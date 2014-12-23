@@ -7,10 +7,10 @@ namespace Launcher {
 	public abstract class CustomListComparer : IComparer {
 		
 		public bool Invert = false;
-		protected readonly int col;
+		protected readonly int Col;
 		
 		public CustomListComparer( int column ) {
-			col = column;
+			Col = column;
 		}
 		
 		public int Compare( object x, object y ) {
@@ -25,7 +25,7 @@ namespace Launcher {
 		public NameComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			int value = String.Compare( x.SubItems[col].Text, y.SubItems[col].Text, true );
+			int value = String.Compare( x.SubItems[Col].Text, y.SubItems[Col].Text, true );
 			if( Invert ) value = -value;
 			return value;
 		}
@@ -36,8 +36,8 @@ namespace Launcher {
 		public NumericalComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			long valX = Int64.Parse( x.SubItems[col].Text );
-			long valY = Int64.Parse( y.SubItems[col].Text );
+			long valX = Int64.Parse( x.SubItems[Col].Text );
+			long valY = Int64.Parse( y.SubItems[Col].Text );
 			int value = valX.CompareTo( valY );
 			if( Invert ) value = -value;
 			return value;
@@ -49,8 +49,8 @@ namespace Launcher {
 		public UptimeComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			TimeSpan valX = ParseUptimeString( x.SubItems[col].Text );
-			TimeSpan valY = ParseUptimeString( y.SubItems[col].Text );
+			TimeSpan valX = ParseUptimeString( x.SubItems[Col].Text );
+			TimeSpan valY = ParseUptimeString( y.SubItems[Col].Text );
 			int value = valX.CompareTo( valY );
 			if( Invert ) value = -value;
 			return value;

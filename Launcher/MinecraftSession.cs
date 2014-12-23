@@ -5,13 +5,13 @@ namespace Launcher {
 
 	public class MinecraftSession : GameSession {
 		
-		const string minecraftNetUri = "https://minecraft.net/",
-		loginUri = "https://minecraft.net/login",
-		publicServersUri = "https://minecraft.net/classic/list",
-		playUri = "https://minecraft.net/classic/play/";
-		const string loggedInAs = @"<span class=""logged-in"">";
-		const string wrongCredentialsMessage = "Oops, unknown username or password.";
-		StringComparison ordinal = StringComparison.Ordinal;
+		const string MinecraftNetUri = "https://minecraft.net/",
+		LoginUri = "https://minecraft.net/login",
+		PublicServersUri = "https://minecraft.net/classic/list",
+		PlayUri = "https://minecraft.net/classic/play/";
+		const string LoggedInAs = @"<span class=""logged-in"">";
+		const string WrongCredentialsMessage = "Oops, unknown username or password.";
+		StringComparison _ordinal = StringComparison.Ordinal;
 		
 		public override void Login( string user, string password ) {
 			Username = user;
@@ -23,11 +23,11 @@ namespace Launcher {
 			
 			var sw = System.Diagnostics.Stopwatch.StartNew();
 			// Step 1: POST to login page username and password.
-			var response = PostHtml( loginUri, loginUri, loginData );
+			var response = PostHtml( LoginUri, LoginUri, loginData );
 			foreach( string line in response ) {
-				if( line.Contains( wrongCredentialsMessage ) ) {
+				if( line.Contains( WrongCredentialsMessage ) ) {
 					throw new InvalidOperationException( "Wrong username or password." );
-				} else if( line.Contains( loggedInAs ) ) {
+				} else if( line.Contains( LoggedInAs ) ) {
 					Log( "login took " + sw.ElapsedMilliseconds );
 					sw.Stop();
 					return;
@@ -37,15 +37,15 @@ namespace Launcher {
 		}
 		
 		public override GameStartData GetConnectInfo( string hash ) {
-			string uri = playUri + hash;
-			var response = GetHtml( uri, minecraftNetUri );
+			string uri = PlayUri + hash;
+			var response = GetHtml( uri, MinecraftNetUri );
 			GameStartData data = new GameStartData();
 			data.Username = Username;
 			
 			foreach( string line in response ) {
 				int index = 0;
 				// Look for <param name="x" value="x"> tags
-				if( ( index = line.IndexOf( "<param", ordinal ) ) > 0 ) {
+				if( ( index = line.IndexOf( "<param", _ordinal ) ) > 0 ) {
 					int nameStart = index + 13;
 					int nameEnd = line.IndexOf( '"', nameStart );
 					string paramName = line.Substring( nameStart, nameEnd - nameStart );
@@ -71,7 +71,7 @@ namespace Launcher {
 		
 		public override List<ServerListEntry> GetPublicServers() {
 			var sw = System.Diagnostics.Stopwatch.StartNew();
-			var response = GetHtml( publicServersUri, minecraftNetUri );
+			var response = GetHtml( PublicServersUri, MinecraftNetUri );
 			List<ServerListEntry> servers = new List<ServerListEntry>();
 			int index = -1;
 			int mode = 0;
@@ -83,7 +83,7 @@ namespace Launcher {
 			string uptime = null;
 			
 			foreach( string line in response ) {
-				if( line.StartsWith( "                                    <a href", ordinal ) ) {
+				if( line.StartsWith( "                                    <a href", _ordinal ) ) {
 					const int hashStart = 59;
 					int hashEnd = line.IndexOf( '"', hashStart );
 					hash = line.Substring( hashStart, hashEnd - hashStart );
@@ -99,7 +99,7 @@ namespace Launcher {
 				
 				// NOTE: >16 checks that the line actually has a value.
 				// this check is necessary, as the page does have lines with just "            <td>"
-				if( line.Length > 16 && line.StartsWith( "            <td>", ordinal ) ) {
+				if( line.Length > 16 && line.StartsWith( "            <td>", _ordinal ) ) {
 					const int valStart = 16;
 					int valEnd = line.IndexOf( '<', valStart );
 					string value = line.Substring( valStart, valEnd - valStart );
