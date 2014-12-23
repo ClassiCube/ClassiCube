@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Launcher {
+﻿namespace Launcher {
 
 	public class ServerListEntry {
 		
@@ -17,7 +15,9 @@ namespace Launcher {
 		
 		/// <summary> How long the server has been 'alive'. </summary>
 		public string Uptime;
-		
+
+	    public string Mppass;
+
 		public ServerListEntry( string hash, string name, string players, string maxPlayers, string uptime ) {
 			Hash = hash;
 			Name = name;
