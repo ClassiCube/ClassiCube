@@ -8,8 +8,8 @@ namespace Launcher {
 		
 		public bool Invert = false;
 		protected readonly int Col;
-		
-		public CustomListComparer( int column ) {
+
+	    protected CustomListComparer( int column ) {
 			Col = column;
 		}
 		
@@ -25,7 +25,7 @@ namespace Launcher {
 		public NameComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			int value = String.Compare( x.SubItems[Col].Text, y.SubItems[Col].Text, true );
+			var value = String.Compare( x.SubItems[Col].Text, y.SubItems[Col].Text, true );
 			if( Invert ) value = -value;
 			return value;
 		}
@@ -36,9 +36,9 @@ namespace Launcher {
 		public NumericalComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			long valX = Int64.Parse( x.SubItems[Col].Text );
-			long valY = Int64.Parse( y.SubItems[Col].Text );
-			int value = valX.CompareTo( valY );
+			var valX = Int64.Parse( x.SubItems[Col].Text );
+			var valY = Int64.Parse( y.SubItems[Col].Text );
+			var value = valX.CompareTo( valY );
 			if( Invert ) value = -value;
 			return value;
 		}
@@ -49,21 +49,21 @@ namespace Launcher {
 		public UptimeComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			TimeSpan valX = ParseUptimeString( x.SubItems[Col].Text );
-			TimeSpan valY = ParseUptimeString( y.SubItems[Col].Text );
-			int value = valX.CompareTo( valY );
+			var valX = ParseUptimeString( x.SubItems[Col].Text );
+			var valY = ParseUptimeString( y.SubItems[Col].Text );
+			var value = valX.CompareTo( valY );
 			if( Invert ) value = -value;
 			return value;
 		}
 		
 		static TimeSpan ParseUptimeString( string s ) {
-			int sum = 0;
-			for( int i = 0; i < s.Length - 1; i++ ) {
+			var sum = 0;
+			for( var i = 0; i < s.Length - 1; i++ ) {
 				sum *= 10;
 				sum += s[i] - '0';
 			}
 			
-			char timeType = s[s.Length - 1];
+			var timeType = s[s.Length - 1];
 			switch( timeType ) {
 					case 'w' : return TimeSpan.FromDays( sum * 7 );
 					case 'd' : return TimeSpan.FromDays( sum );					

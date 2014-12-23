@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Launcher {
+﻿namespace Launcher {
 
 	public class ServerListEntry {
 		

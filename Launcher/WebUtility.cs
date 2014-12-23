@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 namespace Launcher {
 	
 	public static class WebUtility {
 		
-		static Dictionary<string, char> _lookupTable = new Dictionary<string, char>( 253, StringComparer.Ordinal ) {
+		static readonly Dictionary<string, char> LookupTable = new Dictionary<string, char>( 253, StringComparer.Ordinal ) {
 			{ "quot", '\x0022' }, { "amp", '\x0026' }, { "apos", '\x0027' }, { "lt", '\x003C' },
 			{ "gt", '\x003E' }, { "nbsp", '\x00A0' }, { "iexcl", '\x00A1' }, { "cent", '\x00A2' },
 			{ "pound", '\x00A3' }, { "curren", '\x00A4' }, { "yen", '\x00A5' }, { "brvbar", '\x00A6' },
@@ -76,54 +75,59 @@ namespace Launcher {
 		};
 		
 		static bool Lookup( string entity, out char decoded ) {
-			return _lookupTable.TryGetValue( entity, out decoded );
+			return LookupTable.TryGetValue( entity, out decoded );
 		}
 		
 		public static string HtmlDecode( string value ) {
 			value = value.Replace( "hellip;", "\x2026" ); // minecraft.net doesn't escape this at the end properly.
+
 			if( String.IsNullOrEmpty( value ) || value.IndexOf( '&' ) < 0 ) {
 				return value;
 			}
 			
-			StringBuilder sb = new StringBuilder();
-			WebUtility.HtmlDecode( value, sb );
+			var sb = new StringBuilder();
+			HtmlDecode( value, sb );
 			return sb.ToString();
 		}
 		
 		static void HtmlDecode( string value, StringBuilder output ) {
-			int length = value.Length;
+			var length = value.Length;
 			
-			for( int i = 0; i < length; i++ ) {
-				char token = value[i];
+			for( var i = 0; i < length; i++ ) {
+				var token = value[i];
+
 				if( token != '&' ) {
 					output.Append( token );
 					continue;
 				}
 				
-				int entityEnd = value.IndexOf( ';', i + 1 );
+				var entityEnd = value.IndexOf( ';', i + 1 );
+
 				if( entityEnd <= 0 ) {
 					output.Append( token );
 					continue;
 				}
 				
-				string entity = value.Substring( i + 1, entityEnd - i - 1 );
+				var entity = value.Substring( i + 1, entityEnd - i - 1 );
+
 				if( entity.Length > 1 && entity[0] == '#' ) {
 					ushort encodedNumber;
+
 					if( entity[1] == 'x' || entity[1] == 'X' ) {
 						ushort.TryParse( entity.Substring( 2 ), NumberStyles.AllowHexSpecifier, NumberFormatInfo.InvariantInfo, out encodedNumber );
 					} else {
 						ushort.TryParse( entity.Substring( 1 ), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out encodedNumber );
 					}
-					if( encodedNumber != 0 ) {
-						output.Append( (char)encodedNumber );
-						i = entityEnd;
-					}
+
+				    if (encodedNumber == 0) 
+                        continue;
+				    output.Append( (char)encodedNumber );
+				    i = entityEnd;
 				} else {
 					i = entityEnd;
 					char decodedEntity;
 					if( Lookup( entity, out decodedEntity ) ) {
-						token = decodedEntity;
-						output.Append( decodedEntity );
+					    output.Append( decodedEntity );
 					} else { // Invalid token.
 						output.Append( '&' );
 						output.Append( entity );

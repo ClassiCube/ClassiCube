@@ -23,7 +23,7 @@ namespace Launcher {
 		CookieContainer _cookies = new CookieContainer();		
 		
 		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
+			var request = (HttpWebRequest)WebRequest.Create( uri );
 			request.UserAgent = "ClassicalSharp Launcher 0.1";
 			request.ReadWriteTimeout = 15 * 1000;
 			request.Timeout = 15 * 1000;
@@ -36,9 +36,9 @@ namespace Launcher {
 			if( data != null ) {
 				request.Method = "POST";
 				request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
-				byte[] encodedData = Encoding.UTF8.GetBytes( data );
+				var encodedData = Encoding.UTF8.GetBytes( data );
 				request.ContentLength = encodedData.Length;
-				using( Stream stream = request.GetRequestStream() ) {
+				using( var stream = request.GetRequestStream() ) {
 					stream.Write( encodedData, 0, encodedData.Length );
 				}
 			}
@@ -49,13 +49,14 @@ namespace Launcher {
 			var response = MakeRequest( uri, referer, null );
 
 			using( var stream = response.GetResponseStream() ) {
-				using( var reader = new StreamReader( stream ) ) {
-					string line;
+			    if (stream == null) yield break;
+			    using( var reader = new StreamReader( stream ) ) {
+			        string line;
 
-					while( ( line = reader.ReadLine() ) != null	 ) {
-						yield return line;
-					}
-				}
+			        while( ( line = reader.ReadLine() ) != null	 ) {
+			            yield return line;
+			        }
+			    }
 			}
 		}
 
@@ -63,14 +64,15 @@ namespace Launcher {
 			var response = MakeRequest( uri, referer, data );
 
             using ( var stream = response.GetResponseStream() ) {
-				using( var reader = new StreamReader( stream ) ) {
-					string line;
+                if (stream == null) yield break;
+                using( var reader = new StreamReader( stream ) ) {
+                    string line;
 
-					while( ( line = reader.ReadLine() ) != null	 ) {
-						yield return line;
-					}
-				}
-			}
+                    while( ( line = reader.ReadLine() ) != null	 ) {
+                        yield return line;
+                    }
+                }
+            }
 		}
 		
 		protected static void Log( string text ) {
