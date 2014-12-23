@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 		PlayerRenderer renderer;
 		
 		public float JumpHeight {
-			get { return jumpVelocity == 0 ? 0 : GetMaxHeight( jumpVelocity ); }
+			get { return jumpVelocity == 0 ? 0 : (float)GetMaxHeight( jumpVelocity ); }
 		}
 		
 		public void CalculateJumpVelocity( float jumpHeight ) {
@@ -86,40 +86,33 @@ namespace ClassicalSharp {
 				jumpVelocity = 0;
 				return;
 			}
-			// NOTE: There is probably still a better way of doing this.
+
 			float jumpV = 0.01f;
-			// Find the most appropriate starting velocity, this can ~half the time
-			// required in some circumstances. (8 -> 3 ms for max jump height of 1024 )
 			if( jumpHeight >= 256 ) jumpV = 10.0f;
 			if( jumpHeight >= 512 ) jumpV = 16.5f;
 			if( jumpHeight >= 768 ) jumpV = 22.5f;
-			float diff = float.PositiveInfinity;
 			
-			while( true ) {
-				float height = GetMaxHeight( jumpV );
-				float newDiff = Math.Abs( height - jumpHeight );
-				if( newDiff > diff ) {
-					// 0.01 isn't subtracted because it's better to slightly
-					// overestimate jump height than underestimate it.
-					jumpVelocity = jumpV;
-					break;
-				}
-				diff = newDiff;
+			while( GetMaxHeight( jumpV ) <= jumpHeight ) {
 				jumpV += 0.01f;
 			}
+			jumpVelocity = jumpV;
 		}
 		
-		static float GetMaxHeight( float velY ) {
-			float posY = 0f;
-			float maxY = 0f;
-
-			while( posY > -0.1f ) {
-				posY += velY;
-				velY *= 0.98f;
-				velY -= 0.08f;
-				if( posY > maxY ) maxY = posY;
-			}
-			return maxY;
+		static double GetMaxHeight( float u ) {
+			// equation below comes from solving diff(x(t, u))= 0
+			// We only work in discrete timesteps, so test both rounded up and down.
+			double t = 49.49831645 * Math.Log( 0.247483075 * u + 0.9899323 );			
+			return Math.Max( YPosAt( (int)t, u ), YPosAt( (int)t + 1, u ) );
+		}
+		
+		static double YPosAt( int t, float u ) {
+			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
+			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
+			// plugging into Wolfram Alpha gives 1 equation as
+			// e^(-0.0202027 t) * (-49u - 196) - 4t + 50u + 196
+			// which is the same as (0.98^t) * (-49u - 196) - 4t + 50u + 196
+			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
+			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
 		}
 		
 		void HandleInput( out float xMoving, out float zMoving ) {
