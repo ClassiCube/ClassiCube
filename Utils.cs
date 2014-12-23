@@ -236,35 +236,6 @@ namespace ClassicalSharp {
 			return Lerp( leftAngle, rightAngle, t );
 		}
 		
-		static uint[] crcTable;
-		static void MakeCrcTable() {
-			crcTable = new uint[256];
-			for( int n = 0; n < crcTable.Length; n++ ) {
-				uint c = (uint)n;
-				for( int k = 0; k < 8; k++ ) {
-					if( ( c & 0x01 ) != 0 ) {
-						c = 0xEDB88320 ^ ( c >> 1 );
-					} else {
-						c = c >> 1;
-					}
-				}
-				crcTable[n] = c;
-			}
-		}
-		
-		static uint UpdateCrc( uint crc, byte[] buffer ) {
-			if( crcTable == null ) MakeCrcTable();
-			
-			for( int i = 0; i < buffer.Length; i++ ) {
-				crc = crcTable[( crc ^ buffer[i] ) & 0xFF] ^ ( crc >> 8 );
-			}
-			return crc;
-		}
-		
-		public static uint Crc( byte[] buffer ) {
-			return UpdateCrc( 0xFFFFFFFF, buffer ) ^ 0xFFFFFFFF;
-		}
-		
 		public static SkinType GetSkinType( Bitmap bmp ) {
 			if( bmp.Width == 64 && bmp.Height == 32 ) {
 				return SkinType.Type64x32;
