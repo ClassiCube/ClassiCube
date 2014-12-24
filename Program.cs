@@ -8,6 +8,7 @@ namespace ClassicalSharp {
 	
 	class Program {
 		
+		[STAThread]
 		public static void Main( string[] args ) {
 			if( !Debugger.IsAttached ) {
 				AppDomain.CurrentDomain.UnhandledException += UnhandledException;

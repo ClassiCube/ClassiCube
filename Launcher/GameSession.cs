@@ -48,18 +48,15 @@ namespace Launcher {
 		
 		protected IEnumerable<string> GetHtml( string uri, string referer ) {
 			HttpWebResponse response = MakeRequest( uri, referer, null );
-			using( Stream stream = response.GetResponseStream() ) {
-				using( StreamReader reader = new StreamReader( stream ) ) {
-					string line;
-					while( ( line = reader.ReadLine() ) != null	 ) {
-						yield return line;
-					}
-				}
-			}
+			return GetResponseLines( response );
 		}
 
 		protected IEnumerable<string> PostHtml( string uri, string referer, string data ) {
 			HttpWebResponse response = MakeRequest( uri, referer, data );
+			return GetResponseLines( response );
+		}
+		
+		protected IEnumerable<string> GetResponseLines( HttpWebResponse response ) {
 			using( Stream stream = response.GetResponseStream() ) {
 				using( StreamReader reader = new StreamReader( stream ) ) {
 					string line;

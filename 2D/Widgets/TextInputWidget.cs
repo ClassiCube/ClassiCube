@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK.Input;
+using System.Windows.Forms;
 
 namespace ClassicalSharp {
 	
@@ -50,7 +51,7 @@ namespace ClassicalSharp {
 				Size charSize = Utils2D.MeasureSize( chatInputText.Substring( caretPos, 1 ), "Arial", 12, false );
 				chatCaretTexture.Width = charSize.Width;
 			}
-			size.Height = Math.Max( size.Height, chatCaretTexture.Height );		
+			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
 			
 			int y = Window.Height - ChatInputYOffset - size.Height / 2;
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
@@ -229,6 +230,37 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			for( int i = 0; i < handlers.Length; i++ ) {
 				if( handlers[i].HandlesKeyDown( key ) ) return true;
+			}
+			bool controlDown = Window.IsKeyDown( Key.LControl) || Window.IsKeyDown( Key.RControl );
+			if( key == Key.V && controlDown && chatInputText.Length < 64 ) {
+				string text = Clipboard.GetText();
+				if( String.IsNullOrEmpty( text ) ) return true;
+				
+				for( int i = 0; i < text.Length; i++ ) {
+					if( IsInvalidChar( text[i] ) ) {
+						Utils.LogWarning( "Clipboard text contained characters that can't be sent." );
+						return true;
+					}
+				}
+				
+				if( chatInputText.Length + text.Length > 64 ) {
+					text = text.Substring( 0, 64 - chatInputText.Length );
+				}
+				
+				if( caretPos == -1 ) {
+					chatInputText += text;
+				} else {
+					chatInputText = chatInputText.Insert( caretPos, text );
+					caretPos += text.Length;
+				}
+				Dispose();
+				Init();
+				return true;
+			} else if( key == Key.C && controlDown ) {
+				if( !String.IsNullOrEmpty( chatInputText ) ) {
+					Clipboard.SetText( chatInputText );
+				}
+				return true;
 			}
 			return false;
 		}

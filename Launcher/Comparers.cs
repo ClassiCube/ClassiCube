@@ -26,8 +26,7 @@ namespace Launcher {
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
 			int value = String.Compare( x.SubItems[col].Text, y.SubItems[col].Text, true );
-			if( Invert ) value = -value;
-			return value;
+			return Invert ? -value : value;
 		}
 	}
 	
@@ -39,8 +38,7 @@ namespace Launcher {
 			long valX = Int64.Parse( x.SubItems[col].Text );
 			long valY = Int64.Parse( y.SubItems[col].Text );
 			int value = valX.CompareTo( valY );
-			if( Invert ) value = -value;
-			return value;
+			return Invert ? -value : value;
 		}
 	}
 	
@@ -52,8 +50,7 @@ namespace Launcher {
 			TimeSpan valX = ParseUptimeString( x.SubItems[col].Text );
 			TimeSpan valY = ParseUptimeString( y.SubItems[col].Text );
 			int value = valX.CompareTo( valY );
-			if( Invert ) value = -value;
-			return value;
+			return Invert ? -value : value;
 		}
 		
 		static TimeSpan ParseUptimeString( string s ) {
