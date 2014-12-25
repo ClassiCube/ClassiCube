@@ -24,6 +24,20 @@ namespace Launcher {
 			tabMC.TabPages.Remove( tabMCServer );
 			tabCC.TabPages.Remove( tabCCServers );
 			tabCC.TabPages.Remove( tabCCServer );
+			Shown += DisplayResourcesDialog;
+		}
+		
+		void DisplayResourcesDialog( object sender, EventArgs e ) {
+			// TODO: async fetching
+			ResourceFetcher fetcher = new ResourceFetcher();
+			if( !fetcher.CheckAllResourcesExist() ) {
+				DialogResult result = MessageBox.Show(
+					"Some required resources weren't found. Would you like to download them now?", "Missing resources",
+					MessageBoxButtons.OKCancel );
+				if( result == DialogResult.OK ) {				
+					fetcher.Run();
+				}			
+			}
 		}
 		
 		delegate void Action<T1, T2>( T1 arg1, T2 arg2 );
