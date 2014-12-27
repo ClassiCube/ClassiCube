@@ -229,4 +229,41 @@ namespace ClassicalSharp.Commands {
 			game.EnvRenderer.Init();
 		}
 	}
+	
+	public sealed class ChatFontSizeCommand : Command {
+		
+		public override string Name {
+			get { return "ChatSize"; }
+		}
+		
+		public override string[] Help {
+			get {
+				return new [] {
+					"&a/client chatsize [fontsize]",
+					"&fontsize: &eWhole number specifying the new font size for chat.",
+					"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
+					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+				};
+			}
+		}	
+		
+		public override void Execute( CommandReader reader ) {
+			int fontSize;
+			if( !reader.NextInt( out fontSize ) ) {
+				Window.AddChat( "&e/client chatsize: &cInvalid font size." );
+			} else {
+				if( fontSize < 6 ) {
+					Window.AddChat( "&e/client chatsize: &cFont size too small." );
+					return;
+				} else if( fontSize > 30 ) {
+					Window.AddChat( "&e/client chatsize: &cFont size too big." );
+					return;
+				}
+				Window.ChatFontSize = fontSize;
+				Window.SetNewScreen( null );
+				Window.chatInInputBuffer = null;
+				Window.SetNewScreen( new NormalScreen( Window ) );
+			}
+		}
+	}
 }

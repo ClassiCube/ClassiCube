@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
 		
-		public TextInputWidget( Game window ) : base( window ) {
+		public TextInputWidget( Game window, int fontSize ) : base( window ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
 			handlers[0] = new InputHandler( BackspaceKey, Key.BackSpace, 10 );
@@ -17,6 +17,7 @@ namespace ClassicalSharp {
 			handlers[4] = new InputHandler( UpKey, Key.Up, 5 );
 			handlers[5] = new InputHandler( DownKey, Key.Down, 5 );
 			typingLogPos = Window.ChatInputLog.Count; // Index of newest entry + 1.
+			this.fontSize = fontSize;
 		}
 		
 		Texture chatInputTexture, chatCaretTexture;
@@ -25,6 +26,7 @@ namespace ClassicalSharp {
 		int typingLogPos = 0;
 		public int ChatInputYOffset;
 		public string chatInputText = "";
+		readonly int fontSize;
 		
 		public override void Render( double delta ) {
 			chatInputTexture.Render( GraphicsApi );
@@ -35,20 +37,20 @@ namespace ClassicalSharp {
 		public override void Init() {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( GraphicsApi, "_", Color.White, false );
-			chatCaretTexture = Utils2D.MakeTextTexture( "Arial", 12, FontStyle.Bold, 0, 0, caretArgs );
+			chatCaretTexture = Utils2D.MakeTextTexture( "Arial", fontSize, FontStyle.Bold, 0, 0, caretArgs );
 			
 			if( chatInputText.Length == 0 ) {
 				caretPos = -1;
 			}
-			Size size = Utils2D.MeasureSize( chatInputText, "Arial", 12, false );
+			Size size = Utils2D.MeasureSize( chatInputText, "Arial", fontSize, false );
 			
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
 				size.Width += chatCaretTexture.Width;
 			} else {
-				Size trimmedSize = Utils2D.MeasureSize( chatInputText.Substring( 0, caretPos ), "Arial", 12, false );
+				Size trimmedSize = Utils2D.MeasureSize( chatInputText.Substring( 0, caretPos ), "Arial", fontSize, false );
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = Utils2D.MeasureSize( chatInputText.Substring( caretPos, 1 ), "Arial", 12, false );
+				Size charSize = Utils2D.MeasureSize( chatInputText.Substring( caretPos, 1 ), "Arial", fontSize, false );
 				chatCaretTexture.Width = charSize.Width;
 			}
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
@@ -58,7 +60,7 @@ namespace ClassicalSharp {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, chatInputText, Color.White, false );
-					Utils2D.DrawText( g, "Arial", 12, args );
+					Utils2D.DrawText( g, "Arial", fontSize, args );
 				}
 				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
 			}

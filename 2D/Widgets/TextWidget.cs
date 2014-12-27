@@ -4,9 +4,8 @@ using System.Drawing;
 
 namespace ClassicalSharp {
 	
-	public sealed class TextWidget : Widget {
+	public sealed class TextWidget : Widget {	
 		
-		int fontSize;
 		public TextWidget( Game window, int fontSize ) : base( window ) {
 			this.fontSize = fontSize;
 		}
@@ -16,6 +15,7 @@ namespace ClassicalSharp {
 		public int XOffset = 0, YOffset = 0;
 		public FontStyle Style = FontStyle.Regular;
 		int defaultHeight;
+		readonly int fontSize;
 		
 		public override void Init() {
 			defaultHeight = Utils2D.MeasureSize( "I", "Arial", fontSize, Style, true ).Height;

@@ -20,6 +20,8 @@ namespace ClassicalSharp {
 		
 		public List<string> ChatInputLog = new List<string>();
 		
+		public int ChatFontSize = 12;
+		
 		public void SendChat( string text ) {
 			if( String.IsNullOrEmpty( text ) ) return;
 			

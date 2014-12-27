@@ -44,17 +44,18 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			textInput = new TextInputWidget( Window );
+			int fontSize = Window.ChatFontSize;
+			textInput = new TextInputWidget( Window, fontSize );
 			textInput.ChatInputYOffset = ChatInputYOffset;
-			status = new TextGroupWidget( Window, 3 );
+			status = new TextGroupWidget( Window, 3, fontSize );
 			status.VerticalDocking = Docking.LeftOrTop;
 			status.HorizontalDocking = Docking.BottomOrRight;
 			status.Init();
-			bottomRight = new TextGroupWidget( Window, 3 );
+			bottomRight = new TextGroupWidget( Window, 3, fontSize );
 			bottomRight.VerticalDocking = Docking.BottomOrRight;
 			bottomRight.HorizontalDocking = Docking.BottomOrRight;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( Window, chatLines );
+			normalChat = new TextGroupWidget( Window, chatLines, fontSize );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = ChatLogYOffset;
 			normalChat.HorizontalDocking = Docking.LeftOrTop;
