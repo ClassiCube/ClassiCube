@@ -241,8 +241,6 @@ namespace ClassicalSharp.Commands {
 				return new [] {
 					"&a/client chatsize [fontsize]",
 					"&fontsize: &eWhole number specifying the new font size for chat.",
-					"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
 				};
 			}
 		}	
