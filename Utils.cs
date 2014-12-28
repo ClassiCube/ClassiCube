@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 	
 	public static class Utils {
 		
-		public static string AppName = "ClassicalSharp 0.3";
+		public static string AppName = "ClassicalSharp 0.4";
 		
 		public static int NextPowerOf2( int value ) {
 			int next = 1;

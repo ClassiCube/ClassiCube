@@ -226,6 +226,7 @@ namespace ClassicalSharp {
 				Network.Tick( ticksPeriod );
 				LocalPlayer.Tick( ticksPeriod );
 				Camera.Tick( ticksPeriod );
+				ParticleManager.Tick( ticksPeriod );
 				for( int i = 0; i < NetPlayers.Length; i++ ) {
 					if( NetPlayers[i] != null ) {
 						NetPlayers[i].Tick( ticksPeriod );
@@ -249,8 +250,9 @@ namespace ClassicalSharp {
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
 				//EnvRenderer.EnableAmbientLighting();
-				RenderPlayers( e.Time );
-				ParticleManager.Render( e.Time );
+				float t = (float)( ticksAccumulator / ticksPeriod );
+				RenderPlayers( e.Time, t );
+				ParticleManager.Render( e.Time, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
@@ -282,9 +284,8 @@ namespace ClassicalSharp {
 			SwapBuffers();
 		}
 		
-		void RenderPlayers( double deltaTime ) {
-			//Graphics.AlphaTest = true;
-			float t = (float)( ticksAccumulator / ticksPeriod );
+		void RenderPlayers( double deltaTime, float t ) {
+			//Graphics.AlphaTest = true;			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
 					NetPlayers[i].Render( deltaTime, t );

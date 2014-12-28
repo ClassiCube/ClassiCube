@@ -7,7 +7,7 @@ namespace ClassicalSharp.Particles {
 	
 	public class ParticleManager {
 		
-		List<TerrainParticle> particles = new List<TerrainParticle>();
+		List<Particle> particles = new List<Particle>();
 		public Game Window;
 		public IGraphicsApi Graphics;
 		
@@ -16,19 +16,13 @@ namespace ClassicalSharp.Particles {
 			Graphics = window.Graphics;
 		}
 		
-		public void Render( double delta ) {
+		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
 			VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[particles.Count * 6];
 			int index = 0;
 			for( int i = 0; i < particles.Count; i++ ) {
-				Particle particle = particles[i];
-				particle.Render( delta, vertices, ref index );
-				if( particle.Tick( delta ) ) {				
-					particles.RemoveAt( i );
-					i--;
-					particle.Dispose();
-				}
+				particles[i].Render( delta, t, vertices, ref index );
 			}
 			
 			Graphics.Texturing = true;
@@ -37,6 +31,17 @@ namespace ClassicalSharp.Particles {
 			Graphics.DrawVertices( DrawMode.Triangles, vertices );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
+		}
+		
+		public void Tick( double delta ) {
+			for( int i = 0; i < particles.Count; i++ ) {
+				Particle particle = particles[i];
+				if( particle.Tick( delta ) ) {				
+					particles.RemoveAt( i );
+					i--;
+					particle.Dispose();
+				}
+			}
 		}
 		
 		int particleId = 0;

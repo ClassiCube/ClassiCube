@@ -16,7 +16,6 @@ It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft i
 === Requirements ===
 * ClassicalSharp requires .NET Framework 2.0. (Vista and above already include later versions of the .NET Framework)
 * Mono should also work in theory, but I have not tested that.
-* You will need to put "terrain.png","clouds.png", and "char.png" into the same directory as the client.
 
 
 === Todo list ===

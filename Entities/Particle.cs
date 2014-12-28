@@ -11,14 +11,15 @@ namespace ClassicalSharp.Particles {
 		public double Lifetime = 0;
 		public Game Window;
 		public int Id;
+		protected Vector3 lastPos, nextPos;
 
-		public abstract void Render( double delta, VertexPos3fTex2f[] vertices, ref int index );
+		public abstract void Render( double delta, float t, VertexPos3fTex2f[] vertices, ref int index );
 		
 		public abstract void Dispose();
 		
 		public Particle( Game window, Vector3 pos, Vector3 velocity, int id, double lifetime ) {
 			Window = window;
-			Position = pos;
+			Position = lastPos = nextPos = pos;
 			Velocity = velocity;
 			Id = id;
 			Lifetime = lifetime;
@@ -42,7 +43,8 @@ namespace ClassicalSharp.Particles {
 			maxY = Position.Y;
 		}
 		
-		public override void Render( double delta, VertexPos3fTex2f[] vertices, ref int index ) {
+		public override void Render( double delta, float t, VertexPos3fTex2f[] vertices, ref int index ) {
+			Position = Vector3.Lerp( lastPos, nextPos, t );
 			float x1 = Position.X, y1 = Position.Y, z1 = Position.Z,
 			x2 = Position.X + Size.X, y2 = Position.Y + Size.Y;
 			vertices[index++] = new VertexPos3fTex2f( x1, y1, z1, Rectangle.U1, Rectangle.V2 );
@@ -55,6 +57,7 @@ namespace ClassicalSharp.Particles {
 		}
 
 		public override bool Tick( double delta ) {
+			lastPos = Position = nextPos;
 			Velocity.Y -= gravity * (float)delta;
 			int startY = (int)Math.Floor( Position.Y );
 			Position += Velocity * (float)delta;
@@ -74,19 +77,19 @@ namespace ClassicalSharp.Particles {
 				for( int y = startY; y >= endY; y-- ) {
 					if( y < 0 ) {
 						return CollideWithGround( 0 ) ? true : base.Tick( delta );
-						//break;
 					}
 					byte block = GetBlock( (int)Position.X, y, (int)Position.Z );
 					if( block == 0 || Window.BlockInfo.IsSprite( block ) || Window.BlockInfo.IsLiquid( block ) )
 						continue;
-					float groundHeight = y + Window.BlockInfo.BlockHeight( block );
 					
+					float groundHeight = y + Window.BlockInfo.BlockHeight( block );				
 					if( Position.Y < groundHeight ) {
 						return CollideWithGround( groundHeight ) ? true : base.Tick( delta );
-						//break;
 					}
 				}
 			}
+			nextPos = Position;
+			Position = lastPos;
 			return base.Tick( delta );
 		}
 		
@@ -106,6 +109,8 @@ namespace ClassicalSharp.Particles {
 			Position.Y = y;
 			maxY = y;
 			Velocity = Vector3.Zero;
+			nextPos = Position;
+			Position = lastPos;
 			return false;
 		}
 		
