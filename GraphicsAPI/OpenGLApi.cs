@@ -288,17 +288,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFuncs[3] = (mode, id, count) => DrawVbPos3fTex2fCol4bFast( mode, id, count );
 		}
 		
-		int GenBufferId() {
-			int[] ids = new int[1];
-			GL.Arb.GenBuffers( 1, ids );
-			return ids[0];
-		}
-		
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
 			if( !useVbos ) {
 				return CreateDisplayList( vertices, mode, format, count );
 			}
-			int id = GenBufferId();
+			int id = 0;
+			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = GetSizeInBytes( count, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
@@ -364,6 +359,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DeleteVb( int id ) {
+			if( id <= 0 ) return;
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
 			#endif
@@ -371,7 +367,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.DeleteLists( id, 1 );
 				return;
 			}
-			GL.DeleteBuffers( 1, new [] { id } );
+			GL.DeleteBuffers( 1, ref id );
 		}
 		
 		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {

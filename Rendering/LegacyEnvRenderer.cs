@@ -104,58 +104,23 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetClouds() {
-			if( cloudsVbo != -1 ) {
-				Graphics.DeleteVb( cloudsVbo );
-			}
+			Graphics.DeleteVb( cloudsVbo );
 			if( Map.IsNotLoaded ) return;
-			// Calculate the number of possible visible 'cloud grid cells'.
-			int dist = Window.ViewDistance;
-			const int cloudSize = 128;
-			int extent = cloudSize * ( dist / cloudSize + ( dist % cloudSize != 0 ? 1 : 0 ) ); // ceiling division
 			
-			// Calculate how many 'cloud grid cells' are actually visible.
-			int cellsCount = 0;
-			for( int x = -extent; x < Map.Width + extent; x += cloudSize ) {
-				for( int z = -extent; z < Map.Length + extent; z += cloudSize ) {
-					if( x + cloudSize < -dist || z + cloudSize < -dist ) continue;
-					if( x > Map.Width + dist || z > Map.Length + dist ) continue;
-					cellsCount++;
-				}
-			}
-			cloudsVertices = cellsCount * 6;
-			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
-			int index = 0;
+			int extent = Window.ViewDistance;
+			int x1 = 0 - extent, x2 = Map.Width + extent;
 			int y = Map.Height + 2;
+			int z1 = 0 - extent, z2 = Map.Length + extent;
 			FastColour cloudsCol = Map.CloudsCol;
 			
-			for( int x = -extent; x < Map.Width + extent; x += cloudSize ) {
-				for( int z = -extent; z < Map.Length + extent; z += cloudSize ) {
-					int x2 = x + cloudSize;
-					int z2 = z + cloudSize;
-					if( x2 < -dist || z2 < -dist ) continue;
-					if( x > Map.Width + dist || z > Map.Length + dist ) continue;
-					// Clip clouds to visible view distance (avoid overdrawing)
-					x2 = Math.Min( x2, Map.Width + dist );
-					z2 = Math.Min( z2, Map.Length + dist );
-					int x1 = Math.Max( x, -dist );
-					int z1 = Math.Max( z, -dist );
-					
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-					
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
-				}
-			}
+			cloudsVertices = CountVertices( x2 - x1, z2 - z1 );
+			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
+			DrawCloudsYPlane( x1, z1, x2, z2, y, cloudsCol, vertices );
 			cloudsVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		void ResetSky() {
-			if( skyVbo != -1 ) {
-				Graphics.DeleteVb( skyVbo );
-			}
+			Graphics.DeleteVb( skyVbo );
 			if( Map.IsNotLoaded ) return;
 			
 			int extent = Window.ViewDistance;
@@ -166,7 +131,7 @@ namespace ClassicalSharp.Renderers {
 			
 			skyVertices = CountVertices( x2 - x1, z2 - z1 );
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
-			DrawYPlane( x1, z1, x2, z2, y, skyCol, vertices );
+			DrawSkyYPlane( x1, z1, x2, z2, y, skyCol, vertices );
 			skyVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fCol4b );
 		}
 		
@@ -176,7 +141,7 @@ namespace ClassicalSharp.Renderers {
 			return cellsAxis1 * cellsAxis2 * 6;
 		}
 		
-		void DrawYPlane( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fCol4b[] vertices ) {
+		void DrawSkyYPlane( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fCol4b[] vertices ) {
 			int width = x2 - x1, endX = x2;
 			int length = z2 - z1, endZ = z2, startZ = z1;
 			int index = 0;
@@ -196,6 +161,30 @@ namespace ClassicalSharp.Renderers {
 					vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
 					vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
 					vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
+				}
+			}
+		}
+		
+		void DrawCloudsYPlane( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
+			int width = x2 - x1, endX = x2;
+			int length = z2 - z1, endZ = z2, startZ = z1;
+			int index = 0;
+			
+			for( ; x1 < endX; x1 += 128 ) {
+				x2 = x1 + 128;
+				if( x2 > endX ) x2 = endX;
+				z1 = startZ;
+				for( ; z1 < endZ; z1 += 128 ) {
+					z2 = z1 + 128;
+					if( z2 > endZ ) z2 = endZ;
+					
+					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, col );
+					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, col );
+					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, col );
+			
+					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, col );
+					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, col );
+					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, col );
 				}
 			}
 		}

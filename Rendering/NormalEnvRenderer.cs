@@ -12,7 +12,7 @@ namespace ClassicalSharp.Renderers {
 			Map = Window.Map;
 		}
 		
-		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 0;
+		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 6;
 		int skyOffset = 10, skyVbo = -1, skyVertices = 6;
 		public float CloudsSpeed = 1f;
 		
@@ -103,58 +103,27 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetClouds() {
-			if( cloudsVbo != -1 ) {
-				Graphics.DeleteVb( cloudsVbo );
-			}
+			Graphics.DeleteVb( cloudsVbo );
 			if( Map.IsNotLoaded ) return;
-			// Calculate the number of possible visible 'cloud grid cells'.
-			int dist = Window.ViewDistance;
-			const int cloudSize = 512;
-			int extent = cloudSize * ( dist / cloudSize + ( dist % cloudSize != 0 ? 1 : 0 ) ); // ceiling division
-			
-			// Calculate how many 'cloud grid cells' are actually visible.
-			int cellsCount = 0;
-			for( int x = -extent; x < Map.Width + extent; x += cloudSize ) {
-				for( int z = -extent; z < Map.Length + extent; z += cloudSize ) {
-					if( x + cloudSize < -dist || z + cloudSize < -dist ) continue;
-					if( x > Map.Width + dist || z > Map.Length + dist ) continue;
-					cellsCount++;
-				}
-			}
-			cloudsVertices = cellsCount * 6;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
-			int index = 0;
+			int extent = Window.ViewDistance;
+			int x1 = 0 - extent, x2 = Map.Width + extent;
 			int y = Map.Height + 2;
+			int z1 = 0 - extent, z2 = Map.Length + extent;
 			FastColour cloudsCol = Map.CloudsCol;
 			
-			for( int x = -extent; x < Map.Width + extent; x += cloudSize ) {
-				for( int z = -extent; z < Map.Length + extent; z += cloudSize ) {
-					int x2 = x + cloudSize;
-					int z2 = z + cloudSize;
-					if( x2 < -dist || z2 < -dist ) continue;
-					if( x > Map.Width + dist || z > Map.Length + dist ) continue;
-					// Clip clouds to visible view distance (avoid overdrawing)
-					x2 = Math.Min( x2, Map.Width + dist );
-					z2 = Math.Min( z2, Map.Length + dist );
-					int x1 = Math.Max( x, -dist );
-					int z1 = Math.Max( z, -dist );
-					
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-					
-					vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol );
-					vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
-				}
-			}
+			vertices[0] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
+			vertices[1] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, cloudsCol );
+			vertices[2] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
+			
+			vertices[3] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
+			vertices[4] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol );
+			vertices[5] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
 			cloudsVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		void ResetSky() {
-			if( skyVbo != -1 ) {
-				Graphics.DeleteVb( skyVbo );
-			}
+			Graphics.DeleteVb( skyVbo );
 			if( Map.IsNotLoaded ) return;
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
 			int extent = Window.ViewDistance;

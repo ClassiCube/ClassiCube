@@ -71,9 +71,7 @@ namespace ClassicalSharp {
 		int sidesVertices, edgeVertices = 0;
 		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgeCol = FastColour.White;
 		void RebuildSides() {
-			if( sidesVboId != -1 ) {
-				Graphics.DeleteVb( sidesVboId );
-			}
+			Graphics.DeleteVb( sidesVboId );
 
 			int groundLevel = Map.GroundHeight;
 			sidesVertices = 0;			
@@ -98,9 +96,7 @@ namespace ClassicalSharp {
 		}		
 		
 		void RebuildEdges() {
-			if( edgesVboId != -1 ) {
-				Graphics.DeleteVb( edgesVboId );
-			}
+			Graphics.DeleteVb( edgesVboId );
 			
 			int waterLevel = Map.WaterHeight;
 			edgeVertices = 0;
