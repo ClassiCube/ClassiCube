@@ -319,21 +319,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( format == VertexFormat.VertexPos3f ) {
 				fixed( Vector3* p = (vertices as Vector3[]) ) {
 					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
-					GL.DrawArrays( BeginMode.Triangles, 0, count );
+					GL.DrawArrays( modeMappings[(int)mode], 0, count );
 				}
 			} else if( format == VertexFormat.VertexPos3fCol4b ) {
 				GL.EnableClientState( ArrayCap.ColorArray );
 				fixed( VertexPos3fCol4b* p = (vertices as VertexPos3fCol4b[]) ) {
 					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
 					GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 12 + (byte*)p ) );
-					GL.DrawArrays( BeginMode.Triangles, 0, count );
+					GL.DrawArrays( modeMappings[(int)mode], 0, count );
 				}
 			} else if( format == VertexFormat.VertexPos3fTex2f ) {
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				fixed( VertexPos3fTex2f* p = (vertices as VertexPos3fTex2f[]) ) {
 					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p) );
 					GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
-					GL.DrawArrays( BeginMode.Triangles, 0, count );
+					GL.DrawArrays( modeMappings[(int)mode], 0, count );
 				}
 			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
 				GL.EnableClientState( ArrayCap.ColorArray );
@@ -342,7 +342,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
 					GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
 					GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
-					GL.DrawArrays( BeginMode.Triangles, 0, count );
+					GL.DrawArrays( modeMappings[(int)mode], 0, count );
 				}
 			}
 			

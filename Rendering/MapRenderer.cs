@@ -296,7 +296,7 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
-						info.DrawInfo = builder.GetDrawInfo( loc.X, loc.Y, loc.Z, Window.Map );
+						info.DrawInfo = builder.GetDrawInfo( loc.X, loc.Y, loc.Z );
 						chunksUpdatedThisFrame++;
 					}
 				}

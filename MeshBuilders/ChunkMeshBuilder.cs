@@ -96,14 +96,7 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public ChunkDrawInfo[] GetDrawInfo( int x, int y, int z, Map map ) {
-			this.map = map;
-			width = map.Width;
-			height = map.Height;
-			length = map.Length;
-			maxX = width - 1;
-			maxY = height - 1;
-			maxZ = length - 1;
+		public ChunkDrawInfo[] GetDrawInfo( int x, int y, int z ) {		
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
@@ -373,6 +366,13 @@ namespace ClassicalSharp {
 		}
 		
 		public virtual void OnNewMapLoaded() {
+			map = Window.Map;
+			width = map.Width;
+			height = map.Height;
+			length = map.Length;
+			maxX = width - 1;
+			maxY = height - 1;
+			maxZ = length - 1;
 		}
 		
 		protected abstract ChunkDrawInfo[] GetChunkInfo( int x, int y, int z );
