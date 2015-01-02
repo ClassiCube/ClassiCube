@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyMapping.Fullscreen] ) {
 				WindowState state = WindowState;
 				if( state != WindowState.Minimized ) {
-					WindowState = state == WindowState.Fullscreen ? 
+					WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
 			} else if( key == Keys[KeyMapping.ThirdPersonCamera] ) {
@@ -147,58 +147,54 @@ namespace ClassicalSharp {
 			return block == 0 || ( !CanPlace[block] && !CanDelete[block] && BlockInfo.IsLiquid( block ) );
 		}
 		
-		public KeyMap Keys = new KeyMap();		
+		public KeyMap Keys = new KeyMap();
 	}
 	
 	public class KeyMap {
-			
-			public Key this[KeyMapping key] {
-				get { return Keys[(int)key]; }
-				set { Keys[(int)key] = value; }
-			}
-			
-			Key[] Keys = new Key[] {
-				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
-				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
-				Key.F5, Key.F6, Key.Z, Key.LShift, Key.X, Key.Q, Key.E, 
-				Key.Tab, Key.H,
-			};
-			
-			bool IsLockedKey( Key key ) {
-				return key == Key.Escape || ( key >= Key.F1 && key <= Key.F35 );
-			}
-			
-			bool IsReservedKey( Key key ) {
-				return key == Key.Slash || key == Key.BackSpace ||
-					( key >= Key.Insert && key <= Key.End ) || 
-					( key >= Key.Up && key <= Key.Right ) || // chat screen movement
-					( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
-			}
-			
-			public bool IsKeyOkay( Key key, out string reason ) {
-				if( IsLockedKey( key ) ) {
-					reason = "Given key mapping cannot be changed.";
-					return false;
-				}
-				if( IsReservedKey( key ) ) {
-					reason = "Given key is reserved for gui.";
-					return false;
-				}
-				for( int i = 0; i < Keys.Length; i++ ) {
-				   	if( Keys[i] == key ) {
-				   		reason = "Key is already assigned.";
-				   		return false;
-				   	}
-				}
-				reason = null;
-				return true;
-			}
+		
+		public Key this[KeyMapping key] {
+			get { return Keys[(int)key]; }
+			set { Keys[(int)key] = value; }
 		}
 		
-		public enum KeyMapping {
-			Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-			SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
-			ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown, 
-			PlayerList, ChatHistoryMode,
+		Key[] Keys = new Key[] {
+			Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
+			Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
+			Key.F5, Key.F6, Key.Z, Key.LShift, Key.X, Key.Q, Key.E,
+			Key.Tab, Key.H,
+		};
+		
+		bool IsReservedKey( Key key ) {
+			return key == Key.Slash || key == Key.BackSpace ||
+				( key >= Key.Insert && key <= Key.End ) ||
+				( key >= Key.Up && key <= Key.Right ) || // chat screen movement
+				( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
 		}
+		
+		public bool IsLockedKey( Key key ) {
+			return key == Key.Escape || ( key >= Key.F1 && key <= Key.F35 );
+		}
+		
+		public bool IsKeyOkay( Key key, out string reason ) {
+			if( IsReservedKey( key ) ) {
+				reason = "Given key is reserved for gui";
+				return false;
+			}
+			for( int i = 0; i < Keys.Length; i++ ) {
+				if( Keys[i] == key ) {
+					reason = "Key is already assigned";
+					return false;
+				}
+			}
+			reason = null;
+			return true;
+		}
+	}
+	
+	public enum KeyMapping {
+		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
+		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
+		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown,
+		PlayerList, ChatHistoryMode,
+	}
 }
