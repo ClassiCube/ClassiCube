@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ClassicalSharp.Particles;
 using OpenTK;
 using OpenTK.Input;
@@ -8,6 +9,11 @@ namespace ClassicalSharp {
 	public partial class Game : GameWindow {
 		
 		public bool IsKeyDown( Key key ) {
+			return Keyboard[key];
+		}
+		
+		public bool IsKeyDown( KeyMapping mapping ) {
+			Key key = Keys[mapping];
 			return Keyboard[key];
 		}
 		
@@ -69,21 +75,20 @@ namespace ClassicalSharp {
 		static int[] viewDistances = { 16, 32, 64, 128, 256, 512 };
 		void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
-			if( key == Key.F12 ) {
+			if( key == Keys[KeyMapping.Screenshot] ) {
 				screenshotRequested = true;
-			} else if( key == Key.F11 ) {
+			} else if( key == Keys[KeyMapping.Fullscreen] ) {
 				WindowState state = WindowState;
-				if( state == WindowState.Fullscreen ) {
-					WindowState = WindowState.Normal;
-				} else if( state == WindowState.Normal || state == WindowState.Maximized ) {
-					WindowState = WindowState.Fullscreen;
+				if( state != WindowState.Minimized ) {
+					WindowState = state == WindowState.Fullscreen ? 
+						WindowState.Normal : WindowState.Fullscreen;
 				}
-			} else if( key == Key.F5 ) {
+			} else if( key == Keys[KeyMapping.ThirdPersonCamera] ) {
 				bool useThirdPerson = Camera is FirstPersonCamera;
 				SetCamera( useThirdPerson );
-			} else if( key == Key.F7 ) {
+			} else if( key == Keys[KeyMapping.VSync] ) {
 				VSync = VSync == VSyncMode.Off ? VSyncMode.On : VSyncMode.Off;
-			} else if( key == Key.F6 ) {
+			} else if( key == Keys[KeyMapping.ViewDistance] ) {
 				if( ViewDistance >= viewDistances[viewDistances.Length - 1] ) {
 					SetViewDistance( viewDistances[0] );
 				} else {
@@ -95,12 +100,12 @@ namespace ClassicalSharp {
 						}
 					}
 				}
-			} else if( key == Key.Escape && !Map.IsNotLoaded ) {
+			} else if( key == Keys[KeyMapping.PauseOrExit] && !Map.IsNotLoaded ) {
 				if( !( activeScreen is PauseScreen ) ) {
 					SetNewScreen( new PauseScreen( this ) );
 				}
 			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
-				if( key == Key.B ) {
+				if( key == Keys[KeyMapping.OpenInventory] ) {
 					SetNewScreen( new BlockSelectScreen( this ) );
 				} else {
 					LocalPlayer.HandleKeyDown( key );
@@ -142,5 +147,71 @@ namespace ClassicalSharp {
 		bool CanReplace( byte block ) {
 			return block == 0 || ( !CanPlace[block] && !CanDelete[block] && BlockInfo.IsLiquid( block ) );
 		}
+		
+		public KeyMap Keys = new KeyMap();		
 	}
+	
+	public class KeyMap {
+			
+			public Key this[KeyMapping key] {
+				get { return Keys[(int)key]; }
+				set { Keys[(int)key] = value; }
+			}
+			
+			[Obsolete( "It's better to use the KeyMapping indexer")]
+			public Key this[string key] {
+				get {
+					KeyMapping mapping = (KeyMapping)KeyMapping.Parse( typeof( KeyMapping ), key, true );
+					return Keys[(int)mapping]; 
+				}
+				set { 
+					KeyMapping mapping = (KeyMapping)KeyMapping.Parse( typeof( KeyMapping ), key, true );
+					Keys[(int)mapping] = value;
+				}
+			}
+			
+			Key[] Keys = new Key[] {
+				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
+				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
+				Key.F5, Key.F6, Key.Z, Key.LShift, Key.X, Key.Q, Key.E, 
+				Key.Tab, Key.H,
+			};
+			
+			bool IsLockedKey( Key key ) {
+				return key == Key.Escape || ( key >= Key.F1 && key <= Key.F35 );
+			}
+			
+			bool IsReservedKey( Key key ) {
+				return key == Key.Slash || key == Key.BackSpace ||
+					( key >= Key.Insert && key <= Key.End ) || 
+					( key >= Key.Up && key <= Key.Right ) || // chat screen movement
+					( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
+			}
+			
+			public bool IsKeyOkay( Key key, out string reason ) {
+				if( IsLockedKey( key ) ) {
+					reason = "Given key mapping cannot be changed.";
+					return false;
+				}
+				if( IsReservedKey( key ) ) {
+					reason = "Given key is reserved for gui.";
+					return false;
+				}
+				for( int i = 0; i < Keys.Length; i++ ) {
+				   	if( Keys[i] == key ) {
+				   		reason = "Key is already assigned.";
+				   		return false;
+				   	}
+				}
+				reason = null;
+				return true;
+			}
+		}
+		
+		public enum KeyMapping {
+			Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
+			SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
+			ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown, 
+			PlayerList, ChatHistoryMode,
+		}
 }

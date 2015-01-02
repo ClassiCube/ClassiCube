@@ -247,7 +247,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == Key.Escape || key == Key.Q ) {
+			if( key == Window.Keys[KeyMapping.PauseOrExit] ) {
 				Window.SetNewScreen( new NormalScreen( Window ) );
 			} else if( key == Key.Left ) {
 				MovePointerLeft();

@@ -121,16 +121,15 @@ namespace ClassicalSharp {
 			if( Window.ScreenLockedInput ) {
 				jumping = speeding = flyingUp = flyingDown = false;
 			} else {
-				if( Window.IsKeyDown( Key.W ) ) xMoving -= 0.98f;
-				if( Window.IsKeyDown( Key.S ) ) xMoving += 0.98f;
-				if( Window.IsKeyDown( Key.A ) ) zMoving -= 0.98f;
-				if( Window.IsKeyDown( Key.D ) ) zMoving += 0.98f;
+				if( Window.IsKeyDown( KeyMapping.Forward ) ) xMoving -= 0.98f;
+				if( Window.IsKeyDown( KeyMapping.Back ) ) xMoving += 0.98f;
+				if( Window.IsKeyDown( KeyMapping.Left ) ) zMoving -= 0.98f;
+				if( Window.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
 
-				jumping = Window.IsKeyDown( Key.Space );
-				bool shiftDown = Window.IsKeyDown( Key.ShiftLeft ) || Window.IsKeyDown( Key.ShiftRight );
-				speeding = CanSpeed && shiftDown;
-				flyingUp = Window.IsKeyDown( Key.Q );
-				flyingDown = Window.IsKeyDown( Key.E );
+				jumping = Window.IsKeyDown( KeyMapping.Jump );
+				speeding = CanSpeed && Window.IsKeyDown( KeyMapping.Speed );
+				flyingUp = Window.IsKeyDown( KeyMapping.FlyUp );
+				flyingDown = Window.IsKeyDown( KeyMapping.FlyDown );
 			}
 		}
 		
@@ -347,14 +346,14 @@ namespace ClassicalSharp {
 		}
 		
 		public bool HandleKeyDown( Key key ) {
-			if( key == Key.R && canRespawn ) {
+			if( key == Window.Keys[KeyMapping.Respawn] && canRespawn ) {
 				LocationUpdate update = LocationUpdate.MakePos( SpawnPoint, false );
 				SetLocation( update, false );
-			} else if( key == Key.Y && canRespawn ) {
+			} else if( key == Window.Keys[KeyMapping.SetSpawn] && canRespawn ) {
 				SpawnPoint = Position;
-			} else if( key == Key.Z && canFly ) {
+			} else if( key == Window.Keys[KeyMapping.Fly] && canFly ) {
 				flying = !flying;
-			} else if( key == Key.X && canNoclip ) {
+			} else if( key == Window.Keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
 			} else {
 				return false;

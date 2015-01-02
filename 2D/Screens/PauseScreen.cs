@@ -29,18 +29,28 @@ namespace ClassicalSharp {
 			controlsWidget = CreateTextWidget( 0, 30, "&eControls list", Docking.LeftOrTop, 16, FontStyle.Bold );
 			gameWidget = CreateTextWidget( 0, -60, "&eBack to game", Docking.BottomOrRight, 16, FontStyle.Bold );
 			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.BottomOrRight, 16, FontStyle.Bold );
-			MakeKeysLeft( "Forward: W", "Back: S", "Left: A", "Right: D", "Jump: Space", "Respawn: R", "Set spawn: Y", 
-			             "Open chat: T", "Send chat: Enter", "Pause: Escape", "Open inventory: B" );
-			MakeKeysRight( "Take screenshot: F12", "Toggle fullscreen: F11", "Toggle 3rd person camera: F5",
-			              "Toggle VSync: F7", "Change view distance: F6", "Toggle fly: Z", "Speed: Shift",
-			              "Toggle noclip: X", "Fly up: Q", "Fly down: E", "Display player list: Tab" );
+			
+			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
+				KeyMapping.Jump, KeyMapping.Respawn, KeyMapping.SetSpawn, KeyMapping.OpenChat, KeyMapping.SendChat,
+				KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
+			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
+				"Open chat", "Send chat", "Pause", "Open inventory" };
+			MakeKeysLeft( mappingsLeft, descriptionsLeft );
+			
+			KeyMapping[] mappingsRight = { KeyMapping.Screenshot, KeyMapping.Fullscreen, KeyMapping.ThirdPersonCamera, 
+				KeyMapping.VSync, KeyMapping.ViewDistance, KeyMapping.Fly, KeyMapping.Speed, KeyMapping.NoClip, 
+				KeyMapping.FlyUp, KeyMapping.FlyDown, KeyMapping.PlayerList };
+			string[] descriptionsRight = { "Take screenshot", "Toggle fullscreen", "Toggle 3rd person camera", "Toggle VSync",
+				"Change view distance", "Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list" };
+			MakeKeysRight( mappingsRight, descriptionsRight );
 		}
 		
-		void MakeKeysLeft( params string[] keyBindings ) {
+		void MakeKeysLeft( KeyMapping[] mappings, string[] descriptions ) {
 			int startY = controlsWidget.BottomRight.Y + 10;
-			keysLeft = new TextWidget[keyBindings.Length];
+			keysLeft = new TextWidget[mappings.Length];
 			for( int i = 0; i < keysLeft.Length; i++ ) {
-				TextWidget widget = CreateTextWidget( 0, startY, keyBindings[i], Docking.LeftOrTop, 14, FontStyle.Bold );
+				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
+				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, 14, FontStyle.Bold );
 				widget.XOffset = -widget.Width / 2 - 20;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
 				keysLeft[i] = widget;
@@ -48,11 +58,12 @@ namespace ClassicalSharp {
 			}
 		}
 
-		void MakeKeysRight( params string[] keyBindings ) {
+		void MakeKeysRight( KeyMapping[] mappings, string[] descriptions ) {
 			int startY = controlsWidget.BottomRight.Y + 10;
-			keysRight = new TextWidget[keyBindings.Length];
+			keysRight = new TextWidget[mappings.Length];
 			for( int i = 0; i < keysRight.Length; i++ ) {
-				TextWidget widget = CreateTextWidget( 0, startY, keyBindings[i], Docking.LeftOrTop, 14, FontStyle.Bold );
+				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
+				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, 14, FontStyle.Bold );
 				widget.XOffset = widget.Width / 2 + 20;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
 				keysRight[i] = widget;

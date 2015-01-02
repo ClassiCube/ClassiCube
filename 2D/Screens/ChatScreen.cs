@@ -178,7 +178,7 @@ namespace ClassicalSharp {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == Key.Enter ) {
+				if( key == Window.Keys[KeyMapping.SendChat] ) {
 					HandlesAllInput = false;
 					Window.Camera.RegrabMouse();
 					textInput.SendTextInBufferAndReset();
@@ -188,11 +188,11 @@ namespace ClassicalSharp {
 				return true;
 			}
 
-			if( key == Key.T ) {
+			if( key == Window.Keys[KeyMapping.OpenChat] ) {
 				OpenTextInputBar( "" );
 			} else if( key == Key.Slash ) {
 				OpenTextInputBar( "/" );
-			}  else if( key == Key.H ) {
+			}  else if( key == Window.Keys[KeyMapping.ChatHistoryMode] ) {
 				HistoryMode = !HistoryMode;
 				normalChat.Dispose();		
 				InitChat();

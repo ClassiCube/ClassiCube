@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < drawInfoBuffer.Length; i++ ) {
 				DrawInfo1D info = drawInfoBuffer[i];
 				if( info.totalVertices > info.vertices.Length ) {
-					Array.Resize( ref info.vertices, info.totalVertices );
+					info.vertices = new VertexPos3fTex2fCol4b[info.totalVertices];
 				}
 			}
 		}

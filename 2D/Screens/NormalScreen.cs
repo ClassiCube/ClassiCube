@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 			if( playerList != null ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
-				if( !Window.IsKeyDown( Key.Tab ) ) {
+				if( !Window.IsKeyDown( KeyMapping.PlayerList ) ) {
 					playerList.Dispose();
 					playerList = null;
 				}
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == Key.Tab ) {
+			if( key == Window.Keys[KeyMapping.PlayerList] ) {
 				if( playerList == null ) {
 					if( Window.Network.UsingExtPlayerList ) {
 						playerList = new ExtPlayerListWidget( Window );
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( key == Key.Tab ) {
+			if( key == Window.Keys[KeyMapping.PlayerList] ) {
 				if( playerList != null ) {
 					playerList.Dispose();
 					playerList = null;
