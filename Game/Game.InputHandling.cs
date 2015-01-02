@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using ClassicalSharp.Particles;
 using OpenTK;
 using OpenTK.Input;
@@ -156,18 +155,6 @@ namespace ClassicalSharp {
 			public Key this[KeyMapping key] {
 				get { return Keys[(int)key]; }
 				set { Keys[(int)key] = value; }
-			}
-			
-			[Obsolete( "It's better to use the KeyMapping indexer")]
-			public Key this[string key] {
-				get {
-					KeyMapping mapping = (KeyMapping)KeyMapping.Parse( typeof( KeyMapping ), key, true );
-					return Keys[(int)mapping]; 
-				}
-				set { 
-					KeyMapping mapping = (KeyMapping)KeyMapping.Parse( typeof( KeyMapping ), key, true );
-					Keys[(int)mapping] = value;
-				}
 			}
 			
 			Key[] Keys = new Key[] {

@@ -171,42 +171,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void MovePointerUp() {
-			if( selectedIndex == -1 ) return;
-			int colIndex = selectedIndex / blocksPerRow;
-			if( colIndex == 0 ) return;
-			selectedIndex -= blocksPerRow;
-			RecreateBlockInfoTexture();
-		}
-		
-		void MovePointerDown() {
-			if( selectedIndex == -1 ) return;
-			selectedIndex += blocksPerRow;
-			if( selectedIndex >= blocksTable.Length ) {
-				selectedIndex -= blocksPerRow;
-			}
-			RecreateBlockInfoTexture();
-		}
-		
-		void MovePointerLeft() {
-			if( selectedIndex == -1 ) return;
-			int rowIndex = selectedIndex % blocksPerRow;
-			if( rowIndex == 0 ) return;
-			selectedIndex--;
-			RecreateBlockInfoTexture();
-		}
-		
-		void MovePointerRight() {
-			if( selectedIndex == -1 ) return;
-			int rowIndex = selectedIndex % blocksPerRow;
-			if( rowIndex == blocksPerRow - 1 ) return;
-			selectedIndex++;
-			if( selectedIndex >= blocksTable.Length ) {
-				selectedIndex = blocksTable.Length - 1;
-			}
-			RecreateBlockInfoTexture();
-		}
-		
 		public override bool HandlesAllInput {
 			get { return true; }
 		}
@@ -249,14 +213,6 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Window.Keys[KeyMapping.PauseOrExit] ) {
 				Window.SetNewScreen( new NormalScreen( Window ) );
-			} else if( key == Key.Left ) {
-				MovePointerLeft();
-			} else if( key == Key.Right ) {
-				MovePointerRight();
-			} else if( key == Key.Up ) {
-				MovePointerUp();
-			} else if( key == Key.Down ) {
-				MovePointerDown();
 			}
 			return true;
 		}
