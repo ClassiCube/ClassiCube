@@ -93,12 +93,10 @@
     <Compile Include="Blocks\BlockInfo.Optimised.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
-    <Compile Include="Entities\ModelPart.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\Particle.cs" />
     <Compile Include="Entities\ParticleManager.cs" />
     <Compile Include="Entities\Player.cs" />
-    <Compile Include="Entities\PlayerModel.cs" />
     <Compile Include="Game\Game.Chat.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
@@ -115,6 +113,11 @@
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilderTex2Col4.cs" />
+    <Compile Include="Model\CreeperModel.cs" />
+    <Compile Include="Model\IModel.cs" />
+    <Compile Include="Model\ModelPart.cs" />
+    <Compile Include="Model\PlayerModel.cs" />
+    <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\FastNetReader.cs" />
     <Compile Include="Network\FixedBufferStream.cs" />
@@ -179,6 +182,7 @@
     <Folder Include="Entities" />
     <Folder Include="MeshBuilders" />
     <Folder Include="Game" />
+    <Folder Include="Model" />
     <Folder Include="Physics" />
   </ItemGroup>
 </Project>

@@ -8,7 +8,6 @@ namespace ClassicalSharp {
 	
 	public class NetPlayer : Player {
 		
-		public PlayerRenderer renderer;
 		int tickCount = 0;
 		
 		public NetPlayer( byte id, string displayName, string skinName, Game window ) : base( id, window ) {
@@ -70,7 +69,7 @@ namespace ClassicalSharp {
 			if( bmp != null ) {
 				Window.Graphics.DeleteTexture( renderer.TextureId );
 				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
-				renderer.SetSkinType( Utils.GetSkinType( bmp ) );
+				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
 			}
 			tickCount++;

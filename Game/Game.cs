@@ -3,8 +3,8 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp.Commands;
-using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
@@ -33,7 +33,6 @@ namespace ClassicalSharp {
 		public int TerrainAtlasTexId = -1;
 		public TextureAtlas1D TerrainAtlas1D;
 		public int[] TerrainAtlas1DTexIds;
-		public int DefaultPlayerTextureId = -1;
 		public SkinType DefaultPlayerSkinType;
 		public int ChunkUpdates;
 		
@@ -46,7 +45,7 @@ namespace ClassicalSharp {
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos;
-		public PlayerModel ModelCache;
+		public IModel ModelCache;
 		internal string skinServer, chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
@@ -144,15 +143,11 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
-			ModelCache = new PlayerModel( Graphics );
+			ModelCache = new CreeperModel( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			LoadAtlas( terrainBmp );
-			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
-				DefaultPlayerSkinType = Utils.GetSkinType( bmp );
-				DefaultPlayerTextureId = Graphics.LoadTexture( bmp );
-			}
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
@@ -312,7 +307,6 @@ namespace ClassicalSharp {
 					NetPlayers[i].Despawn();
 				}
 			}
-			Graphics.DeleteTexture( DefaultPlayerTextureId );
 			LocalPlayer.Despawn();
 			Graphics.CheckResources();
 			AsyncDownloader.Dispose();

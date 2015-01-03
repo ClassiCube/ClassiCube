@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		float jumpVelocity = 0.42f;
-		PlayerRenderer renderer;
+		
 		
 		public float JumpHeight {
 			get { return jumpVelocity == 0 ? 0 : (float)GetMaxHeight( jumpVelocity ); }
@@ -329,7 +329,7 @@ namespace ClassicalSharp {
 				if( bmp != null ) {
 					Window.Graphics.DeleteTexture( renderer.TextureId );
 					renderer.TextureId = Window.Graphics.LoadTexture( bmp );
-					renderer.SetSkinType( Utils.GetSkinType( bmp ) );
+					SkinType = Utils.GetSkinType( bmp );
 					bmp.Dispose();
 				}
 			}

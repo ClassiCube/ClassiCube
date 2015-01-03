@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 		// === CPE support list ===
 		// TextHotKey       : unlikely
 		// ExtPlayerList    : yes (only version 1, not 2)
-		// ChangeModel      : no
+		// ChangeModel      : planned
 		// EnvWeatherType   : unlikely
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",

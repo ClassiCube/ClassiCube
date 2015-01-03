@@ -24,21 +24,6 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	public class ModelSet {
-		
-		public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
-		
-		public void Dispose() {
-			Hat.Dispose();
-			RightArm.Dispose();
-			LeftArm.Dispose();
-			RightLeg.Dispose();
-			LeftLeg.Dispose();
-			Torso.Dispose();
-			Head.Dispose();
-		}
-	}
-	
 	public enum SkinType {
 		Type64x32,
 		Type64x64,

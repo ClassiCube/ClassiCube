@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK;
+using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp {
 
@@ -26,10 +27,13 @@ namespace ClassicalSharp {
 		public Game Window;
 		public byte ID;
 		public string DisplayName, SkinName;
+		protected PlayerRenderer renderer;
+		public SkinType SkinType;
 		
 		public Player( byte id, Game window ) : base( window ) {
 			ID = id;
 			Window = window;
+			SkinType = Window.DefaultPlayerSkinType;
 		}
 		
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
