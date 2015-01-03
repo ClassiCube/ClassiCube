@@ -226,10 +226,14 @@ namespace ClassicalSharp {
 		}
 		
 		static void WriteString( byte[] buffer, ref int index, string value ) {
-			for( int i = index; i < index + 64; i++ ) {
-				buffer[i] = (byte)' ';
+			int count = Math.Min( value.Length, 64 );
+			for( int i = 0; i < count; i++ ) {
+				char c = value[i];
+				buffer[index + i] = (byte)( c >= '\u0080' ? '?' : c );
 			}
-			Encoding.ASCII.GetBytes( value, 0, value.Length, buffer, index );
+			for( int i = value.Length; i < 64; i++ ) {
+				buffer[index + i] = (byte)' ';
+			}
 			index += 64;
 		}
 		

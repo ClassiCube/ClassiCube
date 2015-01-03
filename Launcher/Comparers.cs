@@ -25,7 +25,8 @@ namespace Launcher {
 		public NameComparer( int column ) : base( column ) { }
 		
 		protected override int Compare( ListViewItem x, ListViewItem y ) {
-			int value = String.Compare( x.SubItems[col].Text, y.SubItems[col].Text, true );
+			StringComparison comparison = StringComparison.CurrentCultureIgnoreCase;
+			int value = String.Compare( x.SubItems[col].Text, y.SubItems[col].Text, comparison );
 			return Invert ? -value : value;
 		}
 	}

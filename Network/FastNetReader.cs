@@ -68,7 +68,16 @@ namespace ClassicalSharp {
 		
 		public string ReadString() {
 			byte[] data = ReadBytes( 64 );
-			return Encoding.ASCII.GetString( data ).TrimEnd( '\0', ' ' );
+			return GetAsciiString( data ).TrimEnd( '\0', ' ' );
+		}
+		
+		static string GetAsciiString( byte[] data ) {
+			char[] characters = new char[data.Length];
+			for( int i = 0; i < data.Length; i++ ) {
+				byte code = data[i];
+				characters[i] = code >= 0x80 ? '?' : (char)code;
+			}
+			return new String( characters );
 		}
 		
 		static string GetTextString( byte[] data ) {
