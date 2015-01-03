@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 		protected void DrawRotateX( float x, float y, float z, float angleX, ModelPart part ) {
 			graphics.PushMatrix();
 			graphics.Translate( x, y, z );
-			graphics.RotateX( angleX );
+			graphics.RotateX( angleX ); // x is ignored anyways.. probably should remove it from arguments.
 			graphics.Translate( -x, -y, -z );
 			part.Render();
 			graphics.PopMatrix();

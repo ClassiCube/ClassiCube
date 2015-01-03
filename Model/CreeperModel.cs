@@ -65,10 +65,10 @@ namespace ClassicalSharp.Model {
 			
 			DrawRotateX( 0, 1.125f, 0, -pitch, Set.Head );
 			Set.Torso.Render();
-			DrawRotateX( 0, 0.375f, -0.25f, leftLegXRot, Set.LeftLegFront );
-			DrawRotateX( 0, 0.375f, -0.25f, rightLegXRot, Set.RightLegFront );
-			DrawRotateX( 0, 0.375f, 0.25f, rightLegXRot, Set.LeftLegBack );
-			DrawRotateX( 0, 0.375f, 0.25f, leftLegXRot, Set.RightLegBack );
+			DrawRotateX( 0, 0.375f, -0.125f, leftLegXRot, Set.LeftLegFront );
+			DrawRotateX( 0, 0.375f, -0.125f, rightLegXRot, Set.RightLegFront );
+			DrawRotateX( 0, 0.375f, 0.125f, rightLegXRot, Set.LeftLegBack );
+			DrawRotateX( 0, 0.375f, 0.125f, leftLegXRot, Set.RightLegBack );
 			graphics.AlphaTest = true;
 		}
 		
