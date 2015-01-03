@@ -60,7 +60,7 @@ namespace ClassicalSharp.Model {
 		
 		private void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
-			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
+			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );
 			
 			DrawRotateX( 0, 1.125f, 0, -pitch, Set.Head );

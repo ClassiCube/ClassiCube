@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
-			ModelCache = new CreeperModel( this );
+			ModelCache = new PlayerModel( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
