@@ -14,10 +14,10 @@ namespace ClassicalSharp.Model {
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
-			Set.LeftLegFront = MakeLeg( 0, 16, -0.25f, 0, -0.375f, -0.125f );
-			Set.RightLegFront = MakeLeg( 0, 16, 0, 0.25f, -0.375f, -0.125f );
-			Set.LeftLegBack = MakeLeg( 0, 16, -0.25f, 0, 0.125f, 0.375f );
-			Set.RightLegBack = MakeLeg( 0, 16, 0, 0.25f, 0.125f, 0.375f );
+			Set.LeftLegFront = MakeLeg( -0.25f, 0, -0.375f, -0.125f );
+			Set.RightLegFront = MakeLeg( 0, 0.25f, -0.375f, -0.125f );
+			Set.LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
+			Set.RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
 			vertices = null;
 
 			DefaultSkinTextureId = graphics.LoadTexture( "creeper.png" );
@@ -31,8 +31,8 @@ namespace ClassicalSharp.Model {
 			return MakePart( 16, 16, 4, 12, 8, 4, 8, 12, -0.25f, 0.25f, 0.375f, 1.125f, -0.125f, 0.125f, false );
 		}
 		
-		ModelPart MakeLeg( int x, int y, float x1, float x2, float z1, float z2 ) {
-			return MakePart( x, y, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 0.375f, z1, z2, false );
+		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
+			return MakePart( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 0.375f, z1, z2, false );
 		}
 		
 		public override float NameYOffset {

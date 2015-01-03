@@ -54,7 +54,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override float NameYOffset {
-			get { return 1.7f; }
+			get { return 1.075f; }
 		}
 		
 		Vector3 pos;
