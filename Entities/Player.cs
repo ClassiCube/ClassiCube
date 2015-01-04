@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		public const float Width = 0.6f;
 		public const float EyeHeight = 1.625f;
 		public const float Height = 1.8f;
-		public const float Depth = 0.6f;
+		public const float Depth = 0.6f;		
 
 		public override Vector3 Size {
 			get { return new Vector3( Width, Height, Depth ); }
@@ -27,6 +27,7 @@ namespace ClassicalSharp {
 		public Game Window;
 		public byte ID;
 		public string DisplayName, SkinName;
+		public string ModelName = "humanoid";
 		protected PlayerRenderer renderer;
 		public SkinType SkinType;
 		

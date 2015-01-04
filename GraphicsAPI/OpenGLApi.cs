@@ -204,22 +204,22 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		
-		public override void DrawVertices( DrawMode mode, Vector3[] vertices ) {
+		public override void DrawVertices( DrawMode mode, Vector3[] vertices, int count ) {
 			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
 			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
 			// Feasible alternatives:
 			// - Use a dynamically updated VBO, and resize it (i.e. create a new bigger VBO) if required.
 			// - Immediate mode.
 			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < vertices.Length; i++ ) {
+			for( int i = 0; i < count; i++ ) {
 				GL.Vertex3( vertices[i] );
 			}
 			GL.End();
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
+		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < vertices.Length; i++ ) {
+			for( int i = 0; i < count; i++ ) {
 				VertexPos3fCol4b vertex = vertices[i];
 				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );
 				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
@@ -228,9 +228,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices ) {
+		public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < vertices.Length; i++ ) {
+			for( int i = 0; i < count; i++ ) {
 				VertexPos3fTex2f vertex = vertices[i];
 				GL.TexCoord2( vertex.U, vertex.V );
 				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
@@ -238,9 +238,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices ) {
+		public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < vertices.Length; i++ ) {
+			for( int i = 0; i < count; i++ ) {
 				VertexPos3fTex2fCol4b vertex = vertices[i];
 				GL.TexCoord2( vertex.U, vertex.V );
 				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );

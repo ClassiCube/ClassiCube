@@ -186,24 +186,24 @@ namespace ClassicalSharp.GraphicsAPI {
             set { device.RenderState.ZBufferWriteEnable = value; }
         }
 
-        public override void DrawVertices( DrawMode mode, OpenTK.Vector3[] vertices ) {
+        public override void DrawVertices( DrawMode mode, OpenTK.Vector3[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position;
-            device.DrawUserPrimitives( modeMappings[(int)mode], vertices.Length, vertices );
+            device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
         }
 
-        public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
+        public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
-            device.DrawUserPrimitives( modeMappings[(int)mode], vertices.Length, vertices );
+            device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
         }
 
-        public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices ) {
+        public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1;
-            device.DrawUserPrimitives( modeMappings[(int)mode], vertices.Length, vertices );
+            device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
         }
 
-        public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices ) {
+        public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse | VertexFormats.Texture1; // TODO: Texture0?
-            device.DrawUserPrimitives( modeMappings[(int)mode], vertices.Length, vertices );
+            device.DrawUserPrimitives( modeMappings[(int)mode], vcount, vertices );
         }
 
         FillMode[] fillModes = new FillMode[] { FillMode.Point, FillMode.WireFrame, FillMode.Solid };

@@ -65,7 +65,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override float NameYOffset {
-			get { return 1.075f; }
+			get { return 1.0125f; }
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
@@ -80,12 +80,6 @@ namespace ClassicalSharp.Model {
 			Set.Torso.Render();
 			DrawRotateX( 0, 0.3125f, 0.0625f, leftLegXRot, Set.LeftLegFront );
 			DrawRotateX( 0, 0.3125f, 0.0625f, rightLegXRot, Set.RightLegFront );
-			graphics.Texturing = false;
-			graphics.AlphaTest = false;
-			Vector3[] vertices = { new Vector3( 0, -2, 0 ), new Vector3( 0, 2, 0 ) };
-			graphics.DrawVertices( DrawMode.Lines, vertices );
-			graphics.AlphaTest = true;
-			graphics.Texturing = true;
 		}
 		
 		public override void Dispose() {

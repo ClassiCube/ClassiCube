@@ -327,7 +327,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void DrawSprite( int count ) {
-			int texId = BlockInfo.GetOptimTextureLoc( tile, 1 );
+			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
 			rec.U2 = count;
