@@ -28,25 +28,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeTorso() {
-			//return MakePart( 28, 8, 8, 16, 10, 4, 8, 16, -0.3125f, 0.3125f, 0.375f, 0.875f, -0.5f, 0.5f, false );
-			index = 0;
-			const float x1 = -0.3125f, x2 = 0.3125f, y1 = 0.375f, y2 = 0.875f, z1 = -0.5f, z2 = 0.5f;
-			
-			YPlane( 54, 16, 10, 16, x1, x2, z1, z2, y2, false ); // top
-			YPlane( 36, 16, 10, 16, x2, x1, z1, z2, y1, false ); // bottom
-			ZPlane( 36, 8, 10, 8, x2, x1, y1, y2, z1, false ); // front
-			ZPlane( 46, 8, 10, 8, x2, x1, y2, y1, z2, false ); // back
-			XPlane( 46, 16, 8, 16, y1, y2, z2, z1, x1, false ); // left
-			XPlane( 28, 16, 8, 16, y2, y1, z2, z1, x2, false ); // right
-			// rotate left and right 90 degrees
-			for( int i = index - 12; i < index; i++ ) {
-				VertexPos3fTex2fCol4b vertex = vertices[i];
-				float z = vertex.Z;
-				vertex.Z = vertex.Y;
-				vertex.Y = z;
-				vertices[i] = vertex;
-			}
-			return new ModelPart( vertices, 6 * 6, graphics );
+			return MakeRotatedPart( 28, 8, 8, 16, 10, 8, 10, 16, -0.3125f, 0.3125f, 0.375f, 0.875f, -0.5f, 0.5f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {

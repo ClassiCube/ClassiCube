@@ -122,6 +122,7 @@
     <Compile Include="Model\PigModel.cs" />
     <Compile Include="Model\PlayerModel.cs" />
     <Compile Include="Model\SkeletonModel.cs" />
+    <Compile Include="Model\SpiderModel.cs" />
     <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\FastNetReader.cs" />

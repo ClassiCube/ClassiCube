@@ -43,7 +43,9 @@ namespace ClassicalSharp.Model {
 				return new PigModel( window );
 			} else if( modelName == "skeleton" ) {
 				return new SkeletonModel( window );
-			} else if( modelName == "zombie" ) {
+			} else if( modelName == "spider" ) {
+				return new SpiderModel( window );
+			}else if( modelName == "zombie" ) {
 				return new ZombieModel( window );
 			}
 			return null;

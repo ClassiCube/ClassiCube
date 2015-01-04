@@ -16,8 +16,10 @@ namespace ClassicalSharp.Model {
 			Set.Head2 = MakeHead2(); // TODO: Find a more appropriate name.
 			Set.Head3 = MakeHead3();
 			Set.Torso = MakeTorso();
-			Set.LeftLegFront = MakeLeg( -0.1875f, 0f, -0.125f, -0.0625f );
-			Set.RightLegFront = MakeLeg( 0f, 0.1875f, 0.0625f, 0.125f );
+			Set.LeftLeg = MakeLeg( -0.1875f, 0f, -0.125f, -0.0625f );
+			Set.RightLeg = MakeLeg( 0f, 0.1875f, 0.0625f, 0.125f );
+			Set.LeftWing = MakeWing( -0.25f, -0.1875f );
+			Set.RightWing = MakeWing( 0.1875f, 0.25f );
 			vertices = null;
 
 			DefaultSkinTextureId = graphics.LoadTexture( "chicken.png" );
@@ -36,24 +38,11 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeTorso() {
-			index = 0;
-			const float x1 = -0.1875f, x2 = 0.1875f, y1 = 0.3125f, y2 = 0.6875f, z1 = -0.25f, z2 = 0.25f;
-			
-			YPlane( 18, 15, 6, 8, x1, x2, z1, z2, y2, false ); // top
-			YPlane( 6, 15, 6, 8, x2, x1, z1, z2, y1, false ); // bottom
-			ZPlane( 6, 9, 6, 6, x2, x1, y1, y2, z1, false ); // front
-			ZPlane( 12, 9, 6, 6, x2, x1, y2, y1, z2, false ); // back
-			XPlane( 12, 15, 6, 8, y1, y2, z2, z1, x1, false ); // left
-			XPlane( 0, 15, 6, 8, y2, y1, z2, z1, x2, false ); // right
-			// rotate left and right 90 degrees
-			for( int i = index - 12; i < index; i++ ) {
-				VertexPos3fTex2fCol4b vertex = vertices[i];
-				float z = vertex.Z;
-				vertex.Z = vertex.Y;
-				vertex.Y = z;
-				vertices[i] = vertex;
-			}
-			return new ModelPart( vertices, 6 * 6, graphics );
+			return MakeRotatedPart( 0, 9, 6, 8, 6, 6, 6, 8, -0.1875f, 0.1875f, 0.3125f, 0.6875f, -0.25f, 0.25f, false );
+		}
+		
+		ModelPart MakeWing( float x1, float x2 ) {
+			return MakePart( 24, 13, 6, 4, 1, 6, 1, 4, x1, x2, 0.4375f, 0.6875f, -0.1875f, 0.1875f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float legX1, float legX2 ) {
@@ -78,8 +67,10 @@ namespace ClassicalSharp.Model {
 			DrawRotateX( 0, 0.5625f, -0.1875f, -pitch, Set.Head2 );
 			DrawRotateX( 0, 0.5625f, -0.1875f, -pitch, Set.Head3 );
 			Set.Torso.Render();
-			DrawRotateX( 0, 0.3125f, 0.0625f, leftLegXRot, Set.LeftLegFront );
-			DrawRotateX( 0, 0.3125f, 0.0625f, rightLegXRot, Set.RightLegFront );
+			DrawRotateX( 0, 0.3125f, 0.0625f, leftLegXRot, Set.LeftLeg );
+			DrawRotateX( 0, 0.3125f, 0.0625f, rightLegXRot, Set.RightLeg );
+			DrawRotateZ( -0.1875f, 0.6875f, 0, -Math.Abs( leftArmXRot ), Set.LeftWing );
+			DrawRotateZ( 0.1875f, 0.6875f, 0, Math.Abs( rightArmXRot ), Set.RightWing );
 		}
 		
 		public override void Dispose() {
@@ -89,15 +80,17 @@ namespace ClassicalSharp.Model {
 		
 		class ModelSet {
 			
-			public ModelPart Head, Head2, Head3, Torso, LeftLegFront, RightLegFront;
+			public ModelPart Head, Head2, Head3, Torso, LeftLeg, RightLeg, LeftWing, RightWing;
 			
 			public void Dispose() {
-				RightLegFront.Dispose();
-				LeftLegFront.Dispose();
+				RightLeg.Dispose();
+				LeftLeg.Dispose();
 				Torso.Dispose();
 				Head.Dispose();
 				Head2.Dispose();
 				Head3.Dispose();
+				LeftWing.Dispose();
+				RightWing.Dispose();
 			}
 		}
 	}
