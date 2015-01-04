@@ -147,12 +147,11 @@ namespace ClassicalSharp {
 		// === CPE support list ===
 		// TextHotKey       : unlikely
 		// ExtPlayerList    : yes (only version 1, not 2)
-		// ChangeModel      : planned
 		// EnvWeatherType   : unlikely
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
-			"HackControl", "EnvMapAppearance", "ExtPlayerList",
+			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
 		};
 		
 		
@@ -635,6 +634,16 @@ namespace ClassicalSharp {
 						Window.RaiseBlockPermissionsChanged();
 					} break;
 					
+				case PacketId.CpeChangeModel:
+					{
+						byte playerId = reader.ReadUInt8();
+						string modelName = reader.ReadString().ToLowerInvariant();
+						Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+						if( player != null ) {
+							player.SetModel( modelName );
+						}
+					} break;
+					
 				case PacketId.CpeEnvSetMapApperance:
 					{
 						string url = reader.ReadString();
@@ -715,10 +724,9 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateLocation( byte playerId, LocationUpdate update, bool interpolate ) {
-			if( playerId == 0xFF ) {
-				Window.LocalPlayer.SetLocation( update, interpolate );
-			} else {
-				Window.NetPlayers[playerId].SetLocation( update, interpolate );
+			Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+			if( player != null ) {
+				player.SetLocation( update, interpolate );
 			}
 		}
 		#endregion

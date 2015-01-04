@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK;
+using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp {
@@ -27,7 +28,8 @@ namespace ClassicalSharp {
 		public Game Window;
 		public byte ID;
 		public string DisplayName, SkinName;
-		public string ModelName = "humanoid";
+		public string ModelName;
+		public IModel Model;
 		protected PlayerRenderer renderer;
 		public SkinType SkinType;
 		
@@ -35,6 +37,7 @@ namespace ClassicalSharp {
 			ID = id;
 			Window = window;
 			SkinType = Window.DefaultPlayerSkinType;
+			SetModel( "humanoid" );
 		}
 		
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
@@ -93,6 +96,11 @@ namespace ClassicalSharp {
 			leftArmZRot = -idleZRot;
 			rightArmXRot += idleXRot;
 			leftArmXRot -= idleXRot;
+		}
+		
+		public void SetModel( string modelName ) {
+			ModelName = modelName;
+			Model = Window.ModelCache.GetModel( ModelName );
 		}
 	}
 }

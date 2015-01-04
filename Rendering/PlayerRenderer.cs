@@ -37,14 +37,14 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Render( double deltaTime ) {
 			pos = Player.Position;
-			Window.ModelCache.RenderModel( Player, this );
+			Player.Model.RenderModel( Player, this );
 			DrawName();
 		}
 		
 		const float nameScale = 50f;
 		private void DrawName() {
 			Graphics.PushMatrix();
-			Graphics.Translate( pos.X, pos.Y + Window.ModelCache.NameYOffset, pos.Z );
+			Graphics.Translate( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z );
 			// Do this to always have names facing the player
 			float yaw = Window.LocalPlayer.YawDegrees;
 			Graphics.RotateY( 0f - yaw );

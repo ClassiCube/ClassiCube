@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos;
-		public IModel ModelCache;
+		public ModelCache ModelCache;
 		internal string skinServer, chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
-			ModelCache = new PlayerModel( this );
+			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
