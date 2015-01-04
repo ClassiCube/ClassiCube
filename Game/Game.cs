@@ -61,6 +61,7 @@ namespace ClassicalSharp {
 				if( !CanChangeHeldBlock )
 					throw new InvalidOperationException( "Server has forbidden changing held block." );
 				hotbarIndex = value;
+				RaiseHeldBlockChanged();
 			}
 		}
 		
@@ -70,6 +71,7 @@ namespace ClassicalSharp {
 				if( !CanChangeHeldBlock )
 					throw new InvalidOperationException( "Server has forbidden changing held block." );
 				BlocksHotbar[hotbarIndex] = value;
+				RaiseHeldBlockChanged();
 			}
 		}
 		

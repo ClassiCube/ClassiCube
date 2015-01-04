@@ -9,6 +9,7 @@ namespace ClassicalSharp {
 		public BlockHotbarWidget( Game window ) : base( window ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
+			window.HeldBlockChanged += HeldBlockChanged;
 		}
 		
 		Texture[] barTextures = new Texture[9];
@@ -46,19 +47,7 @@ namespace ClassicalSharp {
 			Height = blockSize;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				Block block = Window.BlocksHotbar[i];
-				int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
-				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
-				
-				int verSize = blockSize;
-				float height = Window.BlockInfo.BlockHeight( (byte)block );
-				int blockY = y;
-				if( height != 1 ) {
-					rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
-					verSize = (int)( blockSize * height );
-					blockY = y + blockSize - verSize;
-				}
-				barTextures[i] = new Texture( -1, x, blockY, blockSize, verSize, rec );
+				barTextures[i] = MakeTexture( x, y, Window.BlocksHotbar[i] );
 				x += blockSize;
 			}
 		}
@@ -81,6 +70,29 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			GraphicsApi.DeleteTexture( ref selectedBlock );
+			Window.HeldBlockChanged -= HeldBlockChanged;
+		}
+		
+		void HeldBlockChanged( object sender, EventArgs e ) {
+			int index = Window.HeldBlockIndex;
+			Block block = Window.HeldBlock;
+			int x = barTextures[index].X1;
+			barTextures[index] = MakeTexture( x, Y, block );
+		}
+		
+		Texture MakeTexture( int x, int y, Block block ) {
+			int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
+			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
+			
+			int verSize = blockSize;
+			float height = Window.BlockInfo.BlockHeight( (byte)block );
+			int blockY = y;
+			if( height != 1 ) {
+				rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
+				verSize = (int)( blockSize * height );
+				blockY = y + blockSize - verSize;
+			}
+			return new Texture( -1, x, blockY, blockSize, verSize, rec );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
@@ -94,7 +106,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				Texture tex = barTextures[i];
 				tex.X1 += deltaX;
-				tex.Y1 += deltaY;				
+				tex.Y1 += deltaY;
 				barTextures[i] = tex;
 			}
 		}

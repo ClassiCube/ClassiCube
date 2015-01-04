@@ -32,6 +32,8 @@ namespace ClassicalSharp {
 		
 		public event EventHandler OnNewMapLoaded;
 		
+		public event EventHandler HeldBlockChanged;
+		
 		/// <summary> Raised when the client's block permissions(can place or delete a block) change. </summary>
 		public event EventHandler BlockPermissionsChanged;
 		
@@ -42,6 +44,10 @@ namespace ClassicalSharp {
 		
 		internal void RaiseOnNewMap() {
 			RaiseEvent( OnNewMap );
+		}
+		
+		internal void RaiseHeldBlockChanged() {
+			RaiseEvent( HeldBlockChanged );
 		}
 		
 		internal void RaiseEntityAdded( byte id ) {

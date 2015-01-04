@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 		
 		DateTime lastClick = DateTime.MinValue;
 		void PickBlocks( bool cooldown, bool left, bool right ) {
-			if( SelectedPos == null || left == right || ScreenLockedInput ) return;
+			if( SelectedPos == null || left == right || ScreenLockedInput || HeldBlock == Block.Air ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
