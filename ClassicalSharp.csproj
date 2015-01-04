@@ -113,6 +113,7 @@
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilderTex2Col4.cs" />
+    <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />
     <Compile Include="Model\IModel.cs" />
     <Compile Include="Model\ModelPart.cs" />

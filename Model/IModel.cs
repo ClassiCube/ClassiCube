@@ -17,7 +17,30 @@ namespace ClassicalSharp.Model {
 		
 		public abstract float NameYOffset { get; }
 		
-		public abstract void RenderModel( Player player, PlayerRenderer renderer );
+		protected Vector3 pos;
+		protected float yaw, pitch;
+		protected float rightLegXRot, rightArmXRot, rightArmZRot;
+		protected float leftLegXRot, leftArmXRot, leftArmZRot;
+		public void RenderModel( Player player, PlayerRenderer renderer ) {
+			pos = player.Position;
+			yaw = player.YawDegrees;
+			pitch = player.PitchDegrees;
+			
+			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
+			leftArmXRot = player.leftArmXRot * 180 / (float)Math.PI;
+			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
+			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
+			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
+			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
+			
+			graphics.PushMatrix();
+			graphics.Translate( pos.X, pos.Y, pos.Z );
+			graphics.RotateY( -yaw );
+			DrawPlayerModel( player, renderer );
+			graphics.PopMatrix();
+		}
+		
+		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );
 		
 		public abstract void Dispose();
 		
@@ -36,7 +59,7 @@ namespace ClassicalSharp.Model {
 			ZPlane( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2, _64x64 ); // back
 			XPlane( x + sidesW + bodyW, y + endsH, sidesW, sidesH, z1, z2, y1, y2, x1, _64x64 ); // left
 			XPlane( x, y + endsH, sidesW, sidesH, z2, z1, y1, y2, x2, _64x64 ); // right
-			return new ModelPart( vertices, graphics );
+			return new ModelPart( vertices, 6 * 6, graphics );
 		}
 		
 		protected static TextureRectangle SkinTexCoords( int x, int y, int width, int height, float skinWidth, float skinHeight ) {

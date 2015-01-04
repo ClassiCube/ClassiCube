@@ -35,7 +35,7 @@ namespace ClassicalSharp.Model {
 			YPlane( 54, 16, 10, 16, x1, x2, z1, z2, y2, false ); // top
 			YPlane( 36, 16, 10, 16, x2, x1, z1, z2, y1, false ); // bottom
 			ZPlane( 36, 8, 10, 8, x2, x1, y1, y2, z1, false ); // front
-			ZPlane( 46, 8, 10, 8, x1, x2, y1, y2, z2, false ); // back
+			ZPlane( 46, 8, 10, 8, x2, x1, y2, y1, z2, false ); // back
 			XPlane( 46, 16, 8, 16, y1, y2, z2, z1, x1, false ); // left
 			XPlane( 28, 16, 8, 16, y2, y1, z2, z1, x2, false ); // right
 			// rotate left and right 90 degrees
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Model {
 				vertex.Y = z;
 				vertices[i] = vertex;
 			}
-			return new ModelPart( vertices, graphics );
+			return new ModelPart( vertices, 6 * 6, graphics );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
@@ -57,26 +57,7 @@ namespace ClassicalSharp.Model {
 			get { return 1.075f; }
 		}
 		
-		Vector3 pos;
-		float yaw, pitch;
-		float leftLegXRot, rightLegXRot;
-		
-		public override void RenderModel( Player player, PlayerRenderer renderer ) {
-			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
-			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			
-			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
-			DrawPlayerModel( player, renderer );
-			graphics.PopMatrix();
-		}
-		
-		private void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );

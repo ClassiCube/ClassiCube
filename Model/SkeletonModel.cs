@@ -51,29 +51,7 @@ namespace ClassicalSharp.Model {
 			get { return 2.075f; }
 		}
 		
-		Vector3 pos;
-		float yaw, pitch;
-		float rightLegXRot, rightArmZRot;
-		float leftLegXRot, leftArmZRot;
-		
-		public override void RenderModel( Player player, PlayerRenderer renderer ) {
-			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
-			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
-			
-			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
-			DrawPlayerModel( player, renderer );
-			graphics.PopMatrix();
-		}
-		
-		private void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
 			int texId = DefaultSkinTextureId;

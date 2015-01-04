@@ -9,10 +9,10 @@ namespace ClassicalSharp {
 		public int Count;
 		public IGraphicsApi Graphics;
 		
-		public ModelPart( VertexPos3fTex2fCol4b[] vertices, IGraphicsApi graphics ) {
-			Count = vertices.Length;
+		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, IGraphicsApi graphics ) {
+			Count = count;
 			Graphics = graphics;
-			VbId = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
+			VbId = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b, count );
 		}
 		
 		public void Render() {

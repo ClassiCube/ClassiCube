@@ -77,40 +77,15 @@ namespace ClassicalSharp.Model {
 			get { return 2.1375f; }
 		}
 		
-		Vector3 pos;
-		float yaw, pitch;
 		ModelSet model;
-		float rightLegXRot, rightArmXRot, rightArmZRot;
-		float leftLegXRot, leftArmXRot, leftArmZRot;
-		
-		public override void RenderModel( Player player, PlayerRenderer renderer ) {
-			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
-			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			leftArmXRot = player.leftArmXRot * 180 / (float)Math.PI;
-			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
-			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
-			
+		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+			graphics.Texturing = true;
+			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
+			graphics.Bind2DTexture( texId );
 			model = Set64x32;
 			SkinType skinType = player.SkinType;
 			if( skinType == SkinType.Type64x64 ) model = Set64x64;
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
-			
-			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
-			DrawPlayerModel( player, renderer );
-			graphics.PopMatrix();
-		}
-		
-		private void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
-			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
-			graphics.Bind2DTexture( texId );
 			
 			DrawRotateX( 0, 1.5f, 0, -pitch, model.Head );
 			model.Torso.Render();
