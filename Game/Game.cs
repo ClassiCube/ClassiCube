@@ -10,7 +10,6 @@ using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using OpenTK;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -328,7 +327,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnResize( EventArgs e ) {
 			base.OnResize( e );
-			GL.Viewport( ClientRectangle );
+			Graphics.OnWindowResize( Width, Height );
 			UpdateProjection();
 			if( activeScreen != null ) {
 				activeScreen.OnResize( width, height, Width, Height );

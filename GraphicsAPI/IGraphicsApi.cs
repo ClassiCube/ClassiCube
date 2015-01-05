@@ -196,6 +196,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public virtual void PrintApiSpecificInfo() {
 		}
 		
+		public abstract void OnWindowResize( int newWidth, int newHeight );
+		
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
 			VertexPos3fCol4b[] vertices = {
 				new VertexPos3fCol4b( x + width, y, 0, col ),

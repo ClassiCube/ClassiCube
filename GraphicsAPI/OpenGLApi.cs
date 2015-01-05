@@ -618,6 +618,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
+		public override void OnWindowResize( int newWidth, int newHeight ) {
+			GL.Viewport( 0, 0, newWidth, newHeight );
+		}
 
 		public Color4 GetCol() {
 			float[] col = new float[4];
