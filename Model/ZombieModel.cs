@@ -56,12 +56,12 @@ namespace ClassicalSharp.Model {
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotateX( 0, 1.5f, 0, -pitch, Set.Head );
+			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, Set.Head );
 			Set.Torso.Render();
-			DrawRotateX( 0, 0.75f, 0, leftLegXRot, Set.LeftLeg );
-			DrawRotateX( 0, 0.75f, 0, rightLegXRot, Set.RightLeg );
-			DrawRotateXZ( 0, 1.375f, 0, 90f, leftArmZRot, Set.LeftArm );
-			DrawRotateXZ( 0, 1.375f, 0, 90f, rightArmZRot, Set.RightArm );
+			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, Set.LeftLeg );
+			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
+			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, Set.LeftArm );
+			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );
 			graphics.AlphaTest = true;
 		}
 		

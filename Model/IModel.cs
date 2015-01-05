@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Model {
 
-	public abstract class IModel {		
+	public abstract class IModel {
 		
 		protected Game window;
 		protected IGraphicsApi graphics;
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Model {
 		protected int index = 0;
 		
 		protected ModelPart MakePart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
-		                   float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
+		                             float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
 			index = 0;
 			YPlane( x + sidesW, y, endsW, endsH, x2, x1, z2, z1, y2, _64x64 ); // top
 			YPlane( x + sidesW + bodyW, y, endsW, endsH, x2, x1, z1, z2, y1, _64x64 ); // bottom
@@ -63,12 +63,12 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected ModelPart MakeRotatedPart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
-		                   float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
+		                                    float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
 			index = 0;
 			YPlane( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, z1, z2, y2, _64x64 ); // top
 			YPlane( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, z1, z2, y1, _64x64 ); // bottom
 			ZPlane( x + sidesW, y, endsW, endsH, x2, x1, y1, y2, z1, _64x64 ); // front
-			ZPlane( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2, _64x64 ); // back		
+			ZPlane( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2, _64x64 ); // back
 			XPlane( x, y + endsH, sidesW, sidesH, y2, y1, z2, z1, x2, _64x64 ); // left
 			XPlane( x + sidesW + bodyW, y + endsH, sidesW, sidesH, y1, y2, z2, z1, x1, _64x64 ); // right
 			// rotate left and right 90 degrees
@@ -87,7 +87,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void XPlane( int texX, int texY, int texWidth, int texHeight,
-		                   float z1, float z2, float y1, float y2, float x, bool _64x64 ) {
+		                      float z1, float z2, float y1, float y2, float x, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V1, col );
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void YPlane( int texX, int texY, int texWidth, int texHeight,
-		                   float x1, float x2, float z1, float z2, float y, bool _64x64 ) {
+		                      float x1, float x2, float z1, float z2, float y, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, rec.U1, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, rec.U2, rec.V1, col );
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void ZPlane( int texX, int texY, int texWidth, int texHeight,
-		                   float x1, float x2, float y1, float y2, float z, bool _64x64 ) {
+		                      float x1, float x2, float y1, float y2, float z, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V2, col );
@@ -122,29 +122,18 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
 		}
 		
-		protected void DrawRotateX( float x, float y, float z, float angleX, ModelPart part ) {
+		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
 			graphics.PushMatrix();
 			graphics.Translate( x, y, z );
-			graphics.RotateX( angleX ); // x is ignored anyways.. probably should remove it from arguments.
-			graphics.Translate( -x, -y, -z );
-			part.Render();
-			graphics.PopMatrix();
-		}
-		
-		protected void DrawRotateZ( float x, float y, float z, float angleX, ModelPart part ) {
-			graphics.PushMatrix();
-			graphics.Translate( x, y, z );
-			graphics.RotateZ( angleX ); // z is ignored anyways.. probably should remove it from arguments.
-			graphics.Translate( -x, -y, -z );
-			part.Render();
-			graphics.PopMatrix();
-		}
-		
-		protected void DrawRotateXZ( float x, float y, float z, float angleX, float angleZ, ModelPart part ) {
-			graphics.PushMatrix();
-			graphics.Translate( x, y, z );
-			graphics.RotateZ( angleZ );
-			graphics.RotateX( angleX );
+			if( angleZ != 0 ) {
+				graphics.RotateZ( angleZ );
+			}
+			if( angleY != 0 ) {
+				graphics.RotateY( angleY );
+			}
+			if( angleX != 0 ) {
+				graphics.RotateX( angleX );
+			}
 			graphics.Translate( -x, -y, -z );
 			part.Render();
 			graphics.PopMatrix();

@@ -63,14 +63,14 @@ namespace ClassicalSharp.Model {
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			
-			DrawRotateX( 0, 0.5625f, -0.1875f, -pitch, Set.Head );
-			DrawRotateX( 0, 0.5625f, -0.1875f, -pitch, Set.Head2 );
-			DrawRotateX( 0, 0.5625f, -0.1875f, -pitch, Set.Head3 );
+			DrawRotate( 0, 0.5625f, -0.1875f, -pitch, 0, 0, Set.Head );
+			DrawRotate( 0, 0.5625f, -0.1875f, -pitch, 0, 0, Set.Head2 );
+			DrawRotate( 0, 0.5625f, -0.1875f, -pitch, 0, 0, Set.Head3 );
 			Set.Torso.Render();
-			DrawRotateX( 0, 0.3125f, 0.0625f, leftLegXRot, Set.LeftLeg );
-			DrawRotateX( 0, 0.3125f, 0.0625f, rightLegXRot, Set.RightLeg );
-			DrawRotateZ( -0.1875f, 0.6875f, 0, -Math.Abs( leftArmXRot ), Set.LeftWing );
-			DrawRotateZ( 0.1875f, 0.6875f, 0, Math.Abs( rightArmXRot ), Set.RightWing );
+			DrawRotate( 0, 0.3125f, 0.0625f, leftLegXRot, 0, 0, Set.LeftLeg );
+			DrawRotate( 0, 0.3125f, 0.0625f, rightLegXRot, 0, 0, Set.RightLeg );
+			DrawRotate( -0.1875f, 0.6875f, 0, 0, 0, -Math.Abs( leftArmXRot ), Set.LeftWing );
+			DrawRotate( 0.1875f, 0.6875f, 0, 0, 0, Math.Abs( rightArmXRot ), Set.RightWing );
 		}
 		
 		public override void Dispose() {

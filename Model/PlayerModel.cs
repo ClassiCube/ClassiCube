@@ -87,14 +87,14 @@ namespace ClassicalSharp.Model {
 			if( skinType == SkinType.Type64x64 ) model = Set64x64;
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
-			DrawRotateX( 0, 1.5f, 0, -pitch, model.Head );
+			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, model.Head );
 			model.Torso.Render();
-			DrawRotateX( 0, 0.75f, 0, leftLegXRot, model.LeftLeg );
-			DrawRotateX( 0, 0.75f, 0, rightLegXRot, model.RightLeg );
-			DrawRotateXZ( 0, 1.5f, 0, leftArmXRot, leftArmZRot, model.LeftArm );
-			DrawRotateXZ( 0, 1.5f, 0, rightArmXRot, rightArmZRot, model.RightArm );
+			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, model.LeftLeg );
+			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, model.RightLeg );
+			DrawRotate( 0, 1.5f, 0, leftArmXRot, 0, leftArmZRot, model.LeftArm );
+			DrawRotate( 0, 1.5f, 0, rightArmXRot, 0, rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
-			DrawRotateX( 0, 1.4375f, 0, -pitch, model.Hat );
+			DrawRotate( 0, 1.4375f, 0, -pitch, 0, 0, model.Hat );
 		}
 		
 		public override void Dispose() {

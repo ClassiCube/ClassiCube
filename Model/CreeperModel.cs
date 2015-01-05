@@ -44,12 +44,12 @@ namespace ClassicalSharp.Model {
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotateX( 0, 1.125f, 0, -pitch, Set.Head );
+			DrawRotate( 0, 1.125f, 0, -pitch, 0, 0, Set.Head );
 			Set.Torso.Render();
-			DrawRotateX( 0, 0.375f, -0.125f, leftLegXRot, Set.LeftLegFront );
-			DrawRotateX( 0, 0.375f, -0.125f, rightLegXRot, Set.RightLegFront );
-			DrawRotateX( 0, 0.375f, 0.125f, rightLegXRot, Set.LeftLegBack );
-			DrawRotateX( 0, 0.375f, 0.125f, leftLegXRot, Set.RightLegBack );
+			DrawRotate( 0, 0.375f, -0.125f, leftLegXRot, 0, 0, Set.LeftLegFront );
+			DrawRotate( 0, 0.375f, -0.125f, rightLegXRot, 0, 0, Set.RightLegFront );
+			DrawRotate( 0, 0.375f, 0.125f, rightLegXRot, 0, 0, Set.LeftLegBack );
+			DrawRotate( 0, 0.375f, 0.125f, leftLegXRot, 0, 0, Set.RightLegBack );
 			graphics.AlphaTest = true;
 		}
 		

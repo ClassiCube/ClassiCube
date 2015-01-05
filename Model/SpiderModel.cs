@@ -48,11 +48,17 @@ namespace ClassicalSharp.Model {
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			
-			DrawRotateX( 0, 0.5f, -0.1875f, -pitch, Set.Head );
+			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Set.Head );
 			Set.Link.Render();
 			Set.End.Render();
-			DrawRotateZ( -0.1875f, 0.5f, 0, 22.5f, Set.LeftLeg );
-			DrawRotateZ( 0.1875f, 0.5f, 0, -22.5f, Set.RightLeg ); // TODO: 8 rotated legs
+			DrawRotate( -0.1875f, 0.5f, 0, 0, 45f, 22.5f, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, 22.5f, 22.5f, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -22.5f, 22.5f, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -45f, 22.5f, Set.LeftLeg );		
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -45f, -22.5f, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -22.5f, -22.5f, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, 22.5f, -22.5f, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, leftLegXRot, 45f, -22.5f, Set.RightLeg );
 		}
 		
 		public override void Dispose() {
