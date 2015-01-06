@@ -143,7 +143,6 @@ namespace ClassicalSharp {
 		}
 		
 		protected virtual void Load() {
-			Graphics = new OpenGLApi();
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();

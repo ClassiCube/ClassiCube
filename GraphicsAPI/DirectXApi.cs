@@ -1,10 +1,4 @@
-﻿//#define INCLUDE_DIRECTX
-// necessary dll references: (Managed DirectX)
-// Microsoft.DirectX
-// Microsoft.DirectX.Direct3D
-// Microsoft.DirectX.Direct3DX
-#if INCLUDE_DIRECTX
-using System;
+﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.DirectX;
@@ -203,7 +197,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
         public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse | VertexFormats.Texture1; // TODO: Texture0?
-            device.DrawUserPrimitives( modeMappings[(int)mode], vcount, vertices );
+            device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
         }
 
         FillMode[] fillModes = new FillMode[] { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
@@ -436,6 +430,10 @@ namespace ClassicalSharp.GraphicsAPI {
         }
 
         #endregion
+        
+		public override void OnWindowResize( int newWidth, int newHeight ) {
+			throw new NotImplementedException();
+		}
 
 
         public override void PrintApiSpecificInfo() {
@@ -453,4 +451,3 @@ namespace ClassicalSharp.GraphicsAPI {
         }
     }
 }
-#endif

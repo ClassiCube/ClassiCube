@@ -1,14 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
-using System.Net;
-using ClassicalSharp.Commands;
 using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Model;
-using ClassicalSharp.Network;
-using ClassicalSharp.Particles;
-using ClassicalSharp.Renderers;
-using ClassicalSharp.Selections;
 using OpenTK;
 using OpenTK.Input;
 
@@ -34,6 +26,7 @@ namespace ClassicalSharp {
 		}
 
 		void WindowLoad( object sender, EventArgs e ) {
+			Graphics = new OpenGLApi();
 			Load();
 		}
 		
