@@ -69,6 +69,7 @@ namespace ClassicalSharp {
 			Exception ex = (Exception)e.ExceptionObject;
 			MessageBox.Show(
 				"Oh dear, ClassicalSharp crashed. Crash cause: " +  Environment.NewLine +
+				Environment.NewLine +
 				ex.GetType().FullName + ": " + ex.Message + Environment.NewLine +
 				ex.StackTrace + Environment.NewLine +
 				Environment.NewLine +

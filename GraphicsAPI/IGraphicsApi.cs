@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -18,6 +19,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool Texturing { set; }
 		
 		public virtual int LoadTexture( string path ) {
+			if( !File.Exists( path ) ) {
+				throw new FileNotFoundException( path + " not found" );
+			}
 			using( Bitmap bmp = new Bitmap( path ) ) {
 				return LoadTexture( bmp );
 			}
