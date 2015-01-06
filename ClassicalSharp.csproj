@@ -97,10 +97,12 @@
     <Compile Include="Entities\Particle.cs" />
     <Compile Include="Entities\ParticleManager.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Game\Game.Api.cs" />
     <Compile Include="Game\Game.Chat.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
+    <Compile Include="Game\GlGame.cs" />
     <Compile Include="GraphicsAPI\DirectXApi.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />

@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public partial class Game : GameWindow {
+	public abstract partial class Game {
 		
 		public string Status1, Status2, Status3,
 		BottomRight1, BottomRight2, BottomRight3,

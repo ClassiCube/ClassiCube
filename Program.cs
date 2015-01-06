@@ -38,7 +38,7 @@ namespace ClassicalSharp {
             }
 
             string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
-			using( Game game = new Game() ) {
+			using( Game game = new GlGame() ) {
 				game.Username = args[0];
 				game.Mppass = args[1];
 				game.IPAddress = ip;

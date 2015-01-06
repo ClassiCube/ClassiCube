@@ -5,38 +5,24 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	public partial class Game : GameWindow {
+	public abstract partial class Game {
 		
-		public bool IsKeyDown( Key key ) {
-			return Keyboard[key];
-		}
+		public abstract bool IsKeyDown( Key key );
 		
 		public bool IsKeyDown( KeyMapping mapping ) {
 			Key key = Keys[mapping];
-			return Keyboard[key];
+			return IsKeyDown( key );
 		}
 		
-		public bool IsMousePressed( MouseButton button ) {
-			return Mouse[button];
-		}
-		
-		void RegisterInputHandlers() {
-			Keyboard.KeyDown += KeyDownHandler;
-			Keyboard.KeyUp += KeyUpHandler;
-			KeyPress += KeyPressHandler;
-			Mouse.WheelChanged += MouseWheelChanged;
-			Mouse.Move += MouseMove;
-			Mouse.ButtonDown += MouseButtonDown;
-			Mouse.ButtonUp += MouseButtonUp;
-		}
+		public abstract bool IsMousePressed( MouseButton button );
 
-		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
+		protected void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
 				
 			}
 		}
 
-		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
+		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
 				bool left = e.Button == MouseButton.Left;
 				bool right = e.Button == MouseButton.Right;
@@ -46,24 +32,24 @@ namespace ClassicalSharp {
 			}
 		}
 
-		void MouseMove( object sender, MouseMoveEventArgs e ) {
+		protected void MouseMove( object sender, MouseMoveEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseMove( e.X, e.Y ) ) {
 				
 			}
 		}
 
-		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+		protected void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			Camera.MouseZoom( e );
 		}
 
-		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
+		protected void KeyPressHandler( object sender, KeyPressEventArgs e ) {
 			char key = e.KeyChar;
 			if( activeScreen == null || !activeScreen.HandlesKeyPress( key ) ) {
 				
 			}
 		}
 		
-		void KeyUpHandler( object sender, KeyboardKeyEventArgs e ) {
+		protected void KeyUpHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
 			if( activeScreen == null || !activeScreen.HandlesKeyUp( key ) ) {
 				
@@ -72,7 +58,7 @@ namespace ClassicalSharp {
 
 		bool screenshotRequested = false;
 		static int[] viewDistances = { 16, 32, 64, 128, 256, 512 };
-		void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
+		protected void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
 			if( key == Keys[KeyMapping.Screenshot] ) {
 				screenshotRequested = true;

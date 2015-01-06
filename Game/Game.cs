@@ -15,7 +15,7 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 
 	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
-	public partial class Game : GameWindow {
+	public abstract partial class Game : IDisposable {
 		
 		public IGraphicsApi Graphics;
 		public Map Map;
@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			Console.ResetColor();
 		}
 		
-		protected override void OnLoad( EventArgs e ) {
+		protected virtual void Load() {
 			Graphics = new OpenGLApi();
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
@@ -203,10 +203,10 @@ namespace ClassicalSharp {
 		const double imageCheckPeriod = 30.0;
 		double ticksAccumulator = 0, imageCheckAccumulator = 0;
 		
-		protected override void OnRenderFrame( FrameEventArgs e ) {
-			accumulator += e.Time;
-			imageCheckAccumulator += e.Time;
-			ticksAccumulator += e.Time;
+		protected void OnRenderFrame( double elapsed ) {
+			accumulator += elapsed;
+			imageCheckAccumulator += elapsed;
+			ticksAccumulator += elapsed;
 			if( !Focused && !( activeScreen is PauseScreen ) && !Map.IsNotLoaded ) {
 				SetNewScreen( new PauseScreen( this ) );
 			}
@@ -215,7 +215,6 @@ namespace ClassicalSharp {
 				imageCheckAccumulator -= imageCheckPeriod;
 				AsyncDownloader.PurgeOldEntries( 10 );
 			}
-			base.OnRenderFrame( e );
 			
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
@@ -247,13 +246,13 @@ namespace ClassicalSharp {
 			if( visible ) {
 				//EnvRenderer.EnableAmbientLighting();
 				float t = (float)( ticksAccumulator / ticksPeriod );
-				RenderPlayers( e.Time, t );
-				ParticleManager.Render( e.Time, t );
+				RenderPlayers( elapsed, t );
+				ParticleManager.Render( elapsed, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
-				Picking.Render( e.Time );
-				EnvRenderer.Render( e.Time );
-				MapRenderer.Render( e.Time );
-				SelectionManager.Render( e.Time );
+				Picking.Render( elapsed );
+				EnvRenderer.Render( elapsed );
+				MapRenderer.Render( elapsed );
+				SelectionManager.Render( elapsed );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				PickBlocks( true, left, right );
@@ -263,9 +262,9 @@ namespace ClassicalSharp {
 			}
 			
 			Graphics.Mode2D( Width, Height );
-			fpsScreen.Render( e.Time );
+			fpsScreen.Render( elapsed );
 			if( activeScreen != null ) {
-				activeScreen.Render( e.Time );
+				activeScreen.Render( elapsed );
 			}
 			Graphics.Mode3D();
 			
@@ -291,7 +290,7 @@ namespace ClassicalSharp {
 			//Graphics.AlphaTest = false;
 		}
 		
-		public override void Dispose() {
+		public virtual void Dispose() {
 			MapRenderer.Dispose();
 			MapEnvRenderer.Dispose();
 			EnvRenderer.Dispose();
@@ -314,7 +313,6 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
-			base.Dispose();
 		}
 		
 		public void UpdateProjection() {
@@ -325,8 +323,7 @@ namespace ClassicalSharp {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
-		protected override void OnResize( EventArgs e ) {
-			base.OnResize( e );
+		protected virtual void OnResize() {
 			Graphics.OnWindowResize( Width, Height );
 			UpdateProjection();
 			if( activeScreen != null ) {

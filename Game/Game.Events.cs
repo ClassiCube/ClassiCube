@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public partial class Game {
+	public abstract partial class Game {
 		
 		/// <summary> Raised when a player is spawned in the current world. </summary>
 		public event EventHandler<IdEventArgs> EntityAdded;
