@@ -157,17 +157,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
 		
-		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
-		public static void TakeScreenshot( Size size, string output, ImageFormat format ) {
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height, BmpPixelFormat.Format32bppRgb ) ) { // ignoring alpha componen
-				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-					GL.ReadPixels( 0, 0, size.Width, size.Height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
-				}
-				bmp.RotateFlip( RotateFlipType.RotateNoneFlipY );
-				bmp.Save( output, format );
-			}
-		}
-		
 		public override void Clear() {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}
@@ -367,7 +356,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.DeleteLists( id, 1 );
 				return;
 			}
-			GL.DeleteBuffers( 1, ref id );
+			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
 		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
