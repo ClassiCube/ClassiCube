@@ -30,6 +30,8 @@ namespace ClassicalSharp.GraphicsAPI {
             viewStack = new MatrixStack( 32, m => device.SetTransform( TransformType.View, m ) );
             projStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Projection, m ) );
             texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture1, m ) ); // TODO: Texture0?
+            buffers = new VertexBuffer[vertexBufferSize];
+            textures = new D3D.Texture[texBufferSize];
         }
 
         public override bool AlphaTest {

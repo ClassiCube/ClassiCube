@@ -22,14 +22,25 @@ namespace ClassicalSharp {
 		Stopwatch sw;
 		
 		public DxGame() {
+			CheckState( "dxgame constructor" );
 		}
 
-		void WindowPaint(object sender, PaintEventArgs e) {
-			device.BeginScene();
-			double elapsed = sw.Elapsed.TotalSeconds;
-			sw.Reset();
-			sw.Start();
-			OnRenderFrame( elapsed );
+		void WindowPaint( object sender, PaintEventArgs e ) {
+			CheckState( "paint" );
+			try {
+				device.BeginScene();
+				double elapsed = sw.Elapsed.TotalSeconds;
+				sw.Reset();
+				sw.Start();
+				OnRenderFrame( elapsed );
+			} catch( Exception ex ) {
+				string text = ex.GetType().FullName + ": " + ex.Message + 
+					Environment.NewLine + ex.StackTrace;
+				Debug.WriteLine( text );
+				System.Diagnostics.Debugger.Break();
+				throw;
+			}
+			Debug.WriteLine( "end paint" );
 		}
 		
 		protected override void SwapBuffers() {
@@ -37,22 +48,33 @@ namespace ClassicalSharp {
 			device.Present();
 		}
 
-		void WindowResize(object sender, EventArgs e) {
+		void WindowResize( object sender, EventArgs e ) {
 			OnResize();
 		}
 
 		void WindowLoad( object sender, EventArgs e ) {
-			window.Resize += WindowResize;
-			window.Paint += WindowPaint;
-			MakeKeyHandlerHack();
-			MakeKeyMap();
-			InitGraphics();
-			Graphics = new DirectXApi( device );
-			Load();
-			sw = System.Diagnostics.Stopwatch.StartNew();
+			try {
+				CheckState( "window load" );
+				window.Resize += WindowResize;
+				window.Paint += WindowPaint;
+				MakeKeyHandlerHack();
+				MakeKeyMap();
+				InitGraphics();
+				Graphics = new DirectXApi( device );
+				Load();
+				sw = System.Diagnostics.Stopwatch.StartNew();
+				sw.Start();
+			} catch( Exception ex ) {
+				string text = ex.GetType().FullName + ": " + ex.Message + 
+					Environment.NewLine + ex.StackTrace;
+				Debug.WriteLine( text );
+				System.Diagnostics.Debugger.Break();
+				throw;
+			}
 		}
 		
 		public void InitGraphics() {
+			CheckState( "pre init graphics" );
 			PresentParameters presentParams = new PresentParameters();
 			presentParams.Windowed = true;
 			presentParams.SwapEffect = SwapEffect.Discard;
@@ -63,6 +85,7 @@ namespace ClassicalSharp {
 			device.RenderState.ColorVertex = false;
 			device.RenderState.Lighting = false;
 			device.RenderState.CullMode = Cull.None;
+			CheckState( "post init graphics" );
 		}
 		
 		class DxForm : Form {
@@ -70,9 +93,12 @@ namespace ClassicalSharp {
 			public DxForm( DxGame game ) : base() {
 				//SetStyle( ControlStyles.UserPaint, true );
 				//SetStyle( ControlStyles.
-				//SetStyle( ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.Opaque, true );
+				SetStyle( ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque, true );
+				Width = 640;
+				Height = 480;
 				game.window = this;
 				Load += game.WindowLoad;
+				game.CheckState( "form load" );
 			}
 		}
 		
@@ -226,7 +252,7 @@ namespace ClassicalSharp {
 			return Key.Unknown;
 		}
 		
-		public override void Dispose() {			
+		public override void Dispose() {
 			base.Dispose();
 			device.Dispose();
 			window.Dispose();
@@ -235,6 +261,15 @@ namespace ClassicalSharp {
 		public override void Run() {
 			Application.EnableVisualStyles();
 			Application.Run( new DxForm( this ) );
+		}
+		
+		void CheckState( string section ) {
+			Debug.WriteLine( "=== " + section + " ===" );
+			Debug.WriteLine( "device is null: " + ( device == null ) );
+			Debug.WriteLine( "form is null: " + ( window == null ) );
+			if( window != null ) {
+				Debug.WriteLine( "form handle created: " + window.IsHandleCreated );
+			}
 		}
 		
 		Dictionary<Key, Keys> keyToKeys = new Dictionary<Key, Keys>();
