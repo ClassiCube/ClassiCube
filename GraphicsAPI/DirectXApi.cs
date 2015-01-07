@@ -433,7 +433,12 @@ namespace ClassicalSharp.GraphicsAPI {
 
         #endregion
         
+        bool first = true;
 		public override void OnWindowResize( int newWidth, int newHeight ) {
+        	if( first ) {
+        		first = false;
+        		return;
+        	}
 			throw new NotImplementedException();
 		}
 

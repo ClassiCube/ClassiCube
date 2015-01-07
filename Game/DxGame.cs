@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		}
 
 		void WindowPaint( object sender, PaintEventArgs e ) {
-			CheckState( "paint" );
+			//CheckState( "paint" );
 			try {
 				device.BeginScene();
 				double elapsed = sw.Elapsed.TotalSeconds;
@@ -40,7 +40,8 @@ namespace ClassicalSharp {
 				System.Diagnostics.Debugger.Break();
 				throw;
 			}
-			Debug.WriteLine( "end paint" );
+			//Debug.WriteLine( "end paint" );
+			window.Invalidate();
 		}
 		
 		protected override void SwapBuffers() {
@@ -62,6 +63,8 @@ namespace ClassicalSharp {
 				InitGraphics();
 				Graphics = new DirectXApi( device );
 				Load();
+				OnResize();
+				Application.Idle += delegate { Debug.WriteLine( "IDLE" ); };
 				sw = System.Diagnostics.Stopwatch.StartNew();
 				sw.Start();
 			} catch( Exception ex ) {
