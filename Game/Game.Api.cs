@@ -1,20 +1,9 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
-using System.Net;
-using ClassicalSharp.Commands;
-using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Model;
-using ClassicalSharp.Network;
-using ClassicalSharp.Particles;
-using ClassicalSharp.Renderers;
-using ClassicalSharp.Selections;
 using OpenTK;
-using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public abstract partial class Game {
 
 		public abstract int Width { get; }

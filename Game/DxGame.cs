@@ -89,8 +89,7 @@ namespace ClassicalSharp {
 				//SetStyle( ControlStyles.UserPaint, true );
 				//SetStyle( ControlStyles.
 				SetStyle( ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque, true );
-				Width = 640;
-				Height = 480;
+				ClientSize = new Size( 640, 480 );
 				game.window = this;
 				Load += game.WindowLoad;
 			}
@@ -109,11 +108,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override int Width {
-			get { return window.Width; }
+			get { return window.ClientSize.Width; }
 		}
 		
 		public override int Height {
-			get { return window.Height; }
+			get { return window.ClientSize.Height; }
 		}
 		
 		public override string Title {
@@ -185,7 +184,7 @@ namespace ClassicalSharp {
 			MethodInfo method = typeof( KeyboardKeyEventArgs ).GetMethod( "set_Key", BindingFlags.Instance | BindingFlags.NonPublic );
 			Type type = typeof( Action<Key> );
 			keyArgs = new KeyboardKeyEventArgs();
-			SetKey = (Action<Key>)Delegate.CreateDelegate(type, keyArgs, method);
+			SetKey = (Action<Key>)Delegate.CreateDelegate( type, keyArgs, method );
 		}
 
 		void WindowKeyUp( object sender, KeyEventArgs e ) {
@@ -216,7 +215,7 @@ namespace ClassicalSharp {
 			MouseButton tkButton = GetMouseButton( e.Button );
 			if( tkButton == MouseButton.LastButton ) return;
 			MouseButtonEventArgs args = new MouseButtonEventArgs( e.X, e.Y, tkButton, true );
-			MouseButtonUp( sender, args );
+			MouseButtonDown( sender, args );
 		}
 
 		void WindowMouseUp( object sender, Forms.MouseEventArgs e ) {

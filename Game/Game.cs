@@ -14,7 +14,6 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public abstract partial class Game : IDisposable {
 		
 		public IGraphicsApi Graphics;
