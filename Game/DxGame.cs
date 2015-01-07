@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 				MakeKeyHandlerHack();
 				MakeKeyMap();
 				InitGraphics();
-				Graphics = new DirectXApi( device );
+				Graphics = new DirectXApi( device, this );
 				Load();
 				OnResize();
 				Application.Idle += delegate { Debug.WriteLine( "IDLE" ); };
@@ -85,9 +85,10 @@ namespace ClassicalSharp {
 			presentParams.EnableAutoDepthStencil = true;
 			presentParams.AutoDepthStencilFormat = DepthFormat.D16; // D32 doesn't work
 			device = new Device( 0, DeviceType.Hardware, window, CreateFlags.HardwareVertexProcessing, presentParams );
-			device.RenderState.ColorVertex = false;
+			//device.RenderState.ColorVertex = false;
 			device.RenderState.Lighting = false;
 			device.RenderState.CullMode = Cull.None;
+			device.RenderState.FillMode = FillMode.Solid;
 			CheckState( "post init graphics" );
 		}
 		

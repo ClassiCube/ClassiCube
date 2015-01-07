@@ -216,7 +216,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
 			LoadIdentityMatrix();
-			//GL.Ortho( 0, width, height, 0, 0, 1 );
 			DepthTest = false;
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
 			LoadMatrix( ref matrix );

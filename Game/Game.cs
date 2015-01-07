@@ -239,9 +239,9 @@ namespace ClassicalSharp {
 			Matrix4 modelView = Camera.GetView();
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
-			Culling.CalcFrustumEquations( ref Projection, ref modelView );
+			Culling.CalcFrustumEquations( ref Projection, ref View );
 			
-			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
+			/*bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
 				//EnvRenderer.EnableAmbientLighting();
 				float t = (float)( ticksAccumulator / ticksPeriod );
@@ -258,7 +258,7 @@ namespace ClassicalSharp {
 				//EnvRenderer.DisableAmbientLighting();
 			} else {
 				SelectedPos = null;
-			}
+			}*/
 			
 			Graphics.Mode2D( Width, Height );
 			fpsScreen.Render( elapsed );
@@ -266,6 +266,18 @@ namespace ClassicalSharp {
 				activeScreen.Render( elapsed );
 			}
 			Graphics.Mode3D();
+			VertexPos3fCol4b[] vertices = {
+				new VertexPos3fCol4b( -200, 0, -200, FastColour.Red ),
+				new VertexPos3fCol4b( 200, 0, -200, FastColour.Green ),
+				new VertexPos3fCol4b( 200, 0, 200, FastColour.Yellow ),
+				
+				new VertexPos3fCol4b( 200, 0, 200, FastColour.Yellow ),
+				new VertexPos3fCol4b( -200, 0, 200, FastColour.Blue ),
+				new VertexPos3fCol4b( -200, 0, -200, FastColour.Red ),
+			};
+			//Vector3[] vertices = { new Vector3( -500, 0, -500 ), new Vector3( 500, 0, -500 ),
+			//	new Vector3( 500, 0, 500 ), new Vector3( -500, 0, 500 ) };
+			Graphics.DrawVertices( DrawMode.Triangles, vertices );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {
@@ -279,7 +291,7 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;			
+			//Graphics.AlphaTest = true;
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
 					NetPlayers[i].Render( deltaTime, t );
