@@ -167,6 +167,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			MultiplyMatrix( ref matrix );
 		}
 		
+		public virtual void LoadTextureTranslate( float x, float y, float z ) {
+			Matrix4 matrix = Matrix4.CreateTranslation( x, y, z );
+			LoadMatrix( ref matrix );
+		}
+		
 		public virtual void RotateX( float degrees ) {
 			Matrix4 matrix = Matrix4.CreateRotationX( degrees * 0.01745329251f ); // PI / 180
 			MultiplyMatrix( ref matrix );
@@ -218,6 +223,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			LoadIdentityMatrix();
 			DepthTest = false;
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
+			matrix.M33 = -1;
+			matrix.M43 = 0;
 			LoadMatrix( ref matrix );
 			SetMatrixMode( MatrixType.Modelview );
 			PushMatrix();

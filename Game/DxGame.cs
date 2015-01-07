@@ -20,13 +20,8 @@ namespace ClassicalSharp {
 		DxForm window;
 		Device device;
 		Stopwatch sw;
-		
-		public DxGame() {
-			CheckState( "dxgame constructor" );
-		}
 
 		void WindowPaint( object sender, PaintEventArgs e ) {
-			//CheckState( "paint" );
 			try {
 				device.BeginScene();
 				double elapsed = sw.Elapsed.TotalSeconds;
@@ -40,7 +35,6 @@ namespace ClassicalSharp {
 				System.Diagnostics.Debugger.Break();
 				throw;
 			}
-			//Debug.WriteLine( "end paint" );
 			window.Invalidate();
 		}
 		
@@ -55,7 +49,6 @@ namespace ClassicalSharp {
 
 		void WindowLoad( object sender, EventArgs e ) {
 			try {
-				CheckState( "window load" );
 				window.Resize += WindowResize;
 				window.Paint += WindowPaint;
 				MakeKeyHandlerHack();
@@ -77,7 +70,6 @@ namespace ClassicalSharp {
 		}
 		
 		public void InitGraphics() {
-			CheckState( "pre init graphics" );
 			PresentParameters presentParams = new PresentParameters();
 			presentParams.Windowed = true;
 			presentParams.SwapEffect = SwapEffect.Discard;
@@ -89,7 +81,6 @@ namespace ClassicalSharp {
 			device.RenderState.Lighting = false;
 			device.RenderState.CullMode = Cull.None;
 			device.RenderState.FillMode = FillMode.Solid;
-			CheckState( "post init graphics" );
 		}
 		
 		class DxForm : Form {
@@ -102,7 +93,6 @@ namespace ClassicalSharp {
 				Height = 480;
 				game.window = this;
 				Load += game.WindowLoad;
-				game.CheckState( "form load" );
 			}
 		}
 		
@@ -265,15 +255,6 @@ namespace ClassicalSharp {
 		public override void Run() {
 			Application.EnableVisualStyles();
 			Application.Run( new DxForm( this ) );
-		}
-		
-		void CheckState( string section ) {
-			Debug.WriteLine( "=== " + section + " ===" );
-			Debug.WriteLine( "device is null: " + ( device == null ) );
-			Debug.WriteLine( "form is null: " + ( window == null ) );
-			if( window != null ) {
-				Debug.WriteLine( "form handle created: " + window.IsHandleCreated );
-			}
 		}
 		
 		Dictionary<Key, Keys> keyToKeys = new Dictionary<Key, Keys>();

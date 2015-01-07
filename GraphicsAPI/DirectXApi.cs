@@ -49,7 +49,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			caps = device.DeviceCaps;
 			viewStack = new MatrixStack( 32, m => device.SetTransform( TransformType.View, m ) );
 			projStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Projection, m ) );
-			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture1, m ) ); // TODO: Texture0?
+			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture0, m ) ); // TODO: Texture0?
 			buffers = new VertexBuffer[vertexBufferSize];
 			textures = new D3D.Texture[texBufferSize];
 		}
@@ -373,10 +373,23 @@ namespace ClassicalSharp.GraphicsAPI {
 			Matrix dxMatrix = *(Matrix*)&transposed;
 			curStack.SetTop( ref dxMatrix );
 		}
+		
+		public override void LoadTextureTranslate( float x, float y, float z ) {
+			//device.TextureState[0].TextureTransform = TextureTransform.Count3 | TextureTransform.Projected;
+			device.TextureState[0].TextureTransform = TextureTransform.Count2;
+			Matrix matrix = Matrix.Identity;
+			matrix.M31 = x;
+			matrix.M32 = y;
+			matrix.M33 = z;
+			curStack.SetTop( ref matrix );
+		}
 
 		public override void LoadIdentityMatrix() {
 			Matrix identity = Matrix.Identity;
 			curStack.SetTop( ref identity );
+			if( curStack == texStack ) {
+				device.TextureState[0].TextureTransform = TextureTransform.Disable;
+			}
 		}
 
 		public override void PushMatrix() {

@@ -266,18 +266,6 @@ namespace ClassicalSharp {
 				activeScreen.Render( elapsed );
 			}
 			Graphics.Mode3D();
-			VertexPos3fCol4b[] vertices = {
-				new VertexPos3fCol4b( -200, 0, -200, FastColour.Red ),
-				new VertexPos3fCol4b( 200, 0, -200, FastColour.Green ),
-				new VertexPos3fCol4b( 200, 0, 200, FastColour.Yellow ),
-				
-				new VertexPos3fCol4b( 200, 0, 200, FastColour.Yellow ),
-				new VertexPos3fCol4b( -200, 0, 200, FastColour.Blue ),
-				new VertexPos3fCol4b( -200, 0, -200, FastColour.Red ),
-			};
-			//Vector3[] vertices = { new Vector3( -500, 0, -500 ), new Vector3( 500, 0, -500 ),
-			//	new Vector3( 500, 0, 500 ), new Vector3( -500, 0, 500 ) };
-			Graphics.DrawVertices( DrawMode.Triangles, vertices );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {
