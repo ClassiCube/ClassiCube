@@ -241,7 +241,7 @@ namespace ClassicalSharp {
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref View );
 			
-			/*bool visible = activeScreen == null || !activeScreen.BlocksWorld;
+			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
 				//EnvRenderer.EnableAmbientLighting();
 				float t = (float)( ticksAccumulator / ticksPeriod );
@@ -258,7 +258,7 @@ namespace ClassicalSharp {
 				//EnvRenderer.DisableAmbientLighting();
 			} else {
 				SelectedPos = null;
-			}*/
+			}
 			
 			Graphics.Mode2D( Width, Height );
 			fpsScreen.Render( elapsed );

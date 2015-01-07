@@ -247,8 +247,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
-			return 0;
-			
 			VertexBuffer buffer = CreateVb( vertices, count, format );
 
 			// Find first free slot
@@ -269,13 +267,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe VertexBuffer CreateVb<T>( T[] vertices, int count, VertexFormat format ) {
 			int sizeInBytes = GetSizeInBytes( count, format );
 			VertexFormats d3dFormat = formatMapping[(int)format];
-
 			VertexBuffer buffer = new VertexBuffer( device, sizeInBytes, Usage.None, d3dFormat, Pool.Managed );
+			
 			GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
 			IntPtr source = Marshal.UnsafeAddrOfPinnedArrayElement( vertices, 0 );
-			IntPtr dest = vbData.InternalData;
-			// TODO: check memcpy actually works and doesn't explode.
+			IntPtr dest = vbData.InternalData;		
 			memcpy( source, dest, sizeInBytes );
 			buffer.Unlock();
 			handle.Free();
@@ -285,19 +282,22 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int count ) {
 			byte* src = (byte*)sourcePtr;
 			byte* dst = (byte*)destPtr;
+			for( int i = 0; i < count; i++ ) {
+				dst[i] = src[i];
+			}
 
-			while( count >= 4 ) {
-				*( (int*)dst ) = *( (int*)src );
+			/*while( count >= 4 ) {
+			 *( (int*)dst ) = *( (int*)src );
 				dst += 4;
 				src += 4;
 				count -= 4;
 			}
 			// Handle non-aligned last 0-3 bytes.
 			for( int i = 0; i < count; i++ ) {
-				*dst = *src;
+			 *dst = *src;
 				dst++;
 				src++;
-			}
+			}*/
 		}
 
 		public override void DeleteVb( int id ) {
@@ -310,46 +310,44 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
-			return;
 			VertexBuffer buffer = buffers[id];
-			device.SetStreamSource( 0, buffer, 0 );
+			device.SetStreamSource( 0, buffer, 0, sizeof( float ) * 3 );
 			device.VertexFormat = VertexFormats.Position;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, GetNumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
-			return;
 			VertexBuffer buffer = buffers[id];
-			device.SetStreamSource( 0, buffer, 0 );
+			device.SetStreamSource( 0, buffer, 0, VertexPos3fTex2f.Size );
 			device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, GetNumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			return;
 			VertexBuffer buffer = buffers[id];
-			device.SetStreamSource( 0, buffer, 0 );
+			device.SetStreamSource( 0, buffer, 0, VertexPos3fCol4b.Size );
 			device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, GetNumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			return;
 			VertexBuffer buffer = buffers[id];
-			device.SetStreamSource( 0, buffer, 0 );
+			device.SetStreamSource( 0, buffer, 0, VertexPos3fTex2fCol4b.Size );
 			device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1 | VertexFormats.Diffuse;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, GetNumPrimitives( verticesCount, mode ) );
 		}
 
+		int batchStride;
 		public override void BeginVbBatch( VertexFormat format ) {
 			VertexFormats d3dFormat = formatMapping[(int)format];
 			device.VertexFormat = d3dFormat;
+			batchStride = strideSizes[(int)format];
 		}
 
 		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
 			VertexBuffer buffer = buffers[id];
-			device.SetStreamSource( 0, buffer, 0 );
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.SetStreamSource( 0, buffer, 0, batchStride );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, GetNumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void EndVbBatch() {
