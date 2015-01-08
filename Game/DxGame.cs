@@ -73,11 +73,11 @@ namespace ClassicalSharp {
 			PresentParameters presentParams = new PresentParameters();
 			presentParams.Windowed = true;
 			presentParams.SwapEffect = SwapEffect.Discard;
-			presentParams.PresentationInterval = PresentInterval.Default;
+			presentParams.PresentationInterval = PresentInterval.Immediate;
 			presentParams.EnableAutoDepthStencil = true;
 			presentParams.AutoDepthStencilFormat = DepthFormat.D16; // D32 doesn't work
 			device = new Device( 0, DeviceType.Hardware, window, CreateFlags.HardwareVertexProcessing, presentParams );
-			//device.RenderState.ColorVertex = false;
+			device.RenderState.ColorVertex = false;
 			device.RenderState.Lighting = false;
 			device.RenderState.CullMode = Cull.None;
 			device.RenderState.FillMode = FillMode.Solid;

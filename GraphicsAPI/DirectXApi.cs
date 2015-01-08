@@ -272,32 +272,64 @@ namespace ClassicalSharp.GraphicsAPI {
 			GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
 			IntPtr source = Marshal.UnsafeAddrOfPinnedArrayElement( vertices, 0 );
-			IntPtr dest = vbData.InternalData;		
-			memcpy( source, dest, sizeInBytes );
+			IntPtr dest = vbData.InternalData;
+			if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
+				memcpyPos3fTex2fCol4b( source, dest, sizeInBytes );
+			} else if( format == VertexFormat.VertexPos3fCol4b ) {
+				memcpyPos3fCol4b( source, dest, sizeInBytes );
+			} else {
+				memcpy( source, dest, sizeInBytes );
+			}
 			buffer.Unlock();
 			handle.Free();
 			return buffer;
 		}
-
-		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int count ) {
-			byte* src = (byte*)sourcePtr;
-			byte* dst = (byte*)destPtr;
-			for( int i = 0; i < count; i++ ) {
-				dst[i] = src[i];
+		
+		unsafe void memcpyPos3fCol4b( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {
+			uint* src = (uint*)sourcePtr;
+			uint* dst = (uint*)destPtr;
+			while( bytes >= 16 ) { // TODO: Not sure if this is right.
+				*dst++ = *src++; // x
+				*dst++ = *src++; // y
+				*dst++ = *src++; // z
+				uint col = *src++; // R G B A --> B G R A
+				uint red = col & 0xFF;
+				uint green = col & 0xFF00;
+				uint blue = ( col & 0xFF0000 ) >> 16;
+				uint alpha = col & 0xFF000000;
+				col = alpha | ( red << 16 ) | green | blue;
+				*dst++ = col;
+				bytes -= 16;
 			}
-
-			/*while( count >= 4 ) {
-			 *( (int*)dst ) = *( (int*)src );
-				dst += 4;
-				src += 4;
-				count -= 4;
+		}
+		
+		unsafe void memcpyPos3fTex2fCol4b( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {
+			uint* src = (uint*)sourcePtr;
+			uint* dst = (uint*)destPtr;
+			while( bytes >= 24 ) {
+				*dst++ = *src++; // x
+				*dst++ = *src++; // y
+				*dst++ = *src++; // z
+				uint col = *src++; // R G B A --> B G R A
+				uint red = col & 0xFF;
+				uint green = col & 0xFF00;
+				uint blue = ( col & 0xFF0000 ) >> 16;
+				uint alpha = col & 0xFF000000;
+				col = alpha | ( red << 16 ) | green | blue;
+				*dst++ = col;
+				*dst++ = *src++; // u
+				*dst++ = *src++; // v
+				bytes -= 24;
 			}
-			// Handle non-aligned last 0-3 bytes.
-			for( int i = 0; i < count; i++ ) {
-			 *dst = *src;
-				dst++;
-				src++;
-			}*/
+		}
+
+		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {
+			uint* src = (uint*)sourcePtr;
+			uint* dst = (uint*)destPtr;
+			while( bytes >= 4 ) {
+				*dst++ = *src++;
+				bytes -= 4;
+			}
 		}
 
 		public override void DeleteVb( int id ) {
