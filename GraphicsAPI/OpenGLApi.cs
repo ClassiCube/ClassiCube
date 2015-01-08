@@ -506,7 +506,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		MatrixMode lastMode = 0;
 		MatrixMode[] matrixModes = new MatrixMode[] {
-			MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture,
+			MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture, MatrixMode.Modelview,
 		};
 		public override void SetMatrixMode( MatrixType mode ) {
 			MatrixMode glMode = matrixModes[(int)mode];

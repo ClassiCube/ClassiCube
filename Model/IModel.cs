@@ -33,11 +33,13 @@ namespace ClassicalSharp.Model {
 			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
 			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
 			
+			graphics.SetMatrixMode( MatrixType.World );
 			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
 			graphics.RotateY( -yaw );
+			graphics.Translate( pos.X, pos.Y, pos.Z );		
 			DrawPlayerModel( player, renderer );
 			graphics.PopMatrix();
+			graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
 		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );

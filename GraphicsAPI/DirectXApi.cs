@@ -17,7 +17,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		VertexBuffer[] buffers;
 		const int texBufferSize = 512;
 		const int vertexBufferSize = 2048;
-		MatrixStack viewStack, projStack, texStack;
+		MatrixStack viewStack, projStack, texStack, worldStack;
 		MatrixStack curStack;
 		PrimitiveType[] modeMappings = new PrimitiveType[] {
 			PrimitiveType.TriangleList, PrimitiveType.LineList,
@@ -47,9 +47,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			this.device = device;
 			this.game = game;
 			caps = device.DeviceCaps;
-			viewStack = new MatrixStack( 32, m => device.SetTransform( TransformType.View, m ) );
+			viewStack = new MatrixStack( 4, m => device.SetTransform( TransformType.View, m ) );
 			projStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Projection, m ) );
-			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture0, m ) ); // TODO: Texture0?
+			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture0, m ) );
+			worldStack = new MatrixStack( 32, m => device.SetTransform( TransformType.World, m ) );
 			buffers = new VertexBuffer[vertexBufferSize];
 			textures = new D3D.Texture[texBufferSize];
 		}
@@ -397,6 +398,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				curStack = projStack;
 			} else if( mode == MatrixType.Texture ) {
 				curStack = texStack;
+			} else if( mode == MatrixType.World ) {
+				curStack = worldStack;
 			}
 		}
 

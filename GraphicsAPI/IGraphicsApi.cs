@@ -318,5 +318,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		Projection = 0,
 		Modelview = 1,
 		Texture = 2,
+		World = 3,
 	}
 }
