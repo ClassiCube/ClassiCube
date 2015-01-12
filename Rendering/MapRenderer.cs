@@ -240,8 +240,8 @@ namespace ClassicalSharp {
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			builder.BeginRender();
-			Graphics.AlphaTest = true;
-			Graphics.Texturing = true;
+			Graphics.AlphaTest = false;
+			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
 			
 			// First fill depth buffer
@@ -252,6 +252,7 @@ namespace ClassicalSharp {
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
+			Graphics.Texturing = true;
 			Graphics.ColourMask( true, true, true, true );
 			for( int batch = _1Dcount; batch < total1DCount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch - _1Dcount] );
