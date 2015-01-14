@@ -111,6 +111,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Fog( FogParameter.FogStart, value );
 		}
 		
+		public override bool FaceCulling {
+			set { ToggleCap( EnableCap.CullFace, value ); }
+		}
+		
 		
 		#if TRACK_RESOURCES
 		Dictionary<int, string> textures = new Dictionary<int, string>();

@@ -53,6 +53,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void SetFogMode( Fog fogMode );
 		
 		public abstract void SetFogStart( float value );
+		
+		public abstract bool FaceCulling { set; }
 
 		
 		/// <summary> Sets the alpha test function that is used when alpha testing is enabled. </summary>

@@ -228,12 +228,14 @@ namespace ClassicalSharp {
 			builder.BeginRender();
 			Graphics.Texturing = true;
 			Graphics.AlphaTest = true;
+			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderBatch( batch );
 			}
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
+			Graphics.FaceCulling = false;
 			builder.EndRender();
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
@@ -243,6 +245,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
+			Graphics.FaceCulling = true;
 			
 			// First fill depth buffer
 			Graphics.DepthTestFunc( DepthFunc.LessEqual );
@@ -263,6 +266,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
+			Graphics.FaceCulling = false;
 			builder.EndRender();
 		}
 

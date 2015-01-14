@@ -185,13 +185,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
-			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
+			
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
 		}
 
 		protected override void DrawBottomFace( int count ) {
@@ -209,13 +209,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
-			
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
+			
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 		}
 
 		protected override void DrawBackFace( int count ) {
@@ -236,13 +236,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
+			
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
 		}
 
 		protected override void DrawFrontFace( int count ) {
@@ -263,13 +263,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
+			
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
 		}
 
 		protected override void DrawLeftFace( int count ) {
@@ -290,13 +290,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
-			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
+			
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
 		}
 
 		protected override void DrawRightFace( int count ) {
@@ -317,13 +317,13 @@ namespace ClassicalSharp {
 			}
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
 			
-			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
 			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
+			info.vertices[info.index++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
 		}
 		
 		protected override void DrawSprite( int count ) {
