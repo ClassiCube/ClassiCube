@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 			
 			public bool Visible = true;
 			
-			public ChunkDrawInfo[] DrawInfo;
+			public ChunkDrawInfo DrawInfo;
 			
 			public ChunkInfo( int x, int y, int z ) {
 				Location = new Point3S( x, y, z );
@@ -44,7 +44,6 @@ namespace ClassicalSharp {
 		public IGraphicsApi Graphics;
 		
 		int _1Dcount = 1;
-		int total1DCount = 1;
 		ChunkMeshBuilder builder;
 		
 		int width, height, length;
@@ -57,7 +56,6 @@ namespace ClassicalSharp {
 		public MapRenderer( Game window ) {
 			Window = window;
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
-			total1DCount = _1Dcount * 2;
 			builder = new ChunkMeshBuilderTex2Col4( window );
 			UsesLighting = builder.UsesLighting;
 			Graphics = window.Graphics;
@@ -92,7 +90,6 @@ namespace ClassicalSharp {
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			_1Dcount = Window.TerrainAtlas1DTexIds.Length;
-			total1DCount = _1Dcount * 2;
 			bool fullResetRequired = elementsPerBitmap != Window.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
 				Refresh();
@@ -127,16 +124,20 @@ namespace ClassicalSharp {
 			if( chunks == null ) return;
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				ChunkDrawInfo[] drawInfoArray = info.DrawInfo;
-				if( drawInfoArray == null ) continue;
-				
-				for( int j = 0; j < drawInfoArray.Length; j++ ) {
-					ChunkDrawInfo drawInfo = drawInfoArray[j];
-					if( drawInfo.VerticesCount > 0 && drawInfo.VboID != -1 ) {
-						Graphics.DeleteVb( drawInfo.VboID );
-					}
-				}
+				DeleteChunk( chunks[i] );
 			}
+		}
+		
+		void DeleteChunk( ChunkInfo info ) {
+			ChunkDrawInfo drawInfo = info.DrawInfo;
+			if( drawInfo == null ) return;
+			
+			for( int i = 0; i < drawInfo.SolidParts.Length; i++ ) {
+				Graphics.DeleteVb( drawInfo.SpriteParts[i].VboID );
+				Graphics.DeleteVb( drawInfo.TranslucentParts[i].VboID );
+				Graphics.DeleteVb( drawInfo.SolidParts[i].VboID );
+			}
+			info.DrawInfo = null;
 		}
 		
 		void CreateChunkCache() {
@@ -203,18 +204,7 @@ namespace ClassicalSharp {
 				int locCz = loc.Z >> 4;
 				if( locCx == cx && locCy == cy && locCz == cz ) break;
 			}
-			ChunkDrawInfo[] drawInfoArray = info.DrawInfo;
-			if( drawInfoArray == null ) return;
-			
-			for( int i = 0; i < drawInfoArray.Length; i++ ) {
-				ChunkDrawInfo drawInfo = drawInfoArray[i];
-				if( drawInfo.VerticesCount > 0 && drawInfo.VboID != -1 ) {
-					Graphics.DeleteVb( drawInfo.VboID );
-				}
-				drawInfo.VboID = -1;
-				drawInfoArray[i] = drawInfo;
-			}
-			info.DrawInfo = null;
+			DeleteChunk( info );
 		}
 		
 		public void Render( double deltaTime ) {
@@ -231,11 +221,15 @@ namespace ClassicalSharp {
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderBatch( batch );
+				RenderSolidBatch( batch );
+			}		
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSpriteBatch( batch );
 			}
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
-			Graphics.FaceCulling = false;
 			builder.EndRender();
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
@@ -250,16 +244,16 @@ namespace ClassicalSharp {
 			// First fill depth buffer
 			Graphics.DepthTestFunc( DepthFunc.LessEqual );
 			Graphics.ColourMask( false, false, false, false );
-			for( int batch = _1Dcount; batch < total1DCount; batch++ ) {
-				RenderBatchNoAdd( batch );
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				RenderTranslucentBatchNoAdd( batch );
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
 			Graphics.Texturing = true;
 			Graphics.ColourMask( true, true, true, true );
-			for( int batch = _1Dcount; batch < total1DCount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch - _1Dcount] );
-				RenderBatch( batch );
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderTranslucentBatch( batch );
 			}
 			Graphics.DepthTestFunc( DepthFunc.Less );
 			
@@ -270,7 +264,7 @@ namespace ClassicalSharp {
 			builder.EndRender();
 		}
 
-		int[] distances;	
+		int[] distances;
 		void UpdateSortOrder() {
 			Player p = Window.LocalPlayer;
 			Vector3I newChunkPos = Vector3I.Floor( p.Position );
@@ -289,11 +283,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void UpdateChunks() {				
+		void UpdateChunks() {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
 			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
+				ChunkInfo info = chunks[i];				
 				Point3S loc = info.Location;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
@@ -305,7 +299,7 @@ namespace ClassicalSharp {
 						chunksUpdatedThisFrame++;
 					}
 				}
-					
+				
 				if( !inRange ) {
 					info.Visible = false;
 				} else {
@@ -314,12 +308,26 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void RenderBatch( int batch ) {
+		// TODO: there's probably a better way of doing this.
+		void RenderSolidBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkDrawInfo drawInfo = info.DrawInfo[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
+				if( drawInfo.VerticesCount == 0 ) continue;
+				
+				builder.Render( drawInfo );
+				Window.Vertices += drawInfo.VerticesCount;
+			}
+		}
+		
+		void RenderSpriteBatch( int batch ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.DrawInfo == null || !info.Visible ) continue;
+
+				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
 				if( drawInfo.VerticesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );
@@ -327,12 +335,25 @@ namespace ClassicalSharp {
 			}
 		}
 
-		void RenderBatchNoAdd( int batch ) {
+		void RenderTranslucentBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkDrawInfo drawInfo = info.DrawInfo[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				if( drawInfo.VerticesCount == 0 ) continue;
+				
+				builder.Render( drawInfo );
+				Window.Vertices += drawInfo.VerticesCount;
+			}
+		}
+		
+		void RenderTranslucentBatchNoAdd( int batch ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.DrawInfo == null || !info.Visible ) continue;
+
+				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
 				if( drawInfo.VerticesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );

@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public ChunkDrawInfo[] GetDrawInfo( int x, int y, int z ) {		
+		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {		
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
@@ -358,7 +358,7 @@ namespace ClassicalSharp {
 		
 		public abstract void BeginRender();
 		
-		public abstract void Render( ChunkDrawInfo drawInfo );
+		public abstract void Render( ChunkPartInfo drawInfo );
 		
 		public abstract void EndRender();
 		
@@ -375,7 +375,7 @@ namespace ClassicalSharp {
 			maxZ = length - 1;
 		}
 		
-		protected abstract ChunkDrawInfo[] GetChunkInfo( int x, int y, int z );
+		protected abstract ChunkDrawInfo GetChunkInfo( int x, int y, int z );
 
 		protected abstract void DrawTopFace( int count );
 
@@ -392,12 +392,25 @@ namespace ClassicalSharp {
 		protected abstract void DrawSprite( int count );
 	}
 	
-	public struct ChunkDrawInfo {
+	public class ChunkDrawInfo {
+		
+		public ChunkPartInfo[] SolidParts;
+		public ChunkPartInfo[] TranslucentParts;
+		public ChunkPartInfo[] SpriteParts;
+		
+		public ChunkDrawInfo( int partsCount ) {
+			SolidParts = new ChunkPartInfo[partsCount];
+			TranslucentParts = new ChunkPartInfo[partsCount];
+			SpriteParts = new ChunkPartInfo[partsCount];
+		}
+	}
+	
+	public struct ChunkPartInfo {
 		
 		public int VboID;
 		public int VerticesCount;
 		
-		public ChunkDrawInfo( int vbo, int vertices ) {
+		public ChunkPartInfo( int vbo, int vertices ) {
 			VboID = vbo;
 			VerticesCount = vertices;
 		}
