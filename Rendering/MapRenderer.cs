@@ -237,7 +237,6 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
-			Graphics.FaceCulling = true;
 			
 			// First fill depth buffer
 			Graphics.DepthTestFunc( DepthFunc.LessEqual );
@@ -258,7 +257,6 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
-			Graphics.FaceCulling = false;
 			builder.EndRender();
 		}
 
