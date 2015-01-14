@@ -181,30 +181,28 @@ namespace ClassicalSharp {
 		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
 			if( UsesLighting ) {
 				if( newLightCy == oldLightCy ) {
-					ResetChunk( cx, cy, cz );
+					ResetChunk( cx << 4, cy << 4, cz << 4 );
 				} else {
 					int cyMax = Math.Max( newLightCy, oldLightCy );
 					int cyMin = Math.Min( oldLightCy, newLightCy );
 					for( cy = cyMax; cy >= cyMin; cy-- ) {
-						ResetChunk( cx, cy, cz );
+						ResetChunk( cx << 4, cy << 4, cz << 4 );
 					}
 				}
 			} else {
-				ResetChunk( cx, cy, cz );
+				ResetChunk( cx << 4, cy << 4, cz << 4 );
 			}
 		}
 		
 		void ResetChunk( int cx, int cy, int cz ) {
-			ChunkInfo info = null;
 			for( int i = 0; i < chunks.Length; i++ ) {
-				info = chunks[i];
+				ChunkInfo info = chunks[i];
 				Point3S loc = info.Location;
-				int locCx = loc.X >> 4;
-				int locCy = loc.Y >> 4;
-				int locCz = loc.Z >> 4;
-				if( locCx == cx && locCy == cy && locCz == cz ) break;
+				if( loc.X == cx && loc.Y == cy && loc.Z == cz ) {
+					DeleteChunk( info );
+					break;
+				}
 			}
-			DeleteChunk( info );
 		}
 		
 		public void Render( double deltaTime ) {
