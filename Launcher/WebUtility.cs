@@ -91,9 +91,7 @@ namespace Launcher {
 		}
 		
 		static void HtmlDecode( string value, StringBuilder output ) {
-			int length = value.Length;
-			
-			for( int i = 0; i < length; i++ ) {
+			for( int i = 0; i < value.Length; i++ ) {
 				char token = value[i];
 				if( token != '&' ) {
 					output.Append( token );
@@ -122,7 +120,6 @@ namespace Launcher {
 					i = entityEnd;
 					char decodedEntity;
 					if( Lookup( entity, out decodedEntity ) ) {
-						token = decodedEntity;
 						output.Append( decodedEntity );
 					} else { // Invalid token.
 						output.Append( '&' );

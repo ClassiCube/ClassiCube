@@ -86,6 +86,7 @@ namespace ClassicalSharp {
 				GraphicsApi.DeleteTexture( ref info[i].Texture );
 			}
 			Window.CpeListInfoAdded -= PlayerListInfoAdded;
+			Window.CpeListInfoChanged -= PlayerListInfoChanged;
 			Window.CpeListInfoRemoved -= PlayerListInfoRemoved;
 		}
 		

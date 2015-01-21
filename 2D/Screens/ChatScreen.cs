@@ -97,7 +97,6 @@ namespace ClassicalSharp {
 			textInput.Dispose();
 			status.Dispose();
 			bottomRight.Dispose();
-			status.Dispose();
 			GraphicsApi.DeleteTexture( ref pageTexture );
 			GraphicsApi.DeleteTexture( ref announcementTexture );
 			Window.ChatReceived -= ChatReceived;

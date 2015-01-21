@@ -1,5 +1,4 @@
 ﻿using System;
-using EnvDefault = ClassicalSharp.Renderers.EnvRenderer;
 
 namespace ClassicalSharp {
 
@@ -134,17 +133,9 @@ namespace ClassicalSharp {
 		}
 		
 		void AdjustLight( FastColour normal, ref FastColour xSide, ref FastColour zSide, ref FastColour yBottom ) {
-			xSide = Scale( normal, 0.6f );
-			zSide = Scale( normal, 0.8f );
-			yBottom = Scale( normal, 0.5f );
-		}
-		
-		static FastColour Scale( FastColour value, float t ) {
-			FastColour result = value;
-			result.R = (byte)( value.R * t );
-			result.G = (byte)( value.G * t );
-			result.B = (byte)( value.B * t );
-			return result;
+			xSide = FastColour.Scale( normal, 0.6f );
+			zSide = FastColour.Scale( normal, 0.8f );
+			yBottom = FastColour.Scale( normal, 0.5f );
 		}
 		
 		public void UseRawMap( byte[] map, int width, int height, int length ) {

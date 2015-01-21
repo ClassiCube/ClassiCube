@@ -42,6 +42,14 @@ namespace ClassicalSharp {
             G = c.G; 
             B = c.B;
         }
+		
+		public static FastColour Scale( FastColour value, float t ) {
+			FastColour result = value;
+			result.R = (byte)( value.R * t );
+			result.G = (byte)( value.G * t );
+			result.B = (byte)( value.B * t );
+			return result;
+		}
         
         public Color ToColor() {
             return Color.FromArgb( A, R, G, B );
