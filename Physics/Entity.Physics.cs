@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, out BoundingBox box ) {
 			box = new BoundingBox( Vector3.Zero, Vector3.Zero );
-			if( block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) || block == (byte)Block.Snow ) return false;
+			if( CanWalkThrough( block ) ) return false;
 			Vector3 min = new Vector3( x, y, z );
 			Vector3 max = new Vector3( x + 1, y + info.BlockHeight( block ), z + 1 );
 			box = new BoundingBox( min, max );
@@ -37,13 +37,17 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		bool CanWalkThrough( byte block ) {
+			return block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) || block == (byte)Block.Snow;
+		}
+		
 		bool IsFreeYForStep( BoundingBox blockBB ) {
 			// NOTE: if non whole blocks are added, use a proper AABB test.
 			int x = (int)Utils.Floor( blockBB.Min.X );
 			int y = (int)Utils.Floor( blockBB.Min.Y );		
 			int z = (int)Utils.Floor( blockBB.Min.Z );
-			return !info.IsOpaque( GetPhysicsBlockId( x, y + 1, z ) ) &&
-				!info.IsOpaque( GetPhysicsBlockId( x, y + 2, z ) );
+			return CanWalkThrough( GetPhysicsBlockId( x, y + 1, z ) ) &&
+				CanWalkThrough( GetPhysicsBlockId( x, y + 2, z ) );
 		}
 		
 		// TODO: test for corner cases, and refactor this.
