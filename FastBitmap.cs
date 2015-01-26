@@ -34,37 +34,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		unsafe class _32bppRGBAccessor : PixelAccessor {
-			
-			public override int GetPixel( int x, int y ) {
-				int* row = (int*)( scan0 + ( y * stride ) );
-				return row[x] & 0xFFFFFF;
-			}
-			
-			public override void SetPixel( int x, int y, int col ) {
-				int* row = (int*)( scan0 + ( y * stride ) );
-				row[x] = col & 0xFFFFFF;
-			}
-		}
-		
-		// TODO: test this actually works correctly.
-		unsafe class _24bppRGBAccessor : PixelAccessor {
-			
-			public override int GetPixel( int x, int y ) {
-				byte* row = scan0 + ( y * stride );
-				int i = x * 3; // b g r
-				return row[i] | row[i + 1] << 8 | row[i + 2] << 16 | 255 << 24;
-			}
-			
-			public override void SetPixel( int x, int y, int col ) {
-				byte* row = scan0 + ( y * stride );
-				int i = x * 3;
-				row[i] = (byte)( col & 0xFF );
-				row[i + 1] = (byte)( ( col & 0xFF00 ) >> 8 );
-				row[i + 2] = (byte)( ( col & 0xFF0000 ) >> 16 );
-			}
-		}
-		
 		/// <summary> Constructs a new FastBitmap wrapped around the specified Bitmap. </summary>
 		/// <param name="bmp"> Bitmap which is wrapped. </param>
 		/// <param name="lockBits"> Whether to immediately lock the bits of the bitmap,
@@ -117,10 +86,6 @@ namespace ClassicalSharp {
 			PixelFormat format = Bitmap.PixelFormat;
 			if( format == PixelFormat.Format32bppArgb ) {
 				accessor = new _32bppARGBAccessor();
-			} else if( format == PixelFormat.Format32bppRgb ) {
-				accessor = new _32bppRGBAccessor();
-			} else if( format == PixelFormat.Format24bppRgb ) {
-				accessor = new _24bppRGBAccessor();
 			} else {
 				throw new NotSupportedException( "Unsupported bitmap pixel format:" + format );
 			}
