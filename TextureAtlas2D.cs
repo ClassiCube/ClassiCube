@@ -146,13 +146,14 @@ namespace ClassicalSharp {
 			y = id / ElementsPerRow;
 		}
 		
-		void CopyPortion( int x, int y, int destX, int destY, FastBitmap atlas, FastBitmap dest ) {
-			int atlasX = x * horElementSize;
-			int atlasY = y * verElementSize;
-			for( int pixelY = 0; pixelY < verElementSize; pixelY++ ) {
-				for( int pixelX = 0; pixelX < horElementSize; pixelX++ ) {
-					int col = atlas.GetPixel( atlasX + pixelX, atlasY + pixelY );
-					dest.SetPixel( destX + pixelX, destY + pixelY, col );
+		unsafe void CopyPortion( int tileX, int tileY, int dstX, int dstY, FastBitmap atlas, FastBitmap dst ) {
+			int atlasX = tileX * horElementSize;
+			int atlasY = tileY * verElementSize;
+			for( int y = 0; y < verElementSize; y++ ) {
+				int* srcRow = atlas.GetRowPtr( atlasY + y );
+				int* dstRow = dst.GetRowPtr( dstY + y );
+				for( int x = 0; x < horElementSize; x++ ) {
+					dstRow[dstX + x] = srcRow[atlasX + x];
 				}
 			}
 		}

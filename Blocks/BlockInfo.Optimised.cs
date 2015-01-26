@@ -164,11 +164,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		static void MovePortion( int srcX, int srcY, int destX, int destY, FastBitmap src, int size ) {
+		unsafe static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, int size ) {
 			for( int y = 0; y < size; y++ ) {
+				int* srcRow = src.GetRowPtr( srcY + y );
+				int* dstRow = src.GetRowPtr( dstY + y );
 				for( int x = 0; x < size; x++ ) {					
-					int col = src.GetPixel( srcX + x, srcY + y );
-					src.SetPixel( destX + x, destY + y, col );
+					dstRow[dstX + x] = srcRow[srcX + x];
 				}
 			}
 		}
