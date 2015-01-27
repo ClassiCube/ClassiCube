@@ -18,29 +18,28 @@ namespace ClassicalSharp {
 			if( !AllResourcesExist( "terrain.png", "char.png", "clouds.png" ) ) {
 				return;
 			}
-			if( args.Length < 4 ) {
+			if( args.Length < 3 ) {
 				Fail( "ClassicalSharp.exe is only the raw client. You must either use the launcher or"
 				     + " provide command line arguments to start the client." );
 				return;
 			}
 
             IPAddress ip = null;
-            if( !IPAddress.TryParse( args[2], out ip ) ) {
-                Fail( "Invalid IP \"" + args[2] + '"' );
+            if( !IPAddress.TryParse( args[1], out ip ) ) {
+                Fail( "Invalid IP \"" + args[1] + '"' );
             }
 
             int port = 0;
-            if( !Int32.TryParse( args[3], out port ) ) {
-                Fail( "Invalid port \"" + args[3] + '"' );
+            if( !Int32.TryParse( args[2], out port ) ) {
+                Fail( "Invalid port \"" + args[2] + '"' );
                 return;
             } else if( port < ushort.MinValue || port > ushort.MaxValue ) {
                 Fail( "Specified port " + port + " is out of valid range." );
             }
 
-            string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
+            string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 			using( Game game = new Game() ) {
 				game.Username = args[0];
-				game.Mppass = args[1];
 				game.IPAddress = ip;
                 game.Port = port;
 				game.skinServer = skinServer;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using ClassicalSharp.Window;
 
 namespace ClassicalSharp.Network {
 	
@@ -95,6 +96,14 @@ namespace ClassicalSharp.Network {
 			byte[] bytes = Encoding.BigEndianUnicode.GetBytes( value );
 			WriteInt16( (short)value.Length );
 			WriteRawBytes( bytes );
+		}
+		
+		public void WriteSlot( Slot slot ) {
+			WriteInt16( slot.Id );
+			if( !slot.IsEmpty ) {
+				WriteUInt8( slot.ItemCount );
+				WriteInt16( slot.ItemDamage );
+			}
 		}
 	}
 }

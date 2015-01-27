@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using ClassicalSharp.Window;
 
 namespace ClassicalSharp.Network {
 	
@@ -102,6 +103,16 @@ namespace ClassicalSharp.Network {
 				if( read == 0 ) throw new EndOfStreamException();
 				totalRead += read;
 			} while( totalRead < numBytes );
+		}
+		
+		public Slot ReadSlot() {
+			Slot slot = new Slot();
+			slot.Id = ReadInt16();
+			if( slot.Id >= 0 ) {
+				slot.ItemCount = ReadUInt8();
+				slot.ItemDamage = ReadInt16();
+			}
+			return slot;
 		}
 	}
 }

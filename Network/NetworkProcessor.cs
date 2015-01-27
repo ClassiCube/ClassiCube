@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 			stream = new NetworkStream( socket, true );
 			reader = new NetReader( stream );
 			writer = new NetWriter( stream );
-			//SendPacket( new LoginStartOutbound( Window.Username ) );
+			SendPacket( new HandshakeOutbound( Window.Username ) );
 			RunIoThreadAsync();
 		}
 		
@@ -86,7 +86,11 @@ namespace ClassicalSharp {
 			
 			InboundPacket packet = null;
 			while( readQueue.Dequeue( ref packet ) ) {
-				packet.ReadCallback( Window );
+				try {
+					packet.ReadCallback( Window );
+				} catch( NotImplementedException ) {
+					// TODO: Finish all missing packets.
+				}
 			}
 			
 			Player player = Window.LocalPlayer;
