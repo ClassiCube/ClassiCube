@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		int hotbarIndex = 0;
 		public bool CanChangeHeldBlock = true;
 		public Block[] BlocksHotbar = new Block[] { Block.Stone, Block.Cobblestone,
-			Block.Brick, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
+			Block.BrickBlock, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slabs };
 		
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }

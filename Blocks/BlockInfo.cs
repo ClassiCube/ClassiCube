@@ -24,20 +24,19 @@ namespace ClassicalSharp {
 			SetIsTranslucent( Block.StillWater, Block.Water );
 			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
 			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			                 Block.Dandelion, Block.Slab );
+			                 Block.Dandelion, Block.Slabs );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
 			            Block.BrownMushroom, Block.RedMushroom );
-			SetBlockHeight( 0.5f, Block.Slab );
+			SetBlockHeight( 0.5f, Block.Slabs );
 			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
 			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
 			               Block.Dandelion );
 			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
 					
-			SetIsTransparent( Block.Snow, Block.Fire, Block.Rope, Block.CobblestoneSlab );
-			SetBlocksLight( false, Block.Fire, Block.Rope );
+			SetIsTransparent( Block.Snow, Block.Fire );
+			SetBlocksLight( false, Block.Fire );
 			SetIsTranslucent( Block.Ice );
-			SetIsSprite( Block.Rope, Block.Fire );
-			SetBlockHeight( 0.5f, Block.CobblestoneSlab );
+			SetIsSprite( Block.Fire );
 			SetBlockHeight( 0.2f, Block.Snow );
 		}
 		

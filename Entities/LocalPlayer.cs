@@ -76,45 +76,6 @@ namespace ClassicalSharp {
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		float jumpVelocity = 0.42f;
 		
-		
-		public float JumpHeight {
-			get { return jumpVelocity == 0 ? 0 : (float)GetMaxHeight( jumpVelocity ); }
-		}
-		
-		public void CalculateJumpVelocity( float jumpHeight ) {
-			if( jumpHeight == 0 ) {
-				jumpVelocity = 0;
-				return;
-			}
-
-			float jumpV = 0.01f;
-			if( jumpHeight >= 256 ) jumpV = 10.0f;
-			if( jumpHeight >= 512 ) jumpV = 16.5f;
-			if( jumpHeight >= 768 ) jumpV = 22.5f;
-			
-			while( GetMaxHeight( jumpV ) <= jumpHeight ) {
-				jumpV += 0.01f;
-			}
-			jumpVelocity = jumpV;
-		}
-		
-		static double GetMaxHeight( float u ) {
-			// equation below comes from solving diff(x(t, u))= 0
-			// We only work in discrete timesteps, so test both rounded up and down.
-			double t = 49.49831645 * Math.Log( 0.247483075 * u + 0.9899323 );			
-			return Math.Max( YPosAt( (int)t, u ), YPosAt( (int)t + 1, u ) );
-		}
-		
-		static double YPosAt( int t, float u ) {
-			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
-			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
-			// plugging into Wolfram Alpha gives 1 equation as
-			// e^(-0.0202027 t) * (-49u - 196) - 4t + 50u + 196
-			// which is the same as (0.98^t) * (-49u - 196) - 4t + 50u + 196
-			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
-			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
-		}
-		
 		void HandleInput( out float xMoving, out float zMoving ) {
 			xMoving = 0;
 			zMoving = 0;
@@ -246,65 +207,15 @@ namespace ClassicalSharp {
 			Position += Velocity;
 		}
 		
-		public void ParseHackFlags( string name, string motd ) {
-			if( name.Contains( "-hax" ) || motd.Contains( "-hax" ) ) {
-				CanFly = CanNoclip = CanSpeed = CanRespawn = false;
-				Window.CanUseThirdPersonCamera = false;
-				Window.SetCamera( false );
-			} else { // By default (this is also the case with WoM), we can use hacks.
-				CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				Window.CanUseThirdPersonCamera = true;
-			}
-
-			// Determine if specific hacks are or are not allowed.
-			if( name.Contains( "+fly" ) || motd.Contains( "+fly" ) ) {
-				CanFly = true;
-			} else if( name.Contains( "-fly" ) || motd.Contains( "-fly" ) ) {
-				CanFly = false;
-			}
-			if( name.Contains( "+noclip" ) || motd.Contains( "+noclip" ) ) {
-				CanNoclip = true;
-			} else if( name.Contains( "-noclip" ) || motd.Contains( "-noclip" ) ) {
-				CanNoclip = false;
-			}
-			if( name.Contains( "+speed" ) || motd.Contains( "+speed" ) ) {
-				CanSpeed = true;
-			} else if( name.Contains( "-speed" ) || motd.Contains( "-speed" ) ) {
-				CanSpeed = false;
-			}
-			if( name.Contains( "+respawn" ) || motd.Contains( "+respawn" ) ) {
-				CanRespawn = true;
-			} else if( name.Contains( "-respawn" ) || motd.Contains( "-respawn" ) ) {
-				CanRespawn = false;
-			}
-			
-			// Operator override.
-			if( UserType == 0x64 ) {
-				if( name.Contains( "+ophax" ) || motd.Contains( "+ophax" ) ) {
-					CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				} else if( name.Contains( "-ophax" ) || motd.Contains( "-ophax" ) ) {
-					CanFly = CanNoclip = CanSpeed = CanRespawn = false;
-				}
-			}
-		}
-		
 		Vector3 lastPos, nextPos;
 		float lastYaw, nextYaw, lastPitch, nextPitch;
 		public void SetInterpPosition( float t ) {
-			// The first two cases shouldn't happen, but just in case..
-			if( t < 0 ) {
-				Position = lastPos;
-				YawDegrees = lastYaw;
-				PitchDegrees = lastPitch;
-			} else if( t > 1 ) {
-				Position = nextPos;
-				YawDegrees = nextYaw;
-				PitchRadians = nextPitch;
-			} else {
-				Position = Vector3.Lerp( lastPos, nextPos, t );
-				YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
-				PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
-			}
+			if( t < 0 ) t = 0;
+			if( t > 1 ) t = 1;
+			
+			Position = Vector3.Lerp( lastPos, nextPos, t );
+			YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
+			PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
 		}
 		
 		int tickCount = 0;
@@ -317,8 +228,15 @@ namespace ClassicalSharp {
 			lastYaw = nextYaw;
 			lastPitch = nextPitch;
 			HandleInput( out xMoving, out zMoving );
-			UpdateState( xMoving, zMoving );
-			PhysicsTick( xMoving, zMoving );
+			//UpdateState( xMoving, zMoving );
+			//PhysicsTick( xMoving, zMoving );
+			if( flyingUp || jumping ) {
+				Velocity.Y = speeding ? 0.48f : 0.24f;
+			} else if( flyingDown ) {
+				Velocity.Y = speeding ? -0.48f : -0.24f;
+			}
+			AdjHorVelocity( zMoving, xMoving, 0.02f );
+			Position += Velocity;
 			nextPos = Position;
 			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos );

@@ -45,7 +45,8 @@ namespace ClassicalSharp {
 		}
 		
 		public bool TouchesAnyRope() {
-			return TouchesAny( b => b == (byte)Block.Rope );
+			//return TouchesAny( b => b == (byte)Block.Rope );
+			return false;
 		}
 		
 		public bool TouchesAnyWater() {

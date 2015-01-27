@@ -173,9 +173,6 @@ namespace ClassicalSharp.Commands {
 				Window.AddChat( "map width: " + Window.Map.Width );
 				Window.AddChat( "map height: " + Window.Map.Height );
 				Window.AddChat( "map length: " + Window.Map.Length );
-			} else if( property == "jumpheight" ) {
-				float jumpHeight = Window.LocalPlayer.JumpHeight;
-				Window.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
 				Window.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}
