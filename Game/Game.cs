@@ -105,6 +105,7 @@ namespace ClassicalSharp {
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
 			}
+			bmp.Save( "test1.bmp" );
 			TerrainAtlasTexId = Graphics.LoadTexture( TerrainAtlas.AtlasBitmap );
 			int elementsPerBitmap;
 			int size = Math.Min( 2048, Graphics.MaxTextureDimensions );
