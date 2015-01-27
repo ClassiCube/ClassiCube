@@ -103,13 +103,13 @@ namespace ClassicalSharp {
 				lastYaw = yaw;
 				lastPitch = player.PitchDegrees;
 				if( ori && pos ) {
-					//SendPacket( new PlayerPosAndLookOutbound( true, lastPos, lastYaw, lastPitch ) );
+					SendPacket( new PlayerPosAndLookOutbound( true, lastPos, lastPos.Y + Player.EyeHeight, lastYaw, lastPitch ) );
 				} else if( pos ) {
-					//SendPacket( new PlayerPosOutbound( true, lastPos ) );
+					SendPacket( new PlayerPosOutbound( true, lastPos, lastPos.Y + Player.EyeHeight ) );
 				} else if( ori ) {
-					//SendPacket( new PlayerLookOutbound( true, lastYaw, lastPitch ) );
+					SendPacket( new PlayerLookOutbound( true, lastYaw, lastPitch ) );
 				} else {
-					//SendPacket( new PlayerOutbound( true ) );
+					SendPacket( new PlayerOutbound( true ) );
 				}
 			}
 		}

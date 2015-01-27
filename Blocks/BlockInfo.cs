@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			}
 			SetupOptimTextures();
 			
-			SetIsTranslucent( Block.StillWater, Block.Water );
+			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
 			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
 			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
 			                 Block.Dandelion, Block.Slabs );
@@ -35,9 +35,8 @@ namespace ClassicalSharp {
 					
 			SetIsTransparent( Block.Snow, Block.Fire );
 			SetBlocksLight( false, Block.Fire );
-			SetIsTranslucent( Block.Ice );
 			SetIsSprite( Block.Fire );
-			SetBlockHeight( 0.2f, Block.Snow );
+			SetBlockHeight( 0.125f, Block.Snow );
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {

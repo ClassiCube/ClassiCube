@@ -143,7 +143,9 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
+			game.Network.receivedFirstPosition = true;
+			game.LocalPlayer.SetLocation( update, false );
 		}
 	}
 	
