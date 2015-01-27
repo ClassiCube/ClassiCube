@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos;
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer;
+		internal string chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
 		
@@ -83,20 +83,7 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		
-		void LoadAtlas( Bitmap bmp ) {
-			// Cleanup old atlas if applicable.
-			if( TerrainAtlasTexId != -1 ) {
-				Graphics.DeleteTexture( TerrainAtlasTexId );
-			}
-			if( TerrainAtlas1DTexIds != null ) {
-				for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
-					Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
-				}
-			}
-			if( TerrainAtlas != null ) {
-				TerrainAtlas.AtlasBitmap.Dispose();
-			}
-			
+		void LoadAtlas( Bitmap bmp ) {			
 			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16, 5 );
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
@@ -122,11 +109,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
-			LoadAtlas( newAtlas );
-			RaiseEvent( TerrainAtlasChanged );
-		}
-		
 		void PrintGraphicsInfo() {
 			Console.ForegroundColor = ConsoleColor.Green;
 			Graphics.PrintApiSpecificInfo();
@@ -139,7 +121,7 @@ namespace ClassicalSharp {
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
 			ModelCache = new ModelCache( this );
-			AsyncDownloader = new AsyncDownloader( skinServer );
+			AsyncDownloader = new AsyncDownloader();
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			LoadAtlas( terrainBmp );

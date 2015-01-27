@@ -37,12 +37,10 @@ namespace ClassicalSharp {
                 Fail( "Specified port " + port + " is out of valid range." );
             }
 
-            string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 			using( Game game = new Game() ) {
 				game.Username = args[0];
 				game.IPAddress = ip;
                 game.Port = port;
-				game.skinServer = skinServer;
 				game.Run();
 			}
 		}

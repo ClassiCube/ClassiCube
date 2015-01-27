@@ -16,10 +16,9 @@ namespace ClassicalSharp.Network {
 		List<DownloadRequest> requests = new List<DownloadRequest>();
 		readonly object downloadedLocker = new object();
 		Dictionary<string, DownloadedRequest> downloaded = new Dictionary<string, DownloadedRequest>();
-		string skinServer = null;
+		string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 		
-		public AsyncDownloader( string skinServer ) {
-			this.skinServer = skinServer;
+		public AsyncDownloader() {
 			client = new WebClient();
 			client.Proxy = null;
 			worker = new Thread( DownloadThreadWorker );
