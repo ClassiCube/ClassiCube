@@ -42,7 +42,12 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			if( hash != "-" ) {
+				game.SetNewScreen( new ErrorScreen( game, "Lost connection to server", "Cannot connect to online mode server" ) );
+				game.Network.Dispose();
+			} else {
+				game.Network.SendPacket( new LoginRequestOutbound( game.Username ) );
+			}
 		}
 	}
 	
@@ -413,7 +418,7 @@ namespace ClassicalSharp.Network.Packets {
 		public override void ReadCallback( Game game ) {
 			throw new NotImplementedException();
 		}
-	}	
+	}
 	
 	public sealed class EntityStatusInbound : InboundPacket {
 		int entityId;
@@ -746,7 +751,7 @@ namespace ClassicalSharp.Network.Packets {
 	public sealed class MapsInbound : InboundPacket {
 		short itemType;
 		short itemDamage;
-		byte[] data;		
+		byte[] data;
 		
 		public override void ReadData( NetReader reader ) {
 			itemType = reader.ReadInt16();
