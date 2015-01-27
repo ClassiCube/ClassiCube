@@ -60,8 +60,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public abstract void Tick( double delta );
-		
 		public abstract void SetLocation( LocationUpdate update, bool interpolate );
 		
 		public float leftLegXRot, leftArmXRot, leftArmZRot;

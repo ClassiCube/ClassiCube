@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp.Commands;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
@@ -14,14 +15,12 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public partial class Game : GameWindow {
 		
 		public IGraphicsApi Graphics;
 		public Map Map;
 		public NetworkProcessor Network;
 		
-		public Player[] NetPlayers = new Player[256];
 		public Dictionary<string, PlayerListInfo> PlayersList = new Dictionary<string, PlayerListInfo>();
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
@@ -37,6 +36,7 @@ namespace ClassicalSharp {
 		
 		public MapRenderer MapRenderer;
 		public EnvRenderer EnvRenderer;
+		public EntityManager EntityManager;
 		
 		public CommandManager CommandManager;
 		public ParticleManager ParticleManager;
@@ -55,8 +55,6 @@ namespace ClassicalSharp {
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
 			set {
-				if( !CanChangeHeldBlock )
-					throw new InvalidOperationException( "Server has forbidden changing held block." );
 				hotbarIndex = value;
 				RaiseHeldBlockChanged();
 			}
@@ -65,8 +63,6 @@ namespace ClassicalSharp {
 		public Block HeldBlock {
 			get { return BlocksHotbar[hotbarIndex]; }
 			set {
-				if( !CanChangeHeldBlock )
-					throw new InvalidOperationException( "Server has forbidden changing held block." );
 				BlocksHotbar[hotbarIndex] = value;
 				RaiseHeldBlockChanged();
 			}
@@ -105,7 +101,6 @@ namespace ClassicalSharp {
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
 			}
-			bmp.Save( "test1.bmp" );
 			TerrainAtlasTexId = Graphics.LoadTexture( TerrainAtlas.AtlasBitmap );
 			int elementsPerBitmap;
 			int size = Math.Min( 2048, Graphics.MaxTextureDimensions );
@@ -164,6 +159,7 @@ namespace ClassicalSharp {
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
 			ParticleManager = new ParticleManager( this );
+			EntityManager = new EntityManager( this );
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
@@ -216,14 +212,9 @@ namespace ClassicalSharp {
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
 				Network.Tick( ticksPeriod );
-				LocalPlayer.Tick( ticksPeriod );
 				Camera.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
-				for( int i = 0; i < NetPlayers.Length; i++ ) {
-					if( NetPlayers[i] != null ) {
-						NetPlayers[i].Tick( ticksPeriod );
-					}
-				}
+				EntityManager.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
@@ -243,7 +234,7 @@ namespace ClassicalSharp {
 			if( visible ) {
 				//EnvRenderer.EnableAmbientLighting();
 				float t = (float)( ticksAccumulator / ticksPeriod );
-				RenderPlayers( e.Time, t );
+				EntityManager.Render( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
 				Picking.Render( e.Time );
@@ -275,17 +266,6 @@ namespace ClassicalSharp {
 			SwapBuffers();
 		}
 		
-		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;			
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Render( deltaTime, t );
-				}
-			}
-			LocalPlayer.Render( deltaTime, t );
-			//Graphics.AlphaTest = false;
-		}
-		
 		public override void Dispose() {
 			MapRenderer.Dispose();
 			EnvRenderer.Dispose();
@@ -296,11 +276,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
 			}
 			ModelCache.Dispose();
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Despawn();
-				}
-			}
+			EntityManager.Dispose();
 			LocalPlayer.Despawn();
 			Graphics.CheckResources();
 			AsyncDownloader.Dispose();

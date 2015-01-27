@@ -9,6 +9,10 @@ namespace ClassicalSharp {
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
 		
+		public int EntityId;
+		
+		public abstract void Tick( double delta );
+		
 		public float YawRadians {
 			get { return (float)Utils.DegreesToRadians( YawDegrees ); }
 			set { YawDegrees = (float)Utils.RadiansToDegrees( value ); }
