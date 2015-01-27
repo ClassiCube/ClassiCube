@@ -124,8 +124,6 @@
     <Compile Include="Model\SpiderModel.cs" />
     <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
-    <Compile Include="Network\FastNetReader.cs" />
-    <Compile Include="Network\FixedBufferStream.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\AsyncDownloader.cs" />
     <Compile Include="Commands\CommandManager.cs" />
