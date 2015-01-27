@@ -13,11 +13,9 @@ namespace ClassicalSharp {
 		public int ChatInputYOffset, ChatLogYOffset;
 		public bool HistoryMode;
 		const int chatLines = 12;
-		Texture announcementTexture;
 		TextInputWidget textInput;
-		TextGroupWidget status, bottomRight, normalChat;
+		TextGroupWidget normalChat;
 		bool suppressNextPress = true;
-		DateTime announcementDisplayTime;
 
 		int pageNumber, pagesCount;
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
@@ -26,17 +24,8 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			normalChat.Render( delta );
-			status.Render( delta );
-			bottomRight.Render( delta );
-			if( announcementTexture.IsValid ) {
-				announcementTexture.Render( GraphicsApi );
-			}
 			if( HandlesAllInput ) {
 				textInput.Render( delta );
-			}
-			if( Window.Announcement != null && ( DateTime.UtcNow - announcementDisplayTime ).TotalSeconds > 5 ) {
-				Window.Announcement = null;
-				GraphicsApi.DeleteTexture( ref announcementTexture );
 			}
 			if( HistoryMode ) {
 				pageTexture.Render( GraphicsApi );
@@ -47,14 +36,6 @@ namespace ClassicalSharp {
 			int fontSize = Window.ChatFontSize;
 			textInput = new TextInputWidget( Window, fontSize );
 			textInput.ChatInputYOffset = ChatInputYOffset;
-			status = new TextGroupWidget( Window, 3, fontSize );
-			status.VerticalDocking = Docking.LeftOrTop;
-			status.HorizontalDocking = Docking.BottomOrRight;
-			status.Init();
-			bottomRight = new TextGroupWidget( Window, 3, fontSize );
-			bottomRight.VerticalDocking = Docking.BottomOrRight;
-			bottomRight.HorizontalDocking = Docking.BottomOrRight;
-			bottomRight.Init();
 			normalChat = new TextGroupWidget( Window, chatLines, fontSize );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = ChatLogYOffset;
@@ -63,13 +44,6 @@ namespace ClassicalSharp {
 			normalChat.Init();
 			
 			InitChat();
-			status.SetText( 0, Window.Status1 );
-			status.SetText( 1, Window.Status2 );
-			status.SetText( 2, Window.Status3 );
-			bottomRight.SetText( 0, Window.BottomRight1 );
-			bottomRight.SetText( 1, Window.BottomRight2 );
-			bottomRight.SetText( 2, Window.BottomRight3 );
-			UpdateAnnouncement( Window.Announcement );
 			if( !String.IsNullOrEmpty( Window.chatInInputBuffer ) ) {
 				OpenTextInputBar( Window.chatInInputBuffer );
 				Window.chatInInputBuffer = null;
@@ -77,16 +51,8 @@ namespace ClassicalSharp {
 			Window.ChatReceived += ChatReceived;
 		}
 
-		void ChatReceived( object sender, ChatEventArgs e ) {
-			CpeMessageType type = (CpeMessageType)e.Type;
-			if( type == CpeMessageType.Normal ) UpdateChat( e.Text );
-			else if( type == CpeMessageType.Status1 ) status.SetText( 0, e.Text );
-			else if( type == CpeMessageType.Status2 ) status.SetText( 1, e.Text );
-			else if( type == CpeMessageType.Status3 ) status.SetText( 2, e.Text );
-			else if( type == CpeMessageType.BottomRight1 ) bottomRight.SetText( 0, e.Text );
-			else if( type == CpeMessageType.BottomRight2 ) bottomRight.SetText( 1, e.Text );
-			else if( type == CpeMessageType.BottomRight3 ) bottomRight.SetText( 2, e.Text );
-			else if( type == CpeMessageType.Announcement ) UpdateAnnouncement( e.Text );
+		void ChatReceived( object sender, TextEventArgs e ) {
+			UpdateChat( e.Text );
 		}
 
 		public override void Dispose() {
@@ -95,20 +61,13 @@ namespace ClassicalSharp {
 			}
 			normalChat.Dispose();
 			textInput.Dispose();
-			status.Dispose();
-			bottomRight.Dispose();
 			GraphicsApi.DeleteTexture( ref pageTexture );
-			GraphicsApi.DeleteTexture( ref announcementTexture );
 			Window.ChatReceived -= ChatReceived;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			announcementTexture.X1 += ( width - oldWidth ) / 2;
-			announcementTexture.Y1 += ( height - oldHeight ) / 2;
 			pageTexture.Y1 += height - oldHeight;
 			textInput.OnResize( oldWidth, oldHeight, width, height );
-			status.OnResize( oldWidth, oldHeight, width, height );
-			bottomRight.OnResize( oldWidth, oldHeight, width, height );
 			normalChat.OnResize( oldWidth, oldHeight, width, height );
 		}
 		
@@ -125,19 +84,6 @@ namespace ClassicalSharp {
 				pageNumber = pagesCount;
 				MakePageNumberTexture();
 				SetChatHistoryStart( ( pagesCount - 1 ) * chatLines );
-			}
-		}
-		
-		void UpdateAnnouncement( string text ) {
-			announcementDisplayTime = DateTime.UtcNow;
-			if( !String.IsNullOrEmpty( text ) ) {
-				List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( text ), "Arial", 14, true );
-				int x = Window.Width / 2 - size.Width / 2;
-				int y = Window.Height / 4 - size.Height / 2;
-				announcementTexture = Utils2D.MakeTextTexture( parts, "Arial", 14, size, x, y );
-			} else {
-				announcementTexture = new Texture( -1, 0, 0, 0, 0, 0, 0 );
 			}
 		}
 		

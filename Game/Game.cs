@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -8,7 +9,6 @@ using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
-using ClassicalSharp.Selections;
 using OpenTK;
 using OpenTK.Input;
 
@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		public NetworkProcessor Network;
 		
 		public Player[] NetPlayers = new Player[256];
-		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
+		public Dictionary<string, PlayerListInfo> PlayersList = new Dictionary<string, PlayerListInfo>();
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
 		Camera firstPersonCam, thirdPersonCam;
@@ -36,11 +36,9 @@ namespace ClassicalSharp {
 		public int ChunkUpdates;
 		
 		public MapRenderer MapRenderer;
-		public MapEnvRenderer MapEnvRenderer;
 		public EnvRenderer EnvRenderer;
 		
 		public CommandManager CommandManager;
-		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos;
@@ -157,7 +155,6 @@ namespace ClassicalSharp {
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
-			MapEnvRenderer = new NormalMapEnvRenderer( this );
 			EnvRenderer = new NormalEnvRenderer( this );
 			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
@@ -165,7 +162,6 @@ namespace ClassicalSharp {
 			Camera = firstPersonCam;
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
-			SelectionManager = new SelectionManager( this );
 			ParticleManager = new ParticleManager( this );
 			
 			VSync = VSyncMode.On;
@@ -179,7 +175,6 @@ namespace ClassicalSharp {
 			fpsScreen.Init();
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
-			MapEnvRenderer.Init();
 			Picking = new PickingRenderer( this );
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
@@ -253,7 +248,6 @@ namespace ClassicalSharp {
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
-				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				PickBlocks( true, left, right );
@@ -293,11 +287,9 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			MapRenderer.Dispose();
-			MapEnvRenderer.Dispose();
 			EnvRenderer.Dispose();
 			SetNewScreen( null );
 			fpsScreen.Dispose();
-			SelectionManager.Dispose();
 			Graphics.DeleteTexture( TerrainAtlasTexId );
 			for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
 				Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
@@ -369,34 +361,15 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	public sealed class CpeListInfo {
+	public sealed class PlayerListInfo {
 		
-		public byte NameId;
+		public string Name;
 		
-		/// <summary> Unformatted name of the player for autocompletion, etc. </summary>
-		/// <remarks> Colour codes are always removed from this. </remarks>
-		public string PlayerName;
+		public short Ping;
 		
-		/// <summary> Formatted name for display in the player list. </summary>
-		/// <remarks> Can include colour codes. </remarks>
-		public string ListName;
-		
-		/// <summary> Name of the group this player is in. </summary>
-		/// <remarks> Can include colour codes. </remarks>
-		public string GroupName;
-		
-		/// <summary> Player's rank within the group. (0 is highest) </summary>
-		/// <remarks> Multiple group members can share the same rank,
-		/// so a player's group rank is not a unique identifier. </remarks>
-		public byte GroupRank;
-		
-		public CpeListInfo( byte id, string playerName, string listName,
-		                   string groupName, byte groupRank ) {
-			NameId = id;
-			PlayerName = playerName;
-			ListName = listName;
-			GroupName = groupName;
-			GroupRank = groupRank;
+		public PlayerListInfo( string name, short ping ) {
+			Name = name;
+			Ping = ping;
 		}
 	}
 }

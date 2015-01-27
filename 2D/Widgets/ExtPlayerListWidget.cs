@@ -24,40 +24,24 @@ namespace ClassicalSharp {
 			
 			public string Name;
 			
-			public string GroupName;
+			public short Ping;
 			
-			public byte GroupRank;
-			
-			public byte NameId;
-			
-			public PlayerInfo( IGraphicsApi graphics, CpeListInfo p ) {
-				Name = p.ListName;
-				NameId = p.NameId;
-				GroupName = p.GroupName;
-				GroupRank = p.GroupRank;
+			public PlayerInfo( IGraphicsApi graphics, PlayerListInfo p ) {
+				Name = p.Name;
+				Ping = p.Ping;
 				List<DrawTextArgs> parts = Utils.SplitText( graphics, Name, true );
 				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), "Arial", 12, true );
 				Texture = Utils2D.MakeTextTexture( parts, "Arial", 12, size, 0, 0 );
 			}
 			
 			public override string ToString() {
-				return NameId + ":" + Name + "(" + GroupName + "," + GroupRank + ")";
+				return Name;
 			}
 		}
 		
 		class PlayerInfoComparer : IComparer<PlayerInfo> {
 			
-			public bool JustComparingGroups = true;
-			
 			public int Compare( PlayerInfo x, PlayerInfo y ) {
-				if( JustComparingGroups ) {
-					return x.GroupName.CompareTo( y.GroupName );
-				}
-				
-				int rankOrder = x.GroupRank.CompareTo( y.GroupRank );
-				if( rankOrder != 0 ) {
-					return rankOrder;
-				}
 				return x.Name.CompareTo( y.Name );
 			}
 		}
@@ -90,22 +74,22 @@ namespace ClassicalSharp {
 			Window.CpeListInfoRemoved -= PlayerListInfoRemoved;
 		}
 		
-		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
+		void PlayerListInfoChanged( object sender, TextEventArgs e ) {
 			for( int i = 0; i < info.Count; i++ ) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.NameId == e.Id ) {
+				if( pInfo.Name == e.Text ) {
 					GraphicsApi.DeleteTexture( ref pInfo.Texture );
-					info[i] = new PlayerInfo( GraphicsApi, Window.CpePlayersList[e.Id] );
+					info[i] = new PlayerInfo( GraphicsApi, Window.PlayersList[e.Text] );
 					SortPlayerInfo();
 					break;
 				}
 			}
 		}
 
-		void PlayerListInfoRemoved( object sender, IdEventArgs e ) {
+		void PlayerListInfoRemoved( object sender, TextEventArgs e ) {
 			for( int i = 0; i < info.Count; i++ ) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.NameId == e.Id ) {
+				if( pInfo.Name == e.Text ) {
 					GraphicsApi.DeleteTexture( ref pInfo.Texture );
 					info.RemoveAt( i );
 					rows = (int)Math.Ceiling( (double)info.Count / namesPerColumn );
@@ -115,46 +99,22 @@ namespace ClassicalSharp {
 			}
 		}
 
-		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
-			CpeListInfo player = Window.CpePlayersList[e.Id];
+		void PlayerListInfoAdded( object sender, TextEventArgs e ) {
+			PlayerListInfo player = Window.PlayersList[e.Text];
 			info.Add( new PlayerInfo( GraphicsApi, player ) );
 			rows = (int)Math.Ceiling( (double)info.Count / namesPerColumn );
 			SortPlayerInfo();
 		}
 
 		void CreateInitialPlayerInfo() {
-			for( int i = 0; i < Window.CpePlayersList.Length; i++ ) {
-				CpeListInfo player = Window.CpePlayersList[i];
-				if( player != null ) {
-					info.Add( new PlayerInfo( GraphicsApi, player ) );
-				}
+			foreach( var pair in Window.PlayersList ) {
+				info.Add( new PlayerInfo( GraphicsApi, pair.Value ) );
 			}
 		}
 		
-		PlayerInfoComparer comparer = new PlayerInfoComparer();
 		void SortInfoList() {
 			if( info.Count == 0 ) return;
-			// Sort the list into groups
-			comparer.JustComparingGroups = true;
-			info.Sort( comparer );
-			
-			// Sort the entries in each group
-			comparer.JustComparingGroups = false;
-			int index = 0;
-			while( index < info.Count ) {
-				int count = GetGroupCount( index );
-				info.Sort( index, count, comparer );
-				index += count;
-			}
-		}
-		
-		int GetGroupCount( int startIndex ) {
-			string group = info[startIndex].GroupName;
-			int count = 0;
-			while( startIndex < info.Count && info[startIndex++].GroupName == group ) {
-				count++;
-			}
-			return count;
+			info.Sort( (a, b) => a.Name.CompareTo( b.Name ) );
 		}
 		
 		void SortPlayerInfo() {

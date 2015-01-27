@@ -36,30 +36,7 @@ namespace ClassicalSharp {
 		public void AddChat( string text ) {
 			ChatLog.Add( text );
 			LogChatToFile( text );
-			RaiseEvent( ChatReceived, new ChatEventArgs( text, 0 ) );
-		}
-		
-		public void AddChat( string text, byte type ) {
-			CpeMessageType cpeType = (CpeMessageType)type;
-			if( cpeType == 0 ) {
-				ChatLog.Add( text );
-				LogChatToFile( text );
-			} else if( cpeType == CpeMessageType.Status1 ) {
-				Status1 = text;
-			} else if( cpeType == CpeMessageType.Status2 ) {
-				Status2 = text;
-			} else if( cpeType == CpeMessageType.Status3 ) {
-				Status3 = text;
-			} else if( cpeType == CpeMessageType.BottomRight1 ) {
-				BottomRight1 = text;
-			} else if( cpeType == CpeMessageType.BottomRight2 ) {
-				BottomRight2 = text;
-			} else if( cpeType == CpeMessageType.BottomRight3 ) {
-				BottomRight3 = text;
-			} else if( cpeType == CpeMessageType.Announcement ) {
-				Announcement = text;
-			}
-			RaiseEvent( ChatReceived, new ChatEventArgs( text, type ) );
+			RaiseEvent( ChatReceived, new TextEventArgs( text ) );
 		}
 		
 		const string fileNameFormat = "yyyy-MM-dd";

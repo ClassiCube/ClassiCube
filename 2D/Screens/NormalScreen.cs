@@ -63,11 +63,7 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Window.Keys[KeyMapping.PlayerList] ) {
 				if( playerList == null ) {
-					if( Window.Network.UsingExtPlayerList ) {
-						playerList = new ExtPlayerListWidget( Window );
-					} else {
-						playerList = new PlayerListWidget( Window );
-					}
+					playerList = new ExtPlayerListWidget( Window );
 					playerList.Init();
 				}
 			}

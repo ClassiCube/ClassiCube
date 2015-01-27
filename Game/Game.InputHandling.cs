@@ -104,11 +104,7 @@ namespace ClassicalSharp {
 					SetNewScreen( new PauseScreen( this ) );
 				}
 			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
-				if( key == Keys[KeyMapping.OpenInventory] ) {
-					SetNewScreen( new BlockSelectScreen( this ) );
-				} else {
-					LocalPlayer.HandleKeyDown( key );
-				}
+				LocalPlayer.HandleKeyDown( key );
 			}
 		}
 		

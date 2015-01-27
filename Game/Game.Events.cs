@@ -16,11 +16,11 @@ namespace ClassicalSharp {
 		/// <summary> Raised when a player is despawned from the current world. </summary>
 		public event EventHandler<IdEventArgs> EntityRemoved;
 		
-		public event EventHandler<IdEventArgs> CpeListInfoAdded;
+		public event EventHandler<TextEventArgs> CpeListInfoAdded;
 		
-		public event EventHandler<IdEventArgs> CpeListInfoChanged;
+		public event EventHandler<TextEventArgs> CpeListInfoChanged;
 		
-		public event EventHandler<IdEventArgs> CpeListInfoRemoved;
+		public event EventHandler<TextEventArgs> CpeListInfoRemoved;
 		
 		public event EventHandler<MapLoadingEventArgs> MapLoading;
 		
@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 		/// <summary> Raised when the terrain atlas("terrain.png") is changed. </summary>
 		public event EventHandler TerrainAtlasChanged;
 		
-		public event EventHandler<ChatEventArgs> ChatReceived;
+		public event EventHandler<TextEventArgs> ChatReceived;
 		
 		internal void RaiseOnNewMap() {
 			RaiseEvent( OnNewMap );
@@ -65,18 +65,18 @@ namespace ClassicalSharp {
 			RaiseEvent( EntityRemoved, e );
 		}
 		
-		internal void RaiseCpeListInfoAdded( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
+		internal void RaiseCpeListInfoAdded( string name ) {
+			TextEventArgs e = new TextEventArgs( name );
 			RaiseEvent( CpeListInfoAdded, e );
 		}
 		
-		internal void RaiseCpeListInfoChanged( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
+		internal void RaiseCpeListInfoChanged( string name ) {
+			TextEventArgs e = new TextEventArgs( name );
 			RaiseEvent( CpeListInfoChanged, e );
 		}
 		
-		internal void RaiseCpeListInfoRemoved( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
+		internal void RaiseCpeListInfoRemoved( string name ) {
+			TextEventArgs e = new TextEventArgs( name );
 			RaiseEvent( CpeListInfoRemoved, e );
 		}
 		
@@ -120,14 +120,11 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	public sealed class ChatEventArgs : EventArgs {
+	public sealed class TextEventArgs : EventArgs {
 		
-		public readonly byte Type;
+		public readonly string Text;
 		
-		public string Text;
-		
-		public ChatEventArgs( string text, byte type ) {
-			Type = type;
+		public TextEventArgs( string text ) {
 			Text = text;
 		}
 	}
