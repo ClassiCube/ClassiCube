@@ -115,8 +115,6 @@
     <Compile Include="Camera.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
-    <Compile Include="FastBitmap.cs" />
-    <Compile Include="FastColour.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
@@ -158,9 +156,13 @@
     <Compile Include="Rendering\NormalEnvRenderer.cs" />
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\PlayerRenderer.cs" />
-    <Compile Include="TextureAtlas2D.cs" />
-    <Compile Include="Utils.cs" />
     <Compile Include="Util\ConcurrentQueue.cs" />
+    <Compile Include="Util\FastBitmap.cs" />
+    <Compile Include="Util\FastColour.cs" />
+    <Compile Include="Util\TextureAtlas2D.cs" />
+    <Compile Include="Util\Utils.cs" />
+    <Compile Include="Util\Vector2I.cs" />
+    <Compile Include="Util\Vector3I.cs" />
     <Compile Include="Window\ChestWindow.cs" />
     <Compile Include="Window\DispenserWindow.cs" />
     <Compile Include="Window\FurnaceWindow.cs" />

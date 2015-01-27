@@ -17,15 +17,9 @@ namespace ClassicalSharp {
 		public static readonly FastColour DefaultCloudsColour =  new FastColour( 0xFF, 0xFF, 0xFF );		
 		public static readonly FastColour DefaultFogColour = new FastColour( 0xFF, 0xFF, 0xFF );
 		
-		public Block SidesBlock = Block.Bedrock, EdgeBlock = Block.StillWater;
-		public int WaterHeight;
 		public FastColour SkyCol = DefaultSkyColour, FogCol = DefaultFogColour, CloudsCol = DefaultCloudsColour;
 		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
-		
-		public int GroundHeight {
-			get { return WaterHeight - 2; }
-		}
 		
 		public Map( Game window ) {
 			Window = window;
@@ -38,30 +32,12 @@ namespace ClassicalSharp {
 		}
 		
 		public void Reset() {
-			WaterHeight = -1;
 			SetShadowlight( DefaultShadowlight );
 			SetSunlight( DefaultSunlight );
 			Width = Height = Length = 0;
-			EdgeBlock = Block.StillWater;
-			SidesBlock = Block.Bedrock;
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
-		}
-		
-		public void SetSidesBlock( Block block ) {
-			SidesBlock = block;
-			Window.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
-		}
-		
-		public void SetEdgeBlock( Block block ) {
-			EdgeBlock = block;
-			Window.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
-		}
-		
-		public void SetWaterLevel( int level ) {
-			WaterHeight = level;
-			Window.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
 		}
 		
 		public void SetSkyColour( FastColour col ) {
@@ -141,7 +117,6 @@ namespace ClassicalSharp {
 			this.Width = width;
 			this.Height = height;
 			this.Length = length;
-			if( WaterHeight == -1 ) WaterHeight = height / 2;
 			maxY = height - 1;
 			oneY = length * width;
 			
