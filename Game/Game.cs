@@ -10,6 +10,7 @@ using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
+using ClassicalSharp.Window;
 using OpenTK;
 using OpenTK.Input;
 
@@ -35,6 +36,7 @@ namespace ClassicalSharp {
 		public MapRenderer MapRenderer;
 		public EnvRenderer EnvRenderer;
 		public EntityManager EntityManager;
+		public WindowManager WindowManager;
 		
 		public CommandManager CommandManager;
 		public ParticleManager ParticleManager;
@@ -43,28 +45,8 @@ namespace ClassicalSharp {
 		public ModelCache ModelCache;
 		internal string chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
-		FpsScreen fpsScreen;
-		
-		int hotbarIndex = 0;
-		public bool CanChangeHeldBlock = true;
-		public Block[] BlocksHotbar = new Block[] { Block.Stone, Block.Cobblestone,
-			Block.BrickBlock, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slabs };
-		
-		public int HeldBlockIndex {
-			get { return hotbarIndex; }
-			set {
-				hotbarIndex = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public Block HeldBlock {
-			get { return BlocksHotbar[hotbarIndex]; }
-			set {
-				BlocksHotbar[hotbarIndex] = value;
-				RaiseHeldBlockChanged();
-			}
-		}
+		FpsScreen fpsScreen;	
+		public InventoryWindow Inventory;
 		
 		public bool[] CanPlace = new bool[256];
 		public bool[] CanDelete = new bool[256];
@@ -122,6 +104,8 @@ namespace ClassicalSharp {
 			CommandManager.Init( this );
 			ParticleManager = new ParticleManager( this );
 			EntityManager = new EntityManager( this );
+			Inventory = new InventoryWindow( "Inventory", 45, this );
+			WindowManager = new WindowManager( this );
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;

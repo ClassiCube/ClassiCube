@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using ClassicalSharp.GraphicsAPI;
 
@@ -200,6 +201,32 @@ namespace ClassicalSharp {
 		public static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
 			return x >= recX && y >= recY && x < recX + width && y < recY + height;
 		}
+		
+		static Color transparentCol = Color.FromArgb( 160, 100, 100, 100 );
+		static Color filledCol = Color.FromArgb( 255, 100, 100, 100 );
+		public static Texture CreateTransparentSlot( IGraphicsApi graphicsApi, int x, int y, int size ) {
+			return CreateSlot( graphicsApi, x, y, size, transparentCol );
+		}
+		
+		public static Texture CreateFilledSlot( IGraphicsApi graphicsApi, int x, int y, int size ) {
+			return CreateSlot( graphicsApi, x, y, size, filledCol );
+		}
+		
+		public static Texture CreateSlot( IGraphicsApi graphicsApi, int x, int y, int size, Color backCol ) {
+			using( Bitmap bmp = new Bitmap( size, size ) ) {
+				using( Graphics g = Graphics.FromImage( bmp ) ) {
+					using( Brush brush = new SolidBrush( backCol ) ) {
+						g.FillRectangle( brush, 0, 0, size, size );
+					}
+					using( Pen pen = new Pen( Color.FromArgb( 200, 200, 200 ) , size / 10 ) ) {
+						pen.Alignment = PenAlignment.Inset;
+						g.DrawRectangle( pen, 0, 0, size, size );
+					}					
+				}
+				return Utils2D.Make2DTexture( graphicsApi, bmp, 0, y );
+			}
+		}
+
 		
 		public static Bitmap ResizeToPower2( Bitmap bmp ) {
 			int adjWidth = Utils.NextPowerOf2( bmp.Width );

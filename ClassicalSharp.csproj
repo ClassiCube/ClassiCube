@@ -161,7 +161,14 @@
     <Compile Include="TextureAtlas2D.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Util\ConcurrentQueue.cs" />
+    <Compile Include="Window\ChestWindow.cs" />
+    <Compile Include="Window\DispenserWindow.cs" />
+    <Compile Include="Window\FurnaceWindow.cs" />
+    <Compile Include="Window\InventoryWindow.cs" />
     <Compile Include="Window\Slot.cs" />
+    <Compile Include="Window\Window.cs" />
+    <Compile Include="Window\WindowManager.cs" />
+    <Compile Include="Window\WorkbenchWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

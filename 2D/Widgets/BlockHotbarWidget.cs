@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Window;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -9,20 +12,16 @@ namespace ClassicalSharp {
 		public BlockHotbarWidget( Game window ) : base( window ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
-			window.HeldBlockChanged += HeldBlockChanged;
 		}
 		
-		Texture[] barTextures = new Texture[9];
-		Texture selectedBlock;
-		const int blockSize = 32;
+		Texture selectedBlock, slotTexture;
+		const int hotbarCount = 9;
+		const int blockSize = 40;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				try {
-					Window.HeldBlockIndex = (int)key - (int)Key.Number1;
-				} catch( InvalidOperationException ) {
-					Window.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-				}
+				int index = (int)key - (int)Key.Number1;
+				Window.Inventory.SetAndSendHeldSlotIndex( (short)index );
 				return true;
 			}
 			return false;
@@ -33,66 +32,75 @@ namespace ClassicalSharp {
 			
 			using( Bitmap bmp = new Bitmap( blockSize, blockSize ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					using( Pen pen = new Pen( Color.White, blockSize / 8 ) ) {
+					using( Pen pen = new Pen( Color.White, blockSize / 10 ) ) {
+						pen.Alignment = PenAlignment.Inset;
 						g.DrawRectangle( pen, 0, 0, blockSize, blockSize );
 					}
 				}
 				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, y );
 			}
+			slotTexture = Utils2D.CreateTransparentSlot( GraphicsApi, 0, 0, blockSize );
 			
-			int x = Window.Width / 2 - ( blockSize * barTextures.Length ) / 2;
+			int x = Window.Width / 2 - ( blockSize * hotbarCount ) / 2;
 			X = x;
 			Y = y;
-			Width = blockSize * barTextures.Length;
+			Width = blockSize * hotbarCount;
 			Height = blockSize;
-			
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, Window.BlocksHotbar[i] );
-				x += blockSize;
-			}
 		}
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
-			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
+			RenderHotbarBackground();
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
-			int selectedX = 0;
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i].RenderNoBind( GraphicsApi );
-				if( i == Window.HeldBlockIndex ) {
-					selectedX = barTextures[i].X1;
+			RenderHotbarItems();
+			GraphicsApi.Texturing = false;
+		}
+		
+		void RenderHotbarBackground() {
+			GraphicsApi.Bind2DTexture( slotTexture.ID );
+			
+			for( int x = 0; x < hotbarCount; x++ ) {
+				slotTexture.X1 = X + x * blockSize;
+				slotTexture.Y1 = Y;
+				slotTexture.RenderNoBind( GraphicsApi );
+				if( x == Window.Inventory.HeldSlotIndex ) {
+					selectedBlock.X1 = slotTexture.X1;
 				}
 			}
-			selectedBlock.X1 = selectedX;
 			selectedBlock.Render( GraphicsApi );
-			GraphicsApi.Texturing = false;
+		}
+		
+		void RenderHotbarItems() {
+			int x = X;
+			for( int i = 0; i < hotbarCount; i++ ) {
+				Slot slot = Window.Inventory.GetHotbarSlot( i );
+				if( slot.IsEmpty || slot.Id > 255 ) continue;
+				
+				int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)slot.Id, TileSide.Front );
+				if( texId == 0 ) continue;
+				
+				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
+				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
+				float height = Window.BlockInfo.BlockHeight( (byte)slot.Id );
+				if( height != 1 ) {
+					rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
+					y2 = y1 + (int)( 32 * height );
+				}
+				
+				VertexPos3fTex2f[] vertices = {
+					new VertexPos3fTex2f( x2, y1, 0, rec.U2, rec.V1 ),
+					new VertexPos3fTex2f( x2, y2, 0, rec.U2, rec.V2 ),
+					new VertexPos3fTex2f( x1, y1, 0, rec.U1, rec.V1 ),
+					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
+				};
+				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
+				x += blockSize;
+			}
 		}
 		
 		public override void Dispose() {
 			GraphicsApi.DeleteTexture( ref selectedBlock );
-			Window.HeldBlockChanged -= HeldBlockChanged;
-		}
-		
-		void HeldBlockChanged( object sender, EventArgs e ) {
-			int index = Window.HeldBlockIndex;
-			Block block = Window.HeldBlock;
-			int x = barTextures[index].X1;
-			barTextures[index] = MakeTexture( x, Y, block );
-		}
-		
-		Texture MakeTexture( int x, int y, Block block ) {
-			int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
-			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
-			
-			int verSize = blockSize;
-			float height = Window.BlockInfo.BlockHeight( (byte)block );
-			int blockY = y;
-			if( height != 1 ) {
-				rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
-				verSize = (int)( blockSize * height );
-				blockY = y + blockSize - verSize;
-			}
-			return new Texture( -1, x, blockY, blockSize, verSize, rec );
+			GraphicsApi.DeleteTexture( ref slotTexture );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
@@ -102,13 +110,6 @@ namespace ClassicalSharp {
 			Y = newY;
 			selectedBlock.X1 += deltaX;
 			selectedBlock.Y1 += deltaY;
-			
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				Texture tex = barTextures[i];
-				tex.X1 += deltaX;
-				tex.Y1 += deltaY;
-				barTextures[i] = tex;
-			}
 		}
 	}
 }

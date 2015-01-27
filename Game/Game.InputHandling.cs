@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 		
 		DateTime lastClick = DateTime.MinValue;
 		void PickBlocks( bool cooldown, bool left, bool right ) {
-			if( SelectedPos == null || left == right || ScreenLockedInput || HeldBlock == Block.Air ) return;
+			if( SelectedPos == null || left == right || ScreenLockedInput ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
@@ -129,7 +129,7 @@ namespace ClassicalSharp {
 			if( right ) {
 				if( SelectedPos.TranslatedPos == null ) return;
 				Vector3I pos = SelectedPos.TranslatedPos.Value;
-				Block block = HeldBlock;
+				Block block = Block.Grass; // TODO: Picking
 				byte oldBlock = 0;
 				
 				if( Map.IsValidPos( pos ) && CanReplace( oldBlock ) && CanPlace[(int)block] ) {
