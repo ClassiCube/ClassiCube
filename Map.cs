@@ -103,14 +103,12 @@ namespace ClassicalSharp {
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
 			heightmap[index] = -1;
-			int mapIndex = ( maxY * Length + z ) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
-				byte block = GetBlock( mapIndex );
+				byte block = GetBlock( x, y, z );
 				if( Window.BlockInfo.BlocksLight( block ) ) {
 					heightmap[index] = (short)y;
 					return y;
 				}
-				mapIndex -= oneY;
 			}
 			return -1;
 		}
@@ -162,10 +160,6 @@ namespace ClassicalSharp {
 		
 		public void SetBlock( Vector3I p, byte blockId ) {
 			SetBlock( p.X, p.Y, p.Z, blockId );
-		}
-		
-		public byte GetBlock( int index ) {
-			return mapData[index];
 		}
 		
 		public byte GetBlock( int x, int y, int z ) {

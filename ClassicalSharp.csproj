@@ -159,7 +159,6 @@
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\PlayerRenderer.cs" />
     <Compile Include="TextureAtlas2D.cs" />
-    <Compile Include="TextureAtlas1D.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Util\ConcurrentQueue.cs" />
     <Compile Include="Window\Slot.cs" />

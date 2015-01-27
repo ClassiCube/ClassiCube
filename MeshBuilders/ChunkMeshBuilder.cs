@@ -11,25 +11,16 @@ namespace ClassicalSharp {
 		protected Map map;
 		public Game Window;
 		public IGraphicsApi Graphics;
-		byte[] adjBlockLookup;
 		
 		public ChunkMeshBuilder( Game window ) {
 			Window = window;
 			Graphics = window.Graphics;
 			BlockInfo = window.BlockInfo;
-			
-			adjBlockLookup = new byte[256];
-			for( int i = 0; i < adjBlockLookup.Length; i++ ) {
-				adjBlockLookup[i] = (byte)i;
-			}
-			adjBlockLookup[9] = 8;
-			adjBlockLookup[11] = 10;
 		}
 		
-		protected int width, length, height;
-		protected int maxX, maxY, maxZ;
-		protected byte[] counts = new byte[16 * 16 * 16 * 6];
+		protected byte[] drawFlags = new byte[16 * 16 * 16];
 		protected byte[] chunk = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
+		const int minY = 0, maxY = 127;
 		
 		public virtual bool UsesLighting {
 			get { return false; }
@@ -42,14 +33,11 @@ namespace ClassicalSharp {
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
 			
-			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );			
-			int zMax = Math.Min( length, z1 + 16 );
-			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
-				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
+			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
+				for( int z = z1, zz = 0; z < z1 + 16; z++, zz++ ) {
 					
 					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
-					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
+					for( int x = x1, xx = 0; x < x1 + 16; x++, xx++ ) {
 						chunkIndex++;
 						RenderTile( chunkIndex, xx, yy, zz, x, y, z );
 					}
@@ -65,27 +53,17 @@ namespace ClassicalSharp {
 			bool allAir = true, allSolid = true;
 			for( int yy = -1; yy < 17; yy++ ) {
 				int y = yy + y1;
-				if( y < 0 ) continue;
+				if( y < minY ) continue;
 				if( y > maxY ) break;
 				for( int zz = -1; zz < 17; zz++ ) {
-					int z = zz + z1;
-					if( z < 0 ) continue;
-					if( z > maxZ ) break;
-					
-					int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
+					int z = zz + z1;				
 					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
 					
 					for( int xx = -1; xx < 17; xx++ ) {
 						int x = xx + x1;
-						index++;
 						chunkIndex++;
-						if( x < 0 ) continue;
-						if( x > maxX ) break;
 						
-						byte block = map.GetBlock( index );
-						if( block == 9 ) block = 8; // Still water --> Water
-						if( block == 11 ) block = 10; // Still lava --> Lava
-						//byte block = adjBlockLookup[map.GetBlock( index )];					
+						byte block = map.GetBlock( x, y, z );				
 						
 						if( block != 0 ) allAir = false;
 						if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
@@ -121,53 +99,50 @@ namespace ClassicalSharp {
 			int count = 0;
 			
 			if( BlockInfo.IsSprite( tile ) ) {
-				count = counts[index + TileSide.Top];
+				count = drawFlags[index + TileSide.Top];
 				if( count != 0 ) {
-					DrawSprite( count );
+					DrawSprite();
 				}
 				return;
 			}
 			
-			count = counts[index + TileSide.Left];
+			count = drawFlags[index + TileSide.Left];
 			if( count != 0 ) {
-				DrawLeftFace( count );
+				DrawLeftFace();
 			}
-			count = counts[index + TileSide.Right];
+			count = drawFlags[index + TileSide.Right];
 			if( count != 0 ) {
-				DrawRightFace( count );
+				DrawRightFace();
 			}
-			count = counts[index + TileSide.Front];
+			count = drawFlags[index + TileSide.Front];
 			if( count != 0 ) {
-				DrawFrontFace( count );
+				DrawFrontFace();
 			}
-			count = counts[index + TileSide.Back];
+			count = drawFlags[index + TileSide.Back];
 			if( count != 0 ) {
-				DrawBackFace( count );
+				DrawBackFace();
 			}
-			count = counts[index + TileSide.Bottom];
+			count = drawFlags[index + TileSide.Bottom];
 			if( count != 0 ) {
-				DrawBottomFace( count );
+				DrawBottomFace();
 			}
-			count = counts[index + TileSide.Top];
+			count = drawFlags[index + TileSide.Top];
 			if( count != 0 ) {
-				DrawTopFace( count );
+				DrawTopFace();
 			}
 		}
 		
 		
 		void Stretch( int x1, int y1, int z1 ) {
-			for( int i = 0; i < counts.Length; i++ ) {
-				counts[i] = 1;
+			for( int i = 0; i < drawFlags.Length; i++ ) {
+				drawFlags[i] = 1;
 			}
 			
-			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );		
-			int zMax = Math.Min( length, z1 + 16 );
-			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
-				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
+			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
+				for( int z = z1, zz = 0; z < z1 + 16; z++, zz++ ) {
 					
 					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
-					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
+					for( int x = x1, xx = 0; x < x1 + 16; x++, xx++ ) {
 						chunkIndex++;						
 						byte tile = chunk[chunkIndex];
 						if( tile == 0 ) continue;					
@@ -176,13 +151,9 @@ namespace ClassicalSharp {
 						// Sprites only use the top face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
 						if( BlockInfo.IsSprite( tile ) ) {
-							if( counts[countIndex + TileSide.Top] != 0 ) {
-								startX = x;
-								startY = y;
-								startZ = z;
-								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, TileSide.Top );
-								AddSpriteVertices( tile, count );
-								counts[countIndex + TileSide.Top] = (byte)count;
+							if( drawFlags[countIndex + TileSide.Top] != 0 ) {
+								AddSpriteVertices( tile );
+								drawFlags[countIndex + TileSide.Top] = 1;
 							}
 						} else { // Do the full calculation for all six faces.
 							DoStretchTerrain( xx, yy, zz, x, y, z, countIndex, tile, chunkIndex );
@@ -192,10 +163,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected virtual void AddSpriteVertices( byte tile, int count ) {
+		protected virtual void AddSpriteVertices( byte tile ) {
 		}
 		
-		protected virtual void AddVertices( byte tile, int count, int face ) {
+		protected virtual void AddVertices( byte tile, int face ) {
 		}
 		
 		protected bool IsFaceHidden( byte tile, byte block ) {
@@ -218,79 +189,63 @@ namespace ClassicalSharp {
 			startY = y;
 			startZ = z;
 			
-			if( x == 0 ) {
-				counts[index + TileSide.Left] = 0;
-			} else if( counts[index + TileSide.Left] != 0 ) {
+			if( drawFlags[index + TileSide.Left] != 0 ) {
 				byte left = chunk[chunkIndex - 1]; // x - 1
 				if( IsFaceHidden( tile, left ) ) {
-					counts[index + TileSide.Left] = 0;
+					drawFlags[index + TileSide.Left] = 0;
 				} else {
-					int count = StretchZ( zz, index, x, y, z, chunkIndex, tile, TileSide.Left );
-					AddVertices( tile, count, TileSide.Left );
-					counts[index + TileSide.Left] = (byte)count;
+					AddVertices( tile, TileSide.Left );
+					drawFlags[index + TileSide.Left] = 1;
 				}
 			}
 			
-			if( x == maxX ) {
-				counts[index + TileSide.Right] = 0;
-			} else if( counts[index + TileSide.Right] != 0 ) {
+			if( drawFlags[index + TileSide.Right] != 0 ) {
 				byte right = chunk[chunkIndex + 1]; // x + 1
 				if( IsFaceHidden( tile, right ) ) {
-					counts[index + TileSide.Right] = 0;
+					drawFlags[index + TileSide.Right] = 0;
 				} else {
-					int count = StretchZ( zz, index, x, y, z, chunkIndex, tile, TileSide.Right );
-					AddVertices( tile, count, TileSide.Right );
-					counts[index + TileSide.Right] = (byte)count;
+					AddVertices( tile, TileSide.Right );
+					drawFlags[index + TileSide.Right] = 1;
 				}
 			}
 			
-			if( z == 0 ) {
-				counts[index + TileSide.Front] = 0;
-			} else if( counts[index + TileSide.Front] != 0 ) {
+			if( drawFlags[index + TileSide.Front] != 0 ) {
 				byte front = chunk[chunkIndex - 18]; // z - 1
 				if( IsFaceHidden( tile, front ) ) {
-					counts[index + TileSide.Front] = 0;
+					drawFlags[index + TileSide.Front] = 0;
 				} else {
-					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Front );
-					AddVertices( tile, count, TileSide.Front );
-					counts[index + TileSide.Front] = (byte)count;
+					AddVertices( tile, TileSide.Front );
+					drawFlags[index + TileSide.Front] = 1;
 				}
 			}
 			
-			if( z == maxZ ) {
-				counts[index + TileSide.Back] = 0;
-			} else if( counts[index + TileSide.Back] != 0 ) {
+			if( drawFlags[index + TileSide.Back] != 0 ) {
 				byte back = chunk[chunkIndex + 18]; // z + 1
 				if( IsFaceHidden( tile, back ) ) {
-					counts[index + TileSide.Back] = 0;
+					drawFlags[index + TileSide.Back] = 0;
 				} else {
-					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Back );
-					AddVertices( tile, count, TileSide.Back );
-					counts[index + TileSide.Back] = (byte)count;
+					AddVertices( tile, TileSide.Back );
+					drawFlags[index + TileSide.Back] = 1;
 				}
 			}
 			
-			if( y == 0 ) {
-				counts[index + TileSide.Bottom] = 0;
-			} else if( counts[index + TileSide.Bottom] != 0 ) {
+			if( drawFlags[index + TileSide.Bottom] != 0 ) {
 				byte below = chunk[chunkIndex - 324]; // y - 1
 				if( IsFaceHiddenYBottom( tile, below ) ) {
-					counts[index + TileSide.Bottom] = 0;
+					drawFlags[index + TileSide.Bottom] = 0;
 				} else {
-					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Bottom );
-					AddVertices( tile, count, TileSide.Bottom );
-					counts[index + TileSide.Bottom] = (byte)count;
+					AddVertices( tile, TileSide.Bottom );
+					drawFlags[index + TileSide.Bottom] = 1;
 				}
 			}
 			
-			if( counts[index + TileSide.Top] != 0 ) {
+			if( drawFlags[index + TileSide.Top] != 0 ) {
 				byte above = chunk[chunkIndex + 324]; // y + 1
 				if( IsFaceHiddenYTop( tile, above ) ) {
-					counts[index + TileSide.Top] = 0;
+					drawFlags[index + TileSide.Top] = 0;
 				} else {
-					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Top );
-					AddVertices( tile, count, TileSide.Top );
-					counts[index + TileSide.Top] = (byte)count;
+					AddVertices( tile, TileSide.Top );
+					drawFlags[index + TileSide.Top] = 1;
 				}
 			}
 		}
@@ -324,38 +279,6 @@ namespace ClassicalSharp {
 			return 0;
 		}
 		
-		int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte tile, int face ) {
-			int count = 1;
-			x++;
-			chunkIndex++;
-			countIndex += 6;
-			int max = 16 - xx;
-			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
-				count++;
-				counts[countIndex + face] = 0;
-				x++;
-				chunkIndex++;
-				countIndex += 6;
-			}
-			return count;
-		}
-		
-		int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte tile, int face ) {
-			int count = 1;
-			z++;
-			chunkIndex += 18;
-			countIndex += 16 * 6;
-			int max = 16 - zz;
-			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
-				count++;
-				counts[countIndex + face] = 0;
-				z++;
-				chunkIndex += 18;
-				countIndex += 16 * 6;
-			}
-			return count;
-		}
-		
 		public abstract void BeginRender();
 		
 		public abstract void Render( ChunkPartInfo drawInfo );
@@ -367,42 +290,29 @@ namespace ClassicalSharp {
 		
 		public virtual void OnNewMapLoaded() {
 			map = Window.Map;
-			width = map.Width;
-			height = map.Height;
-			length = map.Length;
-			maxX = width - 1;
-			maxY = height - 1;
-			maxZ = length - 1;
 		}
 		
 		protected abstract ChunkDrawInfo GetChunkInfo( int x, int y, int z );
 
-		protected abstract void DrawTopFace( int count );
+		protected abstract void DrawTopFace();
 
-		protected abstract void DrawBottomFace( int count );
+		protected abstract void DrawBottomFace();
 
-		protected abstract void DrawBackFace( int count );
+		protected abstract void DrawBackFace();
 
-		protected abstract void DrawFrontFace( int count );
+		protected abstract void DrawFrontFace();
 
-		protected abstract void DrawLeftFace( int count );
+		protected abstract void DrawLeftFace();
 
-		protected abstract void DrawRightFace( int count );
+		protected abstract void DrawRightFace();
 		
-		protected abstract void DrawSprite( int count );
+		protected abstract void DrawSprite();
 	}
 	
-	public class ChunkDrawInfo {
-		
-		public ChunkPartInfo[] SolidParts;
-		public ChunkPartInfo[] TranslucentParts;
-		public ChunkPartInfo[] SpriteParts;
-		
-		public ChunkDrawInfo( int partsCount ) {
-			SolidParts = new ChunkPartInfo[partsCount];
-			TranslucentParts = new ChunkPartInfo[partsCount];
-			SpriteParts = new ChunkPartInfo[partsCount];
-		}
+	public class ChunkDrawInfo {		
+		public ChunkPartInfo SolidParts;
+		public ChunkPartInfo TranslucentParts;
+		public ChunkPartInfo SpriteParts;
 	}
 	
 	public struct ChunkPartInfo {

@@ -37,9 +37,6 @@ namespace ClassicalSharp {
 		/// <summary> Raised when the client's block permissions(can place or delete a block) change. </summary>
 		public event EventHandler BlockPermissionsChanged;
 		
-		/// <summary> Raised when the terrain atlas("terrain.png") is changed. </summary>
-		public event EventHandler TerrainAtlasChanged;
-		
 		public event EventHandler<TextEventArgs> ChatReceived;
 		
 		internal void RaiseOnNewMap() {

@@ -29,8 +29,6 @@ namespace ClassicalSharp {
 		public double accumulator;
 		public TextureAtlas2D TerrainAtlas;
 		public int TerrainAtlasTexId = -1;
-		public TextureAtlas1D TerrainAtlas1D;
-		public int[] TerrainAtlas1DTexIds;
 		public SkinType DefaultPlayerSkinType;
 		public int ChunkUpdates;
 		
@@ -89,24 +87,6 @@ namespace ClassicalSharp {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
 			}
 			TerrainAtlasTexId = Graphics.LoadTexture( TerrainAtlas.AtlasBitmap );
-			int elementsPerBitmap;
-			int size = Math.Min( 2048, Graphics.MaxTextureDimensions );
-			Bitmap[] bmps = TerrainAtlas.Into1DAtlases( size, out elementsPerBitmap );
-			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", bmps.Length, elementsPerBitmap );
-			
-			TerrainAtlas1D = new TextureAtlas1D( Graphics, bmps, elementsPerBitmap );
-			TerrainAtlas1DTexIds = new int[bmps.Length];
-			for( int i = 0; i < bmps.Length; i++ ) {
-				Bitmap bmp1D = bmps[i];
-				if( Graphics.SupportsNonPowerOf2Textures ) {
-					TerrainAtlas1DTexIds[i] = Graphics.LoadTexture( bmp1D );
-				} else {
-					using( Bitmap adjBmp = Utils2D.ResizeToPower2( bmp1D ) ) {
-						TerrainAtlas1DTexIds[i] = Graphics.LoadTexture( adjBmp );
-					}
-				}
-				bmp1D.Dispose();
-			}
 		}
 		
 		void PrintGraphicsInfo() {
@@ -254,9 +234,6 @@ namespace ClassicalSharp {
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			Graphics.DeleteTexture( TerrainAtlasTexId );
-			for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
-				Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
-			}
 			ModelCache.Dispose();
 			EntityManager.Dispose();
 			LocalPlayer.Despawn();
