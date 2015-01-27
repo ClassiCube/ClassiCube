@@ -1,11 +1,8 @@
-﻿//#define NET_DEBUG
-using System;
-using System.Drawing;
-using System.IO;
-using System.IO.Compression;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using ClassicalSharp.Network;
+using ClassicalSharp.Network.Packets;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -14,13 +11,17 @@ namespace ClassicalSharp {
 		
 		public NetworkProcessor( Game window ) {
 			Window = window;
+			SetupHandlers();
 		}
 		
 		Socket socket;
 		NetworkStream stream;
+		NetReader reader;
+		NetWriter writer;
 		public Game Window;
+		public string ServerName, ServerMotd;
 		public bool Disconnected;
-		bool receivedFirstPosition = false;
+		public bool receivedFirstPosition = false;
 		
 		public void Connect() {
 			IPAddress address = Window.IPAddress;
@@ -35,28 +36,78 @@ namespace ClassicalSharp {
 				return;
 			}
 			stream = new NetworkStream( socket, true );
-			//WritePacket( MakeLoginPacket( Window.Username, Window.Mppass ) );
+			reader = new NetReader( stream );
+			writer = new NetWriter( stream );
+			//SendPacket( new LoginStartOutbound( Window.Username ) );
+			RunIoThreadAsync();
 		}
 		
 		public void SendChat( string text ) {
-
+			//SendPacket( new ChatOutbound( text ) );
 		}
 		
 		public void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
-
 		}
 		
-		public void SendSetBlock( int x, int y, int z, byte block ) {
-
+		public void SendDeleteBlock( PickedPos pos ) {
+			Vector3I loc = pos.BlockPos;
+			byte dir = pos.Direction;
+			//OutboundPacket startPacket = new PlayerDiggingOutbound( DigStatus.Start, loc, dir );
+			//SendPacket( startPacket );
+			//OutboundPacket finishPacket = new PlayerDiggingOutbound( DigStatus.Finish, loc, dir );
+			//SendPacket( finishPacket );
 		}
 		
-		public void Dispose() {
+		public void SendPlaceBlock( PickedPos pos ) {
+			Vector3I loc = pos.BlockPos;
+			byte dir = pos.Direction;
+			//Slot slot = Window.Inventory.HeldSlot;
+			//OutboundPacket packet = new PlayerPlaceBlockOutbound( loc, dir, slot, pos.CrosshairPos );
+			//SendPacket( packet );
+		}
+		
+		public void SendPacket( OutboundPacket packet ) {
+			writeQueue.Enqueue( packet );
+		}
+		
+		public void Dispose() {		
+			StopProcessing = true;
+			if( thread != null ) {
+				thread.Join();
+			}
 			socket.Close();
 			Disconnected = true;
 		}
 		
+		Vector3 lastPos = new Vector3( float.MaxValue, float.MaxValue, float.MaxValue );
+		float lastYaw = float.MaxValue, lastPitch = float.MaxValue;
 		public void Tick( double delta ) {
 			if( Disconnected ) return;
+			
+			InboundPacket packet = null;
+			while( readQueue.Dequeue( ref packet ) ) {
+				packet.ReadCallback( Window );
+			}
+			
+			Player player = Window.LocalPlayer;
+			if( receivedFirstPosition ) {
+				// Figure out which is the most optimal packet to send.
+				float yaw = player.YawDegrees - 180f;
+				bool ori = lastYaw != yaw || lastPitch != player.PitchDegrees;
+				bool pos = lastPos != player.Position;
+				lastPos = player.Position;
+				lastYaw = yaw;
+				lastPitch = player.PitchDegrees;
+				if( ori && pos ) {
+					//SendPacket( new PlayerPosAndLookOutbound( true, lastPos, lastYaw, lastPitch ) );
+				} else if( pos ) {
+					//SendPacket( new PlayerPosOutbound( true, lastPos ) );
+				} else if( ori ) {
+					//SendPacket( new PlayerLookOutbound( true, lastYaw, lastPitch ) );
+				} else {
+					//SendPacket( new PlayerOutbound( true ) );
+				}
+			}
 		}
 	}
 }

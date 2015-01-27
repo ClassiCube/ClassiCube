@@ -24,12 +24,10 @@ namespace ClassicalSharp {
 				}
 				
 				int x = cell.X, y = cell.Y, z = cell.Z;
-				byte block;
+				ushort block;
 				if( map.IsValidPos( x, y, z ) && ( block = map.GetBlock( x, y, z ) ) != 0 ) {
-					if( !window.CanPlace[block] && !window.CanDelete[block] && info.IsLiquid( block ) ) continue;
-					// This cell falls on the path of the ray. Now perform an additional bounding box test,
-					// since some blocks do not occupy a whole cell.
-					float height = info.BlockHeight( block );
+					window.Title = "Looking at type: " + block;
+					float height = 1;
 					Vector3 min = new Vector3( x, y, z );
 					Vector3 max = new Vector3( x + 1, y + height, z + 1 );
 					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max ) ) {
@@ -124,6 +122,7 @@ namespace ClassicalSharp {
 		public Vector3 Min, Max;
 		public Vector3I BlockPos;
 		public Vector3I? TranslatedPos;
+		public byte Direction = 0xFF;
 		
 		struct QuadIntersection {
 			public Quad Quad;
@@ -139,10 +138,10 @@ namespace ClassicalSharp {
 			Min = Vector3.Min( p1, p2 );
 			Max = Vector3.Max( p1, p2 );
 			BlockPos = Vector3I.Truncate( Min );
-					
+			
 			Quad? closestQuad = null;
 			Vector3 closest = new Vector3( float.MaxValue, float.MaxValue, float.MaxValue );
-			IEnumerable<Quad> faces = IntersectionUtils.GetFaces( Min, Max );				
+			IEnumerable<Quad> faces = IntersectionUtils.GetFaces( Min, Max );
 			foreach( QuadIntersection result in FindIntersectingTriangles( origin, dir, faces ) ) {
 				Vector3 I = result.Intersection;
 				if( ( origin - I ).LengthSquared < ( origin - closest ).LengthSquared ) {
@@ -152,7 +151,19 @@ namespace ClassicalSharp {
 			}
 			if( closestQuad != null ) {
 				TranslatedPos = Vector3I.Truncate( Min + closestQuad.Value.Normal );
+				Vector3 intersect = origin + dir * ( origin - closest ).Length;
+				Direction = GetDirection( closestQuad.Value.Normal );
 			}
+		}
+		
+		byte GetDirection( Vector3 norm ) {
+			if( norm == -Vector3.UnitY ) return 0;
+			if( norm == Vector3.UnitY ) return 1;
+			if( norm == -Vector3.UnitZ ) return 2;
+			if( norm == Vector3.UnitZ ) return 3;
+			if( norm == -Vector3.UnitX ) return 4;
+			if( norm == Vector3.UnitX ) return 5;
+			return 0xFF;
 		}
 		
 		

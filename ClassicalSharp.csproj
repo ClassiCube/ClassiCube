@@ -63,6 +63,12 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
+    <Reference Include="fNbt">
+      <HintPath>fNbt.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip.Reduced">
+      <HintPath>Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK">
       <HintPath>OpenTK.dll</HintPath>
     </Reference>
@@ -124,10 +130,14 @@
     <Compile Include="Model\SpiderModel.cs" />
     <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
+    <Compile Include="Network\NetReader.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\AsyncDownloader.cs" />
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
+    <Compile Include="Network\NetworkProcessor.IO.cs" />
+    <Compile Include="Network\NetWriter.cs" />
+    <Compile Include="Network\Packets\Packet.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
     <Compile Include="Physics\Entity.Physics.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />
@@ -145,6 +155,8 @@
     <Compile Include="TextureAtlas2D.cs" />
     <Compile Include="TextureAtlas1D.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="Util\ConcurrentQueue.cs" />
+    <Compile Include="Window\Slot.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -180,6 +192,9 @@
     <Folder Include="MeshBuilders" />
     <Folder Include="Game" />
     <Folder Include="Model" />
+    <Folder Include="Network\Packets" />
+    <Folder Include="Window" />
+    <Folder Include="Util" />
     <Folder Include="Physics" />
   </ItemGroup>
 </Project>
