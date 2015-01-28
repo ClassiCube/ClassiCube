@@ -3,6 +3,7 @@ using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Util;
 using ClassicalSharp.Window;
+using ClassicalSharp.World;
 using Ionic.Zlib;
 using OpenTK;
 
@@ -32,7 +33,9 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId] = game.LocalPlayer;
+			game.Map.Seed = mapSeed;
+			game.Map.Dimension = dimension;
 		}
 	}
 	
@@ -73,7 +76,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.Map.WorldTime = worldAge;
 		}
 	}
 	
@@ -89,7 +92,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId].SetEquipmentSlot( slotId, slot );
 		}
 	}
 	
@@ -147,6 +150,8 @@ namespace ClassicalSharp.Network.Packets {
 		public override void ReadCallback( Game game ) {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
 			game.Network.receivedFirstPosition = true;
+			game.SetNewScreen( new NormalScreen( game ) );
+			game.Map.IsNotLoaded = false;
 			game.LocalPlayer.SetLocation( update, false );
 		}
 	}
@@ -179,7 +184,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId].DoAnimation( anim );
 		}
 	}
 	
@@ -202,6 +207,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
+			game.EntityManager[entityId] = new NullEntity( game );
 			throw new NotImplementedException();
 		}
 	}
@@ -228,6 +234,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
+			game.EntityManager[entityId] = new NullEntity( game );
 			throw new NotImplementedException();
 		}
 	}
@@ -268,6 +275,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
+			game.EntityManager[entityId] = new NullEntity( game );
 			throw new NotImplementedException();
 		}
 	}
@@ -291,6 +299,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
+			game.EntityManager[entityId] = new NullEntity( game );
 			throw new NotImplementedException();
 		}
 	}
@@ -311,6 +320,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
+			game.EntityManager[entityId] = new NullEntity( game );
 			throw new NotImplementedException();
 		}
 	}
@@ -339,7 +349,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager.RemoveEntity( entityId );
 		}
 	}
 	
@@ -351,7 +361,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			// Pointless packet.. do nothing.
 		}
 	}
 	
@@ -367,7 +377,8 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			LocationUpdate update = LocationUpdate.MakePos( dx, dy, dz, true );
+			game.EntityManager[entityId].SetLocation( update, true );
 		}
 	}
 	
@@ -382,7 +393,8 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
+			game.EntityManager[entityId].SetLocation( update, true );
 		}
 	}
 	
@@ -401,7 +413,8 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			LocationUpdate update = LocationUpdate.MakePosAndOri( dx, dy, dz, yaw, pitch, true );
+			game.EntityManager[entityId].SetLocation( update, true );
 		}
 	}
 	
@@ -420,7 +433,8 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
+			game.EntityManager[entityId].SetLocation( update, true );
 		}
 	}
 	
@@ -434,7 +448,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId].SetStatus( status );
 		}
 	}
 	
@@ -462,7 +476,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId].SetMetadata( meta );
 		}
 	}
 	
@@ -500,7 +514,30 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			int elementSize = sizeX * sizeY * sizeZ;
+			int totalSize = elementSize + elementSize * 3 / 2; // blocks + meta + blocklight + skylight
+			byte[] data = Decompress( compressedData, totalSize );
+			Console.WriteLine( sizeX + "," + sizeY + "," + sizeZ );
+			// Full chunk.
+			if( sizeX == 16 && sizeY == 128 && sizeZ == 16 ) {
+				Chunk chunk = new Chunk( x >> 4, z >> 4, false, game );
+				int index = 0;	
+				chunk.Blocks = GetPortion( data, elementSize, ref index );	
+				chunk.Metadata = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				chunk.BlockLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				chunk.SkyLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				game.Map.LoadChunk( chunk );
+			} else {
+				Console.WriteLine( "Partial chunk update not yet done!!!" );
+				throw new NotImplementedException();
+			}			
+		}
+		
+		static byte[] GetPortion( byte[] data, int length, ref int index ) {
+			byte[] portion = new byte[length];
+			Buffer.BlockCopy( data, index, portion, 0, length );
+			index += length;
+			return portion;
 		}
 		
 		static byte[] Decompress( byte[] compressed, int uncompressedSize ) {
@@ -513,7 +550,7 @@ namespace ClassicalSharp.Network.Packets {
 						while( ( count = decompressor.Read( temp, 0, temp.Length ) ) != 0 ) {
 							dest.Write( temp, 0, count );
 						}
-						if( dest.Capacity != dest.Length ) throw new InvalidOperationException( "uncompressed size wrong???" );
+						if( dest.Capacity != dest.Length ) throw new InvalidOperationException( "uncompressed size wrong?" );
 						return dest.GetBuffer();
 					}
 				}
@@ -541,7 +578,16 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			Chunk chunk = game.Map.GetChunk( chunkX, chunkZ );
+			if( chunk != null ) {
+				for( int i = 0; i < posMasks.Length; i++ ) {
+					int mask = posMasks[i];
+					int y = mask & 0x00FF;
+					int z = ( mask & 0x0F00 ) >> 8;
+					int x = ( mask & 0xF000 ) >> 12;
+					game.UpdateChunkBlock( x, y, z, blockTypes[i], blockMetas[i], chunk );
+				}
+			}
 		}
 	}
 	
@@ -558,7 +604,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.UpdateBlock( x, y, z, blockType, blockMeta );
 		}
 	}
 	

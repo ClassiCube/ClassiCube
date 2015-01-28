@@ -8,6 +8,9 @@ namespace ClassicalSharp.Window {
 		Slot[] slots;
 		public InventoryWindow( string title, byte numSlots, Game game ) : base( title, numSlots, game ) {
 			slots = new Slot[numSlots];
+			for( int i = 0; i < slots.Length; i++ ) {
+				slots[i] = Slot.CreateEmpty();
+			}
 		}
 		
 		public override void SetProperty( short property, int value ) {

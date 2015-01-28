@@ -16,9 +16,10 @@ namespace ClassicalSharp {
 			Window = window;
 			Graphics = window.Graphics;
 			BlockInfo = window.BlockInfo;
+			map = window.Map;
 		}
 		
-		protected byte[] drawFlags = new byte[16 * 16 * 16];
+		protected byte[] drawFlags = new byte[16 * 16 * 16 * 6];
 		protected byte[] chunk = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
 		const int minY = 0, maxY = 127;
 		

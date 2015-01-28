@@ -23,6 +23,10 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
+		public void RemoveEntity( int id ) {
+			entities.Remove( id );
+		}
+		
 		public Entity this[int entityId] {
 			get { 
 				return entities[entityId];

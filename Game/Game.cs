@@ -11,6 +11,7 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Window;
+using ClassicalSharp.World;
 using OpenTK;
 using OpenTK.Input;
 
@@ -45,7 +46,7 @@ namespace ClassicalSharp {
 		public ModelCache ModelCache;
 		internal string chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
-		FpsScreen fpsScreen;	
+		FpsScreen fpsScreen;
 		public InventoryWindow Inventory;
 		
 		public bool[] CanPlace = new bool[256];
@@ -63,7 +64,7 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		
-		void LoadAtlas( Bitmap bmp ) {			
+		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16, 5 );
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
@@ -274,10 +275,23 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock( int x, int y, int z, byte block ) {
-			int oldHeight = Map.GetLightHeight( x, z );
 			Map.SetBlock( x, y, z, block );
-			int newHeight = Map.GetLightHeight( x, z );
-			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
+			MapRenderer.RedrawBlock( x, y, z );
+		}
+		
+		public void UpdateBlock( int x, int y, int z, byte block, byte meta ) {
+			Map.SetBlock( x, y, z, block, meta );
+			MapRenderer.RedrawBlock( x, y, z );
+		}
+		
+		public void UpdateChunkBlock( int blockX, int y, int blockZ, byte block, byte meta, Chunk chunk ) {
+			int x = ( chunk.ChunkX << 4 ) + blockX;
+			int z = ( chunk.ChunkZ << 4 ) + blockZ;
+			
+			byte oldBlock = chunk.GetBlock( blockX, y, blockZ );
+			chunk.SetBlock( blockX, y, blockZ, block );
+			chunk.SetBlockMetadata( blockX, y, blockZ, meta );
+			MapRenderer.RedrawBlock( blockX, y, blockZ );
 		}
 	}
 	

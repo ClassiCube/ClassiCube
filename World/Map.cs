@@ -7,6 +7,9 @@ namespace ClassicalSharp {
 	public class Map {
 
 		public Game Window;
+		public long WorldTime;
+		public long Seed;
+		public byte Dimension;
 		
 		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
 		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
@@ -82,17 +85,37 @@ namespace ClassicalSharp {
 				int blockZ = z & 0x0F;
 				byte oldBlock = chunk.GetBlock( blockX, y, blockZ );
 				chunk.SetBlock( blockX, y, blockZ, blockId );
-				chunk.UpdateHeight( x, y, z, oldBlock, blockId );
 			}			
 		}
 		
-		public int GetLightHeight( int x, int z ) {
+		public void SetBlock( int x, int y, int z, byte blockId, byte blockMeta ) {
 			int chunkX = x >> 4;
 			int chunkZ = z >> 4;
 			Chunk chunk;
 			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
-				return chunk.GetLightHeight( x, z );
+				int blockX = x & 0x0F;
+				int blockZ = z & 0x0F;
+				chunk.SetBlock( blockX, y, blockZ, blockId );
+				chunk.SetBlockMetadata( blockX, y, blockZ, blockMeta );
 			}
+		}
+		
+		public void LoadChunk( Chunk chunk ) {
+			chunks.Add( new Vector2I( chunk.ChunkX, chunk.ChunkZ ), chunk );
+			Window.MapRenderer.LoadChunk( chunk );
+		}
+		
+		public Chunk GetChunk( int x, int z ) {
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			Chunk chunk;
+			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
+				return chunk;
+			}
+			return null;
+		}
+		
+		public int GetLightHeight( int x, int z ) {
 			return -1;
 		}
 		

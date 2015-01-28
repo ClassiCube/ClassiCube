@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.World;
 using OpenTK;
 
-namespace ClassicalSharp {	
+namespace ClassicalSharp {
 	
 	// TODO: optimise chunk rendering
 	//  --> reduce the two passes: liquid pass only needs 1 small texture
@@ -28,7 +29,7 @@ namespace ClassicalSharp {
 		public Game Window;
 		public IGraphicsApi Graphics;
 		
-		ChunkMeshBuilder builder;		
+		ChunkMeshBuilder builder;
 		List<SectionInfo> sections = new List<SectionInfo>();
 		Vector3I sectionPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
@@ -92,48 +93,27 @@ namespace ClassicalSharp {
 			Graphics.DeleteVb( drawInfo.SolidParts.VboID );
 			info.DrawInfo = null;
 		}
-		
-		static int NextMultipleOf16( int value ) {
-			int remainder = value % 16;
-			return remainder == 0 ? value : value + 16 - remainder;
-		}
-		
-		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
+
+		public void RedrawBlock( int x, int y, int z ) {
 			int cx = x >> 4;
 			int cy = y >> 4;
 			int cz = z >> 4;
-			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
-			// rather than the entire column.
-			int newLightcy = newHeight == -1 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight == -1 ? 0 : oldHeight >> 4;
 			
-			ResetSectionAndBelow( cx, cy, cz, newLightcy, oldLightcy );
+			ResetSectionAt( cx, cy, cz );
 			int bX = x & 0x0F; // % 16
 			int bY = y & 0x0F;
 			int bZ = z & 0x0F;
 			
-			if( bX == 0 ) ResetSectionAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 0 ) ResetSectionAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
-			if( bZ == 0 ) ResetSectionAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
-			if( bX == 15 ) ResetSectionAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 15 ) ResetSectionAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
-			if( bZ == 15 ) ResetSectionAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
+			if( bX == 0 ) ResetSectionAt( cx - 1, cy, cz );
+			if( bY == 0 ) ResetSectionAt( cx, cy - 1, cz );
+			if( bZ == 0 ) ResetSectionAt( cx, cy, cz - 1 );
+			if( bX == 15 ) ResetSectionAt( cx + 1, cy, cz );
+			if( bY == 15 ) ResetSectionAt( cx, cy + 1, cz );
+			if( bZ == 15 ) ResetSectionAt( cx, cy, cz + 1 );
 		}
 		
-		void ResetSectionAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
-			if( UsesLighting ) {
-				if( newLightCy == oldLightCy ) {
-					ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
-				} else {
-					int cyMax = Math.Max( newLightCy, oldLightCy );
-					int cyMin = Math.Min( oldLightCy, newLightCy );
-					for( cy = cyMax; cy >= cyMin; cy-- ) {
-						ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
-					}
-				}
-			} else {
-				ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
-			}
+		void ResetSectionAt( int cx, int cy, int cz ) {
+			ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 		}
 		
 		void ResetOrCreateSection( int x, int y, int z ) {
@@ -148,6 +128,14 @@ namespace ClassicalSharp {
 				}
 			}
 			sections.Add( new SectionInfo( x, y, z ) );
+		}
+		
+		public void LoadChunk( Chunk chunk ) {
+			int x = chunk.ChunkX << 4;
+			int z = chunk.ChunkZ << 4;
+			for( int y = 0; y < Map.Height; y += 16 ) {
+				sections.Add( new SectionInfo( x, y, z ) );
+			}
 		}
 		
 		public void UnloadChunk( int chunkX, int chunkZ ) {
@@ -183,7 +171,7 @@ namespace ClassicalSharp {
 			Graphics.Texturing = true;
 			Graphics.AlphaTest = true;
 			Graphics.FaceCulling = true;
-			RenderSolidBatch();		
+			RenderSolidBatch();
 			Graphics.FaceCulling = false;
 			RenderSpriteBatch();
 			Graphics.AlphaTest = false;
@@ -236,7 +224,7 @@ namespace ClassicalSharp {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
 			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];				
+				SectionInfo info = sections[i];
 				Vector3I loc = info.Location;
 				int distSqr = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
 				bool inRange = distSqr <= adjViewDistSqr;

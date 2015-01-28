@@ -1,4 +1,6 @@
 ﻿using System;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Window;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -10,6 +12,7 @@ namespace ClassicalSharp {
 		public float YawDegrees, PitchDegrees;
 		
 		public int EntityId;
+		protected Game game;
 		
 		public abstract void Tick( double delta );
 		
@@ -26,6 +29,7 @@ namespace ClassicalSharp {
 		public Entity( Game window ) {
 			map = window.Map;
 			info = window.BlockInfo;
+			this.game = window;
 		}
 		
 		public abstract float StepSize { get; }
@@ -39,6 +43,20 @@ namespace ClassicalSharp {
 				                       pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2 );
 			}
 		}
+		
+		public virtual void SetEquipmentSlot( short slotId, Slot slot ) {
+		}
+		
+		public virtual void SetStatus( byte status ) {
+		}
+		
+		public virtual void SetMetadata( EntityMetadata meta ) {			
+		}
+		
+		public virtual void DoAnimation( byte anim ) {
+		}
+		
+		public abstract void SetLocation( LocationUpdate update, bool interpolate );
 		
 		public abstract void Despawn();
 		

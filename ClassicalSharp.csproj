@@ -141,6 +141,7 @@
     <Compile Include="Network\Packets\InboundPackets.cs" />
     <Compile Include="Network\Packets\OutboundPackets.cs" />
     <Compile Include="Network\Packets\Packet.cs" />
+    <Compile Include="NullEntity.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
     <Compile Include="Physics\Entity.Physics.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />

@@ -58,9 +58,7 @@ namespace ClassicalSharp {
 				if( !map.IsValidPos( blockCoords ) ) return Block.Air;
 				return (Block)map.GetBlock( blockCoords );
 			}
-		}
-		
-		public abstract void SetLocation( LocationUpdate update, bool interpolate );
+		}		
 		
 		public float leftLegXRot, leftArmXRot, leftArmZRot;
 		public float rightLegXRot, rightArmXRot, rightArmZRot;
