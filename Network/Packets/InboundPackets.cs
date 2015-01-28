@@ -519,9 +519,8 @@ namespace ClassicalSharp.Network.Packets {
 			int elementSize = sizeX * sizeY * sizeZ;
 			int totalSize = elementSize + elementSize * 3 / 2; // blocks + meta + blocklight + skylight
 			byte[] data = Decompress( compressedData, totalSize );
-			Console.WriteLine( sizeX + "," + sizeY + "," + sizeZ );
-			// Full chunk.
-			if( sizeX == 16 && sizeY == 128 && sizeZ == 16 ) {
+
+			if( sizeX == 16 && sizeY == 128 && sizeZ == 16 ) { // Full chunk
 				Chunk chunk = new Chunk( x >> 4, z >> 4, false, game );
 				int index = 0;	
 				chunk.Blocks = GetPortion( data, elementSize, ref index );	
@@ -530,7 +529,31 @@ namespace ClassicalSharp.Network.Packets {
 				chunk.SkyLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				game.Map.LoadChunk( chunk );
 			} else {
-				Console.WriteLine( "Partial chunk update not yet done!!!" );
+				Console.WriteLine( "Partial chunk update not done yet!!!" + sizeX + "," + sizeY + "," + sizeZ );
+				return;
+				
+				if( sizeX > 16 || sizeZ > 16 ) {
+					Utils.LogWarning( "Cannot update multiple chunks yet." );
+					return;
+				}
+				Chunk chunk = game.Map.GetChunk( x >> 4, z >> 4 );
+				if( chunk == null ) {
+					chunk = new Chunk( x >> 4, z >> 4, true, game );
+					game.Map.AddChunk( chunk );
+				}
+				int startX = x & 0x0F;
+				int startY = y;
+				int startZ = z & 0x0F;
+				
+				int index = 0;
+				byte[] blocks = GetPortion( data, elementSize, ref index );
+				NibbleArray metadata = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				for( int i = 0; i < elementSize; i++ ) {
+					int blockX = startX + ( ( i / sizeY ) / sizeZ );
+					int blockY = startY + ( i % sizeY );
+					int blockZ = startZ + ( ( i / sizeY ) % sizeZ );
+					game.UpdateChunkBlock( blockX, blockY, blockZ, blocks[i], metadata[i], chunk );
+				}
 				throw new NotImplementedException();
 			}			
 		}
@@ -558,7 +581,6 @@ namespace ClassicalSharp.Network.Packets {
 				}
 			}
 		}
-
 	}
 	
 	public sealed class MultiBlockChangeInbound : InboundPacket {

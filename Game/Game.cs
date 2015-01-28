@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
 			Map = new Map( this );
-			LocalPlayer = new LocalPlayer( 255, this );
+			LocalPlayer = new LocalPlayer( this );
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
@@ -227,6 +227,7 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
+			Network.Dispose();
 			base.Dispose();
 		}
 		
@@ -288,10 +289,9 @@ namespace ClassicalSharp {
 			int x = ( chunk.ChunkX << 4 ) + blockX;
 			int z = ( chunk.ChunkZ << 4 ) + blockZ;
 			
-			byte oldBlock = chunk.GetBlock( blockX, y, blockZ );
 			chunk.SetBlock( blockX, y, blockZ, block );
 			chunk.SetBlockMetadata( blockX, y, blockZ, meta );
-			MapRenderer.RedrawBlock( blockX, y, blockZ );
+			MapRenderer.RedrawBlock( x, y, z );
 		}
 	}
 	

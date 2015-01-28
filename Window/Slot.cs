@@ -1,7 +1,4 @@
 ﻿using System;
-using System.IO;
-using ClassicalSharp.Network;
-using fNbt;
 
 namespace ClassicalSharp.Window {
 	
@@ -12,8 +9,6 @@ namespace ClassicalSharp.Window {
 		public byte Count;
 		
 		public short Damage;
-		
-		public NbtFile NbtMetadata;
 		
 		public bool IsEmpty {
 			get { return Id < 0; }

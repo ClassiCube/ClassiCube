@@ -25,18 +25,14 @@ namespace ClassicalSharp {
 			get { return 0.5f; }
 		}
 		
-		public Game Window;
-		public byte ID;
 		public string DisplayName, SkinName;
 		public string ModelName;
 		public IModel Model;
 		protected PlayerRenderer renderer;
 		public SkinType SkinType;
 		
-		public Player( byte id, Game window ) : base( window ) {
-			ID = id;
-			Window = window;
-			SkinType = Window.DefaultPlayerSkinType;
+		public Player( Game window ) : base( window ) {
+			SkinType = game.DefaultPlayerSkinType;
 			SetModel( "humanoid" );
 		}
 		
@@ -96,7 +92,7 @@ namespace ClassicalSharp {
 		
 		public void SetModel( string modelName ) {
 			ModelName = modelName;
-			Model = Window.ModelCache.GetModel( ModelName );
+			Model = game.ModelCache.GetModel( ModelName );
 		}
 	}
 }

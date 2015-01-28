@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 		public Entity( Game window ) {
 			map = window.Map;
 			info = window.BlockInfo;
-			this.game = window;
+			game = window;
 		}
 		
 		public abstract float StepSize { get; }

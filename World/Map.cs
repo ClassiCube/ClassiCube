@@ -100,6 +100,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public void AddChunk( Chunk chunk ) {
+			chunks.Add( new Vector2I( chunk.ChunkX, chunk.ChunkZ ), chunk );
+		}
+		
 		public void LoadChunk( Chunk chunk ) {
 			chunks.Add( new Vector2I( chunk.ChunkX, chunk.ChunkZ ), chunk );
 			Window.MapRenderer.LoadChunk( chunk );

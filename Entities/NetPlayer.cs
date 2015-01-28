@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		int tickCount = 0;
 		
-		public NetPlayer( byte id, string displayName, string skinName, Game window ) : base( id, window ) {
+		public NetPlayer( string displayName, string skinName, Game window ) : base( window ) {
 			DisplayName = displayName;
 			SkinName = Utils.StripColours( skinName );
 			renderer = new PlayerRenderer( this, window );
@@ -65,10 +65,10 @@ namespace ClassicalSharp {
 		State newState, oldState;
 		public override void Tick( double delta ) {
 			Bitmap bmp;
-			Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
+			game.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
 			if( bmp != null ) {
-				Window.Graphics.DeleteTexture( renderer.TextureId );
-				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
+				game.Graphics.DeleteTexture( renderer.TextureId );
+				renderer.TextureId = game.Graphics.LoadTexture( bmp );
 				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
 			}

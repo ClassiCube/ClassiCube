@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 			set { canNoclip = value; if( !value ) noClip = false; }
 		}
 		
-		public LocalPlayer( byte id, Game window ) : base( id, window ) {
+		public LocalPlayer( Game window ) : base( window ) {
 			DisplayName = window.Username;
 			SkinName = window.Username;
 		}
@@ -74,18 +74,18 @@ namespace ClassicalSharp {
 		void HandleInput( out float xMoving, out float zMoving ) {
 			xMoving = 0;
 			zMoving = 0;
-			if( Window.ScreenLockedInput ) {
+			if( game.ScreenLockedInput ) {
 				jumping = speeding = flyingUp = flyingDown = false;
 			} else {
-				if( Window.IsKeyDown( KeyMapping.Forward ) ) xMoving -= 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Back ) ) xMoving += 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Left ) ) zMoving -= 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
+				if( game.IsKeyDown( KeyMapping.Forward ) ) xMoving -= 0.98f;
+				if( game.IsKeyDown( KeyMapping.Back ) ) xMoving += 0.98f;
+				if( game.IsKeyDown( KeyMapping.Left ) ) zMoving -= 0.98f;
+				if( game.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
 
-				jumping = Window.IsKeyDown( KeyMapping.Jump );
-				speeding = CanSpeed && Window.IsKeyDown( KeyMapping.Speed );
-				flyingUp = Window.IsKeyDown( KeyMapping.FlyUp );
-				flyingDown = Window.IsKeyDown( KeyMapping.FlyDown );
+				jumping = game.IsKeyDown( KeyMapping.Jump );
+				speeding = CanSpeed && game.IsKeyDown( KeyMapping.Speed );
+				flyingUp = game.IsKeyDown( KeyMapping.FlyUp );
+				flyingDown = game.IsKeyDown( KeyMapping.FlyDown );
 			}
 		}
 		
@@ -215,8 +215,8 @@ namespace ClassicalSharp {
 		
 		int tickCount = 0;
 		public override void Tick( double delta ) {
-			if( Window.Map == null || Window.Map.IsNotLoaded ) return;
-			map = Window.Map;
+			if( game.Map == null || game.Map.IsNotLoaded ) return;
+			map = game.Map;
 			
 			float xMoving, zMoving;
 			lastPos = Position = nextPos;
@@ -232,10 +232,10 @@ namespace ClassicalSharp {
 			tickCount++;
 			if( renderer != null ) {
 				Bitmap bmp;
-				Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
+				game.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
 				if( bmp != null ) {
-					Window.Graphics.DeleteTexture( renderer.TextureId );
-					renderer.TextureId = Window.Graphics.LoadTexture( bmp );
+					game.Graphics.DeleteTexture( renderer.TextureId );
+					renderer.TextureId = game.Graphics.LoadTexture( bmp );
 					SkinType = Utils.GetSkinType( bmp );
 					bmp.Dispose();
 				}
@@ -261,19 +261,19 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double deltaTime, float t ) {
-			if( !Window.Camera.IsThirdPerson ) return;
+			if( !game.Camera.IsThirdPerson ) return;
 			if( renderer == null ) {
-				renderer = new PlayerRenderer( this, Window );
-				Window.AsyncDownloader.DownloadSkin( SkinName );
+				renderer = new PlayerRenderer( this, game );
+				game.AsyncDownloader.DownloadSkin( SkinName );
 			}
 			SetCurrentAnimState( tickCount, t );
 			renderer.Render( deltaTime );
 		}
 		
 		public bool HandleKeyDown( Key key ) {
-			if( key == Window.Keys[KeyMapping.Fly] && canFly ) {
+			if( key == game.Keys[KeyMapping.Fly] && canFly ) {
 				flying = !flying;
-			} else if( key == Window.Keys[KeyMapping.NoClip] && canNoclip ) {
+			} else if( key == game.Keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
 			} else {
 				return false;
