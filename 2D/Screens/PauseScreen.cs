@@ -34,10 +34,9 @@ namespace ClassicalSharp {
 			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
 			
 			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
-				KeyMapping.Jump, KeyMapping.Respawn, KeyMapping.SetSpawn, KeyMapping.OpenChat, KeyMapping.SendChat,
-				KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
-			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
-				"Open chat", "Send chat", "Pause", "Open inventory" };
+				KeyMapping.Jump, KeyMapping.OpenChat, KeyMapping.SendChat, KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
+			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Open chat", "Send chat", 
+				"Pause", "Open inventory" };
 			MakeKeysLeft( mappingsLeft, descriptionsLeft );
 			
 			KeyMapping[] mappingsRight = { KeyMapping.Screenshot, KeyMapping.Fullscreen, KeyMapping.ThirdPersonCamera,

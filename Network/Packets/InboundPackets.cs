@@ -1,7 +1,9 @@
 ﻿using System;
+using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Util;
 using ClassicalSharp.Window;
+using Ionic.Zlib;
 using OpenTK;
 
 namespace ClassicalSharp.Network.Packets {
@@ -59,7 +61,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.AddChat( text );
 		}
 	}
 	
@@ -101,7 +103,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.LocalPlayer.SpawnPoint = (Vector3)spawnPos;
 		}
 	}
 	
@@ -113,7 +115,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.LocalPlayer.Health = health;
 		}
 	}
 	
@@ -475,7 +477,9 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			if( !load ) {
+				game.Map.UnloadChunk( chunkX, chunkZ );
+			}
 		}
 	}
 	
@@ -498,6 +502,24 @@ namespace ClassicalSharp.Network.Packets {
 		public override void ReadCallback( Game game ) {
 			throw new NotImplementedException();
 		}
+		
+		static byte[] Decompress( byte[] compressed, int uncompressedSize ) {
+			byte[] temp = new byte[1024];
+			
+			using( MemoryStream dest = new MemoryStream( uncompressedSize ) ) {
+				using( MemoryStream src = new MemoryStream( compressed ) ) {
+					using( Stream decompressor = new ZlibStream( src, CompressionMode.Decompress ) ) {
+						int count;
+						while( ( count = decompressor.Read( temp, 0, temp.Length ) ) != 0 ) {
+							dest.Write( temp, 0, count );
+						}
+						if( dest.Capacity != dest.Length ) throw new InvalidOperationException( "uncompressed size wrong???" );
+						return dest.GetBuffer();
+					}
+				}
+			}
+		}
+
 	}
 	
 	public sealed class MultiBlockChangeInbound : InboundPacket {

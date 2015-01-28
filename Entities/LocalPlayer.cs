@@ -9,11 +9,11 @@ namespace ClassicalSharp {
 	public class LocalPlayer : Player {
 		
 		public Vector3 SpawnPoint;
+		public short Health;
 		
 		public float ReachDistance = 5f;
 		
-		public byte UserType;
-		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
+		bool canSpeed = true, canFly = true, canNoclip = true;
 		
 		public bool CanSpeed {
 			get { return canSpeed; }
@@ -23,11 +23,6 @@ namespace ClassicalSharp {
 		public bool CanFly {
 			get { return canFly; }
 			set { canFly = value; if( !value ) flying = false; }
-		}
-		
-		public bool CanRespawn {
-			get { return canRespawn; }
-			set { canRespawn = value; }
 		}
 		
 		public bool CanNoclip {
@@ -264,12 +259,7 @@ namespace ClassicalSharp {
 		}
 		
 		public bool HandleKeyDown( Key key ) {
-			if( key == Window.Keys[KeyMapping.Respawn] && canRespawn ) {
-				LocationUpdate update = LocationUpdate.MakePos( SpawnPoint, false );
-				SetLocation( update, false );
-			} else if( key == Window.Keys[KeyMapping.SetSpawn] && canRespawn ) {
-				SpawnPoint = Position;
-			} else if( key == Window.Keys[KeyMapping.Fly] && canFly ) {
+			if( key == Window.Keys[KeyMapping.Fly] && canFly ) {
 				flying = !flying;
 			} else if( key == Window.Keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;

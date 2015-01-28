@@ -137,6 +137,8 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetOrCreateSection( int x, int y, int z ) {
+			if( y < 0 || y >= Map.Height ) return;
+			
 			for( int i = 0; i < sections.Count; i++ ) {
 				SectionInfo info = sections[i];
 				Vector3I loc = info.Location;
@@ -146,6 +148,26 @@ namespace ClassicalSharp {
 				}
 			}
 			sections.Add( new SectionInfo( x, y, z ) );
+		}
+		
+		public void UnloadChunk( int chunkX, int chunkZ ) {
+			int x = chunkX << 4;
+			int z = chunkZ << 4;
+			for( int y = 0; y < Map.Height; y += 16 ) {
+				UnloadSection( x, y, z );
+			}
+		}
+		
+		void UnloadSection( int x, int y, int z ) {
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
+				Vector3I loc = info.Location;
+				if( loc.X == x && loc.Y == y && loc.Z == z ) {
+					ResetSection( info );
+					sections.RemoveAt( i );
+					return;
+				}
+			}
 		}
 		
 		public void Render( double deltaTime ) {

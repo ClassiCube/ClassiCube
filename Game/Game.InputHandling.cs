@@ -154,7 +154,7 @@ namespace ClassicalSharp {
 		}
 		
 		Key[] Keys = new Key[] {
-			Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
+			Key.W, Key.S, Key.A, Key.D, Key.Space, Key.T,
 			Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
 			Key.F5, Key.F6, Key.Z, Key.LShift, Key.X, Key.Q, Key.E,
 			Key.Tab, Key.H,
@@ -188,7 +188,7 @@ namespace ClassicalSharp {
 	}
 	
 	public enum KeyMapping {
-		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
+		Forward, Back, Left, Right, Jump, OpenChat,
 		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
 		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown,
 		PlayerList, ChatHistoryMode,

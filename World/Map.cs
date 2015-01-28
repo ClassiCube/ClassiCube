@@ -126,5 +126,11 @@ namespace ClassicalSharp {
 		public bool IsValidPos( Vector3I p ) {
 			return IsValidPos( p.X, p.Y, p.Z );
 		}
+		
+		public void UnloadChunk( int chunkX, int chunkZ ) {
+			if( chunks.Remove( new Vector2I( chunkX, chunkZ ) ) ) {
+				Window.MapRenderer.UnloadChunk( chunkX, chunkZ );
+			}
+		}
 	}
 }
