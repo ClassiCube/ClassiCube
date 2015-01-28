@@ -169,10 +169,6 @@ namespace ClassicalSharp.Commands {
 					Window.AddChat( "target pos: " + pos.BlockPos );
 					Window.AddChat( "target block: " + Utils.GetSpacedBlockName( block ) );
 				}
-			} else if( property == "dimensions" ) {
-				Window.AddChat( "map width: " + Window.Map.Width );
-				Window.AddChat( "map height: " + Window.Map.Height );
-				Window.AddChat( "map length: " + Window.Map.Length );
 			} else {
 				Window.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}

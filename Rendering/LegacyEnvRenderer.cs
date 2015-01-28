@@ -108,9 +108,9 @@ namespace ClassicalSharp.Renderers {
 			if( Map.IsNotLoaded ) return;
 			
 			int extent = Window.ViewDistance;
-			int x1 = 0 - extent, x2 = Map.Width + extent;
+			int x1 = 0 - extent, x2 = 0+ extent;
 			int y = Map.Height + 2;
-			int z1 = 0 - extent, z2 = Map.Length + extent;
+			int z1 = 0 - extent, z2 = 0 + extent;
 			FastColour cloudsCol = Map.CloudsCol;
 			
 			cloudsVertices = CountVertices( x2 - x1, z2 - z1 );
@@ -124,9 +124,9 @@ namespace ClassicalSharp.Renderers {
 			if( Map.IsNotLoaded ) return;
 			
 			int extent = Window.ViewDistance;
-			int x1 = 0 - extent, x2 = Map.Width + extent;
+			int x1 = 0 - extent, x2 = 0 + extent;
 			int y = Map.Height + skyOffset;
-			int z1 = 0 - extent, z2 = Map.Length + extent;
+			int z1 = 0 - extent, z2 = 0 + extent;
 			FastColour skyCol = Map.SkyCol;
 			
 			skyVertices = CountVertices( x2 - x1, z2 - z1 );

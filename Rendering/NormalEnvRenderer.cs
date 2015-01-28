@@ -107,9 +107,9 @@ namespace ClassicalSharp.Renderers {
 			if( Map.IsNotLoaded ) return;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
 			int extent = Window.ViewDistance;
-			int x1 = 0 - extent, x2 = Map.Width + extent;
+			int x1 = 0 - extent, x2 = 0 + extent;
 			int y = Map.Height + 2;
-			int z1 = 0 - extent, z2 = Map.Length + extent;
+			int z1 = 0 - extent, z2 = 0 + extent;
 			FastColour cloudsCol = Map.CloudsCol;
 			
 			vertices[0] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
@@ -127,9 +127,9 @@ namespace ClassicalSharp.Renderers {
 			if( Map.IsNotLoaded ) return;
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
 			int extent = Window.ViewDistance;
-			int x1 = 0 - extent, x2 = Map.Width + extent;
+			int x1 = 0 - extent, x2 = 0 + extent;
 			int y = Map.Height + skyOffset;
-			int z1 = 0 - extent, z2 = Map.Length + extent;
+			int z1 = 0 - extent, z2 = 0 + extent;
 			FastColour skyCol = Map.SkyCol;
 			
 			vertices[0] = new VertexPos3fCol4b( x2, y, z1, skyCol );

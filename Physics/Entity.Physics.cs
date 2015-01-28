@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		protected BlockInfo info;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( y >= map.Height ) return (byte)Block.Air;
+			if( y >= Map.Height ) return (byte)Block.Air;
 			if( !map.IsValidPos( x, y, z ) ) return (byte)Block.Bedrock;
 			return map.GetBlock( x, y, z );
 		}

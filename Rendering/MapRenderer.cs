@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
-namespace ClassicalSharp {
-	
+namespace ClassicalSharp {	
 	
 	// TODO: optimise chunk rendering
 	//  --> reduce the two passes: liquid pass only needs 1 small texture
@@ -12,31 +12,16 @@ namespace ClassicalSharp {
 	// |--> use indices.
 	public class MapRenderer : IDisposable {
 		
-		struct Point3S {
+		class SectionInfo {
 			
-			public short X, Y, Z;
-			
-			public Point3S( int x, int y, int z ) {
-				X = (short)x;
-				Y = (short)y;
-				Z = (short)z;
-			}
-			
-			public override string ToString() {
-				return X + "," + Y + "," + Z;
-			}
-		}
-		
-		class ChunkInfo {
-			
-			public Point3S Location;
+			public Vector3I Location;
 			
 			public bool Visible = true;
 			
-			public ChunkDrawInfo DrawInfo;
+			public SectionDrawInfo DrawInfo;
 			
-			public ChunkInfo( int x, int y, int z ) {
-				Location = new Point3S( x, y, z );
+			public SectionInfo( int x, int y, int z ) {
+				Location = new Vector3I( x, y, z );
 			}
 		}
 		
@@ -44,9 +29,8 @@ namespace ClassicalSharp {
 		public IGraphicsApi Graphics;
 		
 		ChunkMeshBuilder builder;		
-		int width, height, length;
-		ChunkInfo[] chunks;
-		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
+		List<SectionInfo> sections = new List<SectionInfo>();
+		Vector3I sectionPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
 		public readonly bool UsesLighting;
 		
@@ -61,17 +45,16 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			ClearChunkCache();
-			chunks = null;
+			ClearSectionCache();
+			sections = null;
 			Window.OnNewMap -= OnNewMap;
 			Window.OnNewMapLoaded -= OnNewMapLoaded;
 			Window.EnvVariableChanged -= EnvVariableChanged;
 		}
 		
 		public void Refresh() {
-			if( chunks != null && !Window.Map.IsNotLoaded ) {
-				ClearChunkCache();
-				CreateChunkCache();
+			if( sections != null && !Window.Map.IsNotLoaded ) {
+				ClearSectionCache();
 			}
 		}
 		
@@ -84,54 +67,30 @@ namespace ClassicalSharp {
 		
 		void OnNewMap( object sender, EventArgs e ) {
 			Window.ChunkUpdates = 0;
-			ClearChunkCache();
-			chunks = null;
-			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
+			ClearSectionCache();
+			sectionPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			builder.OnNewMap();
 		}
 		
-		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded( object sender, EventArgs e ) {
-			width = NextMultipleOf16( Window.Map.Width );
-			height = NextMultipleOf16( Window.Map.Height );
-			length = NextMultipleOf16( Window.Map.Length );
-			chunksX = width >> 4;
-			chunksY = height >> 4;
-			chunksZ = length >> 4;
-			
-			chunks = new ChunkInfo[chunksX * chunksY * chunksZ];
-			distances = new int[chunks.Length];
-			CreateChunkCache();
 			builder.OnNewMapLoaded();
 		}
 		
-		void ClearChunkCache() {
-			if( chunks == null ) return;
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				DeleteChunk( chunks[i] );
+		void ClearSectionCache() {
+			for( int i = 0; i < sections.Count; i++ ) {
+				ResetSection( sections[i] );
 			}
+			sections.Clear();
 		}
 		
-		void DeleteChunk( ChunkInfo info ) {
-			ChunkDrawInfo drawInfo = info.DrawInfo;
+		void ResetSection( SectionInfo info ) {
+			SectionDrawInfo drawInfo = info.DrawInfo;
 			if( drawInfo == null ) return;
 			
 			Graphics.DeleteVb( drawInfo.SpriteParts.VboID );
 			Graphics.DeleteVb( drawInfo.TranslucentParts.VboID );
 			Graphics.DeleteVb( drawInfo.SolidParts.VboID );
 			info.DrawInfo = null;
-		}
-		
-		void CreateChunkCache() {
-			int index = 0;
-			for( int z = 0; z < length; z += 16 ) {
-				for( int y = 0; y < height; y += 16 ) {
-					for( int x = 0; x < width; x += 16 ) {
-						chunks[index++] = new ChunkInfo( x, y, z );
-					}
-				}
-			}
 		}
 		
 		static int NextMultipleOf16( int value ) {
@@ -148,48 +107,49 @@ namespace ClassicalSharp {
 			int newLightcy = newHeight == -1 ? 0 : newHeight >> 4;
 			int oldLightcy = oldHeight == -1 ? 0 : oldHeight >> 4;
 			
-			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
+			ResetSectionAndBelow( cx, cy, cz, newLightcy, oldLightcy );
 			int bX = x & 0x0F; // % 16
 			int bY = y & 0x0F;
 			int bZ = z & 0x0F;
 			
-			if( bX == 0 && cx > 0 ) ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 0 && cy > 0 ) ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
-			if( bZ == 0 && cz > 0 ) ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
-			if( bX == 15 && cx < chunksX - 1 ) ResetChunkAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 15 && cy < chunksY - 1 ) ResetChunkAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
-			if( bZ == 15 && cz < chunksZ - 1 ) ResetChunkAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
+			if( bX == 0 ) ResetSectionAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
+			if( bY == 0 ) ResetSectionAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
+			if( bZ == 0 ) ResetSectionAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
+			if( bX == 15 ) ResetSectionAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
+			if( bY == 15 ) ResetSectionAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
+			if( bZ == 15 ) ResetSectionAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
 		}
 		
-		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
+		void ResetSectionAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
 			if( UsesLighting ) {
 				if( newLightCy == oldLightCy ) {
-					ResetChunk( cx << 4, cy << 4, cz << 4 );
+					ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 				} else {
 					int cyMax = Math.Max( newLightCy, oldLightCy );
 					int cyMin = Math.Min( oldLightCy, newLightCy );
 					for( cy = cyMax; cy >= cyMin; cy-- ) {
-						ResetChunk( cx << 4, cy << 4, cz << 4 );
+						ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 					}
 				}
 			} else {
-				ResetChunk( cx << 4, cy << 4, cz << 4 );
+				ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 			}
 		}
 		
-		void ResetChunk( int cx, int cy, int cz ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				Point3S loc = info.Location;
-				if( loc.X == cx && loc.Y == cy && loc.Z == cz ) {
-					DeleteChunk( info );
-					break;
+		void ResetOrCreateSection( int x, int y, int z ) {
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
+				Vector3I loc = info.Location;
+				if( loc.X == x && loc.Y == y && loc.Z == z ) {
+					ResetSection( info );
+					return;
 				}
 			}
+			sections.Add( new SectionInfo( x, y, z ) );
 		}
 		
 		public void Render( double deltaTime ) {
-			if( chunks == null ) return;
+			if( sections == null ) return;
 			Window.Vertices = 0;
 			UpdateSortOrder();
 			UpdateChunks();
@@ -231,32 +191,32 @@ namespace ClassicalSharp {
 			builder.EndRender();
 		}
 
-		int[] distances;
 		void UpdateSortOrder() {
 			Player p = Window.LocalPlayer;
 			Vector3I newChunkPos = Vector3I.Floor( p.Position );
 			newChunkPos.X = ( newChunkPos.X & ~0x0F ) + 8;
 			newChunkPos.Y = ( newChunkPos.Y & ~0x0F ) + 8;
 			newChunkPos.Z = ( newChunkPos.Z & ~0x0F ) + 8;
-			if( newChunkPos != chunkPos ) {
-				chunkPos = newChunkPos;
-				for( int i = 0; i < distances.Length; i++ ) {
-					ChunkInfo info = chunks[i];
-					Point3S loc = info.Location;
-					distances[i] = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, chunkPos.X, chunkPos.Y, chunkPos.Z );
-				}
-				// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
-				Array.Sort( distances, chunks );
+			if( newChunkPos != sectionPos ) {
+				sections.Sort( CompareChunks );
 			}
+		}
+		
+		int CompareChunks( SectionInfo a, SectionInfo b ) {
+			Vector3I aLoc = a.Location;
+			Vector3I bLoc = b.Location;
+			int distA = Utils.DistanceSquared( aLoc.X + 8, aLoc.Y + 8, aLoc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
+			int distB = Utils.DistanceSquared( bLoc.X + 8, bLoc.Y + 8, bLoc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
+			return distA.CompareTo( distB );
 		}
 		
 		void UpdateChunks() {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];				
-				Point3S loc = info.Location;
-				int distSqr = distances[i];
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];				
+				Vector3I loc = info.Location;
+				int distSqr = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.DrawInfo == null ) {
@@ -277,8 +237,8 @@ namespace ClassicalSharp {
 		
 		// TODO: there's probably a better way of doing this.
 		void RenderSolidBatch() {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts;
@@ -290,8 +250,8 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderSpriteBatch() {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts;
@@ -303,8 +263,8 @@ namespace ClassicalSharp {
 		}
 
 		void RenderTranslucentBatch() {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts;
@@ -316,8 +276,8 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderTranslucentBatchNoAdd() {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
+			for( int i = 0; i < sections.Count; i++ ) {
+				SectionInfo info = sections[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts;

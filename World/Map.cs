@@ -1,15 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using ClassicalSharp.World;
 
 namespace ClassicalSharp {
 
 	public class Map {
 
 		public Game Window;
-		byte[] mapData;
-		public int Width, Height, Length;	
-		short[] heightmap;
-		int maxY;
-		int oneY;
 		
 		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
 		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
@@ -22,22 +19,23 @@ namespace ClassicalSharp {
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
 		
 		public Map( Game window ) {
+			IsNotLoaded = true;
 			Window = window;
 			SetSunlight( DefaultSunlight );
 			SetShadowlight( DefaultShadowlight );
 		}
 		
-		public bool IsNotLoaded {
-			get { return Width == 0 && Height == 0 && Length == 0; }
-		}
+		public bool IsNotLoaded { get; set; }
+		
+		public const int Height = Chunk.Height;
 		
 		public void Reset() {
 			SetShadowlight( DefaultShadowlight );
 			SetSunlight( DefaultSunlight );
-			Width = Height = Length = 0;
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
+			chunks.Clear();
 		}
 		
 		public void SetSkyColour( FastColour col ) {
@@ -67,70 +65,35 @@ namespace ClassicalSharp {
 			Window.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
 		
-		public int GetLightHeight( int x,  int z ) {
-			int index = ( x * Length ) + z;
-			int height = heightmap[index];
-			
-			if( height == short.MaxValue ) {
-				height = CalcHeightAt( x, maxY, z, index );
-			}
-			return height;
-		}
-		
-		int CalcHeightAt( int x, int maxY, int z, int index ) {
-			heightmap[index] = -1;
-			for( int y = maxY; y >= 0; y-- ) {
-				byte block = GetBlock( x, y, z );
-				if( Window.BlockInfo.BlocksLight( block ) ) {
-					heightmap[index] = (short)y;
-					return y;
-				}
-			}
-			return -1;
-		}
-		
-		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = Window.BlockInfo.BlocksLight( oldBlock );
-			bool nowBlocks = Window.BlockInfo.BlocksLight( newBlock );
-			if( didBlock && nowBlocks || !didBlock && !nowBlocks ) return;
-			
-			int index = ( x * Length ) + z;
-			if( nowBlocks ) {
-				if( y > GetLightHeight( x, z ) ) {
-					heightmap[index] = (short)y;
-				}
-			} else {
-				if( y >= GetLightHeight( x, z ) ) {
-					CalcHeightAt( x, y, z, index );
-				}
-			}
-		}
-		
 		void AdjustLight( FastColour normal, ref FastColour xSide, ref FastColour zSide, ref FastColour yBottom ) {
 			xSide = FastColour.Scale( normal, 0.6f );
 			zSide = FastColour.Scale( normal, 0.8f );
 			yBottom = FastColour.Scale( normal, 0.5f );
 		}
 		
-		public void UseRawMap( byte[] map, int width, int height, int length ) {
-			mapData = map;
-			this.Width = width;
-			this.Height = height;
-			this.Length = length;
-			maxY = height - 1;
-			oneY = length * width;
-			
-			heightmap = new short[width * length];
-			for( int i = 0; i < heightmap.Length; i++ ) {
-				heightmap[i] = short.MaxValue;
-			}
-		}
+		Dictionary<Vector2I, Chunk> chunks = new Dictionary<Vector2I, Chunk>();
 		
 		public void SetBlock( int x, int y, int z, byte blockId ) {
-			int index = ( y * Length + z ) * Width + x;
-			byte oldBlock = mapData[index];
-			mapData[index] = blockId;
-			UpdateHeight( x, y, z, oldBlock, blockId );
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			Chunk chunk;
+			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
+				int blockX = x & 0x0F;
+				int blockZ = z & 0x0F;
+				byte oldBlock = chunk.GetBlock( blockX, y, blockZ );
+				chunk.SetBlock( blockX, y, blockZ, blockId );
+				chunk.UpdateHeight( x, y, z, oldBlock, blockId );
+			}			
+		}
+		
+		public int GetLightHeight( int x, int z ) {
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			Chunk chunk;
+			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
+				return chunk.GetLightHeight( x, z );
+			}
+			return -1;
 		}
 		
 		public void SetBlock( Vector3I p, byte blockId ) {
@@ -138,21 +101,30 @@ namespace ClassicalSharp {
 		}
 		
 		public byte GetBlock( int x, int y, int z ) {
-			return mapData[( y * Length + z ) * Width + x];
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			Chunk chunk;
+			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
+				int blockX = x & 0x0F;
+				int blockZ = z & 0x0F;
+				return chunk.GetBlock( blockX, y, blockZ );
+			}
+			return 0;
 		}
 		
 		public byte GetBlock( Vector3I p ) {
-			return mapData[( p.Y * Length + p.Z ) * Width + p.X];
+			return GetBlock( p.X, p.Y, p.Z );
 		}
 		
 		public bool IsValidPos( int x, int y, int z ) {
-			return x >= 0 && y >= 0 && z >= 0 &&
-				x < Width && y < Height && z < Length;
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			return y >= 0 && y < Height &&
+				chunks.ContainsKey( new Vector2I( chunkX, chunkZ ) );
 		}
 		
 		public bool IsValidPos( Vector3I p ) {
-			return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
-				p.X < Width && p.Y < Height && p.Z < Length;
+			return IsValidPos( p.X, p.Y, p.Z );
 		}
 	}
 }

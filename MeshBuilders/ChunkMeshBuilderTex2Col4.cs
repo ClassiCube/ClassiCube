@@ -96,8 +96,8 @@ namespace ClassicalSharp {
 			return BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1;
 		}
 		
-		protected override ChunkDrawInfo GetChunkInfo( int x, int y, int z ) {
-			ChunkDrawInfo info = new ChunkDrawInfo();
+		protected override SectionDrawInfo GetChunkInfo( int x, int y, int z ) {
+			SectionDrawInfo info = new SectionDrawInfo();
 			info.SolidParts = GetPartInfo( Solid );
 			info.TranslucentParts = GetPartInfo( Translucent );
 			info.SpriteParts = GetPartInfo( Sprite );

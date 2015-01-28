@@ -116,7 +116,6 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
-    <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Model\BlockModel.cs" />
@@ -159,6 +158,7 @@
     <Compile Include="Util\ConcurrentQueue.cs" />
     <Compile Include="Util\FastBitmap.cs" />
     <Compile Include="Util\FastColour.cs" />
+    <Compile Include="Util\NibbleArray.cs" />
     <Compile Include="Util\TextureAtlas2D.cs" />
     <Compile Include="Util\Utils.cs" />
     <Compile Include="Util\Vector2I.cs" />
@@ -171,6 +171,8 @@
     <Compile Include="Window\Window.cs" />
     <Compile Include="Window\WindowManager.cs" />
     <Compile Include="Window\WorkbenchWindow.cs" />
+    <Compile Include="World\Chunk.cs" />
+    <Compile Include="World\Map.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -207,6 +209,7 @@
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Network\Packets" />
+    <Folder Include="World" />
     <Folder Include="Window" />
     <Folder Include="Util" />
     <Folder Include="Physics" />

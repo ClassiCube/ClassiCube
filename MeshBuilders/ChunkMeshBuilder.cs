@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {		
+		public SectionDrawInfo GetDrawInfo( int x, int y, int z ) {		
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
@@ -292,7 +292,7 @@ namespace ClassicalSharp {
 			map = Window.Map;
 		}
 		
-		protected abstract ChunkDrawInfo GetChunkInfo( int x, int y, int z );
+		protected abstract SectionDrawInfo GetChunkInfo( int x, int y, int z );
 
 		protected abstract void DrawTopFace();
 
@@ -309,7 +309,7 @@ namespace ClassicalSharp {
 		protected abstract void DrawSprite();
 	}
 	
-	public class ChunkDrawInfo {		
+	public class SectionDrawInfo {		
 		public ChunkPartInfo SolidParts;
 		public ChunkPartInfo TranslucentParts;
 		public ChunkPartInfo SpriteParts;

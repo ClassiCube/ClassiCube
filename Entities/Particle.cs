@@ -63,16 +63,6 @@ namespace ClassicalSharp.Particles {
 			Position += Velocity * (float)delta;
 			int endY = (int)Math.Floor( Position.Y );
 			
-			// Prevent the particle from going outside the map on horizontal axes.
-			if( Position.X < 0 )
-				Position.X = 0;
-			if( Position.Z < 0 )
-				Position.Z = 0;
-			if( Position.X >= Window.Map.Width )
-				Position.X = Window.Map.Width - 0.01f;
-			if( Position.Z >= Window.Map.Length )
-				Position.Z = Window.Map.Length - 0.01f;
-			
 			if( endY <= startY ) {
 				for( int y = startY; y >= endY; y-- ) {
 					if( y < 0 ) {
@@ -96,7 +86,7 @@ namespace ClassicalSharp.Particles {
 		byte GetBlock( int x, int y, int z ) {
 			// If particles are spawned at the top of the map, they can occasionally
 			// go outside the top of the map. This is okay, so handle this case.
-			if( y >= Window.Map.Height ) return 0;
+			if( y >= Map.Height ) return 0;
 			return Window.Map.GetBlock( x, y, z );
 		}
 		
