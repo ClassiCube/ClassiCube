@@ -3,39 +3,41 @@
 namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
-			
+		
 		bool[] isTransparent = new bool[blocksCount];
 		bool[] isTranslucent = new bool[blocksCount];
 		bool[] isOpaque = new bool[blocksCount];
 		bool[] isSprite = new bool[blocksCount];
 		bool[] isLiquid = new bool[blocksCount];
 		float[] heights = new float[blocksCount];
-		bool[] blocksLight = new bool[blocksCount];	
+		bool[] blocksLight = new bool[blocksCount];
 		const int blocksCount = 256;
 		
 		public void Init() {
 			for( int i = 1; i < blocksCount; i++ ) {
 				heights[i] = 1;
 				blocksLight[i] = true;
-				isOpaque[i] = true;				
+				isOpaque[i] = true;
 			}
 			SetupOptimTextures();
 			
 			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
 			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
 			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			                 Block.Dandelion, Block.Slabs );
+			                 Block.Dandelion, Block.Slabs, Block.Snow, Block.Fire,
+			                 Block.Torch, Block.RedstoneWire, Block.RedstoneTorchOn, 
+			                 Block.RedstoneTorchOff, Block.MonsterSpawner,
+			                 Block.DeadShrubs, Block.TallGrass );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
-			            Block.BrownMushroom, Block.RedMushroom );
-			SetBlockHeight( 0.5f, Block.Slabs );
+			            Block.BrownMushroom, Block.RedMushroom, Block.Torch,
+			            Block.DeadShrubs, Block.TallGrass, Block.Fire, Block.RedstoneWire,
+			            Block.RedstoneTorchOn, Block.RedstoneTorchOff );
+			
 			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
 			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			               Block.Dandelion );
+			               Block.Dandelion, Block.Fire );
 			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
-					
-			SetIsTransparent( Block.Snow, Block.Fire );
-			SetBlocksLight( false, Block.Fire );
-			SetIsSprite( Block.Fire );
+			SetBlockHeight( 0.5f, Block.Slabs );
 			SetBlockHeight( 0.125f, Block.Snow );
 		}
 		

@@ -109,9 +109,7 @@ namespace ClassicalSharp {
 			Window.MapRenderer.LoadChunk( chunk );
 		}
 		
-		public Chunk GetChunk( int x, int z ) {
-			int chunkX = x >> 4;
-			int chunkZ = z >> 4;
+		public Chunk GetChunk( int chunkX, int chunkZ ) {
 			Chunk chunk;
 			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
 				return chunk;

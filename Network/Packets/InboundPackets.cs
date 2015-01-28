@@ -527,10 +527,10 @@ namespace ClassicalSharp.Network.Packets {
 				chunk.Metadata = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				chunk.BlockLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				chunk.SkyLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				game.Map.UnloadChunk( chunk.ChunkX, chunk.ChunkZ );
 				game.Map.LoadChunk( chunk );
 			} else {
 				Console.WriteLine( "Partial chunk update not done yet!!!" + sizeX + "," + sizeY + "," + sizeZ );
-				return;
 				
 				if( sizeX > 16 || sizeZ > 16 ) {
 					Utils.LogWarning( "Cannot update multiple chunks yet." );
