@@ -31,7 +31,7 @@ namespace ClassicalSharp.Entities {
 			get { 
 				return entities[entityId];
 			}
-			set { 
+			set {
 				entities[entityId] = value;
 				value.EntityId = entityId;
 			}

@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static string StripColours( string value ) {
-			if( value.IndexOf( '&' ) == -1 ) {
+			if( value.IndexOf( '§' ) == -1 ) {
 				return value;
 			}
 			
@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < value.Length; i++ ) {
 				char token = value[i];
-				if( token == '&' ) {
+				if( token == '§' ) {
 					i++; // Skip over the following colour code.
 				} else {
 					output[usedChars++] = token;
@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			int code = 15;
 			List<DrawTextArgs> parts = new List<DrawTextArgs>();
 			for( int i = 0; i < value.Length; i++ ) {
-				int nextAnd = value.IndexOf( '&', i );
+				int nextAnd = value.IndexOf( '§', i );
 				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
 				
 				if( partLength > 0 ) {

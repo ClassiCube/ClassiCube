@@ -9,9 +9,9 @@ namespace ClassicalSharp.Window {
 		
 		public short Id;
 		
-		public byte ItemCount;
+		public byte Count;
 		
-		public short ItemDamage;
+		public short Damage;
 		
 		public NbtFile NbtMetadata;
 		
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Window {
 		
 		public override string ToString() {
 			if( IsEmpty ) return "(empty slot)";
-			return "(" + Id + "," + ItemDamage + ":" + ItemCount + ")";
+			return "(" + Id + "," + Damage + ":" + Count + ")";
 		}
 
 	}

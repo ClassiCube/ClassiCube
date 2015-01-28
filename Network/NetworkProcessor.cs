@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 				socket.Connect( address, Window.Port );
 			} catch( SocketException ex ) {
 				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
-				Window.Disconnect( "&eUnable to reach " + Window.IPAddress + ":" + Window.Port,
+				Window.Disconnect( "§eUnable to reach " + Window.IPAddress + ":" + Window.Port,
 				                  "Unable to establish an underlying connection" );
 				Dispose();
 				return;
@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void SendChat( string text ) {
-			//SendPacket( new ChatOutbound( text ) );
+			SendPacket( new ChatOutbound( text ) );
 		}
 		
 		public void SendPosition( Vector3 pos, byte yaw, byte pitch ) {

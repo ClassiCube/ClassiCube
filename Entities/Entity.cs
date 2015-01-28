@@ -56,6 +56,10 @@ namespace ClassicalSharp {
 		public virtual void DoAnimation( byte anim ) {
 		}
 		
+		public virtual void SetVelocity( float velX, float velY, float velZ ) {
+			
+		}
+		
 		public abstract void SetLocation( LocationUpdate update, bool interpolate );
 		
 		public abstract void Despawn();

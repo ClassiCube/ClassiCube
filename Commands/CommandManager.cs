@@ -37,7 +37,7 @@ namespace ClassicalSharp.Commands {
 			foreach( Command cmd in RegisteredCommands ) {
 				if( cmd.Name.StartsWith( commandName, StringComparison.OrdinalIgnoreCase ) ) {
 					if( matchFound ) {
-						Window.AddChat( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
+						Window.AddChat( "§e/client: Multiple commands found that start with: \"§f" + commandName + "§e\"." );
 						return null;
 					}
 					matchFound = true;
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Commands {
 			}
 			
 			if( matchingCommand == null ) {
-				Window.AddChat( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
+				Window.AddChat( "§e/client: Unrecognised command: \"§f" + commandName + "§e\"." );
 			}
 			return matchingCommand;
 		}
@@ -54,7 +54,7 @@ namespace ClassicalSharp.Commands {
 		public void Execute( string text ) {
 			CommandReader reader = new CommandReader( text );
 			if( reader.TotalArgs == 0 ) {
-				Window.AddChat( "&e/client: No command name specified. &fSee /client commands for a list of commands." );
+				Window.AddChat( "§e/client: No command name specified. §fSee /client commands for a list of commands." );
 				return;
 			}
 			string commandName = reader.Next();

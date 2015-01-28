@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 		
 		static bool IsInvalidChar( char c ) {
 			// Make sure we're in the printable text range from 0x20 to 0x7E
-			return c < ' ' || c == '&' || c > '~';
+			return c < ' ' || c > '~';
 		}
 		
 		public void SendTextInBufferAndReset() {

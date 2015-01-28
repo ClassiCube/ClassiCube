@@ -37,14 +37,14 @@ namespace ClassicalSharp {
 				writer.WriteUInt8( (byte)id );
 				packet.WriteData( writer );
 				
-				System.Diagnostics.Debug.WriteLine( " OUT: " + packet.GetType().Name + ", " + id );
+				//System.Diagnostics.Debug.WriteLine( " OUT: " + packet.GetType().Name + ", " + id );
 			}
 		}
 		
 		void ReadPackets() {
 			byte id = reader.ReadUInt8();		
 			InboundPacket packet = inboundConstructors[id]();
-			System.Diagnostics.Debug.WriteLine( "  IN: " + packet.GetType().Name + ", " + id );
+			//System.Diagnostics.Debug.WriteLine( "  IN: " + packet.GetType().Name + ", " + id );
 			packet.ReadData( reader );
 			readQueue.Enqueue( packet );
 		}

@@ -28,10 +28,10 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			controlsWidget = CreateTextWidget( 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, 16, FontStyle.Bold );
+			controlsWidget = CreateTextWidget( 0, 30, "§eControls list", Docking.Centre, Docking.LeftOrTop, 16, FontStyle.Bold );
 			keyStatusWidget = CreateTextWidget( 0, -80, "", Docking.Centre, Docking.BottomOrRight, 13, FontStyle.Italic );
-			gameWidget = CreateTextWidget( 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
-			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
+			gameWidget = CreateTextWidget( 0, -50, "§eBack to game", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
+			exitWidget = CreateTextWidget( 0, -10, "§eExit", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
 			
 			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
 				KeyMapping.Jump, KeyMapping.OpenChat, KeyMapping.SendChat, KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
@@ -122,11 +122,11 @@ namespace ClassicalSharp {
 				widgetToChange = null;
 				string reason;
 				if( !Window.Keys.IsKeyOkay( key, out reason ) ) {
-					const string format = "&eFailed to change mapping \"{0}\". &c({1})";
+					const string format = "§eFailed to change mapping \"{0}\". §c({1})";
 					keyStatusWidget.SetText( String.Format( format, widget.Description, reason ) );
 				} else {
 					Key oldKey = Window.Keys[widget.Mapping];
-					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";
+					const string format = "§eChanged mapping \"{0}\" from §7{1} §eto §7{2}§e.";
 					keyStatusWidget.SetText( String.Format( format, widget.Description, oldKey, key ) );
 					Window.Keys[widget.Mapping] = key;
 					widget.Widget.SetText( widget.Description + ": " + key );
@@ -189,11 +189,11 @@ namespace ClassicalSharp {
 		void SetWidgetToChange( KeyMapWidget widget ) {
 			Key oldKey = Window.Keys[widget.Mapping];
 			if( !Window.Keys.IsLockedKey( oldKey ) ) {
-				const string format = "&ePress new key for \"{0}\".";
+				const string format = "§ePress new key for \"{0}\".";
 				keyStatusWidget.SetText( String.Format( format, widget.Description ) );
 				widgetToChange = widget;
 			} else {
-				const string format = "&cCannot change mapping of &e\"{0}\".";
+				const string format = "§cCannot change mapping of §e\"{0}\".";
 				keyStatusWidget.SetText( String.Format( format, widget.Description ) );
 			}
 		}

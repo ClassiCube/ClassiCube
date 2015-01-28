@@ -101,8 +101,8 @@ namespace ClassicalSharp.Network {
 		public void WriteSlot( Slot slot ) {
 			WriteInt16( slot.Id );
 			if( !slot.IsEmpty ) {
-				WriteUInt8( slot.ItemCount );
-				WriteInt16( slot.ItemDamage );
+				WriteUInt8( slot.Count );
+				WriteInt16( slot.Damage );
 			}
 		}
 	}

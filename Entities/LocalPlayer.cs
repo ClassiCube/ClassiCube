@@ -225,13 +225,7 @@ namespace ClassicalSharp {
 			HandleInput( out xMoving, out zMoving );
 			//UpdateState( xMoving, zMoving );
 			//PhysicsTick( xMoving, zMoving );
-			if( flyingUp || jumping ) {
-				Velocity.Y = speeding ? 0.48f : 0.24f;
-			} else if( flyingDown ) {
-				Velocity.Y = speeding ? -0.48f : -0.24f;
-			}
-			AdjHorVelocity( zMoving, xMoving, 0.02f );
-			Position += Velocity;
+			HackyPhysics( xMoving, zMoving );
 			nextPos = Position;
 			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos );
@@ -246,6 +240,24 @@ namespace ClassicalSharp {
 					bmp.Dispose();
 				}
 			}
+		}
+		
+		void HackyPhysics( float xMoving, float zMoving ) {
+			float multiply = 1F;
+			if( !flying ) {
+				multiply = speeding ? 10 : 1;
+			} else {
+				multiply = speeding ? 90 : 15;
+			}
+			
+			Velocity = Vector3.Zero;
+			if( flyingUp || jumping ) {
+				Velocity.Y = speeding ? 0.48f : 0.24f;
+			} else if( flyingDown ) {
+				Velocity.Y = speeding ? -0.48f : -0.24f;
+			}
+			AdjHorVelocity( zMoving, xMoving, 0.2f * multiply );
+			Position += Velocity;
 		}
 		
 		public override void Render( double deltaTime, float t ) {

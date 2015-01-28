@@ -109,8 +109,8 @@ namespace ClassicalSharp.Network {
 			Slot slot = new Slot();
 			slot.Id = ReadInt16();
 			if( slot.Id >= 0 ) {
-				slot.ItemCount = ReadUInt8();
-				slot.ItemDamage = ReadInt16();
+				slot.Count = ReadUInt8();
+				slot.Damage = ReadInt16();
 			}
 			return slot;
 		}

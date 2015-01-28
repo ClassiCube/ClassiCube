@@ -88,7 +88,9 @@ namespace ClassicalSharp.Network.Packets {
 		public override void ReadData( NetReader reader ) {
 			entityId = reader.ReadInt32();
 			slotId = reader.ReadInt16();
-			slot = reader.ReadSlot();
+			short id = reader.ReadInt16();
+			short damage = reader.ReadInt16();
+			slot = new Slot() { Id = id, Count = 1, Damage = damage };
 		}
 		
 		public override void ReadCallback( Game game ) {
@@ -337,7 +339,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.EntityManager[entityId].SetVelocity( velX, velY, velZ );
 		}
 	}
 	
