@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 			SetIsSprite( Block.Rope, Block.Fire );
 			SetBlockHeight( 0.5f, Block.CobblestoneSlab );
 			SetBlockHeight( 0.2f, Block.Snow );
+			SetupCullingCache();
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {

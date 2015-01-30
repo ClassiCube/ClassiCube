@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			PostStretchTiles( x1, y1, z1 );
 			
 			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );			
+			int yMax = Math.Min( height, y1 + 16 );
 			int zMax = Math.Min( length, z1 + 16 );
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
@@ -57,46 +57,50 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool ReadChunkData( int x1, int y1, int z1 ) {
-			for( int i = 0; i < chunk.Length; i++ ) {
-				chunk[i] = 0;
-			}
-			
+		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {			
 			bool allAir = true, allSolid = true;
-			for( int yy = -1; yy < 17; yy++ ) {
-				int y = yy + y1;
-				if( y < 0 ) continue;
-				if( y > maxY ) break;
-				for( int zz = -1; zz < 17; zz++ ) {
-					int z = zz + z1;
-					if( z < 0 ) continue;
-					if( z > maxZ ) break;
-					
-					int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
-					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
-					
-					for( int xx = -1; xx < 17; xx++ ) {
-						int x = xx + x1;
-						index++;
-						chunkIndex++;
-						if( x < 0 ) continue;
-						if( x > maxX ) break;
-						
-						byte block = map.GetBlock( index );
-						if( block == 9 ) block = 8; // Still water --> Water
-						if( block == 11 ) block = 10; // Still lava --> Lava
-						//byte block = adjBlockLookup[map.GetBlock( index )];					
-						
-						if( block != 0 ) allAir = false;
-						if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
-						chunk[chunkIndex] = block;
+			fixed( byte* chunkPtr = chunk ) {
+				int* chunkIntPtr = (int*)chunkPtr;
+				for( int i = 0; i < ( 18 * 18 * 18 ) / 4; i++ ) {
+					*chunkIntPtr++ = 0;
+				}
+				fixed( byte* mapPtr = map.mapData ) {
+					for( int yy = -1; yy < 17; yy++ ) {
+						int y = yy + y1;
+						if( y < 0 ) continue;
+						if( y > maxY ) break;
+						for( int zz = -1; zz < 17; zz++ ) {
+							int z = zz + z1;
+							if( z < 0 ) continue;
+							if( z > maxZ ) break;
+							
+							int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
+							int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
+							
+							for( int xx = -1; xx < 17; xx++ ) {
+								int x = xx + x1;
+								index++;
+								chunkIndex++;
+								if( x < 0 ) continue;
+								if( x > maxX ) break;
+								
+								byte block = mapPtr[index];
+								if( block == 9 ) block = 8; // Still water --> Water
+								if( block == 11 ) block = 10; // Still lava --> Lava
+								//byte block = adjBlockLookup[map.GetBlock( index )];
+								
+								if( allAir && block != 0 ) allAir = false;
+								if( allSolid && !BlockInfo.IsOpaque( block ) ) allSolid = false;
+								chunkPtr[chunkIndex] = block;
+							}
+						}
 					}
 				}
 			}
 			return allAir || allSolid;
 		}
 		
-		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {		
+		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
@@ -161,16 +165,16 @@ namespace ClassicalSharp {
 			}
 			
 			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );		
+			int yMax = Math.Min( height, y1 + 16 );
 			int zMax = Math.Min( length, z1 + 16 );
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
 					
 					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
-						chunkIndex++;						
+						chunkIndex++;
 						byte tile = chunk[chunkIndex];
-						if( tile == 0 ) continue;					
+						if( tile == 0 ) continue;
 						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
 						
 						// Sprites only use the top face to indicate stretching count, so we can take a shortcut here.
@@ -198,20 +202,6 @@ namespace ClassicalSharp {
 		protected virtual void AddVertices( byte tile, int count, int face ) {
 		}
 		
-		protected bool IsFaceHidden( byte tile, byte block ) {
-			return ( ( tile == block || ( BlockInfo.IsOpaque( block ) && !BlockInfo.IsLiquid( block ) ) )
-			        && !BlockInfo.IsSprite( tile ) )
-				|| ( BlockInfo.IsLiquid( tile ) && block == (byte)Block.Ice );
-		}
-		
-		protected bool IsFaceHiddenYTop( byte tile, byte block ) {
-			return BlockInfo.BlockHeight( tile ) == 1 && IsFaceHidden( tile, block );
-		}
-		
-		protected bool IsFaceHiddenYBottom( byte tile, byte block ) {
-			return BlockInfo.BlockHeight( block ) == 1 && IsFaceHidden( tile, block );
-		}
-		
 		protected int startX, startY, startZ;
 		void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
 			startX = x;
@@ -222,7 +212,7 @@ namespace ClassicalSharp {
 				counts[index + TileSide.Left] = 0;
 			} else if( counts[index + TileSide.Left] != 0 ) {
 				byte left = chunk[chunkIndex - 1]; // x - 1
-				if( IsFaceHidden( tile, left ) ) {
+				if( BlockInfo.IsFaceHidden( tile, left, TileSide.Left ) ) {
 					counts[index + TileSide.Left] = 0;
 				} else {
 					int count = StretchZ( zz, index, x, y, z, chunkIndex, tile, TileSide.Left );
@@ -235,7 +225,7 @@ namespace ClassicalSharp {
 				counts[index + TileSide.Right] = 0;
 			} else if( counts[index + TileSide.Right] != 0 ) {
 				byte right = chunk[chunkIndex + 1]; // x + 1
-				if( IsFaceHidden( tile, right ) ) {
+				if( BlockInfo.IsFaceHidden( tile, right, TileSide.Right ) ) {
 					counts[index + TileSide.Right] = 0;
 				} else {
 					int count = StretchZ( zz, index, x, y, z, chunkIndex, tile, TileSide.Right );
@@ -248,7 +238,7 @@ namespace ClassicalSharp {
 				counts[index + TileSide.Front] = 0;
 			} else if( counts[index + TileSide.Front] != 0 ) {
 				byte front = chunk[chunkIndex - 18]; // z - 1
-				if( IsFaceHidden( tile, front ) ) {
+				if( BlockInfo.IsFaceHidden( tile, front, TileSide.Front ) ) {
 					counts[index + TileSide.Front] = 0;
 				} else {
 					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Front );
@@ -261,7 +251,7 @@ namespace ClassicalSharp {
 				counts[index + TileSide.Back] = 0;
 			} else if( counts[index + TileSide.Back] != 0 ) {
 				byte back = chunk[chunkIndex + 18]; // z + 1
-				if( IsFaceHidden( tile, back ) ) {
+				if( BlockInfo.IsFaceHidden( tile, back, TileSide.Right ) ) {
 					counts[index + TileSide.Back] = 0;
 				} else {
 					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Back );
@@ -274,7 +264,7 @@ namespace ClassicalSharp {
 				counts[index + TileSide.Bottom] = 0;
 			} else if( counts[index + TileSide.Bottom] != 0 ) {
 				byte below = chunk[chunkIndex - 324]; // y - 1
-				if( IsFaceHiddenYBottom( tile, below ) ) {
+				if( BlockInfo.IsFaceHidden( tile, below, TileSide.Bottom ) ) {
 					counts[index + TileSide.Bottom] = 0;
 				} else {
 					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Bottom );
@@ -285,7 +275,7 @@ namespace ClassicalSharp {
 			
 			if( counts[index + TileSide.Top] != 0 ) {
 				byte above = chunk[chunkIndex + 324]; // y + 1
-				if( IsFaceHiddenYTop( tile, above ) ) {
+				if( BlockInfo.IsFaceHidden( tile, above, TileSide.Top ) ) {
 					counts[index + TileSide.Top] = 0;
 				} else {
 					int count = StretchX( xx, index, x, y, z, chunkIndex, tile, TileSide.Top );
@@ -297,8 +287,7 @@ namespace ClassicalSharp {
 		
 		protected virtual bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			// TODO: Do we have to add a separate call for TileSide.Top?
-			return tile == initialTile && !IsFaceHidden( tile, GetNeighbour( chunkIndex, face ) );
+			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face );
 		}
 		
 		protected byte GetNeighbour( int chunkIndex, int face ) {

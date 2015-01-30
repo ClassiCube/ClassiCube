@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	public class Map {
 
 		public Game Window;
-		byte[] mapData;
+		internal byte[] mapData;
 		public int Width, Height, Length;	
 		short[] heightmap;
 		int maxY;

@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		
 		protected override bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !IsFaceHidden( tile, GetNeighbour( chunkIndex, face ) ) &&
+			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
 				( IsLit( startX, startY, startZ, face ) == IsLit( x, y, z, face ) );
 		}
 		
