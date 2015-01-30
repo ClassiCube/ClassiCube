@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 			
 			for( int yy = 0; yy < 16; yy++ ) {
 				int y = yy + y1;
-				int chunkIndex = ( yy + 1 ) * 324 + ( 16 + 1 ) * 18 + ( 0 + 1 );
+				int chunkIndex = ( yy + 1 ) * 324 + ( -1 + 1 ) * 18 + ( 0 + 1 );
 				for( int xx = 0; xx < 16; xx++ ) {
 					
 					byte block = chunk.GetBlock( xx, y, 15 );
@@ -150,7 +150,7 @@ namespace ClassicalSharp {
 			
 			for( int yy = 0; yy < 16; yy++ ) {
 				int y = yy + y1;
-				int chunkIndex = ( yy + 1 ) * 324 + ( -1 + 1 ) * 18 + ( 0 + 1 );
+				int chunkIndex = ( yy + 1 ) * 324 + ( 16 + 1 ) * 18 + ( 0 + 1 );
 				
 				for( int xx = 0; xx < 16; xx++ ) {
 					byte block = chunk.GetBlock( xx, y, 0 );
