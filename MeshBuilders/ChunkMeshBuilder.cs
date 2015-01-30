@@ -1,5 +1,6 @@
 ﻿using System;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.World;
 
 namespace ClassicalSharp {
 	
@@ -46,36 +47,123 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool ReadChunkData( int x1, int y1, int z1 ) {
+		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
 			for( int i = 0; i < chunk.Length; i++ ) {
 				chunk[i] = 0;
 			}
 			
 			bool allAir = true, allSolid = true;
-			for( int yy = -1; yy < 17; yy++ ) {
-				int y = yy + y1;
-				if( y < minY ) continue;
-				if( y > maxY ) break;
-				for( int zz = -1; zz < 17; zz++ ) {
-					int z = zz + z1;				
-					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
-					
-					for( int xx = -1; xx < 17; xx++ ) {
-						int x = xx + x1;
-						chunkIndex++;
-						
-						byte block = map.GetBlock( x, y, z );				
-						
-						if( block != 0 ) allAir = false;
-						if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
-						chunk[chunkIndex] = block;
-					}
-				}
+			fixed( byte* chunkPtr = chunk ) {
+				CopyMainPart( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
+				CopyXMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
+				CopyXPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
+				CopyZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
+				CopyZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
 			}
 			return allAir || allSolid;
 		}
 		
-		public SectionDrawInfo GetDrawInfo( int x, int y, int z ) {		
+		unsafe void CopyMainPart( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+			Chunk chunk = map.GetChunk( x1 >> 4, z1 >> 4 );
+			if( chunk == null ) return;
+			
+			for( int yy = -1; yy < 17; yy++ ) {
+				int y = yy + y1;
+				if( y < minY ) continue;
+				if( y > maxY ) break;
+				
+				for( int zz = 0; zz < 16; zz++ ) {
+					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( 0 + 1 );
+					for( int xx = 0; xx < 16; xx++ ) {
+						byte block = chunk.GetBlock( xx, y, zz );
+						if( block != 0 ) allAir = false;
+						if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+						
+						chunkPtr[chunkIndex] = block;
+						chunkIndex++;
+					}
+				}
+			}
+		}
+		
+		unsafe void CopyXMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) - 1, z1 >> 4 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( 0 + 1 ) * 18 + ( -1 + 1 );
+				
+				for( int zz = 0; zz < 16; zz++ ) {
+					
+					byte block = chunk.GetBlock( 15, y, zz );
+					if( block != 0 ) allAir = false;
+					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+					
+					chunkPtr[chunkIndex] = block;
+					chunkIndex += 18;
+				}
+			}
+		}
+		
+		unsafe void CopyXPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) + 1, z1 >> 4 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( 0 + 1 ) * 18 + ( 16 + 1 );
+				
+				for( int zz = 0; zz < 16; zz++ ) {
+					byte block = chunk.GetBlock( 0, y, zz );
+					if( block != 0 ) allAir = false;
+					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+					
+					chunkPtr[chunkIndex] = block;
+					chunkIndex += 18;
+				}
+			}
+		}
+		
+		unsafe void CopyZMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+			Chunk chunk = map.GetChunk( x1 >> 4, ( z1 >> 4 ) - 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( 16 + 1 ) * 18 + ( 0 + 1 );
+				for( int xx = 0; xx < 16; xx++ ) {
+					
+					byte block = chunk.GetBlock( xx, y, 15 );
+					if( block != 0 ) allAir = false;
+					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+					
+					chunkPtr[chunkIndex] = block;
+					chunkIndex++;
+				}
+			}
+		}
+		
+		unsafe void CopyZPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+			Chunk chunk = map.GetChunk( x1 >> 4, ( z1 >> 4 ) + 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( -1 + 1 ) * 18 + ( 0 + 1 );
+				
+				for( int xx = 0; xx < 16; xx++ ) {
+					byte block = chunk.GetBlock( xx, y, 0 );
+					if( block != 0 ) allAir = false;
+					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+					
+					chunkPtr[chunkIndex] = block;
+					chunkIndex++;
+				}
+			}
+		}
+		
+		public SectionDrawInfo GetDrawInfo( int x, int y, int z ) {
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
@@ -144,9 +232,9 @@ namespace ClassicalSharp {
 					
 					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
 					for( int x = x1, xx = 0; x < x1 + 16; x++, xx++ ) {
-						chunkIndex++;						
+						chunkIndex++;
 						byte tile = chunk[chunkIndex];
-						if( tile == 0 ) continue;					
+						if( tile == 0 ) continue;
 						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
 						
 						// Sprites only use the top face to indicate stretching count, so we can take a shortcut here.
@@ -170,20 +258,6 @@ namespace ClassicalSharp {
 		protected virtual void AddVertices( byte tile, int face ) {
 		}
 		
-		protected bool IsFaceHidden( byte tile, byte block ) {
-			return ( ( tile == block || ( BlockInfo.IsOpaque( block ) && !BlockInfo.IsLiquid( block ) ) )
-			        && !BlockInfo.IsSprite( tile ) )
-				|| ( BlockInfo.IsLiquid( tile ) && block == (byte)Block.Ice );
-		}
-		
-		protected bool IsFaceHiddenYTop( byte tile, byte block ) {
-			return BlockInfo.BlockHeight( tile ) == 1 && IsFaceHidden( tile, block );
-		}
-		
-		protected bool IsFaceHiddenYBottom( byte tile, byte block ) {
-			return BlockInfo.BlockHeight( block ) == 1 && IsFaceHidden( tile, block );
-		}
-		
 		protected int startX, startY, startZ;
 		void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
 			startX = x;
@@ -192,7 +266,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Left] != 0 ) {
 				byte left = chunk[chunkIndex - 1]; // x - 1
-				if( IsFaceHidden( tile, left ) ) {
+				if( BlockInfo.IsFaceHidden( tile, left, TileSide.Left ) ) {
 					drawFlags[index + TileSide.Left] = 0;
 				} else {
 					AddVertices( tile, TileSide.Left );
@@ -202,7 +276,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Right] != 0 ) {
 				byte right = chunk[chunkIndex + 1]; // x + 1
-				if( IsFaceHidden( tile, right ) ) {
+				if( BlockInfo.IsFaceHidden( tile, right, TileSide.Right ) ) {
 					drawFlags[index + TileSide.Right] = 0;
 				} else {
 					AddVertices( tile, TileSide.Right );
@@ -212,7 +286,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Front] != 0 ) {
 				byte front = chunk[chunkIndex - 18]; // z - 1
-				if( IsFaceHidden( tile, front ) ) {
+				if( BlockInfo.IsFaceHidden( tile, front, TileSide.Front ) ) {
 					drawFlags[index + TileSide.Front] = 0;
 				} else {
 					AddVertices( tile, TileSide.Front );
@@ -222,7 +296,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Back] != 0 ) {
 				byte back = chunk[chunkIndex + 18]; // z + 1
-				if( IsFaceHidden( tile, back ) ) {
+				if( BlockInfo.IsFaceHidden( tile, back, TileSide.Back ) ) {
 					drawFlags[index + TileSide.Back] = 0;
 				} else {
 					AddVertices( tile, TileSide.Back );
@@ -232,7 +306,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Bottom] != 0 ) {
 				byte below = chunk[chunkIndex - 324]; // y - 1
-				if( IsFaceHiddenYBottom( tile, below ) ) {
+				if( BlockInfo.IsFaceHidden( tile, below, TileSide.Bottom ) ) {
 					drawFlags[index + TileSide.Bottom] = 0;
 				} else {
 					AddVertices( tile, TileSide.Bottom );
@@ -242,7 +316,7 @@ namespace ClassicalSharp {
 			
 			if( drawFlags[index + TileSide.Top] != 0 ) {
 				byte above = chunk[chunkIndex + 324]; // y + 1
-				if( IsFaceHiddenYTop( tile, above ) ) {
+				if( BlockInfo.IsFaceHidden( tile, above, TileSide.Top ) ) {
 					drawFlags[index + TileSide.Top] = 0;
 				} else {
 					AddVertices( tile, TileSide.Top );
@@ -253,8 +327,7 @@ namespace ClassicalSharp {
 		
 		protected virtual bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			// TODO: Do we have to add a separate call for TileSide.Top?
-			return tile == initialTile && !IsFaceHidden( tile, GetNeighbour( chunkIndex, face ) );
+			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face );
 		}
 		
 		protected byte GetNeighbour( int chunkIndex, int face ) {
@@ -310,7 +383,7 @@ namespace ClassicalSharp {
 		protected abstract void DrawSprite();
 	}
 	
-	public class SectionDrawInfo {		
+	public class SectionDrawInfo {
 		public ChunkPartInfo SolidParts;
 		public ChunkPartInfo TranslucentParts;
 		public ChunkPartInfo SpriteParts;

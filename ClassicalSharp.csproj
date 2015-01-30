@@ -97,6 +97,7 @@
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
+    <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Optimised.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityManager.cs" />
@@ -214,5 +215,13 @@
     <Folder Include="Window" />
     <Folder Include="Util" />
     <Folder Include="Physics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ProfilingSessions\Session20150131_070719.sdps" />
+    <Content Include="ProfilingSessions\Session20150131_071457.sdps" />
+    <Content Include="ProfilingSessions\Session20150131_073723.sdps" />
+    <Content Include="ProfilingSessions\Session20150131_074045.sdps" />
+    <Content Include="ProfilingSessions\Session20150131_074203.sdps" />
+    <Content Include="ProfilingSessions\Session20150131_080446.sdps" />
   </ItemGroup>
 </Project>

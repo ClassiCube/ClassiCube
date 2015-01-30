@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
 			SetBlockHeight( 0.5f, Block.Slabs );
 			SetBlockHeight( 0.125f, Block.Snow );
+			SetupCullingCache();
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
