@@ -57,42 +57,42 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {			
+		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
 			bool allAir = true, allSolid = true;
-			fixed( byte* chunkPtr = chunk ) {
+			fixed( byte* chunkPtr = chunk, mapPtr = map.mapData ) {
+				
 				int* chunkIntPtr = (int*)chunkPtr;
 				for( int i = 0; i < ( 18 * 18 * 18 ) / 4; i++ ) {
 					*chunkIntPtr++ = 0;
 				}
-				fixed( byte* mapPtr = map.mapData ) {
-					for( int yy = -1; yy < 17; yy++ ) {
-						int y = yy + y1;
-						if( y < 0 ) continue;
-						if( y > maxY ) break;
-						for( int zz = -1; zz < 17; zz++ ) {
-							int z = zz + z1;
-							if( z < 0 ) continue;
-							if( z > maxZ ) break;
+				
+				for( int yy = -1; yy < 17; yy++ ) {
+					int y = yy + y1;
+					if( y < 0 ) continue;
+					if( y > maxY ) break;
+					for( int zz = -1; zz < 17; zz++ ) {
+						int z = zz + z1;
+						if( z < 0 ) continue;
+						if( z > maxZ ) break;
+						
+						int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
+						int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
+						
+						for( int xx = -1; xx < 17; xx++ ) {
+							int x = xx + x1;
+							index++;
+							chunkIndex++;
+							if( x < 0 ) continue;
+							if( x > maxX ) break;
 							
-							int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
-							int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
+							byte block = mapPtr[index];
+							if( block == 9 ) block = 8; // Still water --> Water
+							if( block == 11 ) block = 10; // Still lava --> Lava
+							//byte block = adjBlockLookup[map.GetBlock( index )];
 							
-							for( int xx = -1; xx < 17; xx++ ) {
-								int x = xx + x1;
-								index++;
-								chunkIndex++;
-								if( x < 0 ) continue;
-								if( x > maxX ) break;
-								
-								byte block = mapPtr[index];
-								if( block == 9 ) block = 8; // Still water --> Water
-								if( block == 11 ) block = 10; // Still lava --> Lava
-								//byte block = adjBlockLookup[map.GetBlock( index )];
-								
-								if( allAir && block != 0 ) allAir = false;
-								if( allSolid && !BlockInfo.IsOpaque( block ) ) allSolid = false;
-								chunkPtr[chunkIndex] = block;
-							}
+							if( allAir && block != 0 ) allAir = false;
+							if( allSolid && !BlockInfo.IsOpaque( block ) ) allSolid = false;
+							chunkPtr[chunkIndex] = block;
 						}
 					}
 				}
