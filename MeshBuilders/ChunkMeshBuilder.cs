@@ -222,13 +222,19 @@ namespace ClassicalSharp {
 			if( count != 0 ) {
 				DrawTopFace();
 			}
-		}
+		}		
 		
-		
-		void Stretch( int x1, int y1, int z1 ) {
+		unsafe void Stretch( int x1, int y1, int z1 ) {
 			for( int i = 0; i < drawFlags.Length; i++ ) {
 				drawFlags[i] = 1;
 			}
+			int* offsets = stackalloc int[6];
+			offsets[TileSide.Left] = -1; // x - 1
+			offsets[TileSide.Right] = 1; // x + 1
+			offsets[TileSide.Front] = -18; // z - 1
+			offsets[TileSide.Back] = 18; // z + 1
+			offsets[TileSide.Bottom] = -324; // y - 1
+			offsets[TileSide.Top] = 324; // y + 1
 			
 			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < z1 + 16; z++, zz++ ) {
@@ -248,7 +254,7 @@ namespace ClassicalSharp {
 								drawFlags[countIndex + TileSide.Top] = 1;
 							}
 						} else { // Do the full calculation for all six faces.
-							DoStretchTerrain( xx, yy, zz, x, y, z, countIndex, tile, chunkIndex );
+							DoStretchTerrain( countIndex, tile, chunkIndex, offsets );
 						}
 					}
 				}
@@ -261,15 +267,7 @@ namespace ClassicalSharp {
 		protected virtual void AddVertices( byte tile, int face ) {
 		}
 		
-		unsafe void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
-			int* offsets = stackalloc int[6];
-			offsets[TileSide.Left] = -1; // x - 1
-			offsets[TileSide.Right] = 1; // x + 1
-			offsets[TileSide.Front] = -18; // z - 1
-			offsets[TileSide.Back] = 18; // z + 1
-			offsets[TileSide.Bottom] = -324; // y - 1
-			offsets[TileSide.Top] = 324; // y + 1
-			
+		unsafe void DoStretchTerrain( int index, byte tile, int chunkIndex, int* offsets ) {
 			for( int face = 0; face < 6; face++ ) {
 				if( drawFlags[index + face] != 0 ) {
 					byte neighbour = chunk[chunkIndex + offsets[face]];

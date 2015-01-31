@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Blocks.Model;
 
 namespace ClassicalSharp {
 	
@@ -11,9 +12,10 @@ namespace ClassicalSharp {
 		bool[] isLiquid = new bool[blocksCount];
 		float[] heights = new float[blocksCount];
 		bool[] blocksLight = new bool[blocksCount];
+		IBlockModel[] models = new IBlockModel[blocksCount];
 		const int blocksCount = 256;
 		
-		public void Init() {
+		public void Init( TextureAtlas2D atlas ) {
 			for( int i = 1; i < blocksCount; i++ ) {
 				heights[i] = 1;
 				blocksLight[i] = true;
@@ -39,6 +41,13 @@ namespace ClassicalSharp {
 			SetBlockHeight( 9 / 16f, Block.Bed );
 			SetBlockHeight( 3 / 16f, Block.Trapdoor );
 			SetupCullingCache();
+			for( byte id = 1; id <= 96; id++ ) {
+				if( IsSprite( id ) ) {
+					models[id] = new SpriteModel( atlas, this, id );
+				} else {
+					models[id] = new CubeModel( atlas, this, id );
+				}
+			}
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
@@ -145,6 +154,10 @@ namespace ClassicalSharp {
 		/// (water or lava) </summary>
 		public bool IsLiquid( byte id ) {
 			return isLiquid[id];
+		}
+		
+		public IBlockModel GetModel( byte id ) {
+			return models[id];
 		}
 	}
 }

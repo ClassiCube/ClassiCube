@@ -99,6 +99,9 @@
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Optimised.cs" />
+    <Compile Include="Blocks\Model\CubeModel.cs" />
+    <Compile Include="Blocks\Model\IBlockModel.cs" />
+    <Compile Include="Blocks\Model\SpriteModel.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityManager.cs" />
     <Compile Include="Entities\EntityMetadata.cs" />

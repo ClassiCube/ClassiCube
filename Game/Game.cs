@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			LoadAtlas( terrainBmp );
 			BlockInfo = new BlockInfo();
-			BlockInfo.Init();
+			BlockInfo.Init( TerrainAtlas );
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
