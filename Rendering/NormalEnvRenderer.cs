@@ -17,16 +17,19 @@ namespace ClassicalSharp.Renderers {
 		public float CloudsSpeed = 1f;
 		
 		public override void Render( double deltaTime ) {
-			if( skyVbo != -1 ) {
-				Vector3 pos = Window.LocalPlayer.EyePosition;
+			Vector3 pos = Window.LocalPlayer.EyePosition;
+			Graphics.PushMatrix();
+			Graphics.Translate( pos.X, 0, pos.Z );
+			if( skyVbo != -1 ) {			
 				if( pos.Y < Map.Height + skyOffset ) {
 					Graphics.DrawVbPos3fCol4b( DrawMode.Triangles, skyVbo, skyVertices );
 				}
 			}
 			if( cloudsVbo != -1 ) {
-				RenderClouds( deltaTime );
+				RenderClouds( deltaTime, pos );
 			}
 			ResetFog();
+			Graphics.PopMatrix();
 		}
 
 		public void SetSkyOffset( int offset ) {
@@ -82,12 +85,11 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DeleteTexture( cloudTexture );
 		}
 		
-		void RenderClouds( double delta ) {
+		void RenderClouds( double delta, Vector3 pos ) {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			Graphics.SetMatrixMode( MatrixType.Texture );
-			Matrix4 matrix = Matrix4.CreateTranslation( offset, 0, 0 );
-			Graphics.LoadMatrix( ref matrix );
+			Graphics.Translate( offset, 0, 0 );
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 			
 			Graphics.AlphaTest = true;
