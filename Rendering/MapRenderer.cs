@@ -83,23 +83,13 @@ namespace ClassicalSharp {
 			}
 			sections.Clear();
 		}
-		
-		void ResetSection( SectionInfo info ) {
-			SectionDrawInfo drawInfo = info.DrawInfo;
-			if( drawInfo == null ) return;
-			
-			Graphics.DeleteVb( drawInfo.SpriteParts.VboID );
-			Graphics.DeleteVb( drawInfo.TranslucentParts.VboID );
-			Graphics.DeleteVb( drawInfo.SolidParts.VboID );
-			info.DrawInfo = null;
-		}
 
 		public void RedrawBlock( int x, int y, int z ) {
 			int cx = x >> 4;
 			int cy = y >> 4;
 			int cz = z >> 4;
 			
-			ResetSectionAt( cx, cy, cz );
+			ResetOrCreateSectionAt( cx, cy, cz );
 			int bX = x & 0x0F; // % 16
 			int bY = y & 0x0F;
 			int bZ = z & 0x0F;
@@ -113,7 +103,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void RedrawSection( int cx, int cy, int cz, ChunkPartialUpdate update ) {
-			ResetSectionAt( cx, cy, cz );
+			ResetOrCreateSectionAt( cx, cy, cz );
 			if( update.X0Modified ) ResetSectionAt( cx - 1, cy, cz );
 			if( update.Y0Modified ) ResetSectionAt( cx, cy - 1, cz );
 			if( update.Z0Modified ) ResetSectionAt( cx, cy, cz - 1 );
@@ -123,6 +113,10 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetSectionAt( int cx, int cy, int cz ) {
+			ResetSection( cx << 4, cy << 4, cz << 4 );
+		}
+		
+		void ResetOrCreateSectionAt( int cx, int cy, int cz ) {
 			ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 		}
 		
@@ -137,6 +131,25 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		void ResetSection( int x, int y, int z ) {
+			if( y < 0 || y >= Map.Height ) return;
+			
+			SectionInfo info;
+			if( sections.TryGetValue( new Vector3I( x, y, z ), out info ) ) {
+				ResetSection( info );
+			}
+		}
+		
+		void ResetSection( SectionInfo info ) {
+			SectionDrawInfo drawInfo = info.DrawInfo;
+			if( drawInfo == null ) return;
+			
+			Graphics.DeleteVb( drawInfo.SpriteParts.VboID );
+			Graphics.DeleteVb( drawInfo.TranslucentParts.VboID );
+			Graphics.DeleteVb( drawInfo.SolidParts.VboID );
+			info.DrawInfo = null;
+		}
+		
 		void AddSection( SectionInfo info ) {
 			// TODO: Find out why sections are getting duplicated sometimes..
 			//sections.Add( info.Location, info );
@@ -149,6 +162,10 @@ namespace ClassicalSharp {
 			int z = chunk.ChunkZ << 4;
 			for( int y = 0; y < Map.Height; y += 16 ) {
 				AddSection( new SectionInfo( x, y, z ) );
+				ResetSection( x - 16, y, z );
+				ResetSection( x + 16, y, z );
+				ResetSection( x, y, z - 16 );
+				ResetSection( x, y, z + 16 );
 			}
 		}
 		
