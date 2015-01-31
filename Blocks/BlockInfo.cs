@@ -22,23 +22,22 @@ namespace ClassicalSharp {
 			SetupOptimTextures();
 			
 			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
-			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
-			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			                 Block.Dandelion, Block.Slabs, Block.Snow, Block.Fire,
-			                 Block.Torch, Block.RedstoneWire, Block.RedstoneTorchOn, 
-			                 Block.RedstoneTorchOff, Block.MonsterSpawner,
-			                 Block.DeadShrubs, Block.TallGrass );
+			SetIsTransparent( Block.Glass, Block.Leaves, Block.Slabs, Block.Snow,
+			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
 			            Block.BrownMushroom, Block.RedMushroom, Block.Torch,
 			            Block.DeadShrubs, Block.TallGrass, Block.Fire, Block.RedstoneWire,
-			            Block.RedstoneTorchOn, Block.RedstoneTorchOff );
+			            Block.RedstoneTorchOn, Block.RedstoneTorchOff, Block.SugarCane,
+			            Block.Cobweb );
 			
 			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
 			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
 			               Block.Dandelion, Block.Fire );
 			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
-			SetBlockHeight( 0.5f, Block.Slabs );
-			SetBlockHeight( 0.125f, Block.Snow );
+			SetBlockHeight( 8 / 16f, Block.Slabs );
+			SetBlockHeight( 2 / 16f, Block.Snow );
+			SetBlockHeight( 9 / 16f, Block.Bed );
+			SetBlockHeight( 3 / 16f, Block.Trapdoor );
 			SetupCullingCache();
 		}
 		
@@ -71,6 +70,8 @@ namespace ClassicalSharp {
 		void SetIsSprite( params Block[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				isSprite[(int)ids[i]] = true;
+				isTransparent[(int)ids[i]] = true;
+				isOpaque[(int)ids[i]] = false;
 			}
 		}
 		
