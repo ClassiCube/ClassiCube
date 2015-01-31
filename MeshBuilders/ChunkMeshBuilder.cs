@@ -366,7 +366,6 @@ namespace ClassicalSharp {
 		}
 		
 		public virtual void OnNewMapLoaded() {
-			map = Window.Map;
 		}
 		
 		protected abstract SectionDrawInfo GetChunkInfo( int x, int y, int z );

@@ -36,6 +36,7 @@ namespace ClassicalSharp.Network.Packets {
 			game.EntityManager[entityId] = game.LocalPlayer;
 			game.Map.Seed = mapSeed;
 			game.Map.Dimension = dimension;
+			game.RaiseOnNewMap();
 		}
 	}
 	
@@ -151,9 +152,12 @@ namespace ClassicalSharp.Network.Packets {
 		
 		public override void ReadCallback( Game game ) {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
-			game.Network.receivedFirstPosition = true;
-			game.SetNewScreen( new NormalScreen( game ) );
 			game.Map.IsNotLoaded = false;
+			if( !game.Network.receivedFirstPosition ) {
+				game.RaiseOnNewMapLoaded();
+			}
+			game.Network.receivedFirstPosition = true;
+			game.SetNewScreen( new NormalScreen( game ) );		
 			game.LocalPlayer.SetLocation( update, false );
 		}
 	}
