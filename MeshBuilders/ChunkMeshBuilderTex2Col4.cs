@@ -37,43 +37,6 @@ namespace ClassicalSharp {
 			get { return true; }
 		}
 		
-		protected override bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
-				( IsLit( startX, startY, startZ, face ) == IsLit( x, y, z, face ) );
-		}
-		
-		bool IsLit( int x, int y, int z, int face ) {
-			/*switch( face ) {
-				case TileSide.Left:
-					return IsLitAdj( x - 1, y, z );
-					
-				case TileSide.Right:
-					return IsLitAdj( x + 1, y, z );
-					
-				case TileSide.Front:
-					return IsLitAdj( x, y, z - 1 );
-					
-				case TileSide.Back:
-					return IsLitAdj( x, y, z + 1 );
-					
-				case TileSide.Bottom:
-					return IsLit( x, y - 1, z );
-					
-				case TileSide.Top:
-					return IsLit( x, y + 1, z );
-			}*/
-			return true;
-		}
-		
-		bool IsLit( int x, int y, int z ) {
-			return y > GetLightHeight( x, z );
-		}
-		
-		bool IsLitAdj( int x, int y, int z ) {
-			return y > GetLightHeightAdj( x, z );
-		}
-		
 		FastColour GetColour( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
 			if( !map.IsValidPos( x, y, z ) ) return sunlight;
 			return y > GetLightHeight( x, z ) ? sunlight : shadow;

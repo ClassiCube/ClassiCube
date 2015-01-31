@@ -261,99 +261,26 @@ namespace ClassicalSharp {
 		protected virtual void AddVertices( byte tile, int face ) {
 		}
 		
-		protected int startX, startY, startZ;
-		void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
-			startX = x;
-			startY = y;
-			startZ = z;
+		unsafe void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
+			int* offsets = stackalloc int[6];
+			offsets[TileSide.Left] = -1; // x - 1
+			offsets[TileSide.Right] = 1; // x + 1
+			offsets[TileSide.Front] = -18; // z - 1
+			offsets[TileSide.Back] = 18; // z + 1
+			offsets[TileSide.Bottom] = -324; // y - 1
+			offsets[TileSide.Top] = 324; // y + 1
 			
-			if( drawFlags[index + TileSide.Left] != 0 ) {
-				byte left = chunk[chunkIndex - 1]; // x - 1
-				if( BlockInfo.IsFaceHidden( tile, left, TileSide.Left ) ) {
-					drawFlags[index + TileSide.Left] = 0;
-				} else {
-					AddVertices( tile, TileSide.Left );
-					drawFlags[index + TileSide.Left] = 1;
+			for( int face = 0; face < 6; face++ ) {
+				if( drawFlags[index + face] != 0 ) {
+					byte neighbour = chunk[chunkIndex + offsets[face]];
+					if( BlockInfo.IsFaceHidden( tile, neighbour, face ) ) {
+						drawFlags[index + face] = 0;
+					} else {
+						AddVertices( tile, face );
+						drawFlags[index + face] = 1;
+					}
 				}
 			}
-			
-			if( drawFlags[index + TileSide.Right] != 0 ) {
-				byte right = chunk[chunkIndex + 1]; // x + 1
-				if( BlockInfo.IsFaceHidden( tile, right, TileSide.Right ) ) {
-					drawFlags[index + TileSide.Right] = 0;
-				} else {
-					AddVertices( tile, TileSide.Right );
-					drawFlags[index + TileSide.Right] = 1;
-				}
-			}
-			
-			if( drawFlags[index + TileSide.Front] != 0 ) {
-				byte front = chunk[chunkIndex - 18]; // z - 1
-				if( BlockInfo.IsFaceHidden( tile, front, TileSide.Front ) ) {
-					drawFlags[index + TileSide.Front] = 0;
-				} else {
-					AddVertices( tile, TileSide.Front );
-					drawFlags[index + TileSide.Front] = 1;
-				}
-			}
-			
-			if( drawFlags[index + TileSide.Back] != 0 ) {
-				byte back = chunk[chunkIndex + 18]; // z + 1
-				if( BlockInfo.IsFaceHidden( tile, back, TileSide.Back ) ) {
-					drawFlags[index + TileSide.Back] = 0;
-				} else {
-					AddVertices( tile, TileSide.Back );
-					drawFlags[index + TileSide.Back] = 1;
-				}
-			}
-			
-			if( drawFlags[index + TileSide.Bottom] != 0 ) {
-				byte below = chunk[chunkIndex - 324]; // y - 1
-				if( BlockInfo.IsFaceHidden( tile, below, TileSide.Bottom ) ) {
-					drawFlags[index + TileSide.Bottom] = 0;
-				} else {
-					AddVertices( tile, TileSide.Bottom );
-					drawFlags[index + TileSide.Bottom] = 1;
-				}
-			}
-			
-			if( drawFlags[index + TileSide.Top] != 0 ) {
-				byte above = chunk[chunkIndex + 324]; // y + 1
-				if( BlockInfo.IsFaceHidden( tile, above, TileSide.Top ) ) {
-					drawFlags[index + TileSide.Top] = 0;
-				} else {
-					AddVertices( tile, TileSide.Top );
-					drawFlags[index + TileSide.Top] = 1;
-				}
-			}
-		}
-		
-		protected virtual bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face );
-		}
-		
-		protected byte GetNeighbour( int chunkIndex, int face ) {
-			switch( face ) {
-				case TileSide.Left:
-					return chunk[chunkIndex - 1]; // x - 1
-					
-				case TileSide.Right:
-					return chunk[chunkIndex + 1]; // x + 1
-					
-				case TileSide.Front:
-					return chunk[chunkIndex - 18]; // z - 1
-					
-				case TileSide.Back:
-					return chunk[chunkIndex + 18]; // z + 1
-					
-				case TileSide.Bottom:
-					return chunk[chunkIndex - 324]; // y - 1
-					
-				case TileSide.Top:
-					return chunk[chunkIndex + 324]; // y + 1
-			}
-			return 0;
 		}
 		
 		public abstract void BeginRender();

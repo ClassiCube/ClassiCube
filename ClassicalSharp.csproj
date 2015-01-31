@@ -206,6 +206,7 @@
     <Folder Include="2D\Screens" />
     <Folder Include="2D\Widgets" />
     <Folder Include="Blocks" />
+    <Folder Include="Blocks\Model" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
     <Folder Include="MeshBuilders" />
