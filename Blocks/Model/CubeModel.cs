@@ -32,6 +32,22 @@ namespace ClassicalSharp.Blocks.Model {
 				case TileSide.Right:
 					DrawRightFace( ref index, x, y, z, vertices, col );
 					break;
+					
+				case TileSide.Front:
+					DrawFrontFace( ref index, x, y, z, vertices, col );
+					break;
+					
+				case TileSide.Back:
+					DrawBackFace( ref index, x, y, z, vertices, col );
+					break;
+					
+				case TileSide.Bottom:
+					DrawBottomFace( ref index, x, y, z, vertices, col );
+					break;
+					
+				case TileSide.Top:
+					DrawTopFace( ref index, x, y, z, vertices, col );
+					break;
 			}
 		}
 		

@@ -29,7 +29,7 @@ namespace ClassicalSharp.Model {
 			graphics.Bind2DTexture( window.TerrainAtlasTexId );			
 			blockHeight = window.BlockInfo.BlockHeight( block );
 			atlas = window.TerrainAtlas;
-			BlockInfo = window.BlockInfo;					
+			BlockInfo = window.BlockInfo;			
 			index = 0;
 			if( BlockInfo.IsSprite( block ) ) {
 				DrawSprite();

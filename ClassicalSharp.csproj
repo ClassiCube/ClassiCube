@@ -120,8 +120,8 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
+    <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
-    <Compile Include="MeshBuilders\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />

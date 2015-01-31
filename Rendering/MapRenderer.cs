@@ -37,8 +37,8 @@ namespace ClassicalSharp {
 		
 		public MapRenderer( Game window ) {
 			Window = window;
-			builder = new ChunkMeshBuilderTex2Col4( window );
-			UsesLighting = builder.UsesLighting;
+			builder = new ChunkMeshBuilder( window );
+			UsesLighting = true;
 			Graphics = window.Graphics;
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
@@ -70,11 +70,9 @@ namespace ClassicalSharp {
 			Window.ChunkUpdates = 0;
 			ClearSectionCache();
 			sectionPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
-			builder.OnNewMap();
 		}
 		
 		void OnNewMapLoaded( object sender, EventArgs e ) {
-			builder.OnNewMapLoaded();
 		}
 		
 		void ClearSectionCache() {

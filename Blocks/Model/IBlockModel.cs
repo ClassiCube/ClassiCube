@@ -11,6 +11,7 @@ namespace ClassicalSharp.Blocks.Model {
 		public IBlockModel( TextureAtlas2D atlas, BlockInfo info, byte tile ) {
 			this.atlas = atlas;
 			this.block = tile;
+			this.info = info;
 		}
 		
 		public BlockPass Pass = BlockPass.Solid;
