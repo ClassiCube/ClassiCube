@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		public IGraphicsApi Graphics;
 		
 		ChunkMeshBuilder builder;
-		List<SectionInfo> sections = new List<SectionInfo>();
+		Dictionary<Vector3I, SectionInfo> sections = new Dictionary<Vector3I, SectionInfo>();
 		Vector3I sectionPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
 		public readonly bool UsesLighting;
@@ -78,8 +78,8 @@ namespace ClassicalSharp {
 		}
 		
 		void ClearSectionCache() {
-			for( int i = 0; i < sections.Count; i++ ) {
-				ResetSection( sections[i] );
+			foreach( var pair in sections ) {
+				ResetSection( pair.Value );
 			}
 			sections.Clear();
 		}
@@ -112,6 +112,16 @@ namespace ClassicalSharp {
 			if( bZ == 15 ) ResetSectionAt( cx, cy, cz + 1 );
 		}
 		
+		public void RedrawSection( int cx, int cy, int cz, ChunkPartialUpdate update ) {
+			ResetSectionAt( cx, cy, cz );
+			if( update.X0Modified ) ResetSectionAt( cx - 1, cy, cz );
+			if( update.Y0Modified ) ResetSectionAt( cx, cy - 1, cz );
+			if( update.Z0Modified ) ResetSectionAt( cx, cy, cz - 1 );
+			if( update.X15Modified ) ResetSectionAt( cx + 1, cy, cz );
+			if( update.Y15Modified ) ResetSectionAt( cx, cy + 1, cz );
+			if( update.Z15Modified ) ResetSectionAt( cx, cy, cz + 1 );
+		}
+		
 		void ResetSectionAt( int cx, int cy, int cz ) {
 			ResetOrCreateSection( cx << 4, cy << 4, cz << 4 );
 		}
@@ -119,22 +129,26 @@ namespace ClassicalSharp {
 		void ResetOrCreateSection( int x, int y, int z ) {
 			if( y < 0 || y >= Map.Height ) return;
 			
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
-				Vector3I loc = info.Location;
-				if( loc.X == x && loc.Y == y && loc.Z == z ) {
-					ResetSection( info );
-					return;
-				}
+			SectionInfo info;
+			if( sections.TryGetValue( new Vector3I( x, y, z ), out info ) ) {
+				ResetSection( info );
+			} else {
+				AddSection( new SectionInfo( x, y, z ) );
 			}
-			sections.Add( new SectionInfo( x, y, z ) );
+		}
+		
+		void AddSection( SectionInfo info ) {
+			// TODO: Find out why sections are getting duplicated sometimes..
+			//sections.Add( info.Location, info );
+			sections[info.Location] = info;
+			cacheNeedsReloading = true;
 		}
 		
 		public void LoadChunk( Chunk chunk ) {
 			int x = chunk.ChunkX << 4;
 			int z = chunk.ChunkZ << 4;
 			for( int y = 0; y < Map.Height; y += 16 ) {
-				sections.Add( new SectionInfo( x, y, z ) );
+				AddSection( new SectionInfo( x, y, z ) );
 			}
 		}
 		
@@ -147,21 +161,19 @@ namespace ClassicalSharp {
 		}
 		
 		void UnloadSection( int x, int y, int z ) {
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
-				Vector3I loc = info.Location;
-				if( loc.X == x && loc.Y == y && loc.Z == z ) {
-					ResetSection( info );
-					sections.RemoveAt( i );
-					return;
-				}
+			SectionInfo info;
+			if( sections.TryGetValue( new Vector3I( x, y, z ), out info ) ) {
+				ResetSection( info );
+				sections.Remove( new Vector3I( x, y, z ) );
+				cacheNeedsReloading = true;
 			}
 		}
 		
 		public void Render( double deltaTime ) {
 			if( sections == null ) return;
 			Window.Vertices = 0;
-			UpdateSortOrder();
+			UpdatePosition();
+			UpdateCache();
 			UpdateChunks();
 			
 			// Render solid and fully transparent to fill depth buffer.
@@ -201,32 +213,50 @@ namespace ClassicalSharp {
 			builder.EndRender();
 		}
 
-		void UpdateSortOrder() {
+		SectionInfo[] sectionCache;
+		int[] distances;
+		internal int sectionsCacheCount = 0;
+		bool cacheNeedsReloading = true;
+		
+		void UpdatePosition() {
 			Player p = Window.LocalPlayer;
-			Vector3I newChunkPos = Vector3I.Floor( p.Position );
-			newChunkPos.X = ( newChunkPos.X & ~0x0F ) + 8;
-			newChunkPos.Y = ( newChunkPos.Y & ~0x0F ) + 8;
-			newChunkPos.Z = ( newChunkPos.Z & ~0x0F ) + 8;
-			if( newChunkPos != sectionPos ) {
-				sections.Sort( CompareChunks );
+			Vector3I newSectionPos = Vector3I.Floor( p.Position );
+			newSectionPos.X = ( newSectionPos.X & ~0x0F ) + 8;
+			newSectionPos.Y = ( newSectionPos.Y & ~0x0F ) + 8;
+			newSectionPos.Z = ( newSectionPos.Z & ~0x0F ) + 8;
+			if( newSectionPos != sectionPos ) {
+				sectionPos = newSectionPos;
+				cacheNeedsReloading = true;
 			}
 		}
 		
-		int CompareChunks( SectionInfo a, SectionInfo b ) {
-			Vector3I aLoc = a.Location;
-			Vector3I bLoc = b.Location;
-			int distA = Utils.DistanceSquared( aLoc.X + 8, aLoc.Y + 8, aLoc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
-			int distB = Utils.DistanceSquared( bLoc.X + 8, bLoc.Y + 8, bLoc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
-			return distA.CompareTo( distB );
+		void UpdateCache() {
+			if( !cacheNeedsReloading ) return;
+			
+			sectionsCacheCount = sections.Count;
+			if( sectionCache == null || sectionsCacheCount > sectionCache.Length ) {
+				sectionCache = new SectionInfo[sectionsCacheCount];
+				distances = new int[sectionsCacheCount];
+			}
+			
+			int i = 0;
+			foreach( var pair in sections ) {
+				sectionCache[i] = pair.Value;
+				Vector3I loc = pair.Key;
+				distances[i] = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, 
+				                                     sectionPos.X, sectionPos.Y, sectionPos.Z );
+				i++;
+			}
+			Array.Sort( distances, sectionCache, 0, sectionsCacheCount );
 		}
 		
 		void UpdateChunks() {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
+			for( int i = 0; i < sectionsCacheCount; i++ ) {
+				SectionInfo info = sectionCache[i];
 				Vector3I loc = info.Location;
-				int distSqr = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, sectionPos.X, sectionPos.Y, sectionPos.Z );
+				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.DrawInfo == null ) {
@@ -247,8 +277,8 @@ namespace ClassicalSharp {
 		
 		// TODO: there's probably a better way of doing this.
 		void RenderSolidBatch() {
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
+			for( int i = 0; i < sectionsCacheCount; i++ ) {
+				SectionInfo info = sectionCache[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts;
@@ -260,8 +290,8 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderSpriteBatch() {
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
+			for( int i = 0; i < sectionsCacheCount; i++ ) {
+				SectionInfo info = sectionCache[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts;
@@ -273,8 +303,8 @@ namespace ClassicalSharp {
 		}
 
 		void RenderTranslucentBatch() {
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
+			for( int i = 0; i < sectionsCacheCount; i++ ) {
+				SectionInfo info = sectionCache[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts;
@@ -286,8 +316,8 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderTranslucentBatchNoAdd() {
-			for( int i = 0; i < sections.Count; i++ ) {
-				SectionInfo info = sections[i];
+			for( int i = 0; i < sectionsCacheCount; i++ ) {
+				SectionInfo info = sectionCache[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts;

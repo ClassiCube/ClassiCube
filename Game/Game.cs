@@ -293,6 +293,15 @@ namespace ClassicalSharp {
 			chunk.SetBlockMetadata( blockX, y, blockZ, meta );
 			MapRenderer.RedrawBlock( x, y, z );
 		}
+		
+		public void NotifyChunkPartialUpdate( Chunk chunk, ChunkPartialUpdate[] states ) {
+			for( int y = 0; y < states.Length; y++ ) {
+				ChunkPartialUpdate update = states[y];
+				if( update.Modified ) {
+					MapRenderer.RedrawSection( chunk.ChunkX, y, chunk.ChunkZ, update );
+				}
+			}
+		}
 	}
 	
 	public sealed class PlayerListInfo {

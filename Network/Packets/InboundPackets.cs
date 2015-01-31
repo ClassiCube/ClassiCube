@@ -520,20 +520,18 @@ namespace ClassicalSharp.Network.Packets {
 			int totalSize = elementSize + elementSize * 3 / 2; // blocks + meta + blocklight + skylight
 			byte[] data = Decompress( compressedData, totalSize );
 
-			if( sizeX == 16 && sizeY == 128 && sizeZ == 16 ) { // Full chunk
+			if( sizeX == 16 && sizeY == Map.Height && sizeZ == 16 ) { // Full chunk
 				Chunk chunk = new Chunk( x >> 4, z >> 4, false, game );
-				int index = 0;	
-				chunk.Blocks = GetPortion( data, elementSize, ref index );	
+				int index = 0;
+				chunk.Blocks = GetPortion( data, elementSize, ref index );
 				chunk.Metadata = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				chunk.BlockLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				chunk.SkyLight = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
 				game.Map.UnloadChunk( chunk.ChunkX, chunk.ChunkZ );
 				game.Map.LoadChunk( chunk );
 			} else {
-				Console.WriteLine( "Partial chunk update not done yet!!!" + sizeX + "," + sizeY + "," + sizeZ );
-				
 				if( sizeX > 16 || sizeZ > 16 ) {
-					Utils.LogWarning( "Cannot update multiple chunks yet." );
+					Utils.LogWarning( "Cannot update multiple chunks at once yet." );
 					return;
 				}
 				Chunk chunk = game.Map.GetChunk( x >> 4, z >> 4 );
@@ -548,14 +546,18 @@ namespace ClassicalSharp.Network.Packets {
 				int index = 0;
 				byte[] blocks = GetPortion( data, elementSize, ref index );
 				NibbleArray metadata = new NibbleArray( GetPortion( data, elementSize / 2, ref index ) );
+				ChunkPartialUpdate[] updates = new ChunkPartialUpdate[Map.Height / 16];
+				
 				for( int i = 0; i < elementSize; i++ ) {
 					int blockX = startX + ( ( i / sizeY ) / sizeZ );
 					int blockY = startY + ( i % sizeY );
 					int blockZ = startZ + ( ( i / sizeY ) % sizeZ );
-					game.UpdateChunkBlock( blockX, blockY, blockZ, blocks[i], metadata[i], chunk );
+					updates[blockY >> 4].UpdateModifiedState( blockX, blockY, blockZ );
+					chunk.SetBlock( blockX, blockY, blockZ, blocks[i] );
+					chunk.SetBlockMetadata( blockX, blockY, blockZ, metadata[i] );
 				}
-				throw new NotImplementedException();
-			}			
+				game.NotifyChunkPartialUpdate( chunk, updates );
+			}
 		}
 		
 		static byte[] GetPortion( byte[] data, int length, ref int index ) {
@@ -604,13 +606,18 @@ namespace ClassicalSharp.Network.Packets {
 		public override void ReadCallback( Game game ) {
 			Chunk chunk = game.Map.GetChunk( chunkX, chunkZ );
 			if( chunk != null ) {
+				ChunkPartialUpdate[] updates = new ChunkPartialUpdate[Map.Height / 16];
+				
 				for( int i = 0; i < posMasks.Length; i++ ) {
 					int mask = posMasks[i];
 					int y = mask & 0x00FF;
 					int z = ( mask & 0x0F00 ) >> 8;
 					int x = ( mask & 0xF000 ) >> 12;
-					game.UpdateChunkBlock( x, y, z, blockTypes[i], blockMetas[i], chunk );
+					updates[y >> 4].UpdateModifiedState( x, y, z );
+					chunk.SetBlock( x, y, z, blockTypes[i] );
+					chunk.SetBlockMetadata( x, y, z, blockMetas[i] );
 				}
+				game.NotifyChunkPartialUpdate( chunk, updates );
 			}
 		}
 	}

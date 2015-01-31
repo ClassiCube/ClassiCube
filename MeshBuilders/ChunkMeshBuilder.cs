@@ -65,7 +65,10 @@ namespace ClassicalSharp {
 		
 		unsafe void CopyMainPart( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
 			Chunk chunk = map.GetChunk( x1 >> 4, z1 >> 4 );
-			if( chunk == null ) return;
+			if( chunk == null ) {
+				Utils.LogWarning( "um what? " + ( x1 >> 4 ) + " , " + ( z1 >> 4 ) + "(" + x1 + " , " + z1 + ")" );
+				return;
+			}
 			
 			for( int yy = -1; yy < 17; yy++ ) {
 				int y = yy + y1;
