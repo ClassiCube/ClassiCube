@@ -103,6 +103,7 @@
     <Compile Include="Blocks\Model\FenceModel.cs" />
     <Compile Include="Blocks\Model\GrassCubeModel.cs" />
     <Compile Include="Blocks\Model\IBlockModel.cs" />
+    <Compile Include="Blocks\Model\RailsModel.cs" />
     <Compile Include="Blocks\Model\SpriteModel.cs" />
     <Compile Include="Blocks\Model\TorchModel.cs" />
     <Compile Include="Entities\Entity.cs" />

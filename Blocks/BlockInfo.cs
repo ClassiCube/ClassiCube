@@ -25,7 +25,8 @@ namespace ClassicalSharp {
 			
 			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
 			SetIsTransparent( Block.Glass, Block.Leaves, Block.Slabs, Block.Snow,
-			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed, Block.Farmland, Block.Fence );
+			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed, Block.Farmland, Block.Fence,
+			                 Block.Rails );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
 			            Block.BrownMushroom, Block.RedMushroom, Block.Torch,
 			            Block.DeadShrubs, Block.TallGrass, Block.Fire, Block.RedstoneWire,
@@ -48,6 +49,7 @@ namespace ClassicalSharp {
 			models[(byte)Block.Torch] = new TorchModel( atlas, this, (byte)Block.Torch );
 			models[(byte)Block.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOff );
 			models[(byte)Block.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOn );
+			models[(byte)Block.Rails] = new RailsModel( atlas, this, (byte)Block.Rails );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
