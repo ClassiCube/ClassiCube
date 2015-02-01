@@ -1,12 +1,15 @@
 ﻿using System;
+using OpenTK;
 
 namespace ClassicalSharp.Blocks.Model {
 	
 	public class CubeModel : IBlockModel {
 		
-		int[] texIds = new int[6];
-		TextureRectangle[] recs = new TextureRectangle[6];
+		protected int[] texIds = new int[6];
+		protected TextureRectangle[] recs = new TextureRectangle[6];
 		float blockHeight;
+		protected Vector3 min, max;
+		
 		public CubeModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
 			blockHeight = info.BlockHeight( block );
 			for( int face = 0; face < 6; face++ ) {
@@ -16,6 +19,8 @@ namespace ClassicalSharp.Blocks.Model {
 				recs[face] = rec;
 			}
 			Pass = info.IsTranslucent( block ) ? BlockPass.Transluscent : BlockPass.Solid;
+			min = Vector3.Zero;
+			max = new Vector3( 1f, blockHeight, 1f );
 		}
 		
 		public override int GetVerticesCount( int face, byte neighbour ) {
@@ -51,82 +56,82 @@ namespace ClassicalSharp.Blocks.Model {
 			}
 		}
 		
-		protected void DrawTopFace( ref int index, float x, float y, float z,
+		protected virtual void DrawTopFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Top];
 
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z + 1, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + min.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U1, rec.V2, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z + 1, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z + 1, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
 		}
 
-		protected void DrawBottomFace( ref int index, float x, float y, float z,
+		protected virtual void DrawBottomFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Bottom];
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + max.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U1, rec.V1, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + min.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U2, rec.V2, col );
 		}
 
-		protected void DrawBackFace( ref int index, float x, float y, float z,
+		protected virtual void DrawBackFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Back];
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z + 1, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z + 1, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + max.Z, rec.U1, rec.V2, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z + 1, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + max.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
 		}
 
-		protected void DrawFrontFace( ref int index, float x, float y, float z,
+		protected virtual void DrawFrontFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Back];
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + min.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + min.Z, rec.U1, rec.V2, col );
 		}
 
-		protected void DrawLeftFace( ref int index, float x, float y, float z,
+		protected virtual void DrawLeftFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Left];
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z + 1, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + min.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U1, rec.V2, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + blockHeight, z + 1, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + max.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
 		}
 
-		protected void DrawRightFace( ref int index, float x, float y, float z,
+		protected virtual void DrawRightFace( ref int index, float x, float y, float z,
 		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Right];
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z + 1, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U1, rec.V2, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + blockHeight, z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + min.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
 		}
 	}
 }

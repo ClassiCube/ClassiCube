@@ -20,8 +20,10 @@ namespace ClassicalSharp {
 			SetOptimTopTexture( Block.Grass, Row1 );
 			SetOptimAllTextures( Block.Stone, Row1 + 1 );
 			SetOptimAllTextures( Block.Dirt, Row1 + 2 );
+			SetOptimAllTextures( Block.Farmland, Row1 + 2 );
 			SetOptimSideTextures( Block.Grass, Row1 + 3 );
 			SetOptimAllTextures( Block.WoodenPlanks, Row1 + 4 );
+			SetOptimAllTextures( Block.Fence, Row1 + 4 );
 			SetOptimTopTexture( Block.Bookshelf, Row1 + 4 );
 			SetOptimBottomTexture( Block.Bookshelf, Row1 + 4 );
 			SetOptimSideTextures( Block.DoubleSlabs, Row1 + 5 );
@@ -106,7 +108,7 @@ namespace ClassicalSharp {
 			SetOptimAllTextures( Block.Ladders, Row5 + 11 );
 			SetOptimAllTextures( Block.Trapdoor, Row5 + 12 );
 			// TODO: Wet farmland
-			SetOptimAllTextures( Block.Farmland, Row5 + 13 );
+			SetOptimTopTexture( Block.Farmland, Row5 + 13 );
 			// TODO: Crop stages.
 			SetOptimAllTextures( Block.Seeds, Row5 + 15 );
 			SetOptimAllTextures( Block.Lever, Row6 + 7 );

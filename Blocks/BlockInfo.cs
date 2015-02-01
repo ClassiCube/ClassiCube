@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 			
 			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
 			SetIsTransparent( Block.Glass, Block.Leaves, Block.Slabs, Block.Snow,
-			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed );
+			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed, Block.Farmland, Block.Fence );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
 			            Block.BrownMushroom, Block.RedMushroom, Block.Torch,
 			            Block.DeadShrubs, Block.TallGrass, Block.Fire, Block.RedstoneWire,
@@ -40,8 +40,16 @@ namespace ClassicalSharp {
 			SetBlockHeight( 2 / 16f, Block.Snow );
 			SetBlockHeight( 9 / 16f, Block.Bed );
 			SetBlockHeight( 3 / 16f, Block.Trapdoor );
+			SetBlockHeight( 15 / 16f, Block.Farmland );
 			SetupCullingCache();
+			
+			models[(byte)Block.Grass] = new GrassCubeModel( atlas, this, (byte)Block.Grass );
+			models[(byte)Block.Fence] = new FenceModel( atlas, this, (byte)Block.Fence );
+			models[(byte)Block.Torch] = new TorchModel( atlas, this, (byte)Block.Torch );
+			models[(byte)Block.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOff );
+			
 			for( byte id = 1; id <= 96; id++ ) {
+				if( models[id] != null ) continue;
 				if( IsSprite( id ) ) {
 					models[id] = new SpriteModel( atlas, this, id );
 				} else {
