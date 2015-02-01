@@ -47,6 +47,7 @@ namespace ClassicalSharp {
 			models[(byte)Block.Fence] = new FenceModel( atlas, this, (byte)Block.Fence );
 			models[(byte)Block.Torch] = new TorchModel( atlas, this, (byte)Block.Torch );
 			models[(byte)Block.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOff );
+			models[(byte)Block.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOn );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
