@@ -15,7 +15,9 @@ namespace ClassicalSharp.Blocks.Model {
 			for( int face = 0; face < 6; face++ ) {
 				texIds[face] = info.GetOptimTextureLoc( block, face );
 				TextureRectangle rec = atlas.GetTexRec( texIds[face] );
-				rec.V2 = rec.V1 + blockHeight * atlas.invVerElementSize;
+				if( face < TileSide.Bottom ) {
+					rec.V2 = rec.V1 + blockHeight * atlas.invVerElementSize;
+				}
 				recs[face] = rec;
 			}
 			Pass = info.IsTranslucent( block ) ? BlockPass.Transluscent : BlockPass.Solid;
@@ -57,7 +59,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 		
 		protected virtual void DrawTopFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		                                   VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Top];
 
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
@@ -70,7 +72,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 
 		protected virtual void DrawBottomFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		                                      VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Bottom];
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + max.Z, rec.U2, rec.V2, col );
@@ -83,7 +85,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 
 		protected virtual void DrawBackFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		                                    VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Back];
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
@@ -96,8 +98,8 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 
 		protected virtual void DrawFrontFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
-			TextureRectangle rec = recs[TileSide.Back];
+		                                     VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+			TextureRectangle rec = recs[TileSide.Front];
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + min.Y, z + min.Z, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + min.Y, z + min.Z, rec.U2, rec.V2, col );
@@ -109,7 +111,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 
 		protected virtual void DrawLeftFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		                                    VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Left];
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
@@ -122,7 +124,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 
 		protected virtual void DrawRightFace( ref int index, float x, float y, float z,
-		                           VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		                                     VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			TextureRectangle rec = recs[TileSide.Right];
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );

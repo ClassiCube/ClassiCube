@@ -44,6 +44,7 @@ namespace ClassicalSharp {
 			SetBlockHeight( 15 / 16f, Block.Farmland );
 			SetupCullingCache();
 			
+			models[(byte)Block.Seeds] = new SeedsModel( atlas, this, (byte)Block.Seeds );
 			models[(byte)Block.Grass] = new GrassCubeModel( atlas, this, (byte)Block.Grass );
 			models[(byte)Block.Fence] = new FenceModel( atlas, this, (byte)Block.Fence );
 			models[(byte)Block.Torch] = new TorchModel( atlas, this, (byte)Block.Torch );
