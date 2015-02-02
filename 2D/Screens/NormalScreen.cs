@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		}
 		
 		ChatScreen chat;
-		BlockHotbarWidget hotbar;
+		HotbarWidget hotbar;
 		Widget playerList;
 		
 		public override void Render( double delta ) {
@@ -45,10 +45,10 @@ namespace ClassicalSharp {
 			chat = new ChatScreen( Window );
 			chat.Window = Window;
 			const int blockSize = 32;
-			chat.ChatLogYOffset = blockSize + blockSize;
-			chat.ChatInputYOffset = blockSize + blockSize / 2;
+			chat.ChatLogYOffset = blockSize + blockSize + blockSize / 2;
+			chat.ChatInputYOffset = blockSize + blockSize;
 			chat.Init();
-			hotbar = new BlockHotbarWidget( Window );
+			hotbar = new HotbarWidget( Window );
 			hotbar.Init();
 		}
 		

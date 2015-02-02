@@ -7,9 +7,9 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public sealed class BlockHotbarWidget : Widget {
+	public sealed class HotbarWidget : Widget {
 		
-		public BlockHotbarWidget( Game window ) : base( window ) {
+		public HotbarWidget( Game window ) : base( window ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
 		}

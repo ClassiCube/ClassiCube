@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 			DisplayName = name;
 			SkinName = Utils.StripColours( name );
 			renderer = new PlayerRenderer( this, window );
+			window.AsyncDownloader.DownloadSkin( SkinName );
 		}
 		
 		// Last known position and orientation sent by the server.
