@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		public Matrix4 View, Projection;
 		
 		void LoadAtlas( Bitmap bmp ) {
-			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16, 5 );
+			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16 );
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
 			}

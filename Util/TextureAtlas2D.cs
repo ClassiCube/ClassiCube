@@ -41,30 +41,28 @@ namespace ClassicalSharp {
 		
 		public int ElementsPerRow;
 		public int RowsCount;
-		public int UsedRowsCount;
 		public Bitmap AtlasBitmap;
 		public int horElementSize, verElementSize;
 		public float invHorElementSize, invVerElementSize;
 		public IGraphicsApi GraphicsApi;
 		
-		public TextureAtlas2D( IGraphicsApi graphics, string path, int elementsPerRow, int rows, int usedRows ) {
+		public TextureAtlas2D( IGraphicsApi graphics, string path, int elementsPerRow, int rows ) {
 			Bitmap bmp = new Bitmap( path );
 			GraphicsApi = graphics;
-			Init( bmp, elementsPerRow, rows, usedRows );
+			Init( bmp, elementsPerRow, rows );
 		}
 		
-		public TextureAtlas2D( IGraphicsApi graphics, Bitmap bmp, int elementsPerRow, int rows, int usedRows ) {
+		public TextureAtlas2D( IGraphicsApi graphics, Bitmap bmp, int elementsPerRow, int rows ) {
 			GraphicsApi = graphics;
-			Init( bmp, elementsPerRow, rows, usedRows );
+			Init( bmp, elementsPerRow, rows );
 		}
 		
-		void Init( Bitmap bmp, int elementsPerRow, int rows, int usedRows ) {
+		void Init( Bitmap bmp, int elementsPerRow, int rows ) {
 			AtlasBitmap = bmp;
 			ElementsPerRow = elementsPerRow;
 			RowsCount = rows;
 			horElementSize = bmp.Width / ElementsPerRow;
 			verElementSize = bmp.Height / RowsCount;
-			UsedRowsCount = usedRows;
 			invHorElementSize = (float)horElementSize / bmp.Width;
 			invVerElementSize = (float)verElementSize / bmp.Height;
 		}

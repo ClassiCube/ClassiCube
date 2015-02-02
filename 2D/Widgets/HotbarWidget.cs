@@ -17,6 +17,7 @@ namespace ClassicalSharp {
 		Texture selectedBlock, slotTexture;
 		const int hotbarCount = 9;
 		const int blockSize = 40;
+		int iconsTexId;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -40,6 +41,7 @@ namespace ClassicalSharp {
 				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, y );
 			}
 			slotTexture = Utils2D.CreateTransparentSlot( GraphicsApi, 0, 0, blockSize );
+			iconsTexId = GraphicsApi.LoadTexture( "icons.png" );
 			
 			int x = Window.Width / 2 - ( blockSize * hotbarCount ) / 2;
 			X = x;
@@ -53,7 +55,31 @@ namespace ClassicalSharp {
 			RenderHotbarBackground();
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
 			RenderHotbarItems();
+			RenderHearts();
 			GraphicsApi.Texturing = false;
+		}
+		
+		void RenderHearts() {
+			GraphicsApi.Texturing = true;
+			GraphicsApi.Bind2DTexture( iconsTexId );
+			int health = Window.LocalPlayer.Health;
+			
+			for( int heart = 0; heart < 10; heart++ ) {
+				TextureRectangle rec = new TextureRectangle( 16 / 256f, 0 / 256f, 9 / 256f, 9 / 256f );
+				Texture tex = new Texture( iconsTexId, X + 16 * heart, Y - 18, 18, 18, rec );
+				tex.RenderNoBind( GraphicsApi );
+				
+				if( health >= 2 ) {
+					rec = new TextureRectangle( 53 / 256f, 1 / 256f, 7 / 256f, 7 / 256f );
+				} else if( health == 1 ) {
+					rec = new TextureRectangle( 62 / 256f, 1 / 256f, 7 / 256f, 7 / 256f );
+				} else {
+					continue;
+				}
+				tex = new Texture( iconsTexId, X + 16 * heart + 2, Y - 18 + 2, 14, 14, rec );
+				tex.RenderNoBind( GraphicsApi );
+				health -= 2;
+			}
 		}
 		
 		void RenderHotbarBackground() {
@@ -101,6 +127,7 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			GraphicsApi.DeleteTexture( ref selectedBlock );
 			GraphicsApi.DeleteTexture( ref slotTexture );
+			GraphicsApi.DeleteTexture( iconsTexId );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
