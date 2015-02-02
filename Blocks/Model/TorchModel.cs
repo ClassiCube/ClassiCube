@@ -30,6 +30,11 @@ namespace ClassicalSharp.Blocks.Model {
 			return 6;
 		}
 		
+		public override void DrawFace( int face, ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+			col = FastColour.White;
+			base.DrawFace( face, ref index, x, y, z, vertices, col );
+		}
+		
 		protected override void DrawLeftFace( ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			min.X = 7 / 16f;
 			base.DrawLeftFace( ref index, x, y, z, vertices, col );
