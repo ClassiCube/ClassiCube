@@ -35,7 +35,7 @@ namespace ClassicalSharp.Model {
 			
 			graphics.PushMatrix();
 			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
+			graphics.RotateY( 180f - yaw );
 			DrawPlayerModel( player, renderer );
 			graphics.PopMatrix();
 		}

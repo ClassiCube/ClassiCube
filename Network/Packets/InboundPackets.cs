@@ -213,8 +213,11 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			game.EntityManager[entityId] = new NullEntity( game );
-			throw new NotImplementedException();
+			NetPlayer player = new NetPlayer( playerName, game );
+			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
+			player.SetLocation( update, false );
+			player.CurrentItem = currentItem;
+			game.EntityManager[entityId] = player;
 		}
 	}
 	

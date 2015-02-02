@@ -9,10 +9,11 @@ namespace ClassicalSharp {
 	public class NetPlayer : Player {
 		
 		int tickCount = 0;
+		public short CurrentItem;
 		
-		public NetPlayer( string displayName, string skinName, Game window ) : base( window ) {
-			DisplayName = displayName;
-			SkinName = Utils.StripColours( skinName );
+		public NetPlayer( string name, Game window ) : base( window ) {
+			DisplayName = name;
+			SkinName = Utils.StripColours( name );
 			renderer = new PlayerRenderer( this, window );
 		}
 		
