@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 						SetHidden( tile, neighbour, TileSide.Right, true );
 						SetHidden( tile, neighbour, TileSide.Front, true );
 						SetHidden( tile, neighbour, TileSide.Back, true );
-						SetHidden( tile, neighbour, TileSide.Top, BlockHeight( tile ) == 1 );
+						SetHidden( tile, neighbour, TileSide.Top, BlockHeight( tile ) == 1 && ( neighbour != (byte)Block.Cactus ) );
 						SetHidden( tile, neighbour, TileSide.Bottom, BlockHeight( neighbour ) == 1 );
 					}
 				}

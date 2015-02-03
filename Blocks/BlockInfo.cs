@@ -51,6 +51,7 @@ namespace ClassicalSharp {
 			models[(byte)Block.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOff );
 			models[(byte)Block.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOn );
 			models[(byte)Block.Rails] = new RailsModel( atlas, this, (byte)Block.Rails );
+			models[(byte)Block.Cactus] = new CactusModel( atlas, this, (byte)Block.Cactus );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
