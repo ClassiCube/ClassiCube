@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -18,14 +17,6 @@ namespace ClassicalSharp {
 			public BlockDrawInfo( Texture texture, Block block ) {
 				Texture = texture;
 				BlockId = block;
-			}
-			
-			public int X1 {
-				get { return Texture.X1; }
-			}
-			
-			public int Y1 {
-				get { return Texture.Y1; }
 			}
 		}
 		BlockDrawInfo[] blocksTable;
@@ -45,10 +36,10 @@ namespace ClassicalSharp {
 				texture.RenderNoBind( GraphicsApi );
 			}
 			if( selectedIndex != -1 ) {
-				int rowIndex = selectedIndex % blocksPerRow;
-				int colIndex = selectedIndex / blocksPerRow;
-				selectedBlock.X1 = startX + blockSize * rowIndex;
-				selectedBlock.Y1 = startY + blockSize * colIndex;
+				int col = selectedIndex % blocksPerRow;
+				int row = selectedIndex / blocksPerRow;
+				selectedBlock.X1 = startX + blockSize * col;
+				selectedBlock.Y1 = startY + blockSize * row;
 				selectedBlock.Render( GraphicsApi );
 			}
 			if( blockInfoTexture.IsValid ) {
@@ -101,7 +92,7 @@ namespace ClassicalSharp {
 			RecreateBlockInfoTexture();
 		}
 		
-		Color backColour = Color.FromArgb( 120, 60, 60, 60 );
+		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		
 		string GetBlockInfo( Block block ) {
 			return String.Format(
@@ -178,12 +169,11 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
 			selectedIndex = -1;
 			if( Utils2D.Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
-				// clicking on the table. now find the intersecting cell.
 				for( int i = 0; i < blocksTable.Length; i++ ) {
-					int rowIndex = i % blocksPerRow;
-					int colIndex = i / blocksPerRow;
-					int x = startX + blockSize * rowIndex;
-					int y = startY + blockSize * colIndex;
+					int col = i % blocksPerRow;
+					int row = i / blocksPerRow;
+					int x = startX + blockSize * col;
+					int y = startY + blockSize * row;
 					
 					if( Utils2D.Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
 						selectedIndex = i;
@@ -196,14 +186,12 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button == MouseButton.Left ) {
-				if( selectedIndex != -1 ) {
-					BlockDrawInfo info = blocksTable[selectedIndex];
-					try {
-						Window.HeldBlock = info.BlockId;
-					} catch( InvalidOperationException ) {
-						Window.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					}
+			if( button == MouseButton.Left && selectedIndex != -1 ) {
+				BlockDrawInfo info = blocksTable[selectedIndex];
+				try {
+					Window.HeldBlock = info.BlockId;
+				} catch( InvalidOperationException ) {
+					Window.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
 				}
 				Window.SetNewScreen( new NormalScreen( Window ) );
 			}

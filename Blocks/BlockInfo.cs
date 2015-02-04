@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 			                 Block.Dandelion, Block.Slab );
 			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
 			            Block.BrownMushroom, Block.RedMushroom );
-			SetBlockHeight( 0.5f, Block.Slab );
+			SetBlockHeight( 8 / 16f, Block.Slab );
 			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
 			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
 			               Block.Dandelion );
@@ -37,8 +37,8 @@ namespace ClassicalSharp {
 			SetBlocksLight( false, Block.Fire, Block.Rope );
 			SetIsTranslucent( Block.Ice );
 			SetIsSprite( Block.Rope, Block.Fire );
-			SetBlockHeight( 0.5f, Block.CobblestoneSlab );
-			SetBlockHeight( 0.2f, Block.Snow );
+			SetBlockHeight( 8 / 16f, Block.CobblestoneSlab );
+			SetBlockHeight( 2 / 16f, Block.Snow );
 			SetupCullingCache();
 		}
 		
