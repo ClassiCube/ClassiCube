@@ -57,8 +57,6 @@ namespace ClassicalSharp {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			int yDiff = ( height - oldHeight ) / 2;
 			int xDiff = ( width - oldWidth ) / 2;
-			selectedBlock.Y1 += yDiff;
-			selectedBlock.X1 += xDiff;
 			startX += xDiff;
 			startY += yDiff;
 			blockInfoTexture.X1 += xDiff;

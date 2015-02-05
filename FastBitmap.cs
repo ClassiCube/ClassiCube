@@ -59,8 +59,8 @@ namespace ClassicalSharp {
 			}
 			
 			PixelFormat format = Bitmap.PixelFormat;
-			if( format != PixelFormat.Format32bppArgb ) {
-				throw new NotSupportedException( "Unsupported bitmap pixel format:" + format );
+			if( !( format == PixelFormat.Format32bppArgb || format == PixelFormat.Format32bppRgb ) ) {
+				throw new NotSupportedException( "Unsupported bitmap pixel format: " + format );
 			}
 			
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
