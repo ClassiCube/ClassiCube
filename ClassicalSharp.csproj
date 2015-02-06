@@ -108,8 +108,6 @@
     <Compile Include="Camera.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
-    <Compile Include="FastBitmap.cs" />
-    <Compile Include="FastColour.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
@@ -153,9 +151,11 @@
     <Compile Include="Rendering\NormalMapEnvRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
-    <Compile Include="TextureAtlas2D.cs" />
-    <Compile Include="TextureAtlas1D.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Utils\FastBitmap.cs" />
+    <Compile Include="Utils\FastColour.cs" />
+    <Compile Include="Utils\TextureAtlas1D.cs" />
+    <Compile Include="Utils\TextureAtlas2D.cs" />
+    <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -191,6 +191,7 @@
     <Folder Include="MeshBuilders" />
     <Folder Include="Game" />
     <Folder Include="Model" />
+    <Folder Include="Utils" />
     <Folder Include="Physics" />
   </ItemGroup>
 </Project>
