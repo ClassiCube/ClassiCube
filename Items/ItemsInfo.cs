@@ -8,17 +8,17 @@ namespace ClassicalSharp.Items {
 	
 	public class ItemInfo {
 		
-		int[] textures = new int[itemsCount];
 		const int itemsCount = 65536;
 		TextureAtlas2D atlas;
 		Item[] itemCache = new Item[itemsCount];
 		
 		public void Init( TextureAtlas2D atlas ) {
-			this.atlas = atlas;
-			InitTextures();
+			this.atlas = atlas;		
 			foreach( short value in Enum.GetValues( typeof( ItemId ) ) ) {
 				itemCache[value] = new Item( value );
 			}
+			
+			InitTextures();
 			SetMaxCountRange( 1, ItemId.IronShovel, ItemId.Bow );
 			SetMaxCountRange( 1, ItemId.IronSword, ItemId.DiamondAxe );
 			SetMaxCountRange( 1, ItemId.MushroomSoup, ItemId.GoldAxe );
@@ -62,17 +62,14 @@ namespace ClassicalSharp.Items {
 			            Row10 + 8, Row11 + 8, Row1 + 12, Row4 + 6, Row5 + 5,
 			            Row5 + 6, Row5 + 9, Row6 + 9, Row6 + 10, Row5 + 13,
 			            Row2 + 12, Row1 + 13, Row2 + 13, Row3 + 13, Row6 + 6,
-			            Row6 + 12, Row4 + 12, Row6 + 13, Row16 + 0, Row16 + 1 );
-		}
-		
-		void SetTexture( ItemId id, int texId ) {
-			textures[(int)id] = texId;
+			            Row6 + 12, Row4 + 12, Row6 + 13 );
+			SetTextures( ItemId.GoldMusicDisc, Row16 + 0, Row16 + 1 );
 		}
 		
 		void SetTextures( ItemId startId, params int[] texIds ) {
 			int start = (int)startId;
 			for( int i = 0; i < texIds.Length; i++ ) {
-				textures[start + i] = texIds[i];
+				itemCache[start + i].texId = texIds[i];
 			}
 		}
 		
@@ -83,7 +80,7 @@ namespace ClassicalSharp.Items {
 		}
 		
 		public int Get2DTextureLoc( short itemId, short itemDamage ) {
-			return textures[itemId];
+			return itemCache[itemId].Get2DTextureLoc( itemDamage );
 		}
 		
 		public int Get2DTextureLoc( Slot slot ) {

@@ -44,6 +44,7 @@ namespace ClassicalSharp {
 			SetBlockHeight( 3 / 16f, BlockId.Trapdoor );
 			SetBlockHeight( 15 / 16f, BlockId.Farmland );
 			SetupCullingCache();
+			MakeColours();
 			
 			models[(byte)BlockId.Seeds] = new SeedsModel( atlas, this, (byte)BlockId.Seeds );
 			models[(byte)BlockId.Grass] = new GrassCubeModel( atlas, this, (byte)BlockId.Grass );
@@ -53,10 +54,8 @@ namespace ClassicalSharp {
 			models[(byte)BlockId.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)BlockId.RedstoneTorchOn );
 			models[(byte)BlockId.Rails] = new RailsModel( atlas, this, (byte)BlockId.Rails );
 			models[(byte)BlockId.Cactus] = new CactusModel( atlas, this, (byte)BlockId.Cactus );
-			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( "grasscolor.png",
-			                                                         new SpriteModel( atlas, this, (byte)BlockId.TallGrass ) );
-			models[(byte)BlockId.Leaves] = new BiomeColouredModel( "grasscolor.png",
-			                                                      new CubeModel( atlas, this, (byte)BlockId.Leaves ) );
+			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( atlas, this, (byte)BlockId.TallGrass ) );
+			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel( atlas, this, (byte)BlockId.Leaves ) );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;

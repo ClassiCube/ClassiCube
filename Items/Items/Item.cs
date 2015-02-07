@@ -12,5 +12,10 @@ namespace ClassicalSharp.Items {
 		
 		public byte MaxCount = 64;
 		
+		internal int texId;
+		public virtual int Get2DTextureLoc( short damage ) {
+			return texId;
+		}
+		
 	}
 }
