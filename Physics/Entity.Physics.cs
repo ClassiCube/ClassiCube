@@ -11,8 +11,8 @@ namespace ClassicalSharp {
 		protected BlockInfo info;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( y >= Map.Height ) return (byte)Block.Air;
-			if( !map.IsValidPos( x, y, z ) ) return (byte)Block.Bedrock;
+			if( y >= Map.Height ) return (byte)BlockId.Air;
+			if( !map.IsValidPos( x, y, z ) ) return (byte)BlockId.Bedrock;
 			return map.GetBlock( x, y, z );
 		}
 		
@@ -27,18 +27,18 @@ namespace ClassicalSharp {
 		
 		struct State {
 			public BoundingBox BlockBB;
-			public byte Block;
+			public byte BlockId;
 			public float t;
 			
 			public State( BoundingBox bb, byte block, float t ) {
 				BlockBB = bb;
-				Block = block;
+				BlockId = block;
 				this.t = t;
 			}
 		}
 		
 		bool CanWalkThrough( byte block ) {
-			return block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) || block == (byte)Block.Snow;
+			return block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) || block == (byte)BlockId.Snow;
 		}
 		
 		bool IsFreeYForStep( BoundingBox blockBB ) {

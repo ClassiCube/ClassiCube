@@ -2,7 +2,7 @@
 
 namespace ClassicalSharp {
 	
-	public enum Block : byte {
+	public enum BlockId : byte {
 		Air = 0,
 		Stone = 1,
 		Grass = 2,

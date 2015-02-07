@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class BlockModel : IModel {
 		
-		byte block = (byte)Block.Air;	
+		byte block = (byte)BlockId.Air;	
 		public BlockModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[6 * 6];
 		}

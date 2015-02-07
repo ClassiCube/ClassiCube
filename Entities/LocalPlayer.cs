@@ -181,7 +181,7 @@ namespace ClassicalSharp {
 				Velocity.Z *= 0.91f;
 				Velocity.Y -= 0.08f;
 				
-				if( blockUnder == (byte)Block.Ice ) {
+				if( blockUnder == (byte)BlockId.Ice ) {
 					// Limit velocity while travelling on ice.
 					if( Velocity.X > 0.25f ) Velocity.X = 0.25f;
 					if( Velocity.X < -0.25f ) Velocity.X = -0.25f;

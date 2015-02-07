@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		public abstract void Render( double deltaTime, float t );
 		
 		public bool TouchesAnyLava() {
-			return TouchesAny( b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
+			return TouchesAny( b => b == (byte)BlockId.Lava || b == (byte)BlockId.StillLava );
 		}
 		
 		public bool TouchesAnyRope() {
@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		}
 		
 		public bool TouchesAnyWater() {
-			return TouchesAny( b => b == (byte)Block.Water || b == (byte)Block.StillWater );
+			return TouchesAny( b => b == (byte)BlockId.Water || b == (byte)BlockId.StillWater );
 		}
 
 		public bool TouchesAnyOf( byte blockType ) {			

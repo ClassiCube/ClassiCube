@@ -50,9 +50,6 @@ namespace ClassicalSharp {
 		FpsScreen fpsScreen;
 		public InventoryWindow Inventory;
 		
-		public bool[] CanPlace = new bool[256];
-		public bool[] CanDelete = new bool[256];
-		
 		public IPAddress IPAddress;
 		public string Username;
 		public string Mppass;
@@ -93,7 +90,6 @@ namespace ClassicalSharp {
 			LoadAtlases();
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init( TerrainAtlas );
-			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
 			ItemInfo = new ItemInfo();
 			ItemInfo.Init( ItemsAtlas );
 			Map = new Map( this );

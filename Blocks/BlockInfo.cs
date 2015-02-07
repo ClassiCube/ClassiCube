@@ -11,6 +11,7 @@ namespace ClassicalSharp {
 		bool[] isSprite = new bool[blocksCount];
 		bool[] isLiquid = new bool[blocksCount];
 		float[] heights = new float[blocksCount];
+		float[] hardness = new float[blocksCount];
 		bool[] blocksLight = new bool[blocksCount];
 		IBlockModel[] models = new IBlockModel[blocksCount];
 		const int blocksCount = 256;
@@ -23,39 +24,39 @@ namespace ClassicalSharp {
 			}
 			SetupOptimTextures();
 			
-			SetIsTranslucent( Block.StillWater, Block.Water, Block.Ice );
-			SetIsTransparent( Block.Glass, Block.Leaves, Block.Slabs, Block.Snow,
-			                 Block.RedstoneTorchOff, Block.MonsterSpawner, Block.Bed, Block.Farmland, Block.Fence,
-			                 Block.Rails );
-			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
-			            Block.BrownMushroom, Block.RedMushroom, Block.Torch,
-			            Block.DeadShrubs, Block.TallGrass, Block.Fire, Block.RedstoneWire,
-			            Block.RedstoneTorchOn, Block.RedstoneTorchOff, Block.SugarCane,
-			            Block.Cobweb );
+			SetIsTranslucent( BlockId.StillWater, BlockId.Water, BlockId.Ice );
+			SetIsTransparent( BlockId.Glass, BlockId.Leaves, BlockId.Slabs, BlockId.Snow,
+			                 BlockId.RedstoneTorchOff, BlockId.MonsterSpawner, BlockId.Bed, BlockId.Farmland, BlockId.Fence,
+			                 BlockId.Rails );
+			SetIsSprite( BlockId.Rose, BlockId.Sapling, BlockId.Dandelion,
+			            BlockId.BrownMushroom, BlockId.RedMushroom, BlockId.Torch,
+			            BlockId.DeadShrubs, BlockId.TallGrass, BlockId.Fire, BlockId.RedstoneWire,
+			            BlockId.RedstoneTorchOn, BlockId.RedstoneTorchOff, BlockId.SugarCane,
+			            BlockId.Cobweb );
 			
-			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
-			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			               Block.Dandelion, Block.Fire );
-			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
-			SetBlockHeight( 8 / 16f, Block.Slabs );
-			SetBlockHeight( 2 / 16f, Block.Snow );
-			SetBlockHeight( 9 / 16f, Block.Bed );
-			SetBlockHeight( 3 / 16f, Block.Trapdoor );
-			SetBlockHeight( 15 / 16f, Block.Farmland );
+			SetBlocksLight( false, BlockId.Glass, BlockId.Leaves, BlockId.Sapling,
+			               BlockId.RedMushroom, BlockId.BrownMushroom, BlockId.Rose,
+			               BlockId.Dandelion, BlockId.Fire );
+			SetIsLiquid( BlockId.StillWater, BlockId.Water, BlockId.StillLava, BlockId.Lava );
+			SetBlockHeight( 8 / 16f, BlockId.Slabs );
+			SetBlockHeight( 2 / 16f, BlockId.Snow );
+			SetBlockHeight( 9 / 16f, BlockId.Bed );
+			SetBlockHeight( 3 / 16f, BlockId.Trapdoor );
+			SetBlockHeight( 15 / 16f, BlockId.Farmland );
 			SetupCullingCache();
 			
-			models[(byte)Block.Seeds] = new SeedsModel( atlas, this, (byte)Block.Seeds );
-			models[(byte)Block.Grass] = new GrassCubeModel( atlas, this, (byte)Block.Grass );
-			models[(byte)Block.Fence] = new FenceModel( atlas, this, (byte)Block.Fence );
-			models[(byte)Block.Torch] = new TorchModel( atlas, this, (byte)Block.Torch );
-			models[(byte)Block.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOff );
-			models[(byte)Block.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)Block.RedstoneTorchOn );
-			models[(byte)Block.Rails] = new RailsModel( atlas, this, (byte)Block.Rails );
-			models[(byte)Block.Cactus] = new CactusModel( atlas, this, (byte)Block.Cactus );
-			models[(byte)Block.TallGrass] = new BiomeColouredModel( "grasscolor.png", 
-			                                                       new SpriteModel( atlas, this, (byte)Block.TallGrass ) );
-			models[(byte)Block.Leaves] = new BiomeColouredModel( "grasscolor.png", 
-			                                                       new CubeModel( atlas, this, (byte)Block.Leaves ) );
+			models[(byte)BlockId.Seeds] = new SeedsModel( atlas, this, (byte)BlockId.Seeds );
+			models[(byte)BlockId.Grass] = new GrassCubeModel( atlas, this, (byte)BlockId.Grass );
+			models[(byte)BlockId.Fence] = new FenceModel( atlas, this, (byte)BlockId.Fence );
+			models[(byte)BlockId.Torch] = new TorchModel( atlas, this, (byte)BlockId.Torch );
+			models[(byte)BlockId.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)BlockId.RedstoneTorchOff );
+			models[(byte)BlockId.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)BlockId.RedstoneTorchOn );
+			models[(byte)BlockId.Rails] = new RailsModel( atlas, this, (byte)BlockId.Rails );
+			models[(byte)BlockId.Cactus] = new CactusModel( atlas, this, (byte)BlockId.Cactus );
+			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( "grasscolor.png",
+			                                                         new SpriteModel( atlas, this, (byte)BlockId.TallGrass ) );
+			models[(byte)BlockId.Leaves] = new BiomeColouredModel( "grasscolor.png",
+			                                                      new CubeModel( atlas, this, (byte)BlockId.Leaves ) );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
@@ -65,35 +66,26 @@ namespace ClassicalSharp {
 					models[id] = new CubeModel( atlas, this, id );
 				}
 			}
+			SetHardnesses(
+				inf, 1.5f, 0.6f, 0.5f, 2f, 2f, 0f, 1E10f, inf, inf, inf, inf,
+				0.5f, 0.6f, 3f, 3f, 3f, 0.2f, 0.6f, 0.3f, 3f, 3f, 3.5f, 0.8f,
+				0.8f, 0.2f, 0.7f, 0.7f, 0.5f, 4f, 0f, 0f, 0.5f, 0.5f, 0.8f, 0f,
+				0f, 0f, 0f, 0f, 3f, 5f, 2f, 2f, 2f, 0f, 1.5f, 2f, 10f, 0f, 0f,
+				5f, 2f, 2.5f, 0f, 3f, 5f, 2.5f, 0f, 0.6f, 3.5f, 3.5f, 1f, 3f,
+				0.4f, 0.7f, 2f, 1f, 0.5f, 0.5f, 5f, 0.5f, 3f, 3f, 0f, 0f, 0.5f,
+				0.1f, 0.5f, 0.2f, 0.4f, 0.6f, 0f, 2f, 2f, 1f, 0.4f, 0.5f, 0.3f,
+				1E10f, 1f, 0.5f, 0f, 0f, 0f, 3f );
 		}
+		const float inf = float.PositiveInfinity;
 		
-		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
-			for( int i = (int)Block.Stone; i <= (int)Block.Obsidian; i++ ) {
-				canPlace[i] = true;
-				canDelete[i] = true;
-			}
-			canPlace[(int)Block.Grass] = false;
-			canPlace[(int)Block.Lava] = false;
-			canPlace[(int)Block.Water] = false;
-			canPlace[(int)Block.StillLava] = false;
-			canPlace[(int)Block.StillWater] = false;
-			canPlace[(int)Block.Bedrock] = false;
-			
-			canDelete[(int)Block.Bedrock] = false;
-			canDelete[(int)Block.Lava] = false;
-			canDelete[(int)Block.Water] = false;
-			canDelete[(int)Block.StillWater] = false;
-			canDelete[(int)Block.StillLava] = false;
-		}
-		
-		void SetIsTransparent( params Block[] ids ) {
+		void SetIsTransparent( params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				isTransparent[(int)ids[i]] = true;
 				isOpaque[(int)ids[i]] = false;
 			}
 		}
 		
-		void SetIsSprite( params Block[] ids ) {
+		void SetIsSprite( params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				isSprite[(int)ids[i]] = true;
 				isTransparent[(int)ids[i]] = true;
@@ -101,26 +93,32 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void SetIsTranslucent( params Block[] ids ) {
+		void SetIsTranslucent( params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				isTranslucent[(int)ids[i]] = true;
 				isOpaque[(int)ids[i]] = false;
 			}
 		}
 		
-		void SetIsLiquid( params Block[] ids ) {
+		void SetIsLiquid( params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				isLiquid[(int)ids[i]] = true;
 			}
 		}
 		
-		void SetBlockHeight( float height, params Block[] ids ) {
+		void SetBlockHeight( float height, params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				heights[(int)ids[i]] = height;
 			}
 		}
 		
-		void SetBlocksLight( bool blocks, params Block[] ids ) {
+		void SetHardnesses( params float[] hardnesses ) {
+			for( int i = 0; i < hardnesses.Length; i++ ) {
+				hardness[i] = hardnesses[i];
+			}
+		}
+		
+		void SetBlocksLight( bool blocks, params BlockId[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				blocksLight[(int)ids[i]] = blocks;
 			}
@@ -171,6 +169,14 @@ namespace ClassicalSharp {
 		/// (water or lava) </summary>
 		public bool IsLiquid( byte id ) {
 			return isLiquid[id];
+		}
+		
+		public float Hardness( byte id ) {
+			return hardness[id];
+		}
+		
+		public bool CanPick( byte id ) {
+			return hardness[id] != inf;
 		}
 		
 		public IBlockModel GetModel( byte id ) {

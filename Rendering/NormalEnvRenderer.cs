@@ -152,11 +152,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void EnableAmbientLighting() {
-			Block headBlock = Window.LocalPlayer.BlockAtHead;
-			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
+			BlockId headBlock = Window.LocalPlayer.BlockAtHead;
+			if( headBlock == BlockId.Water || headBlock == BlockId.StillWater ) {
 				Graphics.AmbientLighting = true;
 				Graphics.SetAmbientColour( new FastColour( 102, 102, 230 ) );
-			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
+			} else if( headBlock == BlockId.Lava || headBlock == BlockId.StillLava ) {
 				Graphics.AmbientLighting = true;
 				Graphics.SetAmbientColour( new FastColour( 102, 77, 77 ) );
 			} else {
@@ -173,13 +173,13 @@ namespace ClassicalSharp.Renderers {
 			FastColour fogCol = Map.FogCol;
 			FastColour skyCol = Map.SkyCol;
 			FastColour adjFogCol = fogCol;
-			Block headBlock = Window.LocalPlayer.BlockAtHead;
+			BlockId headBlock = Window.LocalPlayer.BlockAtHead;
 			
-			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
+			if( headBlock == BlockId.Water || headBlock == BlockId.StillWater ) {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 0.1f );
 				adjFogCol = new FastColour( 5, 5, 51 );
-			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
+			} else if( headBlock == BlockId.Lava || headBlock == BlockId.StillLava ) {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 2f );
 				adjFogCol = new FastColour( 153, 25, 0 );

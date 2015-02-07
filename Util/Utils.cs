@@ -178,8 +178,8 @@ namespace ClassicalSharp {
 			return buffer.ToString();
 		}
 		
-		public static string GetSpacedBlockName( Block block ) {
-			return block == Block.TNT ? "TNT" : SplitUppercase( block.ToString() );
+		public static string GetSpacedBlockName( BlockId block ) {
+			return block == BlockId.TNT ? "TNT" : SplitUppercase( block.ToString() );
 		}
 		
 		public static void LogWarning( string text ) {

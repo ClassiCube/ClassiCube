@@ -165,7 +165,7 @@ namespace ClassicalSharp.Commands {
 				if( pos == null ) {
 					Window.AddChat( "no target pos" );
 				} else {
-					Block block = (Block)Window.Map.GetBlock( pos.BlockPos );
+					BlockId block = (BlockId)Window.Map.GetBlock( pos.BlockPos );
 					Window.AddChat( "target pos: " + pos.BlockPos );
 					Window.AddChat( "target block: " + Utils.GetSpacedBlockName( block ) );
 				}

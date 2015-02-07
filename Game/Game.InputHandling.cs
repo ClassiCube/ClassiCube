@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 				Vector3I pos = SelectedPos.BlockPos;
 				byte block = 0;
 				
-				if( Map.IsValidPos( pos ) && ( block = Map.GetBlock( pos ) ) != 0 && CanDelete[block] ) {
+				if( Map.IsValidPos( pos ) && ( block = Map.GetBlock( pos ) ) != 0 ) {
 					ParticleManager.BreakBlockEffect( pos, block );
 					Network.SendDeleteBlock( SelectedPos );
 					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
@@ -129,10 +129,10 @@ namespace ClassicalSharp {
 			if( right ) {
 				if( SelectedPos.TranslatedPos == null ) return;
 				Vector3I pos = SelectedPos.TranslatedPos.Value;
-				Block block = Block.Grass; // TODO: Picking
+				BlockId block = BlockId.Grass; // TODO: Picking
 				byte oldBlock = 0;
 				
-				if( Map.IsValidPos( pos ) && CanReplace( oldBlock ) && CanPlace[(int)block] ) {
+				if( Map.IsValidPos( pos ) && CanReplace( oldBlock ) ) {
 					Network.SendPlaceBlock( SelectedPos );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool CanReplace( byte block ) {
-			return block == 0 || ( !CanPlace[block] && !CanDelete[block] && BlockInfo.IsLiquid( block ) );
+			return block == 0;
 		}
 		
 		public KeyMap Keys = new KeyMap();

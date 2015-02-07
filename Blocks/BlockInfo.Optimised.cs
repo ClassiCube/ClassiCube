@@ -17,162 +17,162 @@ namespace ClassicalSharp {
 		void SetupOptimTextures() {
 			// TODO: Snowy grass
 			// TODO: Tinted grass
-			SetOptimTopTexture( Block.Grass, Row1 );
-			SetOptimAllTextures( Block.Stone, Row1 + 1 );
-			SetOptimAllTextures( Block.Dirt, Row1 + 2 );
-			SetOptimAllTextures( Block.Farmland, Row1 + 2 );
-			SetOptimSideTextures( Block.Grass, Row1 + 3 );
-			SetOptimAllTextures( Block.WoodenPlanks, Row1 + 4 );
-			SetOptimAllTextures( Block.Fence, Row1 + 4 );
-			SetOptimTopTexture( Block.Bookshelf, Row1 + 4 );
-			SetOptimBottomTexture( Block.Bookshelf, Row1 + 4 );
-			SetOptimSideTextures( Block.DoubleSlabs, Row1 + 5 );
-			SetOptimSideTextures( Block.Slabs, Row1 + 5 );
-			SetOptimTopTexture( Block.DoubleSlabs, Row1 + 6 );
-			SetOptimBottomTexture( Block.DoubleSlabs, Row1 + 6 );
-			SetOptimTopTexture( Block.Slabs, Row1 + 6 );
-			SetOptimBottomTexture( Block.Slabs, Row1 + 6 );
-			SetOptimAllTextures( Block.BrickBlock, Row1 + 7 );
-			SetOptimSideTextures( Block.TNT, Row1 + 8 );
-			SetOptimTopTexture( Block.TNT, Row1 + 9 );
-			SetOptimBottomTexture( Block.TNT, Row1 + 10 );
-			SetOptimAllTextures( Block.Cobweb, Row1 + 11 );
-			SetOptimAllTextures( Block.Rose, Row1 + 12 );
-			SetOptimAllTextures( Block.Dandelion, Row1 + 13 );
-			SetOptimAllTextures( Block.Sapling, Row1 + 14 );
-			SetOptimAllTextures( Block.Cobblestone, Row1 + 15 );
-			SetOptimAllTextures( Block.Bedrock, Row2 );
-			SetOptimAllTextures( Block.Sand, Row2 + 1 );
-			SetOptimAllTextures( Block.Gravel, Row2 + 2 );
+			SetOptimTopTexture( BlockId.Grass, Row1 );
+			SetOptimAllTextures( BlockId.Stone, Row1 + 1 );
+			SetOptimAllTextures( BlockId.Dirt, Row1 + 2 );
+			SetOptimAllTextures( BlockId.Farmland, Row1 + 2 );
+			SetOptimSideTextures( BlockId.Grass, Row1 + 3 );
+			SetOptimAllTextures( BlockId.WoodenPlanks, Row1 + 4 );
+			SetOptimAllTextures( BlockId.Fence, Row1 + 4 );
+			SetOptimTopTexture( BlockId.Bookshelf, Row1 + 4 );
+			SetOptimBottomTexture( BlockId.Bookshelf, Row1 + 4 );
+			SetOptimSideTextures( BlockId.DoubleSlabs, Row1 + 5 );
+			SetOptimSideTextures( BlockId.Slabs, Row1 + 5 );
+			SetOptimTopTexture( BlockId.DoubleSlabs, Row1 + 6 );
+			SetOptimBottomTexture( BlockId.DoubleSlabs, Row1 + 6 );
+			SetOptimTopTexture( BlockId.Slabs, Row1 + 6 );
+			SetOptimBottomTexture( BlockId.Slabs, Row1 + 6 );
+			SetOptimAllTextures( BlockId.BrickBlock, Row1 + 7 );
+			SetOptimSideTextures( BlockId.TNT, Row1 + 8 );
+			SetOptimTopTexture( BlockId.TNT, Row1 + 9 );
+			SetOptimBottomTexture( BlockId.TNT, Row1 + 10 );
+			SetOptimAllTextures( BlockId.Cobweb, Row1 + 11 );
+			SetOptimAllTextures( BlockId.Rose, Row1 + 12 );
+			SetOptimAllTextures( BlockId.Dandelion, Row1 + 13 );
+			SetOptimAllTextures( BlockId.Sapling, Row1 + 14 );
+			SetOptimAllTextures( BlockId.Cobblestone, Row1 + 15 );
+			SetOptimAllTextures( BlockId.Bedrock, Row2 );
+			SetOptimAllTextures( BlockId.Sand, Row2 + 1 );
+			SetOptimAllTextures( BlockId.Gravel, Row2 + 2 );
 			// TODO: Alternate forms
-			SetOptimSideTextures( Block.Wood, Row2 + 3 );
-			SetOptimTopTexture( Block.Wood, Row2 + 4 );
-			SetOptimBottomTexture( Block.Wood, Row2 + 4 );
-			SetOptimAllTextures( Block.BlockOfIron, Row2 + 5 );
-			SetOptimAllTextures( Block.BlockOfGold, Row2 + 6 );
-			SetOptimAllTextures( Block.BlockOfDiamond, Row2 + 7 );
+			SetOptimSideTextures( BlockId.Wood, Row2 + 3 );
+			SetOptimTopTexture( BlockId.Wood, Row2 + 4 );
+			SetOptimBottomTexture( BlockId.Wood, Row2 + 4 );
+			SetOptimAllTextures( BlockId.BlockOfIron, Row2 + 5 );
+			SetOptimAllTextures( BlockId.BlockOfGold, Row2 + 6 );
+			SetOptimAllTextures( BlockId.BlockOfDiamond, Row2 + 7 );
 			// TODO: Chest front, double chests
-			SetOptimAllTextures( Block.Chest, Row2 + 8 );
-			SetOptimSideTextures( Block.Chest, Row2 + 9 );
-			SetOptimAllTextures( Block.RedMushroom, Row2 + 11 );
-			SetOptimAllTextures( Block.BrownMushroom, Row2 + 12 );
+			SetOptimAllTextures( BlockId.Chest, Row2 + 8 );
+			SetOptimSideTextures( BlockId.Chest, Row2 + 9 );
+			SetOptimAllTextures( BlockId.RedMushroom, Row2 + 11 );
+			SetOptimAllTextures( BlockId.BrownMushroom, Row2 + 12 );
 			// TODO: Fire
-			SetOptimAllTextures( Block.Fire, Row2 + 13 );
-			SetOptimAllTextures( Block.GoldOre, Row2 + 14 );
-			SetOptimAllTextures( Block.IronOre, Row2 + 15 );
-			SetOptimAllTextures( Block.CoalOre, Row3 );
-			SetOptimSideTextures( Block.Bookshelf, Row3 + 1 );
-			SetOptimAllTextures( Block.MossStone, Row3 + 2 );
-			SetOptimAllTextures( Block.Obsidian, Row3 + 3 );
-			SetOptimAllTextures( Block.TallGrass, Row3 + 5 );
+			SetOptimAllTextures( BlockId.Fire, Row2 + 13 );
+			SetOptimAllTextures( BlockId.GoldOre, Row2 + 14 );
+			SetOptimAllTextures( BlockId.IronOre, Row2 + 15 );
+			SetOptimAllTextures( BlockId.CoalOre, Row3 );
+			SetOptimSideTextures( BlockId.Bookshelf, Row3 + 1 );
+			SetOptimAllTextures( BlockId.MossStone, Row3 + 2 );
+			SetOptimAllTextures( BlockId.Obsidian, Row3 + 3 );
+			SetOptimAllTextures( BlockId.TallGrass, Row3 + 5 );
 			// TODO: Crafting table bottom
-			SetOptimAllTextures( Block.CraftingTable, Row3 + 8 );
+			SetOptimAllTextures( BlockId.CraftingTable, Row3 + 8 );
 			// TODO: Furnace front
-			SetOptimSideTextures( Block.Furnace, Row3 + 9 );
+			SetOptimSideTextures( BlockId.Furnace, Row3 + 9 );
 			// TODO: Dispenser front
-			SetOptimSideTextures( Block.Dispenser, Row3 + 11 );
-			SetOptimAllTextures( Block.Sponge, Row3 + 12 );
-			SetOptimAllTextures( Block.Glass, Row3 + 13 );
-			SetOptimAllTextures( Block.DiamondOre, Row3 + 14 );
-			SetOptimAllTextures( Block.RedstoneOre, Row3 + 15 );
+			SetOptimSideTextures( BlockId.Dispenser, Row3 + 11 );
+			SetOptimAllTextures( BlockId.Sponge, Row3 + 12 );
+			SetOptimAllTextures( BlockId.Glass, Row3 + 13 );
+			SetOptimAllTextures( BlockId.DiamondOre, Row3 + 14 );
+			SetOptimAllTextures( BlockId.RedstoneOre, Row3 + 15 );
 			// TODO: Alternate forms
-			SetOptimAllTextures( Block.Leaves, Row4 );
-			SetOptimAllTextures( Block.DeadShrubs, Row4 + 2 );
-			SetOptimSideTextures( Block.CraftingTable, Row4 + 7 );
-			SetOptimSideTextures( Block.BurningFurnace, Row4 + 8 );
-			SetOptimTopTexture( Block.Dispenser, Row4 + 9 );
-			SetOptimTopTexture( Block.BurningFurnace, Row4 + 9 );
-			SetOptimTopTexture( Block.Furnace, Row4 + 9 );
-			SetOptimBottomTexture( Block.Dispenser, Row4 + 9 );
-			SetOptimBottomTexture( Block.BurningFurnace, Row4 + 9 );
-			SetOptimBottomTexture( Block.Furnace, Row4 + 9 );
+			SetOptimAllTextures( BlockId.Leaves, Row4 );
+			SetOptimAllTextures( BlockId.DeadShrubs, Row4 + 2 );
+			SetOptimSideTextures( BlockId.CraftingTable, Row4 + 7 );
+			SetOptimSideTextures( BlockId.BurningFurnace, Row4 + 8 );
+			SetOptimTopTexture( BlockId.Dispenser, Row4 + 9 );
+			SetOptimTopTexture( BlockId.BurningFurnace, Row4 + 9 );
+			SetOptimTopTexture( BlockId.Furnace, Row4 + 9 );
+			SetOptimBottomTexture( BlockId.Dispenser, Row4 + 9 );
+			SetOptimBottomTexture( BlockId.BurningFurnace, Row4 + 9 );
+			SetOptimBottomTexture( BlockId.Furnace, Row4 + 9 );
 			// TODO: Alternate forms
-			SetOptimAllTextures( Block.Wool, Row4 + 11 );
-			SetOptimAllTextures( Block.MonsterSpawner, Row4 + 12 );
-			SetOptimAllTextures( Block.Snow, Row4 + 13 );
-			SetOptimAllTextures( Block.SnowBlock, Row4 + 14 );
-			SetOptimAllTextures( Block.Ice, Row4 + 14 );
-			SetOptimTopTexture( Block.Cactus, Row5 );
-			SetOptimSideTextures( Block.Cactus, Row5 + 1 );
-			SetOptimBottomTexture( Block.Cactus, Row5 + 2 );
-			SetOptimAllTextures( Block.ClayBlock, Row5 + 3 );
-			SetOptimAllTextures( Block.SugarCane, Row5 + 4 );
+			SetOptimAllTextures( BlockId.Wool, Row4 + 11 );
+			SetOptimAllTextures( BlockId.MonsterSpawner, Row4 + 12 );
+			SetOptimAllTextures( BlockId.Snow, Row4 + 13 );
+			SetOptimAllTextures( BlockId.SnowBlock, Row4 + 14 );
+			SetOptimAllTextures( BlockId.Ice, Row4 + 14 );
+			SetOptimTopTexture( BlockId.Cactus, Row5 );
+			SetOptimSideTextures( BlockId.Cactus, Row5 + 1 );
+			SetOptimBottomTexture( BlockId.Cactus, Row5 + 2 );
+			SetOptimAllTextures( BlockId.ClayBlock, Row5 + 3 );
+			SetOptimAllTextures( BlockId.SugarCane, Row5 + 4 );
 			// TODO: what textures do noteblock and jukebox use?
-			SetOptimAllTextures( Block.NoteBlock, Row5 + 5 );
-			SetOptimAllTextures( Block.Jukebox, Row5 + 5 );
-			SetOptimTopTexture( Block.Jukebox, Row5 + 6 );
-			SetOptimAllTextures( Block.Torch, Row5 + 8 );
+			SetOptimAllTextures( BlockId.NoteBlock, Row5 + 5 );
+			SetOptimAllTextures( BlockId.Jukebox, Row5 + 5 );
+			SetOptimTopTexture( BlockId.Jukebox, Row5 + 6 );
+			SetOptimAllTextures( BlockId.Torch, Row5 + 8 );
 			// TODO: Doors
-			SetOptimAllTextures( Block.WoodenDoor, Row5 + 9 );
-			SetOptimAllTextures( Block.IronDoor, Row5 + 10 );
-			SetOptimAllTextures( Block.Ladders, Row5 + 11 );
-			SetOptimAllTextures( Block.Trapdoor, Row5 + 12 );
+			SetOptimAllTextures( BlockId.WoodenDoor, Row5 + 9 );
+			SetOptimAllTextures( BlockId.IronDoor, Row5 + 10 );
+			SetOptimAllTextures( BlockId.Ladders, Row5 + 11 );
+			SetOptimAllTextures( BlockId.Trapdoor, Row5 + 12 );
 			// TODO: Wet farmland
-			SetOptimTopTexture( Block.Farmland, Row5 + 13 );
+			SetOptimTopTexture( BlockId.Farmland, Row5 + 13 );
 			// TODO: Crop stages.
-			SetOptimAllTextures( Block.Seeds, Row5 + 15 );
-			SetOptimAllTextures( Block.Lever, Row6 + 7 );
-			SetOptimAllTextures( Block.RedstoneTorchOn, Row6 + 10 );
+			SetOptimAllTextures( BlockId.Seeds, Row5 + 15 );
+			SetOptimAllTextures( BlockId.Lever, Row6 + 7 );
+			SetOptimAllTextures( BlockId.RedstoneTorchOn, Row6 + 10 );
 			// TODO: Pumpkins and jack o lanterns properly
-			SetOptimAllTextures( Block.Pumpkin, Row6 + 11 );
-			SetOptimAllTextures( Block.JackOLantern, Row6 + 11 );
-			SetOptimAllTextures( Block.Netherrack, Row6 + 12 );
-			SetOptimAllTextures( Block.SoulSand, Row6 + 13 );
-			SetOptimAllTextures( Block.GlowstoneBlock, Row6 + 14 );
+			SetOptimAllTextures( BlockId.Pumpkin, Row6 + 11 );
+			SetOptimAllTextures( BlockId.JackOLantern, Row6 + 11 );
+			SetOptimAllTextures( BlockId.Netherrack, Row6 + 12 );
+			SetOptimAllTextures( BlockId.SoulSand, Row6 + 13 );
+			SetOptimAllTextures( BlockId.GlowstoneBlock, Row6 + 14 );
 			// TODO: Pistons properly
-			SetOptimAllTextures( Block.StickyPiston, Row6 + 15 );
-			SetOptimAllTextures( Block.Piston, Row7 );
-			SetOptimAllTextures( Block.RedstoneTorchOff, Row7 + 7 );
+			SetOptimAllTextures( BlockId.StickyPiston, Row6 + 15 );
+			SetOptimAllTextures( BlockId.Piston, Row7 );
+			SetOptimAllTextures( BlockId.RedstoneTorchOff, Row7 + 7 );
 			// TODO: Eaten cake
-			SetOptimTopTexture( Block.CakeBlock, Row7 + 13 );
-			SetOptimSideTextures( Block.CakeBlock, Row7 + 14 );
-			SetOptimBottomTexture( Block.CakeBlock, Row8 );
+			SetOptimTopTexture( BlockId.CakeBlock, Row7 + 13 );
+			SetOptimSideTextures( BlockId.CakeBlock, Row7 + 14 );
+			SetOptimBottomTexture( BlockId.CakeBlock, Row8 );
 			// TODO: Rails
-			SetOptimAllTextures( Block.Rails, Row8 + 1 );
+			SetOptimAllTextures( BlockId.Rails, Row8 + 1 );
 			// TODO: Repeaters off
-			SetOptimAllTextures( Block.RedstoneRepeaterOff, Row8 + 4 );
+			SetOptimAllTextures( BlockId.RedstoneRepeaterOff, Row8 + 4 );
 			// TODO: Beds
-			SetOptimAllTextures( Block.Bed, Row8 + 7 );
-			SetOptimAllTextures( Block.LapisLazuliBlock, Row8 + 9 );
+			SetOptimAllTextures( BlockId.Bed, Row8 + 7 );
+			SetOptimAllTextures( BlockId.LapisLazuliBlock, Row8 + 9 );
 			// TODO: Repeaters on
-			SetOptimAllTextures( Block.RedstoneRepeaterOn, Row8 + 12 );
-			SetOptimAllTextures( Block.LapisLazuliOre, Row9 + 1 );
+			SetOptimAllTextures( BlockId.RedstoneRepeaterOn, Row8 + 12 );
+			SetOptimAllTextures( BlockId.LapisLazuliOre, Row9 + 1 );
 			// TODO: Powered rail on
-			SetOptimAllTextures( Block.PoweredRail, Row9 + 4 );
+			SetOptimAllTextures( BlockId.PoweredRail, Row9 + 4 );
 			// TODO: Redstone wire
-			SetOptimAllTextures( Block.RedstoneWire, Row9 + 5 );
-			SetOptimTopTexture( Block.Sandstone, Row9 + 7 );
-			SetOptimSideTextures( Block.Sandstone, Row9 + 11 );
+			SetOptimAllTextures( BlockId.RedstoneWire, Row9 + 5 );
+			SetOptimTopTexture( BlockId.Sandstone, Row9 + 7 );
+			SetOptimSideTextures( BlockId.Sandstone, Row9 + 11 );
 			// TODO: Detector rail
-			SetOptimAllTextures( Block.DetectorRail, Row9 + 14 );
+			SetOptimAllTextures( BlockId.DetectorRail, Row9 + 14 );
 			// TODO: Water
-			SetOptimAllTextures( Block.Water, Row9 + 15 );
-			SetOptimAllTextures( Block.StillWater, Row9 + 15 );
-			SetOptimBottomTexture( Block.Sandstone, Row10 );
+			SetOptimAllTextures( BlockId.Water, Row9 + 15 );
+			SetOptimAllTextures( BlockId.StillWater, Row9 + 15 );
+			SetOptimBottomTexture( BlockId.Sandstone, Row10 );
 			// TODO: Lava
-			SetOptimAllTextures( Block.Lava, Row10 + 4 );
-			SetOptimAllTextures( Block.StillLava, Row10 + 4 );
+			SetOptimAllTextures( BlockId.Lava, Row10 + 4 );
+			SetOptimAllTextures( BlockId.StillLava, Row10 + 4 );
 		}
 
-		void SetOptimAllTextures( Block blockId, int textureId ) {
+		void SetOptimAllTextures( BlockId blockId, int textureId ) {
 			int index = (byte)blockId * 6;
 			for( int i = index; i < index + 6; i++ ) {
 				optimTextures[i] = textureId;
 			}
 		}
 		
-		void SetOptimSideTextures( Block blockId, int textureId ) {
+		void SetOptimSideTextures( BlockId blockId, int textureId ) {
 			int index = (byte)blockId * 6;
 			for( int i = index; i < index + TileSide.Top; i++ ) {
 				optimTextures[i] = textureId;
 			}
 		}
 		
-		void SetOptimTopTexture( Block blockId, int textureId ) {
+		void SetOptimTopTexture( BlockId blockId, int textureId ) {
 			optimTextures[(byte)blockId * 6 + TileSide.Top] = textureId;
 		}
 		
-		void SetOptimBottomTexture( Block blockId, int textureId ) {
+		void SetOptimBottomTexture( BlockId blockId, int textureId ) {
 			optimTextures[(byte)blockId * 6 + TileSide.Bottom] = textureId;
 		}
 		

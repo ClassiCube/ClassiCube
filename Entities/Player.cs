@@ -37,22 +37,22 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
-		public Block BlockUnderFeet {
+		public BlockId BlockUnderFeet {
 			get {
-				if( map == null || map.IsNotLoaded ) return Block.Air;
+				if( map == null || map.IsNotLoaded ) return BlockId.Air;
 				Vector3I blockCoords = Vector3I.Floor( Position.X, Position.Y - 0.01f, Position.Z );
-				if( !map.IsValidPos( blockCoords ) ) return Block.Air;
-				return (Block)map.GetBlock( blockCoords );
+				if( !map.IsValidPos( blockCoords ) ) return BlockId.Air;
+				return (BlockId)map.GetBlock( blockCoords );
 			}
 		}
 		
 		/// <summary> Gets the block at player's eye position. </summary>
-		public Block BlockAtHead {
+		public BlockId BlockAtHead {
 			get {
-				if( map == null || map.IsNotLoaded ) return Block.Air;
+				if( map == null || map.IsNotLoaded ) return BlockId.Air;
 				Vector3I blockCoords = Vector3I.Floor( EyePosition );
-				if( !map.IsValidPos( blockCoords ) ) return Block.Air;
-				return (Block)map.GetBlock( blockCoords );
+				if( !map.IsValidPos( blockCoords ) ) return BlockId.Air;
+				return (BlockId)map.GetBlock( blockCoords );
 			}
 		}		
 		
