@@ -62,6 +62,9 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Window.Keys[KeyMapping.PlayerList] ) {
+				// NOTE: the protocol at 1.7.3 beta doesn't include a player list packet,
+				// and we can't rely on entities as they despawn after we move away. So it's disabled.
+				return false;
 				if( playerList == null ) {
 					playerList = new ExtPlayerListWidget( Window );
 					playerList.Init();

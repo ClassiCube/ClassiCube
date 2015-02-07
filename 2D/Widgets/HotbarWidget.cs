@@ -99,7 +99,6 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderHotbarBlocks() {
-			int x = X;
 			for( int i = 0; i < hotbarCount; i++ ) {
 				Slot slot = Window.Inventory.GetHotbarSlot( i );
 				if( slot.IsEmpty || slot.Id > 255 ) continue;
@@ -107,6 +106,7 @@ namespace ClassicalSharp {
 				int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)slot.Id, TileSide.Front );
 				if( texId == 0 ) continue;
 				
+				int x = X + i * blockSize;
 				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
 				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
 				float height = Window.BlockInfo.BlockHeight( (byte)slot.Id );
@@ -122,12 +122,10 @@ namespace ClassicalSharp {
 					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
 				};
 				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
-				x += blockSize;
 			}
 		}
 		
 		void RenderHotbarItems() {
-			int x = X;
 			for( int i = 0; i < hotbarCount; i++ ) {
 				Slot slot = Window.Inventory.GetHotbarSlot( i );
 				if( slot.IsEmpty || slot.Id <= 255 ) continue;
@@ -135,6 +133,7 @@ namespace ClassicalSharp {
 				int texId = Window.ItemInfo.Get2DTextureLoc( slot.Id );
 				if( texId == 0 ) continue;
 				
+				int x = X + i * blockSize;
 				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
 				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
 				
@@ -145,7 +144,6 @@ namespace ClassicalSharp {
 					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
 				};
 				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
-				x += blockSize;
 			}
 		}
 		

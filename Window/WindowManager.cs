@@ -46,6 +46,13 @@ namespace ClassicalSharp.Window {
 			}
 		}
 		
+		public void SetProperty( byte id, short property, short value ) {
+			Window window = Windows[id];
+			if( window != null ) {
+				window.SetProperty( property, value );
+			}
+		}
+		
 		public static Window GetFromType( byte type, string title, byte slots, Game game ) {
 			if( type == 0 ) return new ChestWindow( title, slots, game );
 			if( type == 1 ) return new WorkbenchWindow( title, slots, game );

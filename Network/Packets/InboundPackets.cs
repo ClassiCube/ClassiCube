@@ -774,17 +774,17 @@ namespace ClassicalSharp.Network.Packets {
 	
 	public sealed class SetSlotInbound : InboundPacket {
 		byte windowId;
-		short slotId;
+		short slotIndex;
 		Slot slot;
 		
 		public override void ReadData( NetReader reader ) {
 			windowId = reader.ReadUInt8();
-			slotId = reader.ReadInt16();
+			slotIndex = reader.ReadInt16();
 			slot = reader.ReadSlot();
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.WindowManager.SetSlot( windowId, slotIndex, slot );
 		}
 	}
 	
@@ -801,7 +801,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.WindowManager.SetAllSlots( windowId, slots );
 		}
 	}
 	
@@ -817,7 +817,7 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			throw new NotImplementedException();
+			game.WindowManager.SetProperty( windowId, property, value );
 		}
 	}
 	

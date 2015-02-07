@@ -19,6 +19,10 @@ namespace ClassicalSharp.Entities {
 		
 		public void RemoveEntities( params int[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
+				Entity entity;
+				if( entities.TryGetValue( ids[i], out entity ) ) {
+					entity.Despawn();
+				}
 				entities.Remove( ids[i] );
 			}
 		}
