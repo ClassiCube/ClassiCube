@@ -53,14 +53,16 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
 			RenderHotbarBackground();
+			GraphicsApi.Texturing = true;
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
+			RenderHotbarBlocks();
+			GraphicsApi.Bind2DTexture( Window.ItemsAtlasTexId );
 			RenderHotbarItems();
 			RenderHearts();
 			GraphicsApi.Texturing = false;
 		}
 		
 		void RenderHearts() {
-			GraphicsApi.Texturing = true;
 			GraphicsApi.Bind2DTexture( iconsTexId );
 			int health = Window.LocalPlayer.Health;
 			
@@ -96,7 +98,7 @@ namespace ClassicalSharp {
 			selectedBlock.Render( GraphicsApi );
 		}
 		
-		void RenderHotbarItems() {
+		void RenderHotbarBlocks() {
 			int x = X;
 			for( int i = 0; i < hotbarCount; i++ ) {
 				Slot slot = Window.Inventory.GetHotbarSlot( i );
@@ -112,6 +114,29 @@ namespace ClassicalSharp {
 					rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
 					y2 = y1 + (int)( 32 * height );
 				}
+				
+				VertexPos3fTex2f[] vertices = {
+					new VertexPos3fTex2f( x2, y1, 0, rec.U2, rec.V1 ),
+					new VertexPos3fTex2f( x2, y2, 0, rec.U2, rec.V2 ),
+					new VertexPos3fTex2f( x1, y1, 0, rec.U1, rec.V1 ),
+					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
+				};
+				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
+				x += blockSize;
+			}
+		}
+		
+		void RenderHotbarItems() {
+			int x = X;
+			for( int i = 0; i < hotbarCount; i++ ) {
+				Slot slot = Window.Inventory.GetHotbarSlot( i );
+				if( slot.IsEmpty || slot.Id <= 255 ) continue;
+				
+				int texId = Window.ItemInfo.Get2DTextureLoc( slot.Id );
+				if( texId == 0 ) continue;
+				
+				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
+				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
 				
 				VertexPos3fTex2f[] vertices = {
 					new VertexPos3fTex2f( x2, y1, 0, rec.U2, rec.V1 ),

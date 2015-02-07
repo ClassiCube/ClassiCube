@@ -28,9 +28,10 @@ namespace ClassicalSharp {
 		public Camera Camera;
 		Camera firstPersonCam, thirdPersonCam;
 		public BlockInfo BlockInfo;
+		public ItemInfo ItemInfo;
 		public double accumulator;
-		public TextureAtlas2D TerrainAtlas;
-		public int TerrainAtlasTexId = -1;
+		public TextureAtlas2D TerrainAtlas, ItemsAtlas;
+		public int TerrainAtlasTexId = -1, ItemsAtlasTexId = -1;
 		public SkinType DefaultPlayerSkinType;
 		public int ChunkUpdates;
 		
@@ -64,12 +65,15 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		
-		void LoadAtlas( Bitmap bmp ) {
-			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16 );
-			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+		void LoadAtlases() {
+			Bitmap terrainBmp = new Bitmap( "terrain.png" );
+			TerrainAtlas = new TextureAtlas2D( Graphics, terrainBmp, 16, 16 );
+			ItemsAtlas = new TextureAtlas2D( Graphics, "items.png", 16, 16 );
+			using( FastBitmap fastBmp = new FastBitmap( terrainBmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
 			}
 			TerrainAtlasTexId = Graphics.LoadTexture( TerrainAtlas.AtlasBitmap );
+			ItemsAtlasTexId = Graphics.LoadTexture( ItemsAtlas.AtlasBitmap );
 		}
 		
 		void PrintGraphicsInfo() {
@@ -86,11 +90,12 @@ namespace ClassicalSharp {
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader();
 			PrintGraphicsInfo();
-			Bitmap terrainBmp = new Bitmap( "terrain.png" );
-			LoadAtlas( terrainBmp );
+			LoadAtlases();
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init( TerrainAtlas );
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
+			ItemInfo = new ItemInfo();
+			ItemInfo.Init( ItemsAtlas );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
 			width = Width;
@@ -219,6 +224,7 @@ namespace ClassicalSharp {
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			Graphics.DeleteTexture( TerrainAtlasTexId );
+			Graphics.DeleteTexture( ItemsAtlasTexId );
 			ModelCache.Dispose();
 			EntityManager.Dispose();
 			LocalPlayer.Despawn();

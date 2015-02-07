@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 			}
 			
 			PixelFormat format = Bitmap.PixelFormat;
-			if( format != PixelFormat.Format32bppArgb ) {
+			if( !( format == PixelFormat.Format32bppArgb || format == PixelFormat.Format32bppRgb ) ) {
 				throw new NotSupportedException( "Unsupported bitmap pixel format:" + format );
 			}
 			

@@ -2,7 +2,6 @@
 
 namespace ClassicalSharp {
 	
-	/// <summary> Enumeration of all blocks in Minecraft Classic, including CPE ones. </summary>
 	public enum Block : byte {
 		Air = 0,
 		Stone = 1,

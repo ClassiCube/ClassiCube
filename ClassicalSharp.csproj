@@ -127,6 +127,8 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
+    <Compile Include="Items\ItemId.cs" />
+    <Compile Include="Items\ItemsInfo.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="Model\BlockModel.cs" />
@@ -223,6 +225,7 @@
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Network\Packets" />
+    <Folder Include="Items" />
     <Folder Include="World" />
     <Folder Include="Window" />
     <Folder Include="Util" />
