@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderItem( Slot slot ) {
-			int texId = Window.ItemInfo.Get2DTextureLoc( slot.Id );
+			int texId = Window.ItemInfo.Get2DTextureLoc( slot );
 			if( texId == 0 ) return;
 			
 			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );

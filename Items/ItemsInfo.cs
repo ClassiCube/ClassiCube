@@ -2,18 +2,38 @@
 using System.Drawing;
 using ClassicalSharp.Blocks.Model;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Window;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Items {
 	
 	public class ItemInfo {
 		
 		int[] textures = new int[itemsCount];
 		const int itemsCount = 65536;
 		TextureAtlas2D atlas;
+		Item[] itemCache = new Item[itemsCount];
 		
 		public void Init( TextureAtlas2D atlas ) {
 			this.atlas = atlas;
 			InitTextures();
+			foreach( short value in Enum.GetValues( typeof( ItemId ) ) ) {
+				itemCache[value] = new Item( value );
+			}
+			SetMaxCountRange( 1, ItemId.IronShovel, ItemId.Bow );
+			SetMaxCountRange( 1, ItemId.IronSword, ItemId.DiamondAxe );
+			SetMaxCountRange( 1, ItemId.MushroomSoup, ItemId.GoldAxe );
+			SetMaxCountRange( 1, ItemId.WoodenHoe, ItemId.GoldHoe );
+			SetMaxCountRange( 1, ItemId.LeatherCap, ItemId.GoldBoots );
+			SetMaxCountRange( 1, ItemId.RawPorkchop, ItemId.CookedPorkchop );
+			SetMaxCountRange( 1, ItemId.GoldenApple, ItemId.IronDoor );
+			itemCache[(int)ItemId.Snowball].MaxCount = 16;
+			itemCache[(int)ItemId.Boat].MaxCount = 1;
+			SetMaxCountRange( 1, ItemId.MinecartWithChest, ItemId.MinecartWithFurnace );
+			itemCache[(int)ItemId.FishingRod].MaxCount = 1;
+			SetMaxCountRange( 1, ItemId.RawFish, ItemId.CookedFish );
+			itemCache[(int)ItemId.Cake].MaxCount = 1;
+			SetMaxCountRange( 1, ItemId.Map, ItemId.Shears);
+			SetMaxCountRange( 1, ItemId.GoldMusicDisc, ItemId.GreenMusicDisc );
 		}
 		
 		const int Row1 = 0, Row2 = 16, Row3 = 32, Row4 = 48,
@@ -56,8 +76,18 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public int Get2DTextureLoc( short item ) {
-			return textures[item];
+		void SetMaxCountRange( byte count, ItemId start, ItemId end ) {
+			for( int index = (int)start; index <= (int)end; index++ ) {
+				itemCache[index].MaxCount = count;
+			}
+		}
+		
+		public int Get2DTextureLoc( short itemId, short itemDamage ) {
+			return textures[itemId];
+		}
+		
+		public int Get2DTextureLoc( Slot slot ) {
+			return Get2DTextureLoc( slot.Id, slot.Damage );
 		}
 		
 		public int Make3DModel( int texId, IGraphicsApi graphics, out int verticesCount ) {

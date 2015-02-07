@@ -131,6 +131,7 @@
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Items\ItemId.cs" />
     <Compile Include="Items\ItemsInfo.cs" />
+    <Compile Include="Items\Items\Item.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="Model\BlockModel.cs" />
@@ -223,6 +224,7 @@
     <Folder Include="Blocks\Model" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
+    <Folder Include="Items\Items" />
     <Folder Include="MeshBuilders" />
     <Folder Include="Game" />
     <Folder Include="Model" />

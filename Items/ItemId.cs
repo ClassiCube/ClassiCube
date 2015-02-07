@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Items {
 	
 	public enum ItemId : short {
 		IronShovel = 256,

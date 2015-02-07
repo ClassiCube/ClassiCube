@@ -6,6 +6,7 @@ using System.Net;
 using ClassicalSharp.Commands;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Items;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
