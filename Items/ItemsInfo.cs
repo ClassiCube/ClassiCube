@@ -13,9 +13,11 @@ namespace ClassicalSharp.Items {
 		Item[] itemCache = new Item[itemsCount];
 		
 		public void Init( TextureAtlas2D atlas ) {
-			this.atlas = atlas;		
+			this.atlas = atlas;
 			foreach( short value in Enum.GetValues( typeof( ItemId ) ) ) {
-				itemCache[value] = new Item( value );
+				if( itemCache[value] == null ) {
+					itemCache[value] = new Item( value );
+				}
 			}
 			
 			InitTextures();
@@ -85,6 +87,14 @@ namespace ClassicalSharp.Items {
 		
 		public int Get2DTextureLoc( Slot slot ) {
 			return Get2DTextureLoc( slot.Id, slot.Damage );
+		}
+		
+		public Item GetItem( short itemId ) {
+			return itemCache[itemId];
+		}
+		
+		public Item GetItem( Slot slot ) {
+			return itemCache[slot.Id];
 		}
 		
 		public int Make3DModel( int texId, IGraphicsApi graphics, out int verticesCount ) {

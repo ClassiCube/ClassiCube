@@ -2,20 +2,22 @@
 
 namespace ClassicalSharp.Items {
 	
-	public class SwordItem : Item {
+	public class SwordItem : ToolItem {
 		
-		public SwordItem( short id ) : base( id ) {
+		public ToolGroup Group;
+		public SwordItem( short id, ToolGroup group ) : base( id ) {
+			Group = group;
 		}
 		
 		public override bool CanHarvest( BlockId block ) {
 			return block == BlockId.Cobweb || block == BlockId.JackOLantern || block == BlockId.Pumpkin ||
-				block == BlockId.Leaves || block == BlockId.Leaves;
+				block == BlockId.Leaves;
 		}
 		
 		public override float GetEffectiveness( BlockId block ) {
 			if( block == BlockId.Cobweb ) return 15f;
 			if( block == BlockId.JackOLantern || block == BlockId.Pumpkin ||
-			   block == BlockId.Leaves || block == BlockId.Leaves ) return 1.5f;
+			   block == BlockId.Leaves ) return 1.5f;
 			return 1f;
 		}
 	}

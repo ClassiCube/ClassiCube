@@ -132,8 +132,13 @@
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Items\ItemId.cs" />
     <Compile Include="Items\ItemsInfo.cs" />
+    <Compile Include="Items\Items\AxeItem.cs" />
     <Compile Include="Items\Items\Item.cs" />
+    <Compile Include="Items\Items\PickaxeItem.cs" />
+    <Compile Include="Items\Items\ShearsItem.cs" />
+    <Compile Include="Items\Items\ShovelItem.cs" />
     <Compile Include="Items\Items\SwordItem.cs" />
+    <Compile Include="Items\Items\ToolItem.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="Model\BlockModel.cs" />
