@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp.Renderers;
+using ClassicalSharp.Items;
+using ClassicalSharp.Window;
 using OpenTK;
 using OpenTK.Input;
 
@@ -52,6 +54,22 @@ namespace ClassicalSharp {
 					lastPitch = PitchDegrees = nextPitch;
 				}
 			}
+		}
+		
+		public float GetDamagePerTick( BlockId block ) {
+			Slot heldSlot = game.Inventory.HeldSlot;
+			float hardness = game.BlockInfo.Hardness( (byte)block );
+			if( hardness == 0 ) return 1;
+			
+			//http://greyminecraftcoder.blogspot.ch/2015/01/calculating-rate-of-damage-when-mining.html
+			//http://minecraft.gamepedia.com/Breaking
+			//http://wiki.vg/How_to_Write_a_Client
+			ItemInfo info = game.ItemInfo;
+			float effectiveness = heldSlot.GetEffectiveness( block, info );
+			// TODO: Underwater, effectiveness /=5
+			// TODO: Flying, effectiveness /= 5
+			bool canHarvest = heldSlot.CanHarvest( block, info );
+			return effectiveness / hardness * ( 1 / ( canHarvest ? 100 : 30 ) );			
 		}
 		
 		public override void Despawn() {
