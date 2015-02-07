@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			selectedBlock.RenderNoBind( GraphicsApi );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
-				hotbarSlots[i].RenderItem();
+				hotbarSlots[i].RenderForeground();
 			}
 			RenderHearts();
 			GraphicsApi.Texturing = false;
@@ -100,6 +100,9 @@ namespace ClassicalSharp {
 			GraphicsApi.DeleteTexture( ref selectedBlock );
 			GraphicsApi.DeleteTexture( ref slotTexture );
 			GraphicsApi.DeleteTexture( iconsTexId );
+			for( int i = 0; i < hotbarCount; i++ ) {
+				hotbarSlots[i].Dispose();
+			}
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

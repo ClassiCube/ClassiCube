@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using ClassicalSharp.Window;
 
 namespace ClassicalSharp {
@@ -11,6 +12,8 @@ namespace ClassicalSharp {
 		}
 		
 		Texture slotTexture;
+		Texture countTexture;
+		int count = -1;
 		const int blockSize = 40;
 		Func<Slot> getSlotFunc;
 		
@@ -23,6 +26,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
+			GraphicsApi.DeleteTexture( ref countTexture );
 		}
 		
 		public void RenderBackground() {
@@ -32,14 +36,26 @@ namespace ClassicalSharp {
 			slotTexture.RenderNoBind( GraphicsApi );
 		}
 		
-		public void RenderItem() {
+		public void RenderForeground() {
 			Slot slot = getSlotFunc();
 			if( slot.IsEmpty ) return;
+			
+			if( count == -1 || count != slot.Count ) {
+				GraphicsApi.DeleteTexture( ref countTexture );
+				count = slot.Count;
+				DrawTextArgs args = new DrawTextArgs( GraphicsApi, count.ToString(), Color.White, true );
+				countTexture = Utils2D.MakeTextTexture( "Arial", 12, 0, 0, args );
+			}
+			
 			if( slot.Id <= 255 ) {
 				RenderBlock( slot );
 			} else {
 				RenderItem( slot );
 			}
+			GraphicsApi.Bind2DTexture( countTexture.ID );
+			countTexture.X1 = ( X + 36 ) - countTexture.Width;
+			countTexture.Y1 = ( Y + 36 ) - countTexture.Height + 3; // add 3 to account for measured size being over conversative
+			countTexture.RenderNoBind( GraphicsApi );
 		}
 		
 		void RenderBlock( Slot slot ) {

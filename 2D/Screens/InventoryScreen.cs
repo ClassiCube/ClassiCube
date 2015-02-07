@@ -29,13 +29,16 @@ namespace ClassicalSharp {
 				hotbarSlots[i].RenderBackground();
 			}	
 			for( int i = 0; i < hotbarCount; i++ ) {
-				hotbarSlots[i].RenderItem();
+				hotbarSlots[i].RenderForeground();
 			}
 			GraphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {
 			GraphicsApi.DeleteTexture( ref slotTexture );
+			for( int i = 0; i < hotbarCount; i++ ) {
+				hotbarSlots[i].Dispose();
+			}
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
