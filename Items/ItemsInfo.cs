@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Drawing;
 using ClassicalSharp.Blocks.Model;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
@@ -7,8 +9,10 @@ namespace ClassicalSharp {
 		
 		int[] textures = new int[itemsCount];
 		const int itemsCount = 65536;
+		TextureAtlas2D atlas;
 		
 		public void Init( TextureAtlas2D atlas ) {
+			this.atlas = atlas;
 			InitTextures();
 		}
 		
@@ -39,7 +43,7 @@ namespace ClassicalSharp {
 			            Row5 + 6, Row5 + 9, Row6 + 9, Row6 + 10, Row5 + 13,
 			            Row2 + 12, Row1 + 13, Row2 + 13, Row3 + 13, Row6 + 6,
 			            Row6 + 12, Row4 + 12, Row6 + 13, Row16 + 0, Row16 + 1 );
-			}
+		}
 		
 		void SetTexture( ItemId id, int texId ) {
 			textures[(int)id] = texId;
@@ -54,6 +58,72 @@ namespace ClassicalSharp {
 		
 		public int Get2DTextureLoc( short item ) {
 			return textures[item];
+		}
+		
+		public int Make3DModel( int texId, IGraphicsApi graphics, out int verticesCount ) {
+			int texX = 0, texY = 0;
+			atlas.GetCoords( texId, ref texX, ref texY );
+			using( Bitmap bmp = atlas.GetTextureElement( texX, texY ) ) {
+				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+					int elements = 0;
+					for( int y = 0; y < 16; y++ ) {
+						for( int x = 0; x < 16; x++ ) {
+							if( ( fastBmp.GetPixel( x, y ) & 0xFF000000 ) != 0 ) {
+								if( !IsSolid( x - 1, y, fastBmp ) ) elements++;
+								if( !IsSolid( x + 1, y, fastBmp ) ) elements++;
+								if( !IsSolid( x, y - 1, fastBmp ) ) elements++;
+								if( !IsSolid( x, y + 1, fastBmp ) ) elements++;
+								elements += 2;
+							}
+						}
+					}
+					
+					verticesCount = elements * 6;
+					VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
+					int index = 0;
+					for( int y = 0; y < 16; y++ ) {
+						for( int x = 0; x < 16; x++ ) {
+							int pixel = 0;
+							if( ( ( pixel = fastBmp.GetPixel( x, y ) ) & 0xFF000000 ) != 0 ) {
+								if( !IsSolid( x - 1, y, fastBmp ) ) {
+									AddPixel( x, x, y, y + 1, 0, 1, vertices, ref index, pixel );
+								}
+								if( !IsSolid( x + 1, y, fastBmp ) ) {
+									AddPixel( x + 1, x + 1, y, y + 1, 0, 1, vertices, ref index, pixel );
+								}
+								if( !IsSolid( x, y - 1, fastBmp ) ) {
+									AddPixel( x, x + 1, y, y, 0, 1, vertices, ref index, pixel );
+								}
+								if( !IsSolid( x, y + 1, fastBmp ) ) {
+									AddPixel( x, x + 1, y + 1, y + 1, 0, 1, vertices, ref index, pixel );
+								}
+								AddPixel( x, x + 1, y, y + 1, 0, 0, vertices, ref index, pixel );
+								AddPixel( x, x + 1, y, y + 1, 1, 1, vertices, ref index, pixel );
+							}
+						}
+					}
+					return graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fCol4b );
+				}
+			}
+		}
+		
+		static void AddPixel( int x1, int x2, int y1, int y2, int z1, int z2, VertexPos3fCol4b[] vertices, ref int index, int rawCol ) {
+			FastColour col = new FastColour( ( rawCol & 0xFF0000 ) >> 16, ( rawCol & 0xFF00 ) >> 8, ( rawCol & 0xFF ) );
+			vertices[index++] = new VertexPos3fCol4b( x1, y1, z1, col );
+			vertices[index++] = new VertexPos3fCol4b( x1, y2, z1, col );
+			vertices[index++] = new VertexPos3fCol4b( x2, y2, z2, col );
+			
+			vertices[index++] = new VertexPos3fCol4b( x2, y2, z2, col );
+			vertices[index++] = new VertexPos3fCol4b( x2, y1, z2, col );
+			vertices[index++] = new VertexPos3fCol4b( x1, y1, z1, col );
+		}
+		
+		static bool IsSolid( int x, int y, FastBitmap bmp ) {
+			if( x == -1 ) return false;
+			if( y == -1 ) return false;
+			if( x == 16 ) return false;
+			if( y == 16 ) return false;
+			return ( bmp.GetPixel( x, y ) & 0xFF000000 ) != 0;
 		}
 	}
 }

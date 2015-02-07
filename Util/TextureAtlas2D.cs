@@ -98,14 +98,14 @@ namespace ClassicalSharp {
 		public Bitmap GetTextureElement( int x, int y ) {
 			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
 				Bitmap bmp = new Bitmap( horElementSize, verElementSize );
-				using( FastBitmap dest = new FastBitmap( bmp, true) ) {
+				using( FastBitmap dest = new FastBitmap( bmp, true ) ) {
 					CopyPortion( x, y, 0, 0, atlas, dest );
 				}
 				return bmp;
 			}
 		}
 		
-		void GetCoords( int id, ref int x, ref int y ) {
+		public void GetCoords( int id, ref int x, ref int y ) {
 			x = id % ElementsPerRow;
 			y = id / ElementsPerRow;
 		}
