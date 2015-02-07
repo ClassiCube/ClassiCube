@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Network;
 using ClassicalSharp.Network.Packets;
+using ClassicalSharp.Window;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -61,16 +62,18 @@ namespace ClassicalSharp {
 		public void SendPlaceBlock( PickedPos pos ) {
 			Vector3I loc = pos.BlockPos;
 			byte dir = pos.Direction;
-			//Slot slot = Window.Inventory.HeldSlot;
-			//OutboundPacket packet = new PlayerPlaceBlockOutbound( loc, dir, slot, pos.CrosshairPos );
-			//SendPacket( packet );
+			Slot slot = Window.Inventory.HeldSlot;
+			if( !slot.IsEmpty ) {
+				OutboundPacket packet = new PlayerPlaceBlockOutbound( loc, dir, slot );
+				SendPacket( packet );
+			}
 		}
 		
 		public void SendPacket( OutboundPacket packet ) {
 			writeQueue.Enqueue( packet );
 		}
 		
-		public void Dispose() {		
+		public void Dispose() {
 			StopProcessing = true;
 			if( thread != null ) {
 				thread.Join();

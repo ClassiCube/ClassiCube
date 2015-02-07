@@ -129,12 +129,10 @@ namespace ClassicalSharp {
 			if( right ) {
 				if( SelectedPos.TranslatedPos == null ) return;
 				Vector3I pos = SelectedPos.TranslatedPos.Value;
-				BlockId block = BlockId.Grass; // TODO: Picking
-				byte oldBlock = 0;
+				byte block = 0;
 				
-				if( Map.IsValidPos( pos ) && CanReplace( oldBlock ) ) {
+				if( Map.IsValidPos( pos ) && CanReplace( block = Map.GetBlock( pos ) ) ) {
 					Network.SendPlaceBlock( SelectedPos );
-					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
 			}
 		}
