@@ -6,7 +6,7 @@ namespace ClassicalSharp.Blocks.Model {
 		
 		protected internal TextureAtlas2D atlas;
 		protected internal BlockInfo info;
-		protected byte block;
+		protected internal byte block;
 		
 		public IBlockModel( TextureAtlas2D atlas, BlockInfo info, byte tile ) {
 			this.atlas = atlas;

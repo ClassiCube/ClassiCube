@@ -99,6 +99,7 @@
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Optimised.cs" />
+    <Compile Include="Blocks\Model\BiomeColouredModel.cs" />
     <Compile Include="Blocks\Model\CactusModel.cs" />
     <Compile Include="Blocks\Model\CubeModel.cs" />
     <Compile Include="Blocks\Model\FenceModel.cs" />
