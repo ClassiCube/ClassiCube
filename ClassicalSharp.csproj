@@ -84,6 +84,7 @@
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
+    <Compile Include="2D\Screens\InventoryScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\NormalScreen.cs" />
     <Compile Include="2D\Screens\PauseScreen.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\HotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\SlotWidget.cs" />
     <Compile Include="2D\Widgets\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\TextInputWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />

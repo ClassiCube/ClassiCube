@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Window;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -16,6 +14,7 @@ namespace ClassicalSharp {
 		
 		Texture selectedBlock, slotTexture;
 		const int hotbarCount = 9;
+		SlotWidget[] hotbarSlots = new SlotWidget[hotbarCount];
 		const int blockSize = 40;
 		int iconsTexId;
 		
@@ -44,6 +43,14 @@ namespace ClassicalSharp {
 			iconsTexId = GraphicsApi.LoadTexture( "icons.png" );
 			
 			int x = Window.Width / 2 - ( blockSize * hotbarCount ) / 2;
+			for( int i = 0; i < hotbarCount; i++ ) {
+				int index = i; // must capture the variable.
+				SlotWidget widget = new SlotWidget( Window, slotTexture, 
+				                                   () => Window.Inventory.GetHotbarSlot( index ) );
+				widget.Init();
+				widget.MoveTo( x + i * blockSize, y );
+				hotbarSlots[i] = widget;
+			}
 			X = x;
 			Y = y;
 			Width = blockSize * hotbarCount;
@@ -52,12 +59,17 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
-			RenderHotbarBackground();
-			GraphicsApi.Texturing = true;
-			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
-			RenderHotbarBlocks();
-			GraphicsApi.Bind2DTexture( Window.ItemsAtlasTexId );
-			RenderHotbarItems();
+			for( int i = 0; i < hotbarCount; i++ ) {
+				hotbarSlots[i].RenderBackground();
+			}
+			selectedBlock.X1 = X + blockSize * Window.Inventory.HeldSlotIndex;
+			selectedBlock.Y1 = Y;
+			GraphicsApi.Bind2DTexture( selectedBlock.ID );
+			selectedBlock.RenderNoBind( GraphicsApi );
+			
+			for( int i = 0; i < hotbarCount; i++ ) {
+				hotbarSlots[i].RenderItem();
+			}
 			RenderHearts();
 			GraphicsApi.Texturing = false;
 		}
@@ -84,69 +96,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void RenderHotbarBackground() {
-			GraphicsApi.Bind2DTexture( slotTexture.ID );
-			
-			for( int x = 0; x < hotbarCount; x++ ) {
-				slotTexture.X1 = X + x * blockSize;
-				slotTexture.Y1 = Y;
-				slotTexture.RenderNoBind( GraphicsApi );
-				if( x == Window.Inventory.HeldSlotIndex ) {
-					selectedBlock.X1 = slotTexture.X1;
-				}
-			}
-			selectedBlock.Render( GraphicsApi );
-		}
-		
-		void RenderHotbarBlocks() {
-			for( int i = 0; i < hotbarCount; i++ ) {
-				Slot slot = Window.Inventory.GetHotbarSlot( i );
-				if( slot.IsEmpty || slot.Id > 255 ) continue;
-				
-				int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)slot.Id, TileSide.Front );
-				if( texId == 0 ) continue;
-				
-				int x = X + i * blockSize;
-				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
-				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
-				float height = Window.BlockInfo.BlockHeight( (byte)slot.Id );
-				if( height != 1 ) {
-					rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
-					y2 = y1 + (int)( 32 * height );
-				}
-				
-				VertexPos3fTex2f[] vertices = {
-					new VertexPos3fTex2f( x2, y1, 0, rec.U2, rec.V1 ),
-					new VertexPos3fTex2f( x2, y2, 0, rec.U2, rec.V2 ),
-					new VertexPos3fTex2f( x1, y1, 0, rec.U1, rec.V1 ),
-					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
-				};
-				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
-			}
-		}
-		
-		void RenderHotbarItems() {
-			for( int i = 0; i < hotbarCount; i++ ) {
-				Slot slot = Window.Inventory.GetHotbarSlot( i );
-				if( slot.IsEmpty || slot.Id <= 255 ) continue;
-				
-				int texId = Window.ItemInfo.Get2DTextureLoc( slot.Id );
-				if( texId == 0 ) continue;
-				
-				int x = X + i * blockSize;
-				TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
-				float x1 = x + 4, y1 = Y + 4, x2 = x1 + 32, y2 = y1 + 32;
-				
-				VertexPos3fTex2f[] vertices = {
-					new VertexPos3fTex2f( x2, y1, 0, rec.U2, rec.V1 ),
-					new VertexPos3fTex2f( x2, y2, 0, rec.U2, rec.V2 ),
-					new VertexPos3fTex2f( x1, y1, 0, rec.U1, rec.V1 ),
-					new VertexPos3fTex2f( x1, y2, 0, rec.U1, rec.V2 ),
-				};
-				GraphicsApi.DrawVertices( DrawMode.TriangleStrip, vertices );
-			}
-		}
-		
 		public override void Dispose() {
 			GraphicsApi.DeleteTexture( ref selectedBlock );
 			GraphicsApi.DeleteTexture( ref slotTexture );
@@ -154,12 +103,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
 			X = newX;
 			Y = newY;
-			selectedBlock.X1 += deltaX;
-			selectedBlock.Y1 += deltaY;
+			for( int i = 0; i < hotbarCount; i++ ) {
+				hotbarSlots[i].MoveTo( newX + i * blockSize, newY );
+			}
 		}
 	}
 }

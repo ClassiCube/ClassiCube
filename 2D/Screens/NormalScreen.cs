@@ -72,6 +72,8 @@ namespace ClassicalSharp {
 			}
 			if( chat.HandlesKeyDown( key ) ) {
 				return true;
+			} else if( key == Window.Keys[KeyMapping.OpenInventory] ) {
+				Window.SetNewScreen( new InventoryScreen( Window ) );
 			}
 			return hotbar.HandlesKeyDown( key );
 		}

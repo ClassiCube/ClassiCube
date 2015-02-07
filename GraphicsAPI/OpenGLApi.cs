@@ -145,8 +145,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			return texId;
 		}
 		
+		int activeTex = -1;
 		public override void Bind2DTexture( int texture ) {
-			GL.BindTexture( TextureTarget.Texture2D, texture );
+			if( texture != activeTex ) {
+				activeTex = texture;
+				GL.BindTexture( TextureTarget.Texture2D, texture );
+			}
 		}
 		
 		public override void DeleteTexture( int texId ) {
@@ -639,12 +643,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Disable( EnableCap.Texture2D );
 		}
 
-        public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-            GL.Enable( EnableCap.Texture2D );
-            GL.BindTexture( TextureTarget.Texture2D, texId );
-            GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
-                GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
-            GL.Disable( EnableCap.Texture2D );
-        }
+		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
+			GL.Enable( EnableCap.Texture2D );
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
+			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
+			GL.Disable( EnableCap.Texture2D );
+		}
 	}
 }
