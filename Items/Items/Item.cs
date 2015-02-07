@@ -17,5 +17,12 @@ namespace ClassicalSharp.Items {
 			return texId;
 		}
 		
+		public virtual bool CanHarvest( BlockId block ) {
+			return false;
+		}
+		
+		public virtual float GetEffectiveness( BlockId block ) {
+			return 1;
+		}
 	}
 }

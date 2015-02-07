@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Items;
 
 namespace ClassicalSharp.Window {
 	
@@ -9,6 +10,14 @@ namespace ClassicalSharp.Window {
 		public byte Count;
 		
 		public short Damage;
+		
+		public bool IsBlock {
+			get { return Id >= 0 && Id <= 255; }
+		}
+		
+		public bool IsItem {
+			get { return Id > 255; }
+		}
 		
 		public bool IsEmpty {
 			get { return Id < 0; }
@@ -22,6 +31,5 @@ namespace ClassicalSharp.Window {
 			if( IsEmpty ) return "(empty slot)";
 			return "(" + Id + "," + Damage + ":" + Count + ")";
 		}
-
 	}
 }

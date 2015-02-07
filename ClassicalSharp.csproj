@@ -133,6 +133,7 @@
     <Compile Include="Items\ItemId.cs" />
     <Compile Include="Items\ItemsInfo.cs" />
     <Compile Include="Items\Items\Item.cs" />
+    <Compile Include="Items\Items\SwordItem.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
     <Compile Include="Model\BlockModel.cs" />
