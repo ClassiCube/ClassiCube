@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public partial class ChunkMeshBuilder {
 		
-		unsafe void CopyMainPart( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+		unsafe void CopyMainPart( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
 			Chunk chunk = map.GetChunk( x1 >> 4, z1 >> 4 );
 			if( chunk == null ) {
 				Utils.LogWarning( "um what? " + ( x1 >> 4 ) + " , " + ( z1 >> 4 ) + "(" + x1 + " , " + z1 + ")" );
@@ -27,13 +27,14 @@ namespace ClassicalSharp {
 						if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
 						
 						chunkPtr[chunkIndex] = block;
+						metaPtr[chunkIndex] = chunk.GetBlockMetadata( xx, y, zz );
 						chunkIndex++;
 					}
 				}
 			}
 		}
 		
-		unsafe void CopyXMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+		unsafe void CopyXMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
 			Chunk chunk = map.GetChunk( ( x1 >> 4 ) - 1, z1 >> 4 );
 			if( chunk == null ) return;
 			
@@ -48,12 +49,13 @@ namespace ClassicalSharp {
 					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
 					
 					chunkPtr[chunkIndex] = block;
+					metaPtr[chunkIndex] = chunk.GetBlockMetadata( 15, y, zz );
 					chunkIndex += 18;
 				}
 			}
 		}
 		
-		unsafe void CopyXPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+		unsafe void CopyXPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
 			Chunk chunk = map.GetChunk( ( x1 >> 4 ) + 1, z1 >> 4 );
 			if( chunk == null ) return;
 			
@@ -67,12 +69,13 @@ namespace ClassicalSharp {
 					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
 					
 					chunkPtr[chunkIndex] = block;
+					metaPtr[chunkIndex] = chunk.GetBlockMetadata( 0, y, zz );
 					chunkIndex += 18;
 				}
 			}
 		}
 		
-		unsafe void CopyZMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+		unsafe void CopyZMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
 			Chunk chunk = map.GetChunk( x1 >> 4, ( z1 >> 4 ) - 1 );
 			if( chunk == null ) return;
 			
@@ -86,12 +89,13 @@ namespace ClassicalSharp {
 					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
 					
 					chunkPtr[chunkIndex] = block;
+					metaPtr[chunkIndex] = chunk.GetBlockMetadata( xx, y, 15 );
 					chunkIndex++;
 				}
 			}
 		}
 		
-		unsafe void CopyZPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr ) {
+		unsafe void CopyZPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
 			Chunk chunk = map.GetChunk( x1 >> 4, ( z1 >> 4 ) + 1 );
 			if( chunk == null ) return;
 			
@@ -105,6 +109,7 @@ namespace ClassicalSharp {
 					if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
 					
 					chunkPtr[chunkIndex] = block;
+					metaPtr[chunkIndex] = chunk.GetBlockMetadata( xx, y, 0 );
 					chunkIndex++;
 				}
 			}

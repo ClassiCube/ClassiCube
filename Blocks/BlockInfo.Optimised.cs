@@ -4,9 +4,6 @@ namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
 		
-		// The designation used is as follows:
-		// 0 - left 1 - right 2 - front
-		// 3 - back 4 - bottom 5 - top	
 		int[] optimTextures = new int[blocksCount * 6];	
 		const int Row1 = 0, Row2 = 16, Row3 = 32, Row4 = 48,
 		Row5 = 64, Row6 = 80, Row7 = 96, Row8 = 112, Row9 = 128,
@@ -22,6 +19,7 @@ namespace ClassicalSharp {
 			SetOptimAllTextures( BlockId.Dirt, Row1 + 2 );
 			SetOptimAllTextures( BlockId.Farmland, Row1 + 2 );
 			SetOptimSideTextures( BlockId.Grass, Row1 + 3 );
+			SetOptimBottomTexture( BlockId.Grass, Row1 + 3 );
 			SetOptimAllTextures( BlockId.WoodenPlanks, Row1 + 4 );
 			SetOptimAllTextures( BlockId.Fence, Row1 + 4 );
 			SetOptimTopTexture( BlockId.Bookshelf, Row1 + 4 );
@@ -163,7 +161,7 @@ namespace ClassicalSharp {
 		
 		void SetOptimSideTextures( BlockId blockId, int textureId ) {
 			int index = (byte)blockId * 6;
-			for( int i = index; i < index + TileSide.Top; i++ ) {
+			for( int i = index; i < index + TileSide.Bottom; i++ ) {
 				optimTextures[i] = textureId;
 			}
 		}

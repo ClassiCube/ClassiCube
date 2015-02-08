@@ -284,7 +284,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock( int x, int y, int z, byte block, byte meta ) {
-			Map.SetBlock( x, y, z, block, meta );
+			Map.SetBlockAndMeta( x, y, z, block, meta );
 			MapRenderer.RedrawBlock( x, y, z );
 		}
 		

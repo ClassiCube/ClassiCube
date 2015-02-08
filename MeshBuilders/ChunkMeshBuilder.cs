@@ -28,8 +28,9 @@ namespace ClassicalSharp {
 			};
 		}
 		
-		protected byte[] drawFlags = new byte[16 * 16 * 16 * 6];
-		protected byte[] chunk = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
+		byte[] drawFlags = new byte[16 * 16 * 16 * 6];
+		byte[] chunk = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
+		byte[] meta = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
 		const int minY = 0, maxY = 127;
 		
 		void BuildChunk( int x1, int y1, int z1 ) {
@@ -54,17 +55,19 @@ namespace ClassicalSharp {
 		}
 		
 		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
-			for( int i = 0; i < chunk.Length; i++ ) {
-				chunk[i] = 0;
-			}
-			
 			bool allAir = true, allSolid = true;
-			fixed( byte* chunkPtr = chunk ) {
-				CopyMainPart( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
-				CopyXMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
-				CopyXPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
-				CopyZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
-				CopyZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr );
+			fixed( byte* chunkPtr = chunk, metaPtr = meta ) {
+				int* chunkIntPtr = (int*)chunkPtr;
+				int* metaIntPtr = (int*)metaPtr;
+				for( int i = 0; i < ( 18 * 18 * 18 ) / 4; i++ ) {
+					*chunkIntPtr++ = 0;
+					*metaIntPtr++ = 0;
+				}
+				CopyMainPart( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyXMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyXPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
 			}
 			return allAir || allSolid;
 		}
@@ -78,13 +81,14 @@ namespace ClassicalSharp {
 			byte tile = chunk[chunkIndex];
 			if( tile == 0 ) return;
 			IBlockModel model = BlockInfo.GetModel( tile );
+			byte tileMeta = meta[chunkIndex];
 			DrawInfo1DPart part = model.Pass == BlockPass.Solid ? Solid :
 				model.Pass == BlockPass.Transluscent ? Transluscent : Sprite;
 			
 			for( int face = 0; face < 6; face ++ ) {
 				int count = drawFlags[countIndex + face];
 				if( count != 0 ) {
-					model.DrawFace( face, ref part.index, x, y, z, part.vertices, colours[face] );
+					model.DrawFace( face, tileMeta, ref part.index, x, y, z, part.vertices, colours[face] );
 				}
 			}
 		}
@@ -111,23 +115,24 @@ namespace ClassicalSharp {
 						if( tile == 0 ) continue;
 						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
 						IBlockModel model = BlockInfo.GetModel( tile );
-						CountVertices( countIndex, tile, chunkIndex, offsets, model );
+						byte tileMeta = meta[chunkIndex];
+						CountVertices( countIndex, tile, tileMeta, chunkIndex, offsets, model );
 					}
 				}
 			}
 		}
 		
-		unsafe void CountVertices( int index, byte tile, int chunkIndex, int* offsets, IBlockModel model ) {
+		unsafe void CountVertices( int index, byte tile, byte tileMeta, int chunkIndex, int* offsets, IBlockModel model ) {
 			for( int face = 0; face < 6; face++ ) {
 				if( !model.HasFace( face ) ) {
 					drawFlags[index + face] = 0;
 					continue;
 				}
 				byte neighbour = chunk[chunkIndex + offsets[face]];
-				if( model.FaceHidden( face, neighbour ) ) {
+				if( model.FaceHidden( face, tileMeta, neighbour ) ) {
 					drawFlags[index + face] = 0;
 				} else {
-					AddVertices( model.Pass, model.GetVerticesCount( face, neighbour ) );
+					AddVertices( model.Pass, model.GetVerticesCount( face, tileMeta, neighbour ) );
 					drawFlags[index + face] = 1;
 				}
 			}

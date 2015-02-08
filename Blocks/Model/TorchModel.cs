@@ -22,17 +22,17 @@ namespace ClassicalSharp.Blocks.Model {
 			Pass = BlockPass.Sprite; // TODO: Should this be solid pass?
 		}
 		
-		public override bool FaceHidden( int face, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, byte neighbour ) {
 			return face == TileSide.Bottom && info.IsOpaque( neighbour );
 		}
 		
-		public override int GetVerticesCount( int face, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
 			return 6;
 		}
 		
-		public override void DrawFace( int face, ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		public override void DrawFace( int face, byte meta, ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			col = FastColour.White;
-			base.DrawFace( face, ref index, x, y, z, vertices, col );
+			base.DrawFace( face, meta, ref index, x, y, z, vertices, col );
 		}
 		
 		protected override void DrawLeftFace( ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {

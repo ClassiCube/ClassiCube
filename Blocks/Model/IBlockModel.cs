@@ -20,13 +20,13 @@ namespace ClassicalSharp.Blocks.Model {
 			return true;
 		}
 		
-		public virtual bool FaceHidden( int face, byte neighbour ) {
+		public virtual bool FaceHidden( int face, byte meta, byte neighbour ) {
 			return info.IsFaceHidden( block, neighbour, face );
 		}
 		
-		public abstract int GetVerticesCount( int face, byte neighbour );
+		public abstract int GetVerticesCount( int face, byte meta, byte neighbour );
 		
-		public abstract void DrawFace( int face, ref int index, float x, float y, float z,
+		public abstract void DrawFace( int face, byte meta, ref int index, float x, float y, float z,
 		                              VertexPos3fTex2fCol4b[] vertices, FastColour col );
 	}
 	
