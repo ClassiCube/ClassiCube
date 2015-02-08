@@ -243,7 +243,10 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			game.EntityManager[entityId] = new NullEntity( game );
+			Entity entity = new NullEntity( game );
+			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
+			entity.SetLocation( update, false );
+			game.EntityManager[entityId] = entity;
 			throw new NotImplementedException();
 		}
 	}
@@ -284,7 +287,11 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			game.EntityManager[entityId] = new NullEntity( game );
+			Entity entity = new NullEntity( game );
+			LocationUpdate update = LocationUpdate.MakePos( x, y, z, false );
+			entity.SetLocation( update, false );
+			entity.SetVelocity( velX, velY, velZ );
+			game.EntityManager[entityId] = entity;
 			throw new NotImplementedException();
 		}
 	}
@@ -308,7 +315,11 @@ namespace ClassicalSharp.Network.Packets {
 		}
 		
 		public override void ReadCallback( Game game ) {
-			game.EntityManager[entityId] = new NullEntity( game );
+			Entity entity = new NullEntity( game );
+			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
+			entity.SetLocation( update, false );
+			entity.SetMetadata( meta );
+			game.EntityManager[entityId] = entity;
 			throw new NotImplementedException();
 		}
 	}
