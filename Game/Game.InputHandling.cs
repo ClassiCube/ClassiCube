@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Network.Packets;
 using ClassicalSharp.Particles;
 using OpenTK;
 using OpenTK.Input;
@@ -109,21 +110,45 @@ namespace ClassicalSharp {
 		}
 		
 		DateTime lastClick = DateTime.MinValue;
+		Vector3I lastDiggingPos;
+		double test;
+		float digAccumulator = 0;
 		void PickBlocks( bool cooldown, bool left, bool right ) {
 			if( SelectedPos == null || left == right || ScreenLockedInput ) return;
+			
+			bool samePos = lastDiggingPos == SelectedPos.BlockPos;
+			if( left && samePos ) cooldown = false;
+			
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
 			lastClick = now;
 			
+			lastDiggingPos = SelectedPos.BlockPos;			
 			if( left ) {
 				Vector3I pos = SelectedPos.BlockPos;
 				byte block = 0;
 				
 				if( Map.IsValidPos( pos ) && ( block = Map.GetBlock( pos ) ) != 0 ) {
-					ParticleManager.BreakBlockEffect( pos, block );
-					Network.SendDeleteBlock( SelectedPos );
-					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
+					//ParticleManager.BreakBlockEffect( pos, block );
+					if( samePos ) {
+						digAccumulator += LocalPlayer.GetDamagePerTick( (BlockId)block );
+						test += ticksPeriod;
+						Console.WriteLine( "dig tick    " + digAccumulator );					
+						if( digAccumulator >= 1 ) {
+							Network.SendDigBlock( SelectedPos, DigStatus.Finish );
+							lastDiggingPos = new Vector3I( Int32.MaxValue );
+							Console.WriteLine( "finish dig    "  + test );
+							test = 0;
+						}
+					} else {
+						Console.WriteLine( "start dig " );
+						Console.WriteLine( "hardness: " + BlockInfo.Hardness( block ) );
+						Console.WriteLine( "effectiveness: " + Inventory.HeldSlot.GetEffectiveness( (BlockId)block, ItemInfo ) );
+						Console.WriteLine( "canharvest: " + Inventory.HeldSlot.CanHarvest( (BlockId)block, ItemInfo ) );
+						Network.SendDigBlock( SelectedPos, DigStatus.Start );
+						digAccumulator = 0;
+					}				
 				}
 			}
 			if( right ) {

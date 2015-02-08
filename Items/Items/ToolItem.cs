@@ -4,7 +4,7 @@ namespace ClassicalSharp.Items {
 	
 	public abstract class ToolItem : Item {
 		
-		public ToolItem( short id ) : base( id ) {
+		public ToolItem( ItemId id ) : base( id ) {
 		}
 		
 		public static float GetMultiplier( ToolGroup group ) {

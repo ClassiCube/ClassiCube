@@ -69,7 +69,7 @@ namespace ClassicalSharp {
 			// TODO: Underwater, effectiveness /=5
 			// TODO: Flying, effectiveness /= 5
 			bool canHarvest = heldSlot.CanHarvest( block, info );
-			return effectiveness / hardness * ( 1 / ( canHarvest ? 100 : 30 ) );			
+			return ( effectiveness / hardness ) * ( 1f / ( canHarvest ? 30 : 100 ) );
 		}
 		
 		public override void Despawn() {

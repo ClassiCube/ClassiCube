@@ -50,13 +50,11 @@ namespace ClassicalSharp {
 		public void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
 		}
 		
-		public void SendDeleteBlock( PickedPos pos ) {
+		public void SendDigBlock( PickedPos pos, DigStatus status ) {
 			Vector3I loc = pos.BlockPos;
 			byte dir = pos.Direction;
-			//OutboundPacket startPacket = new PlayerDiggingOutbound( DigStatus.Start, loc, dir );
-			//SendPacket( startPacket );
-			//OutboundPacket finishPacket = new PlayerDiggingOutbound( DigStatus.Finish, loc, dir );
-			//SendPacket( finishPacket );
+			OutboundPacket startPacket = new PlayerDiggingOutbound( status, loc, dir );
+			SendPacket( startPacket );
 		}
 		
 		public void SendPlaceBlock( PickedPos pos ) {

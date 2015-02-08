@@ -6,8 +6,8 @@ namespace ClassicalSharp.Items {
 		
 		public ItemId Id;
 		
-		public Item( short id ) {
-			Id = (ItemId)id;
+		public Item( ItemId id ) {
+			Id = id;
 		}
 		
 		public byte MaxCount = 64;

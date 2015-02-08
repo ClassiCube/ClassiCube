@@ -14,9 +14,27 @@ namespace ClassicalSharp.Items {
 		
 		public void Init( TextureAtlas2D atlas ) {
 			this.atlas = atlas;
+			SetItem( new ShearsItem() );
+			SetItem( new AxeItem( ItemId.WoodenAxe, ToolGroup.Wood ) );
+			SetItem( new AxeItem( ItemId.GoldAxe, ToolGroup.Gold ) );
+			SetItem( new AxeItem( ItemId.IronAxe, ToolGroup.Iron ) );
+			SetItem( new AxeItem( ItemId.DiamondAxe, ToolGroup.Diamond ) );
+			SetItem( new ShovelItem( ItemId.WoodenShovel, ToolGroup.Wood ) );
+			SetItem( new ShovelItem( ItemId.GoldShovel, ToolGroup.Gold ) );
+			SetItem( new ShovelItem( ItemId.IronShovel, ToolGroup.Iron ) );
+			SetItem( new ShovelItem( ItemId.DiamondShovel, ToolGroup.Diamond ) );
+			SetItem( new PickaxeItem( ItemId.WoodenPickaxe, ToolGroup.Wood ) );
+			SetItem( new PickaxeItem( ItemId.GoldPickaxe, ToolGroup.Gold ) );
+			SetItem( new PickaxeItem( ItemId.IronPickaxe, ToolGroup.Iron ) );
+			SetItem( new PickaxeItem( ItemId.DiamondPickaxe, ToolGroup.Diamond ) );
+			SetItem( new SwordItem( ItemId.WoodenSword, ToolGroup.Wood ) );
+			SetItem( new SwordItem( ItemId.GoldSword, ToolGroup.Gold ) );
+			SetItem( new SwordItem( ItemId.IronSword, ToolGroup.Iron ) );
+			SetItem( new SwordItem( ItemId.DiamondSword, ToolGroup.Diamond ) );
+			
 			foreach( short value in Enum.GetValues( typeof( ItemId ) ) ) {
 				if( itemCache[value] == null ) {
-					itemCache[value] = new Item( value );
+					itemCache[value] = new Item( (ItemId)value );
 				}
 			}
 			
@@ -73,6 +91,10 @@ namespace ClassicalSharp.Items {
 			for( int i = 0; i < texIds.Length; i++ ) {
 				itemCache[start + i].texId = texIds[i];
 			}
+		}
+		
+		void SetItem( Item item ) {
+			itemCache[(short)item.Id] = item;
 		}
 		
 		void SetMaxCountRange( byte count, ItemId start, ItemId end ) {

@@ -5,7 +5,7 @@ namespace ClassicalSharp.Items {
 	public class SwordItem : ToolItem {
 		
 		public ToolGroup Group;
-		public SwordItem( short id, ToolGroup group ) : base( id ) {
+		public SwordItem( ItemId id, ToolGroup group ) : base( id ) {
 			Group = group;
 		}
 		

@@ -5,7 +5,7 @@ namespace ClassicalSharp.Items {
 	public class PickaxeItem : ToolItem {
 		
 		public ToolGroup Group;
-		public PickaxeItem( short id, ToolGroup group ) : base( id ) {
+		public PickaxeItem( ItemId id, ToolGroup group ) : base( id ) {
 			Group = group;
 		}
 		

@@ -4,7 +4,7 @@ namespace ClassicalSharp.Items {
 	
 	public class ShearsItem : ToolItem {
 		
-		public ShearsItem( short id ) : base( id ) {
+		public ShearsItem() : base( ItemId.Shears ) {
 		}
 		
 		public override bool CanHarvest( BlockId block ) {

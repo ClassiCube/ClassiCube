@@ -5,7 +5,7 @@ namespace ClassicalSharp.Items {
 	public class ShovelItem : ToolItem {
 		
 		public ToolGroup Group;
-		public ShovelItem( short id, ToolGroup group ) : base( id ) {
+		public ShovelItem( ItemId id, ToolGroup group ) : base( id ) {
 			Group = group;
 		}
 		

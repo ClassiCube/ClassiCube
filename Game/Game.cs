@@ -166,6 +166,9 @@ namespace ClassicalSharp {
 				EntityManager.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
+				bool left = IsMousePressed( MouseButton.Left );
+				bool right = IsMousePressed( MouseButton.Right );
+				PickBlocks( true, left, right );
 			}
 			if( ticksThisFrame > ticksFrequency / 3 ) {
 				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
@@ -189,9 +192,6 @@ namespace ClassicalSharp {
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
-				bool left = IsMousePressed( MouseButton.Left );
-				bool right = IsMousePressed( MouseButton.Right );
-				PickBlocks( true, left, right );
 				//EnvRenderer.DisableAmbientLighting();
 			} else {
 				SelectedPos = null;

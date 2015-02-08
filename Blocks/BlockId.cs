@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 		StoneButton = 77,
 		Snow = 78,
 		Ice = 79,
-		SnowBlock = 79,
+		SnowBlock = 80,
 		Cactus = 81,
 		ClayBlock = 82,
 		SugarCane = 83,

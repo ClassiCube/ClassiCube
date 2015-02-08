@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 			}
 			SetHardnesses(
 				inf, 1.5f, 0.6f, 0.5f, 2f, 2f, 0f, 1E10f, inf, inf, inf, inf,
-				0.5f, 0.6f, 3f, 3f, 3f, 0.2f, 0.6f, 0.3f, 3f, 3f, 3.5f, 0.8f,
+				0.5f, 0.6f, 3f, 3f, 3f, 2f, 0.2f, 0.6f, 0.3f, 3f, 3f, 3.5f, 0.8f,
 				0.8f, 0.2f, 0.7f, 0.7f, 0.5f, 4f, 0f, 0f, 0.5f, 0.5f, 0.8f, 0f,
 				0f, 0f, 0f, 0f, 3f, 5f, 2f, 2f, 2f, 0f, 1.5f, 2f, 10f, 0f, 0f,
 				5f, 2f, 2.5f, 0f, 3f, 5f, 2.5f, 0f, 0.6f, 3.5f, 3.5f, 1f, 3f,
