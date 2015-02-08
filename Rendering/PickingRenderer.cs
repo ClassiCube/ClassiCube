@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Blocks.Model;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
@@ -8,22 +9,25 @@ namespace ClassicalSharp.Renderers {
 		
 		Game window;
 		IGraphicsApi graphics;
+		CubeModel cracks;
 		
 		public PickingRenderer( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
+			cracks = new CubeModel( window, (byte)BlockId.Stone );
 		}
 		
 		FastColour col = FastColour.White;
 		double accumulator;
 		
-		int index = 0;
+		int index = 0, crackIndex = 0;
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[24 * ( 3 * 2 )];
+		VertexPos3fTex2fCol4b[] crackVertices = new VertexPos3fTex2fCol4b[6 * 6];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
 		public void Render( double delta ) {
 			accumulator += delta;
-			index = 0;
+			index = crackIndex = 0;
 			PickedPos pickedPos = window.SelectedPos;
 			
 			if( pickedPos != null ) {
@@ -61,6 +65,24 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( max.Z + offset, min.X - offset, min.Y - offset, max.X + offset, min.Y + size - offset );
 				DrawZPlane( max.Z + offset, min.X - offset, max.Y + offset, max.X + offset, max.Y - size + offset );
 				graphics.DrawVertices( DrawMode.Triangles, vertices );
+				
+				if( window.digging ) {
+					int stage = (int)( window.digAccumulator * 9 );
+					graphics.Texturing = true;
+					graphics.AlphaTest = true;
+					graphics.DepthTestFunc( DepthFunc.LessEqual );
+					graphics.Bind2DTexture( window.TerrainAtlasTexId );
+					int texIndex = 144 + 5 + stage;
+					TextureRectangle rec = window.TerrainAtlas.GetTexRec( texIndex );				
+					for( int i = 0; i < 6; i++ ) {
+						cracks.recs[i] = rec;
+						cracks.DrawFace( i, 0, new Neighbours(), ref crackIndex, min.X, min.Y, min.Z, crackVertices, FastColour.White );
+					}
+					graphics.DrawVertices( DrawMode.Triangles, crackVertices );
+					graphics.AlphaTest = false;
+					graphics.DepthTestFunc( DepthFunc.Less );
+					graphics.Texturing = false;
+				}
 			}
 		}
 		

@@ -5,16 +5,14 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class CubeModel : IBlockModel {
 		
-		protected int[] texIds = new int[6];
-		protected TextureRectangle[] recs = new TextureRectangle[6];
-		float blockHeight;
+		protected internal TextureRectangle[] recs = new TextureRectangle[6];
 		protected Vector3 min, max;
 		
 		public CubeModel( Game game, byte block ) : base( game, block ) {
-			blockHeight = info.BlockHeight( block );
+			float blockHeight = info.BlockHeight( block );
 			for( int face = 0; face < 6; face++ ) {
-				texIds[face] = info.GetOptimTextureLoc( block, face );
-				TextureRectangle rec = atlas.GetTexRec( texIds[face] );
+				int texId = info.GetOptimTextureLoc( block, face );
+				TextureRectangle rec = atlas.GetTexRec( texId );
 				if( face < TileSide.Bottom ) {
 					rec.V2 = rec.V1 + blockHeight * atlas.invVerElementSize;
 				}

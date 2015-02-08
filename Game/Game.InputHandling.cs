@@ -112,8 +112,10 @@ namespace ClassicalSharp {
 		DateTime lastClick = DateTime.MinValue;
 		Vector3I lastDiggingPos;
 		double test;
-		float digAccumulator = 0;
+		internal float digAccumulator = 0;
+		internal bool digging = false;
 		void PickBlocks( bool cooldown, bool left, bool right ) {
+			digging = false;
 			if( SelectedPos == null || left == right || ScreenLockedInput ) return;
 			
 			bool samePos = lastDiggingPos == SelectedPos.BlockPos;
@@ -131,15 +133,17 @@ namespace ClassicalSharp {
 				
 				if( Map.IsValidPos( pos ) && ( block = Map.GetBlock( pos ) ) != 0 ) {
 					//ParticleManager.BreakBlockEffect( pos, block );
+					digging = true;
 					if( samePos ) {
 						digAccumulator += LocalPlayer.GetDamagePerTick( (BlockId)block );
-						test += ticksPeriod;
+						test += ticksPeriod;						
 						Console.WriteLine( "dig tick    " + digAccumulator );					
 						if( digAccumulator >= 1 ) {
 							Network.SendDigBlock( SelectedPos, DigStatus.Finish );
 							lastDiggingPos = new Vector3I( Int32.MaxValue );
 							Console.WriteLine( "finish dig    "  + test );
 							test = 0;
+							digging = false;
 						}
 					} else {
 						Console.WriteLine( "start dig " );
