@@ -38,7 +38,7 @@ namespace ClassicalSharp.Model {
 			return MakePart( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 0.4375f, 0.5625f, -0.0625f, 0.0625f, false );
 		}
 		
-		protected override void DrawModelImpl( Player player, PlayerRenderer renderer ) {
+		protected override void DrawModelImpl( Entity entity, EntityRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );

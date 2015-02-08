@@ -53,7 +53,7 @@ namespace ClassicalSharp.Model {
 			return new ModelPart( vertices, 2 * 6, graphics );
 		}
 		
-		protected override void DrawModelImpl( Player player, PlayerRenderer renderer ) {
+		protected override void DrawModelImpl( Entity entity, EntityRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );

@@ -178,7 +178,7 @@
     <Compile Include="Rendering\MapRenderer.cs" />
     <Compile Include="Rendering\NormalEnvRenderer.cs" />
     <Compile Include="Rendering\PickingRenderer.cs" />
-    <Compile Include="Rendering\PlayerRenderer.cs" />
+    <Compile Include="Rendering\EntityRenderer.cs" />
     <Compile Include="Util\ConcurrentQueue.cs" />
     <Compile Include="Util\FastBitmap.cs" />
     <Compile Include="Util\FastColour.cs" />

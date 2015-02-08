@@ -21,10 +21,10 @@ namespace ClassicalSharp.Model {
 			};
 		}
 		
-		protected override void DrawModelImpl( Player player, PlayerRenderer renderer ) {
+		protected override void DrawModelImpl( Entity entity, EntityRenderer renderer ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
-			block = Byte.Parse( player.ModelName );
+			block = Byte.Parse( entity.ModelName );
 			if( block == 0 ) return;
 			
 			graphics.Bind2DTexture( window.TerrainAtlasTexId );

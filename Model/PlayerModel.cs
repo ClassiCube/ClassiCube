@@ -74,9 +74,11 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelSet model;
-		protected override void DrawModelImpl( Player player, PlayerRenderer renderer ) {
+		protected override void DrawModelImpl( Entity entity, EntityRenderer renderer ) {
+			Player player = (Player)entity;
+			PlayerRenderer pRenderer = (PlayerRenderer)renderer;
 			graphics.Texturing = true;
-			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
+			int texId = pRenderer.TextureId <= 0 ? DefaultSkinTextureId : pRenderer.TextureId;
 			graphics.Bind2DTexture( texId );
 			model = Set64x32;
 			SkinType skinType = player.SkinType;

@@ -19,26 +19,26 @@ namespace ClassicalSharp.Model {
 		protected float yaw, pitch;
 		protected float rightLegXRot, rightArmXRot, rightArmZRot;
 		protected float leftLegXRot, leftArmXRot, leftArmZRot;
-		public void RenderModel( Player player, PlayerRenderer renderer ) {
-			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
+		public void RenderModel( Entity entity, EntityRenderer renderer ) {
+			pos = entity.Position;
+			yaw = entity.YawDegrees;
+			pitch = entity.PitchDegrees;
 			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			leftArmXRot = player.leftArmXRot * 180 / (float)Math.PI;
-			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
-			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
+			leftLegXRot = entity.leftLegXRot * 180 / (float)Math.PI;
+			leftArmXRot = entity.leftArmXRot * 180 / (float)Math.PI;
+			leftArmZRot = entity.leftArmZRot * 180 / (float)Math.PI;
+			rightLegXRot = entity.rightLegXRot * 180 / (float)Math.PI;
+			rightArmXRot = entity.rightArmXRot * 180 / (float)Math.PI;
+			rightArmZRot = entity.rightArmZRot * 180 / (float)Math.PI;
 			
 			graphics.PushMatrix();
 			graphics.Translate( pos.X, pos.Y, pos.Z );
 			graphics.RotateY( 180f - yaw );
-			DrawModelImpl( player, renderer );
+			DrawModelImpl( entity, renderer );
 			graphics.PopMatrix();
 		}
 		
-		protected abstract void DrawModelImpl( Player player, PlayerRenderer renderer );
+		protected abstract void DrawModelImpl( Entity entity, EntityRenderer renderer );
 		
 		public abstract void Dispose();
 		

@@ -6,22 +6,34 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class PlayerRenderer {
+	public class EntityRenderer {
 		
-		Vector3 pos;
 		public Game Window;
 		public IGraphicsApi Graphics;
 		public Player Player;
+		
+		public EntityRenderer( Player player, Game window ) {
+			Player = player;
+			Window = window;
+			Graphics = window.Graphics;
+		}
+		
+		public virtual void Dispose() {
+		}
+		
+		public virtual void Render( double deltaTime ) {
+			Player.Model.RenderModel( Player, this );
+		}
+	}
+	
+	public class PlayerRenderer : EntityRenderer {
+		
 		Texture nameTexture;
 		float nameWidth, nameHeight;
 		public int TextureId = -1;
 		int nameTextureId = -1;
 		
-		public PlayerRenderer( Player player, Game window ) {
-			Player = player;
-			Window = window;
-			Graphics = window.Graphics;
-			
+		public PlayerRenderer( Player player, Game window ) : base( player, window ) {
 			List<DrawTextArgs> parts = Utils.SplitText( Graphics, player.DisplayName, true );
 			Size size = Utils2D.MeasureSize( Utils.StripColours( player.DisplayName ), "Arial", 14, true );
 			nameTexture = Utils2D.MakeTextTexture( parts, "Arial", 14, size, 0, 0 );
@@ -30,14 +42,13 @@ namespace ClassicalSharp.Renderers {
 			nameTextureId = nameTexture.ID;
 		}
 		
-		public void Dispose() {
+		public override void Dispose() {
 			Graphics.DeleteTexture( TextureId );
 			Graphics.DeleteTexture( nameTextureId );
 		}
 		
-		public void Render( double deltaTime ) {
-			pos = Player.Position;
-			Player.Model.RenderModel( Player, this );
+		public override void Render( double deltaTime ) {
+			base.Render( deltaTime );
 			DrawName();
 		}
 		
@@ -45,6 +56,7 @@ namespace ClassicalSharp.Renderers {
 		private void DrawName() {
 			Graphics.PushMatrix();
 			const float nameYOffset = 2.1375f;
+			Vector3 pos = Player.Position;
 			Graphics.Translate( pos.X, pos.Y + nameYOffset, pos.Z );
 			// Do this to always have names facing the player
 			float yaw = Window.LocalPlayer.YawDegrees;
