@@ -16,15 +16,15 @@ namespace ClassicalSharp.Blocks.Model {
 			return face == TileSide.Top;
 		}
 		
-		public override bool FaceHidden( int face, byte meta, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
 			return false;
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
 			return 6 + 6;
 		}
 		
-		public override void DrawFace( int face, byte meta, ref int index, float x, float y, float z,
+		public override void DrawFace( int face, byte meta, Neighbours state, ref int index, float x, float y, float z,
 		                              VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			// TODO: Rotate this.
 			// Draw Z axis

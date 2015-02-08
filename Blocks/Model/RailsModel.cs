@@ -13,11 +13,11 @@ namespace ClassicalSharp.Blocks.Model {
 			return face == TileSide.Top;
 		}
 		
-		public override bool FaceHidden( int face, byte meta, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
 			return false;
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
 			return 6;
 		}
 	}

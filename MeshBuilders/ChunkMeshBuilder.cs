@@ -33,11 +33,19 @@ namespace ClassicalSharp {
 		byte[] meta = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
 		const int minY = 0, maxY = 127;
 		
-		void BuildChunk( int x1, int y1, int z1 ) {
+		unsafe void BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
 			if( ReadChunkData( x1, y1, z1 ) ) return;
 			
-			Stretch( x1, y1, z1 );
+			int* offsets = stackalloc int[6];
+			offsets[TileSide.Left] = -1; // x - 1
+			offsets[TileSide.Right] = 1; // x + 1
+			offsets[TileSide.Front] = -18; // z - 1
+			offsets[TileSide.Back] = 18; // z + 1
+			offsets[TileSide.Bottom] = -324; // y - 1
+			offsets[TileSide.Top] = 324; // y + 1
+			
+			Stretch( x1, y1, z1, offsets );
 			PostStretchTiles( x1, y1, z1 );
 			
 			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
@@ -47,7 +55,7 @@ namespace ClassicalSharp {
 					int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + 0 ) * 6;
 					for( int x = x1, xx = 0; x < x1 + 16; x++, xx++ ) {
 						chunkIndex++;
-						RenderTile( chunkIndex, countIndex, x, y, z );
+						RenderTile( chunkIndex, countIndex, x, y, z, offsets );
 						countIndex += 6;
 					}
 				}
@@ -77,33 +85,35 @@ namespace ClassicalSharp {
 			return GetChunkInfo( x, y, z );
 		}
 
-		public void RenderTile( int chunkIndex, int countIndex, int x, int y, int z ) {
+		unsafe void RenderTile( int chunkIndex, int countIndex, int x, int y, int z, int* offsets ) {
 			byte tile = chunk[chunkIndex];
 			if( tile == 0 ) return;
 			IBlockModel model = BlockInfo.GetModel( tile );
 			byte tileMeta = meta[chunkIndex];
 			DrawInfo1DPart part = model.Pass == BlockPass.Solid ? Solid :
 				model.Pass == BlockPass.Transluscent ? Transluscent : Sprite;
+			Neighbours state = new Neighbours();
+			if( model.NeedsNeighbourState ) {
+				state.Above = chunk[chunkIndex + offsets[TileSide.Top]];
+				state.Below = chunk[chunkIndex + offsets[TileSide.Bottom]];
+				state.Left = chunk[chunkIndex + offsets[TileSide.Left]];
+				state.Right = chunk[chunkIndex + offsets[TileSide.Right]];
+				state.Front = chunk[chunkIndex + offsets[TileSide.Front]];
+				state.Back = chunk[chunkIndex + offsets[TileSide.Back]];
+			}
 			
 			for( int face = 0; face < 6; face ++ ) {
 				int count = drawFlags[countIndex + face];
 				if( count != 0 ) {
-					model.DrawFace( face, tileMeta, ref part.index, x, y, z, part.vertices, colours[face] );
+					model.DrawFace( face, tileMeta, state, ref part.index, x, y, z, part.vertices, colours[face] );
 				}
 			}
 		}
 		
-		unsafe void Stretch( int x1, int y1, int z1 ) {
+		unsafe void Stretch( int x1, int y1, int z1, int* offsets ) {
 			for( int i = 0; i < drawFlags.Length; i++ ) {
 				drawFlags[i] = 1;
-			}
-			int* offsets = stackalloc int[6];
-			offsets[TileSide.Left] = -1; // x - 1
-			offsets[TileSide.Right] = 1; // x + 1
-			offsets[TileSide.Front] = -18; // z - 1
-			offsets[TileSide.Back] = 18; // z + 1
-			offsets[TileSide.Bottom] = -324; // y - 1
-			offsets[TileSide.Top] = 324; // y + 1
+			}			
 			
 			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < z1 + 16; z++, zz++ ) {
@@ -123,16 +133,25 @@ namespace ClassicalSharp {
 		}
 		
 		unsafe void CountVertices( int index, byte tile, byte tileMeta, int chunkIndex, int* offsets, IBlockModel model ) {
+			Neighbours state = new Neighbours();
+			if( model.NeedsNeighbourState ) {
+				state.Above = chunk[chunkIndex + offsets[TileSide.Top]];
+				state.Below = chunk[chunkIndex + offsets[TileSide.Bottom]];
+				state.Left = chunk[chunkIndex + offsets[TileSide.Left]];
+				state.Right = chunk[chunkIndex + offsets[TileSide.Right]];
+				state.Front = chunk[chunkIndex + offsets[TileSide.Front]];
+				state.Back = chunk[chunkIndex + offsets[TileSide.Back]];
+			}
 			for( int face = 0; face < 6; face++ ) {
 				if( !model.HasFace( face ) ) {
 					drawFlags[index + face] = 0;
 					continue;
 				}
 				byte neighbour = chunk[chunkIndex + offsets[face]];
-				if( model.FaceHidden( face, tileMeta, neighbour ) ) {
+				if( model.FaceHidden( face, tileMeta, state, neighbour ) ) {
 					drawFlags[index + face] = 0;
 				} else {
-					AddVertices( model.Pass, model.GetVerticesCount( face, tileMeta, neighbour ) );
+					AddVertices( model.Pass, model.GetVerticesCount( face, tileMeta, state, neighbour ) );
 					drawFlags[index + face] = 1;
 				}
 			}

@@ -25,11 +25,11 @@ namespace ClassicalSharp.Blocks.Model {
 			max = new Vector3( 1f, blockHeight, 1f );
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
 			return 6;
 		}
 		
-		public override void DrawFace( int face, byte meta, ref int index, float x, float y, float z,
+		public override void DrawFace( int face, byte meta, Neighbours state, ref int index, float x, float y, float z,
 		                              VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			switch( face ) {
 				case TileSide.Left:

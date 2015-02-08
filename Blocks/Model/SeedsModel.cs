@@ -23,17 +23,17 @@ namespace ClassicalSharp.Blocks.Model {
 			return face < TileSide.Bottom;
 		}
 		
-		public override bool FaceHidden( int face, byte meta, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
 			return false;
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
 			return 6;
 		}
 		
-		public override void DrawFace( int face, byte meta, ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+		public override void DrawFace( int face, byte meta, Neighbours state, ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			col = FastColour.White;
-			base.DrawFace( face, meta, ref index, x, y, z, vertices, col );
+			base.DrawFace( face, meta, state, ref index, x, y, z, vertices, col );
 		}
 		
 		protected override void DrawLeftFace( ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {

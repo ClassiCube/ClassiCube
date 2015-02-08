@@ -25,11 +25,11 @@ namespace ClassicalSharp.Blocks.Model {
 			recs[TileSide.Top] = verRec;
 		}
 		
-		public override bool FaceHidden( int face, byte meta, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
 			return face >= TileSide.Bottom && ( neighbour == block || info.IsOpaque( neighbour ) );
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
 			return 6;
 		}
 	}
