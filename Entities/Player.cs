@@ -1,7 +1,6 @@
 ﻿using System;
-using OpenTK;
-using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp {
 
@@ -26,8 +25,6 @@ namespace ClassicalSharp {
 		}
 		
 		public string DisplayName, SkinName;
-		public string ModelName;
-		public IModel Model;
 		protected PlayerRenderer renderer;
 		public SkinType SkinType;
 		
@@ -88,11 +85,6 @@ namespace ClassicalSharp {
 			leftArmZRot = -idleZRot;
 			rightArmXRot += idleXRot;
 			leftArmXRot -= idleXRot;
-		}
-		
-		public void SetModel( string modelName ) {
-			ModelName = modelName;
-			Model = game.ModelCache.GetModel( ModelName );
 		}
 	}
 }

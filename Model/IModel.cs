@@ -15,8 +15,6 @@ namespace ClassicalSharp.Model {
 			graphics = window.Graphics;
 		}
 		
-		public abstract float NameYOffset { get; }
-		
 		protected Vector3 pos;
 		protected float yaw, pitch;
 		protected float rightLegXRot, rightArmXRot, rightArmZRot;
@@ -36,11 +34,11 @@ namespace ClassicalSharp.Model {
 			graphics.PushMatrix();
 			graphics.Translate( pos.X, pos.Y, pos.Z );
 			graphics.RotateY( 180f - yaw );
-			DrawPlayerModel( player, renderer );
+			DrawModelImpl( player, renderer );
 			graphics.PopMatrix();
 		}
 		
-		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );
+		protected abstract void DrawModelImpl( Player player, PlayerRenderer renderer );
 		
 		public abstract void Dispose();
 		

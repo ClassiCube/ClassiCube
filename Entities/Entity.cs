@@ -1,5 +1,6 @@
 ﻿using System;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Model;
 using ClassicalSharp.Window;
 using OpenTK;
 
@@ -65,6 +66,13 @@ namespace ClassicalSharp {
 		public abstract void Despawn();
 		
 		public abstract void Render( double deltaTime, float t );
+		
+		public string ModelName;
+		public IModel Model;
+		protected void SetModel( string modelName ) {
+			ModelName = modelName;
+			Model = game.ModelCache.GetModel( ModelName );
+		}
 		
 		public bool TouchesAnyLava() {
 			return TouchesAny( b => b == (byte)BlockId.Lava || b == (byte)BlockId.StillLava );

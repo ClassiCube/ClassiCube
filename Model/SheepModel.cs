@@ -59,11 +59,7 @@ namespace ClassicalSharp.Model {
 			return MakePart( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0.34375f, 0.78125f, z1, z2, false );
 		}
 		
-		public override float NameYOffset {
-			get { return 1.075f; }
-		}
-		
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawModelImpl( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = DefaultSkinTextureId;
 			graphics.Bind2DTexture( texId );

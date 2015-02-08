@@ -74,9 +74,9 @@ namespace ClassicalSharp.Renderers {
 					graphics.Bind2DTexture( window.TerrainAtlasTexId );
 					int texIndex = 144 + 5 + stage;
 					TextureRectangle rec = window.TerrainAtlas.GetTexRec( texIndex );				
-					for( int i = 0; i < 6; i++ ) {
-						cracks.recs[i] = rec;
-						cracks.DrawFace( i, 0, new Neighbours(), ref crackIndex, min.X, min.Y, min.Z, crackVertices, FastColour.White );
+					for( int face = 0; face < 6; face++ ) {
+						cracks.recs[face] = rec;
+						cracks.DrawFace( face, 0, new Neighbours(), ref crackIndex, min.X, min.Y, min.Z, crackVertices, FastColour.White );
 					}
 					graphics.DrawVertices( DrawMode.Triangles, crackVertices );
 					graphics.AlphaTest = false;
