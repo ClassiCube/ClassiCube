@@ -6,7 +6,7 @@ namespace ClassicalSharp.Blocks.Model {
 		
 		int texId;
 		TextureRectangle rec;
-		public SpriteModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public SpriteModel( Game game, byte block ) : base( game, block ) {
 			texId = info.GetOptimTextureLoc( block, TileSide.Top );
 			rec = atlas.GetTexRec( texId );
 			Pass = BlockPass.Sprite;

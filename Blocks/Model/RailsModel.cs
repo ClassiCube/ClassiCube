@@ -4,7 +4,7 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class RailsModel : CubeModel {
 		
-		public RailsModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public RailsModel( Game game, byte block ) : base( game, block ) {
 			Pass = BlockPass.Sprite;
 			max.Y = 1 / 16f;
 		}

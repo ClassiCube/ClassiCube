@@ -5,7 +5,7 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class TorchModel : CubeModel {
 		
-		public TorchModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public TorchModel( Game game, byte block ) : base( game, block ) {
 			TextureRectangle baseRec = recs[0];
 			float scale = atlas.invVerElementSize;
 			

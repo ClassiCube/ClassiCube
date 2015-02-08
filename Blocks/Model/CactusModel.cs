@@ -5,7 +5,7 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class CactusModel : CubeModel {
 		
-		public CactusModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public CactusModel( Game game, byte block ) : base( game, block ) {
 		}
 		
 		protected override void DrawLeftFace( ref int index, float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Blocks.Model {
 		float blockHeight;
 		protected Vector3 min, max;
 		
-		public CubeModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public CubeModel( Game game, byte block ) : base( game, block ) {
 			blockHeight = info.BlockHeight( block );
 			for( int face = 0; face < 6; face++ ) {
 				texIds[face] = info.GetOptimTextureLoc( block, face );

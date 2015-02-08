@@ -4,7 +4,7 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class GrassCubeModel : CubeModel {
 		
-		public GrassCubeModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public GrassCubeModel( Game game, byte block ) : base( game, block ) {
 		}
 		
 		// TODO: We probably need a separate render pass for grass sides.

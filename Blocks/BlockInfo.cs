@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		IBlockModel[] models = new IBlockModel[blocksCount];
 		const int blocksCount = 256;
 		
-		public void Init( TextureAtlas2D atlas ) {
+		public void Init( TextureAtlas2D atlas, Game game ) {
 			for( int i = 1; i < blocksCount; i++ ) {
 				heights[i] = 1;
 				blocksLight[i] = true;
@@ -46,23 +46,23 @@ namespace ClassicalSharp {
 			SetupCullingCache();
 			MakeColours();
 			
-			models[(byte)BlockId.Seeds] = new SeedsModel( atlas, this, (byte)BlockId.Seeds );
-			models[(byte)BlockId.Grass] = new GrassCubeModel( atlas, this, (byte)BlockId.Grass );
-			models[(byte)BlockId.Fence] = new FenceModel( atlas, this, (byte)BlockId.Fence );
-			models[(byte)BlockId.Torch] = new TorchModel( atlas, this, (byte)BlockId.Torch );
-			models[(byte)BlockId.RedstoneTorchOff] = new TorchModel( atlas, this, (byte)BlockId.RedstoneTorchOff );
-			models[(byte)BlockId.RedstoneTorchOn] = new TorchModel( atlas, this, (byte)BlockId.RedstoneTorchOn );
-			models[(byte)BlockId.Rails] = new RailsModel( atlas, this, (byte)BlockId.Rails );
-			models[(byte)BlockId.Cactus] = new CactusModel( atlas, this, (byte)BlockId.Cactus );
-			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( atlas, this, (byte)BlockId.TallGrass ) );
-			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel( atlas, this, (byte)BlockId.Leaves ) );
+			models[(byte)BlockId.Seeds] = new SeedsModel( game, (byte)BlockId.Seeds );
+			models[(byte)BlockId.Grass] = new GrassCubeModel( game, (byte)BlockId.Grass );
+			models[(byte)BlockId.Fence] = new FenceModel( game, (byte)BlockId.Fence );
+			models[(byte)BlockId.Torch] = new TorchModel( game, (byte)BlockId.Torch );
+			models[(byte)BlockId.RedstoneTorchOff] = new TorchModel( game, (byte)BlockId.RedstoneTorchOff );
+			models[(byte)BlockId.RedstoneTorchOn] = new TorchModel( game, (byte)BlockId.RedstoneTorchOn );
+			models[(byte)BlockId.Rails] = new RailsModel( game, (byte)BlockId.Rails );
+			models[(byte)BlockId.Cactus] = new CactusModel( game, (byte)BlockId.Cactus );
+			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( game, (byte)BlockId.TallGrass ) );
+			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel(game, (byte)BlockId.Leaves ) );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
 				if( IsSprite( id ) ) {
-					models[id] = new SpriteModel( atlas, this, id );
+					models[id] = new SpriteModel( game, id );
 				} else {
-					models[id] = new CubeModel( atlas, this, id );
+					models[id] = new CubeModel( game, id );
 				}
 			}
 			SetHardnesses(

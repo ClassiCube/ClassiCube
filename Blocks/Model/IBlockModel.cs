@@ -7,12 +7,14 @@ namespace ClassicalSharp.Blocks.Model {
 		
 		protected internal TextureAtlas2D atlas;
 		protected internal BlockInfo info;
+		protected internal Game game;
 		protected internal byte block;
 		
-		public IBlockModel( TextureAtlas2D atlas, BlockInfo info, byte tile ) {
-			this.atlas = atlas;
+		public IBlockModel( Game game, byte tile ) {
 			this.block = tile;
-			this.info = info;
+			this.game = game;
+			this.atlas = game.TerrainAtlas;
+			this.info = game.BlockInfo;
 		}
 		
 		public BlockPass Pass = BlockPass.Solid;

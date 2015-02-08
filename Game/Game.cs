@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 			PrintGraphicsInfo();
 			LoadAtlases();
 			BlockInfo = new BlockInfo();
-			BlockInfo.Init( TerrainAtlas );
+			BlockInfo.Init( TerrainAtlas, this );
 			ItemInfo = new ItemInfo();
 			ItemInfo.Init( ItemsAtlas );
 			Map = new Map( this );

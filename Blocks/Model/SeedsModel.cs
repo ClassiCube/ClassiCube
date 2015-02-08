@@ -5,7 +5,7 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class SeedsModel : CubeModel {
 		
-		public SeedsModel( TextureAtlas2D atlas, BlockInfo info, byte block ) : base( atlas, info, block ) {
+		public SeedsModel( Game game, byte block ) : base( game, block ) {
 			Pass = BlockPass.Sprite;
 			FlipU( ref recs[TileSide.Right] );
 			FlipU( ref recs[TileSide.Front] );

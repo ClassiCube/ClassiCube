@@ -5,7 +5,7 @@ namespace ClassicalSharp.Blocks.Model {
 	public class BiomeColouredModel : IBlockModel {
 		
 		IBlockModel drawer;
-		public BiomeColouredModel( IBlockModel drawer ) : base( drawer.atlas, drawer.info, drawer.block ) {
+		public BiomeColouredModel( IBlockModel drawer ) : base( drawer.game, drawer.block ) {
 			this.drawer = drawer;
 			Pass = drawer.Pass;
 		}
