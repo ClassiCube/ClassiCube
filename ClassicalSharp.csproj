@@ -115,8 +115,11 @@
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityManager.cs" />
     <Compile Include="Entities\EntityMetadata.cs" />
+    <Compile Include="Entities\LivingEntity.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Entities\NullEntity.cs" />
+    <Compile Include="Entities\ObjectEntity.cs" />
     <Compile Include="Entities\Particle.cs" />
     <Compile Include="Entities\ParticleManager.cs" />
     <Compile Include="Entities\Player.cs" />
@@ -164,7 +167,6 @@
     <Compile Include="Network\Packets\InboundPackets.cs" />
     <Compile Include="Network\Packets\OutboundPackets.cs" />
     <Compile Include="Network\Packets\Packet.cs" />
-    <Compile Include="NullEntity.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
     <Compile Include="Physics\Entity.Physics.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />

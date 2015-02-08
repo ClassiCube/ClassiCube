@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public abstract class Player : Entity {
+	public abstract class Player : LivingEntity {
 		
 		public const float Width = 0.6f;
 		public const float EyeHeight = 1.625f;
