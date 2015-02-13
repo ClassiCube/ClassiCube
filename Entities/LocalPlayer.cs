@@ -223,9 +223,6 @@ namespace ClassicalSharp {
 		Vector3 lastPos, nextPos;
 		float lastYaw, nextYaw, lastPitch, nextPitch;
 		public void SetInterpPosition( float t ) {
-			if( t < 0 ) t = 0;
-			if( t > 1 ) t = 1;
-			
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
 			PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
@@ -246,7 +243,7 @@ namespace ClassicalSharp {
 			HackyPhysics( xMoving, zMoving );
 			nextPos = Position;
 			Position = lastPos;
-			UpdateAnimState( lastPos, nextPos );
+			UpdateAnimState( lastPos, nextPos, delta );
 			tickCount++;
 			if( renderer != null ) {
 				Bitmap bmp;
@@ -284,7 +281,7 @@ namespace ClassicalSharp {
 				renderer = new PlayerRenderer( this, game );
 				game.AsyncDownloader.DownloadSkin( SkinName );
 			}
-			SetCurrentAnimState( tickCount, t );
+			SetCurrentAnimState( t );
 			renderer.Render( deltaTime );
 		}
 		

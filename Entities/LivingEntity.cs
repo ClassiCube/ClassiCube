@@ -8,35 +8,44 @@ namespace ClassicalSharp {
 		public LivingEntity( Game window ) : base( window ) {
 		}
 		
-		protected float animStepO, animStepN, runO, runN;		
-		protected void UpdateAnimState( Vector3 oldPos, Vector3 newPos ) {
-			animStepO = animStepN;
-			runO = runN;
+		protected float walkTimeO, walkTimeN, swingO, swingN;
+		
+		protected void UpdateAnimState( Vector3 oldPos, Vector3 newPos, double delta ) {
+			walkTimeO = walkTimeN;
+			swingO = swingN;
 			float dx = newPos.X - oldPos.X;
 			float dz = newPos.Z - oldPos.Z;
 			double distance = Math.Sqrt( dx * dx + dz * dz );
-			float animSpeed = distance > 0.05 ? (float)distance * 3 : 0;
-			float runDist = distance > 0.05 ? 1 : 0;
-			runN += ( runDist - runN ) * 0.3f;
-			animStepN += animSpeed;
+			bool moves = distance > 0.05;
+			
+			if( moves ) {
+				walkTimeN += (float)distance * 2 * (float)( 20 * delta );
+				swingN += (float)delta * 3;
+				if( swingN > 1 ) swingN = 1;
+			} else {
+				swingN -= (float)delta * 3;
+				if( swingN < 0 ) swingN = 0;
+			}
 		}
 		
-		protected void SetCurrentAnimState( int tickCount, float t ) {
-			float run = Utils.Lerp( runO, runN, t );
-			float anim = Utils.Lerp( animStepO, animStepN, t );
-			float time = tickCount + t;
+		const float armMax = (float)( 90 * Math.PI / 180.0 );
+		const float legMax = (float)( 80 * Math.PI / 180.0 );
+		const float idleMax = (float)( 3 * Math.PI / 180.0 );
+		const float idleXPeriod = (float)( 2 * Math.PI / 5f );
+		const float idleZPeriod = (float)( 2 * Math.PI / 3.5f );		
+		protected void SetCurrentAnimState( float t ) {
+			float swing = Utils.Lerp( swingO, swingN, t );
+			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
+			float idleTime = (float)( game.accumulator );
+			float idleXRot = (float)( Math.Sin( idleTime * idleXPeriod ) * idleMax );
+			float idleZRot = (float)( idleMax + Math.Cos( idleTime * idleZPeriod ) * idleMax );		
 			
-			rightArmXRot = (float)( Math.Cos( anim * 0.6662f + Math.PI ) * 1.5f * run );
-			leftArmXRot = (float)( Math.Cos( anim * 0.6662f ) * 1.5f * run );
-			rightLegXRot = (float)( Math.Cos( anim * 0.6662f ) * 1.4f * run );
-			leftLegXRot = (float)( Math.Cos( anim * 0.6662f + Math.PI ) * 1.4f * run );
-
-			float idleZRot = (float)( Math.Cos( time * 0.09f ) * 0.05f + 0.05f );
-			float idleXRot = (float)( Math.Sin( time * 0.067f ) * 0.05f );
+			leftArmXRot = (float)( Math.Cos( walkTime ) * swing * armMax ) - idleXRot;
+			rightArmXRot = -leftArmXRot;
+			rightLegXRot = (float)( Math.Cos( walkTime ) * swing * legMax );
+			leftLegXRot = -rightLegXRot;
 			rightArmZRot = idleZRot;
 			leftArmZRot = -idleZRot;
-			rightArmXRot += idleXRot;
-			leftArmXRot -= idleXRot;
 		}
 	}
 }

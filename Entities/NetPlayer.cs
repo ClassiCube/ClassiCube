@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 			}
 			tickCount++;
 			UpdateCurrentState();
-			UpdateAnimState( oldState.pos, newState.pos );
+			UpdateAnimState( oldState.pos, newState.pos, delta );
 		}
 		
 		void UpdateCurrentState() {		
@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 			YawDegrees = Utils.InterpAngle( oldState.yaw, newState.yaw, t );
 			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
 			
-			SetCurrentAnimState( tickCount, t );
+			SetCurrentAnimState( t );
 			renderer.Render( deltaTime );
 		}
 	}
