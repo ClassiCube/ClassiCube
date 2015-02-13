@@ -291,20 +291,9 @@ namespace ClassicalSharp {
 		Vector3 lastPos, nextPos;
 		float lastYaw, nextYaw, lastPitch, nextPitch;
 		public void SetInterpPosition( float t ) {
-			// The first two cases shouldn't happen, but just in case..
-			if( t < 0 ) {
-				Position = lastPos;
-				YawDegrees = lastYaw;
-				PitchDegrees = lastPitch;
-			} else if( t > 1 ) {
-				Position = nextPos;
-				YawDegrees = nextYaw;
-				PitchRadians = nextPitch;
-			} else {
-				Position = Vector3.Lerp( lastPos, nextPos, t );
-				YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
-				PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
-			}
+			Position = Vector3.Lerp( lastPos, nextPos, t );
+			YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
+			PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
 		}
 		
 		int tickCount = 0;

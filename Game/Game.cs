@@ -234,7 +234,8 @@ namespace ClassicalSharp {
 			if( ticksThisFrame > ticksFrequency / 3 ) {
 				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
 			}
-			LocalPlayer.SetInterpPosition( (float)( ticksAccumulator / ticksPeriod ) );
+			float t = (float)( ticksAccumulator / ticksPeriod );
+			LocalPlayer.SetInterpPosition( t );
 			
 			Graphics.Clear();
 			Graphics.SetMatrixMode( MatrixType.Modelview );
@@ -245,8 +246,7 @@ namespace ClassicalSharp {
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
-				//EnvRenderer.EnableAmbientLighting();
-				float t = (float)( ticksAccumulator / ticksPeriod );
+				//EnvRenderer.EnableAmbientLighting();			
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
