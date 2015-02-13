@@ -321,7 +321,7 @@ namespace ClassicalSharp {
 			PhysicsTick( xMoving, zMoving );
 			nextPos = Position;
 			Position = lastPos;
-			UpdateAnimState( lastPos, nextPos );
+			UpdateAnimState( lastPos, nextPos, delta );
 			tickCount++;
 			if( renderer != null ) {
 				Bitmap bmp;
@@ -341,7 +341,7 @@ namespace ClassicalSharp {
 				renderer = new PlayerRenderer( this, Window );
 				Window.AsyncDownloader.DownloadSkin( SkinName );
 			}
-			SetCurrentAnimState( tickCount, t );
+			SetCurrentAnimState( t );
 			renderer.Render( deltaTime );
 		}
 		
