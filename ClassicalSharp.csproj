@@ -119,7 +119,8 @@
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\NullEntity.cs" />
-    <Compile Include="Entities\ObjectEntity.cs" />
+    <Compile Include="Entities\Objects\FallingBlockEntity.cs" />
+    <Compile Include="Entities\Objects\ObjectEntity.cs" />
     <Compile Include="Entities\Particle.cs" />
     <Compile Include="Entities\ParticleManager.cs" />
     <Compile Include="Entities\Player.cs" />
@@ -231,6 +232,7 @@
     <Folder Include="2D\Widgets" />
     <Folder Include="Blocks" />
     <Folder Include="Blocks\Model" />
+    <Folder Include="Entities\Objects" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
     <Folder Include="Items\Items" />
