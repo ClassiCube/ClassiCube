@@ -6,7 +6,7 @@ namespace ClassicalSharp.Blocks.Model {
 	public class CubeModel : IBlockModel {
 		
 		protected internal TextureRectangle[] recs = new TextureRectangle[6];
-		protected Vector3 min, max;
+		protected internal Vector3 min, max;
 		
 		public CubeModel( Game game, byte block ) : base( game, block ) {
 			float blockHeight = info.BlockHeight( block );

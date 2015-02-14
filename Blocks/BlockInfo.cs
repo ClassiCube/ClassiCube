@@ -26,13 +26,13 @@ namespace ClassicalSharp {
 			
 			SetIsTranslucent( BlockId.StillWater, BlockId.Water, BlockId.Ice );
 			SetIsTransparent( BlockId.Glass, BlockId.Leaves, BlockId.Slabs, BlockId.Snow,
-			                 BlockId.RedstoneTorchOff, BlockId.MonsterSpawner, BlockId.Bed, BlockId.Farmland, BlockId.Fence,
+			                 BlockId.MonsterSpawner, BlockId.Bed, BlockId.Farmland, BlockId.Fence,
 			                 BlockId.Rails );
 			SetIsSprite( BlockId.Rose, BlockId.Sapling, BlockId.Dandelion,
 			            BlockId.BrownMushroom, BlockId.RedMushroom, BlockId.Torch,
 			            BlockId.DeadShrubs, BlockId.TallGrass, BlockId.Fire, BlockId.RedstoneWire,
 			            BlockId.RedstoneTorchOn, BlockId.RedstoneTorchOff, BlockId.SugarCane,
-			            BlockId.Cobweb );
+			            BlockId.Cobweb, BlockId.Lever );
 			
 			SetBlocksLight( false, BlockId.Glass, BlockId.Leaves, BlockId.Sapling,
 			               BlockId.RedMushroom, BlockId.BrownMushroom, BlockId.Rose,
@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 			models[(byte)BlockId.Torch] = new TorchModel( game, (byte)BlockId.Torch );
 			models[(byte)BlockId.RedstoneTorchOff] = new TorchModel( game, (byte)BlockId.RedstoneTorchOff );
 			models[(byte)BlockId.RedstoneTorchOn] = new TorchModel( game, (byte)BlockId.RedstoneTorchOn );
+			models[(byte)BlockId.Lever] = new LeverModel( game, (byte)BlockId.Lever );
 			models[(byte)BlockId.Rails] = new RailsModel( game, (byte)BlockId.Rails );
 			models[(byte)BlockId.Cactus] = new CactusModel( game, (byte)BlockId.Cactus );
 			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( game, (byte)BlockId.TallGrass ) );
