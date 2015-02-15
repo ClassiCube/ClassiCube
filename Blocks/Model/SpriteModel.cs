@@ -4,10 +4,9 @@ namespace ClassicalSharp.Blocks.Model {
 	
 	public class SpriteModel : IBlockModel {
 		
-		int texId;
-		TextureRectangle rec;
+		protected TextureRectangle rec;
 		public SpriteModel( Game game, byte block ) : base( game, block ) {
-			texId = info.GetOptimTextureLoc( block, TileSide.Top );
+			int texId = info.GetOptimTextureLoc( block, TileSide.Top );
 			rec = atlas.GetTexRec( texId );
 			Pass = BlockPass.Sprite;
 		}

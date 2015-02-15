@@ -57,6 +57,7 @@ namespace ClassicalSharp {
 			models[(byte)BlockId.Cactus] = new CactusModel( game, (byte)BlockId.Cactus );
 			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( game, (byte)BlockId.TallGrass ) );
 			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel(game, (byte)BlockId.Leaves ) );
+			models[(byte)BlockId.Sapling] = new SaplingModel( game );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
