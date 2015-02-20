@@ -137,6 +137,18 @@ namespace ClassicalSharp {
 			return 0;
 		}
 		
+		public byte GetBlockMeta( int x, int y, int z ) {
+			int chunkX = x >> 4;
+			int chunkZ = z >> 4;
+			Chunk chunk;
+			if( chunks.TryGetValue( new Vector2I( chunkX, chunkZ ), out chunk ) ) {
+				int blockX = x & 0x0F;
+				int blockZ = z & 0x0F;
+				return chunk.GetBlockMetadata( blockX, y, blockZ );
+			}
+			return 0;
+		}
+		
 		public byte GetBlockAndMeta( int x, int y, int z, out byte meta ) {
 			int chunkX = x >> 4;
 			int chunkZ = z >> 4;

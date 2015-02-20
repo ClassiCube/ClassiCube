@@ -106,6 +106,7 @@
     <Compile Include="Blocks\Model\CactusModel.cs" />
     <Compile Include="Blocks\Model\CubeModel.cs" />
     <Compile Include="Blocks\Model\FenceModel.cs" />
+    <Compile Include="Blocks\Model\FluidModel.cs" />
     <Compile Include="Blocks\Model\GrassCubeModel.cs" />
     <Compile Include="Blocks\Model\IBlockModel.cs" />
     <Compile Include="Blocks\Model\LeverModel.cs" />

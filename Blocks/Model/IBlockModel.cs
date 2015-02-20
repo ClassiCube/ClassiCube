@@ -42,11 +42,11 @@ namespace ClassicalSharp.Blocks.Model {
 	}
 	
 	public struct Neighbours {
-		public byte Above; // y + 1
-		public byte Below; // y - 1
-		public byte Left; // x - 1
-		public byte Right; // x + 1
-		public byte Front; // z - 1
-		public byte Back; // z + 1
+		public byte Above, AboveMeta; // y + 1
+		public byte Below, BelowMeta; // y - 1
+		public byte Left, LeftMeta; // x - 1
+		public byte Right, RightMeta; // x + 1
+		public byte Front, FrontMeta; // z - 1
+		public byte Back, BackMeta; // z + 1
 	}
 }

@@ -56,8 +56,12 @@ namespace ClassicalSharp {
 			models[(byte)BlockId.Rails] = new RailsModel( game, (byte)BlockId.Rails );
 			models[(byte)BlockId.Cactus] = new CactusModel( game, (byte)BlockId.Cactus );
 			models[(byte)BlockId.TallGrass] = new BiomeColouredModel( new SpriteModel( game, (byte)BlockId.TallGrass ) );
-			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel(game, (byte)BlockId.Leaves ) );
+			models[(byte)BlockId.Leaves] = new BiomeColouredModel( new CubeModel( game, (byte)BlockId.Leaves ) );
 			models[(byte)BlockId.Sapling] = new SaplingModel( game );
+			models[(byte)BlockId.Water] = new FluidModel( game, (byte)BlockId.Water );
+			models[(byte)BlockId.StillWater] = new FluidModel( game, (byte)BlockId.StillWater );
+			models[(byte)BlockId.Lava] = new FluidModel( game, (byte)BlockId.Lava );
+			models[(byte)BlockId.StillLava] = new FluidModel( game, (byte)BlockId.StillLava );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;

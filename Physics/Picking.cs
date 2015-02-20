@@ -26,7 +26,9 @@ namespace ClassicalSharp {
 				int x = cell.X, y = cell.Y, z = cell.Z;
 				byte block;
 				if( map.IsValidPos( x, y, z ) && info.CanPick( block = map.GetBlock( x, y, z ) ) ) {
-					window.Title = "Looking at type: " + block + "," + window.MapRenderer.sectionsCacheCount;
+					const string format = "Looking at type: {0},{1} ({2})";
+					window.Title = String.Format( format, block, map.GetBlockMeta( x, y, z ), 
+					                             window.MapRenderer.sectionsCacheCount );
 					float height = 1;
 					height = window.BlockInfo.BlockHeight( block );
 					Vector3 min = new Vector3( x, y, z );

@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 				map.SunlightZSide,
 				map.SunlightZSide,
 				map.SunlightYBottom,
-				map.Sunlight,				
+				map.Sunlight,
 			};
 		}
 		
@@ -84,6 +84,22 @@ namespace ClassicalSharp {
 			BuildChunk( x, y, z );
 			return GetChunkInfo( x, y, z );
 		}
+		
+		unsafe void MakeState( ref Neighbours state, int index, int* offsets ) {
+			state.Above = chunk[index + offsets[TileSide.Top]];
+			state.Below = chunk[index + offsets[TileSide.Bottom]];
+			state.Left = chunk[index + offsets[TileSide.Left]];
+			state.Right = chunk[index + offsets[TileSide.Right]];
+			state.Front = chunk[index + offsets[TileSide.Front]];
+			state.Back = chunk[index + offsets[TileSide.Back]];
+			
+			state.AboveMeta = meta[index + offsets[TileSide.Top]];
+			state.BelowMeta = meta[index + offsets[TileSide.Bottom]];
+			state.LeftMeta = meta[index + offsets[TileSide.Left]];
+			state.RightMeta = meta[index + offsets[TileSide.Right]];
+			state.FrontMeta = meta[index + offsets[TileSide.Front]];
+			state.BackMeta = meta[index + offsets[TileSide.Back]];
+		}
 
 		unsafe void RenderTile( int chunkIndex, int countIndex, int x, int y, int z, int* offsets ) {
 			byte tile = chunk[chunkIndex];
@@ -94,12 +110,7 @@ namespace ClassicalSharp {
 				model.Pass == BlockPass.Transluscent ? Transluscent : Sprite;
 			Neighbours state = new Neighbours();
 			if( model.NeedsNeighbourState ) {
-				state.Above = chunk[chunkIndex + offsets[TileSide.Top]];
-				state.Below = chunk[chunkIndex + offsets[TileSide.Bottom]];
-				state.Left = chunk[chunkIndex + offsets[TileSide.Left]];
-				state.Right = chunk[chunkIndex + offsets[TileSide.Right]];
-				state.Front = chunk[chunkIndex + offsets[TileSide.Front]];
-				state.Back = chunk[chunkIndex + offsets[TileSide.Back]];
+				MakeState( ref state, chunkIndex, offsets );
 			}
 			
 			for( int face = 0; face < 6; face ++ ) {
@@ -113,7 +124,7 @@ namespace ClassicalSharp {
 		unsafe void Stretch( int x1, int y1, int z1, int* offsets ) {
 			for( int i = 0; i < drawFlags.Length; i++ ) {
 				drawFlags[i] = 1;
-			}			
+			}
 			
 			for( int y = y1, yy = 0; y < y1 + 16; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < z1 + 16; z++, zz++ ) {
@@ -135,12 +146,7 @@ namespace ClassicalSharp {
 		unsafe void CountVertices( int index, byte tile, byte tileMeta, int chunkIndex, int* offsets, IBlockModel model ) {
 			Neighbours state = new Neighbours();
 			if( model.NeedsNeighbourState ) {
-				state.Above = chunk[chunkIndex + offsets[TileSide.Top]];
-				state.Below = chunk[chunkIndex + offsets[TileSide.Bottom]];
-				state.Left = chunk[chunkIndex + offsets[TileSide.Left]];
-				state.Right = chunk[chunkIndex + offsets[TileSide.Right]];
-				state.Front = chunk[chunkIndex + offsets[TileSide.Front]];
-				state.Back = chunk[chunkIndex + offsets[TileSide.Back]];
+				MakeState( ref state, chunkIndex, offsets );
 			}
 			for( int face = 0; face < 6; face++ ) {
 				if( !model.HasFace( face ) ) {
