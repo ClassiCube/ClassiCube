@@ -68,6 +68,19 @@ namespace ClassicalSharp.Blocks.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U2, rec.V1, col );
 		}
+		
+		protected virtual void DrawRotatedTopFace( ref int index, float x, float y, float z,
+		                                   VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
+			TextureRectangle rec = recs[TileSide.Top];
+
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + min.Z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
+			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + min.X, y + max.Y, z + max.Z, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + max.Z, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + max.X, y + max.Y, z + min.Z, rec.U1, rec.V2, col );
+		}
 
 		protected virtual void DrawBottomFace( ref int index, float x, float y, float z,
 		                                      VertexPos3fTex2fCol4b[] vertices, FastColour col ) {

@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 			models[(byte)BlockId.Lava] = new FluidModel( game, (byte)BlockId.Lava );
 			models[(byte)BlockId.StillLava] = new FluidModel( game, (byte)BlockId.StillLava );
 			models[(byte)BlockId.Wood] = new LogModel( game, (byte)BlockId.Wood );
+			models[(byte)BlockId.Bed] = new BedModel( game, (byte)BlockId.Bed );
 			
 			for( byte id = 1; id <= 96; id++ ) {
 				if( models[id] != null ) continue;
