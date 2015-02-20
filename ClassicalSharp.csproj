@@ -110,6 +110,7 @@
     <Compile Include="Blocks\Model\GrassCubeModel.cs" />
     <Compile Include="Blocks\Model\IBlockModel.cs" />
     <Compile Include="Blocks\Model\LeverModel.cs" />
+    <Compile Include="Blocks\Model\LogModel.cs" />
     <Compile Include="Blocks\Model\RailsModel.cs" />
     <Compile Include="Blocks\Model\SaplingModel.cs" />
     <Compile Include="Blocks\Model\SeedsModel.cs" />
