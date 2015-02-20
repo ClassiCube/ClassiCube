@@ -66,9 +66,6 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
-    <Reference Include="fNbt">
-      <HintPath>fNbt.dll</HintPath>
-    </Reference>
     <Reference Include="Ionic.Zip.Reduced">
       <HintPath>Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
