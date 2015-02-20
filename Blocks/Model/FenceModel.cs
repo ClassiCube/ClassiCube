@@ -77,18 +77,18 @@ namespace ClassicalSharp.Blocks.Model {
 				TextureRectangle.FromPoints( baseRec.U1 + ( 8 / 16f ) * scale, baseRec.U1 + ( 16 / 16f ) * scale,
 				                            baseRec.V1 + ( 7 / 16f ) * scale, baseRec.V1 + ( 10 / 16f ) * scale );
 			
-			NeedsNeighbourState = true;
+			NeedsAdjacentNeighbours = true;
 		}
 		
-		public override bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
+		public override bool FaceHidden( int face, byte meta, ref Neighbours state, byte neighbour ) {
 			return face >= TileSide.Bottom && ( neighbour == block || info.IsOpaque( neighbour ) );
 		}
 		
-		public override int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour ) {
+		public override int GetVerticesCount( int face, byte meta, ref Neighbours state, byte neighbour ) {
 			return 6 + ( neighbour == block ? ( 6 * 4 ) * 2 : 0 );
 		}
 		
-		public override void DrawFace( int face, byte meta, Neighbours state, ref int index,
+		public override void DrawFace( int face, byte meta, ref Neighbours state, ref int index,
 		                              float x, float y, float z, VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			if( face == TileSide.Front && state.Front == block ) {
 				TextureRectangle[] origRecs = recs;
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Blocks.Model {
 				max = new Vector3( 16 / 16f, 15 / 16f, 9 / 16f );
 				DrawBars( rightTop, rightBottom, origRecs, ref index, x, y, z, vertices, false );
 			}
-			base.DrawFace( face, meta, state, ref index, x, y, z, vertices, col );
+			base.DrawFace( face, meta, ref state, ref index, x, y, z, vertices, col );
 		}
 		
 		void DrawBars( TextureRectangle[] top, TextureRectangle[] bottom, TextureRectangle[] orig, ref int index,

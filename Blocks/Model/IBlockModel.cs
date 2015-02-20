@@ -23,16 +23,17 @@ namespace ClassicalSharp.Blocks.Model {
 			return true;
 		}
 		
-		public bool NeedsNeighbourState = false;
-		public bool NeedsEightNeighbourState = false;
+		public bool NeedsAdjacentNeighbours = false;
+		public bool NeedsDiagonalNeighbours = false;
+		public bool NeedsAllAboveNeighbours = false;
 		
-		public virtual bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
+		public virtual bool FaceHidden( int face, byte meta, ref Neighbours state, byte neighbour ) {
 			return info.IsFaceHidden( block, neighbour, face );
 		}
 		
-		public abstract int GetVerticesCount( int face, byte meta, Neighbours state, byte neighbour );
+		public abstract int GetVerticesCount( int face, byte meta, ref Neighbours state, byte neighbour );
 		
-		public abstract void DrawFace( int face, byte meta, Neighbours state, ref int index, float x, float y, float z,
+		public abstract void DrawFace( int face, byte meta, ref Neighbours state, ref int index, float x, float y, float z,
 		                              VertexPos3fTex2fCol4b[] vertices, FastColour col );
 	}
 	
@@ -49,5 +50,19 @@ namespace ClassicalSharp.Blocks.Model {
 		public byte Right, RightMeta; // x + 1
 		public byte Front, FrontMeta; // z - 1
 		public byte Back, BackMeta; // z + 1
+		
+		public byte LeftFront, LeftFrontMeta; // x - 1, z - 1
+		public byte RightFront, RightFrontMeta; // x + 1, z - 1
+		public byte LeftBack, LeftBackMeta; // x - 1, z + 1
+		public byte RightBack, RightBackMeta; // x + 1, z + 1
+		
+		/*public byte LeftFrontAbove, LeftFrontAboveMeta; // x - 1, y + 1, z - 1
+		public byte RightFrontAbove, RightFrontAboveMeta; // x + 1, y + 1, z - 1
+		public byte LeftBackAbove, LeftBackAboveMeta; // x - 1, y + 1, z + 1
+		public byte RightBackAbove, RightBackAboveMeta; // x + 1, y + 1, z + 1		
+		public byte LeftAbove, LeftAboveMeta; // x - 1, y + 1
+		public byte RightAbove, RightAboveMeta; // x + 1, y + 1
+		public byte FrontAbove, FrontAboveMeta; // y + 1, z - 1
+		public byte BackAbove, BackAboveMeta; // y + 1, z + 1*/
 	}
 }

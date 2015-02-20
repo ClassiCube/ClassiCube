@@ -11,7 +11,7 @@ namespace ClassicalSharp.Blocks.Model {
 			recB = atlas.GetTexRec( 7, 4 ); // birch
 		}
 		
-		public override void DrawFace( int face, byte meta, Neighbours state, ref int index, float x, float y, float z,
+		public override void DrawFace( int face, byte meta, ref Neighbours state, ref int index, float x, float y, float z,
 		                              VertexPos3fTex2fCol4b[] vertices, FastColour col ) {
 			int type = meta & 0x03;
 			rec = recO;
@@ -20,7 +20,7 @@ namespace ClassicalSharp.Blocks.Model {
 			} else if( type == 2 ) {
 				rec = recB;
 			}
-			base.DrawFace( face, meta, state, ref index, x, y, z, vertices, col );
+			base.DrawFace( face, meta, ref state, ref index, x, y, z, vertices, col );
 		}
 	}
 }

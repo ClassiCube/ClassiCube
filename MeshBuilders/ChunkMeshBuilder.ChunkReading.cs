@@ -114,5 +114,70 @@ namespace ClassicalSharp {
 				}
 			}
 		}
+		
+		
+		unsafe void CopyXMinusZMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) - 1, ( z1 >> 4 ) - 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( -1 + 1 ) * 18 + ( -1 + 1 );
+				byte block = chunk.GetBlock( 15, y, 15 );
+				if( block != 0 ) allAir = false;
+				if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+				
+				chunkPtr[chunkIndex] = block;
+				metaPtr[chunkIndex] = chunk.GetBlockMetadata( 15, y, 15 );
+			}
+		}
+		
+		unsafe void CopyXMinusZPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) - 1, ( z1 >> 4 ) + 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( 16 + 1 ) * 18 + ( -1 + 1 );
+				byte block = chunk.GetBlock( 15, y, 0 );
+				if( block != 0 ) allAir = false;
+				if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+				
+				chunkPtr[chunkIndex] = block;
+				metaPtr[chunkIndex] = chunk.GetBlockMetadata( 15, y, 0 );
+			}
+		}
+		
+		unsafe void CopyXPlusZMinus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) + 1, ( z1 >> 4 ) - 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( -1 + 1 ) * 18 + ( 16 + 1 );
+				byte block = chunk.GetBlock( 0, y, 15 );
+				if( block != 0 ) allAir = false;
+				if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+				
+				chunkPtr[chunkIndex] = block;
+				metaPtr[chunkIndex] = chunk.GetBlockMetadata( 0, y, 15 );
+			}
+		}
+		
+		unsafe void CopyXPlusZPlus( int x1, int y1, int z1, ref bool allAir, ref bool allSolid, byte* chunkPtr, byte* metaPtr ) {
+			Chunk chunk = map.GetChunk( ( x1 >> 4 ) + 1, ( z1 >> 4 ) + 1 );
+			if( chunk == null ) return;
+			
+			for( int yy = 0; yy < 16; yy++ ) {
+				int y = yy + y1;
+				int chunkIndex = ( yy + 1 ) * 324 + ( 16 + 1 ) * 18 + ( 16 + 1 );
+				byte block = chunk.GetBlock( 0, y, 0 );
+				if( block != 0 ) allAir = false;
+				if( !BlockInfo.IsOpaque( block ) ) allSolid = false;
+				
+				chunkPtr[chunkIndex] = block;
+				metaPtr[chunkIndex] = chunk.GetBlockMetadata( 0, y, 0 );
+			}
+		}
 	}
 }

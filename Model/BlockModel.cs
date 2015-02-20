@@ -38,14 +38,14 @@ namespace ClassicalSharp.Model {
 					drawFlags &= ~( 1 << face );
 					continue;
 				}
-				verticesCount += model.GetVerticesCount( face, 0, state, 0 );
+				verticesCount += model.GetVerticesCount( face, 0, ref state, 0 );
 			}
 			
 			int index = 0;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[verticesCount];
 			for( int face = 0; face < 6; face ++ ) {
 				if( ( drawFlags & ( 1 << face ) ) != 0 ) {
-					model.DrawFace( face, 0, state, ref index, -0.5f, -0.5f, -0.5f, vertices, colours[face] );
+					model.DrawFace( face, 0, ref state, ref index, -0.5f, -0.5f, -0.5f, vertices, colours[face] );
 				}
 			}
 			graphics.DrawVertices( DrawMode.Triangles, vertices, 6 * 6 );

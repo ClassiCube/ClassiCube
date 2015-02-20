@@ -76,6 +76,11 @@ namespace ClassicalSharp {
 				CopyXPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
 				CopyZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
 				CopyZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				
+				CopyXMinusZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyXPlusZMinus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyXMinusZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
+				CopyXPlusZPlus( x1, y1, z1, ref allAir, ref allSolid, chunkPtr, metaPtr );
 			}
 			return allAir || allSolid;
 		}
@@ -85,7 +90,8 @@ namespace ClassicalSharp {
 			return GetChunkInfo( x, y, z );
 		}
 		
-		unsafe void MakeState( ref Neighbours state, int index, int* offsets ) {
+		unsafe void MakeState( IBlockModel model, ref Neighbours state, int index, int* offsets ) {
+			if( !( model.NeedsAdjacentNeighbours || model.NeedsDiagonalNeighbours ) ) return;
 			state.Above = chunk[index + offsets[TileSide.Top]];
 			state.Below = chunk[index + offsets[TileSide.Bottom]];
 			state.Left = chunk[index + offsets[TileSide.Left]];
@@ -99,6 +105,18 @@ namespace ClassicalSharp {
 			state.RightMeta = meta[index + offsets[TileSide.Right]];
 			state.FrontMeta = meta[index + offsets[TileSide.Front]];
 			state.BackMeta = meta[index + offsets[TileSide.Back]];
+			
+			if( model.NeedsDiagonalNeighbours ) {
+				state.LeftFront = chunk[index + offsets[TileSide.Left] + offsets[TileSide.Front]];
+				state.RightFront = chunk[index + offsets[TileSide.Right] + offsets[TileSide.Front]];
+				state.LeftBack = chunk[index + offsets[TileSide.Left] + offsets[TileSide.Back]];
+				state.RightBack = chunk[index + offsets[TileSide.Right] + offsets[TileSide.Back]];
+				
+				state.LeftFrontMeta = meta[index + offsets[TileSide.Left] + offsets[TileSide.Front]];
+				state.RightFrontMeta = meta[index + offsets[TileSide.Right] + offsets[TileSide.Front]];
+				state.LeftBackMeta = meta[index + offsets[TileSide.Left] + offsets[TileSide.Back]];
+				state.RightBackMeta = meta[index + offsets[TileSide.Right] + offsets[TileSide.Back]];
+			}
 		}
 
 		unsafe void RenderTile( int chunkIndex, int countIndex, int x, int y, int z, int* offsets ) {
@@ -109,14 +127,12 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = model.Pass == BlockPass.Solid ? Solid :
 				model.Pass == BlockPass.Transluscent ? Transluscent : Sprite;
 			Neighbours state = new Neighbours();
-			if( model.NeedsNeighbourState ) {
-				MakeState( ref state, chunkIndex, offsets );
-			}
+			MakeState( model, ref state, chunkIndex, offsets );
 			
 			for( int face = 0; face < 6; face ++ ) {
 				int count = drawFlags[countIndex + face];
 				if( count != 0 ) {
-					model.DrawFace( face, tileMeta, state, ref part.index, x, y, z, part.vertices, colours[face] );
+					model.DrawFace( face, tileMeta, ref state, ref part.index, x, y, z, part.vertices, colours[face] );
 				}
 			}
 		}
@@ -145,19 +161,17 @@ namespace ClassicalSharp {
 		
 		unsafe void CountVertices( int index, byte tile, byte tileMeta, int chunkIndex, int* offsets, IBlockModel model ) {
 			Neighbours state = new Neighbours();
-			if( model.NeedsNeighbourState ) {
-				MakeState( ref state, chunkIndex, offsets );
-			}
+			MakeState( model, ref state, chunkIndex, offsets );
 			for( int face = 0; face < 6; face++ ) {
 				if( !model.HasFace( face ) ) {
 					drawFlags[index + face] = 0;
 					continue;
 				}
 				byte neighbour = chunk[chunkIndex + offsets[face]];
-				if( model.FaceHidden( face, tileMeta, state, neighbour ) ) {
+				if( model.FaceHidden( face, tileMeta, ref state, neighbour ) ) {
 					drawFlags[index + face] = 0;
 				} else {
-					AddVertices( model.Pass, model.GetVerticesCount( face, tileMeta, state, neighbour ) );
+					AddVertices( model.Pass, model.GetVerticesCount( face, tileMeta, ref state, neighbour ) );
 					drawFlags[index + face] = 1;
 				}
 			}

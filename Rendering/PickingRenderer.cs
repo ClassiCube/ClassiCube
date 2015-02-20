@@ -76,7 +76,7 @@ namespace ClassicalSharp.Renderers {
 					TextureRectangle rec = window.TerrainAtlas.GetTexRec( texIndex );				
 					for( int face = 0; face < 6; face++ ) {
 						cracks.recs[face] = rec;
-						cracks.DrawFace( face, 0, new Neighbours(), ref crackIndex, min.X, min.Y, min.Z, crackVertices, FastColour.White );
+						cracks.DrawFace( face, 0, ref state, ref crackIndex, min.X, min.Y, min.Z, crackVertices, FastColour.White );
 					}
 					graphics.DrawVertices( DrawMode.Triangles, crackVertices );
 					graphics.AlphaTest = false;
@@ -85,6 +85,7 @@ namespace ClassicalSharp.Renderers {
 				}
 			}
 		}
+		Neighbours state = new Neighbours();
 		
 		void DrawXPlane( float x, float z1, float y1, float z2, float y2 ) {
 			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
