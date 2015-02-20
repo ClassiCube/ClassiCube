@@ -181,6 +181,7 @@ namespace ClassicalSharp {
 		}
 		
 		public bool CanPick( byte id ) {
+			return id != 0;
 			return hardness[id] != inf;
 		}
 		

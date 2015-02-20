@@ -24,6 +24,7 @@ namespace ClassicalSharp.Blocks.Model {
 		}
 		
 		public bool NeedsNeighbourState = false;
+		public bool NeedsEightNeighbourState = false;
 		
 		public virtual bool FaceHidden( int face, byte meta, Neighbours state, byte neighbour ) {
 			return info.IsFaceHidden( block, neighbour, face );

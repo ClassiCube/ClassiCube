@@ -22,7 +22,7 @@ namespace ClassicalSharp.Util {
 			get {
 				int packed = Data[index >> 1];
 				//return ( index & 0x01 ) == 0 ? packed & 0x0F : ( packed >> 4 ) & 0x0F;
-				return (byte)( packed >> ( ( index & 0x01 ) << 2 ) );
+				return (byte)( ( packed >> ( ( index & 0x01 ) << 2 ) ) & 0x0F );
 			}
 			set {
 				int packed = Data[index >> 1];
