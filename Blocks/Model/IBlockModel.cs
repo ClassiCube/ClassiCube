@@ -56,13 +56,9 @@ namespace ClassicalSharp.Blocks.Model {
 		public byte LeftBack, LeftBackMeta; // x - 1, z + 1
 		public byte RightBack, RightBackMeta; // x + 1, z + 1
 		
-		/*public byte LeftFrontAbove, LeftFrontAboveMeta; // x - 1, y + 1, z - 1
-		public byte RightFrontAbove, RightFrontAboveMeta; // x + 1, y + 1, z - 1
-		public byte LeftBackAbove, LeftBackAboveMeta; // x - 1, y + 1, z + 1
-		public byte RightBackAbove, RightBackAboveMeta; // x + 1, y + 1, z + 1		
-		public byte LeftAbove, LeftAboveMeta; // x - 1, y + 1
-		public byte RightAbove, RightAboveMeta; // x + 1, y + 1
-		public byte FrontAbove, FrontAboveMeta; // y + 1, z - 1
-		public byte BackAbove, BackAboveMeta; // y + 1, z + 1*/
+		public byte AboveLeftFront, AboveRightFront;
+		public byte AboveLeftBack, AboveRightBack;	
+		public byte AboveLeft, AboveRight;
+		public byte AboveFront, AboveBack;
 	}
 }

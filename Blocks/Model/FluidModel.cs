@@ -1,5 +1,4 @@
 ﻿using System;
-using OpenTK;
 
 namespace ClassicalSharp.Blocks.Model {
 	
@@ -7,8 +6,12 @@ namespace ClassicalSharp.Blocks.Model {
 		
 		public FluidModel( Game game, byte block ) : base( game, block ) {
 			NeedsAdjacentNeighbours = true;
-			NeedsDiagonalNeighbours = true;
-			heightX0Z0 = heightX0Z1 = heightX1Z0 = heightX1Z1 = 14 / 16f;
+			NeedsDiagonalNeighbours = true;		
+			NeedsAllAboveNeighbours = true;
+		}
+		
+		public override bool FaceHidden( int face, byte meta, ref Neighbours state, byte neighbour ) {
+			return ( face == TileSide.Top && neighbour != block ) ? false : info.IsFaceHidden( block, neighbour, face );
 		}
 		
 		public override void DrawFace( int face, byte meta, ref Neighbours state, ref int index, float x, float y, float z,
@@ -22,32 +25,27 @@ namespace ClassicalSharp.Blocks.Model {
 			bool useLeftBack = state.LeftBack == block;
 			bool useRightBack = state.RightBack == block;
 			
-			heightX0Z0 = Math.Max( Height( useLeft ? state.LeftMeta : meta ),
-			                      Math.Max( Height( useFront ? state.FrontMeta : meta ),
-			                               Math.Max( Height( useLeftFront ? state.LeftFrontMeta : meta ),
-			                                        Height( meta ) ) ) );
+			heightX0Z0 = Math.Max( useLeft ? Height( state.LeftMeta, state.AboveLeft ) : 0,
+			                      Math.Max( useFront ? Height( state.FrontMeta, state.AboveFront ) : 0,
+			                               Math.Max( useLeftFront ? Height( state.LeftFrontMeta, state.AboveLeftFront ) : 0,
+			                                        Height( meta, state.Above ) ) ) );
 			
-			heightX1Z0 = Math.Max( Height( useRight ? state.RightMeta : meta ),
-			                      Math.Max( Height( useFront ? state.FrontMeta : meta ),
-			                               Math.Max( Height( useRightFront ? state.RightFrontMeta : meta ),
-			                                        Height( meta ) ) ) );
+			heightX1Z0 = Math.Max( useRight ? Height( state.RightMeta, state.AboveRight ) : 0,
+			                      Math.Max( useFront ? Height( state.FrontMeta, state.AboveFront ) : 0,
+			                               Math.Max( useRightFront ? Height( state.RightFrontMeta, state.AboveRightFront ) : 0,
+			                                        Height( meta, state.Above ) ) ) );
 			
-			heightX0Z1 = Math.Max( Height( useLeft ? state.LeftMeta : meta ),
-			                      Math.Max( Height( useBack ? state.BackMeta : meta ),
-			                               Math.Max( Height( useLeftBack ? state.LeftBackMeta : meta ),
-			                                        Height( meta ) ) ) );
+			heightX0Z1 = Math.Max( useLeft ? Height( state.LeftMeta, state.AboveLeft ) : 0,
+			                      Math.Max( useBack ? Height( state.BackMeta, state.AboveBack ) : 0,
+			                               Math.Max( useLeftBack ? Height( state.LeftBackMeta, state.AboveLeftBack ) : 0,
+			                                        Height( meta, state.Above ) ) ) );
 			
-			heightX1Z1 = Math.Max( Height( useRight ? state.RightMeta : meta ),
-			                      Math.Max( Height( useBack ? state.BackMeta : meta ),
-			                               Math.Max( Height( useRightBack ? state.RightBackMeta : meta ),
-			                                        Height( meta ) ) ) );
+			heightX1Z1 = Math.Max( useRight ? Height( state.RightMeta, state.AboveRight ) : 0,
+			                      Math.Max( useBack ? Height( state.BackMeta, state.AboveBack ) : 0,
+			                               Math.Max( useRightBack ? Height( state.RightBackMeta, state.AboveRightBack ) : 0,
+			                                        Height( meta, state.Above ) ) ) );
 			
 			base.DrawFace( face, meta, ref state, ref index, x, y, z, vertices, col );
-			heightX0Z0 = heightX0Z1 = heightX1Z0 = heightX1Z1 = 14 / 16f;
-		}
-		
-		float Height( byte meta ) {
-			return 7 / 8f - ( meta & 0x07 ) / 8f;
 		}
 		
 		float Height( byte meta, byte above ) {

@@ -117,6 +117,17 @@ namespace ClassicalSharp {
 				state.LeftBackMeta = meta[index + offsets[TileSide.Left] + offsets[TileSide.Back]];
 				state.RightBackMeta = meta[index + offsets[TileSide.Right] + offsets[TileSide.Back]];
 			}
+			
+			if( model.NeedsAllAboveNeighbours ) {
+				state.AboveLeftFront = chunk[index + offsets[TileSide.Left] + offsets[TileSide.Front] + offsets[TileSide.Top]];
+				state.AboveRightFront = chunk[index + offsets[TileSide.Right] + offsets[TileSide.Front] + offsets[TileSide.Top]];
+				state.AboveLeftBack = chunk[index + offsets[TileSide.Left] + offsets[TileSide.Back] + offsets[TileSide.Top]];
+				state.AboveRightBack = chunk[index + offsets[TileSide.Right] + offsets[TileSide.Back] + offsets[TileSide.Top]];
+				state.AboveLeft = chunk[index + offsets[TileSide.Left] + offsets[TileSide.Top]];
+				state.AboveRight = chunk[index + offsets[TileSide.Right] + offsets[TileSide.Top]];
+				state.AboveFront = chunk[index + offsets[TileSide.Front] + offsets[TileSide.Top]];
+				state.AboveBack = chunk[index + offsets[TileSide.Back] + offsets[TileSide.Top]];
+			}
 		}
 
 		unsafe void RenderTile( int chunkIndex, int countIndex, int x, int y, int z, int* offsets ) {
