@@ -22,6 +22,13 @@ namespace ClassicalSharp {
 			rec.V2 = v2;
 			return rec;
 		}
+		
+		public TextureRectangle ReverseU() {
+			TextureRectangle rec = this;
+			rec.U1 = this.U2;
+			rec.U2 = this.U1;
+			return rec;
+		}
 
 		public override string ToString() {
 			return String.Format( "{0}, {1} : {2}, {3}", U1, V1, U2, V2 );
