@@ -171,7 +171,7 @@ namespace ClassicalSharp.Network.Packets {
 			entityId = reader.ReadInt32();
 			unknown = reader.ReadUInt8();
 			x = reader.ReadInt32();
-			y = reader.ReadInt32();
+			y = reader.ReadUInt8();
 			z = reader.ReadInt32();
 		}
 		

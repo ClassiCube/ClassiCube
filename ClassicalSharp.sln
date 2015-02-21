@@ -4,6 +4,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # SharpDevelop 4.4
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassicalSharp", "ClassicalSharp.csproj", "{BEB1C785-5CAD-48FF-A886-876BF0A318D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Injector", "Injector\Injector.csproj", "{7591660C-A783-414C-93D9-37B5A60E7A06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +20,10 @@ Global
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7591660C-A783-414C-93D9-37B5A60E7A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7591660C-A783-414C-93D9-37B5A60E7A06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7591660C-A783-414C-93D9-37B5A60E7A06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7591660C-A783-414C-93D9-37B5A60E7A06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
