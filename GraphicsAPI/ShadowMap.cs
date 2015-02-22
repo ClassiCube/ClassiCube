@@ -1,14 +1,13 @@
 ﻿using System;
-using OpenTK.Graphics.OpenGL;
 using OpenTK;
-using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
 	public abstract class ShadowMap {
 		
-		public Vector3 LightPosition;
-		public Vector3 LightTarget;
+		public Vector3 LightPosition = new Vector3( 256, 160, 256 );
+		public Vector3 LightTarget = new Vector3( 128, 128, 128 );
 		public Matrix4 ShadowMatrix;
 		
 		public abstract void Create( int width, int height );
@@ -16,6 +15,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void BindForReading( IGraphicsApi graphics );
 		
 		public abstract void BindForWriting( IGraphicsApi graphics );
+		
+		public abstract void UnbindForWriting( IGraphicsApi graphics );
 		
 		public abstract void SetupState( IGraphicsApi graphics, Game game );
 		
@@ -32,6 +33,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GenTextures( 1, out depthTextureId );
 			GL.BindTexture( TextureTarget.Texture2D, depthTextureId );
 			
+			//GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear );
+			//GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Clamp );
@@ -39,7 +42,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent,
 			              width, height, 0, PixelFormat.DepthComponent,
 			              PixelType.UnsignedByte, IntPtr.Zero );
-			GL.BindTexture( TextureTarget.Texture2D, 0);
+			GL.BindTexture( TextureTarget.Texture2D, 0 );
 			
 			GL.Ext.GenFramebuffers( 1, out fboId );
 			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, fboId );
@@ -52,6 +55,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( status != FramebufferErrorCode.FramebufferComplete ) Console.WriteLine( "ERROR FBO: " + status );
 			
 			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat );
 			fboWidth = width;
@@ -59,20 +64,24 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void BindForReading( IGraphicsApi graphics ) {
-			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, fboId );
+			GL.Arb.ActiveTexture( TextureUnit.Texture1 );
+			GL.BindTexture( TextureTarget.Texture2D, depthTextureId );
+			GL.Arb.ActiveTexture( TextureUnit.Texture0 );			
 		}
 		
 		public override void BindForWriting( IGraphicsApi graphics ) {
-			GL.Arb.ActiveTexture( TextureUnit.Texture1 );
-			GL.BindTexture( TextureTarget.Texture2D, depthTextureId );
-			GL.Arb.ActiveTexture( TextureUnit.Texture0 );
+			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, fboId );
+		}
+		
+		public override void UnbindForWriting( IGraphicsApi graphics ) {
+			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
 		}
 		
 		public override void SetupState( IGraphicsApi graphics, Game game ) {
 			graphics.SetMatrixMode( MatrixType.Projection );
 			graphics.PushMatrix();
 			Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(
-				(float)Math.PI / 4, game.Width / (float)game.Height, 1, 40000 );
+				(float)Math.PI / 4, game.Width / (float)game.Height, 1, 1000 );
 			graphics.LoadMatrix( ref projection );
 			
 			graphics.SetMatrixMode( MatrixType.Modelview );
@@ -82,6 +91,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			ShadowMatrix = modelview * projection * bias;
 			graphics.ColourMask( false, false, false, false );
 			GL.Viewport( 0, 0, fboWidth, fboHeight );
+			GL.Clear( ClearBufferMask.DepthBufferBit );
 		}
 		
 		public override void RestoreState( IGraphicsApi graphics, Game game ) {

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Text;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics;
 
 namespace ClassicalSharp {
 	
@@ -64,7 +67,11 @@ namespace ClassicalSharp {
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
 			Window.EnvVariableChanged += EnvVariableChanged;
+			shadowMap = new OpenGLShadowMap();
+			shadowMap.Create( 1920, 1080 );
+			LoadShadowShader();
 		}
+		ShadowMap shadowMap;
 		
 		public void Dispose() {
 			ClearChunkCache();
@@ -209,9 +216,11 @@ namespace ClassicalSharp {
 			if( chunks == null ) return;
 			Window.Vertices = 0;
 			UpdateSortOrder();
+			RenderShadowMap( deltaTime );
 			UpdateChunks();
+			RenderNormalPass( deltaTime );
 			
-			// Render solid and fully transparent to fill depth buffer.
+			/*// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
 			builder.BeginRender();
 			Graphics.Texturing = true;
@@ -220,7 +229,7 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
-			}		
+			}
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
@@ -257,7 +266,147 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
+			builder.EndRender();*/
+		}
+		
+		int shadowProgram, shadowMapUniform, shadowMatrixUniform, texImageUniform;
+		
+		const string vertexSource = @"
+varying vec4 ShadowCoord;
+uniform mat4 shadowMatrix;
+void main()
+{
+     	ShadowCoord = shadowMatrix * gl_Vertex;
+		gl_Position = ftransform();
+		gl_TexCoord[0] = gl_MultiTexCoord0;
+		gl_FrontColor = gl_Color;
+}";
+		const string fragmentSource = @"
+uniform sampler2D shadowMap;
+uniform sampler2D texImage;
+varying vec4 ShadowCoord;
+
+void main()
+{
+ 	float shadow = 1.0;
+ 	//if (ShadowCoord.w > 0.0) {
+ 	//	vec4 shadowCoordinateWdivide = ShadowCoord / ShadowCoord.w;
+	//	// Used to lower moire pattern and self-shadowing
+	//	shadowCoordinateWdivide.z += 0.0005;
+	//	float closestDist = texture2D(shadowMap, shadowCoordinateWdivide.st).z;
+ 	//	shadow = shadowCoordinateWdivide.z < closestDist ? 1.0 : 0.5;
+ 	//}
+    if (ShadowCoord.w > 0.0 ) {
+       vec3 ProjCoords = ShadowCoord.xyz / ShadowCoord.w;
+       float Depth = texture2D(shadowMap, ProjCoords.xy).x;
+       //shadow = (Depth < (ProjCoords.z + 0.00001)) ? 0.5 : 1.0;
+       shadow = (Depth < (ProjCoords.z + 0.00001)) ? 0.5 : 1.0;
+    }
+  	gl_FragColor = vec4(shadow, shadow, shadow, 1.0) * texture2D(texImage, gl_TexCoord[0]) * gl_Color;
+}";
+
+		int LoadShader( string source, ArbShaderObjects type ) {
+			int shader = GL.Arb.CreateShaderObject( type );
+			int len = source.Length;
+			GL.Arb.ShaderSource( shader, 1, new [] { source }, ref len );
+			GL.Arb.CompileShader( shader );
+			
+			int errorLogLength = 0, logLength = 0;
+			GL.Arb.GetObjectParameter( shader, ArbShaderObjects.ObjectInfoLogLengthArb, out errorLogLength );
+			StringBuilder builder = new StringBuilder( errorLogLength );
+			GL.Arb.GetInfoLog( shader, errorLogLength, out logLength, builder );
+			Console.WriteLine( "Shader " + shader + ": " + builder.ToString() );
+			return shader;
+		}
+
+		void LoadShadowShader() {
+			int vertexShaderHandle = LoadShader( vertexSource, (ArbShaderObjects)All.VertexShaderArb );
+			int fragmentShaderHandle = LoadShader( fragmentSource, (ArbShaderObjects)All.FragmentShaderArb );
+			
+			shadowProgram = GL.Arb.CreateProgramObject();
+			GL.Arb.AttachObject( shadowProgram, vertexShaderHandle );
+			GL.Arb.AttachObject( shadowProgram, fragmentShaderHandle );
+			GL.Arb.LinkProgram( shadowProgram );
+			
+			int errorLogLength = 0, logLength = 0;
+			GL.Arb.GetObjectParameter( shadowProgram, ArbShaderObjects.ObjectInfoLogLengthArb, out errorLogLength );
+			StringBuilder builder = new StringBuilder( errorLogLength );
+			GL.Arb.GetInfoLog( shadowProgram, errorLogLength, out logLength, builder );
+			Console.WriteLine( "Program " + shadowProgram + ": " + builder.ToString() );
+			shadowMapUniform = GL.Arb.GetUniformLocation( shadowProgram, "shadowMap" );
+			shadowMatrixUniform = GL.Arb.GetUniformLocation( shadowProgram, "shadowMatrix" );
+			texImageUniform = GL.Arb.GetUniformLocation( shadowProgram, "texImage" );
+		}
+		
+		void RenderShadowMap( double deltaTime ) {
+			shadowMap.LightPosition.X = 128 + 128 * (float)Math.Sin( Window.accumulator / 30 );
+			shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );
+			for( int i = 0; i < chunks.Length; i++ ) {
+				chunks[i].Visible = true;
+			}
+			shadowMap.BindForWriting( Graphics );
+			shadowMap.SetupState( Graphics, Window );
+			
+			builder.BeginRender();
+			Graphics.Texturing = true;
+			Graphics.AlphaTest = true;
+			Graphics.FaceCulling = true;
+			GL.CullFace( CullFaceMode.Front );
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSolidBatch( batch );
+			}
+			GL.CullFace( CullFaceMode.Back );
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSpriteBatch( batch );
+			}
+			Graphics.AlphaTest = false;
+			Graphics.Texturing = false;
 			builder.EndRender();
+			//Window.MapEnvRenderer.RenderMapSides( deltaTime );
+			//Window.MapEnvRenderer.RenderMapEdges( deltaTime );
+			
+			shadowMap.RestoreState( Graphics, Window );
+			shadowMap.UnbindForWriting( Graphics );
+		}
+		
+		unsafe void RenderNormalPass( double deltaTime ) {
+			GL.Arb.UseProgramObject( shadowProgram );
+			GL.Arb.Uniform1( shadowMapUniform, 1 );
+			GL.Arb.Uniform1( texImageUniform, 0 );
+			Matrix4 m = shadowMap.ShadowMatrix;
+			GL.Arb.UniformMatrix4( shadowMatrixUniform, 1, false, &m.Row0.X );
+			
+			builder.BeginRender();
+			Graphics.Texturing = true;
+			shadowMap.BindForReading( Graphics );
+			Graphics.AlphaTest = true;
+			Graphics.FaceCulling = true;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSolidBatch( batch );
+			}
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSpriteBatch( batch );
+			}
+			Graphics.AlphaTest = false;
+			Graphics.Texturing = false;
+			builder.EndRender();
+			Window.MapEnvRenderer.RenderMapSides( deltaTime );
+			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
+			
+			GL.Arb.UseProgramObject( 0 );
+			GL.LineWidth( 200 );
+			GL.Begin( BeginMode.Lines );
+			GL.Color3( 1f, 0f, 0f );
+			GL.Vertex3( shadowMap.LightTarget );
+			GL.Vertex3( shadowMap.LightPosition );
+			GL.End();
+			GL.Color3( 1f, 1f, 1f );
 		}
 
 		int[] distances;
@@ -283,7 +432,7 @@ namespace ClassicalSharp {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
 			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];				
+				ChunkInfo info = chunks[i];
 				Point3S loc = info.Location;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
