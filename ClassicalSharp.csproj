@@ -108,6 +108,7 @@
     <Compile Include="Camera.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
+    <Compile Include="GraphicsAPI\ShadowMap.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
