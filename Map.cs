@@ -93,25 +93,22 @@ namespace ClassicalSharp {
 		
 		public int GetLightHeight( int x,  int z ) {
 			int index = ( x * Length ) + z;
-			int height = heightmap[index];
-			
-			if( height == short.MaxValue ) {
-				height = CalcHeightAt( x, maxY, z, index );
-			}
-			return height;
+			int height = heightmap[index];			
+			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
 		}
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
-			heightmap[index] = -1;
 			int mapIndex = ( maxY * Length + z ) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
-				byte block = GetBlock( mapIndex );
+				byte block = mapData[mapIndex];
 				if( Window.BlockInfo.BlocksLight( block ) ) {
 					heightmap[index] = (short)y;
 					return y;
 				}
 				mapIndex -= oneY;
 			}
+			
+			heightmap[index] = -1;
 			return -1;
 		}
 		

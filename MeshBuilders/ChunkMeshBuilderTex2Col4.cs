@@ -102,15 +102,13 @@ namespace ClassicalSharp {
 		}
 		
 		int GetLightHeight( int x, int z ) {
-			int y = map.GetLightHeight( x, z );
-			if( y == -1 ) return -1;
-			return y;
+			return map.GetLightHeight( x, z );
 		}
 		
 		int GetLightHeightAdj( int x, int z ) {
 			int y = map.GetLightHeight( x, z );
-			if( y == -1 ) return -1;
-			return BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1;
+			return y == -1 ? -1 : 
+				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
 		
 		protected override ChunkDrawInfo GetChunkInfo( int x, int y, int z ) {

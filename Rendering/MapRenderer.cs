@@ -3,13 +3,10 @@ using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp {
-	
-	
+		
 	// TODO: optimise chunk rendering
 	//  --> reduce the two passes: liquid pass only needs 1 small texture
-	//    |--> divide into 'solid', 'transparent', 'translucent passes'
-	//       |--> don't render solid back facing polygons. may help with low performance computers.
-	// |--> use indices.
+	//  --> use indices.
 	public class MapRenderer : IDisposable {
 		
 		struct Point3S {
