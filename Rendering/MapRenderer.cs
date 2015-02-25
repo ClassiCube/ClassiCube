@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		ChunkMeshBuilder builder;
 		
 		int width, height, length;
-		ChunkInfo[] chunks;
+		ChunkInfo[] chunks, unsortedChunks;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
 		public readonly bool UsesLighting;
@@ -66,6 +66,7 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			ClearChunkCache();
 			chunks = null;
+			unsortedChunks = null;
 			Window.OnNewMap -= OnNewMap;
 			Window.OnNewMapLoaded -= OnNewMapLoaded;
 			Window.EnvVariableChanged -= EnvVariableChanged;
@@ -98,6 +99,7 @@ namespace ClassicalSharp {
 			Window.ChunkUpdates = 0;
 			ClearChunkCache();
 			chunks = null;
+			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			builder.OnNewMap();
 		}
@@ -112,6 +114,7 @@ namespace ClassicalSharp {
 			chunksZ = length >> 4;
 			
 			chunks = new ChunkInfo[chunksX * chunksY * chunksZ];
+			unsortedChunks = new ChunkInfo[chunksX * chunksY * chunksZ];
 			distances = new int[chunks.Length];
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
@@ -142,7 +145,9 @@ namespace ClassicalSharp {
 			for( int z = 0; z < length; z += 16 ) {
 				for( int y = 0; y < height; y += 16 ) {
 					for( int x = 0; x < width; x += 16 ) {
-						chunks[index++] = new ChunkInfo( x, y, z );
+						chunks[index] = new ChunkInfo( x, y, z );
+						unsortedChunks[index] = chunks[index];
+						index++;
 					}
 				}
 			}
@@ -178,28 +183,23 @@ namespace ClassicalSharp {
 		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
 			if( UsesLighting ) {
 				if( newLightCy == oldLightCy ) {
-					ResetChunk( cx << 4, cy << 4, cz << 4 );
+					ResetChunk( cx, cy, cz );
 				} else {
 					int cyMax = Math.Max( newLightCy, oldLightCy );
 					int cyMin = Math.Min( oldLightCy, newLightCy );
 					for( cy = cyMax; cy >= cyMin; cy-- ) {
-						ResetChunk( cx << 4, cy << 4, cz << 4 );
+						ResetChunk( cx, cy, cz );
 					}
 				}
 			} else {
-				ResetChunk( cx << 4, cy << 4, cz << 4 );
+				ResetChunk( cx, cy, cz );
 			}
 		}
 		
 		void ResetChunk( int cx, int cy, int cz ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				Point3S loc = info.Location;
-				if( loc.X == cx && loc.Y == cy && loc.Z == cz ) {
-					DeleteChunk( info );
-					break;
-				}
-			}
+			if( cx < 0 || cy < 0 || cz < 0 || 
+			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
+			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
 		
 		public void Render( double deltaTime ) {
