@@ -32,8 +32,9 @@ namespace ClassicalSharp {
 					float height = info.BlockHeight( block );
 					Vector3 min = new Vector3( x, y, z );
 					Vector3 max = new Vector3( x + 1, y + height, z + 1 );
-					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max ) ) {
-						return new PickedPos( min, max, origin, dir );
+					float t0, t1;
+					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
+						return new PickedPos( min, max, origin, dir, t0, t1 );
 					}
 				}
 			}
@@ -123,54 +124,30 @@ namespace ClassicalSharp {
 		
 		public Vector3 Min, Max;
 		public Vector3I BlockPos;
-		public Vector3I? TranslatedPos;
+		public Vector3I TranslatedPos;
 		
-		struct QuadIntersection {
-			public Quad Quad;
-			public Vector3 Intersection;
-			
-			public QuadIntersection( Quad quad, Vector3 intersection ) {
-				Quad = quad;
-				Intersection = intersection;
-			}
-		}
-		
-		public PickedPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir ) {
+		public PickedPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir, float t0, float t1 ) {
 			Min = Vector3.Min( p1, p2 );
 			Max = Vector3.Max( p1, p2 );
 			BlockPos = Vector3I.Truncate( Min );
-					
-			Quad? closestQuad = null;
-			Vector3 closest = new Vector3( float.MaxValue, float.MaxValue, float.MaxValue );
-			IEnumerable<Quad> faces = IntersectionUtils.GetFaces( Min, Max );				
-			foreach( QuadIntersection result in FindIntersectingTriangles( origin, dir, faces ) ) {
-				Vector3 I = result.Intersection;
-				if( ( origin - I ).LengthSquared < ( origin - closest ).LengthSquared ) {
-					closest = I;
-					closestQuad = result.Quad;
-				}
-			}
-			if( closestQuad != null ) {
-				TranslatedPos = Vector3I.Truncate( Min + closestQuad.Value.Normal );
-			}
+			
+			Vector3I normal = Vector3I.Zero;
+			Vector3 intersect = origin + dir * t0;
+			float dist = float.PositiveInfinity;
+			TestAxis( intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal );
+			TestAxis( intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal );
+			TestAxis( intersect.Y - Min.Y, ref dist, -Vector3I.UnitY, ref normal );
+			TestAxis( intersect.Y - Max.Y, ref dist, Vector3I.UnitY, ref normal );
+			TestAxis( intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal );
+			TestAxis( intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal );
+			TranslatedPos = BlockPos + normal;
 		}
 		
-		
-		static IEnumerable<QuadIntersection> FindIntersectingTriangles( Vector3 origin, Vector3 dir, IEnumerable<Quad> quads ) {
-			foreach( Quad quad in quads ) {
-				Vector3 p0 = quad.Pos1; // assumed to be min point
-				Vector3 p2 = quad.Pos3; // assumed to be max point
-				Vector3 I;
-				
-				Vector3 p1 = quad.Pos2; // triangle 1
-				if( IntersectionUtils.RayTriangleIntersect( origin, dir, p0, p1, p2, out I ) ) {
-					yield return new QuadIntersection( quad, I );
-				}
-
-				p1 = quad.Pos4; // triangle 2
-				if( IntersectionUtils.RayTriangleIntersect( origin, dir, p0, p1, p2, out I ) ) {
-					yield return new QuadIntersection( quad, I );
-				}
+		static void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal ) {
+			dAxis = Math.Abs( dAxis );
+			if( dAxis < dist ) {
+				dist = dAxis;
+				normal = nAxis;
 			}
 		}
 	}

@@ -131,8 +131,7 @@ namespace ClassicalSharp {
 				}
 			}
 			if( right ) {
-				if( SelectedPos.TranslatedPos == null ) return;
-				Vector3I pos = SelectedPos.TranslatedPos.Value;
+				Vector3I pos = SelectedPos.TranslatedPos;
 				Block block = HeldBlock;
 				byte oldBlock = 0;
 				
