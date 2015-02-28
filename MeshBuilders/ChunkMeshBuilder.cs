@@ -35,9 +35,9 @@ namespace ClassicalSharp {
 			get { return false; }
 		}
 		
-		void BuildChunk( int x1, int y1, int z1 ) {
+		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
-			if( ReadChunkData( x1, y1, z1 ) ) return;
+			if( ReadChunkData( x1, y1, z1 ) ) return true;
 			
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
@@ -55,6 +55,7 @@ namespace ClassicalSharp {
 					}
 				}
 			}
+			return false;
 		}
 		
 		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
@@ -101,8 +102,7 @@ namespace ClassicalSharp {
 		}
 		
 		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {
-			BuildChunk( x, y, z );
-			return GetChunkInfo( x, y, z );
+			return BuildChunk( x, y, z ) ? null : GetChunkInfo( x, y, z );
 		}
 		
 		protected virtual void PreStretchTiles( int x1, int y1, int z1 ) {

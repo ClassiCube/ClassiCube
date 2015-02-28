@@ -29,6 +29,7 @@ namespace ClassicalSharp {
 			public Point3S Location;
 			
 			public bool Visible = true;
+			public bool Empty = false;
 			
 			public ChunkDrawInfo DrawInfo;
 			
@@ -138,6 +139,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteVb( drawInfo.SolidParts[i].VboID );
 			}
 			info.DrawInfo = null;
+			info.Empty = false;
 		}
 		
 		void CreateChunkCache() {
@@ -280,7 +282,8 @@ namespace ClassicalSharp {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
 			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];				
+				ChunkInfo info = chunks[i];
+				if( info.Empty ) continue;
 				Point3S loc = info.Location;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
@@ -289,15 +292,13 @@ namespace ClassicalSharp {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
 						info.DrawInfo = builder.GetDrawInfo( loc.X, loc.Y, loc.Z );
+						if( info.DrawInfo == null ) {
+							info.Empty = true;
+						}
 						chunksUpdatedThisFrame++;
 					}
 				}
-				
-				if( !inRange ) {
-					info.Visible = false;
-				} else {
-					info.Visible = Window.Culling.SphereInFrustum( loc.X + 8, loc.Y + 8, loc.Z + 8, 14 ); // 14 ~ sqrt(3 * 8^2)
-				}
+				info.Visible = inRange && Window.Culling.SphereInFrustum( loc.X + 8, loc.Y + 8, loc.Z + 8, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}
 		
