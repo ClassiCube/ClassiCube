@@ -63,22 +63,22 @@ namespace ClassicalSharp {
 		bool IsLit( int x, int y, int z, int face ) {
 			switch( face ) {
 				case TileSide.Left:
-					return x <= 0 ? true : IsLitAdj( x - 1, y, z );
+					return x <= 0 || IsLitAdj( x - 1, y, z );
 					
 				case TileSide.Right:
-					return x >= maxX ? true : IsLitAdj( x + 1, y, z );
+					return x >= maxX || IsLitAdj( x + 1, y, z );
 					
 				case TileSide.Front:
-					return z <= 0 ? true : IsLitAdj( x, y, z - 1 );
+					return z <= 0 || IsLitAdj( x, y, z - 1 );
 					
 				case TileSide.Back:
-					return z >= maxZ ? true : IsLitAdj( x, y, z + 1 );
+					return z >= maxZ || IsLitAdj( x, y, z + 1 );
 					
 				case TileSide.Bottom:
-					return y <= 0 ? true : IsLit( x, y - 1, z );
+					return y <= 0 || IsLit( x, y - 1, z );
 					
 				case TileSide.Top:
-					return y >= maxY ? true : IsLit( x, y + 1, z );
+					return y >= maxY || IsLit( x, y + 1, z );
 			}
 			return true;
 		}

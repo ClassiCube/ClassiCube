@@ -11,19 +11,11 @@ namespace ClassicalSharp {
 		protected Map map;
 		public Game Window;
 		public IGraphicsApi Graphics;
-		byte[] adjBlockLookup;
 		
 		public ChunkMeshBuilder( Game window ) {
 			Window = window;
 			Graphics = window.Graphics;
 			BlockInfo = window.BlockInfo;
-			
-			adjBlockLookup = new byte[256];
-			for( int i = 0; i < adjBlockLookup.Length; i++ ) {
-				adjBlockLookup[i] = (byte)i;
-			}
-			adjBlockLookup[9] = 8;
-			adjBlockLookup[11] = 10;
 		}
 		
 		protected int width, length, height;
@@ -89,7 +81,6 @@ namespace ClassicalSharp {
 							byte block = mapPtr[index];
 							if( block == 9 ) block = 8; // Still water --> Water
 							if( block == 11 ) block = 10; // Still lava --> Lava
-							//byte block = adjBlockLookup[map.GetBlock( index )];
 							
 							if( allAir && block != 0 ) allAir = false;
 							if( allSolid && !BlockInfo.IsOpaque( block ) ) allSolid = false;
