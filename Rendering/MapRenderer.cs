@@ -131,6 +131,7 @@ namespace ClassicalSharp {
 		
 		void DeleteChunk( ChunkInfo info ) {
 			ChunkDrawInfo drawInfo = info.DrawInfo;
+			info.Empty = false;
 			if( drawInfo == null ) return;
 			
 			for( int i = 0; i < drawInfo.SolidParts.Length; i++ ) {
@@ -138,8 +139,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteVb( drawInfo.TranslucentParts[i].VboID );
 				Graphics.DeleteVb( drawInfo.SolidParts[i].VboID );
 			}
-			info.DrawInfo = null;
-			info.Empty = false;
+			info.DrawInfo = null;		
 		}
 		
 		void CreateChunkCache() {
@@ -156,8 +156,7 @@ namespace ClassicalSharp {
 		}
 		
 		static int NextMultipleOf16( int value ) {
-			int remainder = value % 16;
-			return remainder == 0 ? value : value + 16 - remainder;
+			return ( value + 0x0F ) & ~0x0F;
 		}
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
