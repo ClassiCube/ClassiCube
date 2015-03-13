@@ -117,15 +117,15 @@ namespace ClassicalSharp {
 					Velocity.Y = 0;
 					entityBB.Min.Y = Position.Y;
 					entityBB.Max.Y = Position.Y + Size.Y;
-					entityExtentBB.Min.Y = Velocity.Y < 0 ? entityBB.Min.Y + Velocity.Y : entityBB.Min.Y;
-					entityExtentBB.Max.Y = Velocity.Y > 0 ? entityBB.Max.Y + Velocity.Y : entityBB.Max.Y;
+					entityExtentBB.Min.Y = entityBB.Min.Y;
+					entityExtentBB.Max.Y = entityBB.Max.Y;
 				} else if( finalBB.Max.Y <= blockBB.Min.Y ) {
 					Position.Y = blockBB.Min.Y - size.Y - 0.001f;
 					Velocity.Y = 0;
 					entityBB.Min.Y = Position.Y;
 					entityBB.Max.Y = Position.Y + Size.Y;
-					entityExtentBB.Min.Y = Velocity.Y < 0 ? entityBB.Min.Y + Velocity.Y : entityBB.Min.Y;
-					entityExtentBB.Max.Y = Velocity.Y > 0 ? entityBB.Max.Y + Velocity.Y : entityBB.Max.Y;
+					entityExtentBB.Min.Y = entityBB.Min.Y;
+					entityExtentBB.Max.Y = entityBB.Max.Y;
 				} else {
 					float yDist = blockBB.Max.Y - entityBB.Min.Y;
 					if( yDist > 0 && yDist <= StepSize + 0.01f && wasOnGround && IsFreeYForStep( blockBB ) ) {
@@ -135,36 +135,36 @@ namespace ClassicalSharp {
 						entityBB.Min.Y = Position.Y;
 						entityBB.Max.Y = Position.Y + Size.Y;
 						onGround = true;
-						entityExtentBB.Min.Y = Velocity.Y < 0 ? entityBB.Min.Y + Velocity.Y : entityBB.Min.Y;
-						entityExtentBB.Max.Y = Velocity.Y > 0 ? entityBB.Max.Y + Velocity.Y : entityBB.Max.Y;
+						entityExtentBB.Min.Y = entityBB.Min.Y;
+						entityExtentBB.Max.Y = entityBB.Max.Y;						
 					} else if( finalBB.Min.X >= blockBB.Max.X ) {
 						Position.X = blockBB.Max.X + size.X / 2 + 0.001f;
 						Velocity.X = 0;
 						entityBB.Min.X = pos.X - size.X / 2;
 						entityBB.Max.X = pos.X + size.X / 2;
-						entityExtentBB.Min.X = Velocity.X < 0 ? entityBB.Min.X + Velocity.X : entityBB.Min.X;
-						entityExtentBB.Max.X = Velocity.X > 0 ? entityBB.Max.X + Velocity.X : entityBB.Max.X;
+						entityExtentBB.Min.X = entityBB.Min.X;
+						entityExtentBB.Max.X = entityBB.Max.X;
 					} else if( finalBB.Max.X <= blockBB.Min.X ) {
 						Position.X = blockBB.Min.X - size.X / 2 - 0.001f;
 						Velocity.X = 0;
 						entityBB.Min.X = Position.X - size.X / 2;
 						entityBB.Max.X = Position.X + size.X / 2;
-						entityExtentBB.Min.X = Velocity.X < 0 ? entityBB.Min.X + Velocity.X : entityBB.Min.X;
-						entityExtentBB.Max.X = Velocity.X > 0 ? entityBB.Max.X + Velocity.X : entityBB.Max.X;
+						entityExtentBB.Min.X = entityBB.Min.X;
+						entityExtentBB.Max.X = entityBB.Max.X;
 					} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
 						Position.Z = blockBB.Max.Z + size.Z / 2 + 0.001f;
 						Velocity.Z = 0;
 						entityBB.Min.Z = Position.Z - size.Z / 2;
 						entityBB.Max.Z = Position.Z + size.Z / 2;
-						entityExtentBB.Min.Z = Velocity.Z < 0 ? entityBB.Min.Z + Velocity.Z : entityBB.Min.Z;
-						entityExtentBB.Max.Z = Velocity.Z > 0 ? entityBB.Max.Z + Velocity.Z : entityBB.Max.Z;
+						entityExtentBB.Min.Z = entityBB.Min.Z;
+						entityExtentBB.Max.Z = entityBB.Max.Z;
 					} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
 						Position.Z = blockBB.Min.Z - size.Z / 2 - 0.001f;
 						Velocity.Z = 0;
 						entityBB.Min.Z = Position.Z - size.Z / 2;
 						entityBB.Max.Z = Position.Z + size.Z / 2;
-						entityExtentBB.Min.Z = Velocity.Z < 0 ? entityBB.Min.Z + Velocity.Z : entityBB.Min.Z;
-						entityExtentBB.Max.Z = Velocity.Z > 0 ? entityBB.Max.Z + Velocity.Z : entityBB.Max.Z;
+						entityExtentBB.Min.Z = entityBB.Min.Z;
+						entityExtentBB.Max.Z = entityBB.Max.Z;
 					}
 				}
 			}
