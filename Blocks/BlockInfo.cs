@@ -10,14 +10,14 @@ namespace ClassicalSharp {
 		bool[] isSprite = new bool[blocksCount];
 		bool[] isLiquid = new bool[blocksCount];
 		float[] heights = new float[blocksCount];
-		bool[] blocksLight = new bool[blocksCount];	
-		const int blocksCount = 256;
+		bool[] blocksLight = new bool[blocksCount];
+		const byte blocksCount = (byte)Block.StoneBrick + 1;
 		
 		public void Init() {
-			for( int i = 1; i < blocksCount; i++ ) {
-				heights[i] = 1;
-				blocksLight[i] = true;
-				isOpaque[i] = true;				
+			for( int tile = 1; tile < blocksCount; tile++ ) {
+				heights[tile] = 1f;
+				blocksLight[tile] = true;
+				isOpaque[tile] = true;				
 			}
 			SetupOptimTextures();
 			
@@ -43,9 +43,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
-			for( int i = (int)Block.Stone; i <= (int)Block.Obsidian; i++ ) {
-				canPlace[i] = true;
-				canDelete[i] = true;
+			for( int tile = (int)Block.Stone; tile <= (int)Block.Obsidian; tile++ ) {
+				canPlace[tile] = true;
+				canDelete[tile] = true;
 			}
 			canPlace[(int)Block.Grass] = false;
 			canPlace[(int)Block.Lava] = false;

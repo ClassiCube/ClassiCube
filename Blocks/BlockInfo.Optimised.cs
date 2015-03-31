@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 		};
 		
 		public static void MakeOptimisedTexture( FastBitmap atlas ) {
-			int size = atlas.Width / 16;
+			int tileSize = atlas.Width / 16;
 			int srcIndex = 0, destIndex = 0;
 			
 			for( int y = 0; y < 6; y++ ) {
@@ -150,16 +150,15 @@ namespace ClassicalSharp {
 				for( int x = 0; x < 16; x++ ) {
 					bool isUsed = ( flags & 1 << ( 15 - x ) ) != 0;
 					if( isUsed && srcIndex != destIndex ) {
-						int srcX = x * size;
-						int srcY = y * size;
-						int destX = ( destIndex & 0x0F ) * size;
-						int destY = ( destIndex >> 4 ) * size;
-						MovePortion( srcX, srcY, destX, destY, atlas, size );
+						int srcX = x * tileSize;
+						int srcY = y * tileSize;
+						int destX = ( destIndex & 0x0F ) * tileSize;
+						int destY = ( destIndex >> 4 ) * tileSize;
+						MovePortion( srcX, srcY, destX, destY, atlas, tileSize );
 					}
 					
 					srcIndex++;
-					destIndex++;
-					if( !isUsed ) destIndex--;
+					if( isUsed ) destIndex++;
 				}
 			}
 		}
