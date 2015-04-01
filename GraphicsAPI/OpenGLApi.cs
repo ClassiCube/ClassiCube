@@ -16,8 +16,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		int textureDimensions;
 		bool nonPow2;
 		const string nonPow2Ext = "GL_ARB_texture_non_power_of_two";
-		const string vboExt1 = "GL_ARB_vertex_buffer_object",
-		vboExt2 = "GLX_ARB_vertex_buffer_object";
+		const string vboExt = "GL_ARB_vertex_buffer_object";
 		bool useVbos = true;
 		BeginMode[] modeMappings = new BeginMode[] {
 			BeginMode.Triangles, BeginMode.Lines, BeginMode.Points,
@@ -28,7 +27,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
 			string extensions = GL.GetString( StringName.Extensions );
 			nonPow2 = extensions.Contains( nonPow2Ext );
-			useVbos = extensions.Contains( vboExt1 ) || extensions.Contains( vboExt2 );
+			useVbos = extensions.Contains( vboExt );
 			if( useVbos ) {
 				SetupVb();
 			} else {
