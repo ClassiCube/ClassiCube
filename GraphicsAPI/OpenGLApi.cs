@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -296,42 +297,30 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		// Okay this isn't exactly the prettiest code ever.
 		unsafe int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
 			int id = GL.GenLists( 1 );
 			int stride = strideSizes[(int)format];
 			GL.NewList( id, ListMode.Compile );
 			GL.EnableClientState( ArrayCap.VertexArray );
 			
-			if( format == VertexFormat.VertexPos3f ) {
-				fixed( Vector3* p = (vertices as Vector3[]) ) {
-					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
-					GL.DrawArrays( modeMappings[(int)mode], 0, count );
-				}
-			} else if( format == VertexFormat.VertexPos3fCol4b ) {
+			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
+			IntPtr p = handle.AddrOfPinnedObject();
+			GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
+			
+			if( format == VertexFormat.VertexPos3fCol4b ) {
 				GL.EnableClientState( ArrayCap.ColorArray );
-				fixed( VertexPos3fCol4b* p = (vertices as VertexPos3fCol4b[]) ) {
-					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
-					GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 12 + (byte*)p ) );
-					GL.DrawArrays( modeMappings[(int)mode], 0, count );
-				}
+				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 12 + (byte*)p ) );
 			} else if( format == VertexFormat.VertexPos3fTex2f ) {
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				fixed( VertexPos3fTex2f* p = (vertices as VertexPos3fTex2f[]) ) {
-					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p) );
-					GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
-					GL.DrawArrays( modeMappings[(int)mode], 0, count );
-				}
+				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
 			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
 				GL.EnableClientState( ArrayCap.ColorArray );
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				fixed( VertexPos3fTex2fCol4b* p = (vertices as VertexPos3fTex2fCol4b[]) ) {
-					GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
-					GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
-					GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
-					GL.DrawArrays( modeMappings[(int)mode], 0, count );
-				}
+				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
+				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
 			}
+			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+			handle.Free();
 			
 			GL.DisableClientState( ArrayCap.VertexArray );
 			if( format == VertexFormat.VertexPos3fCol4b ) {
@@ -638,12 +627,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Disable( EnableCap.Texture2D );
 		}
 
-        public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-            GL.Enable( EnableCap.Texture2D );
-            GL.BindTexture( TextureTarget.Texture2D, texId );
-            GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
-                GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
-            GL.Disable( EnableCap.Texture2D );
-        }
+		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
+			GL.Enable( EnableCap.Texture2D );
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
+			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
+			GL.Disable( EnableCap.Texture2D );
+		}
 	}
 }
