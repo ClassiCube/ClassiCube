@@ -297,6 +297,27 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
+		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, int count, DrawMode mode, VertexFormat format, ushort[] indices, int elements ) {
+			if( !useVbos ) {
+				//return CreateDisplayList( vertices, mode, format, count );
+				throw new NotImplementedException();
+			}
+			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
+			GL.Arb.GenBuffers( 2, out info.VbId );
+			
+			int sizeInBytes = GetSizeInBytes( count, format );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.VbId );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			
+			sizeInBytes = elements * sizeof( ushort );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.IbId );
+			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
+			
+			return info;
+		}
+		
 		unsafe int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
 			int id = GL.GenLists( 1 );
 			int stride = strideSizes[(int)format];

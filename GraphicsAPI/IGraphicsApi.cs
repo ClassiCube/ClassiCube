@@ -1,8 +1,10 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using VbInfo = System.Int32;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
@@ -118,13 +120,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void SetAmbientColour( FastColour col );
 		
-		public virtual int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
+		public virtual VbInfo InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
 			return InitVb( vertices, mode, format, vertices.Length );
 		}
 		
-		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
+		public abstract VbInfo InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
 		
-		public abstract void DeleteVb( int id );
+		public virtual IndexedVbInfo InitIndexedVb<T>( T[] vertices, DrawMode mode, VertexFormat format, ushort[] indices ) where T : struct {
+			return InitIndexedVb( vertices, vertices.Length, mode, format, indices, indices.Length );
+		}
+		
+		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, int count, DrawMode mode, 
+		                                               VertexFormat format, ushort[] indices, int elements ) where T : struct;
+		
+		public abstract void DeleteVb( VbInfo id );
 		
 		public virtual void DrawVb( DrawMode mode, int id, int verticesCount, VertexFormat format ) {
 			if( format == VertexFormat.VertexPos3f ) DrawVbPos3f( mode, id, verticesCount );
@@ -133,17 +142,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			else if( format == VertexFormat.VertexPos3fTex2fCol4b ) DrawVbPos3fTex2fCol4b( mode, id, verticesCount );
 		}
 		
-		public abstract void DrawVbPos3f( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbPos3f( DrawMode mode, VbInfo id, int verticesCount );
 		
-		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbPos3fTex2f( DrawMode mode, VbInfo id, int verticesCount );
 		
-		public abstract void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbPos3fCol4b( DrawMode mode, VbInfo id, int verticesCount );
 		
-		public abstract void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbPos3fTex2fCol4b( DrawMode mode, VbInfo id, int verticesCount );
 		
 		public abstract void BeginVbBatch( VertexFormat format );
 		
-		public abstract void DrawVbBatch( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbBatch( DrawMode mode, VbInfo id, int verticesCount );
 		
 		public abstract void EndVbBatch();
 		
@@ -236,6 +245,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			PopMatrix();
 			DepthTest = true;
 			AlphaBlending = false;
+		}
+	}
+	
+	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
+	public struct IndexedVbInfo {
+		public int VbId, IbId;
+		
+		public IndexedVbInfo( int vb, int ib ) {
+			VbId = vb;
+			IbId = ib;
 		}
 	}
 
