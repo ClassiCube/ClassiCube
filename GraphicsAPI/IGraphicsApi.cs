@@ -90,10 +90,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public virtual void DrawVertices( DrawMode mode, Vector3[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
 		public virtual void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
 			DrawVertices( mode, vertices, vertices.Length );
 		}
@@ -105,8 +101,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public virtual void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices ) {
 			DrawVertices( mode, vertices, vertices.Length );
 		}
-		
-		public abstract void DrawVertices( DrawMode mode, Vector3[] vertices, int count );
 		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count );
 		
@@ -258,10 +252,9 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		VertexPos3f = 0,
-		VertexPos3fTex2f = 1,
-		VertexPos3fCol4b = 2,
-		VertexPos3fTex2fCol4b = 3
+		VertexPos3fTex2f = 0,
+		VertexPos3fCol4b = 1,
+		VertexPos3fTex2fCol4b = 2
 	}
 	
 	public enum DrawMode {
