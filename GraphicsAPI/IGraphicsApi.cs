@@ -60,7 +60,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		
 		/// <summary> Sets the alpha test function that is used when alpha testing is enabled. </summary>
-		public abstract void AlphaTestFunc( AlphaFunc func, float value );
+		public abstract void AlphaTestFunc( CompareFunc func, float value );
 		
 		/// <summary> Whether alpha testing is currently enabled. </summary>
 		public abstract bool AlphaTest { set; }
@@ -82,7 +82,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void ColourMask( bool red, bool green, bool blue, bool alpha );
 		
-		public abstract void DepthTestFunc( DepthFunc func );
+		public abstract void DepthTestFunc( CompareFunc func );
 		
 		/// <summary> Whether depth testing is currently enabled. </summary>
 		public abstract bool DepthTest { set; }
@@ -152,7 +152,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}
-		protected static int[] strideSizes = new [] { 12, 20, 16, 24 };
+		protected static int[] strideSizes = new [] { 20, 16, 24 };
 		
 		
 		public abstract void SetMatrixMode( MatrixType mode );
@@ -216,6 +216,18 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawVertices( DrawMode.TriangleStrip, vertices );
 		}
 		
+		public virtual void Draw2DTextureVertices( ref Texture tex ) {
+			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
+			// Have to order them this way because it's a triangle strip.
+			VertexPos3fTex2f[] vertices = {
+				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
+				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
+				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
+				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
+			};
+			DrawVertices( DrawMode.TriangleStrip, vertices );
+		}
+		
 		public void Mode2D( float width, float height ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
@@ -275,19 +287,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		ReverseSubtract = 4,
 	}
 	
-	public enum AlphaFunc {
-		Always = 0,
-		NotEqual = 1,
-		Never = 2,
-		
-		Less = 3,
-		LessEqual = 4,
-		Equal = 5,
-		GreaterEqual = 6,
-		Greater = 7,
-	}
-	
-	public enum DepthFunc {
+	public enum CompareFunc {
 		Always = 0,
 		NotEqual = 1,
 		Never = 2,

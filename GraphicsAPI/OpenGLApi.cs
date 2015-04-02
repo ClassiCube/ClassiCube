@@ -57,7 +57,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			AlphaFunction.Lequal, AlphaFunction.Equal,
 			AlphaFunction.Gequal, AlphaFunction.Greater,
 		};
-		public override void AlphaTestFunc( AlphaFunc func, float value ) {
+		public override void AlphaTestFunc( CompareFunc func, float value ) {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
@@ -183,7 +183,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthFunction.Lequal, DepthFunction.Equal,
 			DepthFunction.Gequal, DepthFunction.Greater,
 		};
-		public override void DepthTestFunc( DepthFunc func ) {
+		public override void DepthTestFunc( CompareFunc func ) {
 			GL.DepthFunc( depthFuncs[(int)func] );
 		}
 		
