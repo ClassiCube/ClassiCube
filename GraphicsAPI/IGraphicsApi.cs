@@ -135,14 +135,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteVb( VbInfo id );
 		
-		public virtual void DrawVb( DrawMode mode, int id, int verticesCount, VertexFormat format ) {
-			if( format == VertexFormat.VertexPos3f ) DrawVbPos3f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2f ) DrawVbPos3fTex2f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fCol4b ) DrawVbPos3fCol4b( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2fCol4b ) DrawVbPos3fTex2fCol4b( mode, id, verticesCount );
-		}
-		
-		public abstract void DrawVbPos3f( DrawMode mode, VbInfo id, int verticesCount );
+		public abstract void DeleteIndexedVb( IndexedVbInfo id );
 		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, VbInfo id, int verticesCount );
 		
@@ -155,6 +148,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void DrawVbBatch( DrawMode mode, VbInfo id, int verticesCount );
 		
 		public abstract void EndVbBatch();
+		
+		public abstract void BeginIndexedVbBatch( VertexFormat format );
+		
+		public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
+		
+		public abstract void EndIndexedVbBatch();
 		
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
