@@ -262,6 +262,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		Dictionary<int, string> vbs = new Dictionary<int, string>();
 		Dictionary<int, int> vbMemorys = new Dictionary<int, int>();
 		long totalVbMem = 0;
+		Dictionary<int, int> indexedVbMemorys = new Dictionary<int, int>();
+		long totalIndexedVbMem = 0;
 		#endif
 		Action<DrawMode, int, int>[] drawBatchFuncs;
 		Action<DrawMode, int, int> drawBatchFunc;
@@ -311,7 +313,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.IbId );
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
-			
+			#if TRACK_RESOURCES
+			indexedVbMemorys.Add( info.VbId, sizeInBytes + GetSizeInBytes( verticesCount, format ) );
+			totalIndexedVbMem += sizeInBytes + GetSizeInBytes( verticesCount, format );
+			Console.WriteLine( "INDEXED VB MEM " + ( totalIndexedVbMem / 1024.0 / 1024.0 ) );
+			#endif
 			return info;
 		}
 		
@@ -331,6 +337,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void DeleteIndexedVb( IndexedVbInfo id ) {
 			if( id.VbId <= 0 || id.IbId <= 0 ) return;
 			GL.Arb.DeleteBuffers( 2, ref id.VbId );
+			#if TRACK_RESOURCES
+			int mem;
+			if( indexedVbMemorys.TryGetValue( id.VbId, out mem ) ) {
+				totalIndexedVbMem -= mem;
+			}
+			indexedVbMemorys.Remove( id.VbId );
+			#endif
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
