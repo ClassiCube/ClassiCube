@@ -18,7 +18,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		bool nonPow2;
 		const string nonPow2Ext = "GL_ARB_texture_non_power_of_two";
 		const string vboExt = "GL_ARB_vertex_buffer_object";
-		bool useVbos = true;
 		BeginMode[] modeMappings = new BeginMode[] {
 			BeginMode.Triangles, BeginMode.Lines, BeginMode.Points,
 			BeginMode.TriangleStrip, BeginMode.LineStrip, BeginMode.TriangleFan
@@ -28,12 +27,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
 			string extensions = GL.GetString( StringName.Extensions );
 			nonPow2 = extensions.Contains( nonPow2Ext );
-			useVbos = extensions.Contains( vboExt );
-			if( useVbos ) {
-				SetupVb();
-			} else {
-				Utils.LogWarning( "Unable to use OpenGL VBOs, you may experience reduced performance." );
+			bool useVbos = extensions.Contains( vboExt );
+			if( !useVbos ) {
+				Utils.LogError( "Unable to use OpenGL VBOs." );
+				throw new NotSupportedException( "Display lists not supported on optimised branch" );
 			}
+			SetupVb();
 		}
 
 		public override int MaxTextureDimensions {
@@ -282,9 +281,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
-			if( !useVbos ) {
-				return CreateDisplayList( vertices, mode, format, count );
-			}
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = GetSizeInBytes( count, format );
@@ -298,10 +294,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, int count, DrawMode mode, VertexFormat format, ushort[] indices, int elements ) {
-			if( !useVbos ) {
-				//return CreateDisplayList( vertices, mode, format, count );
-				throw new NotImplementedException();
-			}
 			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
 			GL.Arb.GenBuffers( 2, out info.VbId );
 			
@@ -318,65 +310,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			return info;
 		}
 		
-		unsafe int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
-			int id = GL.GenLists( 1 );
-			int stride = strideSizes[(int)format];
-			GL.NewList( id, ListMode.Compile );
-			GL.EnableClientState( ArrayCap.VertexArray );
-			
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			IntPtr p = handle.AddrOfPinnedObject();
-			GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
-			
-			if( format == VertexFormat.VertexPos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 12 + (byte*)p ) );
-			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
-			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
-				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
-			}
-			GL.DrawArrays( modeMappings[(int)mode], 0, count );
-			handle.Free();
-			
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( format == VertexFormat.VertexPos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			}
-			GL.Color3( 1f, 1f, 1f ); // NOTE: not sure why, but display lists seem to otherwise modify global colour..
-			GL.EndList();
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			#endif
-			return id;
-		}
-		
 		public override void DeleteVb( int id ) {
 			if( id <= 0 ) return;
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
 			#endif
-			if( !useVbos ) {
-				GL.DeleteLists( id, 1 );
-				return;
-			}
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
 		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
 			GL.EnableClientState( ArrayCap.VertexArray );
 			
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
@@ -388,10 +330,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.TextureCoordArray );
 			
@@ -406,10 +344,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.ColorArray );
 			
@@ -424,10 +358,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.TextureCoordArray );
 			GL.EnableClientState( ArrayCap.ColorArray );
@@ -446,9 +376,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		VertexFormat batchFormat;
 		public override void BeginVbBatch( VertexFormat format ) {
-			if( !useVbos ) {
-				return;
-			}
 			batchFormat = format;
 			GL.EnableClientState( ArrayCap.VertexArray );
 			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
@@ -463,17 +390,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
 			drawBatchFunc( mode, id, verticesCount );
 		}
 		
 		public override void EndVbBatch() {
-			if( !useVbos ) {
-				return;
-			}
 			GL.DisableClientState( ArrayCap.VertexArray );
 			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
 				GL.DisableClientState( ArrayCap.ColorArray );
