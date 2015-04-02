@@ -1,4 +1,4 @@
-﻿//#define TRACK_RESOURCES
+﻿#define TRACK_RESOURCES
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -260,6 +260,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#if TRACK_RESOURCES
 		Dictionary<int, string> vbs = new Dictionary<int, string>();
+		Dictionary<int, int> vbMemorys = new Dictionary<int, int>();
+		long totalVbMem = 0;
 		#endif
 		Action<DrawMode, int, int>[] drawBatchFuncs;
 		Action<DrawMode, int, int> drawBatchFunc;
@@ -288,15 +290,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			#if TRACK_RESOURCES
 			vbs.Add( id, Environment.StackTrace );
+			vbMemorys.Add( id, sizeInBytes );
+			totalVbMem += sizeInBytes;
+			Console.WriteLine( "VB MEM " + ( totalVbMem / 1024.0 / 1024.0 ) );
 			#endif
 			return id;
 		}
 		
-		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, int count, DrawMode mode, VertexFormat format, ushort[] indices, int elements ) {
+		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, DrawMode mode, 
+		                                               VertexFormat format, ushort[] indices, int elements ) {
 			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
 			GL.Arb.GenBuffers( 2, out info.VbId );
 			
-			int sizeInBytes = GetSizeInBytes( count, format );
+			int sizeInBytes = GetSizeInBytes( verticesCount, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.VbId );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
@@ -313,6 +319,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( id <= 0 ) return;
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
+			int mem;
+			if( vbMemorys.TryGetValue( id, out mem ) ) {
+				totalVbMem -= mem;
+			}
+			vbMemorys.Remove( id );
 			#endif
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}

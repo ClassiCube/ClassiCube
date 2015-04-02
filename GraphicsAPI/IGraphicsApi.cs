@@ -124,7 +124,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return InitIndexedVb( vertices, vertices.Length, mode, format, indices, indices.Length );
 		}
 		
-		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, int count, DrawMode mode, 
+		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, DrawMode mode, 
 		                                               VertexFormat format, ushort[] indices, int elements ) where T : struct;
 		
 		public abstract void DeleteVb( VbInfo id );

@@ -135,9 +135,9 @@ namespace ClassicalSharp {
 			if( drawInfo == null ) return;
 			
 			for( int i = 0; i < drawInfo.SolidParts.Length; i++ ) {
-				Graphics.DeleteVb( drawInfo.SpriteParts[i].VboID );
-				Graphics.DeleteVb( drawInfo.TranslucentParts[i].VboID );
-				Graphics.DeleteVb( drawInfo.SolidParts[i].VboID );
+				Graphics.DeleteIndexedVb( drawInfo.SpriteParts[i].Id );
+				Graphics.DeleteIndexedVb( drawInfo.TranslucentParts[i].Id );
+				Graphics.DeleteIndexedVb( drawInfo.SolidParts[i].Id );
 			}
 			info.DrawInfo = null;		
 		}
@@ -308,10 +308,10 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
-				if( drawInfo.VerticesCount == 0 ) continue;
+				if( drawInfo.IndicesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.VerticesCount;
+				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 		
@@ -321,10 +321,10 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
-				if( drawInfo.VerticesCount == 0 ) continue;
+				if( drawInfo.IndicesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.VerticesCount;
+				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 
@@ -334,10 +334,10 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
-				if( drawInfo.VerticesCount == 0 ) continue;
+				if( drawInfo.IndicesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.VerticesCount;
+				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 		
@@ -347,7 +347,7 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
-				if( drawInfo.VerticesCount == 0 ) continue;
+				if( drawInfo.IndicesCount == 0 ) continue;
 				
 				builder.Render( drawInfo );
 			}

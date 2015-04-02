@@ -387,12 +387,12 @@ namespace ClassicalSharp {
 	
 	public struct ChunkPartInfo {
 		
-		public int VboID;
-		public int VerticesCount;
+		public IndexedVbInfo Id;
+		public int IndicesCount;
 		
-		public ChunkPartInfo( int vbo, int vertices ) {
-			VboID = vbo;
-			VerticesCount = vertices;
+		public ChunkPartInfo( IndexedVbInfo id, int indices ) {
+			Id = id;
+			IndicesCount = indices;
 		}
 	}
 }
