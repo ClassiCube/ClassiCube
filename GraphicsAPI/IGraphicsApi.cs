@@ -214,6 +214,18 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawVertices( DrawMode.TriangleStrip, vertices );
 		}
 		
+		public virtual void Draw2DTexture( ref Texture tex ) {
+			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
+			// Have to order them this way because it's a triangle strip.
+			VertexPos3fTex2f[] vertices = {
+				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
+				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
+				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
+				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
+			};
+			DrawVertices( DrawMode.TriangleStrip, vertices );
+		}
+		
 		public void Mode2D( float width, float height ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();

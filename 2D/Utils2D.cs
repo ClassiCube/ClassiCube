@@ -247,20 +247,12 @@ namespace ClassicalSharp {
 		public void Render( IGraphicsApi graphics ) {
 			graphics.Texturing = true;
 			graphics.Bind2DTexture( ID );
-			RenderNoBind( graphics );
+			graphics.Draw2DTexture( ref this );
 			graphics.Texturing = false;
 		}
 		
 		public void RenderNoBind( IGraphicsApi graphics ) {
-			float x1 = X1, y1 = Y1, x2 = X2, y2 = Y2;
-			// Have to order them this way because it's a triangle strip.
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, U2, V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, U2, V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, U1, V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, U1, V2 ),
-			};
-			graphics.DrawVertices( DrawMode.TriangleStrip, vertices );
+			graphics.Draw2DTexture( ref this );
 		}
 		
 		public int X2 {
