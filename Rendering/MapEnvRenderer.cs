@@ -10,7 +10,6 @@ namespace ClassicalSharp {
 		public Map Map;
 		public Game Window;
 		public IGraphicsApi Graphics;
-		protected Block sideBlock, edgeBlock;
 		
 		public virtual void OnNewMap( object sender, EventArgs e ) {
 		}
