@@ -6,43 +6,8 @@ namespace ClassicalSharp {
 
 	public static class Picking {
 		
-		public static PickedPos GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach ) {
-			Map map = window.Map;
-			BlockInfo info = window.BlockInfo;
-			float reachSquared = reach * reach;
-			
-			int iterations = 0;
-			foreach( Vector3I cell in GetCellsOnRay( origin, dir ) ) {
-				Vector3 pos = new Vector3( cell.X, cell.Y, cell.Z );
-				if( Utils.DistanceSquared( pos, origin ) >= reachSquared ) return null;
-				iterations++;
-
-				if( iterations > 10000 ) {
-					throw new InvalidOperationException(
-						"did over 10000 iterations in Picking.GetPickedBlockPos(). " +
-						"Something has gone wrong. (dir: " + dir + ")" );
-				}
-				
-				int x = cell.X, y = cell.Y, z = cell.Z;
-				byte block;
-				if( map.IsValidPos( x, y, z ) && ( block = map.GetBlock( x, y, z ) ) != 0 ) {
-					if( !window.CanPlace[block] && !window.CanDelete[block] && info.IsLiquid( block ) ) continue;
-					// This cell falls on the path of the ray. Now perform an additional bounding box test,
-					// since some blocks do not occupy a whole cell.
-					float height = info.BlockHeight( block );
-					Vector3 min = new Vector3( x, y, z );
-					Vector3 max = new Vector3( x + 1, y + height, z + 1 );
-					float t0, t1;
-					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-						return new PickedPos( min, max, origin, dir, t0, t1 );
-					}
-				}
-			}
-			return null;
-		}
-		
 		// http://www.xnawiki.com/index.php/Voxel_traversal
-		public static IEnumerable<Vector3I> GetCellsOnRay( Vector3 origin, Vector3 dir ) {
+		public static PickedPos GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach ) {
 			// Implementation is based on:
 			// "A Fast Voxel Traversal Algorithm for Ray Tracing"
 			// John Amanatides, Andrew Woo
@@ -97,11 +62,34 @@ namespace ClassicalSharp {
 			if( Single.IsNaN( tDelta.X ) ) tDelta.X = Single.PositiveInfinity;
 			if( Single.IsNaN( tDelta.Y ) ) tDelta.Y = Single.PositiveInfinity;
 			if( Single.IsNaN( tDelta.Z ) ) tDelta.Z = Single.PositiveInfinity;
+			
+			Map map = window.Map;
+			BlockInfo info = window.BlockInfo;
+			float reachSquared = reach * reach;
+			int iterations = 0;
 
 			// For each step, determine which distance to the next voxel boundary is lowest (i.e.
 			// which voxel boundary is nearest) and walk that way.
-			while( true ) {
-				yield return new Vector3I( x, y, z );
+			while( iterations < 10000 ) {
+				Vector3 pos = new Vector3( x, y, z );
+				if( Utils.DistanceSquared( pos, origin ) >= reachSquared ) return null;
+				iterations++;
+				
+				byte block;
+				if( map.IsValidPos( x, y, z ) && ( block = map.GetBlock( x, y, z ) ) != 0 ) {
+					bool cantPickBlock = !window.CanPlace[block] && !window.CanDelete[block] && info.IsLiquid( block );
+					if( !cantPickBlock ) {
+						// This cell falls on the path of the ray. Now perform an additional bounding box test,
+						// since some blocks do not occupy a whole cell.
+						float height = info.BlockHeight( block );
+						Vector3 min = new Vector3( x, y, z );
+						Vector3 max = new Vector3( x + 1, y + height, z + 1 );
+						float t0, t1;
+						if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
+							return new PickedPos( min, max, origin, dir, t0, t1 );
+						}
+					}
+				}
 				
 				if( tMax.X < tMax.Y && tMax.X < tMax.Z ) {
 					// tMax.X is the lowest, an YZ cell boundary plane is nearest.
@@ -117,6 +105,8 @@ namespace ClassicalSharp {
 					tMax.Z += tDelta.Z;
 				}
 			}
+			throw new InvalidOperationException( "did over 10000 iterations in GetPickedBlockPos(). " +
+			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 	}
 	
