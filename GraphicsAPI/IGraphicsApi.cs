@@ -204,26 +204,24 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void OnWindowResize( int newWidth, int newHeight );
 		
+		VertexPos3fCol4b[] quadVertices = new VertexPos3fCol4b[4];
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			VertexPos3fCol4b[] vertices = {
-				new VertexPos3fCol4b( x + width, y, 0, col ),
-				new VertexPos3fCol4b( x + width, y + height, 0, col ),
-				new VertexPos3fCol4b( x, y, 0, col ),
-				new VertexPos3fCol4b( x, y + height, 0, col ),
-			};
-			DrawVertices( DrawMode.TriangleStrip, vertices );
+			quadVertices[0] = new VertexPos3fCol4b( x + width, y, 0, col );
+			quadVertices[1] = new VertexPos3fCol4b( x + width, y + height, 0, col );
+			quadVertices[2] = new VertexPos3fCol4b( x, y, 0, col );
+			quadVertices[3] = new VertexPos3fCol4b( x, y + height, 0, col );
+			DrawVertices( DrawMode.TriangleStrip, quadVertices );
 		}
 		
+		VertexPos3fTex2f[] texVertices = new VertexPos3fTex2f[4];
 		public virtual void Draw2DTexture( ref Texture tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			// Have to order them this way because it's a triangle strip.
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
-			};
-			DrawVertices( DrawMode.TriangleStrip, vertices );
+			texVertices[0] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
+			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
+			texVertices[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
+			texVertices[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
+			DrawVertices( DrawMode.TriangleStrip, texVertices );
 		}
 		
 		public void Mode2D( float width, float height ) {
