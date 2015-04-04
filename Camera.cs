@@ -18,7 +18,8 @@ namespace ClassicalSharp {
 		public virtual void Tick( double elapsed ) {
 		}
 		
-		public virtual void MouseZoom( MouseWheelEventArgs e ) {
+		public virtual bool MouseZoom( MouseWheelEventArgs e ) {
+			return false;
 		}
 		
 		public abstract void RegrabMouse();
@@ -104,9 +105,10 @@ namespace ClassicalSharp {
 		}
 		
 		float distance = 3;		
-		public override void MouseZoom( MouseWheelEventArgs e ) {
+		public override bool MouseZoom( MouseWheelEventArgs e ) {
 			distance -= e.DeltaPrecise;
 			if( distance < 2 ) distance = 2;
+			return true;
 		}
 		
 		public override Matrix4 GetView() {

@@ -61,7 +61,13 @@ namespace ClassicalSharp {
 		}
 
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			Camera.MouseZoom( e );
+			if( !Camera.MouseZoom( e ) && CanChangeHeldBlock ) {
+				int diffIndex = -e.Delta % BlocksHotbar.Length;
+				int newIndex = HeldBlockIndex + diffIndex;
+				if( newIndex < 0 ) newIndex += BlocksHotbar.Length;
+				if( newIndex >= BlocksHotbar.Length ) newIndex -= BlocksHotbar.Length;
+				HeldBlockIndex = newIndex;
+			}
 		}
 
 		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
