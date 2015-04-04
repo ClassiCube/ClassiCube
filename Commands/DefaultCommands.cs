@@ -197,22 +197,22 @@ namespace ClassicalSharp.Commands {
 					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
 				};
 			}
-		}	
+		}
 		
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
 				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( property == "legacyfast" ) {
-				SetNewRenderType( g => new LegacyMapEnvRenderer( g ), 
+				SetNewRenderType( g => new LegacyMapEnvRenderer( g ),
 				                 g => new LegacyFastEnvRenderer( g ) );
 				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
 			} else if( property == "legacy" ) {
-				SetNewRenderType( g => new LegacyMapEnvRenderer( g ), 
+				SetNewRenderType( g => new LegacyMapEnvRenderer( g ),
 				                 g => new LegacyEnvRenderer( g ) );
 				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( property == "normal" ) {
-				SetNewRenderType( g => new NormalMapEnvRenderer( g ), 
+				SetNewRenderType( g => new NormalMapEnvRenderer( g ),
 				                 g => new NormalEnvRenderer( g ) );
 				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
@@ -240,10 +240,10 @@ namespace ClassicalSharp.Commands {
 			get {
 				return new [] {
 					"&a/client chatsize [fontsize]",
-					"&fontsize: &eWhole number specifying the new font size for chat.",
+					"&bfontsize: &eWhole number specifying the new font size for chat.",
 				};
 			}
-		}	
+		}
 		
 		public override void Execute( CommandReader reader ) {
 			int fontSize;
@@ -261,6 +261,33 @@ namespace ClassicalSharp.Commands {
 				Window.SetNewScreen( null );
 				Window.chatInInputBuffer = null;
 				Window.SetNewScreen( new NormalScreen( Window ) );
+			}
+		}
+	}
+	
+	public sealed class MouseSensitivityCommand : Command {
+		
+		public override string Name {
+			get { return "Sensitivity"; }
+		}
+		
+		public override string[] Help {
+			get {
+				return new [] {
+					"&a/client sensitivity [mouse sensitivity]",
+					"&bmouse sensitivity: &eInteger between 1 to 100 specifiying the mouse sensitivity.",
+				};
+			}
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			int sensitivity;
+			if( !reader.NextInt( out sensitivity ) ) {
+				Window.AddChat( "&e/client sensitivity: Current sensitivity is: " + Window.MouseSensitivity );
+			} else if( sensitivity < 1 || sensitivity > 100 ) {
+				Window.AddChat( "&e/client sensitivity: &cMouse sensitivity must be between 1 to 100." );
+			} else {
+				Window.MouseSensitivity = sensitivity;
 			}
 		}
 	}

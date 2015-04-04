@@ -92,6 +92,7 @@ namespace ClassicalSharp {
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
+		public int MouseSensitivity = 30;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			// Cleanup old atlas if applicable.

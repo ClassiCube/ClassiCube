@@ -72,8 +72,8 @@ namespace ClassicalSharp {
 			delta = Point.Empty;
 		}
 		
-		const float sensitivity = 0.01f; // max 0.025?
 		private void UpdateMouseRotation() {
+			float sensitivity = 0.0002f * Window.MouseSensitivity;
 			Orientation.X += delta.X * sensitivity;
 			Orientation.Y += delta.Y * sensitivity;
 
