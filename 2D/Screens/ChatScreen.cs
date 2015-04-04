@@ -54,6 +54,7 @@ namespace ClassicalSharp {
 			bottomRight = new TextGroupWidget( Window, 3, fontSize );
 			bottomRight.VerticalDocking = Docking.BottomOrRight;
 			bottomRight.HorizontalDocking = Docking.BottomOrRight;
+			bottomRight.YOffset = ChatInputYOffset;
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( Window, chatLines, fontSize );
 			normalChat.XOffset = 10;
@@ -83,9 +84,9 @@ namespace ClassicalSharp {
 			else if( type == CpeMessageType.Status1 ) status.SetText( 0, e.Text );
 			else if( type == CpeMessageType.Status2 ) status.SetText( 1, e.Text );
 			else if( type == CpeMessageType.Status3 ) status.SetText( 2, e.Text );
-			else if( type == CpeMessageType.BottomRight1 ) bottomRight.SetText( 0, e.Text );
+			else if( type == CpeMessageType.BottomRight1 ) bottomRight.SetText( 2, e.Text );
 			else if( type == CpeMessageType.BottomRight2 ) bottomRight.SetText( 1, e.Text );
-			else if( type == CpeMessageType.BottomRight3 ) bottomRight.SetText( 2, e.Text );
+			else if( type == CpeMessageType.BottomRight3 ) bottomRight.SetText( 0, e.Text );
 			else if( type == CpeMessageType.Announcement ) UpdateAnnouncement( e.Text );
 		}
 
