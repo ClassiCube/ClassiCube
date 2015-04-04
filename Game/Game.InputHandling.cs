@@ -116,6 +116,8 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyMapping.PauseOrExit] && !Map.IsNotLoaded ) {
 				if( !( activeScreen is PauseScreen ) ) {
 					SetNewScreen( new PauseScreen( this ) );
+				} else {
+					SetNewScreen( new NormalScreen( this ) );
 				}
 			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
 				if( key == Keys[KeyMapping.OpenInventory] ) {
