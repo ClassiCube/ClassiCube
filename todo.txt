@@ -1,0 +1,7 @@
+* Texture animations.
+* Proper SelectionBox sorting.
+* DirectX API support.
+* Some of the remaining CPE extensions.
+* Test that Mojang Accounts work properly.
+* Fix issues with framerate limiting not working properly on same cards.
+  (will require 'sleeping'of main thread)
