@@ -67,14 +67,24 @@ namespace ClassicalSharp {
 		static void UnhandledException( object sender, UnhandledExceptionEventArgs e ) {
 			// So we don't get the normal unhelpful crash dialog on Windows.
 			Exception ex = (Exception)e.ExceptionObject;
+			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			try {
+				using( StreamWriter writer = new StreamWriter( "crash.log", true ) ) {
+					writer.WriteLine( "Crash time: " + DateTime.Now.ToString() );
+					writer.WriteLine( error );
+					writer.WriteLine();
+				}
+			} catch( Exception ) {
+			}
+			
 			MessageBox.Show(
-				"Oh dear, ClassicalSharp crashed. Crash cause: " +  Environment.NewLine +
-				Environment.NewLine +
-				ex.GetType().FullName + ": " + ex.Message + Environment.NewLine +
-				ex.StackTrace + Environment.NewLine +
-				Environment.NewLine +
-				Environment.NewLine +
-				"Please consider reporting this at [link to fill in]" );
+				"Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + 
+				" The cause of the crash has been logged to \"crash.log\". Please consider reporting the " +
+				"crash (and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues " +
+				Environment.NewLine + Environment.NewLine +			
+				"(the cause of the crash is reproduced below)" + Environment.NewLine + error, 
+				"ClassicalSharp has crashed" );
+			
 			Environment.Exit( 1 );
 		}
 	}
