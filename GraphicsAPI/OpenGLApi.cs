@@ -89,9 +89,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Fog, value ); }
 		}
 		
-		public override void SetFogColour( FastColour col ) {
-			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f };
-			GL.Fog( FogParameter.FogColor, colRGBA );
+		public unsafe override void SetFogColour( FastColour col ) {
+			Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
+			GL.Fog( FogParameter.FogColor, &colRGBA.X );
 		}
 		
 		public override void SetFogDensity( float value ) {

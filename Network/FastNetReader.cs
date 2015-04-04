@@ -62,18 +62,20 @@ namespace ClassicalSharp {
 		/// <summary> Reads a string, then converts control characters into the
 		/// unicode values of their equivalent code page 437 graphical representations. </summary>
 		public string ReadTextString() {
-			byte[] data = ReadBytes( 64 );
-			return GetTextString( data ).TrimEnd( '\0', ' ' ); // servers can use either null or spaces for padding.
+			string value = GetTextString( buffer ).TrimEnd( '\0', ' ' ); // servers can use either null or spaces for padding.
+			Remove( 64 );
+			return value;
 		}
 		
 		public string ReadString() {
-			byte[] data = ReadBytes( 64 );
-			return GetAsciiString( data ).TrimEnd( '\0', ' ' );
+			string value = GetAsciiString( buffer ).TrimEnd( '\0', ' ' );
+			Remove( 64 );
+			return value;
 		}
 		
+		static char[] characters = new char[64];
 		static string GetAsciiString( byte[] data ) {
-			char[] characters = new char[data.Length];
-			for( int i = 0; i < data.Length; i++ ) {
+			for( int i = 0; i < 64; i++ ) {
 				byte code = data[i];
 				characters[i] = code >= 0x80 ? '?' : (char)code;
 			}
@@ -82,8 +84,7 @@ namespace ClassicalSharp {
 		
 		static string GetTextString( byte[] data ) {
 			// code page 437 indices --> actual unicode characters
-			char[] characters = new char[data.Length];
-			for( int i = 0; i < data.Length; i++ ) {
+			for( int i = 0; i < 64; i++ ) {
 				byte code = data[i];
 				if( code < 0x20 ) { // general control characters
 					characters[i] = controlCharReplacements[code];

@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	
 	internal class FixedBufferStream : Stream {
 		
-		private byte[] _buffer;
+		public byte[] _buffer;
 		private int _position;
 		private int _length;
 		

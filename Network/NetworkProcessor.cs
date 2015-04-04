@@ -329,14 +329,12 @@ namespace ClassicalSharp {
 				case PacketId.LevelDataChunk:
 					{
 						int usedLength = reader.ReadInt16();
-						byte[] data = reader.ReadBytes( 1024 );
-						byte progress = reader.ReadUInt8();
-						Window.RaiseMapLoading( progress );
-						
 						gzippedMap.Position = 0;
 						gzippedMap.SetLength( usedLength );
-						gzippedMap.Write( data, 0, usedLength );
+						Buffer.BlockCopy( reader.buffer, 0, gzippedMap._buffer, 0, usedLength );
+						reader.Remove( 1024 );
 						gzippedMap.Position = 0;
+						
 						if( mapSizeIndex < 4 ) {
 							mapSizeIndex += gzipStream.Read( mapSize, 0, 4 - mapSizeIndex );
 						}
@@ -348,6 +346,9 @@ namespace ClassicalSharp {
 							}
 							mapIndex += gzipStream.Read( map, mapIndex, map.Length - mapIndex );
 						}
+						
+						byte progress = reader.ReadUInt8();
+						Window.RaiseMapLoading( progress );
 					} break;
 					
 				case PacketId.LevelFinalise:
