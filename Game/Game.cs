@@ -57,8 +57,10 @@ namespace ClassicalSharp {
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
 			set {
-				if( !CanChangeHeldBlock )
-					throw new InvalidOperationException( "Server has forbidden changing held block." );
+				if( !CanChangeHeldBlock ) {
+					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
+					return;
+				}
 				hotbarIndex = value;
 				RaiseHeldBlockChanged();
 			}
@@ -67,8 +69,10 @@ namespace ClassicalSharp {
 		public Block HeldBlock {
 			get { return BlocksHotbar[hotbarIndex]; }
 			set {
-				if( !CanChangeHeldBlock )
-					throw new InvalidOperationException( "Server has forbidden changing held block." );
+				if( !CanChangeHeldBlock ) {
+					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
+					return;
+				}
 				BlocksHotbar[hotbarIndex] = value;
 				RaiseHeldBlockChanged();
 			}

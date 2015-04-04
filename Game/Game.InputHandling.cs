@@ -38,9 +38,17 @@ namespace ClassicalSharp {
 
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
-				bool left = e.Button == MouseButton.Left;
-				bool right = e.Button == MouseButton.Right;
-				PickBlocks( false, left, right );
+				if( e.Button == MouseButton.Middle ) {
+					if( SelectedPos == null || !Map.IsValidPos( SelectedPos.BlockPos ) ) return;
+					byte block = Map.GetBlock( SelectedPos.BlockPos );
+					if( CanPlace[block] || CanDelete[block] ) {
+						HeldBlock = (Block)block;
+					}
+				} else {
+					bool left = e.Button == MouseButton.Left;
+					bool right = e.Button == MouseButton.Right;
+					PickBlocks( false, left, right );
+				}
 			} else {
 				lastClick = DateTime.UtcNow;
 			}

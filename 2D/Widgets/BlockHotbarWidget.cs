@@ -18,11 +18,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				try {
-					Window.HeldBlockIndex = (int)key - (int)Key.Number1;
-				} catch( InvalidOperationException ) {
-					Window.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-				}
+				Window.HeldBlockIndex = (int)key - (int)Key.Number1;
 				return true;
 			}
 			return false;

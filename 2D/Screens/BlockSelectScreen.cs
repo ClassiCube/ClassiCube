@@ -186,11 +186,7 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				BlockDrawInfo info = blocksTable[selectedIndex];
-				try {
-					Window.HeldBlock = info.BlockId;
-				} catch( InvalidOperationException ) {
-					Window.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-				}
+				Window.HeldBlock = info.BlockId;
 				Window.SetNewScreen( new NormalScreen( Window ) );
 			}
 			return true;
