@@ -154,7 +154,7 @@ void main() {
 		}
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
-		public int mvpLoc, fogColLoc, fogStartLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int sOffsetLoc, texImageLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
@@ -164,7 +164,6 @@ void main() {
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogStartLoc = api.GetUniformLocation( ProgramId, "fogStart" );
 			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
 			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
@@ -221,6 +220,22 @@ void main() {
    }
    gl_FragColor = finalColour;
 }";	
-		}		
+		}
+		
+		public int positionLoc, texCoordsLoc, colourLoc;
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
+		public int texImageLoc;
+		protected override void BindParameters( OpenGLApi api ) {			
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
+			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
+			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
+		}
 	}
 }
