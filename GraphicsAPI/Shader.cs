@@ -237,6 +237,20 @@ void main() {
 			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
 		}
+		
+		const int stride = VertexPos3fTex2fCol4b.Size;
+		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount ) {
+			graphics.BindVb( vbId );
+			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
+			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
+			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			graphics.DrawArrays( DrawMode.Triangles, 0, verticesCount );
+			
+			graphics.DisableVertexAttribArray( positionLoc );
+			graphics.DisableVertexAttribArray( texCoordsLoc );
+			graphics.DisableVertexAttribArray( colourLoc );
+		}
 	}
 	
 	public sealed class MapLiquidDepthPassShader : Shader {
