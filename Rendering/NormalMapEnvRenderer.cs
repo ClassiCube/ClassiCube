@@ -6,9 +6,11 @@ namespace ClassicalSharp {
 	
 	public class NormalMapEnvRenderer : MapEnvRenderer {
 		
+		MapShader shader;
 		public NormalMapEnvRenderer( Game window ) {
 			Window = window;
 			Map = Window.Map;
+			shader = window.MapRenderer.shader;
 		}
 		
 		public override void Init() {
@@ -35,7 +37,7 @@ namespace ClassicalSharp {
 			if( sidesVboId == -1 ) return;
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( sideTexId );
-			Graphics.DrawVbPos3fTex2fCol4b( DrawMode.Triangles, sidesVboId, sidesVertices );
+			RenderVbo( sidesVboId, sidesVertices );
 			Graphics.Texturing = false;
 		}
 		
@@ -45,9 +47,23 @@ namespace ClassicalSharp {
 			Graphics.Texturing = true;
 			Graphics.AlphaBlending = true;
 			Graphics.Bind2DTexture( edgeTexId );
-			Graphics.DrawVbPos3fTex2fCol4b( DrawMode.Triangles, edgesVboId, edgesVertices );
+			RenderVbo( edgesVboId, edgesVertices );
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
+		}
+		
+		const int stride = VertexPos3fTex2fCol4b.Size;
+		void RenderVbo( int vb, int vertices ) {
+			Graphics.BindVb( vb );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
+			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			Graphics.DrawArrays( DrawMode.Triangles, 0, vertices );
+			
+			Graphics.DisableVertexAttribArray( shader.positionLoc );
+			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
+			Graphics.DisableVertexAttribArray( shader.colourLoc );
 		}
 		
 		const int sidesVertices = 5 * 6 + 4 * 6, edgesVertices = 4 * 6;

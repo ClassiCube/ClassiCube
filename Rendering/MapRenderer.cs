@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		
 		public readonly bool UsesLighting;
 		int elementsPerBitmap = 0;
-		MapShader shader;
+		internal MapShader shader;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -235,12 +235,12 @@ namespace ClassicalSharp {
 			}
 			Graphics.Texturing = false;
 			builder.EndRender();
-			Graphics.UseProgram( 0 );
+			//Graphics.UseProgram( 0 );
 			
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
-			Graphics.UseProgram( shader.ProgramId );
+			//Graphics.UseProgram( shader.ProgramId );
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			builder.BeginRender();
 			Graphics.Texturing = false;
