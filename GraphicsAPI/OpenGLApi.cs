@@ -576,6 +576,43 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		#endif
 		
+		public override void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
+			VertexPos3fCol4b[] vertices = {
+				new VertexPos3fCol4b( x + width, y, 0, col ),
+				new VertexPos3fCol4b( x + width, y + height, 0, col ),
+				new VertexPos3fCol4b( x, y, 0, col ),
+				new VertexPos3fCol4b( x, y + height, 0, col ),
+			};
+			GL.Begin( BeginMode.TriangleStrip );
+			for( int i = 0; i < vertices.Length; i++ ) {
+				VertexPos3fCol4b vertex = vertices[i];
+				GL.VertexAttrib2( shader.texCoordsLoc, -1f, -1f );
+				GL.VertexAttrib4( shader.colourLoc, 
+				                 new Vector4( vertex.R / 255f, vertex.G / 255f, vertex.B / 255f, vertex.A / 255f ) );
+				GL.VertexAttrib3( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );				
+			}
+			GL.End();
+		}
+		
+		public override void Draw2DTextureVertices( ref Texture tex ) {
+			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
+			// Have to order them this way because it's a triangle strip.
+			VertexPos3fTex2f[] vertices = {
+				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
+				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
+				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
+				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
+			};
+			GL.Begin( BeginMode.TriangleStrip );
+			for( int i = 0; i < vertices.Length; i++ ) {
+				VertexPos3fTex2f vertex = vertices[i];
+				GL.VertexAttrib4( shader.colourLoc, new Vector4( 1, 1, 1, 1 ) );
+				GL.VertexAttrib2( shader.texCoordsLoc, vertex.U, vertex.V );
+				GL.VertexAttrib3( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
+			}
+			GL.End();
+		}
+		
 		public override void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );
 			Console.WriteLine( "OpenGL renderer: " + GL.GetString( StringName.Renderer ) );

@@ -90,18 +90,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
+		// TODO: Kill these forever
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count );
 		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count );
@@ -206,48 +195,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void OnWindowResize( int newWidth, int newHeight );
 		
-		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			VertexPos3fCol4b[] vertices = {
-				new VertexPos3fCol4b( x + width, y, 0, col ),
-				new VertexPos3fCol4b( x + width, y + height, 0, col ),
-				new VertexPos3fCol4b( x, y, 0, col ),
-				new VertexPos3fCol4b( x, y + height, 0, col ),
-			};
-			DrawVertices( DrawMode.TriangleStrip, vertices );
-		}
+		public abstract void Draw2DQuad( float x, float y, float width, float height, FastColour col );
 		
-		public virtual void Draw2DTextureVertices( ref Texture tex ) {
-			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
-			// Have to order them this way because it's a triangle strip.
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
-			};
-			DrawVertices( DrawMode.TriangleStrip, vertices );
-		}
+		public abstract void Draw2DTextureVertices( ref Texture tex );
 		
-		public void Mode2D( float width, float height ) {
-			SetMatrixMode( MatrixType.Projection );
-			PushMatrix();
-			LoadIdentityMatrix();
-			//GL.Ortho( 0, width, height, 0, 0, 1 );
+		protected GuiShader shader;
+		public void Mode2D( GuiShader shader ) {
 			DepthTest = false;
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
-			LoadMatrix( ref matrix );
-			SetMatrixMode( MatrixType.Modelview );
-			PushMatrix();
-			LoadIdentityMatrix();
 			AlphaBlending = true;
+			// Please excuse the awful hackery here
+			this.shader = shader;
 		}
 		
 		public void Mode3D() {
-			// Get rid of orthographic 2D matrix.
-			SetMatrixMode( MatrixType.Projection );
-			PopMatrix();
-			SetMatrixMode( MatrixType.Modelview );
-			PopMatrix();
 			DepthTest = true;
 			AlphaBlending = false;
 		}

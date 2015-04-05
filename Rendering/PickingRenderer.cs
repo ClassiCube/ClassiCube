@@ -60,7 +60,7 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( max.Z + offset, max.X + offset, min.Y - offset, max.X - size + offset, max.Y + offset );
 				DrawZPlane( max.Z + offset, min.X - offset, min.Y - offset, max.X + offset, min.Y + size - offset );
 				DrawZPlane( max.Z + offset, min.X - offset, max.Y + offset, max.X + offset, max.Y - size + offset );
-				graphics.DrawVertices( DrawMode.Triangles, vertices );
+				graphics.DrawVertices( DrawMode.Triangles, vertices, vertices.Length );
 			}
 		}
 		

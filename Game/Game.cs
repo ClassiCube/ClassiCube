@@ -189,7 +189,7 @@ namespace ClassicalSharp {
 			guiShader = new GuiShader();
 			guiShader.Initialise( ModernGraphics );
 		}
-		Shader guiShader;
+		GuiShader guiShader;
 		
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
@@ -267,14 +267,16 @@ namespace ClassicalSharp {
 				SelectedPos = null;
 			}
 			
-			//ModernGraphics.UseProgram( guiShader.ProgramId );
-			Graphics.Mode2D( Width, Height );
+			ModernGraphics.UseProgram( guiShader.ProgramId );
+			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
+			ModernGraphics.SetUniform( guiShader.projLoc, ref matrix );
+			Graphics.Mode2D( guiShader );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
 			Graphics.Mode3D();
-			//ModernGraphics.UseProgram( 0 );
+			ModernGraphics.UseProgram( 0 );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {

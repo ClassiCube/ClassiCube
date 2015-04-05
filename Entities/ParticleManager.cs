@@ -28,7 +28,7 @@ namespace ClassicalSharp.Particles {
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( Window.TerrainAtlasTexId );
 			Graphics.AlphaTest = true;
-			Graphics.DrawVertices( DrawMode.Triangles, vertices );
+			Graphics.DrawVertices( DrawMode.Triangles, vertices, vertices.Length );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 		}
