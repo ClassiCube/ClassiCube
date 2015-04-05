@@ -17,8 +17,10 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Render( double delta, float t ) {
+			// TODO: Fix particle support to work properly
+			return;
 			if( particles.Count == 0 ) return;
-			
+			/*
 			VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[particles.Count * 6];
 			int index = 0;
 			for( int i = 0; i < particles.Count; i++ ) {
@@ -30,7 +32,7 @@ namespace ClassicalSharp.Particles {
 			Graphics.AlphaTest = true;
 			Graphics.DrawVertices( DrawMode.Triangles, vertices, vertices.Length );
 			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
+			Graphics.Texturing = false;*/
 		}
 		
 		public void Tick( double delta ) {
