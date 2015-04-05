@@ -8,9 +8,11 @@ namespace ClassicalSharp {
 		DrawInfo1D[] drawInfoBuffer;
 		TextureAtlas1D atlas;
 		int arraysCount = 0;
+		MapShader shader;
 		
-		public ChunkMeshBuilderTex2Col4( Game window ) : base( window ) {
+		public ChunkMeshBuilderTex2Col4( Game window, MapShader shader ) : base( window ) {
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
+			this.shader = shader;
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {

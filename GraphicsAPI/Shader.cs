@@ -179,7 +179,7 @@ void main() {
 attribute vec3 in_position;
 attribute vec2 in_texcoords;
 attribute vec4 in_colour;
-varying vec3 out_texcoords;
+varying vec2 out_texcoords;
 varying vec4 out_colour;
 uniform mat4 MVP;
 
@@ -200,7 +200,7 @@ uniform float fogDensity;
 uniform float fogMode;
 
 void main() {
-   vec4 finalColour = texture(texImage, out_texcoords) * out_colour;
+   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;
    if(finalColour.a < 0.5) {
       discard;
    }

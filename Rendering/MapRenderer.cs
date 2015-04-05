@@ -54,16 +54,18 @@ namespace ClassicalSharp {
 		
 		public MapRenderer( Game window ) {
 			Window = window;
-			_1Dcount = window.TerrainAtlas1DTexIds.Length;
-			builder = new ChunkMeshBuilderTex2Col4( window );
-			UsesLighting = builder.UsesLighting;
 			Graphics = window.Graphics;
+			shader = new MapShader();
+			shader.Initialise( Graphics );
+			_1Dcount = window.TerrainAtlas1DTexIds.Length;
+			builder = new ChunkMeshBuilderTex2Col4( window, shader );
+			
+			UsesLighting = builder.UsesLighting;			
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;
-			shader = new MapShader();
+			Window.EnvVariableChanged += EnvVariableChanged;			
 		}
 		
 		public void Dispose() {
