@@ -7,12 +7,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public int ProgramId;
 		
-		public void Initialise( ModernOpenGLApi api ) {
+		public void Initialise( OpenGLApi api ) {
 			ProgramId = api.CreateProgram( VertexSource, FragSource );
 			BindParameters( api );
 		}
 		
-		protected virtual void BindParameters( ModernOpenGLApi api ) {
+		protected virtual void BindParameters( OpenGLApi api ) {
 			
 		}
 	}
@@ -57,7 +57,7 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc, projLoc;
-		protected override void BindParameters( ModernOpenGLApi api ) {
+		protected override void BindParameters( OpenGLApi api ) {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
@@ -88,7 +88,7 @@ void main() {
 		
 		public int positionLoc;
 		public int mvpLoc;
-		protected override void BindParameters( ModernOpenGLApi api ) {			
+		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 		}

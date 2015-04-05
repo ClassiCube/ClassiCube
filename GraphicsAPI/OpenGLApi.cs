@@ -11,7 +11,7 @@ using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	public class OpenGLApi : IGraphicsApi {
+	public partial class OpenGLApi {
 		
 		int textureDimensions;
 		bool nonPow2;
@@ -34,19 +34,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			SetupVb();
 		}
 
-		public override int MaxTextureDimensions {
+		public int MaxTextureDimensions {
 			get { return textureDimensions; }
 		}
 		
-		public override bool SupportsNonPowerOf2Textures {
+		public bool SupportsNonPowerOf2Textures {
 			get { return nonPow2; }
 		}
 		
-		public override bool AlphaTest {
+		public bool AlphaTest {
 			set { ToggleCap( EnableCap.AlphaTest, value ); }
 		}
 		
-		public override bool AlphaBlending {
+		public bool AlphaBlending {
 			set { ToggleCap( EnableCap.Blend, value ); }
 		}
 		
@@ -56,7 +56,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			AlphaFunction.Lequal, AlphaFunction.Equal,
 			AlphaFunction.Gequal, AlphaFunction.Greater,
 		};
-		public override void AlphaTestFunc( CompareFunc func, float value ) {
+		public void AlphaTestFunc( CompareFunc func, float value ) {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
@@ -65,7 +65,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			BlendEquationMode.Min, BlendEquationMode.FuncSubtract,
 			BlendEquationMode.FuncReverseSubtract,
 		};
-		public override void AlphaBlendEq( BlendEquation eq ) {
+		public void AlphaBlendEq( BlendEquation eq ) {
 			GL.BlendEquation( blendEqs[(int)eq] );
 		}
 		
@@ -79,37 +79,37 @@ namespace ClassicalSharp.GraphicsAPI {
 			BlendingFactorDest.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha,
 			BlendingFactorDest.DstAlpha, BlendingFactorDest.OneMinusDstAlpha,
 		};
-		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
+		public void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
 			GL.BlendFunc( srcBlendFuncs[(int)srcFunc], destBlendFuncs[(int)destFunc] );
 		}
 		
-		public override bool Fog {
+		public bool Fog {
 			set { ToggleCap( EnableCap.Fog, value ); }
 		}
 		
-		public override void SetFogColour( FastColour col ) {
+		public void SetFogColour( FastColour col ) {
 			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f };
 			GL.Fog( FogParameter.FogColor, colRGBA );
 		}
 		
-		public override void SetFogDensity( float value ) {
+		public void SetFogDensity( float value ) {
 			GL.Fog( FogParameter.FogDensity, value );
 		}
 		
-		public override void SetFogEnd( float value ) {
+		public void SetFogEnd( float value ) {
 			GL.Fog( FogParameter.FogEnd, value );
 		}
 		
 		FogMode[] fogModes = new FogMode[] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
-		public override void SetFogMode( Fog mode ) {
+		public void SetFogMode( Fog mode ) {
 			GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
 		}
 		
-		public override void SetFogStart( float value ) {
+		public void SetFogStart( float value ) {
 			GL.Fog( FogParameter.FogStart, value );
 		}
 		
-		public override bool FaceCulling {
+		public bool FaceCulling {
 			set { ToggleCap( EnableCap.CullFace, value ); }
 		}
 		
@@ -117,13 +117,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		#if TRACK_RESOURCES
 		Dictionary<int, string> textures = new Dictionary<int, string>();
 		#endif
-		public override int LoadTexture( Bitmap bmp ) {
+		public int LoadTexture( Bitmap bmp ) {
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				return LoadTexture( fastBmp );
 			}
 		}
 		
-		public override int LoadTexture( FastBitmap bmp ) {
+		public int LoadTexture( FastBitmap bmp ) {
 			int texId = GL.GenTexture();
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
@@ -143,11 +143,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			return texId;
 		}
 		
-		public override void Bind2DTexture( int texture ) {
+		public void Bind2DTexture( int texture ) {
 			GL.BindTexture( TextureTarget.Texture2D, texture );
 		}
 		
-		public override void DeleteTexture( int texId ) {
+		public void DeleteTexture( int texId ) {
 			if( texId <= 0 ) return;
 			#if TRACK_RESOURCES
 			textures.Remove( texId );
@@ -155,16 +155,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DeleteTexture( texId );
 		}
 		
-		public override bool Texturing {
+		public bool Texturing {
 			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
 		
-		public override void Clear() {
+		public void Clear() {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}
 		
 		FastColour lastClearCol;
-		public override void ClearColour( FastColour col ) {
+		public void ClearColour( FastColour col ) {
 			if( col != lastClearCol ) {
 				Color4 col4 = new Color4( col.R, col.G, col.B, col.A );
 				GL.ClearColor( col4 );
@@ -172,7 +172,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void ColourMask( bool red, bool green, bool blue, bool alpha ) {
+		public void ColourMask( bool red, bool green, bool blue, bool alpha ) {
 			GL.ColorMask( red, green, blue, alpha );
 		}
 		
@@ -182,19 +182,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthFunction.Lequal, DepthFunction.Equal,
 			DepthFunction.Gequal, DepthFunction.Greater,
 		};
-		public override void DepthTestFunc( CompareFunc func ) {
+		public void DepthTestFunc( CompareFunc func ) {
 			GL.DepthFunc( depthFuncs[(int)func] );
 		}
 		
-		public override bool DepthTest {
+		public bool DepthTest {
 			set { ToggleCap( EnableCap.DepthTest, value ); }
 		}
 		
-		public override bool DepthWrite {
+		public bool DepthWrite {
 			set { GL.DepthMask( value ); }
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
+		public void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
 			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
 			// Feasible alternatives:
@@ -210,7 +210,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
+		public void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
 			for( int i = 0; i < count; i++ ) {
 				VertexPos3fTex2f vertex = vertices[i];
@@ -220,7 +220,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
+		public void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
 			for( int i = 0; i < count; i++ ) {
 				VertexPos3fTex2fCol4b vertex = vertices[i];
@@ -233,11 +233,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		PolygonMode[] fillModes = new PolygonMode[] { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
-		public override void SetFillType( FillType type ) {
+		public void SetFillType( FillType type ) {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
 		}
 		
-		public override bool AmbientLighting {
+		public bool AmbientLighting {
 			set {
 				if( value ) {
 					GL.Enable( EnableCap.Lighting );
@@ -250,7 +250,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void SetAmbientColour( FastColour col ) {
+		public void SetAmbientColour( FastColour col ) {
 			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, 1f };
 			GL.LightModel( LightModelParameter.LightModelAmbient, colRGBA );
 		}
@@ -282,7 +282,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 		}
 		
-		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
+		public int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = GetSizeInBytes( count, format );
@@ -298,8 +298,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, DrawMode mode, 
-		                                               VertexFormat format, ushort[] indices, int elements ) {
+		public IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, DrawMode mode, 
+		                                               VertexFormat format, ushort[] indices, int elements ) where T : struct {
 			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
 			GL.Arb.GenBuffers( 2, out info.VbId );
 			
@@ -320,7 +320,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return info;
 		}
 		
-		public override void DeleteVb( int id ) {
+		public void DeleteVb( int id ) {
 			if( id <= 0 ) return;
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
@@ -333,7 +333,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
-		public override void DeleteIndexedVb( IndexedVbInfo id ) {
+		public void DeleteIndexedVb( IndexedVbInfo id ) {
 			if( id.VbId <= 0 || id.IbId <= 0 ) return;
 			GL.Arb.DeleteBuffers( 2, ref id.VbId );
 			#if TRACK_RESOURCES
@@ -345,7 +345,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			#endif
 		}
 		
-		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
+		public void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.TextureCoordArray );
 			
@@ -359,7 +359,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DisableClientState( ArrayCap.TextureCoordArray );
 		}
 		
-		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
+		public void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.ColorArray );
 			
@@ -373,7 +373,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DisableClientState( ArrayCap.ColorArray );
 		}
 		
-		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
+		public void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.TextureCoordArray );
 			GL.EnableClientState( ArrayCap.ColorArray );
@@ -391,13 +391,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		VertexFormat batchFormat;
-		public override void BeginVbBatch( VertexFormat format ) {
+		public void BeginVbBatch( VertexFormat format ) {
 			batchFormat = format;
 			SetupBatchVertexState();
 			drawBatchFunc = drawBatchFuncs[(int)batchFormat];
 		}
 		
-		public override void BeginIndexedVbBatch( VertexFormat format ) {
+		public void BeginIndexedVbBatch( VertexFormat format ) {
 			batchFormat = format;
 			SetupBatchVertexState();
 			drawIndexedBatchFunc = drawIndexedBatchFuncs[(int)batchFormat];
@@ -415,19 +415,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
+		public void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
 			drawBatchFunc( mode, id, verticesCount );
 		}
 		
-		public override void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
+		public void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
 			drawIndexedBatchFunc( mode, id, indicesCount );
 		}
 		
-		public override void EndVbBatch() {
+		public void EndVbBatch() {
 			ClearBatchVertexState();
 		}
 		
-		public override void EndIndexedVbBatch() {
+		public void EndIndexedVbBatch() {
 			ClearBatchVertexState();
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 		}
@@ -503,7 +503,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		MatrixMode[] matrixModes = new MatrixMode[] {
 			MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture,
 		};
-		public override void SetMatrixMode( MatrixType mode ) {
+		public void SetMatrixMode( MatrixType mode ) {
 			MatrixMode glMode = matrixModes[(int)mode];
 			if( glMode != lastMode ) {
 				GL.MatrixMode( glMode );
@@ -511,50 +511,50 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void LoadMatrix( ref Matrix4 matrix ) {
+		public void LoadMatrix( ref Matrix4 matrix ) {
 			GL.LoadMatrix( ref matrix );
 		}
 		
-		public override void LoadIdentityMatrix() {
+		public void LoadIdentityMatrix() {
 			GL.LoadIdentity();
 		}
 		
-		public override void PushMatrix() {
+		public void PushMatrix() {
 			GL.PushMatrix();
 		}
 		
-		public override void PopMatrix() {
+		public void PopMatrix() {
 			GL.PopMatrix();
 		}
 		
-		public override void MultiplyMatrix( ref Matrix4 matrix ) {
+		public void MultiplyMatrix( ref Matrix4 matrix ) {
 			GL.MultMatrix( ref matrix );
 		}
 		
-		public override void Translate( float x, float y, float z ) {
+		public void Translate( float x, float y, float z ) {
 			GL.Translate( x, y, z );
 		}
 		
-		public override void RotateX( float degrees ) {
+		public void RotateX( float degrees ) {
 			GL.Rotate( degrees, 1f, 0f, 0f );
 		}
 		
-		public override void RotateY( float degrees ) {
+		public void RotateY( float degrees ) {
 			GL.Rotate( degrees, 0f, 1f, 0f );
 		}
 		
-		public override void RotateZ( float degrees ) {
+		public void RotateZ( float degrees ) {
 			GL.Rotate( degrees, 0f, 0f, 1f );
 		}
 		
-		public override void Scale( float x, float y, float z ) {
+		public void Scale( float x, float y, float z ) {
 			GL.Scale( x, y, z );
 		}
 		
 		#endregion
 		
 		#if TRACK_RESOURCES
-		public override void CheckResources() {
+		public void CheckResources() {
 			if( textures.Count > 0 ) {
 				foreach( var pair in textures ) {
 					Console.WriteLine( pair.Value );
@@ -576,44 +576,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		#endif
 		
-		public override void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			VertexPos3fCol4b[] vertices = {
-				new VertexPos3fCol4b( x + width, y, 0, col ),
-				new VertexPos3fCol4b( x + width, y + height, 0, col ),
-				new VertexPos3fCol4b( x, y, 0, col ),
-				new VertexPos3fCol4b( x, y + height, 0, col ),
-			};
-			GL.Begin( BeginMode.TriangleStrip );
-			for( int i = 0; i < vertices.Length; i++ ) {
-				VertexPos3fCol4b vertex = vertices[i];
-				GL.VertexAttrib2( shader.texCoordsLoc, -1f, -1f );
-				GL.VertexAttrib4( shader.colourLoc, 
-				                 new Vector4( vertex.R / 255f, vertex.G / 255f, vertex.B / 255f, vertex.A / 255f ) );
-				GL.VertexAttrib3( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );				
-			}
+		public void BeginDrawClientVertices( DrawMode mode ) {
+			GL.Begin( (BeginMode)modeMappings[(int)mode] );
+		}
+		
+		public void EndDrawClientVertices() {
 			GL.End();
 		}
 		
-		public override void Draw2DTextureVertices( ref Texture tex ) {
-			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
-			// Have to order them this way because it's a triangle strip.
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
-			};
-			GL.Begin( BeginMode.TriangleStrip );
-			for( int i = 0; i < vertices.Length; i++ ) {
-				VertexPos3fTex2f vertex = vertices[i];
-				GL.VertexAttrib4( shader.colourLoc, new Vector4( 1, 1, 1, 1 ) );
-				GL.VertexAttrib2( shader.texCoordsLoc, vertex.U, vertex.V );
-				GL.VertexAttrib3( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.End();
-		}
-		
-		public override void PrintApiSpecificInfo() {
+		public void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );
 			Console.WriteLine( "OpenGL renderer: " + GL.GetString( StringName.Renderer ) );
 			Console.WriteLine( "OpenGL version: " + GL.GetString( StringName.Version ) );
@@ -629,7 +600,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
-		public override void TakeScreenshot( string output, Size size ) {
+		public void TakeScreenshot( string output, Size size ) {
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height, BmpPixelFormat.Format32bppRgb ) ) { // ignore alpha component
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 					GL.ReadPixels( 0, 0, size.Width, size.Height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
@@ -639,7 +610,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void OnWindowResize( int newWidth, int newHeight ) {
+		public void OnWindowResize( int newWidth, int newHeight ) {
 			GL.Viewport( 0, 0, newWidth, newHeight );
 		}
 

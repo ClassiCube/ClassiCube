@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			
 			public byte PlayerId;
 			
-			public PlayerInfo( IGraphicsApi graphics, Player p ) {
+			public PlayerInfo( OpenGLApi graphics, Player p ) {
 				Name = p.DisplayName;
 				PlayerId = p.ID;
 				List<DrawTextArgs> parts = Utils.SplitText( graphics, Name, true );

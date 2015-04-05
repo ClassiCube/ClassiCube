@@ -8,7 +8,7 @@ namespace ClassicalSharp.Selections {
 	public class SelectionManager : IDisposable {
 		
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		public SelectionManager( Game window ) {
 			Window = window;

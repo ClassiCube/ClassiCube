@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 	public abstract class IModel {
 		
 		protected Game window;
-		protected IGraphicsApi graphics;
+		protected OpenGLApi graphics;
 		
 		public IModel( Game window ) {
 			this.window = window;

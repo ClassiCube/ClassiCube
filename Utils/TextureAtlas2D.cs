@@ -45,15 +45,15 @@ namespace ClassicalSharp {
 		public Bitmap AtlasBitmap;
 		public int horElementSize, verElementSize;
 		public float invHorElementSize, invVerElementSize;
-		public IGraphicsApi GraphicsApi;
+		public OpenGLApi GraphicsApi;
 		
-		public TextureAtlas2D( IGraphicsApi graphics, string path, int elementsPerRow, int rows, int usedRows ) {
+		public TextureAtlas2D( OpenGLApi graphics, string path, int elementsPerRow, int rows, int usedRows ) {
 			Bitmap bmp = new Bitmap( path );
 			GraphicsApi = graphics;
 			Init( bmp, elementsPerRow, rows, usedRows );
 		}
 		
-		public TextureAtlas2D( IGraphicsApi graphics, Bitmap bmp, int elementsPerRow, int rows, int usedRows ) {
+		public TextureAtlas2D( OpenGLApi graphics, Bitmap bmp, int elementsPerRow, int rows, int usedRows ) {
 			GraphicsApi = graphics;
 			Init( bmp, elementsPerRow, rows, usedRows );
 		}

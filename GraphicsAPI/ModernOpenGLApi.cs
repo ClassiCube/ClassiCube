@@ -6,7 +6,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	public class ModernOpenGLApi {
+	public partial class OpenGLApi {
 		
 		public int CreateProgram( string vertexShader, string fragShader ) {
 			int vertexShaderId = LoadShader( vertexShader, ShaderType.VertexShader );
@@ -40,6 +40,34 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void UseProgram( int program ) {
 			GL.UseProgram( program );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, float v0 ) {
+			GL.VertexAttrib1( attribLoc, v0 );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, float v0, float v1 ) {
+			GL.VertexAttrib2( attribLoc, v0, v1 );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, Vector2 v ) {
+			GL.VertexAttrib2( attribLoc, v );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, float v0, float v1, float v2 ) {
+			GL.VertexAttrib3( attribLoc, v0, v1, v2 );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, Vector3 v ) {
+			GL.VertexAttrib3( attribLoc, v );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, float v0, float v1, float v2, float v3 ) {
+			GL.VertexAttrib4( attribLoc, v0, v1, v2, v3 );
+		}
+		
+		public void SetVertexAttrib( int attribLoc, Vector4 v ) {
+			GL.VertexAttrib4( attribLoc, v );
 		}
 		
 		// Booooo, no direct state access for OpenGL 2.0.

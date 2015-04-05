@@ -17,8 +17,7 @@ namespace ClassicalSharp {
 	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public partial class Game : GameWindow {
 		
-		public IGraphicsApi Graphics;
-		public ModernOpenGLApi ModernGraphics;
+		public OpenGLApi Graphics;
 		public Map Map;
 		public NetworkProcessor Network;
 		
@@ -145,7 +144,6 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
-			ModernGraphics = new ModernOpenGLApi();
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
@@ -187,7 +185,7 @@ namespace ClassicalSharp {
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect();
 			guiShader = new GuiShader();
-			guiShader.Initialise( ModernGraphics );
+			guiShader.Initialise( Graphics );
 		}
 		GuiShader guiShader;
 		
@@ -267,16 +265,16 @@ namespace ClassicalSharp {
 				SelectedPos = null;
 			}
 			
-			ModernGraphics.UseProgram( guiShader.ProgramId );
+			Graphics.UseProgram( guiShader.ProgramId );
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
-			ModernGraphics.SetUniform( guiShader.projLoc, ref matrix );
+			Graphics.SetUniform( guiShader.projLoc, ref matrix );
 			Graphics.Mode2D( guiShader );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
 			Graphics.Mode3D();
-			ModernGraphics.UseProgram( 0 );
+			Graphics.UseProgram( 0 );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {

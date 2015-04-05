@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		}
 		
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		int _1Dcount = 1;
 		ChunkMeshBuilder builder;

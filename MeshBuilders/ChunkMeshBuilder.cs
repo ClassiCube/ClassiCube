@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public BlockInfo BlockInfo;
 		protected Map map;
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		public ChunkMeshBuilder( Game window ) {
 			Window = window;

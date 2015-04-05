@@ -184,7 +184,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, int x1, int y1 ) {
+		public static Texture Make2DTexture( OpenGLApi graphics, Bitmap bmp, int x1, int y1 ) {
 			if( graphics.SupportsNonPowerOf2Textures ) {
 				int textureID = graphics.LoadTexture( bmp );
 				return new Texture( textureID, x1, y1, bmp.Width, bmp.Height, 1f, 1f );
@@ -244,14 +244,14 @@ namespace ClassicalSharp {
 			get { return ID > 0; }
 		}
 		
-		public void Render( IGraphicsApi graphics ) {
+		public void Render( OpenGLApi graphics ) {
 			graphics.Texturing = true;
 			graphics.Bind2DTexture( ID );
 			RenderNoBind( graphics );
 			graphics.Texturing = false;
 		}
 		
-		public void RenderNoBind( IGraphicsApi graphics ) {
+		public void RenderNoBind( OpenGLApi graphics ) {
 			graphics.Draw2DTextureVertices( ref this );
 		}
 		

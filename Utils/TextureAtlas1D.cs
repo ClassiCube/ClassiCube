@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		internal int elementsPerBitmap;
 		public float invElementSize;
 		
-		public TextureAtlas1D( IGraphicsApi graphics, Bitmap[] bmps, int elementsPerBitmap ) {
+		public TextureAtlas1D( OpenGLApi graphics, Bitmap[] bmps, int elementsPerBitmap ) {
 			Init( graphics.SupportsNonPowerOf2Textures, bmps, elementsPerBitmap );
 		}
 		

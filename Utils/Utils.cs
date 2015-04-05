@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 			Color.FromArgb( 255, 255, 255 ), // white
 		};
 
-		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
+		public static List<DrawTextArgs> SplitText( OpenGLApi graphics, string value, bool shadow ) {
 			int code = 15;
 			List<DrawTextArgs> parts = new List<DrawTextArgs>();
 			for( int i = 0; i < value.Length; i++ ) {

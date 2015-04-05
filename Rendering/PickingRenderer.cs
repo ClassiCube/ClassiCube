@@ -7,7 +7,7 @@ namespace ClassicalSharp.Renderers {
 	public class PickingRenderer {
 		
 		Game window;
-		IGraphicsApi graphics;
+		OpenGLApi graphics;
 		
 		public PickingRenderer( Game window ) {
 			this.window = window;

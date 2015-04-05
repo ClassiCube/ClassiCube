@@ -13,17 +13,17 @@ namespace ClassicalSharp {
 		
 		public bool UseShadow;
 		public Color ShadowColour;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
-		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow ) : 
+		public DrawTextArgs( OpenGLApi graphics, string text, Color col, bool useShadow ) : 
 			this( graphics, text, col, useShadow, Color.Black, 0f, 0f ) {
 		}
 		
-		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow, Color shadowCol ) : 
+		public DrawTextArgs( OpenGLApi graphics, string text, Color col, bool useShadow, Color shadowCol ) : 
 			this( graphics, text, col, useShadow, shadowCol, 0f, 0f ) {
 		}
 		
-		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, 
+		public DrawTextArgs( OpenGLApi graphics, string text, Color col, 
 		                    bool useShadow, Color shadowCol, float x, float y ) {
 			Graphics = graphics;
 			Text = text;

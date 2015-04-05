@@ -7,9 +7,9 @@ namespace ClassicalSharp {
 		
 		public int VbId;
 		public int Count;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
-		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, IGraphicsApi graphics ) {
+		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, OpenGLApi graphics ) {
 			Count = count;
 			Graphics = graphics;
 			VbId = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b, count );

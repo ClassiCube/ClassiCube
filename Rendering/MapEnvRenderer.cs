@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		
 		public Map Map;
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		protected Block sideBlock, edgeBlock;
 		
 		public virtual void OnNewMap( object sender, EventArgs e ) {
