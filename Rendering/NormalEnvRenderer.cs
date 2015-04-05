@@ -7,9 +7,12 @@ namespace ClassicalSharp.Renderers {
 
 	public class NormalEnvRenderer : EnvRenderer {
 		
+		EnvShader shader;
 		public NormalEnvRenderer( Game window ) {
 			Window = window;
 			Map = Window.Map;
+			shader = new EnvShader();
+			shader.Initialise( window.Graphics );
 		}
 		
 		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 6;
@@ -17,15 +20,13 @@ namespace ClassicalSharp.Renderers {
 		public float CloudsSpeed = 1f;
 		
 		public override void Render( double deltaTime ) {
-			if( skyVbo != -1 ) {
-				Vector3 pos = Window.LocalPlayer.EyePosition;
-				if( pos.Y < Map.Height + skyOffset ) {
-					Graphics.DrawVbPos3fCol4b( DrawMode.Triangles, skyVbo, skyVertices );
-				}
+			if( Map.IsNotLoaded ) return;
+						
+			Vector3 pos = Window.LocalPlayer.EyePosition;
+			if( pos.Y < Map.Height + skyOffset ) {
+				Graphics.DrawVbPos3fCol4b( DrawMode.Triangles, skyVbo, skyVertices );
 			}
-			if( cloudsVbo != -1 ) {
-				RenderClouds( deltaTime );
-			}
+			RenderClouds( deltaTime );
 			ResetFog();
 		}
 
