@@ -119,7 +119,6 @@ varying vec2 out_texcoords;
 varying vec4 out_colour;
 uniform sampler2D texImage;
 uniform vec4 fogColour;
-uniform float fogStart;
 uniform float fogEnd;
 uniform float fogDensity;
 uniform float fogMode;
@@ -143,7 +142,7 @@ void main() {
    float depth = (gl_FragCoord.z / gl_FragCoord.w);
    float f = 0;
    if(fogMode == 0) {
-      f = (fogEnd - depth) / (fogEnd - fogStart);
+      f = (fogEnd - depth) / fogEnd; // omit (end - start) since start is 0
    } else {
       f = exp(-fogDensity * depth);
    }
@@ -197,10 +196,9 @@ varying vec2 out_texcoords;
 varying vec4 out_colour;
 uniform sampler2D texImage;
 uniform vec4 fogColour;
-uniform int fogStart;
-uniform int fogEnd;
+uniform float fogEnd;
 uniform float fogDensity;
-uniform int fogMode;
+uniform float fogMode;
 
 void main() {
    vec4 finalColour = texture(texImage, out_texcoords) * out_colour;
@@ -212,7 +210,7 @@ void main() {
       float depth = (gl_FragCoord.z / gl_FragCoord.w);
       float f = 0;
       if(fogMode == 1 ) {
-         f = (fogEnd - depth) / (fogEnd - fogStart);
+         f = (fogEnd - depth) / fogEnd; // omit (end - start) since start is 0
       } else if(fogMode == 2) {
          f = exp(-fogDensity * depth);
       }
