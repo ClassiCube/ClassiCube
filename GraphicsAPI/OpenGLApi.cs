@@ -327,6 +327,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			#endif
 		}
 		
+		public void BindVb( int vb ) {
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
+		}
+		
+		public void DrawArrays( DrawMode mode, int offset, int vertices ) {
+			GL.DrawArrays( modeMappings[(int)mode], offset, vertices );
+		}
+		
 		public void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.TextureCoordArray );

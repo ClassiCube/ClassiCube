@@ -70,13 +70,28 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexAttrib4( attribLoc, v );
 		}
 		
-		public void SetVertexAttribPointerFloat( int attribLoc, int numComponents, int stride, int offset ) {
+		public void SetVertexAttribPointerF( int attribLoc, int numComponents, int stride, int offset ) {
 			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
 		}
 		
-		public void SetVertexAttribPointer( int attribLoc, int numComponents, 
-		                                   VertexAttribPointerType type, bool normalise, int stride, int offset ) {
-			GL.VertexAttribPointer( attribLoc, numComponents, type, normalise, stride, new IntPtr( offset ) );
+		public void EnableAndSetVertexAttribPointerF( int attribLoc, int numComponents, int stride, int offset ) {
+			GL.EnableVertexAttribArray( attribLoc );
+			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
+		}
+		
+		VertexAttribPointerType[] attribMappings = new VertexAttribPointerType[] {
+			VertexAttribPointerType.Float, VertexAttribPointerType.UnsignedByte,
+			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,
+			VertexAttribPointerType.Byte, VertexAttribPointerType.Short,
+			VertexAttribPointerType.Int,
+		};
+		public void SetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
+			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
+		}
+		
+		public void EnableAndSetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
+			GL.EnableVertexAttribArray( attribLoc );
+			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
 		}
 		
 		public void EnableVertexAttribArray( int attribLoc ) {
@@ -89,7 +104,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		// Booooo, no direct state access for OpenGL 2.0.
 		
-		public void SetUniform( int uniformLoc, ref float value ) {
+		public void SetUniform( int uniformLoc, float value ) {
 			GL.Uniform1( uniformLoc, value );
 		}
 		
@@ -140,5 +155,15 @@ namespace ClassicalSharp.GraphicsAPI {
 				Console.WriteLine( i + " : " + type + ", " + builder );
 			}
 		}
+	}
+	
+	public enum VertexAttribType : byte {
+		Float32 = 0,
+		UInt8 = 1,
+		UInt16 = 2,
+		UInt32 = 3,
+		Int8 = 4,
+		Int16 = 5,
+		Int32 = 6,
 	}
 }

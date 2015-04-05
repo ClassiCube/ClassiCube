@@ -18,16 +18,23 @@ namespace ClassicalSharp.Renderers {
 		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 6;
 		int skyOffset = 10, skyVbo = -1, skyVertices = 6;
 		public float CloudsSpeed = 1f;
+		const int stride = VertexPos3fTex2fCol4b.Size;
 		
 		public override void Render( double deltaTime ) {
-			if( Map.IsNotLoaded ) return;
+			if( Map.IsNotLoaded || skyVbo == -1 ) return;
+			
+			Graphics.Fog = false;
+			Graphics.UseProgram( shader.ProgramId );
+			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
+			ResetFog( true );
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
-				Graphics.DrawVbPos3fCol4b( DrawMode.Triangles, skyVbo, skyVertices );
+				RenderSky();
 			}
 			RenderClouds( deltaTime );
-			ResetFog();
+			Graphics.UseProgram( 0 );
+			Graphics.Fog = true;
 		}
 
 		public void SetSkyOffset( int offset ) {
@@ -40,7 +47,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		protected override void FogColourChanged() {
-			ResetFog();
+			ResetFog( false );
 		}
 		
 		protected override void SkyColourChanged() {
@@ -57,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void OnNewMapLoaded( object sender, EventArgs e ) {
 			Graphics.Fog = true;
-			ResetFog();
+			ResetFog( false );
 			ResetSky();
 			ResetClouds();
 		}
@@ -65,12 +72,12 @@ namespace ClassicalSharp.Renderers {
 		public override void Init() {
 			base.Init();
 			Graphics.Fog = true;
-			ResetFog();
+			ResetFog( false );
 			ResetSky();
 			ResetClouds();
 			cloudTexture = Graphics.LoadTexture( "clouds.png" );
 			Window.ViewDistanceChanged += delegate {
-				ResetFog();
+				ResetFog( false );
 				ResetSky();
 				ResetClouds();
 			};
@@ -83,64 +90,81 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DeleteTexture( cloudTexture );
 		}
 		
+		void RenderSky() {
+			Graphics.BindVb( skyVbo );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
+			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			Graphics.DrawArrays( DrawMode.Triangles, 0, skyVertices );
+			Graphics.BindVb( 0 );
+			
+			Graphics.DisableVertexAttribArray( shader.positionLoc );
+			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
+			Graphics.DisableVertexAttribArray( shader.colourLoc );
+		}
+		
 		void RenderClouds( double delta ) {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
-			Graphics.SetMatrixMode( MatrixType.Texture );
-			Matrix4 matrix = Matrix4.CreateTranslation( offset, 0, 0 );
-			Graphics.LoadMatrix( ref matrix );
-			Graphics.SetMatrixMode( MatrixType.Modelview );
-			
-			Graphics.AlphaTest = true;
+			Graphics.SetUniform( shader.sOffsetLoc, offset );
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( cloudTexture );
-			Graphics.DrawVbPos3fTex2fCol4b( DrawMode.Triangles, cloudsVbo, cloudsVertices );
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
 			
-			Graphics.SetMatrixMode( MatrixType.Texture );
-			Graphics.LoadIdentityMatrix();
-			Graphics.SetMatrixMode( MatrixType.Modelview );
+			Graphics.BindVb( cloudsVbo );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
+			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			Graphics.DrawArrays( DrawMode.Triangles, 0, cloudsVertices );
+			Graphics.BindVb( 0 );
+			
+			Graphics.DisableVertexAttribArray( shader.positionLoc );
+			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
+			Graphics.DisableVertexAttribArray( shader.colourLoc );
+			Graphics.Texturing = false;
 		}
 		
 		void ResetClouds() {
 			Graphics.DeleteVb( cloudsVbo );
 			if( Map.IsNotLoaded ) return;
-			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
 			int extent = Window.ViewDistance;
 			int x1 = 0 - extent, x2 = Map.Width + extent;
 			int y = Map.Height + 2;
 			int z1 = 0 - extent, z2 = Map.Length + extent;
 			FastColour cloudsCol = Map.CloudsCol;
 			
-			vertices[0] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
-			vertices[1] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, cloudsCol );
-			vertices[2] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-			
-			vertices[3] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol );
-			vertices[4] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol );
-			vertices[5] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol );
+			VertexPos3fTex2fCol4b[] vertices = {
+				new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol ),
+				new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, cloudsCol ),
+				new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol ),
+				
+				new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, cloudsCol ),
+				new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol ),
+				new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol ),
+			};
 			cloudsVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		void ResetSky() {
 			Graphics.DeleteVb( skyVbo );
 			if( Map.IsNotLoaded ) return;
-			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
 			int extent = Window.ViewDistance;
 			int x1 = 0 - extent, x2 = Map.Width + extent;
 			int y = Map.Height + skyOffset;
 			int z1 = 0 - extent, z2 = Map.Length + extent;
 			FastColour skyCol = Map.SkyCol;
 			
-			vertices[0] = new VertexPos3fCol4b( x2, y, z1, skyCol );
-			vertices[1] = new VertexPos3fCol4b( x1, y, z1, skyCol );
-			vertices[2] = new VertexPos3fCol4b( x1, y, z2, skyCol );
-			
-			vertices[3] = new VertexPos3fCol4b( x2, y, z1, skyCol );
-			vertices[4] = new VertexPos3fCol4b( x2, y, z2, skyCol );
-			vertices[5] = new VertexPos3fCol4b( x1, y, z2, skyCol );
-			skyVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fCol4b );
+			VertexPos3fTex2fCol4b[] vertices = {
+				new VertexPos3fTex2fCol4b( x2, y, z1, -1000, -1000, skyCol ),
+				new VertexPos3fTex2fCol4b( x1, y, z1, -1000, -1000, skyCol ),
+				new VertexPos3fTex2fCol4b( x1, y, z2, -1000, -1000, skyCol ),
+				
+				new VertexPos3fTex2fCol4b( x2, y, z1, -1000, -1000, skyCol ),
+				new VertexPos3fTex2fCol4b( x2, y, z2, -1000, -1000, skyCol ),
+				new VertexPos3fTex2fCol4b( x1, y, z2, -1000, -1000, skyCol ),
+			};
+			skyVbo = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		double blendFactor( int x ) {
@@ -150,7 +174,7 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		void ResetFog() {
+		void ResetFog( bool updateShaders ) {
 			if( Map.IsNotLoaded ) return;
 			FastColour fogCol = Map.FogCol;
 			FastColour skyCol = Map.SkyCol;
@@ -161,10 +185,18 @@ namespace ClassicalSharp.Renderers {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 0.1f );
 				adjFogCol = new FastColour( 5, 5, 51 );
+				if( updateShaders ) {
+					Graphics.SetUniform( shader.fogModeLoc, 1 );
+					Graphics.SetUniform( shader.fogDensityLoc, 0.1f );
+				}
 			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 2f );
 				adjFogCol = new FastColour( 153, 25, 0 );
+				if( updateShaders ) {
+					Graphics.SetUniform( shader.fogModeLoc, 1 );
+					Graphics.SetUniform( shader.fogDensityLoc, 2f );
+				}
 			} else {
 				// Blend fog and sky together
 				float blend = (float)blendFactor( Window.ViewDistance );
@@ -174,9 +206,17 @@ namespace ClassicalSharp.Renderers {
 				Graphics.SetFogMode( Fog.Linear );
 				Graphics.SetFogStart( 0 );
 				Graphics.SetFogEnd( Window.ViewDistance );
+				if( updateShaders ) {
+					Graphics.SetUniform( shader.fogModeLoc, 0 );
+					Graphics.SetUniform( shader.fogEndLoc, Window.ViewDistance );
+				}
 			}
 			Graphics.ClearColour( adjFogCol );
 			Graphics.SetFogColour( adjFogCol );
+			if( updateShaders ) {
+				Vector4 colVec4 = new Vector4( adjFogCol.R / 255f, adjFogCol.G / 255f, adjFogCol.B / 255f, 1 );
+				Graphics.SetUniform( shader.fogColLoc, ref colVec4 );
+			}
 		}
 	}
 }

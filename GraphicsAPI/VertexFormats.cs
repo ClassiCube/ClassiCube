@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 			R = r; G = g; B = b; A = 255;
 		}
 		
-		public static readonly int Size = 16; // (4 + 4 + 4) + (1 + 1 + 1 + 1)
+		public const int Size = 16; // (4 + 4 + 4) + (1 + 1 + 1 + 1)
 		
 		public override string ToString()  {
 			return String.Format( "({0},{1},{2}) ({3},{4},{5},{6})", X, Y, Z, R, G, B, A );
@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 			R = r; G = g; B = b; A = 255;
 		}
 		
-		public static readonly int Size = 24; // 3 * 4 + 2 * 4 + 4 * 1
+		public const int Size = 24; // 3 * 4 + 2 * 4 + 4 * 1
 		
 		public override string ToString()  {
 			return String.Format( "({0},{1},{2}) ({3},{4}) ({5},{6},{7},{8})", X, Y, Z, R, U, V, G, B, A );
@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			U = u; V = v;
 		}
 		
-		public static readonly int Size = 20; // (4 + 4 + 4) + (4 + 4)
+		public const int Size = 20; // (4 + 4 + 4) + (4 + 4)
 		
 		public override string ToString()  {
 			return String.Format( "({0},{1},{2}) ({3},{4})", X, Y, Z, U, V );
