@@ -50,6 +50,7 @@ namespace ClassicalSharp {
 		
 		public readonly bool UsesLighting;
 		int elementsPerBitmap = 0;
+		MapShader shader;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -62,6 +63,7 @@ namespace ClassicalSharp {
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
 			Window.EnvVariableChanged += EnvVariableChanged;
+			shader = new MapShader();
 		}
 		
 		public void Dispose() {

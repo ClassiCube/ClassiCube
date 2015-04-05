@@ -172,4 +172,57 @@ void main() {
 			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
 		}
 	}
+	
+	public sealed class MapShader : Shader {
+		
+		public MapShader() {
+			VertexSource = @"
+#version 120
+attribute vec3 in_position;
+attribute vec2 in_texcoords;
+attribute vec4 in_colour;
+varying vec3 out_texcoords;
+varying vec4 out_colour;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_texcoords = in_texcoords;
+   out_colour = in_colour;
+}";
+			
+			FragSource = @"
+#version 120
+varying vec2 out_texcoords;
+varying vec4 out_colour;
+uniform sampler2D texImage;
+uniform vec4 fogColour;
+uniform int fogStart;
+uniform int fogEnd;
+uniform float fogDensity;
+uniform int fogMode;
+
+void main() {
+   vec4 finalColour = texture(texImage, out_texcoords) * out_colour;
+   if(finalColour.a < 0.5) {
+      discard;
+   }
+   if(fogMode != 0) {
+      float alpha = finalColour.a;
+      float depth = (gl_FragCoord.z / gl_FragCoord.w);
+      float f = 0;
+      if(fogMode == 1 ) {
+         f = (fogEnd - depth) / (fogEnd - fogStart);
+      } else if(fogMode == 2) {
+         f = exp(-fogDensity * depth);
+      }
+
+      f = clamp(f, 0.0, 1.0);
+      finalColour = mix(fogColour, finalColour, f);     
+      finalColour.a = alpha; // fog shouldn't affect alpha
+   }
+   gl_FragColor = finalColour;
+}";	
+		}		
+	}
 }
