@@ -340,6 +340,8 @@ namespace ClassicalSharp {
 		
 		public abstract void Render( ChunkPartInfo drawInfo );
 		
+		public abstract void RenderLiquidDepthPass( ChunkPartInfo drawInfo );
+		
 		public abstract void EndRender();
 		
 		public virtual void OnNewMap() {

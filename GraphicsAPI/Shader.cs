@@ -238,4 +238,31 @@ void main() {
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
 		}
 	}
+	
+	public sealed class MapLiquidDepthPassShader : Shader {
+		
+		public MapLiquidDepthPassShader() {
+			VertexSource = @"
+#version 120
+attribute vec3 in_position;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+}";
+			
+			FragSource = @"
+#version 120
+
+void main() {
+   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}";	
+		}
+		
+		public int positionLoc, mvpLoc;
+		protected override void BindParameters( OpenGLApi api ) {			
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+		}
+	}
 }

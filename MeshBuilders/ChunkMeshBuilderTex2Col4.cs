@@ -9,10 +9,12 @@ namespace ClassicalSharp {
 		TextureAtlas1D atlas;
 		int arraysCount = 0;
 		MapShader shader;
+		MapLiquidDepthPassShader liquidShader;
 		
-		public ChunkMeshBuilderTex2Col4( Game window, MapShader shader ) : base( window ) {
+		public ChunkMeshBuilderTex2Col4( Game window, MapRenderer renderer ) : base( window ) {
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
-			this.shader = shader;
+			shader = renderer.shader;
+			liquidShader = renderer.transluscentShader;
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
@@ -197,6 +199,14 @@ namespace ClassicalSharp {
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
+		}
+		
+		public override void RenderLiquidDepthPass( ChunkPartInfo info ) {
+			Graphics.BindVb( info.Id.VbId );
+			Graphics.BindIb( info.Id.IbId );
+			Graphics.EnableAndSetVertexAttribPointerF( liquidShader.positionLoc, 3, stride, 0 );			
+			Graphics.DrawElements( DrawMode.Triangles, info.IndicesCount );			
+			Graphics.DisableVertexAttribArray( liquidShader.positionLoc );
 		}
 		
 		public override void EndRender() {

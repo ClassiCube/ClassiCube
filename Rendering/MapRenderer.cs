@@ -51,14 +51,17 @@ namespace ClassicalSharp {
 		public readonly bool UsesLighting;
 		int elementsPerBitmap = 0;
 		internal MapShader shader;
+		internal MapLiquidDepthPassShader transluscentShader;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
 			Graphics = window.Graphics;
 			shader = new MapShader();
 			shader.Initialise( Graphics );
+			transluscentShader = new MapLiquidDepthPassShader();
+			transluscentShader.Initialise( Graphics );
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
-			builder = new ChunkMeshBuilderTex2Col4( window, shader );
+			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
 			UsesLighting = builder.UsesLighting;			
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
@@ -235,24 +238,26 @@ namespace ClassicalSharp {
 			}
 			Graphics.Texturing = false;
 			builder.EndRender();
-			//Graphics.UseProgram( 0 );
 			
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
-			//Graphics.UseProgram( shader.ProgramId );
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			builder.BeginRender();
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
 			
 			// First fill depth buffer
+			Graphics.UseProgram( transluscentShader.ProgramId );
+			Graphics.SetUniform( transluscentShader.mvpLoc, ref Window.mvp );
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			Graphics.ColourMask( false, false, false, false );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
 			}
+			
 			// Then actually draw the transluscent blocks
+			Graphics.UseProgram( shader.ProgramId );
 			Graphics.AlphaBlending = true;
 			Graphics.Texturing = true;
 			Graphics.ColourMask( true, true, true, true );
