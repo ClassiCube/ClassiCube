@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Renderers {
 
@@ -12,12 +13,13 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void Render( double deltaTime ) {
+			Graphics.SetFogMode( Fog.None );
 			Graphics.ClearColour( Map.SkyCol );
 		}
 		
 		public override void Init() {
 			base.Init();
-			Graphics.Fog = false;
+			Graphics.SetFogMode( Fog.None );
 			Graphics.ClearColour( Map.SkyCol );
 		}
 		

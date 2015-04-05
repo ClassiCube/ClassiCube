@@ -83,30 +83,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc( srcBlendFuncs[(int)srcFunc], destBlendFuncs[(int)destFunc] );
 		}
 		
-		public bool Fog {
-			set { ToggleCap( EnableCap.Fog, value ); }
-		}
+		public Fog FogMode = Fog.None;
+		public float FogDensity, FogEnd;
+		public Vector4 FogColour;
 		
 		public void SetFogColour( FastColour col ) {
-			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f };
-			GL.Fog( FogParameter.FogColor, colRGBA );
+			FogColour = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 		}
 		
 		public void SetFogDensity( float value ) {
-			GL.Fog( FogParameter.FogDensity, value );
+			FogDensity = value;
 		}
 		
 		public void SetFogEnd( float value ) {
-			GL.Fog( FogParameter.FogEnd, value );
+			FogEnd = value;
 		}
 		
-		FogMode[] fogModes = new FogMode[] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public void SetFogMode( Fog mode ) {
-			GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
-		}
-		
-		public void SetFogStart( float value ) {
-			GL.Fog( FogParameter.FogStart, value );
+			FogMode = mode;
 		}
 		
 		public bool FaceCulling {
@@ -248,19 +242,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endif
 		Action<DrawMode, int, int>[] drawBatchFuncs;
 		Action<DrawMode, int, int> drawBatchFunc;
-		Action<DrawMode, IndexedVbInfo, int>[] drawIndexedBatchFuncs;
-		Action<DrawMode, IndexedVbInfo, int> drawIndexedBatchFunc;
 		
 		void SetupVb() {
 			drawBatchFuncs = new Action<DrawMode, int, int>[] {
 				(mode, id, count) => DrawVbPos3fTex2fFast( mode, id, count ),
 				(mode, id, count) => DrawVbPos3fCol4bFast( mode, id, count ),
 				(mode, id, count) => DrawVbPos3fTex2fCol4bFast( mode, id, count ),
-			};
-			drawIndexedBatchFuncs = new Action<DrawMode, IndexedVbInfo, int>[] {
-				(mode, id, count) => DrawIndexedVbPos3fTex2fFast( mode, id, count ),
-				(mode, id, count) => DrawIndexedVbPos3fCol4bFast( mode, id, count ),
-				(mode, id, count) => DrawIndexedVbPos3fTex2fCol4bFast( mode, id, count ),
 			};
 		}
 		
@@ -331,8 +318,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
 		}
 		
+		public void BindIb( int ib ) {
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ib );
+		}
+		
 		public void DrawArrays( DrawMode mode, int offset, int vertices ) {
 			GL.DrawArrays( modeMappings[(int)mode], offset, vertices );
+		}
+		
+		public void DrawElements( DrawMode mode, int indicesCount ) {
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
 		}
 		
 		public void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
@@ -387,12 +382,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFunc = drawBatchFuncs[(int)batchFormat];
 		}
 		
-		public void BeginIndexedVbBatch( VertexFormat format ) {
-			batchFormat = format;
-			SetupBatchVertexState();
-			drawIndexedBatchFunc = drawIndexedBatchFuncs[(int)batchFormat];
-		}
-		
 		void SetupBatchVertexState() {
 			GL.EnableClientState( ArrayCap.VertexArray );
 			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
@@ -409,17 +398,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFunc( mode, id, verticesCount );
 		}
 		
-		public void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			drawIndexedBatchFunc( mode, id, indicesCount );
-		}
-		
 		public void EndVbBatch() {
 			ClearBatchVertexState();
-		}
-		
-		public void EndIndexedVbBatch() {
-			ClearBatchVertexState();
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 		}
 		
 		void ClearBatchVertexState() {
@@ -455,34 +435,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
 			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
-		
-		void DrawIndexedVbPos3fTex2fFast( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.VbId );
-			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.IbId );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
-		}
-		
-		void DrawIndexedVbPos3fCol4bFast( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.VbId );
-			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.IbId );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
-		}
-		
-		void DrawIndexedVbPos3fTex2fCol4bFast( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.VbId );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.IbId );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
 		}
 		#endregion
 		

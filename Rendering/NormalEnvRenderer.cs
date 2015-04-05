@@ -23,10 +23,13 @@ namespace ClassicalSharp.Renderers {
 		public override void Render( double deltaTime ) {
 			if( Map.IsNotLoaded || skyVbo == -1 ) return;
 			
-			Graphics.Fog = false;
 			Graphics.UseProgram( shader.ProgramId );
 			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
-			ResetFog( true );
+			ResetFog();
+			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( shader.fogModeLoc, Graphics.FogMode == Fog.Linear ? 0 : 1 );
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
@@ -34,7 +37,6 @@ namespace ClassicalSharp.Renderers {
 			}
 			RenderClouds( deltaTime );
 			Graphics.UseProgram( 0 );
-			Graphics.Fog = true;
 		}
 
 		public void SetSkyOffset( int offset ) {
@@ -47,7 +49,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		protected override void FogColourChanged() {
-			ResetFog( false );
+			ResetFog();
 		}
 		
 		protected override void SkyColourChanged() {
@@ -55,7 +57,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMap( object sender, EventArgs e ) {
-			Graphics.Fog = false;
 			Graphics.DeleteVb( skyVbo );
 			Graphics.DeleteVb( cloudsVbo );
 			skyVbo = -1;
@@ -63,21 +64,19 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMapLoaded( object sender, EventArgs e ) {
-			Graphics.Fog = true;
-			ResetFog( false );
+			ResetFog();
 			ResetSky();
 			ResetClouds();
 		}
 		
 		public override void Init() {
 			base.Init();
-			Graphics.Fog = true;
-			ResetFog( false );
+			ResetFog();
 			ResetSky();
 			ResetClouds();
 			cloudTexture = Graphics.LoadTexture( "clouds.png" );
 			Window.ViewDistanceChanged += delegate {
-				ResetFog( false );
+				ResetFog();
 				ResetSky();
 				ResetClouds();
 			};
@@ -97,11 +96,11 @@ namespace ClassicalSharp.Renderers {
 			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
 			Graphics.DrawArrays( DrawMode.Triangles, 0, skyVertices );
-			Graphics.BindVb( 0 );
 			
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
+			Graphics.BindVb( 0 );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -117,11 +116,12 @@ namespace ClassicalSharp.Renderers {
 			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
 			Graphics.DrawArrays( DrawMode.Triangles, 0, cloudsVertices );
-			Graphics.BindVb( 0 );
 			
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
+			Graphics.BindVb( 0 );			
+			
 			Graphics.Texturing = false;
 		}
 		
@@ -174,7 +174,7 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		void ResetFog( bool updateShaders ) {
+		void ResetFog() {
 			if( Map.IsNotLoaded ) return;
 			FastColour fogCol = Map.FogCol;
 			FastColour skyCol = Map.SkyCol;
@@ -185,18 +185,10 @@ namespace ClassicalSharp.Renderers {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 0.1f );
 				adjFogCol = new FastColour( 5, 5, 51 );
-				if( updateShaders ) {
-					Graphics.SetUniform( shader.fogModeLoc, 1 );
-					Graphics.SetUniform( shader.fogDensityLoc, 0.1f );
-				}
 			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
 				Graphics.SetFogMode( Fog.Exp );
 				Graphics.SetFogDensity( 2f );
 				adjFogCol = new FastColour( 153, 25, 0 );
-				if( updateShaders ) {
-					Graphics.SetUniform( shader.fogModeLoc, 1 );
-					Graphics.SetUniform( shader.fogDensityLoc, 2f );
-				}
 			} else {
 				// Blend fog and sky together
 				float blend = (float)blendFactor( Window.ViewDistance );
@@ -204,19 +196,10 @@ namespace ClassicalSharp.Renderers {
 				adjFogCol.G = (byte)( Utils.Lerp( fogCol.G / 255f, skyCol.G / 255f, blend ) * 255 );
 				adjFogCol.B = (byte)( Utils.Lerp( fogCol.B / 255f, skyCol.B / 255f, blend ) * 255 );
 				Graphics.SetFogMode( Fog.Linear );
-				Graphics.SetFogStart( 0 );
 				Graphics.SetFogEnd( Window.ViewDistance );
-				if( updateShaders ) {
-					Graphics.SetUniform( shader.fogModeLoc, 0 );
-					Graphics.SetUniform( shader.fogEndLoc, Window.ViewDistance );
-				}
 			}
 			Graphics.ClearColour( adjFogCol );
 			Graphics.SetFogColour( adjFogCol );
-			if( updateShaders ) {
-				Vector4 colVec4 = new Vector4( adjFogCol.R / 255f, adjFogCol.G / 255f, adjFogCol.B / 255f, 1 );
-				Graphics.SetUniform( shader.fogColLoc, ref colVec4 );
-			}
 		}
 	}
 }

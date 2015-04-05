@@ -26,7 +26,6 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			GraphicsApi.Fog = false;
 			titleWidget = CreateTextWidget( 30, serverName );
 			messageWidget = CreateTextWidget( 60, serverMotd );
 			progX = Window.Width / 2f - progWidth / 2f;

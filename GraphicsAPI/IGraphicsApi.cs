@@ -148,9 +148,9 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 	
 	public enum Fog {
-		Linear = 0,
-		Exp = 1,
-		Exp2 = 2,
+		None = 0,
+		Linear = 1,
+		Exp = 2,
 	}
 	
 	public enum FillType {

@@ -212,12 +212,17 @@ namespace ClassicalSharp {
 			Window.Vertices = 0;
 			UpdateSortOrder();
 			UpdateChunks();
+			Graphics.UseProgram( shader.ProgramId );
+			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
+			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( shader.fogModeLoc, (int)Graphics.FogMode );
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
 			builder.BeginRender();
 			Graphics.Texturing = true;
-			Graphics.AlphaTest = true;
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
@@ -228,15 +233,16 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
 			}
-			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			builder.EndRender();
+			Graphics.UseProgram( 0 );
+			
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
+			Graphics.UseProgram( shader.ProgramId );
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			builder.BeginRender();
-			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
 			
@@ -256,10 +262,10 @@ namespace ClassicalSharp {
 			}
 			Graphics.DepthTestFunc( CompareFunc.Less );
 			
-			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
 			builder.EndRender();
+			Graphics.UseProgram( 0 );
 		}
 
 		int[] distances;

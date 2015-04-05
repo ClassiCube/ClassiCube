@@ -182,15 +182,26 @@ namespace ClassicalSharp {
 		}
 		
 		public override void BeginRender() {
-			Graphics.BeginIndexedVbBatch( VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
+		const int stride = VertexPos3fTex2fCol4b.Size;
 		public override void Render( ChunkPartInfo info ) {
-			Graphics.DrawIndexedVbBatch( DrawMode.Triangles, info.Id, info.IndicesCount );
+			Graphics.BindVb( info.Id.VbId );
+			Graphics.BindIb( info.Id.IbId );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
+			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
+			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			Graphics.DrawElements( DrawMode.Triangles, info.IndicesCount );
+			
+			Graphics.DisableVertexAttribArray( shader.positionLoc );
+			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
+			Graphics.DisableVertexAttribArray( shader.colourLoc );
 		}
 		
 		public override void EndRender() {
-			Graphics.EndIndexedVbBatch();
+			Graphics.BindVb( 0 );
+			Graphics.BindIb( 0 );
 		}
 		
 		protected override void AddSpriteVertices( byte tile, int count ) {
