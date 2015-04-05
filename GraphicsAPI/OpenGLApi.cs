@@ -31,7 +31,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				Utils.LogError( "Unable to use OpenGL VBOs." );
 				throw new NotSupportedException( "Display lists not supported on optimised branch" );
 			}
-			SetupVb();
 		}
 
 		public int MaxTextureDimensions {
@@ -240,16 +239,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		Dictionary<int, int> indexedVbMemorys = new Dictionary<int, int>();
 		long totalIndexedVbMem = 0;
 		#endif
-		Action<DrawMode, int, int>[] drawBatchFuncs;
-		Action<DrawMode, int, int> drawBatchFunc;
-		
-		void SetupVb() {
-			drawBatchFuncs = new Action<DrawMode, int, int>[] {
-				(mode, id, count) => DrawVbPos3fTex2fFast( mode, id, count ),
-				(mode, id, count) => DrawVbPos3fCol4bFast( mode, id, count ),
-				(mode, id, count) => DrawVbPos3fTex2fCol4bFast( mode, id, count ),
-			};
-		}
 		
 		public int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
 			int id = 0;
@@ -375,67 +364,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DisableClientState( ArrayCap.ColorArray );
 		}
 		
-		VertexFormat batchFormat;
-		public void BeginVbBatch( VertexFormat format ) {
-			batchFormat = format;
-			SetupBatchVertexState();
-			drawBatchFunc = drawBatchFuncs[(int)batchFormat];
-		}
-		
-		void SetupBatchVertexState() {
-			GL.EnableClientState( ArrayCap.VertexArray );
-			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			}
-		}
-		
-		public void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			drawBatchFunc( mode, id, verticesCount );
-		}
-		
-		public void EndVbBatch() {
-			ClearBatchVertexState();
-		}
-		
-		void ClearBatchVertexState() {
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			}
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-		}
-		
-		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
-		
-		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
-		
-		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
 		#endregion
 		
 		
