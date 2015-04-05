@@ -193,8 +193,7 @@ namespace ClassicalSharp.Commands {
 				return new [] {
 					"&a/client rendertype [normal/legacy/legacyfast]",
 					"&bnormal: &eDefault renderer, with all environmental effects enabled.",
-					"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+					"&bfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
 				};
 			}
 		}	
@@ -204,26 +203,16 @@ namespace ClassicalSharp.Commands {
 			if( property == null ) {
 				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( property == "legacyfast" ) {
-				SetNewRenderType( g => new LegacyMapEnvRenderer( g ), 
-				                 g => new LegacyFastEnvRenderer( g ) );
+				SetNewRenderType( g => new LegacyFastEnvRenderer( g ) );
 				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
-			} else if( property == "legacy" ) {
-				SetNewRenderType( g => new LegacyMapEnvRenderer( g ), 
-				                 g => new LegacyEnvRenderer( g ) );
-				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( property == "normal" ) {
-				SetNewRenderType( g => new NormalMapEnvRenderer( g ), 
-				                 g => new NormalEnvRenderer( g ) );
+				SetNewRenderType( g => new NormalEnvRenderer( g ) );
 				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
 		}
 		
-		void SetNewRenderType( Func<Game, MapEnvRenderer> mapEnvConstructor,
-		                      Func<Game, EnvRenderer> envConstructor ) {
+		void SetNewRenderType( Func<Game, EnvRenderer> envConstructor ) {
 			Game game = Window;
-			game.MapEnvRenderer.Dispose();
-			game.MapEnvRenderer = mapEnvConstructor( game );
-			game.MapEnvRenderer.Init();
 			game.EnvRenderer.Dispose();
 			game.EnvRenderer = envConstructor( game );
 			game.EnvRenderer.Init();
