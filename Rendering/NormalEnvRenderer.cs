@@ -21,7 +21,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Render( double deltaTime ) {
 			if( Map.IsNotLoaded ) return;
-						
+			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
 				Graphics.DrawVbPos3fCol4b( DrawMode.Triangles, skyVbo, skyVertices );

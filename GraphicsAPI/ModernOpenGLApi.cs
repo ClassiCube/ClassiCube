@@ -70,6 +70,23 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexAttrib4( attribLoc, v );
 		}
 		
+		public void SetVertexAttribPointerFloat( int attribLoc, int numComponents, int stride, int offset ) {
+			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
+		}
+		
+		public void SetVertexAttribPointer( int attribLoc, int numComponents, 
+		                                   VertexAttribPointerType type, bool normalise, int stride, int offset ) {
+			GL.VertexAttribPointer( attribLoc, numComponents, type, normalise, stride, new IntPtr( offset ) );
+		}
+		
+		public void EnableVertexAttribArray( int attribLoc ) {
+			GL.EnableVertexAttribArray( attribLoc );
+		}
+		
+		public void DisableVertexAttribArray( int attribLoc ) {
+			GL.DisableVertexAttribArray( attribLoc );
+		}
+		
 		// Booooo, no direct state access for OpenGL 2.0.
 		
 		public void SetUniform( int uniformLoc, ref float value ) {
