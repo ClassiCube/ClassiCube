@@ -18,6 +18,7 @@ namespace ClassicalSharp {
 	public partial class Game : GameWindow {
 		
 		public IGraphicsApi Graphics;
+		public ModernOpenGLApi ModernGraphics;
 		public Map Map;
 		public NetworkProcessor Network;
 		
@@ -144,6 +145,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
+			ModernGraphics = new ModernOpenGLApi();
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
@@ -184,7 +186,10 @@ namespace ClassicalSharp {
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect();
+			guiShader = new GuiShader();
+			guiShader.Initialise( ModernGraphics );
 		}
+		Shader guiShader;
 		
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
@@ -262,12 +267,14 @@ namespace ClassicalSharp {
 				SelectedPos = null;
 			}
 			
+			//ModernGraphics.UseProgram( guiShader.ProgramId );
 			Graphics.Mode2D( Width, Height );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
 			Graphics.Mode3D();
+			//ModernGraphics.UseProgram( 0 );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {

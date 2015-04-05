@@ -39,7 +39,7 @@
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <BaseAddress>4194304</BaseAddress>
@@ -106,10 +106,12 @@
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
+    <Compile Include="GraphicsAPI\ModernOpenGLApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
+    <Compile Include="GraphicsAPI\Shader.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
