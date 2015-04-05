@@ -206,6 +206,7 @@ namespace ClassicalSharp {
 		const double imageCheckPeriod = 30.0;
 		double ticksAccumulator = 0, imageCheckAccumulator = 0;
 		
+		internal Matrix4 mvp;
 		protected override void OnRenderFrame( FrameEventArgs e ) {
 			accumulator += e.Time;
 			imageCheckAccumulator += e.Time;
@@ -244,6 +245,7 @@ namespace ClassicalSharp {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 			Matrix4 modelView = Camera.GetView();
 			View = modelView;
+			mvp = modelView * Projection;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
