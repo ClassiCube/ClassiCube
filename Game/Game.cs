@@ -265,6 +265,11 @@ namespace ClassicalSharp {
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
+			Texture tex = new Texture( 0, 0, 0, 1920, 1080, 1, 1 );
+			tex.ID = MapRenderer.shadowMap.TexId;
+			if( IsKeyDown( Key.F8 ) ) {
+				tex.Render( Graphics );
+			}
 			Graphics.Mode3D();
 			
 			if( screenshotRequested ) {

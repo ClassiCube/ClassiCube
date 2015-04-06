@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		internal MapShader2 shader2;
 		internal MapLiquidDepthPassShader transluscentShader;
 		internal MapShadowShader shadowShader;
-		ShadowMap shadowMap;
+		internal ShadowMap shadowMap;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -67,8 +67,8 @@ namespace ClassicalSharp {
 			shader2.Initialise( Graphics );
 			transluscentShader = new MapLiquidDepthPassShader();
 			transluscentShader.Initialise( Graphics );
-			shadowShader = new MapShadowShader();
-			shadowShader.Initialise( Graphics );
+			//shadowShader = new MapShadowShader();
+			//shadowShader.Initialise( Graphics );
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
@@ -280,13 +280,13 @@ namespace ClassicalSharp {
 			UpdateChunks();
 			
 			shadowMap.LightPosition.X = 128 + 128 * (float)Math.Sin( Window.accumulator / 30 );
-			shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );
-			Graphics.UseProgram( shadowShader.ProgramId );			
+			shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );			
 			shadowMap.BindForWriting();
 			shadowMap.SetupState( Window );
-			Graphics.SetUniform( shadowShader.mvpLoc, ref shadowMap.ShadowMatrix );
+			Graphics.SetUniform( shader.mvpLoc, ref shadowMap.ShadowMatrix );
 
 			Graphics.FaceCulling = true;
+			GL.CullFace( CullFaceMode.Front );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatchShadowPass( batch );
@@ -298,9 +298,6 @@ namespace ClassicalSharp {
 			}
 			shadowMap.UnbindFromWriting();
 			shadowMap.RestoreState( Window );
-			
-			Graphics.ColourMask( true, true, true, true );
-			Graphics.Viewport( Window.Width, Window.Height );
 			Graphics.AlphaBlending = false;
 			
 			Graphics.UseProgram( shader2.ProgramId );
@@ -310,13 +307,16 @@ namespace ClassicalSharp {
 			Graphics.UseProgram( shader2.ProgramId );
 			Graphics.SetUniform( shader2.mvpLoc, ref Window.mvp );
 			Graphics.SetUniform( shader2.lightMvpLoc, ref shadowMap.BiasedShadowMatrix );
+			
 			GL.Uniform1( shader2.texShadowLoc, 1 );
 			Graphics.SetUniform( shader2.fogColLoc, ref Graphics.FogColour );
 			Graphics.SetUniform( shader2.fogDensityLoc, Graphics.FogDensity );
 			Graphics.SetUniform( shader2.fogEndLoc, Graphics.FogEnd );
 			Graphics.SetUniform( shader2.fogModeLoc, (int)Graphics.FogMode );
+			//System.Diagnostics.Debugger.Break();
 	
 			Graphics.FaceCulling = true;
+			GL.CullFace( CullFaceMode.Back );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
@@ -343,7 +343,7 @@ namespace ClassicalSharp {
 			GL.End();
 			GL.Color3( 1f, 1f, 1f );
 			//System.Threading.Thread.Sleep( 10 );
-			GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
+			//GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
 		}
 
 		int[] distances;
@@ -424,7 +424,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.RenderShadowPass( drawInfo );
+				builder.Render( drawInfo );
 			}
 		}
 		
@@ -436,7 +436,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.RenderShadowPass( drawInfo );
+				builder.Render( drawInfo );
 			}
 		}
 

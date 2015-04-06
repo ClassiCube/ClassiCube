@@ -18,6 +18,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void Initalise() {
 			GL.GenTextures( 1, out TexId );
 			GL.BindTexture( TextureTarget.Texture2D, TexId );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge );
 			
