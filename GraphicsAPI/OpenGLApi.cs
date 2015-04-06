@@ -196,10 +196,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public void UpdateDynamicVb<T>( int id, T[] vertices, VertexFormat format ) where T : struct {
+			// TODO: Is it better to 
+			// BindBuffer(null), then BindBuffer(vertices) ?
 			int sizeInBytes = GetSizeInBytes( vertices.Length, format );
 			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
-			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 		}
 		
 		int CreateVb<T>( T[] vertices, VertexFormat format, int count, BufferUsageArb usage ) where T : struct {
@@ -208,7 +209,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			int sizeInBytes = GetSizeInBytes( count, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, usage );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -218,7 +218,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			int sizeInBytes = GetSizeInBytes( capacity, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, usage );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -230,12 +229,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			int sizeInBytes = GetSizeInBytes( verticesCount, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.VbId );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			
 			sizeInBytes = elements * sizeof( ushort );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.IbId );
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 			#if TRACK_RESOURCES
 			indexedVbMemorys.Add( info.VbId, sizeInBytes + GetSizeInBytes( verticesCount, format ) );
 			totalIndexedVbMem += sizeInBytes + GetSizeInBytes( verticesCount, format );

@@ -99,7 +99,6 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
-			Graphics.BindVb( 0 );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -118,7 +117,6 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
-			Graphics.BindVb( 0 );
 		}
 		
 		void ResetClouds() {

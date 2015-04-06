@@ -218,7 +218,6 @@ namespace ClassicalSharp {
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
-			builder.BeginRender();
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
@@ -229,13 +228,11 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
 			}
-			builder.EndRender();
 			
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
-			builder.BeginRender();
 			Graphics.AlphaBlending = false;
 			
 			// First fill depth buffer
@@ -258,7 +255,6 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc( CompareFunc.Less );
 			
 			Graphics.AlphaBlending = false;
-			builder.EndRender();
 		}
 
 		int[] distances;
