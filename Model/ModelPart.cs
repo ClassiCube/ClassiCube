@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( MapShader shader ) {
-			shader.DrawVb( Graphics, VbId, Count );
+			shader.DrawVb( Graphics, VbId, Count, DrawMode.Triangles );
 		}
 		
 		public void Dispose() {

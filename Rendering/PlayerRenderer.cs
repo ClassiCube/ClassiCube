@@ -54,23 +54,18 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		private void DrawTextureInWorld( ref Texture tex, MapShader shader ) {
-			Graphics.Bind2DTexture( tex.ID );
-			
+			Graphics.Bind2DTexture( tex.ID );			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
+			VertexPos3fTex2fCol4b[] vertices = {
+				new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, FastColour.White ),
 			};
-			Graphics.BeginDrawClientVertices( DrawMode.TriangleStrip );
-			for( int i = 0; i < vertices.Length; i++ ) {
-				VertexPos3fTex2f vertex = vertices[i];
-				Graphics.SetVertexAttrib( shader.colourLoc, new Vector4( 1, 1, 1, 1 ) );
-				Graphics.SetVertexAttrib( shader.texCoordsLoc, vertex.U, vertex.V );
-				Graphics.SetVertexAttrib( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
-			}
-			Graphics.EndDrawClientVertices();
+			
+			Graphics.BindVb( Graphics.vb2d );
+			Graphics.UpdateDynamicVb( Graphics.vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			shader.DrawVb( Graphics, Graphics.vb2d, 4, DrawMode.TriangleStrip );
 		}
 	}
 }

@@ -40,41 +40,35 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void CheckResources() {
 		}
 		
+		internal int vb2d;
+		void Setup2DCache() {
+			vb2d = CreateEmptyDynamicVb( VertexFormat.VertexPos3fTex2fCol4b, 4 );
+		}
+		
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			VertexPos3fCol4b[] vertices = {
-				new VertexPos3fCol4b( x + width, y, 0, col ),
-				new VertexPos3fCol4b( x + width, y + height, 0, col ),
-				new VertexPos3fCol4b( x, y, 0, col ),
-				new VertexPos3fCol4b( x, y + height, 0, col ),
+			VertexPos3fTex2fCol4b[] vertices = {
+				new VertexPos3fTex2fCol4b( x + width, y, 0, -10, -10, col ),
+				new VertexPos3fTex2fCol4b( x + width, y + height, 0, -10, -10, col ),
+				new VertexPos3fTex2fCol4b( x, y, 0, -10, -10, col ),
+				new VertexPos3fTex2fCol4b( x, y + height, 0, -10, -10, col ),
 			};
-			BeginDrawClientVertices( DrawMode.TriangleStrip );
-			for( int i = 0; i < vertices.Length; i++ ) {
-				VertexPos3fCol4b vertex = vertices[i];
-				SetVertexAttrib( shader.texCoordsLoc, -1f, -1f );
-				SetVertexAttrib( shader.colourLoc, 
-				                 new Vector4( vertex.R / 255f, vertex.G / 255f, vertex.B / 255f, vertex.A / 255f ) );
-				SetVertexAttrib( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );				
-			}
-			EndDrawClientVertices();
+			BindVb( vb2d );
+			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			shader.DrawVb( this, vb2d, 4 );
 		}
 		
 		public void Draw2DTextureVertices( ref Texture tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			// Have to order them this way because it's a triangle strip.
-			VertexPos3fTex2f[] vertices = {
-				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
-				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
-				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
-				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
+			VertexPos3fTex2fCol4b[] vertices = {
+				new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, FastColour.White ),
+				new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, FastColour.White ),
 			};
-			BeginDrawClientVertices( DrawMode.TriangleStrip );
-			for( int i = 0; i < vertices.Length; i++ ) {
-				VertexPos3fTex2f vertex = vertices[i];
-				SetVertexAttrib( shader.colourLoc, new Vector4( 1, 1, 1, 1 ) );
-				SetVertexAttrib( shader.texCoordsLoc, vertex.U, vertex.V );
-				SetVertexAttrib( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
-			}
-			EndDrawClientVertices();
+			BindVb( vb2d );
+			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			shader.DrawVb( this, vb2d, 4 );
 		}
 		
 		protected GuiShader shader;

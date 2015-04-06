@@ -65,6 +65,20 @@ void main() {
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			projLoc = api.GetUniformLocation( ProgramId, "proj" );
 		}
+		
+		const int stride = VertexPos3fTex2fCol4b.Size;
+		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount ) {
+			graphics.BindVb( vbId );
+			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
+			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
+			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			graphics.DrawVb( DrawMode.TriangleStrip, 0, verticesCount );
+			
+			graphics.DisableVertexAttribArray( positionLoc );
+			graphics.DisableVertexAttribArray( texCoordsLoc );
+			graphics.DisableVertexAttribArray( colourLoc );
+		}
 	}
 	
 	public sealed class PickingShader : Shader {
@@ -239,13 +253,13 @@ void main() {
 		}
 		
 		const int stride = VertexPos3fTex2fCol4b.Size;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount ) {
+		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
 			graphics.BindVb( vbId );
 			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
 			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
 			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
-			graphics.DrawVb( DrawMode.Triangles, 0, verticesCount );
+			graphics.DrawVb( mode, 0, verticesCount );
 			
 			graphics.DisableVertexAttribArray( positionLoc );
 			graphics.DisableVertexAttribArray( texCoordsLoc );

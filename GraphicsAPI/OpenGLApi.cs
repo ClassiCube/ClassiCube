@@ -31,6 +31,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				Utils.LogError( "Unable to use OpenGL VBOs." );
 				throw new NotSupportedException( "Display lists not supported on optimised branch" );
 			}
+			Setup2DCache();
 		}
 
 		public int MaxTextureDimensions {
@@ -167,44 +168,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		public void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
-			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
-			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
-			// Feasible alternatives:
-			// - Use a dynamically updated VBO, and resize it (i.e. create a new bigger VBO) if required.
-			// - Immediate mode.
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fCol4b vertex = vertices[i];
-				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.Color4( 1f, 1f, 1f, 1f );
-			GL.End();
-		}
-		
-		public void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fTex2f vertex = vertices[i];
-				GL.TexCoord2( vertex.U, vertex.V );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.End();
-		}
-		
-		public void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fTex2fCol4b vertex = vertices[i];
-				GL.TexCoord2( vertex.U, vertex.V );
-				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.Color4( 1f, 1f, 1f, 1f );
-			GL.End();
-		}
-		
 		PolygonMode[] fillModes = new PolygonMode[] { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
 		public void SetFillType( FillType type ) {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
@@ -228,6 +191,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			return CreateVb( vertices, format, count, BufferUsageArb.StreamDraw );
 		}
 		
+		public int CreateEmptyDynamicVb(VertexFormat format, int capacity ) {
+			return CreateEmptyVb( format, capacity, BufferUsageArb.StreamDraw );
+		}
+		
+		public void UpdateDynamicVb<T>( int id, T[] vertices, VertexFormat format, int count ) where T : struct {
+			int sizeInBytes = GetSizeInBytes( count, format );
+			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+		}
+		
 		int CreateVb<T>( T[] vertices, VertexFormat format, int count, BufferUsageArb usage ) where T : struct {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
@@ -235,12 +209,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, usage );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			vbMemorys.Add( id, sizeInBytes );
-			totalVbMem += sizeInBytes;
-			Console.WriteLine( "VB MEM " + ( totalVbMem / 1024.0 / 1024.0 ) );
-			#endif
+			return id;
+		}
+		
+		int CreateEmptyVb( VertexFormat format, int capacity, BufferUsageArb usage ) {
+			int id = 0;
+			GL.Arb.GenBuffers( 1, out id );
+			int sizeInBytes = GetSizeInBytes( capacity, format );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, usage );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			return id;
 		}
 		
