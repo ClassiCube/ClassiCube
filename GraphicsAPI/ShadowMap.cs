@@ -55,10 +55,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( status != FramebufferErrorCode.FramebufferComplete ) Console.WriteLine( "ERROR FBO: " + status );
 			
 			GL.Ext.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat );
 			fboWidth = width;
 			fboHeight = height;
 		}
