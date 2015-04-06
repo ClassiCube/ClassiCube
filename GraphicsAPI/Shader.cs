@@ -51,6 +51,7 @@ void main() {
    if(finalColour.a < 0.05) {
       discard;
    }
+   //finalColour.rgb = vec3(1.0,1.0,1.0)-finalColour.rgb; for shadow map
    gl_FragColor = finalColour;
 }";
 		}
@@ -272,58 +273,6 @@ void main() {
 			graphics.DisableVertexAttribArray( positionLoc );
 			graphics.DisableVertexAttribArray( texCoordsLoc );
 			graphics.DisableVertexAttribArray( colourLoc );
-		}
-	}
-	
-		public sealed class MapShadowShader : Shader {
-		
-		public MapShadowShader() {
-			VertexSource = @"
-#version 120
-attribute vec3 in_position;
-attribute vec2 in_texcoords;
-varying vec2 out_texcoords;
-uniform mat4 MVP;
-
-void main() {
-   gl_Position = MVP * vec4(in_position, 1.0);
-   out_texcoords = in_texcoords;
-}";
-			
-			FragSource = @"
-#version 120
-varying vec2 out_texcoords;
-varying vec4 out_colour;
-uniform sampler2D texImage;
-
-void main() {
-   vec4 finalColour = texture2D(texImage, out_texcoords);
-   if(finalColour.a < 0.5) {
-      discard;
-   }
-   gl_FragColor = finalColour;
-}";	
-		}
-		
-		public int positionLoc, texCoordsLoc;
-		public int mvpLoc, texImageLoc;
-		protected override void BindParameters( OpenGLApi api ) {			
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
-		}
-		
-		const int stride = VertexPos3fTex2fCol4b.Size;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
-			graphics.BindVb( vbId );
-			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
-			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
-			
-			graphics.DrawVb( mode, 0, verticesCount );
-			
-			graphics.DisableVertexAttribArray( positionLoc );
-			graphics.DisableVertexAttribArray( texCoordsLoc );
 		}
 	}
 	

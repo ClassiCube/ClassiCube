@@ -62,12 +62,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		);
 		
 		public Matrix4 ShadowMatrix, BiasedShadowMatrix;
-		public Vector3 LightPosition = new Vector3( 256, 160, 256 );
+		public Vector3 LightPosition = new Vector3( 256, 160, 192 );
 		public Vector3 LightTarget = new Vector3( 128, 128, 128 );
 
 		public void SetupState( Game game ) {
 			Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(
-				(float)Math.PI / 4, game.Width / (float)game.Height, 1, 1000 );
+				(float)Math.PI / 2 - 0.01f, game.Width / (float)game.Height, 0.1f, 800f );
 			
 			Matrix4 modelview = Matrix4.LookAt( LightPosition, LightTarget, Vector3.UnitY );
 			ShadowMatrix = modelview * projection;

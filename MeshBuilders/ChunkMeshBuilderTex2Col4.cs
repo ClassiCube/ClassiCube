@@ -10,13 +10,11 @@ namespace ClassicalSharp {
 		int arraysCount = 0;
 		MapShader shader;
 		MapLiquidDepthPassShader liquidShader;
-		MapShadowShader shadowShader;
 		
 		public ChunkMeshBuilderTex2Col4( Game window, MapRenderer renderer ) : base( window ) {
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 			shader = renderer.shader;
 			liquidShader = renderer.transluscentShader;
-			shadowShader = renderer.shadowShader;
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
@@ -199,20 +197,10 @@ namespace ClassicalSharp {
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
 		}
 		
-		public override void RenderShadowPass( ChunkPartInfo info ) {
-			Graphics.BindVb( info.Id.VbId );
-			Graphics.BindIb( info.Id.IbId );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
-			
-			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
-			Graphics.DisableVertexAttribArray( shader.positionLoc );
-			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
-		}
-		
 		public override void RenderLiquidDepthPass( ChunkPartInfo info ) {
 			Graphics.BindVb( info.Id.VbId );
 			Graphics.BindIb( info.Id.IbId );
+			
 			Graphics.EnableAndSetVertexAttribPointerF( liquidShader.positionLoc, 3, stride, 0 );			
 			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
 			Graphics.DisableVertexAttribArray( liquidShader.positionLoc );

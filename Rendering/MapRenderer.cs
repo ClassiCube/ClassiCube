@@ -55,7 +55,6 @@ namespace ClassicalSharp {
 		internal MapShader shader;
 		internal MapShader2 shader2;
 		internal MapLiquidDepthPassShader transluscentShader;
-		internal MapShadowShader shadowShader;
 		internal ShadowMap shadowMap;
 		
 		public MapRenderer( Game window ) {
@@ -67,8 +66,6 @@ namespace ClassicalSharp {
 			shader2.Initialise( Graphics );
 			transluscentShader = new MapLiquidDepthPassShader();
 			transluscentShader.Initialise( Graphics );
-			//shadowShader = new MapShadowShader();
-			//shadowShader.Initialise( Graphics );
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
@@ -222,17 +219,58 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( double deltaTime ) {
-			RenderShadowTest( deltaTime );
-			return;
-			
 			if( chunks == null ) return;
 			Window.Vertices = 0;
 			UpdateSortOrder();
 			UpdateChunks();
 			
-			// Render solid and fully transparent to fill depth buffer.
-			// These blocks are treated as having an alpha value of either none or full.
+			//shadowMap.LightPosition.X = 128 + 128 * (float)Math.Sin( Window.accumulator / 30 );
+			//shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );
+			shadowMap.LightTarget.X = Window.Map.Width / 2;
+			shadowMap.LightTarget.Z = Window.Map.Length / 2;
+			shadowMap.LightTarget.Y = 0;
+			shadowMap.LightPosition.X = Window.Map.Width / 2 + Window.Map.Width * (float)Math.Cos( Window.accumulator / 10 );
+			shadowMap.LightPosition.Y = Window.Map.Height / 2 + 10 + Window.Map.Height / 2 * Math.Abs( (float)Math.Sin( Window.accumulator / 10 ) );
+			shadowMap.LightPosition.Z = Window.Map.Length / 2;
+			
+			shadowMap.BindForWriting();
+			shadowMap.SetupState( Window );
+			Graphics.UseProgram( transluscentShader.ProgramId );
+			Graphics.SetUniform( transluscentShader.mvpLoc, ref shadowMap.ShadowMatrix );
+
 			Graphics.FaceCulling = true;
+			GL.CullFace( CullFaceMode.Front );
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				RenderSolidBatchShadowPass( batch );
+			}
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				//RenderSpriteBatchShadowPass( batch );
+			}
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				//RenderTranslucentBatchDepthPass( batch );
+			}
+			shadowMap.UnbindFromWriting();
+			shadowMap.RestoreState( Window );
+			Graphics.AlphaBlending = false;
+			
+			Graphics.UseProgram( shader2.ProgramId );
+			GL.ActiveTexture( TextureUnit.Texture1 );
+			GL.BindTexture( TextureTarget.Texture2D, shadowMap.TexId );
+			GL.ActiveTexture( TextureUnit.Texture0 );
+			Graphics.UseProgram( shader2.ProgramId );
+			Graphics.SetUniform( shader2.mvpLoc, ref Window.mvp );
+			Graphics.SetUniform( shader2.lightMvpLoc, ref shadowMap.BiasedShadowMatrix );
+			
+			GL.Uniform1( shader2.texShadowLoc, 1 );
+			Graphics.SetUniform( shader2.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( shader2.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( shader2.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( shader2.fogModeLoc, (int)Graphics.FogMode );
+			//System.Diagnostics.Debugger.Break();
+			
+			Graphics.FaceCulling = true;
+			GL.CullFace( CullFaceMode.Back );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
@@ -255,7 +293,7 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			Graphics.ColourMask( false, false, false, false );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				RenderTranslucentBatchNoAdd( batch );
+				RenderTranslucentBatchDepthPass( batch );
 			}
 			
 			// Then actually draw the transluscent blocks
@@ -266,69 +304,8 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			Graphics.DepthTestFunc( CompareFunc.Less );
-			
+			Graphics.DepthTestFunc( CompareFunc.Less );			
 			Graphics.AlphaBlending = false;
-		}
-		
-		int frame = 0;
-		void RenderShadowTest( double deltaTime ) {
-			if( chunks == null ) return;
-			Window.Vertices = 0;
-			frame++;
-			UpdateSortOrder();
-			UpdateChunks();
-			
-			shadowMap.LightPosition.X = 128 + 128 * (float)Math.Sin( Window.accumulator / 30 );
-			shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );			
-			shadowMap.BindForWriting();
-			shadowMap.SetupState( Window );
-			Graphics.SetUniform( shader.mvpLoc, ref shadowMap.ShadowMatrix );
-
-			Graphics.FaceCulling = true;
-			GL.CullFace( CullFaceMode.Front );
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSolidBatchShadowPass( batch );
-			}
-			Graphics.FaceCulling = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSpriteBatchShadowPass( batch );
-			}
-			shadowMap.UnbindFromWriting();
-			shadowMap.RestoreState( Window );
-			Graphics.AlphaBlending = false;
-			
-			Graphics.UseProgram( shader2.ProgramId );
-			GL.ActiveTexture( TextureUnit.Texture1 );
-			GL.BindTexture( TextureTarget.Texture2D, shadowMap.TexId );
-			GL.ActiveTexture( TextureUnit.Texture0 );
-			Graphics.UseProgram( shader2.ProgramId );
-			Graphics.SetUniform( shader2.mvpLoc, ref Window.mvp );
-			Graphics.SetUniform( shader2.lightMvpLoc, ref shadowMap.BiasedShadowMatrix );
-			
-			GL.Uniform1( shader2.texShadowLoc, 1 );
-			Graphics.SetUniform( shader2.fogColLoc, ref Graphics.FogColour );
-			Graphics.SetUniform( shader2.fogDensityLoc, Graphics.FogDensity );
-			Graphics.SetUniform( shader2.fogEndLoc, Graphics.FogEnd );
-			Graphics.SetUniform( shader2.fogModeLoc, (int)Graphics.FogMode );
-			//System.Diagnostics.Debugger.Break();
-	
-			Graphics.FaceCulling = true;
-			GL.CullFace( CullFaceMode.Back );
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSolidBatch( batch );
-			}
-			Graphics.FaceCulling = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSpriteBatch( batch );
-			}
-			
-			Window.MapEnvRenderer.RenderMapSides( deltaTime );
-			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			GL.UseProgram( 0 );
 			GL.MatrixMode( MatrixMode.Projection );
@@ -342,8 +319,6 @@ namespace ClassicalSharp {
 			GL.Vertex3( shadowMap.LightPosition );
 			GL.End();
 			GL.Color3( 1f, 1f, 1f );
-			//System.Threading.Thread.Sleep( 10 );
-			//GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
 		}
 
 		int[] distances;
@@ -424,7 +399,19 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.Render( drawInfo );
+				builder.RenderLiquidDepthPass( drawInfo );
+			}
+		}
+		
+		void RenderTranslucentBatchShadowPass( int batch ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.DrawInfo == null || info.Empty ) continue;
+
+				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				if( drawInfo.IndicesCount == 0 ) continue;
+				
+				builder.RenderLiquidDepthPass( drawInfo );
 			}
 		}
 		
@@ -436,7 +423,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.Render( drawInfo );
+				builder.RenderLiquidDepthPass( drawInfo );
 			}
 		}
 
@@ -453,7 +440,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void RenderTranslucentBatchNoAdd( int batch ) {
+		void RenderTranslucentBatchDepthPass( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
@@ -461,7 +448,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.Render( drawInfo );
+				builder.RenderLiquidDepthPass( drawInfo );
 			}
 		}
 	}
