@@ -345,9 +345,8 @@ void main() {
  	float shadow = 1.0;
  	if (out_shadowcoords.w > 0.0) {
  	   vec4 shadowCoord = out_shadowcoords / out_shadowcoords.w;
-       shadowCoord.z += 0.0001;
-	   float lightDist = texture2D(texShadow, shadowCoord.st).z;
- 	   shadow = lightDist < shadowCoord.z ? 0.5 : 1.0;
+	   float shadowDist = texture2D(texShadow, shadowCoord.st).z;
+ 	   shadow = shadowCoord.z + 0.00001 < shadowDist ? 1.0 : 0.5;
  	}
  	finalColour = finalColour * vec4(shadow, shadow, shadow, 1.0);
  	
