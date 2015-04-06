@@ -54,7 +54,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		private void DrawTextureInWorld( ref Texture tex, MapShader shader ) {
-			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( tex.ID );
 			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
@@ -72,7 +71,6 @@ namespace ClassicalSharp.Renderers {
 				Graphics.SetVertexAttrib( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
 			}
 			Graphics.EndDrawClientVertices();
-			Graphics.Texturing = false;
 		}
 	}
 }

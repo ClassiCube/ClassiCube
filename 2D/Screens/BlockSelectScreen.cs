@@ -28,7 +28,6 @@ namespace ClassicalSharp {
 		int startX, startY;
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
@@ -45,7 +44,6 @@ namespace ClassicalSharp {
 			if( blockInfoTexture.IsValid ) {
 				blockInfoTexture.Render( GraphicsApi );
 			}
-			GraphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {

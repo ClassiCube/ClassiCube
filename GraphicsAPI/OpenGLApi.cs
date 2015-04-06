@@ -134,10 +134,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DeleteTexture( texId );
 		}
 		
-		public bool Texturing {
-			set { ToggleCap( EnableCap.Texture2D, value ); }
-		}
-		
 		public void Clear() {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}

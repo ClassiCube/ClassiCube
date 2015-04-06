@@ -106,7 +106,6 @@ namespace ClassicalSharp.Renderers {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			Graphics.SetUniform( shader.sOffsetLoc, offset );
-			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( cloudTexture );
 			
 			Graphics.BindVb( cloudsVbo );
@@ -119,9 +118,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
 			Graphics.DisableVertexAttribArray( shader.colourLoc );
-			Graphics.BindVb( 0 );			
-			
-			Graphics.Texturing = false;
+			Graphics.BindVb( 0 );
 		}
 		
 		void ResetClouds() {

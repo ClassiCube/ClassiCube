@@ -35,21 +35,18 @@ namespace ClassicalSharp {
 		
 		public override void RenderMapSides( double deltaTime ) {
 			if( sidesVboId == -1 ) return;
-			Graphics.Texturing = true;
+
 			Graphics.Bind2DTexture( sideTexId );
 			shader.DrawVb( Graphics, sidesVboId, sidesVertices );
-			Graphics.Texturing = false;
 		}
 		
 		public override void RenderMapEdges( double deltaTime ) {
 			if( edgesVboId == -1 ) return;
 			
-			Graphics.Texturing = true;
 			Graphics.AlphaBlending = true;
 			Graphics.Bind2DTexture( edgeTexId );
 			shader.DrawVb( Graphics, edgesVboId, edgesVertices );
 			Graphics.AlphaBlending = false;
-			Graphics.Texturing = false;
 		}
 		
 		const int sidesVertices = 5 * 6 + 4 * 6, edgesVertices = 4 * 6;
