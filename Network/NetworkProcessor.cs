@@ -151,7 +151,7 @@ namespace ClassicalSharp {
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"MessageTypes", "CustomBlocks", "EnvColors",
-			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
+			"HackControl", "EnvMapAppearance", "ExtPlayerList",
 		};
 		
 		
@@ -603,16 +603,6 @@ namespace ClassicalSharp {
 							Window.CanDelete[blockId] = canDelete;
 						}
 						Window.RaiseBlockPermissionsChanged();
-					} break;
-					
-				case PacketId.CpeChangeModel:
-					{
-						byte playerId = reader.ReadUInt8();
-						string modelName = reader.ReadString().ToLowerInvariant();
-						Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
-						if( player != null ) {
-							player.SetModel( modelName );
-						}
 					} break;
 					
 				case PacketId.CpeEnvSetMapApperance:
