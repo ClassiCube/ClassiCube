@@ -366,63 +366,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		
-		#region Matrix manipulation
-
-		MatrixMode lastMode = 0;
-		MatrixMode[] matrixModes = new MatrixMode[] {
-			MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture,
-		};
-		public void SetMatrixMode( MatrixType mode ) {
-			MatrixMode glMode = matrixModes[(int)mode];
-			if( glMode != lastMode ) {
-				GL.MatrixMode( glMode );
-				lastMode = glMode;
-			}
-		}
-		
-		public void LoadMatrix( ref Matrix4 matrix ) {
-			GL.LoadMatrix( ref matrix );
-		}
-		
-		public void LoadIdentityMatrix() {
-			GL.LoadIdentity();
-		}
-		
-		public void PushMatrix() {
-			GL.PushMatrix();
-		}
-		
-		public void PopMatrix() {
-			GL.PopMatrix();
-		}
-		
-		public void MultiplyMatrix( ref Matrix4 matrix ) {
-			GL.MultMatrix( ref matrix );
-		}
-		
-		public void Translate( float x, float y, float z ) {
-			GL.Translate( x, y, z );
-		}
-		
-		public void RotateX( float degrees ) {
-			GL.Rotate( degrees, 1f, 0f, 0f );
-		}
-		
-		public void RotateY( float degrees ) {
-			GL.Rotate( degrees, 0f, 1f, 0f );
-		}
-		
-		public void RotateZ( float degrees ) {
-			GL.Rotate( degrees, 0f, 0f, 1f );
-		}
-		
-		public void Scale( float x, float y, float z ) {
-			GL.Scale( x, y, z );
-		}
-		
-		#endregion
-		
 		#if TRACK_RESOURCES
 		public void CheckResources() {
 			if( textures.Count > 0 ) {

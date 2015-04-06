@@ -124,7 +124,6 @@ namespace ClassicalSharp.Model {
 		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, MapShader shader, ref Matrix4 mvp, ModelPart part ) {
 			Matrix4 tempMvp = mvp;
 			tempMvp = Matrix4.CreateTranslation( x, y, z ) * tempMvp;
-			graphics.Translate( x, y, z );
 			if( angleZ != 0 ) {
 				tempMvp = Matrix4.CreateRotationZ( angleZ ) * tempMvp;
 			}

@@ -239,12 +239,9 @@ namespace ClassicalSharp {
 			LocalPlayer.SetInterpPosition( t );
 			
 			Graphics.Clear();
-			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView();
-			View = modelView;
-			mvp = modelView * Projection;
-			Graphics.LoadMatrix( ref modelView );
-			Culling.CalcFrustumEquations( ref Projection, ref modelView );
+			View = Camera.GetView();
+			mvp = View * Projection;
+			Culling.CalcFrustumEquations( ref mvp );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {				
@@ -325,11 +322,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateProjection() {
-			Matrix4 projection = Camera.GetProjection();
-			Projection = projection;
-			Graphics.SetMatrixMode( MatrixType.Projection );
-			Graphics.LoadMatrix( ref projection );
-			Graphics.SetMatrixMode( MatrixType.Modelview );
+			Projection = Camera.GetProjection();
 		}
 		
 		protected override void OnResize( EventArgs e ) {
