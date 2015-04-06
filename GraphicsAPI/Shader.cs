@@ -422,12 +422,15 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
-		public int texImageLoc;
+		public int texImageLoc, texShadowLoc;
+		public int lightMvpLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
+			lightMvpLoc = api.GetUniformLocation( ProgramId, "LightMVP" );
+			texShadowLoc = api.GetUniformLocation( ProgramId, "texShadow" );
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );

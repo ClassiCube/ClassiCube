@@ -287,7 +287,7 @@ namespace ClassicalSharp {
 			frame++;
 			UpdateSortOrder();
 			UpdateChunks();
-			//if( frame < 60 * 10 ) return;
+			if( frame < 60 * 10 ) return;
 			
 			CalcLightMatrices();
 			Graphics.UseProgram( shadowShader.ProgramId );
@@ -309,16 +309,24 @@ namespace ClassicalSharp {
 				RenderSpriteBatchShadowPass( batch );
 			}
 			
-			Graphics.Bind2DTexture( shadowMap.TexId );
-			
-			//GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
 			Framebuffer.BindFramebuffer( 0 );
 			Graphics.ColourMask( true, true, true, true );
 			Graphics.Viewport( Window.Width, Window.Height );
 			Graphics.AlphaBlending = false;
 			
-			Graphics.UseProgram( shader.ProgramId );
-			
+			Graphics.UseProgram( shader2.ProgramId );
+			GL.ActiveTexture( TextureUnit.Texture1 );
+			GL.BindTexture( TextureTarget.Texture2D, shadowMap.TexId );
+			GL.ActiveTexture( TextureUnit.Texture0 );
+			Graphics.UseProgram( shader2.ProgramId );
+			Graphics.SetUniform( shader2.mvpLoc, ref Window.mvp );
+			Graphics.SetUniform( shader2.lightMvpLoc, ref lightMvp );
+			GL.Uniform1( shader2.texShadowLoc, 1 );
+			Graphics.SetUniform( shader2.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( shader2.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( shader2.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( shader2.fogModeLoc, (int)Graphics.FogMode );
+	
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
@@ -329,6 +337,9 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
 			}
+			
+			System.Threading.Thread.Sleep( 10 );
+			GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
 		}
 
 		int[] distances;
