@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 		ChunkPartInfo GetPartInfo( DrawInfo1DPart part ) {
 			ChunkPartInfo info = default( ChunkPartInfo );
 			if( part.verticesCount > 0 ) {
-				info.Id = Graphics.InitIndexedVb( part.vertices, part.verticesCount, DrawMode.Triangles,
+				info.Id = Graphics.InitIndexedVb( part.vertices, part.verticesCount,
 				                                 VertexFormat.VertexPos3fTex2fCol4b, part.indices, part.indicesCount );
 				info.IndicesCount = part.indicesCount;
 			}

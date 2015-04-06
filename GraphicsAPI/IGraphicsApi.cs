@@ -24,12 +24,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			texture.ID = 0;
 		}
 		
-		public virtual VbInfo InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
-			return InitVb( vertices, mode, format, vertices.Length );
+		public virtual VbInfo InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
+			return InitVb( vertices, format, vertices.Length );
 		}
 		
-		public virtual IndexedVbInfo InitIndexedVb<T>( T[] vertices, DrawMode mode, VertexFormat format, ushort[] indices ) where T : struct {
-			return InitIndexedVb( vertices, vertices.Length, mode, format, indices, indices.Length );
+		public virtual IndexedVbInfo InitIndexedVb<T>( T[] vertices, VertexFormat format, ushort[] indices ) where T : struct {
+			return InitIndexedVb( vertices, vertices.Length, format, indices, indices.Length );
 		}
 		
 		protected int GetSizeInBytes( int count, VertexFormat format ) {

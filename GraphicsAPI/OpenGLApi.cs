@@ -220,12 +220,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		long totalIndexedVbMem = 0;
 		#endif
 		
-		public int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
+		public int InitVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct {
+			return CreateVb( vertices, format, count, BufferUsageArb.StaticDraw );
+		}
+		
+		public int InitDynamicVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct {
+			return CreateVb( vertices, format, count, BufferUsageArb.StreamDraw );
+		}
+		
+		int CreateVb<T>( T[] vertices, VertexFormat format, int count, BufferUsageArb usage ) where T : struct {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = GetSizeInBytes( count, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, usage );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			#if TRACK_RESOURCES
 			vbs.Add( id, Environment.StackTrace );
@@ -236,8 +244,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, DrawMode mode, 
-		                                               VertexFormat format, ushort[] indices, int elements ) where T : struct {
+		public IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, VertexFormat format, 
+		                                      ushort[] indices, int elements ) where T : struct {
 			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
 			GL.Arb.GenBuffers( 2, out info.VbId );
 			
