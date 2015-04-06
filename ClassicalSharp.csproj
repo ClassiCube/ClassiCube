@@ -105,7 +105,7 @@
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
-    <Compile Include="GraphicsAPI\Framebuffer.cs" />
+    <Compile Include="GraphicsAPI\ShadowMap.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\ModernOpenGLApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />

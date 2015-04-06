@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		internal MapShader2 shader2;
 		internal MapLiquidDepthPassShader transluscentShader;
 		internal MapShadowShader shadowShader;
-		Framebuffer shadowMap;
+		ShadowMap shadowMap;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
 			Window.EnvVariableChanged += EnvVariableChanged;
-			shadowMap = new Framebuffer( 1920, 1080 );
+			shadowMap = new ShadowMap( 1920, 1080 );
 			shadowMap.Initalise();
 		}
 		
@@ -222,7 +222,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( double deltaTime ) {
-			RenderShadowTest();
+			RenderShadowTest( deltaTime );
 			return;
 			
 			if( chunks == null ) return;
@@ -271,32 +271,20 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = false;
 		}
 		
-		Matrix4 lightMvp;
-		void CalcLightMatrices() {
-			Vector3 lightPos = new Vector3( 0, 128, 256 );
-			Vector3 targetPos = new Vector3( 128, 0, 128 );
-			Matrix4 view = Matrix4.LookAt( lightPos, targetPos, Vector3.UnitY );
-			Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView( (float)Math.PI / 4,
-			                                                    1920f / 1080, 0.01f, 500f );
-			lightMvp = view * proj;
-		}
 		int frame = 0;
-		void RenderShadowTest() {
+		void RenderShadowTest( double deltaTime ) {
 			if( chunks == null ) return;
 			Window.Vertices = 0;
 			frame++;
 			UpdateSortOrder();
 			UpdateChunks();
-			if( frame < 60 * 10 ) return;
 			
-			CalcLightMatrices();
-			Graphics.UseProgram( shadowShader.ProgramId );
-			Graphics.SetUniform( shadowShader.mvpLoc, ref lightMvp );
-			
-			Framebuffer.BindFramebuffer( shadowMap.FboId );
-			Graphics.Clear( OpenTK.Graphics.OpenGL.ClearBufferMask.DepthBufferBit );
-			Graphics.ColourMask( false, false, false, false );
-			Graphics.Viewport( 1920, 1080 );
+			shadowMap.LightPosition.X = 128 + 128 * (float)Math.Sin( Window.accumulator / 30 );
+			shadowMap.LightPosition.Z = 128 + 128 * (float)Math.Cos( Window.accumulator / 30 );
+			Graphics.UseProgram( shadowShader.ProgramId );			
+			shadowMap.BindForWriting();
+			shadowMap.SetupState( Window );
+			Graphics.SetUniform( shadowShader.mvpLoc, ref shadowMap.ShadowMatrix );
 
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
@@ -308,8 +296,9 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatchShadowPass( batch );
 			}
+			shadowMap.UnbindFromWriting();
+			shadowMap.RestoreState( Window );
 			
-			Framebuffer.BindFramebuffer( 0 );
 			Graphics.ColourMask( true, true, true, true );
 			Graphics.Viewport( Window.Width, Window.Height );
 			Graphics.AlphaBlending = false;
@@ -320,7 +309,7 @@ namespace ClassicalSharp {
 			GL.ActiveTexture( TextureUnit.Texture0 );
 			Graphics.UseProgram( shader2.ProgramId );
 			Graphics.SetUniform( shader2.mvpLoc, ref Window.mvp );
-			Graphics.SetUniform( shader2.lightMvpLoc, ref lightMvp );
+			Graphics.SetUniform( shader2.lightMvpLoc, ref shadowMap.BiasedShadowMatrix );
 			GL.Uniform1( shader2.texShadowLoc, 1 );
 			Graphics.SetUniform( shader2.fogColLoc, ref Graphics.FogColour );
 			Graphics.SetUniform( shader2.fogDensityLoc, Graphics.FogDensity );
@@ -338,7 +327,22 @@ namespace ClassicalSharp {
 				RenderSpriteBatch( batch );
 			}
 			
-			System.Threading.Thread.Sleep( 10 );
+			Window.MapEnvRenderer.RenderMapSides( deltaTime );
+			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
+			
+			GL.UseProgram( 0 );
+			GL.MatrixMode( MatrixMode.Projection );
+			GL.LoadMatrix( ref Window.Projection );
+			GL.MatrixMode( MatrixMode.Modelview );
+			GL.LoadMatrix( ref Window.View );
+			GL.LineWidth( 200 );
+			GL.Begin( BeginMode.Lines );
+			GL.Color3( 1f, 0f, 0f );
+			GL.Vertex3( shadowMap.LightTarget );
+			GL.Vertex3( shadowMap.LightPosition );
+			GL.End();
+			GL.Color3( 1f, 1f, 1f );
+			//System.Threading.Thread.Sleep( 10 );
 			GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
 		}
 
