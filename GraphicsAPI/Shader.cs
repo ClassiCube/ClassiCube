@@ -367,7 +367,7 @@ void main() {
 				shadow += lookup(vec2(x, y));
 		
 		shadow /= 16.0;
-		shadow = shadow + 0.5;
+		shadow = shadow + 0.2;
 		shadow = clamp(shadow, 0.0, 1.0);
 	} else {
 		shadow = 1.0;
