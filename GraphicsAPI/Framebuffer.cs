@@ -37,5 +37,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}		
 			GL.Ext.BindFramebuffer( FramebufferTarget.FramebufferExt, 0 );
 		}
+		
+		public static void BindFramebuffer( int fbo ) {
+			GL.Ext.BindFramebuffer( FramebufferTarget.FramebufferExt, fbo );
+		}
 	}
 }

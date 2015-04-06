@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 		int elementsPerBitmap = 0;
 		internal MapShader shader;
 		internal MapLiquidDepthPassShader transluscentShader;
+		MapShadowShader shadowShader;
 		Framebuffer shadowMap;
 		
 		public MapRenderer( Game window ) {
@@ -61,6 +62,8 @@ namespace ClassicalSharp {
 			shader.Initialise( Graphics );
 			transluscentShader = new MapLiquidDepthPassShader();
 			transluscentShader.Initialise( Graphics );
+			shadowShader = new MapShadowShader();
+			shadowShader.Initialise( Graphics );
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
@@ -263,12 +266,32 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = false;
 		}
 		
+		Matrix4 lightMvp;
+		void CalcLightMatrices() {
+			Vector3 lightPos = new Vector3( 0, 128, 256 );
+			Vector3 targetPos = new Vector3( 128, 0, 128 );
+			Matrix4 view = Matrix4.LookAt( lightPos, targetPos, Vector3.UnitY );
+			Matrix4 proj = Matrix4.CreatePerspectiveFieldOfView( (float)Math.PI / 4,
+			                                                    1920f / 1080, 0.01f, 500f );
+			lightMvp = view * proj;
+		}
+		int frame = 0;
 		void RenderShadowTest() {
 			if( chunks == null ) return;
 			Window.Vertices = 0;
+			frame++;
 			UpdateSortOrder();
 			UpdateChunks();
+			if( frame < 60 * 5 ) return;
 			
+			CalcLightMatrices();
+			Graphics.UseProgram( shadowShader.ProgramId );
+			Graphics.SetUniform( shadowShader.mvpLoc, ref lightMvp );
+			
+			Framebuffer.BindFramebuffer( shadowMap.FboId );
+			Graphics.Clear( OpenTK.Graphics.OpenGL.ClearBufferMask.DepthBufferBit );
+			Graphics.ColourMask( false, false, false, false );
+			Graphics.Viewport( 1920, 1080 );
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
 			Graphics.FaceCulling = true;
@@ -282,6 +305,12 @@ namespace ClassicalSharp {
 				RenderSpriteBatch( batch );
 			}
 			
+			Graphics.Bind2DTexture( shadowMap.TexId );
+			Console.WriteLine( shadowMap.TexId + "," + shadowMap.FboId );
+			OpenTK.Graphics.OpenGL.GL.FrontFace( OpenTK.Graphics.OpenGL.FrontFaceDirection.Cw );
+			Framebuffer.BindFramebuffer( 0 );
+			Graphics.ColourMask( true, true, true, true );
+			Graphics.Viewport( Window.Width, Window.Height );
 			Graphics.AlphaBlending = false;
 		}
 

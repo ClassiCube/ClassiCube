@@ -137,6 +137,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}
 		
+		public void Clear( ClearBufferMask mask ) {
+			GL.Clear( mask );
+		}
+		
 		FastColour lastClearCol;
 		public void ClearColour( FastColour col ) {
 			if( col != lastClearCol ) {
@@ -148,6 +152,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void ColourMask( bool red, bool green, bool blue, bool alpha ) {
 			GL.ColorMask( red, green, blue, alpha );
+		}
+		
+		public void Viewport( int width, int height ) {
+			GL.Viewport( 0, 0, width, height );
 		}
 		
 		DepthFunction[] depthFuncs = new DepthFunction[] {
