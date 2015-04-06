@@ -270,7 +270,6 @@ namespace ClassicalSharp {
 				activeScreen.Render( e.Time );
 			}
 			Graphics.Mode3D();
-			Graphics.UseProgram( 0 );
 			
 			if( screenshotRequested ) {
 				if( !Directory.Exists( "screenshots" ) ) {

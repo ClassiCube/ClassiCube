@@ -38,38 +38,40 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double deltaTime, MapShader shader ) {
 			pos = Player.Position;
 			Player.Model.RenderModel( Player, this, shader );
-			DrawName();
+			DrawName( shader );
 		}
 		
-		const float nameScale = 50f;
-		private void DrawName() {
-			Graphics.PushMatrix();
-			Graphics.Translate( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z );
-			// Do this to always have names facing the player
-			float yaw = Window.LocalPlayer.YawDegrees;
-			Graphics.RotateY( 0f - yaw );
-			// NOTE: Do this instead with network player's yaw to have names rotate with them instead.
-			//Graphics.RotateY( 180f - yaw );
-			Graphics.Scale( 1 / nameScale, -1 / nameScale, 1 / nameScale ); // -y to flip text
-			Graphics.Translate( -nameWidth / 2f, -nameHeight, 0f );
-			DrawTextureInWorld( ref nameTexture );
-			Graphics.PopMatrix();
-			Graphics.AlphaTest = false;
+		const float nameScale = 1 / 50f;
+		private void DrawName( MapShader shader ) {
+			Matrix4 newMvp = Matrix4.CreateTranslation( -nameWidth / 2f, -nameHeight, 0 ) * 
+				Matrix4.Scale( nameScale, -nameScale, nameScale ) *
+				Matrix4.CreateRotationY( -Window.LocalPlayer.YawRadians ) * 
+				Matrix4.CreateTranslation( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z ) * Window.mvp;
+			
+			Graphics.SetUniform( shader.mvpLoc, ref newMvp );
+			DrawTextureInWorld( ref nameTexture, shader );
+			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
 		}
 		
-		private void DrawTextureInWorld( ref Texture tex ) {
+		private void DrawTextureInWorld( ref Texture tex, MapShader shader ) {
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( tex.ID );
 			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
-			// Have to order them this way because it's a triangle strip.
 			VertexPos3fTex2f[] vertices = {
 				new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 ),
 				new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 ),
 				new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 ),
 				new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 ),
 			};
-			Graphics.DrawVertices( DrawMode.TriangleStrip, vertices, 4 );
+			Graphics.BeginDrawClientVertices( DrawMode.TriangleStrip );
+			for( int i = 0; i < vertices.Length; i++ ) {
+				VertexPos3fTex2f vertex = vertices[i];
+				Graphics.SetVertexAttrib( shader.colourLoc, new Vector4( 1, 1, 1, 1 ) );
+				Graphics.SetVertexAttrib( shader.texCoordsLoc, vertex.U, vertex.V );
+				Graphics.SetVertexAttrib( shader.positionLoc, vertex.X, vertex.Y, vertex.Z );
+			}
+			Graphics.EndDrawClientVertices();
 			Graphics.Texturing = false;
 		}
 	}

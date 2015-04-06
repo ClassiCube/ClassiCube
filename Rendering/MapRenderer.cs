@@ -264,7 +264,6 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
 			builder.EndRender();
-			Graphics.UseProgram( 0 );
 		}
 
 		int[] distances;

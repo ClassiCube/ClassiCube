@@ -67,7 +67,6 @@ namespace ClassicalSharp.Renderers {
 					graphics.SetVertexAttrib( shader.positionLoc, vertices[i] );
 				}
 				graphics.EndDrawClientVertices();
-				graphics.UseProgram( 0 );
 			}
 		}
 		
