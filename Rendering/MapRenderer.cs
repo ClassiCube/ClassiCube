@@ -1,9 +1,11 @@
 ﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp {
-		
+	
 	// TODO: optimise chunk rendering
 	//  --> reduce the two passes: liquid pass only needs 1 small texture
 	//  --> use indices.
@@ -51,8 +53,9 @@ namespace ClassicalSharp {
 		public readonly bool UsesLighting;
 		int elementsPerBitmap = 0;
 		internal MapShader shader;
+		internal MapShader2 shader2;
 		internal MapLiquidDepthPassShader transluscentShader;
-		MapShadowShader shadowShader;
+		internal MapShadowShader shadowShader;
 		Framebuffer shadowMap;
 		
 		public MapRenderer( Game window ) {
@@ -60,6 +63,8 @@ namespace ClassicalSharp {
 			Graphics = window.Graphics;
 			shader = new MapShader();
 			shader.Initialise( Graphics );
+			shader2 = new MapShader2();
+			shader2.Initialise( Graphics );
 			transluscentShader = new MapLiquidDepthPassShader();
 			transluscentShader.Initialise( Graphics );
 			shadowShader = new MapShadowShader();
@@ -67,7 +72,7 @@ namespace ClassicalSharp {
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
-			UsesLighting = builder.UsesLighting;			
+			UsesLighting = builder.UsesLighting;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 			Window.OnNewMap += OnNewMap;
@@ -152,7 +157,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteIndexedVb( drawInfo.TranslucentParts[i].Id );
 				Graphics.DeleteIndexedVb( drawInfo.SolidParts[i].Id );
 			}
-			info.DrawInfo = null;		
+			info.DrawInfo = null;
 		}
 		
 		void CreateChunkCache() {
@@ -211,7 +216,7 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetChunk( int cx, int cy, int cz ) {
-			if( cx < 0 || cy < 0 || cz < 0 || 
+			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
@@ -231,7 +236,7 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
-			}		
+			}
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
@@ -282,7 +287,7 @@ namespace ClassicalSharp {
 			frame++;
 			UpdateSortOrder();
 			UpdateChunks();
-			if( frame < 60 * 5 ) return;
+			//if( frame < 60 * 10 ) return;
 			
 			CalcLightMatrices();
 			Graphics.UseProgram( shadowShader.ProgramId );
@@ -292,26 +297,38 @@ namespace ClassicalSharp {
 			Graphics.Clear( OpenTK.Graphics.OpenGL.ClearBufferMask.DepthBufferBit );
 			Graphics.ColourMask( false, false, false, false );
 			Graphics.Viewport( 1920, 1080 );
-			// Render solid and fully transparent to fill depth buffer.
-			// These blocks are treated as having an alpha value of either none or full.
+
+			Graphics.FaceCulling = true;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSolidBatchShadowPass( batch );
+			}
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSpriteBatchShadowPass( batch );
+			}
+			
+			Graphics.Bind2DTexture( shadowMap.TexId );
+			
+			//GL.FrontFace( FrontFaceDirection.Cw ); // gDEbugger
+			Framebuffer.BindFramebuffer( 0 );
+			Graphics.ColourMask( true, true, true, true );
+			Graphics.Viewport( Window.Width, Window.Height );
+			Graphics.AlphaBlending = false;
+			
+			Graphics.UseProgram( shader.ProgramId );
+			
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
-			}		
+			}
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
 			}
-			
-			Graphics.Bind2DTexture( shadowMap.TexId );
-			Console.WriteLine( shadowMap.TexId + "," + shadowMap.FboId );
-			OpenTK.Graphics.OpenGL.GL.FrontFace( OpenTK.Graphics.OpenGL.FrontFaceDirection.Cw );
-			Framebuffer.BindFramebuffer( 0 );
-			Graphics.ColourMask( true, true, true, true );
-			Graphics.Viewport( Window.Width, Window.Height );
-			Graphics.AlphaBlending = false;
 		}
 
 		int[] distances;
@@ -381,6 +398,30 @@ namespace ClassicalSharp {
 				
 				builder.Render( drawInfo );
 				Window.Vertices += drawInfo.IndicesCount;
+			}
+		}
+		
+		void RenderSolidBatchShadowPass( int batch ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.DrawInfo == null || info.Empty ) continue;
+
+				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
+				if( drawInfo.IndicesCount == 0 ) continue;
+				
+				builder.RenderShadowPass( drawInfo );
+			}
+		}
+		
+		void RenderSpriteBatchShadowPass( int batch ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.DrawInfo == null || info.Empty ) continue;
+
+				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
+				if( drawInfo.IndicesCount == 0 ) continue;
+				
+				builder.RenderShadowPass( drawInfo );
 			}
 		}
 
