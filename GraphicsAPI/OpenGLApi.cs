@@ -104,7 +104,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public int LoadTexture( FastBitmap bmp ) {
 			int texId = GL.GenTexture();
-			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
@@ -115,7 +114,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp.Width, bmp.Height, 0,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, bmp.Scan0 );
 			bmp.UnlockBits();
-			GL.Disable( EnableCap.Texture2D );
 			#if TRACK_RESOURCES
 			textures.Add( texId, Environment.StackTrace );
 			#endif
