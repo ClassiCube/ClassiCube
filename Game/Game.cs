@@ -247,12 +247,12 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {			
-				RenderPlayers( e.Time, t );
+			if( visible ) {				
 				ParticleManager.Render( e.Time, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
+				RenderPlayers( e.Time, t );
 				MapRenderer.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
@@ -284,22 +284,20 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;
 			MapShader shader = MapRenderer.shader;
-			// TODO: most of these assignments are redundant
 			Graphics.UseProgram( shader.ProgramId );
 			Graphics.SetUniform( shader.mvpLoc, ref mvp );
 			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );
 			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
 			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
 			Graphics.SetUniform( shader.fogModeLoc, (int)Graphics.FogMode );
+			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
 					NetPlayers[i].Render( deltaTime, t, shader );
 				}
 			}
 			LocalPlayer.Render( deltaTime, t, shader );
-			//Graphics.AlphaTest = false;
 		}
 		
 		public override void Dispose() {

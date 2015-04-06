@@ -215,12 +215,6 @@ namespace ClassicalSharp {
 			Window.Vertices = 0;
 			UpdateSortOrder();
 			UpdateChunks();
-			Graphics.UseProgram( shader.ProgramId );
-			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
-			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );
-			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
-			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
-			Graphics.SetUniform( shader.fogModeLoc, (int)Graphics.FogMode );
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
