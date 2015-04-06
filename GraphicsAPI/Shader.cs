@@ -336,13 +336,12 @@ void main() {
 }";	
 		}
 		
-		public int positionLoc, texCoordsLoc, colourLoc;
+		public int positionLoc, flagsLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			flagsLoc = api.GetAttribLocation( ProgramId, "in_flags" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
@@ -352,18 +351,16 @@ void main() {
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
 		}
 		
-		const int stride = VertexPos3fTex2fCol4b.Size;
+		const int stride = VertexMapPacked.Size;
 		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
 			graphics.BindVb( vbId );
-			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
-			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
-			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			graphics.EnableAndSetVertexAttribPointer( positionLoc, 3, VertexAttribType.Int16, false, stride, 0 );
+			graphics.EnableAndSetVertexAttribPointer( flagsLoc, 2, VertexAttribType.UInt8, false, stride, 6 );
 			
 			graphics.DrawVb( mode, 0, verticesCount );
 			
 			graphics.DisableVertexAttribArray( positionLoc );
-			graphics.DisableVertexAttribArray( texCoordsLoc );
-			graphics.DisableVertexAttribArray( colourLoc );
+			graphics.DisableVertexAttribArray( flagsLoc );
 		}
 	}
 	

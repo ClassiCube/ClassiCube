@@ -79,6 +79,25 @@ namespace ClassicalSharp {
 		}
 	}
 	
+	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
+	public struct VertexMapPacked {
+		public short X, Y, Z;
+		public byte FlagsTexY;
+		public byte FlagsTexOffsetsAndColour;
+		
+		public VertexMapPacked( short x, short y, short z, byte texY, 
+		                       bool texXOffset, bool texYOffset, byte colPacked ) {
+			X = x; Y = y; Z = z;
+			FlagsTexY = texY;
+			int flags = colPacked;
+			if( texXOffset ) flags |= 1 << 7;
+			if( texYOffset ) flags |= 1 << 6;
+			FlagsTexOffsetsAndColour = (byte)flags;
+		}
+		
+		public const int Size = 8;
+	}
+	
 	/// <summary> 3 floats for position (X, Y, Z),<br/>
 	/// 2 floats for texture coordinates (U, V)</summary>
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
