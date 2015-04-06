@@ -348,7 +348,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
-				builder.Render( drawInfo );
+				builder.RenderLiquidDepthPass( drawInfo );
 			}
 		}
 	}
