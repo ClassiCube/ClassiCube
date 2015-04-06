@@ -169,7 +169,6 @@ namespace ClassicalSharp {
 			Graphics.DepthTest = true;
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
-			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
 			RegisterInputHandlers();
 			Title = Utils.AppName;
 			fpsScreen = new FpsScreen( this );

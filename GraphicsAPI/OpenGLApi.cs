@@ -41,22 +41,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			get { return nonPow2; }
 		}
 		
-		public bool AlphaTest {
-			set { ToggleCap( EnableCap.AlphaTest, value ); }
-		}
-		
 		public bool AlphaBlending {
 			set { ToggleCap( EnableCap.Blend, value ); }
-		}
-		
-		AlphaFunction[] alphaFuncs = new AlphaFunction[] {
-			AlphaFunction.Always, AlphaFunction.Notequal,
-			AlphaFunction.Never, AlphaFunction.Less,
-			AlphaFunction.Lequal, AlphaFunction.Equal,
-			AlphaFunction.Gequal, AlphaFunction.Greater,
-		};
-		public void AlphaTestFunc( CompareFunc func, float value ) {
-			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
 		BlendEquationMode[] blendEqs = new BlendEquationMode[] {

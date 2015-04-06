@@ -158,10 +158,4 @@ namespace ClassicalSharp.GraphicsAPI {
 		Wireframe = 1,
 		Solid = 2,
 	}
-	
-	public enum MatrixType {
-		Projection = 0,
-		Modelview = 1,
-		Texture = 2,
-	}
 }
