@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 		int elementsPerBitmap = 0;
 		internal MapShader shader;
 		internal MapLiquidDepthPassShader transluscentShader;
+		Framebuffer shadowMap;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -68,7 +69,9 @@ namespace ClassicalSharp {
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;			
+			Window.EnvVariableChanged += EnvVariableChanged;
+			shadowMap = new Framebuffer( 1920, 1080 );
+			shadowMap.Initalise();
 		}
 		
 		public void Dispose() {
@@ -211,6 +214,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( double deltaTime ) {
+			RenderShadowTest();
+			return;
+			
 			if( chunks == null ) return;
 			Window.Vertices = 0;
 			UpdateSortOrder();
@@ -253,6 +259,28 @@ namespace ClassicalSharp {
 				RenderTranslucentBatch( batch );
 			}
 			Graphics.DepthTestFunc( CompareFunc.Less );
+			
+			Graphics.AlphaBlending = false;
+		}
+		
+		void RenderShadowTest() {
+			if( chunks == null ) return;
+			Window.Vertices = 0;
+			UpdateSortOrder();
+			UpdateChunks();
+			
+			// Render solid and fully transparent to fill depth buffer.
+			// These blocks are treated as having an alpha value of either none or full.
+			Graphics.FaceCulling = true;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSolidBatch( batch );
+			}		
+			Graphics.FaceCulling = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				RenderSpriteBatch( batch );
+			}
 			
 			Graphics.AlphaBlending = false;
 		}
