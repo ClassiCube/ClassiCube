@@ -18,10 +18,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void Initalise() {
 			GL.GenTextures( 1, out TexId );
 			GL.BindTexture( TextureTarget.Texture2D, TexId );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge );
+			// Remove these and change sampler2dshadow to sampler2d if you want old shadow behaviour
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureCompareMode, (int)All.CompareRToTexture );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureCompareFunc, (int)All.Lequal );
+			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.DepthTextureMode, (int)All.Intensity );
 			
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, Width, Height, 0,
 			              PixelFormat.DepthComponent, PixelType.UnsignedByte, IntPtr.Zero );
