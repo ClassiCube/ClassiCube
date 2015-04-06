@@ -194,7 +194,7 @@ namespace ClassicalSharp {
 			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
 			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
-			Graphics.DrawElements( DrawMode.Triangles, info.IndicesCount );
+			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );
 			
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
@@ -205,7 +205,7 @@ namespace ClassicalSharp {
 			Graphics.BindVb( info.Id.VbId );
 			Graphics.BindIb( info.Id.IbId );
 			Graphics.EnableAndSetVertexAttribPointerF( liquidShader.positionLoc, 3, stride, 0 );			
-			Graphics.DrawElements( DrawMode.Triangles, info.IndicesCount );			
+			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
 			Graphics.DisableVertexAttribArray( liquidShader.positionLoc );
 		}
 		

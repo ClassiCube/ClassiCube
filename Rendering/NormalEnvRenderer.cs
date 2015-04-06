@@ -94,7 +94,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
 			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
-			Graphics.DrawArrays( DrawMode.Triangles, 0, skyVertices );
+			Graphics.DrawVb( DrawMode.Triangles, 0, skyVertices );
 			
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
@@ -114,7 +114,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
 			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
-			Graphics.DrawArrays( DrawMode.Triangles, 0, cloudsVertices );
+			Graphics.DrawVb( DrawMode.Triangles, 0, cloudsVertices );
 			
 			Graphics.DisableVertexAttribArray( shader.positionLoc );
 			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
