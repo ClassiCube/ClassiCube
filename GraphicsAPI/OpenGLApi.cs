@@ -195,8 +195,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			return CreateEmptyVb( format, capacity, BufferUsageArb.StreamDraw );
 		}
 		
-		public void UpdateDynamicVb<T>( int id, T[] vertices, VertexFormat format, int count ) where T : struct {
-			int sizeInBytes = GetSizeInBytes( count, format );
+		public void UpdateDynamicVb<T>( int id, T[] vertices, VertexFormat format ) where T : struct {
+			int sizeInBytes = GetSizeInBytes( vertices.Length, format );
 			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
@@ -309,14 +309,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		#endif
-		
-		public void BeginDrawClientVertices( DrawMode mode ) {
-			GL.Begin( (BeginMode)modeMappings[(int)mode] );
-		}
-		
-		public void EndDrawClientVertices() {
-			GL.End();
-		}
 		
 		public void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );

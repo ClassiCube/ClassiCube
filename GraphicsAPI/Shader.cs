@@ -107,6 +107,14 @@ void main() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 		}
+		
+		const int stride = 12;
+		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
+			graphics.BindVb( vbId );
+			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );			
+			graphics.DrawVb( mode, 0, verticesCount );		
+			graphics.DisableVertexAttribArray( positionLoc );
+		}
 	}
 	
 	public sealed class EnvShader : Shader {

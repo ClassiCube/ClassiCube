@@ -9,16 +9,19 @@ namespace ClassicalSharp.Renderers {
 		Game window;
 		OpenGLApi graphics;
 		PickingShader shader;
+		int vb;
 		
 		public PickingRenderer( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
 			shader = new PickingShader();
 			shader.Initialise( graphics );
+			vb = graphics.CreateEmptyDynamicVb( VertexFormat.VertexPos3, verticesCount );
 		}
 		
 		int index = 0;
-		Vector3[] vertices = new Vector3[24 * ( 3 * 2 )];
+		const int verticesCount = 24 * ( 3 * 2 );
+		Vector3[] vertices = new Vector3[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
 		public void Render( double delta ) {
@@ -62,11 +65,9 @@ namespace ClassicalSharp.Renderers {
 				
 				graphics.UseProgram( shader.ProgramId );
 				graphics.SetUniform( shader.mvpLoc, ref window.mvp );
-				graphics.BeginDrawClientVertices( DrawMode.Triangles );
-				for( int i = 0; i < vertices.Length; i++ ) {
-					graphics.SetVertexAttrib( shader.positionLoc, vertices[i] );
-				}
-				graphics.EndDrawClientVertices();
+				graphics.BindVb( vb );
+				graphics.UpdateDynamicVb( vb, vertices, VertexFormat.VertexPos3 );
+				shader.DrawVb( graphics, vb, verticesCount, DrawMode.Triangles );
 			}
 		}
 		

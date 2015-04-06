@@ -35,7 +35,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}
-		protected static int[] strideSizes = new [] { 20, 16, 24 };
+		protected static int[] strideSizes = new [] { 20, 16, 24, 12 };
 		
 		public void CheckResources() {
 		}
@@ -53,7 +53,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				new VertexPos3fTex2fCol4b( x, y + height, 0, -10, -10, col ),
 			};
 			BindVb( vb2d );
-			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
 			shader.DrawVb( this, vb2d, 4 );
 		}
 		
@@ -67,7 +67,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, FastColour.White ),
 			};
 			BindVb( vb2d );
-			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
 			shader.DrawVb( this, vb2d, 4 );
 		}
 		
@@ -98,7 +98,8 @@ namespace ClassicalSharp.GraphicsAPI {
 	public enum VertexFormat {
 		VertexPos3fTex2f = 0,
 		VertexPos3fCol4b = 1,
-		VertexPos3fTex2fCol4b = 2
+		VertexPos3fTex2fCol4b = 2,
+		VertexPos3 = 3,
 	}
 	
 	public enum DrawMode {
