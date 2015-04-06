@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -38,7 +39,7 @@ namespace ClassicalSharp {
 		
 		public abstract void Despawn();
 		
-		public abstract void Render( double deltaTime, float t );
+		public abstract void Render( double deltaTime, float t, MapShader shader );
 		
 		public bool TouchesAnyLava() {
 			return TouchesAny( b => b == (byte)Block.Lava || b == (byte)Block.StillLava );

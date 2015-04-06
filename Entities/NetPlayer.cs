@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
 using OpenTK;
 
@@ -90,13 +91,13 @@ namespace ClassicalSharp {
 			} while( states.Count >= 10 ); // Drop old states, otherwise we will never be able to catch up.
 		}
 
-		public override void Render( double deltaTime, float t ) {
+		public override void Render( double deltaTime, float t, MapShader shader ) {
 			Position = Vector3.Lerp( oldState.pos, newState.pos, t );
 			YawDegrees = Utils.InterpAngle( oldState.yaw, newState.yaw, t );
 			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
 			
 			SetCurrentAnimState( t );
-			renderer.Render( deltaTime );
+			renderer.Render( deltaTime, shader );
 		}
 	}
 }

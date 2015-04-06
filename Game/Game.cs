@@ -284,13 +284,21 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;			
+			//Graphics.AlphaTest = true;
+			MapShader shader = MapRenderer.shader;
+			// TODO: most of these assignments are redundant
+			Graphics.UseProgram( shader.ProgramId );
+			Graphics.SetUniform( shader.mvpLoc, ref mvp );
+			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( shader.fogModeLoc, (int)Graphics.FogMode );
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Render( deltaTime, t );
+					NetPlayers[i].Render( deltaTime, t, shader );
 				}
 			}
-			LocalPlayer.Render( deltaTime, t );
+			LocalPlayer.Render( deltaTime, t, shader );
 			//Graphics.AlphaTest = false;
 		}
 		

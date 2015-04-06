@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
@@ -324,14 +325,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void Render( double deltaTime, float t ) {
+		public override void Render( double deltaTime, float t, MapShader shader ) {
 			if( !Window.Camera.IsThirdPerson ) return;
 			if( renderer == null ) {
 				renderer = new PlayerRenderer( this, Window );
 				Window.AsyncDownloader.DownloadSkin( SkinName );
 			}
 			SetCurrentAnimState( t );
-			renderer.Render( deltaTime );
+			renderer.Render( deltaTime, shader );
 		}
 		
 		public bool HandleKeyDown( Key key ) {

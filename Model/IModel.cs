@@ -21,26 +21,25 @@ namespace ClassicalSharp.Model {
 		protected float yaw, pitch;
 		protected float rightLegXRot, rightArmXRot, rightArmZRot;
 		protected float leftLegXRot, leftArmXRot, leftArmZRot;
-		public void RenderModel( Player player, PlayerRenderer renderer ) {
+		public void RenderModel( Player player, PlayerRenderer renderer, MapShader shader ) {
 			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
+			yaw = player.YawRadians;
+			pitch = player.PitchRadians;
 			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			leftArmXRot = player.leftArmXRot * 180 / (float)Math.PI;
-			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
-			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
+			leftLegXRot = player.leftLegXRot;
+			leftArmXRot = player.leftArmXRot;
+			leftArmZRot = player.leftArmZRot;
+			rightLegXRot = player.rightLegXRot;
+			rightArmXRot = player.rightArmXRot;
+			rightArmZRot = player.rightArmZRot;
 			
-			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
-			DrawPlayerModel( player, renderer );
-			graphics.PopMatrix();
+			Matrix4 mvp = Matrix4.CreateRotationY( -yaw ) * Matrix4.CreateTranslation( pos ) * window.mvp;
+			graphics.SetUniform( shader.mvpLoc, ref mvp );
+			DrawPlayerModel( player, renderer, shader, ref mvp );
+			graphics.SetUniform( shader.mvpLoc, ref window.mvp );
 		}
 		
-		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );
+		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer, MapShader shader, ref Matrix4 mvp );
 		
 		public abstract void Dispose();
 		
@@ -122,21 +121,22 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
 		}
 		
-		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
-			graphics.PushMatrix();
+		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, MapShader shader, ref Matrix4 mvp, ModelPart part ) {
+			Matrix4 tempMvp = mvp;
+			tempMvp = Matrix4.CreateTranslation( x, y, z ) * tempMvp;
 			graphics.Translate( x, y, z );
 			if( angleZ != 0 ) {
-				graphics.RotateZ( angleZ );
+				tempMvp = Matrix4.CreateRotationZ( angleZ ) * tempMvp;
 			}
 			if( angleY != 0 ) {
-				graphics.RotateY( angleY );
+				tempMvp = Matrix4.CreateRotationY( angleY ) * tempMvp;
 			}
 			if( angleX != 0 ) {
-				graphics.RotateX( angleX );
+				tempMvp = Matrix4.CreateRotationX( angleX ) * tempMvp;
 			}
-			graphics.Translate( -x, -y, -z );
-			part.Render();
-			graphics.PopMatrix();
+			tempMvp = Matrix4.CreateTranslation( -x, -y, -z ) * tempMvp;
+			graphics.SetUniform( shader.mvpLoc, ref tempMvp );
+			part.Render( shader );
 		}
 	}
 }

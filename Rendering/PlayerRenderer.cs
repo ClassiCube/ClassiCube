@@ -35,9 +35,9 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DeleteTexture( nameTextureId );
 		}
 		
-		public void Render( double deltaTime ) {
+		public void Render( double deltaTime, MapShader shader ) {
 			pos = Player.Position;
-			Player.Model.RenderModel( Player, this );
+			Player.Model.RenderModel( Player, this, shader );
 			DrawName();
 		}
 		
