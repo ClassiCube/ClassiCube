@@ -85,9 +85,9 @@ namespace ClassicalSharp {
 		public byte FlagsTexY;
 		public byte FlagsTexOffsetsAndColour;
 		
-		public VertexMapPacked( short x, short y, short z, byte texY, 
+		public VertexMapPacked( int x, int y, int z, byte texY, 
 		                       bool texXOffset, bool texYOffset, byte colPacked ) {
-			X = x; Y = y; Z = z;
+			X = (short)x; Y = (short)y; Z = (short)z;
 			FlagsTexY = texY;
 			int flags = colPacked;
 			if( texXOffset ) flags |= 1 << 7;
