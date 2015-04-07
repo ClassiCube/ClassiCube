@@ -13,6 +13,8 @@ namespace Launcher {
 	
 	public partial class MainForm : Form {
 		
+		public const string AppName = "ClassicalSharp Launcher 0.5";
+		
 		public MainForm() {
 			InitializeComponent();
 			AdjustTabs();
@@ -35,7 +37,8 @@ namespace Launcher {
 					"Some required resources weren't found. Would you like to download them now?", "Missing resources",
 					MessageBoxButtons.OKCancel );
 				if( result == DialogResult.OK ) {				
-					fetcher.Run();
+					fetcher.Run( this );
+					Text = AppName;
 				}			
 			}
 		}

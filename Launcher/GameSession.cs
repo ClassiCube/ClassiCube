@@ -25,7 +25,7 @@ namespace Launcher {
 		
 		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
-			request.UserAgent = "ClassicalSharp Launcher 0.1";
+			request.UserAgent = MainForm.AppName;
 			request.ReadWriteTimeout = 15 * 1000;
 			request.Timeout = 15 * 1000;
 			request.Referer = referer;

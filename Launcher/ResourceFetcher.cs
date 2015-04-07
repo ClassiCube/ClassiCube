@@ -11,17 +11,18 @@ namespace Launcher {
 		const string cloudsUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/clouds.png";
 		const string charUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/char.png";
 		
-		public void Run() {
+		public void Run( MainForm form ) {
 			using( WebClient client = new WebClient() ) {
-				client.Proxy = null;
-				if( !DownloadData( terrainUri, client, "terrain.png" ) ) return;
-				if( !DownloadData( cloudsUri, client, "clouds.png" ) ) return;
-				if( !DownloadData( charUri, client, "char.png" ) ) return;
+				client.Proxy = null;				
+				if( !DownloadData( terrainUri, client, "terrain.png", form ) ) return;
+				if( !DownloadData( cloudsUri, client, "clouds.png", form ) ) return;
+				if( !DownloadData( charUri, client, "char.png", form ) ) return;
 			}
 		}
 		
-		static bool DownloadData( string uri, WebClient client, string output ) {
+		static bool DownloadData( string uri, WebClient client, string output, MainForm form ) {
 			if( File.Exists( output ) ) return true;
+			form.Text = MainForm.AppName + " - fetching " + output;
 			
 			byte[] data = null;
 			try {

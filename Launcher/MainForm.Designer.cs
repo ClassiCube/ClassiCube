@@ -764,7 +764,7 @@ namespace Launcher
 			this.ClientSize = new System.Drawing.Size(432, 393);
 			this.Controls.Add(this.tabs);
 			this.Name = "MainForm";
-			this.Text = "ClassicalSharp Launcher";
+			this.Text = Launcher.MainForm.AppName;
 			this.ResizeEnd += new System.EventHandler(this.MainFormResizeEnd);
 			this.tabMinecraftNet.ResumeLayout(false);
 			this.tabMC.ResumeLayout(false);
