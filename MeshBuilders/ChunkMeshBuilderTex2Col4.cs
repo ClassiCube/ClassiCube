@@ -201,8 +201,8 @@ namespace ClassicalSharp {
 		public override void RenderLiquidDepthPass( ChunkPartInfo info ) {
 			Graphics.BindVb( info.Id.VbId );
 			Graphics.BindIb( info.Id.IbId );
-			Graphics.EnableAndSetVertexAttribPointerF( liquidShader.positionLoc, 3, stride, 0 );			
-			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
+			Graphics.EnableAndSetVertexAttribPointerF( liquidShader.positionLoc, 3, stride, 0 );
+			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );
 			Graphics.DisableVertexAttribArray( liquidShader.positionLoc );
 		}
 		
@@ -238,7 +238,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );			
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
 		}
 
 		protected override void DrawBottomFace( int count ) {
@@ -258,7 +258,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );			
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
 		}
 
 		protected override void DrawBackFace( int count ) {
@@ -281,7 +281,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );		
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 		}
 
 		protected override void DrawFrontFace( int count ) {
@@ -304,7 +304,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );			
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
 		}
 
 		protected override void DrawLeftFace( int count ) {
@@ -327,7 +327,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );		
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
 		}
 
 		protected override void DrawRightFace( int count ) {
@@ -350,7 +350,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );		
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
 		}
 		
 		protected override void DrawSprite( int count ) {
@@ -369,7 +369,7 @@ namespace ClassicalSharp {
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col );
-			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col );			
+			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col );
 			
 			// Draw X axis
 			rec.U2 = 1;
@@ -380,7 +380,7 @@ namespace ClassicalSharp {
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col );
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col );
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col );			
+				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col );
 				X++;
 			}
 			X = startX;
@@ -395,6 +395,23 @@ namespace ClassicalSharp {
 			part.indices[part.indicesIndex++] = (ushort)( startIndex + 2 );
 			part.indices[part.indicesIndex++] = (ushort)( startIndex + 3 );
 			part.indices[part.indicesIndex++] = (ushort)( startIndex + 0 );
+		}
+		
+		static uint Pack( int xx, int yy, int zz, int yType, int texX, int texY, int texCount, int colourType ) {
+			// Bit structure
+			//5: X in chunk
+			//5: Z in chunk
+			//5: Y in chunk
+			//2: Y height (00: 0, 01: 0.125, 10: 0.5, 11: 1.0)
+
+			//4: tex X (divide by 16)
+			//3: tex Y (divide by 16, NOT 8)
+			//5: texCount
+			
+			//3: colour
+			return (uint)( xx | ( yy << 5 ) | ( zz << 10 ) | ( yType << 15 ) |
+				( texX << 17 ) | ( texY << 21 ) | ( texCount << 24 ) | 
+				( colourType << 29 ) );
 		}
 	}
 }
