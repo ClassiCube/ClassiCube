@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassicalSharp", "Classical
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher\Launcher.csproj", "{23B9BDA8-4330-46AB-9012-08D87430391A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftwareEngine", "SoftwareEngine\SoftwareEngine.csproj", "{6D86F2F3-6117-402C-9F99-2D15EE9E4E41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D86F2F3-6117-402C-9F99-2D15EE9E4E41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D86F2F3-6117-402C-9F99-2D15EE9E4E41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D86F2F3-6117-402C-9F99-2D15EE9E4E41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D86F2F3-6117-402C-9F99-2D15EE9E4E41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
