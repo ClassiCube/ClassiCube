@@ -122,6 +122,28 @@ namespace SoftwareRasterizer.Engine {
 			v.Y = -point.Y * height + height / 2.0f;
 			v.Z = point.Z;
 		}
+		
+		bool ProjectClipped( ref Vector3 coord, out Vector3 v ) {
+			v = Vector3.Zero;
+			Vector4 point = Vector4.Zero;
+			Vector4 wCoord = new Vector4( coord.X, coord.Y, coord.Z, 1 );
+			Vector4.Transform( ref wCoord, ref worldViewProj, out point );
+			
+			if( Math.Abs( point.X ) > Math.Abs( point.W ) && 
+			   Math.Abs( point.Y ) > Math.Abs( point.W ) ) {
+				return true;
+			}
+			point.X /= point.W;
+			point.Y /= point.W;
+			point.Z /= point.W;
+			
+			//x = ( point.X * 0.5f + 0.5f ) * width;
+			//y = ( point.Y * 0.5f + 0.5f ) * height;
+			v.X = point.X * width + width / 2.0f;
+			v.Y = -point.Y * height + height / 2.0f;
+			v.Z = point.Z;
+			return false;
+		}
 
 		void SetPixelClipped( ref Vector3 p, ref FastColour col ) {
 			if( p.X >= 0 && p.Y >= 0 && p.X < width && p.Y < height )  {
