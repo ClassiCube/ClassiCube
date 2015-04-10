@@ -19,11 +19,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		const string nonPow2Ext = "GL_ARB_texture_non_power_of_two";
 		const string vboExt = "GL_ARB_vertex_buffer_object";
 		bool useVbos = true;
-		BeginMode[] modeMappings = new BeginMode[] {
-			BeginMode.Triangles, BeginMode.Lines, BeginMode.Points,
-			BeginMode.TriangleStrip, BeginMode.LineStrip, BeginMode.TriangleFan
-		};
-		
+		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.TriangleStrip };	
 		public OpenGLApi() {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
 			string extensions = GL.GetString( StringName.Extensions );
@@ -60,15 +56,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 		public override void AlphaTestFunc( AlphaFunc func, float value ) {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
-		}
-		
-		BlendEquationMode[] blendEqs = new BlendEquationMode[] {
-			BlendEquationMode.FuncAdd, BlendEquationMode.Max,
-			BlendEquationMode.Min, BlendEquationMode.FuncSubtract,
-			BlendEquationMode.FuncReverseSubtract,
-		};
-		public override void AlphaBlendEq( BlendEquation eq ) {
-			GL.BlendEquation( blendEqs[(int)eq] );
 		}
 		
 		BlendingFactorSrc[] srcBlendFuncs = new BlendingFactorSrc[] {
@@ -196,21 +183,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		
-		public override void DrawVertices( DrawMode mode, Vector3[] vertices, int count ) {
+		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
 			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
 			// Feasible alternatives:
 			// - Use a dynamically updated VBO, and resize it (i.e. create a new bigger VBO) if required.
 			// - Immediate mode.
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				GL.Vertex3( vertices[i] );
-			}
-			GL.End();
-		}
-		
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
 			for( int i = 0; i < count; i++ ) {
 				VertexPos3fCol4b vertex = vertices[i];
@@ -246,24 +224,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		PolygonMode[] fillModes = new PolygonMode[] { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
 		public override void SetFillType( FillType type ) {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
-		}
-		
-		public override bool AmbientLighting {
-			set {
-				if( value ) {
-					GL.Enable( EnableCap.Lighting );
-					GL.Enable( EnableCap.ColorMaterial );
-					GL.ColorMaterial( MaterialFace.FrontAndBack, ColorMaterialParameter.Ambient );
-				} else {
-					GL.Disable( EnableCap.Lighting );
-					GL.Disable( EnableCap.ColorMaterial );
-				}
-			}
-		}
-		
-		public override void SetAmbientColour( FastColour col ) {
-			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, 1f };
-			GL.LightModel( LightModelParameter.LightModelAmbient, colRGBA );
 		}
 		
 		#region Vertex buffers
@@ -349,21 +309,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			GL.Arb.DeleteBuffers( 1, ref id );
-		}
-		
-		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
-			GL.EnableClientState( ArrayCap.VertexArray );
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 12, new IntPtr( 0 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			GL.DisableClientState( ArrayCap.VertexArray );
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {

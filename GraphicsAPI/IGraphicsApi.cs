@@ -66,9 +66,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether alpha blending is currently enabled. </summary>
 		public abstract bool AlphaBlending { set; }
 		
-		/// <summary> Sets the alpha blend equation that is used when alpha blending is enabled. </summary>
-		public abstract void AlphaBlendEq( BlendEquation eq );
-		
 		/// <summary> Sets the alpha blend function that isused when alpha blending is enabled. </summary>
 		public abstract void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc );
 		
@@ -88,10 +85,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public virtual void DrawVertices( DrawMode mode, Vector3[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
 		public virtual void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
 			DrawVertices( mode, vertices, vertices.Length );
 		}
@@ -104,8 +97,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawVertices( mode, vertices, vertices.Length );
 		}
 		
-		public abstract void DrawVertices( DrawMode mode, Vector3[] vertices, int count );
-		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count );
 		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count );
@@ -114,10 +105,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void SetFillType( FillType type );
 		
-		public abstract bool AmbientLighting { set; }
-		
-		public abstract void SetAmbientColour( FastColour col );
-		
 		public virtual int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
 			return InitVb( vertices, mode, format, vertices.Length );
 		}
@@ -125,15 +112,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
 		
 		public abstract void DeleteVb( int id );
-		
-		public virtual void DrawVb( DrawMode mode, int id, int verticesCount, VertexFormat format ) {
-			if( format == VertexFormat.VertexPos3f ) DrawVbPos3f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2f ) DrawVbPos3fTex2f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fCol4b ) DrawVbPos3fCol4b( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2fCol4b ) DrawVbPos3fTex2fCol4b( mode, id, verticesCount );
-		}
-		
-		public abstract void DrawVbPos3f( DrawMode mode, int id, int verticesCount );
 		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
 		
@@ -150,7 +128,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}
-		protected static int[] strideSizes = new [] { 12, 20, 16, 24 };
+		protected static int[] strideSizes = new [] { 20, 16, 24 };
 		
 		
 		public abstract void SetMatrixMode( MatrixType mode );
@@ -250,28 +228,14 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		VertexPos3f = 0,
-		VertexPos3fTex2f = 1,
-		VertexPos3fCol4b = 2,
-		VertexPos3fTex2fCol4b = 3
+		VertexPos3fTex2f = 0,
+		VertexPos3fCol4b = 1,
+		VertexPos3fTex2fCol4b = 2,
 	}
 	
 	public enum DrawMode {
 		Triangles = 0,
-		Lines = 1,
-		Points = 2,
-		
-		TriangleStrip = 3,
-		LineStrip = 4,
-		TriangleFan = 5,
-	}
-	
-	public enum BlendEquation {
-		Add = 0,
-		Max = 1,
-		Min = 2,
-		Subtract = 3,
-		ReverseSubtract = 4,
+		TriangleStrip = 1,
 	}
 	
 	public enum AlphaFunc {

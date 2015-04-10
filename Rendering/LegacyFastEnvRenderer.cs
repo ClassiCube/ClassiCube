@@ -36,11 +36,5 @@ namespace ClassicalSharp.Renderers {
 		
 		protected override void SkyColourChanged() {
 		}
-		
-		public override void EnableAmbientLighting() {
-		}
-		
-		public override void DisableAmbientLighting() {
-		}
 	}
 }
