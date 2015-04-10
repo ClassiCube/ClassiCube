@@ -65,7 +65,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Graphics.BindVb( Graphics.vb2d );
 			Graphics.UpdateDynamicVb( Graphics.vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
-			shader.DrawVb( Graphics, Graphics.vb2d, 4, DrawMode.TriangleStrip );
+			shader.DrawVb( Graphics, DrawMode.TriangleStrip, Graphics.vb2d, 4 );
 		}
 	}
 }

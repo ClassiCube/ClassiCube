@@ -15,6 +15,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected virtual void BindParameters( OpenGLApi api ) {
 			
 		}
+		
+		public abstract void DrawVb( OpenGLApi graphics, DrawMode mode, int vb, int verticesCount );
 	}
 	
 	public sealed class GuiShader : Shader {
@@ -67,13 +69,13 @@ void main() {
 		}
 		
 		const int stride = VertexPos3fTex2fCol4b.Size;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount ) {
+		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vbId, int verticesCount ) {
 			graphics.BindVb( vbId );
 			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
 			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
 			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 			
-			graphics.DrawVb( DrawMode.TriangleStrip, 0, verticesCount );
+			graphics.DrawVb( mode, 0, verticesCount );
 			
 			graphics.DisableVertexAttribArray( positionLoc );
 			graphics.DisableVertexAttribArray( texCoordsLoc );
@@ -109,7 +111,7 @@ void main() {
 		}
 		
 		const int stride = 12;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
+		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vbId, int verticesCount ) {
 			graphics.BindVb( vbId );
 			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );			
 			graphics.DrawVb( mode, 0, verticesCount );		
@@ -191,6 +193,20 @@ void main() {
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
 			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
 		}
+		
+		const int stride = VertexPos3fTex2fCol4b.Size;
+		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vb, int verticesCount ) {
+			graphics.BindVb( vb );
+			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
+			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
+			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			
+			graphics.DrawVb( mode, 0, verticesCount );
+			
+			graphics.DisableVertexAttribArray( positionLoc );
+			graphics.DisableVertexAttribArray( texCoordsLoc );
+			graphics.DisableVertexAttribArray( colourLoc );
+		}
 	}
 	
 	public sealed class MapShader : Shader {
@@ -261,7 +277,7 @@ void main() {
 		}
 		
 		const int stride = VertexPos3fTex2fCol4b.Size;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount, DrawMode mode ) {
+		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vbId, int verticesCount ) {
 			graphics.BindVb( vbId );
 			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
 			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
@@ -299,6 +315,14 @@ void main() {
 		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+		}
+		
+		const int stride = VertexPos3fTex2fCol4b.Size;
+		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vbId, int verticesCount ) {
+			graphics.BindVb( vbId );
+			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );			
+			graphics.DrawVb( mode, 0, verticesCount );			
+			graphics.DisableVertexAttribArray( positionLoc );
 		}
 	}
 }

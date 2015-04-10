@@ -15,10 +15,10 @@ namespace ClassicalSharp.Renderers {
 			shader.Initialise( window.Graphics );
 		}
 		
-		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 6;
-		int skyOffset = 10, skyVbo = -1, skyVertices = 6;
+		int cloudTexture = -1, cloudsVbo = -1;
+		int skyOffset = 10, skyVbo = -1;
 		public float CloudsSpeed = 1f;
-		const int stride = VertexPos3fTex2fCol4b.Size;
+		const int cloudsVertices = 6, skyVertices = 6;
 		
 		public override void Render( double deltaTime ) {
 			if( Map.IsNotLoaded || skyVbo == -1 ) return;
@@ -89,16 +89,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RenderSky() {
-			Graphics.BindVb( skyVbo );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
-			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
-			
-			Graphics.DrawVb( DrawMode.Triangles, 0, skyVertices );
-			
-			Graphics.DisableVertexAttribArray( shader.positionLoc );
-			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
-			Graphics.DisableVertexAttribArray( shader.colourLoc );
+			shader.DrawVb( Graphics, DrawMode.Triangles, skyVbo, skyVertices );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -106,17 +97,7 @@ namespace ClassicalSharp.Renderers {
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			Graphics.SetUniform( shader.sOffsetLoc, offset );
 			Graphics.Bind2DTexture( cloudTexture );
-			
-			Graphics.BindVb( cloudsVbo );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.positionLoc, 3, stride, 0 );
-			Graphics.EnableAndSetVertexAttribPointerF( shader.texCoordsLoc, 2, stride, 12 );
-			Graphics.EnableAndSetVertexAttribPointer( shader.colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
-			
-			Graphics.DrawVb( DrawMode.Triangles, 0, cloudsVertices );
-			
-			Graphics.DisableVertexAttribArray( shader.positionLoc );
-			Graphics.DisableVertexAttribArray( shader.texCoordsLoc );
-			Graphics.DisableVertexAttribArray( shader.colourLoc );
+			shader.DrawVb( Graphics, DrawMode.Triangles, cloudsVbo, cloudsVertices );
 		}
 		
 		void ResetClouds() {

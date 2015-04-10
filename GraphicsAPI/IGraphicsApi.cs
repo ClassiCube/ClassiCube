@@ -54,7 +54,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 			BindVb( vb2d );
 			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
-			shader.DrawVb( this, vb2d, 4 );
+			shader.DrawVb( this, DrawMode.TriangleStrip, vb2d, 4 );
 		}
 		
 		public void Draw2DTextureVertices( ref Texture tex ) {
@@ -68,7 +68,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 			BindVb( vb2d );
 			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
-			shader.DrawVb( this, vb2d, 4 );
+			shader.DrawVb( this, DrawMode.TriangleStrip, vb2d, 4 );
 		}
 		
 		protected GuiShader shader;

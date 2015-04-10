@@ -67,7 +67,7 @@ namespace ClassicalSharp.Renderers {
 				graphics.SetUniform( shader.mvpLoc, ref window.mvp );
 				graphics.BindVb( vb );
 				graphics.UpdateDynamicVb( vb, vertices, VertexFormat.VertexPos3 );
-				shader.DrawVb( graphics, vb, verticesCount, DrawMode.Triangles );
+				shader.DrawVb( graphics, DrawMode.Triangles, vb, verticesCount );
 			}
 		}
 		

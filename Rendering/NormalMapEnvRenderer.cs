@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			if( sidesVboId == -1 ) return;
 
 			Graphics.Bind2DTexture( sideTexId );
-			shader.DrawVb( Graphics, sidesVboId, sidesVertices, DrawMode.Triangles );
+			shader.DrawVb( Graphics, DrawMode.Triangles, sidesVboId, sidesVertices );
 		}
 		
 		public override void RenderMapEdges( double deltaTime ) {
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			
 			Graphics.AlphaBlending = true;
 			Graphics.Bind2DTexture( edgeTexId );
-			shader.DrawVb( Graphics, edgesVboId, edgesVertices, DrawMode.Triangles );
+			shader.DrawVb( Graphics, DrawMode.Triangles, edgesVboId, edgesVertices );
 			Graphics.AlphaBlending = false;
 		}
 		
