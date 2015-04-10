@@ -400,8 +400,8 @@ namespace ClassicalSharp {
 		static uint Pack( int xx, int yy, int zz, int yType, int texX, int texY, int texCount, int colourType ) {
 			// Bit structure
 			//5: X in chunk
-			//5: Z in chunk
 			//5: Y in chunk
+			//5: Z in chunk
 			//2: Y height (00: 0, 01: 0.125, 10: 0.5, 11: 1.0)
 
 			//4: tex X (divide by 16)
