@@ -26,7 +26,6 @@ namespace SoftwareRasterizer {
 		}
 		
 		Vector3 rot = Vector3.Zero;
-		bool painted = false;
 		int frames = 0;
 		protected override void OnPaint( PaintEventArgs e ) {
 			try {
@@ -34,6 +33,7 @@ namespace SoftwareRasterizer {
 				device.Clear( new FastColour( 0, 0, 0, 255 ) );
 
 				Matrix4 view = Matrix4.LookAt( new Vector3( 0, 0, 10 ), Vector3.Zero, Vector3.UnitY );
+				//Matrix4 view = Matrix4.LookAt( new Vector3( 10 * (float)Math.Sin( rot.X * 1 ), 0, 10 * (float)Math.Cos( rot.X * 1 ) ), Vector3.Zero, Vector3.UnitY );
 				Matrix4 proj = Matrix4.Perspective( 0.78f, 640f / 480f, 0.01f, 50.0f );
 				
 				Vector3[] vertices = new Vector3[8];
@@ -67,16 +67,16 @@ namespace SoftwareRasterizer {
 				};
 				
 				rot.X += 0.01f;
-				Matrix4 world = Matrix4.RotateX( rot.X ) * Matrix4.RotateY( rot.X );
+				Matrix4 world = Matrix4.Identity;//Matrix4.RotateX( rot.X ) * Matrix4.RotateY( rot.X );
 				device.SetAllMatrices( ref proj, ref view, ref world );
 				device.DrawIndexed_Triangles( vertices, indices );
-				/*for( int i = 0; i < 1000; i++ ) {
+				for( int i = 0; i < 1000; i++ ) {
 					float offset = (float)rnd.NextDouble() - 0.5f;
 					for( int j = 0; j < vertices.Length; j++ ) {
 						vertices[j] += new Vector3( offset, offset, offset );
 					}
 					device.DrawIndexed_Triangles( vertices, indices );
-				}*/
+				}
 				
 				device.Present( e.Graphics );
 				base.OnPaint( e );

@@ -54,19 +54,19 @@ namespace SoftwareRasterizer.Engine {
 		}
 		
 		public void Clear( FastColour col ) {
-			int colBGRA = col.A << 24 | col.R << 16 | col.G << 8 | col.B;
+			int colARGB = col.ARGB;
 			#if USE_UNSAFE
 			IntPtr colPtr = colourBuffer.ptr;
 			IntPtr depthPtr = depthBuffer.ptr;
 			int* colourBufferPtr = (int*)colPtr;
 			uint* depthBufferPtr = (uint*)depthPtr;
 			for( int i = 0; i < width * height; i++ ) {
-				*colourBufferPtr++ = colBGRA;
+				*colourBufferPtr++ = colARGB;
 				*depthBufferPtr++ = UInt32.MaxValue;
 			}
 			#else
 			for( int i = 0; i < colourBuffer.Length; i++ ) {
-				colourBuffer[i] = colBGRA;
+				colourBuffer[i] = colARGB;
 			}
 			#endif
 		}
@@ -87,15 +87,14 @@ namespace SoftwareRasterizer.Engine {
 		}
 
 		void PutPixel( int x, int y, FastColour col ) {
-			//int colBGRA = col.A << 24 | col.R << 16 | col.G << 8 | col.B;
-			int colBGRA = *(int*)( &col );
+			int colARGB = col.ARGB;
 			
 			#if USE_UNSAFE
 			IntPtr scan0 = colourBuffer.ptr;
 			int* row = (int*)( scan0 + ( y * width ) );
-			row[x] = colBGRA;
+			row[x] = colARGB;
 			#else
-			colourBuffer[y * width + x] = colBGRA;
+			colourBuffer[y * width + x] = colARGB;
 			#endif
 		}
 
