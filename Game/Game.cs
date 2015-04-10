@@ -8,7 +8,6 @@ using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
-using ClassicalSharp.Selections;
 using OpenTK;
 using OpenTK.Input;
 
@@ -40,7 +39,6 @@ namespace ClassicalSharp {
 		public EnvRenderer EnvRenderer;
 		
 		public CommandManager CommandManager;
-		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos;
@@ -170,7 +168,6 @@ namespace ClassicalSharp {
 			Camera = firstPersonCam;
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
-			SelectionManager = new SelectionManager( this );
 			ParticleManager = new ParticleManager( this );
 			
 			VSync = VSyncMode.On;
@@ -258,7 +255,6 @@ namespace ClassicalSharp {
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
-				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				PickBlocks( true, left, right );
@@ -302,7 +298,6 @@ namespace ClassicalSharp {
 			EnvRenderer.Dispose();
 			SetNewScreen( null );
 			fpsScreen.Dispose();
-			SelectionManager.Dispose();
 			Graphics.DeleteTexture( TerrainAtlasTexId );
 			for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
 				Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );

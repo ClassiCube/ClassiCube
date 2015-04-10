@@ -149,8 +149,6 @@
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\PlayerRenderer.cs" />
     <Compile Include="Rendering\NormalMapEnvRenderer.cs" />
-    <Compile Include="Selections\SelectionBox.cs" />
-    <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
     <Compile Include="Utils\TextureAtlas1D.cs" />

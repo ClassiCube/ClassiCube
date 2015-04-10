@@ -150,7 +150,7 @@ namespace ClassicalSharp {
 		// EnvWeatherType   : unlikely
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
-			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
+			"MessageTypes", "CustomBlocks", "EnvColors",
 			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
 		};
 		
@@ -306,7 +306,6 @@ namespace ClassicalSharp {
 					{
 						Window.Map.Reset();
 						Window.RaiseOnNewMap();
-						Window.SelectionManager.Dispose();
 						Window.SetNewScreen( new LoadingMapScreen( Window, ServerName, ServerMotd ) );
 						if( ServerMotd.Contains( "cfg=" ) ) {
 							string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
@@ -566,34 +565,6 @@ namespace ClassicalSharp {
 						if( nameId >= 0 && nameId <= 255 ) {
 							Window.RaiseCpeListInfoRemoved( (byte)nameId );
 						}
-					} break;
-					
-				case PacketId.CpeMakeSelection:
-					{
-						byte selectionId = reader.ReadUInt8();
-						string label = reader.ReadString();
-						short startX = reader.ReadInt16();
-						short startY = reader.ReadInt16();
-						short startZ = reader.ReadInt16();
-						short endX = reader.ReadInt16();
-						short endY = reader.ReadInt16();
-						short endZ = reader.ReadInt16();
-						
-						byte r = (byte)reader.ReadInt16();
-						byte g = (byte)reader.ReadInt16();
-						byte b = (byte)reader.ReadInt16();
-						byte a = (byte)reader.ReadInt16();
-						
-						Vector3I p1 = Vector3I.Min( startX, startY, startZ, endX, endY, endZ );
-						Vector3I p2 = Vector3I.Max( startX, startY, startZ, endX, endY, endZ );
-						FastColour col = new FastColour( r, g, b, a );
-						Window.SelectionManager.AddSelection( selectionId, p1, p2, col );
-					} break;
-					
-				case PacketId.CpeRemoveSelection:
-					{
-						byte selectionId = reader.ReadUInt8();
-						Window.SelectionManager.RemoveSelection( selectionId );
 					} break;
 					
 				case PacketId.CpeEnvColours:
