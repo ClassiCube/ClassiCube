@@ -314,22 +314,22 @@ vec4(0.512, 0.512, 0.512, 1.0),
 vec4(0.384, 0.384, 0.384, 1.0),
 vec4(0.32, 0.32, 0.32, 1.0)
 );
-uniform float y_offsets[3] = float[](0.0, 0.125, 0.5, 1.0);
+uniform float y_offsets[4] = float[](0.0, 0.125, 0.5, 1.0);
 
 void main() {
    vec3 pos = offset;
-   pos.x += in_packed & 0x1F;
-   pos.y += (in_packed & 0x3E0 ) >> 5;
-   pos.z += (in_packed & 0x7C00 ) >> 10;
-   pos.y += y_offsets[(in_packed & 0x18000) >> 15];
+   pos.x += in_packed & 0x1Fu;
+   pos.y += (in_packed & 0x3E0u ) >> 5u;
+   pos.z += (in_packed & 0x7C00u ) >> 10u;
+   pos.y += y_offsets[(in_packed & 0x18000u) >> 15u];
       
    gl_Position = MVP * vec4(pos, 1.0);
    
-   uint meta = in_packed >> 17;  
-   out_texcoords = vec2( (meta & 0x0F ) / 16.0,
-                         ((meta & 0x70) >> 4 ) / 16.0 );
-   out_texOffset = (meta & 0xF80) >> 7;
-   out_colour = colour_indices[meta >> 12];
+   uint meta = in_packed >> 17u;  
+   out_texcoords = vec2( float(meta & 0x0Fu) / 16.0,
+                         float((meta & 0x70u) >> 4u) / 16.0 );
+   out_texOffset = (meta & 0xF80u) >> 7u;
+   out_colour = colour_indices[meta >> 12u];
 }";
 			
 			FragSource = @"
@@ -337,6 +337,8 @@ void main() {
 flat in vec2 out_texcoords;
 in float out_texOffset;
 in vec4 out_colour;
+out vec4 frag_colour;
+
 uniform sampler2D texImage;
 uniform vec4 fogColour;
 uniform float fogEnd;
@@ -350,6 +352,7 @@ void main() {
    if(finalColour.a < 0.5) {
       discard;
    }
+   
    if(fogMode != 0) {
       float alpha = finalColour.a;
       float depth = (gl_FragCoord.z / gl_FragCoord.w);
@@ -364,7 +367,7 @@ void main() {
       finalColour = mix(fogColour, finalColour, f);     
       finalColour.a = alpha; // fog shouldn't affect alpha
    }
-   gl_FragColor = finalColour;
+   frag_colour = finalColour;
 }";	
 		}
 		

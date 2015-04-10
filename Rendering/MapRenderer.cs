@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 		int elementsPerBitmap = 0;
 		internal MapShader shader;
 		internal MapLiquidDepthPassShader transluscentShader;
+		internal MapPackedShader packedShader;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
@@ -60,6 +61,8 @@ namespace ClassicalSharp {
 			shader.Initialise( Graphics );
 			transluscentShader = new MapLiquidDepthPassShader();
 			transluscentShader.Initialise( Graphics );
+			packedShader = new MapPackedShader();
+			packedShader.Initialise( Graphics );
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			

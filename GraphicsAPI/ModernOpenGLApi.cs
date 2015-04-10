@@ -18,8 +18,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.LinkProgram( program );
 			
 			string errorLog = GL.GetProgramInfoLog( program );
-			Console.WriteLine( "Program error for {0}:", program );
-			Console.WriteLine( errorLog );
+			if( !String.IsNullOrEmpty( errorLog ) ) {
+				Console.WriteLine( "Program error for {0}:", program );
+				Console.WriteLine( errorLog );
+			}
 			
 			GL.DeleteShader( vertexShaderId );
 			GL.DeleteShader( fragShaderId );
@@ -33,8 +35,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.CompileShader( shaderId );
 			
 			string errorLog = GL.GetShaderInfoLog( shaderId );
-			Console.WriteLine( "Shader error for {0} ({1}):", shaderId, type );
-			Console.WriteLine( errorLog );
+			if( !String.IsNullOrEmpty( errorLog ) ) {
+				Console.WriteLine( "Shader error for {0} ({1}):", shaderId, type );
+				Console.WriteLine( errorLog );
+			}
 			return shaderId;
 		}
 		
