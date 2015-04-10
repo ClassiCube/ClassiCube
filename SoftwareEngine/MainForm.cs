@@ -67,16 +67,16 @@ namespace SoftwareRasterizer {
 				};
 				
 				rot.X += 0.01f;
-				Matrix4 world = Matrix4.Identity;//Matrix4.RotateX( rot.X ) * Matrix4.RotateY( rot.X );
+				Matrix4 world = Matrix4.RotateX( rot.X ) * Matrix4.RotateY( rot.X );
 				device.SetAllMatrices( ref proj, ref view, ref world );
-				device.DrawIndexed_Triangles( vertices, indices );
-				for( int i = 0; i < 1000; i++ ) {
+				device.Filled_DrawIndexedTriangles( vertices, indices );
+				/*for( int i = 0; i < 1000; i++ ) {
 					float offset = (float)rnd.NextDouble() - 0.5f;
 					for( int j = 0; j < vertices.Length; j++ ) {
 						vertices[j] += new Vector3( offset, offset, offset );
 					}
-					device.DrawIndexed_Triangles( vertices, indices );
-				}
+					device.Line_DrawIndexedTriangles( vertices, indices );
+				}*/
 				
 				device.Present( e.Graphics );
 				base.OnPaint( e );

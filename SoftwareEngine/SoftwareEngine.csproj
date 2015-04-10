@@ -55,6 +55,8 @@
   <ItemGroup>
     <Compile Include="Engine\FastColour.cs" />
     <Compile Include="Engine\SoftwareEngine.cs" />
+    <Compile Include="Engine\SoftwareEngine.DrawingFilled.cs" />
+    <Compile Include="Engine\SoftwareEngine.DrawingLine.cs" />
     <Compile Include="Engine\UnmanagedBuffer.cs" />
     <Compile Include="Engine\Utils.cs" />
     <Compile Include="MainForm.cs" />
