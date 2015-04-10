@@ -6,10 +6,10 @@ namespace SoftwareRasterizer.Engine {
 	public unsafe partial class SoftwareEngine {
 		
 		public void Line_DrawVertexLine( Vector3 vertex1, Vector3 vertex2 ) {
-			float x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-			Project( ref vertex1, out x1, out y1 );
-			Project( ref vertex2, out x2, out y2 );
-			DrawLine( x1, y1, x2, y2 );
+			Vector3 p1, p2;
+			Project( ref vertex1, out p1 );
+			Project( ref vertex2, out p2 );
+			DrawLine( ref p1, ref p2 );
 		}
 		
 		public void Line_DrawIndexedTriangles( Vector3[] vertices, ushort[] indices ) {
@@ -18,13 +18,13 @@ namespace SoftwareRasterizer.Engine {
 				Vector3 vertex2 = vertices[indices[i + 1]];
 				Vector3 vertex3 = vertices[indices[i + 2]];
 
-				float x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0;
-				Project( ref vertex1, out x1, out y1 );
-				Project( ref vertex2, out x2, out y2 );
-				Project( ref vertex3, out x3, out y3 );
-				DrawLine( x1, y1, x2, y2 );
-				DrawLine( x2, y2, x3, y3 );
-				DrawLine( x3, y3, x1, y1 );
+				Vector3 p1, p2, p3;
+				Project( ref vertex1, out p1 );
+				Project( ref vertex2, out p2 );
+				Project( ref vertex3, out p3 );
+				DrawLine( ref p1, ref p2 );
+				DrawLine( ref p2, ref p3 );
+				DrawLine( ref p3, ref p1 );
 			}
 		}
 		
@@ -32,10 +32,10 @@ namespace SoftwareRasterizer.Engine {
 		const int LEFT = 1;   // 0001
 		const int RIGHT = 2;  // 0010
 		const int BOTTOM = 4; // 0100
-		const int TOP = 8;    // 1000		
+		const int TOP = 8;    // 1000
 		// Compute the bit code for a point (x, y) using the clip rectangle
 		// bounded diagonally by (xmin, ymin), and (xmax, ymax)
-		int ComputeOutCode( float x, float y ) {	
+		int ComputeOutCode( float x, float y ) {
 			int code = INSIDE;
 			
 			if( x < 0 ) {
@@ -51,7 +51,11 @@ namespace SoftwareRasterizer.Engine {
 			return code;
 		}
 		
-		void DrawLine( float x0, float y0, float x1, float y1 ) {
+		void DrawLine( ref Vector3 p1, ref Vector3 p2 ) {
+			float x0 = p1.X;
+			float y0 = p1.Y;
+			float x1 = p2.X;
+			float y1 = p2.Y;
 			int outcode0 = ComputeOutCode( x0, y0 );
 			int outcode1 = ComputeOutCode( x1, y1 );
 			
@@ -129,7 +133,7 @@ namespace SoftwareRasterizer.Engine {
 					int xx = x1 + ( j >> 16 );
 					int yy = y1 + i;
 					if( xx >= 0 && yy >= 0 && xx < width && yy < height )  {
-						PutPixel( xx, yy, FastColour.Red );
+						PutPixel( xx, yy, 0, FastColour.Red );
 					}
 					j += decInc;
 				}
@@ -138,14 +142,14 @@ namespace SoftwareRasterizer.Engine {
 					int xx = x1 + i;
 					int yy = y1 + ( j >> 16 );
 					if( xx >= 0 && yy >= 0 && xx < width && yy < height )  {
-						PutPixel( xx, yy, FastColour.Red );
+						PutPixel( xx, yy, 0, FastColour.Red );
 					}
 					j += decInc;
 				}
 			}
 		}
 		
-		void DrawLin32e( int x0, int y0, int x1, int y1 ) {			
+		void DrawLin32e( int x0, int y0, int x1, int y1 ) {
 			int dx = Math.Abs( x1 - x0 );
 			int dy = Math.Abs( y1 - y0 );
 			int dirX = ( x0 < x1 ) ? 1 : -1;
@@ -154,7 +158,7 @@ namespace SoftwareRasterizer.Engine {
 
 			while( true ) {
 				if( x0 >= 0 && y0 >= 0 && x0 < width && y0 < height )  {
-					PutPixel( x0, y0, FastColour.Red );
+					PutPixel( x0, y0, 0, FastColour.Red );
 				}
 				if ( ( x0 == x1 ) && ( y0 == y1 ) ) break;
 				

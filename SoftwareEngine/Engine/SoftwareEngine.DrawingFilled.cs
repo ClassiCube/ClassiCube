@@ -11,13 +11,13 @@ namespace SoftwareRasterizer.Engine {
 				Vector3 vertex2 = vertices[indices[i + 1]];
 				Vector3 vertex3 = vertices[indices[i + 2]];
 
-				float x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0;
-				Project( ref vertex1, out x1, out y1 );
-				Project( ref vertex2, out x2, out y2 );
-				Project( ref vertex3, out x3, out y3 );
+				Vector3 p1, p2, p3;
+				Project( ref vertex1, out p1 );
+				Project( ref vertex2, out p2 );
+				Project( ref vertex3, out p3 );
 				byte col = (byte)( 255 * ( 0.25f + ( ( i / 3 ) % indices.Length ) * 0.75f / indices.Length ) );
 				FastColour col2 = new FastColour( col, col, col );
-				DrawTriangle( new Vector3( x1, y1, 0 ), new Vector3( x2, y2, 0 ), new Vector3( x3, y3, 0 ), ref col2 );
+				DrawTriangle( p1, p2, p3, ref col2 );
 			}
 		}
 		
@@ -37,9 +37,13 @@ namespace SoftwareRasterizer.Engine {
 			
 			int sx = (int)lerp( pa.X, pb.X, gradient1 );
 			int ex = (int)lerp( pc.X, pd.X, gradient2 );
+			float z1 = lerp( pa.Z, pb.Z, gradient1 );
+			float z2 = lerp( pc.Z, pd.Z, gradient2 );
 
 			for( int x = sx; x < ex; x++ ) {
-				SetPixelClipped( ref x, ref y, ref col );
+				float gradient = ( x - sx) / (float)( ex - sx );
+				float z = lerp( z1, z2, gradient );
+				SetPixelClipped( ref x, ref y, ref z, ref col );
 			}
 		}
 

@@ -13,6 +13,7 @@ namespace SoftwareRasterizer.Engine {
 		UnmanagedBuffer<int> colourBuffer;
 		#else
 		int[] colourBuffer;
+		float[] depthBuffer;
 		#endif	
 		
 		public SoftwareEngine( int width, int height ) {
@@ -20,6 +21,7 @@ namespace SoftwareRasterizer.Engine {
 			colourBuffer = new UnmanagedBuffer<int>( width, height );
 			#else
 			colourBuffer = new int[width * height];
+			depthBuffer = new float[width * height];
 			#endif
 			SetDimensions( width, height );
 		}
@@ -30,6 +32,7 @@ namespace SoftwareRasterizer.Engine {
 			depthBuffer.Resize( width, height );
 			#else
 			colourBuffer = new int[width * height];
+			depthBuffer = new float[width * height];
 			#endif
 			SetDimensions( width, height );
 		}
@@ -67,6 +70,7 @@ namespace SoftwareRasterizer.Engine {
 			#else
 			for( int i = 0; i < colourBuffer.Length; i++ ) {
 				colourBuffer[i] = colARGB;
+				depthBuffer[i] = float.MaxValue;
 			}
 			#endif
 		}
@@ -86,7 +90,7 @@ namespace SoftwareRasterizer.Engine {
 			#endif
 		}
 
-		void PutPixel( int x, int y, FastColour col ) {
+		void PutPixel( int x, int y, float z, FastColour col ) {
 			int colARGB = col.ARGB;
 			
 			#if USE_UNSAFE
@@ -94,13 +98,17 @@ namespace SoftwareRasterizer.Engine {
 			int* row = (int*)( scan0 + ( y * width ) );
 			row[x] = colARGB;
 			#else
-			colourBuffer[y * width + x] = colARGB;
+			int index = y * width + x;
+			if( depthBuffer[index] < z ) return;
+			
+			depthBuffer[index] = z;
+			colourBuffer[index] = colARGB;
 			#endif
 		}
 
 		// Project takes some 3D coordinates and transform them
 		// in 2D coordinates using the transformation matrix
-		void Project( ref Vector3 coord, out float x, out float y ) {
+		void Project( ref Vector3 coord, out Vector3 v ) {
 			Vector4 point = Vector4.Zero;
 			Vector4 wCoord = new Vector4( coord.X, coord.Y, coord.Z, 1 );
 			Vector4.Transform( ref wCoord, ref worldViewProj, out point );
@@ -110,26 +118,27 @@ namespace SoftwareRasterizer.Engine {
 			
 			//x = ( point.X * 0.5f + 0.5f ) * width;
 			//y = ( point.Y * 0.5f + 0.5f ) * height;
-			x = point.X * width + width / 2.0f;
-			y = -point.Y * height + height / 2.0f;
+			v.X = point.X * width + width / 2.0f;
+			v.Y = -point.Y * height + height / 2.0f;
+			v.Z = point.Z;
 		}
 
-		void SetPixelClipped( ref float x, ref float y, ref FastColour col ) {
-			if( x >= 0 && y >= 0 && x < width && y < height )  {
-				PutPixel( (int)x, (int)y, col );
+		void SetPixelClipped( ref Vector3 p, ref FastColour col ) {
+			if( p.X >= 0 && p.Y >= 0 && p.X < width && p.Y < height )  {
+				PutPixel( (int)p.X, (int)p.Y, p.Z, col );
 			}
 		}
 		
-		void SetPixelClipped( ref int x, ref int y, ref FastColour col ) {
+		void SetPixelClipped( ref int x, ref int y, ref float z, ref FastColour col ) {
 			if( x >= 0 && y >= 0 && x < width && y < height )  {
-				PutPixel( x, y, col );
+				PutPixel( x, y, z, col );
 			}
 		}
 		
 		public void DrawVertex_Point( Vector3 vertex ) {
-			float x = 0, y = 0;
-			Project( ref vertex, out x, out y );
-			SetPixelClipped( ref x, ref y, ref FastColour.Cyan );
+			Vector3 p;
+			Project( ref vertex, out p );
+			SetPixelClipped( ref p, ref FastColour.Cyan );
 		}
 	}
 }
