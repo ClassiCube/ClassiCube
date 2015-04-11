@@ -303,6 +303,7 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderSpriteBatch() {
+			Graphics.SetUniform( packedShader.spritePassLoc, true );
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
@@ -315,6 +316,7 @@ namespace ClassicalSharp {
 				builder.Render( drawInfo );
 				Window.Vertices += drawInfo.IndicesCount;
 			}
+			Graphics.SetUniform( packedShader.spritePassLoc, false );
 		}
 
 		void RenderTranslucentBatch() {

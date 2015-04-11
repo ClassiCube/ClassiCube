@@ -297,7 +297,8 @@ void main() {
 			VertexSource = @"
 #version 130
 in uint in_packed;
-uniform vec3 offset; // MAKE WITH VERTEX DIVISOR
+uniform vec3 offset;
+uniform bool spritePass = false;
 out vec2 out_texcoords;
 flat out float out_texU1;
 out vec4 out_colour;
@@ -317,19 +318,27 @@ vec4(0.32, 0.32, 0.32, 1.0)
 uniform float y_offsets[4] = float[](0.0, 0.125, 0.5, 1.0);
 
 void main() {
+   uint posData = in_packed & 0xFFFFu; // lower 16 bits
    vec3 pos = offset;
-   pos.x += in_packed & 0x1Fu;
-   pos.y += (in_packed & 0x3E0u ) >> 5u;
-   pos.z += (in_packed & 0x7C00u ) >> 10u;
-   pos.y += y_offsets[(in_packed & 0x18000u) >> 15u];
-      
-   gl_Position = MVP * vec4(pos, 1.0);
+   pos.x += posData & 0x001Fu;
+   pos.y += (posData & 0x01E0u ) >> 5u;
+   pos.y += y_offsets[(posData & 0x0600u) >> 9u];
+   pos.z += (posData & 0xF800u ) >> 11u;    
    
-   uint meta = in_packed >> 17u;  
-   out_texcoords = vec2( float(meta & 0x0Fu), float((meta & 0x70u) >> 4u) );
+   uint meta = in_packed >> 16u; // upper 16 bits
+   out_texcoords = vec2( float(meta & 0x000Fu), float((meta & 0x0070u) >> 4u) );
    out_texU1 = out_texcoords.x;
-   out_texcoords.x += float((meta & 0xF80u) >> 7u);
-   out_colour = colour_indices[meta >> 12u];
+   out_texcoords.x += float((meta & 0x0F80u) >> 7u); 
+   
+   if(spritePass) {
+      out_colour = colour_indices[((meta & 0x1000u) >> 12u) * 4u];
+      uint posOffsetFlags = (meta & 0x6000u) >> 13u;
+      if((posOffsetFlags & 0x1u) != 0u) pos.x += 0.5;
+      if((posOffsetFlags & 0x2u) != 0u) pos.z += 0.5;
+   } else {
+      out_colour = colour_indices[meta >> 12u];
+   }
+   gl_Position = MVP * vec4(pos, 1.0);
 }";
 			
 			FragSource = @"
@@ -372,12 +381,13 @@ void main() {
 }";	
 		}
 		
-		public int flagsLoc, offsetLoc;
+		public int flagsLoc, offsetLoc, spritePassLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			flagsLoc = api.GetAttribLocation( ProgramId, "in_packed" );
 			offsetLoc = api.GetUniformLocation( ProgramId, "offset" );
+			spritePassLoc = api.GetUniformLocation( ProgramId, "spritePass" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
@@ -399,17 +409,17 @@ void main() {
 			VertexSource = @"
 #version 130
 in uint in_packed;
-uniform vec3 offset; // MAKE WITH VERTEX DIVISOR
+uniform vec3 offset;
 uniform mat4 MVP;
 uniform float y_offsets[4] = float[](0.0, 0.125, 0.5, 1.0);
 
 void main() {
+   uint posData = in_packed & 0xFFFFu; // lower 16 bits
    vec3 pos = offset;
-   pos.x += in_packed & 0x1Fu;
-   pos.y += (in_packed & 0x3E0u ) >> 5u;
-   pos.z += (in_packed & 0x7C00u ) >> 10u;
-   pos.y += y_offsets[(in_packed & 0x18000u) >> 15u];
-      
+   pos.x += posData & 0x001Fu;
+   pos.y += (posData & 0x01E0u ) >> 5u;
+   pos.y += y_offsets[(posData & 0x0600u) >> 9u];
+   pos.z += (posData & 0xF800u ) >> 11u;
    gl_Position = MVP * vec4(pos, 1.0);
 }";
 			

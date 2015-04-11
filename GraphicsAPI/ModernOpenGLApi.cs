@@ -113,6 +113,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		// Booooo, no direct state access for OpenGL 2.0.
 		
+		public void SetUniform( int uniformLoc, bool value ) {
+			GL.Uniform1( uniformLoc, value ? 1 : 0 );
+		}
+		
 		public void SetUniform( int uniformLoc, float value ) {
 			GL.Uniform1( uniformLoc, value );
 		}

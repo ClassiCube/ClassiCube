@@ -152,8 +152,8 @@ namespace ClassicalSharp {
 			Graphics.BindVb( info.Id.VbId );
 			Graphics.BindIb( info.Id.IbId );
 			
-			Graphics.EnableAndUIntSetVertexAttribPointer( shader.flagsLoc, 1, 4, 0 );		
-			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
+			Graphics.EnableAndUIntSetVertexAttribPointer( shader.flagsLoc, 1, 4, 0 );
+			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );
 			Graphics.DisableVertexAttribArray( shader.flagsLoc );
 		}
 		
@@ -161,8 +161,8 @@ namespace ClassicalSharp {
 			Graphics.BindVb( info.Id.VbId );
 			Graphics.BindIb( info.Id.IbId );
 			
-			Graphics.EnableAndUIntSetVertexAttribPointer( liquidShader.flagsLoc, 1, 4, 0 );		
-			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );			
+			Graphics.EnableAndUIntSetVertexAttribPointer( liquidShader.flagsLoc, 1, 4, 0 );
+			Graphics.DrawIndexedVb( DrawMode.Triangles, info.IndicesCount );
 			Graphics.DisableVertexAttribArray( liquidShader.flagsLoc );
 		}
 		
@@ -323,35 +323,44 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void DrawSprite( int count ) {
-			/*int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
-			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
-			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-			}*/
+			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
+			int texX, texY;
+			atlas.GetCoords( texId, out texX, out texY );
+			int col = GetColour( X, Y + 1, Z, typeYTop ) != 0 ? 1 : 0;
+			if( yOffsetType == 0xFF ) {
+				yOffsetType = BlockInfo.YOffsetType( tile );
+			}
 			DrawInfoPart part = Sprite;
 			
 			// Draw stretched Z axis
 			AddIndices( part );
+			byte type = yOffsetType;
+			part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ, 0, texX, texY + 1, count, col, 0, 1 );
+			part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ, type, texX, texY, count, col, 0, 1 );
+			part.vertices[part.verticesIndex++] = PackSprite( XX + count, YY, ZZ, type, texX, texY, 0, col, 0, 1 );
+			part.vertices[part.verticesIndex++] = PackSprite( XX + count, YY, ZZ, 0, texX, texY + 1, 0, col, 0, 1 );
+			
 			/*part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col );
 			part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col );*/
 			
 			// Draw X axis
-			int startX = X;
-			
+			int startX = XX;			
 			for( int i = 0; i < count; i++ ) {
 				AddIndices( part );
+				part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ, 0, texX, texY + 1, 0, col, 1, 0 );
+				part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ, type, texX, texY, 0, col, 1, 0 );
+				part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ + 1, type, texX, texY, 1, col, 1, 0 );
+				part.vertices[part.verticesIndex++] = PackSprite( XX, YY, ZZ + 1, 0, texX, texY + 1, 1, col, 1, 0 );
+				
 				/*part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col );
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col );
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
 				part.vertices[part.verticesIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col );*/
-				X++;
+				XX++;
 			}
-			X = startX;
+			XX = startX;
 		}
 		
 		void AddIndices( DrawInfoPart part ) {
@@ -366,20 +375,32 @@ namespace ClassicalSharp {
 		}
 		
 		static uint Pack( int xx, int yy, int zz, int yType, int texX, int texY, int texCount, int colourType ) {
-			// Bit structure
+			// Main position data (16 bits)
 			//5: X in chunk
-			//5: Y in chunk
+			//4: Y in chunk
+			//2: Y offset (00: 0, 01: 0.125, 10: 0.5, 11: 1.0)
 			//5: Z in chunk
-			//2: Y height (00: 0, 01: 0.125, 10: 0.5, 11: 1.0)
-
-			//4: tex X (divide by 16)
-			//3: tex Y (divide by 16, NOT 8)
-			//5: texCount
 			
+			// Meta (16 bits)
+			//4: tex X
+			//3: tex Y
+			//5: texCount
 			//3: colour
-			return (uint)( xx | ( yy << 5 ) | ( zz << 10 ) | ( yType << 15 ) |
-			              ( texX << 17 ) | ( texY << 21 ) | ( texCount << 24 ) |
-			              ( colourType << 29 ) );
+			//1: unused
+			return (uint)( xx | ( yy << 5 ) | ( yType << 9 ) | ( zz << 11 ) |
+			              ( texX << 16 ) | ( texY << 20 ) | ( texCount << 23 ) |
+			              ( colourType << 28 ) );
+		}
+		
+		static uint PackSprite( int xx, int yy, int zz, int yType, int texX, int texY, int texCount, int colourType,
+		                       int offsetX, int offsetZ ) {
+			//1: colour
+			//1: offsetX
+			//1: offsetZ
+			//1: unused
+			return (uint)( xx | ( yy << 5 ) | ( yType << 9 ) | ( zz << 11 ) |
+			              ( texX << 16 ) | ( texY << 20 ) | ( texCount << 23 ) |
+			              ( colourType << 28 ) | ( offsetX << 29 ) | ( offsetZ << 30 ) );
 		}
 	}
 }
