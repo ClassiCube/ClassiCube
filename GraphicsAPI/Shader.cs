@@ -209,9 +209,9 @@ void main() {
 		}
 	}
 	
-	public sealed class MapShader : Shader {
+	public sealed class StandardShader : Shader {
 		
-		public MapShader() {
+		public StandardShader() {
 			VertexSource = @"
 #version 120
 attribute vec3 in_position;

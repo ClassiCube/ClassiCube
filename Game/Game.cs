@@ -117,6 +117,11 @@ namespace ClassicalSharp {
 		
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
+			guiShader = new GuiShader();
+			guiShader.Initialise( Graphics );
+			shader = new StandardShader();
+			shader.Initialise( Graphics );
+			
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
@@ -155,10 +160,9 @@ namespace ClassicalSharp {
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect();
-			guiShader = new GuiShader();
-			guiShader.Initialise( Graphics );
 		}
 		GuiShader guiShader;
+		internal StandardShader shader;
 		
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
@@ -254,7 +258,6 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {
-			MapShader shader = MapRenderer.shader;
 			Graphics.UseProgram( shader.ProgramId );
 			Graphics.SetUniform( shader.mvpLoc, ref mvp );
 			Graphics.SetUniform( shader.fogColLoc, ref Graphics.FogColour );

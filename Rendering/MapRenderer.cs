@@ -47,15 +47,12 @@ namespace ClassicalSharp {
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
 		public readonly bool UsesLighting;
-		internal MapShader shader;
 		internal MapPackedLiquidDepthShader transluscentShader;
 		internal MapPackedShader packedShader;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
-			Graphics = window.Graphics;
-			shader = new MapShader();
-			shader.Initialise( Graphics );
+			Graphics = window.Graphics;		
 			transluscentShader = new MapPackedLiquidDepthShader();
 			transluscentShader.Initialise( Graphics );
 			packedShader = new MapPackedShader();
@@ -221,7 +218,7 @@ namespace ClassicalSharp {
 			Graphics.FaceCulling = false;
 			RenderSpriteBatch();
 			
-			Graphics.UseProgram( shader.ProgramId );
+			Graphics.UseProgram( Window.shader.ProgramId );
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			

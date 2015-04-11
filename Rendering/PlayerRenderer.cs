@@ -35,14 +35,14 @@ namespace ClassicalSharp.Renderers {
 			Graphics.DeleteTexture( nameTextureId );
 		}
 		
-		public void Render( double deltaTime, MapShader shader ) {
+		public void Render( double deltaTime, StandardShader shader ) {
 			pos = Player.Position;
 			Player.Model.RenderModel( Player, this, shader );
 			DrawName( shader );
 		}
 		
 		const float nameScale = 1 / 50f;
-		private void DrawName( MapShader shader ) {
+		private void DrawName( StandardShader shader ) {
 			Matrix4 newMvp = Matrix4.CreateTranslation( -nameWidth / 2f, -nameHeight, 0 ) * 
 				Matrix4.Scale( nameScale, -nameScale, nameScale ) *
 				Matrix4.CreateRotationY( -Window.LocalPlayer.YawRadians ) * 
@@ -53,7 +53,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.SetUniform( shader.mvpLoc, ref Window.mvp );
 		}
 		
-		private void DrawTextureInWorld( ref Texture tex, MapShader shader ) {
+		private void DrawTextureInWorld( ref Texture tex, StandardShader shader ) {
 			Graphics.Bind2DTexture( tex.ID );			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			VertexPos3fTex2fCol4b[] vertices = {

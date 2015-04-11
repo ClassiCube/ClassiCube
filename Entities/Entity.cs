@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		
 		public abstract void Despawn();
 		
-		public abstract void Render( double deltaTime, float t, MapShader shader );
+		public abstract void Render( double deltaTime, float t, StandardShader shader );
 		
 		public bool TouchesAnyLava() {
 			return TouchesAny( b => b == (byte)Block.Lava || b == (byte)Block.StillLava );

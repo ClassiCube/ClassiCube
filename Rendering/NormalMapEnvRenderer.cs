@@ -6,11 +6,11 @@ namespace ClassicalSharp {
 	
 	public class NormalMapEnvRenderer : MapEnvRenderer {
 		
-		MapShader shader;
+		StandardShader shader;
 		public NormalMapEnvRenderer( Game window ) {
 			Window = window;
 			Map = Window.Map;
-			shader = window.MapRenderer.shader;
+			shader = window.shader;
 		}
 		
 		public override void Init() {

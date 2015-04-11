@@ -325,7 +325,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void Render( double deltaTime, float t, MapShader shader ) {
+		public override void Render( double deltaTime, float t, StandardShader shader ) {
 			if( !Window.Camera.IsThirdPerson ) return;
 			if( renderer == null ) {
 				renderer = new PlayerRenderer( this, Window );

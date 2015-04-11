@@ -78,7 +78,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelSet model;
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer, MapShader shader, ref Matrix4 mvp ) {
+		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer, StandardShader shader, ref Matrix4 mvp ) {
 			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
 			graphics.Bind2DTexture( texId );
 			model = Set64x32;

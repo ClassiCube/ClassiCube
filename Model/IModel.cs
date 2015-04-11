@@ -21,7 +21,7 @@ namespace ClassicalSharp.Model {
 		protected float yaw, pitch;
 		protected float rightLegXRot, rightArmXRot, rightArmZRot;
 		protected float leftLegXRot, leftArmXRot, leftArmZRot;
-		public void RenderModel( Player player, PlayerRenderer renderer, MapShader shader ) {
+		public void RenderModel( Player player, PlayerRenderer renderer, StandardShader shader ) {
 			pos = player.Position;
 			yaw = player.YawRadians;
 			pitch = player.PitchRadians;
@@ -39,7 +39,7 @@ namespace ClassicalSharp.Model {
 			graphics.SetUniform( shader.mvpLoc, ref window.mvp );
 		}
 		
-		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer, MapShader shader, ref Matrix4 mvp );
+		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer, StandardShader shader, ref Matrix4 mvp );
 		
 		public abstract void Dispose();
 		
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
 		}
 		
-		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, MapShader shader, ref Matrix4 mvp, ModelPart part ) {
+		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, StandardShader shader, ref Matrix4 mvp, ModelPart part ) {
 			Matrix4 tempMvp = mvp;
 			tempMvp = Matrix4.CreateTranslation( x, y, z ) * tempMvp;
 			if( angleZ != 0 ) {

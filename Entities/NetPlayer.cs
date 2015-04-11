@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			} while( states.Count >= 10 ); // Drop old states, otherwise we will never be able to catch up.
 		}
 
-		public override void Render( double deltaTime, float t, MapShader shader ) {
+		public override void Render( double deltaTime, float t, StandardShader shader ) {
 			Position = Vector3.Lerp( oldState.pos, newState.pos, t );
 			YawDegrees = Utils.InterpAngle( oldState.yaw, newState.yaw, t );
 			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
