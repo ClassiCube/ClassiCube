@@ -212,6 +212,9 @@ namespace ClassicalSharp {
 					sunCol, sunCol * 0.8f, sunCol * 0.6f, sunCol * 0.5f,
 					shadowCol, shadowCol * 0.8f, shadowCol * 0.6f, shadowCol * 0.5f,
 				};
+				for( int i = 0; i < array.Length; i++ ) {
+					array[i].W = 1;
+				}
 				Graphics.SetUniform( packedShader.colourIndicesLoc, array );
 				needToUpdateLighting = false;
 			}
