@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 		
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
-			for( int i = 0; i < Window.CanPlace.Length; i++ ) {
+			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
 				if( Window.CanPlace[i] || Window.CanDelete[i] ) {
 					blocksCount++;
 				}
@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 			blocksTable = new BlockDrawInfo[blocksCount];
 			
 			int tableIndex = 0;
-			for( int i = 0; i < Window.CanPlace.Length; i++ ) {
+			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
 				if( Window.CanPlace[i] || Window.CanDelete[i] ) {
 					Block block = (Block)i;
 					int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );

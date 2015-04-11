@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 		// The designation used is as follows:
 		// 0 - left 1 - right 2 - front
 		// 3 - back 4 - bottom 5 - top	
-		int[] optimTextures = new int[blocksCount * 6];	
+		int[] optimTextures = new int[BlocksCount * 6];	
 		const int Row1 = 0, Row2 = 16, Row3 = 32, Row4 = 48,
 		Row5 = 64, Row6 = 80, Row7 = 96, Row8 = 112, Row9 = 128;
 

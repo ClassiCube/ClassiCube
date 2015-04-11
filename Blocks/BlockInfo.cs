@@ -4,17 +4,18 @@ namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
 			
-		bool[] isTransparent = new bool[blocksCount];
-		bool[] isTranslucent = new bool[blocksCount];
-		bool[] isOpaque = new bool[blocksCount];
-		bool[] isSprite = new bool[blocksCount];
-		bool[] isLiquid = new bool[blocksCount];
-		float[] heights = new float[blocksCount];
-		bool[] blocksLight = new bool[blocksCount];
-		const byte blocksCount = (byte)Block.StoneBrick + 1;
+		bool[] isTransparent = new bool[BlocksCount];
+		bool[] isTranslucent = new bool[BlocksCount];
+		bool[] isOpaque = new bool[BlocksCount];
+		bool[] isSprite = new bool[BlocksCount];
+		bool[] isLiquid = new bool[BlocksCount];
+		float[] heights = new float[BlocksCount];
+		bool[] blocksLight = new bool[BlocksCount];		
+		public const byte MaxDefinedBlock = (byte)Block.StoneBrick;
+		public const byte BlocksCount = MaxDefinedBlock + 1;
 		
 		public void Init() {
-			for( int tile = 1; tile < blocksCount; tile++ ) {
+			for( int tile = 1; tile < BlocksCount; tile++ ) {
 				heights[tile] = 1f;
 				blocksLight[tile] = true;
 				isOpaque[tile] = true;				
