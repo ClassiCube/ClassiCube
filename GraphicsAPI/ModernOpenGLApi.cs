@@ -133,6 +133,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Uniform4( uniformLoc, ref value );
 		}
 		
+		public unsafe void SetUniform( int uniformLoc, Vector4[] values ) {
+			fixed( Vector4* ptr = values ) {
+				GL.Uniform4( uniformLoc, values.Length, &ptr[0].X );
+			}
+		}
+		
 		public void SetUniform( int uniformLoc, ref Matrix4 value ) {
 			GL.UniformMatrix4( uniformLoc, false, ref value );
 		}

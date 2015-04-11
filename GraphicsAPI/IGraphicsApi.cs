@@ -35,7 +35,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}
-		protected static int[] strideSizes = new [] { 20, 16, 24, 12 };
+		protected static int[] strideSizes = new [] { 20, 16, 24, 12, 4 };
 		
 		public void CheckResources() {
 		}
@@ -100,6 +100,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		VertexPos3fCol4b = 1,
 		VertexPos3fTex2fCol4b = 2,
 		VertexPos3 = 3,
+		MapPacked = 4,
 	}
 	
 	public enum DrawMode {

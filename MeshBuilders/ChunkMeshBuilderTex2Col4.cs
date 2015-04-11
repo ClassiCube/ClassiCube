@@ -31,6 +31,7 @@ namespace ClassicalSharp {
 			}
 			
 			public void ExpandToCapacity() {
+				verticesCount = ( indicesCount / 6 ) * 4;
 				if( verticesCount > vertices.Length ) {
 					vertices = new uint[verticesCount];
 				}
@@ -123,7 +124,7 @@ namespace ClassicalSharp {
 			ChunkPartInfo info = default( ChunkPartInfo );
 			if( part.verticesCount > 0 ) {
 				info.Id = Graphics.InitIndexedVb( part.vertices, part.verticesCount,
-				                                 VertexFormat.VertexPos3fTex2fCol4b, part.indices, part.indicesCount );
+				                                 VertexFormat.MapPacked, part.indices, part.indicesCount );
 				info.IndicesCount = part.indicesCount;
 			}
 			return info;
@@ -167,14 +168,12 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void AddSpriteVertices( byte tile, int count ) {
-			Sprite.verticesCount += 4 + 4 * count;
 			Sprite.indicesCount += 6 + 6 * count;
 		}
 		
 		protected override void AddVertices( byte tile, int count, int face ) {
 			DrawInfoPart part = BlockInfo.IsTranslucent( tile ) ? Translucent : Solid;
 			part.indicesCount += 6;
-			part.verticesCount += 4;
 		}
 
 		const int typeYTop = 0, typeZSide = 1, typeXSide = 2, typeYBottom = 3;

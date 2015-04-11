@@ -323,7 +323,7 @@ void main() {
    pos.x += posData & 0x001Fu;
    pos.y += (posData & 0x01E0u ) >> 5u;
    pos.y += y_offsets[(posData & 0x0600u) >> 9u];
-   pos.z += (posData & 0xF800u ) >> 11u;    
+   pos.z += (posData & 0xF800u ) >> 11u;
    
    uint meta = in_packed >> 16u; // upper 16 bits
    out_texcoords = vec2( float(meta & 0x000Fu), float((meta & 0x0070u) >> 4u) );
@@ -381,13 +381,14 @@ void main() {
 }";	
 		}
 		
-		public int flagsLoc, offsetLoc, spritePassLoc;
+		public int flagsLoc, offsetLoc, spritePassLoc, colourIndicesLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			flagsLoc = api.GetAttribLocation( ProgramId, "in_packed" );
 			offsetLoc = api.GetUniformLocation( ProgramId, "offset" );
 			spritePassLoc = api.GetUniformLocation( ProgramId, "spritePass" );
+			colourIndicesLoc = api.GetUniformLocation( ProgramId, "colour_indices" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );

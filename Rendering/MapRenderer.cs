@@ -81,10 +81,17 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		bool needToUpdateLighting = false;
+		Vector4 sunCol, shadowCol;
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( ( e.Variable == EnvVariable.SunlightColour ||
 			     e.Variable == EnvVariable.ShadowlightColour ) && UsesLighting ) {
-				Refresh();
+				FastColour col = Window.Map.Sunlight;
+				sunCol = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, 1 );
+				
+				col = Window.Map.Shadowlight;
+				shadowCol = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, 1 );
+				needToUpdateLighting = true;
 			}
 		}
 		
@@ -200,6 +207,14 @@ namespace ClassicalSharp {
 			Graphics.SetUniform( packedShader.fogDensityLoc, Graphics.FogDensity );
 			Graphics.SetUniform( packedShader.fogEndLoc, Graphics.FogEnd );
 			Graphics.SetUniform( packedShader.fogModeLoc, (int)Graphics.FogMode );
+			if( needToUpdateLighting ) {
+				Vector4[] array = {
+					sunCol, sunCol * 0.8f, sunCol * 0.6f, sunCol * 0.5f,
+					shadowCol, shadowCol * 0.8f, shadowCol * 0.6f, shadowCol * 0.5f,
+				};
+				Graphics.SetUniform( packedShader.colourIndicesLoc, array );
+				needToUpdateLighting = false;
+			}
 		}
 		
 		public void Render( double deltaTime ) {
