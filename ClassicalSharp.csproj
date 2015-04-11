@@ -145,7 +145,6 @@
     <Compile Include="Rendering\NormalMapEnvRenderer.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
-    <Compile Include="Utils\TextureAtlas1D.cs" />
     <Compile Include="Utils\TextureAtlas2D.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>

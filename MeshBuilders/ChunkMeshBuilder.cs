@@ -6,6 +6,7 @@ namespace ClassicalSharp {
 	public abstract class ChunkMeshBuilder {
 		
 		protected int X, Y, Z;
+		protected int XX, YY, ZZ;
 		protected byte tile;
 		public BlockInfo BlockInfo;
 		protected Map map;
@@ -111,6 +112,9 @@ namespace ClassicalSharp {
 			X = x;
 			Y = y;
 			Z = z;
+			XX = xx;
+			YY = yy;
+			ZZ = zz;
 			PreRenderTile();
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
 			int count = 0;
@@ -370,17 +374,10 @@ namespace ClassicalSharp {
 		protected abstract void DrawSprite( int count );
 	}
 	
-	public class ChunkDrawInfo {
-		
-		public ChunkPartInfo[] SolidParts;
-		public ChunkPartInfo[] TranslucentParts;
-		public ChunkPartInfo[] SpriteParts;
-		
-		public ChunkDrawInfo( int partsCount ) {
-			SolidParts = new ChunkPartInfo[partsCount];
-			TranslucentParts = new ChunkPartInfo[partsCount];
-			SpriteParts = new ChunkPartInfo[partsCount];
-		}
+	public class ChunkDrawInfo {		
+		public ChunkPartInfo SolidPart;
+		public ChunkPartInfo TranslucentPart;
+		public ChunkPartInfo SpritePart;
 	}
 	
 	public struct ChunkPartInfo {

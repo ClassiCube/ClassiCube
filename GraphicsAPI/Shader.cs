@@ -297,9 +297,9 @@ void main() {
 			VertexSource = @"
 #version 130
 in uint in_packed;
-in vec3 offset;
-flat out vec2 out_texcoords;
-out float out_texOffset;
+uniform vec3 offset; // MAKE WITH VERTEX DIVISOR
+out vec2 out_texcoords;
+flat out float out_texU1;
 out vec4 out_colour;
 uniform mat4 MVP;
 uniform vec4 colour_indices[8] = vec4[](
@@ -326,16 +326,16 @@ void main() {
    gl_Position = MVP * vec4(pos, 1.0);
    
    uint meta = in_packed >> 17u;  
-   out_texcoords = vec2( float(meta & 0x0Fu) / 16.0,
-                         float((meta & 0x70u) >> 4u) / 16.0 );
-   out_texOffset = (meta & 0xF80u) >> 7u;
+   out_texcoords = vec2( float(meta & 0x0Fu), float((meta & 0x70u) >> 4u) );
+   out_texU1 = out_texcoords.x;
+   out_texcoords.x += float((meta & 0xF80u) >> 7u);
    out_colour = colour_indices[meta >> 12u];
 }";
 			
 			FragSource = @"
 #version 130
-flat in vec2 out_texcoords;
-in float out_texOffset;
+flat in float out_texU1;
+in vec2 out_texcoords;
 in vec4 out_colour;
 out vec4 frag_colour;
 
@@ -347,8 +347,9 @@ uniform float fogMode;
 
 void main() {
    vec2 texCoords = out_texcoords;
-   texCoords.x += fract(out_texOffset) / 16.0;
-   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;
+   texCoords.x = (out_texU1 + fract(texCoords.x - out_texU1)) / 16.0;
+   texCoords.y /= 16.0;
+   vec4 finalColour = texture2D(texImage, texCoords) * out_colour;
    if(finalColour.a < 0.5) {
       discard;
    }
@@ -371,13 +372,12 @@ void main() {
 }";	
 		}
 		
-		public int positionLoc, texCoordsLoc, colourLoc;
+		public int flagsLoc, offsetLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			flagsLoc = api.GetAttribLocation( ProgramId, "in_packed" );
+			offsetLoc = api.GetUniformLocation( ProgramId, "offset" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
@@ -393,38 +393,45 @@ void main() {
 		}
 	}
 	
-	public sealed class MapLiquidDepthPassShader : Shader {
+	public sealed class MapPackedLiquidDepthShader : Shader {
 		
-		public MapLiquidDepthPassShader() {
+		public MapPackedLiquidDepthShader() {
 			VertexSource = @"
-#version 120
-attribute vec3 in_position;
+#version 130
+in uint in_packed;
+uniform vec3 offset; // MAKE WITH VERTEX DIVISOR
 uniform mat4 MVP;
+uniform float y_offsets[4] = float[](0.0, 0.125, 0.5, 1.0);
 
 void main() {
-   gl_Position = MVP * vec4(in_position, 1.0);
+   vec3 pos = offset;
+   pos.x += in_packed & 0x1Fu;
+   pos.y += (in_packed & 0x3E0u ) >> 5u;
+   pos.z += (in_packed & 0x7C00u ) >> 10u;
+   pos.y += y_offsets[(in_packed & 0x18000u) >> 15u];
+      
+   gl_Position = MVP * vec4(pos, 1.0);
 }";
 			
 			FragSource = @"
-#version 120
+#version 130
+out vec4 frag_colour;
 
 void main() {
-   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+   frag_colour = vec4(1.0, 1.0, 1.0, 1.0);
 }";	
 		}
 		
-		public int positionLoc, mvpLoc;
+		public int flagsLoc, offsetLoc, mvpLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			flagsLoc = api.GetAttribLocation( ProgramId, "in_packed" );
+			offsetLoc = api.GetUniformLocation( ProgramId, "offset" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 		}
 		
 		const int stride = VertexPos3fTex2fCol4b.Size;
 		public override void DrawVb( OpenGLApi graphics, DrawMode mode, int vbId, int verticesCount ) {
-			graphics.BindVb( vbId );
-			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );			
-			graphics.DrawVb( mode, 0, verticesCount );			
-			graphics.DisableVertexAttribArray( positionLoc );
+			throw new NotImplementedException();
 		}
 	}
 }

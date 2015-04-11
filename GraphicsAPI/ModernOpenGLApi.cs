@@ -83,6 +83,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
 		}
 		
+		public void EnableAndUIntSetVertexAttribPointer( int attribLoc, int numComponents, int stride, int offset ) {
+			GL.EnableVertexAttribArray( attribLoc );
+			GL.VertexAttribIPointer( attribLoc, numComponents, VertexAttribIPointerType.UnsignedInt, stride, new IntPtr( offset ) );
+		}
+		
 		VertexAttribPointerType[] attribMappings = new VertexAttribPointerType[] {
 			VertexAttribPointerType.Float, VertexAttribPointerType.UnsignedByte,
 			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,

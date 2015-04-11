@@ -3,7 +3,7 @@ using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp {
-		
+	
 	// TODO: optimise chunk rendering
 	//  --> reduce the two passes: liquid pass only needs 1 small texture
 	//  --> use indices.
@@ -40,8 +40,6 @@ namespace ClassicalSharp {
 		
 		public Game Window;
 		public OpenGLApi Graphics;
-		
-		int _1Dcount = 1;
 		ChunkMeshBuilder builder;
 		
 		int width, height, length;
@@ -49,9 +47,8 @@ namespace ClassicalSharp {
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		
 		public readonly bool UsesLighting;
-		int elementsPerBitmap = 0;
 		internal MapShader shader;
-		internal MapLiquidDepthPassShader transluscentShader;
+		internal MapPackedLiquidDepthShader transluscentShader;
 		internal MapPackedShader packedShader;
 		
 		public MapRenderer( Game window ) {
@@ -59,19 +56,16 @@ namespace ClassicalSharp {
 			Graphics = window.Graphics;
 			shader = new MapShader();
 			shader.Initialise( Graphics );
-			transluscentShader = new MapLiquidDepthPassShader();
+			transluscentShader = new MapPackedLiquidDepthShader();
 			transluscentShader.Initialise( Graphics );
 			packedShader = new MapPackedShader();
 			packedShader.Initialise( Graphics );
-			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window, this );
 			
-			UsesLighting = builder.UsesLighting;			
-			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
-			Window.TerrainAtlasChanged += TerrainAtlasChanged;
+			UsesLighting = builder.UsesLighting;
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;			
+			Window.EnvVariableChanged += EnvVariableChanged;
 		}
 		
 		public void Dispose() {
@@ -95,15 +89,6 @@ namespace ClassicalSharp {
 			     e.Variable == EnvVariable.ShadowlightColour ) && UsesLighting ) {
 				Refresh();
 			}
-		}
-
-		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			_1Dcount = Window.TerrainAtlas1DTexIds.Length;
-			bool fullResetRequired = elementsPerBitmap != Window.TerrainAtlas1D.elementsPerBitmap;
-			if( fullResetRequired ) {
-				Refresh();
-			}
-			elementsPerBitmap = Window.TerrainAtlas1D.elementsPerBitmap;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -144,12 +129,10 @@ namespace ClassicalSharp {
 			info.Empty = false;
 			if( drawInfo == null ) return;
 			
-			for( int i = 0; i < drawInfo.SolidParts.Length; i++ ) {
-				Graphics.DeleteIndexedVb( drawInfo.SpriteParts[i].Id );
-				Graphics.DeleteIndexedVb( drawInfo.TranslucentParts[i].Id );
-				Graphics.DeleteIndexedVb( drawInfo.SolidParts[i].Id );
-			}
-			info.DrawInfo = null;		
+			Graphics.DeleteIndexedVb( drawInfo.SpritePart.Id );
+			Graphics.DeleteIndexedVb( drawInfo.TranslucentPart.Id );
+			Graphics.DeleteIndexedVb( drawInfo.SolidPart.Id );
+			info.DrawInfo = null;
 		}
 		
 		void CreateChunkCache() {
@@ -208,9 +191,18 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetChunk( int cx, int cy, int cz ) {
-			if( cx < 0 || cy < 0 || cz < 0 || 
+			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
+		}
+		
+		void SetAttributes() {
+			Graphics.UseProgram( packedShader.ProgramId );
+			Graphics.SetUniform( packedShader.mvpLoc, ref Window.mvp );
+			Graphics.SetUniform( packedShader.fogColLoc, ref Graphics.FogColour );
+			Graphics.SetUniform( packedShader.fogDensityLoc, Graphics.FogDensity );
+			Graphics.SetUniform( packedShader.fogEndLoc, Graphics.FogEnd );
+			Graphics.SetUniform( packedShader.fogModeLoc, (int)Graphics.FogMode );
 		}
 		
 		public void Render( double deltaTime ) {
@@ -221,17 +213,15 @@ namespace ClassicalSharp {
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
+			Graphics.UseProgram( packedShader.ProgramId );
+			SetAttributes();
+			Graphics.Bind2DTexture( Window.TerrainAtlasTexId );
 			Graphics.FaceCulling = true;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSolidBatch( batch );
-			}		
+			RenderSolidBatch();
 			Graphics.FaceCulling = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderSpriteBatch( batch );
-			}
+			RenderSpriteBatch();
 			
+			Graphics.UseProgram( shader.ProgramId );
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
@@ -243,18 +233,14 @@ namespace ClassicalSharp {
 			Graphics.SetUniform( transluscentShader.mvpLoc, ref Window.mvp );
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			Graphics.ColourMask( false, false, false, false );
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				RenderTranslucentBatchNoAdd( batch );
-			}
+			RenderTranslucentBatchNoAdd();
 			
 			// Then actually draw the transluscent blocks
-			Graphics.UseProgram( shader.ProgramId );
+			Graphics.UseProgram( packedShader.ProgramId );
 			Graphics.AlphaBlending = true;
 			Graphics.ColourMask( true, true, true, true );
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
-				RenderTranslucentBatch( batch );
-			}
+			Graphics.Bind2DTexture( Window.TerrainAtlasTexId );
+			RenderTranslucentBatch();
 			Graphics.DepthTestFunc( CompareFunc.Less );
 			
 			Graphics.AlphaBlending = false;
@@ -304,53 +290,61 @@ namespace ClassicalSharp {
 		}
 		
 		// TODO: there's probably a better way of doing this.
-		void RenderSolidBatch( int batch ) {
+		void RenderSolidBatch() {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.SolidPart;
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
+				Vector3 offset = new Vector3( info.Location.X, info.Location.Y, info.Location.Z );
+				Graphics.SetUniform( packedShader.offsetLoc, ref offset );
 				builder.Render( drawInfo );
 				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 		
-		void RenderSpriteBatch( int batch ) {
+		void RenderSpriteBatch() {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.SpritePart;
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
+				Vector3 offset = new Vector3( info.Location.X, info.Location.Y, info.Location.Z );
+				Graphics.SetUniform( packedShader.offsetLoc, ref offset );
 				builder.Render( drawInfo );
 				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 
-		void RenderTranslucentBatch( int batch ) {
+		void RenderTranslucentBatch() {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentPart;
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
+				Vector3 offset = new Vector3( info.Location.X, info.Location.Y, info.Location.Z );
+				Graphics.SetUniform( packedShader.offsetLoc, ref offset );
 				builder.Render( drawInfo );
 				Window.Vertices += drawInfo.IndicesCount;
 			}
 		}
 		
-		void RenderTranslucentBatchNoAdd( int batch ) {
+		void RenderTranslucentBatchNoAdd() {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentPart;
 				if( drawInfo.IndicesCount == 0 ) continue;
 				
+				Vector3 offset = new Vector3( info.Location.X, info.Location.Y, info.Location.Z );
+				Graphics.SetUniform( transluscentShader.offsetLoc, ref offset );
 				builder.RenderLiquidDepthPass( drawInfo );
 			}
 		}

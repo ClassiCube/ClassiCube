@@ -12,12 +12,14 @@ namespace ClassicalSharp {
 		float[] heights = new float[blocksCount];
 		bool[] blocksLight = new bool[blocksCount];
 		const byte blocksCount = (byte)Block.StoneBrick + 1;
+		byte[] yOffsetType = new byte[blocksCount];
 		
 		public void Init() {
 			for( int tile = 1; tile < blocksCount; tile++ ) {
 				heights[tile] = 1f;
 				blocksLight[tile] = true;
-				isOpaque[tile] = true;				
+				isOpaque[tile] = true;
+				yOffsetType[tile] = 3;
 			}
 			SetupOptimTextures();
 			
@@ -40,6 +42,9 @@ namespace ClassicalSharp {
 			SetBlockHeight( 8 / 16f, Block.CobblestoneSlab );
 			SetBlockHeight( 2 / 16f, Block.Snow );
 			SetupCullingCache();
+			
+			SetYOffsetType( 2, Block.Slab, Block.CobblestoneSlab );
+			SetYOffsetType( 1, Block.Snow );
 		}
 		
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
@@ -90,6 +95,12 @@ namespace ClassicalSharp {
 		void SetBlockHeight( float height, params Block[] ids ) {
 			for( int i = 0; i < ids.Length; i++ ) {
 				heights[(int)ids[i]] = height;
+			}
+		}
+		
+		void SetYOffsetType( byte type, params Block[] ids ) {
+			for( int i = 0; i < ids.Length; i++ ) {
+				yOffsetType[(int)ids[i]] = type;
 			}
 		}
 		
@@ -144,6 +155,10 @@ namespace ClassicalSharp {
 		/// (water or lava) </summary>
 		public bool IsLiquid( byte id ) {
 			return isLiquid[id];
+		}
+		
+		internal byte YOffsetType( byte id ) {
+			return yOffsetType[id];
 		}
 	}
 }
