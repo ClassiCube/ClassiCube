@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 namespace ClassicalSharp.Commands {
 
@@ -60,23 +59,10 @@ namespace ClassicalSharp.Commands {
 			}
 		}
 		
-		public bool NextOf<T>( out T value ) {
-			string next = Next();
-			if( next == null ) {
-				value = default( T );
-				return false;
-			}
-			
-			TypeConverter converter = TypeDescriptor.GetConverter( typeof( T ) );
-			try {
-				value = (T)converter.ConvertFromInvariantString( next );
-				return true;
-			} catch( FormatException ) {
-				value = default( T );
-			} catch( NotSupportedException ) {
-				value = default( T );
-			}
-			return false;
+		public bool NextOf<T>( out T value, TryParseFunc<T> parser ) {
+			bool success = parser( Next(), out value );
+			if( !success ) value = default( T);
+			return success;
 		}
 		
 		bool MoveNext() {

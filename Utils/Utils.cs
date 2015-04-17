@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 	public delegate TResult Func<TResult>();
 	public delegate TResult Func<T1, TResult>( T1 arg1 );
 	public delegate TResult Func<T1, T2, TResult>( T1 arg1, T2 arg2 );
+	public delegate bool TryParseFunc<T>( string s, out T value );
 	// ################################################################
 	
 	public static class Utils {
