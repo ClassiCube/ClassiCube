@@ -22,7 +22,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public string NextAll() {
-			if( curOffset > rawInput.Length ) return null;
+			if( curOffset >= rawInput.Length ) return null;
 			string arg = rawInput.Substring( curOffset, rawInput.Length - curOffset );
 			curOffset = rawInput.Length;
 			return arg;

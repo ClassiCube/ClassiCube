@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		bool IsFreeYForStep( BoundingBox blockBB ) {
 			// NOTE: if non whole blocks are added, use a proper AABB test.
 			int x = (int)Utils.Floor( blockBB.Min.X );
-			int y = (int)Utils.Floor( blockBB.Min.Y );		
+			int y = (int)Utils.Floor( blockBB.Min.Y );
 			int z = (int)Utils.Floor( blockBB.Min.Z );
 			return CanWalkThrough( GetPhysicsBlockId( x, y + 1, z ) ) &&
 				CanWalkThrough( GetPhysicsBlockId( x, y + 2, z ) );
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 			int maxY = Utils.Floor( entityExtentBB.Max.Y );
 			int maxZ = Utils.Floor( entityExtentBB.Max.Z );
 			
-			List<State> collisions = new List<State>();			
+			List<State> collisions = new List<State>();
 			for( int x = minX; x <= maxX; x++ ) {
 				for( int y = minY; y <= maxY; y++ ) {
 					for( int z = minZ; z <= maxZ; z++ ) {
@@ -115,56 +115,42 @@ namespace ClassicalSharp {
 					Position.Y = blockBB.Max.Y + 0.001f;
 					onGround = true;
 					Velocity.Y = 0;
-					entityBB.Min.Y = Position.Y;
-					entityBB.Max.Y = Position.Y + Size.Y;
-					entityExtentBB.Min.Y = entityBB.Min.Y;
-					entityExtentBB.Max.Y = entityBB.Max.Y;
+					entityBB.Min.Y = entityExtentBB.Min.Y = Position.Y;
+					entityBB.Max.Y = entityExtentBB.Max.Y = Position.Y + Size.Y;
 				} else if( finalBB.Max.Y <= blockBB.Min.Y ) {
 					Position.Y = blockBB.Min.Y - size.Y - 0.001f;
 					Velocity.Y = 0;
-					entityBB.Min.Y = Position.Y;
-					entityBB.Max.Y = Position.Y + Size.Y;
-					entityExtentBB.Min.Y = entityBB.Min.Y;
-					entityExtentBB.Max.Y = entityBB.Max.Y;
+					entityBB.Min.Y = entityExtentBB.Min.Y = Position.Y;
+					entityBB.Max.Y = entityExtentBB.Max.Y = Position.Y + Size.Y;
 				} else {
 					float yDist = blockBB.Max.Y - entityBB.Min.Y;
 					if( yDist > 0 && yDist <= StepSize + 0.01f && wasOnGround && IsFreeYForStep( blockBB ) ) {
 						// Slide up steps.
 						Position.Y = blockBB.Max.Y + 0.001f;
 						Velocity.Y = 0;
-						entityBB.Min.Y = Position.Y;
-						entityBB.Max.Y = Position.Y + Size.Y;
+						entityBB.Min.Y = entityExtentBB.Min.Y = Position.Y;
+						entityBB.Max.Y = entityExtentBB.Max.Y = Position.Y + Size.Y;
 						onGround = true;
-						entityExtentBB.Min.Y = entityBB.Min.Y;
-						entityExtentBB.Max.Y = entityBB.Max.Y;						
 					} else if( finalBB.Min.X >= blockBB.Max.X ) {
 						Position.X = blockBB.Max.X + size.X / 2 + 0.001f;
 						Velocity.X = 0;
-						entityBB.Min.X = pos.X - size.X / 2;
-						entityBB.Max.X = pos.X + size.X / 2;
-						entityExtentBB.Min.X = entityBB.Min.X;
-						entityExtentBB.Max.X = entityBB.Max.X;
+						entityBB.Min.X = entityExtentBB.Min.X = pos.X - size.X / 2;
+						entityBB.Max.X = entityExtentBB.Max.X = pos.X + size.X / 2;
 					} else if( finalBB.Max.X <= blockBB.Min.X ) {
 						Position.X = blockBB.Min.X - size.X / 2 - 0.001f;
 						Velocity.X = 0;
-						entityBB.Min.X = Position.X - size.X / 2;
-						entityBB.Max.X = Position.X + size.X / 2;
-						entityExtentBB.Min.X = entityBB.Min.X;
-						entityExtentBB.Max.X = entityBB.Max.X;
+						entityBB.Min.X = entityExtentBB.Min.X = pos.X - size.X / 2;
+						entityBB.Max.X = entityExtentBB.Max.X = pos.X + size.X / 2;
 					} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
 						Position.Z = blockBB.Max.Z + size.Z / 2 + 0.001f;
 						Velocity.Z = 0;
-						entityBB.Min.Z = Position.Z - size.Z / 2;
-						entityBB.Max.Z = Position.Z + size.Z / 2;
-						entityExtentBB.Min.Z = entityBB.Min.Z;
-						entityExtentBB.Max.Z = entityBB.Max.Z;
+						entityBB.Min.Z = entityExtentBB.Min.Z = Position.Z - size.Z / 2;
+						entityBB.Max.Z = entityExtentBB.Max.Z = Position.Z + size.Z / 2;
 					} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
 						Position.Z = blockBB.Min.Z - size.Z / 2 - 0.001f;
 						Velocity.Z = 0;
-						entityBB.Min.Z = Position.Z - size.Z / 2;
-						entityBB.Max.Z = Position.Z + size.Z / 2;
-						entityExtentBB.Min.Z = entityBB.Min.Z;
-						entityExtentBB.Max.Z = entityBB.Max.Z;
+						entityBB.Min.Z = entityExtentBB.Min.Z = Position.Z - size.Z / 2;
+						entityBB.Max.Z = entityExtentBB.Max.Z = Position.Z + size.Z / 2;
 					}
 				}
 			}
