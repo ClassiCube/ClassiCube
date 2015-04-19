@@ -60,7 +60,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override float NameYOffset {
-			get { return 1.075f; }
+			get { return Fur ? 1.48125f: 1.075f; }
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
