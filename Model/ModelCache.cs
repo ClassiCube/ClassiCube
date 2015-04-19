@@ -16,22 +16,18 @@ namespace ClassicalSharp.Model {
 			IModel model;
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) ) {
-				if( !cache.TryGetValue( "block", out model ) ) {
-					model = new BlockModel( window );
-					cache["block"] = model;
-				}			
-				return model;
-			} else {
-				if( !cache.TryGetValue( modelName, out model ) ) {
-					model = InitModel( modelName );
-					if( model != null ) {
-						cache[modelName] = model;
-					} else {
-						model = cache["humanoid"]; // fallback to default
-					}
+				modelName = "block";
+			}
+			
+			if( !cache.TryGetValue( modelName, out model ) ) {
+				model = InitModel( modelName );
+				if( model != null ) {
+					cache[modelName] = model;
+				} else {
+					model = cache["humanoid"]; // fallback to default
 				}
-				return model;
-			}			
+			}
+			return model;
 		}
 		
 		IModel InitModel( string modelName ) {
@@ -49,6 +45,8 @@ namespace ClassicalSharp.Model {
 				return new SpiderModel( window );
 			} else if( modelName == "zombie" ) {
 				return new ZombieModel( window );
+			} else if( modelName == "block" ) {
+				return new BlockModel( window );
 			}
 			return null;
 		}
