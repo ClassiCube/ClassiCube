@@ -196,23 +196,6 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		public override void EnableAmbientLighting() {
-			Block headBlock = Window.LocalPlayer.BlockAtHead;
-			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
-				Graphics.AmbientLighting = true;
-				Graphics.SetAmbientColour( new FastColour( 102, 102, 230 ) );
-			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
-				Graphics.AmbientLighting = true;
-				Graphics.SetAmbientColour( new FastColour( 102, 77, 77 ) );
-			} else {
-				// don't turn on unnecessary ambient colour of 255,255,255
-			}
-		}
-		
-		public override void DisableAmbientLighting() {
-			Graphics.AmbientLighting = false;
-		}
-		
 		void ResetFog() {
 			if( Map.IsNotLoaded ) return;
 			FastColour fogCol = Map.FogCol;

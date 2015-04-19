@@ -250,8 +250,7 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {
-				//EnvRenderer.EnableAmbientLighting();			
+			if( visible ) {		
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
@@ -262,7 +261,6 @@ namespace ClassicalSharp {
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				PickBlocks( true, left, right );
-				//EnvRenderer.DisableAmbientLighting();
 			} else {
 				SelectedPos = null;
 			}

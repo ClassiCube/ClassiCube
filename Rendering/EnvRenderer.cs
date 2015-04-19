@@ -45,9 +45,5 @@ namespace ClassicalSharp.Renderers {
 		protected abstract void FogColourChanged();
 		
 		protected abstract void CloudsColourChanged();
-		
-		public abstract void EnableAmbientLighting();
-		
-		public abstract void DisableAmbientLighting();
 	}
 }
