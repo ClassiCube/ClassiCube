@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ClassicalSharp.Model {
 
@@ -20,12 +21,15 @@ namespace ClassicalSharp.Model {
 			}
 			
 			if( !cache.TryGetValue( modelName, out model ) ) {
-				model = InitModel( modelName );
-				if( model != null ) {
-					cache[modelName] = model;
-				} else {
-					model = cache["humanoid"]; // fallback to default
+				try {
+					model = InitModel( modelName );
+				} catch( FileNotFoundException ) {
+					model = null;
+					Utils.LogWarning( modelName + " not found, falling back to human default." );
 				}
+				if( model == null ) 
+					model = cache["humanoid"]; // fallback to default
+				cache[modelName] = model;
 			}
 			return model;
 		}
