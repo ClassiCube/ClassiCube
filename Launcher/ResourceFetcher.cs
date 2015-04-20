@@ -48,21 +48,18 @@ namespace Launcher {
 			}
 			return true;
 		}
-		
-		public bool CheckAllResourcesExist() {
-			return File.Exists( "char.png" )
-                && File.Exists( "chicken.png" )
-                && File.Exists( "clouds.png" )
-                && File.Exists( "creeper.png" )
-                //&& File.Exists( "croc.png" )
-                && File.Exists( "pig.png" )
-                //&& File.Exists( "printer.png" )
-                && File.Exists( "sheep.png" )
-                && File.Exists( "sheep_fur.png" )
-                && File.Exists( "skeleton.png" )
-                && File.Exists( "spider.png" )
-                && File.Exists( "terrain.png" )
-                && File.Exists( "zombie.png" );
+
+        public bool CheckAllResourcesExist() {
+            return CheckResourcesExist("char.png", "chicken.png", "clouds.png", "creeper.png", "pig.png", "sheep.png",
+                                       "sheep_fur.png", "skeleton.png", "spider.png", "terrain.png", "zombie.png");
+        }
+
+        static bool CheckResourcesExist(params string[] resources) {
+            foreach (string file in resources) {
+                if (!File.Exists(file))
+                    return false;
+            }
+            return true;
         }
     }
 }
