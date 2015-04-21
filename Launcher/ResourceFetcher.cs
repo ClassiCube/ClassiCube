@@ -7,16 +7,24 @@ namespace Launcher {
 	
 	public class ResourceFetcher {
 		
-		const string terrainUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/terrain.png";
-		const string cloudsUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/clouds.png";
-		const string charUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/char.png";
+		const string resUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/";
 		
 		public void Run( MainForm form ) {
 			using( WebClient client = new WebClient() ) {
-				client.Proxy = null;				
-				if( !DownloadData( terrainUri, client, "terrain.png", form ) ) return;
-				if( !DownloadData( cloudsUri, client, "clouds.png", form ) ) return;
-				if( !DownloadData( charUri, client, "char.png", form ) ) return;
+                client.Proxy = null;
+				if( !DownloadData( "char.png", client, "char.png", form ) ) return;
+				if( !DownloadData( "mob/chicken.png", client, "chicken.png", form ) ) return;
+				if( !DownloadData( "clouds.png", client, "clouds.png", form ) ) return;
+				if( !DownloadData( "mob/creeper.png", client, "creeper.png", form ) ) return;
+				//if( !DownloadData( "mob/croc.png", client, "croc.png", form ) ) return;
+				if( !DownloadData( "mob/pig.png", client, "pig.png", form ) ) return;
+				//if( !DownloadData( "mob/printer.png", client, "printer.png", form ) ) return;
+				if( !DownloadData( "mob/sheep.png", client, "sheep.png", form ) ) return;
+				if( !DownloadData( "mob/sheep_fur.png", client, "sheep_fur.png", form ) ) return;
+				if( !DownloadData( "mob/skeleton.png", client, "skeleton.png", form ) ) return;
+				if( !DownloadData( "mob/spider.png", client, "spider.png", form ) ) return;
+				if( !DownloadData( "terrain.png", client, "terrain.png", form ) ) return;
+				if( !DownloadData( "mob/zombie.png", client, "zombie.png", form ) ) return;
 			}
 		}
 		
@@ -26,7 +34,7 @@ namespace Launcher {
 			
 			byte[] data = null;
 			try {
-				data = client.DownloadData( uri );
+				data = client.DownloadData( resUri + uri );
 			} catch( WebException ) {
 				MessageBox.Show( "Unable to download " + output, "Failed to download resource", MessageBoxButtons.OK, MessageBoxIcon.Error );
 				return false;
@@ -40,9 +48,18 @@ namespace Launcher {
 			}
 			return true;
 		}
-		
-		public bool CheckAllResourcesExist() {
-			return File.Exists( "terrain.png" ) && File.Exists( "clouds.png" ) && File.Exists( "char.png" );
-		}
-	}
+
+        public bool CheckAllResourcesExist() {
+            return CheckResourcesExist("char.png", "chicken.png", "clouds.png", "creeper.png", "pig.png", "sheep.png",
+                                       "sheep_fur.png", "skeleton.png", "spider.png", "terrain.png", "zombie.png");
+        }
+
+        static bool CheckResourcesExist(params string[] resources) {
+            foreach (string file in resources) {
+                if (!File.Exists(file))
+                    return false;
+            }
+            return true;
+        }
+    }
 }
