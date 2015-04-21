@@ -8,22 +8,24 @@ namespace Launcher {
 	public class ResourceFetcher {
 		
 		const string resUri = "https://raw.githubusercontent.com/andrewphorn/ClassiCube-Client/master/src/main/resources/";
+		static readonly string[] coreList = { "char.png", "clouds.png", "terrain.png" };
+		static readonly string[] mobsList = { "chicken.png", "creeper.png", "pig.png", "sheep.png",
+			"sheep_fur.png", "skeleton.png", "spider.png", "zombie.png" };
 		
 		public void Run( MainForm form ) {
 			using( WebClient client = new WebClient() ) {
                 client.Proxy = null;
-				if( !DownloadData( "char.png", client, "char.png", form ) ) return;
-				if( !DownloadData( "mob/chicken.png", client, "chicken.png", form ) ) return;
-				if( !DownloadData( "clouds.png", client, "clouds.png", form ) ) return;
-				if( !DownloadData( "mob/creeper.png", client, "creeper.png", form ) ) return;
-				if( !DownloadData( "mob/pig.png", client, "pig.png", form ) ) return;
-				if( !DownloadData( "mob/sheep.png", client, "sheep.png", form ) ) return;
-				if( !DownloadData( "mob/sheep_fur.png", client, "sheep_fur.png", form ) ) return;
-				if( !DownloadData( "mob/skeleton.png", client, "skeleton.png", form ) ) return;
-				if( !DownloadData( "mob/spider.png", client, "spider.png", form ) ) return;
-				if( !DownloadData( "terrain.png", client, "terrain.png", form ) ) return;
-				if( !DownloadData( "mob/zombie.png", client, "zombie.png", form ) ) return;
+                if( DownloadResources( "", client, form, coreList ) ) {
+                	DownloadResources( "mob/", client, form, mobsList );
+                }
 			}
+		}
+		
+		static bool DownloadResources( string prefix, WebClient client, MainForm form, params string[] resources ) {
+			foreach( string resource in resources ) {
+				if( !DownloadData( prefix + resource, client, resource, form ) ) return false;
+			}
+			return true;
 		}
 		
 		static bool DownloadData( string uri, WebClient client, string output, MainForm form ) {
@@ -48,8 +50,7 @@ namespace Launcher {
 		}
 
         public bool CheckAllResourcesExist() {
-            return CheckResourcesExist( "char.png", "chicken.png", "clouds.png", "creeper.png", "pig.png", "sheep.png",
-                                       "sheep_fur.png", "skeleton.png", "spider.png", "terrain.png", "zombie.png" );
+			return CheckResourcesExist( coreList ) && CheckResourcesExist( mobsList );
         }
 
         static bool CheckResourcesExist( params string[] resources ) {
