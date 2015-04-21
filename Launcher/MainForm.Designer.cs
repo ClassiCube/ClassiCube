@@ -137,6 +137,7 @@ namespace Launcher
 			this.lblMCPassword.Size = new System.Drawing.Size(77, 20);
 			this.lblMCPassword.TabIndex = 2;
 			this.lblMCPassword.Text = "Password";
+			this.txtMCPassword.PasswordChar = '*';
 			// 
 			// txtMCUser
 			// 
@@ -601,6 +602,7 @@ namespace Launcher
 			this.lblCCPassword.Size = new System.Drawing.Size(77, 20);
 			this.lblCCPassword.TabIndex = 2;
 			this.lblCCPassword.Text = "Password";
+			this.txtCCPassword.PasswordChar = '*';
 			// 
 			// tabCCServers
 			// 
