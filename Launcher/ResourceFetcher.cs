@@ -32,18 +32,16 @@ namespace Launcher {
 			if( File.Exists( output ) ) return true;
 			form.Text = MainForm.AppName + " - fetching " + output;
 			
-			byte[] data = null;
 			try {
-				data = client.DownloadData( resUri + uri );
+				byte[] data = client.DownloadData( resUri + uri );
+				try {
+					File.WriteAllBytes( output, data );
+				} catch( IOException ) {
+					MessageBox.Show( "Unable to save " + output, "Failed to save resource", MessageBoxButtons.OK, MessageBoxIcon.Error );
+					return false;
+				}
 			} catch( WebException ) {
 				MessageBox.Show( "Unable to download " + output, "Failed to download resource", MessageBoxButtons.OK, MessageBoxIcon.Error );
-				return false;
-			}
-			
-			try {
-				File.WriteAllBytes( output, data );
-			} catch( IOException ) {
-				MessageBox.Show( "Unable to save " + output, "Failed to save resource", MessageBoxButtons.OK, MessageBoxIcon.Error );
 				return false;
 			}
 			return true;
