@@ -16,9 +16,7 @@ namespace Launcher {
 				if( !DownloadData( "mob/chicken.png", client, "chicken.png", form ) ) return;
 				if( !DownloadData( "clouds.png", client, "clouds.png", form ) ) return;
 				if( !DownloadData( "mob/creeper.png", client, "creeper.png", form ) ) return;
-				//if( !DownloadData( "mob/croc.png", client, "croc.png", form ) ) return;
 				if( !DownloadData( "mob/pig.png", client, "pig.png", form ) ) return;
-				//if( !DownloadData( "mob/printer.png", client, "printer.png", form ) ) return;
 				if( !DownloadData( "mob/sheep.png", client, "sheep.png", form ) ) return;
 				if( !DownloadData( "mob/sheep_fur.png", client, "sheep_fur.png", form ) ) return;
 				if( !DownloadData( "mob/skeleton.png", client, "skeleton.png", form ) ) return;
@@ -50,14 +48,14 @@ namespace Launcher {
 		}
 
         public bool CheckAllResourcesExist() {
-            return CheckResourcesExist("char.png", "chicken.png", "clouds.png", "creeper.png", "pig.png", "sheep.png",
-                                       "sheep_fur.png", "skeleton.png", "spider.png", "terrain.png", "zombie.png");
+            return CheckResourcesExist( "char.png", "chicken.png", "clouds.png", "creeper.png", "pig.png", "sheep.png",
+                                       "sheep_fur.png", "skeleton.png", "spider.png", "terrain.png", "zombie.png" );
         }
 
-        static bool CheckResourcesExist(params string[] resources) {
-            foreach (string file in resources) {
-                if (!File.Exists(file))
-                    return false;
+        static bool CheckResourcesExist( params string[] resources ) {
+            foreach( string file in resources ) {
+                if( !File.Exists( file ) ) 
+                	return false;
             }
             return true;
         }
