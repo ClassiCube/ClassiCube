@@ -14,10 +14,10 @@ namespace Launcher {
 		
 		public void Run( MainForm form ) {
 			using( WebClient client = new WebClient() ) {
-                client.Proxy = null;
-                if( DownloadResources( "", client, form, coreList ) ) {
-                	DownloadResources( "mob/", client, form, mobsList );
-                }
+				client.Proxy = null;
+				if( DownloadResources( "", client, form, coreList ) ) {
+					DownloadResources( "mob/", client, form, mobsList );
+				}
 			}
 		}
 		
@@ -49,16 +49,16 @@ namespace Launcher {
 			return true;
 		}
 
-        public bool CheckAllResourcesExist() {
+		public bool CheckAllResourcesExist() {
 			return CheckResourcesExist( coreList ) && CheckResourcesExist( mobsList );
-        }
+		}
 
-        static bool CheckResourcesExist( params string[] resources ) {
-            foreach( string file in resources ) {
-                if( !File.Exists( file ) ) 
-                	return false;
-            }
-            return true;
-        }
-    }
+		static bool CheckResourcesExist( params string[] resources ) {
+			foreach( string file in resources ) {
+				if( !File.Exists( file ) )
+					return false;
+			}
+			return true;
+		}
+	}
 }
