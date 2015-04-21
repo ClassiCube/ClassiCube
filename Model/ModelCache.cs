@@ -18,6 +18,8 @@ namespace ClassicalSharp.Model {
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) ) {
 				modelName = "block";
+				if( blockId == 0 || blockId > BlockInfo.MaxDefinedBlock )
+					return cache["humanoid"];
 			}
 			
 			if( !cache.TryGetValue( modelName, out model ) ) {
