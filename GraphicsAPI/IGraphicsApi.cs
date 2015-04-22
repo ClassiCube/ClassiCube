@@ -126,13 +126,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteVb( int id );
 		
-		public virtual void DrawVb( DrawMode mode, int id, int verticesCount, VertexFormat format ) {
-			if( format == VertexFormat.VertexPos3f ) DrawVbPos3f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2f ) DrawVbPos3fTex2f( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fCol4b ) DrawVbPos3fCol4b( mode, id, verticesCount );
-			else if( format == VertexFormat.VertexPos3fTex2fCol4b ) DrawVbPos3fTex2fCol4b( mode, id, verticesCount );
-		}
-		
 		public abstract void DrawVbPos3f( DrawMode mode, int id, int verticesCount );
 		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
