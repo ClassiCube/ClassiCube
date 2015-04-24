@@ -261,9 +261,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void SetAmbientColour( FastColour col ) {
-			float[] colRGBA = { col.R / 255f, col.G / 255f, col.B / 255f, 1f };
-			GL.LightModel( LightModelParameter.LightModelAmbient, colRGBA );
+		public unsafe override void SetAmbientColour( FastColour col ) {
+			Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, 1 );
+			GL.LightModel( LightModelParameter.LightModelAmbient, &colRGBA.X );
 		}
 		
 		#region Vertex buffers
