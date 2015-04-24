@@ -300,8 +300,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
 		                              VertexFormat format, int verticesCount, int indicesCount ) {
 			if( !useVbos ) {
-				// TODO: Indexed display lists
-				return default( IndexedVbInfo ); //return CreateDisplayList( vertices, mode, format, count );
+				return CreateIndexedDisplayList( vertices, indices, mode, format, verticesCount, indicesCount );
 			}
 			int* ids = stackalloc int[2];
 			GL.Arb.GenBuffers( 2, ids );
@@ -323,9 +322,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = SetupDisplayListState( vertices, format, out handle );
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
 			RestoreDisplayListState( format, ref handle );
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			#endif
 			return new IndexedVbInfo( id, id );
 		}
 		
