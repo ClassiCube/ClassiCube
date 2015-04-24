@@ -1,22 +1,21 @@
-ClassicalSharp is a custom Minecraft Classic client written in C#. 
-It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.
+ClassicalSharp is a custom MineCraft Classic client written in C#. 
+It is not affiliated with (or supported by) Mojang AB, MineCraft, or Microsoft in any way.
 
 You can get the latest binaries from github.com/UnknownShadow200/ClassicalSharp/releases
 
 === What ClassicalSharp is === 
-* Works with both Minecraft.net and ClassiCube.net
+* Works with both MineCraft.net and ClassiCube.net
 * Lightweight, minimal memory usage compared to standard client.
 * Should work with effectively all graphics cards that support OpenGL.
 
 It does not:
-* Work with 'modern/premium' Minecraft servers.
-* Provide singleplayer support.
+* Work with 'modern/premium' MineCraft servers.
+* Provide single-player support.
 
 === Requirements ===
-* ClassicalSharp requires the .NET Framework 2.0. 
+* either A) The .NET Framework 2.0. 
   (Windows Vista and later already have this built in)
-* Mono (I haven't tested though) should also work.
-
+* or B) In theory, Mono (I haven't tested though) should also work.
 
 === Instructions ===
 To use ClassicalSharp, you can either
@@ -27,57 +26,15 @@ B) Pass command line arguments directly to classicalsharp.exe
 "Some required resources weren't found." Just click OK. (This is because I cannot redistribute 
 the assets of Minecraft Classic with the application as they are the copyrighted property of Mojang)
 
-The launcher is divided into 3 tabs. They are:
-1) Local tab
-This is for connecting to classic servers that are hosted on the same computer as you, 
-or that are in the same LAN network.
-* You do not have to be connected to the internet to play in this mode. (Note that you won't see 
-custom skins if you are not connected to the internet, however)
+The launcher interface should be straightforward. If you are confused about how to use the launcher, 
+please read "launcher instructions.txt"
 
-Click "connect" to start the client.
+=== Key combinations ===
+Press escape (after joining the first world) to switch to the pause menu. 
+The pause menu lists all of the key combinations used by the client.
+Key combinations can be reassigned in the pause menu by clicking on a key combination.
+Press escape or click "Back to game" to return to the game.
 
-2) Minecraft.net
-### Note: Mojang appears to have deleted all of the unpaid free accounts. Premium accounts should still
-### work though. The public servers list on minecraft.net is also completely stuffed. There are servers
-### that appear on the list that are either fake, or don't actually exist anymore. 
-### You are probably better off just using ClassiCube.net.
-
-You will need to provide the username and password for your minecraft.net account. Then click sign in.
-
-If sign-in was successful, two new tabs should appear beside 'Sign in'.
-You can then either: 
-A) Browse the public servers list and double-click on a server (Which will then take you to the 'minecraft.net server' tab with the hash filled in for you) 
-B) Directly enter in a hash in the 'minecraft.net server' tab. 
-
-Then click "connect". The launcher will then download the necessary information about the server from minecraft.net and start the client.
-
-3) ClassiCube.net
-The process is the exact same as described under minecraft.net. (except that signing in, downloading skins, and retrieving server information is done through classicube.net)
-
-
-=== Default key combinations ===
-These can be reassigned in the pause menu (hit escape, then click on the key mapping you want to change)
-W     | Move forward
-S     | Move back
-A     | Move left
-D     | Move right
-Space | Jump
-R     | Respawn (if the server has not forbidden respawning)
-Y     | Set respawn point to current position
-T     | Open the chat bar
-Enter | Send the chat currently in the chat bar
-Escape| Pause the game
-B     | Opens the inventory window, allowing you to change which blocks are in your hotbar.
-F12   | Takes a screenshot of the game, and saves it to the screenshots folder.
-F11   | Toggles whether the game is running in full screen.
-F5    | Toggles 3rd person camera. (if the server has not forbidden this)
-F7    | Toggles whether VSync is used. This limits the framerate to minimise CPU usage, but you can toggle
-         this off to increase chunk loading speed.
-F6    | Changes render distance. This can be used to improve performance, as chunks outside the view
-          distance aren't loaded or rendered.
-Z     | Toggles flying mode. (if the server has not forbidden this)
-LShift| When held down, movement speed is increased. (if the server has not forbidden this)
-X     | Toggles no clip mode, allowing you to fly through all blocks. (if the server has not forbidden this)
-Q     | If flying is enabled, when held down causes you to move vertically up.
-E     | If flying is enabled, when held down causes you to move vertically down.
-Tab   | Displays the list of players in the same map as you.
+* Note that if the server has disabled hacks, some of the key combinations will have no affect.
+* Pressing F6 to change view distance can improve performance by limiting the number of visible chunks.
+* Pressing F7 to toggle VSync on or off. On minimises CPU usage, whereas off maximises chunk loading speed.

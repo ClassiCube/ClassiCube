@@ -1,0 +1,30 @@
+* Note that the first time you run the launcher, a dialog box will pop up with the message 
+"Some required resources weren't found." Just click OK. (This is because I cannot redistribute 
+the assets of Mine craft Classic with the application as they are the copyrighted property of Mojang)
+
+The launcher is divided into 3 tabs. They are:
+1) Local tab
+This is for connecting to classic servers that are hosted on the same computer as you, 
+or that are in the same LAN network.
+* You do not have to be connected to the internet to play in this mode. (Note that you won't see 
+custom skins if you are not connected to the internet, however)
+
+Click "connect" to start the client.
+
+2) Mine craft.net
+### Note: Mojang appears to have deleted all of the unpaid free accounts. Premium accounts should still
+### work though. The public servers list on minecraft.net is also completely stuffed. There are servers
+### that appear on the list that are either fake, or don't actually exist anymore. 
+### You are probably better off just using ClassiCube.net.
+
+You will need to provide the username and password for your minecraft.net account. Then click sign in.
+
+If sign-in was successful, two new tabs should appear beside 'Sign in'.
+You can then either: 
+A) Browse the public servers list and double-click on a server (Which will then take you to the 'minecraft.net server' tab with the hash filled in for you) 
+B) Directly enter in a hash in the 'minecraft.net server' tab. 
+
+Then click "connect". The launcher will then download the necessary information about the server from minecraft.net and start the client.
+
+3) ClassiCube.net
+The process is the exact same as described under minecraft.net. (except that signing in, downloading skins, and retrieving server information is done through classicube.net)
