@@ -274,11 +274,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<DrawMode, int, int>[] drawBatchFuncs;
 		Action<DrawMode, int, int> drawBatchFunc;
 		void SetupVb() {
-			drawBatchFuncs = new Action<DrawMode, int, int>[4];
-			drawBatchFuncs[0] = (mode, id, count) => DrawVbPos3fFast( mode, id, count );
-			drawBatchFuncs[1] = (mode, id, count) => DrawVbPos3fTex2fFast( mode, id, count );
-			drawBatchFuncs[2] = (mode, id, count) => DrawVbPos3fCol4bFast( mode, id, count );
-			drawBatchFuncs[3] = (mode, id, count) => DrawVbPos3fTex2fCol4bFast( mode, id, count );
+			drawBatchFuncs = new Action<DrawMode, int, int>[3];
+			drawBatchFuncs[0] = (mode, id, count) => DrawVbPos3fTex2fFast( mode, id, count );
+			drawBatchFuncs[1] = (mode, id, count) => DrawVbPos3fCol4bFast( mode, id, count );
+			drawBatchFuncs[2] = (mode, id, count) => DrawVbPos3fTex2fCol4bFast( mode, id, count );
 		}
 		
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
@@ -389,12 +388,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
-		public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3f );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
-		}
-		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
 			BeginVbBatch( VertexFormat.VertexPos3fTex2f );
 			DrawVbBatch( mode, id, verticesCount );
@@ -453,12 +446,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.DisableClientState( ArrayCap.TextureCoordArray );
 			}
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-		}
-		
-		void DrawVbPos3fFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 12, new IntPtr( 0 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
 		}
 		
 		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int verticesCount ) {

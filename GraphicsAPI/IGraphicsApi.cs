@@ -129,8 +129,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteVb( int id );
 		
-		public abstract void DrawVbPos3f( DrawMode mode, int id, int verticesCount );
-		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
 		
 		public abstract void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount );
@@ -146,7 +144,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}
-		protected static int[] strideSizes = new [] { 12, 20, 16, 24 };
+		protected static int[] strideSizes = new [] { 20, 16, 24 };
 		
 		
 		public abstract void SetMatrixMode( MatrixType mode );
@@ -246,10 +244,9 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		VertexPos3f = 0,
-		VertexPos3fTex2f = 1,
-		VertexPos3fCol4b = 2,
-		VertexPos3fTex2fCol4b = 3
+		VertexPos3fTex2f = 0,
+		VertexPos3fCol4b = 1,
+		VertexPos3fTex2fCol4b = 2,
 	}
 	
 	public enum DrawMode {
