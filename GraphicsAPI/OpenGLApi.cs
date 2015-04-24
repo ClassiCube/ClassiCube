@@ -58,7 +58,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			AlphaFunction.Lequal, AlphaFunction.Equal,
 			AlphaFunction.Gequal, AlphaFunction.Greater,
 		};
-		public override void AlphaTestFunc( AlphaFunc func, float value ) {
+		public override void AlphaTestFunc( CompareFunc func, float value ) {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
@@ -184,7 +184,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthFunction.Lequal, DepthFunction.Equal,
 			DepthFunction.Gequal, DepthFunction.Greater,
 		};
-		public override void DepthTestFunc( DepthFunc func ) {
+		public override void DepthTestFunc( CompareFunc func ) {
 			GL.DepthFunc( depthFuncs[(int)func] );
 		}
 		
@@ -297,13 +297,56 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		unsafe int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
+		public unsafe override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
+		                              VertexFormat format, int verticesCount, int indicesCount ) {
+			if( !useVbos ) {
+				// TODO: Indexed display lists
+				return default( IndexedVbInfo ); //return CreateDisplayList( vertices, mode, format, count );
+			}
+			int* ids = stackalloc int[2];
+			GL.Arb.GenBuffers( 2, ids );
+			int sizeInBytes = GetSizeInBytes( verticesCount, format );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, ids[0] );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			
+			sizeInBytes = indicesCount * sizeof( ushort );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ids[1] );
+			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
+			return new IndexedVbInfo( ids[0], ids[1] );
+		}
+		
+		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode, 
+		                              VertexFormat format, int verticesCount, int indicesCount ) where T : struct {
+			GCHandle handle;
+			int id = SetupDisplayListState( vertices, format, out handle );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
+			RestoreDisplayListState( format, ref handle );
+			#if TRACK_RESOURCES
+			vbs.Add( id, Environment.StackTrace );
+			#endif
+			return new IndexedVbInfo( id, id );
+		}
+		
+		int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
+			GCHandle handle;
+			int id = SetupDisplayListState( vertices, format, out handle );
+			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+			RestoreDisplayListState( format, ref handle );
+			#if TRACK_RESOURCES
+			vbs.Add( id, Environment.StackTrace );
+			#endif
+			return id;
+		}
+		
+		unsafe static int SetupDisplayListState<T>( T[] vertices, VertexFormat format, out GCHandle handle ) {
 			int id = GL.GenLists( 1 );
 			int stride = strideSizes[(int)format];
 			GL.NewList( id, ListMode.Compile );
 			GL.EnableClientState( ArrayCap.VertexArray );
 			
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
+			handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
 			IntPtr p = handle.AddrOfPinnedObject();
 			GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
 			
@@ -319,7 +362,10 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
 				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
 			}
-			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+			return id;
+		}
+		
+		static void RestoreDisplayListState( VertexFormat format, ref GCHandle handle ) {
 			handle.Free();
 			
 			GL.DisableClientState( ArrayCap.VertexArray );
@@ -333,10 +379,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			GL.Color3( 1f, 1f, 1f ); // NOTE: not sure why, but display lists seem to otherwise modify global colour..
 			GL.EndList();
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			#endif
-			return id;
 		}
 		
 		public override void DeleteVb( int id ) {

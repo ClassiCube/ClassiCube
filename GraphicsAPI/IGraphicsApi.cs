@@ -58,7 +58,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		
 		/// <summary> Sets the alpha test function that is used when alpha testing is enabled. </summary>
-		public abstract void AlphaTestFunc( AlphaFunc func, float value );
+		public abstract void AlphaTestFunc( CompareFunc func, float value );
 		
 		/// <summary> Whether alpha testing is currently enabled. </summary>
 		public abstract bool AlphaTest { set; }
@@ -80,7 +80,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void ColourMask( bool red, bool green, bool blue, bool alpha );
 		
-		public abstract void DepthTestFunc( DepthFunc func );
+		public abstract void DepthTestFunc( CompareFunc func );
 		
 		/// <summary> Whether depth testing is currently enabled. </summary>
 		public abstract bool DepthTest { set; }
@@ -123,6 +123,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
+		
+		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
+		                              VertexFormat format, int verticesCount, int indicesCount ) where T : struct;
 		
 		public abstract void DeleteVb( int id );
 		
@@ -267,19 +270,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		ReverseSubtract = 4,
 	}
 	
-	public enum AlphaFunc {
-		Always = 0,
-		NotEqual = 1,
-		Never = 2,
-		
-		Less = 3,
-		LessEqual = 4,
-		Equal = 5,
-		GreaterEqual = 6,
-		Greater = 7,
-	}
-	
-	public enum DepthFunc {
+	public enum CompareFunc {
 		Always = 0,
 		NotEqual = 1,
 		Never = 2,
@@ -317,5 +308,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		Projection = 0,
 		Modelview = 1,
 		Texture = 2,
+	}
+	
+	public struct IndexedVbInfo {
+		public int Vb, Ib;
+		
+		public IndexedVbInfo( int vb, int ib ) {
+			Vb = vb;
+			Ib = ib;
+		}
 	}
 }

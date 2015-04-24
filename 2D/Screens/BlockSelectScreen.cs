@@ -135,9 +135,9 @@ namespace ClassicalSharp {
 			blocksTable = new BlockDrawInfo[blocksCount];
 			
 			int tableIndex = 0;
-			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
-				if( Window.CanPlace[i] || Window.CanDelete[i] ) {
-					Block block = (Block)i;
+			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
+				if( Window.CanPlace[tile] || Window.CanDelete[tile] ) {
+					Block block = (Block)tile;
 					int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;

@@ -237,7 +237,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = false;
 			
 			// First fill depth buffer
-			Graphics.DepthTestFunc( DepthFunc.LessEqual );
+			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			Graphics.ColourMask( false, false, false, false );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
@@ -250,7 +250,7 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			Graphics.DepthTestFunc( DepthFunc.Less );
+			Graphics.DepthTestFunc( CompareFunc.Less );
 			
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
