@@ -297,13 +297,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public unsafe override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              VertexFormat format, int verticesCount, int indicesCount ) {
+		                              int verticesCount, int indicesCount ) {
 			if( !useVbos ) {
-				return CreateIndexedDisplayList( vertices, indices, mode, format, verticesCount, indicesCount );
+				return CreateIndexedDisplayList( vertices, indices, mode, verticesCount, indicesCount );
 			}
 			int* ids = stackalloc int[2];
 			GL.Arb.GenBuffers( 2, ids );
-			int sizeInBytes = GetSizeInBytes( verticesCount, format );
+			int sizeInBytes = GetSizeInBytes( verticesCount, VertexFormat.VertexPos3fTex2fCol4b );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, ids[0] );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
@@ -316,11 +316,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              VertexFormat format, int verticesCount, int indicesCount ) where T : struct {
+		                              int verticesCount, int indicesCount ) where T : struct {
 			GCHandle handle;
-			int id = SetupDisplayListState( vertices, format, out handle );
+			int id = SetupDisplayListState( vertices, VertexFormat.VertexPos3fTex2fCol4b, out handle );
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
-			RestoreDisplayListState( format, ref handle );
+			RestoreDisplayListState( VertexFormat.VertexPos3fTex2fCol4b, ref handle );
 			return new IndexedVbInfo( id, id );
 		}
 		
@@ -396,12 +396,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		VertexFormat batchFormat;
 		public override void BeginVbBatch( VertexFormat format ) {
-			if( !useVbos ) {
-				return;
-			}
+			if( !useVbos ) return;
 			batchFormat = format;
 			EnableClientState( format );
 			drawBatchFunc = drawBatchFuncs[(int)batchFormat];
+		}
+		
+		public override void BeginIndexedVbBatch() {
+			if( !useVbos ) return;
+			EnableClientState( VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
@@ -412,12 +415,31 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFunc( mode, id, verticesCount );
 		}
 		
-		public override void EndVbBatch() {
+		public override void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
 			if( !useVbos ) {
+				GL.CallList( id.Vb );
 				return;
 			}
+			
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.Vb );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.Ib );
+			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
+			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
+			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
+		}
+		
+		public override void EndVbBatch() {
+			if( !useVbos ) return;
 			DisableClientState( batchFormat );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+		}
+		
+		public override void EndIndexedVbBatch() {
+			if( !useVbos ) return;
+			DisableClientState( VertexFormat.VertexPos3fTex2fCol4b );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 		}
 		
 		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int verticesCount ) {

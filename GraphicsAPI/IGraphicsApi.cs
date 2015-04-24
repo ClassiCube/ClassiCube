@@ -125,7 +125,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
 		
 		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              VertexFormat format, int verticesCount, int indicesCount ) where T : struct;
+		                              int verticesCount, int indicesCount ) where T : struct;
 		
 		public abstract void DeleteVb( int id );
 		
@@ -141,11 +141,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void EndVbBatch();
 		
-		//public abstract void BeginIndexedVbBatch( VertexFormat format );
+		public abstract void BeginIndexedVbBatch();
 		
-		//public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
+		public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
 		
-		//public abstract void EndIndexedVbBatch();
+		public abstract void EndIndexedVbBatch();
 		
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
