@@ -141,6 +141,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void EndVbBatch();
 		
+		//public abstract void BeginIndexedVbBatch( VertexFormat format );
+		
+		//public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
+		
+		//public abstract void EndIndexedVbBatch();
+		
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
 		}

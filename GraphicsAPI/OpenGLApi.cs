@@ -345,15 +345,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			IntPtr p = handle.AddrOfPinnedObject();
 			GL.VertexPointer( 3, VertexPointerType.Float, stride, (IntPtr)( 0 + (byte*)p ) );
 			
+			EnableClientState( format );
 			if( format == VertexFormat.VertexPos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
 				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 12 + (byte*)p ) );
 			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
 			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				GL.TexCoordPointer( 2, TexCoordPointerType.Float, stride, (IntPtr)( 12 + (byte*)p ) );
 				GL.ColorPointer( 4, ColorPointerType.UnsignedByte, stride, (IntPtr)( 20 + (byte*)p ) );
 			}
@@ -362,16 +359,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		static void RestoreDisplayListState( VertexFormat format, ref GCHandle handle ) {
 			handle.Free();
-			
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( format == VertexFormat.VertexPos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			}
+			DisableClientState( format );
 			GL.Color3( 1f, 1f, 1f ); // NOTE: not sure why, but display lists seem to otherwise modify global colour..
 			GL.EndList();
 		}
@@ -412,15 +400,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			batchFormat = format;
-			GL.EnableClientState( ArrayCap.VertexArray );
-			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			}
+			EnableClientState( format );
 			drawBatchFunc = drawBatchFuncs[(int)batchFormat];
 		}
 		
@@ -436,15 +416,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( !useVbos ) {
 				return;
 			}
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( batchFormat == VertexFormat.VertexPos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.VertexPos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			}
+			DisableClientState( batchFormat );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 		}
 		
@@ -468,6 +440,30 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
 			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
+		}
+		
+		static void EnableClientState( VertexFormat format ) {
+			GL.EnableClientState( ArrayCap.VertexArray );
+			if( format == VertexFormat.VertexPos3fCol4b ) {
+				GL.EnableClientState( ArrayCap.ColorArray );
+			} else if( format == VertexFormat.VertexPos3fTex2f ) {
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
+			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
+				GL.EnableClientState( ArrayCap.ColorArray );
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
+			}
+		}
+		
+		static void DisableClientState( VertexFormat format ) {
+			GL.DisableClientState( ArrayCap.VertexArray );
+			if( format == VertexFormat.VertexPos3fCol4b ) {
+				GL.DisableClientState( ArrayCap.ColorArray );
+			} else if( format == VertexFormat.VertexPos3fTex2f ) {
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
+			} else if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
+				GL.DisableClientState( ArrayCap.ColorArray );
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
+			}
 		}
 		#endregion
 		
