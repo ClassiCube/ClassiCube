@@ -61,7 +61,7 @@ namespace ClassicalSharp.Commands {
 		
 		public bool NextOf<T>( out T value, TryParseFunc<T> parser ) {
 			bool success = parser( Next(), out value );
-			if( !success ) value = default( T);
+			if( !success ) value = default( T );
 			return success;
 		}
 		
@@ -76,28 +76,22 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public int RemainingArgs {
-			get {
-				int count = 0;
-				int pos = curOffset;
-				while( MoveNext() ) {
-					count++;
-				}
-				curOffset = pos;
-				return count;
-			}
+			get { return CountArgsFrom( curOffset ); }
 		}
 		
 		public int TotalArgs {
-			get {
-				int count = 0;
-				int pos = curOffset;
-				curOffset = firstArgOffset;
-				while( MoveNext() ) {
-					count++;
-				}
-				curOffset = pos;
-				return count;
+			get { return CountArgsFrom( firstArgOffset ); }
+		}
+		
+		int CountArgsFrom( int startOffset ) {
+			int count = 0;
+			int pos = curOffset;
+			curOffset = startOffset;
+			while( MoveNext() ) {
+				count++;
 			}
+			curOffset = pos;
+			return count;
 		}
 
 		public void Reset() {

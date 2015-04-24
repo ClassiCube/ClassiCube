@@ -125,9 +125,7 @@ namespace ClassicalSharp.Commands {
 				Window.AddChat( "&e/client: &cYou didn't specify a command to get help with." );
 			} else {
 				Command cmd = Window.CommandManager.GetMatchingCommand( commandName );
-				if( cmd == null ) {
-					Window.AddChat( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
-				} else {
+				if( cmd != null ) {
 					string[] help = cmd.Help;
 					for( int i = 0; i < help.Length; i++ ) {
 						Window.AddChat( help[i] );
