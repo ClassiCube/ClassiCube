@@ -50,16 +50,16 @@ namespace ClassicalSharp {
 				vCount = ( iCount / 6 ) * 4;
 				
 				vCount1 = Math.Min( vCount, maxIndices );
+				iCount1 = ( vCount1 / 4 ) * 6;
 				if( vCount1 > vertices1.Length ) {
-					vertices1 = new VertexPos3fTex2fCol4b[vCount1];
-					iCount1 = ( vCount1 / 4 ) * 6;
+					vertices1 = new VertexPos3fTex2fCol4b[vCount1];					
 					indices1 = new ushort[iCount1];
 				}
 				
 				vCount2 = Math.Max( 0, vCount - maxIndices );
+				iCount2 = ( vCount2 / 4 ) * 6;
 				if( vCount2 > vertices2.Length ) {
-					vertices2 = new VertexPos3fTex2fCol4b[vCount2];
-					iCount2 = ( vCount2 / 4 ) * 6;
+					vertices2 = new VertexPos3fTex2fCol4b[vCount2];					
 					indices2 = new ushort[iCount2];
 				}
 				vertices = vertices1;
