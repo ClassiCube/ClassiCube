@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			
 			public void ResetState() {
 				vIndex = iIndex = 0;
-				vCount = vIndex = 0;
+				vCount = iCount = 0;
 			}
 		}
 		
