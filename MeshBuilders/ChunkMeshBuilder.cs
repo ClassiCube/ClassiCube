@@ -11,6 +11,9 @@ namespace ClassicalSharp {
 		protected Map map;
 		public Game Window;
 		public IGraphicsApi Graphics;
+		const int chunkSize = 16, extChunkSize = 18;
+		const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
+		const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
 		
 		public ChunkMeshBuilder( Game window ) {
 			Window = window;
@@ -20,8 +23,8 @@ namespace ClassicalSharp {
 		
 		protected int width, length, height;
 		protected int maxX, maxY, maxZ;
-		protected byte[] counts = new byte[16 * 16 * 16 * 6];
-		protected byte[] chunk = new byte[( 16 + 2 ) * ( 16 + 2 ) * ( 16 + 2 )];
+		protected byte[] counts = new byte[chunkSize3 * 6];
+		protected byte[] chunk = new byte[extChunkSize3];
 		
 		public virtual bool UsesLighting {
 			get { return false; }
@@ -34,13 +37,13 @@ namespace ClassicalSharp {
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
 			
-			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );
-			int zMax = Math.Min( length, z1 + 16 );
+			int xMax = Math.Min( width, x1 + chunkSize );
+			int yMax = Math.Min( height, y1 + chunkSize );
+			int zMax = Math.Min( length, z1 + chunkSize );
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
 					
-					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
+					int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 + 1 );
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						chunkIndex++;
 						RenderTile( chunkIndex, xx, yy, zz, x, y, z );
@@ -55,7 +58,7 @@ namespace ClassicalSharp {
 			fixed( byte* chunkPtr = chunk, mapPtr = map.mapData ) {
 				
 				int* chunkIntPtr = (int*)chunkPtr;
-				for( int i = 0; i < ( 18 * 18 * 18 ) / 4; i++ ) {
+				for( int i = 0; i < extChunkSize3 / 4; i++ ) {
 					*chunkIntPtr++ = 0;
 				}
 				
@@ -69,7 +72,7 @@ namespace ClassicalSharp {
 						if( z > maxZ ) break;
 						
 						int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
-						int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 );
+						int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 );
 						
 						for( int xx = -1; xx < 17; xx++ ) {
 							int x = xx + x1;
@@ -155,13 +158,13 @@ namespace ClassicalSharp {
 				counts[i] = 1;
 			}
 			
-			int xMax = Math.Min( width, x1 + 16 );
-			int yMax = Math.Min( height, y1 + 16 );
-			int zMax = Math.Min( length, z1 + 16 );
+			int xMax = Math.Min( width, x1 + chunkSize );
+			int yMax = Math.Min( height, y1 + chunkSize );
+			int zMax = Math.Min( length, z1 + chunkSize );
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
 					
-					int chunkIndex = ( yy + 1 ) * 324 + ( zz + 1 ) * 18 + ( -1 + 1 );
+					int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 + 1 );
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						chunkIndex++;
 						byte tile = chunk[chunkIndex];

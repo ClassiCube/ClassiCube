@@ -369,9 +369,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void DeleteIndexedVb( IndexedVbInfo id ) {
 			if( id.Vb <= 0 && id.Ib <= 0 ) return;
-			#if TRACK_RESOURCES
-			vbs.Remove( id );
-			#endif
 			if( !useVbos ) {
 				GL.DeleteLists( id.Vb, 1 );
 				return;
