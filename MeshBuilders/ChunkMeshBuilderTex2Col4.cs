@@ -8,6 +8,7 @@ namespace ClassicalSharp {
 		DrawInfo1D[] drawInfoBuffer;
 		TextureAtlas1D atlas;
 		int arraysCount = 0;
+		const int maxIndices = 65536;
 		
 		public ChunkMeshBuilderTex2Col4( Game window ) : base( window ) {
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
@@ -31,27 +32,47 @@ namespace ClassicalSharp {
 		}
 		
 		class DrawInfo1DPart {
-			public VertexPos3fTex2fCol4b[] vertices;
-			public ushort[] indices;
+			public VertexPos3fTex2fCol4b[] vertices1, vertices2, vertices;
+			public ushort[] indices1, indices2, indices;
 			public int vIndex, vCount;
 			public int iIndex, iCount;
+			public int vCount1, vCount2;
+			public int iCount1, iCount2;
 			
 			public DrawInfo1DPart() {
-				vertices = new VertexPos3fTex2fCol4b[0];
-				indices = new ushort[0];
+				vertices1 = new VertexPos3fTex2fCol4b[0];
+				indices1 = new ushort[0];
+				vertices2 = new VertexPos3fTex2fCol4b[0];
+				indices2 = new ushort[0];
+				vertices = vertices1;
+				indices = indices1;
 			}
 			
 			public void ExpandToCapacity() {
 				vCount = ( iCount / 6 ) * 4;
-				if( vCount > vertices.Length ) {
-					vertices = new VertexPos3fTex2fCol4b[vCount];
-					indices = new ushort[iCount];
+				
+				vCount1 = Math.Min( vCount, maxIndices );
+				if( vCount1 > vertices1.Length ) {
+					vertices1 = new VertexPos3fTex2fCol4b[vCount1];
+					iCount1 = ( vCount1 / 4 ) * 6;
+					indices1 = new ushort[iCount1];
+				}
+				
+				vCount2 = Math.Max( 0, vCount - maxIndices );
+				if( vCount2 > vertices2.Length ) {
+					vertices2 = new VertexPos3fTex2fCol4b[vCount2];
+					iCount2 = ( vCount2 / 4 ) * 6;
+					indices2 = new ushort[iCount2];
 				}
 			}
 			
 			public void ResetState() {
 				vIndex = iIndex = 0;
 				vCount = iCount = 0;
+				vCount1 = vCount2 = 0;
+				iCount1 = iCount2 = 0;
+				vertices = vertices1;
+				indices = indices1;
 			}
 		}
 		
@@ -117,22 +138,26 @@ namespace ClassicalSharp {
 		}
 		
 		protected override ChunkDrawInfo GetChunkInfo( int x, int y, int z ) {
-			ChunkDrawInfo info = new ChunkDrawInfo( arraysCount );
+			ChunkDrawInfo info = new ChunkDrawInfo( arraysCount * 2 );
 			for( int i = 0; i < arraysCount; i++ ) {
 				DrawInfo1D drawInfo = drawInfoBuffer[i];
-				info.SolidParts[i] = GetPartInfo( drawInfo.Solid );
-				info.TranslucentParts[i] = GetPartInfo( drawInfo.Translucent );
-				info.SpriteParts[i] = GetPartInfo( drawInfo.Sprite );
+				SetPartInfo( drawInfo.Solid, i, info.SolidParts );
+				SetPartInfo( drawInfo.Translucent, i, info.TranslucentParts );
+				SetPartInfo( drawInfo.Sprite, i, info.SpriteParts );
 			}
 			return info;
 		}
 		
-		ChunkPartInfo GetPartInfo( DrawInfo1DPart part ) {
+		void SetPartInfo( DrawInfo1DPart part, int i, ChunkPartInfo[] parts ) {
 			ChunkPartInfo info = new ChunkPartInfo( new IndexedVbInfo( 0, 0 ), part.iCount );
-			if( part.iCount > 0 ) {
-				info.VbId = Graphics.InitIndexedVb( part.vertices, part.indices, DrawMode.Triangles, part.vCount, part.iCount );
+			if( part.iCount1 > 0 ) {
+				IndexedVbInfo id = Graphics.InitIndexedVb( part.vertices1, part.indices1, DrawMode.Triangles, part.vCount1, part.iCount1 );
+				parts[i] = new ChunkPartInfo( id, part.iCount1 );
 			}
-			return info;
+			if( part.iCount2 > 0 ) {
+				IndexedVbInfo id = Graphics.InitIndexedVb( part.vertices2, part.indices2, DrawMode.Triangles, part.vCount2, part.iCount2 );
+				parts[i + arraysCount] = new ChunkPartInfo( id, part.iCount2 );
+			}
 		}
 		
 		bool isTranslucent;
@@ -364,6 +389,13 @@ namespace ClassicalSharp {
 		
 		void AddIndices( DrawInfo1DPart part ) {
 			int element = part.vIndex;
+			if( element == maxIndices ) {
+				part.indices = part.indices2;
+				part.vertices = part.vertices2;
+				part.iIndex = 0;
+				part.vIndex = 0;
+				element = 0;
+			}
 			part.indices[part.iIndex++] = (ushort)( element + 0 );
 			part.indices[part.iIndex++] = (ushort)( element + 1 );
 			part.indices[part.iIndex++] = (ushort)( element + 2 );

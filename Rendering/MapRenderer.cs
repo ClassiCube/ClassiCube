@@ -218,11 +218,13 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
+				RenderSolidBatch( batch + _1Dcount );
 			}		
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
+				RenderSpriteBatch( batch + _1Dcount );
 			}
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
@@ -241,6 +243,7 @@ namespace ClassicalSharp {
 			Graphics.ColourMask( false, false, false, false );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
+				RenderTranslucentBatchNoAdd( batch + _1Dcount );
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
@@ -249,6 +252,7 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderTranslucentBatch( batch );
+				RenderTranslucentBatch( batch + _1Dcount );
 			}
 			Graphics.DepthTestFunc( CompareFunc.Less );
 			
