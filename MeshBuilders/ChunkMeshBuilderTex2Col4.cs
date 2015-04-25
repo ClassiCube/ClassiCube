@@ -44,8 +44,6 @@ namespace ClassicalSharp {
 				indices1 = new ushort[0];
 				vertices2 = new VertexPos3fTex2fCol4b[0];
 				indices2 = new ushort[0];
-				vertices = vertices1;
-				indices = indices1;
 			}
 			
 			public void ExpandToCapacity() {
@@ -64,6 +62,8 @@ namespace ClassicalSharp {
 					iCount2 = ( vCount2 / 4 ) * 6;
 					indices2 = new ushort[iCount2];
 				}
+				vertices = vertices1;
+				indices = indices1;
 			}
 			
 			public void ResetState() {
@@ -71,8 +71,6 @@ namespace ClassicalSharp {
 				vCount = iCount = 0;
 				vCount1 = vCount2 = 0;
 				iCount1 = iCount2 = 0;
-				vertices = vertices1;
-				indices = indices1;
 			}
 		}
 		
