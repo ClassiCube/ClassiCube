@@ -287,23 +287,23 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public unsafe override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
+		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
 		                              int verticesCount, int indicesCount ) {
 			if( !useVbos ) {
 				return CreateIndexedDisplayList( vertices, indices, mode, verticesCount, indicesCount );
 			}
-			int* ids = stackalloc int[2];
-			GL.Arb.GenBuffers( 2, ids );
+			IndexedVbInfo info = default( IndexedVbInfo );
+			GL.Arb.GenBuffers( 2, out info.Vb );
 			int sizeInBytes = GetSizeInBytes( verticesCount, VertexFormat.VertexPos3fTex2fCol4b );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, ids[0] );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.Vb );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			
 			sizeInBytes = indicesCount * sizeof( ushort );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ids[1] );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.Ib );
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
-			return new IndexedVbInfo( ids[0], ids[1] );
+			return info;
 		}
 		
 		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode, 
@@ -365,6 +365,18 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			GL.Arb.DeleteBuffers( 1, ref id );
+		}
+		
+		public override void DeleteIndexedVb( IndexedVbInfo id ) {
+			if( id.Vb <= 0 && id.Ib <= 0 ) return;
+			#if TRACK_RESOURCES
+			vbs.Remove( id );
+			#endif
+			if( !useVbos ) {
+				GL.DeleteLists( id.Vb, 1 );
+				return;
+			}
+			GL.Arb.DeleteBuffers( 2, ref id.Vb );
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {

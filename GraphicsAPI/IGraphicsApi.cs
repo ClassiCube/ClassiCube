@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -128,6 +129,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		                              int verticesCount, int indicesCount ) where T : struct;
 		
 		public abstract void DeleteVb( int id );
+		
+		public abstract void DeleteIndexedVb( IndexedVbInfo id );
 		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
 		
@@ -313,6 +316,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		Texture = 2,
 	}
 	
+	[StructLayout( LayoutKind.Sequential )]
 	public struct IndexedVbInfo {
 		public int Vb, Ib;
 		
