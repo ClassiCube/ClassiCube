@@ -310,7 +310,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		                              int verticesCount, int indicesCount ) where T : struct {
 			GCHandle handle;
 			int id = SetupDisplayListState( vertices, VertexFormat.VertexPos3fTex2fCol4b, out handle );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, indices );
 			RestoreDisplayListState( VertexFormat.VertexPos3fTex2fCol4b, ref handle );
 			return new IndexedVbInfo( id, id );
 		}
