@@ -31,6 +31,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			useVbos = extensions.Contains( vboExt );
 			if( !useVbos ) {
 				Utils.LogWarning( "Unable to use OpenGL VBOs, you may experience reduced performance." );
+			} else {
+				drawBatchFuncCol4b = DrawVbPos3fCol4bFast;
+				drawBatchFuncTex2f = DrawVbPos3fTex2fFast;
+				drawBatchFuncTex2fCol4b = DrawVbPos3fTex2fCol4bFast;
 			}
 		}
 
@@ -270,6 +274,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		Dictionary<int, string> vbs = new Dictionary<int, string>();
 		#endif
 		Action<DrawMode, int, int> drawBatchFunc;
+		Action<DrawMode, int, int> drawBatchFuncTex2f;
+		Action<DrawMode, int, int> drawBatchFuncCol4b;
+		Action<DrawMode, int, int> drawBatchFuncTex2fCol4b;
 		
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
 			if( !useVbos ) {
@@ -400,11 +407,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			batchFormat = format;
 			EnableClientState( format );
 			if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				drawBatchFunc = DrawVbPos3fTex2fCol4bFast;
+				drawBatchFunc = drawBatchFuncTex2fCol4b;
 			} else if( format == VertexFormat.VertexPos3fCol4b ) {
-				drawBatchFunc = DrawVbPos3fCol4bFast;
+				drawBatchFunc =drawBatchFuncCol4b;
 			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				drawBatchFunc = DrawVbPos3fTex2fFast;
+				drawBatchFunc = drawBatchFuncTex2f;
 			}
 		}
 		

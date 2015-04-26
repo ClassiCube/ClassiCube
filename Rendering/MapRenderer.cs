@@ -5,8 +5,7 @@ using OpenTK;
 namespace ClassicalSharp {
 		
 	// TODO: optimise chunk rendering
-	//  --> reduce the two passes: liquid pass only needs 1 small texture
-	//  --> use indices.
+	//  --> reduce iterations: liquid and sprite pass only need 1 row
 	public class MapRenderer : IDisposable {
 		
 		struct Point3S {
