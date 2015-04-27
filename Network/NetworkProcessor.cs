@@ -316,7 +316,9 @@ namespace ClassicalSharp {
 							// different world, the environment settings from the last world are not loaded in the
 							// new world if the async 'get request' didn't complete before the new world was loaded.
 							womCounter++;
-							Window.AsyncDownloader.DownloadPage( url, true, "womenv_" + womCounter );
+							womEnvIdentifier = "womenv_" + womCounter;
+							womTerrainIdentifier = "womterrain_" + womCounter;
+							Window.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
 							sendWomId = true;
 						}
 						receivedFirstPosition = false;

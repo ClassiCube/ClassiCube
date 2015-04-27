@@ -7,9 +7,10 @@ namespace ClassicalSharp {
 
 	public partial class NetworkProcessor {
 		
+		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
 		void CheckForWomEnvironment() {
 			string page;
-			Window.AsyncDownloader.TryGetPage( "womenv_" + womCounter, out page );
+			Window.AsyncDownloader.TryGetPage( womEnvIdentifier, out page );
 			if( page != null ) {
 				ParseWomConfig( page );
 			}
@@ -18,7 +19,7 @@ namespace ClassicalSharp {
 		
 		void CheckWomBitmaps() {
 			Bitmap terrainBmp;
-			Window.AsyncDownloader.TryGetImage( "womterrain_" + womCounter, out terrainBmp );
+			Window.AsyncDownloader.TryGetImage( womTerrainIdentifier, out terrainBmp );
 			if( terrainBmp != null ) {
 				Window.ChangeTerrainAtlas( terrainBmp );
 			}
