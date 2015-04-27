@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
 				if( e.Button == MouseButton.Middle ) {
-					if( SelectedPos == null || !Map.IsValidPos( SelectedPos.BlockPos ) ) return;
+					if( !SelectedPos.Valid || !Map.IsValidPos( SelectedPos.BlockPos ) ) return;
 					byte block = Map.GetBlock( SelectedPos.BlockPos );
 					if( CanPlace[block] || CanDelete[block] ) {
 						HeldBlock = (Block)block;
@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 		
 		DateTime lastClick = DateTime.MinValue;
 		void PickBlocks( bool cooldown, bool left, bool right ) {
-			if( SelectedPos == null || left == right || ScreenLockedInput || HeldBlock == Block.Air ) return;
+			if( !SelectedPos.Valid || left == right || ScreenLockedInput || HeldBlock == Block.Air ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second

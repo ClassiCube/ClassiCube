@@ -160,7 +160,7 @@ namespace ClassicalSharp.Commands {
 				Window.AddChat( "Eye: " + Window.LocalPlayer.EyePosition );
 			} else if( property == "target" ) {
 				PickedPos pos = Window.SelectedPos;
-				if( pos == null ) {
+				if( !pos.Valid ) {
 					Window.AddChat( "no target pos" );
 				} else {
 					Block block = (Block)Window.Map.GetBlock( pos.BlockPos );

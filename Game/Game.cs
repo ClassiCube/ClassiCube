@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
-		public PickedPos SelectedPos;
+		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
 		internal string skinServer, chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
@@ -253,7 +253,7 @@ namespace ClassicalSharp {
 			if( visible ) {		
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
-				SelectedPos = Camera.GetPickedPos(); // TODO: only pick when necessary
+				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				Picking.Render( e.Time );
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
@@ -262,7 +262,7 @@ namespace ClassicalSharp {
 				bool right = IsMousePressed( MouseButton.Right );
 				PickBlocks( true, left, right );
 			} else {
-				SelectedPos = null;
+				SelectedPos.Valid = false;
 			}
 			
 			Graphics.Mode2D( Width, Height );

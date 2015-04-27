@@ -24,8 +24,7 @@ namespace ClassicalSharp {
 		
 		public abstract void RegrabMouse();
 		
-		public virtual PickedPos GetPickedPos() {
-			return null;
+		public virtual void GetPickedBlock( PickedPos pos ) {
 		}
 	}
 	
@@ -43,11 +42,11 @@ namespace ClassicalSharp {
 			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, 0.1f, Window.ViewDistance );
 		}
 		
-		public override PickedPos GetPickedPos() {
+		public override void GetPickedBlock( PickedPos pos ) {
 			Vector3 dir = Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI );
 			Vector3 eyePos = player.EyePosition;
 			float reach = Window.LocalPlayer.ReachDistance;
-			return Picking.GetPickedBlockPos( Window, eyePos, dir, reach );
+			Picking.GetPickedBlockPos( Window, eyePos, dir, reach, pos );
 		}
 		
 		Point previous, delta;

@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public static class Picking {
 		
 		// http://www.xnawiki.com/index.php/Voxel_traversal
-		public static PickedPos GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach ) {
+		public static void GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
 			// Implementation is based on:
 			// "A Fast Voxel Traversal Algorithm for Ray Tracing"
 			// John Amanatides, Andrew Woo
@@ -72,7 +72,10 @@ namespace ClassicalSharp {
 			// which voxel boundary is nearest) and walk that way.
 			while( iterations < 10000 ) {
 				Vector3 pos = new Vector3( x, y, z );
-				if( Utils.DistanceSquared( pos, origin ) >= reachSquared ) return null;
+				if( Utils.DistanceSquared( pos, origin ) >= reachSquared ) {
+					pickedPos.Valid = false;
+					return;
+				}
 				iterations++;
 				
 				byte block;
@@ -86,7 +89,8 @@ namespace ClassicalSharp {
 						Vector3 max = new Vector3( x + 1, y + height, z + 1 );
 						float t0, t1;
 						if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-							return new PickedPos( min, max, origin, dir, t0, t1 );
+							pickedPos.UpdateBlockPos( min, max, origin, dir, t0, t1 );
+							return;
 						}
 					}
 				}
@@ -115,11 +119,13 @@ namespace ClassicalSharp {
 		public Vector3 Min, Max;
 		public Vector3I BlockPos;
 		public Vector3I TranslatedPos;
+		public bool Valid = true;
 		
-		public PickedPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir, float t0, float t1 ) {
+		public void UpdateBlockPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir, float t0, float t1 ) {
 			Min = Vector3.Min( p1, p2 );
 			Max = Vector3.Max( p1, p2 );
 			BlockPos = Vector3I.Truncate( Min );
+			Valid = true;
 			
 			Vector3I normal = Vector3I.Zero;
 			Vector3 intersect = origin + dir * t0;

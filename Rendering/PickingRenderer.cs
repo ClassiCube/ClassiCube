@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 			index = 0;
 			PickedPos pickedPos = window.SelectedPos;
 			
-			if( pickedPos != null ) {
+			if( pickedPos.Valid ) {
 				Vector3 min = pickedPos.Min;
 				Vector3 max = pickedPos.Max;
 				
