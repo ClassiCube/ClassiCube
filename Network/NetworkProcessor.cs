@@ -157,109 +157,102 @@ namespace ClassicalSharp {
 		
 		#region Writing
 		
-		private static byte[] MakeLoginPacket( string username, string verKey ) {
-			byte[] buffer = new byte[1 + 1 + 64 + 64 + 1];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0 ); // packet id
-			WriteUInt8( buffer, ref index, 7 ); // protocol version
-			WriteString( buffer, ref index, username );
-			WriteString( buffer, ref index, verKey );
-			WriteUInt8( buffer, ref index, 0x42 );
-			return buffer;
+		static byte[] outBuffer = new byte[131];
+		static int outIndex = 0;
+		private static int MakeLoginPacket( string username, string verKey ) {
+			WriteUInt8( 0 ); // packet id
+			WriteUInt8( 7 ); // protocol version
+			WriteString( username );
+			WriteString( verKey );
+			WriteUInt8( 0x42 );
+			return 1 + 1 + 64 + 64 + 1;
 		}
 		
-		private static byte[] MakeSetBlockPacket( short x, short y, short z, byte mode, byte block ) {
-			byte[] buffer = new byte[1 + 3 * 2 + 1 + 1];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0x05 ); // packet id
-			WriteInt16( buffer, ref index, x );
-			WriteInt16( buffer, ref index, y );
-			WriteInt16( buffer, ref index, z );
-			WriteUInt8( buffer, ref index, mode );
-			WriteUInt8( buffer, ref index, block );
-			return buffer;
+		private static int MakeSetBlockPacket( short x, short y, short z, byte mode, byte block ) {
+			WriteUInt8( 0x05 ); // packet id
+			WriteInt16( x );
+			WriteInt16( y );
+			WriteInt16( z );
+			WriteUInt8( mode );
+			WriteUInt8( block );
+			return 1 + 3 * 2 + 1 + 1;
 		}
 		
-		private static byte[] MakePositionPacket( Vector3 pos, byte yaw, byte pitch, byte playerId ) {
-			byte[] buffer = new byte[1 + 1 + 3 * 2 + 2 * 1];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0x08 ); // packet id
-			WriteUInt8( buffer, ref index, playerId ); // player id (-1 is self)
-			WriteInt16( buffer, ref index, (short)( pos.X * 32 ) );
-			WriteInt16( buffer, ref index, (short)( (int)( pos.Y * 32 ) + 51 ) );
-			WriteInt16( buffer, ref index, (short)( pos.Z * 32 ) );
-			WriteUInt8( buffer, ref index, yaw );
-			WriteUInt8( buffer, ref index, pitch );
-			return buffer;
+		private static int MakePositionPacket( Vector3 pos, byte yaw, byte pitch, byte playerId ) {
+			WriteUInt8( 0x08 ); // packet id
+			WriteUInt8( playerId ); // player id (-1 is self)
+			WriteInt16( (short)( pos.X * 32 ) );
+			WriteInt16( (short)( (int)( pos.Y * 32 ) + 51 ) );
+			WriteInt16( (short)( pos.Z * 32 ) );
+			WriteUInt8( yaw );
+			WriteUInt8( pitch );
+			return 1 + 1 + 3 * 2 + 2 * 1;
 		}
 		
-		private static byte[] MakeMessagePacket( string text ) {
-			byte[] buffer = new byte[1 + 1 + 64];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0x0D ); // packet id
-			WriteUInt8( buffer, ref index, 0xFF ); // unused
-			WriteString( buffer, ref index, text );
-			return buffer;
+		private static int MakeMessagePacket( string text ) {
+			WriteUInt8( 0x0D ); // packet id
+			WriteUInt8( 0xFF ); // unused
+			WriteString( text );
+			return 1 + 1 + 64;
 		}
 		
-		private static byte[] MakeExtInfo( string appName, int extensionsCount ) {
-			byte[] buffer = new byte[1 + 64 + 2];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0x10 ); // packet id
-			WriteString( buffer, ref index, appName );
-			WriteInt16( buffer, ref index, (short)extensionsCount );
-			return buffer;
+		private static int MakeExtInfo( string appName, int extensionsCount ) {
+			WriteUInt8( 0x10 ); // packet id
+			WriteString( appName );
+			WriteInt16( (short)extensionsCount );
+			return 1 + 64 + 2;
 		}
 		
-		private static byte[] MakeExtEntry( string extensionName, int extensionVersion ) {
-			byte[] buffer = new byte[1 + 64 + 4];
-			int index = 0;
-			WriteUInt8( buffer, ref index, 0x11 ); // packet id
-			WriteString( buffer, ref index, extensionName );
-			WriteInt32( buffer, ref index, extensionVersion );
-			return buffer;
+		private static int MakeExtEntry( string extensionName, int extensionVersion ) {
+			WriteUInt8( 0x11 ); // packet id
+			WriteString( extensionName );
+			WriteInt32( extensionVersion );
+			return 1 + 64 + 4;
 		}
 		
-		private static byte[] MakeCustomBlockSupportLevel( byte version ) {
-			return new byte[] { (byte)19, version }; // packet id, version
+		private static int MakeCustomBlockSupportLevel( byte version ) {
+			WriteUInt8( 19 ); // packet id
+			WriteUInt8( version );
+			return 1 + 1;
 		}
 		
-		static void WriteString( byte[] buffer, ref int index, string value ) {
+		static void WriteString( string value ) {
 			int count = Math.Min( value.Length, 64 );
 			for( int i = 0; i < count; i++ ) {
 				char c = value[i];
-				buffer[index + i] = (byte)( c >= '\u0080' ? '?' : c );
+				outBuffer[outIndex + i] = (byte)( c >= '\u0080' ? '?' : c );
 			}
 			for( int i = value.Length; i < 64; i++ ) {
-				buffer[index + i] = (byte)' ';
+				outBuffer[outIndex + i] = (byte)' ';
 			}
-			index += 64;
+			outIndex += 64;
 		}
 		
-		static void WriteUInt8( byte[] buffer, ref int index, byte value ) {
-			buffer[index++] = value;
+		static void WriteUInt8( byte value ) {
+			outBuffer[outIndex++] = value;
 		}
 		
-		static void WriteInt16( byte[] buffer, ref int index, short value ) {
-			buffer[index++] = (byte)( value >> 8 );
-			buffer[index++] = (byte)( value );
+		static void WriteInt16( short value ) {
+			outBuffer[outIndex++] = (byte)( value >> 8 );
+			outBuffer[outIndex++] = (byte)( value );
 		}
 		
-		static void WriteInt32( byte[] buffer, ref int index, int value ) {
-			buffer[index++] = (byte)( value >> 24 );
-			buffer[index++] = (byte)( value >> 16 );
-			buffer[index++] = (byte)( value >> 8 );
-			buffer[index++] = (byte)( value );
+		static void WriteInt32( int value ) {
+			outBuffer[outIndex++] = (byte)( value >> 24 );
+			outBuffer[outIndex++] = (byte)( value >> 16 );
+			outBuffer[outIndex++] = (byte)( value >> 8 );
+			outBuffer[outIndex++] = (byte)( value );
 		}
 		
-		void WritePacket( byte[] packet ) {
-			if( Disconnected ) return;
+		void WritePacket( int packetLength ) {
+			outIndex = 0;
+			if( Disconnected ) return;			
 			
 			#if NET_DEBUG
-			Utils.LogDebug( "writing {0} bytes ({1})", packet.Length, (PacketId)packet[0] );
+			Utils.LogDebug( "writing {0} bytes ({1})", packetLength, (PacketId)outBuffer[0] );
 			#endif
 			try {
-				stream.Write( packet, 0, packet.Length );
+				stream.Write( outBuffer, 0, packetLength );
 			} catch( IOException ex ) {
 				Utils.LogError( "Error while writing packets: {0}{1}", Environment.NewLine, ex );
 				Window.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
