@@ -51,6 +51,13 @@ namespace ClassicalSharp {
 		}
 		
 		// TODO: test for corner cases, and refactor this.
+		static State[] stateCache = new State[0];
+		class StateComparer : IComparer<State> {
+			public int Compare( State x, State y ) {
+				return x.t.CompareTo( y.t );
+			}
+		}
+		static StateComparer comparer = new StateComparer();
 		protected void MoveAndWallSlide() {
 			Vector3 vel = Velocity;
 			if( vel == Vector3.Zero ) return;
@@ -78,7 +85,12 @@ namespace ClassicalSharp {
 			int maxY = Utils.Floor( entityExtentBB.Max.Y );
 			int maxZ = Utils.Floor( entityExtentBB.Max.Z );
 			
-			List<State> collisions = new List<State>();
+			int elements = ( maxX + 1 - minX ) * ( maxY + 1 - minY ) * ( maxZ + 1 - minZ );
+			if( elements > stateCache.Length ) {
+				stateCache = new State[elements];
+			}
+			int count = 0;
+			
 			for( int x = minX; x <= maxX; x++ ) {
 				for( int y = minY; y <= maxY; y++ ) {
 					for( int z = minZ; z <= maxZ; z++ ) {
@@ -91,16 +103,17 @@ namespace ClassicalSharp {
 						CalcTime( ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz );
 						if( tx > 1 || ty > 1 || tz > 1 ) continue;
 						float t = (float)Math.Sqrt( tx * tx + ty * ty + tz * tz );
-						collisions.Add( new State( blockBB, blockId, t ) );
+						stateCache[count++] = new State( blockBB, blockId, t );
 					}
 				}
 			}
 			
 			bool wasOnGround = onGround;
 			onGround = false;
-			collisions.Sort( (a, b) => a.t.CompareTo( b.t ) );
+			Array.Sort( stateCache, 0, count, comparer );
 
-			foreach( State state in collisions ) {
+			for( int i = 0; i < count; i++ ) {
+				State state = stateCache[i];
 				BoundingBox blockBB = state.BlockBB;
 				if( !entityExtentBB.Intersects( blockBB ) ) continue;
 				
