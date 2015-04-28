@@ -16,10 +16,14 @@ namespace ClassicalSharp.Particles {
 			Graphics = window.Graphics;
 		}
 		
+		VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[0];
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
-			VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[particles.Count * 6];
+			int count = particles.Count * 6;
+			if( count > vertices.Length ) {
+				vertices = new VertexPos3fTex2f[count];
+			}
 			int index = 0;
 			for( int i = 0; i < particles.Count; i++ ) {
 				particles[i].Render( delta, t, vertices, ref index );
@@ -28,7 +32,7 @@ namespace ClassicalSharp.Particles {
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( Window.TerrainAtlasTexId );
 			Graphics.AlphaTest = true;
-			Graphics.DrawVertices( DrawMode.Triangles, vertices );
+			Graphics.DrawVertices( DrawMode.Triangles, vertices, count );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 		}
