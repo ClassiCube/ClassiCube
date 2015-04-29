@@ -102,17 +102,14 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyMapping.VSync] ) {
 				VSync = VSync == VSyncMode.Off ? VSyncMode.On : VSyncMode.Off;
 			} else if( key == Keys[KeyMapping.ViewDistance] ) {
-				if( ViewDistance >= viewDistances[viewDistances.Length - 1] ) {
-					SetViewDistance( viewDistances[0] );
-				} else {
-					for( int i = 0; i < viewDistances.Length; i++ ) {
-						int newDistance = viewDistances[i];
-						if( newDistance > ViewDistance ) {
-							SetViewDistance( newDistance );
-							break;
-						}
+				for( int i = 0; i < viewDistances.Length; i++ ) {
+					int newDist = viewDistances[i];
+					if( newDist > ViewDistance ) {
+						SetViewDistance( newDist );
+						return;
 					}
 				}
+				SetViewDistance( viewDistances[0] );
 			} else if( key == Keys[KeyMapping.PauseOrExit] && !Map.IsNotLoaded ) {
 				if( !( activeScreen is PauseScreen ) ) {
 					SetNewScreen( new PauseScreen( this ) );
