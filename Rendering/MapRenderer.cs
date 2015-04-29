@@ -204,7 +204,6 @@ namespace ClassicalSharp {
 		
 		public void Render( double deltaTime ) {
 			if( chunks == null ) return;
-			Window.Vertices = 0;
 			UpdateSortOrder();
 			UpdateChunks();
 			

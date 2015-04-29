@@ -212,6 +212,7 @@ namespace ClassicalSharp {
 			accumulator += e.Time;
 			imageCheckAccumulator += e.Time;
 			ticksAccumulator += e.Time;
+			Vertices = 0;
 			if( !Focused && !( activeScreen is PauseScreen ) && !Map.IsNotLoaded ) {
 				SetNewScreen( new PauseScreen( this ) );
 			}
@@ -341,6 +342,10 @@ namespace ClassicalSharp {
 		
 		public void Disconnect( string title, string reason ) {
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
+			Map.Reset();
+			RaiseOnNewMap();
+			Map.mapData = null;
+			GC.Collect();
 		}
 		
 		Screen activeScreen;
