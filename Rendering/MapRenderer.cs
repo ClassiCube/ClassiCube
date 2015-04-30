@@ -3,7 +3,7 @@ using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp {
-		
+	
 	// TODO: optimise chunk rendering
 	//  --> reduce iterations: liquid and sprite pass only need 1 row
 	public class MapRenderer : IDisposable {
@@ -138,7 +138,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteIndexedVb( drawInfo.TranslucentParts[i].VbId );
 				Graphics.DeleteIndexedVb( drawInfo.SolidParts[i].VbId );
 			}
-			info.DrawInfo = null;		
+			info.DrawInfo = null;
 		}
 		
 		void CreateChunkCache() {
@@ -197,7 +197,7 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetChunk( int cx, int cy, int cz ) {
-			if( cx < 0 || cy < 0 || cz < 0 || 
+			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
@@ -216,13 +216,11 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSolidBatch( batch );
-				RenderSolidBatch( batch + _1Dcount );
-			}		
+			}
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderSpriteBatch( batch );
-				RenderSpriteBatch( batch + _1Dcount );
 			}
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
@@ -241,7 +239,6 @@ namespace ClassicalSharp {
 			Graphics.ColourMask( false, false, false, false );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
-				RenderTranslucentBatchNoAdd( batch + _1Dcount );
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
@@ -250,7 +247,6 @@ namespace ClassicalSharp {
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
 				RenderTranslucentBatch( batch );
-				RenderTranslucentBatch( batch + _1Dcount );
 			}
 			Graphics.DepthTestFunc( CompareFunc.Less );
 			
@@ -310,10 +306,14 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
-				if( drawInfo.IndicesCount == 0 ) continue;
-				
-				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.IndicesCount;
+				if( drawInfo.IndicesCount > 0 ) {
+					builder.Render( drawInfo );
+					Window.Vertices += drawInfo.IndicesCount;
+					if( drawInfo.IndicesCount2 > 0 ) {
+						builder.Render2( drawInfo );
+						Window.Vertices += drawInfo.IndicesCount2;
+					}
+				}
 			}
 		}
 		
@@ -323,10 +323,10 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
-				if( drawInfo.IndicesCount == 0 ) continue;
-				
-				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.IndicesCount;
+				if( drawInfo.IndicesCount > 0 ) {
+					builder.Render( drawInfo );
+					Window.Vertices += drawInfo.IndicesCount;
+				}
 			}
 		}
 
@@ -336,10 +336,14 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
-				if( drawInfo.IndicesCount == 0 ) continue;
-				
-				builder.Render( drawInfo );
-				Window.Vertices += drawInfo.IndicesCount;
+				if( drawInfo.IndicesCount > 0 ) {
+					builder.Render( drawInfo );
+					Window.Vertices += drawInfo.IndicesCount;
+					if( drawInfo.IndicesCount2 > 0 ) {
+						builder.Render2( drawInfo );
+						Window.Vertices += drawInfo.IndicesCount2;
+					}
+				}
 			}
 		}
 		
@@ -349,9 +353,12 @@ namespace ClassicalSharp {
 				if( info.DrawInfo == null || !info.Visible ) continue;
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
-				if( drawInfo.IndicesCount == 0 ) continue;
-				
-				builder.Render( drawInfo );
+				if( drawInfo.IndicesCount > 0 ) {
+					builder.Render( drawInfo );
+					if( drawInfo.IndicesCount2 > 0 ) {
+						builder.Render2( drawInfo );
+					}
+				}
 			}
 		}
 	}

@@ -343,6 +343,8 @@ namespace ClassicalSharp {
 		
 		public abstract void Render( ChunkPartInfo drawInfo );
 		
+		public abstract void Render2( ChunkPartInfo drawInfo );
+		
 		public abstract void EndRender();
 		
 		public virtual void OnNewMap() {
@@ -391,11 +393,14 @@ namespace ClassicalSharp {
 	public struct ChunkPartInfo {
 		
 		public IndexedVbInfo VbId;
-		public int IndicesCount;
+		public IndexedVbInfo VbId2;
+		public int IndicesCount, IndicesCount2;
 		
 		public ChunkPartInfo( IndexedVbInfo id, int indices ) {
 			VbId = id;
 			IndicesCount = indices;
+			VbId2 = default( IndexedVbInfo );
+			IndicesCount2 = 0;
 		}
 	}
 }

@@ -136,7 +136,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected override ChunkDrawInfo GetChunkInfo( int x, int y, int z ) {
-			ChunkDrawInfo info = new ChunkDrawInfo( arraysCount * 2 );
+			ChunkDrawInfo info = new ChunkDrawInfo( arraysCount );
 			for( int i = 0; i < arraysCount; i++ ) {
 				DrawInfo1D drawInfo = drawInfoBuffer[i];
 				SetPartInfo( drawInfo.Solid, i, info.SolidParts );
@@ -147,15 +147,16 @@ namespace ClassicalSharp {
 		}
 		
 		void SetPartInfo( DrawInfo1DPart part, int i, ChunkPartInfo[] parts ) {
-			ChunkPartInfo info = new ChunkPartInfo( new IndexedVbInfo( 0, 0 ), part.iCount );
+			ChunkPartInfo info = default( ChunkPartInfo );
 			if( part.iCount1 > 0 ) {
-				IndexedVbInfo id = Graphics.InitIndexedVb( part.vertices1, part.indices1, DrawMode.Triangles, part.vCount1, part.iCount1 );
-				parts[i] = new ChunkPartInfo( id, part.iCount1 );
+				info.VbId = Graphics.InitIndexedVb( part.vertices1, part.indices1, DrawMode.Triangles, part.vCount1, part.iCount1 );
+				info.IndicesCount = part.iCount1;
 			}
 			if( part.iCount2 > 0 ) {
-				IndexedVbInfo id = Graphics.InitIndexedVb( part.vertices2, part.indices2, DrawMode.Triangles, part.vCount2, part.iCount2 );
-				parts[i + arraysCount] = new ChunkPartInfo( id, part.iCount2 );
+				info.VbId2 = Graphics.InitIndexedVb( part.vertices2, part.indices2, DrawMode.Triangles, part.vCount2, part.iCount2 );
+				info.IndicesCount2 = part.iCount2;
 			}
+			parts[i] = info;
 		}
 		
 		bool isTranslucent;
@@ -200,6 +201,10 @@ namespace ClassicalSharp {
 		
 		public override void Render( ChunkPartInfo info ) {
 			Graphics.DrawIndexedVbBatch( DrawMode.Triangles, info.VbId, info.IndicesCount );
+		}
+		
+		public override void Render2( ChunkPartInfo info ) {
+			Graphics.DrawIndexedVbBatch( DrawMode.Triangles, info.VbId2, info.IndicesCount2 );
 		}
 		
 		public override void EndRender() {
