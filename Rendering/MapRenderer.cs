@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 		public MapRenderer( Game window ) {
 			Window = window;
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
-			builder = new ChunkMeshBuilderTex2Col4( window );
+			builder = new ChunkMeshBuilder( window );
 			Graphics = window.Graphics;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
@@ -119,7 +119,6 @@ namespace ClassicalSharp {
 		void ClearChunkCache() {
 			if( chunks == null ) return;
 			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
 				DeleteChunk( chunks[i] );
 			}
 		}

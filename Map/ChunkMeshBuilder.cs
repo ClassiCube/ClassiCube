@@ -3,12 +3,12 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public abstract class ChunkMeshBuilder {
+	public partial class ChunkMeshBuilder {
 		
-		protected int X, Y, Z;
-		protected byte tile;
+		int X, Y, Z;
+		byte tile;
 		public BlockInfo BlockInfo;
-		protected Map map;
+		Map map;
 		public Game Window;
 		public IGraphicsApi Graphics;
 		const int chunkSize = 16, extChunkSize = 18;
@@ -19,12 +19,13 @@ namespace ClassicalSharp {
 			Window = window;
 			Graphics = window.Graphics;
 			BlockInfo = window.BlockInfo;
+			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		protected int width, length, height;
-		protected int maxX, maxY, maxZ;
-		protected byte[] counts = new byte[chunkSize3 * 6];
-		protected byte[] chunk = new byte[extChunkSize3];
+		int width, length, height;
+		int maxX, maxY, maxZ;
+		byte[] counts = new byte[chunkSize3 * 6];
+		byte[] chunk = new byte[extChunkSize3];
 		
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
@@ -94,15 +95,6 @@ namespace ClassicalSharp {
 		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {
 			return BuildChunk( x, y, z ) ? null : GetChunkInfo( x, y, z );
 		}
-		
-		protected virtual void PreStretchTiles( int x1, int y1, int z1 ) {
-		}
-		
-		protected virtual void PostStretchTiles( int x1, int y1, int z1 ) {
-		}
-		
-		protected virtual void PreRenderTile() {
-		}
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
 			tile = chunk[chunkIndex];
@@ -110,7 +102,7 @@ namespace ClassicalSharp {
 			X = x;
 			Y = y;
 			Z = z;
-			PreRenderTile();
+			blockHeight = -1;
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
 			int count = 0;
 			
@@ -146,8 +138,7 @@ namespace ClassicalSharp {
 			if( count != 0 ) {
 				DrawTopFace( count );
 			}
-		}
-		
+		}	
 		
 		void Stretch( int x1, int y1, int z1 ) {
 			for( int i = 0; i < counts.Length; i++ ) {
@@ -186,13 +177,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected virtual void AddSpriteVertices( byte tile, int count ) {
-		}
-		
-		protected virtual void AddVertices( byte tile, int count, int face ) {
-		}
-		
-		protected int startX, startY, startZ;
+		int startX, startY, startZ;
 		void DoStretchTerrain( int xx, int yy, int zz, int x, int y, int z, int index, byte tile, int chunkIndex ) {
 			startX = x;
 			startY = y;
@@ -275,12 +260,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected virtual bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face );
-		}
-		
-		protected byte GetNeighbour( int chunkIndex, int face ) {
+		byte GetNeighbour( int chunkIndex, int face ) {
 			switch( face ) {
 				case TileSide.Left:
 					return chunk[chunkIndex - 1]; // x - 1
@@ -308,7 +288,7 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += 6;
-			int max = 16 - xx;
+			int max = chunkSize - xx;
 			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				count++;
 				counts[countIndex + face] = 0;
@@ -322,31 +302,23 @@ namespace ClassicalSharp {
 		int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte tile, int face ) {
 			int count = 1;
 			z++;
-			chunkIndex += 18;
-			countIndex += 16 * 6;
-			int max = 16 - zz;
+			chunkIndex += extChunkSize;
+			countIndex += chunkSize * 6;
+			int max = chunkSize - zz;
 			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				count++;
 				counts[countIndex + face] = 0;
 				z++;
-				chunkIndex += 18;
-				countIndex += 16 * 6;
+				chunkIndex += extChunkSize;
+				countIndex += chunkSize * 6;
 			}
 			return count;
 		}
 		
-		public abstract void BeginRender();
-		
-		public abstract void Render( ChunkPartInfo drawInfo );
-		
-		public abstract void Render2( ChunkPartInfo drawInfo );
-		
-		public abstract void EndRender();
-		
-		public virtual void OnNewMap() {
+		public void OnNewMap() {
 		}
 		
-		public virtual void OnNewMapLoaded() {
+		public void OnNewMapLoaded() {
 			map = Window.Map;
 			width = map.Width;
 			height = map.Height;
@@ -355,22 +327,6 @@ namespace ClassicalSharp {
 			maxY = height - 1;
 			maxZ = length - 1;
 		}
-		
-		protected abstract ChunkDrawInfo GetChunkInfo( int x, int y, int z );
-
-		protected abstract void DrawTopFace( int count );
-
-		protected abstract void DrawBottomFace( int count );
-
-		protected abstract void DrawBackFace( int count );
-
-		protected abstract void DrawFrontFace( int count );
-
-		protected abstract void DrawLeftFace( int count );
-
-		protected abstract void DrawRightFace( int count );
-		
-		protected abstract void DrawSprite( int count );
 	}
 	
 	public class ChunkDrawInfo {
