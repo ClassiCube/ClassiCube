@@ -184,22 +184,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void BeginRender() {
-			Graphics.BeginIndexedVbBatch();
-		}
-		
-		public void Render( ChunkPartInfo info ) {
-			Graphics.DrawIndexedVbBatch( DrawMode.Triangles, info.VbId, info.IndicesCount );
-		}
-		
-		public void Render2( ChunkPartInfo info ) {
-			Graphics.DrawIndexedVbBatch( DrawMode.Triangles, info.VbId2, info.IndicesCount2 );
-		}
-		
-		public void EndRender() {
-			Graphics.EndIndexedVbBatch();
-		}
-		
 		void AddSpriteVertices( byte tile, int count ) {
 			int i = atlas.Get1DIndex( BlockInfo.GetOptimTextureLoc( tile, TileSide.Left ) );
 			drawInfoBuffer[i].Sprite.iCount += 6 + 6 * count;

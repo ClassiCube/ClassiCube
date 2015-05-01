@@ -200,7 +200,7 @@ namespace ClassicalSharp {
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
-			builder.BeginRender();
+			Graphics.BeginIndexedVbBatch();
 			Graphics.Texturing = true;
 			Graphics.AlphaTest = true;
 			Graphics.FaceCulling = true;
@@ -215,12 +215,12 @@ namespace ClassicalSharp {
 			}
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
-			builder.EndRender();
+			Graphics.EndIndexedVbBatch();
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
-			builder.BeginRender();
+			Graphics.BeginIndexedVbBatch();
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
@@ -244,7 +244,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
-			builder.EndRender();
+			Graphics.EndIndexedVbBatch();
 		}
 
 		int[] distances;
@@ -291,6 +291,7 @@ namespace ClassicalSharp {
 		}
 		
 		// TODO: there's probably a better way of doing this.
+		const DrawMode mode = DrawMode.Triangles;
 		void RenderSolidBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
@@ -298,10 +299,10 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
-					builder.Render( drawInfo );
+					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
 					if( drawInfo.IndicesCount2 > 0 ) {
-						builder.Render2( drawInfo );
+						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IndicesCount2 );
 						Window.Vertices += drawInfo.IndicesCount2;
 					}
 				}
@@ -315,7 +316,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
-					builder.Render( drawInfo );
+					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
 				}
 			}
@@ -328,10 +329,10 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
-					builder.Render( drawInfo );
+					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
 					if( drawInfo.IndicesCount2 > 0 ) {
-						builder.Render2( drawInfo );
+						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IndicesCount2 );
 						Window.Vertices += drawInfo.IndicesCount2;
 					}
 				}
@@ -345,9 +346,9 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
-					builder.Render( drawInfo );
+					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IndicesCount );
 					if( drawInfo.IndicesCount2 > 0 ) {
-						builder.Render2( drawInfo );
+						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IndicesCount2 );
 					}
 				}
 			}
