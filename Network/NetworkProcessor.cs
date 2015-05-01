@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		public bool Disconnected;
 		bool sendHeldBlock = false;
 		bool useMessageTypes = false;
+		bool useBlockPermissions = false;
 		bool receivedFirstPosition = false;
 		public bool UsingExtPlayerList = false;
 		
@@ -286,7 +287,9 @@ namespace ClassicalSharp {
 						ServerName = reader.ReadString();
 						ServerMotd = reader.ReadString();
 						byte userType = reader.ReadUInt8();
-						Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+						if( !useBlockPermissions ) {
+							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+						}
 						Window.LocalPlayer.UserType = userType;
 						receivedFirstPosition = false;
 						Window.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
@@ -453,7 +456,9 @@ namespace ClassicalSharp {
 				case PacketId.SetPermission:
 					{
 						byte userType = reader.ReadUInt8();
-						Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+						if( !useBlockPermissions ) {
+							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+						}
 						Window.LocalPlayer.UserType = userType;
 					} break;
 					
@@ -475,6 +480,8 @@ namespace ClassicalSharp {
 							useMessageTypes = true;
 						} else if( extensionName == "ExtPlayerList" ) {
 							UsingExtPlayerList = true;
+						} else if( extensionName == "BlockPermissions" ) {
+							useBlockPermissions = true;
 						}
 						cpeServerExtensionsCount--;
 						if( cpeServerExtensionsCount <= 0 ) {
