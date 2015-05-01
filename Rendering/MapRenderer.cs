@@ -46,15 +46,12 @@ namespace ClassicalSharp {
 		int width, height, length;
 		ChunkInfo[] chunks, unsortedChunks;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
-		
-		public readonly bool UsesLighting;
 		int elementsPerBitmap = 0;
 		
 		public MapRenderer( Game window ) {
 			Window = window;
 			_1Dcount = window.TerrainAtlas1DTexIds.Length;
 			builder = new ChunkMeshBuilderTex2Col4( window );
-			UsesLighting = builder.UsesLighting;
 			Graphics = window.Graphics;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
@@ -80,8 +77,7 @@ namespace ClassicalSharp {
 		}
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( ( e.Variable == EnvVariable.SunlightColour ||
-			     e.Variable == EnvVariable.ShadowlightColour ) && UsesLighting ) {
+			if( e.Variable == EnvVariable.SunlightColour || e.Variable == EnvVariable.ShadowlightColour ) {
 				Refresh();
 			}
 		}
@@ -181,18 +177,14 @@ namespace ClassicalSharp {
 		}
 		
 		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
-			if( UsesLighting ) {
-				if( newLightCy == oldLightCy ) {
-					ResetChunk( cx, cy, cz );
-				} else {
-					int cyMax = Math.Max( newLightCy, oldLightCy );
-					int cyMin = Math.Min( oldLightCy, newLightCy );
-					for( cy = cyMax; cy >= cyMin; cy-- ) {
-						ResetChunk( cx, cy, cz );
-					}
-				}
-			} else {
+			if( newLightCy == oldLightCy ) {
 				ResetChunk( cx, cy, cz );
+			} else {
+				int cyMax = Math.Max( newLightCy, oldLightCy );
+				int cyMin = Math.Min( oldLightCy, newLightCy );
+				for( cy = cyMax; cy >= cyMin; cy-- ) {
+					ResetChunk( cx, cy, cz );
+				}
 			}
 		}
 		

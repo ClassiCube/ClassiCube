@@ -26,10 +26,6 @@ namespace ClassicalSharp {
 		protected byte[] counts = new byte[chunkSize3 * 6];
 		protected byte[] chunk = new byte[extChunkSize3];
 		
-		public virtual bool UsesLighting {
-			get { return false; }
-		}
-		
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
 			if( ReadChunkData( x1, y1, z1 ) ) return true;
