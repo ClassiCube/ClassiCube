@@ -105,13 +105,12 @@
     <Compile Include="GraphicsAPI\DirectXApi.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
-    <Compile Include="Camera.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
-    <Compile Include="Map.cs" />
-    <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
-    <Compile Include="MeshBuilders\ChunkMeshBuilderTex2Col4.cs" />
+    <Compile Include="Map\ChunkMeshBuilder.cs" />
+    <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
+    <Compile Include="Map\Map.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />
@@ -151,6 +150,7 @@
     <Compile Include="Rendering\NormalMapEnvRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
+    <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
     <Compile Include="Utils\TextureAtlas1D.cs" />
@@ -194,7 +194,7 @@
     <Folder Include="Blocks" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
-    <Folder Include="MeshBuilders" />
+    <Folder Include="Map" />
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Utils" />
