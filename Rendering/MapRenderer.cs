@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 		
 		class ChunkInfo {
 			
-			public Point3S Location;
+			public Point3S Centre;
 			
 			public bool Visible = true;
 			public bool Empty = false;
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 			public ChunkDrawInfo DrawInfo;
 			
 			public ChunkInfo( int x, int y, int z ) {
-				Location = new Point3S( x, y, z );
+				Centre = new Point3S( x + 8, y + 8, z + 8 );
 			}
 		}
 		
@@ -258,8 +258,8 @@ namespace ClassicalSharp {
 				chunkPos = newChunkPos;
 				for( int i = 0; i < distances.Length; i++ ) {
 					ChunkInfo info = chunks[i];
-					Point3S loc = info.Location;
-					distances[i] = Utils.DistanceSquared( loc.X + 8, loc.Y + 8, loc.Z + 8, chunkPos.X, chunkPos.Y, chunkPos.Z );
+					Point3S centre = info.Centre;
+					distances[i] = Utils.DistanceSquared( centre.X, centre.Y, centre.Z, chunkPos.X, chunkPos.Y, chunkPos.Z );
 				}
 				// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
 				Array.Sort( distances, chunks );
@@ -272,21 +272,21 @@ namespace ClassicalSharp {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
-				Point3S loc = info.Location;
+				Point3S centre = info.Centre;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.DrawInfo == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
-						info.DrawInfo = builder.GetDrawInfo( loc.X, loc.Y, loc.Z );
+						info.DrawInfo = builder.GetDrawInfo( centre.X - 8, centre.Y - 8, centre.Z - 8 );
 						if( info.DrawInfo == null ) {
 							info.Empty = true;
 						}
 						chunksUpdatedThisFrame++;
 					}
 				}
-				info.Visible = inRange && Window.Culling.SphereInFrustum( loc.X + 8, loc.Y + 8, loc.Z + 8, 14 ); // 14 ~ sqrt(3 * 8^2)
+				info.Visible = inRange && Window.Culling.SphereInFrustum( centre.X, centre.Y, centre.Z, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}
 		
