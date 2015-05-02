@@ -26,6 +26,12 @@ namespace ClassicalSharp {
 		public override string ToString() {
 			return String.Format( "{0}, {1} : {2}, {3}", U1, V1, U2, V2 );
 		}
+		
+		internal void SwapU() {
+			float u2 = U2;
+			U2 = U1;
+			U1 = u2;
+		}
 	}
 	
 	public static class TileSide {
