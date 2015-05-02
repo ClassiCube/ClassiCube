@@ -435,13 +435,9 @@ namespace ClassicalSharp {
 						string text = reader.ReadTextString();
 						if( !useMessageTypes ) messageType = 0;
 						// wom ^detail.user parsing
-						if( text.StartsWith( "^detail.user", StringComparison.Ordinal ) ) {
-							if( !useMessageTypes && text.StartsWith( "^detail.user=", StringComparison.Ordinal ) ) {
-								messageType = 3;
-								text = text.Substring( 13 );
-							} else {
-								break;
-							}
+						if( !useMessageTypes && text.StartsWith( "^detail.user=", StringComparison.Ordinal ) ) {
+							messageType = 3;
+							text = text.Substring( 13 );
 						}
 						Window.AddChat( text, messageType );
 					} break;
