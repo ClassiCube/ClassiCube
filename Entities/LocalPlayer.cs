@@ -64,14 +64,6 @@ namespace ClassicalSharp {
 				renderer.Dispose();
 			}
 		}
-		
-		static float Sin( double degrees ) {
-			return (float)Math.Sin( degrees * Math.PI / 180.0 );
-		}
-		
-		static float Cos( double degrees ) {
-			return (float)Math.Cos( degrees * Math.PI / 180.0 );
-		}
 
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		float jumpVelocity = 0.42f;
@@ -174,10 +166,10 @@ namespace ClassicalSharp {
 			float multiply = factor / dist;
 			x *= multiply;
 			z *= multiply;
-			float xDir = Cos( YawDegrees );
-			float yDir = Sin( YawDegrees );
-			Velocity.X += x * xDir - z * yDir;
-			Velocity.Z += x * yDir + z * xDir;
+			float cosA = (float)Math.Cos( YawRadians );
+			float sinA = (float)Math.Sin( YawRadians );
+			Velocity.X += x * cosA - z * sinA;
+			Velocity.Z += x * sinA + z * cosA;
 		}
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
@@ -205,11 +197,8 @@ namespace ClassicalSharp {
 				Velocity *= 0.5f;
 				Velocity.Y = ( Velocity.Y - 0.02f ) * multiply; // gravity
 			} else {
-				if( !flying ) {
-					AdjHorVelocity( zMoving, xMoving, ( onGround ? 0.1f : 0.02f ) * multiply );
-				} else {
-					AdjHorVelocity( zMoving, xMoving, 0.02f * multiply );
-				}
+				float factor = !flying && onGround ? 0.1f : 0.02f;
+				AdjHorVelocity( zMoving, xMoving, factor * multiply );
 				multiply /= 5;
 				if( multiply < 1 ) multiply = 1;
 				
