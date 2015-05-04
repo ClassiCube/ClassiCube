@@ -127,28 +127,20 @@ namespace ClassicalSharp {
 		
 		void UpdateState( float xMoving, float zMoving ) {
 			if( flying || noClip ) {
-				Velocity.Y = 0; // counter the effect of gravity
-			}
-			if( noClip ) {
+				Velocity.Y = 0; // eliminate the effect of gravity
+				float vel = noClip ? 0.24f : 0.06f;
+				float velSpeeding = noClip ? 0.48f : 0.08f;
 				if( flyingUp || jumping ) {
-					Velocity.Y = speeding ? 0.48f : 0.24f;
+					Velocity.Y = speeding ? velSpeeding : vel;
 				} else if( flyingDown ) {
-					Velocity.Y = speeding ? -0.48f : -0.24f;
-				}
-			} else if( flying ) {
-				if( flyingUp || jumping ) {
-					Velocity.Y = speeding ? 0.08f : 0.06f;
-				} else if( flyingDown ) {
-					Velocity.Y = speeding ? -0.08f : -0.06f;
+					Velocity.Y = speeding ? -velSpeeding : -vel;
 				}
 			} else if( !noClip && !flyingDown && jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
 			}
 
 			if( jumping ) {
-				if( TouchesAnyWater() ) {
-					Velocity.Y += speeding ? 0.08f : 0.04f;
-				} else if( TouchesAnyLava() ) {
+				if( TouchesAnyWater() || TouchesAnyLava() ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
 				} else if( TouchesAnyRope() ) {
 					Velocity.Y += speeding ? 0.15f : 0.10f;
