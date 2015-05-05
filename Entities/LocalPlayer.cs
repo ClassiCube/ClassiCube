@@ -43,6 +43,7 @@ namespace ClassicalSharp {
 		public LocalPlayer( byte id, Game window ) : base( id, window ) {
 			DisplayName = window.Username;
 			SkinName = window.Username;
+			map = window.Map;
 		}
 		
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {
@@ -69,8 +70,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Tick( double delta ) {
-			if( Window.Map == null || Window.Map.IsNotLoaded ) return;
-			map = Window.Map;
+			if( Window.Map.IsNotLoaded ) return;
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
@@ -123,7 +123,7 @@ namespace ClassicalSharp {
 				} else if( flyingDown ) {
 					Velocity.Y = speeding ? -velSpeeding : -vel;
 				}
-			} else if( !noClip && !flyingDown && jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
+			} else if( jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
 			}
 
