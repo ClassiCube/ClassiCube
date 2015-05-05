@@ -38,17 +38,10 @@ namespace ClassicalSharp {
 
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
-				if( e.Button == MouseButton.Middle ) {
-					if( !SelectedPos.Valid || !Map.IsValidPos( SelectedPos.BlockPos ) ) return;
-					byte block = Map.GetBlock( SelectedPos.BlockPos );
-					if( CanPlace[block] || CanDelete[block] ) {
-						HeldBlock = (Block)block;
-					}
-				} else {
-					bool left = e.Button == MouseButton.Left;
-					bool right = e.Button == MouseButton.Right;
-					PickBlocks( false, left, right );
-				}
+				bool left = e.Button == MouseButton.Left;
+				bool right = e.Button == MouseButton.Right;
+				bool middle = e.Button == MouseButton.Middle;
+				PickBlocks( false, left, right, middle );
 			} else {
 				lastClick = DateTime.UtcNow;
 			}
@@ -126,29 +119,33 @@ namespace ClassicalSharp {
 		}
 		
 		DateTime lastClick = DateTime.MinValue;
-		void PickBlocks( bool cooldown, bool left, bool right ) {
-			if( !SelectedPos.Valid || left == right || ScreenLockedInput || HeldBlock == Block.Air ) return;
+		void PickBlocks( bool cooldown, bool left, bool right, bool middle ) {
+			int buttonsDown = ( left ? 1 : 0 ) + ( right ? 1 : 0 ) + ( middle ? 1 : 0 );
+			if( !SelectedPos.Valid || buttonsDown > 1 || ScreenLockedInput || HeldBlock == Block.Air ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
 			lastClick = now;
 			
-			if( left ) {
+			if( middle ) {
 				Vector3I pos = SelectedPos.BlockPos;
-				byte block = 0;
-				
-				if( Map.IsValidPos( pos ) && ( block = Map.GetBlock( pos ) ) != 0 && CanDelete[block] ) {
+				byte block = Map.GetBlock( pos );
+				if( block != 0 && ( CanPlace[block] || CanDelete[block] ) ) {
+					HeldBlock = (Block)block;
+				}
+			} else if( left ) {
+				Vector3I pos = SelectedPos.BlockPos;
+				byte block = Map.GetBlock( pos );
+				if( block != 0 && CanDelete[block] ) {
 					ParticleManager.BreakBlockEffect( pos, block );
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, 0 );
 					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 				}
-			}
-			if( right ) {
+			} else if( right ) {
 				Vector3I pos = SelectedPos.TranslatedPos;
 				Block block = HeldBlock;
-				byte oldBlock = 0;
-				
-				if( Map.IsValidPos( pos ) && CanReplace( oldBlock ) && CanPlace[(int)block] ) {
+				byte oldBlock = Map.IsValidPos( pos ) ? Map.GetBlock( pos ) : (byte)0;
+				if( CanReplace( oldBlock ) && CanPlace[(int)block] ) {
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
@@ -156,7 +153,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool CanReplace( byte block ) {
-			return block == 0 || ( !CanPlace[block] && !CanDelete[block] && BlockInfo.IsLiquid( block ) );
+			return block == 0 || ( BlockInfo.IsLiquid( block ) && !CanPlace[block] && !CanDelete[block] );
 		}
 		
 		public KeyMap Keys = new KeyMap();

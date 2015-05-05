@@ -261,7 +261,8 @@ namespace ClassicalSharp {
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
-				PickBlocks( true, left, right );
+				bool middle = IsMousePressed( MouseButton.Middle );
+				PickBlocks( true, left, right, middle );
 			} else {
 				SelectedPos.Valid = false;
 			}
