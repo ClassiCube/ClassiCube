@@ -28,12 +28,12 @@ namespace ClassicalSharp {
 		struct State {
 			public BoundingBox BlockBB;
 			public byte Block;
-			public float t;
+			public float tSquared;
 			
-			public State( BoundingBox bb, byte block, float t ) {
+			public State( BoundingBox bb, byte block, float tSquared ) {
 				BlockBB = bb;
 				Block = block;
-				this.t = t;
+				this.tSquared = tSquared;
 			}
 		}
 		
@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 		static State[] stateCache = new State[0];
 		class StateComparer : IComparer<State> {
 			public int Compare( State x, State y ) {
-				return x.t.CompareTo( y.t );
+				return x.tSquared.CompareTo( y.tSquared );
 			}
 		}
 		static StateComparer comparer = new StateComparer();
@@ -102,8 +102,8 @@ namespace ClassicalSharp {
 						float tx = 0, ty = 0, tz = 0;
 						CalcTime( ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz );
 						if( tx > 1 || ty > 1 || tz > 1 ) continue;
-						float t = (float)Math.Sqrt( tx * tx + ty * ty + tz * tz );
-						stateCache[count++] = new State( blockBB, blockId, t );
+						float tSquared = tx * tx + ty * ty + tz * tz;
+						stateCache[count++] = new State( blockBB, blockId, tSquared );
 					}
 				}
 			}
