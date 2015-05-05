@@ -72,25 +72,18 @@ namespace ClassicalSharp {
 			if( Window.Map == null || Window.Map.IsNotLoaded ) return;
 			map = Window.Map;
 			
-			float xMoving, zMoving;
+			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
 			lastYaw = nextYaw;
 			lastPitch = nextPitch;
-			HandleInput( out xMoving, out zMoving );
-			UpdateState( xMoving, zMoving );
+			HandleInput( ref xMoving, ref zMoving );
+			UpdateVelocityYState();
 			PhysicsTick( xMoving, zMoving );
 			nextPos = Position;
 			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos, delta );
 			if( renderer != null ) {
-				Bitmap bmp;
-				Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
-				if( bmp != null ) {
-					Window.Graphics.DeleteTexture( renderer.TextureId );
-					renderer.TextureId = Window.Graphics.LoadTexture( bmp );
-					SkinType = Utils.GetSkinType( bmp );
-					bmp.Dispose();
-				}
+				CheckSkin();
 			}
 		}
 		
@@ -104,9 +97,7 @@ namespace ClassicalSharp {
 			renderer.Render( deltaTime );
 		}
 		
-		void HandleInput( out float xMoving, out float zMoving ) {
-			xMoving = 0;
-			zMoving = 0;
+		void HandleInput( ref float xMoving, ref float zMoving ) {
 			if( Window.ScreenLockedInput ) {
 				jumping = speeding = flyingUp = flyingDown = false;
 			} else {
@@ -122,7 +113,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void UpdateState( float xMoving, float zMoving ) {
+		void UpdateVelocityYState() {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
 				float vel = noClip ? 0.24f : 0.06f;

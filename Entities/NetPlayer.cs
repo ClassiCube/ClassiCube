@@ -64,14 +64,7 @@ namespace ClassicalSharp {
 		List<State> states = new List<State>();
 		State newState, oldState;
 		public override void Tick( double delta ) {
-			Bitmap bmp;
-			Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
-			if( bmp != null ) {
-				Window.Graphics.DeleteTexture( renderer.TextureId );
-				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
-				SkinType = Utils.GetSkinType( bmp );
-				bmp.Dispose();
-			}
+			CheckSkin();
 			tickCount++;
 			UpdateCurrentState();
 			UpdateAnimState( oldState.pos, newState.pos, delta );

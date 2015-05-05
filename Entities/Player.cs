@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using OpenTK;
 using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
@@ -104,6 +105,17 @@ namespace ClassicalSharp {
 			leftLegXRot = -rightLegXRot;
 			rightArmZRot = idleZRot;
 			leftArmZRot = -idleZRot;
+		}
+		
+		protected void CheckSkin() {
+			Bitmap bmp;
+			Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
+			if( bmp != null ) {
+				Window.Graphics.DeleteTexture( renderer.TextureId );
+				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
+				SkinType = Utils.GetSkinType( bmp );
+				bmp.Dispose();
+			}
 		}
 		
 		public void SetModel( string modelName ) {
