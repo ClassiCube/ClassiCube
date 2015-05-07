@@ -22,6 +22,11 @@ namespace ClassicalSharp {
 		
 		public static string AppName = "ClassicalSharp 0.5";
 		
+		public static void Clamp( ref float value, float min, float max ) {
+			if( value < min ) value = min;
+			if( value > max ) value = max;
+		}
+		
 		public static int NextPowerOf2( int value ) {
 			int next = 1;
 			while( value > next ) {

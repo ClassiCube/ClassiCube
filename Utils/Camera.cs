@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 			Orientation.X += delta.X * sensitivity;
 			Orientation.Y += delta.Y * sensitivity;
 
-			Clamp( ref Orientation.Y, halfPi + 0.01f, threeHalfPi - 0.01f );
+			Utils.Clamp( ref Orientation.Y, halfPi + 0.01f, threeHalfPi - 0.01f );
 			LocationUpdate update = LocationUpdate.MakeOri(
 				(float)Utils.RadiansToDegrees( Orientation.X ),
 				(float)Utils.RadiansToDegrees( Orientation.Y - Math.PI )
@@ -90,11 +90,6 @@ namespace ClassicalSharp {
 			if( Window.ScreenLockedInput ) return;
 			CentreMousePosition();
 			UpdateMouseRotation();
-		}
-		
-		static void Clamp( ref float value, float min, float max ) {
-			if( value < min ) value = min;
-			if( value > max ) value = max;
 		}
 	}
 	

@@ -187,11 +187,8 @@ namespace ClassicalSharp {
 				Velocity.Y -= 0.08f;
 				
 				if( BlockUnderFeet == Block.Ice ) {
-					// Limit velocity while travelling on ice.
-					if( Velocity.X > 0.25f ) Velocity.X = 0.25f;
-					if( Velocity.X < -0.25f ) Velocity.X = -0.25f;
-					if( Velocity.Z > 0.25f ) Velocity.Z = 0.25f;
-					if( Velocity.Z < -0.25f ) Velocity.Z = -0.25f;
+					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
+					Utils.Clamp( ref Velocity.Z, -0.25f, 0.25f );
 				} else if( onGround || flying ) {
 					// Apply air resistance or ground friction
 					Velocity.X *= 0.6f;
@@ -209,7 +206,8 @@ namespace ClassicalSharp {
 		
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		public void ParseHackFlags( string name, string motd ) {
-			if( name.Contains( "-hax" ) || motd.Contains( "-hax" ) ) {
+			string joined = name + motd;
+			if( joined.Contains( "-hax" ) ) {
 				CanFly = CanNoclip = CanSpeed = CanRespawn = false;
 				Window.CanUseThirdPersonCamera = false;
 				Window.SetCamera( false );
@@ -219,32 +217,32 @@ namespace ClassicalSharp {
 			}
 
 			// Determine if specific hacks are or are not allowed.
-			if( name.Contains( "+fly" ) || motd.Contains( "+fly" ) ) {
+			if( joined.Contains( "+fly" ) ) {
 				CanFly = true;
-			} else if( name.Contains( "-fly" ) || motd.Contains( "-fly" ) ) {
+			} else if( joined.Contains( "-fly" ) ) {
 				CanFly = false;
 			}
-			if( name.Contains( "+noclip" ) || motd.Contains( "+noclip" ) ) {
+			if( joined.Contains( "+noclip" ) ) {
 				CanNoclip = true;
-			} else if( name.Contains( "-noclip" ) || motd.Contains( "-noclip" ) ) {
+			} else if( joined.Contains( "-noclip" ) ) {
 				CanNoclip = false;
 			}
-			if( name.Contains( "+speed" ) || motd.Contains( "+speed" ) ) {
+			if( joined.Contains( "+speed" ) ) {
 				CanSpeed = true;
-			} else if( name.Contains( "-speed" ) || motd.Contains( "-speed" ) ) {
+			} else if( joined.Contains( "-speed" ) ) {
 				CanSpeed = false;
 			}
-			if( name.Contains( "+respawn" ) || motd.Contains( "+respawn" ) ) {
+			if( joined.Contains( "+respawn" ) ) {
 				CanRespawn = true;
-			} else if( name.Contains( "-respawn" ) || motd.Contains( "-respawn" ) ) {
+			} else if( joined.Contains( "-respawn" ) ) {
 				CanRespawn = false;
 			}
 			
 			// Operator override.
 			if( UserType == 0x64 ) {
-				if( name.Contains( "+ophax" ) || motd.Contains( "+ophax" ) ) {
+				if( joined.Contains( "+ophax" ) ) {
 					CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				} else if( name.Contains( "-ophax" ) || motd.Contains( "-ophax" ) ) {
+				} else if( joined.Contains( "-ophax" ) ) {
 					CanFly = CanNoclip = CanSpeed = CanRespawn = false;
 				}
 			}

@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		public const float Width = 0.6f;
 		public const float EyeHeight = 1.625f;
 		public const float Height = 1.8f;
-		public const float Depth = 0.6f;		
+		public const float Depth = 0.6f;
 
 		public override Vector3 Size {
 			get { return new Vector3( Width, Height, Depth ); }
@@ -43,22 +43,19 @@ namespace ClassicalSharp {
 		
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
 		public Block BlockUnderFeet {
-			get {
-				if( map == null || map.IsNotLoaded ) return Block.Air;
-				Vector3I blockCoords = Vector3I.Floor( Position.X, Position.Y - 0.01f, Position.Z );
-				if( !map.IsValidPos( blockCoords ) ) return Block.Air;
-				return (Block)map.GetBlock( blockCoords );
-			}
+			get { return GetBlock( new Vector3( Position.X, Position.Y - 0.01f, Position.Z ) ); }
 		}
 		
 		/// <summary> Gets the block at player's eye position. </summary>
 		public Block BlockAtHead {
-			get {
-				if( map == null || map.IsNotLoaded ) return Block.Air;
-				Vector3I blockCoords = Vector3I.Floor( EyePosition );
-				if( !map.IsValidPos( blockCoords ) ) return Block.Air;
-				return (Block)map.GetBlock( blockCoords );
-			}
+			get { return GetBlock( EyePosition ); }
+		}
+		
+		Block GetBlock( Vector3 coords ) {
+			if( map == null || map.IsNotLoaded ) return Block.Air;
+			Vector3I blockCoords = Vector3I.Floor( coords );
+			return map.IsValidPos( blockCoords ) ?
+				(Block)map.GetBlock( blockCoords ) : Block.Air;
 		}
 		
 		public abstract void Tick( double delta );
@@ -91,13 +88,13 @@ namespace ClassicalSharp {
 		const float legMax = (float)( 80 * Math.PI / 180.0 );
 		const float idleMax = (float)( 3 * Math.PI / 180.0 );
 		const float idleXPeriod = (float)( 2 * Math.PI / 5f );
-		const float idleZPeriod = (float)( 2 * Math.PI / 3.5f );		
+		const float idleZPeriod = (float)( 2 * Math.PI / 3.5f );
 		protected void SetCurrentAnimState( float t ) {
 			float swing = Utils.Lerp( swingO, swingN, t );
 			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
 			float idleTime = (float)( Window.accumulator );
 			float idleXRot = (float)( Math.Sin( idleTime * idleXPeriod ) * idleMax );
-			float idleZRot = (float)( idleMax + Math.Cos( idleTime * idleZPeriod ) * idleMax );		
+			float idleZRot = (float)( idleMax + Math.Cos( idleTime * idleZPeriod ) * idleMax );
 			
 			leftArmXRot = (float)( Math.Cos( walkTime ) * swing * armMax ) - idleXRot;
 			rightArmXRot = -leftArmXRot;
