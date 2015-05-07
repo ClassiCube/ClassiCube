@@ -211,16 +211,6 @@ namespace ClassicalSharp.GraphicsAPI {
             device.RenderState.FillMode = fillModes[(int)type];
         }
 
-        public override bool AmbientLighting {
-            set {
-                if( !value ) device.RenderState.Ambient = Color.White;
-            }
-        }
-
-        public override void SetAmbientColour( FastColour col ) {
-            device.RenderState.Ambient = col.ToColor();
-        }
-
         #region Vertex buffers
 
         VertexFormats[] formatMapping = new VertexFormats[] {

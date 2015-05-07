@@ -250,24 +250,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
 		}
 		
-		public override bool AmbientLighting {
-			set {
-				if( value ) {
-					GL.Enable( EnableCap.Lighting );
-					GL.Enable( EnableCap.ColorMaterial );
-					GL.ColorMaterial( MaterialFace.FrontAndBack, ColorMaterialParameter.Ambient );
-				} else {
-					GL.Disable( EnableCap.Lighting );
-					GL.Disable( EnableCap.ColorMaterial );
-				}
-			}
-		}
-		
-		public unsafe override void SetAmbientColour( FastColour col ) {
-			Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, 1 );
-			GL.LightModel( LightModelParameter.LightModelAmbient, &colRGBA.X );
-		}
-		
 		#region Vertex buffers
 		
 		#if TRACK_RESOURCES

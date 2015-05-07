@@ -115,10 +115,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void SetFillType( FillType type );
 		
-		public abstract bool AmbientLighting { set; }
-		
-		public abstract void SetAmbientColour( FastColour col );
-		
 		public virtual int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
 			return InitVb( vertices, mode, format, vertices.Length );
 		}
