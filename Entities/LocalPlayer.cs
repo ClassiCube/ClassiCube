@@ -153,12 +153,7 @@ namespace ClassicalSharp {
 		}
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			float multiply = 1F;
-			if( !flying ) {
-				multiply = speeding ? 10 : 1;
-			} else {
-				multiply = speeding ? 90 : 15;
-			}
+			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
 
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				AdjHorVelocity( zMoving * multiply, xMoving * multiply, 0.02f * multiply );
@@ -185,16 +180,13 @@ namespace ClassicalSharp {
 				Velocity.Y *= multiply;
 				Move();
 				Velocity.Y /= multiply;
-				Vector3I blockCoords = Vector3I.Floor( Position.X , Position.Y - 0.01f, Position.Z );
-				byte blockUnder = GetPhysicsBlockId( blockCoords.X, blockCoords.Y, blockCoords.Z );
-
-				// Apply general drag
+				// Apply general drag and gravity
 				Velocity.X *= 0.91f;
 				Velocity.Y *= 0.98f;
 				Velocity.Z *= 0.91f;
 				Velocity.Y -= 0.08f;
 				
-				if( blockUnder == (byte)Block.Ice ) {
+				if( BlockUnderFeet == Block.Ice ) {
 					// Limit velocity while travelling on ice.
 					if( Velocity.X > 0.25f ) Velocity.X = 0.25f;
 					if( Velocity.X < -0.25f ) Velocity.X = -0.25f;
