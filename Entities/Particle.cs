@@ -61,17 +61,9 @@ namespace ClassicalSharp.Particles {
 			Velocity.Y -= gravity * (float)delta;
 			int startY = (int)Math.Floor( Position.Y );
 			Position += Velocity * (float)delta;
-			int endY = (int)Math.Floor( Position.Y );
-			
-			// Prevent the particle from going outside the map on horizontal axes.
-			if( Position.X < 0 )
-				Position.X = 0;
-			if( Position.Z < 0 )
-				Position.Z = 0;
-			if( Position.X >= Window.Map.Width )
-				Position.X = Window.Map.Width - 0.01f;
-			if( Position.Z >= Window.Map.Length )
-				Position.Z = Window.Map.Length - 0.01f;
+			int endY = (int)Math.Floor( Position.Y );			
+			Utils.Clamp( ref Position.X, 0, Window.Map.Width - 0.01f );
+			Utils.Clamp( ref Position.Z, 0, Window.Map.Length - 0.01f );
 			
 			if( endY <= startY ) {
 				for( int y = startY; y >= endY; y-- ) {

@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		
 		float jumpVel = 0.42f;
 		public float JumpHeight {
-			get { return jumpVel == 0 ? 0 : (float)GetMaxHeight( jumpVel ); }
+			get { return (float)GetMaxHeight( jumpVel ); }
 		}
 		
 		public LocalPlayer( byte id, Game window ) : base( id, window ) {
@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 				if( Window.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
 
 				jumping = Window.IsKeyDown( KeyMapping.Jump );
-				speeding = CanSpeed && Window.IsKeyDown( KeyMapping.Speed );
+				speeding = canSpeed && Window.IsKeyDown( KeyMapping.Speed );
 				flyingUp = Window.IsKeyDown( KeyMapping.FlyUp );
 				flyingDown = Window.IsKeyDown( KeyMapping.FlyDown );
 			}
@@ -202,7 +202,7 @@ namespace ClassicalSharp {
 				MoveAndWallSlide();
 			}
 			Position += Velocity;
-		}		
+		}
 		
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		public void ParseHackFlags( string name, string motd ) {
@@ -215,36 +215,22 @@ namespace ClassicalSharp {
 				CanFly = CanNoclip = CanSpeed = CanRespawn = true;
 				Window.CanUseThirdPersonCamera = true;
 			}
-
-			// Determine if specific hacks are or are not allowed.
-			if( joined.Contains( "+fly" ) ) {
-				CanFly = true;
-			} else if( joined.Contains( "-fly" ) ) {
-				CanFly = false;
-			}
-			if( joined.Contains( "+noclip" ) ) {
-				CanNoclip = true;
-			} else if( joined.Contains( "-noclip" ) ) {
-				CanNoclip = false;
-			}
-			if( joined.Contains( "+speed" ) ) {
-				CanSpeed = true;
-			} else if( joined.Contains( "-speed" ) ) {
-				CanSpeed = false;
-			}
-			if( joined.Contains( "+respawn" ) ) {
-				CanRespawn = true;
-			} else if( joined.Contains( "-respawn" ) ) {
-				CanRespawn = false;
-			}
 			
-			// Operator override.
+			ParseFlag( b => CanFly = b, joined, "fly" );
+			ParseFlag( b => CanNoclip = b, joined, "noclip" );
+			ParseFlag( b => CanSpeed = b, joined, "speed" );
+			ParseFlag( b => CanRespawn = b, joined, "respawn" );
+
 			if( UserType == 0x64 ) {
-				if( joined.Contains( "+ophax" ) ) {
-					CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				} else if( joined.Contains( "-ophax" ) ) {
-					CanFly = CanNoclip = CanSpeed = CanRespawn = false;
-				}
+				ParseFlag( b => CanFly = CanNoclip = CanRespawn = CanSpeed = b, joined, "ophax" );
+			}
+		}
+		
+		static void ParseFlag( Action<bool> action, string joined, string flag ) {
+			if( joined.Contains( "+" + flag ) ) {
+				action( true );
+			} else if( joined.Contains( "-" + flag ) ) {
+				action( false );
 			}
 		}
 		
@@ -256,7 +242,7 @@ namespace ClassicalSharp {
 			PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
 		}
 		
-		public bool HandleKeyDown( Key key ) {
+		internal void HandleKeyDown( Key key ) {
 			if( key == Window.Keys[KeyMapping.Respawn] && canRespawn ) {
 				LocationUpdate update = LocationUpdate.MakePos( SpawnPoint, false );
 				SetLocation( update, false );
@@ -266,27 +252,18 @@ namespace ClassicalSharp {
 				flying = !flying;
 			} else if( key == Window.Keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
-			} else {
-				return false;
 			}
-			return true;
 		}
 		
 		internal void CalculateJumpVelocity( float jumpHeight ) {
-			if( jumpHeight == 0 ) {
-				jumpVel = 0;
-				return;
-			}
-
-			float jumpV = 0.01f;
-			if( jumpHeight >= 256 ) jumpV = 10.0f;
-			if( jumpHeight >= 512 ) jumpV = 16.5f;
-			if( jumpHeight >= 768 ) jumpV = 22.5f;
+			jumpVel = 0;
+			if( jumpHeight >= 256 ) jumpVel = 10.0f;
+			if( jumpHeight >= 512 ) jumpVel = 16.5f;
+			if( jumpHeight >= 768 ) jumpVel = 22.5f;
 			
-			while( GetMaxHeight( jumpV ) <= jumpHeight ) {
-				jumpV += 0.01f;
+			while( GetMaxHeight( jumpVel ) <= jumpHeight ) {
+				jumpVel += 0.01f;
 			}
-			jumpVel = jumpV;
 		}
 		
 		static double GetMaxHeight( float u ) {
@@ -300,8 +277,7 @@ namespace ClassicalSharp {
 			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
 			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
 			// plugging into Wolfram Alpha gives 1 equation as
-			// e^(-0.0202027 t) * (-49u - 196) - 4t + 50u + 196
-			// which is the same as (0.98^t) * (-49u - 196) - 4t + 50u + 196
+			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
 			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
 			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
 		}
