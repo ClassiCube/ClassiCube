@@ -138,7 +138,36 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void AdjHorVelocity( float x, float z, float factor ) {
+		static Vector3 waterDrag = new Vector3( 0.8f, 0.8f, 0.8f ),
+		lavaDrag = new Vector3( 0.5f, 0.5f, 0.5f ),
+		ropeDrag = new Vector3( 0.5f, 0.85f, 0.5f ),
+		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
+		airDrag = new Vector3( 0.6f, 1f, 0.6f );
+		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		void PhysicsTick( float xMoving, float zMoving ) {
+			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
+
+			if( TouchesAnyWater() && !flying && !noClip ) {
+				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
+			} else if( TouchesAnyLava() && !flying && !noClip ) {
+				Move( xMoving, zMoving, 0.02f * multiply, lavaDrag, liquidGrav, 1 );
+			} else if( TouchesAnyRope() && !flying && !noClip ) {
+				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
+			} else {
+				float factor = !flying && onGround ? 0.1f : 0.02f;
+				float yMul = Math.Max( 1, multiply / 5f );		
+				Move( xMoving, zMoving, factor * multiply, normalDrag, normalGrav, yMul );
+				
+				if( BlockUnderFeet == Block.Ice ) {
+					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
+					Utils.Clamp( ref Velocity.Z, -0.25f, 0.25f );
+				} else if( onGround || flying ) {
+					Velocity *= airDrag; // air drag or ground friction
+				}
+			}
+		}
+		
+		void AdjHeadingVelocity( float x, float z, float factor ) {
 			float dist = (float)Math.Sqrt( x * x + z * z );
 			if( dist < 0.00001f ) return;
 			if( dist < 1 ) dist = 1;
@@ -152,56 +181,16 @@ namespace ClassicalSharp {
 			Velocity.Z += x * sinA + z * cosA;
 		}
 		
-		void PhysicsTick( float xMoving, float zMoving ) {
-			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
-
-			if( TouchesAnyWater() && !flying && !noClip ) {
-				AdjHorVelocity( zMoving * multiply, xMoving * multiply, 0.02f * multiply );
-				Move();
-				Velocity *= 0.8f;
-				Velocity.Y -= 0.02f;
-			} else if( TouchesAnyLava() && !flying && !noClip ) {
-				AdjHorVelocity( zMoving * multiply, xMoving * multiply, 0.02f * multiply );
-				Move();
-				Velocity *= 0.5f;
-				Velocity.Y -= 0.02f; // gravity
-			} else if( TouchesAnyRope() && !flying && !noClip ) {
-				multiply = 1.7f;
-				AdjHorVelocity( zMoving, xMoving, 0.02f * multiply );
-				Move();
-				Velocity *= 0.5f;
-				Velocity.Y = ( Velocity.Y - 0.02f ) * multiply; // gravity
-			} else {
-				float factor = !flying && onGround ? 0.1f : 0.02f;
-				AdjHorVelocity( zMoving, xMoving, factor * multiply );
-				multiply /= 5;
-				if( multiply < 1 ) multiply = 1;
-				
-				Velocity.Y *= multiply;
-				Move();
-				Velocity.Y /= multiply;
-				// Apply general drag and gravity
-				Velocity.X *= 0.91f;
-				Velocity.Y *= 0.98f;
-				Velocity.Z *= 0.91f;
-				Velocity.Y -= 0.08f;
-				
-				if( BlockUnderFeet == Block.Ice ) {
-					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
-					Utils.Clamp( ref Velocity.Z, -0.25f, 0.25f );
-				} else if( onGround || flying ) {
-					// Apply air resistance or ground friction
-					Velocity.X *= 0.6f;
-					Velocity.Z *= 0.6f;
-				}
-			}
-		}
-		
-		void Move() {
-			if( !noClip ) {
+		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			AdjHeadingVelocity( zMoving, xMoving, factor );
+			Velocity.Y *= yMul;
+			if( !noClip ) 
 				MoveAndWallSlide();
-			}
 			Position += Velocity;
+			
+			Velocity.Y /= yMul;
+			Velocity *= drag;
+			Velocity.Y -= gravity;
 		}
 		
 		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
