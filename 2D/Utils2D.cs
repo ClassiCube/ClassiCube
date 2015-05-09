@@ -11,6 +11,7 @@ namespace ClassicalSharp {
 		public static StringFormat format;
 		static Bitmap measuringBmp;
 		static Graphics measuringGraphics;
+		static Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );
 		static Utils2D() {
 			format = StringFormat.GenericTypographic;
 			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
@@ -19,6 +20,17 @@ namespace ClassicalSharp {
 			//format.FormatFlags |= StringFormatFlags.NoClip;
 			measuringBmp = new Bitmap( 1, 1 );
 			measuringGraphics = Graphics.FromImage( measuringBmp );
+		}
+		
+		static SolidBrush GetOrCreateBrush( Color color ) {
+			int key = color.ToArgb();
+			SolidBrush brush;
+			if( brushCache.TryGetValue( key, out brush ) ) {
+				return brush;
+			}
+			brush = new SolidBrush( color );
+			brushCache[key] = brush;
+			return brush;
 		}
 		
 		const float shadowOffset = 1.3f;		
@@ -46,14 +58,14 @@ namespace ClassicalSharp {
 		}
 		
 		public static void DrawText( Graphics g, Font font, DrawTextArgs args, float x, float y ) {
-			using( Brush textBrush = new SolidBrush( args.TextColour ),
-			      shadowBrush = new SolidBrush( args.ShadowColour ) ) {
-				g.TextRenderingHint = TextRenderingHint.AntiAlias;
-				if( args.UseShadow ) {
-					g.DrawString( args.Text, font, shadowBrush, x + shadowOffset, y + shadowOffset, format );
-				}
-				g.DrawString( args.Text, font, textBrush, x, y, format );
+			Brush textBrush = GetOrCreateBrush( args.TextColour );
+			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
+			g.TextRenderingHint = TextRenderingHint.AntiAlias;
+			
+			if( args.UseShadow ) {
+				g.DrawString( args.Text, font, shadowBrush, x + shadowOffset, y + shadowOffset, format );
 			}
+			g.DrawString( args.Text, font, textBrush, x, y, format );
 		}
 		
 		public static void DrawText( Graphics g, List<DrawTextArgs> parts, Font font, float x, float y ) {
@@ -66,9 +78,8 @@ namespace ClassicalSharp {
 		}
 		
 		public static void DrawRect( Graphics g, Color colour, int x, int y, int width, int height ) {
-			using( Brush brush = new SolidBrush( colour ) ) {
-				g.FillRectangle( brush, x, y, width, height );
-			}
+			Brush brush = GetOrCreateBrush( colour );
+			g.FillRectangle( brush, x, y, width, height );
 		}
 		
 		public static void DrawRectBounds( Graphics g, Color colour, float lineWidth, int x, int y, int width, int height ) {
@@ -118,6 +129,14 @@ namespace ClassicalSharp {
 				g.DrawImage( bmp, 0, 0 );
 			}
 			return adjBmp;
+		}
+		
+		public static void Dispose() {
+			measuringBmp.Dispose();
+			measuringGraphics.Dispose();
+			foreach( var pair in brushCache ) {
+				pair.Value.Dispose();
+			}
 		}
 	}
 }

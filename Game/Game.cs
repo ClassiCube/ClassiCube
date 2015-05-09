@@ -319,6 +319,7 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
+			Utils2D.Dispose();
 			base.Dispose();
 		}
 		
