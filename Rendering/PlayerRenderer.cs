@@ -23,7 +23,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics = window.Graphics;
 			
 			using( Font font = new Font( "Arial", 14 ) ) {
-				List<DrawTextArgs> parts = Utils.SplitText( Graphics, player.DisplayName, true );
+				List<DrawTextArgs> parts = Utils2D.SplitText( Graphics, player.DisplayName, true );
 				Size size = Utils2D.MeasureSize( Utils.StripColours( player.DisplayName ), font, true );
 				nameTexture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );			
 				nameWidth = size.Width;

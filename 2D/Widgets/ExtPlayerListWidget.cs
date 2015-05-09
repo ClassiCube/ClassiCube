@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 				NameId = p.NameId;
 				GroupName = p.GroupName;
 				GroupRank = p.GroupRank;
-				List<DrawTextArgs> parts = Utils.SplitText( graphics, Name, true );
+				List<DrawTextArgs> parts = Utils2D.SplitText( graphics, Name, true );
 				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), font, true );
 				Texture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
 			}

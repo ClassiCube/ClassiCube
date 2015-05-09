@@ -109,7 +109,7 @@ namespace ClassicalSharp {
 			
 			Block block = blocksTable[selectedIndex].BlockId;
 			string text = GetBlockInfo( block );
-			List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
+			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
 			Size size = Utils2D.MeasureSize( parts, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;

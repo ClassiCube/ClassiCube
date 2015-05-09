@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 		void UpdateAnnouncement( string text ) {
 			announcementDisplayTime = DateTime.UtcNow;
 			if( !String.IsNullOrEmpty( text ) ) {
-				List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
+				List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
 				Size size = Utils2D.MeasureSize( Utils.StripColours( text ), announcementFont, true );
 				int x = Window.Width / 2 - size.Width / 2;
 				int y = Window.Height / 4 - size.Height / 2;
@@ -232,7 +232,7 @@ namespace ClassicalSharp {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, Color.Yellow, false );
-					Utils2D.DrawText( g, historyFont, args, 0, 0 );
+					Utils2D.DrawText( g, historyFont, ref args, 0, 0 );
 				}
 				pageTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
 			}

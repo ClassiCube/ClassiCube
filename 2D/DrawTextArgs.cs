@@ -4,7 +4,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public class DrawTextArgs {
+	public struct DrawTextArgs {
 		
 		public Color TextColour;
 		public string Text;

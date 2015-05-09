@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 		}
 		
 		Texture ModifyText( int yOffset, string text, Font font ) {			
-			List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
+			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
 			Size size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
 			int x = Window.Width / 2 - size.Width / 2;
 			int y = Window.Height / 2 - yOffset;

@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 			return Size.Ceiling( total );
 		}
 		
-		public static void DrawText( Graphics g, Font font, DrawTextArgs args, float x, float y ) {
+		public static void DrawText( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
 			Brush textBrush = GetOrCreateBrush( args.TextColour );
 			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
 			g.TextRenderingHint = TextRenderingHint.AntiAlias;
@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 		public static void DrawText( Graphics g, List<DrawTextArgs> parts, Font font, float x, float y ) {
 			for( int i = 0; i < parts.Count; i++ ) {
 				DrawTextArgs part = parts[i];
-				DrawText( g, font, part, x, y );
+				DrawText( g, font, ref part, x, y );
 				SizeF partSize = g.MeasureString( part.Text, font, Int32.MaxValue, format );
 				x += partSize.Width;
 			}
@@ -88,11 +88,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture MakeTextTexture( Font font, int x1, int y1, DrawTextArgs args ) {
+		public static Texture MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					DrawText( g, font, args, 0, 0 );
+					DrawText( g, font, ref args, 0, 0 );
 				}
 				return Make2DTexture( args.Graphics, bmp, x1, y1 );
 			}
@@ -137,6 +137,43 @@ namespace ClassicalSharp {
 			foreach( var pair in brushCache ) {
 				pair.Value.Dispose();
 			}
+		}
+		
+		static Color[] colours = new Color[] {
+			Color.FromArgb( 0, 0, 0 ), // black
+			Color.FromArgb( 0, 0, 191 ), // dark blue
+			Color.FromArgb( 0, 191, 0 ), // dark green
+			Color.FromArgb( 0, 191, 191 ), // dark teal
+			Color.FromArgb( 191, 0, 0 ), // dark red
+			Color.FromArgb( 191, 0, 191 ), // purple
+			Color.FromArgb( 191, 191, 0 ), // gold
+			Color.FromArgb( 191, 191, 191 ), // gray
+			Color.FromArgb( 64, 64, 64 ), // dark gray
+			Color.FromArgb( 64, 64, 255 ), // blue
+			Color.FromArgb( 64, 255, 64 ), // lime
+			Color.FromArgb( 64, 255, 255 ), // teal
+			Color.FromArgb( 255, 64, 64 ), // red
+			Color.FromArgb( 255, 64, 255 ), // pink
+			Color.FromArgb( 255, 255, 64 ), // yellow
+			Color.FromArgb( 255, 255, 255 ), // white
+		};
+
+		static List<DrawTextArgs> parts = new List<DrawTextArgs>( 64 );
+		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
+			int code = 15;
+			parts.Clear();
+			for( int i = 0; i < value.Length; i++ ) {
+				int nextAnd = value.IndexOf( '&', i );
+				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
+				
+				if( partLength > 0 ) {
+					string part = value.Substring( i, partLength );
+					parts.Add( new DrawTextArgs( graphics, part, colours[code], shadow ) );
+				}
+				i += partLength + 1;
+				code = nextAnd == -1 ? 0 : Utils.ParseHex( value[nextAnd + 1] );
+			}
+			return parts;
 		}
 	}
 }

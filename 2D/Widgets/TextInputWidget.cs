@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( GraphicsApi, "_", Color.White, false );
-			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, caretArgs );
+			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			
 			if( chatInputText.Length == 0 ) {
 				caretPos = -1;
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, chatInputText, Color.White, false );
-					Utils2D.DrawText( g, font, args, 0, 0 );
+					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
 				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
 			}

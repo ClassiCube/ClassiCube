@@ -54,42 +54,6 @@ namespace ClassicalSharp {
 			return new String( output, 0, usedChars );
 		}
 		
-		static Color[] colours = new Color[] {
-			Color.FromArgb( 0, 0, 0 ), // black
-			Color.FromArgb( 0, 0, 191 ), // dark blue
-			Color.FromArgb( 0, 191, 0 ), // dark green
-			Color.FromArgb( 0, 191, 191 ), // dark teal
-			Color.FromArgb( 191, 0, 0 ), // dark red
-			Color.FromArgb( 191, 0, 191 ), // purple
-			Color.FromArgb( 191, 191, 0 ), // gold
-			Color.FromArgb( 191, 191, 191 ), // gray
-			Color.FromArgb( 64, 64, 64 ), // dark gray
-			Color.FromArgb( 64, 64, 255 ), // blue
-			Color.FromArgb( 64, 255, 64 ), // lime
-			Color.FromArgb( 64, 255, 255 ), // teal
-			Color.FromArgb( 255, 64, 64 ), // red
-			Color.FromArgb( 255, 64, 255 ), // pink
-			Color.FromArgb( 255, 255, 64 ), // yellow
-			Color.FromArgb( 255, 255, 255 ), // white
-		};
-
-		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
-			int code = 15;
-			List<DrawTextArgs> parts = new List<DrawTextArgs>();
-			for( int i = 0; i < value.Length; i++ ) {
-				int nextAnd = value.IndexOf( '&', i );
-				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
-				
-				if( partLength > 0 ) {
-					string part = value.Substring( i, partLength );
-					parts.Add( new DrawTextArgs( graphics, part, colours[code], shadow ) );
-				}
-				i += partLength + 1;
-				code = nextAnd == -1 ? 0 : ParseHex( value[nextAnd + 1] );
-			}
-			return parts;
-		}
-		
 		public static string ToHexString( byte[] array ) {
 			int len = array.Length;
 			char[] hexadecimal = new char[len * 2];
