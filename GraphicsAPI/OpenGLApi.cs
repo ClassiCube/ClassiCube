@@ -122,24 +122,29 @@ namespace ClassicalSharp.GraphicsAPI {
 		Dictionary<int, string> textures = new Dictionary<int, string>();
 		#endif
 		public override int LoadTexture( Bitmap bmp ) {
-			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-				return LoadTexture( fastBmp );
-			}
+			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
+			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
+			int texId = LoadTexture( data.Width, data.Height, data.Scan0 );
+			bmp.UnlockBits( data );
+			return texId;
 		}
 		
 		public override int LoadTexture( FastBitmap bmp ) {
+			if( !bmp.IsLocked ) bmp.LockBits();
+			int texId = LoadTexture( bmp.Width, bmp.Height, bmp.Scan0 );
+			bmp.UnlockBits();
+			return texId;
+		}
+		
+		static int LoadTexture( int width, int height, IntPtr scan0 ) {
 			int texId = GL.GenTexture();
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
-			if( !bmp.IsLocked ) {
-				bmp.LockBits();
-			}
 
-			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp.Width, bmp.Height, 0,
-			              GlPixelFormat.Bgra, PixelType.UnsignedByte, bmp.Scan0 );
-			bmp.UnlockBits();
+			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
+			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
 			GL.Disable( EnableCap.Texture2D );
 			#if TRACK_RESOURCES
 			textures.Add( texId, Environment.StackTrace );
