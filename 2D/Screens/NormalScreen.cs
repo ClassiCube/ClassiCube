@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -11,6 +12,7 @@ namespace ClassicalSharp {
 		ChatScreen chat;
 		BlockHotbarWidget hotbar;
 		Widget playerList;
+		Font playerFont;
 		
 		public override void Render( double delta ) {
 			chat.Render( delta );
@@ -26,6 +28,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
+			playerFont.Dispose();
 			chat.Dispose();
 			hotbar.Dispose();
 			if( playerList != null ) {
@@ -42,6 +45,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
+			playerFont = new Font( "Arial", 12 );
 			chat = new ChatScreen( Window );
 			chat.Window = Window;
 			const int blockSize = 32;
@@ -64,9 +68,9 @@ namespace ClassicalSharp {
 			if( key == Window.Keys[KeyMapping.PlayerList] ) {
 				if( playerList == null ) {
 					if( Window.Network.UsingExtPlayerList ) {
-						playerList = new ExtPlayerListWidget( Window );
+						playerList = new ExtPlayerListWidget( Window, playerFont );
 					} else {
-						playerList = new PlayerListWidget( Window );
+						playerList = new PlayerListWidget( Window, playerFont );
 					}
 					playerList.Init();
 				}

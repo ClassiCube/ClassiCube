@@ -71,6 +71,7 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( Window.Map.IsNotLoaded ) return;
+			Window.Title = ( GC.GetTotalMemory( false ) / 1024.0 / 1024.0 ).ToString(); // TODO: temp debug statement
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;

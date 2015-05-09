@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Drawing;
 
 namespace ClassicalSharp {
 	
 	public class FpsScreen : Screen {
 		
+		readonly Font font;
 		public FpsScreen( Game window ) : base( window ) {
+			font = new Font( "Arial", 13 );
 		}
 		
 		TextWidget fpsTextWidget;
@@ -36,12 +39,13 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			fpsTextWidget = new TextWidget( Window, 13 );
+			fpsTextWidget = new TextWidget( Window, font );
 			fpsTextWidget.Init();
 			fpsTextWidget.SetText( "FPS: no data yet" );
 		}
 		
 		public override void Dispose() {
+			font.Dispose();
 			fpsTextWidget.Dispose();
 		}
 	}

@@ -27,11 +27,15 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		Font titleFont, keyStatusFont, textFont;
 		public override void Init() {
-			controlsWidget = CreateTextWidget( 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, 16, FontStyle.Bold );
-			keyStatusWidget = CreateTextWidget( 0, -80, "", Docking.Centre, Docking.BottomOrRight, 13, FontStyle.Italic );
-			gameWidget = CreateTextWidget( 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
-			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, 16, FontStyle.Bold );
+			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
+			textFont = new Font( "Arial", 14, FontStyle.Bold );
+			controlsWidget = CreateTextWidget( 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
+			keyStatusWidget = CreateTextWidget( 0, -80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
+			gameWidget = CreateTextWidget( 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
+			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
 				KeyMapping.Jump, KeyMapping.Respawn, KeyMapping.SetSpawn, KeyMapping.OpenChat, KeyMapping.SendChat,
@@ -54,7 +58,7 @@ namespace ClassicalSharp {
 			keysLeft = new KeyMapWidget[mappings.Length];
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
-				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, 14, FontStyle.Bold );
+				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widget.XOffset = 10;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
 				keysLeft[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
@@ -68,7 +72,7 @@ namespace ClassicalSharp {
 			keysRight = new KeyMapWidget[mappings.Length];
 			for( int i = 0; i < keysRight.Length; i++ ) {
 				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
-				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, 14, FontStyle.Bold );
+				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widget.XOffset = leftEnd + 30;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
 				keysRight[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
@@ -77,6 +81,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
+			textFont.Dispose();
+			titleFont.Dispose();
+			keyStatusFont.Dispose();
 			gameWidget.Dispose();
 			controlsWidget.Dispose();
 			exitWidget.Dispose();
@@ -88,9 +95,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		TextWidget CreateTextWidget( int x, int y, string text, Docking horizontal, Docking vertical, int fontSize, FontStyle style ) {
-			TextWidget widget = new TextWidget( Window, fontSize );
-			widget.Style = style;
+		TextWidget CreateTextWidget( int x, int y, string text, Docking horizontal, Docking vertical, Font font ) {
+			TextWidget widget = new TextWidget( Window, font );
 			widget.Init();
 			widget.HorizontalDocking = horizontal;
 			widget.VerticalDocking = vertical;

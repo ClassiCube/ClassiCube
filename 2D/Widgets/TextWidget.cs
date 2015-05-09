@@ -6,19 +6,18 @@ namespace ClassicalSharp {
 	
 	public sealed class TextWidget : Widget {	
 		
-		public TextWidget( Game window, int fontSize ) : base( window ) {
-			this.fontSize = fontSize;
+		public TextWidget( Game window, Font font ) : base( window ) {
+			this.font = font;
 		}
 		
 		Texture texture;
 		string textCache = null;
 		public int XOffset = 0, YOffset = 0;
-		public FontStyle Style = FontStyle.Regular;
 		int defaultHeight;
-		readonly int fontSize;
+		readonly Font font;
 		
 		public override void Init() {
-			defaultHeight = Utils2D.MeasureSize( "I", "Arial", fontSize, Style, true ).Height;
+			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
 			texture.Height = defaultHeight;
 			UpdateDimensions();
 		}
@@ -35,11 +34,11 @@ namespace ClassicalSharp {
 			List<DrawTextArgs> parts = null;
 			Size size = new Size( 0, defaultHeight );
 			parts = Utils.SplitText( GraphicsApi, text, true );
-			size = Utils2D.MeasureSize( Utils.StripColours( text ), "Arial", fontSize, Style, true );
+			size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
 			
 			X = CalcAdjOffset( XOffset, Window.Width, size.Width, HorizontalDocking );
 			Y = CalcAdjOffset( YOffset, Window.Height, size.Height, VerticalDocking );
-			texture = Utils2D.MakeTextTexture( parts, "Arial", fontSize, Style, size, X, Y );
+			texture = Utils2D.MakeTextTexture( parts, font, size, X, Y );
 			UpdateDimensions();
 		}
 		

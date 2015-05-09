@@ -6,8 +6,6 @@ namespace ClassicalSharp {
 
 	public class DrawTextArgs {
 		
-		public float XOffset, YOffset;
-		
 		public Color TextColour;
 		public string Text;
 		
@@ -16,22 +14,15 @@ namespace ClassicalSharp {
 		public IGraphicsApi Graphics;
 		
 		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow ) : 
-			this( graphics, text, col, useShadow, Color.Black, 0f, 0f ) {
+			this( graphics, text, col, useShadow, Color.Black ) {
 		}
 		
-		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow, Color shadowCol ) : 
-			this( graphics, text, col, useShadow, shadowCol, 0f, 0f ) {
-		}
-		
-		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, 
-		                    bool useShadow, Color shadowCol, float x, float y ) {
+		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow, Color shadowCol ) {
 			Graphics = graphics;
 			Text = text;
 			TextColour = col;
 			UseShadow = useShadow;
 			ShadowColour = shadowCol;
-			XOffset = x;
-			YOffset = y;
 		}		
 	}
 }

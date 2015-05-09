@@ -6,21 +6,21 @@ namespace ClassicalSharp {
 	
 	public sealed class TextGroupWidget : Widget {
 		
-		public TextGroupWidget( Game window, int elementsCount, int fontSize ) : base( window ) {
+		public TextGroupWidget( Game window, int elementsCount, Font font ) : base( window ) {
 			ElementsCount = elementsCount;
-			this.fontSize = fontSize;
+			this.font = font;
 		}
 		
 		Texture[] textures;
 		string[] textCache;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
-		readonly int fontSize;
+		readonly Font font;
 		
 		public override void Init() {
 			textures = new Texture[ElementsCount];
 			textCache = new string[ElementsCount];
-			defaultHeight = Utils2D.MeasureSize( "I", "Arial", fontSize, true ).Height;
+			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
 			for( int i = 0; i < textures.Length; i++ ) {
 				textures[i].Height = defaultHeight;
 			}
@@ -33,13 +33,13 @@ namespace ClassicalSharp {
 			Size size = new Size( 0, defaultHeight );
 			if( !String.IsNullOrEmpty( text ) ) {
 				parts = Utils.SplitText( GraphicsApi, text, true );
-				size = Utils2D.MeasureSize( Utils.StripColours( text ), "Arial", fontSize, true );
+				size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
 			}
 			
 			int x = HorizontalDocking == Docking.LeftOrTop ? XOffset : Window.Width - size.Width - XOffset;
 			int y = CalcY( index, size.Height );
 			if( !String.IsNullOrEmpty( text ) ) {
-				textures[index] = Utils2D.MakeTextTexture( parts, "Arial", fontSize, size, x, y );
+				textures[index] = Utils2D.MakeTextTexture( parts, font, size, x, y );
 			} else {
 				textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
 			}

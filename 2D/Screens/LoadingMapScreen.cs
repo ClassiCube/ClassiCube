@@ -4,10 +4,12 @@ using System.Drawing;
 namespace ClassicalSharp {
 	
 	public class LoadingMapScreen : Screen {
-				
+		
+		readonly Font font;
 		public LoadingMapScreen( Game window, string name, string motd ) : base( window ) {
 			serverName = name;
 			serverMotd = motd;
+			font = new Font( "Arial", 14 );
 		}
 		
 		string serverName, serverMotd;
@@ -32,7 +34,7 @@ namespace ClassicalSharp {
 			progX = Window.Width / 2f - progWidth / 2f;
 			using( Bitmap bmp = new Bitmap( progWidth, progHeight ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, 5f, progWidth, progHeight );
+					Utils2D.DrawRectBounds( g, Color.White, 5f, 0, 0, progWidth, progHeight );
 				}
 				progressBoxTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, 0 );
 			}
@@ -46,6 +48,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
+			font.Dispose();
 			messageWidget.Dispose();
 			titleWidget.Dispose();
 			GraphicsApi.DeleteTexture( ref progressBoxTexture );
@@ -53,7 +56,7 @@ namespace ClassicalSharp {
 		}
 		
 		TextWidget CreateTextWidget( int yOffset, string text ) {
-			TextWidget widget = new TextWidget( Window, 14 );
+			TextWidget widget = new TextWidget( Window, font );
 			widget.Init();
 			widget.HorizontalDocking = Docking.Centre;
 			widget.YOffset = yOffset;

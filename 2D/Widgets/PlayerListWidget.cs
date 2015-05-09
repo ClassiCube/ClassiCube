@@ -7,9 +7,11 @@ namespace ClassicalSharp {
 	
 	public sealed class PlayerListWidget : Widget {
 		
-		public PlayerListWidget( Game window ) : base( window ) {
+		readonly Font font;
+		public PlayerListWidget( Game window, Font font ) : base( window ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.Centre;
+			this.font = font;
 		}
 		
 		const int namesPerColumn = 20;
@@ -26,12 +28,12 @@ namespace ClassicalSharp {
 			
 			public byte PlayerId;
 			
-			public PlayerInfo( IGraphicsApi graphics, Player p ) {
+			public PlayerInfo( IGraphicsApi graphics, Player p, Font font ) {
 				Name = p.DisplayName;
 				PlayerId = p.ID;
 				List<DrawTextArgs> parts = Utils.SplitText( graphics, Name, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), "Arial", 12, true );
-				Texture = Utils2D.MakeTextTexture( parts, "Arial", 12, size, 0, 0 );
+				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), font, true );
+				Texture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
 			}
 		}
 		
@@ -65,7 +67,7 @@ namespace ClassicalSharp {
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
 			Player player = Window.NetPlayers[e.Id];
-			info.Add( new PlayerInfo( GraphicsApi, player ) );
+			info.Add( new PlayerInfo( GraphicsApi, player, font ) );
 			rows = (int)Math.Ceiling( (double)info.Count / namesPerColumn );
 			SortPlayerInfo();
 		}
@@ -88,7 +90,7 @@ namespace ClassicalSharp {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.PlayerId == e.Id ) {
 					GraphicsApi.DeleteTexture( ref pInfo.Texture );
-					info[i] = new PlayerInfo( GraphicsApi, Window.NetPlayers[e.Id] );
+					info[i] = new PlayerInfo( GraphicsApi, Window.NetPlayers[e.Id], font );
 					SortPlayerInfo();
 					break;
 				}
@@ -99,11 +101,11 @@ namespace ClassicalSharp {
 			for( int i = 0; i < Window.NetPlayers.Length; i++ ) {
 				Player player = Window.NetPlayers[i];
 				if( player != null ) {
-					info.Add( new PlayerInfo( GraphicsApi, player ) );
+					info.Add( new PlayerInfo( GraphicsApi, player, font ) );
 				}
 			}
 			Player localPlayer = Window.LocalPlayer;
-			info.Add( new PlayerInfo( GraphicsApi, localPlayer ) );
+			info.Add( new PlayerInfo( GraphicsApi, localPlayer, font ) );
 		}
 		
 		void SortPlayerInfo() {

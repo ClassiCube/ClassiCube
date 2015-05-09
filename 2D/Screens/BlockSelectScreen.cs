@@ -8,6 +8,7 @@ namespace ClassicalSharp {
 	public class BlockSelectScreen : Screen {
 		
 		public BlockSelectScreen( Game window ) : base( window ) {
+			font = new Font( "Arial", 13 );
 		}
 		
 		class BlockDrawInfo {
@@ -26,6 +27,7 @@ namespace ClassicalSharp {
 		const int blocksPerRow = 10;
 		int rows;
 		int startX, startY;
+		readonly Font font;
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
@@ -49,6 +51,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
+			font.Dispose();
 			GraphicsApi.DeleteTexture( ref selectedBlock );
 			GraphicsApi.DeleteTexture( ref blockInfoTexture );
 			Window.BlockPermissionsChanged -= BlockPermissionsChanged;
@@ -107,14 +110,14 @@ namespace ClassicalSharp {
 			Block block = blocksTable[selectedIndex].BlockId;
 			string text = GetBlockInfo( block );
 			List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
-			Size size = Utils2D.MeasureSize( parts, "Arial", 13, true );
+			Size size = Utils2D.MeasureSize( parts, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;
 			
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, bmp.Width, bmp.Height );
-					Utils2D.DrawText( g, parts, "Arial", 13 );
+					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
+					Utils2D.DrawText( g, parts, font, 0, 0 );
 				}
 				blockInfoTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, x, y );
 			}
@@ -166,14 +169,14 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
 			selectedIndex = -1;
-			if( Utils2D.Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
+			if( Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
 				for( int i = 0; i < blocksTable.Length; i++ ) {
 					int col = i % blocksPerRow;
 					int row = i / blocksPerRow;
 					int x = startX + blockSize * col;
 					int y = startY + blockSize * row;
 					
-					if( Utils2D.Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
+					if( Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
 						selectedIndex = i;
 						break;
 					}
@@ -197,6 +200,10 @@ namespace ClassicalSharp {
 				Window.SetNewScreen( new NormalScreen( Window ) );
 			}
 			return true;
+		}
+		
+		static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
+			return x >= recX && y >= recY && x < recX + width && y < recY + height;
 		}
 	}
 }

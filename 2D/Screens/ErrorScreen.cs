@@ -7,9 +7,12 @@ namespace ClassicalSharp {
 	public class ErrorScreen : Screen {
 		
 		string title, message;
+		readonly Font titleFont, messageFont;
 		public ErrorScreen( Game window, string title, string message ) : base( window ) {
 			this.title = title;
 			this.message = message;
+			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			messageFont = new Font( "Arial", 14, FontStyle.Regular );
 		}
 		
 		Texture titleTexture, messageTexture;
@@ -21,21 +24,23 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			GraphicsApi.ClearColour( new FastColour( 65, 31, 31 ) );
-			titleTexture = ModifyText( 30, title, 16, FontStyle.Bold );
-			messageTexture = ModifyText( -10, message, 14, FontStyle.Regular );
+			titleTexture = ModifyText( 30, title, titleFont );
+			messageTexture = ModifyText( -10, message, messageFont );
 		}
 		
 		public override void Dispose() {
+			titleFont.Dispose();
+			messageFont.Dispose();
 			GraphicsApi.DeleteTexture( ref titleTexture );
 			GraphicsApi.DeleteTexture( ref messageTexture );
 		}
 		
-		Texture ModifyText( int yOffset, string text, int fontSize, FontStyle style ) {			
+		Texture ModifyText( int yOffset, string text, Font font ) {			
 			List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
-			Size size = Utils2D.MeasureSize( Utils.StripColours( text ), "Arial", fontSize, style, true );
+			Size size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
 			int x = Window.Width / 2 - size.Width / 2;
 			int y = Window.Height / 2 - yOffset;
-			return Utils2D.MakeTextTexture( parts, "Arial", fontSize, style, size, x, y );
+			return Utils2D.MakeTextTexture( parts, font, size, x, y );
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

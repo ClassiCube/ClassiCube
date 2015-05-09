@@ -43,20 +43,25 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		Font chatFont, chatBoldFont, historyFont, announcementFont;
 		public override void Init() {
-			int fontSize = Window.ChatFontSize;
-			textInput = new TextInputWidget( Window, fontSize );
+			chatFont = new Font( "Arial", Window.ChatFontSize );
+			chatBoldFont = new Font( "Arial", Window.ChatFontSize, FontStyle.Bold );
+			announcementFont = new Font( "Arial", 14 );
+			historyFont = new Font( "Arial", 12, FontStyle.Italic );
+			
+			textInput = new TextInputWidget( Window, chatFont, chatBoldFont );
 			textInput.ChatInputYOffset = ChatInputYOffset;
-			status = new TextGroupWidget( Window, 3, fontSize );
+			status = new TextGroupWidget( Window, 3, chatFont );
 			status.VerticalDocking = Docking.LeftOrTop;
 			status.HorizontalDocking = Docking.BottomOrRight;
 			status.Init();
-			bottomRight = new TextGroupWidget( Window, 3, fontSize );
+			bottomRight = new TextGroupWidget( Window, 3, chatFont );
 			bottomRight.VerticalDocking = Docking.BottomOrRight;
 			bottomRight.HorizontalDocking = Docking.BottomOrRight;
 			bottomRight.YOffset = ChatInputYOffset;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( Window, chatLines, fontSize );
+			normalChat = new TextGroupWidget( Window, chatLines, chatFont );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = ChatLogYOffset;
 			normalChat.HorizontalDocking = Docking.LeftOrTop;
@@ -94,6 +99,11 @@ namespace ClassicalSharp {
 			if( !String.IsNullOrEmpty( textInput.chatInputText ) ) {
 				Window.chatInInputBuffer = textInput.chatInputText;
 			}
+			chatFont.Dispose();
+			chatBoldFont.Dispose();
+			historyFont.Dispose();
+			announcementFont.Dispose();
+			
 			normalChat.Dispose();
 			textInput.Dispose();
 			status.Dispose();
@@ -133,10 +143,10 @@ namespace ClassicalSharp {
 			announcementDisplayTime = DateTime.UtcNow;
 			if( !String.IsNullOrEmpty( text ) ) {
 				List<DrawTextArgs> parts = Utils.SplitText( GraphicsApi, text, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( text ), "Arial", 14, true );
+				Size size = Utils2D.MeasureSize( Utils.StripColours( text ), announcementFont, true );
 				int x = Window.Width / 2 - size.Width / 2;
 				int y = Window.Height / 4 - size.Height / 2;
-				announcementTexture = Utils2D.MakeTextTexture( parts, "Arial", 14, size, x, y );
+				announcementTexture = Utils2D.MakeTextTexture( parts, announcementFont, size, x, y );
 			} else {
 				announcementTexture = new Texture( -1, 0, 0, 0, 0, 0, 0 );
 			}
@@ -215,14 +225,14 @@ namespace ClassicalSharp {
 		void MakePageNumberTexture() {
 			GraphicsApi.DeleteTexture( ref pageTexture );
 			string text = "Page " + pageNumber + " of " + pagesCount;
-			Size size = Utils2D.MeasureSize( text, "Arial", 12, FontStyle.Italic, false );
+			Size size = Utils2D.MeasureSize( text, historyFont, false );
 			int y = normalChat.CalcUsedY() - size.Height;
 
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, bmp.Width, bmp.Height );
+					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, Color.Yellow, false );
-					Utils2D.DrawText( g, "Arial", 12, FontStyle.Italic, args );
+					Utils2D.DrawText( g, historyFont, args, 0, 0 );
 				}
 				pageTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
 			}

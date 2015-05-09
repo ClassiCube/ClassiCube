@@ -80,6 +80,7 @@
     <Compile Include="2D\Screens\NormalScreen.cs" />
     <Compile Include="2D\Screens\PauseScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
+    <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />

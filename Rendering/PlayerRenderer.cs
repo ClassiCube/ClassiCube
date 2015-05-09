@@ -22,12 +22,14 @@ namespace ClassicalSharp.Renderers {
 			Window = window;
 			Graphics = window.Graphics;
 			
-			List<DrawTextArgs> parts = Utils.SplitText( Graphics, player.DisplayName, true );
-			Size size = Utils2D.MeasureSize( Utils.StripColours( player.DisplayName ), "Arial", 14, true );
-			nameTexture = Utils2D.MakeTextTexture( parts, "Arial", 14, size, 0, 0 );
-			nameWidth = size.Width;
-			nameHeight = size.Height;
-			nameTextureId = nameTexture.ID;
+			using( Font font = new Font( "Arial", 14 ) ) {
+				List<DrawTextArgs> parts = Utils.SplitText( Graphics, player.DisplayName, true );
+				Size size = Utils2D.MeasureSize( Utils.StripColours( player.DisplayName ), font, true );
+				nameTexture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );			
+				nameWidth = size.Width;
+				nameHeight = size.Height;
+				nameTextureId = nameTexture.ID;
+			}
 		}
 		
 		public void Dispose() {

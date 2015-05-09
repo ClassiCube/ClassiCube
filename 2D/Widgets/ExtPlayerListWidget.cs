@@ -7,9 +7,11 @@ namespace ClassicalSharp {
 	
 	public class ExtPlayerListWidget : Widget {
 		
-		public ExtPlayerListWidget( Game window ) : base( window ) {
+		readonly Font font;
+		public ExtPlayerListWidget( Game window, Font font ) : base( window ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.Centre;
+			this.font = font;
 		}
 		
 		const int namesPerColumn = 20;
@@ -30,14 +32,14 @@ namespace ClassicalSharp {
 			
 			public byte NameId;
 			
-			public PlayerInfo( IGraphicsApi graphics, CpeListInfo p ) {
+			public PlayerInfo( IGraphicsApi graphics, CpeListInfo p, Font font ) {
 				Name = p.ListName;
 				NameId = p.NameId;
 				GroupName = p.GroupName;
 				GroupRank = p.GroupRank;
 				List<DrawTextArgs> parts = Utils.SplitText( graphics, Name, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), "Arial", 12, true );
-				Texture = Utils2D.MakeTextTexture( parts, "Arial", 12, size, 0, 0 );
+				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), font, true );
+				Texture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
 			}
 			
 			public override string ToString() {
@@ -95,7 +97,7 @@ namespace ClassicalSharp {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.NameId == e.Id ) {
 					GraphicsApi.DeleteTexture( ref pInfo.Texture );
-					info[i] = new PlayerInfo( GraphicsApi, Window.CpePlayersList[e.Id] );
+					info[i] = new PlayerInfo( GraphicsApi, Window.CpePlayersList[e.Id], font );
 					SortPlayerInfo();
 					break;
 				}
@@ -117,7 +119,7 @@ namespace ClassicalSharp {
 
 		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
 			CpeListInfo player = Window.CpePlayersList[e.Id];
-			info.Add( new PlayerInfo( GraphicsApi, player ) );
+			info.Add( new PlayerInfo( GraphicsApi, player, font ) );
 			rows = (int)Math.Ceiling( (double)info.Count / namesPerColumn );
 			SortPlayerInfo();
 		}
@@ -126,7 +128,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < Window.CpePlayersList.Length; i++ ) {
 				CpeListInfo player = Window.CpePlayersList[i];
 				if( player != null ) {
-					info.Add( new PlayerInfo( GraphicsApi, player ) );
+					info.Add( new PlayerInfo( GraphicsApi, player, font ) );
 				}
 			}
 		}
