@@ -6,7 +6,7 @@ using System.Windows.Forms;
 namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
-		
+				
 		public TextInputWidget( Game window, Font font, Font boldFont ) : base( window ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
@@ -19,6 +19,7 @@ namespace ClassicalSharp {
 			typingLogPos = Window.ChatInputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
+			chatInputText = new UnsafeString( 64 );
 		}
 		
 		Texture chatInputTexture, chatCaretTexture;
@@ -26,7 +27,7 @@ namespace ClassicalSharp {
 		int caretPos = -1;
 		int typingLogPos = 0;
 		public int ChatInputYOffset;
-		public string chatInputText = "";
+		internal UnsafeString chatInputText;
 		readonly Font font, boldFont;
 		
 		public override void Render( double delta ) {
@@ -39,19 +40,20 @@ namespace ClassicalSharp {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( GraphicsApi, "_", Color.White, false );
 			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
+			string value = chatInputText.value;
 			
-			if( chatInputText.Length == 0 ) {
+			if( chatInputText.Empty ) {
 				caretPos = -1;
 			}
-			Size size = Utils2D.MeasureSize( chatInputText, font, false );
+			Size size = Utils2D.MeasureSize( value, font, false );
 			
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
 				size.Width += chatCaretTexture.Width;
 			} else {
-				Size trimmedSize = Utils2D.MeasureSize( chatInputText.Substring( 0, caretPos ), font, false );
+				Size trimmedSize = Utils2D.MeasureSize( value.Substring( 0, caretPos ), font, false );
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = Utils2D.MeasureSize( chatInputText.Substring( caretPos, 1 ), font, false );
+				Size charSize = Utils2D.MeasureSize( value.Substring( caretPos, 1 ), font, false );
 				chatCaretTexture.Width = charSize.Width;
 			}
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
@@ -60,7 +62,7 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( GraphicsApi, chatInputText, Color.White, false );
+					DrawTextArgs args = new DrawTextArgs( GraphicsApi, value, Color.White, false );
 					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
 				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
@@ -91,9 +93,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void SendTextInBufferAndReset() {
-			Window.SendChat( chatInputText );
+			Window.SendChat( chatInputText.ToString() );
 			typingLogPos = Window.ChatInputLog.Count; // Index of newest entry + 1.
-			chatInputText = "";
+			chatInputText.Clear();
 			Dispose();
 		}
 		
@@ -149,9 +151,9 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyPress( char key ) {
 			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
 				if( caretPos == -1 ) {
-					chatInputText += key;
+					chatInputText.Append( chatInputText.Length, key );
 				} else {
-					chatInputText = chatInputText.Insert( caretPos, new String( key, 1 ) );
+					chatInputText.InsertAt( caretPos, key );
 					caretPos++;
 				}
 				Dispose();
@@ -162,14 +164,14 @@ namespace ClassicalSharp {
 		}
 		
 		void BackspaceKey() {
-			if( chatInputText.Length > 0 ) {
+			if( !chatInputText.Empty ) {
 				if( caretPos == -1 ) {
-					chatInputText = chatInputText.Remove( chatInputText.Length - 1, 1 );
+					chatInputText.DeleteAt( chatInputText.Length - 1 );
 					Dispose();
 					Init();
 				} else if( caretPos > 0 ) {
 					caretPos--;
-					chatInputText = chatInputText.Remove( caretPos, 1 );
+					chatInputText.DeleteAt( caretPos );
 					Dispose();
 					Init();
 				}
@@ -177,8 +179,8 @@ namespace ClassicalSharp {
 		}
 		
 		void DeleteKey() {
-			if( chatInputText.Length > 0 && caretPos != -1 ) {
-				chatInputText = chatInputText.Remove( caretPos, 1 );
+			if( !chatInputText.Empty && caretPos != -1 ) {
+				chatInputText.DeleteAt( caretPos );
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
 				Dispose();
 				Init();
@@ -186,7 +188,7 @@ namespace ClassicalSharp {
 		}
 		
 		void RightKey() {
-			if( chatInputText.Length > 0 && caretPos != -1 ) {
+			if( !chatInputText.Empty && caretPos != -1 ) {
 				caretPos++;
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
 				Dispose();
@@ -195,7 +197,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LeftKey() {
-			if( chatInputText.Length > 0 ) {
+			if( !chatInputText.Empty ) {
 				if( caretPos == -1 ) caretPos = chatInputText.Length;
 				caretPos--;
 				if( caretPos < 0 ) caretPos = 0;
@@ -208,7 +210,8 @@ namespace ClassicalSharp {
 			if( Window.ChatInputLog.Count > 0 ) {
 				typingLogPos--;
 				if( typingLogPos < 0 ) typingLogPos = 0;
-				chatInputText = Window.ChatInputLog[typingLogPos];
+				chatInputText.Clear();
+				chatInputText.Append( 0, Window.ChatInputLog[typingLogPos] );
 				caretPos = -1;
 				Dispose();
 				Init();
@@ -218,11 +221,11 @@ namespace ClassicalSharp {
 		void DownKey() {
 			if( Window.ChatInputLog.Count > 0 ) {
 				typingLogPos++;
+				chatInputText.Clear();
 				if( typingLogPos >= Window.ChatInputLog.Count ) {
 					typingLogPos = Window.ChatInputLog.Count;
-					chatInputText = "";
 				} else {
-					chatInputText = Window.ChatInputLog[typingLogPos];
+					chatInputText.Append( 0, Window.ChatInputLog[typingLogPos] );
 				}
 				caretPos = -1;
 				Dispose();
@@ -251,17 +254,17 @@ namespace ClassicalSharp {
 				}
 				
 				if( caretPos == -1 ) {
-					chatInputText += text;
+					chatInputText.Append( chatInputText.Length, text );
 				} else {
-					chatInputText = chatInputText.Insert( caretPos, text );
+					chatInputText.Append( caretPos, text );
 					caretPos += text.Length;
 				}
 				Dispose();
 				Init();
 				return true;
 			} else if( key == Key.C && controlDown ) {
-				if( !String.IsNullOrEmpty( chatInputText ) ) {
-					Clipboard.SetText( chatInputText );
+				if( !chatInputText.Empty ) {
+					Clipboard.SetText( chatInputText.ToString() );
 				}
 				return true;
 			}

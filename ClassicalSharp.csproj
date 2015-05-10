@@ -156,6 +156,7 @@
     <Compile Include="Utils\FastColour.cs" />
     <Compile Include="Utils\TextureAtlas1D.cs" />
     <Compile Include="Utils\TextureAtlas2D.cs" />
+    <Compile Include="Utils\UnsafeString.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

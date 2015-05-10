@@ -6,8 +6,10 @@ namespace ClassicalSharp {
 	public class FpsScreen : Screen {
 		
 		readonly Font font;
+		UnsafeString text;
 		public FpsScreen( Game window ) : base( window ) {
 			font = new Font( "Arial", 13 );
+			text = new UnsafeString( 96 );
 		}
 		
 		TextWidget fpsTextWidget;
@@ -17,20 +19,24 @@ namespace ClassicalSharp {
 			fpsTextWidget.Render( delta );
 		}
 		
-		const string formatString = "FPS: {0} (min {1}), chunks/s: {2}, vertices: {3}";
 		double accumulator, maxDelta;
-		int fpsCount;
-		
-		void UpdateFPS( double delta ) {
+		int fpsCount;	
+		unsafe void UpdateFPS( double delta ) {
 			fpsCount++;
 			maxDelta = Math.Max( maxDelta, delta );
 			accumulator += delta;
 			long vertices = Window.Vertices;
 
 			if( accumulator >= 1 )  {
-				string text = String.Format( formatString, (int)( fpsCount / accumulator ),
-				                            (int)( 1f / maxDelta ), Window.ChunkUpdates, vertices );
-				fpsTextWidget.SetText( text );
+				fixed( char* ptr = text.value ) {
+					char* ptr2 = ptr;
+					text.Clear( ptr2 )
+						.Append( ref ptr2, "FPS: " ).AppendNum( ref ptr2, (int)( fpsCount / accumulator ) )
+						.Append( ref ptr2, " (min " ).AppendNum( ref ptr2, (int)( 1f / maxDelta ) )
+						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, Window.ChunkUpdates )
+						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, Window.Vertices );
+				}
+				fpsTextWidget.SetText( text.value );
 				maxDelta = 0;
 				accumulator = 0;
 				fpsCount = 0;

@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 			Size size = new Size( 0, defaultHeight );
 			if( !String.IsNullOrEmpty( text ) ) {
 				parts = Utils2D.SplitText( GraphicsApi, text, true );
-				size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
+				size = Utils2D.MeasureSize( parts, font, true );
 			}
 			
 			int x = HorizontalDocking == Docking.LeftOrTop ? XOffset : Window.Width - size.Width - XOffset;

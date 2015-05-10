@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 			RaiseEvent( ChatReceived, new ChatEventArgs( text, 0 ) );
 		}
 		
+		ChatEventArgs chatArgs = new ChatEventArgs( "", 0 );
 		public void AddChat( string text, byte type ) {
 			CpeMessageType cpeType = (CpeMessageType)type;
 			if( cpeType == 0 ) {
@@ -59,7 +60,9 @@ namespace ClassicalSharp {
 			} else if( cpeType == CpeMessageType.Announcement ) {
 				Announcement = text;
 			}
-			RaiseEvent( ChatReceived, new ChatEventArgs( text, type ) );
+			chatArgs.Text = text;
+			chatArgs.Type = type;
+			RaiseEvent( ChatReceived, chatArgs );
 		}
 		
 		const string fileNameFormat = "yyyy-MM-dd";

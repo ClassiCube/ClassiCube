@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			List<DrawTextArgs> parts = null;
 			Size size = new Size( 0, defaultHeight );
 			parts = Utils2D.SplitText( GraphicsApi, text, true );
-			size = Utils2D.MeasureSize( Utils.StripColours( text ), font, true );
+			size = Utils2D.MeasureSize( parts, font, true );
 			
 			X = CalcAdjOffset( XOffset, Window.Width, size.Width, HorizontalDocking );
 			Y = CalcAdjOffset( YOffset, Window.Height, size.Height, VerticalDocking );

@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 	
 	public sealed class ChatEventArgs : EventArgs {
 		
-		public readonly byte Type;
+		public byte Type;
 		
 		public string Text;
 		

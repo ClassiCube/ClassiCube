@@ -96,8 +96,8 @@ namespace ClassicalSharp {
 		}
 
 		public override void Dispose() {
-			if( !String.IsNullOrEmpty( textInput.chatInputText ) ) {
-				Window.chatInInputBuffer = textInput.chatInputText;
+			if( !textInput.chatInputText.Empty ) {
+				Window.chatInInputBuffer = textInput.chatInputText.ToString();
 			}
 			chatFont.Dispose();
 			chatBoldFont.Dispose();
@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 			announcementDisplayTime = DateTime.UtcNow;
 			if( !String.IsNullOrEmpty( text ) ) {
 				List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( text ), announcementFont, true );
+				Size size = Utils2D.MeasureSize( parts, announcementFont, true );
 				int x = Window.Width / 2 - size.Width / 2;
 				int y = Window.Height / 4 - size.Height / 2;
 				announcementTexture = Utils2D.MakeTextTexture( parts, announcementFont, size, x, y );
@@ -180,7 +180,8 @@ namespace ClassicalSharp {
 		void OpenTextInputBar( string initialText ) {
 			suppressNextPress = true;
 			HandlesAllInput = true;
-			textInput.chatInputText = initialText;
+			textInput.chatInputText.Clear();
+			textInput.chatInputText.Append( 0, initialText );
 			textInput.Init();
 		}
 		

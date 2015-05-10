@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 				Name = p.DisplayName;
 				PlayerId = p.ID;
 				List<DrawTextArgs> parts = Utils2D.SplitText( graphics, Name, true );
-				Size size = Utils2D.MeasureSize( Utils.StripColours( Name ), font, true );
+				Size size = Utils2D.MeasureSize( parts, font, true );
 				Texture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
 			}
 		}
