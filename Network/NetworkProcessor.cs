@@ -432,13 +432,7 @@ namespace ClassicalSharp {
 				case PacketId.Message:
 					{
 						byte messageType = reader.ReadUInt8();
-						string text = reader.ReadTextString();
-						if( !useMessageTypes ) messageType = 0;
-						// wom ^detail.user parsing
-						if( !useMessageTypes && text.StartsWith( "^detail.user=", StringComparison.Ordinal ) ) {
-							messageType = 3;
-							text = text.Substring( 13 );
-						}
+						string text = reader.ReadWoMTextString( ref messageType, useMessageTypes );
 						Window.AddChat( text, messageType );
 					} break;
 					

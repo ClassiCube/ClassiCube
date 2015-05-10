@@ -67,6 +67,14 @@ namespace ClassicalSharp {
 			return value;
 		}
 		
+		internal string ReadWoMTextString( ref byte messageType, bool useMessageTypes ) {
+			if( useMessageTypes ) return ReadTextString();
+			
+			string value = GetWoMTextString( buffer, ref messageType );
+			Remove( 64 );
+			return value;
+		}
+		
 		public string ReadString() {
 			string value = GetAsciiString( buffer );
 			Remove( 64 );
@@ -74,25 +82,53 @@ namespace ClassicalSharp {
 		}
 		
 		static char[] characters = new char[64];
+		const string womDetail = "^detail.user=";
+		static string GetTextString( byte[] data ) {			
+			int length = CopyTextStringToBuffer( data );
+			return new String( characters, 0, length );
+		}
+		
+		static string GetWoMTextString( byte[] data, ref byte messageType ) {			
+			int length = CopyTextStringToBuffer( data );
+			int offset = 0;
+			if( IsWomDetailString( length ) ) {
+				length -= womDetail.Length;
+				offset += womDetail.Length;
+				messageType = 3;
+			}
+			return new String( characters, offset, length );
+		}
+		
+		static bool IsWomDetailString( int length ) {			
+			if( length < womDetail.Length ) 
+				return false;
+			
+			for( int i = 0; i < womDetail.Length; i++ ) {
+				if( characters[i] != womDetail[i] )
+					return false;
+			}
+			return true;
+		}
+		
 		static string GetAsciiString( byte[] data ) {
-		    int endIndex = 0;
+		    int length = 0;
 			for( int i = 63; i >= 0; i-- ) {
 				byte code = data[i];
-				if( endIndex == 0 && !( code == 0 || code == 0x20 ) )
-				   endIndex = i + 1;
+				if( length == 0 && !( code == 0 || code == 0x20 ) )
+				   length = i + 1;
 				
 				characters[i] = code >= 0x80 ? '?' : (char)code;				
 			}
-			return new String( characters, 0, endIndex );
+			return new String( characters, 0, length );
 		}
 		
-		static string GetTextString( byte[] data ) {
+		static int CopyTextStringToBuffer( byte[] data ) {
 			// code page 437 indices --> actual unicode characters
-			int endIndex = 0;
+			int length = 0;
 			for( int i = 63; i >= 0; i-- ) {
 				byte code = data[i];
-				if( endIndex == 0 && !( code == 0 || code == 0x20 ) )
-				   endIndex = i + 1;
+				if( length == 0 && !( code == 0 || code == 0x20 ) )
+				   length = i + 1;
 				
 				if( code < 0x20 ) { // general control characters
 					characters[i] = controlCharReplacements[code];
@@ -104,7 +140,7 @@ namespace ClassicalSharp {
 					characters[i] = extendedCharReplacements[code - 0x80];
 				}
 			}
-			return new String( characters, 0, endIndex );
+			return length;
 		}
 		
 		static char[] controlCharReplacements = new char[] { // 00 -> 1F
