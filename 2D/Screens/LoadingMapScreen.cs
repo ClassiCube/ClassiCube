@@ -29,8 +29,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			GraphicsApi.Fog = false;
-			titleWidget = CreateTextWidget( 30, serverName );
-			messageWidget = CreateTextWidget( 60, serverMotd );
+			titleWidget = TextWidget.Create( Window, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
+			messageWidget = TextWidget.Create( Window, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
 			progX = Window.Width / 2f - progWidth / 2f;
 			using( Bitmap bmp = new Bitmap( progWidth, progHeight ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
@@ -53,15 +53,6 @@ namespace ClassicalSharp {
 			titleWidget.Dispose();
 			GraphicsApi.DeleteTexture( ref progressBoxTexture );
 			Window.MapLoading -= MapLoading;
-		}
-		
-		TextWidget CreateTextWidget( int yOffset, string text ) {
-			TextWidget widget = new TextWidget( Window, font );
-			widget.Init();
-			widget.HorizontalDocking = Docking.Centre;
-			widget.YOffset = yOffset;
-			widget.SetText( text );
-			return widget;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

@@ -10,6 +10,17 @@ namespace ClassicalSharp {
 			this.font = font;
 		}
 		
+		public static TextWidget Create( Game game, int x, int y, string text, Docking horizontal, Docking vertical, Font font ) {
+			TextWidget widget = new TextWidget( game, font );
+			widget.Init();
+			widget.HorizontalDocking = horizontal;
+			widget.VerticalDocking = vertical;
+			widget.XOffset = x;
+			widget.YOffset = y;
+			widget.SetText( text );
+			return widget;
+		}
+		
 		Texture texture;
 		string textCache = null;
 		public int XOffset = 0, YOffset = 0;

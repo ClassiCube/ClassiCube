@@ -32,50 +32,38 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
-			controlsWidget = CreateTextWidget( 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
-			keyStatusWidget = CreateTextWidget( 0, -80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
-			gameWidget = CreateTextWidget( 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
-			exitWidget = CreateTextWidget( 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
+			controlsWidget = TextWidget.Create( Window, 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
+			keyStatusWidget = TextWidget.Create( Window, 0, -80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
+			gameWidget = TextWidget.Create( Window, 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
+			exitWidget = TextWidget.Create( Window, 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
 				KeyMapping.Jump, KeyMapping.Respawn, KeyMapping.SetSpawn, KeyMapping.OpenChat, KeyMapping.SendChat,
 				KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
 				"Open chat", "Send chat", "Pause", "Open inventory" };
-			MakeKeysLeft( mappingsLeft, descriptionsLeft );
+			MakeKeys( mappingsLeft, descriptionsLeft, 10, out keysLeft );
+			leftEnd = CalculateMaxWidth( keysLeft );
 			
 			KeyMapping[] mappingsRight = { KeyMapping.Screenshot, KeyMapping.Fullscreen, KeyMapping.ThirdPersonCamera,
 				KeyMapping.VSync, KeyMapping.ViewDistance, KeyMapping.Fly, KeyMapping.Speed, KeyMapping.NoClip,
 				KeyMapping.FlyUp, KeyMapping.FlyDown, KeyMapping.PlayerList };
 			string[] descriptionsRight = { "Take screenshot", "Toggle fullscreen", "Toggle 3rd person camera", "Toggle VSync",
 				"Change view distance", "Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list" };
-			MakeKeysRight( mappingsRight, descriptionsRight );
+			MakeKeys( mappingsRight, descriptionsRight, leftEnd + 30, out keysRight );
 		}
 		
 		int leftEnd;
-		void MakeKeysLeft( KeyMapping[] mappings, string[] descriptions ) {
+		void MakeKeys( KeyMapping[] mappings, string[] descriptions, int offset, out KeyMapWidget[] widgets ) {
 			int startY = controlsWidget.BottomRight.Y + 10;
-			keysLeft = new KeyMapWidget[mappings.Length];
+			widgets = new KeyMapWidget[mappings.Length];
+			
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
-				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
-				widget.XOffset = 10;
+				TextWidget widget = TextWidget.Create( Window, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
+				widget.XOffset = offset;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
-				keysLeft[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
-				startY += widget.Height + 5;
-			}
-			leftEnd = CalculateMaxWidth( keysLeft );
-		}
-
-		void MakeKeysRight( KeyMapping[] mappings, string[] descriptions ) {
-			int startY = controlsWidget.BottomRight.Y + 10;
-			keysRight = new KeyMapWidget[mappings.Length];
-			for( int i = 0; i < keysRight.Length; i++ ) {
-				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
-				TextWidget widget = CreateTextWidget( 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
-				widget.XOffset = leftEnd + 30;
-				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
-				keysRight[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
+				widgets[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
 				startY += widget.Height + 5;
 			}
 		}
@@ -89,21 +77,8 @@ namespace ClassicalSharp {
 			exitWidget.Dispose();
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				keysLeft[i].Dispose();
-			}
-			for( int i = 0; i < keysRight.Length; i++ ) {
 				keysRight[i].Dispose();
 			}
-		}
-		
-		TextWidget CreateTextWidget( int x, int y, string text, Docking horizontal, Docking vertical, Font font ) {
-			TextWidget widget = new TextWidget( Window, font );
-			widget.Init();
-			widget.HorizontalDocking = horizontal;
-			widget.VerticalDocking = vertical;
-			widget.XOffset = x;
-			widget.YOffset = y;
-			widget.SetText( text );
-			return widget;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
