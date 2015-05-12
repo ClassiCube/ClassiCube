@@ -109,39 +109,9 @@ namespace ClassicalSharp {
 		}
 		
 		readonly int[] packetSizes = new int[] {
-			131, // server identification (1 + 1 + 64 + 64 + 1)
-			1, // ping (1)
-			1, // level initialise (1)
-			1028, // level data chunk (1 + 2 + 1024 + 1)
-			7, // level finalise (1 + 3(2))
-			9, // set block client (1 + 3(2) + 1 + 1)
-			8, // set block (1 + 3(2) + 1)
-			74, // spawn player (1 + 1 + 64 + 3(2) + 2(1))
-			10, // player teleport (1 + 1 + 3(2) + 2(1))
-			7, // relative pos and orientation update (1 + 1 + 3(1) + 2(1))
-			5, // relative pos update (1 + 1 + 3(1))
-			4, // relative orientation update (1 + 1 + 2(1))
-			2, // despawn player (1 + 1)
-			66, // message (1 + 1 + 64)
-			65, // disconnect (1 + 64)
-			2, // set permission (1 + 1)
-			67, // extension info (1 + 64 + 2)
-			69, // extension entry (1 + 64 + 4)
-			3, // set click distance (1 + 2)
-			2, // custom blocks (1 + 1)
-			3, // held block (1 + 2)
-			134, // text hotkey (1 + 64 + 64 + 4 + 1)
-			196, // extended add player name (1 + 2 + 64 + 64 + 64 + 1),
-			130, // extended add entity (1 + 1 + 64 + 64)
-			3, // extended remove player name (1 + 2)
-			8, // env set colours (1 + 1 + 3(2))
-			86, // selection cuboid (1 + 1 + 64 + 6(2) + 4(2))
-			2, // remove selection (1 + 1)
-			4, // block permissions (1 + 1 + 1 + 1)
-			66, // change model(1 + 1 + 64)
-			69, // env map appearance (1 + 64 + 1 + 1 + 2)
-			2, // env weather type (1 + 1)
-			8, // hack control (1 + 1 + 1 + 1 + 1 + 1 + 2)
+			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
+			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
+			8, 86, 2, 4, 66, 69, 2, 8, 138,
 		};
 		
 		// TODO: Finish implementing CPE
@@ -247,7 +217,7 @@ namespace ClassicalSharp {
 		
 		void WritePacket( int packetLength ) {
 			outIndex = 0;
-			if( Disconnected ) return;			
+			if( Disconnected ) return;
 			
 			#if NET_DEBUG
 			Utils.LogDebug( "writing {0} bytes ({1})", packetLength, (PacketId)outBuffer[0] );
@@ -383,21 +353,7 @@ namespace ClassicalSharp {
 					{
 						byte entityId = reader.ReadUInt8();
 						string name = reader.ReadString();
-						if( entityId != 0xFF ) {
-							Window.AsyncDownloader.DownloadSkin( name );
-							// This shouldn't usually happen, but just in case..
-							Player oldPlayer = Window.NetPlayers[entityId];
-							if( oldPlayer != null ) {
-								Window.RaiseEntityRemoved( entityId );
-								oldPlayer.Despawn();
-							}
-							Window.NetPlayers[entityId] = new NetPlayer( entityId, name, name, Window );
-							Window.RaiseEntityAdded( entityId );
-						}
-						ReadAbsoluteLocation( entityId, false );
-						if( entityId == 0xFF ) {
-							Window.LocalPlayer.SpawnPoint = Window.LocalPlayer.Position;
-						}
+						AddEntity( entityId, name, name );
 					}  break;
 					
 				case PacketId.EntityTeleport:
@@ -670,8 +626,34 @@ namespace ClassicalSharp {
 						Window.LocalPlayer.CalculateJumpVelocity( jumpHeight );
 					} break;
 					
+				case PacketId.CpeExtAddEntity2:
+					{
+						byte entityId = reader.ReadUInt8();
+						string displayName = reader.ReadString();
+						string skinName = reader.ReadString();
+						AddEntity( entityId, displayName, skinName );
+					} break;
+					
 				default:
 					throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );
+			}
+		}
+		
+		void AddEntity( byte entityId, string displayName, string skinName ) {
+			if( entityId != 0xFF ) {
+				Window.AsyncDownloader.DownloadSkin( skinName );
+				// This shouldn't usually happen, but just in case..
+				Player oldPlayer = Window.NetPlayers[entityId];
+				if( oldPlayer != null ) {
+					Window.RaiseEntityRemoved( entityId );
+					oldPlayer.Despawn();
+				}
+				Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
+				Window.RaiseEntityAdded( entityId );
+			}
+			ReadAbsoluteLocation( entityId, false );
+			if( entityId == 0xFF ) {
+				Window.LocalPlayer.SpawnPoint = Window.LocalPlayer.Position;
 			}
 		}
 		

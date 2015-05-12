@@ -37,6 +37,7 @@ namespace ClassicalSharp {
 		CpeEnvSetMapApperance = 30,
 		CpeEnvWeatherType = 31,
 		CpeHackControl = 32,
+		CpeExtAddEntity2 = 33,
 	}
 	
 	public enum CpeMessageType {
