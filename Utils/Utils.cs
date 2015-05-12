@@ -303,15 +303,11 @@ namespace ClassicalSharp {
 		}
 		
 		public static Vector3I Floor( Vector3 value ) {
-			return new Vector3I( FastFloor( value.X ), FastFloor( value.Y ), FastFloor( value.Z ) );
+			return new Vector3I( Utils.Floor( value.X ), Utils.Floor( value.Y ), Utils.Floor( value.Z ) );
 		}
 		
 		public static Vector3I Floor( float x, float y, float z ) {
-			return new Vector3I( FastFloor( x ), FastFloor( y ), FastFloor( z ) );
-		}
-		
-		private static int FastFloor( float value ) {
-			return value >= 0 ? (int)value : (int)value - 1;
+			return new Vector3I( Utils.Floor( x ), Utils.Floor( y ),  Utils.Floor( z ) );
 		}
 		
 		public static Vector3I Min( Vector3I p1, Vector3I p2 ) {
