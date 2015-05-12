@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Input;
 
@@ -31,8 +30,10 @@ namespace ClassicalSharp {
 	public abstract class PerspectiveCamera : Camera {
 		
 		protected Player player;
+		IInputDriver driver;
 		public PerspectiveCamera( Game window ) {
 			Window = window;
+			driver = window.InputDriver;
 			player = Window.LocalPlayer;
 		}
 		
@@ -53,12 +54,12 @@ namespace ClassicalSharp {
 		Vector2 Orientation;
 		void CentreMousePosition() {
 			if( !Window.Focused ) return;
-			Point current = Cursor.Position;
+			Point current = driver.DesktopCursorPos;
 			delta = new Point( current.X - previous.X, current.Y - previous.Y );
 			Rectangle bounds = Window.Bounds;
 			int cenX = bounds.Left + bounds.Width / 2;
 			int cenY = bounds.Top + bounds.Height / 2;
-			Cursor.Position = new Point( cenX, cenY );
+			driver.DesktopCursorPos = new Point( cenX, cenY );
 			previous = new Point( cenX, cenY );
 		}
 		
@@ -66,7 +67,7 @@ namespace ClassicalSharp {
 			Rectangle bounds = Window.Bounds;
 			int cenX = bounds.Left + bounds.Width / 2;
 			int cenY = bounds.Top + bounds.Height / 2;
-			Cursor.Position = new Point( cenX, cenY );
+			driver.DesktopCursorPos = new Point( cenX, cenY );
 			previous = new Point( cenX, cenY );
 			delta = Point.Empty;
 		}

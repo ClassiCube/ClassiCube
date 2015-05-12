@@ -169,7 +169,7 @@ namespace ClassicalSharp {
 		Key[] Keys = new Key[] {
 			Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
 			Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
-			Key.F5, Key.F6, Key.Z, Key.LShift, Key.X, Key.Q, Key.E,
+			Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, Key.E,
 			Key.Tab, Key.H,
 		};
 		

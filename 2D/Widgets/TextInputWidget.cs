@@ -237,7 +237,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < handlers.Length; i++ ) {
 				if( handlers[i].HandlesKeyDown( key ) ) return true;
 			}
-			bool controlDown = Window.IsKeyDown( Key.LControl) || Window.IsKeyDown( Key.RControl );
+			bool controlDown = Window.IsKeyDown( Key.ControlLeft ) || Window.IsKeyDown( Key.ControlRight );
 			if( key == Key.V && controlDown && chatInputText.Length < 64 ) {
 				string text = Clipboard.GetText();
 				if( String.IsNullOrEmpty( text ) ) return true;

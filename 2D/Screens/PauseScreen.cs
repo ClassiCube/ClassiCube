@@ -28,7 +28,11 @@ namespace ClassicalSharp {
 		}
 		
 		Font titleFont, keyStatusFont, textFont;
+		static string[] keyNames;
 		public override void Init() {
+			if( keyNames == null ) {
+				keyNames = Enum.GetNames( typeof( Key ) );
+			}
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
@@ -59,7 +63,8 @@ namespace ClassicalSharp {
 			widgets = new KeyMapWidget[mappings.Length];
 			
 			for( int i = 0; i < keysLeft.Length; i++ ) {
-				string text = descriptions[i] + ": " + Window.Keys[mappings[i]];
+				Key tkKey = Window.Keys[mappings[i]];
+				string text = descriptions[i] + ": " + keyNames[(int)tkKey];
 				TextWidget widget = TextWidget.Create( Window, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widget.XOffset = offset;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
