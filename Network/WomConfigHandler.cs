@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp.Network;
 
 namespace ClassicalSharp {
 
@@ -9,19 +10,15 @@ namespace ClassicalSharp {
 		
 		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
 		void CheckForWomEnvironment() {
-			string page;
-			Window.AsyncDownloader.TryGetPage( womEnvIdentifier, out page );
-			if( page != null ) {
-				ParseWomConfig( page );
+			DownloadedItem item;
+			Window.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
+			if( item != null && item.Page != null ) {
+				ParseWomConfig( item.Page );
 			}
-			CheckWomBitmaps();
-		}
-		
-		void CheckWomBitmaps() {
-			Bitmap terrainBmp;
-			Window.AsyncDownloader.TryGetImage( womTerrainIdentifier, out terrainBmp );
-			if( terrainBmp != null ) {
-				Window.ChangeTerrainAtlas( terrainBmp );
+			
+			Window.AsyncDownloader.TryGetItem( womTerrainIdentifier, out item );
+			if( item != null && item.Bmp != null ) {
+				Window.ChangeTerrainAtlas( item.Bmp );
 			}
 		}
 		

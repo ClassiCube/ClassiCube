@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using ClassicalSharp.Network;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -65,10 +66,10 @@ namespace ClassicalSharp {
 		}
 		
 		void CheckForNewTerrainAtlas() {
-			Bitmap bmp;
-			Window.AsyncDownloader.TryGetImage( "terrain", out bmp );
-			if( bmp != null ) {
-				Window.ChangeTerrainAtlas( bmp );
+			DownloadedItem item;
+			Window.AsyncDownloader.TryGetItem( "terrain", out item );
+			if( item != null && item.Bmp != null ) {
+				Window.ChangeTerrainAtlas( item.Bmp );
 			}
 		}
 		
@@ -353,7 +354,7 @@ namespace ClassicalSharp {
 					{
 						byte entityId = reader.ReadUInt8();
 						string name = reader.ReadString();
-						AddEntity( entityId, name, name );
+						AddEntity( entityId, name, name, true );
 					}  break;
 					
 				case PacketId.EntityTeleport:
@@ -494,18 +495,7 @@ namespace ClassicalSharp {
 						byte entityId = reader.ReadUInt8();
 						string displayName = reader.ReadString();
 						string skinName = reader.ReadString();
-						if( entityId != 0xFF ) {
-							Window.AsyncDownloader.DownloadSkin( skinName );
-							Player oldPlayer = Window.NetPlayers[entityId];
-							if( oldPlayer != null ) {
-								oldPlayer.DisplayName = displayName;
-								oldPlayer.SkinName = skinName;
-								Window.RaiseEntityInfoChange( entityId );
-							} else {
-								Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
-								Window.RaiseEntityAdded( entityId );
-							}
-						}
+						AddEntity( entityId, displayName, skinName, false );
 					} break;
 					
 				case PacketId.CpeExtRemovePlayerName:
@@ -631,7 +621,7 @@ namespace ClassicalSharp {
 						byte entityId = reader.ReadUInt8();
 						string displayName = reader.ReadString();
 						string skinName = reader.ReadString();
-						AddEntity( entityId, displayName, skinName );
+						AddEntity( entityId, displayName, skinName, true );
 					} break;
 					
 				default:
@@ -639,7 +629,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void AddEntity( byte entityId, string displayName, string skinName ) {
+		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
 				Window.AsyncDownloader.DownloadSkin( skinName );
 				// This shouldn't usually happen, but just in case..
@@ -651,9 +641,11 @@ namespace ClassicalSharp {
 				Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
 				Window.RaiseEntityAdded( entityId );
 			}
-			ReadAbsoluteLocation( entityId, false );
-			if( entityId == 0xFF ) {
-				Window.LocalPlayer.SpawnPoint = Window.LocalPlayer.Position;
+			if( readPosition ) {
+				ReadAbsoluteLocation( entityId, false );
+				if( entityId == 0xFF ) {
+					Window.LocalPlayer.SpawnPoint = Window.LocalPlayer.Position;
+				}
 			}
 		}
 		

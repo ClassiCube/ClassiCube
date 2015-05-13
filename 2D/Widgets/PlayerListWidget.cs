@@ -43,7 +43,6 @@ namespace ClassicalSharp {
 			SortPlayerInfo();
 			Window.EntityAdded += PlayerSpawned;
 			Window.EntityRemoved += PlayerDespawned;
-			Window.EntityInfoChanged += PlayerInfoChanged;
 		}
 		
 		public override void Render( double delta ) {
@@ -62,7 +61,6 @@ namespace ClassicalSharp {
 			}
 			Window.EntityAdded -= PlayerSpawned;
 			Window.EntityRemoved -= PlayerDespawned;
-			Window.EntityInfoChanged -= PlayerInfoChanged;
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
@@ -79,18 +77,6 @@ namespace ClassicalSharp {
 					GraphicsApi.DeleteTexture( ref pInfo.Texture );
 					info.RemoveAt( i );
 					rows = (int)Math.Ceiling( (double)info.Count / namesPerColumn );
-					SortPlayerInfo();
-					break;
-				}
-			}
-		}
-		
-		void PlayerInfoChanged( object sender, IdEventArgs e ) {
-			for( int i = 0; i < info.Count; i++ ) {
-				PlayerInfo pInfo = info[i];
-				if( pInfo.PlayerId == e.Id ) {
-					GraphicsApi.DeleteTexture( ref pInfo.Texture );
-					info[i] = new PlayerInfo( GraphicsApi, Window.NetPlayers[e.Id], font );
 					SortPlayerInfo();
 					break;
 				}

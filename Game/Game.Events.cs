@@ -9,10 +9,6 @@ namespace ClassicalSharp {
 		/// <summary> Raised when a player is spawned in the current world. </summary>
 		public event EventHandler<IdEventArgs> EntityAdded;
 		
-		/// <summary> Raised when information(display name and/or skin name) is changed about a player. </summary>
-		/// <remarks> Note this event is only raised when using the CPE player list extension. </remarks>
-		public event EventHandler<IdEventArgs> EntityInfoChanged;
-		
 		/// <summary> Raised when a player is despawned from the current world. </summary>
 		public event EventHandler<IdEventArgs> EntityRemoved;
 		
@@ -53,11 +49,6 @@ namespace ClassicalSharp {
 		internal void RaiseEntityAdded( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( EntityAdded, e );
-		}
-		
-		internal void RaiseEntityInfoChange( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( EntityInfoChanged, e );
 		}
 		
 		internal void RaiseEntityRemoved( byte id ) {

@@ -35,6 +35,10 @@ namespace ClassicalSharp {
 			return next;
 		}
 		
+		public static bool IsUrl( string value ) {
+			return value.StartsWith( "http://" ) || value.StartsWith( "https://" );
+		}
+		
 		public static string StripColours( string value ) {
 			if( value.IndexOf( '&' ) == -1 ) {
 				return value;

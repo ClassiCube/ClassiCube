@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK;
+using ClassicalSharp.Network;
 using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
 
@@ -105,9 +106,10 @@ namespace ClassicalSharp {
 		}
 		
 		protected void CheckSkin() {
-			Bitmap bmp;
-			Window.AsyncDownloader.TryGetImage( "skin_" + SkinName, out bmp );
-			if( bmp != null ) {
+			DownloadedItem item;
+			Window.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
+			if( item != null && item.Bmp != null ) {
+				Bitmap bmp = item.Bmp;
 				Window.Graphics.DeleteTexture( renderer.TextureId );
 				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
 				SkinType = Utils.GetSkinType( bmp );
