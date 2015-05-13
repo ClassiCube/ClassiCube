@@ -156,12 +156,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture( TextureTarget.Texture2D, texture );
 		}
 		
-		public override void DeleteTexture( int texId ) {
+		public override void DeleteTexture( ref int texId ) {
 			if( texId <= 0 ) return;
 			#if TRACK_RESOURCES
 			textures.Remove( texId );
 			#endif
 			GL.DeleteTexture( texId );
+			texId = -1;
 		}
 		
 		public override bool Texturing {

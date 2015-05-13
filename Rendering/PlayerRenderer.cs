@@ -33,8 +33,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteTexture( TextureId );
-			Graphics.DeleteTexture( nameTextureId );
+			Graphics.DeleteTexture( ref TextureId );
+			Graphics.DeleteTexture( ref nameTextureId );
 		}
 		
 		public void Render( double deltaTime ) {

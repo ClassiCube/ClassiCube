@@ -34,11 +34,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void Bind2DTexture( int texId );
 		
-		public abstract void DeleteTexture( int texId );
+		public abstract void DeleteTexture( ref int texId );
 		
 		public virtual void DeleteTexture( ref Texture texture ) {
-			DeleteTexture( texture.ID );
-			texture.ID = 0;
+			DeleteTexture( ref texture.ID );
 		}
 		
 		

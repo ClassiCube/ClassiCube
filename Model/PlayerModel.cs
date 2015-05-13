@@ -101,7 +101,7 @@ namespace ClassicalSharp.Model {
 			Set64x32.Dispose();
 			Set64x64.Dispose();
 			Set64x64Slim.Dispose();
-			graphics.DeleteTexture( DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultSkinTextureId );
 		}
 		
 		class ModelSet {

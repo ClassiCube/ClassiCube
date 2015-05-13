@@ -67,7 +67,7 @@ namespace ClassicalSharp.Model {
 		
 		public override void Dispose() {
 			Set.Dispose();
-			graphics.DeleteTexture( DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultSkinTextureId );
 		}
 		
 		class ModelSet {

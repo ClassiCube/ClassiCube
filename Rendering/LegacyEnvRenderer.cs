@@ -80,7 +80,7 @@ namespace ClassicalSharp.Renderers {
 			base.Dispose();
 			Graphics.DeleteVb( skyVbo );
 			Graphics.DeleteVb( cloudsVbo );
-			Graphics.DeleteTexture( cloudTexture );
+			Graphics.DeleteTexture( ref cloudTexture );
 		}
 		
 		void RenderClouds( double delta ) {

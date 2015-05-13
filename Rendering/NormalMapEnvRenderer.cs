@@ -105,8 +105,8 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			base.Dispose();
 			index = 0;
-			Graphics.DeleteTexture( edgeTexId );
-			Graphics.DeleteTexture( sideTexId );
+			Graphics.DeleteTexture( ref edgeTexId );
+			Graphics.DeleteTexture( ref sideTexId );
 			Graphics.DeleteVb( sidesVboId );
 			Graphics.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
@@ -127,13 +127,13 @@ namespace ClassicalSharp {
 		
 		void MakeEdgeTexture() {
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)Map.EdgeBlock, TileSide.Top );
-			Window.Graphics.DeleteTexture( edgeTexId );
+			Window.Graphics.DeleteTexture( ref edgeTexId );
 			edgeTexId = Window.TerrainAtlas.LoadTextureElement( texLoc );
 		}
 		
 		void MakeSideTexture() {
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)Map.SidesBlock, TileSide.Top );
-			Window.Graphics.DeleteTexture( sideTexId );
+			Window.Graphics.DeleteTexture( ref sideTexId );
 			sideTexId = Window.TerrainAtlas.LoadTextureElement( texLoc );
 		}
 		

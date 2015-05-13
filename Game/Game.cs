@@ -96,12 +96,10 @@ namespace ClassicalSharp {
 		
 		void LoadAtlas( Bitmap bmp ) {
 			// Cleanup old atlas if applicable.
-			if( TerrainAtlasTexId != -1 ) {
-				Graphics.DeleteTexture( TerrainAtlasTexId );
-			}
+			Graphics.DeleteTexture( ref TerrainAtlasTexId );
 			if( TerrainAtlas1DTexIds != null ) {
 				for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
-					Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
+					Graphics.DeleteTexture( ref TerrainAtlas1DTexIds[i] );
 				}
 			}
 			if( TerrainAtlas != null ) {
@@ -303,9 +301,9 @@ namespace ClassicalSharp {
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			SelectionManager.Dispose();
-			Graphics.DeleteTexture( TerrainAtlasTexId );
+			Graphics.DeleteTexture( ref TerrainAtlasTexId );
 			for( int i = 0; i < TerrainAtlas1DTexIds.Length; i++ ) {
-				Graphics.DeleteTexture( TerrainAtlas1DTexIds[i] );
+				Graphics.DeleteTexture( ref TerrainAtlas1DTexIds[i] );
 			}
 			ModelCache.Dispose();
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
