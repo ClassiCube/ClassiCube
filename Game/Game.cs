@@ -160,7 +160,7 @@ namespace ClassicalSharp {
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
-			MapEnvRenderer = new NormalMapEnvRenderer( this );
+			MapEnvRenderer = new MapEnvRenderer( this );
 			EnvRenderer = new NormalEnvRenderer( this );
 			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
