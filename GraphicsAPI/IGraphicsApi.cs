@@ -40,6 +40,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteTexture( ref texture.ID );
 		}
 		
+		public abstract bool IsValidTexture( int texId );
+		
 		
 		/// <summary> Whether fog is currently enabled. </summary>
 		public abstract bool Fog { set; }
@@ -122,6 +124,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
 		                              int verticesCount, int indicesCount ) where T : struct;
+		
+		public abstract bool IsValidVb( int vb );
 		
 		public abstract void DeleteVb( int id );
 		

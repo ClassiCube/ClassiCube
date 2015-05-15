@@ -165,6 +165,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			texId = -1;
 		}
 		
+		public override bool IsValidTexture( int texId ) {
+			return GL.IsTexture( texId );
+		}
+		
 		public override bool Texturing {
 			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
@@ -369,6 +373,10 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			GL.Arb.DeleteBuffers( 2, ref id.Vb );
+		}
+		
+		public override bool IsValidVb( int vb ) {
+			return useVbos ? GL.Arb.IsBuffer( vb ) : GL.IsList( vb );
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
