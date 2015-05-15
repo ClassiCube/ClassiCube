@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
 using ClassicalSharp.Renderers;
 using OpenTK;
 
@@ -32,15 +30,15 @@ namespace ClassicalSharp {
 			}
 			
 			if( !interpolate ) {
-				states.Clear();
+				stateCount = 0;
 				newState = oldState = new State( tickCount, serverPos, serverYaw, serverPitch );
 			} else {
 				// Smoother interpolation by also adding midpoint.
 				Vector3 midPos = Vector3.Lerp( lastPos, serverPos, 0.5f );
 				float midYaw = Utils.InterpAngle( lastYaw, serverYaw, 0.5f );
 				float midPitch = Utils.InterpAngle( lastPitch, serverPitch, 0.5f );
-				states.Add( new State( tickCount, midPos, midYaw, midPitch ) );
-				states.Add( new State( tickCount, serverPos, serverYaw, serverPitch ) );
+				AddState( new State( tickCount, midPos, midYaw, midPitch ) );
+				AddState( new State( tickCount, serverPos, serverYaw, serverPitch ) );
 			}
 		}
 		
@@ -61,8 +59,9 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		List<State> states = new List<State>();
+		State[] states = new State[10];
 		State newState, oldState;
+		int stateCount;
 		public override void Tick( double delta ) {
 			CheckSkin();
 			tickCount++;
@@ -70,17 +69,26 @@ namespace ClassicalSharp {
 			UpdateAnimState( oldState.pos, newState.pos, delta );
 		}
 		
+		void AddState( State state ) {
+		   if( stateCount == states.Length )
+		     RemoveOldestState();
+		   states[stateCount++] = state;
+		}
+		
+		void RemoveOldestState() {
+		   for( int i = 0; i < states.Length - 1; i++ ) {
+		      states[i] = states[i + 1];
+		   }
+		   stateCount--;
+		}
+		
 		void UpdateCurrentState() {		
 			oldState = newState;
-			if( states.Count < 1 ) return;
+			if( stateCount == 0 ) return;
 			
-			do {
-				oldState = newState;
-				State state = states[0];
-				//if( state.tick > tickCount - 2 ) break; // 100 ms delay
-				newState = state;
-				states.RemoveAt( 0 );
-			} while( states.Count >= 10 ); // Drop old states, otherwise we will never be able to catch up.
+			//if( states[0].tick > tickCount - 2 ) return; // 100 ms delay
+			newState = states[0];
+			RemoveOldestState();
 		}
 
 		public override void Render( double deltaTime, float t ) {
