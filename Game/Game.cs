@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 			height = Height;
 			MapRenderer = new MapRenderer( this );
 			MapEnvRenderer = new MapEnvRenderer( this );
-			EnvRenderer = new NormalEnvRenderer( this );
+			EnvRenderer = new StandardEnvRenderer( this );
 			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );

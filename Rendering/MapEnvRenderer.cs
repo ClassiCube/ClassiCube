@@ -177,11 +177,11 @@ namespace ClassicalSharp {
 		void RebuildSidesLegacy( int groundLevel ) {
 			sidesVertices = 0;
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				sidesVertices += CountVertices( rec.Width, rec.Height ); // YPlanes outside
+				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			sidesVertices += CountVertices( Map.Width, Map.Length ); // YPlane beneath map
-			sidesVertices += CountVertices( Map.Width, groundLevel ) * 2; // ZPlanes
-			sidesVertices += CountVertices( Map.Length, groundLevel ) * 2; // XPlanes
+			sidesVertices += Utils.CountVertices( Map.Width, Map.Length, axisSize ); // YPlane beneath map
+			sidesVertices += Utils.CountVertices( Map.Width, groundLevel, axisSize ) * 2; // ZPlanes
+			sidesVertices += Utils.CountVertices( Map.Length, groundLevel, axisSize ) * 2; // XPlanes
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[sidesVertices];
 			
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
@@ -198,7 +198,7 @@ namespace ClassicalSharp {
 		void RebuildEdgesLegacy( int waterLevel ) {
 			edgesVertices = 0;
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				edgesVertices += CountVertices( rec.Width, rec.Height ); // YPlanes outside
+				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[edgesVertices];
 			
@@ -208,22 +208,16 @@ namespace ClassicalSharp {
 			edgesVboId = Graphics.InitVb( vertices, DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
-		const int legacyAxisSize = 128;
-		int CountVertices( int axis1Len, int axis2Len ) {
-			int cellsAxis1 = axis1Len / legacyAxisSize + ( axis1Len % legacyAxisSize != 0 ? 1 : 0 );
-			int cellsAxis2 = axis2Len / legacyAxisSize + ( axis2Len % legacyAxisSize != 0 ? 1 : 0 );
-			return cellsAxis1 * cellsAxis2 * 6;
-		}
-		
+		const int axisSize = 128;	
 		void DrawXPlaneParts( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			int length = z2 - z1, endZ = z2;
 			int height = y2 - y1, endY = y2, startY = y1;
-			for( ; z1 < endZ; z1 += legacyAxisSize ) {
-				z2 = z1 + legacyAxisSize;
+			for( ; z1 < endZ; z1 += axisSize ) {
+				z2 = z1 + axisSize;
 				if( z2 > endZ ) z2 = endZ;
 				y1 = startY;
-				for( ; y1 < endY; y1 += legacyAxisSize ) {
-					y2 = y1 + legacyAxisSize;
+				for( ; y1 < endY; y1 += axisSize ) {
+					y2 = y1 + axisSize;
 					if( y2 > endY ) y2 = endY;
 					DrawXPlane( x, z1, z2, y1, y2, col, vertices );
 				}
@@ -233,12 +227,12 @@ namespace ClassicalSharp {
 		void DrawZPlaneParts( int z, int x1, int x2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			int width = x2 - x1, endX = x2;
 			int height= y2 - y1, endY = y2, startY = y1;
-			for( ; x1 < endX; x1 += legacyAxisSize ) {
-				x2 = x1 + legacyAxisSize;
+			for( ; x1 < endX; x1 += axisSize ) {
+				x2 = x1 + axisSize;
 				if( x2 > endX ) x2 = endX;
 				y1 = startY;
-				for( ; y1 < endY; y1 += legacyAxisSize ) {
-					y2 = y1 + legacyAxisSize;
+				for( ; y1 < endY; y1 += axisSize ) {
+					y2 = y1 + axisSize;
 					if( y2 > endY ) y2 = endY;
 					DrawZPlane( z, x1, x2, y1, y2, col, vertices );
 				}
@@ -248,12 +242,12 @@ namespace ClassicalSharp {
 		void DrawYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			int width = x2 - x1, endX = x2;
 			int length = z2 - z1, endZ = z2, startZ = z1;
-			for( ; x1 < endX; x1 += legacyAxisSize ) {
-				x2 = x1 + legacyAxisSize;
+			for( ; x1 < endX; x1 += axisSize ) {
+				x2 = x1 + axisSize;
 				if( x2 > endX ) x2 = endX;
 				z1 = startZ;
-				for( ; z1 < endZ; z1 += legacyAxisSize ) {
-					z2 = z1 + legacyAxisSize;
+				for( ; z1 < endZ; z1 += axisSize ) {
+					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					DrawYPlane( x1, z1, x2, z2, y, col, vertices );
 				}

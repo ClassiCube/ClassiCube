@@ -85,7 +85,7 @@ namespace ClassicalSharp.Commands {
 				if( !reader.NextFloat( out speed ) ) {
 					Window.AddChat( "&e/client env: &cInvalid clouds speed." );
 				} else {
-					NormalEnvRenderer env = Window.EnvRenderer as NormalEnvRenderer;
+					StandardEnvRenderer env = Window.EnvRenderer as StandardEnvRenderer;
 					if( env != null ) {
 						env.CloudsSpeed = speed;
 					}
@@ -202,23 +202,32 @@ namespace ClassicalSharp.Commands {
 			if( property == null ) {
 				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( property == "legacyfast" ) {
-				SetNewRenderType( true, g => new LegacyFastEnvRenderer( g ) );
+				SetNewRenderType( true, true, true );
 				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
 			} else if( property == "legacy" ) {
-				SetNewRenderType( true, g => new LegacyEnvRenderer( g ) );
+				SetNewRenderType( true, false, true );
 				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( property == "normal" ) {
-				SetNewRenderType( false, g => new NormalEnvRenderer( g ) );
+				SetNewRenderType( false, false, false );
 				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
 		}
 		
-		void SetNewRenderType( bool legacy, Func<Game, EnvRenderer> envConstructor ) {
+		void SetNewRenderType( bool legacy, bool minimal, bool legacyEnv ) {
 			Game game = Window;
-			game.MapEnvRenderer.SetUseLegacyMode( legacy );
-			game.EnvRenderer.Dispose();
-			game.EnvRenderer = envConstructor( game );
-			game.EnvRenderer.Init();
+			game.MapEnvRenderer.SetUseLegacyMode( legacy );			
+			if( minimal ) {
+				game.EnvRenderer.Dispose();
+				game.EnvRenderer = new MinimalEnvRenderer( game );
+				game.EnvRenderer.Init();
+			} else {
+				if( !( game.EnvRenderer is StandardEnvRenderer ) ) {
+					game.EnvRenderer.Dispose();
+					game.EnvRenderer = new StandardEnvRenderer( game );
+					game.EnvRenderer.Init();
+				}
+				((StandardEnvRenderer)game.EnvRenderer).SetUseLegacyMode( legacyEnv );
+			}
 		}
 	}
 	

@@ -4,9 +4,9 @@ namespace ClassicalSharp.Renderers {
 
 	/// <summary> Minimialistic environment renderer - only sets the clear colour to be sky colour.
 	/// (no fog, clouds, or proper overhead sky) </summary>
-	public class LegacyFastEnvRenderer : EnvRenderer {
+	public class MinimalEnvRenderer : EnvRenderer {
 		
-		public LegacyFastEnvRenderer( Game window ) {
+		public MinimalEnvRenderer( Game window ) {
 			Window = window;
 			Map = Window.Map;
 		}

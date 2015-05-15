@@ -198,6 +198,12 @@ namespace ClassicalSharp {
 			return a + ( b - a ) * t;
 		}
 		
+		internal static int CountVertices( int axis1Len, int axis2Len, int axisSize ) {
+			int cellsAxis1 = axis1Len / axisSize + ( axis1Len % axisSize != 0 ? 1 : 0 );
+			int cellsAxis2 = axis2Len / axisSize + ( axis2Len % axisSize != 0 ? 1 : 0 );
+			return cellsAxis1 * cellsAxis2 * 6;
+		}
+		
 		public static float InterpAngle( float leftAngle, float rightAngle, float t ) {
 			// we have to cheat a bit for angles here.
 			// Consider 350* --> 0*, we only want to travel 10*,

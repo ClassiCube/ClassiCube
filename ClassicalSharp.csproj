@@ -138,15 +138,14 @@
     <Compile Include="Physics\Picking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rendering\LegacyEnvRenderer.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
-    <Compile Include="Rendering\LegacyFastEnvRenderer.cs" />
+    <Compile Include="Rendering\MinimalEnvRenderer.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />
     <Compile Include="Rendering\MapEnvRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.cs" />
-    <Compile Include="Rendering\NormalEnvRenderer.cs" />
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\PlayerRenderer.cs" />
+    <Compile Include="Rendering\StandardEnvRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Utils\Camera.cs" />
