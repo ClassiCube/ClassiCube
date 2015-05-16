@@ -19,14 +19,13 @@ namespace ClassicalSharp {
 		
 		int rainTexture;
 		short[] heightmap;
+		float vOffset;
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[12 * 9 * 9];
 		public void Render( double deltaTime ) {
 			graphics.Texturing = true;
 			graphics.Bind2DTexture( rainTexture );
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
-			graphics.SetMatrixMode( MatrixType.Texture );
-			graphics.PushMatrix();
-			graphics.Translate( 0, (float)-Window.accumulator, 0 );
+			vOffset = -(float)Window.accumulator;
 			
 			int index = 0;
 			graphics.AlphaBlending = true;
@@ -43,9 +42,6 @@ namespace ClassicalSharp {
 			}
 			graphics.DrawVertices( DrawMode.Triangles, vertices, index );
 			graphics.AlphaBlending = false;
-			
-			graphics.PopMatrix();
-			graphics.SetMatrixMode( MatrixType.Modelview );
 			graphics.Texturing = false;
 		}
 		
@@ -54,7 +50,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
-			float v1 = ( z & 0x01 ) * 0.5f - ( x & 0x0F ) * 0.0625f;
+			float v1 = vOffset + ( z & 0x01 ) * 0.5f - ( x & 0x0F ) * 0.0625f;
 			float v2 = height / 6f + v1;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
