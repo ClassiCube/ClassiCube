@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		public MapRenderer MapRenderer;
 		public MapEnvRenderer MapEnvRenderer;
 		public EnvRenderer EnvRenderer;
+		public WeatherRenderer WeatherRenderer;
 		
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
@@ -170,6 +171,8 @@ namespace ClassicalSharp {
 			CommandManager.Init( this );
 			SelectionManager = new SelectionManager( this );
 			ParticleManager = new ParticleManager( this );
+			WeatherRenderer = new WeatherRenderer( this );
+			WeatherRenderer.Init();
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
@@ -298,6 +301,7 @@ namespace ClassicalSharp {
 			MapRenderer.Dispose();
 			MapEnvRenderer.Dispose();
 			EnvRenderer.Dispose();
+			WeatherRenderer.Dispose();
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			SelectionManager.Dispose();

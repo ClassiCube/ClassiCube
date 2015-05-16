@@ -146,6 +146,7 @@
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\PlayerRenderer.cs" />
     <Compile Include="Rendering\StandardEnvRenderer.cs" />
+    <Compile Include="Rendering\WeatherRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Utils\Camera.cs" />
