@@ -17,30 +17,45 @@ namespace ClassicalSharp {
 		
 		int rainTexture;
 		//short[] rainHeightmap;
+		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[12 * 9 * 9];
 		public void Render( double deltaTime ) {
 			graphics.Texturing = true;
 			graphics.Bind2DTexture( rainTexture );
-			graphics.PushMatrix();
 			Vector3 pos = Window.LocalPlayer.Position;
-			graphics.Translate( pos.X, pos.Y, pos.Z );
 			graphics.SetMatrixMode( MatrixType.Texture );
 			graphics.PushMatrix();
 			graphics.Translate( 0, (float)( -Window.accumulator / 2 ), 0 );
 			
-			VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[6];
-			vertices[0] = new VertexPos3fTex2f( -1, 0, -0.5f, 0, 1 );
-			vertices[1] = new VertexPos3fTex2f( -1, 6, -0.5f, 0, 0 );
-			vertices[2] = new VertexPos3fTex2f( -1, 6, 0.5f, 1, 0 );
-			
-			vertices[3] = new VertexPos3fTex2f( -1, 6, 0.5f, 1, 0 );
-			vertices[4] = new VertexPos3fTex2f( -1, 0, 0.5f, 1, 1 );
-			vertices[5] = new VertexPos3fTex2f( -1, 0, -0.5f, 0, 1 );
-			graphics.DrawVertices( DrawMode.Triangles, vertices );
+			int index = 0;
+			graphics.AlphaBlending = true;
+			FastColour col = FastColour.White;
+			col.A = 110;
+			MakeRainForSquare( (int)pos.X + 4, (int)pos.Y, 6, (int)pos.Z, col, ref index );
+			graphics.DrawVertices( DrawMode.Triangles, vertices, 12 );
+			graphics.AlphaBlending = false;
 			
 			graphics.PopMatrix();
 			graphics.SetMatrixMode( MatrixType.Modelview );
 			graphics.Texturing = false;
-			graphics.PopMatrix();
+		}
+		
+		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, 1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, 0, col );
+			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, 1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, 1, col );
+			
+			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, 1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, 0, col );
+			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, 0, 1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, 1, col );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

@@ -256,9 +256,10 @@ namespace ClassicalSharp {
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				Picking.Render( e.Time );
-				EnvRenderer.Render( e.Time );
+				Picking.Render( e.Time );				
+				EnvRenderer.Render( e.Time );			
 				MapRenderer.Render( e.Time );
+				WeatherRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );

@@ -216,13 +216,11 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.EndIndexedVbBatch();
-			Window.WeatherRenderer.Render( deltaTime );
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			Graphics.BeginIndexedVbBatch();
-			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.AlphaBlending = false;
 			
