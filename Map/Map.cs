@@ -5,6 +5,7 @@ namespace ClassicalSharp {
 	public class Map {
 
 		public Game Window;
+		BlockInfo info;
 		internal byte[] mapData;
 		public int Width, Height, Length;	
 		short[] heightmap;
@@ -29,6 +30,7 @@ namespace ClassicalSharp {
 		
 		public Map( Game window ) {
 			Window = window;
+			info = window.BlockInfo;
 			SetSunlight( DefaultSunlight );
 			SetShadowlight( DefaultShadowlight );
 		}
@@ -101,7 +103,7 @@ namespace ClassicalSharp {
 			int mapIndex = ( maxY * Length + z ) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
-				if( Window.BlockInfo.BlocksLight( block ) ) {
+				if( info.BlocksLight( block ) ) {
 					heightmap[index] = (short)y;
 					return y;
 				}
@@ -113,9 +115,9 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = Window.BlockInfo.BlocksLight( oldBlock );
-			bool nowBlocks = Window.BlockInfo.BlocksLight( newBlock );
-			if( didBlock && nowBlocks || !didBlock && !nowBlocks ) return;
+			bool didBlock = info.BlocksLight( oldBlock );
+			bool nowBlocks = info.BlocksLight( newBlock );
+			if( didBlock == nowBlocks ) return;
 			
 			int index = ( x * Length ) + z;
 			if( nowBlocks ) {
@@ -155,6 +157,7 @@ namespace ClassicalSharp {
 			byte oldBlock = mapData[index];
 			mapData[index] = blockId;
 			UpdateHeight( x, y, z, oldBlock, blockId );
+			Window.WeatherRenderer.UpdateHeight( x, y, z, oldBlock, blockId );
 		}
 		
 		public void SetBlock( Vector3I p, byte blockId ) {
