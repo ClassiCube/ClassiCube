@@ -216,7 +216,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.EndIndexedVbBatch();
-			Window.MapEnvRenderer.RenderMapSides( deltaTime );
+			Window.MapEnvRenderer.RenderMapSides( deltaTime );		
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.

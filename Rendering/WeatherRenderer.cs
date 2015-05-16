@@ -26,11 +26,10 @@ namespace ClassicalSharp {
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
 			graphics.SetMatrixMode( MatrixType.Texture );
 			graphics.PushMatrix();
-			graphics.Translate( 0, (float)( -Window.accumulator / 2 ), 0 );
+			graphics.Translate( 0, (float)-Window.accumulator, 0 );
 			
 			int index = 0;
 			graphics.AlphaBlending = true;
-			graphics.DepthWrite = false;
 			FastColour col = FastColour.White;
 			for( int dx = - 4; dx <= 4; dx++ ) {
 				for( int dz = -4; dz <= 4; dz++ ) {
@@ -43,7 +42,6 @@ namespace ClassicalSharp {
 				}
 			}
 			graphics.DrawVertices( DrawMode.Triangles, vertices, index );
-			graphics.DepthWrite = true;
 			graphics.AlphaBlending = false;
 			
 			graphics.PopMatrix();
@@ -56,21 +54,23 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
-			float v2 = height / 3f;
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, 0, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, 0, col );
+			float v1 = ( z & 0x01 ) * 0.5f - ( x & 0x0F ) * 0.0625f;
+			float v2 = height / 6f + v1;
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
+			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
 			
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, 0, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, 0, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, 0, v2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
 		}
@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 		}
 		
 		int GetRainHeight( int x, int z ) {
-			if( x < 0 || z < 0 || x >= length || z >= length ) return map.WaterHeight;
+			if( x < 0 || z < 0 || x >= length || z >= length ) return map.WaterHeight - 1;
 			int index = ( x * length ) + z;
 			int height = heightmap[index];			
 			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
@@ -126,6 +126,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool BlocksRain( byte block ) {
+			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
 			return !( block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) );
 		}
 		
