@@ -72,6 +72,7 @@ namespace ClassicalSharp {
 					*offsetPtr = *( offsetPtr + 1 );
 					offsetPtr++;
 				}
+				*offsetPtr = '\0';
 			}
 		}
 		
@@ -82,7 +83,6 @@ namespace ClassicalSharp {
 					*offsetPtr = *( offsetPtr - 1 );
 					offsetPtr--;
 				}
-				offsetPtr = ptr + index;
 				*offsetPtr = c;
 			}
 		}
