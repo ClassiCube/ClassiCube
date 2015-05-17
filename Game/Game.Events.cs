@@ -145,11 +145,18 @@ namespace ClassicalSharp {
 		SidesBlock,
 		EdgeBlock,
 		WaterLevel,
+		Weather,
 
 		SkyColour,
 		CloudsColour,
 		FogColour,
 		SunlightColour,
-		ShadowlightColour,
+		ShadowlightColour,	
+	}
+	
+	public enum Weather {
+		Sunny,
+		Rainy,
+		Snowy,
 	}
 }

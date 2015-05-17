@@ -90,6 +90,13 @@ namespace ClassicalSharp.Commands {
 						env.CloudsSpeed = speed;
 					}
 				}
+			} else if( property.Equals( "weather", StringComparison.OrdinalIgnoreCase ) ) {
+				int weather;
+				if( !reader.NextInt( out weather ) || weather < 0 || weather > 2 ) {
+					Window.AddChat( "&e/client env: &cInvalid weather." );
+				} else {
+					Window.Map.SetWeather( (Weather)weather );
+				}
 			}
 		}
 		

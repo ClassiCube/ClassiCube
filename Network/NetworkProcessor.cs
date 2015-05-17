@@ -119,11 +119,11 @@ namespace ClassicalSharp {
 		// === CPE support list ===
 		// TextHotKey       : unlikely
 		// ExtPlayerList    : yes (only version 1, not 2)
-		// EnvWeatherType   : unlikely
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
 			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
+			"EnvWeatherType", 
 		};
 		
 		
@@ -599,6 +599,11 @@ namespace ClassicalSharp {
 							Window.AsyncDownloader.DownloadImage( url, true, "terrain" );
 						}
 						Utils.LogDebug( "Image url: " + url );
+					} break;
+					
+				case PacketId.CpeEnvWeatherType:
+					{
+						Window.Map.SetWeather( (Weather)reader.ReadUInt8() );
 					} break;
 					
 				case PacketId.CpeHackControl:

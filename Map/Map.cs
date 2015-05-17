@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		public FastColour SkyCol = DefaultSkyColour, FogCol = DefaultFogColour, CloudsCol = DefaultCloudsColour;
 		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		public Weather Weather = Weather.Sunny;
 		
 		public int GroundHeight {
 			get { return WaterHeight - 2; }
@@ -49,6 +50,7 @@ namespace ClassicalSharp {
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
+			Weather = Weather.Sunny;
 		}
 		
 		public void SetSidesBlock( Block block ) {
@@ -64,6 +66,11 @@ namespace ClassicalSharp {
 		public void SetWaterLevel( int level ) {
 			WaterHeight = level;
 			Window.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
+		}
+		
+		public void SetWeather( Weather weather ) {
+			Weather = weather;
+			Window.RaiseEnvVariableChanged( EnvVariable.Weather );
 		}
 		
 		public void SetSkyColour( FastColour col ) {
