@@ -143,9 +143,10 @@ namespace ClassicalSharp {
 				}
 			} else if( right ) {
 				Vector3I pos = SelectedPos.TranslatedPos;
+				if( !Map.IsValidPos( pos ) ) return;
+				
 				Block block = HeldBlock;
-				byte oldBlock = Map.IsValidPos( pos ) ? Map.GetBlock( pos ) : (byte)0;
-				if( CanReplace( oldBlock ) && CanPlace[(int)block] ) {
+				if( CanReplace( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
