@@ -434,7 +434,9 @@ namespace ClassicalSharp {
 						if( cpeServerExtensionsCount <= 0 ) {
 							WritePacket( MakeExtInfo( Utils.AppName, clientExtensions.Length ) );
 							for( int i = 0; i < clientExtensions.Length; i++ ) {
-								WritePacket( MakeExtEntry( clientExtensions[i], 1 ) );
+								string extName = clientExtensions[i];
+								int version = extName == "ExtPlayerList" ? 2 : 1;
+								WritePacket( MakeExtEntry( extName, version ) );
 							}
 						}
 					} break;
@@ -636,8 +638,6 @@ namespace ClassicalSharp {
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
-				Window.AsyncDownloader.DownloadSkin( skinName );
-				// This shouldn't usually happen, but just in case..
 				Player oldPlayer = Window.NetPlayers[entityId];
 				if( oldPlayer != null ) {
 					Window.RaiseEntityRemoved( entityId );
@@ -645,6 +645,7 @@ namespace ClassicalSharp {
 				}
 				Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
 				Window.RaiseEntityAdded( entityId );
+				Window.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {
 				ReadAbsoluteLocation( entityId, false );

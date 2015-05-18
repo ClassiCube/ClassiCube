@@ -112,14 +112,24 @@ namespace ClassicalSharp {
 				Bitmap bmp = item.Bmp;
 				Window.Graphics.DeleteTexture( ref renderer.PlayerTextureId );
 				renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );
+				// Custom mob textures.
+				renderer.MobTextureId = -1;
+				if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
+					renderer.MobTextureId = renderer.PlayerTextureId;
+				}
 				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
 			}
 		}
 		
+		DateTime lastModelChange = new DateTime( 1, 1, 1 );
 		public void SetModel( string modelName ) {
 			ModelName = modelName;
 			Model = Window.ModelCache.GetModel( ModelName );
+			lastModelChange = DateTime.UtcNow;
+			if( renderer != null ) {
+				renderer.MobTextureId = -1;
+			}
 		}
 	}
 }

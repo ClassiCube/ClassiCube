@@ -146,7 +146,7 @@ namespace ClassicalSharp.Network {
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
-				DownloadedItem newItem = new DownloadedItem( bmp, page, request.TimeAdded );
+				DownloadedItem newItem = new DownloadedItem( bmp, page, request.TimeAdded, request.Url );
 				
 				if( downloaded.TryGetValue( request.Identifier, out oldItem ) ) {
 					if( oldItem.TimeAdded > newItem.TimeAdded ) {
@@ -183,12 +183,14 @@ namespace ClassicalSharp.Network {
 		public Bitmap Bmp;
 		public string Page;
 		public DateTime TimeAdded, TimeDownloaded;
+		public string Url;
 		
-		public DownloadedItem( Bitmap bmp, string page, DateTime timeAdded ) {
+		public DownloadedItem( Bitmap bmp, string page, DateTime timeAdded, string url ) {
 			Bmp = bmp;
 			Page = page;
 			TimeAdded = timeAdded;
 			TimeDownloaded = DateTime.UtcNow;
+			Url = url;
 		}
 	}
 }
