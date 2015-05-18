@@ -14,7 +14,7 @@ namespace ClassicalSharp.Renderers {
 		public Player Player;
 		Texture nameTexture;
 		float nameWidth, nameHeight;
-		public int TextureId = -1;
+		public int PlayerTextureId = -1, MobTextureId = -1;
 		int nameTextureId = -1;
 		
 		public PlayerRenderer( Player player, Game window ) {
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteTexture( ref TextureId );
+			Graphics.DeleteTexture( ref PlayerTextureId );
 			Graphics.DeleteTexture( ref nameTextureId );
 		}
 		

@@ -44,7 +44,7 @@ namespace ClassicalSharp.Model {
 		
 		public abstract void Dispose();
 		
-		public int DefaultSkinTextureId; //{ get; protected set; }
+		public int DefaultTexId; //{ get; protected set; }
 		
 		protected FastColour col = new FastColour( 178, 178, 178 );
 		protected VertexPos3fTex2fCol4b[] vertices;

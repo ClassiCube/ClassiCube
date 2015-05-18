@@ -20,7 +20,7 @@ namespace ClassicalSharp.Model {
 			Set.RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			vertices = null;
 
-			DefaultSkinTextureId = graphics.LoadTexture( "pig.png" );
+			DefaultTexId = graphics.LoadTexture( "pig.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -41,7 +41,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
-			int texId = DefaultSkinTextureId;
+			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
 			DrawRotate( 0, 0.75f, -0.375f, -pitch, 0, 0, Set.Head );
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Model {
 		
 		public override void Dispose() {
 			Set.Dispose();
-			graphics.DeleteTexture( ref DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		class ModelSet {

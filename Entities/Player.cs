@@ -110,8 +110,8 @@ namespace ClassicalSharp {
 			Window.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
 			if( item != null && item.Bmp != null ) {
 				Bitmap bmp = item.Bmp;
-				Window.Graphics.DeleteTexture( ref renderer.TextureId );
-				renderer.TextureId = Window.Graphics.LoadTexture( bmp );
+				Window.Graphics.DeleteTexture( ref renderer.PlayerTextureId );
+				renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );
 				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
 			}

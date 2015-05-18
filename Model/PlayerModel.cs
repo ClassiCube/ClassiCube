@@ -41,7 +41,7 @@ namespace ClassicalSharp.Model {
 			
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
 				window.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
-				DefaultSkinTextureId = graphics.LoadTexture( bmp );
+				DefaultTexId = graphics.LoadTexture( bmp );
 			}
 		}
 		
@@ -80,7 +80,7 @@ namespace ClassicalSharp.Model {
 		ModelSet model;
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
-			int texId = renderer.TextureId <= 0 ? DefaultSkinTextureId : renderer.TextureId;
+			int texId = renderer.PlayerTextureId <= 0 ? DefaultTexId : renderer.PlayerTextureId;
 			graphics.Bind2DTexture( texId );
 			model = Set64x32;
 			SkinType skinType = player.SkinType;
@@ -101,7 +101,7 @@ namespace ClassicalSharp.Model {
 			Set64x32.Dispose();
 			Set64x64.Dispose();
 			Set64x64Slim.Dispose();
-			graphics.DeleteTexture( ref DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		class ModelSet {

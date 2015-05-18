@@ -31,7 +31,7 @@ namespace ClassicalSharp.Model {
 			}
 			vertices = null;
 
-			DefaultSkinTextureId = graphics.LoadTexture( "sheep.png" );
+			DefaultTexId = graphics.LoadTexture( "sheep.png" );
 			furTextureId = graphics.LoadTexture( "sheep_fur.png" );
 		}
 		
@@ -65,7 +65,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
-			int texId = DefaultSkinTextureId;
+			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
 			DrawRotate( 0, 1.125f, -0.5f, -pitch, 0, 0, Set.Head );
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Model {
 		
 		public override void Dispose() {
 			Set.Dispose();
-			graphics.DeleteTexture( ref DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultTexId );
 			if( Fur ) {
 				graphics.DeleteTexture( ref furTextureId );
 			}

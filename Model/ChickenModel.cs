@@ -22,7 +22,7 @@ namespace ClassicalSharp.Model {
 			Set.RightWing = MakeWing( 0.1875f, 0.25f );
 			vertices = null;
 
-			DefaultSkinTextureId = graphics.LoadTexture( "chicken.png" );
+			DefaultTexId = graphics.LoadTexture( "chicken.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
-			int texId = DefaultSkinTextureId;
+			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Model {
 		
 		public override void Dispose() {
 			Set.Dispose();
-			graphics.DeleteTexture( ref DefaultSkinTextureId );
+			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		class ModelSet {
