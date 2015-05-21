@@ -36,7 +36,11 @@ namespace ClassicalSharp {
 						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, Window.ChunkUpdates )
 						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, Window.Vertices );
 				}
-				fpsTextWidget.SetText( text.value );
+				string textString = text.value;
+				if( Utils2D.needWinXpFix )
+					textString = textString.TrimEnd( Utils2D.trimChars );
+				
+				fpsTextWidget.SetText( textString );
 				maxDelta = 0;
 				accumulator = 0;
 				fpsCount = 0;

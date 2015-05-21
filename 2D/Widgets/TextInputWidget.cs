@@ -41,6 +41,8 @@ namespace ClassicalSharp {
 			DrawTextArgs caretArgs = new DrawTextArgs( GraphicsApi, "_", Color.White, false );
 			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			string value = chatInputText.value;
+			if( Utils2D.needWinXpFix )
+				value = value.TrimEnd( Utils2D.trimChars );
 			
 			if( chatInputText.Empty ) {
 				caretPos = -1;

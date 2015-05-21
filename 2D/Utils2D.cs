@@ -12,6 +12,9 @@ namespace ClassicalSharp {
 		static Bitmap measuringBmp;
 		static Graphics measuringGraphics;
 		static Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );
+		internal static bool needWinXpFix;
+		internal static char[] trimChars = { '\0' };
+		
 		static Utils2D() {
 			format = StringFormat.GenericTypographic;
 			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
@@ -20,6 +23,9 @@ namespace ClassicalSharp {
 			//format.FormatFlags |= StringFormatFlags.NoClip;
 			measuringBmp = new Bitmap( 1, 1 );
 			measuringGraphics = Graphics.FromImage( measuringBmp );
+			measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+			OperatingSystem os = Environment.OSVersion;
+			needWinXpFix = os.Platform == PlatformID.Win32NT && os.Version.Major < 6;
 		}
 		
 		static SolidBrush GetOrCreateBrush( Color color ) {
@@ -33,7 +39,7 @@ namespace ClassicalSharp {
 			return brush;
 		}
 		
-		const float shadowOffset = 1.3f;		
+		const float shadowOffset = 1.3f;
 		public static Size MeasureSize( string text, Font font, bool shadow ) {
 			SizeF size = measuringGraphics.MeasureString( text, font, Int32.MaxValue, format );
 			if( shadow ) {
