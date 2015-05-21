@@ -115,10 +115,6 @@ namespace ClassicalSharp {
 			8, 86, 2, 4, 66, 69, 2, 8, 138,
 		};
 		
-		// TODO: Finish implementing CPE
-		// === CPE support list ===
-		// TextHotKey       : unlikely
-		// ExtPlayerList    : yes (only version 1, not 2)
 		static string[] clientExtensions = new string[] {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",

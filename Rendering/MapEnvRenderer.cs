@@ -35,8 +35,8 @@ namespace ClassicalSharp {
 			Window.TerrainAtlasChanged += ResetTextures;
 			
 			Graphics = Window.Graphics;
-			MakeEdgeTexture();
-			MakeSideTexture();
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 			ResetSidesAndEdges( null, null );
 		}
 
@@ -78,8 +78,8 @@ namespace ClassicalSharp {
 			Graphics.DeleteVb( sidesVboId );
 			Graphics.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
-			MakeEdgeTexture();
-			MakeSideTexture();
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 		}
 		
 		void OnNewMapLoaded( object sender, EventArgs e ) {
@@ -89,17 +89,18 @@ namespace ClassicalSharp {
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Variable == EnvVariable.EdgeBlock ) {
-				MakeEdgeTexture();
+				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
 			} else if( e.Variable == EnvVariable.SidesBlock ) {
-				MakeSideTexture();
+				MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 			} else if( e.Variable == EnvVariable.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
 			}
 		}
 		
 		void ResetTextures( object sender, EventArgs e ) {
-			MakeEdgeTexture();
-			MakeSideTexture();
+			lastEdgeTexLoc = lastSideTexLoc = -1;
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
@@ -256,17 +257,15 @@ namespace ClassicalSharp {
 		
 		#endregion
 		
-		void MakeEdgeTexture() {
-			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)Map.EdgeBlock, TileSide.Top );
-			Window.Graphics.DeleteTexture( ref edgeTexId );
-			edgeTexId = Window.TerrainAtlas.LoadTextureElement( texLoc );
-		}
-		
-		void MakeSideTexture() {
-			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)Map.SidesBlock, TileSide.Top );
-			Window.Graphics.DeleteTexture( ref sideTexId );
-			sideTexId = Window.TerrainAtlas.LoadTextureElement( texLoc );
-		}
+		int lastEdgeTexLoc, lastSideTexLoc;
+		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
+			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
+			if( texLoc != lastTexLoc ) {
+				lastTexLoc = texLoc;
+				Window.Graphics.DeleteTexture( ref texId );
+				texId = Window.TerrainAtlas.LoadTextureElement( texLoc );
+			}
+		}	
 		
 		void DrawXPlane( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			TextureRectangle rec = new TextureRectangle( 0, 0, z2 - z1, y2 - y1 );
