@@ -125,7 +125,6 @@ namespace ClassicalSharp {
 			Console.ForegroundColor = ConsoleColor.Green;
 			Graphics.PrintApiSpecificInfo();
 			Console.WriteLine( "Max 2D texture dimensions: " + Graphics.MaxTextureDimensions );
-			Console.WriteLine( "Supports non power of 2 textures: " + Graphics.SupportsNonPowerOf2Textures );
 			Console.WriteLine( "== End of graphics info ==" );
 			Console.ResetColor();
 		}

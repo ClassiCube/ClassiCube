@@ -99,14 +99,6 @@ namespace ClassicalSharp.GraphicsAPI {
             device.RenderState.FogStart = value;
         }
 
-
-        public override bool SupportsNonPowerOf2Textures {
-            get {
-                return !caps.TextureCaps.SupportsPower2 &&
-                    !caps.TextureCaps.SupportsNonPower2Conditional;
-            }
-        }
-
         public override int MaxTextureDimensions {
             get {
                 return Math.Min( caps.MaxTextureHeight, caps.MaxTextureWidth );

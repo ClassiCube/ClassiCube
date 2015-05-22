@@ -9,10 +9,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	
 	public abstract class IGraphicsApi {
 		
-		/// <summary> Whether the underlying graphics API (and card) fully
-		/// supports using non power of two textures. </summary>
-		public abstract bool SupportsNonPowerOf2Textures { get; }
-		
 		/// <summary> Maximum supported length of a dimension
 		/// (i.e. max width and max height) in a 2D texture. </summary>
 		public abstract int MaxTextureDimensions { get; }

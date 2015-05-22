@@ -15,8 +15,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	public class OpenGLApi : IGraphicsApi {
 		
 		int textureDimensions;
-		bool nonPow2;
-		const string nonPow2Ext = "GL_ARB_texture_non_power_of_two";
 		const string vboExt = "GL_ARB_vertex_buffer_object";
 		bool useVbos = true;
 		BeginMode[] modeMappings = new BeginMode[] {
@@ -27,7 +25,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public OpenGLApi() {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
 			string extensions = GL.GetString( StringName.Extensions );
-			nonPow2 = extensions.Contains( nonPow2Ext );
 			useVbos = extensions.Contains( vboExt );
 			if( !useVbos ) {
 				Utils.LogWarning( "Unable to use OpenGL VBOs, you may experience reduced performance." );
@@ -40,10 +37,6 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override int MaxTextureDimensions {
 			get { return textureDimensions; }
-		}
-		
-		public override bool SupportsNonPowerOf2Textures {
-			get { return nonPow2; }
 		}
 		
 		public override bool AlphaTest {
@@ -137,6 +130,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		static int LoadTexture( int width, int height, IntPtr scan0 ) {
+			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
+				Utils.LogWarning( "Creating a non power of two texture." );
+			
 			int texId = GL.GenTexture();
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );

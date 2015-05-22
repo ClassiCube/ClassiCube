@@ -120,23 +120,9 @@ namespace ClassicalSharp {
 		
 		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
 			int textureID = graphics.LoadTexture( bmp );
-			if( !Utils.IsPowerOf2( bmp.Width ) || !Utils.IsPowerOf2( bmp.Height ) )
-				Utils.LogWarning( "Creating a non power of two texture." );
-			
 			return new Texture( textureID, x1, y1, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
-		}
-		
-		public static Bitmap ResizeToPower2( Bitmap bmp ) {
-			int adjWidth = Utils.NextPowerOf2( bmp.Width );
-			int adjHeight = Utils.NextPowerOf2( bmp.Height );
-			Bitmap adjBmp = new Bitmap( adjWidth, adjHeight );
-			using( Graphics g = Graphics.FromImage( adjBmp ) ) {
-				g.DrawImage( bmp, 0, 0 );
-			}
-			return adjBmp;
-		}
-		
+		}		
 		
 		public static void Dispose() {
 			measuringBmp.Dispose();
