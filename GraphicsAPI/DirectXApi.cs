@@ -186,11 +186,6 @@ namespace ClassicalSharp.GraphicsAPI {
             set { device.RenderState.ZBufferWriteEnable = value; }
         }
 
-        public override void DrawVertices( DrawMode mode, OpenTK.Vector3[] vertices, int count ) {
-            device.VertexFormat = VertexFormats.Position;
-            device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
-        }
-
         public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
             device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
             device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );

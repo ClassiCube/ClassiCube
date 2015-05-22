@@ -208,21 +208,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		
-		public override void DrawVertices( DrawMode mode, Vector3[] vertices, int count ) {
+		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
 			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
 			// Feasible alternatives:
 			// - Use a dynamically updated VBO, and resize it (i.e. create a new bigger VBO) if required.
 			// - Immediate mode.
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				GL.Vertex3( vertices[i] );
-			}
-			GL.End();
-		}
-		
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
 			GL.Begin( modeMappings[(int)mode] );
 			for( int i = 0; i < count; i++ ) {
 				VertexPos3fCol4b vertex = vertices[i];

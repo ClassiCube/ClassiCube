@@ -90,24 +90,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public virtual void DrawVertices( DrawMode mode, Vector3[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public virtual void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices ) {
-			DrawVertices( mode, vertices, vertices.Length );
-		}
-		
-		public abstract void DrawVertices( DrawMode mode, Vector3[] vertices, int count );
-		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count );
 		
 		public abstract void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count );
@@ -212,7 +194,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVertices[1] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVertices[2] = new VertexPos3fCol4b( x, y, 0, col );
 			quadVertices[3] = new VertexPos3fCol4b( x, y + height, 0, col );
-			DrawVertices( DrawMode.TriangleStrip, quadVertices );
+			DrawVertices( DrawMode.TriangleStrip, quadVertices, 4 );
 		}
 		
 		VertexPos3fTex2f[] texVertices = new VertexPos3fTex2f[4];
@@ -223,7 +205,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
 			texVertices[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
 			texVertices[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			DrawVertices( DrawMode.TriangleStrip, texVertices );
+			DrawVertices( DrawMode.TriangleStrip, texVertices, 4 );
 		}
 		
 		public void Mode2D( float width, float height ) {

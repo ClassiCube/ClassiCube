@@ -18,7 +18,8 @@ namespace ClassicalSharp.Renderers {
 		double accumulator;
 		
 		int index = 0;
-		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[24 * ( 3 * 2 )];
+		const int verticesCount = 24 * ( 3 * 2 );
+		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
 		public void Render( double delta ) {
@@ -60,7 +61,7 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( max.Z + offset, max.X + offset, min.Y - offset, max.X - size + offset, max.Y + offset );
 				DrawZPlane( max.Z + offset, min.X - offset, min.Y - offset, max.X + offset, min.Y + size - offset );
 				DrawZPlane( max.Z + offset, min.X - offset, max.Y + offset, max.X + offset, max.Y - size + offset );
-				graphics.DrawVertices( DrawMode.Triangles, vertices );
+				graphics.DrawVertices( DrawMode.Triangles, vertices, verticesCount );
 			}
 		}
 		
