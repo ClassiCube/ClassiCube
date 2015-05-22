@@ -111,48 +111,14 @@ namespace ClassicalSharp {
 				}
 				return bmp;
 			}
-		}
+		}		
 		
-		/// <summary> Converts the *used* portion of this 2D texture atlas into an array of 1D textures. </summary>
-		/// <param name="maxVerSize"> Maximum height for any bitmap. (the resulting bitmaps may
-		/// have less height than this amount)</param>
-		/// <param name="elementsPerBitmap"> Number of elements in each bitmap.
-		/// (note that if there is more than one bitmap, the last bitmap may have less elements)</param>
-		/// <remarks> Element size is bmps[0].Height / elementsPerBitmap</remarks>
-		/// <returns> The array of bitmaps. </returns>
-		public Bitmap[] Into1DAtlases( int maxVerSize, out int elementsPerBitmap ) {
-			int verElements = maxVerSize / verElementSize;
-			int totalElements = UsedRowsCount * ElementsPerRow;
-			
-			int atlasesCount = totalElements / verElements + ( totalElements % verElements != 0 ? 1 : 0 );
-			Bitmap[] atlases = new Bitmap[atlasesCount];
-			elementsPerBitmap = Math.Min( verElements, totalElements ); // in case verElements > totalElements
-			int index = 0;
-			
-			int x = 0, y = 0;
-			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
-
-				for( int i = 0; i < atlases.Length; i++ ) {
-					Bitmap atlas1d = new Bitmap( horElementSize, elementsPerBitmap * verElementSize );
-					using( FastBitmap dest = new FastBitmap( atlas1d, true ) ) {
-						for( int j = 0; j < elementsPerBitmap; j++ ) {
-							GetCoords( index, ref x, ref y );
-							CopyPortion( x, y, 0, j * verElementSize, atlas, dest );
-							index++;
-						}
-					}
-					atlases[i] = atlas1d;
-				}
-			}
-			return atlases;
-		}
-		
-		void GetCoords( int id, ref int x, ref int y ) {
+		internal void GetCoords( int id, ref int x, ref int y ) {
 			x = id % ElementsPerRow;
 			y = id / ElementsPerRow;
 		}
 		
-		unsafe void CopyPortion( int tileX, int tileY, int dstX, int dstY, FastBitmap atlas, FastBitmap dst ) {
+		internal unsafe void CopyPortion( int tileX, int tileY, int dstX, int dstY, FastBitmap atlas, FastBitmap dst ) {
 			int atlasX = tileX * horElementSize;
 			int atlasY = tileY * verElementSize;
 			for( int y = 0; y < verElementSize; y++ ) {

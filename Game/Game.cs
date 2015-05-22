@@ -110,26 +110,10 @@ namespace ClassicalSharp {
 			TerrainAtlas = new TextureAtlas2D( Graphics, bmp, 16, 16, 5 );
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				BlockInfo.MakeOptimisedTexture( fastBmp );
+				TerrainAtlasTexId = Graphics.LoadTexture( fastBmp );
 			}
-			TerrainAtlasTexId = Graphics.LoadTexture( TerrainAtlas.AtlasBitmap );
-			int elementsPerBitmap;
 			int size = Math.Min( 2048, Graphics.MaxTextureDimensions );
-			Bitmap[] bmps = TerrainAtlas.Into1DAtlases( size, out elementsPerBitmap );
-			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", bmps.Length, elementsPerBitmap );
-			
-			TerrainAtlas1D = new TextureAtlas1D( Graphics, bmps, elementsPerBitmap );
-			TerrainAtlas1DTexIds = new int[bmps.Length];
-			for( int i = 0; i < bmps.Length; i++ ) {
-				Bitmap bmp1D = bmps[i];
-				if( Graphics.SupportsNonPowerOf2Textures ) {
-					TerrainAtlas1DTexIds[i] = Graphics.LoadTexture( bmp1D );
-				} else {
-					using( Bitmap adjBmp = Utils2D.ResizeToPower2( bmp1D ) ) {
-						TerrainAtlas1DTexIds[i] = Graphics.LoadTexture( adjBmp );
-					}
-				}
-				bmp1D.Dispose();
-			}
+			TerrainAtlas1DTexIds = TerrainAtlas1D.CreateFrom2DAtlas( Graphics, TerrainAtlas, size );
 		}
 		
 		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
@@ -152,6 +136,7 @@ namespace ClassicalSharp {
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
+			TerrainAtlas1D = new TextureAtlas1D();
 			LoadAtlas( terrainBmp );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
