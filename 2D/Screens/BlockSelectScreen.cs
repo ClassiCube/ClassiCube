@@ -74,13 +74,12 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			Window.BlockPermissionsChanged += BlockPermissionsChanged;
-			using( Bitmap bmp = new Bitmap( blockSize, blockSize ) ) {
+			Size size = new Size( blockSize, blockSize );
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					using( Pen pen = new Pen( Color.White, blockSize / 8 ) ) {
-						g.DrawRectangle( pen, 0, 0, blockSize, blockSize );
-					}
+					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
 				}
-				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, 0 );
+				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 0, 0 );
 			}
 			RecreateBlockTextures();
 		}
@@ -114,12 +113,12 @@ namespace ClassicalSharp {
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;
 			
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					Utils2D.DrawText( g, parts, font, 0, 0 );
 				}
-				blockInfoTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, x, y );
+				blockInfoTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, x, y );
 			}
 		}
 		

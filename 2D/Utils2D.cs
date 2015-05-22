@@ -39,6 +39,10 @@ namespace ClassicalSharp {
 			return brush;
 		}
 		
+		public static Bitmap CreatePow2Bitmap( Size size ) {
+			return new Bitmap( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
+		}
+		
 		const float shadowOffset = 1.3f;
 		public static Size MeasureSize( string text, Font font, bool shadow ) {
 			SizeF size = measuringGraphics.MeasureString( text, font, Int32.MaxValue, format );
@@ -96,35 +100,31 @@ namespace ClassicalSharp {
 		
 		public static Texture MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
+			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					DrawText( g, font, ref args, 0, 0 );
 				}
-				return Make2DTexture( args.Graphics, bmp, x1, y1 );
+				return Make2DTexture( args.Graphics, bmp, size, x1, y1 );
 			}
 		}
 		
 		public static Texture MakeTextTexture( List<DrawTextArgs> parts, Font font, Size size, int x1, int y1 ) {
 			if( parts.Count == 0 ) return new Texture( -1, x1, y1, 0, 0, 1, 1 );
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
+			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					DrawText( g, parts, font, 0, 0 );
 				}
-				return Make2DTexture( parts[0].Graphics, bmp, x1, y1 );
+				return Make2DTexture( parts[0].Graphics, bmp, size, x1, y1 );
 			}
 		}
 		
-		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, int x1, int y1 ) {
-			if( graphics.SupportsNonPowerOf2Textures ) {
-				int textureID = graphics.LoadTexture( bmp );
-				return new Texture( textureID, x1, y1, bmp.Width, bmp.Height, 1f, 1f );
-			} else {
-				using( Bitmap adjBmp = ResizeToPower2( bmp ) )  {
-					int textureID = graphics.LoadTexture( adjBmp );
-					return new Texture( textureID, x1, y1, bmp.Width, bmp.Height,
-					                   (float)bmp.Width / adjBmp.Width, (float)bmp.Height / adjBmp.Height );
-				}
-			}
+		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
+			int textureID = graphics.LoadTexture( bmp );
+			if( !Utils.IsPowerOf2( bmp.Width ) || !Utils.IsPowerOf2( bmp.Height ) )
+				Utils.LogWarning( "Creating a non power of two texture." );
+			
+			return new Texture( textureID, x1, y1, used.Width, used.Height,
+			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
 		}
 		
 		public static Bitmap ResizeToPower2( Bitmap bmp ) {
@@ -136,6 +136,7 @@ namespace ClassicalSharp {
 			}
 			return adjBmp;
 		}
+		
 		
 		public static void Dispose() {
 			measuringBmp.Dispose();

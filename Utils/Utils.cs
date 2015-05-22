@@ -35,6 +35,10 @@ namespace ClassicalSharp {
 			return next;
 		}
 		
+		public static bool IsPowerOf2( int value ) {
+			return value != 0 && ( value & ( value - 1 ) ) == 0;
+		}
+		
 		public static bool IsUrl( string value ) {
 			return value.StartsWith( "http://" ) || value.StartsWith( "https://" );
 		}

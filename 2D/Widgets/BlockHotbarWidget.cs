@@ -27,13 +27,12 @@ namespace ClassicalSharp {
 		public override void Init() {
 			int y = Window.Height - blockSize;
 			
-			using( Bitmap bmp = new Bitmap( blockSize, blockSize ) ) {
+			Size size = new Size( 32, 32 );
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					using( Pen pen = new Pen( Color.White, blockSize / 8 ) ) {
-						g.DrawRectangle( pen, 0, 0, blockSize, blockSize );
-					}
+					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
 				}
-				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, y );
+				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 0, y );
 			}
 			
 			int x = Window.Width / 2 - ( blockSize * barTextures.Length ) / 2;

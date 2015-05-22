@@ -32,14 +32,14 @@ namespace ClassicalSharp {
 			titleWidget = TextWidget.Create( Window, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
 			messageWidget = TextWidget.Create( Window, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
 			progX = Window.Width / 2f - progWidth / 2f;
-			using( Bitmap bmp = new Bitmap( progWidth, progHeight ) ) {
+			
+			Size size = new Size( progWidth, progHeight );
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRectBounds( g, Color.White, 5f, 0, 0, progWidth, progHeight );
 				}
-				progressBoxTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 0, 0 );
+				progressBoxTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, (int)progX, (int)progY );
 			}
-			progressBoxTexture.X1 = (int)progX;
-			progressBoxTexture.Y1 = (int)progY;
 			Window.MapLoading += MapLoading;
 		}
 

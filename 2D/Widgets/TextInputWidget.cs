@@ -61,13 +61,13 @@ namespace ClassicalSharp {
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
 			
 			int y = Window.Height - ChatInputYOffset - size.Height / 2;
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, value, Color.White, false );
 					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
-				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
+				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 10, y );
 			}
 			chatCaretTexture.Y1 = chatInputTexture.Y1;
 			Y = y;

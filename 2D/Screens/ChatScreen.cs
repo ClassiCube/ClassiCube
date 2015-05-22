@@ -229,13 +229,13 @@ namespace ClassicalSharp {
 			Size size = Utils2D.MeasureSize( text, historyFont, false );
 			int y = normalChat.CalcUsedY() - size.Height;
 
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height ) ) {
+			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, Color.Yellow, false );
 					Utils2D.DrawText( g, historyFont, ref args, 0, 0 );
 				}
-				pageTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, 10, y );
+				pageTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 10, y );
 			}
 		}
 		
