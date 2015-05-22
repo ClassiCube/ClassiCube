@@ -50,7 +50,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Compare.Always, Compare.NotEqual, Compare.Never, Compare.Less,
 			Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
 		};
-        public override void AlphaTestFunc( AlphaFunc func, float value ) {
+        public override void AlphaTestFunc( CompareFunc func, float value ) {
             device.RenderState.AlphaFunction = compareFuncs[(int)func];
             device.RenderState.ReferenceAlpha = (int)( value * 255f );
         }
@@ -98,6 +98,13 @@ namespace ClassicalSharp.GraphicsAPI {
         public override void SetFogStart( float value ) {
             device.RenderState.FogStart = value;
         }
+        
+		public override bool FaceCulling {
+			set {
+        		Cull mode = value ? Cull.CounterClockwise : Cull.None;
+        		device.RenderState.CullMode = mode;
+        	}
+		}
 
         public override int MaxTextureDimensions {
             get {
@@ -138,7 +145,7 @@ namespace ClassicalSharp.GraphicsAPI {
             }
         }
 
-        public override void DeleteTexture( int texId ) {
+        public override void DeleteTexture( ref int texId ) {
             if( texId <= 0 || texId >= textures.Length ) return;
 
             D3D.Texture texture = textures[texId];
@@ -146,7 +153,12 @@ namespace ClassicalSharp.GraphicsAPI {
                 texture.Dispose();
             }
             textures[texId] = null;
+            texId = -1;
         }
+        
+        public override bool IsValidTexture( int texId ) {
+        	return texId < textures.Length && textures[texId] != null;
+		}
 
         Color lastClearCol = Color.Black;
         public override void Clear() {
@@ -166,7 +178,7 @@ namespace ClassicalSharp.GraphicsAPI {
             device.RenderState.ColorWriteEnable = flags;
         }
 
-        public override void DepthTestFunc( DepthFunc func ) {
+        public override void DepthTestFunc( CompareFunc func ) {
             device.RenderState.ZBufferFunction = compareFuncs[(int)func];
         }
 
@@ -267,13 +279,10 @@ namespace ClassicalSharp.GraphicsAPI {
                 buffers[id] = null;
             }
         }
-
-        public override void DrawVbPos3f( DrawMode mode, int id, int verticesCount ) {
-            VertexBuffer buffer = buffers[id];
-            device.SetStreamSource( 0, buffer, 0 );
-            device.VertexFormat = VertexFormats.Position;
-            device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
-        }
+        
+        public override bool IsValidVb( int vb ) {
+        	return vb < buffers.Length && buffers[vb] != null;
+		}
 
         public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
             VertexBuffer buffer = buffers[id];
