@@ -81,7 +81,9 @@ namespace ClassicalSharp {
 		static int[] viewDistances = { 16, 32, 64, 128, 256, 512 };
 		void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
-			if( key == Keys[KeyMapping.Screenshot] ) {
+			if( key == Key.F4 && ( IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ) ) ) {
+				Exit();
+			} else if( key == Keys[KeyMapping.Screenshot] ) {
 				screenshotRequested = true;
 			} else if( key == Keys[KeyMapping.Fullscreen] ) {
 				WindowState state = WindowState;
@@ -175,7 +177,7 @@ namespace ClassicalSharp {
 		};
 		
 		bool IsReservedKey( Key key ) {
-			return key == Key.Slash || key == Key.BackSpace ||
+			return IsLockedKey( key ) || key == Key.Slash || key == Key.BackSpace ||
 				( key >= Key.Insert && key <= Key.End ) ||
 				( key >= Key.Up && key <= Key.Right ) || // chat screen movement
 				( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
