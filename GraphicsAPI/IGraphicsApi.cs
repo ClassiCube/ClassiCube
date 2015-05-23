@@ -64,9 +64,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether alpha blending is currently enabled. </summary>
 		public abstract bool AlphaBlending { set; }
 		
-		/// <summary> Sets the alpha blend equation that is used when alpha blending is enabled. </summary>
-		public abstract void AlphaBlendEq( BlendEquation eq );
-		
 		/// <summary> Sets the alpha blend function that isused when alpha blending is enabled. </summary>
 		public abstract void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc );
 		

@@ -57,15 +57,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
-		BlendEquationMode[] blendEqs = new BlendEquationMode[] {
-			BlendEquationMode.FuncAdd, BlendEquationMode.Max,
-			BlendEquationMode.Min, BlendEquationMode.FuncSubtract,
-			BlendEquationMode.FuncReverseSubtract,
-		};
-		public override void AlphaBlendEq( BlendEquation eq ) {
-			GL.BlendEquation( blendEqs[(int)eq] );
-		}
-		
 		BlendingFactorSrc[] srcBlendFuncs = new BlendingFactorSrc[] {
 			BlendingFactorSrc.Zero, BlendingFactorSrc.One,
 			BlendingFactorSrc.SrcAlpha, BlendingFactorSrc.OneMinusSrcAlpha,
@@ -133,7 +124,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
 				Utils.LogWarning( "Creating a non power of two texture." );
 			
-			int texId = GL.GenTexture();
+			int texId = 0;
+			GL.GenTextures( 1, out texId );
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
@@ -157,7 +149,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			#if TRACK_RESOURCES
 			textures.Remove( texId );
 			#endif
-			GL.DeleteTexture( texId );
+			GL.DeleteTextures( 1, ref texId );
 			texId = -1;
 		}
 		
@@ -609,7 +601,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void SaveTexture( int texId, int width, int height, string path ) {
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
-			//GL.CopyTexSubImage2D( TextureTarget.Texture2D, 0, 0, 0, 0, 0, width, height );
 			using( Bitmap bmp = new Bitmap( width, height, BmpPixelFormat.Format32bppArgb ) ) {
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 					GL.GetTexImage( TextureTarget.Texture2D, 0, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );

@@ -55,15 +55,6 @@ namespace ClassicalSharp.GraphicsAPI {
             device.RenderState.ReferenceAlpha = (int)( value * 255f );
         }
 
-        BlendOperation[] blendEqs = new BlendOperation[] {
-			BlendOperation.Add, BlendOperation.Max,
-			BlendOperation.Min, BlendOperation.Subtract,
-			BlendOperation.RevSubtract,
-		};
-        public override void AlphaBlendEq( BlendEquation eq ) {
-            device.RenderState.BlendOperation = blendEqs[(int)eq];
-        }
-
         Blend[] blendFuncs = new Blend[] {
 			Blend.Zero, Blend.One,
 			Blend.SourceAlpha, Blend.InvSourceAlpha,
@@ -244,7 +235,7 @@ namespace ClassicalSharp.GraphicsAPI {
             VertexBuffer buffer = new VertexBuffer( device, sizeInBytes, Usage.None, d3dFormat, Pool.Managed );
             GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
             GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-            IntPtr source = Marshal.UnsafeAddrOfPinnedArrayElement( vertices, 0 );
+            IntPtr source = handle.AddrOfPinnedObject();
             IntPtr dest = vbData.InternalData;
             // TODO: check memcpy actually works and doesn't explode.
             memcpy( source, dest, sizeInBytes );
