@@ -30,9 +30,8 @@ namespace ClassicalSharp {
 			set { _position = (int)value; }
 		}
 
-		public FixedBufferStream( int capacity ) {
-			_buffer = new byte[capacity];
-			_length = capacity;
+		public FixedBufferStream( byte[] buffer ) {
+			_buffer = buffer;
 		}
 		
 		public override void Flush() {

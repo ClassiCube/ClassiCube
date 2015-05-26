@@ -42,6 +42,7 @@ namespace ClassicalSharp {
 			}
 			stream = new NetworkStream( socket, true );
 			reader = new FastNetReader( stream );
+			gzippedMap = new FixedBufferStream( reader.buffer );
 			WritePacket( MakeLoginPacket( Window.Username, Window.Mppass ) );
 		}
 		
@@ -240,7 +241,7 @@ namespace ClassicalSharp {
 		byte[] mapSize = new byte[4];
 		byte[] map;
 		int mapIndex;
-		FixedBufferStream gzippedMap = new FixedBufferStream( 1024 );
+		FixedBufferStream gzippedMap;
 		int womCounter = 0;
 		bool sendWomId = false, sentWomId = false;
 		
@@ -296,9 +297,6 @@ namespace ClassicalSharp {
 						int usedLength = reader.ReadInt16();
 						gzippedMap.Position = 0;
 						gzippedMap.SetLength( usedLength );
-						Buffer.BlockCopy( reader.buffer, 0, gzippedMap._buffer, 0, usedLength );
-						reader.Remove( 1024 );
-						gzippedMap.Position = 0;
 						
 						if( mapSizeIndex < 4 ) {
 							mapSizeIndex += gzipStream.Read( mapSize, 0, 4 - mapSizeIndex );
@@ -311,7 +309,7 @@ namespace ClassicalSharp {
 							}
 							mapIndex += gzipStream.Read( map, mapIndex, map.Length - mapIndex );
 						}
-						
+						reader.Remove( 1024 );
 						byte progress = reader.ReadUInt8();
 						Window.RaiseMapLoading( progress );
 					} break;
