@@ -14,53 +14,51 @@ namespace ClassicalSharp.Renderers {
 			graphics = window.Graphics;
 		}
 		
-		FastColour col = FastColour.White;
-		double accumulator;
-		
+		FastColour col = FastColour.White;		
 		int index = 0;
 		const int verticesCount = 24 * ( 3 * 2 );
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
+		
 		public void Render( double delta ) {
-			accumulator += delta;
 			index = 0;
 			PickedPos pickedPos = window.SelectedPos;
 			
 			if( pickedPos.Valid ) {
-				Vector3 min = pickedPos.Min;
-				Vector3 max = pickedPos.Max;
+				Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
+				Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 				
 				// bottom face
-				DrawYPlane( min.Y - offset, min.X - offset, min.Z - offset, min.X + size - offset, max.Z + offset );
-				DrawYPlane( min.Y - offset, max.X + offset, min.Z - offset, max.X - size + offset, max.Z + offset );
-				DrawYPlane( min.Y - offset, min.X - offset, min.Z - offset, max.X + offset, min.Z + size - offset );
-				DrawYPlane( min.Y - offset, min.X - offset, max.Z + offset, max.X + offset, max.Z - size + offset );
+				DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );
+				DrawYPlane( p1.Y, p2.X, p1.Z, p2.X - size, p2.Z );
+				DrawYPlane( p1.Y, p1.X, p1.Z, p2.X, p1.Z + size );
+				DrawYPlane( p1.Y, p1.X, p2.Z, p2.X, p2.Z - size );
 				// top face
-				DrawYPlane( max.Y + offset, min.X - offset, min.Z - offset, min.X + size - offset, max.Z + offset );
-				DrawYPlane( max.Y + offset, max.X + offset, min.Z - offset, max.X - size + offset, max.Z + offset );
-				DrawYPlane( max.Y + offset, min.X - offset, min.Z - offset, max.X + offset, min.Z + size - offset );
-				DrawYPlane( max.Y + offset, min.X - offset, max.Z + offset, max.X + offset, max.Z - size + offset );
+				DrawYPlane( p2.Y, p1.X, p1.Z, p1.X + size, p2.Z );
+				DrawYPlane( p2.Y, p2.X, p1.Z, p2.X - size, p2.Z );
+				DrawYPlane( p2.Y, p1.X, p1.Z, p2.X, p1.Z + size );
+				DrawYPlane( p2.Y, p1.X, p2.Z, p2.X, p2.Z - size );
 				// left face
-				DrawXPlane( min.X - offset, min.Z - offset, min.Y - offset, min.Z + size - offset, max.Y + offset );
-				DrawXPlane( min.X - offset, max.Z + offset, min.Y - offset, max.Z - size + offset, max.Y + offset );
-				DrawXPlane( min.X - offset, min.Z - offset, min.Y - offset, max.Z + offset, min.Y + size - offset );
-				DrawXPlane( min.X - offset, min.Z - offset, max.Y + offset, max.Z + offset, max.Y - size + offset );
+				DrawXPlane( p1.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
+				DrawXPlane( p1.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
+				DrawXPlane( p1.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
+				DrawXPlane( p1.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
 				// right face
-				DrawXPlane( max.X + offset, min.Z - offset, min.Y - offset, min.Z + size - offset, max.Y + offset );
-				DrawXPlane( max.X + offset, max.Z + offset, min.Y - offset, max.Z - size + offset, max.Y + offset );
-				DrawXPlane( max.X + offset, min.Z - offset, min.Y - offset, max.Z + offset, min.Y + size - offset );
-				DrawXPlane( max.X + offset, min.Z - offset, max.Y + offset, max.Z + offset, max.Y - size + offset );
+				DrawXPlane( p2.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
+				DrawXPlane( p2.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
+				DrawXPlane( p2.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
+				DrawXPlane( p2.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
 				// front face
-				DrawZPlane( min.Z - offset, min.X - offset, min.Y - offset, min.X + size - offset, max.Y + offset );
-				DrawZPlane( min.Z - offset, max.X + offset, min.Y - offset, max.X - size + offset, max.Y + offset );
-				DrawZPlane( min.Z - offset, min.X - offset, min.Y - offset, max.X + offset, min.Y + size - offset );
-				DrawZPlane( min.Z - offset, min.X - offset, max.Y + offset, max.X + offset, max.Y - size + offset );
+				DrawZPlane( p1.Z, p1.X, p1.Y, p1.X + size, p2.Y );
+				DrawZPlane( p1.Z, p2.X, p1.Y, p2.X - size, p2.Y );
+				DrawZPlane( p1.Z, p1.X, p1.Y, p2.X, p1.Y + size );
+				DrawZPlane( p1.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 				// back face
-				DrawZPlane( max.Z + offset, min.X - offset, min.Y - offset, min.X + size - offset, max.Y + offset );
-				DrawZPlane( max.Z + offset, max.X + offset, min.Y - offset, max.X - size + offset, max.Y + offset );
-				DrawZPlane( max.Z + offset, min.X - offset, min.Y - offset, max.X + offset, min.Y + size - offset );
-				DrawZPlane( max.Z + offset, min.X - offset, max.Y + offset, max.X + offset, max.Y - size + offset );
+				DrawZPlane( p2.Z, p1.X, p1.Y, p1.X + size, p2.Y );
+				DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
+				DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
+				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 				graphics.DrawVertices( DrawMode.Triangles, vertices, verticesCount );
 			}
 		}
