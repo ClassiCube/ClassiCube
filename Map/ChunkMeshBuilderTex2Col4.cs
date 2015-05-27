@@ -201,8 +201,7 @@ namespace ClassicalSharp {
 		void DrawTopFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Top );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -221,8 +220,7 @@ namespace ClassicalSharp {
 		void DrawBottomFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Bottom );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColour( X, Y - 1, Z, ref map.SunlightYBottom, ref map.ShadowlightYBottom );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -241,8 +239,7 @@ namespace ClassicalSharp {
 		void DrawBackFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Back );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColourAdj( X, Y, Z + 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -264,8 +261,7 @@ namespace ClassicalSharp {
 		void DrawFrontFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Front );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColourAdj( X, Y, Z - 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -287,8 +283,7 @@ namespace ClassicalSharp {
 		void DrawLeftFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Left );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColourAdj( X - 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -310,8 +305,7 @@ namespace ClassicalSharp {
 		void DrawRightFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColourAdj( X + 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
@@ -333,8 +327,7 @@ namespace ClassicalSharp {
 		void DrawSprite( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
-			TextureRectangle rec = atlas.GetTexRec( texId, out drawInfoIndex );
-			rec.U2 = count;
+			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
 			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );

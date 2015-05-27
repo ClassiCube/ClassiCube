@@ -30,7 +30,7 @@ namespace ClassicalSharp.Particles {
 			}
 			
 			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( Window.TerrainAtlasTexId );
+			Graphics.Bind2DTexture( Window.TerrainAtlas.TexId );
 			Graphics.AlphaTest = true;
 			Graphics.DrawVertices( DrawMode.Triangles, vertices, count );
 			Graphics.AlphaTest = false;
@@ -54,8 +54,8 @@ namespace ClassicalSharp.Particles {
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( block, TileSide.Left );
 			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texLoc );
 			
-			float invHorSize = Window.TerrainAtlas.invHorElementSize;
-			float invVerSize = Window.TerrainAtlas.invVerElementSize;
+			float invHorSize = TerrainAtlas2D.invElementSize;
+			float invVerSize = TerrainAtlas2D.invElementSize;
 			int cellsCountX = (int)( 0.25f / invHorSize );
 			int cellsCountY = (int)( 0.25f / invVerSize );
 			float elementXSize = invHorSize * 0.25f;

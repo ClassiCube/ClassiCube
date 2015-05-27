@@ -153,9 +153,11 @@
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
     <Compile Include="Utils\TextureAtlas1D.cs" />
-    <Compile Include="Utils\TextureAtlas2D.cs" />
+    <Compile Include="Utils\TerrainAtlas2D.cs" />
+    <Compile Include="Utils\TextureRectangle.cs" />
     <Compile Include="Utils\UnsafeString.cs" />
     <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Utils\Vector3I.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

@@ -131,46 +131,5 @@ namespace ClassicalSharp {
 		public int GetOptimTextureLoc( byte block, int face ) {
 			return optimTextures[block * 6 + face];
 		}
-		
-		static ushort[] RowFlags = new ushort[] {
-			0xFFFF, // y y y y  y y y y  y y y y  y y y y
-			0xFFEE, // y y y y  y y y y  y y y n  y y y n
-			0xFFE0, // y y y y  y y y y  y y y n  n n n n
-			0xFFE0, // y y y y  y y y y  y y y n  n n n n
-			0xFFFF, // y y y y  y y y y  y y y y  y y y y
-			0xFA00, // y y y y  y n y n  n n n n  n n n n
-		};
-		
-		public static void MakeOptimisedTexture( FastBitmap atlas ) {
-			int tileSize = atlas.Width / 16;
-			int srcIndex = 0, destIndex = 0;
-			
-			for( int y = 0; y < 6; y++ ) {
-				int flags = RowFlags[y];
-				for( int x = 0; x < 16; x++ ) {
-					bool isUsed = ( flags & 1 << ( 15 - x ) ) != 0;
-					if( isUsed && srcIndex != destIndex ) {
-						int srcX = x * tileSize;
-						int srcY = y * tileSize;
-						int destX = ( destIndex & 0x0F ) * tileSize;
-						int destY = ( destIndex >> 4 ) * tileSize;
-						MovePortion( srcX, srcY, destX, destY, atlas, tileSize );
-					}
-					
-					srcIndex++;
-					if( isUsed ) destIndex++;
-				}
-			}
-		}
-		
-		unsafe static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, int size ) {
-			for( int y = 0; y < size; y++ ) {
-				int* srcRow = src.GetRowPtr( srcY + y );
-				int* dstRow = src.GetRowPtr( dstY + y );
-				for( int x = 0; x < size; x++ ) {					
-					dstRow[dstX + x] = srcRow[srcX + x];
-				}
-			}
-		}
 	}
 }

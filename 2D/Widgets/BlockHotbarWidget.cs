@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
 			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
-			GraphicsApi.Bind2DTexture( Window.TerrainAtlasTexId );
+			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
 			int selectedX = 0;
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				barTextures[i].RenderNoBind( GraphicsApi );
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 			float height = Window.BlockInfo.BlockHeight( (byte)block );
 			int blockY = y;
 			if( height != 1 ) {
-				rec.V1 = rec.V1 + Window.TerrainAtlas.invVerElementSize * height;
+				rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
 				verSize = (int)( blockSize * height );
 				blockY = y + blockSize - verSize;
 			}

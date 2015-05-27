@@ -26,7 +26,7 @@ namespace ClassicalSharp.Model {
 				return;
 			}
 			
-			graphics.Bind2DTexture( window.TerrainAtlasTexId );
+			graphics.Bind2DTexture( window.TerrainAtlas.TexId );
 			blockHeight = window.BlockInfo.BlockHeight( block );
 			atlas = window.TerrainAtlas;
 			BlockInfo = window.BlockInfo;
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		float blockHeight;
-		TextureAtlas2D atlas;
+		TerrainAtlas2D atlas;
 		BlockInfo BlockInfo;
 		
 		public override void Dispose() {
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetOptimTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * atlas.invVerElementSize;
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			}
 			if( swapU ) rec.SwapU();
 			
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetOptimTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * atlas.invVerElementSize;
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			}
 			if( swapU ) rec.SwapU();
 			
