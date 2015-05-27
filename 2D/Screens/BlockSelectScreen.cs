@@ -28,6 +28,7 @@ namespace ClassicalSharp {
 		int rows;
 		int startX, startY;
 		readonly Font font;
+		UnsafeString buffer = new UnsafeString( 96 );
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
@@ -93,13 +94,30 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
-		
-		string GetBlockInfo( Block block ) {
-			return String.Format(
-				"&f{0} (can place: {1}&f, can delete: {2}&f)",
-				Utils.GetSpacedBlockName( block ),
-				Window.CanPlace[(int)block] ? "&aYes" : "&cNo",
-				Window.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+		static readonly string[] blockNames = Enum.GetNames( typeof( Block ) );
+		unsafe void UpdateBlockInfoString( Block block ) {
+			fixed( char* ptr = buffer.value ) {
+				char* ptr2 = ptr;
+				buffer.Clear( ptr );
+				buffer.Append( ref ptr2, "&f" );
+				if( block == Block.TNT ) {
+					buffer.Append( ref ptr2, "TNT" );
+				} else {
+					string value = blockNames[(int)block];
+					for( int i = 0; i < value.Length; i++ ) {
+						char c = value[i];
+						if( Char.IsUpper( c ) && i > 0 ) {
+							buffer.Append( ref ptr2, ' ' );
+						}
+						buffer.Append( ref ptr2, c );
+					}
+				}
+				buffer.Append( ref ptr2, " (can place: " );
+				buffer.Append( ref ptr2, Window.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, "&f, can delete: " );
+				buffer.Append( ref ptr2, Window.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, "&f)" );
+			}
 		}
 		
 		void RecreateBlockInfoTexture() {
@@ -107,8 +125,8 @@ namespace ClassicalSharp {
 			if( selectedIndex == -1 ) return;
 			
 			Block block = blocksTable[selectedIndex].BlockId;
-			string text = GetBlockInfo( block );
-			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
+			UpdateBlockInfoString( block );
+			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, buffer.value, true );
 			Size size = Utils2D.MeasureSize( parts, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;

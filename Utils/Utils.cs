@@ -142,22 +142,6 @@ namespace ClassicalSharp {
 			return new Vector3( (float)x, (float)y, (float)z );
 		}
 		
-		static string SplitUppercase( string value ) {
-			StringBuilder buffer = new StringBuilder( value.Length + 3 );
-			for( int i = 0; i < value.Length; i++ ) {
-				char c = value[i];
-				if( Char.IsUpper( c ) && buffer.Length > 0 ) {
-					buffer.Append( ' ' );
-				}
-				buffer.Append( c );
-			}
-			return buffer.ToString();
-		}
-		
-		public static string GetSpacedBlockName( Block block ) {
-			return block == Block.TNT ? "TNT" : SplitUppercase( block.ToString() );
-		}
-		
 		public static void LogWarning( string text ) {
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine( text );

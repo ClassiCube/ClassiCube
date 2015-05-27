@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		public const float invElementSize = 0.0625f;
 		public readonly int UsedRowsCount = 5;
 		public Bitmap AtlasBitmap;
-		public int elementSize;		
+		public int elementSize;
 		public IGraphicsApi GraphicsApi;
 		public int TexId;
 		
@@ -36,10 +36,11 @@ namespace ClassicalSharp {
 			int x = index & 0x0F;
 			int y = index >> 4;
 			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
-				Bitmap bmp = new Bitmap( elementSize, elementSize );
-				using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
-					Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
-					return GraphicsApi.LoadTexture( dst );
+				using( Bitmap bmp = new Bitmap( elementSize, elementSize ) ) {
+					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
+						Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
+						return GraphicsApi.LoadTexture( dst );
+					}
 				}
 			}
 		}
@@ -57,7 +58,7 @@ namespace ClassicalSharp {
 			GraphicsApi.DeleteTexture( ref TexId );
 		}
 		
-		static ushort[] rowFlags = { 0xFFFF, 0xFFEE, 0xFFE0, 0xFFE0, 0xFFFF, 0xFA00 };		
+		static ushort[] rowFlags = { 0xFFFF, 0xFFEE, 0xFFE0, 0xFFE0, 0xFFFF, 0xFA00 };
 		void MakeOptimisedTexture( FastBitmap atlas ) {
 			int srcIndex = 0, destIndex = 0;
 			

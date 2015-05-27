@@ -152,11 +152,10 @@ namespace ClassicalSharp.Commands {
 			get {
 				return new [] {
 					"&a/client info [property]",
-					"&bproperties: &epos, target, dimensions, jumpheight",
+					"&bproperties: &epos, targetpos, dimensions, jumpheight",
 				};
 			}
-		}
-		
+		}	
 		
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
@@ -165,14 +164,12 @@ namespace ClassicalSharp.Commands {
 			} else if( property == "pos" ) {
 				Window.AddChat( "Feet: " + Window.LocalPlayer.Position );
 				Window.AddChat( "Eye: " + Window.LocalPlayer.EyePosition );
-			} else if( property == "target" ) {
+			} else if( property == "targetpos" ) {
 				PickedPos pos = Window.SelectedPos;
 				if( !pos.Valid ) {
-					Window.AddChat( "no target pos" );
+					Window.AddChat( "Currently not targeting a block" );
 				} else {
-					Block block = (Block)Window.Map.GetBlock( pos.BlockPos );
-					Window.AddChat( "target pos: " + pos.BlockPos );
-					Window.AddChat( "target block: " + Utils.GetSpacedBlockName( block ) );
+					Window.AddChat( "Currently targeting: " + pos.BlockPos );
 				}
 			} else if( property == "dimensions" ) {
 				Window.AddChat( "map width: " + Window.Map.Width );

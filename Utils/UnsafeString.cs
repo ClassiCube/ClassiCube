@@ -36,6 +36,11 @@ namespace ClassicalSharp {
 			return this;
 		}
 		
+		public UnsafeString Append( ref char* ptr, char c) {
+			*ptr++ = c;
+			return this;
+		}
+		
 		static char[] numBuffer = new char[20];
 		public UnsafeString AppendNum( ref char* ptr, long num ) {
 			int index = 0;
