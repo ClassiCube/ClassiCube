@@ -152,7 +152,7 @@
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
-    <Compile Include="Utils\TextureAtlas1D.cs" />
+    <Compile Include="Utils\TerrainAtlas1D.cs" />
     <Compile Include="Utils\TerrainAtlas2D.cs" />
     <Compile Include="Utils\TextureRectangle.cs" />
     <Compile Include="Utils\UnsafeString.cs" />

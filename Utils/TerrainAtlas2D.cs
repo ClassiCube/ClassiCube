@@ -20,15 +20,19 @@ namespace ClassicalSharp {
 		public readonly int UsedRowsCount = 5;
 		public Bitmap AtlasBitmap;
 		public int elementSize;
-		public IGraphicsApi GraphicsApi;
 		public int TexId;
+		IGraphicsApi graphics;
+		
+		public TerrainAtlas2D( IGraphicsApi graphics ) {
+			this.graphics = graphics;
+		}
 		
 		public void UpdateState( Bitmap bmp ) {
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				MakeOptimisedTexture( fastBmp );
-				TexId = GraphicsApi.LoadTexture( fastBmp );
+				TexId = graphics.LoadTexture( fastBmp );
 			}
 		}
 		
@@ -39,7 +43,7 @@ namespace ClassicalSharp {
 				using( Bitmap bmp = new Bitmap( elementSize, elementSize ) ) {
 					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
 						Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
-						return GraphicsApi.LoadTexture( dst );
+						return graphics.LoadTexture( dst );
 					}
 				}
 			}
@@ -55,7 +59,7 @@ namespace ClassicalSharp {
 			if( AtlasBitmap != null ) {
 				AtlasBitmap.Dispose();
 			}
-			GraphicsApi.DeleteTexture( ref TexId );
+			graphics.DeleteTexture( ref TexId );
 		}
 		
 		static ushort[] rowFlags = { 0xFFFF, 0xFFEE, 0xFFE0, 0xFFE0, 0xFFFF, 0xFA00 };

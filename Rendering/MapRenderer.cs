@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		
 		public MapRenderer( Game window ) {
 			Window = window;
-			_1Dcount = window.TerrainAtlas1DTexIds.Length;
+			_1Dcount = window.TerrainAtlas1D.TexIds.Length;
 			builder = new ChunkMeshBuilder( window );
 			Graphics = window.Graphics;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			_1Dcount = Window.TerrainAtlas1DTexIds.Length;
+			_1Dcount = Window.TerrainAtlas1D.TexIds.Length;
 			bool fullResetRequired = elementsPerBitmap != Window.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
 				Refresh();
@@ -197,6 +197,7 @@ namespace ClassicalSharp {
 			if( chunks == null ) return;
 			UpdateSortOrder();
 			UpdateChunks();
+			int[] texIds = Window.TerrainAtlas1D.TexIds;
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
@@ -205,12 +206,12 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = true;
 			Graphics.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				Graphics.Bind2DTexture( texIds[batch] );
 				RenderSolidBatch( batch );
 			}
 			Graphics.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				Graphics.Bind2DTexture( texIds[batch] );
 				RenderSpriteBatch( batch );
 			}
 			Graphics.AlphaTest = false;
@@ -235,7 +236,7 @@ namespace ClassicalSharp {
 			Graphics.Texturing = true;
 			Graphics.ColourMask( true, true, true, true );
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( Window.TerrainAtlas1DTexIds[batch] );
+				Graphics.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
 			Graphics.DepthTestFunc( CompareFunc.Less );

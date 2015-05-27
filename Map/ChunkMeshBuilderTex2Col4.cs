@@ -6,12 +6,12 @@ namespace ClassicalSharp {
 	public partial class ChunkMeshBuilder {
 		
 		DrawInfo1D[] drawInfoBuffer;
-		TextureAtlas1D atlas;
+		TerrainAtlas1D atlas;
 		int arraysCount = 0;
 		const int maxIndices = 65536;
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			int newArraysCount = Window.TerrainAtlas1DTexIds.Length;
+			int newArraysCount = Window.TerrainAtlas1D.TexIds.Length;
 			if( arraysCount > 0 && arraysCount != newArraysCount ) {
 				Array.Resize( ref drawInfoBuffer, newArraysCount );
 				for( int i = arraysCount; i < drawInfoBuffer.Length; i++ ) {
@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 		
 		void PreStretchTiles( int x1, int y1, int z1 ) {
 			invVerElementSize = Window.TerrainAtlas1D.invElementSize;
-			arraysCount = Window.TerrainAtlas1DTexIds.Length;
+			arraysCount = Window.TerrainAtlas1D.TexIds.Length;
 			atlas = Window.TerrainAtlas1D;
 			
 			if( drawInfoBuffer == null ) {
