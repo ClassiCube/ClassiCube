@@ -105,22 +105,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		#if TRACK_RESOURCES
 		Dictionary<int, string> textures = new Dictionary<int, string>();
 		#endif
-		public override int LoadTexture( Bitmap bmp ) {
-			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-			int texId = LoadTexture( data.Width, data.Height, data.Scan0 );
-			bmp.UnlockBits( data );
-			return texId;
-		}
-		
-		public override int LoadTexture( FastBitmap bmp ) {
-			if( !bmp.IsLocked ) bmp.LockBits();
-			int texId = LoadTexture( bmp.Width, bmp.Height, bmp.Scan0 );
-			bmp.UnlockBits();
-			return texId;
-		}
-		
-		static int LoadTexture( int width, int height, IntPtr scan0 ) {
+
+		public override int LoadTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
 				Utils.LogWarning( "Creating a non power of two texture." );
 			

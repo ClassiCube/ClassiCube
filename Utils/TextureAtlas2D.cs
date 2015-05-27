@@ -75,13 +75,13 @@ namespace ClassicalSharp {
 			invVerElementSize = (float)verElementSize / bmp.Height;
 		}
 		
-		/// <summary> Loads the texture at the specified coordinates within the atlas. </summary>
-		/// <param name="x"> horizontal position. (i.e. 1st image = 0, 2nd image = 1, etc</param>
-		/// <param name="bottomY"> vertical position. (i.e. 1st row = 0, 2nd row = 1, etc)</param>
-		/// <returns> The ID of the loaded texture at the specified coordinates.</returns>
 		public int LoadTextureElement( int x, int y ) {
-			using( Bitmap bmp = GetTextureElement( x, y ) ) {
-				return GraphicsApi.LoadTexture( bmp );
+			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
+				Bitmap bmp = new Bitmap( horElementSize, verElementSize );
+				using( FastBitmap dest = new FastBitmap( bmp, true ) ) {
+					CopyPortion( x, y, 0, 0, atlas, dest );
+					return GraphicsApi.LoadTexture( dest );
+				}
 			}
 		}
 		
@@ -99,19 +99,8 @@ namespace ClassicalSharp {
 		public TextureRectangle GetTexRec( int index ) {
 			int x = 0, y = 0;
 			GetCoords( index, ref x, ref y );
-			return new TextureRectangle( x * invHorElementSize, y * invVerElementSize,
-			                            invHorElementSize, invVerElementSize );
+			return GetTexRec( x, y );
 		}
-		
-		public Bitmap GetTextureElement( int x, int y ) {
-			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
-				Bitmap bmp = new Bitmap( horElementSize, verElementSize );
-				using( FastBitmap dest = new FastBitmap( bmp, true) ) {
-					CopyPortion( x, y, 0, 0, atlas, dest );
-				}
-				return bmp;
-			}
-		}		
 		
 		internal void GetCoords( int id, ref int x, ref int y ) {
 			x = id % ElementsPerRow;

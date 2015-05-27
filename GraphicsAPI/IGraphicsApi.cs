@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using OpenTK;
@@ -24,9 +25,23 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public abstract int LoadTexture( Bitmap bmp );
+		public virtual int LoadTexture( Bitmap bmp ) {
+			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
+			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
+			int texId = LoadTexture( data.Width, data.Height, data.Scan0 );
+			bmp.UnlockBits( data );
+			return texId;
+		}
 		
-		public abstract int LoadTexture( FastBitmap bmp );
+		public virtual int LoadTexture( FastBitmap bmp ) {
+			if( !bmp.IsLocked ) 
+				bmp.LockBits();
+			int texId = LoadTexture( bmp.Width, bmp.Height, bmp.Scan0 );
+			bmp.UnlockBits();
+			return texId;
+		}
+		
+		public abstract int LoadTexture( int width, int height, IntPtr scan0 );
 		
 		public abstract void Bind2DTexture( int texId );
 		
