@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				MakeOptimisedTexture( fastBmp );
-				TexId = graphics.LoadTexture( fastBmp );
+				TexId = graphics.LoadTexture( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
 			}
 		}
 		
@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 		public TextureRectangle GetTexRec( int index ) {
 			int x = index & 0x0F;
 			int y = index >> 4;
-			return new TextureRectangle( x * invElementSize, y * invElementSize, invElementSize, invElementSize );
+			return new TextureRectangle( x * invElementSize, y * invElementSize * 2, invElementSize, invElementSize * 2 );
 		}
 		
 		public void Dispose() {
