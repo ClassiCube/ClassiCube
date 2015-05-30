@@ -16,9 +16,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		int textureDimensions;
 		const string vboExt = "GL_ARB_vertex_buffer_object";
-		BeginMode[] modeMappings = new BeginMode[] {
-			BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip,
-		};
+		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
 		
 		public OpenGLApi() {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
@@ -46,7 +44,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Blend, value ); }
 		}
 		
-		AlphaFunction[] alphaFuncs = new AlphaFunction[] {
+		AlphaFunction[] alphaFuncs = {
 			AlphaFunction.Always, AlphaFunction.Notequal,
 			AlphaFunction.Never, AlphaFunction.Less,
 			AlphaFunction.Lequal, AlphaFunction.Equal,
@@ -56,12 +54,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
-		BlendingFactorSrc[] srcBlendFuncs = new BlendingFactorSrc[] {
+		BlendingFactorSrc[] srcBlendFuncs = {
 			BlendingFactorSrc.Zero, BlendingFactorSrc.One,
 			BlendingFactorSrc.SrcAlpha, BlendingFactorSrc.OneMinusSrcAlpha,
 			BlendingFactorSrc.DstAlpha, BlendingFactorSrc.OneMinusDstAlpha,
 		};
-		BlendingFactorDest[] destBlendFuncs = new BlendingFactorDest[] {
+		BlendingFactorDest[] destBlendFuncs = {
 			BlendingFactorDest.Zero, BlendingFactorDest.One,
 			BlendingFactorDest.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha,
 			BlendingFactorDest.DstAlpha, BlendingFactorDest.OneMinusDstAlpha,
@@ -87,7 +85,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Fog( FogParameter.FogEnd, value );
 		}
 		
-		FogMode[] fogModes = new FogMode[] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public override void SetFogMode( Fog mode ) {
 			GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
 		}
@@ -163,7 +161,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.ColorMask( red, green, blue, alpha );
 		}
 		
-		DepthFunction[] depthFuncs = new DepthFunction[] {
+		DepthFunction[] depthFuncs = {
 			DepthFunction.Always, DepthFunction.Notequal,
 			DepthFunction.Never, DepthFunction.Less,
 			DepthFunction.Lequal, DepthFunction.Equal,
@@ -219,7 +217,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		PolygonMode[] fillModes = new PolygonMode[] { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
+		PolygonMode[] fillModes = { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
 		public override void SetFillType( FillType type ) {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
 		}
@@ -388,9 +386,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		#region Matrix manipulation
 
 		MatrixMode lastMode = 0;
-		MatrixMode[] matrixModes = new MatrixMode[] {
-			MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture,
-		};
+		MatrixMode[] matrixModes = { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
 		public override void SetMatrixMode( MatrixType mode ) {
 			MatrixMode glMode = matrixModes[(int)mode];
 			if( glMode != lastMode ) {

@@ -26,7 +26,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		const int vBufferSize = 2048;
 		MatrixStack viewStack, projStack, texStack;
 		MatrixStack curStack;
-		PrimitiveType[] modeMappings = new PrimitiveType[] {
+		PrimitiveType[] modeMappings = {
 			PrimitiveType.TriangleList, PrimitiveType.LineList,
 			PrimitiveType.TriangleStrip,
 		};
@@ -47,7 +47,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { device.RenderState.AlphaBlendEnable = value; }
 		}
 
-		Compare[] compareFuncs = new Compare[] {
+		Compare[] compareFuncs = {
 			Compare.Always, Compare.NotEqual, Compare.Never, Compare.Less,
 			Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
 		};
@@ -56,7 +56,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.RenderState.ReferenceAlpha = (int)( value * 255f );
 		}
 
-		Blend[] blendFuncs = new Blend[] {
+		Blend[] blendFuncs = {
 			Blend.Zero, Blend.One,
 			Blend.SourceAlpha, Blend.InvSourceAlpha,
 			Blend.DestinationAlpha, Blend.InvDestinationAlpha,
@@ -82,7 +82,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.RenderState.FogEnd = value;
 		}
 
-		FogMode[] modes = new FogMode[] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		FogMode[] modes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public override void SetFogMode( Fog mode ) {
 			device.RenderState.FogTableMode = modes[(int)mode];
 		}
@@ -186,14 +186,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
 		}
 
-		FillMode[] fillModes = new FillMode[] { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
+		FillMode[] fillModes = { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
 		public override void SetFillType( FillType type ) {
 			device.RenderState.FillMode = fillModes[(int)type];
 		}
 
 		#region Vertex buffers
 
-		VertexFormats[] formatMapping = new VertexFormats[] {
+		VertexFormats[] formatMapping = {
 			VertexFormats.Position | VertexFormats.Texture1,
 			VertexFormats.Position | VertexFormats.Diffuse,
 			VertexFormats.Position | VertexFormats.Texture1 | VertexFormats.Diffuse,
