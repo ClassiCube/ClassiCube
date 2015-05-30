@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
 			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
-			"EnvWeatherType", 
+			"EnvWeatherType",
 		};
 		
 		
@@ -236,7 +236,8 @@ namespace ClassicalSharp {
 		FastNetReader reader;
 		int cpeServerExtensionsCount;
 		DateTime receiveStart;
-		GZipStream gzipStream;
+		DeflateStream gzipStream;
+		GZipHeaderReader gzipHeader;
 		int mapSizeIndex;
 		byte[] mapSize = new byte[4];
 		byte[] map;
@@ -286,7 +287,8 @@ namespace ClassicalSharp {
 							sendWomId = true;
 						}
 						receivedFirstPosition = false;
-						gzipStream = new GZipStream( gzippedMap, CompressionMode.Decompress );
+						gzipHeader = new GZipHeaderReader();
+						gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
 						mapSizeIndex = 0;
 						mapIndex = 0;
 						receiveStart = DateTime.UtcNow;
@@ -298,16 +300,18 @@ namespace ClassicalSharp {
 						gzippedMap.Position = 0;
 						gzippedMap.SetLength( usedLength );
 						
-						if( mapSizeIndex < 4 ) {
-							mapSizeIndex += gzipStream.Read( mapSize, 0, 4 - mapSizeIndex );
-						}
-
-						if( mapSizeIndex == 4 ) {
-							if( map == null ) {
-								int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
-								map = new byte[size];
+						if( gzipHeader.done || gzipHeader.ReadHeader( gzippedMap ) ) {
+							if( mapSizeIndex < 4 ) {
+								mapSizeIndex += gzipStream.Read( mapSize, 0, 4 - mapSizeIndex );
 							}
-							mapIndex += gzipStream.Read( map, mapIndex, map.Length - mapIndex );
+
+							if( mapSizeIndex == 4 ) {
+								if( map == null ) {
+									int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
+									map = new byte[size];
+								}
+								mapIndex += gzipStream.Read( map, mapIndex, map.Length - mapIndex );
+							}
 						}
 						reader.Remove( 1024 );
 						byte progress = reader.ReadUInt8();

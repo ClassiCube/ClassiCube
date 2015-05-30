@@ -127,6 +127,7 @@
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\FastNetReader.cs" />
     <Compile Include="Network\FixedBufferStream.cs" />
+    <Compile Include="Network\GZipHeaderReader.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\AsyncDownloader.cs" />
     <Compile Include="Network\WomConfigHandler.cs" />
