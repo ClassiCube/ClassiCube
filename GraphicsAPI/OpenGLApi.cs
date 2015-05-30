@@ -248,20 +248,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              int verticesCount, int indicesCount ) {
-			IndexedVbInfo info = default( IndexedVbInfo );
-			GL.Arb.GenBuffers( 2, out info.Vb );
-			int sizeInBytes = GetSizeInBytes( verticesCount, VertexFormat.VertexPos3fTex2fCol4b );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.Vb );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			
-			sizeInBytes = indicesCount * sizeof( ushort );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.Ib );
+		public override int InitIb( ushort[] indices, DrawMode mode, int indicesCount ) {
+			int id = 0;
+			GL.Arb.GenBuffers( 1, out id );
+			int sizeInBytes = indicesCount * sizeof( ushort );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
-			return info;
+			return id;
 		}
 		
 		public override void DeleteVb( int id ) {
@@ -272,13 +266,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
-		public override void DeleteIndexedVb( IndexedVbInfo id ) {
-			if( id.Vb <= 0 && id.Ib <= 0 ) return;
-			GL.Arb.DeleteBuffers( 2, ref id.Vb );
+		public override void DeleteIb( int id ) {
+			if( id <= 0 ) return;
+			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
 		public override bool IsValidVb( int vb ) {
 			return GL.Arb.IsBuffer( vb );
+		}
+		
+		public override bool IsValidIb( int ib ) {
+			return GL.Arb.IsBuffer( ib );
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
@@ -320,9 +318,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFunc( mode, id, verticesCount );
 		}
 		
-		public override void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.Vb );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.Ib );
+		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
+			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ib );
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );

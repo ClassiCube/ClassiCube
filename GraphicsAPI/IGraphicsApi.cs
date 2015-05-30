@@ -112,14 +112,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
 		
-		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              int verticesCount, int indicesCount ) where T : struct;
+		public abstract int InitIb( ushort[] indices, DrawMode mode, int indicesCount );
 		
 		public abstract bool IsValidVb( int vb );
 		
+		public abstract bool IsValidIb( int ib );
+		
 		public abstract void DeleteVb( int id );
 		
-		public abstract void DeleteIndexedVb( IndexedVbInfo id );
+		public abstract void DeleteIb( int ib );
 		
 		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
 		
@@ -135,7 +136,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void BeginIndexedVbBatch();
 		
-		public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
+		public abstract void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount );
 		
 		public abstract void EndIndexedVbBatch();
 		
