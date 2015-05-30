@@ -112,32 +112,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
 		
-		public abstract IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
+		public abstract int InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
 		                              int verticesCount, int indicesCount ) where T : struct;
 		
 		public abstract bool IsValidVb( int vb );
 		
 		public abstract void DeleteVb( int id );
 		
-		public abstract void DeleteIndexedVb( IndexedVbInfo id );
-		
-		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void BeginVbBatch( VertexFormat format );
-		
-		public abstract void DrawVbBatch( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void EndVbBatch();
-		
-		public abstract void BeginIndexedVbBatch();
-		
-		public abstract void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount );
-		
-		public abstract void EndIndexedVbBatch();
+		public abstract void DrawVb( int id );
 		
 		protected int GetSizeInBytes( int count, VertexFormat format ) {
 			return count * strideSizes[(int)format];
@@ -303,15 +285,5 @@ namespace ClassicalSharp.GraphicsAPI {
 		Projection = 0,
 		Modelview = 1,
 		Texture = 2,
-	}
-	
-	[StructLayout( LayoutKind.Sequential )]
-	public struct IndexedVbInfo {
-		public int Vb, Ib;
-		
-		public IndexedVbInfo( int vb, int ib ) {
-			Vb = vb;
-			Ib = ib;
-		}
 	}
 }

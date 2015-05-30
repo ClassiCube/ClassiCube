@@ -76,14 +76,12 @@ namespace ClassicalSharp.Selections {
 			if( selections.Count == 0 ) return;
 			selections.Sort( (a, b) => Compare( a, b ) );
 			
-			Graphics.BeginVbBatch( VertexFormat.VertexPos3fCol4b );
 			Graphics.AlphaBlending = true;
 			for( int i = 0 ; i < selections.Count; i++ ) {
 				SelectionBox box = selections[i];
 				box.Render( delta );
 			}
 			Graphics.AlphaBlending = false;
-			Graphics.EndVbBatch();
 		}
 		
 		public void Dispose() {

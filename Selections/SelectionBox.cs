@@ -27,9 +27,9 @@ namespace ClassicalSharp.Selections {
 		
 		public void Render( double delta ) {
 			Graphics.DepthWrite = false;
-			Graphics.DrawVbBatch( DrawMode.Triangles, VboId, VerticesCount );
+			Graphics.DrawVb( VboId );
 			Graphics.DepthWrite = true;
-			Graphics.DrawVbBatch( DrawMode.Lines, LineVboId, LineVerticesCount );
+			Graphics.DrawVb( LineVboId );
 		}
 		
 		public SelectionBox( Vector3I start, Vector3I end, FastColour col, IGraphicsApi graphics ) {

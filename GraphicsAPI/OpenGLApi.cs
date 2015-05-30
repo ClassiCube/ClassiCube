@@ -224,18 +224,18 @@ namespace ClassicalSharp.GraphicsAPI {
 			return CreateDisplayList( vertices, mode, format, count );
 		}
 		
-		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode,
+		public override int InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode,
 		                                               int verticesCount, int indicesCount ) {
 			return CreateIndexedDisplayList( vertices, indices, mode, verticesCount, indicesCount );
 		}
 		
-		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode,
+		int CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode,
 		                                          int verticesCount, int indicesCount ) where T : struct {
 			GCHandle handle;
 			int id = SetupDisplayListState( vertices, VertexFormat.VertexPos3fTex2fCol4b, out handle );
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, indices );
 			RestoreDisplayListState( VertexFormat.VertexPos3fTex2fCol4b, ref handle );
-			return new IndexedVbInfo( id, id );
+			return id;
 		}
 		
 		int CreateDisplayList<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct {
@@ -286,46 +286,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DeleteLists( id, 1 );
 		}
 		
-		public override void DeleteIndexedVb( IndexedVbInfo id ) {
-			if( id.Vb <= 0 && id.Ib <= 0 ) return;
-			GL.DeleteLists( id.Vb, 1 );
-		}
-		
 		public override bool IsValidVb( int vb ) {
 			return GL.IsList( vb );
 		}
 		
-		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
+		public override void DrawVb( int id ) {
 			GL.CallList( id );
-		}
-		
-		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			GL.CallList( id );
-		}
-		
-		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			GL.CallList( id );
-		}
-		
-		VertexFormat batchFormat;
-		public override void BeginVbBatch( VertexFormat format ) {
-		}
-		
-		public override void BeginIndexedVbBatch() {
-		}
-		
-		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			GL.CallList( id );
-		}
-		
-		public override void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			GL.CallList( id.Vb );
-		}
-		
-		public override void EndVbBatch() {		
-		}
-		
-		public override void EndIndexedVbBatch() {			
 		}
 		
 		static void EnableClientState( VertexFormat format ) {

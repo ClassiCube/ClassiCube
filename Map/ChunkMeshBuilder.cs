@@ -344,14 +344,14 @@ namespace ClassicalSharp {
 	
 	public struct ChunkPartInfo {
 		
-		public IndexedVbInfo VbId;
-		public IndexedVbInfo VbId2;
+		public int VbId;
+		public int VbId2;
 		public int IndicesCount, IndicesCount2;
 		
-		public ChunkPartInfo( IndexedVbInfo id, int indices ) {
+		public ChunkPartInfo( int id, int indices ) {
 			VbId = id;
 			IndicesCount = indices;
-			VbId2 = default( IndexedVbInfo );
+			VbId2 = 0;
 			IndicesCount2 = 0;
 		}
 	}

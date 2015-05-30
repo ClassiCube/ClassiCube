@@ -275,21 +275,21 @@ namespace ClassicalSharp.GraphicsAPI {
         	return vb < buffers.Length && buffers[vb] != null;
 		}
 
-        public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
+        public override void DrawVb( DrawMode mode, int id, int verticesCount ) {
             VertexBuffer buffer = buffers[id];
             device.SetStreamSource( 0, buffer, 0 );
             device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1;
             device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
         }
 
-        public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
+        public override void DrawVb( DrawMode mode, int id, int verticesCount ) {
             VertexBuffer buffer = buffers[id];
             device.SetStreamSource( 0, buffer, 0 );
             device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
             device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
         }
 
-        public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
+        public override void DrawVb( DrawMode mode, int id, int verticesCount ) {
             VertexBuffer buffer = buffers[id];
             device.SetStreamSource( 0, buffer, 0 );
             device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1 | VertexFormats.Diffuse;
@@ -301,7 +301,7 @@ namespace ClassicalSharp.GraphicsAPI {
             device.VertexFormat = d3dFormat;
         }
 
-        public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
+        public override void DrawVb( DrawMode mode, int id, int verticesCount ) {
             VertexBuffer buffer = buffers[id];
             device.SetStreamSource( 0, buffer, 0 );
             device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
