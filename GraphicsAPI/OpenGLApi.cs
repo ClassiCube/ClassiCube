@@ -235,7 +235,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<DrawMode, int, int> drawBatchFuncCol4b;
 		Action<DrawMode, int, int> drawBatchFuncTex2fCol4b;
 		
-		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
+		public override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = GetSizeInBytes( count, format );
@@ -248,7 +248,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override int InitIb( ushort[] indices, DrawMode mode, int indicesCount ) {
+		public override int InitIb( ushort[] indices, int indicesCount ) {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
 			int sizeInBytes = indicesCount * sizeof( ushort );
@@ -493,12 +493,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void OnWindowResize( int newWidth, int newHeight ) {
 			GL.Viewport( 0, 0, newWidth, newHeight );
-		}
-
-		public Color4 GetCol() {
-			float[] col = new float[4];
-			GL.GetFloat( GetPName.CurrentColor, out col[0] );
-			return new Color4( col[0], col[1], col[2], col[3] );
 		}
 		
 		static void ToggleCap( EnableCap cap, bool value ) {

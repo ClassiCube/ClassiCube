@@ -106,13 +106,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void SetFillType( FillType type );
 		
-		public virtual int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format ) where T : struct {
-			return InitVb( vertices, mode, format, vertices.Length );
+		public virtual int InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
+			return InitVb( vertices, format, vertices.Length );
 		}
 		
-		public abstract int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) where T : struct;
+		public abstract int InitVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct;
 		
-		public abstract int InitIb( ushort[] indices, DrawMode mode, int indicesCount );
+		public abstract int InitIb( ushort[] indices, int indicesCount );
 		
 		public abstract bool IsValidVb( int vb );
 		
