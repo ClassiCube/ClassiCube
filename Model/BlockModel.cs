@@ -69,7 +69,7 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetOptimTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.usedInvVerElemSize;
 			}
 			if( swapU ) rec.SwapU();
 			
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetOptimTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.usedInvVerElemSize;
 			}
 			if( swapU ) rec.SwapU();
 			

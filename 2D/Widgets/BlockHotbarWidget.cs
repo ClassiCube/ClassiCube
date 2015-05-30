@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 			float height = Window.BlockInfo.BlockHeight( (byte)block );
 			int blockY = y;
 			if( height != 1 ) {
-				rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
+				rec.V1 = rec.V1 + TerrainAtlas2D.usedInvVerElemSize * height;
 				verSize = (int)( blockSize * height );
 				blockY = y + blockSize - verSize;
 			}

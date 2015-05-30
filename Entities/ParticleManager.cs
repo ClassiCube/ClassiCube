@@ -55,7 +55,7 @@ namespace ClassicalSharp.Particles {
 			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texLoc );
 			
 			float invHorSize = TerrainAtlas2D.invElementSize;
-			float invVerSize = TerrainAtlas2D.invElementSize;
+			float invVerSize = TerrainAtlas2D.usedInvVerElemSize;
 			int cellsCountX = (int)( 0.25f / invHorSize );
 			int cellsCountY = (int)( 0.25f / invVerSize );
 			float elementXSize = invHorSize * 0.25f;

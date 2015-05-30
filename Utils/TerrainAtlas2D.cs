@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 		
 		public const int ElementsPerRow = 16, RowsCount = 16;
 		public const float invElementSize = 0.0625f;
-		public readonly int UsedRowsCount = 5;
+		public const float usedInvVerElemSize = 0.125f;
 		public Bitmap AtlasBitmap;
 		public int elementSize;
 		public int TexId;
@@ -52,7 +52,8 @@ namespace ClassicalSharp {
 		public TextureRectangle GetTexRec( int index ) {
 			int x = index & 0x0F;
 			int y = index >> 4;
-			return new TextureRectangle( x * invElementSize, y * invElementSize * 2, invElementSize, invElementSize * 2 );
+			return new TextureRectangle( x * invElementSize, y * usedInvVerElemSize, 
+			                            invElementSize, usedInvVerElemSize );
 		}
 		
 		public void Dispose() {
