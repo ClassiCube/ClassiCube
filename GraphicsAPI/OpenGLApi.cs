@@ -15,8 +15,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	public class OpenGLApi : IGraphicsApi {
 		
 		int textureDimensions;
-		const string vboExt = "GL_ARB_vertex_buffer_object";
-		bool useVbos = true;
 		BeginMode[] modeMappings = new BeginMode[] {
 			BeginMode.Triangles, BeginMode.Lines, BeginMode.Points,
 			BeginMode.TriangleStrip, BeginMode.LineStrip, BeginMode.TriangleFan
@@ -24,15 +22,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public OpenGLApi() {
 			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
-			string extensions = GL.GetString( StringName.Extensions );
-			useVbos = extensions.Contains( vboExt );
-			if( !useVbos ) {
-				Utils.LogWarning( "Unable to use OpenGL VBOs, you may experience reduced performance." );
-			} else {
-				drawBatchFuncCol4b = DrawVbPos3fCol4bFast;
-				drawBatchFuncTex2f = DrawVbPos3fTex2fFast;
-				drawBatchFuncTex2fCol4b = DrawVbPos3fTex2fCol4bFast;
-			}
 		}
 
 		public override int MaxTextureDimensions {
@@ -230,48 +219,18 @@ namespace ClassicalSharp.GraphicsAPI {
 		#if TRACK_RESOURCES
 		Dictionary<int, string> vbs = new Dictionary<int, string>();
 		#endif
-		Action<DrawMode, int, int> drawBatchFunc;
-		Action<DrawMode, int, int> drawBatchFuncTex2f;
-		Action<DrawMode, int, int> drawBatchFuncCol4b;
-		Action<DrawMode, int, int> drawBatchFuncTex2fCol4b;
 		
 		public override int InitVb<T>( T[] vertices, DrawMode mode, VertexFormat format, int count ) {
-			if( !useVbos ) {
-				return CreateDisplayList( vertices, mode, format, count );
-			}
-			int id = 0;
-			GL.Arb.GenBuffers( 1, out id );
-			int sizeInBytes = GetSizeInBytes( count, format );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			#endif
-			return id;
+			return CreateDisplayList( vertices, mode, format, count );
 		}
 		
-		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              int verticesCount, int indicesCount ) {
-			if( !useVbos ) {
-				return CreateIndexedDisplayList( vertices, indices, mode, verticesCount, indicesCount );
-			}
-			IndexedVbInfo info = default( IndexedVbInfo );
-			GL.Arb.GenBuffers( 2, out info.Vb );
-			int sizeInBytes = GetSizeInBytes( verticesCount, VertexFormat.VertexPos3fTex2fCol4b );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.Vb );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			
-			sizeInBytes = indicesCount * sizeof( ushort );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.Ib );
-			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
-			return info;
+		public override IndexedVbInfo InitIndexedVb<T>( T[] vertices, ushort[] indices, DrawMode mode,
+		                                               int verticesCount, int indicesCount ) {
+			return CreateIndexedDisplayList( vertices, indices, mode, verticesCount, indicesCount );
 		}
 		
-		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode, 
-		                              int verticesCount, int indicesCount ) where T : struct {
+		IndexedVbInfo CreateIndexedDisplayList<T>( T[] vertices, ushort[] indices, DrawMode mode,
+		                                          int verticesCount, int indicesCount ) where T : struct {
 			GCHandle handle;
 			int id = SetupDisplayListState( vertices, VertexFormat.VertexPos3fTex2fCol4b, out handle );
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, indices );
@@ -324,118 +283,49 @@ namespace ClassicalSharp.GraphicsAPI {
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
 			#endif
-			if( !useVbos ) {
-				GL.DeleteLists( id, 1 );
-				return;
-			}
-			GL.Arb.DeleteBuffers( 1, ref id );
+			GL.DeleteLists( id, 1 );
 		}
 		
 		public override void DeleteIndexedVb( IndexedVbInfo id ) {
 			if( id.Vb <= 0 && id.Ib <= 0 ) return;
-			if( !useVbos ) {
-				GL.DeleteLists( id.Vb, 1 );
-				return;
-			}
-			GL.Arb.DeleteBuffers( 2, ref id.Vb );
+			GL.DeleteLists( id.Vb, 1 );
 		}
 		
 		public override bool IsValidVb( int vb ) {
-			return useVbos ? GL.Arb.IsBuffer( vb ) : GL.IsList( vb );
+			return GL.IsList( vb );
 		}
 		
 		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fTex2f );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
+			GL.CallList( id );
 		}
 		
 		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fCol4b );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
+			GL.CallList( id );
 		}
 		
 		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fTex2fCol4b );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
+			GL.CallList( id );
 		}
 		
 		VertexFormat batchFormat;
 		public override void BeginVbBatch( VertexFormat format ) {
-			if( !useVbos ) return;
-			batchFormat = format;
-			EnableClientState( format );
-			if( format == VertexFormat.VertexPos3fTex2fCol4b ) {
-				drawBatchFunc = drawBatchFuncTex2fCol4b;
-			} else if( format == VertexFormat.VertexPos3fCol4b ) {
-				drawBatchFunc =drawBatchFuncCol4b;
-			} else if( format == VertexFormat.VertexPos3fTex2f ) {
-				drawBatchFunc = drawBatchFuncTex2f;
-			}
 		}
 		
 		public override void BeginIndexedVbBatch() {
-			if( !useVbos ) return;
-			EnableClientState( VertexFormat.VertexPos3fTex2fCol4b );
 		}
 		
 		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id );
-				return;
-			}
-			drawBatchFunc( mode, id, verticesCount );
+			GL.CallList( id );
 		}
 		
 		public override void DrawIndexedVbBatch( DrawMode mode, IndexedVbInfo id, int indicesCount ) {
-			if( !useVbos ) {
-				GL.CallList( id.Vb );
-				return;
-			}
-			
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id.Vb );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id.Ib );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
+			GL.CallList( id.Vb );
 		}
 		
-		public override void EndVbBatch() {
-			if( !useVbos ) return;
-			DisableClientState( batchFormat );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+		public override void EndVbBatch() {		
 		}
 		
-		public override void EndIndexedVbBatch() {
-			if( !useVbos ) return;
-			DisableClientState( VertexFormat.VertexPos3fTex2fCol4b );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
-		}
-		
-		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
-		
-		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
-		}
-		
-		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
+		public override void EndIndexedVbBatch() {			
 		}
 		
 		static void EnableClientState( VertexFormat format ) {
