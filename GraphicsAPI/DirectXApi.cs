@@ -28,8 +28,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		MatrixStack curStack;
 		PrimitiveType[] modeMappings = new PrimitiveType[] {
 			PrimitiveType.TriangleList, PrimitiveType.LineList,
-			PrimitiveType.PointList, PrimitiveType.TriangleStrip,
-			PrimitiveType.LineStrip, PrimitiveType.TriangleFan,
+			PrimitiveType.TriangleStrip,
 		};
 
 		public DirectXApi( Device device ) {

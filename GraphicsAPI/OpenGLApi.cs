@@ -17,8 +17,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		int textureDimensions;
 		const string vboExt = "GL_ARB_vertex_buffer_object";
 		BeginMode[] modeMappings = new BeginMode[] {
-			BeginMode.Triangles, BeginMode.Lines, BeginMode.Points,
-			BeginMode.TriangleStrip, BeginMode.LineStrip, BeginMode.TriangleFan
+			BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip,
 		};
 		
 		public OpenGLApi() {

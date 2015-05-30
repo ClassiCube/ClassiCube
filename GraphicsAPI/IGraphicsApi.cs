@@ -251,19 +251,7 @@ namespace ClassicalSharp.GraphicsAPI {
 	public enum DrawMode {
 		Triangles = 0,
 		Lines = 1,
-		Points = 2,
-		
-		TriangleStrip = 3,
-		LineStrip = 4,
-		TriangleFan = 5,
-	}
-	
-	public enum BlendEquation {
-		Add = 0,
-		Max = 1,
-		Min = 2,
-		Subtract = 3,
-		ReverseSubtract = 4,
+		TriangleStrip = 2,
 	}
 	
 	public enum CompareFunc {
