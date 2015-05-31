@@ -194,8 +194,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void OnWindowResize( int newWidth, int newHeight );
 		
 		protected void InitDynamicBuffers() {
-			quadVb = CreateDynamicVb( VertexFormat.VertexPos3fCol4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.VertexPos3fTex2f, 4 );
+			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );
+			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2f, 4 );
 		}
 		
 		public virtual void Dispose() {
@@ -210,7 +210,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVertices[1] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVertices[2] = new VertexPos3fCol4b( x, y, 0, col );
 			quadVertices[3] = new VertexPos3fCol4b( x, y + height, 0, col );
-			DrawDynamicVb( DrawMode.TriangleStrip, quadVb, quadVertices, VertexFormat.VertexPos3fCol4b, 4 );
+			DrawDynamicVb( DrawMode.TriangleStrip, quadVb, quadVertices, VertexFormat.Pos3fCol4b, 4 );
 		}
 		
 		VertexPos3fTex2f[] texVertices = new VertexPos3fTex2f[4];
@@ -222,7 +222,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
 			texVertices[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
 			texVertices[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVertices, VertexFormat.VertexPos3fTex2f, 4 );
+			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVertices, VertexFormat.Pos3fTex2f, 4 );
 		}
 		
 		public void Mode2D( float width, float height ) {
@@ -251,9 +251,9 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		VertexPos3fTex2f = 0,
-		VertexPos3fCol4b = 1,
-		VertexPos3fTex2fCol4b = 2,
+		Pos3fTex2f = 0,
+		Pos3fCol4b = 1,
+		Pos3fTex2fCol4b = 2,
 	}
 	
 	public enum DrawMode {
@@ -300,15 +300,5 @@ namespace ClassicalSharp.GraphicsAPI {
 		Projection = 0,
 		Modelview = 1,
 		Texture = 2,
-	}
-	
-	[StructLayout( LayoutKind.Sequential )]
-	public struct IndexedVbInfo {
-		public int Vb, Ib;
-		
-		public IndexedVbInfo( int vb, int ib ) {
-			Vb = vb;
-			Ib = ib;
-		}
 	}
 }

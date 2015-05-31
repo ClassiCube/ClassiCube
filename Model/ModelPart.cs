@@ -12,11 +12,11 @@ namespace ClassicalSharp {
 		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, IGraphicsApi graphics ) {
 			Count = count;
 			Graphics = graphics;
-			VbId = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b, count );
+			VbId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, count );
 		}
 		
 		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b, VbId, Count );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, Count );
 		}
 		
 		public void Dispose() {

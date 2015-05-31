@@ -15,7 +15,7 @@ namespace ClassicalSharp.Particles {
 		public ParticleManager( Game window ) {
 			Window = window;
 			Graphics = window.Graphics;
-			vb = Graphics.CreateDynamicVb( VertexFormat.VertexPos3fTex2f, 1000 );
+			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
 		}
 		
 		VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[0];
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Particles {
 			Graphics.Bind2DTexture( Window.TerrainAtlas.TexId );
 			Graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
-			Graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.VertexPos3fTex2f, count );
+			Graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 		}

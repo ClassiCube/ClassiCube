@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 			map = Window.Map;
 			graphics = window.Graphics;
 			info = Window.BlockInfo;
-			weatherVb = graphics.CreateDynamicVb( VertexFormat.VertexPos3fTex2fCol4b, 12 * 9 * 9 );
+			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
 		}
 		
 		int weatherVb;
@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			graphics.DrawDynamicVb( DrawMode.Triangles, weatherVb, vertices, VertexFormat.VertexPos3fTex2fCol4b, index );
+			graphics.DrawDynamicVb( DrawMode.Triangles, weatherVb, vertices, VertexFormat.Pos3fTex2fCol4b, index );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 		}

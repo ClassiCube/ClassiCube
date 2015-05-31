@@ -141,12 +141,12 @@ namespace ClassicalSharp {
 		void SetPartInfo( DrawInfo1DPart part, int i, ChunkPartInfo[] parts ) {
 			ChunkPartInfo info = default( ChunkPartInfo );
 			if( part.iCount1 > 0 ) {
-				info.VbId = Graphics.InitVb( part.vertices1, VertexFormat.VertexPos3fTex2fCol4b, part.vCount1 );
+				info.VbId = Graphics.InitVb( part.vertices1, VertexFormat.Pos3fTex2fCol4b, part.vCount1 );
 				info.IbId = Graphics.InitIb( part.indices1, part.iCount1 );
 				info.IndicesCount = part.iCount1;
 			}
 			if( part.iCount2 > 0 ) {
-				info.VbId2 = Graphics.InitVb( part.vertices2, VertexFormat.VertexPos3fTex2fCol4b, part.vCount2 );
+				info.VbId2 = Graphics.InitVb( part.vertices2, VertexFormat.Pos3fTex2fCol4b, part.vCount2 );
 				info.IbId2 = Graphics.InitIb( part.indices2, part.iCount2 );
 				info.IndicesCount2 = part.iCount2;
 			}

@@ -273,7 +273,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void BeginIndexedVbBatch() {
-			device.VertexFormat = formatMapping[(int)VertexFormat.VertexPos3fTex2fCol4b];
+			device.VertexFormat = formatMapping[(int)VertexFormat.Pos3fTex2fCol4b];
 		}
 
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {

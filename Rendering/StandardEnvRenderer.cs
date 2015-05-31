@@ -29,7 +29,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
-				Graphics.DrawVb( DrawMode.Triangles, VertexFormat.VertexPos3fCol4b, skyVbo, skyVertices );
+				Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fCol4b, skyVbo, skyVertices );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
@@ -97,7 +97,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.AlphaTest = true;
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( cloudTexture );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.VertexPos3fTex2fCol4b, cloudsVbo, cloudsVertices );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, cloudsVbo, cloudsVertices );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			
@@ -174,14 +174,14 @@ namespace ClassicalSharp.Renderers {
 			cloudsVertices = 6;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];		
 			DrawCloudsYPlane( x1, z1, x2, z2, y, Map.CloudsCol, vertices );
-			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		void ResetSkyModern( int y, int x1, int z1, int x2, int z2 ) {
 			skyVertices = 6;
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
 			DrawSkyYPlane( x1, z1, x2, z2, y, Map.SkyCol, vertices );
-			skyVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fCol4b );
+			skyVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 		}
 		
 		#endregion
@@ -192,14 +192,14 @@ namespace ClassicalSharp.Renderers {
 			cloudsVertices = Utils.CountVertices( x2 - x1, z2 - z1, 128 );
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
 			DrawCloudsYPlaneParts( x1, z1, x2, z2, y, Map.CloudsCol, vertices );
-			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		void ResetSkyLegacy( int y, int x1, int z1, int x2, int z2 ) {
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, 128 );
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
 			DrawSkyYPlaneParts( x1, z1, x2, z2, y, Map.SkyCol, vertices );
-			skyVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fCol4b );
+			skyVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 		}
 		
 		void DrawSkyYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fCol4b[] vertices ) {
