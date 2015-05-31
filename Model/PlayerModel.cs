@@ -1,5 +1,4 @@
-﻿using OpenTK;
-using System;
+﻿using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
@@ -10,7 +9,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set64x32, Set64x64, Set64x64Slim;
 		public PlayerModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[( 6 * 6 ) * 7 * 3];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 7 * 3];
 			Set64x32 = new ModelSet();
 			Set64x32.Head = MakeHead( false );
 			Set64x32.Torso = MakeTorso( false );
@@ -112,8 +111,8 @@ namespace ClassicalSharp.Model {
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
 			
 			public void SetVb( int vb ) {
-				Head.VbId = Torso.VbId = LeftLeg.VbId = RightLeg.VbId =
-					LeftArm.VbId = RightArm.VbId = Hat.VbId = vb;
+				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
+					LeftArm.Vb = RightArm.Vb = Hat.Vb = vb;
 			}
 		}
 	}

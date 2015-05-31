@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public ChickenModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 + planeVertices * 2 * 2];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Head2 = MakeHead2(); // TODO: Find a more appropriate name.
@@ -20,8 +20,10 @@ namespace ClassicalSharp.Model {
 			Set.RightLeg = MakeLeg( 0f, 0.1875f, 0.0625f, 0.125f );
 			Set.LeftWing = MakeWing( -0.25f, -0.1875f );
 			Set.RightWing = MakeWing( 0.1875f, 0.25f );
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set.SetVb( vb );
 			vertices = null;
-
 			DefaultTexId = graphics.LoadTexture( "chicken.png" );
 		}
 		
@@ -46,12 +48,10 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float legX1, float legX2 ) {
-			index = 0;
 			const float y1 = 0f, y2 = 0.3125f, z2 = 0.0625f, z1 = -0.125f;		
 			YPlane( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
 			ZPlane( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
-			int vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, 2 * 6 );
-			return new ModelPart( vb, 0, 2 * 6, graphics );
+			return new ModelPart( vb, index - 12, 2 * 6, graphics );
 		}
 		
 		public override float NameYOffset {
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
@@ -83,15 +83,9 @@ namespace ClassicalSharp.Model {
 			
 			public ModelPart Head, Head2, Head3, Torso, LeftLeg, RightLeg, LeftWing, RightWing;
 			
-			public void Dispose() {
-				RightLeg.Dispose();
-				LeftLeg.Dispose();
-				Torso.Dispose();
-				Head.Dispose();
-				Head2.Dispose();
-				Head3.Dispose();
-				LeftWing.Dispose();
-				RightWing.Dispose();
+			public void SetVb( int vb ) {
+				Head.Vb = Head2.Vb = Head3.Vb = Torso.Vb = LeftLeg.Vb =
+					RightLeg.Vb = LeftWing.Vb = RightWing.Vb = vb;
 			}
 		}
 	}

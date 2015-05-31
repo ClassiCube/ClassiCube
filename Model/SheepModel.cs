@@ -13,7 +13,7 @@ namespace ClassicalSharp.Model {
 		int furTextureId;
 		
 		public SheepModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 * ( Fur ? 2 : 1 )];
 			Set = new ModelSet( Fur );
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -29,8 +29,10 @@ namespace ClassicalSharp.Model {
 				Set.FurLeftLegBack = MakeFurLeg( -0.34375f, -0.03125f, 0.28125f, 0.59375f );
 				Set.FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set.SetVb( vb );
 			vertices = null;
-
 			DefaultTexId = graphics.LoadTexture( "sheep.png" );
 			furTextureId = graphics.LoadTexture( "sheep_fur.png" );
 		}
@@ -87,7 +89,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 			if( Fur ) {
 				graphics.DeleteTexture( ref furTextureId );
@@ -104,20 +106,12 @@ namespace ClassicalSharp.Model {
 				this.fur = fur;
 			}
 			
-			public void Dispose() {
-				RightLegFront.Dispose();
-				LeftLegFront.Dispose();
-				RightLegBack.Dispose();
-				LeftLegBack.Dispose();
-				Torso.Dispose();
-				Head.Dispose();
+			public void SetVb( int vb ) {
+				Head.Vb = Torso.Vb = LeftLegFront.Vb = RightLegFront.Vb
+					= LeftLegBack.Vb = RightLegBack.Vb = vb;
 				if( fur ) {
-					FurHead.Dispose();
-					FurTorso.Dispose();
-					FurLeftLegBack.Dispose();
-					FurLeftLegFront.Dispose();
-					FurRightLegBack.Dispose();
-					FurRightLegFront.Dispose();
+					FurHead.Vb = FurTorso.Vb = FurLeftLegFront.Vb = FurRightLegFront.Vb
+					= FurLeftLegBack.Vb = FurRightLegBack.Vb = vb;
 				}
 			}
 		}

@@ -1,6 +1,4 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
 
@@ -10,7 +8,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public CreeperModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -18,8 +16,10 @@ namespace ClassicalSharp.Model {
 			Set.RightLegFront = MakeLeg( 0, 0.25f, -0.375f, -0.125f );
 			Set.LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
 			Set.RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set.SetVb( vb );
 			vertices = null;
-
 			DefaultTexId = graphics.LoadTexture( "creeper.png" );
 		}
 		
@@ -54,7 +54,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
@@ -62,13 +62,9 @@ namespace ClassicalSharp.Model {
 			
 			public ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
 			
-			public void Dispose() {
-				RightLegFront.Dispose();
-				LeftLegFront.Dispose();
-				RightLegBack.Dispose();
-				LeftLegBack.Dispose();
-				Torso.Dispose();
-				Head.Dispose();
+			public void SetVb( int vb ) {
+				Head.Vb = Torso.Vb = LeftLegFront.Vb = RightLegFront.Vb
+					= LeftLegBack.Vb = RightLegBack.Vb = vb;
 			}
 		}
 	}

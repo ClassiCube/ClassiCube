@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public ZombieModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -18,8 +18,10 @@ namespace ClassicalSharp.Model {
 			Set.RightLeg = MakeRightLeg( 0, 0.25f );
 			Set.LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			Set.RightArm = MakeRightArm( 0.25f, 0.5f );
-			vertices = null;
-
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set.SetVb( vb );
+			vertices = null;		
 			DefaultTexId = graphics.LoadTexture( "zombie.png" );
 		}
 		
@@ -66,7 +68,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
@@ -74,13 +76,9 @@ namespace ClassicalSharp.Model {
 			
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 			
-			public void Dispose() {
-				RightArm.Dispose();
-				LeftArm.Dispose();
-				RightLeg.Dispose();
-				LeftLeg.Dispose();
-				Torso.Dispose();
-				Head.Dispose();
+			public void SetVb( int vb ) {
+				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
+					LeftArm.Vb = RightArm.Vb = vb;
 			}
 		}
 	}

@@ -10,15 +10,17 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public SpiderModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * 5];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Link = MakeLink();
 			Set.End = MakeEnd();
 			Set.LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			Set.RightLeg = MakeLeg( 0.1875f, 1.1875f );
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set.SetVb( vb );
 			vertices = null;
-
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
 		}
 		
@@ -62,7 +64,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
@@ -70,12 +72,9 @@ namespace ClassicalSharp.Model {
 			
 			public ModelPart Head, Link, End, LeftLeg, RightLeg;
 			
-			public void Dispose() {
-				RightLeg.Dispose();
-				LeftLeg.Dispose();
-				End.Dispose();
-				Head.Dispose();
-				Link.Dispose();
+			public void SetVb( int vb ) {
+				Head.Vb = Link.Vb = LeftLeg.Vb = RightLeg.Vb =
+					End.Vb = vb;
 			}
 		}
 	}

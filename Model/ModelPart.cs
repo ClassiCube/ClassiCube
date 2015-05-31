@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	
 	public class ModelPart {
 		
-		public int VbId;
+		public int Vb;
 		public int Offset = 0;
 		public int Count;
 		public IGraphicsApi Graphics;
@@ -14,15 +14,11 @@ namespace ClassicalSharp {
 			Offset = offset;
 			Count = count;
 			Graphics = graphics;
-			VbId = vb;
+			Vb = vb;
 		}
 		
 		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, Offset, Count );
-		}
-		
-		public void Dispose() {
-			Graphics.DeleteVb( VbId );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, Vb, Offset, Count );
 		}
 	}
 	
