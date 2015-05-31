@@ -278,6 +278,8 @@ namespace ClassicalSharp {
 			TerrainAtlas.Dispose();
 			TerrainAtlas1D.Dispose();
 			ModelCache.Dispose();
+			Picking.Dispose();
+			ParticleManager.Dispose();
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
 					NetPlayers[i].Despawn();
@@ -289,6 +291,7 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
+			Graphics.Dispose();
 			Utils2D.Dispose();
 			base.Dispose();
 		}

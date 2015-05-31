@@ -27,6 +27,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				Utils.LogWarning( "Alternatively, you can download the 'DLCompatibility build." );
 				throw new InvalidOperationException( "Cannot use OpenGL vbos." );
 			}
+			base.InitDynamicBuffers();
 			drawBatchFuncCol4b = DrawVbPos3fCol4bFast;
 			drawBatchFuncTex2f = DrawVbPos3fTex2fFast;
 			drawBatchFuncTex2fCol4b = DrawVbPos3fTex2fCol4bFast;
@@ -179,44 +180,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
-			//GL.DrawArrays( BeginMode.Triangles, 0, vertices.Length );
-			// We can't just use GL.DrawArrays since we'd have to pin the array to prevent it from being moved around in memory.
-			// Feasible alternatives:
-			// - Use a dynamically updated VBO, and resize it (i.e. create a new bigger VBO) if required.
-			// - Immediate mode.
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fCol4b vertex = vertices[i];
-				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.Color4( 1f, 1f, 1f, 1f );
-			GL.End();
-		}
-		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fTex2f vertex = vertices[i];
-				GL.TexCoord2( vertex.U, vertex.V );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.End();
-		}
-		
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
-			GL.Begin( modeMappings[(int)mode] );
-			for( int i = 0; i < count; i++ ) {
-				VertexPos3fTex2fCol4b vertex = vertices[i];
-				GL.TexCoord2( vertex.U, vertex.V );
-				GL.Color4( vertex.R, vertex.G, vertex.B, vertex.A );
-				GL.Vertex3( vertex.X, vertex.Y, vertex.Z );
-			}
-			GL.Color4( 1f, 1f, 1f, 1f );
-			GL.End();
-		}
-		
 		PolygonMode[] fillModes = { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
 		public override void SetFillType( FillType type ) {
 			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
@@ -231,6 +194,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<DrawMode, int, int> drawBatchFuncTex2f;
 		Action<DrawMode, int, int> drawBatchFuncCol4b;
 		Action<DrawMode, int, int> drawBatchFuncTex2fCol4b;
+		
+		
+		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+			int id = 0;
+			GL.Arb.GenBuffers( 1, out id );
+			int sizeInBytes = GetSizeInBytes( maxVertices, format );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageArb.DynamicDraw );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			return id;
+		}
 		
 		public override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
@@ -253,6 +227,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 			return id;
+		}
+		
+		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
+			int sizeInBytes = GetSizeInBytes( count, format );
+			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
+			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			
+			BeginVbBatch( format );
+			DrawVbBatch( mode, vb, count );
+			EndVbBatch();
+		}
+		
+		public override void DeleteDynamicVb( int id ) {
+			if( id <= 0 ) return;
+			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
 		public override void DeleteVb( int id ) {

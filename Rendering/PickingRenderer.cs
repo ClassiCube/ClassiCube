@@ -8,10 +8,12 @@ namespace ClassicalSharp.Renderers {
 		
 		Game window;
 		IGraphicsApi graphics;
+		int vb;
 		
 		public PickingRenderer( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
+			vb = graphics.CreateDynamicVb( VertexFormat.VertexPos3fCol4b, verticesCount );
 		}
 		
 		FastColour col = FastColour.White;		
@@ -59,8 +61,12 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
 				DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
-				graphics.DrawVertices( DrawMode.Triangles, vertices, verticesCount );
+				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.VertexPos3fCol4b, verticesCount );
 			}
+		}
+		
+		public void Dispose() {
+			graphics.DeleteDynamicVb( vb );
 		}
 		
 		void DrawXPlane( float x, float z1, float y1, float z2, float y2 ) {

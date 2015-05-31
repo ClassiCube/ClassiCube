@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 namespace Launcher {
@@ -75,10 +74,6 @@ namespace Launcher {
 			{ "diams", '\x2666' },
 		};
 		
-		static bool Lookup( string entity, out char decoded ) {
-			return _lookupTable.TryGetValue( entity, out decoded );
-		}
-		
 		public static string HtmlDecode( string value ) {
 			value = value.Replace( "hellip;", "\x2026" ); // minecraft.net doesn't escape this at the end properly.
 			if( String.IsNullOrEmpty( value ) || value.IndexOf( '&' ) < 0 ) {
@@ -119,7 +114,7 @@ namespace Launcher {
 				} else {
 					i = entityEnd;
 					char decodedEntity;
-					if( Lookup( entity, out decodedEntity ) ) {
+					if( _lookupTable.TryGetValue( entity, out decodedEntity ) ) {
 						output.Append( decodedEntity );
 					} else { // Invalid token.
 						output.Append( '&' );

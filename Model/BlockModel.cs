@@ -9,8 +9,10 @@ namespace ClassicalSharp.Model {
 	public class BlockModel : IModel {
 		
 		byte block = (byte)Block.Air;
+		int vb;
 		public BlockModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vb = window.Graphics.CreateDynamicVb( VertexFormat.VertexPos3fTex2fCol4b, 6 * 6 );
 		}
 		
 		public override float NameYOffset {
@@ -34,7 +36,7 @@ namespace ClassicalSharp.Model {
 			if( BlockInfo.IsSprite( block ) ) {
 				DrawXFace( 0f, TileSide.Right, false );
 				DrawZFace( 0f, TileSide.Back, false );
-				graphics.DrawVertices( DrawMode.Triangles, vertices, 6 * 2 );
+				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.VertexPos3fTex2fCol4b, 6 * 2 );
 			} else {
 				DrawYFace( blockHeight, TileSide.Top );
 				DrawXFace( -0.5f, TileSide.Right, false );
@@ -42,7 +44,7 @@ namespace ClassicalSharp.Model {
 				DrawZFace( -0.5f, TileSide.Front, true );
 				DrawZFace( 0.5f, TileSide.Back, false );
 				DrawYFace( 0f, TileSide.Bottom );
-				graphics.DrawVertices( DrawMode.Triangles, vertices, 6 * 6 );
+				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.VertexPos3fTex2fCol4b, 6 * 6 );
 			}
 		}
 		float blockHeight;
@@ -50,6 +52,7 @@ namespace ClassicalSharp.Model {
 		BlockInfo BlockInfo;
 		
 		public override void Dispose() {
+			graphics.DeleteDynamicVb( vb );
 		}
 		
 		void DrawYFace( float y, int side ) {

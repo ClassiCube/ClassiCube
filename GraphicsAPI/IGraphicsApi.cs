@@ -98,13 +98,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public abstract void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count );
-		
-		public abstract void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count );
-		
-		public abstract void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count );
-		
 		public abstract void SetFillType( FillType type );
+		
+		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
+		
+		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
 		
 		public virtual int InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
 			return InitVb( vertices, format, vertices.Length );
@@ -117,6 +115,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool IsValidVb( int vb );
 		
 		public abstract bool IsValidIb( int ib );
+		
+		public abstract void DeleteDynamicVb( int id );
 		
 		public abstract void DeleteVb( int id );
 		
@@ -197,16 +197,28 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void OnWindowResize( int newWidth, int newHeight );
 		
+		protected void InitDynamicBuffers() {
+			quadVb = CreateDynamicVb( VertexFormat.VertexPos3fCol4b, 4 );
+			texVb = CreateDynamicVb( VertexFormat.VertexPos3fTex2f, 4 );
+		}
+		
+		public virtual void Dispose() {
+			DeleteDynamicVb( quadVb );
+			DeleteDynamicVb( texVb );
+		}
+		
 		VertexPos3fCol4b[] quadVertices = new VertexPos3fCol4b[4];
+		int quadVb;
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
 			quadVertices[0] = new VertexPos3fCol4b( x + width, y, 0, col );
 			quadVertices[1] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVertices[2] = new VertexPos3fCol4b( x, y, 0, col );
 			quadVertices[3] = new VertexPos3fCol4b( x, y + height, 0, col );
-			DrawVertices( DrawMode.TriangleStrip, quadVertices, 4 );
+			DrawDynamicVb( DrawMode.TriangleStrip, quadVb, quadVertices, VertexFormat.VertexPos3fCol4b, 4 );
 		}
 		
 		VertexPos3fTex2f[] texVertices = new VertexPos3fTex2f[4];
+		int texVb;
 		public virtual void Draw2DTexture( ref Texture tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			// Have to order them this way because it's a triangle strip.
@@ -214,7 +226,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
 			texVertices[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
 			texVertices[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			DrawVertices( DrawMode.TriangleStrip, texVertices, 4 );
+			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVertices, VertexFormat.VertexPos3fTex2f, 4 );
 		}
 		
 		public void Mode2D( float width, float height ) {
