@@ -254,21 +254,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			return IsValid( iBuffers, ib );
 		}
 
-		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount ) {
 			device.SetStreamSource( 0, vBuffers[id], 0 );
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
-		}
-
-		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0 );
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
-		}
-
-		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0 );
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1 | VertexFormats.Diffuse;
+			device.VertexFormat = formatMapping[(int)format];
 			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
 		}
 

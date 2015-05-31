@@ -265,20 +265,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GL.Arb.IsBuffer( ib );
 		}
 		
-		public override void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fTex2f );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
-		}
-		
-		public override void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fCol4b );
-			DrawVbBatch( mode, id, verticesCount );
-			EndVbBatch();
-		}
-		
-		public override void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount ) {
-			BeginVbBatch( VertexFormat.VertexPos3fTex2fCol4b );
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount ) {
+			BeginVbBatch( format );
 			DrawVbBatch( mode, id, verticesCount );
 			EndVbBatch();
 		}

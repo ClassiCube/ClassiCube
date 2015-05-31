@@ -122,11 +122,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteIb( int ib );
 		
-		public abstract void DrawVbPos3fTex2f( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void DrawVbPos3fCol4b( DrawMode mode, int id, int verticesCount );
-		
-		public abstract void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount );
 		
 		public abstract void BeginVbBatch( VertexFormat format );
 		
