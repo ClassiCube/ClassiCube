@@ -49,22 +49,33 @@ namespace ClassicalSharp.Model {
 		protected FastColour col = new FastColour( 178, 178, 178 );
 		protected VertexPos3fTex2fCol4b[] vertices;
 		protected int index = 0;
+		protected int vb = 0;
 		
 		protected ModelPart MakePart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
 		                             float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
-			index = 0;
+			// TODO: temp hack until we change other classes.
+			if( !( this is PlayerModel ) ) {
+				index = 0;
+			}
 			YPlane( x + sidesW, y, endsW, endsH, x2, x1, z2, z1, y2, _64x64 ); // top
 			YPlane( x + sidesW + bodyW, y, endsW, endsH, x2, x1, z1, z2, y1, _64x64 ); // bottom
 			ZPlane( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, y1, y2, z1, _64x64 ); // front
 			ZPlane( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2, _64x64 ); // back
 			XPlane( x, y + endsH, sidesW, sidesH, z2, z1, y1, y2, x2, _64x64 ); // left
 			XPlane( x + sidesW + bodyW, y + endsH, sidesW, sidesH, z1, z2, y1, y2, x1, _64x64 ); // right
-			return new ModelPart( vertices, 6 * 6, graphics );
+			if( !( this is PlayerModel ) ) {
+				int vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, 6 * 6 );
+				return new ModelPart( vb, 0, 6 * 6, graphics );
+			} else {
+				return new ModelPart( this.vb, index - 36, 6 * 6, graphics );
+			}			
 		}
 		
 		protected ModelPart MakeRotatedPart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
 		                                    float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
-			index = 0;
+			if( !( this is PlayerModel ) ) {
+				index = 0;
+			}
 			YPlane( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, z1, z2, y2, _64x64 ); // top
 			YPlane( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, z1, z2, y1, _64x64 ); // bottom
 			ZPlane( x + sidesW, y, endsW, endsH, x2, x1, y1, y2, z1, _64x64 ); // front
@@ -79,7 +90,12 @@ namespace ClassicalSharp.Model {
 				vertex.Y = z;
 				vertices[i] = vertex;
 			}
-			return new ModelPart( vertices, 6 * 6, graphics );
+			if( !( this is PlayerModel ) ) {
+				int vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, 6 * 6 );
+				return new ModelPart( vb, 0, 6 * 6, graphics );
+			} else {
+				return new ModelPart( this.vb, index - 36, 6 * 6, graphics );
+			}
 		}
 		
 		protected static TextureRectangle SkinTexCoords( int x, int y, int width, int height, float skinWidth, float skinHeight ) {

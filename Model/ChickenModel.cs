@@ -50,7 +50,8 @@ namespace ClassicalSharp.Model {
 			const float y1 = 0f, y2 = 0.3125f, z2 = 0.0625f, z1 = -0.125f;		
 			YPlane( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
 			ZPlane( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
-			return new ModelPart( vertices, 2 * 6, graphics );
+			int vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, 2 * 6 );
+			return new ModelPart( vb, 0, 2 * 6, graphics );
 		}
 		
 		public override float NameYOffset {

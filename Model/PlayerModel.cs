@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set64x32, Set64x64, Set64x64Slim;
 		public PlayerModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
+			vertices = new VertexPos3fTex2fCol4b[( 6 * 6 ) * 7 * 3];
 			Set64x32 = new ModelSet();
 			Set64x32.Head = MakeHead( false );
 			Set64x32.Torso = MakeTorso( false );
@@ -37,6 +37,11 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.Hat = MakeHat( true );
+			
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			Set64x32.SetVb( vb );
+			Set64x64.SetVb( vb );
+			Set64x64Slim.SetVb( vb );
 			vertices = null;
 			
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
@@ -98,9 +103,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			Set64x32.Dispose();
-			Set64x64.Dispose();
-			Set64x64Slim.Dispose();
+			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
@@ -108,14 +111,9 @@ namespace ClassicalSharp.Model {
 			
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
 			
-			public void Dispose() {
-				Hat.Dispose();
-				RightArm.Dispose();
-				LeftArm.Dispose();
-				RightLeg.Dispose();
-				LeftLeg.Dispose();
-				Torso.Dispose();
-				Head.Dispose();
+			public void SetVb( int vb ) {
+				Head.VbId = Torso.VbId = LeftLeg.VbId = RightLeg.VbId =
+					LeftArm.VbId = RightArm.VbId = Hat.VbId = vb;
 			}
 		}
 	}

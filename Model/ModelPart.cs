@@ -6,17 +6,19 @@ namespace ClassicalSharp {
 	public class ModelPart {
 		
 		public int VbId;
+		public int Offset = 0;
 		public int Count;
 		public IGraphicsApi Graphics;
 		
-		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, IGraphicsApi graphics ) {
+		public ModelPart( int vb, int offset, int count, IGraphicsApi graphics ) {
+			Offset = offset;
 			Count = count;
 			Graphics = graphics;
-			VbId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b, count );
+			VbId = vb;
 		}
 		
 		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, 0, Count );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, Offset, Count );
 		}
 		
 		public void Dispose() {
