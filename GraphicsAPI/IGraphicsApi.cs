@@ -122,11 +122,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteIb( int ib );
 		
-		public abstract void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount );
+		public abstract void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount );
 		
 		public abstract void BeginVbBatch( VertexFormat format );
 		
-		public abstract void DrawVbBatch( DrawMode mode, int id, int verticesCount );
+		public abstract void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount );
 		
 		public abstract void EndVbBatch();
 		

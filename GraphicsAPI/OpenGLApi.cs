@@ -190,10 +190,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		#if TRACK_RESOURCES
 		Dictionary<int, string> vbs = new Dictionary<int, string>();
 		#endif
-		Action<DrawMode, int, int> drawBatchFunc;
-		Action<DrawMode, int, int> drawBatchFuncTex2f;
-		Action<DrawMode, int, int> drawBatchFuncCol4b;
-		Action<DrawMode, int, int> drawBatchFuncTex2fCol4b;
+		Action<DrawMode, int, int, int> drawBatchFunc;
+		Action<DrawMode, int, int, int> drawBatchFuncTex2f;
+		Action<DrawMode, int, int, int> drawBatchFuncCol4b;
+		Action<DrawMode, int, int, int> drawBatchFuncTex2fCol4b;
 		
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
@@ -235,7 +235,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
 			BeginVbBatch( format );
-			DrawVbBatch( mode, vb, count );
+			DrawVbBatch( mode, vb, 0, count );
 			EndVbBatch();
 		}
 		
@@ -265,9 +265,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GL.Arb.IsBuffer( ib );
 		}
 		
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount ) {
 			BeginVbBatch( format );
-			DrawVbBatch( mode, id, verticesCount );
+			DrawVbBatch( mode, id, offset, verticesCount );
 			EndVbBatch();
 		}
 		
@@ -288,8 +288,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			EnableClientState( VertexFormat.Pos3fTex2fCol4b );
 		}
 		
-		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			drawBatchFunc( mode, id, verticesCount );
+		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
+			drawBatchFunc( mode, id, offset, verticesCount );
 		}
 		
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
@@ -312,26 +312,26 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 		}
 		
-		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int verticesCount ) {
+		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int offset, int verticesCount ) {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
+			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
-		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int verticesCount ) {
+		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
+			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
-		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int verticesCount ) {
+		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
-			GL.DrawArrays( modeMappings[(int)mode], 0, verticesCount );
+			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
 		static void EnableClientState( VertexFormat format ) {

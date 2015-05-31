@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( sideTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, sidesVboId, sidesVertices );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, sidesVboId, 0, sidesVertices );
 			Graphics.Texturing = false;
 		}
 		
@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 			Graphics.Texturing = true;
 			Graphics.AlphaBlending = true;
 			Graphics.Bind2DTexture( edgeTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, edgesVboId, edgesVertices );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, edgesVboId, 0, edgesVertices );
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
 		}

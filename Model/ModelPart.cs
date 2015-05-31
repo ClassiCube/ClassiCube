@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, Count );
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, VbId, 0, Count );
 		}
 		
 		public void Dispose() {
