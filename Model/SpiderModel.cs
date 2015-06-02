@@ -53,6 +53,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Set.Head );
 			Set.Link.Render();
 			Set.End.Render();
+			// TODO: leg animations
 			DrawRotate( -0.1875f, 0.5f, 0, 0, 45f, 22.5f, Set.LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, 22.5f, 22.5f, Set.LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, -22.5f, 22.5f, Set.LeftLeg );
@@ -60,7 +61,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0.1875f, 0.5f, 0, 0, -45f, -22.5f, Set.RightLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, -22.5f, -22.5f, Set.RightLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, 22.5f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, leftLegXRot, 45f, -22.5f, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, 45f, -22.5f, Set.RightLeg );
 		}
 		
 		public override void Dispose() {
