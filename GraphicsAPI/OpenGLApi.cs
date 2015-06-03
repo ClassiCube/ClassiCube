@@ -158,8 +158,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void ColourMask( bool red, bool green, bool blue, bool alpha ) {
-			GL.ColorMask( red, green, blue, alpha );
+		public override bool ColourWrite { 
+			set { GL.ColorMask( value, value, value, value ); }
 		}
 		
 		DepthFunction[] depthFuncs = {

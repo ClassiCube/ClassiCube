@@ -150,13 +150,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			lastClearCol = col.ToColor();
 		}
 
-		public override void ColourMask( bool red, bool green, bool blue, bool alpha ) {
-			ColorWriteEnable flags = 0;
-			if( red ) flags |= ColorWriteEnable.Red;
-			if( green ) flags |= ColorWriteEnable.Green;
-			if( blue ) flags |= ColorWriteEnable.Blue;
-			if( alpha ) flags |= ColorWriteEnable.Alpha;
-			device.RenderState.ColorWriteEnable = flags;
+		public override bool ColourWrite {
+			set {
+				ColorWriteEnable flags = value ? ColorWriteEnable.RedGreenBlueAlpha : 0;
+				device.RenderState.ColorWriteEnable = flags;
+			}
 		}
 
 		public override void DepthTestFunc( CompareFunc func ) {
@@ -170,20 +168,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override bool DepthWrite {
 			set { device.RenderState.ZBufferWriteEnable = value; }
 		}
-
-		public override void DrawVertices( DrawMode mode, VertexPos3fCol4b[] vertices, int count ) {
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse;
+		
+		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+			return -1;
+		}
+		
+		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
+			device.VertexFormat = formatMapping[(int)format];
 			device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
 		}
-
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2f[] vertices, int count ) {
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Texture1;
-			device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
-		}
-
-		public override void DrawVertices( DrawMode mode, VertexPos3fTex2fCol4b[] vertices, int count ) {
-			device.VertexFormat = VertexFormats.Position | VertexFormats.Diffuse | VertexFormats.Texture1; // TODO: Texture0?
-			device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
+		
+		public override void DeleteDynamicVb(int id) {
 		}
 
 		FillMode[] fillModes = { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
@@ -212,8 +207,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe VertexBuffer CreateVb<T>( T[] vertices, int count, VertexFormat format ) {
 			int sizeInBytes = GetSizeInBytes( count, format );
 			VertexFormats d3dFormat = formatMapping[(int)format];
-
 			VertexBuffer buffer = new VertexBuffer( device, sizeInBytes, Usage.None, d3dFormat, Pool.Managed );
+			
 			GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
 			IntPtr source = handle.AddrOfPinnedObject();
@@ -226,8 +221,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		unsafe IndexBuffer CreateIb( ushort[] indices, int count ) {
 			int sizeInBytes = count * 2;
-
 			IndexBuffer buffer = new IndexBuffer( device, sizeInBytes, Usage.None, Pool.Managed, true );
+			
 			GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
 			GCHandle handle = GCHandle.Alloc( indices, GCHandleType.Pinned );
 			IntPtr source = handle.AddrOfPinnedObject();
@@ -254,19 +249,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			return IsValid( iBuffers, ib );
 		}
 
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount ) {
 			device.SetStreamSource( 0, vBuffers[id], 0 );
 			device.VertexFormat = formatMapping[(int)format];
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void BeginVbBatch( VertexFormat format ) {
 			device.VertexFormat = formatMapping[(int)format];
 		}
 
-		public override void DrawVbBatch( DrawMode mode, int id, int verticesCount ) {
-			device.SetStreamSource( 0,vBuffers[id], 0 );
-			device.DrawPrimitives( modeMappings[(int)mode], 0, verticesCount / 3 );
+		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
+			device.SetStreamSource( 0, vBuffers[id], 0 );
+			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void EndVbBatch() {
@@ -280,7 +275,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.Indices = iBuffers[ib];
 			device.SetStreamSource( 0, vBuffers[vb], 0 );
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, 
-			                             indicesCount / 6 * 4, 0, indicesCount / 3 );
+			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
 
 		public override void EndIndexedVbBatch() {
@@ -436,6 +431,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			array[id] = null;
 		}
 		
+		static int NumPrimitives( int vertices, DrawMode mode ) {
+			if( mode == DrawMode.Triangles ) {
+				return vertices / 3;
+			} else if( mode == DrawMode.TriangleStrip ) {
+				return vertices - 2;
+			}
+			return vertices / 2;
+		}
+		
 		static bool IsValid<T>( T[] array, int id ) {
 			return id > 0 && id < array.Length && array[id] != null;
 		}
@@ -443,6 +447,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void PrintApiSpecificInfo() {
 			Console.WriteLine( "D3D tex memory available: " + device.AvailableTextureMemory );
 			Console.WriteLine( "D3D software vertex processing: " + device.SoftwareVertexProcessing );
+			Console.WriteLine( "D3D hardware rasterization: " + device.DeviceCaps.DeviceCaps.SupportsHardwareRasterization );
+			Console.WriteLine( "D3D hardware T & L: " + device.DeviceCaps.DeviceCaps.SupportsHardwareTransformAndLight );
+			Console.WriteLine( "D3D hardware pure: " + device.DeviceCaps.DeviceCaps.SupportsPureDevice );
 		}
 
 		public override void TakeScreenshot( string output, Size size ) {

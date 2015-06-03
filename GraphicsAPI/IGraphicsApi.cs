@@ -88,7 +88,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets the colour the screen is cleared to when Clear() is called. </summary>
 		public abstract void ClearColour( FastColour col );
 		
-		public abstract void ColourMask( bool red, bool green, bool blue, bool alpha );
+		public abstract bool ColourWrite { set; }
 		
 		public abstract void DepthTestFunc( CompareFunc func );
 		

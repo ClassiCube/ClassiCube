@@ -230,14 +230,14 @@ namespace ClassicalSharp {
 			
 			// First fill depth buffer
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
-			Graphics.ColourMask( false, false, false, false );
+			Graphics.ColourWrite = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
 			Graphics.Texturing = true;
-			Graphics.ColourMask( true, true, true, true );
+			Graphics.ColourWrite = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
