@@ -8,24 +8,9 @@ namespace ClassicalSharp {
 	//  --> reduce iterations: liquid and sprite pass only need 1 row
 	public class MapRenderer : IDisposable {
 		
-		struct Point3S {
-			
-			public short X, Y, Z;
-			
-			public Point3S( int x, int y, int z ) {
-				X = (short)x;
-				Y = (short)y;
-				Z = (short)z;
-			}
-			
-			public override string ToString() {
-				return X + "," + Y + "," + Z;
-			}
-		}
-		
 		class ChunkInfo {
 			
-			public Point3S Centre;
+			public short CentreX, CentreY, CentreZ;
 			
 			public bool Visible = true;
 			public bool Empty = false;
@@ -33,7 +18,9 @@ namespace ClassicalSharp {
 			public ChunkDrawInfo DrawInfo;
 			
 			public ChunkInfo( int x, int y, int z ) {
-				Centre = new Point3S( x + 8, y + 8, z + 8 );
+				CentreX = (short)( x + 8 );
+				CentreY = (short)( y + 8 );
+				CentreZ = (short)( z + 8 );
 			}
 		}
 		
@@ -261,8 +248,7 @@ namespace ClassicalSharp {
 				chunkPos = newChunkPos;
 				for( int i = 0; i < distances.Length; i++ ) {
 					ChunkInfo info = chunks[i];
-					Point3S centre = info.Centre;
-					distances[i] = Utils.DistanceSquared( centre.X, centre.Y, centre.Z, chunkPos.X, chunkPos.Y, chunkPos.Z );
+					distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ, chunkPos.X, chunkPos.Y, chunkPos.Z );
 				}
 				// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
 				Array.Sort( distances, chunks );
@@ -275,21 +261,21 @@ namespace ClassicalSharp {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
-				Point3S centre = info.Centre;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.DrawInfo == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
-						info.DrawInfo = builder.GetDrawInfo( centre.X - 8, centre.Y - 8, centre.Z - 8 );
+						info.DrawInfo = builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8 );
 						if( info.DrawInfo == null ) {
 							info.Empty = true;
 						}
 						chunksUpdatedThisFrame++;
 					}
 				}
-				info.Visible = inRange && Window.Culling.SphereInFrustum( centre.X, centre.Y, centre.Z, 14 ); // 14 ~ sqrt(3 * 8^2)
+				info.Visible = inRange && 
+					Window.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}
 		
