@@ -194,7 +194,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
-			int sizeInBytes = GetSizeInBytes( maxVertices, format );
+			int sizeInBytes = maxVertices * strideSizes[(int)format];
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageArb.DynamicDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
@@ -204,7 +204,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
-			int sizeInBytes = GetSizeInBytes( count, format );
+			int sizeInBytes = count * strideSizes[(int)format];
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
@@ -225,7 +225,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
-			int sizeInBytes = GetSizeInBytes( count, format );
+			int sizeInBytes = count * strideSizes[(int)format];
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
 			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			

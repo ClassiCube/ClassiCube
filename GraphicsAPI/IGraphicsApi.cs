@@ -136,11 +136,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void EndIndexedVbBatch();
 		
-		protected int GetSizeInBytes( int count, VertexFormat format ) {
-			return count * strideSizes[(int)format];
-		}
-		protected static int[] strideSizes = { 20, 16, 24 };
-		
+		protected static int[] strideSizes = { 20, 16, 24 };		
 		
 		public abstract void SetMatrixMode( MatrixType mode );
 		

@@ -152,13 +152,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DeleteTexture( ref int texId ) {
-			if( texId <= 0 || texId >= textures.Length ) return;
-
-			D3D.Texture texture = textures[texId];
-			if( texture != null ) {
-				texture.Dispose();
-			}
-			textures[texId] = null;
+			Delete( textures, texId );
 			texId = -1;
 		}
 		
@@ -453,7 +447,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					return i;
 				}
 			}
-			// Otherwise resize and add 2048 more elements
+			// Otherwise resize and add more elements
 			int oldLength = array.Length;
 			Array.Resize( ref array, array.Length + expSize );
 			array[oldLength] = value;
@@ -462,6 +456,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		static void Delete<T>( T[] array, int id ) where T : class, IDisposable {
 			if( id <= 0 || id >= array.Length ) return;
+			
 			T value = array[id];
 			if( value != null ) {
 				value.Dispose();
