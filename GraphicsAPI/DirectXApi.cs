@@ -10,6 +10,7 @@ using Microsoft.DirectX;
 using Microsoft.DirectX.Direct3D;
 using D3D = Microsoft.DirectX.Direct3D;
 using Matrix4 = OpenTK.Matrix4;
+using System.Reflection;
 
 namespace ClassicalSharp.GraphicsAPI {
 
@@ -17,12 +18,14 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public Device device;
 		Caps caps;
-		D3D.Texture[] textures;
-		VertexBuffer[] vBuffers;
-		IndexBuffer[] iBuffers;
+		RenderStateManager state;
 		const int texBufferSize = 512;
 		const int iBufferSize = 1024;
 		const int vBufferSize = 2048;
+		
+		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
+		VertexBuffer[] vBuffers = new VertexBuffer[vBufferSize];
+		IndexBuffer[] iBuffers = new IndexBuffer[iBufferSize];
 		MatrixStack viewStack, projStack, texStack;
 		MatrixStack curStack;
 		PrimitiveType[] modeMappings = {
@@ -30,14 +33,38 @@ namespace ClassicalSharp.GraphicsAPI {
 			PrimitiveType.TriangleStrip,
 		};
 
-		public DirectXApi( Device device ) {
-			this.device = device;
+		public DirectXApi( Game game ) {
+			PresentParameters args = new PresentParameters();
+			args.Windowed = true;
+			args.SwapEffect = SwapEffect.Discard;
+			args.PresentationInterval = PresentInterval.Immediate;
+			args.EnableAutoDepthStencil = true;
+			args.AutoDepthStencilFormat = DepthFormat.D24X8; // D32 doesn't work
+			
+			// Code to get window handle from WinWindowInfo class
+			OpenTK.Platform.IWindowInfo info = game.WindowInfo;
+			Type type = info.GetType();
+			FieldInfo getWindowHandle = type.GetField( "handle", BindingFlags.NonPublic | BindingFlags.Instance );
+			IntPtr windowHandle = (IntPtr)getWindowHandle.GetValue( info );
+			
+			int adapter = Manager.Adapters.Default.Adapter;
+			CreateFlags flags = CreateFlags.HardwareVertexProcessing;
+			device = new Device( adapter, DeviceType.Hardware, windowHandle, flags, args );
+			
 			caps = device.DeviceCaps;
+			state = device.RenderState;
 			viewStack = new MatrixStack( 32, m => device.SetTransform( TransformType.View, m ) );
 			projStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Projection, m ) );
 			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture1, m ) ); // TODO: Texture0?
+			
+			state.ColorVertex = false;
+			state.Lighting = false;
+			state.CullMode = Cull.None;
+			state.FillMode = FillMode.Solid;
+			state.SpecularEnable = false;
+			state.DebugMonitorTokenEnabled = false;
 		}
-
+		
 		public override bool AlphaTest {
 			set { device.RenderState.AlphaTestEnable = value; }
 		}
@@ -273,7 +300,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
 			device.Indices = iBuffers[ib];
 			device.SetStreamSource( 0, vBuffers[vb], 0 );
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, 
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
 			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
 
@@ -453,11 +480,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void PrintApiSpecificInfo() {
-			Console.WriteLine( "D3D tex memory available: " + device.AvailableTextureMemory );
+			Console.WriteLine( "D3D tex memory available: " + (uint)device.AvailableTextureMemory );
 			Console.WriteLine( "D3D software vertex processing: " + device.SoftwareVertexProcessing );
-			Console.WriteLine( "D3D hardware rasterization: " + device.DeviceCaps.DeviceCaps.SupportsHardwareRasterization );
-			Console.WriteLine( "D3D hardware T & L: " + device.DeviceCaps.DeviceCaps.SupportsHardwareTransformAndLight );
-			Console.WriteLine( "D3D hardware pure: " + device.DeviceCaps.DeviceCaps.SupportsPureDevice );
+			Console.WriteLine( "D3D hardware rasterization: " + caps.DeviceCaps.SupportsHardwareRasterization );
+			Console.WriteLine( "D3D hardware T & L: " + caps.DeviceCaps.SupportsHardwareTransformAndLight );
+			Console.WriteLine( "D3D hardware pure: " + caps.DeviceCaps.SupportsPureDevice );
 		}
 
 		public override void TakeScreenshot( string output, Size size ) {
