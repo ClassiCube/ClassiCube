@@ -42,19 +42,18 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	// TODO: do texture coords and colours need to be swapped for DirectX?
 	/// <summary> 3 floats for position (X, Y, Z),<br/>
 	/// 2 floats for texture coordinates (U, V),<br/>
 	/// 4 bytes for colour (R, G, B, A) </summary>
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
 	public struct VertexPos3fTex2fCol4b {
-		public float X, Y, Z;
-		public float U, V;
+		public float X, Y, Z;	
 		#if !USE_DX
 		public byte R, G, B, A;
 		#else
 		public byte B, G, R, A;
 		#endif
+		public float U, V;
 		
 		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, FastColour c ) {
 			X = x; Y = y; Z = z;

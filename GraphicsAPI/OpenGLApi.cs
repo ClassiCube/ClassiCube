@@ -291,8 +291,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ib );
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
+			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
+			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );			
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
 		}
 		
@@ -324,8 +324,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 12 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 20 ) );
+			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
+			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
 			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
