@@ -55,18 +55,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
-		BlendingFactorSrc[] srcBlendFuncs = {
-			BlendingFactorSrc.Zero, BlendingFactorSrc.One,
-			BlendingFactorSrc.SrcAlpha, BlendingFactorSrc.OneMinusSrcAlpha,
-			BlendingFactorSrc.DstAlpha, BlendingFactorSrc.OneMinusDstAlpha,
-		};
-		BlendingFactorDest[] destBlendFuncs = {
-			BlendingFactorDest.Zero, BlendingFactorDest.One,
-			BlendingFactorDest.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha,
-			BlendingFactorDest.DstAlpha, BlendingFactorDest.OneMinusDstAlpha,
+		BlendingFactor[] blendFuncs = {
+			BlendingFactor.Zero, BlendingFactor.One,
+			BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
+			BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
 		};
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
-			GL.BlendFunc( srcBlendFuncs[(int)srcFunc], destBlendFuncs[(int)destFunc] );
+			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)destFunc] );
 		}
 		
 		public override bool Fog {
