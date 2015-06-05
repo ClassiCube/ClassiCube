@@ -200,7 +200,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
 			device.VertexFormat = formatMapping[(int)format];
-			device.DrawUserPrimitives( modeMappings[(int)mode], count, vertices );
+			device.DrawUserPrimitives( modeMappings[(int)mode], NumPrimitives( count, mode ), vertices );
 		}
 		
 		public override void DeleteDynamicVb(int id) {
