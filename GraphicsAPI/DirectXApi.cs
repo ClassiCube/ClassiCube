@@ -276,17 +276,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0 );
+			device.SetStreamSource( 0, vBuffers[id], 0, strideSizes[(int)format] );
 			device.VertexFormat = formatMapping[(int)format];
 			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
 		}
 
+		int batchStride;
 		public override void BeginVbBatch( VertexFormat format ) {
 			device.VertexFormat = formatMapping[(int)format];
+			batchStride = strideSizes[(int)format];
 		}
 
 		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0 );
+			device.SetStreamSource( 0, vBuffers[id], 0, batchStride );
 			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
 		}
 
@@ -299,7 +301,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
 			device.Indices = iBuffers[ib];
-			device.SetStreamSource( 0, vBuffers[vb], 0 );
+			device.SetStreamSource( 0, vBuffers[vb], 0, batchStride );
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
 			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
@@ -324,7 +326,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
-			Matrix4 transposed = Matrix4.Transpose( matrix );
+			Matrix4 transposed = matrix;
 			Matrix dxMatrix = *(Matrix*)&transposed;
 			curStack.SetTop( ref dxMatrix );
 		}
@@ -343,7 +345,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
-			Matrix4 transposed = Matrix4.Transpose( matrix );
+			Matrix4 transposed = matrix;
 			Matrix dxMatrix = *(Matrix*)&transposed;
 			curStack.MultiplyTop( ref dxMatrix );
 		}
@@ -422,7 +424,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void OnWindowResize( int newWidth, int newHeight ) {
-			throw new NotSupportedException();
+			//throw new NotSupportedException();
+			// TODO: temp disabled to get Direct3D sort of working.
 		}
 		
 		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {
