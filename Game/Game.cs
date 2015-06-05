@@ -179,6 +179,7 @@ namespace ClassicalSharp {
 		double ticksAccumulator = 0, imageCheckAccumulator = 0;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
+			Graphics.BeginFrame( this );
 			accumulator += e.Time;
 			imageCheckAccumulator += e.Time;
 			ticksAccumulator += e.Time;
@@ -253,7 +254,7 @@ namespace ClassicalSharp {
 				Graphics.TakeScreenshot( path, ClientSize );
 				screenshotRequested = false;
 			}
-			SwapBuffers();
+			Graphics.EndFrame( this );
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {

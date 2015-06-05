@@ -432,6 +432,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		#endif
 		
+		public override void BeginFrame( Game game ) {
+		}
+		
+		public override void EndFrame( Game game ) {
+			game.SwapBuffers();
+		}
+		
 		public override void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );
 			Console.WriteLine( "OpenGL renderer: " + GL.GetString( StringName.Renderer ) );

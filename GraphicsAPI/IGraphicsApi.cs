@@ -191,6 +191,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		public virtual void PrintApiSpecificInfo() {
 		}
 		
+		public abstract void BeginFrame( Game game );
+		
+		public abstract void EndFrame( Game game );
+		
 		public abstract void OnWindowResize( int newWidth, int newHeight );
 		
 		protected void InitDynamicBuffers() {

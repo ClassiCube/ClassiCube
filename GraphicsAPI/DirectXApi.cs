@@ -386,6 +386,15 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#endregion
 		
+		public override void BeginFrame( Game game ) {
+			device.BeginScene();
+		}
+		
+		public override void EndFrame( Game game ) {
+			device.EndScene();
+			device.Present();
+		}
+		
 		public override void OnWindowResize( int newWidth, int newHeight ) {
 			throw new NotSupportedException();
 		}
