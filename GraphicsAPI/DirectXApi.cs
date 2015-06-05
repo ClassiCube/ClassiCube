@@ -1,9 +1,8 @@
-﻿//#define INCLUDE_DIRECTX
-// necessary dll references: (Managed DirectX)
+﻿// necessary dll references: (Managed DirectX)
 // Microsoft.DirectX
 // Microsoft.DirectX.Direct3D
 // Microsoft.DirectX.Direct3DX
-#if INCLUDE_DIRECTX
+#if USE_DX
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;

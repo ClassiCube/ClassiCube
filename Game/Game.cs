@@ -114,7 +114,11 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
+			#if !USE_DX
 			Graphics = new OpenGLApi();
+			#else
+			Graphics = new DirectXApi( this );
+			#endif
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
