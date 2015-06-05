@@ -119,8 +119,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override bool FaceCulling {
 			set {
-				Cull mode = value ? Cull.CounterClockwise : Cull.None;
-				device.RenderState.CullMode = mode;
+				device.RenderState.CullMode = value ? Cull.Clockwise : Cull.None;
 			}
 		}
 
@@ -297,6 +296,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void BeginIndexedVbBatch() {
 			device.VertexFormat = formatMapping[(int)VertexFormat.Pos3fTex2fCol4b];
+			batchStride = VertexPos3fTex2fCol4b.Size;
 		}
 
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
