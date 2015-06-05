@@ -66,11 +66,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool AlphaTest {
-			set { device.RenderState.AlphaTestEnable = value; }
+			set { state.AlphaTestEnable = value; }
 		}
 
 		public override bool AlphaBlending {
-			set { device.RenderState.AlphaBlendEnable = value; }
+			set { state.AlphaBlendEnable = value; }
 		}
 
 		Compare[] compareFuncs = {
@@ -78,8 +78,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
 		};
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
-			device.RenderState.AlphaFunction = compareFuncs[(int)func];
-			device.RenderState.ReferenceAlpha = (int)( value * 255f );
+			state.AlphaFunction = compareFuncs[(int)func];
+			state.ReferenceAlpha = (int)( value * 255f );
 		}
 
 		Blend[] blendFuncs = {
@@ -88,38 +88,38 @@ namespace ClassicalSharp.GraphicsAPI {
 			Blend.DestinationAlpha, Blend.InvDestinationAlpha,
 		};
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
-			device.RenderState.SourceBlend = blendFuncs[(int)srcFunc];
-			device.RenderState.DestinationBlend = blendFuncs[(int)destFunc];
+			state.SourceBlend = blendFuncs[(int)srcFunc];
+			state.DestinationBlend = blendFuncs[(int)destFunc];
 		}
 
 		public override bool Fog {
-			set { device.RenderState.FogEnable = value; }
+			set { state.FogEnable = value; }
 		}
 
 		public override void SetFogColour( FastColour col ) {
-			device.RenderState.FogColor = col.ToColor();
+			state.FogColor = col.ToColor();
 		}
 
 		public override void SetFogDensity( float value ) {
-			device.RenderState.FogDensity = value;
+			state.FogDensity = value;
 		}
 
 		public override void SetFogEnd( float value ) {
-			device.RenderState.FogEnd = value;
+			state.FogEnd = value;
 		}
 
 		FogMode[] modes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public override void SetFogMode( Fog mode ) {
-			device.RenderState.FogTableMode = modes[(int)mode];
+			state.FogTableMode = modes[(int)mode];
 		}
 
 		public override void SetFogStart( float value ) {
-			device.RenderState.FogStart = value;
+			state.FogStart = value;
 		}
 		
 		public override bool FaceCulling {
 			set {
-				device.RenderState.CullMode = value ? Cull.Clockwise : Cull.None;
+				state.CullMode = value ? Cull.Clockwise : Cull.None;
 			}
 		}
 
@@ -178,20 +178,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override bool ColourWrite {
 			set {
 				ColorWriteEnable flags = value ? ColorWriteEnable.RedGreenBlueAlpha : 0;
-				device.RenderState.ColorWriteEnable = flags;
+				state.ColorWriteEnable = flags;
 			}
 		}
 
 		public override void DepthTestFunc( CompareFunc func ) {
-			device.RenderState.ZBufferFunction = compareFuncs[(int)func];
+			state.ZBufferFunction = compareFuncs[(int)func];
 		}
 
 		public override bool DepthTest {
-			set { device.RenderState.ZBufferEnable = value; }
+			set { state.ZBufferEnable = value; }
 		}
 
 		public override bool DepthWrite {
-			set { device.RenderState.ZBufferWriteEnable = value; }
+			set { state.ZBufferWriteEnable = value; }
 		}
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
@@ -208,7 +208,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		FillMode[] fillModes = { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
 		public override void SetFillType( FillType type ) {
-			device.RenderState.FillMode = fillModes[(int)type];
+			state.FillMode = fillModes[(int)type];
 		}
 
 		#region Vertex buffers
