@@ -61,11 +61,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void SetFogDensity( float value );
 		
+		public abstract void SetFogStart( float value );
+		
 		public abstract void SetFogEnd( float value );
 		
-		public abstract void SetFogMode( Fog fogMode );
-		
-		public abstract void SetFogStart( float value );
+		public abstract void SetFogMode( Fog fogMode );		
 		
 		public abstract bool FaceCulling { set; }
 
