@@ -39,7 +39,7 @@
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <BaseAddress>4194304</BaseAddress>
@@ -54,6 +54,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <StartAction>Project</StartAction>
     <StartArguments>wwwf null 127.0.0.1 25566</StartArguments>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>output\release\</OutputPath>
@@ -64,6 +65,7 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_DX32' ">
+    <PlatformTarget>x86</PlatformTarget>
     <OutputPath>output\debug\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>Full</DebugType>
@@ -76,9 +78,9 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
-    <Reference Include="Microsoft.DirectX" Condition=" '$(Configuration)' == 'Debug_DX32' "/>
-    <Reference Include="Microsoft.DirectX.Direct3D" Condition=" '$(Configuration)' == 'Debug_DX32' "/>
-    <Reference Include="Microsoft.DirectX.Direct3DX" Condition=" '$(Configuration)' == 'Debug_DX32' "/>
+    <Reference Include="Microsoft.DirectX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
+    <Reference Include="Microsoft.DirectX.Direct3D" Condition=" '$(Configuration)' == 'Debug_DX32' " />
+    <Reference Include="Microsoft.DirectX.Direct3DX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="OpenTK">
       <HintPath>OpenTK.dll</HintPath>
     </Reference>
