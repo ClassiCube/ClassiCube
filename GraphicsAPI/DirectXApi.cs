@@ -53,9 +53,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			caps = device.DeviceCaps;
 			state = device.RenderState;
-			viewStack = new MatrixStack( 32, m => device.SetTransform( TransformType.View, m ) );
-			projStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Projection, m ) );
-			texStack = new MatrixStack( 4, m => device.SetTransform( TransformType.Texture1, m ) ); // TODO: Texture0?
+			viewStack = new MatrixStack( 32, device, TransformType.View );
+			projStack = new MatrixStack( 4, device, TransformType.Projection );
+			texStack = new MatrixStack( 4, device, TransformType.Texture1 ); // TODO: Texture0?
 			
 			state.ColorVertex = false;
 			state.Lighting = false;
@@ -139,9 +139,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void Bind2DTexture( int texId ) {
-			if( texId == 0 ) {
-				device.SetTexture( 0, null );
-			}
 			device.SetTexture( 0, textures[texId] );
 		}
 
@@ -197,7 +194,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawUserPrimitives( modeMappings[(int)mode], NumPrimitives( count, mode ), vertices );
 		}
 		
-		public override void DeleteDynamicVb(int id) {
+		public override void DeleteDynamicVb( int id ) {
 		}
 
 		FillMode[] fillModes = { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
@@ -224,7 +221,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		unsafe VertexBuffer CreateVb<T>( T[] vertices, int count, VertexFormat format ) {
-			int sizeInBytes = GetSizeInBytes( count, format );
+			int sizeInBytes = count * strideSizes[(int)format];
 			VertexFormats d3dFormat = formatMapping[(int)format];
 			VertexBuffer buffer = new VertexBuffer( device, sizeInBytes, Usage.None, d3dFormat, Pool.Managed );
 			
@@ -325,8 +322,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			curStack.SetTop( ref dxMatrix );
 		}
 
+		Matrix identity = Matrix.Identity;
 		public override void LoadIdentityMatrix() {
-			Matrix identity = Matrix.Identity;
 			curStack.SetTop( ref identity );
 		}
 
@@ -373,12 +370,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		{
 			Matrix[] stack;
 			int stackIndex;
-			Action<Matrix> dxSetMatrix;
+			Device device;
+			TransformType matrixType;
 
-			public MatrixStack( int capacity, Action<Matrix> dxSetter ) {
+			public MatrixStack( int capacity, Device device, TransformType matrixType ) {
 				stack = new Matrix[capacity];
 				stack[0] = Matrix.Identity;
-				dxSetMatrix = dxSetter;
+				this.device = device;
+				this.matrixType = matrixType;
 			}
 
 			public void Push() {
@@ -388,12 +387,12 @@ namespace ClassicalSharp.GraphicsAPI {
 
 			public void SetTop( ref Matrix matrix ) {
 				stack[stackIndex] = matrix;
-				dxSetMatrix( matrix );
+				device.SetTransform( matrixType, stack[stackIndex] );
 			}
 
 			public void MultiplyTop( ref Matrix matrix ) {
 				stack[stackIndex] *= matrix;
-				dxSetMatrix( stack[stackIndex] );
+				device.SetTransform( matrixType, stack[stackIndex] );
 			}
 
 			public Matrix GetTop() {
@@ -402,7 +401,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 			public void Pop() {
 				stackIndex--;
-				dxSetMatrix( stack[stackIndex] );
+				device.SetTransform( matrixType, stack[stackIndex] );
 			}
 		}
 
@@ -475,6 +474,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		static bool IsValid<T>( T[] array, int id ) {
 			return id > 0 && id < array.Length && array[id] != null;
+		}
+		
+		protected override void LoadOrthoMatrix( float width, float height ) {
+			Matrix dxMatrix = Matrix.OrthoOffCenterRH( 0, width, height, 0, 0, 1 );
+			curStack.SetTop( ref dxMatrix );
 		}
 
 		public override void PrintApiSpecificInfo() {
