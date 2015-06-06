@@ -269,18 +269,24 @@ namespace ClassicalSharp.GraphicsAPI {
 		VertexFormat batchFormat;
 		public override void BeginVbBatch( VertexFormat format ) {
 			batchFormat = format;
-			EnableClientState( format );
+			GL.EnableClientState( ArrayCap.VertexArray );
 			if( format == VertexFormat.Pos3fTex2fCol4b ) {
+				GL.EnableClientState( ArrayCap.ColorArray );
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				drawBatchFunc = drawBatchFuncTex2fCol4b;
-			} else if( format == VertexFormat.Pos3fCol4b ) {
-				drawBatchFunc =drawBatchFuncCol4b;
 			} else if( format == VertexFormat.Pos3fTex2f ) {
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				drawBatchFunc = drawBatchFuncTex2f;
+			} else if( format == VertexFormat.Pos3fCol4b ) {
+				GL.EnableClientState( ArrayCap.ColorArray );
+				drawBatchFunc = drawBatchFuncCol4b;
 			}
 		}
 		
 		public override void BeginIndexedVbBatch() {
-			EnableClientState( VertexFormat.Pos3fTex2fCol4b );
+			GL.EnableClientState( ArrayCap.VertexArray );
+			GL.EnableClientState( ArrayCap.ColorArray );
+			GL.EnableClientState( ArrayCap.TextureCoordArray );
 		}
 		
 		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
@@ -297,12 +303,22 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void EndVbBatch() {
-			DisableClientState( batchFormat );
+			GL.DisableClientState( ArrayCap.VertexArray );
+			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
+				GL.DisableClientState( ArrayCap.ColorArray );
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
+			} else if( batchFormat == VertexFormat.Pos3fTex2f ) {
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
+			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
+				GL.DisableClientState( ArrayCap.ColorArray );
+			} 
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 		}
 		
 		public override void EndIndexedVbBatch() {
-			DisableClientState( VertexFormat.Pos3fTex2fCol4b );
+			GL.DisableClientState( ArrayCap.VertexArray );
+			GL.DisableClientState( ArrayCap.ColorArray );
+			GL.DisableClientState( ArrayCap.TextureCoordArray );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 		}
@@ -327,30 +343,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
 			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
-		}
-		
-		static void EnableClientState( VertexFormat format ) {
-			GL.EnableClientState( ArrayCap.VertexArray );
-			if( format == VertexFormat.Pos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-			} else if( format == VertexFormat.Pos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			} else if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-			}
-		}
-		
-		static void DisableClientState( VertexFormat format ) {
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( format == VertexFormat.Pos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			} else if( format == VertexFormat.Pos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			}
 		}
 		#endregion
 		
