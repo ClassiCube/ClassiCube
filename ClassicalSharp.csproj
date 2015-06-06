@@ -81,9 +81,6 @@
     <Reference Include="Microsoft.DirectX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="Microsoft.DirectX.Direct3D" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="Microsoft.DirectX.Direct3DX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
-    <Reference Include="OpenTK">
-      <HintPath>OpenTK.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -220,5 +217,11 @@
     <Folder Include="Model" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="OpenTK\OpenTK.csproj">
+      <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
+      <Name>OpenTK</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
