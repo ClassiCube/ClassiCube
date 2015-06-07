@@ -25,7 +25,6 @@ namespace ClassicalSharp {
 			fpsCount++;
 			maxDelta = Math.Max( maxDelta, delta );
 			accumulator += delta;
-			long vertices = Window.Vertices;
 
 			if( accumulator >= 1 )  {
 				fixed( char* ptr = text.value ) {

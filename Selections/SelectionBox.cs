@@ -59,7 +59,6 @@ namespace ClassicalSharp.Selections {
 			Line( vertices, ref index, p2.X, p1.Y, p2.Z, p2.X, p2.Y, p2.Z );
 			Line( vertices, ref index, p1.X, p1.Y, p2.Z, p1.X, p2.Y, p2.Z );
 			LineVerticesCount = vertices.Length;
-			int size = vertices.Length * VertexPos3fCol4b.Size;
 			LineVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 			
 			vertices = new VertexPos3fCol4b[6 * 6];
@@ -72,7 +71,6 @@ namespace ClassicalSharp.Selections {
 			RenderZPlane( vertices, ref index, p1.Z, p2.Z, p1.Y, p2.Y, p1.X );
 			RenderZPlane( vertices, ref index, p1.Z, p2.Z, p1.Y, p2.Y, p2.X );
 			VerticesCount = vertices.Length;
-			size = vertices.Length * VertexPos3fCol4b.Size;
 			VboId = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 		}
 		

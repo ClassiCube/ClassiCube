@@ -203,8 +203,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawSkyYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fCol4b[] vertices ) {
-			int width = x2 - x1, endX = x2;
-			int length = z2 - z1, endZ = z2, startZ = z1;
+			int endX = x2, endZ = z2, startZ = z1;
 			
 			for( ; x1 < endX; x1 += 128 ) {
 				x2 = x1 + 128;
@@ -219,8 +218,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawCloudsYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int width = x2 - x1, endX = x2;
-			int length = z2 - z1, endZ = z2, startZ = z1;
+			int endX = x2, endZ = z2, startZ = z1;
 			
 			for( ; x1 < endX; x1 += 128 ) {
 				x2 = x1 + 128;

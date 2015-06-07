@@ -211,8 +211,7 @@ namespace ClassicalSharp {
 		
 		const int axisSize = 128;	
 		void DrawXPlaneParts( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int length = z2 - z1, endZ = z2;
-			int height = y2 - y1, endY = y2, startY = y1;
+			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
 				z2 = z1 + axisSize;
 				if( z2 > endZ ) z2 = endZ;
@@ -226,8 +225,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawZPlaneParts( int z, int x1, int x2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int width = x2 - x1, endX = x2;
-			int height= y2 - y1, endY = y2, startY = y1;
+			int endX = x2, endY = y2, startY = y1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
 				if( x2 > endX ) x2 = endX;
@@ -241,8 +239,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int width = x2 - x1, endX = x2;
-			int length = z2 - z1, endZ = z2, startZ = z1;
+			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
 				if( x2 > endX ) x2 = endX;
