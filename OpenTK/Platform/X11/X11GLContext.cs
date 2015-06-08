@@ -31,7 +31,6 @@ namespace OpenTK.Platform.X11
 		X11WindowInfo currentWindow;
 		bool vsync_supported;
 		int vsync_interval;
-		bool glx_loaded;
 
 		#endregion
 
@@ -56,33 +55,6 @@ namespace OpenTK.Platform.X11
 			
 			Debug.Write("Creating X11GLContext context: ");
 			Debug.Write(direct ? "direct, " : "indirect, ");
-			
-			if (!glx_loaded)
-			{
-				Debug.WriteLine("Creating temporary context to load GLX extensions.");
-				
-				// Create a temporary context to obtain the necessary function pointers.
-				XVisualInfo visual = currentWindow.VisualInfo;
-				IntPtr ctx = IntPtr.Zero;
-
-				using (new XLock(Display))
-				{
-					ctx = Glx.Imports.CreateContext(Display, ref visual, IntPtr.Zero, true);
-					if (ctx == IntPtr.Zero)
-						ctx = Glx.Imports.CreateContext(Display, ref visual, IntPtr.Zero, false);
-				}
-				
-				if (ctx != IntPtr.Zero)
-				{
-					new Glx().LoadEntryPoints();
-					using (new XLock(Display))
-					{
-						Glx.Imports.MakeCurrent(Display, IntPtr.Zero, IntPtr.Zero);
-						//Glx.DestroyContext(Display, ctx);
-					}
-					glx_loaded = true;
-				}
-			}
 			
 			Debug.Write("Using legacy context creation... ");
 			
@@ -151,23 +123,6 @@ namespace OpenTK.Platform.X11
 		}
 
 		#endregion
-
-		bool SupportsExtension(X11WindowInfo window, string e)
-		{
-			if (window == null)
-				throw new ArgumentNullException("window");
-			if (e == null)
-				throw new ArgumentNullException("e");
-			if (window.Display != Display)
-				throw new InvalidOperationException();
-
-			string extensions = null;
-			using (new XLock(Display))
-			{
-				extensions = Glx.Imports.QueryExtensionsString(Display, window.Screen);
-			}
-			return !String.IsNullOrEmpty(extensions) && extensions.Contains(e);
-		}
 
 		#endregion
 

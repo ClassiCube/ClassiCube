@@ -172,21 +172,10 @@ namespace OpenTK.Platform.X11
 	partial class Glx
 	{
 
-		public partial class Imports {
-			
+		public partial class Imports {			
 			
 			[DllImport(Library, EntryPoint = "glXIsDirect")]
 			public static extern bool IsDirect(IntPtr dpy, IntPtr context);
-			
-			[DllImport(Library, EntryPoint = "glXQueryExtension")]
-			public static extern bool QueryExtension(IntPtr dpy, ref int errorBase, ref int eventBase);
-
-			[DllImport(Library, EntryPoint = "glXQueryExtensionsString")]
-			static extern IntPtr QueryExtensionsStringInternal(IntPtr dpy, int screen);
-
-			public static string QueryExtensionsString(IntPtr dpy, int screen) {
-				return Marshal.PtrToStringAnsi(QueryExtensionsStringInternal(dpy, screen));
-			}
 
 			[DllImport(Library, EntryPoint = "glXCreateContext")]
 			public static extern IntPtr CreateContext(IntPtr dpy, IntPtr vis, IntPtr shareList, bool direct);
