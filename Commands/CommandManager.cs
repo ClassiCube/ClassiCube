@@ -6,7 +6,7 @@ namespace ClassicalSharp.Commands {
 	public class CommandManager {
 		
 		public static bool IsCommandPrefix( string input ) {
-			return input.StartsWith( "/client", StringComparison.OrdinalIgnoreCase );
+			return Utils.CaselessStarts( input, "/client" );
 		}
 		
 		public Game Window;
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Commands {
 		void RegisterCommand( Command command ) {
 			command.Window = Window;
 			foreach( Command cmd in RegisteredCommands ) {
-				if( command.Name.Equals( cmd.Name, StringComparison.OrdinalIgnoreCase ) ) {
+				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {
 					throw new InvalidOperationException( "Another command already has name : " + command.Name );
 				}
 			}
@@ -36,7 +36,7 @@ namespace ClassicalSharp.Commands {
 			bool matchFound = false;
 			Command matchingCommand = null;
 			foreach( Command cmd in RegisteredCommands ) {
-				if( cmd.Name.StartsWith( commandName, StringComparison.OrdinalIgnoreCase ) ) {
+				if( Utils.CaselessStarts( cmd.Name, commandName ) ) {
 					if( matchFound ) {
 						Window.AddChat( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
 						return null;

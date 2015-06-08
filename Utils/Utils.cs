@@ -61,6 +61,14 @@ namespace ClassicalSharp {
 			return new String( output, 0, usedChars );
 		}
 		
+		public static bool CaselessEquals( string a, string b ) {
+			return a.Equals( b, StringComparison.OrdinalIgnoreCase );
+		}
+		
+		public static bool CaselessStarts( string a, string b ) {
+			return a.StartsWith( b, StringComparison.OrdinalIgnoreCase );
+		}
+		
 		public static string ToHexString( byte[] array ) {
 			int len = array.Length;
 			char[] hexadecimal = new char[len * 2];

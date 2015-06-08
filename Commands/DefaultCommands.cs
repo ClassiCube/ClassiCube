@@ -54,7 +54,7 @@ namespace ClassicalSharp.Commands {
 				return new [] {
 					"&a/client env [property] [value]",
 					"&bproperties: &eskycol, fogcol, cloudscol, cloudsspeed,",
-					"     &esuncol, shadowcol",
+					"     &esuncol, shadowcol, weather",
 					"&bcol properties: &evalue must be a hex colour code (either #RRGGBB or RRGGBB).",
 					"&bcloudsspeed: &evalue must be a decimal number. (e.g. 0.5, 1, 4.5).",
 					"&eIf no args are given, the current env variables will be displayed.",
@@ -68,19 +68,19 @@ namespace ClassicalSharp.Commands {
 				Window.AddChat( "Fog colour: " + Window.Map.FogCol.ToRGBHexString() );
 				Window.AddChat( "Clouds colour: " + Window.Map.CloudsCol.ToRGBHexString() );
 				Window.AddChat( "Sky colour: " + Window.Map.SkyCol.ToRGBHexString() );
-			} else if( property.Equals( "skycol", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "skycol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetSkyColour( c ) );
-			} else if( property.Equals( "fogcol", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "fogcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetFogColour( c ) );
-			} else if( property.Equals( "cloudscol", StringComparison.OrdinalIgnoreCase ) ||
-			          property.Equals( "cloudcol", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "cloudscol" ) 
+			          || Utils.CaselessEquals( property, "cloudcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetCloudsColour( c ) );
-			} else if( property.Equals( "suncol", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "suncol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetSunlight( c ) );
-			} else if( property.Equals( "shadowcol", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "shadowcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetShadowlight( c ) );
-			} else if( property.Equals( "cloudsspeed", StringComparison.OrdinalIgnoreCase ) ||
-			          property.Equals( "cloudspeed", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "cloudsspeed" ) 
+			          || Utils.CaselessEquals( property, "cloudspeed" ) ) {
 				float speed;
 				if( !reader.NextFloat( out speed ) ) {
 					Window.AddChat( "&e/client env: &cInvalid clouds speed." );
@@ -90,7 +90,7 @@ namespace ClassicalSharp.Commands {
 						env.CloudsSpeed = speed;
 					}
 				}
-			} else if( property.Equals( "weather", StringComparison.OrdinalIgnoreCase ) ) {
+			} else if( Utils.CaselessEquals( property, "weather" ) ) {
 				int weather;
 				if( !reader.NextInt( out weather ) || weather < 0 || weather > 2 ) {
 					Window.AddChat( "&e/client env: &cInvalid weather." );
@@ -123,8 +123,7 @@ namespace ClassicalSharp.Commands {
 					"&eDisplays the help (if available) for the given command.",
 				};
 			}
-		}
-		
+		}		
 		
 		public override void Execute( CommandReader reader ) {
 			string commandName = reader.Next();
@@ -161,21 +160,21 @@ namespace ClassicalSharp.Commands {
 			string property = reader.Next();
 			if( property == null ) {
 				Window.AddChat( "&e/client info: &cYou didn't specify a property." );
-			} else if( property == "pos" ) {
+			} else if( Utils.CaselessEquals( property, "pos" ) ) {
 				Window.AddChat( "Feet: " + Window.LocalPlayer.Position );
 				Window.AddChat( "Eye: " + Window.LocalPlayer.EyePosition );
-			} else if( property == "targetpos" ) {
+			} else if( Utils.CaselessEquals( property, "targetpos" ) ) {
 				PickedPos pos = Window.SelectedPos;
 				if( !pos.Valid ) {
 					Window.AddChat( "Currently not targeting a block" );
 				} else {
 					Window.AddChat( "Currently targeting: " + pos.BlockPos );
 				}
-			} else if( property == "dimensions" ) {
+			} else if( Utils.CaselessEquals( property, "dimensions" ) ) {
 				Window.AddChat( "map width: " + Window.Map.Width );
 				Window.AddChat( "map height: " + Window.Map.Height );
 				Window.AddChat( "map length: " + Window.Map.Length );
-			} else if( property == "jumpheight" ) {
+			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
 				float jumpHeight = Window.LocalPlayer.JumpHeight;
 				Window.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
@@ -205,13 +204,13 @@ namespace ClassicalSharp.Commands {
 			string property = reader.Next();
 			if( property == null ) {
 				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
-			} else if( property == "legacyfast" ) {
+			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
 				SetNewRenderType( true, true, true );
 				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
-			} else if( property == "legacy" ) {
+			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
 				SetNewRenderType( true, false, true );
 				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
-			} else if( property == "normal" ) {
+			} else if( Utils.CaselessEquals( property, "normal" ) ) {
 				SetNewRenderType( false, false, false );
 				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
