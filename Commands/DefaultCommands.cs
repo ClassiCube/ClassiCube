@@ -151,7 +151,7 @@ namespace ClassicalSharp.Commands {
 			get {
 				return new [] {
 					"&a/client info [property]",
-					"&bproperties: &epos, targetpos, dimensions, jumpheight",
+					"&bproperties: &epos, target, dimensions, jumpheight, viewdist",
 				};
 			}
 		}	
@@ -163,12 +163,12 @@ namespace ClassicalSharp.Commands {
 			} else if( Utils.CaselessEquals( property, "pos" ) ) {
 				Window.AddChat( "Feet: " + Window.LocalPlayer.Position );
 				Window.AddChat( "Eye: " + Window.LocalPlayer.EyePosition );
-			} else if( Utils.CaselessEquals( property, "targetpos" ) ) {
+			} else if( Utils.CaselessEquals( property, "target" ) ) {
 				PickedPos pos = Window.SelectedPos;
 				if( !pos.Valid ) {
 					Window.AddChat( "Currently not targeting a block" );
 				} else {
-					Window.AddChat( "Currently targeting: " + pos.BlockPos );
+					Window.AddChat( "Currently targeting at: " + pos.BlockPos );
 				}
 			} else if( Utils.CaselessEquals( property, "dimensions" ) ) {
 				Window.AddChat( "map width: " + Window.Map.Width );
@@ -177,6 +177,17 @@ namespace ClassicalSharp.Commands {
 			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
 				float jumpHeight = Window.LocalPlayer.JumpHeight;
 				Window.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
+			} else if( Utils.CaselessEquals( property, "viewdist" ) ) {
+				int newDist;
+				if( !reader.NextInt( out newDist ) ) {
+					Window.AddChat( "View distance: " + Window.ViewDistance );
+				} else if( newDist < 8 ) {
+					Window.AddChat( "&e/client info: &cThat view distance is way too small." );
+				} else if( newDist > 8192 ) {
+					Window.AddChat( "&e/client info: &cThat view distance is way too large." );
+				} else {
+					Window.SetViewDistance( newDist );
+				}
 			} else {
 				Window.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}

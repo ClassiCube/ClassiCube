@@ -51,6 +51,9 @@ namespace ClassicalSharp {
 		
 		public void RenderMapEdges( double deltaTime ) {
 			if( edgesVboId == -1 ) return;
+			// Do not draw water when we cannot see it.
+			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
+			if( Window.LocalPlayer.EyePosition.Y < 0 ) return;
 			
 			Graphics.Texturing = true;
 			Graphics.AlphaBlending = true;

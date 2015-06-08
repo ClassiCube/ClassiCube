@@ -149,6 +149,7 @@ namespace ClassicalSharp {
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
+			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );

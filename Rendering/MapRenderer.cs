@@ -216,7 +216,6 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = false;
 			
 			// First fill depth buffer
-			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			Graphics.ColourWrite = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchNoAdd( batch );
@@ -229,7 +228,6 @@ namespace ClassicalSharp {
 				Graphics.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			Graphics.DepthTestFunc( CompareFunc.Less );
 			
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
