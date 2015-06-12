@@ -70,26 +70,42 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Fog, value ); }
 		}
 		
-		public unsafe override void SetFogColour( FastColour col ) {
-			Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
-			GL.Fog( FogParameter.FogColor, &colRGBA.X );
+		FastColour lastFogCol = FastColour.Black;
+		public unsafe override void SetFogColour( FastColour col ) {			
+			if( col != lastFogCol ) {
+				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
+				GL.Fog( FogParameter.FogColor, &colRGBA.X );
+				lastFogCol = col;
+			}
 		}
 		
+		float lastFogStart = -1, lastFogEnd = -1, lastFogDensity = -1;
 		public override void SetFogDensity( float value ) {
-			GL.Fog( FogParameter.FogDensity, value );
-		}
-		
-		public override void SetFogEnd( float value ) {
-			GL.Fog( FogParameter.FogEnd, value );
-		}
-		
-		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
-		public override void SetFogMode( Fog mode ) {
-			GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
+			FogParam( FogParameter.FogDensity, value, ref lastFogDensity );
 		}
 		
 		public override void SetFogStart( float value ) {
-			GL.Fog( FogParameter.FogStart, value );
+			FogParam( FogParameter.FogStart, value, ref lastFogStart );
+		}
+		
+		public override void SetFogEnd( float value ) {
+			FogParam( FogParameter.FogEnd, value, ref lastFogEnd );
+		}
+		
+		static void FogParam( FogParameter param, float value, ref float last ) {
+			if( value != last ) {
+				GL.Fog( param, value );
+				last = value;
+			}
+		}
+		
+		Fog lastFogMode = (Fog)999;
+		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		public override void SetFogMode( Fog mode ) {
+			if( mode != lastFogMode ) {
+				GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
+				lastFogMode = mode;
+			}
 		}
 		
 		public override bool FaceCulling {
