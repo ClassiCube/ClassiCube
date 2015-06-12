@@ -90,58 +90,5 @@ namespace OpenTK.Graphics.OpenGL
         }
 
         #endregion
-
-        #region --- GL Overloads ---
-
-#pragma warning disable 3019
-#pragma warning disable 1591
-#pragma warning disable 1572
-#pragma warning disable 1573
-
-        // Note: Mono 1.9.1 truncates StringBuilder results (for 'out string' parameters).
-        // We work around this issue by doubling the StringBuilder capacity.
-
-        public unsafe static void MultMatrix(ref Matrix4 mat)
-        {
-        	fixed (Single* m_ptr = &mat.Row0.X)
-        		GL.MultMatrix(m_ptr);
-        }
-
-        public unsafe static void LoadMatrix(ref Matrix4 mat)
-        {
-        	fixed (Single* m_ptr = &mat.Row0.X)
-        		GL.LoadMatrix(m_ptr);
-        }
-
-        public unsafe static void GetFloat(GetPName pname, out Vector2 vector)
-        {
-        	fixed (Vector2* ptr = &vector)
-        		GetFloat(pname, (float*)ptr);
-        }
-
-        public unsafe static void GetFloat(GetPName pname, out Vector3 vector)
-        {
-            fixed (Vector3* ptr = &vector)
-        		GetFloat(pname, (float*)ptr);
-        }
-
-        public unsafe static void GetFloat(GetPName pname, out Vector4 vector)
-        {
-            fixed (Vector4* ptr = &vector)
-        		GetFloat(pname, (float*)ptr);
-        }
-
-        public unsafe static void GetFloat(GetPName pname, out Matrix4 matrix)
-        {
-        	fixed (Matrix4* ptr = &matrix)
-        		GetFloat(pname, (float*)ptr);
-        }
-
-#pragma warning restore 3019
-#pragma warning restore 1591
-#pragma warning restore 1572
-#pragma warning restore 1573
-
-        #endregion
     }
 }

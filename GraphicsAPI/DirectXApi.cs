@@ -383,7 +383,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 
 			public void MultiplyTop( ref Matrix matrix ) {
-				stack[stackIndex] *= matrix;
+				stack[stackIndex] = matrix * stack[stackIndex];
 				device.SetTransform( matrixType, stack[stackIndex] );
 			}
 

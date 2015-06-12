@@ -308,14 +308,6 @@ namespace OpenTK.Graphics.OpenGL
        
         Texture2D = ((int)0x0DE1),
 
-        PolygonOffsetUnits = ((int)0x2A00),
-        PolygonOffsetPoint = ((int)0x2A01),
-        PolygonOffsetLine = ((int)0x2A02),
-       
-        PolygonOffsetFill = ((int)0x8037),
-        PolygonOffsetFactor = ((int)0x8038),
-        PolygonOffsetBiasExt = ((int)0x8039),
-
         TextureBinding2D = ((int)0x8069),
         
         TextureBindingRectangle = ((int)0x84F6),

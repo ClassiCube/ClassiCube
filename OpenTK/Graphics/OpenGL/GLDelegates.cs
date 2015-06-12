@@ -236,9 +236,6 @@ namespace OpenTK.Graphics.OpenGL
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal delegate void PolygonMode(OpenTK.Graphics.OpenGL.MaterialFace face, OpenTK.Graphics.OpenGL.PolygonMode mode);
             internal static PolygonMode glPolygonMode;
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void PolygonOffset(Single factor, Single units);
-            internal static PolygonOffset glPolygonOffset;
 
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal delegate void PopMatrix();

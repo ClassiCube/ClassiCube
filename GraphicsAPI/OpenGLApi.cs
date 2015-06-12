@@ -18,9 +18,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		const string vboExt = "GL_ARB_vertex_buffer_object";
 		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
 		
-		public OpenGLApi() {
-			GL.GetInteger( GetPName.MaxTextureSize, out textureDimensions );
+		public unsafe OpenGLApi() {
+			int texDims;
+			GL.GetInteger( GetPName.MaxTextureSize, &texDims );
+			textureDimensions = texDims;
 			string extensions = GL.GetString( StringName.Extensions );
+			
 			if( !extensions.Contains( vboExt ) ) {
 				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
 				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
@@ -375,8 +378,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void LoadMatrix( ref Matrix4 matrix ) {
-			GL.LoadMatrix( ref matrix );
+		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
+			fixed( Single* ptr = &matrix.Row0.X )
+				GL.LoadMatrix( ptr );
 		}
 		
 		public override void LoadIdentityMatrix() {
@@ -391,8 +395,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.PopMatrix();
 		}
 		
-		public override void MultiplyMatrix( ref Matrix4 matrix ) {
-			GL.MultMatrix( ref matrix );
+		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
+			fixed( Single* ptr = &matrix.Row0.X )
+				GL.MultMatrix( ptr );
 		}
 		
 		public override void Translate( float x, float y, float z ) {
