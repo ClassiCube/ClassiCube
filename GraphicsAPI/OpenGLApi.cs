@@ -447,12 +447,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			game.SwapBuffers();
 		}
 		
-		public override void PrintApiSpecificInfo() {
+		public unsafe override void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );
 			Console.WriteLine( "OpenGL renderer: " + GL.GetString( StringName.Renderer ) );
 			Console.WriteLine( "OpenGL version: " + GL.GetString( StringName.Version ) );
 			int depthBits = 0;
-			GL.GetInteger( GetPName.DepthBits, out depthBits );
+			GL.GetInteger( GetPName.DepthBits, &depthBits );
 			Console.WriteLine( "Depth buffer bits: " + depthBits );
 			if( depthBits < 24 ) {
 				Utils.LogWarning( "Depth buffer is less than 24 bits, you may see some issues " +

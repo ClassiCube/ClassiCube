@@ -63,15 +63,6 @@ namespace OpenTK.Graphics.OpenGL
         QuadStrip = ((int)0x0008),
     }
 
-    public enum BlendEquationMode : int
-    {
-        FuncAdd = ((int)0x8006),
-        Min = ((int)0x8007),
-        Max = ((int)0x8008),
-        FuncSubtract = ((int)0x800A),
-        FuncReverseSubtract = ((int)0x800B),
-    }
-
     public enum BlendingFactor : int
     {
         Zero = ((int)0),
@@ -105,7 +96,6 @@ namespace OpenTK.Graphics.OpenGL
         StreamDraw = ((int)0x88E0),
         StaticDraw = ((int)0x88E4),
         DynamicDraw = ((int)0x88E8),
-
     }
 
     public enum BufferUsageHint : int
@@ -113,7 +103,6 @@ namespace OpenTK.Graphics.OpenGL
         StreamDraw = ((int)0x88E0),
         StaticDraw = ((int)0x88E4),
         DynamicDraw = ((int)0x88E8),
-
     }
 
     [Flags]
@@ -125,30 +114,10 @@ namespace OpenTK.Graphics.OpenGL
         ColorBufferBit = ((int)0x00004000),
     }
 
-    public enum ColorMaterialFace : int
-    {
-        Front = ((int)0x0404),
-        Back = ((int)0x0405),
-        FrontAndBack = ((int)0x0408),
-    }
-
-    public enum ColorMaterialParameter : int
-    {
-        Ambient = ((int)0x1200),
-        Diffuse = ((int)0x1201),
-        Specular = ((int)0x1202),
-        Emission = ((int)0x1600),
-        AmbientAndDiffuse = ((int)0x1602),
-    }
-
     public enum ColorPointerType : int
     {
-        Byte = ((int)0x1400),
         UnsignedByte = ((int)0x1401),
-        Short = ((int)0x1402),
-        UnsignedShort = ((int)0x1403),
-        Int = ((int)0x1404),
-        UnsignedInt = ((int)0x1405),
+
         Float = ((int)0x1406),
     }
 
@@ -190,8 +159,6 @@ namespace OpenTK.Graphics.OpenGL
         Dither = ((int)0x0BD0),
         Blend = ((int)0x0BE2),
 
-        AutoNormal = ((int)0x0D80),
-
         Texture2D = ((int)0x0DE1),
         PolygonOffsetPoint = ((int)0x2A01),
         PolygonOffsetLine = ((int)0x2A02),
@@ -204,11 +171,7 @@ namespace OpenTK.Graphics.OpenGL
         IndexArray = ((int)0x8077),
         TextureCoordArray = ((int)0x8078),
        
-        ColorSum = ((int)0x8458),
-       
         DepthClamp = ((int)0x864F),
-
-        RasterizerDiscard = ((int)0x8C89),
     }
 
     public enum ErrorCode : int
@@ -227,7 +190,6 @@ namespace OpenTK.Graphics.OpenGL
 
     public enum ExtBgra : int
     {
-        BgrExt = ((int)0x80E0),
         BgraExt = ((int)0x80E1),
     }
 
@@ -266,10 +228,6 @@ namespace OpenTK.Graphics.OpenGL
 
         LineWidth = ((int)0x0B21),
 
-        ListMode = ((int)0x0B30),
-        MaxListNesting = ((int)0x0B31),
-        ListBase = ((int)0x0B32),
-        ListIndex = ((int)0x0B33),
         PolygonMode = ((int)0x0B40),
         PolygonSmooth = ((int)0x0B41),
 
@@ -347,89 +305,23 @@ namespace OpenTK.Graphics.OpenGL
         BlueBits = ((int)0x0D54),
         AlphaBits = ((int)0x0D55),
         DepthBits = ((int)0x0D56),
-
-        AutoNormal = ((int)0x0D80),
        
         Texture2D = ((int)0x0DE1),
 
         PolygonOffsetUnits = ((int)0x2A00),
         PolygonOffsetPoint = ((int)0x2A01),
         PolygonOffsetLine = ((int)0x2A02),
-        
-        BlendColorExt = ((int)0x8005),
-        BlendEquationExt = ((int)0x8009),
-        BlendEquationRgb = ((int)0x8009),
        
         PolygonOffsetFill = ((int)0x8037),
         PolygonOffsetFactor = ((int)0x8038),
         PolygonOffsetBiasExt = ((int)0x8039),
-        RescaleNormalExt = ((int)0x803A),
 
         TextureBinding2D = ((int)0x8069),
-
-        VertexArray = ((int)0x8074),
-        NormalArray = ((int)0x8075),
-        ColorArray = ((int)0x8076),
-
-        TextureCoordArray = ((int)0x8078),
-
-        VertexArraySize = ((int)0x807A),
-        VertexArrayType = ((int)0x807B),
-        VertexArrayStride = ((int)0x807C),
-        VertexArrayCountExt = ((int)0x807D),
-
-        ColorArraySize = ((int)0x8081),
-        ColorArrayType = ((int)0x8082),
-        ColorArrayStride = ((int)0x8083),
-        ColorArrayCountExt = ((int)0x8084),
-
-        TextureCoordArraySize = ((int)0x8088),
-        TextureCoordArrayType = ((int)0x8089),
-        TextureCoordArrayStride = ((int)0x808A),
-        TextureCoordArrayCountExt = ((int)0x808B),
-       
-        BlendDstRgb = ((int)0x80C8),
-        BlendSrcRgb = ((int)0x80C9),
-        BlendDstAlpha = ((int)0x80CA),
-        BlendSrcAlpha = ((int)0x80CB),
-
-     
-        MajorVersion = ((int)0x821B),
-        MinorVersion = ((int)0x821C),
-        NumExtensions = ((int)0x821D),
-        ContextFlags = ((int)0x821E),
         
-        ColorSum = ((int)0x8458),
-        
-        TextureCompressionHint = ((int)0x84EF),
         TextureBindingRectangle = ((int)0x84F6),
         MaxRectangleTextureSize = ((int)0x84F8),
-        MaxTextureLodBias = ((int)0x84FD),
-
-        VertexArrayBinding = ((int)0x85B5),
 
         DepthClamp = ((int)0x864F),
-
-        RgbaFloatMode = ((int)0x8820),
-       
-        BlendEquationAlpha = ((int)0x883D),
-
-        PointSprite = ((int)0x8861),
-
-        MaxTextureCoords = ((int)0x8871),
-
-        ArrayBufferBinding = ((int)0x8894),
-        ElementArrayBufferBinding = ((int)0x8895),
-        VertexArrayBufferBinding = ((int)0x8896),
-        NormalArrayBufferBinding = ((int)0x8897),
-        ColorArrayBufferBinding = ((int)0x8898),
-        IndexArrayBufferBinding = ((int)0x8899),
-        TextureCoordArrayBufferBinding = ((int)0x889A),
-
-        MaxArrayTextureLayers = ((int)0x88FF),
-
-        MaxColorAttachments = ((int)0x8CDF),
-        MaxColorAttachmentsExt = ((int)0x8CDF),
     }
 
     public enum HintMode : int
@@ -448,7 +340,6 @@ namespace OpenTK.Graphics.OpenGL
         FogHint = ((int)0x0C54),
 
         GenerateMipmapHint = ((int)0x8192),
-        TextureCompressionHint = ((int)0x84EF),
     }
 
     public enum MaterialFace : int
@@ -468,61 +359,21 @@ namespace OpenTK.Graphics.OpenGL
 
     public enum PixelFormat : int
     {
-        Red = ((int)0x1903),
-        Green = ((int)0x1904),
-        Blue = ((int)0x1905),
-        Alpha = ((int)0x1906),
-        Rgb = ((int)0x1907),
         Rgba = ((int)0x1908),
 
-        Bgr = ((int)0x80E0),
         Bgra = ((int)0x80E1),
-
-        RgbInteger = ((int)0x8D98),
-        RgbaInteger = ((int)0x8D99),
-        BgrInteger = ((int)0x8D9A),
-        BgraInteger = ((int)0x8D9B),
     }
 
     public enum PixelInternalFormat : int
     {
-        Rgb = ((int)0x1907),
         Rgba = ((int)0x1908),
 
-        Rgb8 = ((int)0x8051),
-
-        Rgb16 = ((int)0x8054),
         Rgba8 = ((int)0x8058),
-        Rgba16 = ((int)0x805B),
-
-        Rgba32ui = ((int)0x8D70),
-        Rgb32ui = ((int)0x8D71),
-        Rgba16ui = ((int)0x8D76),
-        Rgb16ui = ((int)0x8D77),
-        Rgba8ui = ((int)0x8D7C),
-        Rgb8ui = ((int)0x8D7D),
-        Rgba32i = ((int)0x8D82),
-        Rgb32i = ((int)0x8D83),
-        Rgba16i = ((int)0x8D88),
-        Rgb16i = ((int)0x8D89),
-        Rgba8i = ((int)0x8D8E),
-        Rgb8i = ((int)0x8D8F),
-
-        One = ((int)1),
-        Two = ((int)2),
-        Three = ((int)3),
-        Four = ((int)4),
     }
 
     public enum PixelType : int
     {
-        Byte = ((int)0x1400),
         UnsignedByte = ((int)0x1401),
-        Short = ((int)0x1402),
-        UnsignedShort = ((int)0x1403),
-        Int = ((int)0x1404),
-        UnsignedInt = ((int)0x1405),
-        Float = ((int)0x1406),
     }
 
     public enum PolygonMode : int
@@ -548,8 +399,6 @@ namespace OpenTK.Graphics.OpenGL
 
     public enum TexCoordPointerType : int
     {
-        Short = ((int)0x1402),
-        Int = ((int)0x1404),
         Float = ((int)0x1406),
     }
 
@@ -603,8 +452,6 @@ namespace OpenTK.Graphics.OpenGL
 
     public enum VertexPointerType : int
     {
-        Short = ((int)0x1402),
-        Int = ((int)0x1404),
         Float = ((int)0x1406),
     }
 }
