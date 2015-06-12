@@ -188,13 +188,6 @@ namespace OpenTK.Graphics.OpenGL
             internal extern static unsafe void GetBooleanv(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] bool* @params);
 
             [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetBufferParameteriv", ExactSpelling = true)]
-            internal extern static unsafe void GetBufferParameteriv(OpenTK.Graphics.OpenGL.BufferTarget target, OpenTK.Graphics.OpenGL.BufferParameterName pname, [OutAttribute] Int32* @params);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetBufferParameterivARB", ExactSpelling = true)]
-            internal extern static unsafe void GetBufferParameterivARB(OpenTK.Graphics.OpenGL.ArbVertexBufferObject target, OpenTK.Graphics.OpenGL.BufferParameterNameArb pname, [OutAttribute] Int32* @params);
-           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
             [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetDoublev", ExactSpelling = true)]
             internal extern static unsafe void GetDoublev(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] Double* @params);
             [System.Security.SuppressUnmanagedCodeSecurity()]
@@ -219,11 +212,7 @@ namespace OpenTK.Graphics.OpenGL
            
             [System.Security.SuppressUnmanagedCodeSecurity()]
             [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glHint", ExactSpelling = true)]
-            internal extern static void Hint(OpenTK.Graphics.OpenGL.HintTarget target, OpenTK.Graphics.OpenGL.HintMode mode);           
-           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glInterleavedArrays", ExactSpelling = true)]
-            internal extern static void InterleavedArrays(OpenTK.Graphics.OpenGL.InterleavedArrayFormat format, Int32 stride, IntPtr pointer);
+            internal extern static void Hint(OpenTK.Graphics.OpenGL.HintTarget target, OpenTK.Graphics.OpenGL.HintMode mode);
            
             [System.Security.SuppressUnmanagedCodeSecurity()]
             [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsBuffer", ExactSpelling = true)]

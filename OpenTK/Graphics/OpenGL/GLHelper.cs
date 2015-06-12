@@ -101,16 +101,6 @@ namespace OpenTK.Graphics.OpenGL
         // Note: Mono 1.9.1 truncates StringBuilder results (for 'out string' parameters).
         // We work around this issue by doubling the StringBuilder capacity.
 
-        public static void ClearColor(System.Drawing.Color color)
-        {
-            GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-        }
-
-        public static void ClearColor(Color4 color)
-        {
-            GL.ClearColor(color.R, color.G, color.B, color.A);
-        }
-
         public static void Rotate(Single angle, Vector3 axis)
         {
             GL.Rotate(angle, axis.X, axis.Y, axis.Z);
@@ -129,13 +119,13 @@ namespace OpenTK.Graphics.OpenGL
         public unsafe static void MultMatrix(ref Matrix4 mat)
         {
         	fixed (Single* m_ptr = &mat.Row0.X)
-        		GL.MultMatrix((Single*)m_ptr);
+        		GL.MultMatrix(m_ptr);
         }
 
         public unsafe static void LoadMatrix(ref Matrix4 mat)
         {
         	fixed (Single* m_ptr = &mat.Row0.X)
-        		GL.LoadMatrix((Single*)m_ptr);
+        		GL.LoadMatrix(m_ptr);
         }
 
         public static void VertexPointer(int size, VertexPointerType type, int stride, int offset)

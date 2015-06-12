@@ -117,12 +117,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		Dictionary<int, string> textures = new Dictionary<int, string>();
 		#endif
 
-		public override int LoadTexture( int width, int height, IntPtr scan0 ) {
+		public unsafe override int LoadTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
 				Utils.LogWarning( "Creating a non power of two texture." );
 			
 			int texId = 0;
-			GL.GenTextures( 1, out texId );
+			GL.GenTextures( 1, &texId );
 			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
@@ -141,12 +141,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture( TextureTarget.Texture2D, texture );
 		}
 		
-		public override void DeleteTexture( ref int texId ) {
+		public unsafe override void DeleteTexture( ref int texId ) {
 			if( texId <= 0 ) return;
 			#if TRACK_RESOURCES
 			textures.Remove( texId );
 			#endif
-			GL.DeleteTextures( 1, ref texId );
+			int id = texId;
+			GL.DeleteTextures( 1, &id );
 			texId = -1;
 		}
 		
@@ -165,8 +166,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		FastColour lastClearCol;
 		public override void ClearColour( FastColour col ) {
 			if( col != lastClearCol ) {
-				Color4 col4 = new Color4( col.R, col.G, col.B, col.A );
-				GL.ClearColor( col4 );
+				GL.ClearColor( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 				lastClearCol = col;
 			}
 		}
@@ -209,9 +209,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<DrawMode, int, int, int> drawBatchFuncTex2fCol4b;
 		
 		
-		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+		public unsafe override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, out id );
+			GL.Arb.GenBuffers( 1, &id );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageArb.DynamicDraw );
@@ -219,9 +219,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
+		public unsafe override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, out id );
+			GL.Arb.GenBuffers( 1, &id );
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
@@ -232,12 +232,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override int InitIb( ushort[] indices, int indicesCount ) {
+		public unsafe override int InitIb( ushort[] indices, int indicesCount ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, out id );
+			GL.Arb.GenBuffers( 1, &id );
 			int sizeInBytes = indicesCount * sizeof( ushort );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
+			fixed( ushort* ptr = indices ) {
+				GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageArb.StaticDraw );
+			}
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
 			return id;
 		}
@@ -252,22 +254,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			EndVbBatch();
 		}
 		
-		public override void DeleteDynamicVb( int id ) {
+		public unsafe override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
-			GL.Arb.DeleteBuffers( 1, ref id );
+			GL.Arb.DeleteBuffers( 1, &id );
 		}
 		
-		public override void DeleteVb( int id ) {
+		public unsafe override void DeleteVb( int id ) {
 			if( id <= 0 ) return;
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
 			#endif
-			GL.Arb.DeleteBuffers( 1, ref id );
+			GL.Arb.DeleteBuffers( 1, &id );
 		}
 		
-		public override void DeleteIb( int id ) {
+		public unsafe override void DeleteIb( int id ) {
 			if( id <= 0 ) return;
-			GL.Arb.DeleteBuffers( 1, ref id );
+			GL.Arb.DeleteBuffers( 1, &id );
 		}
 		
 		public override bool IsValidVb( int vb ) {

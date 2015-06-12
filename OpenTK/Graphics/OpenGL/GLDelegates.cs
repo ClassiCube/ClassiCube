@@ -186,13 +186,6 @@ namespace OpenTK.Graphics.OpenGL
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal unsafe delegate void GetBooleanv(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] bool* @params);
             internal unsafe static GetBooleanv glGetBooleanv;
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal unsafe delegate void GetBufferParameteriv(OpenTK.Graphics.OpenGL.BufferTarget target, OpenTK.Graphics.OpenGL.BufferParameterName pname, [OutAttribute] Int32* @params);
-            internal unsafe static GetBufferParameteriv glGetBufferParameteriv;
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal unsafe delegate void GetBufferParameterivARB(OpenTK.Graphics.OpenGL.ArbVertexBufferObject target, OpenTK.Graphics.OpenGL.BufferParameterNameArb pname, [OutAttribute] Int32* @params);
-            internal unsafe static GetBufferParameterivARB glGetBufferParameterivARB;
            
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal unsafe delegate void GetDoublev(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] Double* @params);
@@ -220,10 +213,6 @@ namespace OpenTK.Graphics.OpenGL
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal delegate void Hint(OpenTK.Graphics.OpenGL.HintTarget target, OpenTK.Graphics.OpenGL.HintMode mode);
             internal static Hint glHint;
-           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void InterleavedArrays(OpenTK.Graphics.OpenGL.InterleavedArrayFormat format, Int32 stride, IntPtr pointer);
-            internal static InterleavedArrays glInterleavedArrays;
   
             [System.Security.SuppressUnmanagedCodeSecurity()]
             internal delegate bool IsBuffer(UInt32 buffer);

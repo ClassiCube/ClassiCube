@@ -234,12 +234,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			IndexBuffer buffer = new IndexBuffer( device, sizeInBytes, Usage.None, Pool.Managed, true );
 			
 			GraphicsStream vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
-			GCHandle handle = GCHandle.Alloc( indices, GCHandleType.Pinned );
-			IntPtr source = handle.AddrOfPinnedObject();
-			IntPtr dest = vbData.InternalData;
-			memcpy( source, dest, sizeInBytes );
+			fixed( ushort* src = indices ) {
+				memcpy( (IntPtr)src, vbData.InternalData, sizeInBytes );
+			}
 			buffer.Unlock();
-			handle.Free();
 			return buffer;
 		}
 
