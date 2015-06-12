@@ -101,21 +101,6 @@ namespace OpenTK.Graphics.OpenGL
         // Note: Mono 1.9.1 truncates StringBuilder results (for 'out string' parameters).
         // We work around this issue by doubling the StringBuilder capacity.
 
-        public static void Rotate(Single angle, Vector3 axis)
-        {
-            GL.Rotate(angle, axis.X, axis.Y, axis.Z);
-        }
-
-        public static void Scale(Vector3 scale)
-        {
-            GL.Scale(scale.X, scale.Y, scale.Z);
-        }
-
-        public static void Translate(Vector3 trans)
-        {
-            GL.Translate(trans.X, trans.Y, trans.Z);
-        }
-
         public unsafe static void MultMatrix(ref Matrix4 mat)
         {
         	fixed (Single* m_ptr = &mat.Row0.X)
@@ -126,26 +111,6 @@ namespace OpenTK.Graphics.OpenGL
         {
         	fixed (Single* m_ptr = &mat.Row0.X)
         		GL.LoadMatrix(m_ptr);
-        }
-
-        public static void VertexPointer(int size, VertexPointerType type, int stride, int offset)
-        {
-            VertexPointer(size, type, stride, (IntPtr)offset);
-        }
-
-        public static void ColorPointer(int size, ColorPointerType type, int stride, int offset)
-        {
-            ColorPointer(size, type, stride, (IntPtr)offset);
-        }
-
-        public static void TexCoordPointer(int size, TexCoordPointerType type, int stride, int offset)
-        {
-            TexCoordPointer(size, type, stride, (IntPtr)offset);
-        }
-
-        public static void DrawElements(BeginMode mode, int count, DrawElementsType type, int offset)
-        {
-            DrawElements(mode, count, type, new IntPtr(offset));
         }
 
         public unsafe static void GetFloat(GetPName pname, out Vector2 vector)

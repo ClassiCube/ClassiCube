@@ -43,37 +43,6 @@ namespace OpenTK.Graphics.OpenGL
         Always = ((int)0x0207),
     }
 
-    public enum ArbVertexBufferObject : int
-    {
-        BufferSizeArb = ((int)0x8764),
-        BufferUsageArb = ((int)0x8765),
-        ArrayBufferArb = ((int)0x8892),
-        ElementArrayBufferArb = ((int)0x8893),
-        ArrayBufferBindingArb = ((int)0x8894),
-        ElementArrayBufferBindingArb = ((int)0x8895),
-        VertexArrayBufferBindingArb = ((int)0x8896),
-
-        ColorArrayBufferBindingArb = ((int)0x8898),
-
-        TextureCoordArrayBufferBindingArb = ((int)0x889A),
-
-        ReadOnlyArb = ((int)0x88B8),
-        WriteOnlyArb = ((int)0x88B9),
-        ReadWriteArb = ((int)0x88BA),
-        BufferAccessArb = ((int)0x88BB),
-        BufferMappedArb = ((int)0x88BC),
-        BufferMapPointerArb = ((int)0x88BD),
-        StreamDrawArb = ((int)0x88E0),
-        StreamReadArb = ((int)0x88E1),
-        StreamCopyArb = ((int)0x88E2),
-        StaticDrawArb = ((int)0x88E4),
-        StaticReadArb = ((int)0x88E5),
-        StaticCopyArb = ((int)0x88E6),
-        DynamicDrawArb = ((int)0x88E8),
-        DynamicReadArb = ((int)0x88E9),
-        DynamicCopyArb = ((int)0x88EA),
-    }
-
     public enum ArrayCap : int
     {
         VertexArray = ((int)0x8074),
@@ -119,68 +88,10 @@ namespace OpenTK.Graphics.OpenGL
         True = ((int)1),
     }
 
-    public enum BufferAccess : int
-    {
-        ReadOnly = ((int)0x88B8),
-        WriteOnly = ((int)0x88B9),
-        ReadWrite = ((int)0x88BA),
-    }
-
-    public enum BufferAccessArb : int
-    {
-        ReadOnly = ((int)0x88B8),
-        WriteOnly = ((int)0x88B9),
-        ReadWrite = ((int)0x88BA),
-    }
-
-    [Flags]
-    public enum BufferAccessMask : int
-    {
-        MapReadBit = ((int)0x0001),
-        MapWriteBit = ((int)0x0002),
-        MapInvalidateRangeBit = ((int)0x0004),
-        MapInvalidateBufferBit = ((int)0x0008),
-        MapFlushExplicitBit = ((int)0x0010),
-        MapUnsynchronizedBit = ((int)0x0020),
-    }
-
-    public enum BufferParameterName : int
-    {
-        BufferSize = ((int)0x8764),
-        BufferUsage = ((int)0x8765),
-        BufferAccess = ((int)0x88BB),
-        BufferMapped = ((int)0x88BC),
-    }
-
-    public enum BufferParameterNameArb : int
-    {
-        BufferSize = ((int)0x8764),
-        BufferUsage = ((int)0x8765),
-        BufferAccess = ((int)0x88BB),
-        BufferMapped = ((int)0x88BC),
-    }
-
-    public enum BufferPointer : int
-    {
-        BufferMapPointer = ((int)0x88BD),
-    }
-
-    public enum BufferPointerNameArb : int
-    {
-        BufferMapPointer = ((int)0x88BD),
-    }
-
     public enum BufferTarget : int
     {
         ArrayBuffer = ((int)0x8892),
         ElementArrayBuffer = ((int)0x8893),
-        PixelPackBuffer = ((int)0x88EB),
-        PixelUnpackBuffer = ((int)0x88EC),
-        UniformBuffer = ((int)0x8A11),
-        TextureBuffer = ((int)0x8C2A),
-        TransformFeedbackBuffer = ((int)0x8C8E),
-        CopyReadBuffer = ((int)0x8F36),
-        CopyWriteBuffer = ((int)0x8F37),
     }
 
     public enum BufferTargetArb : int
@@ -192,27 +103,17 @@ namespace OpenTK.Graphics.OpenGL
     public enum BufferUsageArb : int
     {
         StreamDraw = ((int)0x88E0),
-        StreamRead = ((int)0x88E1),
-        StreamCopy = ((int)0x88E2),
         StaticDraw = ((int)0x88E4),
-        StaticRead = ((int)0x88E5),
-        StaticCopy = ((int)0x88E6),
         DynamicDraw = ((int)0x88E8),
-        DynamicRead = ((int)0x88E9),
-        DynamicCopy = ((int)0x88EA),
+
     }
 
     public enum BufferUsageHint : int
     {
         StreamDraw = ((int)0x88E0),
-        StreamRead = ((int)0x88E1),
-        StreamCopy = ((int)0x88E2),
         StaticDraw = ((int)0x88E4),
-        StaticRead = ((int)0x88E5),
-        StaticCopy = ((int)0x88E6),
         DynamicDraw = ((int)0x88E8),
-        DynamicRead = ((int)0x88E9),
-        DynamicCopy = ((int)0x88EA),
+
     }
 
     [Flags]
@@ -319,8 +220,7 @@ namespace OpenTK.Graphics.OpenGL
         StackOverflow = ((int)0x0503),
         StackUnderflow = ((int)0x0504),
         OutOfMemory = ((int)0x0505),
-        InvalidFramebufferOperation = ((int)0x0506),
-        InvalidFramebufferOperationExt = ((int)0x0506),
+
         TableTooLargeExt = ((int)0x8031),
         TextureTooLargeExt = ((int)0x8065),
     }
@@ -549,50 +449,6 @@ namespace OpenTK.Graphics.OpenGL
 
         GenerateMipmapHint = ((int)0x8192),
         TextureCompressionHint = ((int)0x84EF),
-    }
-
-    
-    public enum InterleavedArrayFormat : int
-    {
-        V2f = ((int)0x2A20),
-        V3f = ((int)0x2A21),
-        C4ubV2f = ((int)0x2A22),
-        C4ubV3f = ((int)0x2A23),
-        C3fV3f = ((int)0x2A24),
-        N3fV3f = ((int)0x2A25),
-        C4fN3fV3f = ((int)0x2A26),
-        T2fV3f = ((int)0x2A27),
-        T4fV4f = ((int)0x2A28),
-        T2fC4ubV3f = ((int)0x2A29),
-        T2fC3fV3f = ((int)0x2A2A),
-        T2fN3fV3f = ((int)0x2A2B),
-        T2fC4fN3fV3f = ((int)0x2A2C),
-        T4fC4fN3fV4f = ((int)0x2A2D),
-    }
-
-    public enum ListMode : int
-    {
-        Compile = ((int)0x1300),
-        CompileAndExecute = ((int)0x1301),
-    }
-
-    public enum ListNameType : int
-    {
-        Byte = ((int)0x1400),
-        UnsignedByte = ((int)0x1401),
-        Short = ((int)0x1402),
-        UnsignedShort = ((int)0x1403),
-        Int = ((int)0x1404),
-        UnsignedInt = ((int)0x1405),
-        Float = ((int)0x1406),
-        Gl2Bytes = ((int)0x1407),
-        Gl3Bytes = ((int)0x1408),
-        Gl4Bytes = ((int)0x1409),
-    }
-
-    public enum ListParameterName : int
-    {
-        ListPrioritySgix = ((int)0x8182),
     }
 
     public enum MaterialFace : int

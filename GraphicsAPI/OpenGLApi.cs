@@ -327,7 +327,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, 0 );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, IntPtr.Zero );
 		}
 		
 		public override void EndVbBatch() {
