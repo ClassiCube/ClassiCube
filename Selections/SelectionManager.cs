@@ -33,40 +33,36 @@ namespace ClassicalSharp.Selections {
 			}
 		}
 		
-		void Intersect( SelectionBox box, Vector3 origin, out float minDist, out float maxDist ) {
+		unsafe void Intersect( SelectionBox box, Vector3 origin, ref float closest, ref float furthest ) {
 			Vector3I min = box.Min;
 			Vector3I max = box.Max;
-			
-			float closest = float.PositiveInfinity;
-			float furthest = float.NegativeInfinity;
-			foreach( float dist in GetDistances( origin, min, max ) ) {
-				if( dist < closest ) closest = dist;
-				if( dist > furthest ) furthest = dist;
-			}
-			minDist = closest;
-			maxDist = furthest;
+			// Bottom corners
+			UpdateDist( pos.X, pos.Y, pos.Z, min.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, max.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, max.X, min.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, min.X, min.Y, max.Z, ref closest, ref furthest );
+			// top corners
+			UpdateDist( pos.X, pos.Y, pos.Z, min.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, max.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, max.X, max.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos.X, pos.Y, pos.Z, min.X, max.Y, max.Z, ref closest, ref furthest );
 		}
 		
-		static IEnumerable<float> GetDistances( Vector3 pos, Vector3I min, Vector3I max ) {
-			// bottom corners
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, min.X, min.Y, min.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, max.X, min.Y, min.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, max.X, min.Y, max.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, min.X, min.Y, max.Z );
-			// top corners
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, min.X, max.Y, min.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, max.X, max.Y, min.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, max.X, max.Y, max.Z );
-			yield return Utils.DistanceSquared( pos.X, pos.Y, pos.Z, min.X, max.Y, max.Z );
+		static void UpdateDist( float x1, float y1, float z1, float x2, float y2, float z2,
+		                          ref float closest, ref float furthest ) {
+			float dist = Utils.DistanceSquared( x1, y1, z1, x2, y2, z2 );
+			if( dist < closest ) closest = dist;
+			if( dist > furthest ) furthest = dist;
 		}
 		
 		// Basically sorts selection boxes back to front for better transparency.
 		// TODO: Proper selection box sorting.
 		Vector3 pos;
 		int Compare( SelectionBox a, SelectionBox b ) {
-			float minDistA = 0, minDistB = 0, maxDistA = 0, maxDistB = 0;
-			Intersect( a, pos, out minDistA, out maxDistA );
-			Intersect( b, pos, out minDistB, out maxDistB );
+			float minDistA = float.PositiveInfinity, minDistB = float.PositiveInfinity;
+			float maxDistA = float.NegativeInfinity, maxDistB = float.NegativeInfinity;
+			Intersect( a, pos, ref minDistA, ref maxDistA );
+			Intersect( b, pos, ref minDistB, ref maxDistB );
 			return maxDistA == maxDistB ? minDistA.CompareTo( minDistB ) : maxDistA.CompareTo( maxDistB );
 		}
 		
