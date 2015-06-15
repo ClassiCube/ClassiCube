@@ -11,11 +11,12 @@ namespace ClassicalSharp {
 		class ChunkInfo {
 			
 			public short CentreX, CentreY, CentreZ;
-			
 			public bool Visible = true;
 			public bool Empty = false;
 			
-			public ChunkDrawInfo DrawInfo;
+			public ChunkPartInfo[] SolidParts;
+			public ChunkPartInfo[] SpriteParts;
+			public ChunkPartInfo[] TranslucentParts;
 			
 			public ChunkInfo( int x, int y, int z ) {
 				CentreX = (short)( x + 8 );
@@ -111,19 +112,20 @@ namespace ClassicalSharp {
 		}
 		
 		void DeleteChunk( ChunkInfo info ) {
-			ChunkDrawInfo drawInfo = info.DrawInfo;
 			info.Empty = false;
-			if( drawInfo == null ) return;
+			DeleteData( ref info.SolidParts );
+			DeleteData( ref info.SpriteParts );
+			DeleteData( ref info.TranslucentParts );
+		}
+		
+		void DeleteData( ref ChunkPartInfo[] parts ) {
+			if( parts == null ) return;
 			
-			for( int i = 0; i < drawInfo.SolidParts.Length; i++ ) {
-				Graphics.DeleteVb( drawInfo.SpriteParts[i].VbId );
-				Graphics.DeleteIb( drawInfo.SpriteParts[i].IbId );
-				Graphics.DeleteVb( drawInfo.TranslucentParts[i].VbId );
-				Graphics.DeleteIb( drawInfo.TranslucentParts[i].IbId );
-				Graphics.DeleteVb( drawInfo.SolidParts[i].VbId );
-				Graphics.DeleteIb( drawInfo.SolidParts[i].IbId );
+			for( int i = 0; i < parts.Length; i++ ) {
+				Graphics.DeleteVb( parts[i].VbId );
+				Graphics.DeleteIb( parts[i].IbId );
 			}
-			info.DrawInfo = null;
+			parts = null;
 		}
 		
 		void CreateChunkCache() {
@@ -207,7 +209,7 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			Graphics.EndIndexedVbBatch();
-			Window.MapEnvRenderer.RenderMapSides( deltaTime );		
+			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
@@ -262,14 +264,14 @@ namespace ClassicalSharp {
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
 				
-				if( info.DrawInfo == null ) {
+				if( info.SolidParts == null && info.SpriteParts == null && info.TranslucentParts == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
-						info.DrawInfo = builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8 );
-						if( info.DrawInfo == null ) {
+						if( !builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
+							                         ref info.SolidParts, ref info.SpriteParts, ref info.TranslucentParts ) ) {
 							info.Empty = true;
 						}
-						chunksUpdatedThisFrame++;
+						chunksThisFrame++;
 					}
 				}
 				info.Visible = inRange && 
@@ -277,14 +279,13 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		// TODO: there's probably a better way of doing this.
 		const DrawMode mode = DrawMode.Triangles;
 		void RenderSolidBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.DrawInfo == null || !info.Visible ) continue;
+				if( info.SolidParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.SolidParts[batch];
+				ChunkPartInfo drawInfo = info.SolidParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
 					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
@@ -299,9 +300,9 @@ namespace ClassicalSharp {
 		void RenderSpriteBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.DrawInfo == null || !info.Visible ) continue;
+				if( info.SpriteParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.SpriteParts[batch];
+				ChunkPartInfo drawInfo = info.SpriteParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
 					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
@@ -312,9 +313,9 @@ namespace ClassicalSharp {
 		void RenderTranslucentBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.DrawInfo == null || !info.Visible ) continue;
+				if( info.TranslucentParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				ChunkPartInfo drawInfo = info.TranslucentParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
 					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
 					Window.Vertices += drawInfo.IndicesCount;
@@ -329,9 +330,9 @@ namespace ClassicalSharp {
 		void RenderTranslucentBatchNoAdd( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.DrawInfo == null || !info.Visible ) continue;
+				if( info.TranslucentParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.DrawInfo.TranslucentParts[batch];
+				ChunkPartInfo drawInfo = info.TranslucentParts[batch];
 				if( drawInfo.IndicesCount > 0 ) {
 					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
 					if( drawInfo.IndicesCount2 > 0 ) {

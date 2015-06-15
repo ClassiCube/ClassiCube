@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 		
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
-			if( ReadChunkData( x1, y1, z1 ) ) return true;
+			if( ReadChunkData( x1, y1, z1 ) ) return false;
 			
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 					}
 				}
 			}
-			return false;
+			return true;
 		}
 		
 		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
@@ -92,8 +92,13 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public ChunkDrawInfo GetDrawInfo( int x, int y, int z ) {
-			return BuildChunk( x, y, z ) ? null : GetChunkInfo( x, y, z );
+		public bool GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts, 
+		                        ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
+			if( !BuildChunk( x, y, z ) )
+				return false;
+			
+			GetChunkInfo( x, y, z, ref solidParts, ref spriteParts, ref translucentParts );
+			return true;
 		}
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
@@ -326,19 +331,6 @@ namespace ClassicalSharp {
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;
-		}
-	}
-	
-	public class ChunkDrawInfo {
-		
-		public ChunkPartInfo[] SolidParts;
-		public ChunkPartInfo[] TranslucentParts;
-		public ChunkPartInfo[] SpriteParts;
-		
-		public ChunkDrawInfo( int partsCount ) {
-			SolidParts = new ChunkPartInfo[partsCount];
-			TranslucentParts = new ChunkPartInfo[partsCount];
-			SpriteParts = new ChunkPartInfo[partsCount];
 		}
 	}
 	

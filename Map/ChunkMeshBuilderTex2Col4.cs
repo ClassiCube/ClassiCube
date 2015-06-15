@@ -48,14 +48,14 @@ namespace ClassicalSharp {
 				vCount1 = Math.Min( vCount, maxIndices );
 				iCount1 = ( vCount1 / 4 ) * 6;
 				if( vCount1 > vertices1.Length ) {
-					vertices1 = new VertexPos3fTex2fCol4b[vCount1];					
+					vertices1 = new VertexPos3fTex2fCol4b[vCount1];
 					indices1 = new ushort[iCount1];
 				}
 				
 				vCount2 = Math.Max( 0, vCount - maxIndices );
 				iCount2 = ( vCount2 / 4 ) * 6;
 				if( vCount2 > vertices2.Length ) {
-					vertices2 = new VertexPos3fTex2fCol4b[vCount2];					
+					vertices2 = new VertexPos3fTex2fCol4b[vCount2];
 					indices2 = new ushort[iCount2];
 				}
 				vertices = vertices1;
@@ -127,29 +127,32 @@ namespace ClassicalSharp {
 				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
 		
-		ChunkDrawInfo GetChunkInfo( int x, int y, int z ) {
-			ChunkDrawInfo info = new ChunkDrawInfo( arraysCount );
+		void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts,
+		                  ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
 			for( int i = 0; i < arraysCount; i++ ) {
-				DrawInfo1D drawInfo = drawInfoBuffer[i];
-				SetPartInfo( drawInfo.Solid, i, info.SolidParts );
-				SetPartInfo( drawInfo.Translucent, i, info.TranslucentParts );
-				SetPartInfo( drawInfo.Sprite, i, info.SpriteParts );
+				DrawInfo1D info = drawInfoBuffer[i];
+				SetPartInfo( info.Solid, i, ref solidParts );
+				SetPartInfo( info.Sprite, i, ref spriteParts );
+				SetPartInfo( info.Translucent, i, ref translucentParts );
 			}
-			return info;
 		}
 		
-		void SetPartInfo( DrawInfo1DPart part, int i, ChunkPartInfo[] parts ) {
+		void SetPartInfo( DrawInfo1DPart part, int i, ref ChunkPartInfo[] parts ) {
+			if( part.iCount1 == 0 ) return;
+			
 			ChunkPartInfo info = default( ChunkPartInfo );
-			if( part.iCount1 > 0 ) {
-				info.VbId = Graphics.InitVb( part.vertices1, VertexFormat.Pos3fTex2fCol4b, part.vCount1 );
-				info.IbId = Graphics.InitIb( part.indices1, part.iCount1 );
-				info.IndicesCount = part.iCount1;
-			}
+			info.VbId = Graphics.InitVb( part.vertices1, VertexFormat.Pos3fTex2fCol4b, part.vCount1 );
+			info.IbId = Graphics.InitIb( part.indices1, part.iCount1 );
+			info.IndicesCount = part.iCount1;
+			
 			if( part.iCount2 > 0 ) {
 				info.VbId2 = Graphics.InitVb( part.vertices2, VertexFormat.Pos3fTex2fCol4b, part.vCount2 );
 				info.IbId2 = Graphics.InitIb( part.indices2, part.iCount2 );
 				info.IndicesCount2 = part.iCount2;
 			}
+			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
+			if( parts == null ) 
+				parts = new ChunkPartInfo[arraysCount];
 			parts[i] = info;
 		}
 		
