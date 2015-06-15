@@ -271,7 +271,7 @@ namespace ClassicalSharp {
 							                         ref info.SolidParts, ref info.SpriteParts, ref info.TranslucentParts ) ) {
 							info.Empty = true;
 						}
-						chunksThisFrame++;
+						chunksUpdatedThisFrame++;
 					}
 				}
 				info.Visible = inRange && 

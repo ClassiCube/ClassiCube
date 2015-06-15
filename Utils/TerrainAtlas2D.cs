@@ -43,12 +43,6 @@ namespace ClassicalSharp {
 				using( Bitmap bmp = new Bitmap( elementSize, elementSize ) ) {
 					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
 						Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
-						for( int xxx = 0; xxx < 2; xxx++ ) {
-							for( int yyy = 0; yyy < 2; yyy++ ) {
-								Console.WriteLine( dst.GetPixel( xxx, yyy ) & 0xFF );
-							}
-						}
-						
 						return graphics.LoadTexture( dst );
 					}
 				}
