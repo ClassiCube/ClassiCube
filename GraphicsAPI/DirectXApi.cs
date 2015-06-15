@@ -472,6 +472,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			Matrix dxMatrix = Matrix.OrthoOffCenterRH( 0, width, height, 0, 0, 1 );
 			curStack.SetTop( ref dxMatrix );
 		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			device.Dispose();
+		}
 
 		public override void PrintApiSpecificInfo() {
 			Console.WriteLine( "D3D tex memory available: " + (uint)device.AvailableTextureMemory );
