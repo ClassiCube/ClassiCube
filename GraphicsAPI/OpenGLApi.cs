@@ -283,9 +283,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GL.Arb.IsBuffer( ib );
 		}
 		
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
 			BeginVbBatch( format );
-			DrawVbBatch( mode, id, offset, verticesCount );
+			DrawVbBatch( mode, id, startVertex, verticesCount );
 			EndVbBatch();
 		}
 		
@@ -320,17 +320,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 		}
 		
-		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
-			drawBatchFunc( mode, id, offset, verticesCount );
+		public override void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
+			drawBatchFunc( mode, id, startVertex, verticesCount );
 		}
 		
-		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
+		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
+		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
+		                                        int startVertex, int startIndex ) {
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ib );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, DrawElementsType.UnsignedShort, IntPtr.Zero );
+			
+			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
+			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( offset ) );
+			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
+			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( offset + 16 ) );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 		
 		public override void EndVbBatch() {

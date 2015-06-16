@@ -280,19 +280,22 @@ namespace ClassicalSharp {
 		}
 		
 		const DrawMode mode = DrawMode.Triangles;
+		const int maxVertex = 65536;
+		const int maxIndices = maxVertex / 4 * 6;
 		void RenderSolidBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.SolidParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.SolidParts[batch];
-				if( drawInfo.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
-					Window.Vertices += drawInfo.IndicesCount;
-					if( drawInfo.IndicesCount2 > 0 ) {
-						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IbId2, drawInfo.IndicesCount2 );
-						Window.Vertices += drawInfo.IndicesCount2;
+				ChunkPartInfo part = info.SolidParts[batch];
+				if( part.IndicesCount > 0 ) {
+					if( part.IndicesCount > maxIndices ) {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+					} else {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
+					Window.Vertices += part.IndicesCount;
 				}
 			}
 		}
@@ -302,10 +305,10 @@ namespace ClassicalSharp {
 				ChunkInfo info = chunks[i];
 				if( info.SpriteParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.SpriteParts[batch];
-				if( drawInfo.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
-					Window.Vertices += drawInfo.IndicesCount;
+				ChunkPartInfo part = info.SpriteParts[batch];
+				if( part.IndicesCount > 0 ) {
+					Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+					Window.Vertices += part.IndicesCount;
 				}
 			}
 		}
@@ -315,14 +318,15 @@ namespace ClassicalSharp {
 				ChunkInfo info = chunks[i];
 				if( info.TranslucentParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.TranslucentParts[batch];
-				if( drawInfo.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
-					Window.Vertices += drawInfo.IndicesCount;
-					if( drawInfo.IndicesCount2 > 0 ) {
-						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IbId2, drawInfo.IndicesCount2 );
-						Window.Vertices += drawInfo.IndicesCount2;
+				ChunkPartInfo part = info.TranslucentParts[batch];
+				if( part.IndicesCount > 0 ) {
+					if( part.IndicesCount > maxIndices ) {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+					} else {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
+					Window.Vertices += part.IndicesCount;
 				}
 			}
 		}
@@ -332,11 +336,13 @@ namespace ClassicalSharp {
 				ChunkInfo info = chunks[i];
 				if( info.TranslucentParts == null || !info.Visible ) continue;
 
-				ChunkPartInfo drawInfo = info.TranslucentParts[batch];
-				if( drawInfo.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId, drawInfo.IbId, drawInfo.IndicesCount );
-					if( drawInfo.IndicesCount2 > 0 ) {
-						Graphics.DrawIndexedVbBatch( mode, drawInfo.VbId2, drawInfo.IbId2, drawInfo.IndicesCount2 );
+				ChunkPartInfo part = info.TranslucentParts[batch];
+				if( part.IndicesCount > 0 ) {
+					if( part.IndicesCount > maxIndices ) {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+					} else {
+						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 				}
 			}

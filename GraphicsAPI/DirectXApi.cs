@@ -257,10 +257,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			return IsValid( iBuffers, ib );
 		}
 
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int offset, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
 			device.SetStreamSource( 0, vBuffers[id], 0, strideSizes[(int)format] );
 			device.VertexFormat = formatMapping[(int)format];
-			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
+			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
 		}
 
 		int batchStride;
@@ -269,9 +269,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			batchStride = strideSizes[(int)format];
 		}
 
-		public override void DrawVbBatch( DrawMode mode, int id, int offset, int verticesCount ) {
+		public override void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
 			device.SetStreamSource( 0, vBuffers[id], 0, batchStride );
-			device.DrawPrimitives( modeMappings[(int)mode], offset, NumPrimitives( verticesCount, mode ) );
+			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
 		}
 
 		public override void EndVbBatch() {
@@ -282,11 +282,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			batchStride = VertexPos3fTex2fCol4b.Size;
 		}
 
-		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount ) {
+		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
+		                                        int startVertex, int startIndex ) {
 			device.Indices = iBuffers[ib];
 			device.SetStreamSource( 0, vBuffers[vb], 0, batchStride );
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
-			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
+			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
 
 		public override void EndIndexedVbBatch() {

@@ -337,16 +337,12 @@ namespace ClassicalSharp {
 	public struct ChunkPartInfo {
 		
 		public int VbId, IbId;
-		public int VbId2, IbId2;
-		public int IndicesCount, IndicesCount2;
+		public int IndicesCount;
 		
 		public ChunkPartInfo( int vb, int ib, int indices ) {
 			VbId = vb;
 			IbId = ib;
 			IndicesCount = indices;
-			VbId2 = 0;
-			IbId2 = 0;
-			IndicesCount2 = 0;
 		}
 	}
 }
