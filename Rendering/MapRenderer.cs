@@ -267,14 +267,15 @@ namespace ClassicalSharp {
 				if( info.SolidParts == null && info.SpriteParts == null && info.TranslucentParts == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
 						Window.ChunkUpdates++;
-						if( !builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-							                         ref info.SolidParts, ref info.SpriteParts, ref info.TranslucentParts ) ) {
+						builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
+						                    ref info.SolidParts, ref info.SpriteParts, ref info.TranslucentParts );
+						if( info.SolidParts == null && info.SpriteParts == null && info.TranslucentParts == null ) {
 							info.Empty = true;
 						}
 						chunksUpdatedThisFrame++;
 					}
 				}
-				info.Visible = inRange && 
+				info.Visible = inRange &&
 					Window.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}

@@ -92,13 +92,12 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public bool GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts, 
+		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts, 
 		                        ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
 			if( !BuildChunk( x, y, z ) )
-				return false;
+				return;
 			
 			GetChunkInfo( x, y, z, ref solidParts, ref spriteParts, ref translucentParts );
-			return true;
 		}
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
