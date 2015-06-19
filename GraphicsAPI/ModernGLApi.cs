@@ -142,8 +142,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {				
-			int sizeInBytes = count * strideSizes[(int)format];
+		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int stride, int count ) where T : struct {				
+			int sizeInBytes = count * stride;
 			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
 		}

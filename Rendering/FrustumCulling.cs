@@ -31,9 +31,8 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		public unsafe void CalcFrustumEquations( ref Matrix4 projection, ref Matrix4 modelView ) {
-			Matrix4 clipMatrix;
-			Matrix4.Mult( ref modelView, ref projection, out clipMatrix );
+		public unsafe void CalcFrustumEquations( ref Matrix4 MVP ) {
+			Matrix4 clipMatrix = MVP;
 
 			float* clip = (float*)&clipMatrix;
 			// Extract the numbers for the RIGHT plane

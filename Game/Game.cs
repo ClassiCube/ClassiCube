@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 		public FrustumCulling Culling;
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
-		public Matrix4 View, Projection;
+		public Matrix4 View, Projection, MVP;
 		public int MouseSensitivity = 30;
 		
 		void LoadAtlas( Bitmap bmp ) {
@@ -220,7 +220,8 @@ namespace ClassicalSharp {
 			Matrix4 modelView = Camera.GetView();
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
-			Culling.CalcFrustumEquations( ref Projection, ref modelView );
+			Matrix4.Mult( ref View, ref Projection, out MVP );
+			Culling.CalcFrustumEquations( ref MVP );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {		
