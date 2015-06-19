@@ -297,6 +297,12 @@ namespace ClassicalSharp {
 						gzipStream = new DeflateStream( gzippedMap, true );
 						#else
 						gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
+						if( OpenTK.Configuration.RunningOnMono ) {
+							Utils.LogWarning( "You are running on Mono, but this build does not support the Mono workaround." );
+							Utils.LogWarning( "You should either download the Mono compatible build or define '__MonoCS__' when targeting Mono. " +
+							                 "(The Mono compiler already defines this by default)" );
+							Utils.LogWarning( "You will likely experience an 'Internal error (no progress possible) ReadInternal' exception when decompressing the map." );
+						}
 						#endif
 						mapSizeIndex = 0;
 						mapIndex = 0;
