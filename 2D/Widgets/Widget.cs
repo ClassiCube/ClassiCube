@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 	public abstract class Widget : IDisposable {
 		
 		public Game Window;
-		public IGraphicsApi GraphicsApi;
+		public OpenGLApi GraphicsApi;
 		
 		public Widget( Game window ) {
 			Window = window;

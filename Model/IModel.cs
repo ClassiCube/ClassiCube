@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 	public abstract class IModel {
 		
 		protected Game window;
-		protected IGraphicsApi graphics;
+		protected OpenGLApi graphics;
 		protected const int planeVertices = 6;
 		protected const int partVertices = 6 * planeVertices;
 		

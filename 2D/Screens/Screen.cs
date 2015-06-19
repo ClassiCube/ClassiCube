@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 	public abstract class Screen : IDisposable {
 		
 		public Game Window;
-		public IGraphicsApi GraphicsApi;
+		public OpenGLApi GraphicsApi;
 		
 		public Screen( Game window ) {
 			Window = window;

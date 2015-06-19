@@ -21,9 +21,9 @@ namespace ClassicalSharp {
 		public Bitmap AtlasBitmap;
 		public int elementSize;
 		public int TexId;
-		IGraphicsApi graphics;
+		OpenGLApi graphics;
 		
-		public TerrainAtlas2D( IGraphicsApi graphics ) {
+		public TerrainAtlas2D( OpenGLApi graphics ) {
 			this.graphics = graphics;
 		}
 		

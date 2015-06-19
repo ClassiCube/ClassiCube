@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		
 		public Map Map;
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		public MapEnvRenderer( Game window ) {
 			Window = window;

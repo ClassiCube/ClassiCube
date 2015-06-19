@@ -10,7 +10,7 @@ namespace ClassicalSharp.Renderers {
 		
 		Vector3 pos;
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		public Player Player;
 		Texture nameTexture;
 		float nameWidth, nameHeight;

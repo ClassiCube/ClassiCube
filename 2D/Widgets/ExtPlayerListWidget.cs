@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 			
 			public byte NameId;
 			
-			public PlayerInfo( IGraphicsApi graphics, CpeListInfo p, Font font ) {
+			public PlayerInfo( OpenGLApi graphics, CpeListInfo p, Font font ) {
 				Name = p.ListName;
 				NameId = p.NameId;
 				GroupName = p.GroupName;

@@ -17,14 +17,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void Draw( OpenGLApi api, DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
 			EnableVertexAttribStates( api );
-			api.DrawVb( mode, format, id, startVertex, verticesCount );
+			api.DrawModernVb( mode, id, startVertex, verticesCount );
 			DisableVertexAttribStates( api );
 		}
 		
-		public void DrawIndexedVbBatch( OpenGLApi api, DrawMode mode, int vb, int ib, int indicesCount,
+		public void DrawIndexed( OpenGLApi api, DrawMode mode, int vb, int ib, int indicesCount,
 		                               int startVertex, int startIndex ) {
 			EnableVertexAttribStates( api );
-			api.DrawIndexedVbBatch( mode, vb, ib, indicesCount, startVertex, startIndex );
+			api.DrawModernIndexedVb( mode, vb, ib, indicesCount, startVertex, startIndex );
+			DisableVertexAttribStates( api );
+		}
+		
+		public void DrawDynamic<T>( OpenGLApi api, DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {
+			EnableVertexAttribStates( api );
+			api.DrawModernDynamicVb( mode, vb, vertices, format, count );
 			DisableVertexAttribStates( api );
 		}
 		
@@ -89,17 +95,16 @@ void main() {
 		}
 		
 		const int stride = VertexPos3fTex2fCol4b.Size;
-		public void DrawVb( OpenGLApi graphics, int vbId, int verticesCount ) {
-			graphics.EnableVertexAttribF( positionLoc, 3, stride, 0 );
-			graphics.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
-			graphics.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
-			
-			graphics.DrawModernVb( DrawMode.TriangleStrip, vbId, 0, verticesCount );
-			
-			graphics.DisableVertexAttrib( positionLoc );
-			graphics.DisableVertexAttrib( texCoordsLoc );
-			graphics.DisableVertexAttrib( colourLoc );
+		protected override void EnableVertexAttribStates( OpenGLApi api ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
 		}
-	}
-	
+		
+		protected override void DisableVertexAttribStates( OpenGLApi api ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+			api.DisableVertexAttrib( colourLoc );
+		}	
+	}	
 }

@@ -10,10 +10,10 @@ namespace ClassicalSharp {
 		internal int elementsPerBitmap;
 		public float invElementSize;
 		public int[] TexIds;
-		IGraphicsApi graphics;
+		OpenGLApi graphics;
 		public readonly int UsedRows1D = 5;
 		
-		public TerrainAtlas1D( IGraphicsApi graphics ) {
+		public TerrainAtlas1D( OpenGLApi graphics ) {
 			this.graphics = graphics;
 		}
 		

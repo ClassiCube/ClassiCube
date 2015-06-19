@@ -10,7 +10,7 @@ namespace ClassicalSharp.Selections {
 		public FastColour Colour, LineColour;
 		public int VboId, VerticesCount;
 		public int LineVboId, LineVerticesCount;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		public Vector3I Min, Max;
 		
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Selections {
 			Graphics.DrawVbBatch( DrawMode.Lines, LineVboId, 0, LineVerticesCount );
 		}
 		
-		public SelectionBox( Vector3I start, Vector3I end, FastColour col, IGraphicsApi graphics ) {
+		public SelectionBox( Vector3I start, Vector3I end, FastColour col, OpenGLApi graphics ) {
 			Graphics = graphics;
 			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[12 * 2];
 			Min = Vector3I.Min( start, end );

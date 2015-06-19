@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public BlockInfo BlockInfo;
 		Map map;
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		const int chunkSize = 16, extChunkSize = 18;
 		const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
 		const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;

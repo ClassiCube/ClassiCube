@@ -35,14 +35,14 @@ namespace ClassicalSharp {
 			get { return ID > 0; }
 		}
 		
-		public void Render( IGraphicsApi graphics ) {
+		public void Render( OpenGLApi graphics ) {
 			graphics.Texturing = true;
 			graphics.Bind2DTexture( ID );
 			graphics.Draw2DTexture( ref this );
 			graphics.Texturing = false;
 		}
 		
-		public void RenderNoBind( IGraphicsApi graphics ) {
+		public void RenderNoBind( OpenGLApi graphics ) {
 			graphics.Draw2DTexture( ref this );
 		}
 		

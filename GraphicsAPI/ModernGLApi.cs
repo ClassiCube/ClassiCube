@@ -18,8 +18,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.LinkProgram( program );
 			
 			string errorLog = GL.GetProgramInfoLog( program );
-			Console.WriteLine( "Program error for {0}:", program );
-			Console.WriteLine( errorLog );
+			if( !String.IsNullOrEmpty( errorLog ) ) {
+				Console.WriteLine( "Program error for {0}:", program );
+				Console.WriteLine( errorLog );
+			}
 			
 			GL.DeleteShader( vertexShaderId );
 			GL.DeleteShader( fragShaderId );
@@ -33,8 +35,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.CompileShader( shaderId );
 			
 			string errorLog = GL.GetShaderInfoLog( shaderId );
-			Console.WriteLine( "Shader error for {0} ({1}):", shaderId, type );
-			Console.WriteLine( errorLog );
+			if( !String.IsNullOrEmpty( errorLog ) ) {
+				Console.WriteLine( "Shader error for {0} ({1}):", shaderId, type );
+				Console.WriteLine( errorLog );
+			}
 			return shaderId;
 		}
 		
@@ -57,13 +61,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,
 			VertexAttribPointerType.Byte, VertexAttribPointerType.Short,
 			VertexAttribPointerType.Int,
-		};	
+		};
 		
 		public void DisableVertexAttrib( int attribLoc ) {
 			GL.DisableVertexAttribArray( attribLoc );
 		}
 		
-		// Booooo, no direct state access for OpenGL 2.0.	
+		// Booooo, no direct state access for OpenGL 2.0.
 		public void SetUniform( int uniformLoc, float value ) {
 			GL.Uniform1( uniformLoc, value );
 		}
@@ -122,8 +126,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
+		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			int sizeInBytes = count * strideSizes[(int)format];
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+		}
+		
 		public void DrawModernIndexedVb( DrawMode mode, int vb, int ib, int indicesCount,
-		                                        int startVertex, int startIndex ) {
+		                                int startVertex, int startIndex ) {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
 			

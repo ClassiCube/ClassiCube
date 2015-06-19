@@ -7,7 +7,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public Map Map;
 		public Game Window;	
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
 		public virtual void Init() {
 			Graphics = Window.Graphics;

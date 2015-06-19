@@ -8,9 +8,9 @@ namespace ClassicalSharp {
 		public int Vb;
 		public int Offset = 0;
 		public int Count;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		
-		public ModelPart( int vb, int offset, int count, IGraphicsApi graphics ) {
+		public ModelPart( int vb, int offset, int count, OpenGLApi graphics ) {
 			Offset = offset;
 			Count = count;
 			Graphics = graphics;

@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 		
 		public Game Window;
 		Map map;
-		IGraphicsApi graphics;
+		OpenGLApi graphics;
 		BlockInfo info;
 		public WeatherRenderer( Game window ) {
 			Window = window;

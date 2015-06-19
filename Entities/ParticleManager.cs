@@ -9,7 +9,7 @@ namespace ClassicalSharp.Particles {
 		
 		List<Particle> particles = new List<Particle>();
 		public Game Window;
-		public IGraphicsApi Graphics;
+		public OpenGLApi Graphics;
 		int vb;
 		
 		public ParticleManager( Game window ) {

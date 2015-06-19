@@ -118,7 +118,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
+		public static Texture Make2DTexture( OpenGLApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
 			int textureID = graphics.LoadTexture( bmp );
 			return new Texture( textureID, x1, y1, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
@@ -152,7 +152,7 @@ namespace ClassicalSharp {
 		};
 
 		static List<DrawTextArgs> parts = new List<DrawTextArgs>( 64 );
-		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
+		public static List<DrawTextArgs> SplitText( OpenGLApi graphics, string value, bool shadow ) {
 			int code = 15;
 			parts.Clear();
 			for( int i = 0; i < value.Length; i++ ) {
