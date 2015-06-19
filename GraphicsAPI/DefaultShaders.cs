@@ -136,7 +136,7 @@ uniform float sOffset;
 
 void main() {
    vec4 finalColour;
-   if(out_texcoords.s >= -900) {
+   if(out_texcoords.s >= -90000) {
       vec2 texcoords = out_texcoords;
       texcoords.s = texcoords.s + sOffset;
       finalColour = texture2D(texImage, texcoords) * out_colour;

@@ -75,7 +75,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		float lastFogStart = -1, lastFogEnd = -1, lastFogDensity = -1;
-		internal float modernFogStart, modernFogEnd, modernFogDensity;
+		internal float modernFogEnd, modernFogDensity;
 		public void SetFogDensity( float value ) {
 			FogParam( FogParameter.FogDensity, value, ref lastFogDensity );
 			modernFogDensity = value;
@@ -83,7 +83,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void SetFogStart( float value ) {
 			FogParam( FogParameter.FogStart, value, ref lastFogStart );
-			modernFogStart = value;
 		}
 		
 		public void SetFogEnd( float value ) {

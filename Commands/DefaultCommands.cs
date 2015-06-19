@@ -240,7 +240,6 @@ namespace ClassicalSharp.Commands {
 					game.EnvRenderer = new StandardEnvRenderer( game );
 					game.EnvRenderer.Init();
 				}
-				((StandardEnvRenderer)game.EnvRenderer).SetUseLegacyMode( legacyEnv );
 			}
 		}
 	}
