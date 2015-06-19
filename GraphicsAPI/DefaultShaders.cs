@@ -81,17 +81,25 @@ void main() {
 			FragmentSource = @"
 #version 130
 out vec4 final_colour;
+--IMPORT fog_uniforms
 
 void main() {
-   final_colour = vec4(1.0, 1.0, 1.0, 1.0);
+   vec4 finalColour = vec4(1.0, 1.0, 1.0, 1.0);
+--IMPORT fog_code
+   final_colour = finalColour;
 }";
 		}
 		
 		public int positionLoc;
-		public int mvpLoc;
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		protected override void GetLocations( OpenGLApi api ) {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			
+			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
+			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
+			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );	
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
@@ -154,11 +162,12 @@ void main() {
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
+			
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
 			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
 			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
-			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );		
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
@@ -217,6 +226,7 @@ void main() {
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
 			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
 			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );

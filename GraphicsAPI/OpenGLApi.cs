@@ -64,25 +64,31 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		FastColour lastFogCol = FastColour.Black;
+		internal Vector4 modernFogCol;
 		public unsafe void SetFogColour( FastColour col ) {			
 			if( col != lastFogCol ) {
 				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
+				modernFogCol = colRGBA;
 				GL.Fog( FogParameter.FogColor, &colRGBA.X );
 				lastFogCol = col;
 			}
 		}
 		
 		float lastFogStart = -1, lastFogEnd = -1, lastFogDensity = -1;
+		internal float modernFogStart, modernFogEnd, modernFogDensity;
 		public void SetFogDensity( float value ) {
 			FogParam( FogParameter.FogDensity, value, ref lastFogDensity );
+			modernFogDensity = value;
 		}
 		
 		public void SetFogStart( float value ) {
 			FogParam( FogParameter.FogStart, value, ref lastFogStart );
+			modernFogStart = value;
 		}
 		
 		public void SetFogEnd( float value ) {
 			FogParam( FogParameter.FogEnd, value, ref lastFogEnd );
+			modernFogEnd = value;
 		}
 		
 		static void FogParam( FogParameter param, float value, ref float last ) {
@@ -93,10 +99,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		Fog lastFogMode = (Fog)999;
-		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp };
+		internal int modernFogMode = 0;
 		public void SetFogMode( Fog mode ) {
 			if( mode != lastFogMode ) {
 				GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
+				modernFogMode = mode == ClassicalSharp.GraphicsAPI.Fog.Linear ? 0 : 1;
 				lastFogMode = mode;
 			}
 		}

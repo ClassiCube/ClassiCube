@@ -9,11 +9,14 @@ namespace ClassicalSharp.Renderers {
 		Game window;
 		OpenGLApi graphics;
 		int vb;
+		PickingShader shader;
 		
 		public PickingRenderer( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
+			shader = new PickingShader();
+			shader.Init( graphics );
 		}
 		
 		FastColour col = FastColour.White;		
@@ -28,6 +31,12 @@ namespace ClassicalSharp.Renderers {
 			PickedPos pickedPos = window.SelectedPos;
 			
 			if( pickedPos.Valid ) {
+				graphics.UseProgram( shader.ProgramId );
+				graphics.SetUniform( shader.mvpLoc, ref window.MVP );
+				graphics.SetUniform( shader.fogColLoc, ref graphics.modernFogCol );
+				graphics.SetUniform( shader.fogDensityLoc, graphics.modernFogDensity );
+				graphics.SetUniform( shader.fogEndLoc, graphics.modernFogEnd );
+				graphics.SetUniform( shader.fogModeLoc, graphics.modernFogMode );
 				Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 				Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 				
@@ -61,7 +70,9 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
 				DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
-				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fCol4b, verticesCount );
+				
+				shader.DrawDynamic( graphics, DrawMode.Triangles, VertexPos3fCol4b.Size, vb, vertices, verticesCount );
+				graphics.UseProgram( 0 );
 			}
 		}
 		
