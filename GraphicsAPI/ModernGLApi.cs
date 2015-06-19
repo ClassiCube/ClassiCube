@@ -90,11 +90,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public int GetAttribLocation( int program, string name ) {
-			return GL.GetAttribLocation( program, name );
+			int loc = GL.GetAttribLocation( program, name );
+			if( loc == -1 ) {
+				Utils.LogWarning( "Attrib " + name + " returned -1 as its location." );
+			}
+			return loc;
 		}
 		
 		public int GetUniformLocation( int program, string name ) {
-			return GL.GetUniformLocation( program, name );
+			int loc = GL.GetUniformLocation( program, name );
+			if( loc == -1 ) {
+				Utils.LogWarning( "Uniform " + name + " returned -1 as its location." );
+			}
+			return loc;
 		}
 		
 		public unsafe void PrintAllAttribs( int program ) {
@@ -126,7 +134,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {
+		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {		
 			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );

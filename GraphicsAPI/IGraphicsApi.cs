@@ -91,7 +91,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quads[1] = new VertexPos3fTex2fCol4b( x + width, y + height, 0, -100, -100, col );
 			quads[2] = new VertexPos3fTex2fCol4b( x, y, 0, -100, -100, col );
 			quads[3] = new VertexPos3fTex2fCol4b( x, y + height, 0, -100, -100, col );
-			guiShader.DrawDynamic( this, DrawMode.TriangleStrip, quadVb, quads, VertexFormat.Pos3fTex2fCol4b, 4 );
+			guiShader.DrawDynamic( this, DrawMode.TriangleStrip, VertexFormat.Pos3fTex2fCol4b, quadVb, quads, 4 );
 		}
 		
 		public virtual void Draw2DTexture( ref Texture tex ) {
@@ -101,7 +101,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quads[1] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, FastColour.White );
 			quads[2] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, FastColour.White );
 			quads[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, FastColour.White );
-			guiShader.DrawDynamic( this, DrawMode.TriangleStrip, quadVb, quads, VertexFormat.Pos3fTex2fCol4b, 4 );
+			guiShader.DrawDynamic( this, DrawMode.TriangleStrip, VertexFormat.Pos3fTex2fCol4b, quadVb, quads, 4 );
 		}
 		
 		public void Mode2D( float width, float height ) {

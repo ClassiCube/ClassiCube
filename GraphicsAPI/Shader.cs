@@ -15,9 +15,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GetLocations( api );
 		}
 		
-		public void Draw( OpenGLApi api, DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
+		public void Draw( OpenGLApi api, DrawMode mode, VertexFormat format, int vb, int startVertex, int verticesCount ) {
 			EnableVertexAttribStates( api );
-			api.DrawModernVb( mode, id, startVertex, verticesCount );
+			api.DrawModernVb( mode, vb, startVertex, verticesCount );
 			DisableVertexAttribStates( api );
 		}
 		
@@ -28,7 +28,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DisableVertexAttribStates( api );
 		}
 		
-		public void DrawDynamic<T>( OpenGLApi api, DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {
+		public void DrawDynamic<T>( OpenGLApi api, DrawMode mode, VertexFormat format, int vb, T[] vertices, int count ) where T : struct {
 			EnableVertexAttribStates( api );
 			api.DrawModernDynamicVb( mode, vb, vertices, format, count );
 			DisableVertexAttribStates( api );
