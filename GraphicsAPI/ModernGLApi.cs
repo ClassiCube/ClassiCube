@@ -26,10 +26,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			return program;
 		}
 		
-		static int LoadShader( string source, ShaderType type ) {
+		unsafe static int LoadShader( string source, ShaderType type ) {
 			int shaderId = GL.CreateShader( type );
 			int len = source.Length;
-			GL.ShaderSource( shaderId, 1, new [] { source }, ref len );
+			GL.ShaderSource( shaderId, 1, new [] { source }, &len );
 			GL.CompileShader( shaderId );
 			
 			string errorLog = GL.GetShaderInfoLog( shaderId );
@@ -93,26 +93,26 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GL.GetUniformLocation( program, name );
 		}
 		
-		public void PrintAllAttribs( int program ) {
+		public unsafe void PrintAllAttribs( int program ) {
 			int numAttribs;
-			GL.GetProgram( program, ProgramParameter.ActiveAttributes, out numAttribs );
+			GL.GetProgram( program, ProgramParameter.ActiveAttributes, &numAttribs );
 			for( int i = 0; i < numAttribs; i++ ) {
 				int len, size;
 				StringBuilder builder = new StringBuilder( 64 );
 				ActiveAttribType type;
-				GL.GetActiveAttrib( program, i, 32, out len, out size, out type, builder );
+				GL.GetActiveAttrib( program, i, 32, &len, &size, &type, builder );
 				Console.WriteLine( i + " : " + type + ", " + builder );
 			}
 		}
 		
-		public void PrintAllUniforms( int program ) {
+		public unsafe void PrintAllUniforms( int program ) {
 			int numUniforms;
-			GL.GetProgram( program, ProgramParameter.ActiveUniforms, out numUniforms );
+			GL.GetProgram( program, ProgramParameter.ActiveUniforms, &numUniforms );
 			for( int i = 0; i < numUniforms; i++ ) {
 				int len, size;
 				StringBuilder builder = new StringBuilder( 64 );
 				ActiveUniformType type;
-				GL.GetActiveUniform( program, i, 32, out len, out size, out type, builder );
+				GL.GetActiveUniform( program, i, 32, &len, &size, &type, builder );
 				Console.WriteLine( i + " : " + type + ", " + builder );
 			}
 		}
