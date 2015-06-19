@@ -1,4 +1,4 @@
-ClassicalSharp is a custom MineCraft Classic client written in C#. 
+ClassicalSharp is a custom MineCraft Classic client written in C# that works with Windows and Linux.
 It is not affiliated with (or supported by) Mojang AB, MineCraft, or Microsoft in any way.
 
 You can get the latest binaries from github.com/UnknownShadow200/ClassicalSharp/releases
@@ -13,9 +13,12 @@ It does not:
 * Provide single-player support.
 
 === Requirements ===
-* either A) The .NET Framework 2.0. 
-  (Windows Vista and later already have this built in)
-* or B) In theory, Mono (I haven't tested though) should also work.
+* Windows: The .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
+* Linux: Mono. (Not completely tested, but does work)
+* Mac OS X: Mono. (Not tested at all yet - may just crash)
+
+* When building from source and targeting Mono, you must either use the Mono compiler or
+define '__MonoCS__' when building, otherwise you will get runtime errors when decompressing the map.
 
 === Instructions ===
 To use ClassicalSharp, you can either
