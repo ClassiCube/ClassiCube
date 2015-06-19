@@ -235,14 +235,52 @@ void main() {
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
-			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
-			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );			
 		}
 			
 		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );
+		}
+	}
+	
+	public sealed class MapDepthPassShader : Shader {
+		
+		public MapDepthPassShader() {
+			VertexSource = @"
+#version 130
+in vec3 in_position;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+}";
+			
+			FragmentSource = @"
+#version 130
+in float out_test;
+out vec4 final_colour;
+
+void main() {
+   final_colour = vec4(1.0, 1.0, 1.0, 1.0);
+}";	
+		}
+		
+		public int positionLoc;
+		public int mvpLoc;
+		protected override void GetLocations( OpenGLApi api ) {			
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );	
+		}
+			
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
 		}
 	}
 }

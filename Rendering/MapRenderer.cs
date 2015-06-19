@@ -26,10 +26,12 @@ namespace ClassicalSharp {
 		}
 		
 		public Game Window;
-		public OpenGLApi Graphics;
+		public OpenGLApi api;
 		
 		int _1Dcount = 1;
 		ChunkMeshBuilder builder;
+		MapShader shader;
+		MapDepthPassShader lShader;
 		
 		int width, height, length;
 		ChunkInfo[] chunks, unsortedChunks;
@@ -40,8 +42,16 @@ namespace ClassicalSharp {
 			Window = window;
 			_1Dcount = window.TerrainAtlas1D.TexIds.Length;
 			builder = new ChunkMeshBuilder( window );
-			Graphics = window.Graphics;
+			api = window.Graphics;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
+		}
+		
+		public void Init() {
+			shader = new MapShader();
+			shader.Init( api );
+			lShader = new MapDepthPassShader();
+			lShader.Init( api );
+			
 			Window.TerrainAtlasChanged += TerrainAtlasChanged;
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
@@ -122,8 +132,8 @@ namespace ClassicalSharp {
 			if( parts == null ) return;
 			
 			for( int i = 0; i < parts.Length; i++ ) {
-				Graphics.DeleteVb( parts[i].VbId );
-				Graphics.DeleteIb( parts[i].IbId );
+				api.DeleteVb( parts[i].VbId );
+				api.DeleteIb( parts[i].IbId );
 			}
 			parts = null;
 		}
@@ -190,52 +200,51 @@ namespace ClassicalSharp {
 			UpdateSortOrder();
 			UpdateChunks();
 			int[] texIds = Window.TerrainAtlas1D.TexIds;
+			api.UseProgram( shader.ProgramId );
+			api.SetUniform( shader.mvpLoc, ref Window.MVP );
+			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
+			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
+			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.
-			Graphics.BeginIndexedVbBatch();
-			Graphics.Texturing = true;
-			Graphics.AlphaTest = true;
-			Graphics.FaceCulling = true;
+			api.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
+				api.Bind2DTexture( texIds[batch] );
 				RenderSolidBatch( batch );
 			}
-			Graphics.FaceCulling = false;
+			api.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
+				api.Bind2DTexture( texIds[batch] );
 				RenderSpriteBatch( batch );
 			}
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
-			Graphics.EndIndexedVbBatch();
+			api.UseProgram( 0 );
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
-			Graphics.BeginIndexedVbBatch();
-			Graphics.Texturing = false;
-			Graphics.AlphaBlending = false;
-			
+			api.UseProgram( lShader.ProgramId );
+			api.SetUniform( lShader.mvpLoc, ref Window.MVP );
+			api.AlphaBlending = false;
 			// First fill depth buffer
-			Graphics.ColourWrite = false;
+			api.ColourWrite = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				RenderTranslucentBatchNoAdd( batch );
+				RenderTranslucentBatchDepthPass( batch );
 			}
+			
 			// Then actually draw the transluscent blocks
-			Graphics.AlphaBlending = true;
-			Graphics.Texturing = true;
-			Graphics.ColourWrite = true;
+			api.UseProgram( shader.ProgramId );
+			api.AlphaBlending = true;
+			api.ColourWrite = true;
 			//Graphics.DepthWrite = false; TODO: test if this makes a difference.
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
+				api.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
 			//Graphics.DepthWrite = true;
-			Graphics.AlphaTest = false;
-			Graphics.AlphaBlending = false;
-			Graphics.Texturing = false;
-			Graphics.EndIndexedVbBatch();
+			api.AlphaBlending = false;
+			api.UseProgram( 0 );
 		}
 
 		int[] distances;
@@ -282,6 +291,7 @@ namespace ClassicalSharp {
 		}
 		
 		const DrawMode mode = DrawMode.Triangles;
+		const int stride = VertexPos3fTex2fCol4b.Size;
 		const int maxVertex = 65536;
 		const int maxIndices = maxVertex / 4 * 6;
 		void RenderSolidBatch( int batch ) {
@@ -292,10 +302,10 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.SolidParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 					Window.Vertices += part.IndicesCount;
 				}
@@ -309,7 +319,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.SpriteParts[batch];
 				if( part.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+					shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					Window.Vertices += part.IndicesCount;
 				}
 			}
@@ -323,17 +333,17 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 					Window.Vertices += part.IndicesCount;
 				}
 			}
 		}
 		
-		void RenderTranslucentBatchNoAdd( int batch ) {
+		void RenderTranslucentBatchDepthPass( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.TranslucentParts == null || !info.Visible ) continue;
@@ -341,10 +351,10 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 				}
 			}

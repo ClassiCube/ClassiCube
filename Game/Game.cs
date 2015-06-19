@@ -154,6 +154,7 @@ namespace ClassicalSharp {
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
 			Culling = new FrustumCulling();
+			MapRenderer.Init();
 			EnvRenderer.Init();
 			MapEnvRenderer.Init();
 			Picking = new PickingRenderer( this );
