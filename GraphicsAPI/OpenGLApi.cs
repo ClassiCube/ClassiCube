@@ -12,7 +12,7 @@ using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	public class OpenGLApi : IGraphicsApi {
+	public partial class OpenGLApi : IGraphicsApi {
 		
 		int textureDimensions;
 		const string vboExt = "GL_ARB_vertex_buffer_object";

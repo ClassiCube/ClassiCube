@@ -119,6 +119,7 @@
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
+    <Compile Include="GraphicsAPI\ModernGLApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
