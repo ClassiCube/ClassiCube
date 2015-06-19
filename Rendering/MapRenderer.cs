@@ -226,11 +226,12 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlending = true;
 			Graphics.Texturing = true;
 			Graphics.ColourWrite = true;
+			//Graphics.DepthWrite = false; TODO: test if this makes a difference.
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			
+			//Graphics.DepthWrite = true;
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;

@@ -2,10 +2,13 @@
 using System;
 using System.Drawing;
 using System.IO;
+#if __MonoCS__
+using Ionic.Zlib;
+#else
 using System.IO.Compression;
+#endif
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using ClassicalSharp.Network;
 using OpenTK;
 
@@ -288,7 +291,13 @@ namespace ClassicalSharp {
 						}
 						receivedFirstPosition = false;
 						gzipHeader = new GZipHeaderReader();
+						// Workaround because built in mono stream assumes that the end of stream
+						// has been reached the first time a read call returns 0. (MS.NET doesn't)
+						#if __MonoCS__
+						gzipStream = new DeflateStream( gzippedMap, true );
+						#else
 						gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
+						#endif
 						mapSizeIndex = 0;
 						mapIndex = 0;
 						receiveStart = DateTime.UtcNow;
@@ -330,7 +339,7 @@ namespace ClassicalSharp {
 						Window.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
 						Window.RaiseOnNewMapLoaded();
 						map = null;
-						gzipStream.Dispose();
+						gzipStream.Close();
 						if( sendWomId && !sentWomId ) {
 							SendChat( "/womid WoMClient-2.0.6" );
 							sentWomId = true;
