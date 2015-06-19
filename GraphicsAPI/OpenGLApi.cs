@@ -196,9 +196,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		PolygonMode[] fillModes = { PolygonMode.Point, PolygonMode.Line, PolygonMode.Fill };
-		public override void SetFillType( FillType type ) {
-			GL.PolygonMode( MaterialFace.FrontAndBack, fillModes[(int)type] );
+		public override void SetFillType( FillType type ) {;
 		}
 		
 		#region Vertex buffers
@@ -214,21 +212,21 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, &id );
+			GL.GenBuffers( 1, &id );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageArb.DynamicDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
 		public unsafe override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, &id );
+			GL.GenBuffers( 1, &id );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			#if TRACK_RESOURCES
 			vbs.Add( id, Environment.StackTrace );
 			#endif
@@ -237,20 +235,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override int InitIb( ushort[] indices, int indicesCount ) {
 			int id = 0;
-			GL.Arb.GenBuffers( 1, &id );
+			GL.GenBuffers( 1, &id );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, id );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, id );
 			fixed( ushort* ptr = indices ) {
-				GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageArb.StaticDraw );
+				GL.BufferData( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
 			}
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
 			return id;
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
-			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
 			BeginVbBatch( format );
 			DrawVbBatch( mode, vb, 0, count );
@@ -259,7 +257,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
-			GL.Arb.DeleteBuffers( 1, &id );
+			GL.DeleteBuffers( 1, &id );
 		}
 		
 		public unsafe override void DeleteVb( int id ) {
@@ -267,20 +265,20 @@ namespace ClassicalSharp.GraphicsAPI {
 			#if TRACK_RESOURCES
 			vbs.Remove( id );
 			#endif
-			GL.Arb.DeleteBuffers( 1, &id );
+			GL.DeleteBuffers( 1, &id );
 		}
 		
 		public unsafe override void DeleteIb( int id ) {
 			if( id <= 0 ) return;
-			GL.Arb.DeleteBuffers( 1, &id );
+			GL.DeleteBuffers( 1, &id );
 		}
 		
 		public override bool IsValidVb( int vb ) {
-			return GL.Arb.IsBuffer( vb );
+			return GL.IsBuffer( vb );
 		}
 		
 		public override bool IsValidIb( int ib ) {
-			return GL.Arb.IsBuffer( ib );
+			return GL.IsBuffer( ib );
 		}
 		
 		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
@@ -327,8 +325,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
 		                                        int startVertex, int startIndex ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, vb );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, ib );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
 			
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( offset ) );
@@ -338,30 +336,30 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void EndVbBatch() {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 		}
 		
 		public override void EndIndexedVbBatch() {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, 0 );
-			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
 		}
 		
 		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
 			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
 		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
 			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
 		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
 			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
 			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
@@ -402,26 +400,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
 			fixed( Single* ptr = &matrix.Row0.X )
 				GL.MultMatrix( ptr );
-		}
-		
-		public override void Translate( float x, float y, float z ) {
-			GL.Translate( x, y, z );
-		}
-		
-		public override void RotateX( float degrees ) {
-			GL.Rotate( degrees, 1f, 0f, 0f );
-		}
-		
-		public override void RotateY( float degrees ) {
-			GL.Rotate( degrees, 0f, 1f, 0f );
-		}
-		
-		public override void RotateZ( float degrees ) {
-			GL.Rotate( degrees, 0f, 0f, 1f );
-		}
-		
-		public override void Scale( float x, float y, float z ) {
-			GL.Scale( x, y, z );
 		}
 		
 		#endregion
@@ -489,18 +467,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		static void ToggleCap( EnableCap cap, bool value ) {
 			if( value ) GL.Enable( cap );
 			else GL.Disable( cap );
-		}
-		
-		public void SaveTexture( int texId, int width, int height, string path ) {
-			GL.Enable( EnableCap.Texture2D );
-			GL.BindTexture( TextureTarget.Texture2D, texId );
-			using( Bitmap bmp = new Bitmap( width, height, BmpPixelFormat.Format32bppArgb ) ) {
-				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-					GL.GetTexImage( TextureTarget.Texture2D, 0, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
-				}
-				bmp.Save( path );
-			}
-			GL.Disable( EnableCap.Texture2D );
 		}
 
 		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
