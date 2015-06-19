@@ -148,6 +148,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
 		}
 		
+		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public void DrawModernIndexedVb( DrawMode mode, int vb, int ib, int indicesCount,
 		                                int startVertex, int startIndex ) {
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;

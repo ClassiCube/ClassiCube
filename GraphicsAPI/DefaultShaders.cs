@@ -246,6 +246,65 @@ void main() {
 		}
 	}
 	
+	public sealed class MapEnvShader : Shader {
+		
+		public MapEnvShader() {
+			VertexSource = @"
+#version 130
+--IMPORT pos3fTex2fCol4b_uniforms
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_texcoords = in_texcoords;
+   out_colour = in_colour;
+}";
+			
+			FragmentSource = @"
+#version 130
+in vec2 out_texcoords;
+in vec4 out_colour;
+out vec4 final_colour;
+uniform sampler2D texImage;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;   
+--IMPORT fog_code
+   final_colour = finalColour;
+}";	
+		}
+		
+		public int positionLoc, texCoordsLoc, colourLoc;
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
+		public int texImageLoc;
+		protected override void GetLocations( OpenGLApi api ) {			
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			
+			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
+			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
+			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );			
+		}
+			
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+			api.DisableVertexAttrib( colourLoc );
+		}
+	}
+	
 	public sealed class MapDepthPassShader : Shader {
 		
 		public MapDepthPassShader() {

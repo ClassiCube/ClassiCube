@@ -9,7 +9,8 @@ namespace ClassicalSharp {
 		
 		public Map Map;
 		public Game Window;
-		public OpenGLApi Graphics;
+		public OpenGLApi api;
+		MapEnvShader shader;
 		
 		public MapEnvRenderer( Game window ) {
 			Window = window;
@@ -20,12 +21,6 @@ namespace ClassicalSharp {
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices, index;
 		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgesCol = FastColour.White;
-		bool legacy = false;
-		
-		public void SetUseLegacyMode( bool legacy ) {
-			this.legacy = legacy;
-			ResetSidesAndEdges( null, null );
-		}
 		
 		public void Init() {
 			Window.OnNewMap += OnNewMap;
@@ -34,19 +29,26 @@ namespace ClassicalSharp {
 			Window.ViewDistanceChanged += ResetSidesAndEdges;
 			Window.TerrainAtlasChanged += ResetTextures;
 			
-			Graphics = Window.Graphics;
+			api = Window.Graphics;
 			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 			ResetSidesAndEdges( null, null );
+			shader = new MapEnvShader();
+			shader.Init( api );
 		}
 
 		public void RenderMapSides( double deltaTime ) {
 			if( sidesVboId == -1 ) return;
 			
-			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( sideTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, sidesVboId, 0, sidesVertices );
-			Graphics.Texturing = false;
+			api.UseProgram( shader.ProgramId );
+			api.SetUniform( shader.mvpLoc, ref Window.MVP );
+			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
+			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
+			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
+			
+			api.Bind2DTexture( sideTexId );
+			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );
 		}
 		
 		public void RenderMapEdges( double deltaTime ) {
@@ -55,12 +57,10 @@ namespace ClassicalSharp {
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			if( Window.LocalPlayer.EyePosition.Y < 0 ) return;
 			
-			Graphics.Texturing = true;
-			Graphics.AlphaBlending = true;
-			Graphics.Bind2DTexture( edgeTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, edgesVboId, 0, edgesVertices );
-			Graphics.AlphaBlending = false;
-			Graphics.Texturing = false;
+			api.AlphaBlending = true;
+			api.Bind2DTexture( edgeTexId );
+			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, edgesVboId, 0, edgesVertices );
+			api.AlphaBlending = false;
 		}
 		
 		public void Dispose() {
@@ -70,16 +70,16 @@ namespace ClassicalSharp {
 			Window.ViewDistanceChanged -= ResetSidesAndEdges;
 			Window.TerrainAtlasChanged -= ResetTextures;
 			
-			Graphics.DeleteTexture( ref edgeTexId );
-			Graphics.DeleteTexture( ref sideTexId );
-			Graphics.DeleteVb( sidesVboId );
-			Graphics.DeleteVb( edgesVboId );
+			api.DeleteTexture( ref edgeTexId );
+			api.DeleteTexture( ref sideTexId );
+			api.DeleteVb( sidesVboId );
+			api.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
-			Graphics.DeleteVb( sidesVboId );
-			Graphics.DeleteVb( edgesVboId );
+			api.DeleteVb( sidesVboId );
+			api.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
 			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
@@ -114,22 +114,14 @@ namespace ClassicalSharp {
 		
 		void RebuildSides() {
 			index = 0;
-			Graphics.DeleteVb( sidesVboId );
-			if( legacy ) {
-				RebuildSidesLegacy( Map.GroundHeight );
-			} else {
-				RebuildSidesModern( Map.GroundHeight );
-			}
+			api.DeleteVb( sidesVboId );
+			RebuildSidesModern( Map.GroundHeight );
 		}
 		
 		void RebuildEdges() {
 			index = 0;
-			Graphics.DeleteVb( edgesVboId );
-			if( legacy ) {
-				RebuildEdgesLegacy( Map.WaterHeight );
-			} else {
-				RebuildEdgesModern( Map.WaterHeight );
-			}
+			api.DeleteVb( edgesVboId );
+			RebuildEdgesModern( Map.WaterHeight );
 		}
 		
 		// |-----------|
@@ -161,7 +153,7 @@ namespace ClassicalSharp {
 			DrawZPlane( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices  );			
-			sidesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			sidesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		void RebuildEdgesModern( int waterLevel ) {
@@ -171,88 +163,7 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
 			}			
-			edgesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		#endregion
-		
-		#region Legacy
-		
-		void RebuildSidesLegacy( int groundLevel ) {
-			sidesVertices = 0;
-			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
-			}
-			sidesVertices += Utils.CountVertices( Map.Width, Map.Length, axisSize ); // YPlane beneath map
-			sidesVertices += Utils.CountVertices( Map.Width, groundLevel, axisSize ) * 2; // ZPlanes
-			sidesVertices += Utils.CountVertices( Map.Length, groundLevel, axisSize ) * 2; // XPlanes
-			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[sidesVertices];
-			
-			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				DrawYPlaneParts( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, sidesCol, vertices );
-			}
-			DrawYPlaneParts( 0, 0, Map.Width, Map.Length, 0, sidesCol, vertices );
-			DrawZPlaneParts( 0, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
-			DrawZPlaneParts( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
-			DrawXPlaneParts( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
-			DrawXPlaneParts( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
-			sidesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		void RebuildEdgesLegacy( int waterLevel ) {
-			edgesVertices = 0;
-			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
-			}
-			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[edgesVertices];
-			
-			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
-				DrawYPlaneParts( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
-			}
-			edgesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		const int axisSize = 128;	
-		void DrawXPlaneParts( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int endZ = z2, endY = y2, startY = y1;
-			for( ; z1 < endZ; z1 += axisSize ) {
-				z2 = z1 + axisSize;
-				if( z2 > endZ ) z2 = endZ;
-				y1 = startY;
-				for( ; y1 < endY; y1 += axisSize ) {
-					y2 = y1 + axisSize;
-					if( y2 > endY ) y2 = endY;
-					DrawXPlane( x, z1, z2, y1, y2, col, vertices );
-				}
-			}
-		}
-		
-		void DrawZPlaneParts( int z, int x1, int x2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int endX = x2, endY = y2, startY = y1;
-			for( ; x1 < endX; x1 += axisSize ) {
-				x2 = x1 + axisSize;
-				if( x2 > endX ) x2 = endX;
-				y1 = startY;
-				for( ; y1 < endY; y1 += axisSize ) {
-					y2 = y1 + axisSize;
-					if( y2 > endY ) y2 = endY;
-					DrawZPlane( z, x1, x2, y1, y2, col, vertices );
-				}
-			}
-		}
-		
-		void DrawYPlaneParts( int x1, int z1, int x2, int z2, int y, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
-			int endX = x2, endZ = z2, startZ = z1;
-			for( ; x1 < endX; x1 += axisSize ) {
-				x2 = x1 + axisSize;
-				if( x2 > endX ) x2 = endX;
-				z1 = startZ;
-				for( ; z1 < endZ; z1 += axisSize ) {
-					z2 = z1 + axisSize;
-					if( z2 > endZ ) z2 = endZ;
-					DrawYPlane( x1, z1, x2, z2, y, col, vertices );
-				}
-			}
+			edgesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		#endregion

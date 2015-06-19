@@ -309,19 +309,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			drawBatchFunc( mode, id, startVertex, verticesCount );
 		}
 		
-		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
-		public void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
-		                                        int startVertex, int startIndex ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
-			
-			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( offset ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( offset + 16 ) );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
-		}
-		
 		public void EndVbBatch() {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			GL.DisableClientState( ArrayCap.VertexArray );
@@ -333,11 +320,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
 				GL.DisableClientState( ArrayCap.ColorArray );
 			}
-		}
-		
-		public void EndIndexedVbBatch() {
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
-			EndVbBatch();
 		}
 		
 		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int offset, int verticesCount ) {

@@ -72,14 +72,14 @@ namespace ClassicalSharp.Commands {
 				ReadHexColourAnd( reader, c => Window.Map.SetSkyColour( c ) );
 			} else if( Utils.CaselessEquals( property, "fogcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetFogColour( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudscol" ) 
+			} else if( Utils.CaselessEquals( property, "cloudscol" )
 			          || Utils.CaselessEquals( property, "cloudcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetCloudsColour( c ) );
 			} else if( Utils.CaselessEquals( property, "suncol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetSunlight( c ) );
 			} else if( Utils.CaselessEquals( property, "shadowcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetShadowlight( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudsspeed" ) 
+			} else if( Utils.CaselessEquals( property, "cloudsspeed" )
 			          || Utils.CaselessEquals( property, "cloudspeed" ) ) {
 				float speed;
 				if( !reader.NextFloat( out speed ) ) {
@@ -123,7 +123,7 @@ namespace ClassicalSharp.Commands {
 					"&eDisplays the help (if available) for the given command.",
 				};
 			}
-		}		
+		}
 		
 		public override void Execute( CommandReader reader ) {
 			string commandName = reader.Next();
@@ -154,7 +154,7 @@ namespace ClassicalSharp.Commands {
 					"&bproperties: &epos, target, dimensions, jumpheight, viewdist",
 				};
 			}
-		}	
+		}
 		
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
@@ -205,8 +205,7 @@ namespace ClassicalSharp.Commands {
 				return new [] {
 					"&a/client rendertype [normal/legacy/legacyfast]",
 					"&bnormal: &eDefault renderer, with all environmental effects enabled.",
-					"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+					"&bfast: &eMay be slightly slower than normal, but produces the same environmental effects.",
 				};
 			}
 		}
@@ -215,32 +214,24 @@ namespace ClassicalSharp.Commands {
 			string property = reader.Next();
 			if( property == null ) {
 				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
-			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
-				SetNewRenderType( true, true, true );
-				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
-			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
-				SetNewRenderType( true, false, true );
-				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
+			} else if( Utils.CaselessEquals( property, "fast" ) ) {
+				SetNewRenderType( true );
+				Window.AddChat( "&e/client rendertype: &fRender type is now fast." );
 			} else if( Utils.CaselessEquals( property, "normal" ) ) {
-				SetNewRenderType( false, false, false );
+				SetNewRenderType( false );
 				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
 		}
 		
-		void SetNewRenderType( bool legacy, bool minimal, bool legacyEnv ) {
+		void SetNewRenderType( bool minimal ) {
 			Game game = Window;
-			game.MapEnvRenderer.SetUseLegacyMode( legacy );			
+			game.EnvRenderer.Dispose();
 			if( minimal ) {
-				game.EnvRenderer.Dispose();
 				game.EnvRenderer = new MinimalEnvRenderer( game );
-				game.EnvRenderer.Init();
 			} else {
-				if( !( game.EnvRenderer is StandardEnvRenderer ) ) {
-					game.EnvRenderer.Dispose();
-					game.EnvRenderer = new StandardEnvRenderer( game );
-					game.EnvRenderer.Init();
-				}
+				game.EnvRenderer = new StandardEnvRenderer( game );
 			}
+			game.EnvRenderer.Init();
 		}
 	}
 	
