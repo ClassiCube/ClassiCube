@@ -16,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 			graphics = window.Graphics;
 			shader = new PickingShader();
 			shader.Initialise( graphics );
-			vb = graphics.CreateEmptyDynamicVb( VertexFormat.VertexPos3, verticesCount );
+			vb = graphics.CreateEmptyDynamicVb( Vector3.SizeInBytes, verticesCount );
 		}
 		
 		int index = 0;
@@ -66,7 +66,7 @@ namespace ClassicalSharp.Renderers {
 				graphics.UseProgram( shader.ProgramId );
 				graphics.SetUniform( shader.mvpLoc, ref window.mvp );
 				graphics.BindVb( vb );
-				graphics.UpdateDynamicVb( vb, vertices, VertexFormat.VertexPos3 );
+				graphics.UpdateDynamicVb( vb, vertices, Vector3.SizeInBytes );
 				shader.DrawVb( graphics, vb, verticesCount, DrawMode.Triangles );
 			}
 		}

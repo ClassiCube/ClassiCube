@@ -197,35 +197,60 @@ void main() {
 		
 		public MapShader() {
 			VertexSource = @"
-#version 120
-attribute vec3 in_position;
-attribute vec2 in_texcoords;
-attribute vec4 in_colour;
-varying vec2 out_texcoords;
-varying vec4 out_colour;
+#version 130
+in vec3 in_position;
+in vec2 in_texcoords;
+in uint in_colour;
+in uint in_block;
+smooth out vec2 out_texcoords;
+flat out uint out_colour;
+flat out uint out_block;
 uniform mat4 MVP;
+uniform float worldTime;
 
 void main() {
    gl_Position = MVP * vec4(in_position, 1.0);
+   if(in_block == 18u) {
+      gl_Position.x += sin(worldTime) * 0.25 * fract( in_position.y / 2.0 );
+   }
    out_texcoords = in_texcoords;
    out_colour = in_colour;
+   out_block = in_block;
 }";
 			
 			FragSource = @"
-#version 120
-varying vec2 out_texcoords;
-varying vec4 out_colour;
+#version 130
+smooth in vec2 out_texcoords;
+flat in uint out_colour;
+flat in uint out_block;
 uniform sampler2D texImage;
 uniform vec4 fogColour;
 uniform float fogEnd;
 uniform float fogDensity;
 uniform float fogMode;
+const vec4 lightCols[8] = vec4[8](
+	vec4(1.0, 1.0, 1.0, 1.0 ),
+	vec4(0.6, 0.6, 0.6, 1.0 ),
+	
+	vec4(0.6, 0.6, 0.6, 1.0 ),
+	vec4(0.36, 0.36, 0.36, 1.0 ),
+	
+	vec4(0.8, 0.8, 0.8, 1.0 ),
+	vec4(0.48, 0.48, 0.48, 1.0 ),
+	
+	vec4(0.5, 0.5, 0.5, 1.0 ),
+	vec4(0.3, 0.3, 0.3, 1.0 )
+);
 
 void main() {
-   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;
+   vec4 finalColour = texture2D(texImage, out_texcoords) * lightCols[out_colour];
    if(finalColour.a < 0.5) {
       discard;
    }
+   if(out_block == 18u) {
+      finalColour.g += 0.0001;
+   }
+   
    if(fogMode != 0) {
       float alpha = finalColour.a;
       float depth = (gl_FragCoord.z / gl_FragCoord.w);
@@ -244,15 +269,17 @@ void main() {
 }";	
 		}
 		
-		public int positionLoc, texCoordsLoc, colourLoc;
+		public int positionLoc, texCoordsLoc, colourLoc, tileLoc;
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
-		public int texImageLoc;
+		public int texImageLoc, worldTimeLoc;
 		protected override void BindParameters( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			tileLoc = api.GetAttribLocation( ProgramId, "in_block" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			worldTimeLoc = api.GetUniformLocation( ProgramId, "worldTime" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
 			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
@@ -265,13 +292,15 @@ void main() {
 			graphics.BindVb( vbId );
 			graphics.EnableAndSetVertexAttribPointerF( positionLoc, 3, stride, 0 );
 			graphics.EnableAndSetVertexAttribPointerF( texCoordsLoc, 2, stride, 12 );
-			graphics.EnableAndSetVertexAttribPointer( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			graphics.EnableAndSetVertexAttribPointer( colourLoc, 1, VertexAttribType.UInt8, true, stride, 20 );
+			graphics.EnableAndSetVertexAttribPointer( tileLoc, 1, VertexAttribType.UInt8, true, stride, 21 );
 			
 			graphics.DrawVb( mode, 0, verticesCount );
 			
 			graphics.DisableVertexAttribArray( positionLoc );
 			graphics.DisableVertexAttribArray( texCoordsLoc );
 			graphics.DisableVertexAttribArray( colourLoc );
+			graphics.DisableVertexAttribArray( tileLoc );
 		}
 	}
 	

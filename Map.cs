@@ -20,8 +20,11 @@ namespace ClassicalSharp {
 		public Block SidesBlock = Block.Bedrock, EdgeBlock = Block.StillWater;
 		public int WaterHeight;
 		public FastColour SkyCol = DefaultSkyColour, FogCol = DefaultFogColour, CloudsCol = DefaultCloudsColour;
-		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
-		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		//public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
+		//public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		public FastColour SunlightCol, ShadowlightCol;
+		public const int Sunlight = 0, Shadowlight = 1, SunlightXSide = 2, ShadowlightXSide = 3,
+		SunlightZSide = 4, ShadowlightZSide = 5, SunlightYBottom = 6, ShadowlightYBottom = 7;
 		
 		public int GroundHeight {
 			get { return WaterHeight - 2; }
@@ -80,14 +83,14 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetSunlight( FastColour value ) {
-			Sunlight = value;
-			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
+			SunlightCol = value;
+			//AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
 			Window.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
 		}
 		
 		public void SetShadowlight( FastColour value ) {
-			Shadowlight = value;
-			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
+			ShadowlightCol = value;
+			//AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
 			Window.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
 		

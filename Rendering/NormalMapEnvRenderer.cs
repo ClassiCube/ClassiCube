@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			DrawXPlane( 0, 0, Map.Length, groundLevel, sidesCol, vertices );
 			DrawXPlane( Map.Width, 0, Map.Length, groundLevel, sidesCol, vertices  );
 			
-			sidesVboId = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			sidesVboId = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 			index = 0;
 		}
 		
@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
 			}
 			
-			edgesVboId = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			edgesVboId = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 			index = 0;
 		}
 		

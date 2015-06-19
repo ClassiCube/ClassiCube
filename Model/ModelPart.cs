@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public ModelPart( VertexPos3fTex2fCol4b[] vertices, int count, OpenGLApi graphics ) {
 			Count = count;
 			Graphics = graphics;
-			VbId = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b, count );
+			VbId = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size, count );
 		}
 		
 		public void Render( MapShader shader ) {

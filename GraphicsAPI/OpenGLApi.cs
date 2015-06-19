@@ -175,95 +175,65 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#region Vertex buffers
 		
-		#if TRACK_RESOURCES
-		Dictionary<int, string> vbs = new Dictionary<int, string>();
-		Dictionary<int, int> vbMemorys = new Dictionary<int, int>();
-		long totalVbMem = 0;
-		Dictionary<int, int> indexedVbMemorys = new Dictionary<int, int>();
-		long totalIndexedVbMem = 0;
-		#endif
-		
-		public int InitVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct {
-			return CreateVb( vertices, format, count, BufferUsageArb.StaticDraw );
+		public int InitVb<T>( T[] vertices, int stride, int count ) where T : struct {
+			return CreateVb( vertices, stride, count, BufferUsageArb.StaticDraw );
 		}
 		
-		public int InitDynamicVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct {
-			return CreateVb( vertices, format, count, BufferUsageArb.StreamDraw );
+		public int InitDynamicVb<T>( T[] vertices, int stride, int count ) where T : struct {
+			return CreateVb( vertices, stride, count, BufferUsageArb.DynamicDraw );
 		}
 		
-		public int CreateEmptyDynamicVb(VertexFormat format, int capacity ) {
-			return CreateEmptyVb( format, capacity, BufferUsageArb.StreamDraw );
+		public int CreateEmptyDynamicVb( int stride, int capacity ) {
+			return CreateEmptyVb( stride, capacity, BufferUsageArb.DynamicDraw );
 		}
 		
-		public void UpdateDynamicVb<T>( int id, T[] vertices, VertexFormat format ) where T : struct {
+		public void UpdateDynamicVb<T>( int id, T[] vertices, int stride ) where T : struct {
 			// TODO: Is it better to 
 			// BindBuffer(null), then BindBuffer(vertices) ?
-			int sizeInBytes = GetSizeInBytes( vertices.Length, format );
+			int sizeInBytes = vertices.Length * stride;
 			//GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
 			GL.Arb.BufferSubData( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 		}
 		
-		int CreateVb<T>( T[] vertices, VertexFormat format, int count, BufferUsageArb usage ) where T : struct {
+		int CreateVb<T>( T[] vertices, int stride, int count, BufferUsageArb usage ) where T : struct {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
-			int sizeInBytes = GetSizeInBytes( count, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, usage );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( count * stride ), vertices, usage );
 			return id;
 		}
 		
-		int CreateEmptyVb( VertexFormat format, int capacity, BufferUsageArb usage ) {
+		int CreateEmptyVb( int stride, int capacity, BufferUsageArb usage ) {
 			int id = 0;
 			GL.Arb.GenBuffers( 1, out id );
-			int sizeInBytes = GetSizeInBytes( capacity, format );
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, id );
-			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, usage );
+			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( capacity * stride ), IntPtr.Zero, usage );
 			return id;
 		}
 		
-		public IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, VertexFormat format, 
+		public IndexedVbInfo InitIndexedVb<T>( T[] vertices, int verticesCount, int stride, 
 		                                      ushort[] indices, int elements ) where T : struct {
 			IndexedVbInfo info = new IndexedVbInfo( 0, 0 );
 			GL.Arb.GenBuffers( 2, out info.VbId );
 			
-			int sizeInBytes = GetSizeInBytes( verticesCount, format );
+			int sizeInBytes = verticesCount * stride;
 			GL.Arb.BindBuffer( BufferTargetArb.ArrayBuffer, info.VbId );
 			GL.Arb.BufferData( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageArb.StaticDraw );
 			
 			sizeInBytes = elements * sizeof( ushort );
 			GL.Arb.BindBuffer( BufferTargetArb.ElementArrayBuffer, info.IbId );
 			GL.Arb.BufferData( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageArb.StaticDraw );
-			#if TRACK_RESOURCES
-			indexedVbMemorys.Add( info.VbId, sizeInBytes + GetSizeInBytes( verticesCount, format ) );
-			totalIndexedVbMem += sizeInBytes + GetSizeInBytes( verticesCount, format );
-			Console.WriteLine( "INDEXED VB MEM " + ( totalIndexedVbMem / 1024.0 / 1024.0 ) );
-			#endif
 			return info;
 		}
 		
 		public void DeleteVb( int id ) {
 			if( id <= 0 ) return;
-			#if TRACK_RESOURCES
-			vbs.Remove( id );
-			int mem;
-			if( vbMemorys.TryGetValue( id, out mem ) ) {
-				totalVbMem -= mem;
-			}
-			vbMemorys.Remove( id );
-			#endif
 			GL.Arb.DeleteBuffers( 1, ref id );
 		}
 		
 		public void DeleteIndexedVb( IndexedVbInfo id ) {
 			if( id.VbId <= 0 || id.IbId <= 0 ) return;
 			GL.Arb.DeleteBuffers( 2, ref id.VbId );
-			#if TRACK_RESOURCES
-			int mem;
-			if( indexedVbMemorys.TryGetValue( id.VbId, out mem ) ) {
-				totalIndexedVbMem -= mem;
-			}
-			indexedVbMemorys.Remove( id.VbId );
-			#endif
 		}
 		
 		public void BindVb( int vb ) {
@@ -283,29 +253,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		#endregion
-		
-		#if TRACK_RESOURCES
-		public void CheckResources() {
-			if( textures.Count > 0 ) {
-				foreach( var pair in textures ) {
-					Console.WriteLine( pair.Value );
-					Console.WriteLine( "for tex id " + pair.Key );
-					Console.WriteLine( "===========" );
-				}
-			}
-			if( vbs.Count > 0 ) {
-				foreach( var pair in vbs ) {
-					Console.WriteLine( pair.Value );
-					Console.WriteLine( "for vb id " + pair.Key );
-					Console.WriteLine( "===========" );
-				}
-			}
-			Console.WriteLine( "tex " + textures.Count + ", vb" + vbs.Count );
-			if( textures.Count > 0 || vbs.Count > 0 ) {
-				System.Diagnostics.Debugger.Break();
-			}
-		}
-		#endif
 		
 		public void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + GL.GetString( StringName.Vendor ) );

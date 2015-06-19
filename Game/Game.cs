@@ -286,6 +286,7 @@ namespace ClassicalSharp {
 			Graphics.SetUniform( shader.fogDensityLoc, Graphics.FogDensity );
 			Graphics.SetUniform( shader.fogEndLoc, Graphics.FogEnd );
 			Graphics.SetUniform( shader.fogModeLoc, (int)Graphics.FogMode );
+			Graphics.SetUniform( shader.worldTimeLoc, (float)accumulator );
 			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
@@ -312,7 +313,6 @@ namespace ClassicalSharp {
 				}
 			}
 			LocalPlayer.Despawn();
-			Graphics.CheckResources();
 			AsyncDownloader.Dispose();
 			if( writer != null ) {
 				writer.Close();

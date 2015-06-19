@@ -24,25 +24,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			texture.ID = 0;
 		}
 		
-		public virtual VbInfo InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
-			return InitVb( vertices, format, vertices.Length );
+		public virtual VbInfo InitVb<T>( T[] vertices, int stride ) where T : struct {
+			return InitVb( vertices, stride, vertices.Length );
 		}
 		
-		public virtual IndexedVbInfo InitIndexedVb<T>( T[] vertices, VertexFormat format, ushort[] indices ) where T : struct {
-			return InitIndexedVb( vertices, vertices.Length, format, indices, indices.Length );
-		}
-		
-		protected int GetSizeInBytes( int count, VertexFormat format ) {
-			return count * strideSizes[(int)format];
-		}
-		protected static int[] strideSizes = new [] { 20, 16, 24, 12 };
-		
-		public void CheckResources() {
+		public virtual IndexedVbInfo InitIndexedVb<T>( T[] vertices, int stride, ushort[] indices ) where T : struct {
+			return InitIndexedVb( vertices, vertices.Length, stride, indices, indices.Length );
 		}
 		
 		internal int vb2d;
 		void Setup2DCache() {
-			vb2d = CreateEmptyDynamicVb( VertexFormat.VertexPos3fTex2fCol4b, 4 );
+			vb2d = CreateEmptyDynamicVb( VertexPos3fTex2fCol4b.Size, 4 );
 		}
 		
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
@@ -53,7 +45,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				new VertexPos3fTex2fCol4b( x, y + height, 0, -10, -10, col ),
 			};
 			BindVb( vb2d );
-			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			UpdateDynamicVb( vb2d, vertices, VertexPos3fTex2fCol4b.Size );
 			shader.DrawVb( this, vb2d, 4 );
 		}
 		
@@ -67,7 +59,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, FastColour.White ),
 			};
 			BindVb( vb2d );
-			UpdateDynamicVb( vb2d, vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			UpdateDynamicVb( vb2d, vertices, VertexPos3fTex2fCol4b.Size );
 			shader.DrawVb( this, vb2d, 4 );
 		}
 		

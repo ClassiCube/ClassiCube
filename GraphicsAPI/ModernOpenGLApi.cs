@@ -79,24 +79,28 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
 		}
 		
-		VertexAttribPointerType[] attribMappings = new VertexAttribPointerType[] {
-			VertexAttribPointerType.Float, VertexAttribPointerType.UnsignedByte,
-			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,
-			VertexAttribPointerType.Byte, VertexAttribPointerType.Short,
-			VertexAttribPointerType.Int,
-		};
-		public void SetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
-			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
-		}
-		
 		public void EnableAndSetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
 			GL.EnableVertexAttribArray( attribLoc );
 			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
 		}
 		
-		public void EnableVertexAttribArray( int attribLoc ) {
+		public void EnableAndSetVertexAttribPointerI( int attribLoc, int numComponents, VertexAttribType type, int stride, int offset ) {
 			GL.EnableVertexAttribArray( attribLoc );
+			GL.VertexAttribIPointer( attribLoc, numComponents, attribMappingsI[(int)type], stride, new IntPtr( offset ) );
 		}
+		
+		VertexAttribPointerType[] attribMappings = {
+			VertexAttribPointerType.Float, VertexAttribPointerType.UnsignedByte,
+			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,
+			VertexAttribPointerType.Byte, VertexAttribPointerType.Short,
+			VertexAttribPointerType.Int,
+		};
+		VertexAttribIPointerType[] attribMappingsI = {
+			(VertexAttribIPointerType)0, VertexAttribIPointerType.UnsignedByte,
+			VertexAttribIPointerType.UnsignedShort, VertexAttribIPointerType.UnsignedInt,
+			VertexAttribIPointerType.Byte, VertexAttribIPointerType.Short,
+			VertexAttribIPointerType.Int,
+		};
 		
 		public void DisableVertexAttribArray( int attribLoc ) {
 			GL.DisableVertexAttribArray( attribLoc );
@@ -125,11 +129,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public int GetAttribLocation( int program, string name ) {
-			return GL.GetAttribLocation( program, name );
+			int loc = GL.GetAttribLocation( program, name );
+			if( loc == -1 ) {
+				Utils.LogWarning( "Attrib not defined: " + name );
+			}
+			return loc;
 		}
 		
 		public int GetUniformLocation( int program, string name ) {
-			return GL.GetUniformLocation( program, name );
+			int loc = GL.GetUniformLocation( program, name );
+			if( loc == -1 ) {
+				Utils.LogWarning( "Uniform not defined: " + name );
+			}
+			return loc;
 		}
 		
 		public void PrintAllAttribs( int program ) {

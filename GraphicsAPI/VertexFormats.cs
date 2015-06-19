@@ -79,6 +79,27 @@ namespace ClassicalSharp {
 		}
 	}
 	
+	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
+	public struct VertexMapPacked {
+		public float X, Y, Z;
+		public float U, V;
+		public byte ColIndex;
+		public byte BlockType;
+		public byte Pad1;
+		public byte Pad2;
+		
+		public VertexMapPacked( float x, float y, float z, float u, float v, int colIndex, byte blockType ) {
+			X = x; Y = y; Z = z;
+			U = u; V = v;
+			ColIndex = (byte)colIndex;
+			BlockType = blockType;
+			Pad1 = 0;
+			Pad2 = 0;
+		}
+		
+		public const int Size = 24; // 3 * 4 + 2 * 4 + 4 * 1
+	}
+	
 	/// <summary> 3 floats for position (X, Y, Z),<br/>
 	/// 2 floats for texture coordinates (U, V)</summary>
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]

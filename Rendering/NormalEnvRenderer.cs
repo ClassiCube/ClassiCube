@@ -137,7 +137,7 @@ namespace ClassicalSharp.Renderers {
 				new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, cloudsCol ),
 				new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, cloudsCol ),
 			};
-			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			cloudsVbo = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 		
 		void ResetSky() {
@@ -158,7 +158,7 @@ namespace ClassicalSharp.Renderers {
 				new VertexPos3fTex2fCol4b( x2, y, z2, -1000, -1000, skyCol ),
 				new VertexPos3fTex2fCol4b( x1, y, z2, -1000, -1000, skyCol ),
 			};
-			skyVbo = Graphics.InitVb( vertices, VertexFormat.VertexPos3fTex2fCol4b );
+			skyVbo = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 		
 		double blendFactor( int x ) {
