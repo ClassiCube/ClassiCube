@@ -42,40 +42,28 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.UseProgram( program );
 		}
 		
-		public void SetVertexAttribPointerF( int attribLoc, int numComponents, int stride, int offset ) {
-			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
-		}
-		
-		public void EnableAndSetVertexAttribPointerF( int attribLoc, int numComponents, int stride, int offset ) {
+		public void EnableVertexAttribF( int attribLoc, int numComponents, int stride, int offset ) {
 			GL.EnableVertexAttribArray( attribLoc );
 			GL.VertexAttribPointer( attribLoc, numComponents, VertexAttribPointerType.Float, false, stride, new IntPtr( offset ) );
 		}
 		
-		VertexAttribPointerType[] attribMappings = new VertexAttribPointerType[] {
+		public void EnableVertexAttribF( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
+			GL.EnableVertexAttribArray( attribLoc );
+			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
+		}
+		
+		VertexAttribPointerType[] attribMappings = {
 			VertexAttribPointerType.Float, VertexAttribPointerType.UnsignedByte,
 			VertexAttribPointerType.UnsignedShort, VertexAttribPointerType.UnsignedInt,
 			VertexAttribPointerType.Byte, VertexAttribPointerType.Short,
 			VertexAttribPointerType.Int,
-		};
-		public void SetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
-			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
-		}
+		};	
 		
-		public void EnableAndSetVertexAttribPointer( int attribLoc, int numComponents, VertexAttribType type, bool normalise, int stride, int offset ) {
-			GL.EnableVertexAttribArray( attribLoc );
-			GL.VertexAttribPointer( attribLoc, numComponents, attribMappings[(int)type], normalise, stride, new IntPtr( offset ) );
-		}
-		
-		public void EnableVertexAttribArray( int attribLoc ) {
-			GL.EnableVertexAttribArray( attribLoc );
-		}
-		
-		public void DisableVertexAttribArray( int attribLoc ) {
+		public void DisableVertexAttrib( int attribLoc ) {
 			GL.DisableVertexAttribArray( attribLoc );
 		}
 		
-		// Booooo, no direct state access for OpenGL 2.0.
-		
+		// Booooo, no direct state access for OpenGL 2.0.	
 		public void SetUniform( int uniformLoc, float value ) {
 			GL.Uniform1( uniformLoc, value );
 		}
@@ -127,6 +115,20 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.GetActiveUniform( program, i, 32, out len, out size, out type, builder );
 				Console.WriteLine( i + " : " + type + ", " + builder );
 			}
+		}
+		
+		public void DrawModernVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
+		}
+		
+		public void DrawModernIndexedVb( DrawMode mode, int vb, int ib, int indicesCount,
+		                                        int startVertex, int startIndex ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
+			
+			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 	}
 	

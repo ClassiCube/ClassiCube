@@ -15,21 +15,12 @@ namespace ClassicalSharp.GraphicsAPI {
 	public partial class OpenGLApi : IGraphicsApi {
 		
 		int textureDimensions;
-		const string vboExt = "GL_ARB_vertex_buffer_object";
 		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
 		
 		public unsafe OpenGLApi() {
 			int texDims;
 			GL.GetInteger( GetPName.MaxTextureSize, &texDims );
 			textureDimensions = texDims;
-			string extensions = GL.GetString( StringName.Extensions );
-			
-			if( !extensions.Contains( vboExt ) ) {
-				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
-				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
-				Utils.LogWarning( "Alternatively, you can download the 'DLCompatibility build." );
-				throw new InvalidOperationException( "Cannot use OpenGL vbos." );
-			}
 			base.InitDynamicBuffers();
 			
 			drawBatchFuncCol4b = DrawVbPos3fCol4bFast;
