@@ -129,13 +129,20 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
+		public void BindModernVB( int vb ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+		}
+		
+		public void BindModernIndexedVb( int vb, int ib ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
+		}
+		
 		public void DrawModernVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {		
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {				
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
@@ -143,9 +150,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void DrawModernIndexedVb( DrawMode mode, int vb, int ib, int indicesCount,
 		                                int startVertex, int startIndex ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
-			
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}

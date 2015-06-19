@@ -16,6 +16,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public void Draw( OpenGLApi api, DrawMode mode, VertexFormat format, int vb, int startVertex, int verticesCount ) {
+			api.BindModernVB( vb );
 			EnableVertexAttribStates( api );
 			api.DrawModernVb( mode, vb, startVertex, verticesCount );
 			DisableVertexAttribStates( api );
@@ -23,12 +24,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public void DrawIndexed( OpenGLApi api, DrawMode mode, int vb, int ib, int indicesCount,
 		                               int startVertex, int startIndex ) {
+			api.BindModernIndexedVb( vb, ib );
 			EnableVertexAttribStates( api );
 			api.DrawModernIndexedVb( mode, vb, ib, indicesCount, startVertex, startIndex );
 			DisableVertexAttribStates( api );
 		}
 		
 		public void DrawDynamic<T>( OpenGLApi api, DrawMode mode, VertexFormat format, int vb, T[] vertices, int count ) where T : struct {
+			api.BindModernVB( vb );
 			EnableVertexAttribStates( api );
 			api.DrawModernDynamicVb( mode, vb, vertices, format, count );
 			DisableVertexAttribStates( api );
@@ -97,8 +100,8 @@ void main() {
 		const int stride = VertexPos3fTex2fCol4b.Size;
 		protected override void EnableVertexAttribStates( OpenGLApi api ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
-			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
-			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 20 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );		
 		}
 		
 		protected override void DisableVertexAttribStates( OpenGLApi api ) {
