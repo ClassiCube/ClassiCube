@@ -9,18 +9,31 @@ namespace ClassicalSharp.Particles {
 		
 		List<Particle> particles = new List<Particle>();
 		public Game Window;
-		public OpenGLApi Graphics;
+		public OpenGLApi api;
+		ParticleShader shader;
 		int vb;
 		
 		public ParticleManager( Game window ) {
 			Window = window;
-			Graphics = window.Graphics;
-			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
+			api = window.Graphics;			
+		}
+		
+		public void Init() {
+			vb = api.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
+			shader = new ParticleShader();
+			shader.Init( api );
 		}
 		
 		VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[0];
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
+			
+			api.UseProgram( shader.ProgramId );
+			api.SetUniform( shader.mvpLoc, ref Window.MVP );
+			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
+			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
+			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
 			
 			int count = particles.Count * 6;
 			if( count > vertices.Length ) {
@@ -30,14 +43,10 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < particles.Count; i++ ) {
 				particles[i].Render( delta, t, vertices, ref index );
 			}
-			
-			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( Window.TerrainAtlas.TexId );
-			Graphics.AlphaTest = true;
+					
 			count = Math.Min( count, 1000 );
-			Graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
+			api.Bind2DTexture( Window.TerrainAtlas.TexId );
+			shader.DrawDynamic( api, DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, count );
 		}
 		
 		public void Tick( double delta ) {
@@ -52,7 +61,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteDynamicVb( vb );
+			api.DeleteDynamicVb( vb );
 		}
 		
 		int particleId = 0;

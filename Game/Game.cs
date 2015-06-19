@@ -140,6 +140,7 @@ namespace ClassicalSharp {
 			CommandManager.Init( this );
 			SelectionManager = new SelectionManager( this );
 			ParticleManager = new ParticleManager( this );
+			ParticleManager.Init();
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
 			

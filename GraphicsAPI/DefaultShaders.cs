@@ -65,8 +65,21 @@ void main() {
 			api.DisableVertexAttrib( colourLoc );
 		}
 	}
+	
+	public abstract class FogAndMVPShader : Shader {
+		
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			
+			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
+			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
+			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );	
+		}
+	}
 
-	public sealed class PickingShader : Shader {
+	public sealed class PickingShader : FogAndMVPShader {
 		
 		public PickingShader() {
 			VertexSource = @"
@@ -91,15 +104,9 @@ void main() {
 		}
 		
 		public int positionLoc;
-		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		protected override void GetLocations( OpenGLApi api ) {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
-			
-			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
-			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );	
+			base.GetLocations( api );	
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
@@ -111,12 +118,12 @@ void main() {
 		}
 	}
 	
-	public sealed class EnvShader : Shader {
+	public sealed class EnvShader : FogAndMVPShader {
 		
 		public EnvShader() {
 			VertexSource = @"
 #version 130
---IMPORT pos3fTex2fCol4b_uniforms
+--IMPORT pos3fTex2fCol4b_attributes
 uniform mat4 MVP;
 
 void main() {
@@ -153,7 +160,6 @@ void main() {
 		}
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
-		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int sOffsetLoc, texImageLoc;
 		protected override void GetLocations( OpenGLApi api ) {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
@@ -161,13 +167,8 @@ void main() {
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
-			
-			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
-			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );		
+			base.GetLocations( api );			
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
@@ -183,12 +184,12 @@ void main() {
 		}
 	}
 	
-	public sealed class MapShader : Shader {
+	public sealed class MapShader : FogAndMVPShader {
 		
 		public MapShader() {
 			VertexSource = @"
 #version 130
---IMPORT pos3fTex2fCol4b_uniforms
+--IMPORT pos3fTex2fCol4b_attributes
 uniform mat4 MVP;
 
 void main() {
@@ -217,7 +218,6 @@ void main() {
 		}
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
-		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void GetLocations( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
@@ -225,12 +225,7 @@ void main() {
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
-			
-			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
-			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
+			base.GetLocations( api );
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
@@ -246,12 +241,70 @@ void main() {
 		}
 	}
 	
-	public sealed class MapEnvShader : Shader {
+		public sealed class ParticleShader : FogAndMVPShader {
+		
+		public ParticleShader() {
+			VertexSource = @"
+#version 130
+in vec3 in_position;
+in vec2 in_texcoords;
+out vec2 out_texcoords;
+uniform mat4 MVP;
+
+void main() {  
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_texcoords = in_texcoords;
+}";
+			
+			FragmentSource = @"
+#version 130
+in vec2 out_texcoords;
+out vec4 final_colour;
+uniform sampler2D texImage;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour = texture2D(texImage, out_texcoords);
+   if(finalColour.a < 0.5) {
+      discard;
+   }
+   
+--IMPORT fog_code
+   final_colour = finalColour;
+}";	
+		}
+		
+		public int positionLoc, texCoordsLoc;
+		public int texImageLoc;
+		protected override void GetLocations( OpenGLApi api ) {			
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			base.GetLocations( api );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );			
+		}
+			
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+		}
+	}
+	
+	public sealed class MapEnvShader : FogAndMVPShader {
 		
 		public MapEnvShader() {
 			VertexSource = @"
 #version 130
---IMPORT pos3fTex2fCol4b_uniforms
+in vec3 in_position;
+in vec4 in_colour;
+in vec2 in_texcoords;
+out vec4 out_colour;
+out vec2 out_texcoords;
 uniform mat4 MVP;
 
 void main() {
@@ -276,7 +329,6 @@ void main() {
 		}
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
-		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
 		public int texImageLoc;
 		protected override void GetLocations( OpenGLApi api ) {			
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
@@ -284,12 +336,7 @@ void main() {
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
-			
-			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
-			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
+			base.GetLocations( api );
 		}
 		
 		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {

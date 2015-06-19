@@ -76,7 +76,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		GuiShader guiShader;
 		protected void InitDynamicBuffers() {
 			guiShader = new GuiShader();
-			guiShader.Init( (OpenGLApi)this );
+			guiShader.Init( this );
 			quadVb = CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 4 );
 		}
 		
@@ -168,6 +168,5 @@ namespace ClassicalSharp.GraphicsAPI {
 	public enum MatrixType {
 		Projection = 0,
 		Modelview = 1,
-		Texture = 2,
 	}
 }

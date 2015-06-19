@@ -27,7 +27,7 @@ uniform float fogMode;
 // 0 = linear, 1 = exp
 ";
 		
-		const string pos3fTex2fCol4bUniformCode = @"
+		const string pos3fTex2fCol4bAttributesCode = @"
 in vec3 in_position;
 in vec4 in_colour;
 in vec2 in_texcoords;
@@ -58,8 +58,8 @@ out vec2 out_texcoords;
 						builder.Append( fogUniformCode );
 					} else if( line == "--IMPORT fog_code" ) {
 						builder.Append( fogShaderCode );
-					} else if( line == "--IMPORT pos3fTex2fCol4b_uniforms" ) {
-						builder.Append( pos3fTex2fCol4bUniformCode );
+					} else if( line == "--IMPORT pos3fTex2fCol4b_attributes" ) {
+						builder.Append( pos3fTex2fCol4bAttributesCode );
 					} else if( line.StartsWith( "--IMPORT" ) ) {
 					    Utils.LogWarning( "Unrecognised import: " + line );
 					} else {
