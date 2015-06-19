@@ -218,14 +218,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		int texVb;
 		public virtual void Draw2DTexture( ref Texture tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
-			#if USE_DX
-			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
-			// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
-			x1 -= 0.5f;
-			x2 -= 0.5f;
-			y1 -= 0.5f;
-			y2 -= 0.5f;
-			#endif
 			// Have to order them this way because it's a triangle strip.
 			texVertices[0] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
 			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );

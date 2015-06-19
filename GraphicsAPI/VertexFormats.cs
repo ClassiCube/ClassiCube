@@ -9,11 +9,7 @@ namespace ClassicalSharp {
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
 	public struct VertexPos3fCol4b {
 		public float X, Y, Z;
-		#if !USE_DX
 		public byte R, G, B, A;
-		#else
-		public byte B, G, R, A;
-		#endif
 		
 		public VertexPos3fCol4b( float x, float y, float z, FastColour c ) {
 			X = x; Y = y; Z = z;
@@ -48,11 +44,7 @@ namespace ClassicalSharp {
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
 	public struct VertexPos3fTex2fCol4b {
 		public float X, Y, Z;	
-		#if !USE_DX
 		public byte R, G, B, A;
-		#else
-		public byte B, G, R, A;
-		#endif
 		public float U, V;
 		
 		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, FastColour c ) {
