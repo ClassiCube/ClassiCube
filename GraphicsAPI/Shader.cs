@@ -48,7 +48,7 @@ out vec2 out_texcoords;
    f = clamp(f, 0.0, 1.0);
    finalColour = mix(fogColour, finalColour, f);
    finalColour.a = alpha_start;
-";		
+";
 		
 		string ReadShader( string source ) {
 			StringBuilder builder = new StringBuilder( source.Length );
@@ -62,7 +62,7 @@ out vec2 out_texcoords;
 					} else if( line == "--IMPORT pos3fTex2fCol4b_attributes" ) {
 						builder.Append( pos3fTex2fCol4bAttributesCode );
 					} else if( line.StartsWith( "--IMPORT" ) ) {
-					    Utils.LogWarning( "Unrecognised import: " + line );
+						Utils.LogWarning( "Unrecognised import: " + line );
 					} else {
 						builder.AppendLine( line );
 					}
@@ -115,13 +115,28 @@ out vec2 out_texcoords;
 			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
 		}
 		
-		// TODO: Cache fog state so we don't change uniforms needlessly.
+		float lastFogDensity, lastFogEnd;
+		int lastFogMode;
+		Vector4 lastFogCol;
 		public void UpdateFogAndMVPState( OpenGLApi api, ref Matrix4 mvp ) {
 			api.SetUniform( mvpLoc, ref mvp );
-			api.SetUniform( fogColLoc, ref api.modernFogCol );
-			api.SetUniform( fogDensityLoc, api.modernFogDensity );
-			api.SetUniform( fogEndLoc, api.modernFogEnd );
-			api.SetUniform( fogModeLoc, api.modernFogMode );
+			// Cache fog state so we don't change uniforms needlessly.
+			if( api.modernFogCol != lastFogCol ) {
+				api.SetUniform( fogColLoc, ref api.modernFogCol );
+				lastFogCol = api.modernFogCol;
+			}
+			if( api.modernFogDensity != lastFogDensity ) {
+				api.SetUniform( fogDensityLoc, api.modernFogDensity );
+				lastFogDensity = api.modernFogDensity;
+			}
+			if( api.modernFogEnd != lastFogEnd ) {
+				api.SetUniform( fogEndLoc, api.modernFogEnd );
+				lastFogEnd = api.modernFogEnd;
+			}
+			if( api.modernFogMode != lastFogMode ) {
+				api.SetUniform( fogModeLoc, api.modernFogMode );
+				lastFogMode = api.modernFogMode;
+			}
 		}
 	}
 }

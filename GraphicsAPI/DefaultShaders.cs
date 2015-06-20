@@ -10,7 +10,7 @@ namespace ClassicalSharp.GraphicsAPI {
 in vec3 in_position;
 in vec4 in_colour;
 in vec2 in_texcoords;
-out vec4 out_colour;
+flat out vec4 out_colour;
 out vec2 out_texcoords;
 
 uniform mat4 proj;
@@ -23,7 +23,7 @@ void main() {
 			
 			FragmentSource = @"
 #version 130
-in vec4 out_colour;
+flat in vec4 out_colour;
 in vec2 out_texcoords;
 out vec4 final_colour;
 uniform sampler2D texImage;
@@ -400,7 +400,7 @@ void main() {
 in vec3 in_position;
 in vec4 in_colour;
 in vec2 in_texcoords;
-out vec4 out_colour;
+flat out vec4 out_colour;
 out vec2 out_texcoords;
 uniform mat4 MVP;
 
@@ -413,7 +413,7 @@ void main() {
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
-in vec4 out_colour;
+flat in vec4 out_colour;
 out vec4 final_colour;
 uniform sampler2D texImage;
 --IMPORT fog_uniforms
