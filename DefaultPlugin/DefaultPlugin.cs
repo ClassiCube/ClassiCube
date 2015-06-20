@@ -42,6 +42,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.EnvironmentRenderer, typeof( StandardEnvRenderer ) ),
 					new PluginModule( PluginModuleType.EnvironmentRenderer, typeof( MinimalEnvRenderer ) ),
 					new PluginModule( PluginModuleType.WeatherRenderer, typeof( StandardWeatherRenderer ) ),
+					new PluginModule( PluginModuleType.MapRenderer, typeof( StandardMapRenderer ) ),
 				};
 			}
 		}

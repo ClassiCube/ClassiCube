@@ -154,6 +154,7 @@ namespace ClassicalSharp {
 				p.X < Width && p.Y < Height && p.Z < Length;
 		}
 		
+		
 		#region Heightmap for rain/snow
 		
 		public int GetSolidHeight( int x, int z ) {

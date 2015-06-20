@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public class TerrainAtlas1D : IDisposable {
 		
 		int usedElementsPerAtlas1D;
-		internal int elementsPerBitmap;
+		public int elementsPerBitmap;
 		public float invElementSize;
 		public int[] TexIds;
 		OpenGLApi graphics;

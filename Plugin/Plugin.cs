@@ -58,6 +58,9 @@ namespace ClassicalSharp.Plugins {
 					game.WeatherRendererTypes.Add( module.Type );
 					break;
 					
+				case PluginModuleType.MapRenderer:
+					game.MapRendererTypes.Add( module.Type );
+					break;
 			}
 		}
 	}
@@ -68,6 +71,7 @@ namespace ClassicalSharp.Plugins {
 		MapBordersRenderer,
 		EnvironmentRenderer,
 		WeatherRenderer,
+		MapRenderer,
 	}
 	
 	public class PluginModule {

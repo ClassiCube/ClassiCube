@@ -35,6 +35,7 @@ namespace ClassicalSharp {
 		public int ChunkUpdates;
 		
 		public MapRenderer MapRenderer;
+		public List<Type> MapRendererTypes = new List<Type>();
 		public MapBordersRenderer MapBordersRenderer;
 		public List<Type> MapBordersRendererTypes = new List<Type>();
 		public EnvRenderer EnvRenderer;
@@ -134,7 +135,6 @@ namespace ClassicalSharp {
 			LocalPlayer = new LocalPlayer( 255, this );
 			width = Width;
 			height = Height;
-			MapRenderer = new MapRenderer( this );
 			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
@@ -145,6 +145,18 @@ namespace ClassicalSharp {
 			SelectionManager.Init();
 			ParticleManager = new ParticleManager( this );
 			ParticleManager.Init();
+			Picking = new PickingRenderer( this );
+			
+			VSync = VSyncMode.On;
+			Graphics.DepthTest = true;
+			Graphics.DepthTestFunc( CompareFunc.LessEqual );
+			//Graphics.DepthWrite = true;
+			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
+			RegisterInputHandlers();
+			Title = Utils.AppName;
+			fpsScreen = new FpsScreen( this );
+			fpsScreen.Init();
+			Culling = new FrustumCulling();
 			
 			string defaultPlugin = Path.Combine( "plugins", "defaultplugin.dll" );
 			if( !Directory.Exists( "plugins" ) || !File.Exists( defaultPlugin ) ) {
@@ -167,21 +179,9 @@ namespace ClassicalSharp {
 			EnvRenderer.Init();
 			WeatherRenderer = Utils.New<WeatherRenderer>( WeatherRendererTypes[0], this );
 			WeatherRenderer.Init();
+			MapRenderer = Utils.New<MapRenderer>( MapRendererTypes[0], this );
+			MapRenderer.Init();			
 			
-			VSync = VSyncMode.On;
-			Graphics.DepthTest = true;
-			Graphics.DepthTestFunc( CompareFunc.LessEqual );
-			//Graphics.DepthWrite = true;
-			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
-			RegisterInputHandlers();
-			Title = Utils.AppName;
-			fpsScreen = new FpsScreen( this );
-			fpsScreen.Init();
-			Culling = new FrustumCulling();
-			MapRenderer.Init();
-			EnvRenderer.Init();
-			MapBordersRenderer.Init();
-			Picking = new PickingRenderer( this );
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect();

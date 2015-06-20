@@ -68,6 +68,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Renderers\MapBordersRenderer.cs" />
     <Compile Include="Renderers\EnvRenderer.cs" />
+    <Compile Include="Renderers\MapRenderer.cs" />
+    <Compile Include="Renderers\MapRenderer.Shaders.cs" />
     <Compile Include="Renderers\MinimalEnvRenderer.cs" />
     <Compile Include="Renderers\WeatherRenderer.cs" />
   </ItemGroup>
