@@ -73,20 +73,40 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public void SetUniform( int uniformLoc, ref Vector2 value ) {
-			GL.Uniform2( uniformLoc, ref value );
+			GL.Uniform2( uniformLoc, value.X, value.Y );
 		}
 		
 		public void SetUniform( int uniformLoc, ref Vector3 value ) {
-			GL.Uniform3( uniformLoc, ref value );
+			GL.Uniform3( uniformLoc, value.X, value.Y, value.Z );
 		}
 		
 		public void SetUniform( int uniformLoc, ref Vector4 value ) {
-			GL.Uniform4( uniformLoc, ref value );
+			GL.Uniform4( uniformLoc, value.X, value.Y, value.Z, value.W );
 		}
 		
 		public unsafe void SetUniform( int uniformLoc, ref Matrix4 value ) {
 			fixed( float* ptr = &value.Row0.X )
 				GL.UniformMatrix4( uniformLoc, 1, false, ptr );
+		}
+		
+		public unsafe void SetUniformArray( int uniformLoc, float[] values ) {
+			fixed( float* ptr = values )
+				GL.Uniform1( uniformLoc, values.Length, ptr );
+		}
+		
+		public unsafe void SetUniformArray( int uniformLoc, Vector2[] values ) {
+			fixed( Vector2* ptr = values )
+				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
+		}
+		
+		public unsafe void SetUniformArray( int uniformLoc, Vector3[] values ) {
+			fixed( Vector3* ptr = values )
+				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
+		}
+		
+		public unsafe void SetUniformArray( int uniformLoc, Vector4[] values ) {
+			fixed( Vector4* ptr = values )
+				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
 		}
 		
 		public int GetAttribLocation( int program, string name ) {
@@ -142,7 +162,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int stride, int count ) where T : struct {				
+		public void DrawModernDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int stride, int count ) where T : struct {
 			int sizeInBytes = count * stride;
 			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );

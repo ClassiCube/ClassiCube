@@ -96,21 +96,6 @@ namespace OpenTK.Graphics.OpenGL
 
 		#region Overloads
 
-		[CLSCompliant(false)]
-		public static void Uniform2( int location, ref Vector2 vector ) {
-			GL.Uniform2( location, vector.X, vector.Y );
-		}
-
-		[CLSCompliant(false)]
-		public static void Uniform3( int location, ref Vector3 vector ) {
-			GL.Uniform3( location, vector.X, vector.Y, vector.Z );
-		}
-
-		[CLSCompliant(false)]
-		public static void Uniform4( int location, ref Vector4 vector ) {
-			GL.Uniform4( location, vector.X, vector.Y, vector.Z, vector.W );
-		}
-
 		public unsafe static void ShaderSource( int shader, string @string ) {
 			int length = @string.Length;
 			GL.ShaderSource( shader, 1, new string[] { @string }, &length );
