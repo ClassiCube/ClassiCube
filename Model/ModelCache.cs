@@ -53,6 +53,7 @@ namespace ClassicalSharp.Model {
 				entry.Value.Dispose();
 			}
 			window.Graphics.DeleteVb( EntityNameVb );
+			Shader.Dispose();
 		}
 	}
 }

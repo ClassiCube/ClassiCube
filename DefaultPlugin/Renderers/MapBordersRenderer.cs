@@ -61,6 +61,7 @@ namespace DefaultPlugin {
 			api.DeleteVb( sidesVboId );
 			api.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
+			shader.Dispose();
 		}
 		
 		protected override void OnNewMap( object sender, EventArgs e ) {

@@ -80,6 +80,7 @@ namespace DefaultPlugin {
 		}
 		
 		public override void Dispose() {
+			shader.Dispose();
 			api.DeleteTexture( ref rainTexture );
 			api.DeleteTexture( ref snowTexture );
 		}

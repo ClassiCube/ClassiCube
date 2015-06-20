@@ -43,14 +43,6 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ClassicalSharp">
-      <HintPath>..\output\debug\ClassicalSharp.exe</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="OpenTK">
-      <HintPath>..\output\debug\OpenTK.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
   </ItemGroup>
@@ -77,6 +69,18 @@
   <ItemGroup>
     <Folder Include="Models" />
     <Folder Include="Renderers" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassicalSharp.csproj">
+      <Project>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</Project>
+      <Name>ClassicalSharp</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTK\OpenTK.csproj">
+      <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
+      <Name>OpenTK</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -55,6 +55,8 @@ namespace DefaultPlugin {
 		}
 		
 		public override void Dispose() {
+			shader.Dispose();
+			lShader.Dispose();
 			ClearChunkCache();
 			chunks = null;
 			unsortedChunks = null;

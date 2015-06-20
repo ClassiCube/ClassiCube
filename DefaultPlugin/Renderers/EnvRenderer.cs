@@ -87,6 +87,7 @@ namespace DefaultPlugin {
 			Graphics.DeleteVb( skyVbo );
 			Graphics.DeleteVb( cloudsVbo );
 			Graphics.DeleteTexture( ref cloudTexture );
+			shader.Dispose();
 		}
 		
 		void RenderClouds( double delta ) {
