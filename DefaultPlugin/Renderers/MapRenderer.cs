@@ -30,6 +30,7 @@ namespace DefaultPlugin {
 		ChunkMeshBuilder builder;
 		MapShader shader;
 		MapDepthPassShader lShader;
+		bool needToUpdateColours = true;
 		
 		int width, height, length;
 		ChunkInfo[] chunks, unsortedChunks;
@@ -70,7 +71,7 @@ namespace DefaultPlugin {
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Variable == EnvVariable.SunlightColour || e.Variable == EnvVariable.ShadowlightColour ) {
-				Refresh();
+				needToUpdateColours = true;
 			}
 		}
 
@@ -187,13 +188,29 @@ namespace DefaultPlugin {
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
 		
+		Vector4[] lightCols = new Vector4[8];		
+		void MakeCol( FastColour col, ref int i ) {
+			Vector4 baseCol = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, 1 );
+			lightCols[i++] = baseCol;
+			lightCols[i++] = new Vector4( baseCol.Xyz * 0.6f, 1 );
+			lightCols[i++] = new Vector4( baseCol.Xyz * 0.8f, 1 );
+			lightCols[i++] = new Vector4( baseCol.Xyz * 0.5f, 1 );
+		}
+		
 		public override void Render( double deltaTime ) {
 			if( chunks == null ) return;
 			UpdateSortOrder();
 			UpdateChunks();
 			int[] texIds = Window.TerrainAtlas1D.TexIds;
 			api.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( api, ref Window.MVP );
+			if( needToUpdateColours ) {
+				int i = 0;
+				needToUpdateColours = false;
+				MakeCol( Window.Map.Sunlight, ref i );
+				MakeCol( Window.Map.Shadowlight, ref i );
+				api.SetUniformArray( shader.lightsColourLoc, lightCols );
+			}
+			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.

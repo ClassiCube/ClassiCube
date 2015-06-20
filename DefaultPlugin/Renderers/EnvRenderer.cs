@@ -29,7 +29,7 @@ namespace DefaultPlugin {
 			if( skyVbo == -1 || cloudsVbo == -1 ) return;
 			
 			Graphics.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( Graphics, ref Window.MVP );
+			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {

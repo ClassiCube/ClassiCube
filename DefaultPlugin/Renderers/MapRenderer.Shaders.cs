@@ -8,29 +8,37 @@ namespace DefaultPlugin {
 		public MapShader() {
 			VertexSource = @"
 #version 130
---IMPORT pos3fTex2fCol4b_attributes
+in vec3 in_position;
+in vec4 in_flags;
+in vec2 in_texcoords;
+flat out vec4 out_colour;
+flat out float out_type;
+out vec2 out_texcoords;
 uniform mat4 MVP;
+uniform vec4 lightColours[8];
 
 void main() {
    gl_Position = MVP * vec4(in_position, 1.0);
    out_texcoords = in_texcoords;
-   out_colour = in_colour;
+   out_colour = lightColours[int(in_flags.x)];
+   out_type = in_flags.y;
 }";
 			
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
 flat in vec4 out_colour;
+flat in float out_type;
 out vec4 final_colour;
 uniform sampler2D texImage;
 --IMPORT fog_uniforms
-uniform vec4 lightColours[8];
 
 void main() {
-   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;
-   if(finalColour.a < 0.5) {
+   vec4 texColour = texture2D(texImage, out_texcoords);
+   if(texColour.a < 0.5) {
       discard;
    }
+   vec4 finalColour = texColour * out_colour;
    
 --IMPORT fog_code
    final_colour = finalColour;
@@ -38,19 +46,20 @@ void main() {
 		}
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
-		public int texImageLoc;
+		public int texImageLoc, lightsColourLoc;
 		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_flags" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			lightsColourLoc = api.GetUniformLocation( ProgramId, "lightColours" );
 			base.GetLocations();
 		}
 		
 		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
-			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, false, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		

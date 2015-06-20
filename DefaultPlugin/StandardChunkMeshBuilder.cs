@@ -97,12 +97,12 @@ namespace ClassicalSharp {
 			return y > GetLightHeightAdj( x, z );
 		}
 		
-		FastColour GetColour( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
+		byte GetColour( int x, int y, int z, byte sunlight, byte shadow ) {
 			if( !map.IsValidPos( x, y, z ) ) return sunlight;
 			return y > GetLightHeight( x, z ) ? sunlight : shadow;
 		}
 		
-		FastColour GetColourAdj( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
+		byte GetColourAdj( int x, int y, int z, byte sunlight, byte shadow ) {
 			if( !map.IsValidPos( x, y, z ) ) return sunlight;
 			return y > GetLightHeightAdj( x, z ) ? sunlight : shadow;
 		}
@@ -186,11 +186,12 @@ namespace ClassicalSharp {
 			}
 		}
 
+		const byte baseCol = 0, xCol = 1, zCol = 2, yBottomCol = 3;
 		protected override void DrawTopFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Top );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
+			byte col = GetColour( X, Y + 1, Z, baseCol, baseCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -199,17 +200,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col, tile, 0, 0 );
 		}
 
 		protected override void DrawBottomFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Bottom );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColour( X, Y - 1, Z, ref map.SunlightYBottom, ref map.ShadowlightYBottom );
+			byte col = GetColour( X, Y - 1, Z, yBottomCol, yBottomCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -218,17 +219,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col, tile, 0, 0 );
 		}
 
 		protected override void DrawBackFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Back );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColourAdj( X, Y, Z + 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
+			byte col = GetColourAdj( X, Y, Z + 1, zCol, zCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -240,17 +241,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col, tile, 0, 0 );
 		}
 
 		protected override void DrawFrontFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Front );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColourAdj( X, Y, Z - 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
+			byte col = GetColourAdj( X, Y, Z - 1, zCol, zCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -262,17 +263,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col, tile, 0, 0 );
 		}
 
 		protected override void DrawLeftFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Left );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColourAdj( X - 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
+			byte col = GetColourAdj( X - 1, Y, Z, xCol, xCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -284,17 +285,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col, tile, 0, 0 );
 		}
 
 		protected override void DrawRightFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColourAdj( X + 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
+			byte col = GetColourAdj( X + 1, Y, Z, xCol, xCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -306,17 +307,17 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col, tile, 0, 0 );
 		}
 		
 		protected override void DrawSprite( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
-			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
+			byte col = GetColour( X, Y + 1, Z, baseCol, baseCol + 4 );
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 			}
@@ -324,10 +325,10 @@ namespace ClassicalSharp {
 			
 			// Draw stretched Z axis
 			AddIndices( part );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col, tile, 0, 0 );
+			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col, tile, 0, 0 );
 			
 			// Draw X axis
 			rec.U2 = 1;
@@ -335,10 +336,10 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < count; i++ ) {
 				AddIndices( part );
-				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col );
-				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col );
-				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col );
+				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col, tile, 0, 0 );
+				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col, tile, 0, 0 );
+				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col, tile, 0, 0 );
+				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col, tile, 0, 0 );
 				X++;
 			}
 			X = startX;

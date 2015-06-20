@@ -284,7 +284,7 @@ namespace ClassicalSharp {
 		void RenderPlayers( double deltaTime, float t ) {
 			EntityShader shader = ModelCache.Shader;
 			Graphics.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( Graphics, ref MVP );
+			shader.UpdateFogAndMVPState( ref MVP );
 			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {

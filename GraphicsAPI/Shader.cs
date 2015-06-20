@@ -121,7 +121,7 @@ out vec2 out_texcoords;
 		float lastFogDensity, lastFogEnd;
 		int lastFogMode;
 		Vector4 lastFogCol;
-		public void UpdateFogAndMVPState( OpenGLApi api, ref Matrix4 mvp ) {
+		public void UpdateFogAndMVPState( ref Matrix4 mvp ) {
 			api.SetUniform( mvpLoc, ref mvp );
 			// Cache fog state so we don't change uniforms needlessly.
 			if( api.modernFogCol != lastFogCol ) {

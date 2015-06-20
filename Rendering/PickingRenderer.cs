@@ -22,7 +22,7 @@ namespace ClassicalSharp.Renderers {
 		FastColour col = FastColour.White;		
 		int index = 0;
 		const int verticesCount = 24 * ( 3 * 2 );
-		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
+		Vector3[] vertices = new Vector3[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
 		
@@ -32,11 +32,7 @@ namespace ClassicalSharp.Renderers {
 			
 			if( pickedPos.Valid ) {
 				graphics.UseProgram( shader.ProgramId );
-				graphics.SetUniform( shader.mvpLoc, ref window.MVP );
-				graphics.SetUniform( shader.fogColLoc, ref graphics.modernFogCol );
-				graphics.SetUniform( shader.fogDensityLoc, graphics.modernFogDensity );
-				graphics.SetUniform( shader.fogEndLoc, graphics.modernFogEnd );
-				graphics.SetUniform( shader.fogModeLoc, graphics.modernFogMode );
+				shader.UpdateFogAndMVPState( ref window.MVP );
 				Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 				Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 				
@@ -71,7 +67,7 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 				
-				shader.DrawDynamic( DrawMode.Triangles, VertexPos3fCol4b.Size, vb, vertices, verticesCount );
+				shader.DrawDynamic( DrawMode.Triangles, Vector3.SizeInBytes, vb, vertices, verticesCount );
 			}
 		}
 		
@@ -80,33 +76,33 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawXPlane( float x, float z1, float y1, float z2, float y2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
+			vertices[index++] = new Vector3( x, y1, z1 );
+			vertices[index++] = new Vector3( x, y2, z1 );
+			vertices[index++] = new Vector3( x, y2, z2 );
 			
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
+			vertices[index++] = new Vector3( x, y2, z2 );
+			vertices[index++] = new Vector3( x, y1, z2 );
+			vertices[index++] = new Vector3( x, y1, z1 );
 		}
 		
 		void DrawZPlane( float z, float x1, float y1, float x2, float y2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
+			vertices[index++] = new Vector3( x1, y1, z );
+			vertices[index++] = new Vector3( x1, y2, z );
+			vertices[index++] = new Vector3( x2, y2, z );
 			
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
+			vertices[index++] = new Vector3( x2, y2, z );
+			vertices[index++] = new Vector3( x2, y1, z );
+			vertices[index++] = new Vector3( x1, y1, z );
 		}
 		
 		void DrawYPlane( float y, float x1, float z1, float x2, float z2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
+			vertices[index++] = new Vector3( x1, y, z1 );
+			vertices[index++] = new Vector3( x1, y, z2 );
+			vertices[index++] = new Vector3( x2, y, z2 );
 			
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
+			vertices[index++] = new Vector3( x2, y, z2 );
+			vertices[index++] = new Vector3( x2, y, z1 );
+			vertices[index++] = new Vector3( x1, y, z1 );
 		}
 	}
 }

@@ -33,7 +33,7 @@ namespace DefaultPlugin {
 			if( sidesVboId == -1 ) return;
 			
 			api.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( api, ref Window.MVP );
+			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			api.Bind2DTexture( sideTexId );
 			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );

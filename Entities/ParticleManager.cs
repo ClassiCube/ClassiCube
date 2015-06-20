@@ -29,7 +29,7 @@ namespace ClassicalSharp.Particles {
 			if( particles.Count == 0 ) return;
 			
 			api.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( api, ref Window.MVP );
+			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			int count = particles.Count * 6;
 			if( count > vertices.Length ) {

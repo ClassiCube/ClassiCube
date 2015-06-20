@@ -20,7 +20,7 @@ namespace DefaultPlugin {
 			if( weather == Weather.Sunny ) return;
 			
 			api.UseProgram( shader.ProgramId );
-			shader.UpdateFogAndMVPState( api, ref Window.MVP );
+			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			api.Bind2DTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
