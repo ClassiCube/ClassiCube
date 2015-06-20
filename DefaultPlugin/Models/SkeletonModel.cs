@@ -8,19 +8,16 @@ namespace DefaultPlugin {
 
 	public class SkeletonModel : IModel {
 		
-		ModelSet Set;
 		public SkeletonModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 6];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Torso = MakeTorso();
-			Set.LeftLeg = MakeLeftLeg( 0.1875f, 0.0625f );
-			Set.RightLeg = MakeRightLeg( 0.0625f, 0.1875f );
-			Set.LeftArm = MakeLeftArm( 0.375f, 0.25f );
-			Set.RightArm = MakeRightArm( 0.25f, 0.375f );
+			Head = MakeHead();
+			Torso = MakeTorso();
+			LeftLeg = MakeLeftLeg( 0.1875f, 0.0625f );
+			RightLeg = MakeRightLeg( 0.0625f, 0.1875f );
+			LeftArm = MakeLeftArm( 0.375f, 0.25f );
+			RightArm = MakeRightArm( 0.25f, 0.375f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "skeleton.png" );
 		}
@@ -61,12 +58,12 @@ namespace DefaultPlugin {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, Set.Head );
-			Set.Torso.Render();
-			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, Set.LeftLeg );
-			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
-			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, Set.LeftArm );
-			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );			
+			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, Head );
+			DrawPart( Torso );
+			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, LeftLeg );
+			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, RightLeg );
+			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, LeftArm );
+			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, RightArm );			
 		}
 		
 		public override void Dispose() {
@@ -74,14 +71,6 @@ namespace DefaultPlugin {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
-					LeftArm.Vb = RightArm.Vb = vb;
-			}
-		}
+		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 	}
 }

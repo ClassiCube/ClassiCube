@@ -8,18 +8,15 @@ namespace DefaultPlugin {
 
 	public class SpiderModel : IModel {
 		
-		ModelSet Set;
 		public SpiderModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 5];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Link = MakeLink();
-			Set.End = MakeEnd();
-			Set.LeftLeg = MakeLeg( -1.1875f, -0.1875f );
-			Set.RightLeg = MakeLeg( 0.1875f, 1.1875f );
+			Head = MakeHead();
+			Link = MakeLink();
+			End = MakeEnd();
+			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
+			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
 		}
@@ -52,18 +49,18 @@ namespace DefaultPlugin {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Set.Head );
-			Set.Link.Render();
-			Set.End.Render();
+			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Head );
+			DrawPart( Link );
+			DrawPart( End );
 			// TODO: leg animations
-			DrawRotate( -0.1875f, 0.5f, 0, 0, 45f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, 22.5f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -22.5f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -45f, 22.5f, Set.LeftLeg );		
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -45f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -22.5f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, 22.5f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, 45f, -22.5f, Set.RightLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, 45f, 22.5f, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, 22.5f, 22.5f, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -22.5f, 22.5f, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -45f, 22.5f, LeftLeg );		
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -45f, -22.5f, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -22.5f, -22.5f, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, 22.5f, -22.5f, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, 45f, -22.5f, RightLeg );
 		}
 		
 		public override void Dispose() {
@@ -71,14 +68,6 @@ namespace DefaultPlugin {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Link, End, LeftLeg, RightLeg;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Link.Vb = LeftLeg.Vb = RightLeg.Vb =
-					End.Vb = vb;
-			}
-		}
+		ModelPart Head, Link, End, LeftLeg, RightLeg;
 	}
 }

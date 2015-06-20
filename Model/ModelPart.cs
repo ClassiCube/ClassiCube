@@ -5,22 +5,20 @@ namespace ClassicalSharp {
 	
 	public class ModelPart {
 		
-		public int Vb;
 		public int Offset = 0;
 		public int Count;
 		public OpenGLApi Graphics;
 		public Shader Shader;
 		
-		public ModelPart( int vb, int offset, int count, OpenGLApi graphics, Shader shader ) {
+		public ModelPart( int offset, int count, OpenGLApi graphics, Shader shader ) {
 			Offset = offset;
 			Count = count;
 			Graphics = graphics;
-			Vb = vb;
 			Shader = shader;
 		}
 		
-		public void Render() {
-			Shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fTex2f.Size, Vb, Offset, Count );
+		public void Render( int vb ) {
+			Shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fTex2f.Size, vb, Offset, Count );
 		}
 	}
 	

@@ -33,6 +33,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.EntityModel, typeof( ChickenModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( CreeperModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( PigModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( SheepModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( SkeletonModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( SpiderModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( ZombieModel ) ),

@@ -61,6 +61,7 @@
     <Compile Include="Models\ChickenModel.cs" />
     <Compile Include="Models\CreeperModel.cs" />
     <Compile Include="Models\PigModel.cs" />
+    <Compile Include="Models\SheepModel.cs" />
     <Compile Include="Models\SkeletonModel.cs" />
     <Compile Include="Models\SpiderModel.cs" />
     <Compile Include="Models\ZombieModel.cs" />

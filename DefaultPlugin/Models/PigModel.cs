@@ -7,20 +7,17 @@ using ClassicalSharp.Renderers;
 namespace DefaultPlugin {
 
 	public class PigModel : IModel {
-		
-		ModelSet Set;
+
 		public PigModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 6];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Torso = MakeTorso();
-			Set.LeftLegFront = MakeLeg( -0.3125f, -0.0625f, -0.4375f, -0.1875f );
-			Set.RightLegFront = MakeLeg( 0.0625f, 0.3125f, -0.4375f, -0.1875f );
-			Set.LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
-			Set.RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
+			Head = MakeHead();
+			Torso = MakeTorso();
+			LeftLegFront = MakeLeg( -0.3125f, -0.0625f, -0.4375f, -0.1875f );
+			RightLegFront = MakeLeg( 0.0625f, 0.3125f, -0.4375f, -0.1875f );
+			LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
+			RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "pig.png" );
 		}
@@ -49,12 +46,12 @@ namespace DefaultPlugin {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 0.75f, -0.375f, -pitch, 0, 0, Set.Head );
-			Set.Torso.Render();
-			DrawRotate( 0, 0.375f, -0.3125f, leftLegXRot, 0, 0, Set.LeftLegFront );
-			DrawRotate( 0, 0.375f, -0.3125f, rightLegXRot, 0, 0, Set.RightLegFront );
-			DrawRotate( 0, 0.375f, 0.4375f, rightLegXRot, 0, 0, Set.LeftLegBack );
-			DrawRotate( 0, 0.375f, 0.4375f, leftLegXRot, 0, 0, Set.RightLegBack );
+			DrawRotate( 0, 0.75f, -0.375f, -pitch, 0, 0, Head );
+			DrawPart( Torso );
+			DrawRotate( 0, 0.375f, -0.3125f, leftLegXRot, 0, 0, LeftLegFront );
+			DrawRotate( 0, 0.375f, -0.3125f, rightLegXRot, 0, 0, RightLegFront );
+			DrawRotate( 0, 0.375f, 0.4375f, rightLegXRot, 0, 0, LeftLegBack );
+			DrawRotate( 0, 0.375f, 0.4375f, leftLegXRot, 0, 0, RightLegBack );
 		}
 		
 		public override void Dispose() {
@@ -62,14 +59,6 @@ namespace DefaultPlugin {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLegFront.Vb = RightLegFront.Vb
-					= LeftLegBack.Vb = RightLegBack.Vb = vb;
-			}
-		}
+		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
 	}
 }

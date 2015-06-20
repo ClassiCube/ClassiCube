@@ -8,19 +8,16 @@ namespace DefaultPlugin {
 
 	public class CreeperModel : IModel {
 		
-		ModelSet Set;
 		public CreeperModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 6];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Torso = MakeTorso();
-			Set.LeftLegFront = MakeLeg( -0.25f, 0, -0.375f, -0.125f );
-			Set.RightLegFront = MakeLeg( 0, 0.25f, -0.375f, -0.125f );
-			Set.LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
-			Set.RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
+			Head = MakeHead();
+			Torso = MakeTorso();
+			LeftLegFront = MakeLeg( -0.25f, 0, -0.375f, -0.125f );
+			RightLegFront = MakeLeg( 0, 0.25f, -0.375f, -0.125f );
+			LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
+			RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "creeper.png" );
 		}
@@ -49,12 +46,12 @@ namespace DefaultPlugin {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.125f, 0, -pitch, 0, 0, Set.Head );
-			Set.Torso.Render();
-			DrawRotate( 0, 0.375f, -0.125f, leftLegXRot, 0, 0, Set.LeftLegFront );
-			DrawRotate( 0, 0.375f, -0.125f, rightLegXRot, 0, 0, Set.RightLegFront );
-			DrawRotate( 0, 0.375f, 0.125f, rightLegXRot, 0, 0, Set.LeftLegBack );
-			DrawRotate( 0, 0.375f, 0.125f, leftLegXRot, 0, 0, Set.RightLegBack );
+			DrawRotate( 0, 1.125f, 0, -pitch, 0, 0, Head );
+			DrawPart( Torso );
+			DrawRotate( 0, 0.375f, -0.125f, leftLegXRot, 0, 0, LeftLegFront );
+			DrawRotate( 0, 0.375f, -0.125f, rightLegXRot, 0, 0, RightLegFront );
+			DrawRotate( 0, 0.375f, 0.125f, rightLegXRot, 0, 0, LeftLegBack );
+			DrawRotate( 0, 0.375f, 0.125f, leftLegXRot, 0, 0, RightLegBack );
 		}
 		
 		public override void Dispose() {
@@ -62,14 +59,6 @@ namespace DefaultPlugin {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLegFront.Vb = RightLegFront.Vb
-					= LeftLegBack.Vb = RightLegBack.Vb = vb;
-			}
-		}
+		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
 	}
 }

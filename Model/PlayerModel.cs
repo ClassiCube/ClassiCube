@@ -38,9 +38,6 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.Hat = MakeHat( true );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
-			Set64x32.SetVb( vb );
-			Set64x64.SetVb( vb );
-			Set64x64Slim.SetVb( vb );
 			vertices = null;
 			
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
@@ -95,7 +92,7 @@ namespace ClassicalSharp.Model {
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
 			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, model.Head );
-			model.Torso.Render();
+			DrawPart( model.Torso );
 			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( 0, 1.5f, 0, leftArmXRot, 0, leftArmZRot, model.LeftArm );
@@ -108,14 +105,8 @@ namespace ClassicalSharp.Model {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
+		class ModelSet {			
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
-					LeftArm.Vb = RightArm.Vb = Hat.Vb = vb;
-			}
 		}
 	}
 }
