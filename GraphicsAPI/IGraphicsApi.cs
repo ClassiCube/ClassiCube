@@ -2,9 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using OpenTK;
-using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
@@ -88,7 +86,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public void Mode3D() {
-			UseProgram( 0 );
 			DepthTest = true;
 			AlphaBlending = false;
 		}
@@ -131,17 +128,5 @@ namespace ClassicalSharp.GraphicsAPI {
 	public enum Fog {
 		Linear = 0,
 		Exp = 1,
-		Exp2 = 2,
-	}
-	
-	public enum FillType {
-		Points = 0,
-		Wireframe = 1,
-		Solid = 2,
-	}
-	
-	public enum MatrixType {
-		Projection = 0,
-		Modelview = 1,
 	}
 }
