@@ -158,6 +158,7 @@
     <Compile Include="Physics\Entity.Physics.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />
     <Compile Include="Physics\Picking.cs" />
+    <Compile Include="Plugin\Plugin.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
@@ -222,6 +223,7 @@
     <Folder Include="Map" />
     <Folder Include="Game" />
     <Folder Include="Model" />
+    <Folder Include="Plugin" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />
   </ItemGroup>
