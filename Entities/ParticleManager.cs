@@ -19,7 +19,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Init() {
-			vb = api.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
+			vb = api.CreateDynamicVb( VertexPos3fTex2f.Size, 1000 );
 			shader = new ParticleShader();
 			shader.Init( api );
 		}

@@ -20,7 +20,7 @@ namespace DefaultPlugin {
 			LeftWing = MakeWing( -0.25f, -0.1875f );
 			RightWing = MakeWing( 0.1875f, 0.25f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
+			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "chicken.png" );
 		}

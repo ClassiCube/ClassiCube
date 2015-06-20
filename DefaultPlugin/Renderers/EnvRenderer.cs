@@ -154,13 +154,13 @@ namespace DefaultPlugin {
 		void ResetCloudsModern( int y, int x1, int z1, int x2, int z2 ) {
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudsVertices];
 			DrawCloudsYPlane( x1, z1, x2, z2, y, Map.CloudsCol, vertices );
-			cloudsVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			cloudsVbo = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 		
 		void ResetSkyModern( int y, int x1, int z1, int x2, int z2 ) {
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[skyVertices];
 			DrawSkyYPlane( x1, z1, x2, z2, y, Map.SkyCol, vertices );
-			skyVbo = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			skyVbo = Graphics.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 		
 		#endregion

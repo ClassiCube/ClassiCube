@@ -14,7 +14,7 @@ namespace ClassicalSharp.Renderers {
 		public PickingRenderer( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
-			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
+			vb = graphics.CreateDynamicVb( Vector3.SizeInBytes, verticesCount );
 			shader = new PickingShader();
 			shader.Init( graphics );
 		}

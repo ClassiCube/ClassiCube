@@ -17,7 +17,7 @@ namespace DefaultPlugin {
 			LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.5f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
+			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;		
 			DefaultTexId = graphics.LoadTexture( "zombie.png" );
 		}

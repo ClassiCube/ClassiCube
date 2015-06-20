@@ -37,11 +37,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteTexture( ref texture.ID );
 		}
 		
-		public int InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
-			return InitVb( vertices, format, vertices.Length );
+		public int InitVb<T>( T[] vertices, int stride ) where T : struct {
+			return InitVb( vertices, stride, vertices.Length );
 		}
-		
-		protected static int[] strideSizes = { 20, 16, 24 };
 		
 		public void CheckResources() {
 		}
@@ -50,7 +48,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected void InitDynamicBuffers() {
 			guiShader = new GuiShader();
 			guiShader.Init( this );
-			quadVb = CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 4 );
+			quadVb = CreateDynamicVb( VertexPos3fTex2fCol4b.Size, 4 );
 		}
 		
 		public void Dispose() {
@@ -89,12 +87,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthTest = true;
 			AlphaBlending = false;
 		}
-	}
-
-	public enum VertexFormat {
-		Pos3fTex2f = 0,
-		Pos3fCol4b = 1,
-		Pos3fTex2fCol4b = 2,
 	}
 	
 	public enum DrawMode {

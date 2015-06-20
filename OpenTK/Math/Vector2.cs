@@ -246,7 +246,7 @@ namespace OpenTK
         /// <summary>
         /// Defines the size of the Vector2 struct in bytes.
         /// </summary>
-        public static readonly int SizeInBytes = Marshal.SizeOf(new Vector2());
+        public const int SizeInBytes = 8;
 
         #endregion
 

@@ -127,20 +127,20 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#region Vertex buffers
 		
-		public unsafe int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+		public unsafe int CreateDynamicVb( int stride, int maxVertices ) {
 			int id = 0;
 			GL.GenBuffers( 1, &id );
-			int sizeInBytes = maxVertices * strideSizes[(int)format];
+			int sizeInBytes = maxVertices * stride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
 			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
-		public unsafe int InitVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct {
+		public unsafe int InitVb<T>( T[] vertices, int stride, int count ) where T : struct {
 			int id = 0;
 			GL.GenBuffers( 1, &id );
-			int sizeInBytes = count * strideSizes[(int)format];
+			int sizeInBytes = count * stride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
 			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );

@@ -113,7 +113,7 @@ namespace DefaultPlugin {
 			DrawZPlane( map.Length, 0, map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( 0, 0, map.Length, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( map.Width, 0, map.Length, 0, groundLevel, sidesCol, vertices  );			
-			sidesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			sidesVboId = api.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 		
 		void RebuildEdges() {
@@ -126,7 +126,7 @@ namespace DefaultPlugin {
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
 			}			
-			edgesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			edgesVboId = api.InitVb( vertices, VertexPos3fTex2fCol4b.Size );
 		}
 
 		int lastEdgeTexLoc, lastSideTexLoc;

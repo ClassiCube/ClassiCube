@@ -21,7 +21,7 @@ namespace ClassicalSharp.Model {
 			Shader = new EntityShader();
 			Shader.Init( window.Graphics );
 			cache["humanoid"] = new PlayerModel( window );
-			EntityNameVb = window.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 4 );
+			EntityNameVb = window.Graphics.CreateDynamicVb( VertexPos3fTex2f.Size, 4 );
 		}
 		
 		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();

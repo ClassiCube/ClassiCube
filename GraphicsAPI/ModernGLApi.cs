@@ -96,17 +96,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe void SetUniformArray( int uniformLoc, Vector2[] values ) {
 			fixed( Vector2* ptr = values )
-				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
+				GL.Uniform2( uniformLoc, values.Length, &ptr->X );
 		}
 		
 		public unsafe void SetUniformArray( int uniformLoc, Vector3[] values ) {
 			fixed( Vector3* ptr = values )
-				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
+				GL.Uniform3( uniformLoc, values.Length, &ptr->X );
 		}
 		
 		public unsafe void SetUniformArray( int uniformLoc, Vector4[] values ) {
 			fixed( Vector4* ptr = values )
-				GL.Uniform1( uniformLoc, values.Length, &ptr->X );
+				GL.Uniform4( uniformLoc, values.Length, &ptr->X );
 		}
 		
 		public int GetAttribLocation( int program, string name ) {

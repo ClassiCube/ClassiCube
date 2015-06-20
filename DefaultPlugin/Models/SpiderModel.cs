@@ -16,7 +16,7 @@ namespace DefaultPlugin {
 			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
+			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
 		}

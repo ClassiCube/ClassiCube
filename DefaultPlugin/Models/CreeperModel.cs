@@ -17,7 +17,7 @@ namespace DefaultPlugin {
 			LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
 			RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
+			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "creeper.png" );
 		}

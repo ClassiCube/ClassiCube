@@ -74,7 +74,7 @@ namespace DefaultPlugin {
 		public override void Init() {
 			rainTexture = api.LoadTexture( "rain.png" );
 			snowTexture = api.LoadTexture( "snow.png" );
-			weatherVb = api.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
+			weatherVb = api.CreateDynamicVb( VertexPos3fTex2fCol4b.Size, 12 * 9 * 9 );
 			shader = new WeatherShader();
 			shader.Init( api );
 		}

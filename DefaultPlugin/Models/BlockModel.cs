@@ -11,7 +11,7 @@ namespace DefaultPlugin {
 		byte block = (byte)Block.Air;
 		public BlockModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[6 * 6];
-			vb = window.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 6 * 6 );
+			vb = window.Graphics.CreateDynamicVb( VertexPos3fTex2f.Size, 6 * 6 );
 		}
 		
 		public override float NameYOffset {

@@ -37,7 +37,7 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.Hat = MakeHat( true );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
+			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
 			
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
