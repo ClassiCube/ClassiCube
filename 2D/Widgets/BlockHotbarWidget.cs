@@ -48,7 +48,6 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
 			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
 			int selectedX = 0;
@@ -60,7 +59,6 @@ namespace ClassicalSharp {
 			}
 			selectedBlock.X1 = selectedX;
 			selectedBlock.Render( GraphicsApi );
-			GraphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {

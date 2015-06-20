@@ -151,7 +151,6 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
-			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
 			RegisterInputHandlers();
 			Title = Utils.AppName;
 			fpsScreen = new FpsScreen( this );
@@ -220,10 +219,7 @@ namespace ClassicalSharp {
 			LocalPlayer.SetInterpPosition( t );
 			
 			Graphics.Clear();
-			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView();
-			View = modelView;
-			Graphics.LoadMatrix( ref modelView );
+			View = Camera.GetView();
 			Matrix4.Mult( ref View, ref Projection, out MVP );
 			Culling.CalcFrustumEquations( ref MVP );
 			
@@ -310,11 +306,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateProjection() {
-			Matrix4 projection = Camera.GetProjection();
-			Projection = projection;
-			Graphics.SetMatrixMode( MatrixType.Projection );
-			Graphics.LoadMatrix( ref projection );
-			Graphics.SetMatrixMode( MatrixType.Modelview );
+			Projection = Camera.GetProjection();
 		}
 		
 		protected override void OnResize( EventArgs e ) {

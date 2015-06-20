@@ -36,10 +36,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( OpenGLApi graphics ) {
-			graphics.Texturing = true;
 			graphics.Bind2DTexture( ID );
 			graphics.Draw2DTexture( ref this );
-			graphics.Texturing = false;
 		}
 		
 		public void RenderNoBind( OpenGLApi graphics ) {

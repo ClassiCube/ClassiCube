@@ -28,7 +28,6 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			GraphicsApi.Fog = false;
 			titleWidget = TextWidget.Create( Window, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
 			messageWidget = TextWidget.Create( Window, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
 			progX = Window.Width / 2f - progWidth / 2f;

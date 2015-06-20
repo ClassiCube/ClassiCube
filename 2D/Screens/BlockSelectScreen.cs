@@ -31,7 +31,6 @@ namespace ClassicalSharp {
 		UnsafeString buffer = new UnsafeString( 96 );
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
@@ -48,7 +47,6 @@ namespace ClassicalSharp {
 			if( blockInfoTexture.IsValid ) {
 				blockInfoTexture.Render( GraphicsApi );
 			}
-			GraphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {

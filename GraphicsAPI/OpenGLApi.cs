@@ -27,22 +27,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			get { return textureDimensions; }
 		}
 		
-		public bool AlphaTest {
-			set { ToggleCap( EnableCap.AlphaTest, value ); }
-		}
-		
 		public bool AlphaBlending {
 			set { ToggleCap( EnableCap.Blend, value ); }
-		}
-		
-		AlphaFunction[] alphaFuncs = {
-			AlphaFunction.Always, AlphaFunction.Notequal,
-			AlphaFunction.Never, AlphaFunction.Less,
-			AlphaFunction.Lequal, AlphaFunction.Equal,
-			AlphaFunction.Gequal, AlphaFunction.Greater,
-		};
-		public void AlphaTestFunc( CompareFunc func, float value ) {
-			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
 		BlendingFactor[] blendFuncs = {
@@ -54,53 +40,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)destFunc] );
 		}
 		
-		public bool Fog {
-			set { ToggleCap( EnableCap.Fog, value ); }
-		}
-		
 		FastColour lastFogCol = FastColour.Black;
 		internal Vector4 modernFogCol;
-		public unsafe void SetFogColour( FastColour col ) {			
-			if( col != lastFogCol ) {
-				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
-				modernFogCol = colRGBA;
-				GL.Fog( FogParameter.FogColor, &colRGBA.X );
-				lastFogCol = col;
-			}
+		public void SetFogColour( FastColour col ) {
+			modernFogCol = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 		}
 		
-		float lastFogStart = -1, lastFogEnd = -1, lastFogDensity = -1;
 		internal float modernFogEnd, modernFogDensity;
 		public void SetFogDensity( float value ) {
-			FogParam( FogParameter.FogDensity, value, ref lastFogDensity );
 			modernFogDensity = value;
 		}
 		
-		public void SetFogStart( float value ) {
-			FogParam( FogParameter.FogStart, value, ref lastFogStart );
-		}
-		
 		public void SetFogEnd( float value ) {
-			FogParam( FogParameter.FogEnd, value, ref lastFogEnd );
 			modernFogEnd = value;
 		}
 		
-		static void FogParam( FogParameter param, float value, ref float last ) {
-			if( value != last ) {
-				GL.Fog( param, value );
-				last = value;
-			}
-		}
-		
-		Fog lastFogMode = (Fog)999;
-		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp };
 		internal int modernFogMode = 0;
 		public void SetFogMode( Fog mode ) {
-			if( mode != lastFogMode ) {
-				GL.Fog( FogParameter.FogMode, (int)fogModes[(int)mode] );
-				modernFogMode = mode == ClassicalSharp.GraphicsAPI.Fog.Linear ? 0 : 1;
-				lastFogMode = mode;
-			}
+			modernFogMode = mode == ClassicalSharp.GraphicsAPI.Fog.Linear ? 0 : 1;
 		}
 		
 		public bool FaceCulling {
@@ -113,14 +70,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			int texId = 0;
 			GL.GenTextures( 1, &texId );
-			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
 			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
 
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
-			GL.Disable( EnableCap.Texture2D );
 			return texId;
 		}
 		
@@ -137,10 +92,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public bool IsValidTexture( int texId ) {
 			return GL.IsTexture( texId );
-		}
-		
-		public bool Texturing {
-			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
 		
 		public void Clear() {
@@ -181,7 +132,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		#region Vertex buffers
-				
+		
 		public unsafe int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
 			GL.GenBuffers( 1, &id );
@@ -239,26 +190,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		
-		#region Matrix manipulation
-
-		MatrixMode lastMode = 0;
-		MatrixMode[] matrixModes = { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
-		public void SetMatrixMode( MatrixType mode ) {
-			MatrixMode glMode = matrixModes[(int)mode];
-			if( glMode != lastMode ) {
-				GL.MatrixMode( glMode );
-				lastMode = glMode;
-			}
-		}
-		
-		public unsafe void LoadMatrix( ref Matrix4 matrix ) {
-			fixed( Single* ptr = &matrix.Row0.X )
-				GL.LoadMatrix( ptr );
-		}
-		
-		#endregion
-		
 		public void BeginFrame( Game game ) {
 		}
 		
@@ -302,11 +233,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-			GL.Enable( EnableCap.Texture2D );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
 			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
 			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
-			GL.Disable( EnableCap.Texture2D );
 		}
 	}
 }

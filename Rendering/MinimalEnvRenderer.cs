@@ -17,7 +17,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Init() {
 			base.Init();
-			Graphics.Fog = false;
 			Graphics.ClearColour( Map.SkyCol );
 		}
 		

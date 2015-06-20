@@ -59,20 +59,17 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMap( object sender, EventArgs e ) {
-			Graphics.Fog = false;
 			Graphics.DeleteVb( skyVbo );
 			Graphics.DeleteVb( cloudsVbo );
 			skyVbo = cloudsVbo = -1;
 		}
 		
 		public override void OnNewMapLoaded( object sender, EventArgs e ) {
-			Graphics.Fog = true;
 			ResetAllEnv( null, null );
 		}
 		
 		public override void Init() {
 			base.Init();
-			Graphics.Fog = true;
 			ResetAllEnv( null, null );
 			cloudTexture = Graphics.LoadTexture( "clouds.png" );
 			Window.ViewDistanceChanged += ResetAllEnv;
@@ -132,7 +129,6 @@ namespace ClassicalSharp.Renderers {
 				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );
 				adjFogCol.B = (byte)Utils.Lerp( fogCol.B, skyCol.B, blend );
 				Graphics.SetFogMode( Fog.Linear );
-				Graphics.SetFogStart( 0 );
 				Graphics.SetFogEnd( Window.ViewDistance );
 			}
 			Graphics.ClearColour( adjFogCol );
