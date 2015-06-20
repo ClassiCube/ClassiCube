@@ -44,7 +44,7 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc, projLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
@@ -53,13 +53,13 @@ void main() {
 			projLoc = api.GetUniformLocation( ProgramId, "proj" );
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );
@@ -91,16 +91,16 @@ void main() {
 		}
 		
 		public int positionLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 		}
 	}
@@ -140,22 +140,22 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );
@@ -198,21 +198,21 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc;
 		public int texImageLoc, colourLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			colourLoc = api.GetUniformLocation( ProgramId, "colour" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 		}
@@ -253,20 +253,20 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc;
 		public int texImageLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 		}
@@ -304,22 +304,22 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );
@@ -350,16 +350,16 @@ void main() {
 		
 		public int positionLoc;
 		public int mvpLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 		}
 	}
@@ -395,18 +395,18 @@ void main() {
 		}
 		
 		public int positionLoc, colourLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( colourLoc );
 		}

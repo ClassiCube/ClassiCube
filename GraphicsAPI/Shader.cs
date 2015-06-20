@@ -13,11 +13,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public int ProgramId;
 		
+		protected OpenGLApi api;
+		
 		public void Init( OpenGLApi api ) {
 			string vertexShader = ReadShader( VertexSource );
 			string fragmentShader = ReadShader( FragmentSource );
 			ProgramId = api.CreateProgram( vertexShader, fragmentShader );
-			GetLocations( api );
+			this.api = api;
+			GetLocations();
 		}
 		
 		const string fogUniformCode = @"
@@ -71,42 +74,42 @@ out vec2 out_texcoords;
 			return builder.ToString();
 		}
 		
-		public void Draw( OpenGLApi api, DrawMode mode, int stride, int vb, int startVertex, int verticesCount ) {
+		public void Draw( DrawMode mode, int stride, int vb, int startVertex, int verticesCount ) {
 			api.BindModernVB( vb );
-			EnableVertexAttribStates( api, stride );
+			EnableVertexAttribStates( stride );
 			api.DrawModernVb( mode, vb, startVertex, verticesCount );
-			DisableVertexAttribStates( api, stride );
+			DisableVertexAttribStates( stride );
 		}
 		
-		public void DrawIndexed( OpenGLApi api, DrawMode mode, int stride, int vb, int ib, int indicesCount,
+		public void DrawIndexed( DrawMode mode, int stride, int vb, int ib, int indicesCount,
 		                        int startVertex, int startIndex ) {
 			api.BindModernIndexedVb( vb, ib );
-			EnableVertexAttribStates( api, stride );
+			EnableVertexAttribStates( stride );
 			api.DrawModernIndexedVb( mode, vb, ib, indicesCount, startVertex, startIndex );
-			DisableVertexAttribStates( api, stride );
+			DisableVertexAttribStates( stride );
 		}
 		
-		public void DrawDynamic<T>( OpenGLApi api, DrawMode mode, int stride, int vb, T[] vertices, int count ) where T : struct {
+		public void DrawDynamic<T>(  DrawMode mode, int stride, int vb, T[] vertices, int count ) where T : struct {
 			api.BindModernVB( vb );
-			EnableVertexAttribStates( api, stride );
+			EnableVertexAttribStates( stride );
 			api.DrawModernDynamicVb( mode, vb, vertices, stride, count );
-			DisableVertexAttribStates( api, stride );
+			DisableVertexAttribStates( stride );
 		}
 		
-		protected virtual void GetLocations( OpenGLApi api ) {
+		protected virtual void GetLocations() {
 		}
 		
-		protected virtual void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected virtual void EnableVertexAttribStates( int stride ) {
 		}
 		
-		protected virtual void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected virtual void DisableVertexAttribStates( int stride ) {
 		}
 	}
 	
 	public abstract class FogAndMVPShader : Shader {
 		
 		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
 			
 			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );

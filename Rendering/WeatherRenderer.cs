@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			shader.DrawDynamic( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, weatherVb, vertices, index );
+			shader.DrawDynamic( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, weatherVb, vertices, index );
 			api.AlphaBlending = false;
 		}
 		

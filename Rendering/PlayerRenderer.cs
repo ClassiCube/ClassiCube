@@ -73,7 +73,7 @@ namespace ClassicalSharp.Renderers {
 			quads[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
 			quads[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
 			quads[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			cache.Shader.DrawDynamic( Graphics, DrawMode.TriangleStrip, VertexPos3fTex2f.Size, quadVb, quads, 4 );
+			cache.Shader.DrawDynamic( DrawMode.TriangleStrip, VertexPos3fTex2f.Size, quadVb, quads, 4 );
 		}
 	}
 }

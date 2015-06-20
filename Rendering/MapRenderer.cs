@@ -297,10 +297,10 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.SolidParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 					Window.Vertices += part.IndicesCount;
 				}
@@ -314,7 +314,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.SpriteParts[batch];
 				if( part.IndicesCount > 0 ) {
-					shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+					shader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					Window.Vertices += part.IndicesCount;
 				}
 			}
@@ -328,10 +328,10 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						shader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						shader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 					Window.Vertices += part.IndicesCount;
 				}
@@ -346,10 +346,10 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
-						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
-						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
+						lShader.DrawIndexed( mode, stride, part.VbId, part.IbId, maxIndices, 0, 0 );
+						lShader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
 					} else {
-						lShader.DrawIndexed( api, mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
+						lShader.DrawIndexed( mode, stride, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
 					}
 				}
 			}

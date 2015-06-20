@@ -36,7 +36,7 @@ namespace DefaultPlugin {
 			shader.UpdateFogAndMVPState( api, ref Window.MVP );
 			
 			api.Bind2DTexture( sideTexId );
-			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );
+			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );
 		}
 		
 		public override void RenderMapEdges( double deltaTime ) {
@@ -47,7 +47,7 @@ namespace DefaultPlugin {
 			
 			api.AlphaBlending = true;
 			api.Bind2DTexture( edgeTexId );
-			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, edgesVboId, 0, edgesVertices );
+			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, edgesVboId, 0, edgesVertices );
 			api.AlphaBlending = false;
 		}
 		
@@ -208,22 +208,22 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );

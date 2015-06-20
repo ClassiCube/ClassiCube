@@ -33,7 +33,7 @@ namespace DefaultPlugin {
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
-				shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, skyVbo, 0, skyVertices );
+				shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, skyVbo, 0, skyVertices );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
@@ -94,7 +94,7 @@ namespace DefaultPlugin {
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			Graphics.SetUniform( shader.sOffsetLoc, offset );
 			Graphics.Bind2DTexture( cloudTexture );
-			shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, cloudsVbo, 0, cloudsVertices );
+			shader.Draw(  DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, cloudsVbo, 0, cloudsVertices );
 		}
 		
 		double blendFactor( int x ) {
@@ -229,23 +229,23 @@ void main() {
 		
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int sOffsetLoc, texImageLoc;
-		protected override void GetLocations( OpenGLApi api ) {
+		protected override void GetLocations() {
 			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
 			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
 			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
 			
 			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
 			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
-			base.GetLocations( api );
+			base.GetLocations();
 		}
 		
-		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void EnableVertexAttribStates( int stride ) {
 			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
 			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
 			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
 		}
 		
-		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		protected override void DisableVertexAttribStates( int stride ) {
 			api.DisableVertexAttrib( positionLoc );
 			api.DisableVertexAttrib( texCoordsLoc );
 			api.DisableVertexAttrib( colourLoc );

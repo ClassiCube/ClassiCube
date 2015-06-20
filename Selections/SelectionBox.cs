@@ -27,9 +27,9 @@ namespace ClassicalSharp.Selections {
 		
 		public void Render( SelectionShader shader ) {
 			Graphics.DepthWrite = false;
-			shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fCol4b.Size, Vb, 0, VerticesCount );
+			shader.Draw( DrawMode.Triangles, VertexPos3fCol4b.Size, Vb, 0, VerticesCount );
 			Graphics.DepthWrite = true;
-			shader.Draw( Graphics, DrawMode.Lines, VertexPos3fCol4b.Size, LineVb, 0, LineVerticesCount );
+			shader.Draw( DrawMode.Lines, VertexPos3fCol4b.Size, LineVb, 0, LineVerticesCount );
 		}
 		
 		public SelectionBox( Vector3I start, Vector3I end, FastColour col, OpenGLApi graphics ) {

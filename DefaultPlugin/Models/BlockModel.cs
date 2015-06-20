@@ -37,7 +37,7 @@ namespace DefaultPlugin {
 			if( BlockInfo.IsSprite( block ) ) {
 				DrawXFace( 0f, TileSide.Right, false );
 				DrawZFace( 0f, TileSide.Back, false );
-				shader.DrawDynamic( graphics, DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, 6 * 2 );
+				shader.DrawDynamic( DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, 6 * 2 );
 			} else {
 				DrawYFace( blockHeight, TileSide.Top );
 				DrawXFace( -0.5f, TileSide.Right, false );
@@ -45,7 +45,7 @@ namespace DefaultPlugin {
 				DrawZFace( -0.5f, TileSide.Front, true );
 				DrawZFace( 0.5f, TileSide.Back, false );
 				DrawYFace( 0f, TileSide.Bottom );
-				shader.DrawDynamic( graphics, DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, 6 * 6 );
+				shader.DrawDynamic( DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, 6 * 6 );
 			}
 		}
 		float blockHeight;

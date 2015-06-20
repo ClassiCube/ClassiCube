@@ -42,7 +42,7 @@ namespace ClassicalSharp.Particles {
 					
 			count = Math.Min( count, 1000 );
 			api.Bind2DTexture( Window.TerrainAtlas.TexId );
-			shader.DrawDynamic( api, DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, count );
+			shader.DrawDynamic( DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, count );
 		}
 		
 		public void Tick( double delta ) {
