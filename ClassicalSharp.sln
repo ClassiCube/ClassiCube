@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher\Launch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "OpenTK\OpenTK.csproj", "{35FEE071-2DE6-48A1-9343-B5C1F202A12B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultPlugin", "DefaultPlugin\DefaultPlugin.csproj", "{2769225D-E552-4739-AB46-0C3903436321}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2769225D-E552-4739-AB46-0C3903436321}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2769225D-E552-4739-AB46-0C3903436321}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2769225D-E552-4739-AB46-0C3903436321}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2769225D-E552-4739-AB46-0C3903436321}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

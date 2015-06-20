@@ -123,7 +123,6 @@
     <Compile Include="GraphicsAPI\ModernGLApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
     <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\Shader.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Ionic.Zlib\DeflateStream.cs" />

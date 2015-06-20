@@ -12,17 +12,10 @@ namespace ClassicalSharp.Commands {
 		public Game Window;
 		public List<Command> RegisteredCommands = new List<Command>();
 		public void Init( Game game ) {
-			Window = game;			
-			RegisterCommand( new CommandsCommand() );
-			RegisterCommand( new HelpCommand() );
-			RegisterCommand( new EnvCommand() );
-			RegisterCommand( new InfoCommand() );
-			RegisterCommand( new RenderTypeCommand() );
-			RegisterCommand( new ChatFontSizeCommand() );
-			RegisterCommand( new MouseSensitivityCommand() );
+			Window = game;
 		}
 		
-		void RegisterCommand( Command command ) {
+		internal void RegisterCommand( Command command ) {
 			command.Window = Window;
 			foreach( Command cmd in RegisteredCommands ) {
 				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {

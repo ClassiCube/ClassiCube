@@ -12,6 +12,10 @@ namespace ClassicalSharp.Commands {
 		
 		public Game Window;
 		
+		public Command( Game window ) {
+			Window = window;
+		}
+		
 		public abstract void Execute( CommandReader reader );
 	}
 }

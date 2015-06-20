@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer;
+		public string skinServer, chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
 		
@@ -145,6 +145,17 @@ namespace ClassicalSharp {
 			ParticleManager.Init();
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
+			
+			if( !Directory.Exists( "plugins" ) || 
+			   !File.Exists( Path.Combine( "plugins", "defaultplugin.dll" ) ) ) {
+				Utils.LogError( "Plugins directory or default plugin does not exist." );
+			} else {
+				string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+				foreach( string file in Directory.GetFiles( "plugins" ) ) {
+					if( !Utils.CaselessEquals( Path.GetExtension( file ), ".dll" ) ) continue;
+					Plugin.Plugin.LoadPlugin( Path.Combine( baseDirectory, file ), this );
+				}
+			}
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
