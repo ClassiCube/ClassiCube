@@ -43,10 +43,6 @@ namespace OpenTK.Graphics.OpenGL
 			internal static ActiveTexture glActiveTexture;
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void AlphaFunc(OpenTK.Graphics.OpenGL.AlphaFunction func, Single @ref);
-			internal static AlphaFunc glAlphaFunc;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void AttachShader(UInt32 program, UInt32 shader);
 			internal static AttachShader glAttachShader;
 			
@@ -89,10 +85,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void ColorMask(bool red, bool green, bool blue, bool alpha);
 			internal static ColorMask glColorMask;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void ColorPointer(Int32 size, OpenTK.Graphics.OpenGL.ColorPointerType type, Int32 stride, IntPtr pointer);
-			internal static ColorPointer glColorPointer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void CompileShader(UInt32 shader);
@@ -143,9 +135,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void Disable(OpenTK.Graphics.OpenGL.EnableCap cap);
 			internal static Disable glDisable;
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void DisableClientState(OpenTK.Graphics.OpenGL.ArrayCap array);
-			internal static DisableClientState glDisableClientState;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void DisableVertexAttribArray(UInt32 index);
@@ -162,9 +151,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void Enable(OpenTK.Graphics.OpenGL.EnableCap cap);
 			internal static Enable glEnable;
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void EnableClientState(OpenTK.Graphics.OpenGL.ArrayCap array);
-			internal static EnableClientState glEnableClientState;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
             internal delegate void EnableVertexAttribArray(UInt32 index);
@@ -177,20 +163,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void Flush();
 			internal static Flush glFlush;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void Fogf(OpenTK.Graphics.OpenGL.FogParameter pname, Single param);
-			internal static Fogf glFogf;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal unsafe delegate void Fogfv(OpenTK.Graphics.OpenGL.FogParameter pname, Single* @params);
-			internal unsafe static Fogfv glFogfv;
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void Fogi(OpenTK.Graphics.OpenGL.FogParameter pname, Int32 param);
-			internal static Fogi glFogi;
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal unsafe delegate void Fogiv(OpenTK.Graphics.OpenGL.FogParameter pname, Int32* @params);
-			internal unsafe static Fogiv glFogiv;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void FrontFace(OpenTK.Graphics.OpenGL.FrontFaceDirection mode);
@@ -277,26 +249,10 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void LinkProgram(UInt32 program);
 			internal static LinkProgram glLinkProgram;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void LoadIdentity();
-			internal static LoadIdentity glLoadIdentity;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal unsafe delegate void LoadMatrixf(Single* m);
-			internal unsafe static LoadMatrixf glLoadMatrixf;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void LogicOp(OpenTK.Graphics.OpenGL.LogicOp opcode);
 			internal static LogicOp glLogicOp;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void MatrixMode(OpenTK.Graphics.OpenGL.MatrixMode mode);
-            internal static MatrixMode glMatrixMode;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal unsafe delegate void MultMatrixf(Single* m);
-			internal unsafe static MultMatrixf glMultMatrixf;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void PixelStoref(OpenTK.Graphics.OpenGL.PixelStoreParameter pname, Single param);
@@ -308,18 +264,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void PolygonOffset(Single factor, Single units);
 			internal static PolygonOffset glPolygonOffset;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void PopMatrix();
-			internal static PopMatrix glPopMatrix;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void ProvokingVertex(OpenTK.Graphics.OpenGL.ProvokingVertexMode mode);
-			internal static ProvokingVertex glProvokingVertex;
-
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void PushMatrix();
-			internal static PushMatrix glPushMatrix;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void ReadPixels(Int32 x, Int32 y, Int32 width, Int32 height, OpenTK.Graphics.OpenGL.PixelFormat format, OpenTK.Graphics.OpenGL.PixelType type, [OutAttribute] IntPtr pixels);
@@ -328,10 +272,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal unsafe delegate void ShaderSource(UInt32 shader, Int32 count, String[] @string, Int32* length);
 			internal unsafe static ShaderSource glShaderSource;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void TexCoordPointer(Int32 size, OpenTK.Graphics.OpenGL.TexCoordPointerType type, Int32 stride, IntPtr pointer);
-			internal static TexCoordPointer glTexCoordPointer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void TexImage2D(OpenTK.Graphics.OpenGL.TextureTarget target, Int32 level, OpenTK.Graphics.OpenGL.PixelInternalFormat internalformat, Int32 width, Int32 height, Int32 border, OpenTK.Graphics.OpenGL.PixelFormat format, OpenTK.Graphics.OpenGL.PixelType type, IntPtr pixels);
@@ -464,10 +404,6 @@ namespace OpenTK.Graphics.OpenGL
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void VertexAttribPointer(UInt32 index, Int32 size, OpenTK.Graphics.OpenGL.VertexAttribPointerType type, bool normalized, Int32 stride, IntPtr pointer);
 			internal static VertexAttribPointer glVertexAttribPointer;
-			
-			[System.Security.SuppressUnmanagedCodeSecurity()]
-			internal delegate void VertexPointer(Int32 size, OpenTK.Graphics.OpenGL.VertexPointerType type, Int32 stride, IntPtr pointer);
-			internal static VertexPointer glVertexPointer;
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void Viewport(Int32 x, Int32 y, Int32 width, Int32 height);

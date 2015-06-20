@@ -41,11 +41,7 @@ namespace ClassicalSharp {
 			if( sidesVboId == -1 ) return;
 			
 			api.UseProgram( shader.ProgramId );
-			api.SetUniform( shader.mvpLoc, ref Window.MVP );
-			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
-			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
-			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
-			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
+			shader.UpdateFogAndMVPState( api, ref Window.MVP );
 			
 			api.Bind2DTexture( sideTexId );
 			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );

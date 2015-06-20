@@ -27,11 +27,7 @@ namespace ClassicalSharp.Renderers {
 			if( skyVbo == -1 || cloudsVbo == -1 ) return;
 			
 			Graphics.UseProgram( shader.ProgramId );
-			Graphics.SetUniform( shader.mvpLoc, ref Window.MVP );
-			Graphics.SetUniform( shader.fogColLoc, ref Graphics.modernFogCol );
-			Graphics.SetUniform( shader.fogDensityLoc, Graphics.modernFogDensity );
-			Graphics.SetUniform( shader.fogEndLoc, Graphics.modernFogEnd );
-			Graphics.SetUniform( shader.fogModeLoc, Graphics.modernFogMode );
+			shader.UpdateFogAndMVPState( Graphics, ref Window.MVP );
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {

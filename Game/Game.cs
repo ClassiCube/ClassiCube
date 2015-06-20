@@ -262,11 +262,7 @@ namespace ClassicalSharp {
 		void RenderPlayers( double deltaTime, float t ) {
 			EntityShader shader = ModelCache.Shader;
 			Graphics.UseProgram( shader.ProgramId );
-			Graphics.SetUniform( shader.mvpLoc, ref MVP );
-			Graphics.SetUniform( shader.fogColLoc, ref Graphics.modernFogCol );
-			Graphics.SetUniform( shader.fogDensityLoc, Graphics.modernFogDensity );
-			Graphics.SetUniform( shader.fogEndLoc, Graphics.modernFogEnd );
-			Graphics.SetUniform( shader.fogModeLoc, Graphics.modernFogMode );
+			shader.UpdateFogAndMVPState( Graphics, ref MVP );
 			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {

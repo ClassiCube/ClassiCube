@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.IO;
+using OpenTK;
 
 namespace ClassicalSharp.GraphicsAPI {
 
@@ -99,6 +100,28 @@ out vec2 out_texcoords;
 		}
 		
 		protected virtual void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+		}
+	}
+	
+	public abstract class FogAndMVPShader : Shader {
+		
+		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			
+			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
+			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
+			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
+			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
+		}
+		
+		// TODO: Cache fog state so we don't change uniforms needlessly.
+		public void UpdateFogAndMVPState( OpenGLApi api, ref Matrix4 mvp ) {
+			api.SetUniform( mvpLoc, ref mvp );
+			api.SetUniform( fogColLoc, ref api.modernFogCol );
+			api.SetUniform( fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( fogEndLoc, api.modernFogEnd );
+			api.SetUniform( fogModeLoc, api.modernFogMode );
 		}
 	}
 }

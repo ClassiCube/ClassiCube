@@ -29,11 +29,7 @@ namespace ClassicalSharp.Particles {
 			if( particles.Count == 0 ) return;
 			
 			api.UseProgram( shader.ProgramId );
-			api.SetUniform( shader.mvpLoc, ref Window.MVP );
-			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
-			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
-			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
-			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
+			shader.UpdateFogAndMVPState( api, ref Window.MVP );
 			
 			int count = particles.Count * 6;
 			if( count > vertices.Length ) {

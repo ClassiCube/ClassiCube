@@ -201,11 +201,7 @@ namespace ClassicalSharp {
 			UpdateChunks();
 			int[] texIds = Window.TerrainAtlas1D.TexIds;
 			api.UseProgram( shader.ProgramId );
-			api.SetUniform( shader.mvpLoc, ref Window.MVP );
-			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
-			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
-			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
-			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
+			shader.UpdateFogAndMVPState( api, ref Window.MVP );
 			
 			// Render solid and fully transparent to fill depth buffer.
 			// These blocks are treated as having an alpha value of either none or full.

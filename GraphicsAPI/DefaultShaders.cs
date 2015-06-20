@@ -65,19 +65,6 @@ void main() {
 			api.DisableVertexAttrib( colourLoc );
 		}
 	}
-	
-	public abstract class FogAndMVPShader : Shader {
-		
-		public int mvpLoc, fogColLoc, fogEndLoc, fogDensityLoc, fogModeLoc;
-		protected override void GetLocations( OpenGLApi api ) {
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
-			
-			fogColLoc = api.GetUniformLocation( ProgramId, "fogColour" );
-			fogEndLoc = api.GetUniformLocation( ProgramId, "fogEnd" );
-			fogDensityLoc = api.GetUniformLocation( ProgramId, "fogDensity" );
-			fogModeLoc = api.GetUniformLocation( ProgramId, "fogMode" );
-		}
-	}
 
 	public sealed class PickingShader : FogAndMVPShader {
 		
