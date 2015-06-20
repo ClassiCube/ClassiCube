@@ -3,11 +3,19 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public partial class ChunkMeshBuilder {
+	public class StandardChunkMeshBuilder : ChunkMeshBuilder {
 		
 		DrawInfo1D[] drawInfoBuffer;
 		TerrainAtlas1D atlas;
 		int arraysCount = 0;
+		public StandardChunkMeshBuilder( Game window ) : base( window ) {
+			window.TerrainAtlasChanged += TerrainAtlasChanged;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			Window.TerrainAtlasChanged -= TerrainAtlasChanged;
+		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			int newArraysCount = Window.TerrainAtlas1D.TexIds.Length;
@@ -52,7 +60,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+		protected override bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
 			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
 				( IsLit( startX, startY, startZ, face ) == IsLit( x, y, z, face ) );
@@ -109,7 +117,7 @@ namespace ClassicalSharp {
 				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
 		
-		void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts,
+		protected override void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts,
 		                  ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
 			for( int i = 0; i < arraysCount; i++ ) {
 				DrawInfo1D info = drawInfoBuffer[i];
@@ -134,10 +142,8 @@ namespace ClassicalSharp {
 		}
 		
 		bool isTranslucent;
-		float blockHeight;
-		float invVerElementSize;
-		
-		void PreStretchTiles( int x1, int y1, int z1 ) {
+		float invVerElementSize;	
+		protected override void PreStretchTiles( int x1, int y1, int z1 ) {
 			invVerElementSize = Window.TerrainAtlas1D.invElementSize;
 			arraysCount = Window.TerrainAtlas1D.TexIds.Length;
 			atlas = Window.TerrainAtlas1D;
@@ -157,7 +163,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void PostStretchTiles( int x1, int y1, int z1 ) {
+		protected override void PostStretchTiles( int x1, int y1, int z1 ) {
 			for( int i = 0; i < drawInfoBuffer.Length; i++ ) {
 				DrawInfo1D info = drawInfoBuffer[i];
 				info.Solid.ExpandToCapacity();
@@ -166,12 +172,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void AddSpriteVertices( byte tile, int count ) {
+		protected override void AddSpriteVertices( byte tile, int count ) {
 			int i = atlas.Get1DIndex( BlockInfo.GetOptimTextureLoc( tile, TileSide.Left ) );
 			drawInfoBuffer[i].Sprite.iCount += 6 + 6 * count;
 		}
 		
-		void AddVertices( byte tile, int count, int face ) {
+		protected override void AddVertices( byte tile, int count, int face ) {
 			int i = atlas.Get1DIndex( BlockInfo.GetOptimTextureLoc( tile, face ) );
 			if( BlockInfo.IsTranslucent( tile ) ) {
 				drawInfoBuffer[i].Translucent.iCount += 6;
@@ -180,7 +186,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		void DrawTopFace( int count ) {
+		protected override void DrawTopFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Top );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -199,7 +205,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
 		}
 
-		void DrawBottomFace( int count ) {
+		protected override void DrawBottomFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Bottom );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -218,7 +224,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
 		}
 
-		void DrawBackFace( int count ) {
+		protected override void DrawBackFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Back );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -240,7 +246,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 		}
 
-		void DrawFrontFace( int count ) {
+		protected override void DrawFrontFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Front );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -262,7 +268,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
 		}
 
-		void DrawLeftFace( int count ) {
+		protected override void DrawLeftFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Left );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -284,7 +290,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
 		}
 
-		void DrawRightFace( int count ) {
+		protected override void DrawRightFace( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );
@@ -306,7 +312,7 @@ namespace ClassicalSharp {
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
 		}
 		
-		void DrawSprite( int count ) {
+		protected override void DrawSprite( int count ) {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int drawInfoIndex;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out drawInfoIndex );

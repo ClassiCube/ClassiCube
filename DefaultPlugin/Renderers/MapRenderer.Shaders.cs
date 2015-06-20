@@ -24,6 +24,7 @@ flat in vec4 out_colour;
 out vec4 final_colour;
 uniform sampler2D texImage;
 --IMPORT fog_uniforms
+uniform vec4 lightColours[8];
 
 void main() {
    vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;

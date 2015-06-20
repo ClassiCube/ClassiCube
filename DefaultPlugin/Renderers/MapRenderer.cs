@@ -38,7 +38,7 @@ namespace DefaultPlugin {
 		
 		public StandardMapRenderer( Game window ) : base( window ) {
 			_1Dcount = window.TerrainAtlas1D.TexIds.Length;
-			builder = new ChunkMeshBuilder( window );
+			builder = new StandardChunkMeshBuilder( window );
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
 		}
 		
@@ -89,7 +89,6 @@ namespace DefaultPlugin {
 			chunks = null;
 			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
-			builder.OnNewMap();
 		}
 		
 		int chunksX, chunksY, chunksZ;
@@ -105,7 +104,6 @@ namespace DefaultPlugin {
 			unsortedChunks = new ChunkInfo[chunksX * chunksY * chunksZ];
 			distances = new int[chunks.Length];
 			CreateChunkCache();
-			builder.OnNewMapLoaded();
 		}
 		
 		void ClearChunkCache() {

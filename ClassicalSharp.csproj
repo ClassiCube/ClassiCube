@@ -130,7 +130,6 @@
     <Compile Include="Ionic.Zlib\InfTree.cs" />
     <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\ChunkMeshBuilder.cs" />
-    <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Model\IModel.cs" />
     <Compile Include="Model\ModelCache.cs" />

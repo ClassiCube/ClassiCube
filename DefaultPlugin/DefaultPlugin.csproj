@@ -55,6 +55,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StandardChunkMeshBuilder.cs" />
     <Compile Include="DefaultCommands.cs" />
     <Compile Include="DefaultPlugin.cs" />
     <Compile Include="Models\BlockModel.cs" />
