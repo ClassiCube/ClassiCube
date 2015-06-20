@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public SkeletonModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new VertexPos3fTex2f[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -19,7 +19,7 @@ namespace ClassicalSharp.Model {
 			Set.LeftArm = MakeLeftArm( 0.375f, 0.25f );
 			Set.RightArm = MakeRightArm( 0.25f, 0.375f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "skeleton.png" );
@@ -54,8 +54,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
-			graphics.AlphaTest = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			

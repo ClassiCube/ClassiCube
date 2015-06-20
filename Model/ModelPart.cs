@@ -9,16 +9,18 @@ namespace ClassicalSharp {
 		public int Offset = 0;
 		public int Count;
 		public OpenGLApi Graphics;
+		public Shader Shader;
 		
-		public ModelPart( int vb, int offset, int count, OpenGLApi graphics ) {
+		public ModelPart( int vb, int offset, int count, OpenGLApi graphics, Shader shader ) {
 			Offset = offset;
 			Count = count;
 			Graphics = graphics;
 			Vb = vb;
+			Shader = shader;
 		}
 		
 		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, Vb, Offset, Count );
+			Shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fTex2f.Size, Vb, Offset, Count );
 		}
 	}
 	

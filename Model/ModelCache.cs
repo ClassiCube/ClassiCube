@@ -1,15 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Model {
 
 	public class ModelCache {
 		
 		Game window;
+		public EntityShader Shader;
+		public VertexPos3fTex2f[] EntityNameVertices = new VertexPos3fTex2f[4];
+		public int EntityNameVb;
 		public ModelCache( Game window ) {
 			this.window = window;
+		}
+		
+		public void Init() {
+			// can't place this in constructor because entity constructors
+			// depend on Window.ModelCache not being null.
+			Shader = new EntityShader();
+			Shader.Init( window.Graphics );
 			cache["humanoid"] = new PlayerModel( window );
+			EntityNameVb = window.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 4 );
 		}
 		
 		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();
@@ -61,6 +73,7 @@ namespace ClassicalSharp.Model {
 			foreach( var entry in cache ) {
 				entry.Value.Dispose();
 			}
+			window.Graphics.DeleteVb( EntityNameVb );
 		}
 	}
 }

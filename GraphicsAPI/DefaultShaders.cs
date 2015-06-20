@@ -241,6 +241,62 @@ void main() {
 		}
 	}
 	
+	public sealed class EntityShader : FogAndMVPShader {
+		
+		public EntityShader() {
+			VertexSource = @"
+#version 130
+in vec3 in_position;
+in vec2 in_texcoords;
+out vec2 out_texcoords;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_texcoords = in_texcoords;
+}";
+			
+			FragmentSource = @"
+#version 130
+in vec2 out_texcoords;
+out vec4 final_colour;
+uniform sampler2D texImage;
+uniform float colour;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour = texture2D(texImage, out_texcoords) * vec4(colour, colour, colour, 1.0);
+   if(finalColour.a < 0.5) {
+      discard;
+   }
+   
+--IMPORT fog_code
+   final_colour = finalColour;
+}";
+		}
+		
+		public int positionLoc, texCoordsLoc;
+		public int texImageLoc, colourLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			colourLoc = api.GetUniformLocation( ProgramId, "colour" );
+			base.GetLocations( api );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 12 );
+		}
+		
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+		}
+	}
+	
 	public sealed class ParticleShader : FogAndMVPShader {
 		
 		public ParticleShader() {

@@ -205,8 +205,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<DrawMode, int, int, int> drawBatchFuncTex2f;
 		Action<DrawMode, int, int, int> drawBatchFuncCol4b;
 		Action<DrawMode, int, int, int> drawBatchFuncTex2fCol4b;
-		
-		
+				
 		public unsafe int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
 			GL.GenBuffers( 1, &id );

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public PigModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new VertexPos3fTex2f[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -19,7 +19,7 @@ namespace ClassicalSharp.Model {
 			Set.LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
 			Set.RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "pig.png" );
@@ -42,7 +42,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
@@ -52,7 +51,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.375f, -0.3125f, rightLegXRot, 0, 0, Set.RightLegFront );
 			DrawRotate( 0, 0.375f, 0.4375f, rightLegXRot, 0, 0, Set.LeftLegBack );
 			DrawRotate( 0, 0.375f, 0.4375f, leftLegXRot, 0, 0, Set.RightLegBack );
-			graphics.AlphaTest = true;
 		}
 		
 		public override void Dispose() {

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public SpiderModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 5];
+			vertices = new VertexPos3fTex2f[partVertices * 5];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Link = MakeLink();
@@ -18,7 +18,7 @@ namespace ClassicalSharp.Model {
 			Set.LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			Set.RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
@@ -45,10 +45,8 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
-			graphics.AlphaTest = true;
 			
 			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Set.Head );
 			Set.Link.Render();

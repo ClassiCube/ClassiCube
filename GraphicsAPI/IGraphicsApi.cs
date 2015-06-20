@@ -50,18 +50,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			MultiplyMatrix( ref matrix );
 		}
 		
-		public void RotateX( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationX( degrees * 0.01745329251f ); // PI / 180
-			MultiplyMatrix( ref matrix );
-		}
-		
 		public void RotateY( float degrees ) {
 			Matrix4 matrix = Matrix4.CreateRotationY( degrees * 0.01745329251f );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void RotateZ( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationZ( degrees * 0.01745329251f );
 			MultiplyMatrix( ref matrix );
 		}
 		

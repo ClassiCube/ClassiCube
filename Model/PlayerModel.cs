@@ -9,7 +9,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set64x32, Set64x64, Set64x64Slim;
 		public PlayerModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 7 * 3];
+			vertices = new VertexPos3fTex2f[partVertices * 7 * 3];
 			Set64x32 = new ModelSet();
 			Set64x32.Head = MakeHead( false );
 			Set64x32.Torso = MakeTorso( false );
@@ -37,7 +37,7 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.Hat = MakeHat( true );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set64x32.SetVb( vb );
 			Set64x64.SetVb( vb );
 			Set64x64Slim.SetVb( vb );
@@ -83,7 +83,6 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet model;
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
 			int texId = renderer.PlayerTextureId <= 0 ? DefaultTexId : renderer.PlayerTextureId;
 			graphics.Bind2DTexture( texId );
 			model = Set64x32;
@@ -97,7 +96,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( 0, 1.5f, 0, leftArmXRot, 0, leftArmZRot, model.LeftArm );
 			DrawRotate( 0, 1.5f, 0, rightArmXRot, 0, rightArmZRot, model.RightArm );
-			graphics.AlphaTest = true;
 			DrawRotate( 0, 1.4375f, 0, -pitch, 0, 0, model.Hat );
 		}
 		

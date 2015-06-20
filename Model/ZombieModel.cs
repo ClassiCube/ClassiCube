@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set;
 		public ZombieModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new VertexPos3fTex2f[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -19,7 +19,7 @@ namespace ClassicalSharp.Model {
 			Set.LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			Set.RightArm = MakeRightArm( 0.25f, 0.5f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
 			vertices = null;		
 			DefaultTexId = graphics.LoadTexture( "zombie.png" );
@@ -54,7 +54,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
@@ -64,7 +63,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
 			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, Set.LeftArm );
 			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );
-			graphics.AlphaTest = true;
 		}
 		
 		public override void Dispose() {

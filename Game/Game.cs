@@ -95,8 +95,8 @@ namespace ClassicalSharp {
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
-			TerrainAtlas.Dispose();			
-			TerrainAtlas.UpdateState( bmp );						
+			TerrainAtlas.Dispose();
+			TerrainAtlas.UpdateState( bmp );
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
@@ -116,6 +116,7 @@ namespace ClassicalSharp {
 		protected override void OnLoad( EventArgs e ) {
 			Graphics = new OpenGLApi();
 			ModelCache = new ModelCache( this );
+			ModelCache.Init();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
@@ -226,12 +227,12 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref MVP );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {		
+			if( visible ) {
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				Picking.Render( e.Time );				
-				EnvRenderer.Render( e.Time );			
+				Picking.Render( e.Time );
+				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
@@ -262,14 +263,21 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;			
+			EntityShader shader = ModelCache.Shader;
+			Graphics.UseProgram( shader.ProgramId );
+			Graphics.SetUniform( shader.mvpLoc, ref MVP );
+			Graphics.SetUniform( shader.fogColLoc, ref Graphics.modernFogCol );
+			Graphics.SetUniform( shader.fogDensityLoc, Graphics.modernFogDensity );
+			Graphics.SetUniform( shader.fogEndLoc, Graphics.modernFogEnd );
+			Graphics.SetUniform( shader.fogModeLoc, Graphics.modernFogMode );
+			
 			for( int i = 0; i < NetPlayers.Length; i++ ) {
 				if( NetPlayers[i] != null ) {
 					NetPlayers[i].Render( deltaTime, t );
 				}
 			}
 			LocalPlayer.Render( deltaTime, t );
-			//Graphics.AlphaTest = false;
+			Graphics.UseProgram( 0 );
 		}
 		
 		public override void Dispose() {

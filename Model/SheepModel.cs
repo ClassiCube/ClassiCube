@@ -13,7 +13,7 @@ namespace ClassicalSharp.Model {
 		int furTextureId;
 		
 		public SheepModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 * ( Fur ? 2 : 1 )];
+			vertices = new VertexPos3fTex2f[partVertices * 6 * ( Fur ? 2 : 1 )];
 			Set = new ModelSet( Fur );
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
@@ -30,7 +30,7 @@ namespace ClassicalSharp.Model {
 				Set.FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "sheep.png" );
@@ -66,7 +66,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
@@ -76,7 +75,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, -0.3125f, rightLegXRot, 0, 0, Set.RightLegFront );
 			DrawRotate( 0, 0.75f, 0.4375f, rightLegXRot, 0, 0, Set.LeftLegBack );
 			DrawRotate( 0, 0.75f, 0.4375f, leftLegXRot, 0, 0, Set.RightLegBack );
-			graphics.AlphaTest = true;
+
 			if( Fur ) {
 				graphics.Bind2DTexture( furTextureId );
 				Set.FurTorso.Render();
