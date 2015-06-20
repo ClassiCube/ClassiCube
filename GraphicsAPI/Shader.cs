@@ -32,7 +32,7 @@ uniform float fogMode;
 in vec3 in_position;
 in vec4 in_colour;
 in vec2 in_texcoords;
-out vec4 out_colour;
+flat out vec4 out_colour;
 out vec2 out_texcoords;
 ";
 		

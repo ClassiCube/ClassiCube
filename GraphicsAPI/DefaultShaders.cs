@@ -121,7 +121,7 @@ void main() {
 			
 			FragmentSource = @"
 #version 130
-in vec4 out_colour;
+flat in vec4 out_colour;
 in vec2 out_texcoords;
 out vec4 final_colour;
 uniform sampler2D texImage;
@@ -188,7 +188,7 @@ void main() {
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
-in vec4 out_colour;
+flat in vec4 out_colour;
 out vec4 final_colour;
 uniform sampler2D texImage;
 --IMPORT fog_uniforms
@@ -355,7 +355,7 @@ void main() {
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
-in vec4 out_colour;
+flat in vec4 out_colour;
 out vec4 final_colour;
 uniform sampler2D texImage;
 --IMPORT fog_uniforms
@@ -494,7 +494,7 @@ void main() {
 #version 130
 in vec3 in_position;
 in vec4 in_colour;
-out vec4 out_colour;
+flat out vec4 out_colour;
 uniform mat4 MVP;
 
 void main() {
@@ -505,7 +505,7 @@ void main() {
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
-in vec4 out_colour;
+flat in vec4 out_colour;
 out vec4 final_colour;
 --IMPORT fog_uniforms
 
