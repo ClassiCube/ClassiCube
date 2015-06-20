@@ -45,21 +45,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		protected static int[] strideSizes = { 20, 16, 24 };
 		
-		public void Translate( float x, float y, float z ) {
-			Matrix4 matrix = Matrix4.CreateTranslation( x, y, z );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public void RotateY( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationY( degrees * 0.01745329251f );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void Scale( float x, float y, float z ) {
-			Matrix4 matrix = Matrix4.Scale( x, y, z );
-			MultiplyMatrix( ref matrix );
-		}
-		
 		public void CheckResources() {
 		}
 		

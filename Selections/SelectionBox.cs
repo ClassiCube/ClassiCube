@@ -8,8 +8,8 @@ namespace ClassicalSharp.Selections {
 		public short ID;
 		
 		public FastColour Colour, LineColour;
-		public int VboId, VerticesCount;
-		public int LineVboId, LineVerticesCount;
+		public int Vb, VerticesCount;
+		public int LineVb, LineVerticesCount;
 		public OpenGLApi Graphics;
 		
 		public Vector3I Min, Max;
@@ -25,11 +25,11 @@ namespace ClassicalSharp.Selections {
 			}
 		}
 		
-		public void Render( double delta ) {
+		public void Render( SelectionShader shader ) {
 			Graphics.DepthWrite = false;
-			Graphics.DrawVbBatch( DrawMode.Triangles, VboId, 0, VerticesCount );
+			shader.Draw( Graphics, DrawMode.Triangles, VertexPos3fCol4b.Size, Vb, 0, VerticesCount );
 			Graphics.DepthWrite = true;
-			Graphics.DrawVbBatch( DrawMode.Lines, LineVboId, 0, LineVerticesCount );
+			shader.Draw( Graphics, DrawMode.Lines, VertexPos3fCol4b.Size, LineVb, 0, LineVerticesCount );
 		}
 		
 		public SelectionBox( Vector3I start, Vector3I end, FastColour col, OpenGLApi graphics ) {
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Selections {
 			Line( vertices, ref index, p2.X, p1.Y, p2.Z, p2.X, p2.Y, p2.Z );
 			Line( vertices, ref index, p1.X, p1.Y, p2.Z, p1.X, p2.Y, p2.Z );
 			LineVerticesCount = vertices.Length;
-			LineVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
+			LineVb = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 			
 			vertices = new VertexPos3fCol4b[6 * 6];
 			index = 0;
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Selections {
 			RenderZPlane( vertices, ref index, p1.Z, p2.Z, p1.Y, p2.Y, p1.X );
 			RenderZPlane( vertices, ref index, p1.Z, p2.Z, p1.Y, p2.Y, p2.X );
 			VerticesCount = vertices.Length;
-			VboId = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
+			Vb = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b );
 		}
 		
 		void Line( VertexPos3fCol4b[] vertices, ref int index, float x1, float y1, float z1, float x2, float y2, float z2 ) {
@@ -110,8 +110,8 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteVb( LineVboId );
-			Graphics.DeleteVb( VboId );
+			Graphics.DeleteVb( LineVb );
+			Graphics.DeleteVb( Vb );
 		}
 	}
 }

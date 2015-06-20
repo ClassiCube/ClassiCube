@@ -8,16 +8,17 @@ namespace ClassicalSharp.Selections {
 	public class SelectionManager : IDisposable {
 		
 		public Game Window;
-		public OpenGLApi Graphics;
+		public OpenGLApi api;
+		SelectionShader shader;
 		
 		public SelectionManager( Game window ) {
 			Window = window;
-			Graphics = window.Graphics;
+			api = window.Graphics;
 		}
 		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
 		public void AddSelection( byte id, Vector3I p1, Vector3I p2, FastColour col ) {
-			SelectionBox selection = new SelectionBox( p1, p2, col, Graphics );
+			SelectionBox selection = new SelectionBox( p1, p2, col, api );
 			selection.ID = id;
 			selections.Add( selection );
 		}
@@ -66,20 +67,31 @@ namespace ClassicalSharp.Selections {
 			return maxDistA == maxDistB ? minDistA.CompareTo( minDistB ) : maxDistA.CompareTo( maxDistB );
 		}
 		
+		public void Init() {
+			shader = new SelectionShader();
+			shader.Init( api );
+		}
+		
 		public void Render( double delta ) {
+			if( selections.Count == 0 ) return;
+			
+			api.UseProgram( shader.ProgramId );
+			api.SetUniform( shader.mvpLoc, ref Window.MVP );
+			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
+			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
+			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
+			
 			Player player = Window.LocalPlayer;
 			pos = player.Position;
-			if( selections.Count == 0 ) return;
-			selections.Sort( (a, b) => Compare( a, b ) );
+			selections.Sort( (a, b) => Compare( a, b ) );	
 			
-			Graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
-			Graphics.AlphaBlending = true;
+			api.AlphaBlending = true;
 			for( int i = 0 ; i < selections.Count; i++ ) {
 				SelectionBox box = selections[i];
-				box.Render( delta );
+				box.Render( shader );
 			}
-			Graphics.AlphaBlending = false;
-			Graphics.EndVbBatch();
+			api.AlphaBlending = false;
 		}
 		
 		public void Dispose() {

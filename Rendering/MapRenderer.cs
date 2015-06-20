@@ -219,7 +219,7 @@ namespace ClassicalSharp {
 				api.Bind2DTexture( texIds[batch] );
 				RenderSpriteBatch( batch );
 			}
-			api.UseProgram( 0 );
+
 			Window.MapEnvRenderer.RenderMapSides( deltaTime );
 			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
 			
@@ -244,7 +244,6 @@ namespace ClassicalSharp {
 			}
 			//Graphics.DepthWrite = true;
 			api.AlphaBlending = false;
-			api.UseProgram( 0 );
 		}
 
 		int[] distances;

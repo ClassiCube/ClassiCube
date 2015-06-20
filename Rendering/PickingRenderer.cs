@@ -72,7 +72,6 @@ namespace ClassicalSharp.Renderers {
 				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 				
 				shader.DrawDynamic( graphics, DrawMode.Triangles, VertexPos3fCol4b.Size, vb, vertices, verticesCount );
-				graphics.UseProgram( 0 );
 			}
 		}
 		

@@ -39,7 +39,6 @@ namespace ClassicalSharp.Renderers {
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
-			Graphics.UseProgram( 0 );
 		}
 
 		public void SetSkyOffset( int offset ) {

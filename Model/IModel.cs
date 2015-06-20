@@ -41,7 +41,6 @@ namespace ClassicalSharp.Model {
 			curMVPMatrix = Matrix4.RotateY( -yaw ) * Matrix4.Translation( pos ) * window.MVP;
 			graphics.SetUniform( shader.mvpLoc, ref curMVPMatrix );
 			DrawPlayerModel( player, renderer );
-			graphics.PopMatrix();
 		}
 		
 		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );

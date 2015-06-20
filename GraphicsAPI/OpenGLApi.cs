@@ -1,5 +1,4 @@
-﻿//#define TRACK_RESOURCES
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -22,10 +21,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetInteger( GetPName.MaxTextureSize, &texDims );
 			textureDimensions = texDims;
 			InitDynamicBuffers();
-			
-			drawBatchFuncCol4b = DrawVbPos3fCol4bFast;
-			drawBatchFuncTex2f = DrawVbPos3fTex2fFast;
-			drawBatchFuncTex2fCol4b = DrawVbPos3fTex2fCol4bFast;
 		}
 
 		public int MaxTextureDimensions {
@@ -111,11 +106,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public bool FaceCulling {
 			set { ToggleCap( EnableCap.CullFace, value ); }
 		}
-		
-		
-		#if TRACK_RESOURCES
-		Dictionary<int, string> textures = new Dictionary<int, string>();
-		#endif
 
 		public unsafe int LoadTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
@@ -131,9 +121,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
 			GL.Disable( EnableCap.Texture2D );
-			#if TRACK_RESOURCES
-			textures.Add( texId, Environment.StackTrace );
-			#endif
 			return texId;
 		}
 		
@@ -143,9 +130,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe void DeleteTexture( ref int texId ) {
 			if( texId <= 0 ) return;
-			#if TRACK_RESOURCES
-			textures.Remove( texId );
-			#endif
 			int id = texId;
 			GL.DeleteTextures( 1, &id );
 			texId = -1;
@@ -197,14 +181,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		#region Vertex buffers
-		
-		#if TRACK_RESOURCES
-		Dictionary<int, string> vbs = new Dictionary<int, string>();
-		#endif
-		Action<DrawMode, int, int, int> drawBatchFunc;
-		Action<DrawMode, int, int, int> drawBatchFuncTex2f;
-		Action<DrawMode, int, int, int> drawBatchFuncCol4b;
-		Action<DrawMode, int, int, int> drawBatchFuncTex2fCol4b;
 				
 		public unsafe int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
@@ -223,9 +199,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
 			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
-			#if TRACK_RESOURCES
-			vbs.Add( id, Environment.StackTrace );
-			#endif
 			return id;
 		}
 		
@@ -241,16 +214,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct {
-			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
-			
-			BeginVbBatch( format );
-			DrawVbBatch( mode, vb, 0, count );
-			EndVbBatch();
-		}
-		
 		public unsafe void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffers( 1, &id );
@@ -258,9 +221,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe void DeleteVb( int id ) {
 			if( id <= 0 ) return;
-			#if TRACK_RESOURCES
-			vbs.Remove( id );
-			#endif
 			GL.DeleteBuffers( 1, &id );
 		}
 		
@@ -277,71 +237,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GL.IsBuffer( ib );
 		}
 		
-		public void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
-			BeginVbBatch( format );
-			DrawVbBatch( mode, id, startVertex, verticesCount );
-			EndVbBatch();
-		}
-		
-		VertexFormat batchFormat = (VertexFormat)999;
-		public void BeginVbBatch( VertexFormat format ) {
-			batchFormat = format;
-			GL.EnableClientState( ArrayCap.VertexArray );
-			if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				drawBatchFunc = drawBatchFuncTex2fCol4b;
-			} else if( format == VertexFormat.Pos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				drawBatchFunc = drawBatchFuncTex2f;
-			} else if( format == VertexFormat.Pos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
-				drawBatchFunc = drawBatchFuncCol4b;
-			}
-		}
-		
-		public void BeginIndexedVbBatch() {
-			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		public void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
-			drawBatchFunc( mode, id, startVertex, verticesCount );
-		}
-		
-		public void EndVbBatch() {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
-			GL.DisableClientState( ArrayCap.VertexArray );
-			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
-			}
-		}
-		
-		void DrawVbPos3fTex2fFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
-		}
-		
-		void DrawVbPos3fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
-			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
-		}
-		
-		void DrawVbPos3fTex2fCol4bFast( DrawMode mode, int id, int offset, int verticesCount ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.VertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
-			GL.TexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
-			GL.DrawArrays( modeMappings[(int)mode], offset, verticesCount );
-		}
 		#endregion
 		
 		
@@ -362,47 +257,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.LoadMatrix( ptr );
 		}
 		
-		public void LoadIdentityMatrix() {
-			GL.LoadIdentity();
-		}
-		
-		public void PushMatrix() {
-			GL.PushMatrix();
-		}
-		
-		public void PopMatrix() {
-			GL.PopMatrix();
-		}
-		
-		public unsafe void MultiplyMatrix( ref Matrix4 matrix ) {
-			fixed( Single* ptr = &matrix.Row0.X )
-				GL.MultMatrix( ptr );
-		}
-		
 		#endregion
-		
-		#if TRACK_RESOURCES
-		public void CheckResources() {
-			if( textures.Count > 0 ) {
-				foreach( var pair in textures ) {
-					Console.WriteLine( pair.Value );
-					Console.WriteLine( "for tex id " + pair.Key );
-					Console.WriteLine( "===========" );
-				}
-			}
-			if( vbs.Count > 0 ) {
-				foreach( var pair in vbs ) {
-					Console.WriteLine( pair.Value );
-					Console.WriteLine( "for vb id " + pair.Key );
-					Console.WriteLine( "===========" );
-				}
-			}
-			Console.WriteLine( "tex " + textures.Count + ", vb" + vbs.Count );
-			if( textures.Count > 0 || vbs.Count > 0 ) {
-				System.Diagnostics.Debugger.Break();
-			}
-		}
-		#endif
 		
 		public void BeginFrame( Game game ) {
 		}

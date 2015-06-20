@@ -27,6 +27,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
+			
 			api.UseProgram( shader.ProgramId );
 			api.SetUniform( shader.mvpLoc, ref Window.MVP );
 			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );

@@ -140,6 +140,7 @@ namespace ClassicalSharp {
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
 			SelectionManager = new SelectionManager( this );
+			SelectionManager.Init();
 			ParticleManager = new ParticleManager( this );
 			ParticleManager.Init();
 			WeatherRenderer = new WeatherRenderer( this );
@@ -277,7 +278,6 @@ namespace ClassicalSharp {
 				}
 			}
 			LocalPlayer.Render( deltaTime, t );
-			Graphics.UseProgram( 0 );
 		}
 		
 		public override void Dispose() {

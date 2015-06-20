@@ -499,4 +499,52 @@ void main() {
 			api.DisableVertexAttrib( positionLoc );
 		}
 	}
+	
+	public sealed class SelectionShader : FogAndMVPShader {
+		
+		public SelectionShader() {
+			VertexSource = @"
+#version 130
+in vec3 in_position;
+in vec4 in_colour;
+out vec4 out_colour;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_colour = in_colour;
+}";
+			
+			FragmentSource = @"
+#version 130
+in vec2 out_texcoords;
+in vec4 out_colour;
+out vec4 final_colour;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour = out_colour;
+   
+--IMPORT fog_code
+   final_colour = finalColour;
+}";
+		}
+		
+		public int positionLoc, colourLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			base.GetLocations( api );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+		}
+		
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( colourLoc );
+		}
+	}
 }
