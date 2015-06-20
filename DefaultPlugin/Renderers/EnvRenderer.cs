@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Renderers;
 using OpenTK;
 
-namespace ClassicalSharp.Renderers {
+namespace DefaultPlugin {
 
-	public class StandardEnvRenderer : EnvRenderer {
+	public sealed class StandardEnvRenderer : EnvRenderer {
 		
 		public StandardEnvRenderer( Game window ) {
 			Window = window;
@@ -181,6 +183,72 @@ namespace ClassicalSharp.Renderers {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, -100000, -100000, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, -100000, -100000, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, -100000, -100000, col );
+		}
+	}
+	
+	public sealed class EnvShader : FogAndMVPShader {
+		
+		public EnvShader() {
+			VertexSource = @"
+#version 130
+--IMPORT pos3fTex2fCol4b_attributes
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_colour = in_colour;
+   out_texcoords = in_texcoords;
+}";
+			
+			FragmentSource = @"
+#version 130
+flat in vec4 out_colour;
+in vec2 out_texcoords;
+out vec4 final_colour;
+uniform sampler2D texImage;
+uniform float sOffset;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour;
+   if(out_texcoords.s >= -90000) {
+      vec2 texcoords = out_texcoords;
+      texcoords.s = texcoords.s + sOffset;
+      finalColour = texture2D(texImage, texcoords) * out_colour;
+   } else {
+      finalColour = out_colour;
+   }
+   if(finalColour.a < 0.5) {
+      discard;
+   }
+   
+--IMPORT fog_code
+   final_colour = finalColour;
+}";
+		}
+		
+		public int positionLoc, texCoordsLoc, colourLoc;
+		public int sOffsetLoc, texImageLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
+			base.GetLocations( api );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
+		}
+		
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+			api.DisableVertexAttrib( colourLoc );
 		}
 	}
 }

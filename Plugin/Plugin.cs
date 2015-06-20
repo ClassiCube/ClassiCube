@@ -5,7 +5,7 @@ using System.Reflection;
 using ClassicalSharp.Commands;
 using ClassicalSharp.Model;
 
-namespace ClassicalSharp.Plugin {
+namespace ClassicalSharp.Plugins {
 	
 	public abstract class Plugin {
 		
@@ -20,6 +20,7 @@ namespace ClassicalSharp.Plugin {
 		public static void LoadPlugin( string file, Game game ) {
 			Assembly assembly = Assembly.LoadFile( file );
 			Type[] types = assembly.GetTypes();
+			
 			foreach( Type t in types ) {
 				if( t.IsAbstract || t.IsInterface || t.IsGenericType ) continue;
 				if( t.IsSubclassOf( typeof( Plugin ) ) ) {
@@ -36,19 +37,29 @@ namespace ClassicalSharp.Plugin {
 		static void HandleModule( PluginModule module, Game game ) {
 			switch( module.ModuleType ) {
 				case PluginModuleType.Command:
-					Command cmd = (Command)Activator.CreateInstance( module.Type, game );
+					Command cmd = Utils.New<Command>( module.Type, game );
 					game.CommandManager.RegisterCommand( cmd );
 					break;
 					
 				case PluginModuleType.EntityModel:
-					IModel model = (IModel)Activator.CreateInstance( module.Type, game );
+					IModel model = Utils.New<IModel>( module.Type, game );
 					game.ModelCache.AddModel( model );
 					break;
+					
+				case PluginModuleType.MapBordersRenderer:
+					game.MapBordersRendererTypes.Add( module.Type );
+					break;
+					
+				case PluginModuleType.EnvironmentRenderer:
+					game.EnvRendererTypes.Add( module.Type );
+					break;
+					
 			}
 		}
 	}
 	
 	public enum PluginModuleType {
+		MapBordersRenderer,
 		EnvironmentRenderer,
 		WeatherRenderer,
 		Command,

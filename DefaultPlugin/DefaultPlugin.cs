@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using ClassicalSharp.Plugin;
+using ClassicalSharp.Plugins;
 
 namespace DefaultPlugin {
 	
@@ -37,6 +37,10 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.EntityModel, typeof( SkeletonModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( SpiderModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( ZombieModel ) ),
+					
+					new PluginModule( PluginModuleType.MapBordersRenderer, typeof( StandardMapBordersRenderer ) ),
+					new PluginModule( PluginModuleType.EnvironmentRenderer, typeof( StandardEnvRenderer ) ),
+					new PluginModule( PluginModuleType.EnvironmentRenderer, typeof( MinimalEnvRenderer ) ),
 				};
 			}
 		}

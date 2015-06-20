@@ -231,5 +231,9 @@ namespace ClassicalSharp {
 				}
 			}
 		}
+		
+		public static T New<T>( Type type, params object[] args ) {
+			return (T)Activator.CreateInstance( type, args );
+		}
 	}
 }

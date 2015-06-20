@@ -216,8 +216,8 @@ namespace ClassicalSharp {
 				RenderSpriteBatch( batch );
 			}
 
-			Window.MapEnvRenderer.RenderMapSides( deltaTime );
-			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
+			Window.MapBordersRenderer.RenderMapSides( deltaTime );
+			Window.MapBordersRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			api.UseProgram( lShader.ProgramId );

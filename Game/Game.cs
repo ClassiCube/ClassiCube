@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -7,6 +8,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
+using ClassicalSharp.Plugins;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using OpenTK;
@@ -14,7 +16,6 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public partial class Game : GameWindow {
 		
 		public OpenGLApi Graphics;
@@ -34,9 +35,12 @@ namespace ClassicalSharp {
 		public int ChunkUpdates;
 		
 		public MapRenderer MapRenderer;
-		public MapEnvRenderer MapEnvRenderer;
+		public MapBordersRenderer MapBordersRenderer;
+		public List<Type> MapBordersRendererTypes = new List<Type>();
 		public EnvRenderer EnvRenderer;
+		public List<Type> EnvRendererTypes = new List<Type>();
 		public WeatherRenderer WeatherRenderer;
+		public List<Type> WeatherRendererTypes = new List<Type>();
 		
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
@@ -131,8 +135,6 @@ namespace ClassicalSharp {
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
-			MapEnvRenderer = new MapEnvRenderer( this );
-			EnvRenderer = new StandardEnvRenderer( this );
 			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
@@ -146,16 +148,25 @@ namespace ClassicalSharp {
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
 			
-			if( !Directory.Exists( "plugins" ) || 
-			   !File.Exists( Path.Combine( "plugins", "defaultplugin.dll" ) ) ) {
+			string defaultPlugin = Path.Combine( "plugins", "defaultplugin.dll" );
+			if( !Directory.Exists( "plugins" ) || !File.Exists( defaultPlugin ) ) {
 				Utils.LogError( "Plugins directory or default plugin does not exist." );
 			} else {
 				string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+				//Plugin.LoadPlugin( Path.Combine( baseDirectory, defaultPlugin ), this );
+				
 				foreach( string file in Directory.GetFiles( "plugins" ) ) {
 					if( !Utils.CaselessEquals( Path.GetExtension( file ), ".dll" ) ) continue;
-					Plugin.Plugin.LoadPlugin( Path.Combine( baseDirectory, file ), this );
+					//if( file == defaultPlugin ) continue;
+					
+					Plugin.LoadPlugin( Path.Combine( baseDirectory, file ), this );
 				}
 			}
+			
+			MapBordersRenderer = Utils.New<MapBordersRenderer>( MapBordersRendererTypes[0], this );
+			MapBordersRenderer.Init();
+			EnvRenderer = Utils.New<EnvRenderer>( EnvRendererTypes[0], this );
+			EnvRenderer.Init();
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
@@ -169,7 +180,7 @@ namespace ClassicalSharp {
 			Culling = new FrustumCulling();
 			MapRenderer.Init();
 			EnvRenderer.Init();
-			MapEnvRenderer.Init();
+			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
@@ -285,7 +296,7 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			MapRenderer.Dispose();
-			MapEnvRenderer.Dispose();
+			MapBordersRenderer.Dispose();
 			EnvRenderer.Dispose();
 			WeatherRenderer.Dispose();
 			SetNewScreen( null );

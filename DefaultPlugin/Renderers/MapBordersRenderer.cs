@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin {
 	
-	public sealed class MapEnvRenderer : IDisposable {
+	public sealed class StandardMapBordersRenderer : MapBordersRenderer {
 		
-		public Map Map;
-		public Game Window;
-		public OpenGLApi api;
-		MapEnvShader shader;
-		
-		public MapEnvRenderer( Game window ) {
-			Window = window;
-			Map = Window.Map;
+		MapEnvShader shader;	
+		public StandardMapBordersRenderer( Game window ) : base( window ) {
 		}
 		
 		int sidesVboId = -1, edgesVboId = -1;
@@ -22,22 +17,19 @@ namespace ClassicalSharp {
 		int sidesVertices, edgesVertices, index;
 		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgesCol = FastColour.White;
 		
-		public void Init() {
-			Window.OnNewMap += OnNewMap;
-			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;
+		public override void Init() {
+			base.Init();
 			Window.ViewDistanceChanged += ResetSidesAndEdges;
 			Window.TerrainAtlasChanged += ResetTextures;
 			
-			api = Window.Graphics;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 			ResetSidesAndEdges( null, null );
 			shader = new MapEnvShader();
 			shader.Init( api );
 		}
 
-		public void RenderMapSides( double deltaTime ) {
+		public override void RenderMapSides( double deltaTime ) {
 			if( sidesVboId == -1 ) return;
 			
 			api.UseProgram( shader.ProgramId );
@@ -47,7 +39,7 @@ namespace ClassicalSharp {
 			shader.Draw( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );
 		}
 		
-		public void RenderMapEdges( double deltaTime ) {
+		public override void RenderMapEdges( double deltaTime ) {
 			if( edgesVboId == -1 ) return;
 			// Do not draw water when we cannot see it.
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
@@ -59,10 +51,8 @@ namespace ClassicalSharp {
 			api.AlphaBlending = false;
 		}
 		
-		public void Dispose() {
-			Window.OnNewMap -= OnNewMap;
-			Window.OnNewMapLoaded -= OnNewMapLoaded;
-			Window.EnvVariableChanged -= EnvVariableChanged;
+		public override void Dispose() {
+			base.Dispose();
 			Window.ViewDistanceChanged -= ResetSidesAndEdges;
 			Window.TerrainAtlasChanged -= ResetTextures;
 			
@@ -73,24 +63,24 @@ namespace ClassicalSharp {
 			sidesVboId = edgesVboId = -1;
 		}
 		
-		void OnNewMap( object sender, EventArgs e ) {
+		protected override void OnNewMap( object sender, EventArgs e ) {
 			api.DeleteVb( sidesVboId );
 			api.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
 		
-		void OnNewMapLoaded( object sender, EventArgs e ) {
+		protected override void OnNewMapLoaded( object sender, EventArgs e ) {
 			RebuildSides();
 			RebuildEdges();
 		}
 		
-		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
+		protected override void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Variable == EnvVariable.EdgeBlock ) {
-				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
+				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
 			} else if( e.Variable == EnvVariable.SidesBlock ) {
-				MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 			} else if( e.Variable == EnvVariable.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
 			}
@@ -98,8 +88,8 @@ namespace ClassicalSharp {
 		
 		void ResetTextures( object sender, EventArgs e ) {
 			lastEdgeTexLoc = lastSideTexLoc = -1;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
@@ -111,49 +101,26 @@ namespace ClassicalSharp {
 		void RebuildSides() {
 			index = 0;
 			api.DeleteVb( sidesVboId );
-			RebuildSidesModern( Map.GroundHeight );
-		}
-		
-		void RebuildEdges() {
-			index = 0;
-			api.DeleteVb( edgesVboId );
-			RebuildEdgesModern( Map.WaterHeight );
-		}
-		
-		// |-----------|
-		// |     2     |
-		// |---*****---|
-		// | 3 *Map* 4 |
-		// |   *   *   |
-		// |---*****---|
-		// |     1     |
-		// |-----------|
-		IEnumerable<Rectangle> OutsideMap( int extent ) {
-			yield return new Rectangle( -extent, -extent, extent + Map.Width + extent, extent );
-			yield return new Rectangle( -extent, Map.Length, extent + Map.Width + extent, extent );
-			yield return new Rectangle( -extent, 0, extent, Map.Length );
-			yield return new Rectangle( Map.Width, 0, extent, Map.Length );
-		}
-		
-		#region Modern
-		
-		void RebuildSidesModern( int groundLevel ) {
 			sidesVertices = 5 * 6 + 4 * 6;
+			int groundLevel = map.GroundHeight;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[sidesVertices];
 			
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, sidesCol, vertices );
 			}
-			DrawYPlane( 0, 0, Map.Width, Map.Length, 0, sidesCol, vertices );
-			DrawZPlane( 0, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
-			DrawZPlane( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
-			DrawXPlane( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
-			DrawXPlane( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices  );			
+			DrawYPlane( 0, 0, map.Width, map.Length, 0, sidesCol, vertices );
+			DrawZPlane( 0, 0, map.Width, 0, groundLevel, sidesCol, vertices );
+			DrawZPlane( map.Length, 0, map.Width, 0, groundLevel, sidesCol, vertices );
+			DrawXPlane( 0, 0, map.Length, 0, groundLevel, sidesCol, vertices );
+			DrawXPlane( map.Width, 0, map.Length, 0, groundLevel, sidesCol, vertices  );			
 			sidesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
-		void RebuildEdgesModern( int waterLevel ) {
+		void RebuildEdges() {
+			index = 0;
+			api.DeleteVb( edgesVboId );
 			edgesVertices = 4 * 6;
+			int waterLevel = map.WaterHeight;
 			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[edgesVertices];
 			
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
@@ -161,9 +128,7 @@ namespace ClassicalSharp {
 			}			
 			edgesVboId = api.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
-		
-		#endregion
-		
+
 		int lastEdgeTexLoc, lastSideTexLoc;
 		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
@@ -205,6 +170,63 @@ namespace ClassicalSharp {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V1, col );
+		}
+	}
+	
+	public sealed class MapEnvShader : FogAndMVPShader {
+		
+		public MapEnvShader() {
+			VertexSource = @"
+#version 130
+in vec3 in_position;
+in vec4 in_colour;
+in vec2 in_texcoords;
+flat out vec4 out_colour;
+out vec2 out_texcoords;
+uniform mat4 MVP;
+
+void main() {
+   gl_Position = MVP * vec4(in_position, 1.0);
+   out_texcoords = in_texcoords;
+   out_colour = in_colour;
+}";
+			
+			FragmentSource = @"
+#version 130
+in vec2 out_texcoords;
+flat in vec4 out_colour;
+out vec4 final_colour;
+uniform sampler2D texImage;
+--IMPORT fog_uniforms
+
+void main() {
+   vec4 finalColour = texture2D(texImage, out_texcoords) * out_colour;
+--IMPORT fog_code
+   final_colour = finalColour;
+}";
+		}
+		
+		public int positionLoc, texCoordsLoc, colourLoc;
+		public int texImageLoc;
+		protected override void GetLocations( OpenGLApi api ) {
+			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			
+			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			base.GetLocations( api );
+		}
+		
+		protected override void EnableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
+			api.EnableVertexAttribF( colourLoc, 4, VertexAttribType.UInt8, true, stride, 12 );
+			api.EnableVertexAttribF( texCoordsLoc, 2, stride, 16 );
+		}
+		
+		protected override void DisableVertexAttribStates( OpenGLApi api, int stride ) {
+			api.DisableVertexAttrib( positionLoc );
+			api.DisableVertexAttrib( texCoordsLoc );
+			api.DisableVertexAttrib( colourLoc );
 		}
 	}
 }

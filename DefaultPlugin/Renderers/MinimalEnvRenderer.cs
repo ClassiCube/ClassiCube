@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Drawing;
+using ClassicalSharp;
+using ClassicalSharp.Renderers;
 
-namespace ClassicalSharp.Renderers {
+namespace DefaultPlugin {
 
 	/// <summary> Minimialistic environment renderer - only sets the clear colour to be sky colour.
 	/// (no fog, clouds, or proper overhead sky) </summary>

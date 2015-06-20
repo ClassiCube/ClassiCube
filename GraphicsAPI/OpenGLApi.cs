@@ -127,10 +127,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public bool DepthWrite {
 			set { GL.DepthMask( value ); }
 		}
-		
-		public void SetFillType( FillType type ) {;
-		}
-		
+
 		#region Vertex buffers
 		
 		public unsafe int CreateDynamicVb( VertexFormat format, int maxVertices ) {
