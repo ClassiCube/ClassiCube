@@ -124,6 +124,7 @@
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="GraphicsAPI\Shader.cs" />
+    <Compile Include="GraphicsAPI\ShadowMap.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Ionic.Zlib\DeflateStream.cs" />
     <Compile Include="Ionic.Zlib\Inflate.cs" />
