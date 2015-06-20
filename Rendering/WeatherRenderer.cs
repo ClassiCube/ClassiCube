@@ -8,14 +8,15 @@ namespace ClassicalSharp {
 		
 		public Game Window;
 		Map map;
-		OpenGLApi graphics;
+		OpenGLApi api;
 		BlockInfo info;
+		WeatherShader shader;
+		
 		public WeatherRenderer( Game window ) {
 			Window = window;
 			map = Window.Map;
-			graphics = window.Graphics;
-			info = Window.BlockInfo;
-			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
+			api = window.Graphics;
+			info = Window.BlockInfo;		
 		}
 		
 		int weatherVb;
@@ -26,15 +27,20 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
+			api.UseProgram( shader.ProgramId );
+			api.SetUniform( shader.mvpLoc, ref Window.MVP );
+			api.SetUniform( shader.fogColLoc, ref api.modernFogCol );
+			api.SetUniform( shader.fogDensityLoc, api.modernFogDensity );
+			api.SetUniform( shader.fogEndLoc, api.modernFogEnd );
+			api.SetUniform( shader.fogModeLoc, api.modernFogMode );
 			
-			graphics.Texturing = true;
-			graphics.Bind2DTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
+			api.Bind2DTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)Window.accumulator * speed;
 			
 			int index = 0;
-			graphics.AlphaBlending = true;
+			api.AlphaBlending = true;
 			FastColour col = FastColour.White;
 			for( int dx = - 4; dx <= 4; dx++ ) {
 				for( int dz = -4; dz <= 4; dz++ ) {
@@ -46,9 +52,8 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			graphics.DrawDynamicVb( DrawMode.Triangles, weatherVb, vertices, VertexFormat.Pos3fTex2fCol4b, index );
-			graphics.AlphaBlending = false;
-			graphics.Texturing = false;
+			shader.DrawDynamic( api, DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, weatherVb, vertices, index );
+			api.AlphaBlending = false;
 		}
 		
 		float AlphaAt( float x ) {
@@ -95,8 +100,12 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			rainTexture = graphics.LoadTexture( "rain.png" );
-			snowTexture = graphics.LoadTexture( "snow.png" );
+			rainTexture = api.LoadTexture( "rain.png" );
+			snowTexture = api.LoadTexture( "snow.png" );
+			weatherVb = api.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
+			shader = new WeatherShader();
+			shader.Init( api );
+			
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
 		}
@@ -104,8 +113,8 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			Window.OnNewMap -= OnNewMap;
 			Window.OnNewMapLoaded -= OnNewMapLoaded;
-			graphics.DeleteTexture( ref rainTexture );
-			graphics.DeleteTexture( ref snowTexture );
+			api.DeleteTexture( ref rainTexture );
+			api.DeleteTexture( ref snowTexture );
 		}
 		
 		int GetRainHeight( int x, int z ) {
