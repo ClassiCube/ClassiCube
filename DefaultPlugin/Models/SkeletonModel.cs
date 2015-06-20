@@ -1,36 +1,36 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
 
-namespace ClassicalSharp.Model {
+namespace DefaultPlugin {
 
-	public class ZombieModel : IModel {
+	public class SkeletonModel : IModel {
 		
 		ModelSet Set;
-		public ZombieModel( Game window ) : base( window ) {
+		public SkeletonModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 6];
 			Set = new ModelSet();
 			Set.Head = MakeHead();
 			Set.Torso = MakeTorso();
-			Set.LeftLeg = MakeLeftLeg( 0.25f, 0f );
-			Set.RightLeg = MakeRightLeg( 0, 0.25f );
-			Set.LeftArm = MakeLeftArm( 0.5f, 0.25f );
-			Set.RightArm = MakeRightArm( 0.25f, 0.5f );
+			Set.LeftLeg = MakeLeftLeg( 0.1875f, 0.0625f );
+			Set.RightLeg = MakeRightLeg( 0.0625f, 0.1875f );
+			Set.LeftArm = MakeLeftArm( 0.375f, 0.25f );
+			Set.RightArm = MakeRightArm( 0.25f, 0.375f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2f );
 			Set.SetVb( vb );
-			vertices = null;		
-			DefaultTexId = graphics.LoadTexture( "zombie.png" );
+			vertices = null;
+			DefaultTexId = graphics.LoadTexture( "skeleton.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
-			return MakePart( 40, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 0.75f, 1.5f, -0.125f, 0.125f, false );
+			return MakePart( 40, 16, 2, 12, 2, 2, 2, 12, -x2, -x1, 0.75f, 1.5f, -0.0625f, 0.0625f, false );
 		}
 		
 		ModelPart MakeRightArm( float x1, float x2 ) {
-			return MakePart( 40, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0.75f, 1.5f, -0.125f, 0.125f, false );
+			return MakePart( 40, 16, 2, 12, 2, 2, 2, 12, x1, x2, 0.75f, 1.5f, -0.0625f, 0.0625f, false );
 		}
 		
 		ModelPart MakeHead() {
@@ -42,11 +42,15 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeftLeg( float x1, float x2 ) {
-			return MakePart( 0, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 0.75f, -0.125f, 0.125f, false );
+			return MakePart( 0, 16, 2, 12, 2, 2, 2, 12, -x2, -x1, 0f, 0.75f, -0.0625f, 0.0625f, false );
 		}
 		
 		ModelPart MakeRightLeg( float x1, float x2 ) {
-			return MakePart( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 0.75f, -0.125f, 0.125f, false );
+			return MakePart( 0, 16, 2, 12, 2, 2, 2, 12, x1, x2, 0f, 0.75f, -0.0625f, 0.0625f, false );
+		}
+		
+		public override string ModelName {
+			get { return "skeleton"; }
 		}
 		
 		public override float NameYOffset {
@@ -62,7 +66,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, Set.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
 			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, Set.LeftArm );
-			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );
+			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );			
 		}
 		
 		public override void Dispose() {

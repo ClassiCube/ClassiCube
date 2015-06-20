@@ -1,10 +1,10 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
 
-namespace ClassicalSharp.Model {
+namespace DefaultPlugin {
 
 	public class BlockModel : IModel {
 		
@@ -16,6 +16,10 @@ namespace ClassicalSharp.Model {
 		
 		public override float NameYOffset {
 			get { return blockHeight + 0.075f; }
+		}
+		
+		public override string ModelName {
+			get { return "block"; }
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {

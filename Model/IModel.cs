@@ -11,13 +11,15 @@ namespace ClassicalSharp.Model {
 		protected OpenGLApi graphics;
 		protected const int planeVertices = 6;
 		protected const int partVertices = 6 * planeVertices;
-		protected EntityShader shader;
+		protected EntityShader shader;		
 		
 		public IModel( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;
 			shader = window.ModelCache.Shader;
 		}
+		
+		public abstract string ModelName { get; }
 		
 		public abstract float NameYOffset { get; }
 		

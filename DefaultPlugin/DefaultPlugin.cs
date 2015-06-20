@@ -15,7 +15,7 @@ namespace DefaultPlugin {
 		}
 		
 		public override string Description {
-			get { return "Contains the default set of commands for ClassicalSharp."; }
+			get { return "Contains the default set of commands and entity models for ClassicalSharp."; }
 		}
 		
 		public override IEnumerable<PluginModule> Modules {
@@ -28,6 +28,14 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.Command, typeof( RenderTypeCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( ChatFontSizeCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( MouseSensitivityCommand ) ),
+					
+					new PluginModule( PluginModuleType.EntityModel, typeof( BlockModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( ChickenModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( CreeperModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( PigModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( SkeletonModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( SpiderModel ) ),
+					new PluginModule( PluginModuleType.EntityModel, typeof( ZombieModel ) ),
 				};
 			}
 		}

@@ -81,6 +81,10 @@ namespace ClassicalSharp.Model {
 			get { return 2.1375f; }
 		}
 		
+		public override string ModelName {
+			get { return "humanoid"; }
+		}
+		
 		ModelSet model;
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			int texId = renderer.PlayerTextureId <= 0 ? DefaultTexId : renderer.PlayerTextureId;

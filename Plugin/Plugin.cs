@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using ClassicalSharp.Commands;
+using ClassicalSharp.Model;
 
 namespace ClassicalSharp.Plugin {
 	
@@ -35,8 +36,13 @@ namespace ClassicalSharp.Plugin {
 		static void HandleModule( PluginModule module, Game game ) {
 			switch( module.ModuleType ) {
 				case PluginModuleType.Command:
-					Command cmd = (Command)Activator.CreateInstance( module.ImplementationType, game );
+					Command cmd = (Command)Activator.CreateInstance( module.Type, game );
 					game.CommandManager.RegisterCommand( cmd );
+					break;
+					
+				case PluginModuleType.EntityModel:
+					IModel model = (IModel)Activator.CreateInstance( module.Type, game );
+					game.ModelCache.AddModel( model );
 					break;
 			}
 		}
@@ -46,17 +52,18 @@ namespace ClassicalSharp.Plugin {
 		EnvironmentRenderer,
 		WeatherRenderer,
 		Command,
+		EntityModel,
 	}
 	
 	public class PluginModule {
 		
 		public PluginModuleType ModuleType;
 		
-		public Type ImplementationType;
+		public Type Type;
 		
 		public PluginModule( PluginModuleType moduleType, Type implementation ) {
 			ModuleType = moduleType;
-			ImplementationType = implementation;
+			Type = implementation;
 		}
 	}
 }

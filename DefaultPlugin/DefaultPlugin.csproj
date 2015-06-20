@@ -52,11 +52,22 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultCommands.cs" />
     <Compile Include="DefaultPlugin.cs" />
+    <Compile Include="Models\BlockModel.cs" />
+    <Compile Include="Models\ChickenModel.cs" />
+    <Compile Include="Models\CreeperModel.cs" />
+    <Compile Include="Models\PigModel.cs" />
+    <Compile Include="Models\SkeletonModel.cs" />
+    <Compile Include="Models\SpiderModel.cs" />
+    <Compile Include="Models\ZombieModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,10 +1,10 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
 
-namespace ClassicalSharp.Model {
+namespace DefaultPlugin {
 
 	public class SpiderModel : IModel {
 		
@@ -38,6 +38,10 @@ namespace ClassicalSharp.Model {
 		
 		ModelPart MakeLeg( float x1, float x2 ) {
 			return MakePart( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 0.4375f, 0.5625f, -0.0625f, 0.0625f, false );
+		}
+		
+		public override string ModelName {
+			get { return "spider"; }
 		}
 		
 		public override float NameYOffset {
