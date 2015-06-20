@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
-	public sealed class Framebuffer {
+	public sealed class Framebuffer : IDisposable  {
 		
 		public int Width, Height;
 		public int FboId;
@@ -85,6 +85,19 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.ColorMask( true, true, true, true );
 			}
 			GL.Viewport( 0, 0, game.Width, game.Height );
+		}
+		
+		public unsafe void Dispose() {
+			int fbid = FboId;
+			GL.DeleteFramebuffers( 1, &fbid );
+			if( ColourTexId > 0 ) {
+				int texId = ColourTexId;
+				GL.DeleteTextures( 1, &texId );
+			}
+			if( DepthTexId > 0 ) {
+				int texId = DepthTexId;
+				GL.DeleteTextures( 1, &texId );
+			}
 		}
 	}
 }

@@ -160,15 +160,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public void BindModernVB( int vb ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
-		}
-		
-		public void BindModernIndexedVb( int vb, int ib ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
-		}
-		
 		public void DrawModernVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}

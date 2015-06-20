@@ -2,10 +2,11 @@
 using System.Text;
 using System.IO;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	public abstract class Shader {
+	public abstract class Shader : IDisposable {
 		
 		public string VertexSource;
 		
@@ -75,7 +76,7 @@ out vec2 out_texcoords;
 		}
 		
 		public void Draw( DrawMode mode, int stride, int vb, int startVertex, int verticesCount ) {
-			api.BindModernVB( vb );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 			EnableVertexAttribStates( stride );
 			api.DrawModernVb( mode, vb, startVertex, verticesCount );
 			DisableVertexAttribStates( stride );
@@ -83,14 +84,15 @@ out vec2 out_texcoords;
 		
 		public void DrawIndexed( DrawMode mode, int stride, int vb, int ib, int indicesCount,
 		                        int startVertex, int startIndex ) {
-			api.BindModernIndexedVb( vb, ib );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
 			EnableVertexAttribStates( stride );
 			api.DrawModernIndexedVb( mode, vb, ib, indicesCount, startVertex, startIndex );
 			DisableVertexAttribStates( stride );
 		}
 		
 		public void DrawDynamic<T>(  DrawMode mode, int stride, int vb, T[] vertices, int count ) where T : struct {
-			api.BindModernVB( vb );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 			EnableVertexAttribStates( stride );
 			api.DrawModernDynamicVb( mode, vb, vertices, stride, count );
 			DisableVertexAttribStates( stride );
@@ -103,6 +105,10 @@ out vec2 out_texcoords;
 		}
 		
 		protected virtual void DisableVertexAttribStates( int stride ) {
+		}
+		
+		public void Dispose() {
+			GL.DeleteProgram( ProgramId );
 		}
 	}
 	
