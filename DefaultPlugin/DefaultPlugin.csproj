@@ -69,6 +69,7 @@
     <Compile Include="Renderers\MapBordersRenderer.cs" />
     <Compile Include="Renderers\EnvRenderer.cs" />
     <Compile Include="Renderers\MinimalEnvRenderer.cs" />
+    <Compile Include="Renderers\WeatherRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models" />

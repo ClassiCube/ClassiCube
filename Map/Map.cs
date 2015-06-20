@@ -6,11 +6,10 @@ namespace ClassicalSharp {
 
 		public Game Window;
 		BlockInfo info;
-		internal byte[] mapData;
+		public byte[] mapData;
 		public int Width, Height, Length;	
-		short[] heightmap;
-		int maxY;
-		int oneY;
+		short[] lightmap, solidmap;
+		int maxY, oneY;
 		
 		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
 		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
@@ -100,44 +99,6 @@ namespace ClassicalSharp {
 			Window.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
 		
-		public int GetLightHeight( int x,  int z ) {
-			int index = ( x * Length ) + z;
-			int height = heightmap[index];			
-			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
-		}
-		
-		int CalcHeightAt( int x, int maxY, int z, int index ) {
-			int mapIndex = ( maxY * Length + z ) * Width + x;
-			for( int y = maxY; y >= 0; y-- ) {
-				byte block = mapData[mapIndex];
-				if( info.BlocksLight( block ) ) {
-					heightmap[index] = (short)y;
-					return y;
-				}
-				mapIndex -= oneY;
-			}
-			
-			heightmap[index] = -1;
-			return -1;
-		}
-		
-		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = info.BlocksLight( oldBlock );
-			bool nowBlocks = info.BlocksLight( newBlock );
-			if( didBlock == nowBlocks ) return;
-			
-			int index = ( x * Length ) + z;
-			if( nowBlocks ) {
-				if( y > GetLightHeight( x, z ) ) {
-					heightmap[index] = (short)y;
-				}
-			} else {
-				if( y >= GetLightHeight( x, z ) ) {
-					CalcHeightAt( x, y, z, index );
-				}
-			}
-		}
-		
 		void AdjustLight( FastColour normal, ref FastColour xSide, ref FastColour zSide, ref FastColour yBottom ) {
 			xSide = FastColour.Scale( normal, 0.6f );
 			zSide = FastColour.Scale( normal, 0.8f );
@@ -153,9 +114,13 @@ namespace ClassicalSharp {
 			maxY = height - 1;
 			oneY = length * width;
 			
-			heightmap = new short[width * length];
-			for( int i = 0; i < heightmap.Length; i++ ) {
-				heightmap[i] = short.MaxValue;
+			lightmap = new short[width * length];
+			for( int i = 0; i < lightmap.Length; i++ ) {
+				lightmap[i] = short.MaxValue;
+			}
+			solidmap = new short[width * length];
+			for( int i = 0; i < solidmap.Length; i++ ) {
+				solidmap[i] = short.MaxValue;
 			}
 		}
 		
@@ -163,16 +128,12 @@ namespace ClassicalSharp {
 			int index = ( y * Length + z ) * Width + x;
 			byte oldBlock = mapData[index];
 			mapData[index] = blockId;
-			UpdateHeight( x, y, z, oldBlock, blockId );
-			Window.WeatherRenderer.UpdateHeight( x, y, z, oldBlock, blockId );
+			UpdateLightHeight( x, y, z, oldBlock, blockId );
+			UpdateSolidHeight( x, y, z, oldBlock, blockId );
 		}
 		
 		public void SetBlock( Vector3I p, byte blockId ) {
 			SetBlock( p.X, p.Y, p.Z, blockId );
-		}
-		
-		public byte GetBlock( int index ) {
-			return mapData[index];
 		}
 		
 		public byte GetBlock( int x, int y, int z ) {
@@ -192,5 +153,93 @@ namespace ClassicalSharp {
 			return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
 				p.X < Width && p.Y < Height && p.Z < Length;
 		}
+		
+		#region Heightmap for rain/snow
+		
+		public int GetSolidHeight( int x, int z ) {
+			if( x < 0 || z < 0 || x >= Width || z >= Length ) return WaterHeight - 1;
+			int index = ( x * Length ) + z;
+			int height = lightmap[index];			
+			return height == short.MaxValue ? CalcLightHeight( x, maxY, z, index ) : height;
+		}
+		
+		int CalcSolidHeight( int x, int maxY, int z, int index ) {
+			int mapIndex = ( maxY * Length + z ) * Width + x;
+			for( int y = maxY; y >= 0; y-- ) {
+				if( IsSolid( mapData[mapIndex] ) ) {
+					lightmap[index] = (short)y;
+					return y;
+				}
+				mapIndex -= oneY;
+			}		
+			lightmap[index] = -1;
+			return -1;
+		}
+		
+		bool IsSolid( byte block ) {	
+			return !( block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) );
+		}
+		
+		void UpdateSolidHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
+			bool didBlock = IsSolid( oldBlock );
+			bool nowBlocks = IsSolid( newBlock );
+			if( didBlock == nowBlocks ) return;
+			
+			int index = ( x * Length ) + z;
+			if( nowBlocks ) {
+				if( y > GetSolidHeight( x, z ) ) {
+					solidmap[index] = (short)y;
+				}
+			} else {
+				if( y >= GetSolidHeight( x, z ) ) {
+					CalcSolidHeight( x, y, z, index );
+				}
+			}
+		}
+		
+		#endregion
+		
+		
+		#region Heightmap for light
+		
+		public int GetLightHeight( int x,  int z ) {
+			int index = ( x * Length ) + z;
+			int height = lightmap[index];			
+			return height == short.MaxValue ? CalcLightHeight( x, maxY, z, index ) : height;
+		}
+		
+		int CalcLightHeight( int x, int maxY, int z, int index ) {
+			int mapIndex = ( maxY * Length + z ) * Width + x;
+			for( int y = maxY; y >= 0; y-- ) {
+				byte block = mapData[mapIndex];
+				if( info.BlocksLight( block ) ) {
+					lightmap[index] = (short)y;
+					return y;
+				}
+				mapIndex -= oneY;
+			}
+			
+			lightmap[index] = -1;
+			return -1;
+		}
+		
+		void UpdateLightHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
+			bool didBlock = info.BlocksLight( oldBlock );
+			bool nowBlocks = info.BlocksLight( newBlock );
+			if( didBlock == nowBlocks ) return;
+			
+			int index = ( x * Length ) + z;
+			if( nowBlocks ) {
+				if( y > GetLightHeight( x, z ) ) {
+					lightmap[index] = (short)y;
+				}
+			} else {
+				if( y >= GetLightHeight( x, z ) ) {
+					CalcLightHeight( x, y, z, index );
+				}
+			}
+		}
+		
+		#endregion
 	}
 }

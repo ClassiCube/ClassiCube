@@ -54,16 +54,20 @@ namespace ClassicalSharp.Plugins {
 					game.EnvRendererTypes.Add( module.Type );
 					break;
 					
+				case PluginModuleType.WeatherRenderer:
+					game.WeatherRendererTypes.Add( module.Type );
+					break;
+					
 			}
 		}
 	}
 	
-	public enum PluginModuleType {
+	public enum PluginModuleType {		
+		Command,
+		EntityModel,
 		MapBordersRenderer,
 		EnvironmentRenderer,
 		WeatherRenderer,
-		Command,
-		EntityModel,
 	}
 	
 	public class PluginModule {

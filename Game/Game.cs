@@ -145,8 +145,6 @@ namespace ClassicalSharp {
 			SelectionManager.Init();
 			ParticleManager = new ParticleManager( this );
 			ParticleManager.Init();
-			WeatherRenderer = new WeatherRenderer( this );
-			WeatherRenderer.Init();
 			
 			string defaultPlugin = Path.Combine( "plugins", "defaultplugin.dll" );
 			if( !Directory.Exists( "plugins" ) || !File.Exists( defaultPlugin ) ) {
@@ -167,6 +165,8 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			EnvRenderer = Utils.New<EnvRenderer>( EnvRendererTypes[0], this );
 			EnvRenderer.Init();
+			WeatherRenderer = Utils.New<WeatherRenderer>( WeatherRendererTypes[0], this );
+			WeatherRenderer.Init();
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
