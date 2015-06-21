@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClassicalSharp.Plugins;
+using DefaultPlugin.Shaders;
 
 namespace DefaultPlugin {
 	
@@ -28,6 +29,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.Command, typeof( RenderTypeCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( ChatFontSizeCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( MouseSensitivityCommand ) ),
+					new PluginModule( PluginModuleType.Command, typeof( PostProcessorCommand ) ),
 					
 					new PluginModule( PluginModuleType.EntityModel, typeof( BlockModel ) ),
 					new PluginModule( PluginModuleType.EntityModel, typeof( ChickenModel ) ),
@@ -43,6 +45,8 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.EnvironmentRenderer, typeof( MinimalEnvRenderer ) ),
 					new PluginModule( PluginModuleType.WeatherRenderer, typeof( StandardWeatherRenderer ) ),
 					new PluginModule( PluginModuleType.MapRenderer, typeof( StandardMapRenderer ) ),
+					
+					new PluginModule( PluginModuleType.PostProcessingShader, typeof( RedFilter ) ),
 				};
 			}
 		}

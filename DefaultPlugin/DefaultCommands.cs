@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ClassicalSharp;
 using ClassicalSharp.Commands;
+using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
 
 namespace DefaultPlugin {
@@ -26,20 +27,9 @@ namespace DefaultPlugin {
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			List<string> commandNames = new List<string>();
-			StringBuilder buffer = new StringBuilder( 64 );
-			foreach( Command cmd in Window.CommandManager.RegisteredCommands ) {
-				string name = cmd.Name;
-				if( buffer.Length + name.Length > 64 ) {
-					commandNames.Add( buffer.ToString() );
-					buffer.Length = 0;
-				}
-				buffer.Append( name + ", " );
-			}
-			if( buffer.Length > 0 ) {
-				commandNames.Add( buffer.ToString() );
-			}
-			foreach( string part in commandNames ) {
+			IEnumerable<string> parts = Utils.JoinItemsForChat( Window.CommandManager.RegisteredCommands,
+			                                                   cmd => cmd.Name );
+			foreach( string part in parts ) {
 				Window.AddChat( part );
 			}
 		}
@@ -314,6 +304,76 @@ namespace DefaultPlugin {
 			} else {
 				Window.MouseSensitivity = sensitivity;
 			}
+		}
+	}
+	
+	public sealed class PostProcessorCommand : Command {
+		
+		public PostProcessorCommand( Game window ) : base( window ) {
+		}
+		
+		public override string Name {
+			get { return "PostProcessor"; }
+		}
+		
+		public override string[] Help {
+			get {
+				return new [] {
+					"&a/client postprocessor [set/off/list/affect2d] <value>",
+					"&blist: &ePrints a list of all potential post processing filters that can be used.",
+					"&boff: &eTurns off the currently enabled post processing filter.",
+					"&bset: &eSets the post processing filter to the specified name.",
+					"&baffect2d: &eSets whether the post processing filter affects the gui. (true or false)",
+				};
+			}
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			string param = reader.Next();
+			if( String.IsNullOrEmpty( param ) ) {
+				Window.AddChat( "&e/client postprocessor: &cYou didn't specify any parameter." );
+			} else if( Utils.CaselessEquals( param, "off" ) ) {
+				if( Window.PostProcessor != null ) {
+					Window.PostProcessor.Dispose();
+					Window.PostProcessor = null;
+				}
+			} else if( Utils.CaselessEquals( param, "list" ) ) {
+				IEnumerable<string> parts = Utils.JoinItemsForChat( Window.PostProcessingShaders,
+				                                                   type => type.Name );
+				foreach( string part in parts ) {
+					Window.AddChat( part );
+				}
+			} else if( Utils.CaselessEquals( param, "set" ) ) {
+				string type = reader.Next();
+				if( !String.IsNullOrEmpty( type ) ) {
+					foreach( Type t in Window.PostProcessingShaders ) {
+						if( Utils.CaselessEquals( type, t.Name ) ) {
+							SetPostProcessor( t );
+							return;
+						}
+					}
+				}
+				Window.AddChat( "&e/client postprocessor set: No post processor with name: \"&f" + type + "&e\"." );
+			} else if( Utils.CaselessEquals( param, "affect2d" ) || Utils.CaselessEquals( param, "effect2d" ) ) {
+				bool affectGui;
+				if( !reader.NextOf( out affectGui, Boolean.TryParse ) ) {
+					Window.AddChat( "&e/client postprocessor affect2d: Unrecognised value." );
+				} else if( Window.PostProcessor == null ) {
+					Window.AddChat( "&e/client postprocessor affect2d: &cNo post processor is active." );
+				} else {
+					Window.PostProcessor.ApplyToGui = affectGui;
+				}
+			} else {
+				Window.AddChat( "&e/client postprocessor: Unrecognised parameter: \"&f" + param + "&e\"." );
+			}
+		}
+		
+		void SetPostProcessor( Type type ) {
+			if( Window.PostProcessor == null ) {
+				Window.PostProcessor = new PostProcessor( Window );
+				Window.PostProcessor.Init();
+			}
+			Window.PostProcessor.SetShader( Utils.New<PostProcessingShader>( type ) );
 		}
 	}
 }

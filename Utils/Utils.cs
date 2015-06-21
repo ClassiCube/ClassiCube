@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using OpenTK;
@@ -234,6 +235,22 @@ namespace ClassicalSharp {
 		
 		public static T New<T>( Type type, params object[] args ) {
 			return (T)Activator.CreateInstance( type, args );
+		}
+		
+		public static IEnumerable<string> JoinItemsForChat<T>( IEnumerable<T> collection, Func<T, string> formatter ) {
+			StringBuilder buffer = new StringBuilder( 64 );
+			foreach( T item in collection ) {
+				string value = formatter( item );
+				if( buffer.Length + value.Length + 2 > 64 ) {
+					yield return buffer.ToString();
+					buffer.Length = 0;
+				}
+				buffer.Append( value );
+				buffer.Append( ", " );
+			}
+			if( buffer.Length > 0 ) {
+				yield return buffer.ToString();
+			}
 		}
 	}
 }

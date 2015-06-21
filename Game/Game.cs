@@ -97,6 +97,8 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection, MVP;
 		public int MouseSensitivity = 30;
+		public PostProcessor PostProcessor;
+		public List<Type> PostProcessingShaders = new List<Type>();
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -244,7 +246,9 @@ namespace ClassicalSharp {
 			View = Camera.GetView();
 			Matrix4.Mult( ref View, ref Projection, out MVP );
 			Culling.CalcFrustumEquations( ref MVP );
-			
+			if( PostProcessor != null ) {
+				PostProcessor.framebuffer.BindForWriting( this );
+			}
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
 				RenderPlayers( e.Time, t );
@@ -263,10 +267,20 @@ namespace ClassicalSharp {
 				SelectedPos.Valid = false;
 			}
 			
+			if( PostProcessor != null && !PostProcessor.ApplyToGui ) {
+				Graphics.DepthTest = false;
+				PostProcessor.framebuffer.UnbindFromWriting( this );
+				PostProcessor.Apply();			
+			}
 			Graphics.Mode2D( Width, Height );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
+			}
+			if( PostProcessor != null && PostProcessor.ApplyToGui ) {
+				Graphics.AlphaBlending = false;
+				PostProcessor.framebuffer.UnbindFromWriting( this );
+				PostProcessor.Apply();				
 			}
 			Graphics.Mode3D();
 			

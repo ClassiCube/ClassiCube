@@ -133,7 +133,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			int sizeInBytes = maxVertices * stride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
-			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -143,7 +142,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			int sizeInBytes = count * stride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
-			GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -155,7 +153,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			fixed( ushort* ptr = indices ) {
 				GL.BufferData( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
 			}
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
 			return id;
 		}
 		

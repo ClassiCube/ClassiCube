@@ -123,6 +123,8 @@
     <Compile Include="GraphicsAPI\ModernGLApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
     <Compile Include="Commands\Command.cs" />
+    <Compile Include="GraphicsAPI\PostProcessingShader.cs" />
+    <Compile Include="GraphicsAPI\PostProcessor.cs" />
     <Compile Include="GraphicsAPI\Shader.cs" />
     <Compile Include="GraphicsAPI\Framebuffer.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />

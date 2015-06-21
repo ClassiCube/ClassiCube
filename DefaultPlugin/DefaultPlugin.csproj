@@ -47,6 +47,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Shaders\RedFilterShader.cs" />
     <Compile Include="StandardChunkMeshBuilder.cs" />
     <Compile Include="DefaultCommands.cs" />
     <Compile Include="DefaultPlugin.cs" />
@@ -68,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models" />
+    <Folder Include="Shaders" />
     <Folder Include="Renderers" />
   </ItemGroup>
   <ItemGroup>

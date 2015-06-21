@@ -55,8 +55,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteDynamicVb( quadVb );
 		}
 		
-		VertexPos3fTex2fCol4b[] quads = new VertexPos3fTex2fCol4b[4];
-		int quadVb;
+		internal VertexPos3fTex2fCol4b[] quads = new VertexPos3fTex2fCol4b[4];
+		internal int quadVb;
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
 			quads[0] = new VertexPos3fTex2fCol4b( x + width, y, 0, -100, -100, col );
 			quads[1] = new VertexPos3fTex2fCol4b( x + width, y + height, 0, -100, -100, col );
