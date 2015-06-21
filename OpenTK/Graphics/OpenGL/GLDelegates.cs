@@ -75,8 +75,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal static BufferSubData glBufferSubData;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate FramebufferErrorCode CheckFramebufferStatus(FramebufferTarget target);
-            internal static CheckFramebufferStatus glCheckFramebufferStatus;
+			internal delegate FramebufferErrorCode CheckFramebufferStatus(FramebufferTarget target);
+			internal static CheckFramebufferStatus glCheckFramebufferStatus;
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void Clear(ClearBufferMask mask);
@@ -115,8 +115,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal unsafe static DeleteBuffers glDeleteBuffers;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal unsafe delegate void DeleteFramebuffers(Int32 n, UInt32* framebuffers);
-            internal unsafe static DeleteFramebuffers glDeleteFramebuffers;
+			internal unsafe delegate void DeleteFramebuffers(Int32 n, UInt32* framebuffers);
+			internal unsafe static DeleteFramebuffers glDeleteFramebuffers;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void DeleteProgram(UInt32 program);
@@ -157,8 +157,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal static DrawArrays glDrawArrays;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void DrawBuffer(DrawBufferMode mode);
-            internal static DrawBuffer glDrawBuffer;
+			internal delegate void DrawBuffer(DrawBufferMode mode);
+			internal static DrawBuffer glDrawBuffer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void DrawElements(BeginMode mode, Int32 count, DrawElementsType type, IntPtr indices);
@@ -221,8 +221,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal unsafe static GetFloatv glGetFloatv;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void FramebufferTexture2D(FramebufferTarget target, FramebufferAttachment attachment, TextureTarget textarget, UInt32 texture, Int32 level);
-            internal static FramebufferTexture2D glFramebufferTexture2D;
+			internal delegate void FramebufferTexture2D(FramebufferTarget target, FramebufferAttachment attachment, TextureTarget textarget, UInt32 texture, Int32 level);
+			internal static FramebufferTexture2D glFramebufferTexture2D;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal unsafe delegate void GetIntegerv(GetPName pname, [OutAttribute] Int32* @params);
@@ -259,8 +259,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal static IsBuffer glIsBuffer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate bool IsFramebuffer(UInt32 framebuffer);
-            internal static IsFramebuffer glIsFramebuffer;
+			internal delegate bool IsFramebuffer(UInt32 framebuffer);
+			internal static IsFramebuffer glIsFramebuffer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate bool IsProgram(UInt32 program);
@@ -294,8 +294,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal static PolygonOffset glPolygonOffset;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate void ReadBuffer(ReadBufferMode mode);
-            internal static ReadBuffer glReadBuffer;
+			internal delegate void ReadBuffer(ReadBufferMode mode);
+			internal static ReadBuffer glReadBuffer;
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			internal delegate void ReadPixels(Int32 x, Int32 y, Int32 width, Int32 height, PixelFormat format, PixelType type, [OutAttribute] IntPtr pixels);

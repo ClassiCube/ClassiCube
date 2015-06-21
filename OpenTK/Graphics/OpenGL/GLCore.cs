@@ -51,8 +51,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void BindBuffer(BufferTarget target, UInt32 buffer);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindFramebuffer", ExactSpelling = true)]
-            internal extern static void BindFramebuffer(FramebufferTarget target, UInt32 framebuffer);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindFramebuffer", ExactSpelling = true)]
+			internal extern static void BindFramebuffer(FramebufferTarget target, UInt32 framebuffer);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindTexture", ExactSpelling = true)]
@@ -63,8 +63,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void BlendFunc(BlendingFactor sfactor, BlendingFactor dfactor);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBlitFramebuffer", ExactSpelling = true)]
-            internal extern static void BlitFramebuffer(Int32 srcX0, Int32 srcY0, Int32 srcX1, Int32 srcY1, Int32 dstX0, Int32 dstY0, Int32 dstX1, Int32 dstY1, ClearBufferMask mask, BlitFramebufferFilter filter);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBlitFramebuffer", ExactSpelling = true)]
+			internal extern static void BlitFramebuffer(Int32 srcX0, Int32 srcY0, Int32 srcX1, Int32 srcY1, Int32 dstX0, Int32 dstY0, Int32 dstX1, Int32 dstY1, ClearBufferMask mask, BlitFramebufferFilter filter);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBufferData", ExactSpelling = true)]
@@ -75,8 +75,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void BufferSubData(BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glCheckFramebufferStatus", ExactSpelling = true)]
-            internal extern static FramebufferErrorCode CheckFramebufferStatus(FramebufferTarget target);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glCheckFramebufferStatus", ExactSpelling = true)]
+			internal extern static FramebufferErrorCode CheckFramebufferStatus(FramebufferTarget target);
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glClear", ExactSpelling = true)]
@@ -115,8 +115,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static unsafe void DeleteBuffers(Int32 n, UInt32* buffers);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteFramebuffers", ExactSpelling = true)]
-            internal extern static unsafe void DeleteFramebuffers(Int32 n, UInt32* framebuffers);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteFramebuffers", ExactSpelling = true)]
+			internal extern static unsafe void DeleteFramebuffers(Int32 n, UInt32* framebuffers);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteProgram", ExactSpelling = true)]
@@ -157,8 +157,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void DrawArrays(BeginMode mode, Int32 first, Int32 count);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDrawBuffer", ExactSpelling = true)]
-            internal extern static void DrawBuffer(DrawBufferMode mode);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDrawBuffer", ExactSpelling = true)]
+			internal extern static void DrawBuffer(DrawBufferMode mode);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDrawElements", ExactSpelling = true)]
@@ -181,8 +181,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void Flush();
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFramebufferTexture2D", ExactSpelling = true)]
-            internal extern static void FramebufferTexture2D(FramebufferTarget target, FramebufferAttachment attachment, TextureTarget textarget, UInt32 texture, Int32 level);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFramebufferTexture2D", ExactSpelling = true)]
+			internal extern static void FramebufferTexture2D(FramebufferTarget target, FramebufferAttachment attachment, TextureTarget textarget, UInt32 texture, Int32 level);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFrontFace", ExactSpelling = true)]
@@ -259,8 +259,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static bool IsBuffer(UInt32 buffer);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsFramebuffer", ExactSpelling = true)]
-            internal extern static bool IsFramebuffer(UInt32 framebuffer);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsFramebuffer", ExactSpelling = true)]
+			internal extern static bool IsFramebuffer(UInt32 framebuffer);
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsProgram", ExactSpelling = true)]
@@ -294,8 +294,8 @@ namespace OpenTK.Graphics.OpenGL
 			internal extern static void PolygonOffset(Single factor, Single units);
 			
 			[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glReadBuffer", ExactSpelling = true)]
-            internal extern static void ReadBuffer(ReadBufferMode mode);
+			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glReadBuffer", ExactSpelling = true)]
+			internal extern static void ReadBuffer(ReadBufferMode mode);
 
 			[System.Security.SuppressUnmanagedCodeSecurity()]
 			[System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glReadPixels", ExactSpelling = true)]
