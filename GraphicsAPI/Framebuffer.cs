@@ -76,7 +76,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.ColorMask( false, false, false, false );
 			}
 			GL.Viewport( 0, 0, Width, Height );
-			GL.Clear( ClearBufferMask.DepthBufferBit );
+			GL.Clear( mask );
 		}
 		
 		public void UnbindFromWriting( Game game ) {
