@@ -28,7 +28,7 @@ namespace DefaultPlugin {
 		public override void Render( double deltaTime ) {
 			if( skyVbo == -1 || cloudsVbo == -1 ) return;
 			
-			Graphics.UseProgram( shader.ProgramId );
+			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
@@ -93,7 +93,7 @@ namespace DefaultPlugin {
 		void RenderClouds( double delta ) {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
-			Graphics.SetUniform( shader.sOffsetLoc, offset );
+			shader.SetUniform( shader.sOffsetLoc, offset );
 			Graphics.Bind2DTexture( cloudTexture );
 			shader.Draw(  DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, cloudsVbo, 0, cloudsVertices );
 		}
@@ -231,12 +231,12 @@ void main() {
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int sOffsetLoc, texImageLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
+			colourLoc = GetAttribLocation( "in_colour" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			sOffsetLoc = api.GetUniformLocation( ProgramId, "sOffset" );
+			texImageLoc = GetUniformLocation( "texImage" );
+			sOffsetLoc = GetUniformLocation( "sOffset" );
 			base.GetLocations();
 		}
 		

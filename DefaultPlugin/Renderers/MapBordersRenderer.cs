@@ -32,7 +32,7 @@ namespace DefaultPlugin {
 		public override void RenderMapSides( double deltaTime ) {
 			if( sidesVboId == -1 ) return;
 			
-			api.UseProgram( shader.ProgramId );
+			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			api.Bind2DTexture( sideTexId );
@@ -210,11 +210,11 @@ void main() {
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
+			colourLoc = GetAttribLocation( "in_colour" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			texImageLoc = GetUniformLocation( "texImage" );
 			base.GetLocations();
 		}
 		

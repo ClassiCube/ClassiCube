@@ -49,9 +49,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void Apply() {
 			int width = framebuffer.Width;
 			int height = framebuffer.Height;
-			api.UseProgram( shader.ProgramId );	
+			shader.Bind();
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
-			api.SetUniform( shader.projLoc, ref matrix );
+			shader.SetUniform( shader.projLoc, ref matrix );
 			api.DepthTest = false;
 			api.AlphaBlending = true;
 			

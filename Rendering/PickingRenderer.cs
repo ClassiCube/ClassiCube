@@ -31,7 +31,7 @@ namespace ClassicalSharp.Renderers {
 			PickedPos pickedPos = window.SelectedPos;
 			
 			if( pickedPos.Valid ) {
-				graphics.UseProgram( shader.ProgramId );
+				shader.Bind();
 				shader.UpdateFogAndMVPState( ref window.MVP );
 				Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 				Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );

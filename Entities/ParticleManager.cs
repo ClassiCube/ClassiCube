@@ -28,7 +28,7 @@ namespace ClassicalSharp.Particles {
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
-			api.UseProgram( shader.ProgramId );
+			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			int count = particles.Count * 6;

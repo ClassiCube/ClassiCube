@@ -41,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double deltaTime ) {
 			pos = Player.Position;
 			ModelCache cache = Window.ModelCache;
-			Graphics.SetUniform( cache.Shader.colourLoc, 0.7f );
+			cache.Shader.SetUniform( cache.Shader.colourLoc, 0.7f );
 			Player.Model.RenderModel( Player, this );
 			DrawName();
 		}
@@ -58,14 +58,14 @@ namespace ClassicalSharp.Renderers {
 			//Graphics.RotateY( 180f - yaw );
 			matrix = Matrix4.Scale( invNameScale, -invNameScale, invNameScale ) * matrix; // -y to flip text
 			matrix = Matrix4.Translation( -nameWidth / 2f, -nameHeight, 0f ) * matrix;
-			Graphics.SetUniform( cache.Shader.mvpLoc, ref matrix );
+			cache.Shader.SetUniform( cache.Shader.mvpLoc, ref matrix );
 			// We have to duplicate code from IGraphicsApi because (currently) it only works with the gui shader.
 			
 			Texture tex = nameTexture;			
 			VertexPos3fTex2f[] quads = cache.EntityNameVertices;
 			int quadVb = cache.EntityNameVb;
 			Graphics.Bind2DTexture( tex.ID );
-			Graphics.SetUniform( cache.Shader.colourLoc, 1f );
+			cache.Shader.SetUniform( cache.Shader.colourLoc, 1f );
 			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			// Have to order them this way because it's a triangle strip.

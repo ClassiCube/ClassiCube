@@ -22,11 +22,11 @@ void main() {
 		public int positionLoc, texCoordsLoc;
 		public int texSceneLoc, projLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
 			
-			texSceneLoc = api.GetUniformLocation( ProgramId, "texScene" );
-			projLoc = api.GetUniformLocation( ProgramId, "proj" );
+			texSceneLoc = GetUniformLocation( "texScene" );
+			projLoc = GetUniformLocation( "proj" );
 		}
 		
 		protected override void EnableVertexAttribStates( int stride ) {

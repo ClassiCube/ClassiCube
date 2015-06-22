@@ -41,7 +41,7 @@ namespace ClassicalSharp.Model {
 			rightArmZRot = player.rightArmZRot;
 			
 			curMVPMatrix = Matrix4.RotateY( -yaw ) * Matrix4.Translation( pos ) * window.MVP;
-			graphics.SetUniform( shader.mvpLoc, ref curMVPMatrix );
+			shader.SetUniform( shader.mvpLoc, ref curMVPMatrix );
 			DrawPlayerModel( player, renderer );
 		}
 		
@@ -142,9 +142,9 @@ namespace ClassicalSharp.Model {
 				matrix = Matrix4.RotateX( angleX ) * matrix;
 			}
 			matrix = Matrix4.Translation( -x, -y, -z ) * matrix;
-			graphics.SetUniform( shader.mvpLoc, ref matrix );
+			shader.SetUniform( shader.mvpLoc, ref matrix );
 			part.Render( vb );
-			graphics.SetUniform( shader.mvpLoc, ref curMVPMatrix );
+			shader.SetUniform( shader.mvpLoc, ref curMVPMatrix );
 		}
 	}
 }

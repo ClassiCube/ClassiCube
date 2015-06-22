@@ -48,12 +48,12 @@ void main() {
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc, lightsColourLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_flags" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
+			colourLoc = GetAttribLocation( "in_flags" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			lightsColourLoc = api.GetUniformLocation( ProgramId, "lightColours" );
+			texImageLoc = GetUniformLocation( "texImage" );
+			lightsColourLoc = GetUniformLocation( "lightColours" );
 			base.GetLocations();
 		}
 		
@@ -95,8 +95,8 @@ void main() {
 		public int positionLoc;
 		public int mvpLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			mvpLoc = api.GetUniformLocation( ProgramId, "MVP" );
+			positionLoc = GetAttribLocation( "in_position" );
+			mvpLoc = GetUniformLocation( "MVP" );
 		}
 		
 		protected override void EnableVertexAttribStates( int stride ) {

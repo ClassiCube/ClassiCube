@@ -76,9 +76,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public void Mode2D( float width, float height ) {
-			UseProgram( guiShader.ProgramId );		
+			guiShader.Bind();
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
-			SetUniform( guiShader.projLoc, ref matrix );
+			guiShader.SetUniform( guiShader.projLoc, ref matrix );
 			DepthTest = false;
 			AlphaBlending = true;
 		}

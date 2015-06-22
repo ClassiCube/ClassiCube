@@ -204,13 +204,13 @@ namespace DefaultPlugin {
 			UpdateSortOrder();
 			UpdateChunks();
 			int[] texIds = Window.TerrainAtlas1D.TexIds;
-			api.UseProgram( shader.ProgramId );
+			shader.Bind();
 			if( needToUpdateColours ) {
 				int i = 0;
 				needToUpdateColours = false;
 				MakeCol( Window.Map.Sunlight, ref i );
 				MakeCol( Window.Map.Shadowlight, ref i );
-				api.SetUniformArray( shader.lightsColourLoc, lightCols );
+				shader.SetUniformArray( shader.lightsColourLoc, lightCols );
 			}
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
@@ -231,8 +231,8 @@ namespace DefaultPlugin {
 			Window.MapBordersRenderer.RenderMapEdges( deltaTime );
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
-			api.UseProgram( lShader.ProgramId );
-			api.SetUniform( lShader.mvpLoc, ref Window.MVP );
+			lShader.Bind();
+			lShader.SetUniform( lShader.mvpLoc, ref Window.MVP );
 			api.AlphaBlending = false;
 			// First fill depth buffer
 			api.ColourWrite = false;
@@ -241,7 +241,7 @@ namespace DefaultPlugin {
 			}
 			
 			// Then actually draw the transluscent blocks
-			api.UseProgram( shader.ProgramId );
+			shader.Bind();
 			api.AlphaBlending = true;
 			api.ColourWrite = true;
 			//Graphics.DepthWrite = false; TODO: test if this makes a difference.

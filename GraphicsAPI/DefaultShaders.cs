@@ -45,12 +45,12 @@ void main() {
 		public int positionLoc, texCoordsLoc, colourLoc;
 		public int texImageLoc, projLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
+			colourLoc = GetAttribLocation( "in_colour" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			projLoc = api.GetUniformLocation( ProgramId, "proj" );
+			texImageLoc = GetUniformLocation( "texImage" );
+			projLoc = GetUniformLocation( "proj" );
 		}
 		
 		protected override void EnableVertexAttribStates( int stride ) {
@@ -92,7 +92,7 @@ void main() {
 		
 		public int positionLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
+			positionLoc = GetAttribLocation( "in_position" );
 			base.GetLocations();
 		}
 		
@@ -142,11 +142,11 @@ void main() {
 		public int positionLoc, texCoordsLoc;
 		public int texImageLoc, colourLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
-			colourLoc = api.GetUniformLocation( ProgramId, "colour" );
+			texImageLoc = GetUniformLocation( "texImage" );
+			colourLoc = GetUniformLocation( "colour" );
 			base.GetLocations();
 		}
 		
@@ -197,10 +197,10 @@ void main() {
 		public int positionLoc, texCoordsLoc;
 		public int texImageLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			texCoordsLoc = api.GetAttribLocation( ProgramId, "in_texcoords" );
+			positionLoc = GetAttribLocation( "in_position" );
+			texCoordsLoc = GetAttribLocation( "in_texcoords" );
 			
-			texImageLoc = api.GetUniformLocation( ProgramId, "texImage" );
+			texImageLoc = GetUniformLocation( "texImage" );
 			base.GetLocations();
 		}
 		
@@ -247,8 +247,8 @@ void main() {
 		
 		public int positionLoc, colourLoc;
 		protected override void GetLocations() {
-			positionLoc = api.GetAttribLocation( ProgramId, "in_position" );
-			colourLoc = api.GetAttribLocation( ProgramId, "in_colour" );
+			positionLoc = GetAttribLocation( "in_position" );
+			colourLoc = GetAttribLocation( "in_colour" );
 			base.GetLocations();
 		}
 		

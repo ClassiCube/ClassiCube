@@ -75,7 +75,7 @@ namespace ClassicalSharp.Selections {
 		public void Render( double delta ) {
 			if( selections.Count == 0 ) return;
 			
-			api.UseProgram( shader.ProgramId );
+			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
 			Player player = Window.LocalPlayer;
