@@ -112,8 +112,9 @@
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
-    <Compile Include="Entities\Particle.cs" />
-    <Compile Include="Entities\ParticleManager.cs" />
+    <Compile Include="Entities\Particles\Particle.cs" />
+    <Compile Include="Entities\Particles\ParticleManager.cs" />
+    <Compile Include="Entities\Particles\TerrainParticle.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Game\Game.Chat.cs" />
     <Compile Include="Game\Game.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Rendering\StandardEnvRenderer.cs" />
     <Compile Include="Rendering\WeatherRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
+    <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
@@ -215,6 +217,7 @@
     <Folder Include="2D\Screens" />
     <Folder Include="2D\Widgets" />
     <Folder Include="Blocks" />
+    <Folder Include="Entities\Particles" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
     <Folder Include="Ionic.Zlib" />

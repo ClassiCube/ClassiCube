@@ -28,12 +28,10 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public bool NextInt( out int value ) {
-			value = 0;
 			return Int32.TryParse( Next(), out value );
 		}
 		
 		public bool NextFloat( out float value ) {
-			value = 0;
 			return Single.TryParse( Next(), out value );
 		}
 		
