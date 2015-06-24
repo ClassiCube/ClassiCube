@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 					if( Window.Network.UsingExtPlayerList ) {
 						playerList = new ExtPlayerListWidget( Window, playerFont );
 					} else {
-						playerList = new PlayerListWidget( Window, playerFont );
+						playerList = new NormalPlayerListWidget( Window, playerFont );
 					}
 					playerList.Init();
 				}
