@@ -38,53 +38,53 @@ namespace ClassicalSharp {
 		
 		public event EventHandler<ChatEventArgs> ChatReceived;
 		
-		internal void RaiseOnNewMap() {
+		public void RaiseOnNewMap() {
 			RaiseEvent( OnNewMap );
 		}
 		
-		internal void RaiseHeldBlockChanged() {
+		public void RaiseHeldBlockChanged() {
 			RaiseEvent( HeldBlockChanged );
 		}
 		
-		internal void RaiseEntityAdded( byte id ) {
+		public void RaiseEntityAdded( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( EntityAdded, e );
 		}
 		
-		internal void RaiseEntityRemoved( byte id ) {
+		public void RaiseEntityRemoved( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( EntityRemoved, e );
 		}
 		
-		internal void RaiseCpeListInfoAdded( byte id ) {
+		public void RaiseCpeListInfoAdded( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoAdded, e );
 		}
 		
-		internal void RaiseCpeListInfoChanged( byte id ) {
+		public void RaiseCpeListInfoChanged( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoChanged, e );
 		}
 		
-		internal void RaiseCpeListInfoRemoved( byte id ) {
+		public void RaiseCpeListInfoRemoved( byte id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoRemoved, e );
 		}
 		
-		internal void RaiseBlockPermissionsChanged() {
+		public void RaiseBlockPermissionsChanged() {
 			RaiseEvent( BlockPermissionsChanged );
 		}
 		
-		internal void RaiseOnNewMapLoaded() {
+		public void RaiseOnNewMapLoaded() {
 			RaiseEvent( OnNewMapLoaded );
 		}
 		
-		internal void RaiseMapLoading( byte progress ) {
+		public void RaiseMapLoading( byte progress ) {
 			MapLoadingEventArgs e = new MapLoadingEventArgs( progress );
 			RaiseEvent( MapLoading, e );
 		}
 		
-		internal void RaiseEnvVariableChanged( EnvVariable variable ) {
+		public void RaiseEnvVariableChanged( EnvVariable variable ) {
 			EnvVariableEventArgs e = new EnvVariableEventArgs( variable );
 			RaiseEvent( EnvVariableChanged, e );
 		}

@@ -65,6 +65,10 @@ namespace ClassicalSharp.Plugins {
 				case PluginModuleType.PostProcessingShader:
 					game.PostProcessingShaders.Add( module.Type );
 					break;
+					
+				case PluginModuleType.NetworkProcessor:
+					game.NetworkProcessorTypes.Add( module.Type );
+					break;
 			}
 		}
 	}
@@ -77,6 +81,7 @@ namespace ClassicalSharp.Plugins {
 		WeatherRenderer,
 		MapRenderer,
 		PostProcessingShader,
+		NetworkProcessor,
 	}
 	
 	public class PluginModule {

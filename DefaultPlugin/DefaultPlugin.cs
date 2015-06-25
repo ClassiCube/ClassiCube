@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClassicalSharp.Plugins;
+using DefaultPlugin.Network;
 using DefaultPlugin.Shaders;
 
 namespace DefaultPlugin {
@@ -47,6 +48,8 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.MapRenderer, typeof( StandardMapRenderer ) ),
 					
 					new PluginModule( PluginModuleType.PostProcessingShader, typeof( GrayscaleFilter ) ),
+					
+					new PluginModule( PluginModuleType.NetworkProcessor, typeof( ClassicNetworkProcessor ) ),
 				};
 			}
 		}

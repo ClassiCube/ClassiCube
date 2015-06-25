@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 		public OpenGLApi Graphics;
 		public Map Map;
 		public NetworkProcessor Network;
+		public List<Type> NetworkProcessorTypes = new List<Type>();
 		
 		public Player[] NetPlayers = new Player[256];
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
@@ -137,7 +138,6 @@ namespace ClassicalSharp {
 			LocalPlayer = new LocalPlayer( 255, this );
 			width = Width;
 			height = Height;
-			Network = new NetworkProcessor( this );
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			Camera = firstPersonCam;
@@ -186,7 +186,9 @@ namespace ClassicalSharp {
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
-			Network.Connect();
+			
+			Network = Utils.New<NetworkProcessor>( NetworkProcessorTypes[0], this );
+			Network.Connect( IPAddress, Port );
 		}
 		
 		public void SetViewDistance( int distance ) {

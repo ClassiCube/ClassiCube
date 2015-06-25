@@ -2,13 +2,17 @@
 using System;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp;
 using ClassicalSharp.Network;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin.Network {
 
-	public partial class NetworkProcessor {
+	public partial class ClassicNetworkProcessor {
 		
 		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
+		int womCounter = 0;
+		bool sendWomId = false, sentWomId = false;
+		
 		void CheckForWomEnvironment() {
 			DownloadedItem item;
 			Window.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
@@ -55,6 +59,20 @@ namespace ClassicalSharp {
 					}
 				}
 			}
+		}
+		
+		void DownloadWomDataAsync() {
+			string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
+			string url = "http://" + host;
+			url = url.Replace( "$U", Window.Username );
+			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
+			// different world, the environment settings from the last world are not loaded in the
+			// new world if the async 'get request' didn't complete before the new world was loaded.
+			womCounter++;
+			womEnvIdentifier = "womenv_" + womCounter;
+			womTerrainIdentifier = "womterrain_" + womCounter;
+			Window.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
+			sendWomId = true;
 		}
 		
 		void GetWomImageAsync( string type, string id ) {

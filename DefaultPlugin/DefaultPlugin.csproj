@@ -30,7 +30,7 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>Full</DebugType>
     <Optimize>False</Optimize>
-    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
@@ -47,7 +47,13 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Shaders\RedFilterShader.cs" />
+    <Compile Include="Network\Enums.cs" />
+    <Compile Include="Network\FastNetReader.cs" />
+    <Compile Include="Network\FixedBufferStream.cs" />
+    <Compile Include="Network\GZipHeaderReader.cs" />
+    <Compile Include="Network\NetworkProcessor.cs" />
+    <Compile Include="Network\WomConfigHandler.cs" />
+    <Compile Include="Shaders\GrayscaleFilter.cs" />
     <Compile Include="StandardChunkMeshBuilder.cs" />
     <Compile Include="DefaultCommands.cs" />
     <Compile Include="DefaultPlugin.cs" />
@@ -69,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models" />
+    <Folder Include="Network" />
     <Folder Include="Shaders" />
     <Folder Include="Renderers" />
   </ItemGroup>

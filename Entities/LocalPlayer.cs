@@ -245,7 +245,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal void CalculateJumpVelocity( float jumpHeight ) {
+		public void CalculateJumpVelocity( float jumpHeight ) {
 			jumpVel = 0;
 			if( jumpHeight >= 256 ) jumpVel = 10.0f;
 			if( jumpHeight >= 512 ) jumpVel = 16.5f;
