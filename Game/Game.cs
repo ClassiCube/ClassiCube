@@ -31,7 +31,6 @@ namespace ClassicalSharp {
 		public BlockInfo BlockInfo;
 		public double accumulator;
 		public TerrainAtlas2D TerrainAtlas;
-		public TerrainAtlas1D TerrainAtlas1D;
 		public SkinType DefaultPlayerSkinType;
 		public int ChunkUpdates;
 		
@@ -102,10 +101,8 @@ namespace ClassicalSharp {
 		public List<Type> PostProcessingShaders = new List<Type>();
 		
 		void LoadAtlas( Bitmap bmp ) {
-			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
 			TerrainAtlas.UpdateState( bmp );
-			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
 		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
@@ -128,7 +125,6 @@ namespace ClassicalSharp {
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
-			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
 			LoadAtlas( terrainBmp );
 			BlockInfo = new BlockInfo();
@@ -319,7 +315,6 @@ namespace ClassicalSharp {
 			fpsScreen.Dispose();
 			SelectionManager.Dispose();
 			TerrainAtlas.Dispose();
-			TerrainAtlas1D.Dispose();
 			ModelCache.Dispose();
 			Picking.Dispose();
 			ParticleManager.Dispose();

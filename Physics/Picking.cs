@@ -7,6 +7,7 @@ namespace ClassicalSharp {
 	public static class Picking {
 		
 		// http://www.xnawiki.com/index.php/Voxel_traversal
+		const float inf = Single.PositiveInfinity;
 		public static void GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
 			// Implementation is based on:
 			// "A Fast Voxel Traversal Algorithm for Ray Tracing"
@@ -41,27 +42,17 @@ namespace ClassicalSharp {
 				y + ( stepY > 0 ? 1 : 0 ),
 				z + ( stepZ > 0 ? 1 : 0 ) );
 
-			// NOTE: For the following calculations, the result will be Single.PositiveInfinity
-			// when ray.Direction.X, Y or Z equals zero, which is OK. However, when the left-hand
-			// value of the division also equals zero, the result is Single.NaN, which is not OK.
-
 			// Determine how far we can travel along the ray before we hit a voxel boundary.
 			Vector3 tMax = new Vector3(
-				( cellBoundary.X - origin.X ) / dir.X,    // Boundary is a plane on the YZ axis.
-				( cellBoundary.Y - origin.Y ) / dir.Y,    // Boundary is a plane on the XZ axis.
-				( cellBoundary.Z - origin.Z ) / dir.Z );  // Boundary is a plane on the XY axis.
-			if( Single.IsNaN( tMax.X ) || Single.IsInfinity( tMax.X ) ) tMax.X = Single.PositiveInfinity;
-			if( Single.IsNaN( tMax.Y ) || Single.IsInfinity( tMax.Y ) ) tMax.Y = Single.PositiveInfinity;
-			if( Single.IsNaN( tMax.Z ) || Single.IsInfinity( tMax.Z ) ) tMax.Z = Single.PositiveInfinity;
+				dir.X == 0 ? inf : ( cellBoundary.X - origin.X ) / dir.X,    // Boundary is a plane on the YZ axis.
+				dir.Y == 0 ? inf : ( cellBoundary.Y - origin.Y ) / dir.Y,    // Boundary is a plane on the XZ axis.
+				dir.Z == 0 ? inf : ( cellBoundary.Z - origin.Z ) / dir.Z );  // Boundary is a plane on the XY axis.
 
 			// Determine how far we must travel along the ray before we have crossed a gridcell.
 			Vector3 tDelta = new Vector3(
-				stepX / dir.X,     // Crossing the width of a cell.
-				stepY / dir.Y,     // Crossing the height of a cell.
-				stepZ / dir.Z );   // Crossing the depth of a cell.
-			if( Single.IsNaN( tDelta.X ) ) tDelta.X = Single.PositiveInfinity;
-			if( Single.IsNaN( tDelta.Y ) ) tDelta.Y = Single.PositiveInfinity;
-			if( Single.IsNaN( tDelta.Z ) ) tDelta.Z = Single.PositiveInfinity;
+				dir.X == 0 ? inf : stepX / dir.X,     // Crossing the width of a cell.
+				dir.Y == 0 ? inf : stepY / dir.Y,     // Crossing the height of a cell.
+				dir.Z == 0 ? inf : stepZ / dir.Z );   // Crossing the depth of a cell.
 			
 			Map map = window.Map;
 			BlockInfo info = window.BlockInfo;

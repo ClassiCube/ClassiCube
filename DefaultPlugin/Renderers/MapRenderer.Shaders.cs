@@ -13,20 +13,27 @@ in vec4 in_flags;
 in vec2 in_texcoords;
 flat out vec4 out_colour;
 flat out float out_type;
-out vec2 out_texcoords;
+// Attributes so we can fake a 1D atlas
+flat out float out_ubase;
+smooth out float out_v;
+smooth out float out_uoffset;
 uniform mat4 MVP;
 uniform vec4 lightColours[8];
 
 void main() {
    gl_Position = MVP * vec4(in_position, 1.0);
-   out_texcoords = in_texcoords;
+   out_ubase = in_texcoords.x;
+   out_v = in_texcoords.y;
    out_colour = lightColours[int(in_flags.x)];
    out_type = in_flags.y;
+   out_uoffset = in_flags.z;
 }";
 			
 			FragmentSource = @"
 #version 130
-in vec2 out_texcoords;
+flat in float out_ubase;
+smooth in float out_v;
+smooth in float out_uoffset;
 flat in vec4 out_colour;
 flat in float out_type;
 out vec4 final_colour;
@@ -34,7 +41,8 @@ uniform sampler2D texImage;
 --IMPORT fog_uniforms
 
 void main() {
-   vec4 texColour = texture2D(texImage, out_texcoords);
+   vec2 texCoords = vec2(out_ubase + fract(out_uoffset) * 0.0625, out_v);
+   vec4 texColour = texture2D(texImage, texCoords);
    if(texColour.a < 0.5) {
       discard;
    }

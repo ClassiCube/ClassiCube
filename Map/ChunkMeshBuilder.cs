@@ -94,12 +94,12 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts, 
-		                        ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
+		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo solidPart, 
+		                        ref ChunkPartInfo spritePart, ref ChunkPartInfo translucentPart ) {
 			if( !BuildChunk( x, y, z ) )
 				return;
 			
-			GetChunkInfo( x, y, z, ref solidParts, ref spriteParts, ref translucentParts );
+			GetChunkInfo( x, y, z, ref solidPart, ref spritePart, ref translucentPart );
 		}
 
 		protected float blockHeight;
@@ -344,8 +344,8 @@ namespace ClassicalSharp {
 		
 		protected abstract void PreStretchTiles( int x1, int y1, int z1 );
 		
-		protected abstract void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts,
-		                  ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts );
+		protected abstract void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo solidPart,
+		                  ref ChunkPartInfo spritePart, ref ChunkPartInfo translucentPart );
 		
 		protected abstract void DrawBackFace( int count );
 		
