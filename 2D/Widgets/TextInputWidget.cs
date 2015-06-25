@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			chatInputText = new UnsafeString( 64 );
 		}
 		
-		Texture chatInputTexture, chatCaretTexture;
+		Texture2D chatInputTexture, chatCaretTexture;
 		Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		int caretPos = -1;
 		int typingLogPos = 0;

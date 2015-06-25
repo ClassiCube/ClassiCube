@@ -11,14 +11,14 @@ namespace ClassicalSharp {
 			this.font = font;
 		}
 		
-		Texture[] textures;
+		Texture2D[] textures;
 		string[] textCache;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
 		readonly Font font;
 		
 		public override void Init() {
-			textures = new Texture[ElementsCount];
+			textures = new Texture2D[ElementsCount];
 			textCache = new string[ElementsCount];
 			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
 			for( int i = 0; i < textures.Length; i++ ) {
@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 			if( !String.IsNullOrEmpty( text ) ) {
 				textures[index] = Utils2D.MakeTextTexture( parts, font, size, x, y );
 			} else {
-				textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				textures[index] = new Texture2D( -1, 0, 0, 0, defaultHeight, 0, 0 );
 			}
 			textCache[index] = text;
 			UpdateDimensions();
@@ -123,7 +123,7 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			for( int i = 0; i < textures.Length; i++ ) {
-				Texture texture = textures[i];
+				Texture2D texture = textures[i];
 				if( texture.IsValid ) {
 					texture.Render( GraphicsApi );
 				}

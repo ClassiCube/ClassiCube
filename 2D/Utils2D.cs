@@ -98,7 +98,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {
+		public static Texture2D MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
@@ -108,8 +108,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture MakeTextTexture( List<DrawTextArgs> parts, Font font, Size size, int x1, int y1 ) {
-			if( parts.Count == 0 ) return new Texture( -1, x1, y1, 0, 0, 1, 1 );
+		public static Texture2D MakeTextTexture( List<DrawTextArgs> parts, Font font, Size size, int x1, int y1 ) {
+			if( parts.Count == 0 ) return new Texture2D( -1, x1, y1, 0, 0, 1, 1 );
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					DrawText( g, parts, font, 0, 0 );
@@ -118,9 +118,9 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static Texture Make2DTexture( OpenGLApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
+		public static Texture2D Make2DTexture( OpenGLApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
 			int textureID = graphics.LoadTexture( bmp );
-			return new Texture( textureID, x1, y1, used.Width, used.Height,
+			return new Texture2D( textureID, x1, y1, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
 		}		
 		

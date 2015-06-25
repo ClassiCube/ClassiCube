@@ -12,8 +12,8 @@ namespace ClassicalSharp {
 			window.HeldBlockChanged += HeldBlockChanged;
 		}
 		
-		Texture[] barTextures = new Texture[9];
-		Texture selectedBlock;
+		Texture2D[] barTextures = new Texture2D[9];
+		Texture2D selectedBlock;
 		const int blockSize = 32;
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 			barTextures[index] = MakeTexture( x, Y, block );
 		}
 		
-		Texture MakeTexture( int x, int y, Block block ) {
+		Texture2D MakeTexture( int x, int y, Block block ) {
 			int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
 			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
 			
@@ -85,7 +85,7 @@ namespace ClassicalSharp {
 				verSize = (int)( blockSize * height );
 				blockY = y + blockSize - verSize;
 			}
-			return new Texture( -1, x, blockY, blockSize, verSize, rec );
+			return new Texture2D( -1, x, blockY, blockSize, verSize, rec );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 			selectedBlock.Y1 += deltaY;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				Texture tex = barTextures[i];
+				Texture2D tex = barTextures[i];
 				tex.X1 += deltaX;
 				tex.Y1 += deltaY;
 				barTextures[i] = tex;

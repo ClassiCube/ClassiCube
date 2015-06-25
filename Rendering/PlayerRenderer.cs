@@ -13,7 +13,7 @@ namespace ClassicalSharp.Renderers {
 		public Game Window;
 		public OpenGLApi Graphics;
 		public Player Player;
-		Texture nameTexture;
+		Texture2D nameTexture;
 		float nameWidth, nameHeight;
 		public int PlayerTextureId = -1, MobTextureId = -1;
 		int nameTextureId = -1;
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Renderers {
 			cache.Shader.SetUniform( cache.Shader.mvpLoc, ref matrix );
 			// We have to duplicate code from IGraphicsApi because (currently) it only works with the gui shader.
 			
-			Texture tex = nameTexture;			
+			Texture2D tex = nameTexture;			
 			VertexPos3fTex2f[] quads = cache.EntityNameVertices;
 			int quadVb = cache.EntityNameVb;
 			Graphics.Bind2DTexture( tex.ID );

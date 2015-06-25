@@ -12,16 +12,16 @@ namespace ClassicalSharp {
 		}
 		
 		class BlockDrawInfo {
-			public Texture Texture;
+			public Texture2D Texture;
 			public Block BlockId;
 			
-			public BlockDrawInfo( Texture texture, Block block ) {
+			public BlockDrawInfo( Texture2D texture, Block block ) {
 				Texture = texture;
 				BlockId = block;
 			}
 		}
 		BlockDrawInfo[] blocksTable;
-		Texture selectedBlock, blockInfoTexture;
+		Texture2D selectedBlock, blockInfoTexture;
 		int blockSize = 48;
 		int selectedIndex = 0;
 		const int blocksPerRow = 10;
@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
-				Texture texture = blocksTable[i].Texture;
+				Texture2D texture = blocksTable[i].Texture;
 				texture.RenderNoBind( GraphicsApi );
 			}
 			if( selectedIndex != -1 ) {
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 			blockInfoTexture.X1 += xDiff;
 			blockInfoTexture.Y1 += yDiff;
 			for( int i = 0; i < blocksTable.Length; i++ ) {
-				Texture texture = blocksTable[i].Texture;
+				Texture2D texture = blocksTable[i].Texture;
 				texture.X1 += xDiff;
 				texture.Y1 += yDiff;
 				blocksTable[i].Texture = texture;
@@ -166,7 +166,7 @@ namespace ClassicalSharp {
 						verSize = (int)( blockSize * height );
 						blockY = y + blockSize - verSize;
 					}
-					Texture texture = new Texture( -1, x, blockY, blockSize, verSize, rec );
+					Texture2D texture = new Texture2D( -1, x, blockY, blockSize, verSize, rec );
 					
 					blocksTable[tableIndex++] = new BlockDrawInfo( texture, block );
 					x += blockSize;

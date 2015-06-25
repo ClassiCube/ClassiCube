@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		
 		class PlayerInfo {
 			
-			public Texture Texture;
+			public Texture2D Texture;
 			
 			public string Name;
 			
@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			GraphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );
 			for( int i = 0; i < info.Count; i++ ) {
-				Texture texture = info[i].Texture;
+				Texture2D texture = info[i].Texture;
 				if( texture.IsValid ) {
 					texture.Render( GraphicsApi );
 				}
@@ -240,7 +240,7 @@ namespace ClassicalSharp {
 			int max = Math.Min( info.Count, i + namesPerColumn );
 			
 			for( ; i < max; i++ ) {
-				Texture texture = info[i].Texture;
+				Texture2D texture = info[i].Texture;
 				if( texture.Width > maxWidth ) {
 					maxWidth = texture.Width;
 				}

@@ -3,7 +3,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public struct Texture {
+	public struct Texture2D {
 		public int ID;
 		public int X1, Y1;
 		public int Width, Height;
@@ -11,15 +11,15 @@ namespace ClassicalSharp {
 		// Normally just used for graphics cards that don't support non power of two textures.
 		public float U2, V2;
 
-		public Texture( int id, int x, int y, int width, int height, float u2, float v2 )
+		public Texture2D( int id, int x, int y, int width, int height, float u2, float v2 )
 			: this( id, x, y, width, height, 0, u2, 0, v2 )	{
 		}
 		
-		public Texture( int id, int x, int y, int width, int height, TextureRectangle rec )
+		public Texture2D( int id, int x, int y, int width, int height, TextureRectangle rec )
 			: this( id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2 )	{
 		}
 		
-		public Texture( int id, int x, int y, int width, int height, float u1, float u2, float v1, float v2 ) {
+		public Texture2D( int id, int x, int y, int width, int height, float u1, float u2, float v1, float v2 ) {
 			ID = id;
 			X1 = x;
 			Y1 = y;

@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			return widget;
 		}
 		
-		Texture texture;
+		Texture2D texture;
 		string textCache = null;
 		public int XOffset = 0, YOffset = 0;
 		int defaultHeight;
@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			GraphicsApi.DeleteTexture( ref texture );
 			textCache = text;
 			if( String.IsNullOrEmpty( text ) ) {
-				texture = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				texture = new Texture2D( -1, 0, 0, 0, defaultHeight, 0, 0 );
 				UpdateDimensions();
 				return;
 			}

@@ -33,7 +33,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return texId;
 		}
 		
-		public void DeleteTexture( ref Texture texture ) {
+		public void DeleteTexture( ref Texture2D texture ) {
 			DeleteTexture( ref texture.ID );
 		}
 		
@@ -65,7 +65,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			guiShader.DrawDynamic( DrawMode.TriangleStrip, VertexPos3fTex2fCol4b.Size, quadVb, quads, 4 );
 		}
 		
-		public virtual void Draw2DTexture( ref Texture tex ) {
+		public virtual void Draw2DTexture( ref Texture2D tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			// Have to order them this way because it's a triangle strip.
 			quads[0] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, FastColour.White );

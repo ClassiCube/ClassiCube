@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		
 		string serverName, serverMotd;
 		int progress;
-		Texture progressBoxTexture;
+		Texture2D progressBoxTexture;
 		TextWidget titleWidget, messageWidget;
 		float progX, progY = 100f;
 		int	progWidth = 200, progHeight = 40;

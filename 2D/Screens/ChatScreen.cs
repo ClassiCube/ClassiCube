@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		public int ChatInputYOffset, ChatLogYOffset;
 		public bool HistoryMode;
 		const int chatLines = 12;
-		Texture announcementTexture;
+		Texture2D announcementTexture;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat;
 		bool suppressNextPress = true;
@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		int pageNumber, pagesCount;
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		int chatIndex;
-		Texture pageTexture;
+		Texture2D pageTexture;
 		
 		public override void Render( double delta ) {
 			normalChat.Render( delta );
@@ -148,7 +148,7 @@ namespace ClassicalSharp {
 				int y = Window.Height / 4 - size.Height / 2;
 				announcementTexture = Utils2D.MakeTextTexture( parts, announcementFont, size, x, y );
 			} else {
-				announcementTexture = new Texture( -1, 0, 0, 0, 0, 0, 0 );
+				announcementTexture = new Texture2D( -1, 0, 0, 0, 0, 0, 0 );
 			}
 		}
 		

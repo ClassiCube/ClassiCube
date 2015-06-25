@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 			messageFont = new Font( "Arial", 14, FontStyle.Regular );
 		}
 		
-		Texture titleTexture, messageTexture;
+		Texture2D titleTexture, messageTexture;
 		
 		public override void Render( double delta ) {
 			titleTexture.Render( GraphicsApi );
@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 			GraphicsApi.DeleteTexture( ref messageTexture );
 		}
 		
-		Texture ModifyText( int yOffset, string text, Font font ) {			
+		Texture2D ModifyText( int yOffset, string text, Font font ) {			
 			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
 			Size size = Utils2D.MeasureSize( parts, font, true );
 			int x = Window.Width / 2 - size.Width / 2;
