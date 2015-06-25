@@ -3,9 +3,9 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace DefaultPlugin.Shaders {
 	
-	public sealed class RedFilter : PostProcessingShader {
+	public sealed class GrayscaleFilter : PostProcessingShader {
 		
-		public RedFilter() : base() {
+		public GrayscaleFilter() : base() {
 			FragmentSource = @"
 #version 130
 in vec2 out_texcoords;
@@ -14,9 +14,9 @@ uniform sampler2D texScene;
 
 void main() {
   vec2 uv = out_texcoords;
-  final_colour = texture2D(texScene, uv);
-  final_colour.g = 0;
-  final_colour.b = 0;
+  vec4 col = texture2D(texScene, uv).rgba;
+  float intensity = 0.299 * col.r + 0.587 * col.g + 0.114 * col.b;
+  final_colour = vec4(intensity, intensity, intensity, 1);
 }";
 		}
 		

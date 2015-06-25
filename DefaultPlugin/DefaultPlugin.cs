@@ -46,7 +46,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.WeatherRenderer, typeof( StandardWeatherRenderer ) ),
 					new PluginModule( PluginModuleType.MapRenderer, typeof( StandardMapRenderer ) ),
 					
-					new PluginModule( PluginModuleType.PostProcessingShader, typeof( RedFilter ) ),
+					new PluginModule( PluginModuleType.PostProcessingShader, typeof( GrayscaleFilter ) ),
 				};
 			}
 		}
