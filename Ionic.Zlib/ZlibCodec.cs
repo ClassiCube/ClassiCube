@@ -1,7 +1,6 @@
 // Originally copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 // See license.txt, section Ionic.Zlib license
-#if __MonoCS__
 using System;
 
 namespace Ionic.Zlib {
@@ -41,4 +40,3 @@ namespace Ionic.Zlib {
 		public const int BufferError = -5;
 	}
 }
-#endif

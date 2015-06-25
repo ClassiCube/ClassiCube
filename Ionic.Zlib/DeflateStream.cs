@@ -1,13 +1,12 @@
 // Originally copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 // See license.txt, section Ionic.Zlib license
-#if __MonoCS__
 using System;
 using System.IO;
 
 namespace Ionic.Zlib {
 	
-	internal class DeflateStream {
+	public class DeflateStream {
 		
 		ZlibCodec z;
 		bool _leaveOpen;
@@ -72,4 +71,3 @@ namespace Ionic.Zlib {
 		}
 	}
 }
-#endif
