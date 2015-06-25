@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			for( int i = 0; i < namesCount; i++ ) {
-				GraphicsApi.DeleteTexture( ref textures[i] );
+				textures[i].Delete();
 			}
 		}
 		

@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		int usedElementsPerAtlas1D;
 		public int elementsPerBitmap;
 		public float invElementSize;
-		public int[] TexIds;
+		public TextureObj[] TexIds;
 		OpenGLApi graphics;
 		public readonly int UsedRows1D = 5;
 		
@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			int atlas1DHeight = Utils.NextPowerOf2( usedElementsPerAtlas1D * atlas2D.elementSize );
 			
 			int index = 0;
-			TexIds = new int[atlasesCount];
+			TexIds = new TextureObj[atlasesCount];
 			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, usedElementsPerAtlas1D );
 			
 			using( FastBitmap atlas = new FastBitmap( atlas2D.AtlasBitmap, true ) ) {
@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 							Utils.MovePortion( x * elemSize, y * elemSize, 0, y_1D * elemSize, atlas, dst, elemSize );
 							index++;
 						}
-						TexIds[i] = graphics.LoadTexture( dst );
+						TexIds[i] = new TextureObj( dst );
 					}
 					atlas1d.Dispose();
 				}
@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			if( TexIds != null ) {
 				for( int i = 0; i < TexIds.Length; i++ ) {
-					graphics.DeleteTexture( ref TexIds[i] );
+					TexIds[i].Delete();
 				}
 			}
 		}

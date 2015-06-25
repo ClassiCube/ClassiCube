@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
@@ -34,10 +35,10 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetText( string text ) {
-			GraphicsApi.DeleteTexture( ref texture );
+			texture.Delete();
 			textCache = text;
 			if( String.IsNullOrEmpty( text ) ) {
-				texture = new Texture2D( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				texture = new Texture2D( TextureObj.Empty, 0, 0, 0, defaultHeight, 0, 0 );
 				UpdateDimensions();
 				return;
 			}
@@ -74,7 +75,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
-			GraphicsApi.DeleteTexture( ref texture );
+			texture.Delete();
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

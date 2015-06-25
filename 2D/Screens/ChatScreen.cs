@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -36,7 +37,7 @@ namespace ClassicalSharp {
 			}
 			if( Window.Announcement != null && ( DateTime.UtcNow - announcementDisplayTime ).TotalSeconds > 5 ) {
 				Window.Announcement = null;
-				GraphicsApi.DeleteTexture( ref announcementTexture );
+				announcementTexture.Delete();
 			}
 			if( HistoryMode ) {
 				pageTexture.Render( GraphicsApi );
@@ -108,8 +109,8 @@ namespace ClassicalSharp {
 			textInput.Dispose();
 			status.Dispose();
 			bottomRight.Dispose();
-			GraphicsApi.DeleteTexture( ref pageTexture );
-			GraphicsApi.DeleteTexture( ref announcementTexture );
+			pageTexture.Delete();
+			announcementTexture.Delete();
 			Window.ChatReceived -= ChatReceived;
 		}
 		
@@ -148,7 +149,7 @@ namespace ClassicalSharp {
 				int y = Window.Height / 4 - size.Height / 2;
 				announcementTexture = Utils2D.MakeTextTexture( parts, announcementFont, size, x, y );
 			} else {
-				announcementTexture = new Texture2D( -1, 0, 0, 0, 0, 0, 0 );
+				announcementTexture = new Texture2D( TextureObj.Empty, 0, 0, 0, 0, 0, 0 );
 			}
 		}
 		
@@ -224,7 +225,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakePageNumberTexture() {
-			GraphicsApi.DeleteTexture( ref pageTexture );
+			pageTexture.Delete();
 			string text = "Page " + pageNumber + " of " + pagesCount;
 			Size size = Utils2D.MeasureSize( text, historyFont, false );
 			int y = normalChat.CalcUsedY() - size.Height;

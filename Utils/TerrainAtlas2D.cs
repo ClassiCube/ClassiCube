@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		public const float usedInvVerElemSize = 0.125f;
 		public Bitmap AtlasBitmap;
 		public int elementSize;
-		public int TexId;
+		public TextureObj TexId;
 		OpenGLApi graphics;
 		
 		public TerrainAtlas2D( OpenGLApi graphics ) {
@@ -32,18 +32,18 @@ namespace ClassicalSharp {
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				MakeOptimisedTexture( fastBmp );
-				TexId = graphics.LoadTexture( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
+				TexId = new TextureObj( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
 			}
 		}
 		
-		public int LoadTextureElement( int index ) {
+		public TextureObj LoadTextureElement( int index ) {
 			int x = index & 0x0F;
 			int y = index >> 4;
 			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
 				using( Bitmap bmp = new Bitmap( elementSize, elementSize ) ) {
 					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
 						Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
-						return graphics.LoadTexture( dst );
+						return new TextureObj( dst );
 					}
 				}
 			}
@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 			if( AtlasBitmap != null ) {
 				AtlasBitmap.Dispose();
 			}
-			graphics.DeleteTexture( ref TexId );
+			TexId.Delete();
 		}
 		
 		static ushort[] rowFlags = { 0xFFFF, 0xFFEE, 0xFFE0, 0xFFE0, 0xFFFF, 0xFA00 };

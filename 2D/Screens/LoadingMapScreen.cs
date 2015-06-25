@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 			font.Dispose();
 			messageWidget.Dispose();
 			titleWidget.Dispose();
-			GraphicsApi.DeleteTexture( ref progressBoxTexture );
+			progressBoxTexture.Delete();
 			Window.MapLoading -= MapLoading;
 		}
 		

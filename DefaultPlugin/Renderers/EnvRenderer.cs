@@ -14,7 +14,8 @@ namespace DefaultPlugin {
 			Map = Window.Map;
 		}
 		
-		int cloudTexture = -1, cloudsVbo = -1, cloudsVertices = 6;
+		TextureObj cloudTexture;
+		int cloudsVbo = -1, cloudsVertices = 6;
 		int skyOffset = 10, skyVbo = -1, skyVertices = 6;
 		int index;
 		public float CloudsSpeed = 1f;
@@ -69,7 +70,7 @@ namespace DefaultPlugin {
 		public override void Init() {
 			base.Init();
 			ResetAllEnv( null, null );
-			cloudTexture = Graphics.LoadTexture( "clouds.png" );
+			cloudTexture = TextureObj.LoadTexture( "clouds.png" );
 			Window.ViewDistanceChanged += ResetAllEnv;
 			shader = new EnvShader();
 			shader.Init( Graphics );
@@ -86,7 +87,7 @@ namespace DefaultPlugin {
 			Window.ViewDistanceChanged -= ResetAllEnv;
 			Graphics.DeleteVb( skyVbo );
 			Graphics.DeleteVb( cloudsVbo );
-			Graphics.DeleteTexture( ref cloudTexture );
+			cloudTexture.Delete();
 			shader.Dispose();
 		}
 		
@@ -94,8 +95,8 @@ namespace DefaultPlugin {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			shader.SetUniform( shader.sOffsetLoc, offset );
-			Graphics.Bind2DTexture( cloudTexture );
-			shader.Draw(  DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, cloudsVbo, 0, cloudsVertices );
+			cloudTexture.Bind();
+			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, cloudsVbo, 0, cloudsVertices );
 		}
 		
 		double blendFactor( int x ) {

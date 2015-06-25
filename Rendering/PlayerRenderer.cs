@@ -15,8 +15,8 @@ namespace ClassicalSharp.Renderers {
 		public Player Player;
 		Texture2D nameTexture;
 		float nameWidth, nameHeight;
-		public int PlayerTextureId = -1, MobTextureId = -1;
-		int nameTextureId = -1;
+		public TextureObj PlayerTexId, MobTexId;
+		TextureObj nameTextureId;
 		
 		public PlayerRenderer( Player player, Game window ) {
 			Player = player;
@@ -26,16 +26,16 @@ namespace ClassicalSharp.Renderers {
 			using( Font font = new Font( "Arial", 14 ) ) {
 				List<DrawTextArgs> parts = Utils2D.SplitText( Graphics, player.DisplayName, true );
 				Size size = Utils2D.MeasureSize( parts, font, true );
-				nameTexture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );			
+				nameTexture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
 				nameWidth = size.Width;
 				nameHeight = size.Height;
-				nameTextureId = nameTexture.ID;
+				nameTextureId = nameTexture.TexObj;
 			}
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteTexture( ref PlayerTextureId );
-			Graphics.DeleteTexture( ref nameTextureId );
+			PlayerTexId.Delete();
+			nameTextureId.Delete();
 		}
 		
 		public void Render( double deltaTime ) {
@@ -61,10 +61,10 @@ namespace ClassicalSharp.Renderers {
 			cache.Shader.SetUniform( cache.Shader.mvpLoc, ref matrix );
 			// We have to duplicate code from IGraphicsApi because (currently) it only works with the gui shader.
 			
-			Texture2D tex = nameTexture;			
+			Texture2D tex = nameTexture;
 			VertexPos3fTex2f[] quads = cache.EntityNameVertices;
 			int quadVb = cache.EntityNameVb;
-			Graphics.Bind2DTexture( tex.ID );
+			tex.TexObj.Bind();
 			cache.Shader.SetUniform( cache.Shader.colourLoc, 1f );
 			
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;

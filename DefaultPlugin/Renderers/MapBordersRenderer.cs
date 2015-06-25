@@ -13,7 +13,7 @@ namespace DefaultPlugin {
 		}
 		
 		int sidesVboId = -1, edgesVboId = -1;
-		int edgeTexId, sideTexId;
+		TextureObj edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices, index;
 		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgesCol = FastColour.White;
 		
@@ -35,7 +35,7 @@ namespace DefaultPlugin {
 			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
-			api.Bind2DTexture( sideTexId );
+			sideTexId.Bind();
 			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, sidesVboId, 0, sidesVertices );
 		}
 		
@@ -46,7 +46,7 @@ namespace DefaultPlugin {
 			if( Window.LocalPlayer.EyePosition.Y < 0 ) return;
 			
 			api.AlphaBlending = true;
-			api.Bind2DTexture( edgeTexId );
+			edgeTexId.Bind();
 			shader.Draw( DrawMode.Triangles, VertexPos3fTex2fCol4b.Size, edgesVboId, 0, edgesVertices );
 			api.AlphaBlending = false;
 		}
@@ -56,8 +56,8 @@ namespace DefaultPlugin {
 			Window.ViewDistanceChanged -= ResetSidesAndEdges;
 			Window.TerrainAtlasChanged -= ResetTextures;
 			
-			api.DeleteTexture( ref edgeTexId );
-			api.DeleteTexture( ref sideTexId );
+			edgeTexId.Delete();
+			sideTexId.Delete();
 			api.DeleteVb( sidesVboId );
 			api.DeleteVb( edgesVboId );
 			sidesVboId = edgesVboId = -1;
@@ -131,11 +131,11 @@ namespace DefaultPlugin {
 		}
 
 		int lastEdgeTexLoc, lastSideTexLoc;
-		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
+		void MakeTexture( ref TextureObj texId, ref int lastTexLoc, Block block ) {
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
 			if( texLoc != lastTexLoc ) {
 				lastTexLoc = texLoc;
-				Window.Graphics.DeleteTexture( ref texId );
+				texId.Delete();
 				texId = Window.TerrainAtlas.LoadTextureElement( texLoc );
 			}
 		}	

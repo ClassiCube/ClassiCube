@@ -60,36 +60,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public bool FaceCulling {
 			set { ToggleCap( EnableCap.CullFace, value ); }
 		}
-
-		public unsafe int LoadTexture( int width, int height, IntPtr scan0 ) {
-			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
-				Utils.LogWarning( "Creating a non power of two texture." );
-			
-			int texId = 0;
-			GL.GenTextures( 1, &texId );
-			GL.BindTexture( TextureTarget.Texture2D, texId );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
-			GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
-
-			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
-			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
-			return texId;
-		}
-		
-		public void Bind2DTexture( int texture ) {
-			GL.BindTexture( TextureTarget.Texture2D, texture );
-		}
-		
-		public unsafe void DeleteTexture( ref int texId ) {
-			if( texId <= 0 ) return;
-			int id = texId;
-			GL.DeleteTextures( 1, &id );
-			texId = -1;
-		}
-		
-		public bool IsValidTexture( int texId ) {
-			return GL.IsTexture( texId );
-		}
 		
 		public void Clear() {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
@@ -221,12 +191,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		static void ToggleCap( EnableCap cap, bool value ) {
 			if( value ) GL.Enable( cap );
 			else GL.Disable( cap );
-		}
-
-		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-			GL.BindTexture( TextureTarget.Texture2D, texId );
-			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
-			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
 		}
 	}
 }

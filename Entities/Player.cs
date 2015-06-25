@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK;
+using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Network;
 using ClassicalSharp.Model;
 using ClassicalSharp.Renderers;
@@ -110,12 +111,12 @@ namespace ClassicalSharp {
 			Window.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
 			if( item != null && item.Bmp != null ) {
 				Bitmap bmp = item.Bmp;
-				Window.Graphics.DeleteTexture( ref renderer.PlayerTextureId );
-				renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );
+				renderer.PlayerTexId.Delete();
+				renderer.PlayerTexId = new TextureObj( bmp );
 				// Custom mob textures.
-				renderer.MobTextureId = -1;
+				renderer.MobTexId = TextureObj.Empty;
 				if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
-					renderer.MobTextureId = renderer.PlayerTextureId;
+					renderer.MobTexId = renderer.PlayerTexId;
 				}
 				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
@@ -128,7 +129,7 @@ namespace ClassicalSharp {
 			Model = Window.ModelCache.GetModel( ModelName );
 			lastModelChange = DateTime.UtcNow;
 			if( renderer != null ) {
-				renderer.MobTextureId = -1;
+				renderer.MobTexId = TextureObj.Empty;
 			}
 		}
 	}

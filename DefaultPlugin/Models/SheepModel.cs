@@ -9,7 +9,7 @@ namespace DefaultPlugin {
 	public class SheepModel : IModel {
 		
 		public bool Fur = true;
-		int furTextureId;
+		TextureObj furTextureId;
 		
 		public SheepModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2f[partVertices * 6 * ( Fur ? 2 : 1 )];
@@ -30,8 +30,8 @@ namespace DefaultPlugin {
 			
 			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
-			DefaultTexId = graphics.LoadTexture( "sheep.png" );
-			furTextureId = graphics.LoadTexture( "sheep_fur.png" );
+			DefaultTexId = TextureObj.LoadTexture( "sheep.png" );
+			furTextureId =TextureObj.LoadTexture( "sheep_fur.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -67,8 +67,8 @@ namespace DefaultPlugin {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			TextureObj texId = renderer.MobTexId.IsInvalid ? DefaultTexId : renderer.MobTexId;
+			texId.Bind();
 			
 			DrawRotate( 0, 1.125f, -0.5f, -pitch, 0, 0, Head );
 			DrawPart( Torso );
@@ -78,7 +78,7 @@ namespace DefaultPlugin {
 			DrawRotate( 0, 0.75f, 0.4375f, leftLegXRot, 0, 0, RightLegBack );
 
 			if( Fur ) {
-				graphics.Bind2DTexture( furTextureId );
+				furTextureId.Bind();
 				DrawPart( FurTorso );
 				DrawRotate( 0, 1.125f, -0.5f, -pitch, 0, 0, FurHead );
 				DrawRotate( 0, 0.75f, -0.3125f, leftLegXRot, 0, 0, FurLeftLegFront );
@@ -90,9 +90,9 @@ namespace DefaultPlugin {
 		
 		public override void Dispose() {
 			graphics.DeleteVb( vb );
-			graphics.DeleteTexture( ref DefaultTexId );
+			DefaultTexId.Delete();
 			if( Fur ) {
-				graphics.DeleteTexture( ref furTextureId );
+				furTextureId.Delete();
 			}
 		}
 		

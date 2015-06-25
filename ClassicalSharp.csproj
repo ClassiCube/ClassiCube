@@ -128,6 +128,7 @@
     <Compile Include="GraphicsAPI\PostProcessor.cs" />
     <Compile Include="GraphicsAPI\Shader.cs" />
     <Compile Include="GraphicsAPI\Framebuffer.cs" />
+    <Compile Include="GraphicsAPI\TextureObject.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
     <Compile Include="Ionic.Zlib\DeflateStream.cs" />
     <Compile Include="Ionic.Zlib\Inflate.cs" />

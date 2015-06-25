@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -49,7 +50,7 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
-			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
+			Window.TerrainAtlas.TexId.Bind();
 			int selectedX = 0;
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				barTextures[i].RenderNoBind( GraphicsApi );
@@ -62,7 +63,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
-			GraphicsApi.DeleteTexture( ref selectedBlock );
+			selectedBlock.Delete();
 			Window.HeldBlockChanged -= HeldBlockChanged;
 		}
 		
@@ -85,7 +86,7 @@ namespace ClassicalSharp {
 				verSize = (int)( blockSize * height );
 				blockY = y + blockSize - verSize;
 			}
-			return new Texture2D( -1, x, blockY, blockSize, verSize, rec );
+			return new Texture2D( TextureObj.Empty, x, blockY, blockSize, verSize, rec );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

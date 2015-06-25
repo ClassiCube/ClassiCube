@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.NameId == e.Id ) {
-					GraphicsApi.DeleteTexture( ref textures[i] );
+					textures[i].Delete();
 					AddPlayerInfo( Window.CpePlayersList[e.Id], i );
 					SortPlayerInfo();
 					return;
@@ -77,7 +77,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.NameId == e.Id ) {
-					GraphicsApi.DeleteTexture( ref textures[i] );
+					textures[i].Delete();
 					RemoveItemAt( textures, i );
 					RemoveItemAt( info, i );
 					namesCount--;

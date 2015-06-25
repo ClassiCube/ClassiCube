@@ -22,7 +22,7 @@ namespace DefaultPlugin {
 			
 			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
-			DefaultTexId = graphics.LoadTexture( "chicken.png" );
+			DefaultTexId = TextureObj.LoadTexture( "chicken.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -61,8 +61,8 @@ namespace DefaultPlugin {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			TextureObj texId = renderer.MobTexId.IsInvalid ? DefaultTexId : renderer.MobTexId;
+			texId.Bind();
 			
 			DrawRotate( 0, 0.5625f, -0.1875f, -pitch, 0, 0, Head );
 			DrawRotate( 0, 0.5625f, -0.1875f, -pitch, 0, 0, Head2 );
@@ -76,7 +76,7 @@ namespace DefaultPlugin {
 		
 		public override void Dispose() {
 			graphics.DeleteVb( vb );
-			graphics.DeleteTexture( ref DefaultTexId );
+			DefaultTexId.Delete();
 		}
 	
 		ModelPart Head, Head2, Head3, Torso, LeftLeg, RightLeg, LeftWing, RightWing;

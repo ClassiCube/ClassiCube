@@ -49,7 +49,7 @@ namespace ClassicalSharp.Model {
 		
 		public abstract void Dispose();
 		
-		public int DefaultTexId; //{ get; protected set; }
+		public TextureObj DefaultTexId;
 		
 		protected VertexPos3fTex2f[] vertices;
 		protected int index = 0;

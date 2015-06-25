@@ -203,7 +203,7 @@ namespace DefaultPlugin {
 			if( chunks == null ) return;
 			UpdateSortOrder();
 			UpdateChunks();
-			int[] texIds = Window.TerrainAtlas1D.TexIds;
+			TextureObj[] texIds = Window.TerrainAtlas1D.TexIds;
 			shader.Bind();
 			if( needToUpdateColours ) {
 				int i = 0;
@@ -218,12 +218,12 @@ namespace DefaultPlugin {
 			// These blocks are treated as having an alpha value of either none or full.
 			api.FaceCulling = true;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				api.Bind2DTexture( texIds[batch] );
+				texIds[batch].Bind();
 				RenderSolidBatch( batch );
 			}
 			api.FaceCulling = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				api.Bind2DTexture( texIds[batch] );
+				texIds[batch].Bind();
 				RenderSpriteBatch( batch );
 			}
 
@@ -246,7 +246,7 @@ namespace DefaultPlugin {
 			api.ColourWrite = true;
 			//Graphics.DepthWrite = false; TODO: test if this makes a difference.
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				api.Bind2DTexture( texIds[batch] );
+				texIds[batch].Bind();
 				RenderTranslucentBatch( batch );
 			}
 			//Graphics.DepthWrite = true;

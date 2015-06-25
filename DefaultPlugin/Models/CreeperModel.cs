@@ -19,7 +19,7 @@ namespace DefaultPlugin {
 			
 			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;
-			DefaultTexId = graphics.LoadTexture( "creeper.png" );
+			DefaultTexId = TextureObj.LoadTexture( "creeper.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -43,8 +43,8 @@ namespace DefaultPlugin {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			TextureObj texId = renderer.MobTexId.IsInvalid ? DefaultTexId : renderer.MobTexId;
+			texId.Bind();
 			
 			DrawRotate( 0, 1.125f, 0, -pitch, 0, 0, Head );
 			DrawPart( Torso );
@@ -56,7 +56,7 @@ namespace DefaultPlugin {
 		
 		public override void Dispose() {
 			graphics.DeleteVb( vb );
-			graphics.DeleteTexture( ref DefaultTexId );
+			DefaultTexId.Delete();
 		}
 		
 		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;

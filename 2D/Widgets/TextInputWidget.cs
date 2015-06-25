@@ -76,8 +76,8 @@ namespace ClassicalSharp {
 		}
 
 		public override void Dispose() {
-			GraphicsApi.DeleteTexture( ref chatCaretTexture );
-			GraphicsApi.DeleteTexture( ref chatInputTexture );
+			chatCaretTexture.Delete();
+			chatInputTexture.Delete();
 		}
 
 		public override void MoveTo( int newX, int newY ) {

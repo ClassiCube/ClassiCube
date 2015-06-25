@@ -7,36 +7,7 @@ using OpenTK;
 namespace ClassicalSharp.GraphicsAPI {
 	
 	public partial class OpenGLApi {
-		
-		public int LoadTexture( string path ) {
-			if( !File.Exists( path ) ) {
-				throw new FileNotFoundException( path + " not found" );
-			}
-			using( Bitmap bmp = new Bitmap( path ) ) {
-				return LoadTexture( bmp );
-			}
-		}
-		
-		public  int LoadTexture( Bitmap bmp ) {
-			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-			int texId = LoadTexture( data.Width, data.Height, data.Scan0 );
-			bmp.UnlockBits( data );
-			return texId;
-		}
-		
-		public int LoadTexture( FastBitmap bmp ) {
-			if( !bmp.IsLocked )
-				bmp.LockBits();
-			int texId = LoadTexture( bmp.Width, bmp.Height, bmp.Scan0 );
-			bmp.UnlockBits();
-			return texId;
-		}
-		
-		public void DeleteTexture( ref Texture2D texture ) {
-			DeleteTexture( ref texture.ID );
-		}
-		
+
 		public int InitVb<T>( T[] vertices, int stride ) where T : struct {
 			return InitVb( vertices, stride, vertices.Length );
 		}

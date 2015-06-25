@@ -19,7 +19,7 @@ namespace DefaultPlugin {
 			
 			vb = graphics.InitVb( vertices, VertexPos3fTex2f.Size );
 			vertices = null;		
-			DefaultTexId = graphics.LoadTexture( "zombie.png" );
+			DefaultTexId = TextureObj.LoadTexture( "zombie.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
@@ -55,8 +55,8 @@ namespace DefaultPlugin {
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			TextureObj texId = renderer.MobTexId.IsInvalid ? DefaultTexId : renderer.MobTexId;
+			texId.Bind();
 			
 			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, Head );
 			DrawPart( Torso );
@@ -68,7 +68,7 @@ namespace DefaultPlugin {
 		
 		public override void Dispose() {
 			graphics.DeleteVb( vb );
-			graphics.DeleteTexture( ref DefaultTexId );
+			DefaultTexId.Delete();
 		}
 		
 		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;

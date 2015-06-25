@@ -29,7 +29,7 @@ namespace DefaultPlugin {
 				return;
 			}
 			
-			graphics.Bind2DTexture( window.TerrainAtlas.TexId );
+			window.TerrainAtlas.TexId.Bind();
 			blockHeight = window.BlockInfo.BlockHeight( block );
 			atlas = window.TerrainAtlas;
 			BlockInfo = window.BlockInfo;

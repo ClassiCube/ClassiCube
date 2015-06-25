@@ -41,7 +41,7 @@ namespace ClassicalSharp.Particles {
 			}
 					
 			count = Math.Min( count, 1000 );
-			api.Bind2DTexture( Window.TerrainAtlas.TexId );
+			Window.TerrainAtlas.TexId.Bind();
 			shader.DrawDynamic( DrawMode.Triangles, VertexPos3fTex2f.Size, vb, vertices, count );
 		}
 		

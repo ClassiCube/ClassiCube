@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
@@ -28,7 +29,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetText( int index, string text ) {
-			GraphicsApi.DeleteTexture( ref textures[index] );
+			textures[index].Delete();
 			List<DrawTextArgs> parts = null;
 			Size size = new Size( 0, defaultHeight );
 			if( !String.IsNullOrEmpty( text ) ) {
@@ -41,7 +42,7 @@ namespace ClassicalSharp {
 			if( !String.IsNullOrEmpty( text ) ) {
 				textures[index] = Utils2D.MakeTextTexture( parts, font, size, x, y );
 			} else {
-				textures[index] = new Texture2D( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				textures[index] = new Texture2D( TextureObj.Empty, 0, 0, 0, defaultHeight, 0, 0 );
 			}
 			textCache[index] = text;
 			UpdateDimensions();
@@ -68,14 +69,14 @@ namespace ClassicalSharp {
 		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
-			GraphicsApi.DeleteTexture( ref textures[0] );
+			textures[0].Delete();
 			for( int i = 0; i < textures.Length - 1; i++ ) {
 				textures[i] = textures[i + 1];
 				textures[i].Y1 = y;
 				textCache[i] = textCache[i + 1];
 				y += textures[i].Height;
 			}
-			textures[textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
+			textures[textures.Length - 1].TexObj = TextureObj.Empty; // Delete() is called by SetText otherwise.
 			SetText( textures.Length - 1, text );
 		}
 		
@@ -132,7 +133,7 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			for( int i = 0; i < textures.Length; i++ ) {
-				GraphicsApi.DeleteTexture( ref textures[i] );
+				textures[i].Delete();
 			}
 		}
 		

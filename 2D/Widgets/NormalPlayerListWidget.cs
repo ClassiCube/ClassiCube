@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.PlayerId == e.Id ) {
-					GraphicsApi.DeleteTexture( ref textures[i] );
+					textures[i].Delete();
 					RemoveItemAt( info, i );
 					RemoveItemAt( textures, i );
 					namesCount--;

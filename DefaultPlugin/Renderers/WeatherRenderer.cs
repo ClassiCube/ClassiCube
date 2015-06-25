@@ -12,7 +12,7 @@ namespace DefaultPlugin {
 		}
 		
 		int weatherVb;
-		int rainTexture, snowTexture;
+		TextureObj rainTexture, snowTexture;
 		float vOffset;
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[12 * 9 * 9];
 		public override void Render( double deltaTime ) {
@@ -22,7 +22,8 @@ namespace DefaultPlugin {
 			shader.Bind();
 			shader.UpdateFogAndMVPState( ref Window.MVP );
 			
-			api.Bind2DTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
+			TextureObj tex = weather == Weather.Rainy ? rainTexture : snowTexture;
+			tex.Bind();
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)Window.accumulator * speed;
@@ -72,8 +73,8 @@ namespace DefaultPlugin {
 		}
 		
 		public override void Init() {
-			rainTexture = api.LoadTexture( "rain.png" );
-			snowTexture = api.LoadTexture( "snow.png" );
+			rainTexture = TextureObj.LoadTexture( "rain.png" );
+			snowTexture = TextureObj.LoadTexture( "snow.png" );
 			weatherVb = api.CreateDynamicVb( VertexPos3fTex2fCol4b.Size, 12 * 9 * 9 );
 			shader = new WeatherShader();
 			shader.Init( api );
@@ -81,8 +82,8 @@ namespace DefaultPlugin {
 		
 		public override void Dispose() {
 			shader.Dispose();
-			api.DeleteTexture( ref rainTexture );
-			api.DeleteTexture( ref snowTexture );
+			rainTexture.Delete();
+			snowTexture.Delete();
 		}
 	}
 	

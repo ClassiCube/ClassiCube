@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -31,7 +32,7 @@ namespace ClassicalSharp {
 		UnsafeString buffer = new UnsafeString( 96 );
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
+			Window.TerrainAtlas.TexId.Bind();
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				Texture2D texture = blocksTable[i].Texture;
@@ -51,8 +52,8 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			font.Dispose();
-			GraphicsApi.DeleteTexture( ref selectedBlock );
-			GraphicsApi.DeleteTexture( ref blockInfoTexture );
+			selectedBlock.Delete();
+			blockInfoTexture.Delete();
 			Window.BlockPermissionsChanged -= BlockPermissionsChanged;
 		}
 		
@@ -123,7 +124,7 @@ namespace ClassicalSharp {
 			if( selectedIndex == lastCreatedIndex ) return;
 			lastCreatedIndex = selectedIndex;
 			
-			GraphicsApi.DeleteTexture( ref blockInfoTexture );
+			blockInfoTexture.Delete();
 			if( selectedIndex == -1 ) return;
 			
 			Block block = blocksTable[selectedIndex].BlockId;
@@ -170,7 +171,7 @@ namespace ClassicalSharp {
 						verSize = (int)( blockSize * height );
 						blockY = y + blockSize - verSize;
 					}
-					Texture2D texture = new Texture2D( -1, x, blockY, blockSize, verSize, rec );
+					Texture2D texture = new Texture2D( TextureObj.Empty, x, blockY, blockSize, verSize, rec );
 					
 					blocksTable[tableIndex++] = new BlockDrawInfo( texture, block );
 					x += blockSize;
