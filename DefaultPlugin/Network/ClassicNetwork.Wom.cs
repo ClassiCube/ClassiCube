@@ -1,6 +1,5 @@
 ﻿// This class was partially based on information from http://files.worldofminecraft.com/texturing/
 using System;
-using System.Drawing;
 using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.Network;

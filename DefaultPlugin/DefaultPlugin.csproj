@@ -47,12 +47,14 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Network\ClassicNetwork.Writing.cs" />
+    <Compile Include="Network\ClassicNetwork.Reading.cs" />
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\FastNetReader.cs" />
     <Compile Include="Network\FixedBufferStream.cs" />
     <Compile Include="Network\GZipHeaderReader.cs" />
-    <Compile Include="Network\NetworkProcessor.cs" />
-    <Compile Include="Network\WomConfigHandler.cs" />
+    <Compile Include="Network\ClassicNetwork.cs" />
+    <Compile Include="Network\ClassicNetwork.Wom.cs" />
     <Compile Include="Shaders\GrayscaleFilter.cs" />
     <Compile Include="StandardChunkMeshBuilder.cs" />
     <Compile Include="DefaultCommands.cs" />
