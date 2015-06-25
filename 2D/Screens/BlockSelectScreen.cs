@@ -118,7 +118,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		int lastCreatedIndex = -1000;
 		void RecreateBlockInfoTexture() {
+			if( selectedIndex == lastCreatedIndex ) return;
+			lastCreatedIndex = selectedIndex;
+			
 			GraphicsApi.DeleteTexture( ref blockInfoTexture );
 			if( selectedIndex == -1 ) return;
 			

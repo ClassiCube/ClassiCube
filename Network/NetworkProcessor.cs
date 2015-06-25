@@ -444,7 +444,7 @@ namespace ClassicalSharp {
 							useBlockPermissions = true;
 						}
 						cpeServerExtensionsCount--;
-						if( cpeServerExtensionsCount <= 0 ) {
+						if( cpeServerExtensionsCount == 0 ) {
 							WritePacket( MakeExtInfo( Utils.AppName, clientExtensions.Length ) );
 							for( int i = 0; i < clientExtensions.Length; i++ ) {
 								string extName = clientExtensions[i];

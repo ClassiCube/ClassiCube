@@ -99,6 +99,7 @@
     <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\TextInputWidget.cs" />
