@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 				byte block = Map.GetBlock( pos );
 				if( block != 0 && CanDelete[block] ) {
 					ParticleManager.BreakBlockEffect( pos, block );
-					Network.SendSetBlock( pos.X, pos.Y, pos.Z, 0 );
+					Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)HeldBlock );
 					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 				}
 			} else if( right ) {
@@ -149,7 +149,7 @@ namespace ClassicalSharp {
 				
 				Block block = HeldBlock;
 				if( CanReplace( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
-					Network.SendSetBlock( pos.X, pos.Y, pos.Z, (byte)block );
+					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
 			}

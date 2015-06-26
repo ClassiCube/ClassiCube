@@ -60,8 +60,8 @@ namespace ClassicalSharp {
 			WritePacket( MakePositionPacket( pos, yaw, pitch, payload ) );
 		}
 		
-		public void SendSetBlock( int x, int y, int z, byte block ) {
-			WritePacket( MakeSetBlockPacket( (short)x, (short)y, (short)z, block == 0 ? (byte)0 : (byte)1, block ) );
+		public void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+			WritePacket( MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block ) );
 		}
 		
 		public void Dispose() {
@@ -140,12 +140,12 @@ namespace ClassicalSharp {
 			return 1 + 1 + 64 + 64 + 1;
 		}
 		
-		private static int MakeSetBlockPacket( short x, short y, short z, byte mode, byte block ) {
+		private static int MakeSetBlockPacket( short x, short y, short z, bool place, byte block ) {
 			WriteUInt8( 0x05 ); // packet id
 			WriteInt16( x );
 			WriteInt16( y );
 			WriteInt16( z );
-			WriteUInt8( mode );
+			WriteUInt8( place ? (byte)1 : (byte)0 );
 			WriteUInt8( block );
 			return 1 + 3 * 2 + 1 + 1;
 		}
