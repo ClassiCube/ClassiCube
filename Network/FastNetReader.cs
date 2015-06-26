@@ -88,13 +88,14 @@ namespace ClassicalSharp {
 			return new String( characters, 0, length );
 		}
 		
-		static string GetWoMTextString( byte[] data, ref byte messageType ) {			
+		static string GetWoMTextString( byte[] data, ref byte messageType ) {
+			messageType = (byte)CpeMessageType.Normal;
 			int length = CopyTextStringToBuffer( data );
 			int offset = 0;
 			if( IsWomDetailString( length ) ) {
 				length -= womDetail.Length;
 				offset += womDetail.Length;
-				messageType = 3;
+				messageType = (byte)CpeMessageType.Status3;
 			}
 			return new String( characters, offset, length );
 		}
