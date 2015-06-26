@@ -402,9 +402,7 @@ namespace ClassicalSharp {
 				case PacketId.Message:
 					{
 						byte messageType = reader.ReadUInt8();
-						Console.WriteLine( messageType );
 						string text = reader.ReadWoMTextString( ref messageType, useMessageTypes );
-						Console.WriteLine( messageType + "," + text );
 						Window.AddChat( text, messageType );
 					} break;
 					
