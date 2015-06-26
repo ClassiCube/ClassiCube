@@ -53,12 +53,20 @@ namespace ClassicalSharp {
 			Weather = Weather.Sunny;
 		}
 		
-		public void SetSidesBlock( Block block ) {
+		public void SetSidesBlock( Block block ) {		
+			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+				Utils.LogWarning( "Tried to set sides block to an invalid block: " + block );
+				block = Block.Bedrock;
+			}
 			SidesBlock = block;
 			Window.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
 		}
 		
 		public void SetEdgeBlock( Block block ) {
+			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+				Utils.LogWarning( "Tried to set edge block to an invalid block: " + block );
+				block = Block.StillWater;
+			}
 			EdgeBlock = block;
 			Window.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
 		}
