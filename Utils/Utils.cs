@@ -6,7 +6,7 @@ using OpenTK;
 namespace ClassicalSharp {
 
 	// NOTE: These delegates should be removed when using versions later than NET 2.0.
-	// ################################################################	
+	// ################################################################
 	public delegate void Action();
 	public delegate void Action<T1, T2>( T1 arg1, T2 arg2 );
 	public delegate void Action<T1, T2, T3>( T1 arg1, T2 arg2, T3 arg3 );
@@ -212,13 +212,18 @@ namespace ClassicalSharp {
 		}
 		
 		public static SkinType GetSkinType( Bitmap bmp ) {
-			if( bmp.Width == 64 && bmp.Height == 32 ) {
+			if( bmp.Width == bmp.Height * 2 ) {
 				return SkinType.Type64x32;
-			} else if( bmp.Width == 64 && bmp.Height == 64 ) {
-				bool isNormal = bmp.GetPixel( 54, 20 ).A >= 127;
-				return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
+			} else if( bmp.Width == bmp.Height ) {
+				// Minecraft alex skins have this particular pixel with alpha of 0.
+				if( bmp.Width >= 64 ) {
+					bool isNormal = bmp.GetPixel( 54, 20 ).A >= 127;
+					return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
+				} else {
+					return SkinType.Type64x64;
+				}
 			} else {
-				throw new NotSupportedException( "unsupported skin: " + bmp.Width + ", " + bmp.Height );
+				throw new NotSupportedException( "unsupported skin dimensions: " + bmp.Width + ", " + bmp.Height );
 			}
 		}
 		
@@ -226,7 +231,7 @@ namespace ClassicalSharp {
 			for( int y = 0; y < size; y++ ) {
 				int* srcRow = src.GetRowPtr( srcY + y );
 				int* dstRow = dst.GetRowPtr( dstY + y );
-				for( int x = 0; x < size; x++ ) {					
+				for( int x = 0; x < size; x++ ) {
 					dstRow[dstX + x] = srcRow[srcX + x];
 				}
 			}

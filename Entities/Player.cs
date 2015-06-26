@@ -111,15 +111,26 @@ namespace ClassicalSharp {
 			if( item != null && item.Bmp != null ) {
 				Bitmap bmp = item.Bmp;
 				Window.Graphics.DeleteTexture( ref renderer.PlayerTextureId );
-				renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );
-				// Custom mob textures.
-				renderer.MobTextureId = -1;
-				if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
-					renderer.MobTextureId = renderer.PlayerTextureId;
+				
+				try {
+					SkinType = Utils.GetSkinType( bmp );
+					renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );				
+					renderer.MobTextureId = -1;
+					
+					// Custom mob textures.
+					if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
+						renderer.MobTextureId = renderer.PlayerTextureId;
+					}
+				} catch( NotSupportedException ) {
+					string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
+					Utils.LogWarning( formatString, SkinName, bmp.Width, bmp.Height );
+					renderer.MobTextureId = -1;
+					renderer.PlayerTextureId = -1;
+					SkinType = Window.DefaultPlayerSkinType;
 				}
-				SkinType = Utils.GetSkinType( bmp );
 				bmp.Dispose();
 			}
+			
 		}
 		
 		DateTime lastModelChange = new DateTime( 1, 1, 1 );

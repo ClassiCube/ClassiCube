@@ -347,7 +347,7 @@ namespace ClassicalSharp {
 						map = null;
 						gzipStream.Close();
 						if( sendWomId && !sentWomId ) {
-							SendChat( "/womid WoMClient-2.0.6" );
+							SendChat( "/womid WoMClient-2.0.7" );
 							sentWomId = true;
 						}
 						gzipStream = null;
