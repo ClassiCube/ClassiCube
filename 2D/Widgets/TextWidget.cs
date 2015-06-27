@@ -47,17 +47,12 @@ namespace ClassicalSharp {
 			parts = Utils2D.SplitText( GraphicsApi, text, true );
 			size = Utils2D.MeasureSize( parts, font, true );
 			
-			X = CalcAdjOffset( XOffset, Window.Width, size.Width, HorizontalDocking );
-			Y = CalcAdjOffset( YOffset, Window.Height, size.Height, VerticalDocking );
+			X = CalcOffset( Window.Width, size.Width, XOffset, HorizontalDocking );
+			Y = CalcOffset( Window.Height, size.Height, YOffset, VerticalDocking );
 			texture = Utils2D.MakeTextTexture( parts, font, size, X, Y );
 			UpdateDimensions();
 		}
 		
-		int CalcAdjOffset( int offset, int totalSize, int axisSize, Docking mode ) {
-			if( mode == Docking.LeftOrTop ) return offset;
-			if( mode == Docking.BottomOrRight) return totalSize - axisSize + offset;
-			return ( totalSize - axisSize ) / 2 + offset;
-		}
 		public string GetText() {
 			return textCache;
 		}

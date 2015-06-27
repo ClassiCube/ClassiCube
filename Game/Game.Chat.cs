@@ -76,40 +76,12 @@ namespace ClassicalSharp {
 				Directory.CreateDirectory( "logs" );
 			}
 			
-			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {				
+			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {
 				if( writer != null ) {
 					writer.Close();
 					writer = null;
 				}
-				
-				// Cheap way of ensuring multiple instances do not end up overwriting each other's log entries.
-				int counter = 0;
-				while( true ) {
-					string id = counter == 0 ? "" : "  _" + counter;
-					string fileName = "chat-" + now.ToString( fileNameFormat ) + id + ".log";
-					string path = Path.Combine( "logs", fileName );
-					FileStream stream = null;
-					try {
-						stream = File.Open( path, FileMode.Append, FileAccess.Write, FileShare.Read );
-					} catch( IOException ex ) {
-						if( !ex.Message.Contains( "because it is being used by another process" ) ) {
-							throw;
-						}
-						if( stream != null ) {
-							stream.Close();
-						}
-						counter++;
-						if( counter >= 20 ) {
-							Utils.LogError( "Failed to open or create a chat log file after 20 tries, giving up." );
-							break;
-						}
-						continue;
-					}
-					Utils.LogDebug( "opening chat with id:" + id );
-					writer = new StreamWriter( stream );
-					writer.AutoFlush = true;					
-					break;
-				}
+				OpenChatFile( now );
 				last = now;
 			}
 			
@@ -118,6 +90,29 @@ namespace ClassicalSharp {
 				string entry = now.ToString( chatEntryFormat ) + " " + data;
 				writer.WriteLine( entry );
 			}
+		}
+		
+		void OpenChatFile( DateTime now ) {
+			// Cheap way of ensuring multiple instances do not end up overwriting each other's log entries.
+			for( int i = 0; i < 20; i++ ) {
+				string id = i == 0 ? "" : "  _" + i;
+				string fileName = "chat-" + now.ToString( fileNameFormat ) + id + ".log";
+				string path = Path.Combine( "logs", fileName );
+				FileStream stream = null;
+				try {
+					stream = File.Open( path, FileMode.Append, FileAccess.Write, FileShare.Read );
+				} catch( IOException ex ) {
+					if( !ex.Message.Contains( "because it is being used by another process" ) ) {
+						throw;
+					}
+					continue;
+				}
+				Utils.LogDebug( "opening chat with id:" + id );
+				writer = new StreamWriter( stream );
+				writer.AutoFlush = true;
+				return;
+			}
+			Utils.LogError( "Failed to open or create a chat log file after 20 tries, giving up." );
 		}
 	}
 }

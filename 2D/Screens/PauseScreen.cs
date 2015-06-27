@@ -41,34 +41,29 @@ namespace ClassicalSharp {
 			gameWidget = TextWidget.Create( Window, 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
 			exitWidget = TextWidget.Create( Window, 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
-			KeyMapping[] mappingsLeft = { KeyMapping.Forward, KeyMapping.Back, KeyMapping.Left, KeyMapping.Right,
-				KeyMapping.Jump, KeyMapping.Respawn, KeyMapping.SetSpawn, KeyMapping.OpenChat, KeyMapping.SendChat,
-				KeyMapping.PauseOrExit, KeyMapping.OpenInventory };
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
 				"Open chat", "Send chat", "Pause", "Open inventory" };
-			MakeKeys( mappingsLeft, descriptionsLeft, 10, out keysLeft );
+			MakeKeys( KeyMapping.Forward, descriptionsLeft, 10, out keysLeft );
 			leftEnd = CalculateMaxWidth( keysLeft );
 			
-			KeyMapping[] mappingsRight = { KeyMapping.Screenshot, KeyMapping.Fullscreen, KeyMapping.ThirdPersonCamera,
-				KeyMapping.VSync, KeyMapping.ViewDistance, KeyMapping.Fly, KeyMapping.Speed, KeyMapping.NoClip,
-				KeyMapping.FlyUp, KeyMapping.FlyDown, KeyMapping.PlayerList };
 			string[] descriptionsRight = { "Take screenshot", "Toggle fullscreen", "Toggle 3rd person camera", "Toggle VSync",
 				"Change view distance", "Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list" };
-			MakeKeys( mappingsRight, descriptionsRight, leftEnd + 30, out keysRight );
+			MakeKeys( KeyMapping.Screenshot, descriptionsRight, leftEnd + 30, out keysRight );
 		}
 		
 		int leftEnd;
-		void MakeKeys( KeyMapping[] mappings, string[] descriptions, int offset, out KeyMapWidget[] widgets ) {
+		void MakeKeys( KeyMapping start, string[] descriptions, int offset, out KeyMapWidget[] widgets ) {
 			int startY = controlsWidget.BottomRight.Y + 10;
-			widgets = new KeyMapWidget[mappings.Length];
+			widgets = new KeyMapWidget[descriptions.Length];
 			
-			for( int i = 0; i < keysLeft.Length; i++ ) {
-				Key tkKey = Window.Keys[mappings[i]];
+			for( int i = 0; i < widgets.Length; i++ ) {
+				KeyMapping mapping = (KeyMapping)( (int)start + i );
+				Key tkKey = Window.Keys[mapping];
 				string text = descriptions[i] + ": " + keyNames[(int)tkKey];
 				TextWidget widget = TextWidget.Create( Window, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widget.XOffset = offset;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
-				widgets[i] = new KeyMapWidget( widget, mappings[i], descriptions[i] );
+				widgets[i] = new KeyMapWidget( widget, mapping, descriptions[i] );
 				startY += widget.Height + 5;
 			}
 		}

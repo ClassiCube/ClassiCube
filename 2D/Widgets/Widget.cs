@@ -107,10 +107,13 @@ namespace ClassicalSharp {
 		}
 		
 		protected static int CalcDelta( int newVal, int oldVal, Docking mode ) {
-			if( mode == Docking.LeftOrTop ) return 0;
-			if( mode == Docking.BottomOrRight) return newVal - oldVal;
-			if( mode == Docking.Centre ) return ( newVal - oldVal ) / 2;
-			throw new NotSupportedException( "Unsupported docking mode: " + mode );
+			return CalcOffset( newVal, oldVal, 0, mode );
+		}
+		
+		protected static int CalcOffset( int axisSize, int elemSize, int offset, Docking mode ) {
+			if( mode == Docking.LeftOrTop ) return offset;
+			if( mode == Docking.BottomOrRight) return axisSize - elemSize + offset;
+			return ( axisSize - elemSize ) / 2 + offset;
 		}
 	}
 	
