@@ -39,8 +39,8 @@ namespace ClassicalSharp.Selections {
 			Player player = Window.LocalPlayer;
 			pos = player.Position;
 			if( selections.Count == 0 ) return;
-			// Basically sorts selection boxes back to front for better transparency.
-			// TODO: Proper selection box sorting.
+			// TODO: Proper selection box sorting. But this is very difficult because
+			// we can have boxes within boxes, intersecting boxes, etc..
 			comparer.pos = pos;
 			selections.Sort( comparer );
 			

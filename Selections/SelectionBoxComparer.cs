@@ -13,27 +13,28 @@ namespace ClassicalSharp.Selections {
 			float maxDistA = float.NegativeInfinity, maxDistB = float.NegativeInfinity;
 			Intersect( a, pos, ref minDistA, ref maxDistA );
 			Intersect( b, pos, ref minDistB, ref maxDistB );
-			return maxDistA == maxDistB ? minDistA.CompareTo( minDistB ) : maxDistA.CompareTo( maxDistB );
+			// Reversed comparison order because we need to render back to front for alpha blending.
+			return minDistA == minDistB ? maxDistB.CompareTo( maxDistA ) : minDistB.CompareTo( minDistA );
 		}
 		
 		void Intersect( SelectionBox box, Vector3 origin, ref float closest, ref float furthest ) {
 			Vector3I min = box.Min;
 			Vector3I max = box.Max;
 			// Bottom corners
-			UpdateDist( pos.X, pos.Y, pos.Z, min.X, min.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, max.X, min.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, max.X, min.Y, max.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, min.X, min.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos, min.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos, max.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos, max.X, min.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos, min.X, min.Y, max.Z, ref closest, ref furthest );
 			// top corners
-			UpdateDist( pos.X, pos.Y, pos.Z, min.X, max.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, max.X, max.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, max.X, max.Y, max.Z, ref closest, ref furthest );
-			UpdateDist( pos.X, pos.Y, pos.Z, min.X, max.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos, min.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos, max.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( pos, max.X, max.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( pos, min.X, max.Y, max.Z, ref closest, ref furthest );
 		}
 		
-		static void UpdateDist( float x1, float y1, float z1, float x2, float y2, float z2,
+		static void UpdateDist( Vector3 p, float x2, float y2, float z2,
 		                       ref float closest, ref float furthest ) {
-			float dist = Utils.DistanceSquared( x1, y1, z1, x2, y2, z2 );
+			float dist = Utils.DistanceSquared( p.X, p.Y, p.Z, x2, y2, z2 );
 			if( dist < closest ) closest = dist;
 			if( dist > furthest ) furthest = dist;
 		}
