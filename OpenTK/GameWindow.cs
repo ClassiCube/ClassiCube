@@ -340,22 +340,8 @@ namespace OpenTK
         /// Enters the game loop of the GameWindow using the maximum update rate.
         /// </summary>
         /// <seealso cref="Run(double)"/>
-        public void Run()
-        {
-            Run(0.0, 0.0);
-        }
-
-        #endregion
-
-        #region public void Run(double updateFrequency)
-
-        /// <summary>
-        /// Enters the game loop of the GameWindow using the specified update rate.
-        /// maximum possible render frequency.
-        /// </summary>
-        public void Run(double updateRate)
-        {
-            Run(updateRate, 0.0);
+        public void Run() {
+            Run(0.0);
         }
 
         #endregion
@@ -372,22 +358,16 @@ namespace OpenTK
         /// Once ProcessEvents() returns, it is time to call update and render the next frame.
         /// </para>
         /// </remarks>
-        /// <param name="updates_per_second">The frequency of UpdateFrame events.</param>
         /// <param name="frames_per_second">The frequency of RenderFrame events.</param>
-        public void Run(double updates_per_second, double frames_per_second)
-        {
+        public void Run(double frames_per_second) {
             EnsureUndisposed();
 
             try
             {
-                if (updates_per_second < 0.0 || updates_per_second > 200.0)
-                    throw new ArgumentOutOfRangeException("updates_per_second", updates_per_second,
-                                                          "Parameter should be inside the range [0.0, 200.0]");
                 if (frames_per_second < 0.0 || frames_per_second > 200.0)
                     throw new ArgumentOutOfRangeException("frames_per_second", frames_per_second,
                                                           "Parameter should be inside the range [0.0, 200.0]");
 
-                TargetUpdateFrequency = updates_per_second;
                 TargetRenderFrequency = frames_per_second;
 
                 Visible = true;   // Make sure the GameWindow is visible.
@@ -429,57 +409,7 @@ namespace OpenTK
 
         void DispatchUpdateAndRenderFrame(object sender, EventArgs e)
         {
-            RaiseUpdateFrame(update_watch, ref next_update, update_args);
             RaiseRenderFrame(render_watch, ref next_render, render_args);
-        }
-
-        void RaiseUpdateFrame(Stopwatch update_watch, ref double next_update, FrameEventArgs update_args)
-        {
-            int num_updates = 0;
-            double total_update_time = 0;
-
-            // Cap the maximum time drift to 1 second (e.g. when the process is suspended).
-            double time = update_watch.Elapsed.TotalSeconds;
-            if (time <= 0)
-                return;
-            if (time > 1.0)
-                time = 1.0;
-
-            // Raise UpdateFrame events until we catch up with our target update rate.
-            while (next_update - time <= 0 && time > 0)
-            {
-                next_update -= time;
-                update_args.Time = time;
-                OnUpdateFrameInternal(update_args);
-                time = update_time = update_watch.Elapsed.TotalSeconds - time;
-                // Stopwatches are not accurate over long time periods.
-                // We accumulate the total elapsed time into the time variable
-                // while reseting the Stopwatch frequently.
-                update_watch.Reset();
-                update_watch.Start();
-
-                // Don't schedule a new update more than 1 second in the future.
-                // Sometimes the hardware cannot keep up with updates
-                // (e.g. when the update rate is too high, or the UpdateFrame processing
-                // is too costly). This cap ensures  we can catch up in a reasonable time
-                // once the load becomes lighter.
-                next_update += TargetUpdatePeriod;
-                next_update = Math.Max(next_update, -1.0);
-
-                total_update_time += update_time;
-
-                // Allow up to 10 consecutive UpdateFrame events to prevent the
-                // application from "hanging" when the hardware cannot keep up
-                // with the requested update rate.
-                if (++num_updates >= 10 || TargetUpdateFrequency == 0.0)
-                    break;
-            }
-
-            // Calculate statistics 
-            if (num_updates > 0)
-            {
-                update_period = total_update_time / (double)num_updates;
-            }
         }
 
         void RaiseRenderFrame(Stopwatch render_watch, ref double next_render, FrameEventArgs render_args)
@@ -752,124 +682,6 @@ namespace OpenTK
                     target_render_period = value;
                 }
                 else Debug.Print("Target render period clamped to 1.0 seconds.");
-            }
-        }
-
-        #endregion
-
-        #region TargetUpdateFrequency
-
-        /// <summary>
-        /// Gets or sets a double representing the target update frequency, in hertz.
-        /// </summary>
-        /// <remarks>
-        /// <para>A value of 0.0 indicates that UpdateFrame events are generated at the maximum possible frequency (i.e. only limited by the hardware's capabilities).</para>
-        /// <para>Values lower than 1.0Hz are clamped to 1.0Hz. Values higher than 200.0Hz are clamped to 200.0Hz.</para>
-        /// </remarks>
-        public double TargetUpdateFrequency
-        {
-            get
-            {
-                EnsureUndisposed();
-                if (TargetUpdatePeriod == 0.0)
-                    return 0.0;
-                return 1.0 / TargetUpdatePeriod;
-            }
-            set
-            {
-                EnsureUndisposed();
-                if (value < 1.0)
-                {
-                    TargetUpdatePeriod = 0.0;
-                }
-                else if (value <= 200.0)
-                {
-                    TargetUpdatePeriod = 1.0 / value;
-                }
-                else Debug.Print("Target update frequency clamped to 200.0Hz."); // TODO: Where is it actually performed?
-            }
-        }
-
-        #endregion
-
-        #region TargetUpdatePeriod
-
-        /// <summary>
-        /// Gets or sets a double representing the target update period, in seconds.
-        /// </summary>
-        /// <remarks>
-        /// <para>A value of 0.0 indicates that UpdateFrame events are generated at the maximum possible frequency (i.e. only limited by the hardware's capabilities).</para>
-        /// <para>Values lower than 0.005 seconds (200Hz) are clamped to 0.0. Values higher than 1.0 seconds (1Hz) are clamped to 1.0.</para>
-        /// </remarks>
-        public double TargetUpdatePeriod
-        {
-            get
-            {
-                EnsureUndisposed();
-                return target_update_period;
-            }
-            set
-            {
-                EnsureUndisposed();
-                if (value <= 0.005)
-                {
-                    target_update_period = 0.0;
-                }
-                else if (value <= 1.0)
-                {
-                    target_update_period = value;
-                }
-                else Debug.Print("Target update period clamped to 1.0 seconds."); // TODO: Where is it actually performed?
-            }
-        }
-
-        #endregion
-
-        #region UpdateFrequency
-
-        /// <summary>
-        /// Gets a double representing the frequency of UpdateFrame events, in hertz.
-        /// </summary>
-        public double UpdateFrequency
-        {
-            get
-            {
-                EnsureUndisposed();
-                if (update_period == 0.0)
-                    return 1.0;
-                return 1.0 / update_period;
-            }
-        }
-
-        #endregion
-
-        #region UpdatePeriod
-
-        /// <summary>
-        /// Gets a double representing the period of UpdateFrame events, in seconds.
-        /// </summary>
-        public double UpdatePeriod
-        {
-            get
-            {
-                EnsureUndisposed();
-                return update_period;
-            }
-        }
-
-        #endregion
-
-        #region UpdateTime
-
-        /// <summary>
-        /// Gets a double representing the time spent in the UpdateFrame function, in seconds.
-        /// </summary>
-        public double UpdateTime
-        {
-            get
-            {
-                EnsureUndisposed();
-                return update_time;
             }
         }
 
