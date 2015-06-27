@@ -68,6 +68,7 @@ namespace ClassicalSharp {
 			// So we don't get the normal unhelpful crash dialog on Windows.
 			Exception ex = (Exception)e.ExceptionObject;
 			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			bool wroteToCrashLog = true;
 			try {
 				using( StreamWriter writer = new StreamWriter( "crash.log", true ) ) {
 					writer.WriteLine( "Crash time: " + DateTime.Now.ToString() );
@@ -75,16 +76,18 @@ namespace ClassicalSharp {
 					writer.WriteLine();
 				}
 			} catch( Exception ) {
+				wroteToCrashLog = false;
 			}
 			
-			MessageBox.Show(
-				"Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + 
-				" The cause of the crash has been logged to \"crash.log\". Please consider reporting the " +
-				"crash (and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues " +
-				Environment.NewLine + Environment.NewLine +			
-				"(the cause of the crash is reproduced below)" + Environment.NewLine + error, 
-				"ClassicalSharp has crashed" );
+			string message = wroteToCrashLog ?
+				"The cause of the crash has been logged to \"crash.log\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" :
+				
+				"Failed to write the cause of the crash to \"crash.log\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" +
+				Environment.NewLine + Environment.NewLine + error;
 			
+			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + message, "ClassicalSharp has crashed" );			
 			Environment.Exit( 1 );
 		}
 	}
