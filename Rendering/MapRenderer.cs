@@ -220,18 +220,18 @@ namespace ClassicalSharp {
 			// First fill depth buffer
 			Graphics.ColourWrite = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				RenderTranslucentBatchNoAdd( batch );
+				RenderTranslucentBatchDepthPass( batch );
 			}
 			// Then actually draw the transluscent blocks
 			Graphics.AlphaBlending = true;
 			Graphics.Texturing = true;
 			Graphics.ColourWrite = true;
-			//Graphics.DepthWrite = false; TODO: test if this makes a difference.
+			Graphics.DepthWrite = false; // we already calculated depth values in depth pass
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				Graphics.Bind2DTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			//Graphics.DepthWrite = true;
+			Graphics.DepthWrite = true;
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
@@ -333,7 +333,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void RenderTranslucentBatchNoAdd( int batch ) {
+		void RenderTranslucentBatchDepthPass( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.TranslucentParts == null || !info.Visible ) continue;

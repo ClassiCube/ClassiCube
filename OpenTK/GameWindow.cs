@@ -433,24 +433,6 @@ namespace OpenTK
 
                 if (time > 0)
                 {
-                    // Todo: revisit this code. Maybe check average framerate instead?
-                    // Note: VSyncMode.Adaptive enables vsync by default. The code below
-                    // is supposed to disable vsync if framerate becomes too low (half of target
-                    // framerate in the current approach) and reenable once the framerate
-                    // rises again.
-                    // Note 2: calling Context.VSync = true repeatedly seems to cause jitter on
-                    // some configurations. If possible, we should avoid repeated calls.
-                    // Note 3: we may not read/write the VSync property without a current context.
-                    // This may come to pass if the user has moved rendering to his own thread.
-                    if (Context.IsCurrent && VSync == VSyncMode.Adaptive && TargetRenderPeriod != 0)
-                    {
-                        // Check if we have enough time for a vsync
-                        if (RenderTime > 2.0 * TargetRenderPeriod)
-                            Context.VSync = false;
-                        else
-                            Context.VSync = true;
-                    }
-
                     render_period = render_args.Time = time;
                     OnRenderFrameInternal(render_args);
                     render_time = render_watch.Elapsed.TotalSeconds;
