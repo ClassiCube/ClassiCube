@@ -1,6 +1,5 @@
 ﻿// This class was partially based on information from http://files.worldofminecraft.com/texturing/
 using System;
-using System.Drawing;
 using System.IO;
 using ClassicalSharp.Network;
 
@@ -62,6 +61,20 @@ namespace ClassicalSharp {
 			string url = String.Format( hostFormat, type, Uri.EscapeDataString( id ) );
 			string identifier = "wom" + type + "_" + womCounter;
 			Window.AsyncDownloader.DownloadImage( url, true, identifier );
+		}
+		
+		void ReadWomConfigurationAsync() {
+			string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
+			string url = "http://" + host;
+			url = url.Replace( "$U", Window.Username );
+			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
+			// different world, the environment settings from the last world are not loaded in the
+			// new world if the async 'get request' didn't complete before the new world was loaded.
+			womCounter++;
+			womEnvIdentifier = "womenv_" + womCounter;
+			womTerrainIdentifier = "womterrain_" + womCounter;
+			Window.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
+			sendWomId = true;
 		}
 		
 		static FastColour ParseWomColourString( string value ) {

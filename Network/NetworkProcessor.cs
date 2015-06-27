@@ -46,22 +46,26 @@ namespace ClassicalSharp {
 			stream = new NetworkStream( socket, true );
 			reader = new FastNetReader( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
-			WritePacket( MakeLoginPacket( Window.Username, Window.Mppass ) );
+			MakeLoginPacket( Window.Username, Window.Mppass );
+			SendPacket();
 		}
 		
 		public void SendChat( string text ) {
 			if( !String.IsNullOrEmpty( text ) ) {
-				WritePacket( MakeMessagePacket( text ) );
+				MakeMessagePacket( text );
+				SendPacket();
 			}
 		}
 		
 		public void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
 			byte payload = sendHeldBlock ? (byte)Window.HeldBlock : (byte)0xFF;
-			WritePacket( MakePositionPacket( pos, yaw, pitch, payload ) );
+			MakePositionPacket( pos, yaw, pitch, payload );
+			SendPacket();
 		}
 		
 		public void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			WritePacket( MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block ) );
+			MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block );
+			SendPacket();
 		}
 		
 		public void Dispose() {
@@ -131,26 +135,24 @@ namespace ClassicalSharp {
 		
 		static byte[] outBuffer = new byte[131];
 		static int outIndex = 0;
-		private static int MakeLoginPacket( string username, string verKey ) {
+		private static void MakeLoginPacket( string username, string verKey ) {
 			WriteUInt8( 0 ); // packet id
 			WriteUInt8( 7 ); // protocol version
 			WriteString( username );
 			WriteString( verKey );
 			WriteUInt8( 0x42 );
-			return 1 + 1 + 64 + 64 + 1;
 		}
 		
-		private static int MakeSetBlockPacket( short x, short y, short z, bool place, byte block ) {
+		private static void MakeSetBlockPacket( short x, short y, short z, bool place, byte block ) {
 			WriteUInt8( 0x05 ); // packet id
 			WriteInt16( x );
 			WriteInt16( y );
 			WriteInt16( z );
 			WriteUInt8( place ? (byte)1 : (byte)0 );
 			WriteUInt8( block );
-			return 1 + 3 * 2 + 1 + 1;
 		}
 		
-		private static int MakePositionPacket( Vector3 pos, byte yaw, byte pitch, byte playerId ) {
+		private static void MakePositionPacket( Vector3 pos, byte yaw, byte pitch, byte playerId ) {
 			WriteUInt8( 0x08 ); // packet id
 			WriteUInt8( playerId ); // player id (-1 is self)
 			WriteInt16( (short)( pos.X * 32 ) );
@@ -158,34 +160,43 @@ namespace ClassicalSharp {
 			WriteInt16( (short)( pos.Z * 32 ) );
 			WriteUInt8( yaw );
 			WriteUInt8( pitch );
-			return 1 + 1 + 3 * 2 + 2 * 1;
 		}
 		
-		private static int MakeMessagePacket( string text ) {
+		private static void MakeMessagePacket( string text ) {
 			WriteUInt8( 0x0D ); // packet id
 			WriteUInt8( 0xFF ); // unused
 			WriteString( text );
-			return 1 + 1 + 64;
 		}
 		
-		private static int MakeExtInfo( string appName, int extensionsCount ) {
+		private static void MakeExtInfo( string appName, int extensionsCount ) {
 			WriteUInt8( 0x10 ); // packet id
 			WriteString( appName );
 			WriteInt16( (short)extensionsCount );
-			return 1 + 64 + 2;
 		}
 		
-		private static int MakeExtEntry( string extensionName, int extensionVersion ) {
+		private static void MakeExtEntry( string extensionName, int extensionVersion ) {
 			WriteUInt8( 0x11 ); // packet id
 			WriteString( extensionName );
 			WriteInt32( extensionVersion );
-			return 1 + 64 + 4;
 		}
 		
-		private static int MakeCustomBlockSupportLevel( byte version ) {
-			WriteUInt8( 19 ); // packet id
+		private static void MakeCustomBlockSupportLevel( byte version ) {
+			WriteUInt8( 0x13 ); // packet id
 			WriteUInt8( version );
-			return 1 + 1;
+		}
+		
+		private static void MakePlayerClick( byte button, byte action, short yaw, short pitch, byte targetEntity,
+		                                   Vector3I targetPos, byte targetFace ) {
+			WriteUInt8( 0x22 ); // packet id
+			WriteUInt8( button );
+			WriteUInt8( action );
+			WriteInt16( yaw );
+			WriteInt16( pitch );
+			WriteUInt8( targetEntity );
+			WriteInt16( (short)targetPos.X );
+			WriteInt16( (short)targetPos.Y );
+			WriteInt16( (short)targetPos.Z );
+			WriteUInt8( targetFace );
 		}
 		
 		static void WriteString( string value ) {
@@ -216,9 +227,10 @@ namespace ClassicalSharp {
 			outBuffer[outIndex++] = (byte)( value );
 		}
 		
-		void WritePacket( int packetLength ) {
+		void SendPacket() {
+			int packetLength = outIndex;
 			outIndex = 0;
-			if( Disconnected ) return;
+			if( Disconnected ) return;		
 			
 			#if NET_DEBUG
 			Utils.LogDebug( "writing {0} bytes ({1})", packetLength, (PacketId)outBuffer[0] );
@@ -277,17 +289,7 @@ namespace ClassicalSharp {
 						Window.SelectionManager.Dispose();
 						Window.SetNewScreen( new LoadingMapScreen( Window, ServerName, ServerMotd ) );
 						if( ServerMotd.Contains( "cfg=" ) ) {
-							string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
-							string url = "http://" + host;
-							url = url.Replace( "$U", Window.Username );
-							// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
-							// different world, the environment settings from the last world are not loaded in the
-							// new world if the async 'get request' didn't complete before the new world was loaded.
-							womCounter++;
-							womEnvIdentifier = "womenv_" + womCounter;
-							womTerrainIdentifier = "womterrain_" + womCounter;
-							Window.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
-							sendWomId = true;
+							ReadWomConfigurationAsync();
 						}
 						receivedFirstPosition = false;
 						gzipHeader = new GZipHeaderReader();
@@ -445,11 +447,12 @@ namespace ClassicalSharp {
 						}
 						cpeServerExtensionsCount--;
 						if( cpeServerExtensionsCount == 0 ) {
-							WritePacket( MakeExtInfo( Utils.AppName, clientExtensions.Length ) );
+							MakeExtInfo( Utils.AppName, clientExtensions.Length );
+							SendPacket();
 							for( int i = 0; i < clientExtensions.Length; i++ ) {
 								string extName = clientExtensions[i];
-								int version = extName == "ExtPlayerList" ? 2 : 1;
-								WritePacket( MakeExtEntry( extName, version ) );
+								MakeExtEntry( extName, extName == "ExtPlayerList" ? 2 : 1 );
+								SendPacket();
 							}
 						}
 					} break;
@@ -462,7 +465,8 @@ namespace ClassicalSharp {
 				case PacketId.CpeCustomBlockSupportLevel:
 					{
 						byte supportLevel = reader.ReadUInt8();
-						WritePacket( MakeCustomBlockSupportLevel( 1 ) );
+						MakeCustomBlockSupportLevel( 1 );
+						SendPacket();
 
 						if( supportLevel == 1 ) {
 							for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
