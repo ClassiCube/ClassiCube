@@ -46,29 +46,30 @@ namespace ClassicalSharp {
 			RaiseEvent( HeldBlockChanged );
 		}
 		
+		IdEventArgs idArgs = new IdEventArgs( 0 );
 		internal void RaiseEntityAdded( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( EntityAdded, e );
+			idArgs.Id = id;
+			RaiseEvent( EntityAdded, idArgs );
 		}
 		
 		internal void RaiseEntityRemoved( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( EntityRemoved, e );
+			idArgs.Id = id;
+			RaiseEvent( EntityRemoved, idArgs );
 		}
 		
 		internal void RaiseCpeListInfoAdded( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( CpeListInfoAdded, e );
+			idArgs.Id = id;
+			RaiseEvent( CpeListInfoAdded, idArgs );
 		}
 		
 		internal void RaiseCpeListInfoChanged( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( CpeListInfoChanged, e );
+			idArgs.Id = id;
+			RaiseEvent( CpeListInfoChanged, idArgs );
 		}
 		
 		internal void RaiseCpeListInfoRemoved( byte id ) {
-			IdEventArgs e = new IdEventArgs( id );
-			RaiseEvent( CpeListInfoRemoved, e );
+			idArgs.Id = id;
+			RaiseEvent( CpeListInfoRemoved, idArgs );
 		}
 		
 		internal void RaiseBlockPermissionsChanged() {
@@ -79,14 +80,16 @@ namespace ClassicalSharp {
 			RaiseEvent( OnNewMapLoaded );
 		}
 		
+		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs( 0 );
 		internal void RaiseMapLoading( byte progress ) {
-			MapLoadingEventArgs e = new MapLoadingEventArgs( progress );
-			RaiseEvent( MapLoading, e );
+			loadingArgs.Progress = progress;
+			RaiseEvent( MapLoading, loadingArgs );
 		}
 		
+		EnvVariableEventArgs envArgs = new EnvVariableEventArgs( 0 );
 		internal void RaiseEnvVariableChanged( EnvVariable variable ) {
-			EnvVariableEventArgs e = new EnvVariableEventArgs( variable );
-			RaiseEvent( EnvVariableChanged, e );
+			envArgs.Variable = variable;
+			RaiseEvent( EnvVariableChanged, envArgs );
 		}
 		
 		void RaiseEvent( EventHandler handler ) {
@@ -104,7 +107,7 @@ namespace ClassicalSharp {
 	
 	public sealed class IdEventArgs : EventArgs {
 		
-		public readonly byte Id;
+		public byte Id;
 		
 		public IdEventArgs( byte id ) {
 			Id = id;
@@ -125,7 +128,7 @@ namespace ClassicalSharp {
 	
 	public sealed class MapLoadingEventArgs : EventArgs {
 		
-		public readonly int Progress;
+		public int Progress;
 		
 		public MapLoadingEventArgs( int progress ) {
 			Progress = progress;
@@ -134,7 +137,7 @@ namespace ClassicalSharp {
 	
 	public sealed class EnvVariableEventArgs : EventArgs {
 		
-		public readonly EnvVariable Variable;
+		public EnvVariable Variable;
 		
 		public EnvVariableEventArgs( EnvVariable variable ) {
 			Variable = variable;

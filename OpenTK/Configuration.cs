@@ -82,7 +82,7 @@ namespace OpenTK
             // Hack: it seems that this check will cause X to initialize itself on Mac OS X Leopard and newer.
             // We don't want that (we'll be using the native interfaces anyway), so we'll avoid this check
             // when we detect Mac OS X.
-            if (!RunningOnMacOS)
+            if (!runningOnMacOS && !runningOnWindows)
             {
                 try { runningOnX11 = OpenTK.Platform.X11.API.DefaultDisplay != IntPtr.Zero; }
                 catch { }

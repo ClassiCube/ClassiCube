@@ -79,15 +79,14 @@ namespace OpenTK
 
         bool isExiting = false;
 
-        double update_period, render_period;
-        double target_update_period, target_render_period;
+        double render_period;
+        double target_render_period;
         // TODO: Implement these:
-        double update_time, render_time;
+        double render_time;
         VSyncMode vsync;
 
-        Stopwatch update_watch = new Stopwatch(), render_watch = new Stopwatch();
-        double next_render = 0.0, next_update = 0.0;
-        FrameEventArgs update_args = new FrameEventArgs();
+        Stopwatch render_watch = new Stopwatch();
+        double next_render = 0.0;
         FrameEventArgs render_args = new FrameEventArgs();
 
         #endregion
@@ -382,7 +381,6 @@ namespace OpenTK
                 //Resize += DispatchUpdateAndRenderFrame;
 
                 Debug.Print("Entering main loop.");
-                update_watch.Start();
                 render_watch.Start();
                 while (true)
                 {
