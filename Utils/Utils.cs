@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 	
 	public static class Utils {
 		
-		public static string AppName = "ClassicalSharp 0.6";
+		public static string AppName = "ClassicalSharp 0.7";
 		
 		public static void Clamp( ref float value, float min, float max ) {
 			if( value < min ) value = min;
