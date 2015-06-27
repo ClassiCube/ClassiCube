@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin.Network {
 	
 	internal class GZipHeaderReader {
 		

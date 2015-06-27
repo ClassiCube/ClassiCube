@@ -1,13 +1,14 @@
 ﻿using System;
+using ClassicalSharp;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin {
 	
-	public partial class BlockInfo {
+	public partial class ClassicBlockInfo : BlockInfo {
 		
 		// The designation used is as follows:
 		// 0 - left 1 - right 2 - front
 		// 3 - back 4 - bottom 5 - top	
-		int[] optimTextures = new int[BlocksCount * 6];	
+		int[] optimTextures = new int[blocksCount * 6];	
 		const int Row1 = 0, Row2 = 16, Row3 = 32, Row4 = 48,
 		Row5 = 64, Row6 = 80, Row7 = 96, Row8 = 112, Row9 = 128;
 
@@ -128,7 +129,7 @@ namespace ClassicalSharp {
 		/// <param name="block"> Block ID. </param>
 		/// <param name="face">Face of the given block, see TileSide constants. </param>
 		/// <returns>The index of the texture within the terrain atlas.</returns>
-		public int GetOptimTextureLoc( byte block, int face ) {
+		public override int GetOptimTextureLoc( byte block, int face ) {
 			return optimTextures[block * 6 + face];
 		}
 	}

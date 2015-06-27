@@ -1,14 +1,15 @@
 ﻿using System;
+using ClassicalSharp;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin {
 	
-	public partial class BlockInfo {
+	public partial class ClassicBlockInfo : BlockInfo {
 		
-		bool[] hidden = new bool[BlocksCount * BlocksCount * 6];
+		bool[] hidden = new bool[blocksCount * blocksCount * 6];
 
 		void SetupCullingCache() {
-			for( byte tile = 1; tile < BlocksCount; tile++ ) {
-				for( byte neighbour = 1; neighbour < BlocksCount; neighbour++ ) {
+			for( byte tile = 1; tile < blocksCount; tile++ ) {
+				for( byte neighbour = 1; neighbour < blocksCount; neighbour++ ) {
 					bool hidden = IsHidden( tile, neighbour );
 					if( hidden ) {
 						SetHidden( tile, neighbour, TileSide.Left, true );
@@ -29,11 +30,11 @@ namespace ClassicalSharp {
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {
-			hidden[( tile * BlocksCount + block ) * 6 + tileSide] = value;
+			hidden[( tile * blocksCount + block ) * 6 + tileSide] = value;
 		}
 		
-		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
-			return hidden[( tile * BlocksCount + block ) * 6 + tileSide];
+		public override bool IsFaceHidden( byte tile, byte block, int tileSide ) {
+			return hidden[( tile * blocksCount + block ) * 6 + tileSide];
 		}
 	}
 }

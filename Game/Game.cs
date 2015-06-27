@@ -29,6 +29,7 @@ namespace ClassicalSharp {
 		public Camera Camera;
 		Camera firstPersonCam, thirdPersonCam;
 		public BlockInfo BlockInfo;
+		public List<Type> BlockInfoTypes = new List<Type>();
 		public double accumulator;
 		public TerrainAtlas2D TerrainAtlas;
 		public SkinType DefaultPlayerSkinType;
@@ -127,23 +128,6 @@ namespace ClassicalSharp {
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
 			LoadAtlas( terrainBmp );
-			BlockInfo = new BlockInfo();
-			BlockInfo.Init();
-			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
-			Map = new Map( this );
-			LocalPlayer = new LocalPlayer( 255, this );
-			width = Width;
-			height = Height;
-			firstPersonCam = new FirstPersonCamera( this );
-			thirdPersonCam = new ThirdPersonCamera( this );
-			Camera = firstPersonCam;
-			CommandManager = new CommandManager();
-			CommandManager.Init( this );
-			SelectionManager = new SelectionManager( this );
-			SelectionManager.Init();
-			ParticleManager = new ParticleManager( this );
-			ParticleManager.Init();
-			Picking = new PickingRenderer( this );
 			
 			VSync = VSyncMode.On;
 			Graphics.DepthTest = true;
@@ -155,6 +139,13 @@ namespace ClassicalSharp {
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
 			Culling = new FrustumCulling();
+			width = Width;
+			height = Height;
+			firstPersonCam = new FirstPersonCamera( this );
+			thirdPersonCam = new ThirdPersonCamera( this );
+			Camera = firstPersonCam;
+			CommandManager = new CommandManager();
+			CommandManager.Init( this );
 			
 			string defaultPlugin = Path.Combine( "plugins", "defaultplugin.dll" );
 			if( !Directory.Exists( "plugins" ) || !File.Exists( defaultPlugin ) ) {
@@ -170,6 +161,17 @@ namespace ClassicalSharp {
 					Plugin.LoadPlugin( Path.Combine( baseDirectory, file ), this );
 				}
 			}
+			
+			BlockInfo = Utils.New<BlockInfo>( BlockInfoTypes[0], this );
+			BlockInfo.Init();
+			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
+			Map = new Map( this );
+			LocalPlayer = new LocalPlayer( 255, this );
+			SelectionManager = new SelectionManager( this );
+			SelectionManager.Init();
+			ParticleManager = new ParticleManager( this );
+			ParticleManager.Init();
+			Picking = new PickingRenderer( this );
 			
 			MapBordersRenderer = Utils.New<MapBordersRenderer>( MapBordersRendererTypes[0], this );
 			MapBordersRenderer.Init();

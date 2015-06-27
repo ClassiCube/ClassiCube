@@ -29,12 +29,10 @@ namespace ClassicalSharp {
 	
 	public abstract class PerspectiveCamera : Camera {
 		
-		protected Player player;
 		IInputDriver driver;
 		public PerspectiveCamera( Game window ) {
 			Window = window;
 			driver = window.InputDriver;
-			player = Window.LocalPlayer;
 		}
 		
 		public override Matrix4 GetProjection() {
@@ -44,6 +42,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock( PickedPos pos ) {
+			Player player = Window.LocalPlayer;
 			Vector3 dir = Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI );
 			Vector3 eyePos = player.EyePosition;
 			float reach = Window.LocalPlayer.ReachDistance;
@@ -107,6 +106,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView() {
+			Player player = Window.LocalPlayer;
 			Vector3 eyePos = player.EyePosition;
 			Vector3 cameraPos = eyePos - Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI ) * distance;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY );
@@ -123,6 +123,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView() {
+			Player player = Window.LocalPlayer;
 			Vector3 eyePos = player.EyePosition;
 			Vector3 cameraDir = Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI );
 			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY );

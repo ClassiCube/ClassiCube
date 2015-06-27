@@ -47,6 +47,9 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Blocks\BlockInfo.cs" />
+    <Compile Include="Blocks\BlockInfo.Culling.cs" />
+    <Compile Include="Blocks\BlockInfo.Optimised.cs" />
     <Compile Include="Network\ClassicNetwork.Writing.cs" />
     <Compile Include="Network\ClassicNetwork.Reading.cs" />
     <Compile Include="Network\Enums.cs" />
@@ -78,6 +81,7 @@
   <ItemGroup>
     <Folder Include="Models" />
     <Folder Include="Network" />
+    <Folder Include="Blocks" />
     <Folder Include="Shaders" />
     <Folder Include="Renderers" />
   </ItemGroup>

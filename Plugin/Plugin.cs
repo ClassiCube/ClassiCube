@@ -69,6 +69,10 @@ namespace ClassicalSharp.Plugins {
 				case PluginModuleType.NetworkProcessor:
 					game.NetworkProcessorTypes.Add( module.Type );
 					break;
+					
+				case PluginModuleType.BlockInfo:
+					game.BlockInfoTypes.Add( module.Type );
+					break;
 			}
 		}
 	}
@@ -82,6 +86,7 @@ namespace ClassicalSharp.Plugins {
 		MapRenderer,
 		PostProcessingShader,
 		NetworkProcessor,
+		BlockInfo,
 	}
 	
 	public class PluginModule {

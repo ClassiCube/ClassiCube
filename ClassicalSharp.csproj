@@ -107,8 +107,6 @@
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
-    <Compile Include="Blocks\BlockInfo.Culling.cs" />
-    <Compile Include="Blocks\BlockInfo.Optimised.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\NetPlayer.cs" />

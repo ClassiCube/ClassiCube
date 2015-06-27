@@ -50,6 +50,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.PostProcessingShader, typeof( GrayscaleFilter ) ),
 					
 					new PluginModule( PluginModuleType.NetworkProcessor, typeof( ClassicNetworkProcessor ) ),
+					new PluginModule( PluginModuleType.BlockInfo, typeof( ClassicBlockInfo ) ),
 				};
 			}
 		}

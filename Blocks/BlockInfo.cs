@@ -2,149 +2,55 @@
 
 namespace ClassicalSharp {
 	
-	public partial class BlockInfo {
-			
-		bool[] isTransparent = new bool[BlocksCount];
-		bool[] isTranslucent = new bool[BlocksCount];
-		bool[] isOpaque = new bool[BlocksCount];
-		bool[] isSprite = new bool[BlocksCount];
-		bool[] isLiquid = new bool[BlocksCount];
-		float[] heights = new float[BlocksCount];
-		bool[] blocksLight = new bool[BlocksCount];		
-		public const byte MaxDefinedBlock = (byte)Block.StoneBrick;
-		public const byte BlocksCount = MaxDefinedBlock + 1;
+	public abstract class BlockInfo {
 		
-		public void Init() {
-			for( int tile = 1; tile < BlocksCount; tile++ ) {
-				heights[tile] = 1f;
-				blocksLight[tile] = true;
-				isOpaque[tile] = true;				
-			}
-			SetupOptimTextures();
-			
-			SetIsTranslucent( Block.StillWater, Block.Water );
-			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
-			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			                 Block.Dandelion, Block.Slab );
-			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
-			            Block.BrownMushroom, Block.RedMushroom );
-			SetBlockHeight( 8 / 16f, Block.Slab );
-			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
-			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			               Block.Dandelion );
-			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
-					
-			SetIsTransparent( Block.Snow, Block.Fire, Block.Rope, Block.CobblestoneSlab );
-			SetBlocksLight( false, Block.Fire, Block.Rope );
-			SetIsTranslucent( Block.Ice );
-			SetIsSprite( Block.Rope, Block.Fire );
-			SetBlockHeight( 8 / 16f, Block.CobblestoneSlab );
-			SetBlockHeight( 2 / 16f, Block.Snow );
-			SetupCullingCache();
+		public BlockInfo( Game window ) {
 		}
 		
-		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
-			for( int tile = (int)Block.Stone; tile <= (int)Block.Obsidian; tile++ ) {
-				canPlace[tile] = true;
-				canDelete[tile] = true;
-			}
-			canPlace[(int)Block.Grass] = false;
-			canPlace[(int)Block.Lava] = false;
-			canPlace[(int)Block.Water] = false;
-			canPlace[(int)Block.StillLava] = false;
-			canPlace[(int)Block.StillWater] = false;
-			canPlace[(int)Block.Bedrock] = false;
-			
-			canDelete[(int)Block.Bedrock] = false;
-			canDelete[(int)Block.Lava] = false;
-			canDelete[(int)Block.Water] = false;
-			canDelete[(int)Block.StillWater] = false;
-			canDelete[(int)Block.StillLava] = false;
-		}
+		public abstract byte BlocksCount { get; }
 		
-		void SetIsTransparent( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isTransparent[(int)ids[i]] = true;
-				isOpaque[(int)ids[i]] = false;
-			}
-		}
+		public abstract void Init();
 		
-		void SetIsSprite( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isSprite[(int)ids[i]] = true;
-			}
-		}
-		
-		void SetIsTranslucent( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isTranslucent[(int)ids[i]] = true;
-				isOpaque[(int)ids[i]] = false;
-			}
-		}
-		
-		void SetIsLiquid( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isLiquid[(int)ids[i]] = true;
-			}
-		}
-		
-		void SetBlockHeight( float height, params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				heights[(int)ids[i]] = height;
-			}
-		}
-		
-		void SetBlocksLight( bool blocks, params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				blocksLight[(int)ids[i]] = blocks;
-			}
-		}
+		public abstract void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete );
 		
 		/// <summary> Gets whether the given block id is opaque/not see through. </summary>
-		public bool IsOpaque( byte id ) {
-			return isOpaque[id];
-		}
+		public abstract bool IsOpaque( byte id );
 		
 		/// <summary> Gets whether the given block id is opaque/not see through,
 		/// and occupies a full block. </summary>
-		public bool IsFullAndOpaque( byte id ) {
-			return isOpaque[id] && heights[id] == 1;
-		}
+		public abstract bool IsFullAndOpaque( byte id );
 		
 		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
 		/// <remarks> Note that these blocks's alpha values are treated as either 'fully see through'
 		/// or 'fully solid'. </remarks>
-		public bool IsTransparent( byte id ) {
-			return isTransparent[id];
-		}
+		public abstract bool IsTransparent( byte id );
 		
 		/// <summary> Gets the tile height of the given block id. </summary>
-		public float BlockHeight( byte id ) {
-			return heights[id];
-		}
+		public abstract float BlockHeight( byte id );
 		
 		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
 		/// <remarks> Note that these blocks's colour values are blended into both
 		/// the transparent and opaque blocks behind them. </remarks>
-		public bool IsTranslucent( byte id ) {
-			return isTranslucent[id];
-		}
+		public abstract bool IsTranslucent( byte id );
 		
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
-		public bool BlocksLight( byte id ) {
-			return blocksLight[id];
-		}
+		public abstract bool BlocksLight( byte id );
 		
 		/// <summary> Gets whether the given block id is a sprite. <br/>
 		/// (flowers, saplings, fire, etc) </summary>
-		public bool IsSprite( byte id ) {
-			return isSprite[id];
-		}
+		public abstract bool IsSprite( byte id );
 		
 		/// <summary> Gets whether the given block id is a liquid. <br/>
 		/// (water or lava) </summary>
-		public bool IsLiquid( byte id ) {
-			return isLiquid[id];
-		}
+		public abstract bool IsLiquid( byte id );
+		
+		public abstract bool IsFaceHidden( byte tile, byte block, int tileSide );
+		
+		/// <summary> Gets the index in the ***optimised*** 2D terrain atlas for the
+		/// texture of the face of the given block. </summary>
+		/// <param name="block"> Block ID. </param>
+		/// <param name="face">Face of the given block, see TileSide constants. </param>
+		/// <returns>The index of the texture within the terrain atlas.</returns>
+		public abstract int GetOptimTextureLoc( byte block, int face );
 	}
 }

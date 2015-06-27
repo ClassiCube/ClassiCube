@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin.Network {
 	
 	// Basically a much faster version of List<byte>( capacity )
 	internal class FastNetReader {

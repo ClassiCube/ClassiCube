@@ -30,7 +30,7 @@ namespace ClassicalSharp.Model {
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) ) {
 				modelName = "block";
-				if( blockId == 0 || blockId > BlockInfo.MaxDefinedBlock )
+				if( blockId == 0 || blockId >= window.BlockInfo.BlocksCount )
 					return cache["humanoid"];
 			}
 			

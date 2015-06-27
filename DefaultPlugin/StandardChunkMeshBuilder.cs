@@ -1,7 +1,8 @@
 ﻿using System;
+using ClassicalSharp;
 using ClassicalSharp.GraphicsAPI;
 
-namespace ClassicalSharp {
+namespace DefaultPlugin {
 	
 	public class StandardChunkMeshBuilder : ChunkMeshBuilder {
 		
