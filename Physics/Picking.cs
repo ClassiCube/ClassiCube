@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 				
 				byte block;
 				if( map.IsValidPos( x, y, z ) && ( block = map.GetBlock( x, y, z ) ) != 0 ) {
-					bool cantPickBlock = !window.CanPlace[block] && !window.CanDelete[block] && info.IsLiquid( block );
+					bool cantPickBlock = !window.Inventory.CanPlace[block] && !window.Inventory.CanDelete[block] && info.IsLiquid( block );
 					if( !cantPickBlock ) {
 						// This cell falls on the path of the ray. Now perform an additional bounding box test,
 						// since some blocks do not occupy a whole cell.

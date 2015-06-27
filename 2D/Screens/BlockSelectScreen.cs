@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		}
 		BlockDrawInfo[] blocksTable;
 		Texture2D selectedBlock, blockInfoTexture;
+		Inventory inventory;
 		int blockSize = 48;
 		int selectedIndex = 0;
 		const int blocksPerRow = 10;
@@ -73,6 +74,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
+			inventory = Window.Inventory;
 			Window.BlockPermissionsChanged += BlockPermissionsChanged;
 			Size size = new Size( blockSize, blockSize );
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
@@ -112,9 +114,9 @@ namespace ClassicalSharp {
 					}
 				}
 				buffer.Append( ref ptr2, " (can place: " );
-				buffer.Append( ref ptr2, Window.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f, can delete: " );
-				buffer.Append( ref ptr2, Window.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f)" );
 			}
 		}
@@ -146,7 +148,7 @@ namespace ClassicalSharp {
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
 			for( int i = 0; i < Window.BlockInfo.BlocksCount; i++ ) {
-				if( Window.CanPlace[i] || Window.CanDelete[i] ) {
+				if( inventory.CanPlace[i] || inventory.CanDelete[i] ) {
 					blocksCount++;
 				}
 			}
@@ -159,7 +161,7 @@ namespace ClassicalSharp {
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < Window.BlockInfo.BlocksCount; tile++ ) {
-				if( Window.CanPlace[tile] || Window.CanDelete[tile] ) {
+				if( inventory.CanPlace[tile] || inventory.CanDelete[tile] ) {
 					Block block = (Block)tile;
 					int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
@@ -209,7 +211,7 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				BlockDrawInfo info = blocksTable[selectedIndex];
-				Window.HeldBlock = info.BlockId;
+				inventory.HeldBlock = info.BlockId;
 				Window.SetNewScreen( new NormalScreen( Window ) );
 			}
 			return true;

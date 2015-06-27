@@ -42,7 +42,7 @@ namespace DefaultPlugin.Network {
 						ServerMotd = reader.ReadString();
 						byte userType = reader.ReadUInt8();
 						if( !useBlockPermissions ) {
-							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+							Window.Inventory.CanDelete[(int)Block.Bedrock] = userType == 0x64;
 						}
 						Window.LocalPlayer.UserType = userType;
 						receivedFirstPosition = false;
@@ -177,7 +177,7 @@ namespace DefaultPlugin.Network {
 					{
 						byte userType = reader.ReadUInt8();
 						if( !useBlockPermissions ) {
-							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+							Window.Inventory.CanDelete[(int)Block.Bedrock] = userType == 0x64;
 						}
 						Window.LocalPlayer.UserType = userType;
 					} break;
@@ -226,8 +226,8 @@ namespace DefaultPlugin.Network {
 
 						if( supportLevel == 1 ) {
 							for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
-								Window.CanPlace[i] = true;
-								Window.CanDelete[i] = true;
+								Window.Inventory.CanPlace[i] = true;
+								Window.Inventory.CanDelete[i] = true;
 							}
 							Window.RaiseBlockPermissionsChanged();
 						} else {
@@ -240,9 +240,9 @@ namespace DefaultPlugin.Network {
 					{
 						byte blockType = reader.ReadUInt8();
 						bool noChanging = reader.ReadUInt8() != 0;
-						Window.CanChangeHeldBlock = true;
-						Window.HeldBlock = (Block)blockType;
-						Window.CanChangeHeldBlock = !noChanging;
+						Window.Inventory.CanChangeHeldBlock = true;
+						Window.Inventory.HeldBlock = (Block)blockType;
+						Window.Inventory.CanChangeHeldBlock = !noChanging;
 					} break;
 					
 				case PacketId.CpeExtAddPlayerName:
@@ -337,13 +337,14 @@ namespace DefaultPlugin.Network {
 						bool canPlace = reader.ReadUInt8() != 0;
 						bool canDelete = reader.ReadUInt8() != 0;
 						if( blockId == 0 ) {
-							for( int i = 1; i < Window.CanPlace.Length; i++ ) {
-								Window.CanPlace[i] = canPlace;
-								Window.CanDelete[i] = canDelete;
+							int blocksCount = Window.BlockInfo.BlocksCount;
+							for( int i = 1; i < blocksCount; i++ ) {
+								Window.Inventory.CanPlace[i] = canPlace;
+								Window.Inventory.CanDelete[i] = canDelete;
 							}
 						} else {
-							Window.CanPlace[blockId] = canPlace;
-							Window.CanDelete[blockId] = canDelete;
+							Window.Inventory.CanPlace[blockId] = canPlace;
+							Window.Inventory.CanDelete[blockId] = canDelete;
 						}
 						Window.RaiseBlockPermissionsChanged();
 					} break;

@@ -120,6 +120,7 @@
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
+    <Compile Include="Game\Inventory.cs" />
     <Compile Include="GraphicsAPI\DefaultShaders.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\ModernGLApi.cs" />

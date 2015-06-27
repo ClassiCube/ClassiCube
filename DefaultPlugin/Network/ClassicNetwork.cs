@@ -32,7 +32,7 @@ namespace DefaultPlugin.Network {
 		}
 		
 		public override void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
-			byte payload = sendHeldBlock ? (byte)Window.HeldBlock : (byte)0xFF;
+			byte payload = sendHeldBlock ? (byte)Window.Inventory.HeldBlock : (byte)0xFF;
 			WritePacket( MakePositionPacket( pos, yaw, pitch, payload ) );
 		}
 		

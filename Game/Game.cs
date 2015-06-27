@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 		public OpenGLApi Graphics;
 		public Map Map;
 		public NetworkProcessor Network;
+		public Inventory Inventory;
 		public List<Type> NetworkProcessorTypes = new List<Type>();
 		
 		public Player[] NetPlayers = new Player[256];
@@ -53,38 +54,6 @@ namespace ClassicalSharp {
 		public string skinServer, chatInInputBuffer;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
-		
-		int hotbarIndex = 0;
-		public bool CanChangeHeldBlock = true;
-		public Block[] BlocksHotbar = new Block[] { Block.Stone, Block.Cobblestone,
-			Block.Brick, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
-		
-		public int HeldBlockIndex {
-			get { return hotbarIndex; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				hotbarIndex = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public Block HeldBlock {
-			get { return BlocksHotbar[hotbarIndex]; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				BlocksHotbar[hotbarIndex] = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public bool[] CanPlace = new bool[256];
-		public bool[] CanDelete = new bool[256];
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -130,6 +99,7 @@ namespace ClassicalSharp {
 			LoadAtlas( terrainBmp );
 			
 			VSync = VSyncMode.On;
+			Inventory = new Inventory( this );
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
@@ -164,7 +134,7 @@ namespace ClassicalSharp {
 			
 			BlockInfo = Utils.New<BlockInfo>( BlockInfoTypes[0], this );
 			BlockInfo.Init();
-			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
+			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( 255, this );
 			SelectionManager = new SelectionManager( this );

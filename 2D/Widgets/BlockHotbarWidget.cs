@@ -15,11 +15,12 @@ namespace ClassicalSharp {
 		
 		Texture2D[] barTextures = new Texture2D[9];
 		Texture2D selectedBlock;
+		Inventory inventory;
 		const int blockSize = 32;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				Window.HeldBlockIndex = (int)key - (int)Key.Number1;
+				inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
 				return true;
 			}
 			return false;
@@ -27,6 +28,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			int y = Window.Height - blockSize;
+			inventory = Window.Inventory;
 			
 			Size size = new Size( 32, 32 );
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
@@ -43,7 +45,7 @@ namespace ClassicalSharp {
 			Height = blockSize;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, Window.BlocksHotbar[i] );
+				barTextures[i] = MakeTexture( x, y, inventory.BlocksHotbar[i] );
 				x += blockSize;
 			}
 		}
@@ -54,7 +56,7 @@ namespace ClassicalSharp {
 			int selectedX = 0;
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				barTextures[i].RenderNoBind( GraphicsApi );
-				if( i == Window.HeldBlockIndex ) {
+				if( i == inventory.HeldBlockIndex ) {
 					selectedX = barTextures[i].X1;
 				}
 			}
@@ -68,8 +70,8 @@ namespace ClassicalSharp {
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
-			int index = Window.HeldBlockIndex;
-			Block block = Window.HeldBlock;
+			int index = inventory.HeldBlockIndex;
+			Block block = inventory.HeldBlock;
 			int x = barTextures[index].X1;
 			barTextures[index] = MakeTexture( x, Y, block );
 		}

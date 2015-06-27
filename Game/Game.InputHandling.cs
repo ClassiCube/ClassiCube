@@ -54,12 +54,8 @@ namespace ClassicalSharp {
 		}
 
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			if( !Camera.MouseZoom( e ) && CanChangeHeldBlock ) {
-				int diffIndex = -e.Delta % BlocksHotbar.Length;
-				int newIndex = HeldBlockIndex + diffIndex;
-				if( newIndex < 0 ) newIndex += BlocksHotbar.Length;
-				if( newIndex >= BlocksHotbar.Length ) newIndex -= BlocksHotbar.Length;
-				HeldBlockIndex = newIndex;
+			if( !Camera.MouseZoom( e ) && Inventory.CanChangeHeldBlock ) {
+				Inventory.ScrollHeldIndex( -e.Delta );
 			}
 		}
 
@@ -123,7 +119,7 @@ namespace ClassicalSharp {
 		DateTime lastClick = DateTime.MinValue;
 		void PickBlocks( bool cooldown, bool left, bool right, bool middle ) {
 			int buttonsDown = ( left ? 1 : 0 ) + ( right ? 1 : 0 ) + ( middle ? 1 : 0 );
-			if( !SelectedPos.Valid || buttonsDown > 1 || ScreenLockedInput || HeldBlock == Block.Air ) return;
+			if( !SelectedPos.Valid || buttonsDown > 1 || ScreenLockedInput || Inventory.HeldBlock == Block.Air ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
@@ -132,13 +128,13 @@ namespace ClassicalSharp {
 			if( middle ) {
 				Vector3I pos = SelectedPos.BlockPos;
 				byte block = Map.GetBlock( pos );
-				if( block != 0 && ( CanPlace[block] || CanDelete[block] ) ) {
-					HeldBlock = (Block)block;
+				if( block != 0 && ( Inventory.CanPlace[block] || Inventory.CanDelete[block] ) ) {
+					Inventory.HeldBlock = (Block)block;
 				}
 			} else if( left ) {
 				Vector3I pos = SelectedPos.BlockPos;
 				byte block = Map.GetBlock( pos );
-				if( block != 0 && CanDelete[block] ) {
+				if( block != 0 && Inventory.CanDelete[block] ) {
 					ParticleManager.BreakBlockEffect( pos, block );
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, 0 );
 					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
@@ -147,16 +143,12 @@ namespace ClassicalSharp {
 				Vector3I pos = SelectedPos.TranslatedPos;
 				if( !Map.IsValidPos( pos ) ) return;
 				
-				Block block = HeldBlock;
-				if( CanReplace( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
+				Block block = Inventory.HeldBlock;
+				if( Inventory.CanReplace( Map.GetBlock( pos ) ) && Inventory.CanPlace[(int)block] ) {
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
 			}
-		}
-		
-		bool CanReplace( byte block ) {
-			return block == 0 || ( BlockInfo.IsLiquid( block ) && !CanPlace[block] && !CanDelete[block] );
 		}
 		
 		public KeyMap Keys = new KeyMap();
