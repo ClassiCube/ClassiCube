@@ -71,27 +71,27 @@ namespace ClassicalSharp {
 			// For each step, determine which distance to the next voxel boundary is lowest (i.e.
 			// which voxel boundary is nearest) and walk that way.
 			while( iterations < 10000 ) {
-				Vector3 pos = new Vector3( x, y, z );
-				if( Utils.DistanceSquared( pos, origin ) >= reachSquared ) {
+				byte block = map.IsValidPos( x, y, z ) ? map.GetBlock( x, y, z ) : (byte)0;
+				float height = block == 0 ? 1 : info.BlockHeight( block );
+				Vector3 min = new Vector3( x, y, z );
+				Vector3 max = new Vector3( x + 1, y + height, z + 1 );
+				
+				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
+				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
+				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
+				
+				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
 					pickedPos.Valid = false;
 					return;
 				}
-				iterations++;
 				
-				byte block;
-				if( map.IsValidPos( x, y, z ) && ( block = map.GetBlock( x, y, z ) ) != 0 ) {
-					bool cantPickBlock = !window.CanPlace[block] && !window.CanDelete[block] && info.IsLiquid( block );
-					if( !cantPickBlock ) {
-						// This cell falls on the path of the ray. Now perform an additional bounding box test,
-						// since some blocks do not occupy a whole cell.
-						float height = info.BlockHeight( block );
-						Vector3 min = new Vector3( x, y, z );
-						Vector3 max = new Vector3( x + 1, y + height, z + 1 );
-						float t0, t1;
-						if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-							pickedPos.UpdateBlockPos( min, max, origin, dir, t0, t1 );
-							return;
-						}
+				if( window.CanPick( block ) ) {
+					// This cell falls on the path of the ray. Now perform an additional bounding box test,
+					// since some blocks do not occupy a whole cell.				
+					float t0, t1;
+					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
+						pickedPos.UpdateBlockPos( min, max, origin, dir, t0, t1 );
+						return;
 					}
 				}
 				
@@ -108,12 +108,13 @@ namespace ClassicalSharp {
 					z += stepZ;
 					tMax.Z += tDelta.Z;
 				}
+				iterations++;
 			}
 			throw new InvalidOperationException( "did over 10000 iterations in GetPickedBlockPos(). " +
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 	}
-	
+
 	public class PickedPos {
 		
 		public Vector3 Min, Max;

@@ -148,15 +148,15 @@ namespace ClassicalSharp {
 				if( !Map.IsValidPos( pos ) ) return;
 				
 				Block block = HeldBlock;
-				if( CanReplace( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
+				if( !CanPick( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
 			}
 		}
 		
-		bool CanReplace( byte block ) {
-			return block == 0 || ( BlockInfo.IsLiquid( block ) && !CanPlace[block] && !CanDelete[block] );
+		internal bool CanPick( byte block ) {
+			return !( block == 0 || ( BlockInfo.IsLiquid( block ) && !CanPlace[block] && !CanDelete[block] ) );
 		}
 		
 		public KeyMap Keys = new KeyMap();
