@@ -41,3 +41,7 @@ Press escape or click "Back to game" to return to the game.
 * Note that if the server has disabled hacks, some of the key combinations will have no affect.
 * Pressing F6 to change view distance can improve performance by limiting the number of visible chunks.
 * Pressing F7 to toggle VSync on or off. On minimises CPU usage, whereas off maximises chunk loading speed.
+
+=== Client commands ===
+ClassicalSharp comes with a number of built in commands. You can see a list of them by typing /client commands,
+and you can see help for a given command for typing /client help [command name].

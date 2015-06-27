@@ -10,17 +10,12 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class CommandsCommand : Command {
 		
-		public override string Name {
-			get { return "Commands"; }
-		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client commands",
-					"Prints a list of all usable commands",
-				};
-			}
+		public CommandsCommand() {
+			Name = "Commands";
+			Help = new [] {
+				"&a/client commands",
+				"&ePrints a list of all usable commands"
+			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
@@ -45,21 +40,16 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class EnvCommand : Command {
 		
-		public override string Name {
-			get { return "Env"; }
-		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client env [property] [value]",
-					"&bproperties: &eskycol, fogcol, cloudscol, cloudsspeed,",
-					"     &esuncol, shadowcol, weather",
-					"&bcol properties: &evalue must be a hex colour code (either #RRGGBB or RRGGBB).",
-					"&bcloudsspeed: &evalue must be a decimal number. (e.g. 0.5, 1, 4.5).",
-					"&eIf no args are given, the current env variables will be displayed.",
-				};
-			}
+		public EnvCommand() {
+			Name = "Env";
+			Help = new [] {
+				"&a/client env [property] [value]",
+				"&bproperties: &eskycol, fogcol, cloudscol, cloudsspeed,",
+				"     &esuncol, shadowcol, weather",
+				"&bcol properties: &evalue must be a hex colour code (either #RRGGBB or RRGGBB).",
+				"&bcloudsspeed: &evalue must be a decimal number. (e.g. 0.5, 1, 4.5).",
+				"&eIf no args are given, the current env variables will be displayed.",
+			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
@@ -72,14 +62,14 @@ namespace ClassicalSharp.Commands {
 				ReadHexColourAnd( reader, c => Window.Map.SetSkyColour( c ) );
 			} else if( Utils.CaselessEquals( property, "fogcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetFogColour( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudscol" ) 
+			} else if( Utils.CaselessEquals( property, "cloudscol" )
 			          || Utils.CaselessEquals( property, "cloudcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetCloudsColour( c ) );
 			} else if( Utils.CaselessEquals( property, "suncol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetSunlight( c ) );
 			} else if( Utils.CaselessEquals( property, "shadowcol" ) ) {
 				ReadHexColourAnd( reader, c => Window.Map.SetShadowlight( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudsspeed" ) 
+			} else if( Utils.CaselessEquals( property, "cloudsspeed" )
 			          || Utils.CaselessEquals( property, "cloudspeed" ) ) {
 				float speed;
 				if( !reader.NextFloat( out speed ) ) {
@@ -112,25 +102,20 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class HelpCommand : Command {
 		
-		public override string Name {
-			get { return "Help"; }
+		public HelpCommand() {
+			Name = "Help";
+			Help = new [] {
+				"&a/client help [command name]",
+				"&eDisplays the help for the given command.",
+			};
 		}
 		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client help [command name]",
-					"&eDisplays the help (if available) for the given command.",
-				};
-			}
-		}		
-		
 		public override void Execute( CommandReader reader ) {
-			string commandName = reader.Next();
-			if( commandName == null ) {
-				Window.AddChat( "&e/client: &cYou didn't specify a command to get help with." );
+			string cmdName = reader.Next();
+			if( cmdName == null ) {
+				Window.AddChat( "&e/client help: No command name specified. See /client commands for a list of commands." );
 			} else {
-				Command cmd = Window.CommandManager.GetMatchingCommand( commandName );
+				Command cmd = Window.CommandManager.GetMatchingCommand( cmdName );
 				if( cmd != null ) {
 					string[] help = cmd.Help;
 					for( int i = 0; i < help.Length; i++ ) {
@@ -143,18 +128,13 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class InfoCommand : Command {
 		
-		public override string Name {
-			get { return "Info"; }
+		public InfoCommand() {
+			Name = "Info";
+			Help = new [] {
+				"&a/client info [property]",
+				"&bproperties: &epos, target, dimensions, jumpheight",
+			};
 		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client info [property]",
-					"&bproperties: &epos, target, dimensions, jumpheight, viewdist",
-				};
-			}
-		}	
 		
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
@@ -177,17 +157,6 @@ namespace ClassicalSharp.Commands {
 			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
 				float jumpHeight = Window.LocalPlayer.JumpHeight;
 				Window.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
-			} else if( Utils.CaselessEquals( property, "viewdist" ) ) {
-				int newDist;
-				if( !reader.NextInt( out newDist ) ) {
-					Window.AddChat( "View distance: " + Window.ViewDistance );
-				} else if( newDist < 8 ) {
-					Window.AddChat( "&e/client info: &cThat view distance is way too small." );
-				} else if( newDist > 8192 ) {
-					Window.AddChat( "&e/client info: &cThat view distance is way too large." );
-				} else {
-					Window.SetViewDistance( newDist );
-				}
 			} else {
 				Window.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}
@@ -196,19 +165,14 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class RenderTypeCommand : Command {
 		
-		public override string Name {
-			get { return "RenderType"; }
-		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client rendertype [normal/legacy/legacyfast]",
-					"&bnormal: &eDefault renderer, with all environmental effects enabled.",
-					"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
-					"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
-				};
-			}
+		public RenderTypeCommand() {
+			Name = "RenderType";
+			Help = new [] {
+				"&a/client rendertype [normal/legacy/legacyfast]",
+				"&bnormal: &eDefault renderer, with all environmental effects enabled.",
+				"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
+				"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
@@ -229,7 +193,7 @@ namespace ClassicalSharp.Commands {
 		
 		void SetNewRenderType( bool legacy, bool minimal, bool legacyEnv ) {
 			Game game = Window;
-			game.MapEnvRenderer.SetUseLegacyMode( legacy );			
+			game.MapEnvRenderer.SetUseLegacyMode( legacy );
 			if( minimal ) {
 				game.EnvRenderer.Dispose();
 				game.EnvRenderer = new MinimalEnvRenderer( game );
@@ -247,17 +211,12 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class ChatFontSizeCommand : Command {
 		
-		public override string Name {
-			get { return "ChatSize"; }
-		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client chatsize [fontsize]",
-					"&bfontsize: &eWhole number specifying the new font size for chat.",
-				};
-			}
+		public ChatFontSizeCommand() {
+			Name = "ChatSize";
+			Help = new [] {
+				"&a/client chatsize [fontsize]",
+				"&bfontsize: &eWhole number specifying the new font size for chat.",
+			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
@@ -282,17 +241,12 @@ namespace ClassicalSharp.Commands {
 	
 	public sealed class MouseSensitivityCommand : Command {
 		
-		public override string Name {
-			get { return "Sensitivity"; }
-		}
-		
-		public override string[] Help {
-			get {
-				return new [] {
-					"&a/client sensitivity [mouse sensitivity]",
-					"&bmouse sensitivity: &eInteger between 1 to 100 specifiying the mouse sensitivity.",
-				};
-			}
+		public MouseSensitivityCommand() {
+			Name = "Sensitivity";
+			Help = new [] {
+				"&a/client sensitivity [mouse sensitivity]",
+				"&bmouse sensitivity: &eInteger between 1 to 100 specifiying the mouse sensitivity.",
+			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
@@ -303,6 +257,31 @@ namespace ClassicalSharp.Commands {
 				Window.AddChat( "&e/client sensitivity: &cMouse sensitivity must be between 1 to 100." );
 			} else {
 				Window.MouseSensitivity = sensitivity;
+			}
+		}
+	}
+	
+	public sealed class ViewDistanceCommand : Command {
+		
+		public ViewDistanceCommand() {
+			Name = "ViewDistance";
+			Help = new [] {
+				"&a/client viewdistance [range]",
+				"&brange: &eInteger specifying how far you can see before fog appears.",
+				"&eThe minimum range is 8, the maximum is 4096.",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			int newDist;
+			if( !reader.NextInt( out newDist ) ) {
+				Window.AddChat( "View distance: " + Window.ViewDistance );
+			} else if( newDist < 8 ) {
+				Window.AddChat( "&e/client info: &cThat view distance is way too small." );
+			} else if( newDist > 4096 ) {
+				Window.AddChat( "&e/client info: &cThat view distance is way too large." );
+			} else {
+				Window.SetViewDistance( newDist );
 			}
 		}
 	}

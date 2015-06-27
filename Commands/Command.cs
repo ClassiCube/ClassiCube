@@ -4,11 +4,9 @@ namespace ClassicalSharp.Commands {
 	
 	public abstract class Command {
 		
-		public abstract string Name { get; }
+		public string Name { get; set; }
 		
-		public virtual string[] Help {
-			get { return new [] { "No help is available for this command." }; }
-		}
+		public string[] Help { get; set; }
 		
 		public Game Window;
 		

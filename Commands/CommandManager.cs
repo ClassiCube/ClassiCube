@@ -20,6 +20,7 @@ namespace ClassicalSharp.Commands {
 			RegisterCommand( new RenderTypeCommand() );
 			RegisterCommand( new ChatFontSizeCommand() );
 			RegisterCommand( new MouseSensitivityCommand() );
+			RegisterCommand( new ViewDistanceCommand() );
 		}
 		
 		void RegisterCommand( Command command ) {
@@ -55,7 +56,7 @@ namespace ClassicalSharp.Commands {
 		public void Execute( string text ) {
 			CommandReader reader = new CommandReader( text );
 			if( reader.TotalArgs == 0 ) {
-				Window.AddChat( "&e/client: No command name specified. &fSee /client commands for a list of commands." );
+				Window.AddChat( "&e/client: No command name specified. See /client commands for a list of commands." );
 				return;
 			}
 			string commandName = reader.Next();
