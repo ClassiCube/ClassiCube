@@ -6,33 +6,31 @@
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 
-
 using System;
 using System.IO;
 
 namespace Ionic.Zlib
 {
-    public class DeflateStream : Stream
+
+    public class ZlibStream : Stream
     {
         internal ZlibBaseStream _baseStream;
-        internal Stream _innerStream;
         bool _disposed;
 
-        public DeflateStream(Stream stream, CompressionMode mode)
+        public ZlibStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, CompressionLevel level)
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level)
             : this(stream, mode, level, false) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, bool leaveOpen)
+        public ZlibStream(Stream stream, CompressionMode mode, bool leaveOpen)
             : this(stream, mode, CompressionLevel.Default, leaveOpen) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen) {
-            _innerStream = stream;
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen);
+        public ZlibStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen) {
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen);
         }
 
         public virtual FlushType FlushMode {
@@ -74,7 +72,7 @@ namespace Ionic.Zlib
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("ZlibStream");
                 return _baseStream._stream.CanRead;
             }
         }
@@ -88,20 +86,20 @@ namespace Ionic.Zlib
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("ZlibStream");
                 return _baseStream._stream.CanWrite;
             }
         }
 
         public override void Flush()
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed) throw new ObjectDisposedException("ZlibStream");
             _baseStream.Flush();
         }
 
         public override long Length
         {
-            get { throw new NotImplementedException(); }
+            get { throw new NotSupportedException(); }
         }
 
         public override long Position
@@ -114,28 +112,27 @@ namespace Ionic.Zlib
                     return this._baseStream._z.TotalBytesIn;
                 return 0;
             }
-            set { throw new NotImplementedException(); }
+
+            set { throw new NotSupportedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("ZlibStream");
             return _baseStream.Read(buffer, offset, count);
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
+        public override long Seek(long offset, SeekOrigin origin)  {
+            throw new NotSupportedException();
         }
 
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
+        public override void SetLength(long value) {
+            throw new NotSupportedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("ZlibStream");
             _baseStream.Write(buffer, offset, count);
         }
 
@@ -143,7 +140,7 @@ namespace Ionic.Zlib
         {
             using (var ms = new MemoryStream())
             {
-                Stream compressor = new DeflateStream( ms, CompressionMode.Compress, CompressionLevel.BestCompression );
+                Stream compressor =  new ZlibStream( ms, CompressionMode.Compress, CompressionLevel.BestCompression );
                 ZlibBaseStream.CompressBuffer(b, compressor);
                 return ms.ToArray();
             }
@@ -153,9 +150,10 @@ namespace Ionic.Zlib
         {
             using (var input = new MemoryStream(compressed))
             {
-                Stream decompressor = new DeflateStream( input, CompressionMode.Decompress );
+                Stream decompressor =  new ZlibStream( input, CompressionMode.Decompress );
                 return ZlibBaseStream.UncompressBuffer(compressed, decompressor);
             }
         }
+
     }
 }

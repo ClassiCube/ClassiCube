@@ -78,6 +78,9 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
+    <Reference Include="Ionic.Zlib">
+      <HintPath>Ionic.Zlib\bin\Debug\Ionic.Zlib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.DirectX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="Microsoft.DirectX.Direct3D" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="Microsoft.DirectX.Direct3DX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
@@ -128,10 +131,6 @@
     <Compile Include="GraphicsAPI\Framebuffer.cs" />
     <Compile Include="GraphicsAPI\TextureObject.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
-    <Compile Include="Ionic.Zlib\DeflateStream.cs" />
-    <Compile Include="Ionic.Zlib\Inflate.cs" />
-    <Compile Include="Ionic.Zlib\InfTree.cs" />
-    <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\ChunkMeshBuilder.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Model\IModel.cs" />
@@ -205,7 +204,6 @@
     <Folder Include="Blocks" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
-    <Folder Include="Ionic.Zlib" />
     <Folder Include="Map" />
     <Folder Include="Game" />
     <Folder Include="Model" />

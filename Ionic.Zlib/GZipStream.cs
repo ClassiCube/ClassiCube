@@ -12,27 +12,26 @@ using System.IO;
 
 namespace Ionic.Zlib
 {
-    public class DeflateStream : Stream
-    {
+    public class GZipStream : Stream
+    {      
+        private int _headerByteCount;
         internal ZlibBaseStream _baseStream;
-        internal Stream _innerStream;
         bool _disposed;
 
-        public DeflateStream(Stream stream, CompressionMode mode)
+        public GZipStream(Stream stream, CompressionMode mode)
             : this(stream, mode, CompressionLevel.Default, false) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, CompressionLevel level)
+        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level)
             : this(stream, mode, level, false) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, bool leaveOpen)
+        public GZipStream(Stream stream, CompressionMode mode, bool leaveOpen)
             : this(stream, mode, CompressionLevel.Default, leaveOpen) {
         }
 
-        public DeflateStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen) {
-            _innerStream = stream;
-            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.DEFLATE, leaveOpen);
+        public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level, bool leaveOpen) {
+            _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen);
         }
 
         public virtual FlushType FlushMode {
@@ -60,7 +59,9 @@ namespace Ionic.Zlib
                 if (!_disposed)
                 {
                     if (disposing && (this._baseStream != null))
+                    {
                         this._baseStream.Close();
+                    }
                     _disposed = true;
                 }
             }
@@ -74,7 +75,7 @@ namespace Ionic.Zlib
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("GZipStream");
                 return _baseStream._stream.CanRead;
             }
         }
@@ -88,17 +89,20 @@ namespace Ionic.Zlib
         {
             get
             {
-                if (_disposed) throw new ObjectDisposedException("DeflateStream");
+                if (_disposed) throw new ObjectDisposedException("GZipStream");
                 return _baseStream._stream.CanWrite;
             }
         }
 
         public override void Flush()
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed) throw new ObjectDisposedException("GZipStream");
             _baseStream.Flush();
         }
 
+        /// <summary>
+        /// Reading this property always throws a <see cref="NotImplementedException"/>.
+        /// </summary>
         public override long Length
         {
             get { throw new NotImplementedException(); }
@@ -109,17 +113,18 @@ namespace Ionic.Zlib
             get
             {
                 if (this._baseStream._streamMode == Ionic.Zlib.ZlibBaseStream.StreamMode.Writer)
-                    return this._baseStream._z.TotalBytesOut;
+                    return this._baseStream._z.TotalBytesOut + _headerByteCount;
                 if (this._baseStream._streamMode == Ionic.Zlib.ZlibBaseStream.StreamMode.Reader)
-                    return this._baseStream._z.TotalBytesIn;
+                    return this._baseStream._z.TotalBytesIn + this._baseStream._gzipHeaderByteCount;
                 return 0;
             }
+
             set { throw new NotImplementedException(); }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed) throw new ObjectDisposedException("GZipStream");
             return _baseStream.Read(buffer, offset, count);
         }
 
@@ -135,15 +140,38 @@ namespace Ionic.Zlib
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (_disposed) throw new ObjectDisposedException("DeflateStream");
+            if (_disposed) throw new ObjectDisposedException("GZipStream");
+            if (_baseStream._streamMode == Ionic.Zlib.ZlibBaseStream.StreamMode.Undefined)
+            {
+                //Console.WriteLine("GZipStream: First write");
+                if (_baseStream._wantCompress) {
+                    // first write in compression, therefore, emit the GZIP header
+                    _headerByteCount = EmitHeader();
+                } else {
+                    throw new InvalidOperationException();
+                }
+            }
+
             _baseStream.Write(buffer, offset, count);
+        }
+
+        private int EmitHeader()
+        {
+            byte[] header = new byte[10];          
+            header[0] = 0x1F;  // ID 1
+            header[1] = 0x8B;  // ID 2
+            header[2] = 8;  // compression method
+            header[9] = 0xFF; // OS, 0xFF == unspecified
+
+            _baseStream._stream.Write(header, 0, header.Length);
+            return header.Length; // bytes written
         }
 
         public static byte[] CompressBuffer(byte[] b)
         {
             using (var ms = new MemoryStream())
             {
-                Stream compressor = new DeflateStream( ms, CompressionMode.Compress, CompressionLevel.BestCompression );
+                Stream compressor = new GZipStream( ms, CompressionMode.Compress, CompressionLevel.BestCompression );
                 ZlibBaseStream.CompressBuffer(b, compressor);
                 return ms.ToArray();
             }
@@ -153,7 +181,7 @@ namespace Ionic.Zlib
         {
             using (var input = new MemoryStream(compressed))
             {
-                Stream decompressor = new DeflateStream( input, CompressionMode.Decompress );
+                Stream decompressor = new GZipStream( input, CompressionMode.Decompress );
                 return ZlibBaseStream.UncompressBuffer(compressed, decompressor);
             }
         }

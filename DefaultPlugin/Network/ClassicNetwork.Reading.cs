@@ -63,7 +63,7 @@ namespace DefaultPlugin.Network {
 						}
 						receivedFirstPosition = false;
 						gzipHeader = new GZipHeaderReader();
-						gzipStream = new DeflateStream( gzippedMap, true );
+						gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
 						mapSizeIndex = 0;
 						mapIndex = 0;
 						receiveStart = DateTime.UtcNow;

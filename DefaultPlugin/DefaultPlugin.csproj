@@ -91,6 +91,10 @@
       <Name>ClassicalSharp</Name>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\Ionic.Zlib\Ionic.ZLib.csproj">
+      <Project>{9816BA86-9250-4C00-A912-25F07F8677D1}</Project>
+      <Name>Ionic.ZLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\OpenTK\OpenTK.csproj">
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
