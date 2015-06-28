@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <ProjectGuid>{48648615-FA17-4822-BE6B-58CBF2333DB7}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>PluginBeta173</RootNamespace>
+    <AssemblyName>PluginBeta173</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <NoWin32Manifest>False</NoWin32Manifest>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <NoStdLib>False</NoStdLib>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <BaseAddress>4194304</BaseAddress>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <FileAlignment>4096</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ConcurrentQueue.cs" />
+    <Compile Include="DummyClasses.cs" />
+    <Compile Include="Network\InboundPackets.cs" />
+    <Compile Include="Network\NetReader.cs" />
+    <Compile Include="Network\NetworkProcessor.cs" />
+    <Compile Include="Network\NetworkProcessor.IO.cs" />
+    <Compile Include="Network\NetWriter.cs" />
+    <Compile Include="Network\OutboundPackets.cs" />
+    <Compile Include="Network\Packet.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Network" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassicalSharp.csproj">
+      <Project>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</Project>
+      <Name>ClassicalSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Ionic.Zlib\Ionic.ZLib.csproj">
+      <Project>{9816BA86-9250-4C00-A912-25F07F8677D1}</Project>
+      <Name>Ionic.ZLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTK\OpenTK.csproj">
+      <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
+      <Name>OpenTK</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
