@@ -1,5 +1,4 @@
-﻿//#define NET_DEBUG
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
 #if __MonoCS__
@@ -57,7 +56,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
+		public void SendPosition( Vector3 pos, float yaw, float pitch ) {
 			byte payload = sendHeldBlock ? (byte)Window.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
@@ -93,25 +92,15 @@ namespace ClassicalSharp {
 				return;
 			}
 			
-			int received = reader.size;
-			while( received > 0 ) {
+			while( reader.size > 0 ) {
 				byte opcode = reader.buffer[0];
-				if( received < packetSizes[opcode] ) break;
-				#if NET_DEBUG
-				Utils.LogDebug( "Remaining {0} bytes ({1} size {2} bytes)", received, (PacketId)opcode, packetSizes[opcode] );
-				#endif
+				if( reader.size < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
-				#if NET_DEBUG
-				Utils.LogDebug( "Left {0} bytes", reader.size );
-				#endif
-				received = reader.size;
 			}
 			
 			Player player = Window.LocalPlayer;
 			if( receivedFirstPosition ) {
-				byte yawPacked = Utils.DegreesToPacked( player.YawDegrees );
-				byte pitchPacked = Utils.DegreesToPacked( player.PitchDegrees );
-				SendPosition( player.Position, yawPacked, pitchPacked );
+				SendPosition( player.Position, player.YawDegrees, player.PitchDegrees );
 			}
 			CheckForNewTerrainAtlas();
 			CheckForWomEnvironment();
@@ -136,7 +125,7 @@ namespace ClassicalSharp {
 		static byte[] outBuffer = new byte[131];
 		static int outIndex = 0;
 		private static void MakeLoginPacket( string username, string verKey ) {
-			WriteUInt8( 0 ); // packet id
+			WriteUInt8( (byte)PacketId.Handshake );
 			WriteUInt8( 7 ); // protocol version
 			WriteString( username );
 			WriteString( verKey );
@@ -144,7 +133,7 @@ namespace ClassicalSharp {
 		}
 		
 		private static void MakeSetBlockPacket( short x, short y, short z, bool place, byte block ) {
-			WriteUInt8( 0x05 ); // packet id
+			WriteUInt8( (byte)PacketId.SetBlockClient );
 			WriteInt16( x );
 			WriteInt16( y );
 			WriteInt16( z );
@@ -152,42 +141,42 @@ namespace ClassicalSharp {
 			WriteUInt8( block );
 		}
 		
-		private static void MakePositionPacket( Vector3 pos, byte yaw, byte pitch, byte playerId ) {
-			WriteUInt8( 0x08 ); // packet id
-			WriteUInt8( playerId ); // player id (-1 is self)
+		private static void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
+			WriteUInt8( (byte)PacketId.EntityTeleport );
+			WriteUInt8( payload ); // held block when using HeldBlock, otherwise just 255
 			WriteInt16( (short)( pos.X * 32 ) );
 			WriteInt16( (short)( (int)( pos.Y * 32 ) + 51 ) );
 			WriteInt16( (short)( pos.Z * 32 ) );
-			WriteUInt8( yaw );
-			WriteUInt8( pitch );
+			WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
+			WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
 		}
 		
 		private static void MakeMessagePacket( string text ) {
-			WriteUInt8( 0x0D ); // packet id
+			WriteUInt8( (byte)PacketId.Message );
 			WriteUInt8( 0xFF ); // unused
 			WriteString( text );
 		}
 		
 		private static void MakeExtInfo( string appName, int extensionsCount ) {
-			WriteUInt8( 0x10 ); // packet id
+			WriteUInt8( (byte)PacketId.CpeExtInfo );
 			WriteString( appName );
 			WriteInt16( (short)extensionsCount );
 		}
 		
 		private static void MakeExtEntry( string extensionName, int extensionVersion ) {
-			WriteUInt8( 0x11 ); // packet id
+			WriteUInt8( (byte)PacketId.CpeExtEntry );
 			WriteString( extensionName );
 			WriteInt32( extensionVersion );
 		}
 		
 		private static void MakeCustomBlockSupportLevel( byte version ) {
-			WriteUInt8( 0x13 ); // packet id
+			WriteUInt8( (byte)PacketId.CpeCustomBlockSupportLevel );
 			WriteUInt8( version );
 		}
 		
 		private static void MakePlayerClick( byte button, byte action, short yaw, short pitch, byte targetEntity,
 		                                   Vector3I targetPos, byte targetFace ) {
-			WriteUInt8( 0x22 ); // packet id
+			WriteUInt8( (byte)PacketId.CpePlayerClick );
 			WriteUInt8( button );
 			WriteUInt8( action );
 			WriteInt16( yaw );
@@ -232,9 +221,6 @@ namespace ClassicalSharp {
 			outIndex = 0;
 			if( Disconnected ) return;		
 			
-			#if NET_DEBUG
-			Utils.LogDebug( "writing {0} bytes ({1})", packetLength, (PacketId)outBuffer[0] );
-			#endif
 			try {
 				stream.Write( outBuffer, 0, packetLength );
 			} catch( IOException ex ) {
@@ -253,19 +239,16 @@ namespace ClassicalSharp {
 		DateTime receiveStart;
 		DeflateStream gzipStream;
 		GZipHeaderReader gzipHeader;
-		int mapSizeIndex;
-		byte[] mapSize = new byte[4];
-		byte[] map;
-		int mapIndex;
+		int mapSizeIndex, mapIndex;
+		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
-		int womCounter = 0;
 		bool sendWomId = false, sentWomId = false;
 		
 		void ReadPacket( byte opcode ) {
 			reader.Remove( 1 ); // remove opcode
 			
 			switch( (PacketId)opcode ) {
-				case PacketId.ServerIdentification:
+				case PacketId.Handshake:
 					{
 						byte protocolVer = reader.ReadUInt8();
 						ServerName = reader.ReadString();
@@ -319,7 +302,7 @@ namespace ClassicalSharp {
 						
 						if( gzipHeader.done || gzipHeader.ReadHeader( gzippedMap ) ) {
 							if( mapSizeIndex < 4 ) {
-								mapSizeIndex += gzipStream.Read( mapSize, 0, 4 - mapSizeIndex );
+								mapSizeIndex += gzipStream.Read( mapSize, mapSizeIndex, 4 - mapSizeIndex );
 							}
 
 							if( mapSizeIndex == 4 ) {
@@ -483,10 +466,10 @@ namespace ClassicalSharp {
 				case PacketId.CpeHoldThis:
 					{
 						byte blockType = reader.ReadUInt8();
-						bool noChanging = reader.ReadUInt8() != 0;
+						bool canChange = reader.ReadUInt8() == 0;
 						Window.CanChangeHeldBlock = true;
 						Window.HeldBlock = (Block)blockType;
-						Window.CanChangeHeldBlock = !noChanging;
+						Window.CanChangeHeldBlock = canChange;
 					} break;
 					
 				case PacketId.CpeExtAddPlayerName:

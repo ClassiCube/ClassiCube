@@ -103,24 +103,12 @@ namespace ClassicalSharp {
 			return radians * 180.0 / Math.PI;
 		}
 		
-		// Basically this works as a special unit circle in the range of [0..255].
-		public static byte RadiansToPacked( double radians ) {
-			return DegreesToPacked( radians * 180.0 / Math.PI );
-		}
-		
-		public static byte DegreesToPacked( double degrees ) {
-			int packed = (int)( degrees * 256.0 / 360.0 ) % 256; // 256 = period
-			if( packed < 0 )
-				packed += 256; // Normalise into [0..255];
-			return (byte)packed;
+		public static int DegreesToPacked( double degrees, int period ) {
+			return (int)( degrees * period / 360.0 ) % period;
 		}
 		
 		public static double PackedToDegrees( byte packed ) {
 			return packed * 360.0 / 256.0;
-		}
-		
-		public static double PackedToRadians( byte packed ) {
-			return PackedToDegrees( packed ) * Math.PI / 180.0;
 		}
 		
 		public static float DistanceSquared( Vector3 p1, Vector3 p2 ) {

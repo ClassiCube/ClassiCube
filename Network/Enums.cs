@@ -3,7 +3,7 @@
 namespace ClassicalSharp {
 	
 	public enum PacketId {
-		ServerIdentification = 0,
+		Handshake = 0,
 		Ping = 1,
 		LevelInitialise = 2,
 		LevelDataChunk = 3,
@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		CpeEnvWeatherType = 31,
 		CpeHackControl = 32,
 		CpeExtAddEntity2 = 33,
+		CpePlayerClick = 34,
 	}
 	
 	public enum CpeMessageType {

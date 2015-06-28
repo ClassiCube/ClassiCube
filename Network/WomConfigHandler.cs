@@ -8,6 +8,8 @@ namespace ClassicalSharp {
 	public partial class NetworkProcessor {
 		
 		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
+		int womCounter = 0;
+		
 		void CheckForWomEnvironment() {
 			DownloadedItem item;
 			Window.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
