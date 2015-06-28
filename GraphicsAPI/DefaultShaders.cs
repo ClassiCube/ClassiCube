@@ -65,45 +65,6 @@ void main() {
 			api.DisableVertexAttrib( colourLoc );
 		}
 	}
-
-	public sealed class PickingShader : FogAndMVPShader {
-		
-		public PickingShader() {
-			VertexSource = @"
-#version 130
-in vec3 in_position;
-uniform mat4 MVP;
-
-void main() {
-   gl_Position = MVP * vec4(in_position, 1.0);
-}";
-			
-			FragmentSource = @"
-#version 130
-out vec4 final_colour;
---IMPORT fog_uniforms
-
-void main() {
-   vec4 finalColour = vec4(1.0, 1.0, 1.0, 1.0);
---IMPORT fog_code
-   final_colour = finalColour;
-}";
-		}
-		
-		public int positionLoc;
-		protected override void GetLocations() {
-			positionLoc = GetAttribLocation( "in_position" );
-			base.GetLocations();
-		}
-		
-		protected override void EnableVertexAttribStates( int stride ) {
-			api.EnableVertexAttribF( positionLoc, 3, stride, 0 );
-		}
-		
-		protected override void DisableVertexAttribStates( int stride ) {
-			api.DisableVertexAttrib( positionLoc );
-		}
-	}
 	
 	public sealed class EntityShader : FogAndMVPShader {
 		
