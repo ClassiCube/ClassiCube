@@ -174,18 +174,18 @@ namespace ClassicalSharp {
 			WriteUInt8( version );
 		}
 		
-		private static void MakePlayerClick( byte button, byte action, short yaw, short pitch, byte targetEntity,
-		                                   Vector3I targetPos, byte targetFace ) {
+		private static void MakePlayerClick( byte button, bool buttonDown, float yaw, float pitch, byte targetEntity,
+		                                   Vector3I targetPos, CpeBlockFace targetFace ) {
 			WriteUInt8( (byte)PacketId.CpePlayerClick );
 			WriteUInt8( button );
-			WriteUInt8( action );
-			WriteInt16( yaw );
-			WriteInt16( pitch );
+			WriteUInt8( buttonDown ? (byte)0 : (byte)1 );
+			WriteInt16( (short)Utils.DegreesToPacked( yaw, 65536 ) );
+			WriteInt16( (short)Utils.DegreesToPacked( pitch, 65536 ) );
 			WriteUInt8( targetEntity );
 			WriteInt16( (short)targetPos.X );
 			WriteInt16( (short)targetPos.Y );
 			WriteInt16( (short)targetPos.Z );
-			WriteUInt8( targetFace );
+			WriteUInt8( (byte)targetFace );
 		}
 		
 		static void WriteString( string value ) {

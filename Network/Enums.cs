@@ -51,4 +51,13 @@ namespace ClassicalSharp {
 		BottomRight3 = 13,
 		Announcement = 100,
 	}
+	
+	public enum CpeBlockFace {
+		XMax,
+		XMin,
+		YMax,
+		YMin,
+		ZMax,
+		ZMin,
+	}
 }

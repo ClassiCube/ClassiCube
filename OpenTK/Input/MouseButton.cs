@@ -41,13 +41,13 @@ namespace OpenTK.Input
         /// </summary>
         Left = 0,
         /// <summary>
-        /// The middle mouse button.
-        /// </summary>
-        Middle,
-        /// <summary>
         /// The right mouse button.
         /// </summary>
         Right,
+        /// <summary>
+        /// The middle mouse button.
+        /// </summary>
+        Middle,        
         /// <summary>
         /// The first extra mouse button.
         /// </summary>

@@ -120,6 +120,7 @@ namespace ClassicalSharp {
 		public Vector3I BlockPos;
 		public Vector3I TranslatedPos;
 		public bool Valid = true;
+		public CpeBlockFace BlockFace;
 		
 		public void UpdateBlockPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir, float t0, float t1 ) {
 			Min = Vector3.Min( p1, p2 );
@@ -130,20 +131,22 @@ namespace ClassicalSharp {
 			Vector3I normal = Vector3I.Zero;
 			Vector3 intersect = origin + dir * t0;
 			float dist = float.PositiveInfinity;
-			TestAxis( intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal );
-			TestAxis( intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal );
-			TestAxis( intersect.Y - Min.Y, ref dist, -Vector3I.UnitY, ref normal );
-			TestAxis( intersect.Y - Max.Y, ref dist, Vector3I.UnitY, ref normal );
-			TestAxis( intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal );
-			TestAxis( intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal );
+			TestAxis( intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal, CpeBlockFace.XMin );
+			TestAxis( intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal, CpeBlockFace.XMax );
+			TestAxis( intersect.Y - Min.Y, ref dist, -Vector3I.UnitY, ref normal, CpeBlockFace.YMin );
+			TestAxis( intersect.Y - Max.Y, ref dist, Vector3I.UnitY, ref normal, CpeBlockFace.YMax );
+			TestAxis( intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal, CpeBlockFace.ZMin );
+			TestAxis( intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal, CpeBlockFace.ZMax );
 			TranslatedPos = BlockPos + normal;
 		}
 		
-		static void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal ) {
+		void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal, 
+		                     CpeBlockFace fAxis) {
 			dAxis = Math.Abs( dAxis );
 			if( dAxis < dist ) {
 				dist = dAxis;
 				normal = nAxis;
+				BlockFace = fAxis;
 			}
 		}
 	}
