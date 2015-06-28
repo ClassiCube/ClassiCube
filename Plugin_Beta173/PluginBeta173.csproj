@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="ConcurrentQueue.cs" />
     <Compile Include="DummyClasses.cs" />
+    <Compile Include="Entities\EntityManager.cs" />
+    <Compile Include="Entities\EntityMetadata.cs" />
     <Compile Include="Network\InboundPackets.cs" />
     <Compile Include="Network\NetReader.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
@@ -59,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Network" />
+    <Folder Include="Entities" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassicalSharp.csproj">

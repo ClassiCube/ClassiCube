@@ -50,6 +50,7 @@
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Optimised.cs" />
+    <Compile Include="EntityManager.cs" />
     <Compile Include="Network\ClassicNetwork.Writing.cs" />
     <Compile Include="Network\ClassicNetwork.Reading.cs" />
     <Compile Include="Network\Enums.cs" />

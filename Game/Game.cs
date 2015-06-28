@@ -24,7 +24,6 @@ namespace ClassicalSharp {
 		public Inventory Inventory;
 		public List<Type> NetworkProcessorTypes = new List<Type>();
 		
-		public Player[] NetPlayers = new Player[256];
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
@@ -48,6 +47,8 @@ namespace ClassicalSharp {
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
+		public EntityManager Entities;
+		public List<Type> EntityManagerTypes = new List<Type>();
 		public PickingRenderer Picking;
 		public List<Type> PickingRendererTypes = new List<Type>();
 		public PickedPos SelectedPos = new PickedPos();
@@ -137,7 +138,8 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
-			LocalPlayer = new LocalPlayer( 255, this );
+			LocalPlayer = new LocalPlayer( this );
+			LocalPlayer.EntityId = 255;
 			SelectionManager = new SelectionManager( this );
 			SelectionManager.Init();
 			ParticleManager = new ParticleManager( this );
@@ -153,6 +155,8 @@ namespace ClassicalSharp {
 			MapRenderer.Init();
 			Picking = DefaultImpl<PickingRenderer>( PickingRendererTypes );
 			Picking.Init();
+			Entities = DefaultImpl<EntityManager>( EntityManagerTypes );
+			Entities.Init();
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
@@ -200,15 +204,10 @@ namespace ClassicalSharp {
 			
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
-				Network.Tick( ticksPeriod );
-				LocalPlayer.Tick( ticksPeriod );
-				Camera.Tick( ticksPeriod );
+				Network.Tick( ticksPeriod );		
 				ParticleManager.Tick( ticksPeriod );
-				for( int i = 0; i < NetPlayers.Length; i++ ) {
-					if( NetPlayers[i] != null ) {
-						NetPlayers[i].Tick( ticksPeriod );
-					}
-				}
+				Entities.Tick( ticksPeriod );
+				Camera.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
@@ -277,13 +276,7 @@ namespace ClassicalSharp {
 			EntityShader shader = ModelCache.Shader;
 			shader.Bind();
 			shader.UpdateFogAndMVPState( ref MVP );
-			
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Render( deltaTime, t );
-				}
-			}
-			LocalPlayer.Render( deltaTime, t );
+			Entities.Render( deltaTime, t );
 		}
 		
 		public override void Dispose() {
@@ -298,12 +291,7 @@ namespace ClassicalSharp {
 			ModelCache.Dispose();
 			Picking.Dispose();
 			ParticleManager.Dispose();
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Despawn();
-				}
-			}
-			LocalPlayer.Despawn();
+			Entities.Dispose();
 			Graphics.CheckResources();
 			AsyncDownloader.Dispose();
 			if( writer != null ) {

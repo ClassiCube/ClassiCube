@@ -111,6 +111,7 @@
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\EntityManager.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\Particle.cs" />

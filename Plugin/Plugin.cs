@@ -77,6 +77,10 @@ namespace ClassicalSharp.Plugins {
 				case PluginModuleType.PickingRenderer:
 					game.PickingRendererTypes.Add( module.Type );
 					break;
+					
+				case PluginModuleType.EntityManager:
+					game.EntityManagerTypes.Add( module.Type );
+					break;
 			}
 		}
 	}
@@ -92,6 +96,7 @@ namespace ClassicalSharp.Plugins {
 		NetworkProcessor,
 		BlockInfo,
 		PickingRenderer,
+		EntityManager,
 	}
 	
 	public class PluginModule {

@@ -151,11 +151,9 @@ namespace DefaultPlugin.Network {
 				case PacketId.RemoveEntity:
 					{
 						byte entityId = reader.ReadUInt8();
-						Player player = Window.NetPlayers[entityId];
+						Entity player = Window.Entities[entityId];
 						if( player != null ) {
-							Window.RaiseEntityRemoved( entityId );
-							player.Despawn();
-							Window.NetPlayers[entityId] = null;
+							Window.Entities.RemoveEntity( entityId );
 						}
 					} break;
 					
@@ -353,9 +351,9 @@ namespace DefaultPlugin.Network {
 					{
 						byte playerId = reader.ReadUInt8();
 						string modelName = reader.ReadString().ToLowerInvariant();
-						Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+						Entity player = Window.Entities[playerId];
 						if( player != null ) {
-							player.SetModel( modelName );
+							((Player)player).SetModel( modelName );
 						}
 					} break;
 					
@@ -412,13 +410,8 @@ namespace DefaultPlugin.Network {
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
-				Player oldPlayer = Window.NetPlayers[entityId];
-				if( oldPlayer != null ) {
-					Window.RaiseEntityRemoved( entityId );
-					oldPlayer.Despawn();
-				}
-				Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
-				Window.RaiseEntityAdded( entityId );
+				Window.Entities.RemoveEntity( entityId );
+				Window.Entities.AddEntity( entityId, new NetPlayer( displayName, skinName, Window ) );
 				Window.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {

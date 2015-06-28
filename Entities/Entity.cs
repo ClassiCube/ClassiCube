@@ -8,6 +8,7 @@ namespace ClassicalSharp {
 		public Vector3 Position;
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
+		public int EntityId;
 		
 		public float YawRadians {
 			get { return (float)Utils.DegreesToRadians( YawDegrees ); }
@@ -78,6 +79,11 @@ namespace ClassicalSharp {
 			}
 			return false;
 		}
+		
+				
+		public abstract void Tick( double delta );
+		
+		public abstract void SetLocation( LocationUpdate update, bool interpolate );
 	}
 
 	public struct LocationUpdate {

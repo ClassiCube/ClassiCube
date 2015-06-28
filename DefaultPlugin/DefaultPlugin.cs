@@ -52,6 +52,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.NetworkProcessor, typeof( ClassicNetworkProcessor ) ),
 					new PluginModule( PluginModuleType.BlockInfo, typeof( ClassicBlockInfo ) ),
 					new PluginModule( PluginModuleType.PickingRenderer, typeof( StandardPickingRenderer ) ),
+					new PluginModule( PluginModuleType.EntityManager, typeof( StandardEntityManager ) ),
 				};
 			}
 		}

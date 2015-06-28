@@ -29,15 +29,13 @@ namespace ClassicalSharp {
 		}
 		
 		public Game Window;
-		public byte ID;
 		public string DisplayName, SkinName;
 		public string ModelName;
 		public IModel Model;
 		protected PlayerRenderer renderer;
 		public SkinType SkinType;
 		
-		public Player( byte id, Game window ) : base( window ) {
-			ID = id;
+		public Player( Game window ) : base( window ) {
 			Window = window;
 			SkinType = Window.DefaultPlayerSkinType;
 			SetModel( "humanoid" );
@@ -59,10 +57,6 @@ namespace ClassicalSharp {
 			return map.IsValidPos( blockCoords ) ?
 				(Block)map.GetBlock( blockCoords ) : Block.Air;
 		}
-		
-		public abstract void Tick( double delta );
-		
-		public abstract void SetLocation( LocationUpdate update, bool interpolate );
 		
 		public float leftLegXRot, leftArmXRot, leftArmZRot;
 		public float rightLegXRot, rightArmXRot, rightArmZRot;

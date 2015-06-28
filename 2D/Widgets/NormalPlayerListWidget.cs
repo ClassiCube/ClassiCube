@@ -13,11 +13,11 @@ namespace ClassicalSharp {
 		class PlayerInfo {
 			
 			public string Name;
-			public byte PlayerId;
+			public int PlayerId;
 			
 			public PlayerInfo( Player p ) {
 				Name = p.DisplayName;
-				PlayerId = p.ID;
+				PlayerId = p.EntityId;
 			}
 		}
 		
@@ -34,20 +34,16 @@ namespace ClassicalSharp {
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
-			Player player = Window.NetPlayers[e.Id];
+			Player player = (Player)Window.Entities[e.Id];
 			AddPlayerInfo( player );
 			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < Window.NetPlayers.Length; i++ ) {
-				Player player = Window.NetPlayers[i];
-				if( player != null ) {
-					AddPlayerInfo( player );
-				}
+			foreach( Entity entity in Window.Entities.Entities ) {
+				AddPlayerInfo( (Player)entity );
 			}
-			AddPlayerInfo( Window.LocalPlayer );
 		}
 		
 		void AddPlayerInfo( Player player ) {

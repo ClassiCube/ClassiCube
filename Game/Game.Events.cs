@@ -46,27 +46,27 @@ namespace ClassicalSharp {
 			RaiseEvent( HeldBlockChanged );
 		}
 		
-		public void RaiseEntityAdded( byte id ) {
+		public void RaiseEntityAdded( int id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( EntityAdded, e );
 		}
 		
-		public void RaiseEntityRemoved( byte id ) {
+		public void RaiseEntityRemoved( int id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( EntityRemoved, e );
 		}
 		
-		public void RaiseCpeListInfoAdded( byte id ) {
+		public void RaiseCpeListInfoAdded( int id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoAdded, e );
 		}
 		
-		public void RaiseCpeListInfoChanged( byte id ) {
+		public void RaiseCpeListInfoChanged( int id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoChanged, e );
 		}
 		
-		public void RaiseCpeListInfoRemoved( byte id ) {
+		public void RaiseCpeListInfoRemoved( int id ) {
 			IdEventArgs e = new IdEventArgs( id );
 			RaiseEvent( CpeListInfoRemoved, e );
 		}
@@ -104,9 +104,9 @@ namespace ClassicalSharp {
 	
 	public sealed class IdEventArgs : EventArgs {
 		
-		public readonly byte Id;
+		public readonly int Id;
 		
-		public IdEventArgs( byte id ) {
+		public IdEventArgs( int id ) {
 			Id = id;
 		}
 	}

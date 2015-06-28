@@ -78,7 +78,7 @@ namespace DefaultPlugin.Network {
 		}
 				
 		void UpdateLocation( byte playerId, LocationUpdate update, bool interpolate ) {
-			Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+			Entity player = Window.Entities[playerId];
 			if( player != null ) {
 				player.SetLocation( update, interpolate );
 			}
