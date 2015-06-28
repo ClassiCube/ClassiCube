@@ -153,7 +153,7 @@ namespace ClassicalSharp {
 
 		static List<DrawTextArgs> parts = new List<DrawTextArgs>( 64 );
 		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
-			int code = 15;
+			int code = 0xF;
 			parts.Clear();
 			for( int i = 0; i < value.Length; i++ ) {
 				int nextAnd = value.IndexOf( '&', i );
@@ -164,7 +164,15 @@ namespace ClassicalSharp {
 					parts.Add( new DrawTextArgs( graphics, part, colours[code], shadow ) );
 				}
 				i += partLength + 1;
-				code = nextAnd == -1 ? 0 : Utils.ParseHex( value[nextAnd + 1] );
+				
+				if( nextAnd >= 0 && nextAnd + 1 < value.Length ) {
+					try {
+						code = Utils.ParseHex( value[nextAnd + 1] );
+					} catch( FormatException ) {
+						code = 0xF;
+						i--; // include the character that isn't a colour code.
+					}
+				}
 			}
 			return parts;
 		}
