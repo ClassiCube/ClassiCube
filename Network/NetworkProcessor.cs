@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Network;
 using OpenTK;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 
@@ -65,6 +66,18 @@ namespace ClassicalSharp {
 		public void SendSetBlock( int x, int y, int z, bool place, byte block ) {
 			MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block );
 			SendPacket();
+		}
+		
+		public void SendPlayerClick( MouseButton button, bool buttonDown, PickedPos pos ) {
+			Player p = Window.LocalPlayer;
+			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, 255,
+			                pos.BlockPos, pos.BlockFace );
+		}
+		
+		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId ) {
+			Player p = Window.LocalPlayer;
+			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
+			                new Vector3I( -100, -100, -100 ), 0 );
 		}
 		
 		public void Dispose() {
@@ -251,8 +264,8 @@ namespace ClassicalSharp {
 				case PacketId.Handshake:
 					{
 						byte protocolVer = reader.ReadUInt8();
-						ServerName = reader.ReadString();
-						ServerMotd = reader.ReadString();
+						ServerName = reader.ReadAsciiString();
+						ServerMotd = reader.ReadAsciiString();
 						byte userType = reader.ReadUInt8();
 						if( !useBlockPermissions ) {
 							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
@@ -351,7 +364,7 @@ namespace ClassicalSharp {
 				case PacketId.AddEntity:
 					{
 						byte entityId = reader.ReadUInt8();
-						string name = reader.ReadString();
+						string name = reader.ReadAsciiString();
 						AddEntity( entityId, name, name, true );
 					}  break;
 					
@@ -387,13 +400,13 @@ namespace ClassicalSharp {
 				case PacketId.Message:
 					{
 						byte messageType = reader.ReadUInt8();
-						string text = reader.ReadWoMTextString( ref messageType, useMessageTypes );
+						string text = reader.ReadChatString( ref messageType, useMessageTypes );
 						Window.AddChat( text, messageType );
 					} break;
 					
 				case PacketId.Kick:
 					{
-						string reason = reader.ReadString();
+						string reason = reader.ReadAsciiString();
 						Window.Disconnect( "&eLost connection to the server", reason );
 						Dispose();
 					} break;
@@ -409,14 +422,14 @@ namespace ClassicalSharp {
 					
 				case PacketId.CpeExtInfo:
 					{
-						string appName = reader.ReadString();
+						string appName = reader.ReadAsciiString();
 						Utils.LogDebug( "Server identified itself as: " + appName );
 						cpeServerExtensionsCount = reader.ReadInt16();
 					} break;
 					
 				case PacketId.CpeExtEntry:
 					{
-						string extensionName = reader.ReadString();
+						string extensionName = reader.ReadAsciiString();
 						int extensionVersion = reader.ReadInt32();
 						Utils.LogDebug( "cpe ext: " + extensionName + "," + extensionVersion );
 						if( extensionName == "HeldBlock" ) {
@@ -475,9 +488,9 @@ namespace ClassicalSharp {
 				case PacketId.CpeExtAddPlayerName:
 					{
 						short nameId = reader.ReadInt16();
-						string playerName = Utils.StripColours( reader.ReadString() );
-						string listName = reader.ReadString();
-						string groupName = reader.ReadString();
+						string playerName = Utils.StripColours( reader.ReadAsciiString() );
+						string listName = reader.ReadAsciiString();
+						string groupName = reader.ReadAsciiString();
 						byte groupRank = reader.ReadUInt8();
 						if( nameId >= 0 && nameId <= 255 ) {
 							CpeListInfo oldInfo = Window.CpePlayersList[nameId];
@@ -495,8 +508,8 @@ namespace ClassicalSharp {
 				case PacketId.CpeExtAddEntity:
 					{
 						byte entityId = reader.ReadUInt8();
-						string displayName = reader.ReadString();
-						string skinName = reader.ReadString();
+						string displayName = reader.ReadAsciiString();
+						string skinName = reader.ReadAsciiString();
 						AddEntity( entityId, displayName, skinName, false );
 					} break;
 					
@@ -511,7 +524,7 @@ namespace ClassicalSharp {
 				case PacketId.CpeMakeSelection:
 					{
 						byte selectionId = reader.ReadUInt8();
-						string label = reader.ReadString();
+						string label = reader.ReadAsciiString();
 						short startX = reader.ReadInt16();
 						short startY = reader.ReadInt16();
 						short startZ = reader.ReadInt16();
@@ -578,7 +591,7 @@ namespace ClassicalSharp {
 				case PacketId.CpeChangeModel:
 					{
 						byte playerId = reader.ReadUInt8();
-						string modelName = reader.ReadString().ToLowerInvariant();
+						string modelName = reader.ReadAsciiString().ToLowerInvariant();
 						Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
 						if( player != null ) {
 							player.SetModel( modelName );
@@ -587,7 +600,7 @@ namespace ClassicalSharp {
 					
 				case PacketId.CpeEnvSetMapApperance:
 					{
-						string url = reader.ReadString();
+						string url = reader.ReadAsciiString();
 						byte sideBlock = reader.ReadUInt8();
 						byte edgeBlock = reader.ReadUInt8();
 						short waterLevel = reader.ReadInt16();
@@ -626,8 +639,8 @@ namespace ClassicalSharp {
 				case PacketId.CpeExtAddEntity2:
 					{
 						byte entityId = reader.ReadUInt8();
-						string displayName = reader.ReadString();
-						string skinName = reader.ReadString();
+						string displayName = reader.ReadAsciiString();
+						string skinName = reader.ReadAsciiString();
 						AddEntity( entityId, displayName, skinName, true );
 					} break;
 					

@@ -6,7 +6,7 @@ using System.Windows.Forms;
 namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
-				
+		
 		public TextInputWidget( Game window, Font font, Font boldFont ) : base( window ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
@@ -166,17 +166,15 @@ namespace ClassicalSharp {
 		}
 		
 		void BackspaceKey() {
-			if( !chatInputText.Empty ) {
+			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {
-					chatInputText.DeleteAt( chatInputText.Length - 1 );
-					Dispose();
-					Init();
-				} else if( caretPos > 0 ) {
+					chatInputText.DeleteAt( chatInputText.Length - 1 );				
+				} else {
 					caretPos--;
 					chatInputText.DeleteAt( caretPos );
-					Dispose();
-					Init();
 				}
+				Dispose();
+				Init();
 			}
 		}
 		
