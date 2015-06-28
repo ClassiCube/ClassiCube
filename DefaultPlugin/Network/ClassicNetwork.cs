@@ -16,7 +16,6 @@ namespace DefaultPlugin.Network {
 		bool sendHeldBlock = false;
 		bool useMessageTypes = false;
 		bool useBlockPermissions = false;
-		bool receivedFirstPosition = false;
 		
 		public override void Connect( IPAddress address, int port ) {
 			base.Connect( address, port );
@@ -31,9 +30,11 @@ namespace DefaultPlugin.Network {
 			}
 		}
 		
-		public override void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
+		public override void SendPosition( Vector3 pos, float yawDegrees, float pitchDegrees ) {
 			byte payload = sendHeldBlock ? (byte)Window.Inventory.HeldBlock : (byte)0xFF;
-			WritePacket( MakePositionPacket( pos, yaw, pitch, payload ) );
+			byte yawPacked = Utils.DegreesToPacked( yawDegrees );
+			byte pitchPacked = Utils.DegreesToPacked( pitchDegrees );
+			WritePacket( MakePositionPacket( pos, yawPacked, pitchPacked, payload ) );
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, byte block ) {
@@ -69,10 +70,8 @@ namespace DefaultPlugin.Network {
 			}
 			
 			Player player = Window.LocalPlayer;
-			if( receivedFirstPosition ) {
-				byte yawPacked = Utils.DegreesToPacked( player.YawDegrees );
-				byte pitchPacked = Utils.DegreesToPacked( player.PitchDegrees );
-				SendPosition( player.Position, yawPacked, pitchPacked );
+			if( receivedFirstPosition ) {				
+				SendPosition( player.Position, player.YawDegrees, player.PitchDegrees );
 			}
 			CheckForNewTerrainAtlas();
 			CheckForWomEnvironment();

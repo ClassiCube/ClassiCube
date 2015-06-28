@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 		public Game Window;
 		public bool Disconnected = false;
 		public bool UsingExtPlayerList; // TODO: remove this
+		public bool receivedFirstPosition = false;
 		
 		public virtual void Connect( IPAddress address, int port) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
@@ -42,7 +43,7 @@ namespace ClassicalSharp {
 		
 		public abstract void SendChat( string text );
 		
-		public abstract void SendPosition( Vector3 pos, byte yaw, byte pitch );
+		public abstract void SendPosition( Vector3 pos, float yawDegrees, float pitchDegrees );
 		
 		public abstract void SendSetBlock( int x, int y, int z, byte block );
 		

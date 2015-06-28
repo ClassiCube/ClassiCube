@@ -17,7 +17,6 @@ namespace PluginBeta173.Network {
 		NetReader reader;
 		NetWriter writer;
 		public string ServerName, ServerMotd;
-		public bool receivedFirstPosition = false;
 		
 		public void Connect() {
 			IPAddress address = Window.IPAddress;
@@ -42,7 +41,23 @@ namespace PluginBeta173.Network {
 			SendPacket( new ChatOutbound( text ) );
 		}
 		
-		public override void SendPosition( Vector3 pos, byte yaw, byte pitch ) {
+		public override void SendPosition( Vector3 position, float yawDegrees, float pitchDegrees ) {
+			float yaw = yawDegrees - 180f;
+			bool ori = lastYaw != yaw || lastPitch != pitchDegrees;
+			bool pos = lastPos != position;
+			lastPos = position;
+			lastYaw = yaw;
+			lastPitch = pitchDegrees;
+			
+			if( ori && pos ) {
+				SendPacket( new PlayerPosAndLookOutbound( true, lastPos, lastPos.Y + Player.EyeHeight, lastYaw, lastPitch ) );
+			} else if( pos ) {
+				SendPacket( new PlayerPosOutbound( true, lastPos, lastPos.Y + Player.EyeHeight ) );
+			} else if( ori ) {
+				SendPacket( new PlayerLookOutbound( true, lastYaw, lastPitch ) );
+			} else {
+				SendPacket( new PlayerOutbound( true ) );
+			}
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, byte block ) {
@@ -95,22 +110,7 @@ namespace PluginBeta173.Network {
 			
 			Player player = Window.LocalPlayer;
 			if( receivedFirstPosition ) {
-				// Figure out which is the most optimal packet to send.
-				float yaw = player.YawDegrees - 180f;
-				bool ori = lastYaw != yaw || lastPitch != player.PitchDegrees;
-				bool pos = lastPos != player.Position;
-				lastPos = player.Position;
-				lastYaw = yaw;
-				lastPitch = player.PitchDegrees;
-				if( ori && pos ) {
-					SendPacket( new PlayerPosAndLookOutbound( true, lastPos, lastPos.Y + Player.EyeHeight, lastYaw, lastPitch ) );
-				} else if( pos ) {
-					SendPacket( new PlayerPosOutbound( true, lastPos, lastPos.Y + Player.EyeHeight ) );
-				} else if( ori ) {
-					SendPacket( new PlayerLookOutbound( true, lastYaw, lastPitch ) );
-				} else {
-					SendPacket( new PlayerOutbound( true ) );
-				}
+				SendPosition( player.Position, player.YawDegrees, player.PitchDegrees );
 			}
 		}
 	}

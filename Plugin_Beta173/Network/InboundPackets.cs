@@ -150,12 +150,12 @@ namespace PluginBeta173.Network {
 		public override void ReadCallback( Game game ) {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
 			//game.Map.IsNotLoaded = false;
-			//if( !game.Network.receivedFirstPosition ) {
-			//	game.RaiseOnNewMapLoaded();
-			//}
-			//game.Network.receivedFirstPosition = true;
-			//game.SetNewScreen( new NormalScreen( game ) );		
-			//game.LocalPlayer.SetLocation( update, false );
+			if( !game.Network.receivedFirstPosition ) {
+				game.RaiseOnNewMapLoaded();
+			}
+			game.Network.receivedFirstPosition = true;
+			game.SetNewScreen( new NormalScreen( game ) );		
+			game.LocalPlayer.SetLocation( update, false );
 		}
 	}
 	
