@@ -49,6 +49,7 @@ namespace ClassicalSharp {
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
+		public List<Type> PickingRendererTypes = new List<Type>();
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
 		public string skinServer, chatInInputBuffer;
@@ -140,23 +141,28 @@ namespace ClassicalSharp {
 			SelectionManager = new SelectionManager( this );
 			SelectionManager.Init();
 			ParticleManager = new ParticleManager( this );
-			ParticleManager.Init();
-			Picking = new PickingRenderer( this );
+			ParticleManager.Init();		
 			
-			MapBordersRenderer = Utils.New<MapBordersRenderer>( MapBordersRendererTypes[0], this );
+			MapBordersRenderer = DefaultImpl<MapBordersRenderer>( MapBordersRendererTypes );
 			MapBordersRenderer.Init();
-			EnvRenderer = Utils.New<EnvRenderer>( EnvRendererTypes[0], this );
+			EnvRenderer = DefaultImpl<EnvRenderer>( EnvRendererTypes );
 			EnvRenderer.Init();
-			WeatherRenderer = Utils.New<WeatherRenderer>( WeatherRendererTypes[0], this );
+			WeatherRenderer = DefaultImpl<WeatherRenderer>( WeatherRendererTypes );
 			WeatherRenderer.Init();
-			MapRenderer = Utils.New<MapRenderer>( MapRendererTypes[0], this );
-			MapRenderer.Init();			
+			MapRenderer = DefaultImpl<MapRenderer>( MapRendererTypes );
+			MapRenderer.Init();
+			Picking = DefaultImpl<PickingRenderer>( PickingRendererTypes );
+			Picking.Init();
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			
-			Network = Utils.New<NetworkProcessor>( NetworkProcessorTypes[0], this );
+			Network = DefaultImpl<NetworkProcessor>( NetworkProcessorTypes );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		T DefaultImpl<T>( List<Type> candidates ) {
+			return Utils.New<T>( candidates[0], this );
 		}
 		
 		public void SetViewDistance( int distance ) {
@@ -224,7 +230,9 @@ namespace ClassicalSharp {
 				RenderPlayers( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				Picking.Render( e.Time );
+				if( SelectedPos.Valid ) {
+					Picking.Render( e.Time, SelectedPos );
+				}
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
 				WeatherRenderer.Render( e.Time );

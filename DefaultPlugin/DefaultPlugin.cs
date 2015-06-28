@@ -22,7 +22,7 @@ namespace DefaultPlugin {
 		
 		public override IEnumerable<PluginModule> Modules {
 			get {
-				return new List<PluginModule>() {
+				return new [] {
 					new PluginModule( PluginModuleType.Command, typeof( CommandsCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( HelpCommand ) ),
 					new PluginModule( PluginModuleType.Command, typeof( EnvCommand ) ),
@@ -51,6 +51,7 @@ namespace DefaultPlugin {
 					
 					new PluginModule( PluginModuleType.NetworkProcessor, typeof( ClassicNetworkProcessor ) ),
 					new PluginModule( PluginModuleType.BlockInfo, typeof( ClassicBlockInfo ) ),
+					new PluginModule( PluginModuleType.PickingRenderer, typeof( StandardPickingRenderer ) ),
 				};
 			}
 		}

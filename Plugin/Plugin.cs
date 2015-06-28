@@ -73,6 +73,10 @@ namespace ClassicalSharp.Plugins {
 				case PluginModuleType.BlockInfo:
 					game.BlockInfoTypes.Add( module.Type );
 					break;
+					
+				case PluginModuleType.PickingRenderer:
+					game.PickingRendererTypes.Add( module.Type );
+					break;
 			}
 		}
 	}
@@ -87,6 +91,7 @@ namespace ClassicalSharp.Plugins {
 		PostProcessingShader,
 		NetworkProcessor,
 		BlockInfo,
+		PickingRenderer,
 	}
 	
 	public class PluginModule {
