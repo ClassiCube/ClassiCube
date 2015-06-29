@@ -43,18 +43,18 @@ namespace ClassicalSharp.Renderers {
 			DrawName();
 		}
 		
-		const float nameScale = 50f;
+		const float nameScale = 1 / 50f;
 		private void DrawName() {
 			Graphics.PushMatrix();
-			Graphics.Translate( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z );
+			Matrix4 mat = Matrix4.Translate( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z );
 			// Do this to always have names facing the player
-			float yaw = Window.LocalPlayer.YawDegrees;
-			Graphics.RotateY( 0f - yaw );
+			float yaw = Window.LocalPlayer.YawRadians;
+			mat = Matrix4.RotateY( 0f - yaw ) * mat;
 			// NOTE: Do this instead with network player's yaw to have names rotate with them instead.
 			//Graphics.RotateY( 180f - yaw );
-			Graphics.Scale( 1 / nameScale, -1 / nameScale, 1 / nameScale ); // -y to flip text
-			Graphics.Translate( -nameWidth / 2f, -nameHeight, 0f );
-			
+			mat = Matrix4.Scale( nameScale, -nameScale, nameScale ) * mat; // -y to flip text
+			mat = Matrix4.Translate( -nameWidth / 2f, -nameHeight, 0f ) * mat;
+			Graphics.MultiplyMatrix( ref mat );
 			nameTexture.Render( Graphics );
 			
 			Graphics.PopMatrix();

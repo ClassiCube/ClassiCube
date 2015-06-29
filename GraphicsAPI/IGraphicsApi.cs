@@ -148,31 +148,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void MultiplyMatrix( ref Matrix4 matrix );
 		
-		public virtual void Translate( float x, float y, float z ) {
-			Matrix4 matrix = Matrix4.Translate( x, y, z );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void RotateX( float degrees ) {
-			Matrix4 matrix = Matrix4.RotateX( degrees * 0.01745329251f ); // PI / 180
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void RotateY( float degrees ) {
-			Matrix4 matrix = Matrix4.RotateY( degrees * 0.01745329251f );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void RotateZ( float degrees ) {
-			Matrix4 matrix = Matrix4.RotateZ( degrees * 0.01745329251f );
-			MultiplyMatrix( ref matrix );
-		}
-		
-		public virtual void Scale( float x, float y, float z ) {
-			Matrix4 matrix = Matrix4.Scale( x, y, z );
-			MultiplyMatrix( ref matrix );
-		}
-		
 		public abstract void PushMatrix();
 		
 		public abstract void PopMatrix();

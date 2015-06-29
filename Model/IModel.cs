@@ -25,19 +25,19 @@ namespace ClassicalSharp.Model {
 		protected float leftLegXRot, leftArmXRot, leftArmZRot;
 		public void RenderModel( Player player, PlayerRenderer renderer ) {
 			pos = player.Position;
-			yaw = player.YawDegrees;
-			pitch = player.PitchDegrees;
+			yaw = player.YawRadians;
+			pitch = player.PitchRadians;
 			
-			leftLegXRot = player.leftLegXRot * 180 / (float)Math.PI;
-			leftArmXRot = player.leftArmXRot * 180 / (float)Math.PI;
-			leftArmZRot = player.leftArmZRot * 180 / (float)Math.PI;
-			rightLegXRot = player.rightLegXRot * 180 / (float)Math.PI;
-			rightArmXRot = player.rightArmXRot * 180 / (float)Math.PI;
-			rightArmZRot = player.rightArmZRot * 180 / (float)Math.PI;
+			leftLegXRot = player.leftLegXRot;
+			leftArmXRot = player.leftArmXRot;
+			leftArmZRot = player.leftArmZRot;
+			rightLegXRot = player.rightLegXRot;
+			rightArmXRot = player.rightArmXRot;
+			rightArmZRot = player.rightArmZRot;
 			
 			graphics.PushMatrix();
-			graphics.Translate( pos.X, pos.Y, pos.Z );
-			graphics.RotateY( -yaw );
+			Matrix4 mat = Matrix4.RotateY( -yaw ) * Matrix4.Translate( pos );
+			graphics.MultiplyMatrix( ref mat );
 			DrawPlayerModel( player, renderer );
 			graphics.PopMatrix();
 		}
@@ -125,17 +125,18 @@ namespace ClassicalSharp.Model {
 		
 		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
 			graphics.PushMatrix();
-			graphics.Translate( x, y, z );
+			Matrix4 mat = Matrix4.Translate( x, y, z );
 			if( angleZ != 0 ) {
-				graphics.RotateZ( angleZ );
+				mat = Matrix4.RotateZ( angleZ ) * mat;
 			}
 			if( angleY != 0 ) {
-				graphics.RotateY( angleY );
+				mat = Matrix4.RotateY( angleY ) * mat;
 			}
 			if( angleX != 0 ) {
-				graphics.RotateX( angleX );
+				mat = Matrix4.RotateX( angleX ) * mat;
 			}
-			graphics.Translate( -x, -y, -z );
+			mat = Matrix4.Translate( -x, -y, -z ) * mat;
+			graphics.MultiplyMatrix( ref mat );
 			part.Render();
 			graphics.PopMatrix();
 		}
