@@ -75,7 +75,6 @@
     <Compile Include="Graphics\GraphicsModeException.cs" />
     <Compile Include="Graphics\IGraphicsContext.cs" />
     <Compile Include="Graphics\IGraphicsMode.cs" />
-    <Compile Include="Graphics\OpenGL\GL.cs" />
     <Compile Include="Graphics\OpenGL\GLCore.cs" />
     <Compile Include="Graphics\OpenGL\GLDelegates.cs" />
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />

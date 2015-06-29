@@ -98,8 +98,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
-		public abstract void SetFillType( FillType type );
-		
 		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
 		
 		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
@@ -151,22 +149,22 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void MultiplyMatrix( ref Matrix4 matrix );
 		
 		public virtual void Translate( float x, float y, float z ) {
-			Matrix4 matrix = Matrix4.CreateTranslation( x, y, z );
+			Matrix4 matrix = Matrix4.Translate( x, y, z );
 			MultiplyMatrix( ref matrix );
 		}
 		
 		public virtual void RotateX( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationX( degrees * 0.01745329251f ); // PI / 180
+			Matrix4 matrix = Matrix4.RotateX( degrees * 0.01745329251f ); // PI / 180
 			MultiplyMatrix( ref matrix );
 		}
 		
 		public virtual void RotateY( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationY( degrees * 0.01745329251f );
+			Matrix4 matrix = Matrix4.RotateY( degrees * 0.01745329251f );
 			MultiplyMatrix( ref matrix );
 		}
 		
 		public virtual void RotateZ( float degrees ) {
-			Matrix4 matrix = Matrix4.CreateRotationZ( degrees * 0.01745329251f );
+			Matrix4 matrix = Matrix4.RotateZ( degrees * 0.01745329251f );
 			MultiplyMatrix( ref matrix );
 		}
 		
@@ -300,12 +298,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		Linear = 0,
 		Exp = 1,
 		Exp2 = 2,
-	}
-	
-	public enum FillType {
-		Points = 0,
-		Wireframe = 1,
-		Solid = 2,
 	}
 	
 	public enum MatrixType {

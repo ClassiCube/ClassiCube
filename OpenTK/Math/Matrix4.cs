@@ -312,17 +312,11 @@ namespace OpenTK
         
         #endregion
 
-        #region CreateRotation[XYZ]
+        #region Rotate[XYZ]
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the x-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <param name="result">The resulting Matrix4 instance.</param>
-        public static void CreateRotationX(float angle, out Matrix4 result)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
+        public static void RotateX(float angle, out Matrix4 result) {
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
 
             result.Row0 = Vector4.UnitX;
             result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
@@ -330,27 +324,15 @@ namespace OpenTK
             result.Row3 = Vector4.UnitW;
         }
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the x-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <returns>The resulting Matrix4 instance.</returns>
-        public static Matrix4 CreateRotationX(float angle)
-        {
+        public static Matrix4 RotateX(float angle) {
             Matrix4 result;
-            CreateRotationX(angle, out result);
+            RotateX(angle, out result);
             return result;
         }
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the y-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <param name="result">The resulting Matrix4 instance.</param>
-        public static void CreateRotationY(float angle, out Matrix4 result)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
+        public static void RotateY(float angle, out Matrix4 result) {
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
 
             result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
             result.Row1 = Vector4.UnitY;
@@ -358,25 +340,13 @@ namespace OpenTK
             result.Row3 = Vector4.UnitW;
         }
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the y-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <returns>The resulting Matrix4 instance.</returns>
-        public static Matrix4 CreateRotationY(float angle)
-        {
+        public static Matrix4 RotateY(float angle) {
             Matrix4 result;
-            CreateRotationY(angle, out result);
+            RotateY(angle, out result);
             return result;
         }
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the z-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <param name="result">The resulting Matrix4 instance.</param>
-        public static void CreateRotationZ(float angle, out Matrix4 result)
-        {
+        public static void RotateZ(float angle, out Matrix4 result) {
             float cos = (float)System.Math.Cos(angle);
             float sin = (float)System.Math.Sin(angle);
 
@@ -386,69 +356,35 @@ namespace OpenTK
             result.Row3 = Vector4.UnitW;
         }
 
-        /// <summary>
-        /// Builds a rotation matrix for a rotation around the z-axis.
-        /// </summary>
-        /// <param name="angle">The counter-clockwise angle in radians.</param>
-        /// <returns>The resulting Matrix4 instance.</returns>
-        public static Matrix4 CreateRotationZ(float angle)
-        {
+        public static Matrix4 RotateZ(float angle) {
             Matrix4 result;
-            CreateRotationZ(angle, out result);
+            RotateZ(angle, out result);
             return result;
         }
 
         #endregion
 
-        #region CreateTranslation
+        #region Translate
 
-        /// <summary>
-        /// Creates a translation matrix.
-        /// </summary>
-        /// <param name="x">X translation.</param>
-        /// <param name="y">Y translation.</param>
-        /// <param name="z">Z translation.</param>
-        /// <param name="result">The resulting Matrix4 instance.</param>
-        public static void CreateTranslation(float x, float y, float z, out Matrix4 result)
-        {
+        public static void Translate(float x, float y, float z, out Matrix4 result) {
             result = Identity;
             result.Row3 = new Vector4(x, y, z, 1);
         }
 
-        /// <summary>
-        /// Creates a translation matrix.
-        /// </summary>
-        /// <param name="vector">The translation vector.</param>
-        /// <param name="result">The resulting Matrix4 instance.</param>
-        public static void CreateTranslation(ref Vector3 vector, out Matrix4 result)
-        {
+        public static void Translate(ref Vector3 vector, out Matrix4 result) {
             result = Identity;
             result.Row3 = new Vector4(vector.X, vector.Y, vector.Z, 1);
         }
 
-        /// <summary>
-        /// Creates a translation matrix.
-        /// </summary>
-        /// <param name="x">X translation.</param>
-        /// <param name="y">Y translation.</param>
-        /// <param name="z">Z translation.</param>
-        /// <returns>The resulting Matrix4 instance.</returns>
-        public static Matrix4 CreateTranslation(float x, float y, float z)
-        {
-            Matrix4 result;
-            CreateTranslation(x, y, z, out result);
+        public static Matrix4 Translate(float x, float y, float z) {
+            Matrix4 result = Identity;
+            result.Row3 = new Vector4(x, y, z, 1);
             return result;
         }
 
-        /// <summary>
-        /// Creates a translation matrix.
-        /// </summary>
-        /// <param name="vector">The translation vector.</param>
-        /// <returns>The resulting Matrix4 instance.</returns>
-        public static Matrix4 CreateTranslation(Vector3 vector)
-        {
-            Matrix4 result;
-            CreateTranslation(vector.X, vector.Y, vector.Z, out result);
+        public static Matrix4 Translate(Vector3 vector) {
+            Matrix4 result = Identity;
+            result.Row3 = new Vector4(vector.X, vector.Y, vector.Z, 1);
             return result;
         }
 
@@ -672,40 +608,6 @@ namespace OpenTK
         
         #endregion
 
-        #region Obsolete Functions
-
-        #region Translation Functions
-
-        /// <summary>
-        /// Builds a translation matrix.
-        /// </summary>
-        /// <param name="trans">The translation vector.</param>
-        /// <returns>A new Matrix4 instance.</returns>
-        [Obsolete("Use CreateTranslation instead.")]
-        public static Matrix4 Translation(Vector3 trans)
-        {
-            return Translation(trans.X, trans.Y, trans.Z);
-        }
-
-        /// <summary>
-        /// Build a translation matrix with the given translation
-        /// </summary>
-        /// <param name="x">X translation</param>
-        /// <param name="y">Y translation</param>
-        /// <param name="z">Z translation</param>
-        /// <returns>A Translation matrix</returns>
-        [Obsolete("Use CreateTranslation instead.")]
-        public static Matrix4 Translation(float x, float y, float z)
-        {
-            Matrix4 result = Identity;
-            result.Row3 = new Vector4(x, y, z, 1.0f);
-            return result;
-        }
-
-        #endregion
-
-        #endregion
-
         #region Scale Functions
 
         /// <summary>
@@ -748,63 +650,6 @@ namespace OpenTK
         #endregion
 
         #region Rotation Functions
-
-        /// <summary>
-        /// Build a rotation matrix that rotates about the x-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the x-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationX instead.")]
-        public static Matrix4 RotateX(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = Vector4.UnitX;
-            result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
-            result.Row2 = new Vector4(0.0f, -sin, cos, 0.0f);
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
-        /// Build a rotation matrix that rotates about the y-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the y-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationY instead.")]
-        public static Matrix4 RotateY(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
-            result.Row1 = Vector4.UnitY;
-            result.Row2 = new Vector4(sin, 0.0f, cos, 0.0f);
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
-
-        /// <summary>
-        /// Build a rotation matrix that rotates about the z-axis
-        /// </summary>
-        /// <param name="angle">angle in radians to rotate counter-clockwise around the z-axis</param>
-        /// <returns>A rotation matrix</returns>
-        [Obsolete("Use CreateRotationZ instead.")]
-        public static Matrix4 RotateZ(float angle)
-        {
-            float cos = (float)System.Math.Cos(angle);
-            float sin = (float)System.Math.Sin(angle);
-
-            Matrix4 result;
-            result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
-            result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);
-            result.Row2 = Vector4.UnitZ;
-            result.Row3 = Vector4.UnitW;
-            return result;
-        }
 
         /// <summary>
         /// Build a rotation matrix to rotate about the given axis
@@ -864,7 +709,7 @@ namespace OpenTK
                                         new Vector4(x.Z, y.Z, z.Z, 0.0f),
                                         Vector4.UnitW);
 
-            Matrix4 trans = Matrix4.CreateTranslation(-eye);
+            Matrix4 trans = Matrix4.Translate(-eye);
 
             return trans * rot;
         }

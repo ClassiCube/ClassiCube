@@ -55,7 +55,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			projStack = new MatrixStack( 4, device, TransformType.Projection );
 			texStack = new MatrixStack( 4, device, TransformType.Texture1 ); // TODO: Texture0?
 			
-			SetFillType( FillType.Solid );
+			device.SetRenderState( RenderStates.FillMode, (int)FillMode.Solid );
 			FaceCulling = false;
 			device.SetRenderState( RenderStates.ColorVertex, false );
 			device.SetRenderState( RenderStates.Lighting, false );
@@ -189,11 +189,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DeleteDynamicVb( int id ) {
-		}
-
-		FillMode[] fillModes = { FillMode.Point, FillMode.WireFrame, FillMode.Solid };
-		public override void SetFillType( FillType type ) {
-			device.SetRenderState( RenderStates.FillMode, (int)fillModes[(int)type] );
 		}
 
 		#region Vertex buffers
@@ -332,31 +327,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			Matrix4 transposed = matrix;
 			Matrix dxMatrix = *(Matrix*)&transposed;
 			curStack.MultiplyTop( ref dxMatrix );
-		}
-
-		public override void Translate( float x, float y, float z ) {
-			Matrix matrix = Matrix.Translation( x, y, z );
-			curStack.MultiplyTop( ref matrix );
-		}
-
-		public override void RotateX( float degrees ) {
-			Matrix matrix = Matrix.RotationX( degrees * 0.01745329251f ); // PI / 180
-			curStack.MultiplyTop( ref matrix );
-		}
-
-		public override void RotateY( float degrees ) {
-			Matrix matrix = Matrix.RotationY( degrees * 0.01745329251f );
-			curStack.MultiplyTop( ref matrix );
-		}
-
-		public override void RotateZ( float degrees ) {
-			Matrix matrix = Matrix.RotationZ( degrees * 0.01745329251f );
-			curStack.MultiplyTop( ref matrix );
-		}
-
-		public override void Scale( float x, float y, float z ) {
-			Matrix matrix = Matrix.Scaling( x, y, z );
-			curStack.MultiplyTop( ref matrix );
 		}
 
 		class MatrixStack

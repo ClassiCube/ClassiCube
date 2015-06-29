@@ -90,7 +90,7 @@ namespace ClassicalSharp.Renderers {
 			double time = Window.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
 			Graphics.SetMatrixMode( MatrixType.Texture );
-			Matrix4 matrix = Matrix4.CreateTranslation( offset, 0, 0 );
+			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
 			Graphics.LoadMatrix( ref matrix );
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 			
