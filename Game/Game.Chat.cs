@@ -65,16 +65,10 @@ namespace ClassicalSharp {
 			RaiseEvent( ChatReceived, chatArgs );
 		}
 		
-		const string fileNameFormat = "yyyy-MM-dd";
-		const string chatEntryFormat = "[yyyy-MM-dd HH:mm:ss]";
-		const string dateFormat = "dd-MM-yyyy-HH-mm-ss";
 		DateTime last = new DateTime( 1, 1, 1 );
 		StreamWriter writer = null;
 		void LogChatToFile( string text ) {
 			DateTime now = DateTime.Now;
-			if( !Directory.Exists( "logs" ) ) {
-				Directory.CreateDirectory( "logs" );
-			}
 			
 			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {
 				if( writer != null ) {
@@ -87,16 +81,20 @@ namespace ClassicalSharp {
 			
 			if( writer != null ) {
 				string data = Utils.StripColours( text );
-				string entry = now.ToString( chatEntryFormat ) + " " + data;
+				string entry = now.ToString( "[yyyy-MM-dd HH:mm:ss] " ) + data;
 				writer.WriteLine( entry );
 			}
 		}
 		
 		void OpenChatFile( DateTime now ) {
+			if( !Directory.Exists( "logs" ) ) {
+				Directory.CreateDirectory( "logs" );
+			}
+			string date = now.ToString( "yyyy-MM-dd" );
 			// Cheap way of ensuring multiple instances do not end up overwriting each other's log entries.
 			for( int i = 0; i < 20; i++ ) {
 				string id = i == 0 ? "" : "  _" + i;
-				string fileName = "chat-" + now.ToString( fileNameFormat ) + id + ".log";
+				string fileName = "chat-" + date + id + ".log";
 				string path = Path.Combine( "logs", fileName );
 				FileStream stream = null;
 				try {

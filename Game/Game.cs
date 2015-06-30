@@ -255,7 +255,8 @@ namespace ClassicalSharp {
 				if( !Directory.Exists( "screenshots" ) ) {
 					Directory.CreateDirectory( "screenshots" );
 				}
-				string path = Path.Combine( "screenshots", "screenshot_" + DateTime.Now.ToString( dateFormat ) + ".png" );
+				string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
+				string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
 				Graphics.TakeScreenshot( path, ClientSize );
 				screenshotRequested = false;
 			}
