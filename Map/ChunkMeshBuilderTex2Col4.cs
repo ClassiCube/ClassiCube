@@ -20,6 +20,10 @@ namespace ClassicalSharp {
 			arraysCount = newArraysCount;
 		}
 		
+		public void Dispose() {
+			Window.TerrainAtlasChanged -= TerrainAtlasChanged;
+		}
+		
 		class DrawInfo1D {
 			public DrawInfo1DPart Solid = new DrawInfo1DPart();
 			public DrawInfo1DPart Translucent = new DrawInfo1DPart();

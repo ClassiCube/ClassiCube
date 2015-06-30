@@ -52,9 +52,11 @@ namespace ClassicalSharp {
 			ClearChunkCache();
 			chunks = null;
 			unsortedChunks = null;
+			Window.TerrainAtlasChanged -= TerrainAtlasChanged;
 			Window.OnNewMap -= OnNewMap;
 			Window.OnNewMapLoaded -= OnNewMapLoaded;
 			Window.EnvVariableChanged -= EnvVariableChanged;
+			builder.Dispose();
 		}
 		
 		public void Refresh() {
