@@ -56,6 +56,7 @@ namespace DefaultPlugin {
 			chunks = null;
 			unsortedChunks = null;
 			Window.EnvVariableChanged -= EnvVariableChanged;
+			builder.Dispose();
 			base.Dispose();
 		}
 		

@@ -10,10 +10,6 @@ namespace DefaultPlugin {
 		public StandardChunkMeshBuilder( Game window ) : base( window ) {
 		}
 		
-		public override void Dispose() {
-			base.Dispose();
-		}
-		
 		DrawInfo1DPart Solid = new DrawInfo1DPart();
 		DrawInfo1DPart Translucent = new DrawInfo1DPart();
 		DrawInfo1DPart Sprite = new DrawInfo1DPart();
