@@ -62,6 +62,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture( TextureTarget.Texture2D, TextureId );
 		}
 		
+		public void Bind( int unit ) {
+			GL.ActiveTexture( (TextureUnit)( TextureUnit.Texture0 + unit ) );
+			GL.BindTexture( TextureTarget.Texture2D, TextureId );
+			GL.ActiveTexture( TextureUnit.Texture0 );
+		}
+		
 		public void UpdatePart( int x, int y, FastBitmap part ) {
 			GL.BindTexture( TextureTarget.Texture2D, TextureId );
 			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
