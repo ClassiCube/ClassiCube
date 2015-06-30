@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace Launcher {
@@ -19,15 +16,32 @@ namespace Launcher {
 			InitializeComponent();
 			AdjustTabs();
 			SetTooltips();
-			tblMCServers.HandleCreated += tblMCServersHandleCreated;
-			tblCCServers.HandleCreated += tblCCServersHandleCreated;
 			// hide tabs at start
 			tabMC.TabPages.Remove( tabMCServers );
-			tabMC.TabPages.Remove( tabMCServer );
 			tabCC.TabPages.Remove( tabCCServers );
-			tabCC.TabPages.Remove( tabCCServer );
 			Shown += DisplayResourcesDialog;
+			
+			mc = new GameState() { Progress = prgMCStatus, Status = lblMCStatus,
+				Username = txtMCUser, Password = txtMCPassword, HostServer = "minecraft.net",
+				Session = new MinecraftSession(), SignInButton = btnMCSignIn, Tab = tabMC,
+				ServersTab = tabMCServers, ServersTable = tblMCServers, Hash = txtMCHash,
+				form = this };
+			cc = new GameState() { Progress = prgCCStatus, Status = lblCCStatus,
+				Username = txtCCUser, Password = txtCCPassword, HostServer = "classicube.net",
+				Session = new ClassicubeSession(), SignInButton = btnCCSignIn, Tab = tabCC,
+				ServersTab = tabCCServers, ServersTable = tblCCServers, Hash = txtCCHash,
+				form = this };
+			
+			mc.Filter = e =>
+				// NOTE: using ToLower().Contains() allocates too many unecessary strings.
+				e.Name.IndexOf( txtMCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
+				&& ( cbMCHideEmpty.Checked ? e.Players[0] != '0' : true )
+				&& ( cbMCHideInvalid.Checked ? Int32.Parse( e.Players ) < 600 : true );
+			cc.Filter = e =>
+				e.Name.IndexOf( txtCCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
+				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
 		}
+		GameState mc, cc;
 		
 		void DisplayResourcesDialog( object sender, EventArgs e ) {
 			// TODO: async fetching
@@ -36,14 +50,12 @@ namespace Launcher {
 				DialogResult result = MessageBox.Show(
 					"Some required resources weren't found. Would you like to download them now?", "Missing resources",
 					MessageBoxButtons.OKCancel );
-				if( result == DialogResult.OK ) {				
+				if( result == DialogResult.OK ) {
 					fetcher.Run( this );
 					Text = AppName;
-				}			
+				}
 			}
 		}
-		
-		delegate void Action<T1, T2>( T1 arg1, T2 arg2 );
 
 		void SetTooltips() {
 			toolTip.SetToolTip( lblLanUser, "The username to use when connecting to the local server. " + Environment.NewLine +
@@ -64,82 +76,21 @@ namespace Launcher {
 		void AdjustTabs() {
 			tabs.Width = ClientSize.Width + 6;
 			tabs.Height = ClientSize.Height + 3;
-			tabMC.Width = tabCC.Width = tabs.SelectedTab.Size.Width + 10;
+			tabMC.Width = tabCC.Width = tabs.Width;
 			tabMC.Height = tabCC.Height = tabs.SelectedTab.Size.Height + 10;
 			
 			if( tblMCServers.IsHandleCreated ) {
-				AdjustTablePos( tblMCServers );
+				AdjustTablePos( tblMCServers, btnMCConnect );
 			}
 			if( tblCCServers.IsHandleCreated ) {
-				AdjustTablePos( tblCCServers );
+				AdjustTablePos( tblCCServers, btnCCConnect );
 			}
 		}
 		
-		void tblMCServersHandleCreated( object sender, EventArgs e ) {
-			AdjustTablePos( tblMCServers );
-		}
-		
-		void tblCCServersHandleCreated( object sender, EventArgs e ) {
-			AdjustTablePos( tblCCServers );
-		}
-		
-		void AdjustTablePos( Control control ) {
+		void AdjustTablePos( Control control, Control connectButton ) {
 			Point formLoc = PointToClient( control.Parent.PointToScreen( control.Location ) );
 			control.Width = ClientSize.Width - formLoc.X;
-			control.Height = ClientSize.Height - formLoc.Y;
-		}
-		
-		static string missingExeMessage = "Failed to start ClassicalSharp. (classicalsharp.exe was not found)"
-			+ Environment.NewLine + Environment.NewLine +
-			"This application is only the launcher, it is not the actual client. " +
-			"Please place the launcher in the same directory as the client (classicalsharp.exe).";
-		
-		static void StartClient( GameStartData data, bool classicubeSkins ) {
-			string skinServer = classicubeSkins ? "http://www.classicube.net/static/skins/" : "http://s3.amazonaws.com/MinecraftSkins/";
-			string args = data.Username + " " + data.Mppass + " " +
-				data.Ip + " " + data.Port + " " + skinServer;
-			Log( "starting..." + args );
-			Process process = null;
-			try {
-				process = Process.Start( "classicalsharp.exe", args );
-			} catch( Win32Exception ex ) {
-				if( ex.Message.Contains( "The system cannot find the file specified" ) ) {
-					MessageBox.Show( missingExeMessage );
-				} else {
-					throw;
-				}
-			} finally {
-				if( process != null )  {
-					process.Dispose();
-				}
-			}
-		}
-		
-		static void Log( string text ) {
-			System.Diagnostics.Debug.WriteLine( text );
-		}
-		
-		static void DisplayWebException( WebException ex, string action, string host, Action<int, string> target ) {
-			if( ex.Status == WebExceptionStatus.Timeout ) {
-				string text = "Failed to " + action + ":" +
-					Environment.NewLine + "Timed out while connecting to " + host + ", it may be down.";
-				target( 0, text );
-			} else if( ex.Status == WebExceptionStatus.ProtocolError ) {
-				HttpWebResponse response = (HttpWebResponse)ex.Response;
-				int errorCode = (int)response.StatusCode;
-				string description = response.StatusDescription;
-				string text = "Failed to " + action + ":" +
-					Environment.NewLine + host + " returned: (" + errorCode + ") " + description;
-				target( 0, text );
-			} else if( ex.Status == WebExceptionStatus.NameResolutionFailure ) {
-				string text = "Failed to " + action + ":" +
-					Environment.NewLine + "Unable to resolve " + host + ", you may not be connected to the internet.";
-				target( 0, text );
-			} else {
-				string text = "Failed to " + action + ":" +
-					Environment.NewLine + ex.Status;
-				target( 0, text );
-			}
+			control.Height = ClientSize.Height - formLoc.Y - connectButton.Height - 5;
 		}
 		
 		#region Local tab
@@ -186,12 +137,6 @@ namespace Launcher {
 		
 		#endregion
 		
-		
-		#region minecraft.net tab
-		
-		MinecraftSession mcSession = new MinecraftSession();
-		List<ServerListEntry> mcServers = new List<ServerListEntry>();
-		
 		NameComparer mcNameComparer = new NameComparer( 0 );
 		NumericalComparer mcPlayersComparer = new NumericalComparer( 1 );
 		NumericalComparer mcMaxPlayersComparer = new NumericalComparer( 2 );
@@ -213,165 +158,21 @@ namespace Launcher {
 			tblMCServers.Sort();
 		}
 		
-		void McFilterList() {
-			tblMCServers.Items.Clear();
-			if( mcServers.Count == 0 ) return;
-			IComparer sorter = tblMCServers.ListViewItemSorter;
-			tblMCServers.ListViewItemSorter = null;
-			
-			tblMCServers.BeginUpdate();
-			Predicate<ServerListEntry> filter = e =>
-				// NOTE: using ToLower().Contains() allocates too many unecessary strings.
-				e.Name.IndexOf( txtMCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
-				&& ( cbMCHideEmpty.Checked ? e.Players[0] != '0' : true )
-				&& ( cbMCHideInvalid.Checked ? Int32.Parse( e.Players ) < 600 : true );
-			
-			for( int i = 0; i < mcServers.Count; i++ ) {
-				ServerListEntry entry = mcServers[i];
-				if( filter( entry ) ) {
-					string[] row = { entry.Name, entry.Players, entry.MaximumPlayers, entry.Uptime, entry.Hash };
-					tblMCServers.Items.Add( new ListViewItem( row ) );
-				}
-			}
-			if( sorter != null ) {
-				tblMCServers.ListViewItemSorter = sorter;
-				tblMCServers.Sort();
-			}
-			tblMCServers.EndUpdate();
-		}
+		void txtMCSearchTextChanged( object sender, EventArgs e ) { mc.FilterList(); }
 		
-		void txtMCSearchTextChanged( object sender, EventArgs e ) {
-			McFilterList();
-		}
+		void cbMCHideEmptyCheckedChanged( object sender, EventArgs e ) { mc.FilterList(); }
 		
-		void cbMCHideEmptyCheckedChanged( object sender, EventArgs e ) {
-			McFilterList();
-		}
+		void cbMCHideInvalidCheckedChanged(object sender, EventArgs e ) { mc.FilterList(); }
 		
-		void cbMCHideInvalidCheckedChanged(object sender, EventArgs e ) {
-			McFilterList();
-		}
+		void tblMCServersClick( object sender, EventArgs e ) { mc.ServerTableClick(); }
 		
-		void tblMCServersDoubleClick( object sender, EventArgs e ) {
-			Point mousePos = tblMCServers.PointToClient( MousePosition );
-			ListViewHitTestInfo hitTest = tblMCServers.HitTest( mousePos );
-			if( hitTest != null && hitTest.Item != null ) {
-				txtMCHash.Text = hitTest.Item.SubItems[4].Text;
-				tabMC.SelectedIndex = 2;
-			}
-		}
+		void txtMCHashTextChanged( object sender, EventArgs e ) { mc.HashChanged(); }
 		
-		void txtMCHashTextChanged( object sender, EventArgs e ) {
-			string hash = txtMCHash.Text;
-			lblMCPublicName.Text = "No public name";
-			for( int i = 0; i < mcServers.Count; i++ ) {
-				ServerListEntry entry = mcServers[i];
-				if( hash == entry.Hash ) {
-					lblMCPublicName.Text = entry.Name;
-					break;
-				}
-			}
-		}
+		void btnMCConnectClick( object sender, EventArgs e ) { mc.ConnectToServer(); }
 		
-		void btnMCConnectClick( object sender, EventArgs e ) {
-			GameStartData data = null;
-			try {
-				data = mcSession.GetConnectInfo( txtMCHash.Text );
-			} catch( WebException ex ) {
-				DisplayWebException( ex, "retrieve server info", "minecraft.net",
-					(p, text) => MessageBox.Show( text ) );
-				return;
-			}
-			StartClient( data, false );
-		}
+		void btnMCSignInClick( object sender, EventArgs e ) { mc.DoSignIn(); }
 		
-		void btnMCSignInClick( object sender, EventArgs e ) {
-			if( String.IsNullOrEmpty( txtMCUser.Text ) ) {
-				MessageBox.Show( "Please enter a username." );
-				return;
-			}
-			if( String.IsNullOrEmpty( txtMCPassword.Text ) ) {
-				MessageBox.Show( "Please enter a password." );
-				return;
-			}
-			
-			if( mcSession.Username != null ) {
-				mcSession.ResetSession();
-				tblMCServers.Items.Clear();
-				mcServers.Clear();
-			}
-			btnMCSignIn.Enabled = false;
-			tabMC.TabPages.Remove( tabMCServers );
-			tabMC.TabPages.Remove( tabMCServer );
-			mcLoginThread = new Thread( McLoginAsync );
-			mcLoginThread.Name = "Launcher.McLoginAsync";
-			mcLoginThread.IsBackground = true;
-			mcLoginThread.Start();
-		}
-		
-		Thread mcLoginThread;
-		void McLoginAsync() {
-			SetMcStatus( 0, "Signing in.." );
-			try {
-				mcSession.Login( txtMCUser.Text, txtMCPassword.Text );
-			} catch( WebException ex ) {
-				mcSession.Username = null;
-				McLoginEnd( false );
-				DisplayWebException( ex, "sign in", "minecraft.net", SetMcStatus );
-				return;
-			} catch( InvalidOperationException ex ) {
-				SetMcStatus( 0, "Failed to sign in" );
-				mcSession.Username = null;
-				McLoginEnd( false );
-				string text = "Failed to sign in: " + Environment.NewLine + ex.Message;
-				SetMcStatus( 0, text );
-				return;
-			}
-			
-			SetMcStatus( 50, "Retrieving public servers list.." );
-			try {
-				mcServers = mcSession.GetPublicServers();
-			} catch( WebException ex ) {
-				mcServers = new List<ServerListEntry>();
-				McLoginEnd( false );
-				DisplayWebException( ex, "retrieve servers list", "minecraft.net", SetMcStatus );
-				return;
-			}
-			SetMcStatus( 100, "Done" );
-			McLoginEnd( true );
-		}
-		
-		void McLoginEnd( bool success ) {
-			if( InvokeRequired ) {
-				Invoke( (Action<bool>)McLoginEnd, success );
-			} else {
-				GC.Collect();
-				if( success ) {
-					tabMC.TabPages.Add( tabMCServers );
-					tabMC.TabPages.Add( tabMCServer );
-					McFilterList();
-				}
-				btnMCSignIn.Enabled = true;
-			}
-		}
 
-		void SetMcStatus( int percentage, string text ) {
-			if( InvokeRequired ) {
-				Invoke( (Action<int, string>)SetMcStatus, percentage, text );
-			} else {
-				prgMCStatus.Value = percentage;
-				lblMCStatus.Text = text;
-			}
-		}
-
-		#endregion
-		
-		
-		#region classicube.net tab
-		
-		ClassicubeSession ccSession = new ClassicubeSession();
-		List<ServerListEntry> ccServers = new List<ServerListEntry>();
-		
 		NameComparer ccNameComparer = new NameComparer( 0 );
 		NumericalComparer ccPlayersComparer = new NumericalComparer( 1 );
 		NumericalComparer ccMaxPlayersComparer = new NumericalComparer( 2 );
@@ -391,151 +192,40 @@ namespace Launcher {
 			tblCCServers.Sort();
 		}
 		
-		void CcFilterList() {
-			tblCCServers.Items.Clear();
-			if( ccServers.Count == 0 ) return;
-			IComparer sorter = tblCCServers.ListViewItemSorter;
-			tblCCServers.ListViewItemSorter = null;
+		void txtCCSearchTextChanged( object sender, EventArgs e ) { cc.FilterList(); }
+		
+		void cbCCHideEmptyCheckedChanged( object sender, EventArgs e ) { cc.FilterList(); }
+		
+		void tblCCServersClick( object sender, EventArgs e ) { cc.ServerTableClick(); }
+		
+		void txtCCHashTextChanged( object sender, EventArgs e ) { cc.HashChanged(); }
+		
+		void btnCCConnectClick( object sender, EventArgs e ) { cc.ConnectToServer(); }
+		
+		void btnCCSignInClick( object sender, EventArgs e ) { cc.DoSignIn(); }
+		
+		
+		static string missingExeMessage = "Failed to start ClassicalSharp. (classicalsharp.exe was not found)"
+			+ Environment.NewLine + Environment.NewLine +
+			"This application is only the launcher, it is not the actual client. " +
+			"Please place the launcher in the same directory as the client (classicalsharp.exe).";
+		
+		internal static void StartClient( GameStartData data, bool classicubeSkins ) {
+			string skinServer = classicubeSkins ? "http://www.classicube.net/static/skins/" : "http://s3.amazonaws.com/MinecraftSkins/";
+			string args = data.Username + " " + data.Mppass + " " +
+				data.Ip + " " + data.Port + " " + skinServer;
+			System.Diagnostics.Debug.WriteLine( "starting..." + args );
+			Process process = null;
 			
-			tblCCServers.BeginUpdate();
-			Predicate<ServerListEntry> filter = e =>
-				e.Name.IndexOf( txtCCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
-				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
-			
-			for( int i = 0; i < ccServers.Count; i++ ) {
-				ServerListEntry entry = ccServers[i];
-				if( filter( entry ) ) {
-					string[] row = { entry.Name, entry.Players, entry.MaximumPlayers, entry.Uptime, entry.Hash };
-					tblCCServers.Items.Add( new ListViewItem( row ) );
-				}
-			}
-			if( sorter != null ) {
-				tblCCServers.ListViewItemSorter = sorter;
-				tblCCServers.Sort();
-			}
-			tblCCServers.EndUpdate();
-		}
-		
-		void txtCCSearchTextChanged( object sender, EventArgs e ) {
-			CcFilterList();
-		}
-		
-		void cbCCHideEmptyCheckedChanged( object sender, EventArgs e ) {
-			CcFilterList();
-		}
-		
-		void tblCCServersDoubleClick( object sender, EventArgs e ) {
-			Point mousePos = tblCCServers.PointToClient( MousePosition );
-			ListViewHitTestInfo hitTest = tblCCServers.HitTest( mousePos );
-			if( hitTest != null && hitTest.Item != null ) {
-				txtCCHash.Text = hitTest.Item.SubItems[4].Text;
-				tabCC.SelectedIndex = 2;
-			}
-		}
-		
-		void txtCCHashTextChanged( object sender, EventArgs e ) {
-			string hash = txtCCHash.Text;
-			lblCCPublicName.Text = "No public name";
-			for( int i = 0; i < ccServers.Count; i++ ) {
-				ServerListEntry entry = ccServers[i];
-				if( hash == entry.Hash ) {
-					lblCCPublicName.Text = entry.Name;
-					break;
+			try {
+				process = Process.Start( "classicalsharp.exe", args );
+			} catch( Win32Exception ex ) {
+				if( ex.Message.Contains( "The system cannot find the file specified" ) ) {
+					MessageBox.Show( missingExeMessage );
+				} else {
+					throw;
 				}
 			}
 		}
-		
-		void btnCCConnectClick( object sender, EventArgs e ) {
-			GameStartData data = null;
-			try {
-				data = ccSession.GetConnectInfo( txtCCHash.Text );
-			} catch( WebException ex ) {
-				DisplayWebException( ex, "retrieve server info", "classicube.net",
-					(p, text) => MessageBox.Show( text ) );
-				return;
-			}
-			StartClient( data, true );
-		}
-		
-		void btnCCSignInClick( object sender, EventArgs e ) {
-			if( String.IsNullOrEmpty( txtCCUser.Text ) ) {
-				MessageBox.Show( "Please enter a username." );
-				return;
-			}
-			if( String.IsNullOrEmpty( txtCCPassword.Text ) ) {
-				MessageBox.Show( "Please enter a password." );
-				return;
-			}
-			
-			if( ccSession.Username != null ) {
-				ccSession.ResetSession();
-				tblCCServers.Items.Clear();
-				ccServers.Clear();
-			}
-			btnCCSignIn.Enabled = false;
-			tabCC.TabPages.Remove( tabCCServers );
-			tabCC.TabPages.Remove( tabCCServer );
-			ccLoginThread = new Thread( CcLoginAsync );
-			ccLoginThread.Name = "Launcher.CcLoginAsync";
-			ccLoginThread.IsBackground = true;
-			ccLoginThread.Start();
-		}
-		
-		Thread ccLoginThread;
-		void CcLoginAsync() {
-			SetCcStatus( 0, "Signing in.." );
-			try {
-				ccSession.Login( txtCCUser.Text, txtCCPassword.Text );
-			} catch( WebException ex ) {
-				ccSession.Username = null;
-				CcLoginEnd( false );
-				DisplayWebException( ex, "sign in", "classicube.net", SetCcStatus );
-				return;
-			} catch( InvalidOperationException ex ) {
-				SetCcStatus( 0, "Failed to sign in" );
-				ccSession.Username = null;
-				CcLoginEnd( false );
-				string text = "Failed to sign in: " + Environment.NewLine + ex.Message;
-				SetCcStatus( 0, text );
-				return;
-			}
-			
-			SetCcStatus( 50, "Retrieving public servers list.." );
-			try {
-				ccServers = ccSession.GetPublicServers();
-			} catch( WebException ex ) {
-				ccServers = new List<ServerListEntry>();
-				CcLoginEnd( false );
-				DisplayWebException( ex, "retrieve servers list", "classicube.net", SetCcStatus );
-				return;
-			}
-			SetCcStatus( 100, "Done" );
-			CcLoginEnd( true );
-		}
-		
-		void CcLoginEnd( bool success ) {
-			if( InvokeRequired ) {
-				Invoke( (Action<bool>)CcLoginEnd, success );
-			} else {
-				GC.Collect();
-				if( success ) {
-					tabCC.TabPages.Add( tabCCServers );
-					tabCC.TabPages.Add( tabCCServer );
-					CcFilterList();
-				}
-				btnCCSignIn.Enabled = true;
-			}
-		}
-
-		void SetCcStatus( int percentage, string text ) {
-			if( InvokeRequired ) {
-				Invoke( (Action<int, string>)SetCcStatus, percentage, text );
-			} else {
-				prgCCStatus.Value = percentage;
-				lblCCStatus.Text = text;
-			}
-		}
-		
-		#endregion
 	}
 }
