@@ -200,9 +200,8 @@ namespace OpenTK.Platform.Windows
 			
 			Mode = new GraphicsMode(
 				(IntPtr)modeIndex, new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
-				pfd.DepthBits, pfd.StencilBits, 0,
-				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1,
-				(pfd.Flags & PixelFormatDescriptorFlags.STEREO) != 0);
+				pfd.DepthBits, pfd.StencilBits,
+				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
 			
 			Debug.WriteLine(modeIndex);
 			if (!Functions.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))

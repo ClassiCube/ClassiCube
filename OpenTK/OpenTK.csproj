@@ -69,7 +69,6 @@
     <Compile Include="Graphics\GraphicsContextBase.cs" />
     <Compile Include="Graphics\GraphicsContextException.cs" />
     <Compile Include="Graphics\GraphicsContextMissingException.cs" />
-    <Compile Include="Graphics\GraphicsErrorException.cs" />
     <Compile Include="Graphics\GraphicsExceptions.cs" />
     <Compile Include="Graphics\GraphicsMode.cs" />
     <Compile Include="Graphics\GraphicsModeException.cs" />

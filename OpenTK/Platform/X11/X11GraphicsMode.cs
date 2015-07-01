@@ -32,8 +32,7 @@ namespace OpenTK.Platform.X11
 
         #region IGraphicsMode Members
 
-        public override GraphicsMode SelectGraphicsMode(ColorFormat color, int depth, int stencil, int samples,
-                                               int buffers, bool stereo)
+        public override GraphicsMode SelectGraphicsMode(ColorFormat color, int depth, int stencil, int buffers)
         {
             GraphicsMode gfx;
             // The actual GraphicsMode that will be selected.
@@ -65,8 +64,7 @@ namespace OpenTK.Platform.X11
             ++buffers;
             // the above lines returns 0 - false and 1 - true.
             
-            gfx = new GraphicsMode(info.VisualID, new ColorFormat(r, g, b, a), depth, stencil, samples,
-            buffers, stereo);
+            gfx = new GraphicsMode(info.VisualID, new ColorFormat(r, g, b, a), depth, stencil, buffers);
             
             using (new XLock(display))
             {

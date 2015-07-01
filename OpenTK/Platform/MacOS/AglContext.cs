@@ -77,12 +77,6 @@ namespace OpenTK.Platform.MacOS
 
             if (mode.Stencil > 0)
                 AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_STENCIL_SIZE, mode.Stencil);
-            
-            if (mode.Samples > 1)
-            {
-                AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_SAMPLE_BUFFERS_ARB, 1);
-                AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_SAMPLES_ARB, mode.Samples);
-            }
 
             if (fullscreen)
             {
