@@ -80,6 +80,8 @@ namespace ClassicalSharp {
 				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
 				
 				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
+					pickedPos.BlockPos = Vector3I.MinusOne;
+					pickedPos.BlockFace = (CpeBlockFace)255;
 					pickedPos.Valid = false;
 					return;
 				}

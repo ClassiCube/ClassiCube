@@ -9,6 +9,7 @@ namespace ClassicalSharp {
 		public static Vector3I UnitX = new Vector3I( 1, 0, 0 );
 		public static Vector3I UnitY = new Vector3I( 0, 1, 0 );
 		public static Vector3I UnitZ = new Vector3I( 0, 0, 1 );
+		public static Vector3I MinusOne = new Vector3I( -1, -1, -1 );
 		
 		public int X, Y, Z;
 		

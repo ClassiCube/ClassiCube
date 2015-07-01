@@ -679,13 +679,11 @@ namespace OpenTK
             get
             {
                 EnsureUndisposed();
-                GraphicsContext.Assert();
                 return vsync;
             }
             set
             {
                 EnsureUndisposed();
-                GraphicsContext.Assert();
                 Context.VSync = (vsync = value) != VSyncMode.Off;
             }
         }
@@ -733,11 +731,6 @@ namespace OpenTK
         /// </summary>
         public event EventHandler<EventArgs> Unload;
 
-        /// <summary>
-        /// Occurs when it is time to update a frame.
-        /// </summary>
-        public event EventHandler<FrameEventArgs> UpdateFrame;
-
         #endregion
 
         #endregion
@@ -766,22 +759,6 @@ namespace OpenTK
         protected virtual void OnRenderFrame(FrameEventArgs e)
         {
             if (RenderFrame != null) RenderFrame(this, e);
-        }
-
-        #endregion
-
-        #region OnUpdateFrame
-
-        /// <summary>
-        /// Called when the frame is updated.
-        /// </summary>
-        /// <param name="e">Contains information necessary for frame updating.</param>
-        /// <remarks>
-        /// Subscribe to the <see cref="UpdateFrame"/> event instead of overriding this method.
-        /// </remarks>
-        protected virtual void OnUpdateFrame(FrameEventArgs e)
-        {
-            if (UpdateFrame != null) UpdateFrame(this, e);
         }
 
         #endregion
@@ -828,12 +805,6 @@ namespace OpenTK
         #region OnUnloadInternal
 
         private void OnUnloadInternal(EventArgs e) { OnUnload(e); }
-
-        #endregion
-
-        #region OnUpdateFrameInternal
-
-        private void OnUpdateFrameInternal(FrameEventArgs e) { if (Exists && !isExiting) OnUpdateFrame(e); }
 
         #endregion
 

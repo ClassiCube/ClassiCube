@@ -32,7 +32,6 @@ namespace ClassicalSharp {
 
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
-				
 			}
 		}
 

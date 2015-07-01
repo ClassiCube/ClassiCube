@@ -68,16 +68,10 @@ namespace ClassicalSharp {
 			SendPacket();
 		}
 		
-		public void SendPlayerClick( MouseButton button, bool buttonDown, PickedPos pos ) {
-			Player p = Window.LocalPlayer;
-			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, 255,
-			                pos.BlockPos, pos.BlockFace );
-		}
-		
-		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId ) {
+		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 			Player p = Window.LocalPlayer;
 			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
-			                new Vector3I( -100, -100, -100 ), 0 );
+			                pos.BlockPos, pos.BlockFace );
 		}
 		
 		public void Dispose() {

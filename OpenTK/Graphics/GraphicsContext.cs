@@ -105,20 +105,6 @@ namespace OpenTK.Graphics
 
 		#region --- Static Members ---
 
-		#region public static void Assert()
-
-		/// <summary>
-		/// Checks if a GraphicsContext exists in the calling thread and throws a GraphicsContextMissingException if it doesn't.
-		/// </summary>
-		/// <exception cref="GraphicsContextMissingException">Generated when no GraphicsContext is current in the calling thread.</exception>
-		public static void Assert()
-		{
-			if (GraphicsContext.CurrentContext == null)
-				throw new GraphicsContextMissingException();
-		}
-
-		#endregion
-
 		#region public static IGraphicsContext CurrentContext
 
 		internal delegate ContextHandle GetCurrentContextDelegate();

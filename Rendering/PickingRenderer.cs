@@ -16,53 +16,49 @@ namespace ClassicalSharp.Renderers {
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
 		}
 		
-		FastColour col = FastColour.White;		
+		FastColour col = FastColour.White;
 		int index = 0;
 		const int verticesCount = 24 * ( 3 * 2 );
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
 		
-		public void Render( double delta ) {
+		public void Render( double delta, PickedPos pickedPos ) {
 			index = 0;
-			PickedPos pickedPos = window.SelectedPos;
+			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
+			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 			
-			if( pickedPos.Valid ) {
-				Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
-				Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
-				
-				// bottom face
-				DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );
-				DrawYPlane( p1.Y, p2.X, p1.Z, p2.X - size, p2.Z );
-				DrawYPlane( p1.Y, p1.X, p1.Z, p2.X, p1.Z + size );
-				DrawYPlane( p1.Y, p1.X, p2.Z, p2.X, p2.Z - size );
-				// top face
-				DrawYPlane( p2.Y, p1.X, p1.Z, p1.X + size, p2.Z );
-				DrawYPlane( p2.Y, p2.X, p1.Z, p2.X - size, p2.Z );
-				DrawYPlane( p2.Y, p1.X, p1.Z, p2.X, p1.Z + size );
-				DrawYPlane( p2.Y, p1.X, p2.Z, p2.X, p2.Z - size );
-				// left face
-				DrawXPlane( p1.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
-				DrawXPlane( p1.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
-				DrawXPlane( p1.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
-				DrawXPlane( p1.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
-				// right face
-				DrawXPlane( p2.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
-				DrawXPlane( p2.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
-				DrawXPlane( p2.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
-				DrawXPlane( p2.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
-				// front face
-				DrawZPlane( p1.Z, p1.X, p1.Y, p1.X + size, p2.Y );
-				DrawZPlane( p1.Z, p2.X, p1.Y, p2.X - size, p2.Y );
-				DrawZPlane( p1.Z, p1.X, p1.Y, p2.X, p1.Y + size );
-				DrawZPlane( p1.Z, p1.X, p2.Y, p2.X, p2.Y - size );
-				// back face
-				DrawZPlane( p2.Z, p1.X, p1.Y, p1.X + size, p2.Y );
-				DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
-				DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
-				DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
-				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fCol4b, verticesCount );
-			}
+			// bottom face
+			DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );
+			DrawYPlane( p1.Y, p2.X, p1.Z, p2.X - size, p2.Z );
+			DrawYPlane( p1.Y, p1.X, p1.Z, p2.X, p1.Z + size );
+			DrawYPlane( p1.Y, p1.X, p2.Z, p2.X, p2.Z - size );
+			// top face
+			DrawYPlane( p2.Y, p1.X, p1.Z, p1.X + size, p2.Z );
+			DrawYPlane( p2.Y, p2.X, p1.Z, p2.X - size, p2.Z );
+			DrawYPlane( p2.Y, p1.X, p1.Z, p2.X, p1.Z + size );
+			DrawYPlane( p2.Y, p1.X, p2.Z, p2.X, p2.Z - size );
+			// left face
+			DrawXPlane( p1.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
+			DrawXPlane( p1.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
+			DrawXPlane( p1.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
+			DrawXPlane( p1.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
+			// right face
+			DrawXPlane( p2.X, p1.Z, p1.Y, p1.Z + size, p2.Y );
+			DrawXPlane( p2.X, p2.Z, p1.Y, p2.Z - size, p2.Y );
+			DrawXPlane( p2.X, p1.Z, p1.Y, p2.Z, p1.Y + size );
+			DrawXPlane( p2.X, p1.Z, p2.Y, p2.Z, p2.Y - size );
+			// front face
+			DrawZPlane( p1.Z, p1.X, p1.Y, p1.X + size, p2.Y );
+			DrawZPlane( p1.Z, p2.X, p1.Y, p2.X - size, p2.Y );
+			DrawZPlane( p1.Z, p1.X, p1.Y, p2.X, p1.Y + size );
+			DrawZPlane( p1.Z, p1.X, p2.Y, p2.X, p2.Y - size );
+			// back face
+			DrawZPlane( p2.Z, p1.X, p1.Y, p1.X + size, p2.Y );
+			DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
+			DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
+			DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
+			graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fCol4b, verticesCount );
 		}
 		
 		public void Dispose() {

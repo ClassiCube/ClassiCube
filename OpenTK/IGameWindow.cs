@@ -68,11 +68,6 @@ namespace OpenTK.Platform
         event EventHandler<EventArgs> Unload;
 
         /// <summary>
-        /// Occurs when it is time to update a frame.
-        /// </summary>
-        event EventHandler<FrameEventArgs> UpdateFrame;
-
-        /// <summary>
         /// Occurs when it is time to render a frame.
         /// </summary>
         event EventHandler<FrameEventArgs> RenderFrame;
