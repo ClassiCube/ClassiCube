@@ -383,11 +383,11 @@ namespace ClassicalSharp {
 				case PacketId.RemoveEntity:
 					{
 						byte entityId = reader.ReadUInt8();
-						Player player = Window.NetPlayers[entityId];
-						if( player != null ) {
+						Player player = Window.Players[entityId];
+						if( entityId != 0xFF && player != null ) {
 							Window.RaiseEntityRemoved( entityId );
 							player.Despawn();
-							Window.NetPlayers[entityId] = null;
+							Window.Players[entityId] = null;
 						}
 					} break;
 					
@@ -588,7 +588,7 @@ namespace ClassicalSharp {
 					{
 						byte playerId = reader.ReadUInt8();
 						string modelName = reader.ReadAsciiString().ToLowerInvariant();
-						Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+						Player player = Window.Players[playerId];
 						if( player != null ) {
 							player.SetModel( modelName );
 						}
@@ -647,12 +647,12 @@ namespace ClassicalSharp {
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
-				Player oldPlayer = Window.NetPlayers[entityId];
+				Player oldPlayer = Window.Players[entityId];
 				if( oldPlayer != null ) {
 					Window.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
-				Window.NetPlayers[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
+				Window.Players[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
 				Window.RaiseEntityAdded( entityId );
 				Window.AsyncDownloader.DownloadSkin( skinName );
 			}
@@ -706,7 +706,7 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateLocation( byte playerId, LocationUpdate update, bool interpolate ) {
-			Player player = playerId == 0xFF ? Window.LocalPlayer : Window.NetPlayers[playerId];
+			Player player = Window.Players[playerId];
 			if( player != null ) {
 				player.SetLocation( update, interpolate );
 			}

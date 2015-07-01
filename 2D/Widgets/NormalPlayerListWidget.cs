@@ -34,20 +34,19 @@ namespace ClassicalSharp {
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
-			Player player = Window.NetPlayers[e.Id];
+			Player player = Window.Players[e.Id];
 			AddPlayerInfo( player );
 			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < Window.NetPlayers.Length; i++ ) {
-				Player player = Window.NetPlayers[i];
+			for( int i = 0; i < Window.Players.MaxCount; i++ ) {
+				Player player = Window.Players[i];
 				if( player != null ) {
 					AddPlayerInfo( player );
 				}
 			}
-			AddPlayerInfo( Window.LocalPlayer );
 		}
 		
 		void AddPlayerInfo( Player player ) {

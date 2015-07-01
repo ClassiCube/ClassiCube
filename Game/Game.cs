@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 		public Map Map;
 		public NetworkProcessor Network;
 		
-		public Player[] NetPlayers = new Player[256];
+		public EntityList Players = new EntityList();
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
@@ -131,6 +131,7 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( 255, this );
+			Players[255] = LocalPlayer;
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
@@ -202,14 +203,9 @@ namespace ClassicalSharp {
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
 				Network.Tick( ticksPeriod );
-				LocalPlayer.Tick( ticksPeriod );
+				Players.Tick( ticksPeriod );
 				Camera.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
-				for( int i = 0; i < NetPlayers.Length; i++ ) {
-					if( NetPlayers[i] != null ) {
-						NetPlayers[i].Tick( ticksPeriod );
-					}
-				}
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
@@ -228,7 +224,7 @@ namespace ClassicalSharp {
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {		
-				RenderPlayers( e.Time, t );
+				Players.Render( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				if( SelectedPos.Valid )
@@ -264,17 +260,6 @@ namespace ClassicalSharp {
 			Graphics.EndFrame( this );
 		}
 		
-		void RenderPlayers( double deltaTime, float t ) {
-			//Graphics.AlphaTest = true;			
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Render( deltaTime, t );
-				}
-			}
-			LocalPlayer.Render( deltaTime, t );
-			//Graphics.AlphaTest = false;
-		}
-		
 		public override void Dispose() {
 			MapRenderer.Dispose();
 			MapEnvRenderer.Dispose();
@@ -288,12 +273,7 @@ namespace ClassicalSharp {
 			ModelCache.Dispose();
 			Picking.Dispose();
 			ParticleManager.Dispose();
-			for( int i = 0; i < NetPlayers.Length; i++ ) {
-				if( NetPlayers[i] != null ) {
-					NetPlayers[i].Despawn();
-				}
-			}
-			LocalPlayer.Despawn();
+			Players.Dispose();
 			Graphics.CheckResources();
 			AsyncDownloader.Dispose();
 			if( writer != null ) {
