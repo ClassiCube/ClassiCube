@@ -62,7 +62,7 @@ namespace OpenTK.Platform.MacOS
 
         public virtual IGraphicsMode CreateGraphicsMode()
         {
-            return new MacOSGraphicsMode();
+        	return new IGraphicsMode();
         }
         
         #endregion

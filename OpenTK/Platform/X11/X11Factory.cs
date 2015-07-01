@@ -64,7 +64,7 @@ namespace OpenTK.Platform.X11
         {
             return (GraphicsContext.GetCurrentContextDelegate)delegate
             {
-                return new ContextHandle(Glx.Imports.GetCurrentContext());
+                return new ContextHandle(Glx.GetCurrentContext());
             };
         }
 

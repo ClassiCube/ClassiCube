@@ -7,16 +7,16 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OpenTK.Graphics
 {
-    internal interface IGraphicsMode
+    internal class IGraphicsMode
     {
         // Creates a temporary OpenGL context (if necessary) and finds the mode which closest matches
         // the specified parameters.
-        GraphicsMode SelectGraphicsMode(ColorFormat color, int depth, int stencil, int samples, int buffers,
-            bool stereo);
+        public virtual GraphicsMode SelectGraphicsMode(ColorFormat color, int depth, int stencil, int samples, int buffers,
+                                                       bool stereo) {
+        	  return new GraphicsMode((IntPtr)1, color, depth, stencil, samples, buffers, stereo);
+        }
     }
 }

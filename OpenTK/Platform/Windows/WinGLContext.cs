@@ -65,9 +65,8 @@ namespace OpenTK.Platform.Windows
 				if (window.WindowHandle == IntPtr.Zero)
 					throw new ArgumentException("window", "Must be a valid window.");
 
-				Mode = format;
-
 				Debug.Print("OpenGL will be bound to handle: {0}", window.WindowHandle);
+				SelectGraphicsModePFD(format, (WinWindowInfo)window);
 				Debug.Write("Setting pixel format... ");
 				SetGraphicsModePFD(format, (WinWindowInfo)window);
 
@@ -190,33 +189,57 @@ namespace OpenTK.Platform.Windows
 
 		#region --- Private Methods ---
 
-		#region void SetGraphicsModePFD(GraphicsMode format, WinWindowInfo window)
-
-		void SetGraphicsModePFD(GraphicsMode mode, WinWindowInfo window)
-		{
-			if (!mode.Index.HasValue)
-				throw new GraphicsModeException("Invalid or unsupported GraphicsMode.");
-
-			if (window == null) throw new ArgumentNullException("window", "Must point to a valid window.");
-
+		int modeIndex;
+		void SetGraphicsModePFD(GraphicsMode mode, WinWindowInfo window) {
+			// Find out what we really got as a format:
+			IntPtr deviceContext = window.DeviceContext;
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
-			Functions.DescribePixelFormat(window.DeviceContext, (int)mode.Index.Value,
-			                              API.PixelFormatDescriptorSize, ref pfd);
-			Debug.WriteLine(mode.Index.ToString());
-			if (!Functions.SetPixelFormat(window.DeviceContext, (int)mode.Index.Value, ref pfd))
+			pfd.Size = API.PixelFormatDescriptorSize;
+			pfd.Version = API.PixelFormatDescriptorVersion;
+			Functions.DescribePixelFormat(deviceContext, modeIndex, API.PixelFormatDescriptorSize, ref pfd);
+			
+			Mode = new GraphicsMode(
+				(IntPtr)modeIndex, new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
+				pfd.DepthBits, pfd.StencilBits, 0,
+				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1,
+				(pfd.Flags & PixelFormatDescriptorFlags.STEREO) != 0);
+			
+			Debug.WriteLine(modeIndex);
+			if (!Functions.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
 				throw new GraphicsContextException(String.Format(
 					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));
 		}
-		#endregion
 
-		#region void SetGraphicsModeARB(GraphicsMode format, IWindowInfo window)
+		void SelectGraphicsModePFD(GraphicsMode format, WinWindowInfo window) {
+			IntPtr deviceContext = window.DeviceContext;
+			Debug.WriteLine(String.Format("Device context: {0}", deviceContext));
+			ColorFormat color = format.ColorFormat;
 
-		void SetGraphicsModeARB(GraphicsMode format, IWindowInfo window)
-		{
-			throw new NotImplementedException();
+			Debug.Write("Selecting pixel format PFD... ");
+			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
+			pfd.Size = API.PixelFormatDescriptorSize;
+			pfd.Version = API.PixelFormatDescriptorVersion;
+			pfd.Flags =
+				PixelFormatDescriptorFlags.SUPPORT_OPENGL |
+				PixelFormatDescriptorFlags.DRAW_TO_WINDOW;
+			pfd.ColorBits = (byte)(color.Red + color.Green + color.Blue);
+
+			pfd.PixelType = color.IsIndexed ? PixelType.INDEXED : PixelType.RGBA;
+			pfd.RedBits = (byte)color.Red;
+			pfd.GreenBits = (byte)color.Green;
+			pfd.BlueBits = (byte)color.Blue;
+			pfd.AlphaBits = (byte)color.Alpha;
+
+			pfd.DepthBits = (byte)format.Depth;
+			pfd.StencilBits = (byte)format.Stencil;
+
+			if (format.Depth <= 0) pfd.Flags |= PixelFormatDescriptorFlags.DEPTH_DONTCARE;
+			if (format.Buffers > 1) pfd.Flags |= PixelFormatDescriptorFlags.DOUBLEBUFFER;
+
+			modeIndex = Functions.ChoosePixelFormat(deviceContext, ref pfd);
+			if (modeIndex == 0)
+				throw new GraphicsModeException("The requested GraphicsMode is not available.");
 		}
-
-		#endregion
 
 		#endregion
 

@@ -62,12 +62,12 @@ namespace OpenTK.Platform.X11
 			using (new XLock(Display))
 			{
 				// Cannot pass a Property by reference.
-				Handle = new ContextHandle(Glx.Imports.CreateContext(Display, ref info, shareHandle.Handle, direct));
+				Handle = new ContextHandle(Glx.CreateContext(Display, ref info, shareHandle.Handle, direct));
 
 				if (Handle == ContextHandle.Zero)
 				{
 					Debug.WriteLine(String.Format("failed. Trying direct: {0}... ", !direct));
-					Handle = new ContextHandle(Glx.Imports.CreateContext(Display, ref info, IntPtr.Zero, !direct));
+					Handle = new ContextHandle(Glx.CreateContext(Display, ref info, IntPtr.Zero, !direct));
 				}
 			}
 			
@@ -78,7 +78,7 @@ namespace OpenTK.Platform.X11
 
 			using (new XLock(Display))
 			{
-				if (!Glx.Imports.IsDirect(Display, Handle.Handle))
+				if (!Glx.IsDirect(Display, Handle.Handle))
 					Debug.Print("Warning: Context is not direct.");
 			}
 		}
@@ -137,7 +137,7 @@ namespace OpenTK.Platform.X11
 					String.Format("Window is invalid. Display ({0}), Handle ({1}).", Display, currentWindow.WindowHandle));
 			using (new XLock(Display))
 			{
-				Glx.Imports.SwapBuffers(Display, currentWindow.WindowHandle);
+				Glx.SwapBuffers(Display, currentWindow.WindowHandle);
 			}
 		}
 
@@ -161,7 +161,7 @@ namespace OpenTK.Platform.X11
 				bool result;
 				using (new XLock(Display))
 				{
-					result = Glx.Imports.MakeCurrent(Display, IntPtr.Zero, IntPtr.Zero);
+					result = Glx.MakeCurrent(Display, IntPtr.Zero, IntPtr.Zero);
 					if (result)
 					{
 						currentWindow = null;
@@ -182,7 +182,7 @@ namespace OpenTK.Platform.X11
 
 				using (new XLock(Display))
 				{
-					result = Glx.Imports.MakeCurrent(Display, w.WindowHandle, Handle);
+					result = Glx.MakeCurrent(Display, w.WindowHandle, Handle.Handle);
 					if (result)
 					{
 						currentWindow = w;
@@ -208,7 +208,7 @@ namespace OpenTK.Platform.X11
 			{
 				using (new XLock(Display))
 				{
-					return Glx.Imports.GetCurrentContext() == Handle.Handle;
+					return Glx.GetCurrentContext() == Handle.Handle;
 				}
 			}
 		}
@@ -227,12 +227,12 @@ namespace OpenTK.Platform.X11
 			{
 				if (vsync_supported)
 				{
-					ErrorCode error_code = 0;
+					GLXErrorCode error_code = 0;
 					using (new XLock(Display))
 					{
-						error_code = Glx.Sgi.SwapInterval(value ? 1 : 0);
+						error_code = Glx.Imports.SwapInterval(value ? 1 : 0);
 					}
-					if (error_code != X11.ErrorCode.NO_ERROR)
+					if (error_code != X11.GLXErrorCode.NO_ERROR)
 						Debug.Print("VSync = {0} failed, error code: {1}.", value, error_code);
 					vsync_interval = value ? 1 : 0;
 				}
@@ -247,7 +247,7 @@ namespace OpenTK.Platform.X11
 		{
 			using (new XLock(Display))
 			{
-				return Glx.Imports.GetProcAddress(function);
+				return Glx.GetProcAddress(function);
 			}
 		}
 
@@ -298,12 +298,12 @@ namespace OpenTK.Platform.X11
 					{
 						using (new XLock(display))
 						{
-							Glx.Imports.MakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
+							Glx.MakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
 						}
 					}
 					using (new XLock(display))
 					{
-						Glx.Imports.DestroyContext(display, Handle);
+						Glx.DestroyContext(display, Handle.Handle);
 					}
 				}
 			}

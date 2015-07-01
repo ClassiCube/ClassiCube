@@ -63,7 +63,7 @@ namespace OpenTK.Platform.Windows
 
         public virtual IGraphicsMode CreateGraphicsMode()
         {
-            return new WinGraphicsMode();
+        	return new IGraphicsMode();
         }
         
         #endregion

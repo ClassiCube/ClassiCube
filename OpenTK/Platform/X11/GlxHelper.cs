@@ -26,7 +26,7 @@ namespace OpenTK.Platform.X11
 
 		protected override IntPtr GetAddress (string funcname)
 		{
-			return Glx.Imports.GetProcAddress(funcname);
+			return Glx.GetProcAddress(funcname);
 		}
 	}
 }
