@@ -1,0 +1,44 @@
+ClassicalSharp is a custom Minecraft Classic client written in C# that works on Windows and Linux.
+**It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
+
+You can get the latest binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
+
+#### What ClassicalSharp is
+* Works with both minecraft.net and classicube.net accounts.
+* Lightweight, minimal memory usage compared to the standard client.
+* Works with effectively all graphics cards that support OpenGL.
+
+**It does not:**
+* Work with 'modern/premium' Minecraft servers.
+* Provide single-player support.
+
+#### Requirements
+* Windows: The .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
+* Linux: Mono.
+* Mac OS X: Mono. (Not tested at all yet - likely just crashes)
+
+*When building from source and targeting Mono, you must either use the Mono compiler or
+define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map with Mono.*
+
+#### Instructions
+The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
+
+Note that the first time you run the launcher, a dialog box will pop up saying: "Some required resources weren't found. Would you like to download them now?" Just click OK. 
+(This is necessary because I cannot legally redistribute the assets of Minecraft Classic with the application)
+
+*Alternatively, you can pass command line arguments directly to the client. The client expects these arguments to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
+
+#### Key combinations
+* Press escape (after joining a world) to switch to the pause menu. 
+* The pause menu lists all of the key combinations used by the client. 
+  These key combinations can be reassigned by clicking on a key combination.
+* Press escape or click "Back to game" to return to the game.
+
+Some points to note:
+* If the server has disabled hacks, some of the key combinations such as fly, speed etc will not do anything.
+* Pressing F6 to change view distance can improve performance by limiting the number of visible chunks.
+* Pressing F7 to toggle VSync on or off. On minimises CPU usage, whereas off maximises chunk loading speed.
+
+#### Client commands
+* To see a list of all built in commands, type `/client commands`.
+* To see help for a given built in command, type `/client help <command name>`.

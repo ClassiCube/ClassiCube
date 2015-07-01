@@ -40,7 +40,7 @@ namespace ClassicalSharp.Selections {
 			pos = player.Position;
 			if( selections.Count == 0 ) return;
 			// TODO: Proper selection box sorting. But this is very difficult because
-			// we can have boxes within boxes, intersecting boxes, etc..
+			// we can have boxes within boxes, intersecting boxes, etc. Probably not worth it.
 			comparer.pos = pos;
 			selections.Sort( comparer );
 			

@@ -14,6 +14,7 @@ using System.Reflection;
 
 namespace ClassicalSharp.GraphicsAPI {
 
+	// TODO: Should we use a native form wrapper instead of wrapping over OpenTK?
 	public class DirectXApi : IGraphicsApi {
 
 		public Device device;
@@ -53,7 +54,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			caps = device.DeviceCaps;
 			viewStack = new MatrixStack( 32, device, TransformType.View );
 			projStack = new MatrixStack( 4, device, TransformType.Projection );
-			texStack = new MatrixStack( 4, device, TransformType.Texture1 ); // TODO: Texture0?
+			texStack = new MatrixStack( 4, device, TransformType.Texture0 );
 			
 			device.SetRenderState( RenderStates.FillMode, (int)FillMode.Solid );
 			FaceCulling = false;
@@ -113,7 +114,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		FogMode[] modes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public override void SetFogMode( Fog mode ) {
 			device.SetRenderState( RenderStates.FogTableMode, (int)modes[(int)mode] );
-		}	
+		}
 		
 		public override bool FaceCulling {
 			set {
@@ -307,12 +308,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
 			Matrix4 transposed = matrix;
 			Matrix dxMatrix = *(Matrix*)&transposed;
+			if( curStack == texStack ) {
+				dxMatrix.M31 = dxMatrix.M41; // NOTE: this hack fixes the texture movements.
+				device.SetTextureStageState( 0, TextureStageStates.TextureTransform, (int)TextureTransform.Count2 );
+			}
 			curStack.SetTop( ref dxMatrix );
 		}
 
 		Matrix identity = Matrix.Identity;
 		public override void LoadIdentityMatrix() {
-			curStack.SetTop( ref identity );
+			if( curStack == texStack ) {
+				device.SetTextureStageState( 0, TextureStageStates.TextureTransform, (int)TextureTransform.Disable );
+			}
+			curStack.SetTop( ref identity );		
 		}
 
 		public override void PushMatrix() {
@@ -387,15 +395,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {
 			byte* src = (byte*)sourcePtr;
 			byte* dst = (byte*)destPtr;
-			// TODO: check memcpy actually works and doesn't explode.
+			int* srcInt = (int*)src;
+			int* dstInt = (int*)dst;
 
 			while( bytes >= 4 ) {
-				*( (int*)dst ) = *( (int*)src );
+				*dstInt++ = *srcInt++;
 				dst += 4;
 				src += 4;
 				bytes -= 4;
 			}
-			// Handle non-aligned last 1-3 bytes.
+			// Handle non-aligned last few bytes.
 			for( int i = 0; i < bytes; i++ ) {
 				*dst++ = *src++;
 			}
