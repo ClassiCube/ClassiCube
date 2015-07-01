@@ -30,15 +30,15 @@ namespace ClassicalSharp {
 		bool useBlockPermissions = false;
 		bool receivedFirstPosition = false;
 		public bool UsingExtPlayerList = false;
+		public bool UsingPlayerClick = false;
 		
-		public void Connect() {
-			IPAddress address = Window.IPAddress;
+		public void Connect( IPAddress address, int port ) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
 			try {
-				socket.Connect( address, Window.Port );
+				socket.Connect( address, port );
 			} catch( SocketException ex ) {
 				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
-				Window.Disconnect( "&eUnable to reach " + Window.IPAddress + ":" + Window.Port,
+				Window.Disconnect( "&eUnable to reach " + address + ":" + port,
 				                  "Unable to establish an underlying connection" );
 				Dispose();
 				return;
@@ -440,6 +440,8 @@ namespace ClassicalSharp {
 							UsingExtPlayerList = true;
 						} else if( extensionName == "BlockPermissions" ) {
 							useBlockPermissions = true;
+						} else if( extensionName == "PlayerClick" ) {
+							UsingPlayerClick = true;
 						}
 						cpeServerExtensionsCount--;
 						if( cpeServerExtensionsCount == 0 ) {

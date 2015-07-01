@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			Picking = new PickingRenderer( this );
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
-			Network.Connect();
+			Network.Connect( IPAddress, Port );
 		}
 		
 		public void SetViewDistance( int distance ) {

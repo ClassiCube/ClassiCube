@@ -23,7 +23,7 @@ define `__MonoCS__` when building, otherwise you will get runtime errors when de
 #### Instructions
 The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
 
-Note that the first time you run the launcher, a dialog box will pop up saying: "Some required resources weren't found. Would you like to download them now?" Just click OK. 
+Note that the first time you run the launcher, a dialog box will pop up saying: *"Some required resources weren't found. Would you like to download them now?"* Just click OK. 
 (This is necessary because I cannot legally redistribute the assets of Minecraft Classic with the application)
 
 *Alternatively, you can pass command line arguments directly to the client. The client expects these arguments to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
