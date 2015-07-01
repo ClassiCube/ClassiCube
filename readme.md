@@ -1,4 +1,4 @@
-ClassicalSharp is a custom Minecraft Classic client written in C# that works on Windows and Linux.
+ClassicalSharp is a custom Minecraft Classic client written in C# that works on both Windows and Linux.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 You can get the latest binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
@@ -8,17 +8,17 @@ You can get the latest binaries [here](https://github.com/UnknownShadow200/Class
 * Lightweight, minimal memory usage compared to the standard client.
 * Works with effectively all graphics cards that support OpenGL.
 
-**It does not:**
+It does not:
 * Work with 'modern/premium' Minecraft servers.
 * Provide single-player support.
 
 #### Requirements
-* Windows: The .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
+* Windows: .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
 * Linux: Mono.
 * Mac OS X: Mono. (Not tested at all yet - likely just crashes)
 
-*When building from source and targeting Mono, you must either use the Mono compiler or
-define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map with Mono.*
+*When building from source and targeting Mono, either use the Mono compiler or
+define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map on Mono.*
 
 #### Instructions
 The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
