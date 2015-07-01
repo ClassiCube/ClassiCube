@@ -26,7 +26,7 @@ The simple way to use ClassicalSharp is to use the launcher application. You can
 Note that the first time you run the launcher, a dialog box will pop up saying: *"Some required resources weren't found. Would you like to download them now?"* Just click OK. 
 (This is necessary because I cannot legally redistribute the assets of Minecraft Classic with the application)
 
-*Alternatively, you can pass command line arguments directly to the client. The arguments are expected to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
+*Alternatively, you can pass command line arguments directly to the client. These are expected to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
 
 #### Key combinations
 * Press escape (after joining a world) to switch to the pause menu. 
@@ -35,9 +35,9 @@ Note that the first time you run the launcher, a dialog box will pop up saying: 
 * Press escape or click "Back to game" to return to the game.
 
 Some points to note:
-* If the server has disabled hacks, some key combinations such as fly, speed etc will not do anything.
-* Press F6 to change view distance. Limiting the number of visible chunks can improve performance.
-* Press F7 to toggle VSync on or off. On minimises CPU usage, whereas off maximises chunk loading speed.
+* If the server has disabled hacks, key combinations such as fly and speed will not do anything.
+* Press F6 to change view distance. A smaller number of visible chunks can improve performance.
+* Press F7 to toggle VSync on (minimises CPU usage) or off (maximises chunk loading speed).
 
 #### Client commands
 * To see a list of all built in commands, type `/client commands`.
