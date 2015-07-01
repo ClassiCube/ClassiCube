@@ -44,6 +44,8 @@ namespace ClassicalSharp.Model {
 			get { return 1.0125f; }
 		}
 		
+		const float quarterPi = (float)( Math.PI / 4 );
+		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
@@ -54,14 +56,14 @@ namespace ClassicalSharp.Model {
 			Set.Link.Render();
 			Set.End.Render();
 			// TODO: leg animations
-			DrawRotate( -0.1875f, 0.5f, 0, 0, 45f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, 22.5f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -22.5f, 22.5f, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -45f, 22.5f, Set.LeftLeg );		
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -45f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -22.5f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, 22.5f, -22.5f, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, 45f, -22.5f, Set.RightLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -eighthPi, eighthPi, Set.LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -quarterPi, eighthPi, Set.LeftLeg );		
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -quarterPi, -eighthPi, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -eighthPi, -eighthPi, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, eighthPi, -eighthPi, Set.RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, quarterPi, -eighthPi, Set.RightLeg );
 		}
 		
 		public override void Dispose() {
