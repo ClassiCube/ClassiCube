@@ -63,8 +63,8 @@ namespace ClassicalSharp.Model {
 			Set.Torso.Render();
 			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, Set.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
-			DrawRotate( 0, 1.375f, 0, 90f, 0, leftArmZRot, Set.LeftArm );
-			DrawRotate( 0, 1.375f, 0, 90f, 0, rightArmZRot, Set.RightArm );			
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, leftArmZRot, Set.LeftArm );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, rightArmZRot, Set.RightArm );			
 		}
 		
 		public override void Dispose() {

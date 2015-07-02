@@ -216,10 +216,14 @@ namespace ClassicalSharp {
 			
 			// Render translucent(liquid) blocks. These 'blend' into other blocks.
 			Graphics.BeginIndexedVbBatch();
-			Graphics.Texturing = false;
-			Graphics.AlphaBlending = false;
+			bool canCullTranslucent = !Window.BlockInfo.IsTranslucent(
+				(byte)Window.LocalPlayer.BlockAtHead );
+			if( canCullTranslucent )
+				Graphics.FaceCulling = true;
 			
 			// First fill depth buffer
+			Graphics.Texturing = false;
+			Graphics.AlphaBlending = false;
 			Graphics.ColourWrite = false;
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
 				RenderTranslucentBatchDepthPass( batch );
@@ -237,6 +241,8 @@ namespace ClassicalSharp {
 			Graphics.AlphaTest = false;
 			Graphics.AlphaBlending = false;
 			Graphics.Texturing = false;
+			if( canCullTranslucent )
+				Graphics.FaceCulling = false;
 			Graphics.EndIndexedVbBatch();
 		}
 
@@ -321,7 +327,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.TranslucentParts == null || !info.Visible ) continue;
-
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount > 0 ) {
 					if( part.IndicesCount > maxIndices ) {
