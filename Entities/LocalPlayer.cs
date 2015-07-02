@@ -174,12 +174,7 @@ namespace ClassicalSharp {
 			if( dist < 1 ) dist = 1;
 
 			float multiply = factor / dist;
-			x *= multiply;
-			z *= multiply;
-			float cosA = (float)Math.Cos( YawRadians );
-			float sinA = (float)Math.Sin( YawRadians );
-			Velocity.X += x * cosA - z * sinA;
-			Velocity.Z += x * sinA + z * cosA;
+			Velocity += Utils.RotateY( x * multiply, 0, z * multiply, YawRadians );
 		}
 		
 		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {

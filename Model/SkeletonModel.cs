@@ -53,6 +53,14 @@ namespace ClassicalSharp.Model {
 			get { return 2.075f; }
 		}
 		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -4 / 16f, 0, -4 / 16f, 4 / 16f, 32 / 16f, 4 / 16f ); }
+		}
+		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;

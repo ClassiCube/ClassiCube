@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 		}
 		
 		private static void MakePlayerClick( byte button, bool buttonDown, float yaw, float pitch, byte targetEntity,
-		                                   Vector3I targetPos, CpeBlockFace targetFace ) {
+		                                    Vector3I targetPos, CpeBlockFace targetFace ) {
 			WriteUInt8( (byte)PacketId.CpePlayerClick );
 			WriteUInt8( button );
 			WriteUInt8( buttonDown ? (byte)0 : (byte)1 );
@@ -226,7 +226,7 @@ namespace ClassicalSharp {
 		void SendPacket() {
 			int packetLength = outIndex;
 			outIndex = 0;
-			if( Disconnected ) return;		
+			if( Disconnected ) return;
 			
 			try {
 				stream.Write( outBuffer, 0, packetLength );

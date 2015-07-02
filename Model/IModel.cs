@@ -19,6 +19,10 @@ namespace ClassicalSharp.Model {
 		
 		public abstract float NameYOffset { get; }
 		
+		public abstract Vector3 CollisionSize { get; }
+		
+		public abstract BoundingBox PickingBounds { get; }
+		
 		protected Vector3 pos;
 		protected float yaw, pitch;
 		protected float rightLegXRot, rightArmXRot, rightArmZRot;

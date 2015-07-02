@@ -44,6 +44,14 @@ namespace ClassicalSharp.Model {
 			get { return 1.0125f; }
 		}
 		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 15 / 16f, 12 / 16f, 15 / 16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -5 / 16f, 0, -11 / 16f, 5 / 16f, 12 / 16f, 15 / 16f ); }
+		}
+		
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {

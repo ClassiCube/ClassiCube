@@ -39,8 +39,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < Players.Length - 1; i++ ) { // -1 because we don't want to pick against local player
 				Player p = Players[i];
 				if( p == null ) continue;
-				BoundingBox bounds = p.Bounds;
-				
+				BoundingBox bounds = p.PickingBounds;
 				float t0, t1;
 				if( IntersectionUtils.RayIntersectsBox( eyePos, dir, bounds.Min, bounds.Max, out t0, out t1 ) ) {
 					dist = t0;

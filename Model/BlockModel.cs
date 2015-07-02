@@ -18,6 +18,15 @@ namespace ClassicalSharp.Model {
 			get { return blockHeight + 0.075f; }
 		}
 		
+		const float adjust = 0.1f;
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 1 - adjust, blockHeight - adjust, 1 - adjust ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -0.5f, 0f, -0.5f, 0.5f, blockHeight, 0.5f ); }
+		}
+		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;

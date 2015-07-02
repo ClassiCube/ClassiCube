@@ -1,6 +1,7 @@
 ﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 
@@ -37,6 +38,14 @@ namespace ClassicalSharp.Model {
 		
 		public override float NameYOffset {
 			get { return 1.7f; }
+		}
+		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 8 / 16f, 26 / 16f, 8 / 16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -4 / 16f, 0, -6 / 16f, 4 / 16f, 26 / 16f, 6 / 16f ); }
 		}
 		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {

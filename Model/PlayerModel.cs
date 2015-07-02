@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 
@@ -79,6 +80,14 @@ namespace ClassicalSharp.Model {
 		
 		public override float NameYOffset {
 			get { return 2.1375f; }
+		}
+		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -8 / 16f, 0, -4 / 16f, 8 / 16f, 32 / 16f, 4 / 16f ); }
 		}
 		
 		ModelSet model;

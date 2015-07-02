@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Model;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -8,6 +9,7 @@ namespace ClassicalSharp {
 		public Vector3 Position;
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
+		public IModel Model;
 		
 		public float YawRadians {
 			get { return (float)Utils.DegreesToRadians( YawDegrees ); }
@@ -25,14 +27,35 @@ namespace ClassicalSharp {
 		}
 		
 		public abstract float StepSize { get; }
-		public abstract Vector3 Size { get; }
+		public virtual Vector3 CollisionSize {
+			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f );
+				//Model.CollisionSize; TODO: for non humanoid models, we also need to offset eye position.
+			}
+		}
 		
-		public virtual BoundingBox Bounds {
+		public virtual BoundingBox CollisionBounds {
 			get {
 				Vector3 pos = Position;
-				Vector3 size = Size;
+				Vector3 size = Model.CollisionSize;
 				return new BoundingBox( pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
 				                       pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2 );
+			}
+		}
+		
+		public virtual BoundingBox PickingBounds {
+			get {
+				BoundingBox bb = Model.PickingBounds;
+				float angle = YawRadians;
+				// TODO: This would be a lot simpler and more accurate if we just did ray-oobb intersection.
+				Vector3 x1z1 = Utils.RotateY( bb.Min.X, 0, bb.Min.Z, angle );
+				Vector3 x1z2 = Utils.RotateY( bb.Min.X, 0, bb.Max.Z, angle );
+				Vector3 x2z1 = Utils.RotateY( bb.Max.X, 0, bb.Min.Z, angle );
+				Vector3 x2z2 = Utils.RotateY( bb.Max.X, 0, bb.Max.Z, angle );
+				float minX = Math.Min( x1z1.X, Math.Min( x1z2.X, Math.Min( x2z2.X, x2z1.X ) ) );
+				float maxX = Math.Max( x1z1.X, Math.Max( x1z2.X, Math.Max( x2z2.X, x2z1.X ) ) );
+				float minZ = Math.Min( x1z1.Z, Math.Min( x1z2.Z, Math.Min( x2z2.Z, x2z1.Z ) ) );
+				float maxZ = Math.Max( x1z1.Z, Math.Max( x1z2.Z, Math.Max( x2z2.Z, x2z1.Z ) ) );
+				return new BoundingBox( minX, bb.Min.Y, minZ, maxX, bb.Max.Y, maxZ ).Offset( Position );
 			}
 		}
 		
@@ -52,15 +75,15 @@ namespace ClassicalSharp {
 			return TouchesAny( b => b == (byte)Block.Water || b == (byte)Block.StillWater );
 		}
 
-		public bool TouchesAnyOf( byte blockType ) {			
+		public bool TouchesAnyOf( byte blockType ) {
 			return TouchesAny( b => b == blockType );
 		}
 		
-		public bool TouchesAny( Predicate<byte> condition ) {			
-			BoundingBox bounds = Bounds;
+		public bool TouchesAny( Predicate<byte> condition ) {
+			BoundingBox bounds = CollisionBounds;
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
-						
+			
 			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
 					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
@@ -74,7 +97,7 @@ namespace ClassicalSharp {
 							if( blockBB.Intersects( bounds ) ) return true;
 						}
 					}
-				}				
+				}
 			}
 			return false;
 		}

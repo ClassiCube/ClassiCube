@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		protected void MoveAndWallSlide() {
 			if( Velocity == Vector3.Zero ) 
 				return;		
-			Vector3 size = Size;
+			Vector3 size = CollisionSize;
 			BoundingBox entityBB, entityExtentBB;
 			int count = 0;
 			FindReachableBlocks( ref count, ref size, out entityBB, out entityExtentBB );

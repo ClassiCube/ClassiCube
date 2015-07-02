@@ -65,6 +65,14 @@ namespace ClassicalSharp.Model {
 			get { return Fur ? 1.48125f: 1.075f; }
 		}
 		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 14 / 16f, 20 / 16f, 14 / 16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return new BoundingBox( -6 / 16f, 0, -13 / 16f, 6 / 16f, 23 / 16f, 10 / 16f ); }
+		}
+		
 		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
