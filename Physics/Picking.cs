@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 					// This cell falls on the path of the ray. Now perform an additional bounding box test,
 					// since some blocks do not occupy a whole cell.				
 					float t0, t1;
-					if( IntersectionUtils.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
+					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
 						pickedPos.UpdateBlockPos( min, max, origin, dir, t0, t1 );
 						return;
 					}

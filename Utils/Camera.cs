@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock( PickedPos pos ) {
-			Vector3 dir = Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI );
+			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
 			Vector3 eyePos = player.EyePosition;
 			float reach = Window.LocalPlayer.ReachDistance;
 			Picking.GetPickedBlockPos( Window, eyePos, dir, reach, pos );
@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 		
 		public override Matrix4 GetView() {
 			Vector3 eyePos = player.EyePosition;
-			Vector3 cameraPos = eyePos - Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI ) * distance;
+			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY );
 		}
 		
@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 		
 		public override Matrix4 GetView() {
 			Vector3 eyePos = player.EyePosition;
-			Vector3 cameraDir = Utils.GetDirectionVector( player.YawRadians, player.PitchRadians + Math.PI );
+			Vector3 cameraDir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
 			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY );
 		}
 		

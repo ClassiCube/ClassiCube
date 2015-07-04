@@ -33,17 +33,18 @@ namespace ClassicalSharp {
 		}
 		
 		public byte GetClosetPlayer( Vector3 eyePos, Vector3 dir ) {
-			float dist = float.PositiveInfinity;
+			float closestDist = float.PositiveInfinity;
 			byte targetId = 255;
 			
 			for( int i = 0; i < Players.Length - 1; i++ ) { // -1 because we don't want to pick against local player
 				Player p = Players[i];
 				if( p == null ) continue;
-				BoundingBox bounds = p.PickingBounds;
 				float t0, t1;
-				if( IntersectionUtils.RayIntersectsBox( eyePos, dir, bounds.Min, bounds.Max, out t0, out t1 ) ) {
-					dist = t0;
-					targetId = (byte)i;
+				if( Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
+					if( t0 < closestDist ) {
+						closestDist = t0;
+						targetId = (byte)i;
+					}
 				}
 			}
 			return targetId;

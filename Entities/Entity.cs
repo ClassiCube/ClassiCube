@@ -42,23 +42,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public virtual BoundingBox PickingBounds {
-			get {
-				BoundingBox bb = Model.PickingBounds;
-				float angle = YawRadians;
-				// TODO: This would be a lot simpler and more accurate if we just did ray-oobb intersection.
-				Vector3 x1z1 = Utils.RotateY( bb.Min.X, 0, bb.Min.Z, angle );
-				Vector3 x1z2 = Utils.RotateY( bb.Min.X, 0, bb.Max.Z, angle );
-				Vector3 x2z1 = Utils.RotateY( bb.Max.X, 0, bb.Min.Z, angle );
-				Vector3 x2z2 = Utils.RotateY( bb.Max.X, 0, bb.Max.Z, angle );
-				float minX = Math.Min( x1z1.X, Math.Min( x1z2.X, Math.Min( x2z2.X, x2z1.X ) ) );
-				float maxX = Math.Max( x1z1.X, Math.Max( x1z2.X, Math.Max( x2z2.X, x2z1.X ) ) );
-				float minZ = Math.Min( x1z1.Z, Math.Min( x1z2.Z, Math.Min( x2z2.Z, x2z1.Z ) ) );
-				float maxZ = Math.Max( x1z1.Z, Math.Max( x1z2.Z, Math.Max( x2z2.Z, x2z1.Z ) ) );
-				return new BoundingBox( minX, bb.Min.Y, minZ, maxX, bb.Max.Y, maxZ ).Offset( Position );
-			}
-		}
-		
 		public abstract void Despawn();
 		
 		public abstract void Render( double deltaTime, float t );

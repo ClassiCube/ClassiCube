@@ -4,7 +4,21 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
-	public static class IntersectionUtils {
+	public static class Intersection {
+		
+		internal static bool RayIntersectsRotatedBox( Vector3 origin, Vector3 dir, Player target, out float tMin, out float tMax ) {
+			// This is the rotated AABB of the model
+			//        *
+			//       / \     we then perform a counter       *---*  and we can then do
+			// ====>* x *    rotation to the rotated AABB    | x |   a standard AABB test  
+			//       \ /     and ray origin and direction    *---*   with the rotated ray
+			//        *                                     /
+			//                                             /
+			Vector3 rotatedOrigin = target.Position + Utils.RotateY( origin - target.Position, -target.YawRadians );
+			Vector3 rotatedDir = Utils.RotateY( dir, -target.YawRadians );
+			BoundingBox bb = target.Model.PickingBounds.Offset( target.Position );
+			return RayIntersectsBox( rotatedOrigin, rotatedDir, bb.Min, bb.Max, out tMin, out tMax );
+		}
 		
 		//http://www.cs.utah.edu/~awilliam/box/box.pdf
 		public static bool RayIntersectsBox( Vector3 origin, Vector3 dir, Vector3 min, Vector3 max,

@@ -111,6 +111,12 @@ namespace ClassicalSharp {
 			return packed * 360.0 / 256.0;
 		}
 		
+		public static Vector3 RotateY( Vector3 v, float angle ) {
+			float cosA = (float)Math.Cos( angle );
+			float sinA = (float)Math.Sin( angle );
+			return new Vector3( cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z );
+		}
+		
 		public static Vector3 RotateY( float x, float y, float z, float angle ) {
 			float cosA = (float)Math.Cos( angle );
 			float sinA = (float)Math.Sin( angle );
@@ -138,10 +144,10 @@ namespace ClassicalSharp {
 			return dx * dx + dy * dy + dz * dz;
 		}
 		
-		public static Vector3 GetDirectionVector( double yawRad, double pitchRad ) {
-			double x = Math.Cos( pitchRad ) * -Math.Sin( yawRad );
-			double y = Math.Sin( pitchRad );
-			double z = Math.Cos( pitchRad ) * Math.Cos( yawRad );
+		public static Vector3 GetDirVector( double yawRad, double pitchRad ) {
+			double x = -Math.Cos( pitchRad ) * -Math.Sin( yawRad );
+			double y = -Math.Sin( pitchRad );
+			double z = -Math.Cos( pitchRad ) * Math.Cos( yawRad );
 			return new Vector3( (float)x, (float)y, (float)z );
 		}
 		
