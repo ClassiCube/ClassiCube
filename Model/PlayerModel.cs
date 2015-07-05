@@ -91,23 +91,23 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelSet model;
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.PlayerTextureId <= 0 ? DefaultTexId : renderer.PlayerTextureId;
-			graphics.Bind2DTexture( texId );
+			graphics.Bind2DTexture( texId );		
+			SkinType skinType = p.SkinType;
 			model = Set64x32;
-			SkinType skinType = player.SkinType;
 			if( skinType == SkinType.Type64x64 ) model = Set64x64;
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
-			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, model.Head );
+			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, model.Head );
 			model.Torso.Render();
-			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, model.LeftLeg );
-			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, model.RightLeg );
-			DrawRotate( 0, 1.5f, 0, leftArmXRot, 0, leftArmZRot, model.LeftArm );
-			DrawRotate( 0, 1.5f, 0, rightArmXRot, 0, rightArmZRot, model.RightArm );
+			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
+			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
+			DrawRotate( 0, 1.5f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
+			DrawRotate( 0, 1.5f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
-			DrawRotate( 0, 1.4375f, 0, -pitch, 0, 0, model.Hat );
+			DrawRotate( 0, 1.4375f, 0, -p.PitchRadians, 0, 0, model.Hat );
 		}
 		
 		public override void Dispose() {

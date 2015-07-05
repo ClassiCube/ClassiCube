@@ -52,7 +52,10 @@ namespace ClassicalSharp {
 		
 		public Player this[int id] {
 			get { return Players[id]; }
-			set { Players[id] = value; }
+			set { 
+				Players[id] = value;
+				value.ID = (byte)id;
+			}
 		}
 	}
 }

@@ -652,7 +652,7 @@ namespace ClassicalSharp {
 					Window.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
-				Window.Players[entityId] = new NetPlayer( entityId, displayName, skinName, Window );
+				Window.Players[entityId] = new NetPlayer( displayName, skinName, Window );
 				Window.RaiseEntityAdded( entityId );
 				Window.AsyncDownloader.DownloadSkin( skinName );
 			}

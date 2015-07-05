@@ -49,17 +49,17 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -5 / 16f, 0, -14 / 16f, 5 / 16f, 16 / 16f, 9 / 16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 0.75f, -0.375f, -pitch, 0, 0, Set.Head );
+			DrawRotate( 0, 0.75f, -0.375f, -p.PitchRadians, 0, 0, Set.Head );
 			Set.Torso.Render();
-			DrawRotate( 0, 0.375f, -0.3125f, leftLegXRot, 0, 0, Set.LeftLegFront );
-			DrawRotate( 0, 0.375f, -0.3125f, rightLegXRot, 0, 0, Set.RightLegFront );
-			DrawRotate( 0, 0.375f, 0.4375f, rightLegXRot, 0, 0, Set.LeftLegBack );
-			DrawRotate( 0, 0.375f, 0.4375f, leftLegXRot, 0, 0, Set.RightLegBack );
+			DrawRotate( 0, 0.375f, -0.3125f, p.leftLegXRot, 0, 0, Set.LeftLegFront );
+			DrawRotate( 0, 0.375f, -0.3125f, p.rightLegXRot, 0, 0, Set.RightLegFront );
+			DrawRotate( 0, 0.375f, 0.4375f, p.rightLegXRot, 0, 0, Set.LeftLegBack );
+			DrawRotate( 0, 0.375f, 0.4375f, p.leftLegXRot, 0, 0, Set.RightLegBack );
 			graphics.AlphaTest = true;
 		}
 		

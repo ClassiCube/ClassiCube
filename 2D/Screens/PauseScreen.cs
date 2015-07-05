@@ -37,9 +37,9 @@ namespace ClassicalSharp {
 			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
 			controlsWidget = TextWidget.Create( Window, 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
-			keyStatusWidget = TextWidget.Create( Window, 0, -80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
-			gameWidget = TextWidget.Create( Window, 0, -50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
-			exitWidget = TextWidget.Create( Window, 0, -10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
+			keyStatusWidget = TextWidget.Create( Window, 0, 80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
+			gameWidget = TextWidget.Create( Window, 0, 50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
+			exitWidget = TextWidget.Create( Window, 0, 10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
 				"Open chat", "Send chat", "Pause", "Open inventory" };

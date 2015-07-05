@@ -12,14 +12,12 @@ namespace ClassicalSharp {
 		}
 		
 		Texture[] textures;
-		string[] textCache;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
 		readonly Font font;
 		
 		public override void Init() {
 			textures = new Texture[ElementsCount];
-			textCache = new string[ElementsCount];
 			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
 			for( int i = 0; i < textures.Length; i++ ) {
 				textures[i].Height = defaultHeight;
@@ -29,32 +27,17 @@ namespace ClassicalSharp {
 		
 		public void SetText( int index, string text ) {
 			GraphicsApi.DeleteTexture( ref textures[index] );
-			List<DrawTextArgs> parts = null;
-			Size size = new Size( 0, defaultHeight );
-			if( !String.IsNullOrEmpty( text ) ) {
-				parts = Utils2D.SplitText( GraphicsApi, text, true );
-				size = Utils2D.MeasureSize( parts, font, true );
-			}
 			
-			int x = HorizontalDocking == Docking.LeftOrTop ? XOffset : Window.Width - size.Width - XOffset;
-			int y = CalcY( index, size.Height );
 			if( !String.IsNullOrEmpty( text ) ) {
-				textures[index] = Utils2D.MakeTextTexture( parts, font, size, x, y );
+				DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
+				Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+				tex.X1 = CalcOffset( Window.Width, tex.Width, XOffset, HorizontalDocking );
+				tex.Y1 = CalcY( index, tex.Height );
+				textures[index] = tex;
 			} else {
 				textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
 			}
-			textCache[index] = text;
 			UpdateDimensions();
-		}
-		
-		public void SetText( int startIndex, params string[] texts ) {
-			for( int i = 0; i < texts.Length; i++ ) {
-				SetText( startIndex + i, texts[i] );
-			}
-		}
-		
-		public string GetText( int index ) {
-			return textCache[index];
 		}
 		
 		public int CalcUsedY() {
@@ -72,7 +55,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < textures.Length - 1; i++ ) {
 				textures[i] = textures[i + 1];
 				textures[i].Y1 = y;
-				textCache[i] = textCache[i + 1];
 				y += textures[i].Height;
 			}
 			textures[textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
@@ -80,28 +62,28 @@ namespace ClassicalSharp {
 		}
 		
 		int CalcY( int index, int newHeight ) {
+			int y = 0;
+			int deltaY = newHeight - textures[index].Height;
+			
 			if( VerticalDocking == Docking.LeftOrTop ) {
-				int y = Y;
+				y = Y;
 				for( int i = 0; i < index; i++ ) {
 					y += textures[i].Height;
 				}
-				int deltaY = newHeight - textures[index].Height;
 				for( int i = index + 1; i < textures.Length; i++ ) {
 					textures[i].Y1 += deltaY;
 				}
-				return y;
 			} else {
-				int y = Window.Height - YOffset;
+				y = Window.Height - YOffset;
 				for( int i = index + 1; i < textures.Length; i++ ) {
 					y -= textures[i].Height;
 				}
 				y -= newHeight;
-				int deltaY = newHeight - textures[index].Height;
 				for( int i = 0; i < index; i++ ) {
 					textures[i].Y1 -= deltaY;
-				}
-				return y;
+				}				
 			}
+			return y;
 		}
 		
 		void UpdateDimensions() {
@@ -109,7 +91,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < textures.Length; i++ ) {
 				Height += textures[i].Height;
 			}
-			Y = VerticalDocking == Docking.LeftOrTop ? YOffset : Window.Height - Height - YOffset;
+			Y = CalcOffset( Window.Height, Height, YOffset, VerticalDocking );
 			
 			Width = 0;
 			for( int i = 0; i < textures.Length; i++ ) {
@@ -118,7 +100,7 @@ namespace ClassicalSharp {
 					Width = width;
 				}
 			}
-			X = HorizontalDocking == Docking.LeftOrTop ? XOffset : Window.Width - Width - XOffset;
+			X = CalcOffset( Window.Width, Width, XOffset, HorizontalDocking );
 		}
 		
 		public override void Render( double delta ) {

@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		public int ChatInputYOffset, ChatLogYOffset;
 		public bool HistoryMode;
 		const int chatLines = 12;
-		Texture announcementTexture;
+		Texture announcementTex;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat;
 		bool suppressNextPress = true;
@@ -28,15 +28,15 @@ namespace ClassicalSharp {
 			normalChat.Render( delta );
 			status.Render( delta );
 			bottomRight.Render( delta );
-			if( announcementTexture.IsValid ) {
-				announcementTexture.Render( GraphicsApi );
+			if( announcementTex.IsValid ) {
+				announcementTex.Render( GraphicsApi );
 			}
 			if( HandlesAllInput ) {
 				textInput.Render( delta );
 			}
 			if( Window.Announcement != null && ( DateTime.UtcNow - announcementDisplayTime ).TotalSeconds > 5 ) {
 				Window.Announcement = null;
-				GraphicsApi.DeleteTexture( ref announcementTexture );
+				GraphicsApi.DeleteTexture( ref announcementTex );
 			}
 			if( HistoryMode ) {
 				pageTexture.Render( GraphicsApi );
@@ -109,13 +109,13 @@ namespace ClassicalSharp {
 			status.Dispose();
 			bottomRight.Dispose();
 			GraphicsApi.DeleteTexture( ref pageTexture );
-			GraphicsApi.DeleteTexture( ref announcementTexture );
+			GraphicsApi.DeleteTexture( ref announcementTex );
 			Window.ChatReceived -= ChatReceived;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			announcementTexture.X1 += ( width - oldWidth ) / 2;
-			announcementTexture.Y1 += ( height - oldHeight ) / 2;
+			announcementTex.X1 += ( width - oldWidth ) / 2;
+			announcementTex.Y1 += ( height - oldHeight ) / 2;
 			pageTexture.Y1 += height - oldHeight;
 			textInput.OnResize( oldWidth, oldHeight, width, height );
 			status.OnResize( oldWidth, oldHeight, width, height );
@@ -141,15 +141,10 @@ namespace ClassicalSharp {
 		
 		void UpdateAnnouncement( string text ) {
 			announcementDisplayTime = DateTime.UtcNow;
-			if( !String.IsNullOrEmpty( text ) ) {
-				List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, text, true );
-				Size size = Utils2D.MeasureSize( parts, announcementFont, true );
-				int x = Window.Width / 2 - size.Width / 2;
-				int y = Window.Height / 4 - size.Height / 2;
-				announcementTexture = Utils2D.MakeTextTexture( parts, announcementFont, size, x, y );
-			} else {
-				announcementTexture = new Texture( -1, 0, 0, 0, 0, 0, 0 );
-			}
+			DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
+			announcementTex = Utils2D.MakeTextTexture( announcementFont, 0, 0, ref args );
+			announcementTex.X1 = Window.Width / 2 - announcementTex.Width / 2;
+			announcementTex.Y1 = Window.Height / 4 - announcementTex.Height / 2; 
 		}
 		
 		void UpdateChat( string text ) {

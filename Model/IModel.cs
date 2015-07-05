@@ -23,30 +23,15 @@ namespace ClassicalSharp.Model {
 		
 		public abstract BoundingBox PickingBounds { get; }
 		
-		protected Vector3 pos;
-		protected float yaw, pitch;
-		protected float rightLegXRot, rightArmXRot, rightArmZRot;
-		protected float leftLegXRot, leftArmXRot, leftArmZRot;
-		public void RenderModel( Player player, PlayerRenderer renderer ) {
-			pos = player.Position;
-			yaw = player.YawRadians;
-			pitch = player.PitchRadians;
-			
-			leftLegXRot = player.leftLegXRot;
-			leftArmXRot = player.leftArmXRot;
-			leftArmZRot = player.leftArmZRot;
-			rightLegXRot = player.rightLegXRot;
-			rightArmXRot = player.rightArmXRot;
-			rightArmZRot = player.rightArmZRot;
-			
+		public void RenderModel( Player p, PlayerRenderer renderer ) {
 			graphics.PushMatrix();
-			Matrix4 mat = Matrix4.RotateY( -yaw ) * Matrix4.Translate( pos );
+			Matrix4 mat = Matrix4.RotateY( -p.YawRadians ) * Matrix4.Translate( p.Position );
 			graphics.MultiplyMatrix( ref mat );
-			DrawPlayerModel( player, renderer );
+			DrawPlayerModel( p, renderer );
 			graphics.PopMatrix();
 		}
 		
-		protected abstract void DrawPlayerModel( Player player, PlayerRenderer renderer );
+		protected abstract void DrawPlayerModel( Player p, PlayerRenderer renderer );
 		
 		public abstract void Dispose();
 		

@@ -7,8 +7,7 @@ using OpenTK;
 namespace ClassicalSharp.Renderers {
 	
 	public class PlayerRenderer {
-		
-		Vector3 pos;
+
 		public Game Window;
 		public IGraphicsApi Graphics;
 		public Player Player;
@@ -23,11 +22,10 @@ namespace ClassicalSharp.Renderers {
 			Graphics = window.Graphics;
 			
 			using( Font font = new Font( "Arial", 14 ) ) {
-				List<DrawTextArgs> parts = Utils2D.SplitText( Graphics, player.DisplayName, true );
-				Size size = Utils2D.MeasureSize( parts, font, true );
-				nameTexture = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
-				nameWidth = size.Width;
-				nameHeight = size.Height;
+				DrawTextArgs args = new DrawTextArgs( Graphics, player.DisplayName, true );
+				nameTexture = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+				nameWidth = nameTexture.Width;
+				nameHeight = nameTexture.Height;
 				nameTextureId = nameTexture.ID;
 			}
 		}
@@ -38,13 +36,13 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render( double deltaTime ) {
-			pos = Player.Position;
 			Player.Model.RenderModel( Player, this );
 			DrawName();
 		}
 		
 		const float nameScale = 1 / 50f;
 		private void DrawName() {
+			Vector3 pos = Player.Position;
 			Graphics.PushMatrix();
 			Matrix4 mat = Matrix4.Translate( pos.X, pos.Y + Player.Model.NameYOffset, pos.Z );
 			// Do this to always have names facing the player

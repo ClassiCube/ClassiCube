@@ -61,18 +61,18 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -4 / 16f, 0, -4 / 16f, 4 / 16f, 32 / 16f, 4 / 16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.5f, 0, -pitch, 0, 0, Set.Head );
+			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Set.Head );
 			Set.Torso.Render();
-			DrawRotate( 0, 0.75f, 0, leftLegXRot, 0, 0, Set.LeftLeg );
-			DrawRotate( 0, 0.75f, 0, rightLegXRot, 0, 0, Set.RightLeg );
-			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, leftArmZRot, Set.LeftArm );
-			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, rightArmZRot, Set.RightArm );			
+			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, Set.LeftLeg );
+			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, Set.RightLeg );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, Set.LeftArm );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, Set.RightArm );			
 		}
 		
 		public override void Dispose() {

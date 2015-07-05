@@ -73,26 +73,26 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -6 / 16f, 0, -13 / 16f, 6 / 16f, 23 / 16f, 10 / 16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.125f, -0.5f, -pitch, 0, 0, Set.Head );
+			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Set.Head );
 			Set.Torso.Render();
-			DrawRotate( 0, 0.75f, -0.3125f, leftLegXRot, 0, 0, Set.LeftLegFront );
-			DrawRotate( 0, 0.75f, -0.3125f, rightLegXRot, 0, 0, Set.RightLegFront );
-			DrawRotate( 0, 0.75f, 0.4375f, rightLegXRot, 0, 0, Set.LeftLegBack );
-			DrawRotate( 0, 0.75f, 0.4375f, leftLegXRot, 0, 0, Set.RightLegBack );
+			DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, Set.LeftLegFront );
+			DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, Set.RightLegFront );
+			DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, Set.LeftLegBack );
+			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, Set.RightLegBack );
 			graphics.AlphaTest = true;
 			if( Fur ) {
 				graphics.Bind2DTexture( furTextureId );
 				Set.FurTorso.Render();
-				DrawRotate( 0, 1.125f, -0.5f, -pitch, 0, 0, Set.FurHead );
-				DrawRotate( 0, 0.75f, -0.3125f, leftLegXRot, 0, 0, Set.FurLeftLegFront );
-				DrawRotate( 0, 0.75f, -0.3125f, rightLegXRot, 0, 0, Set.FurRightLegFront );
-				DrawRotate( 0, 0.75f, 0.4375f, rightLegXRot, 0, 0, Set.FurLeftLegBack );
-				DrawRotate( 0, 0.75f, 0.4375f, leftLegXRot, 0, 0, Set.FurRightLegBack );
+				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Set.FurHead );
+				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, Set.FurLeftLegFront );
+				DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, Set.FurRightLegFront );
+				DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, Set.FurLeftLegBack );
+				DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, Set.FurRightLegBack );
 			}
 		}
 		

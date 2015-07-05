@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 		
 		protected static int CalcOffset( int axisSize, int elemSize, int offset, Docking mode ) {
 			if( mode == Docking.LeftOrTop ) return offset;
-			if( mode == Docking.BottomOrRight) return axisSize - elemSize + offset;
+			if( mode == Docking.BottomOrRight) return axisSize - elemSize - offset;
 			return ( axisSize - elemSize ) / 2 + offset;
 		}
 	}

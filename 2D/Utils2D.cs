@@ -45,22 +45,15 @@ namespace ClassicalSharp {
 		
 		const float shadowOffset = 1.3f;
 		public static Size MeasureSize( string text, Font font, bool shadow ) {
-			SizeF size = measuringGraphics.MeasureString( text, font, Int32.MaxValue, format );
-			if( shadow ) {
-				size.Width += shadowOffset;
-				size.Height += shadowOffset;
-			}
-			return Size.Ceiling( size );
-		}
-		
-		public static Size MeasureSize( List<DrawTextArgs> parts, Font font, bool shadow ) {
+			GetTextParts( text );
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
 				SizeF size = measuringGraphics.MeasureString( parts[i].Text, font, Int32.MaxValue, format );
 				total.Height = Math.Max( total.Height, size.Height );
 				total.Width += size.Width;
 			}
-			if( shadow ) {
+			
+			if( shadow && parts.Count > 0 ) {
 				total.Width += shadowOffset;
 				total.Height += shadowOffset;
 			}
@@ -68,22 +61,23 @@ namespace ClassicalSharp {
 		}
 		
 		public static void DrawText( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
-			Brush textBrush = GetOrCreateBrush( args.TextColour );
-			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
-			g.TextRenderingHint = TextRenderingHint.AntiAlias;
-			
-			if( args.UseShadow ) {
-				g.DrawString( args.Text, font, shadowBrush, x + shadowOffset, y + shadowOffset, format );
-			}
-			g.DrawString( args.Text, font, textBrush, x, y, format );
+			GetTextParts( args.Text );
+			DrawTextNoCheck( g, font, ref args, x, y );
 		}
 		
-		public static void DrawText( Graphics g, List<DrawTextArgs> parts, Font font, float x, float y ) {
+		private static void DrawTextNoCheck( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
+			g.TextRenderingHint = TextRenderingHint.AntiAlias;
+			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
+			
 			for( int i = 0; i < parts.Count; i++ ) {
-				DrawTextArgs part = parts[i];
-				DrawText( g, font, ref part, x, y );
-				SizeF partSize = g.MeasureString( part.Text, font, Int32.MaxValue, format );
-				x += partSize.Width;
+				TextPart part = parts[i];
+				Brush textBrush = GetOrCreateBrush( part.TextColour );
+				if( args.UseShadow ) {
+					g.DrawString( part.Text, font, shadowBrush, x + shadowOffset, y + shadowOffset, format );
+				}
+				
+				g.DrawString( part.Text, font, textBrush, x, y, format );
+				x += g.MeasureString( part.Text, font, Int32.MaxValue, format ).Width;
 			}
 		}
 		
@@ -100,29 +94,22 @@ namespace ClassicalSharp {
 		
 		public static Texture MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
+			if( parts.Count == 0 )
+				return new Texture( -1, x1, y1, 0, 0, 1, 1 );
+			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					DrawText( g, font, ref args, 0, 0 );
+					DrawTextNoCheck( g, font, ref args, 0, 0 );
 				}
 				return Make2DTexture( args.Graphics, bmp, size, x1, y1 );
 			}
 		}
 		
-		public static Texture MakeTextTexture( List<DrawTextArgs> parts, Font font, Size size, int x1, int y1 ) {
-			if( parts.Count == 0 ) return new Texture( -1, x1, y1, 0, 0, 1, 1 );
-			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					DrawText( g, parts, font, 0, 0 );
-				}
-				return Make2DTexture( parts[0].Graphics, bmp, size, x1, y1 );
-			}
-		}
-		
 		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
-			int textureID = graphics.LoadTexture( bmp );
-			return new Texture( textureID, x1, y1, used.Width, used.Height,
+			int texId = graphics.LoadTexture( bmp );
+			return new Texture( texId, x1, y1, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
-		}		
+		}
 		
 		public static void Dispose() {
 			measuringBmp.Dispose();
@@ -132,36 +119,47 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		static Color[] colours = new Color[] {
-			Color.FromArgb( 0, 0, 0 ), // black
-			Color.FromArgb( 0, 0, 191 ), // dark blue
-			Color.FromArgb( 0, 191, 0 ), // dark green
-			Color.FromArgb( 0, 191, 191 ), // dark teal
-			Color.FromArgb( 191, 0, 0 ), // dark red
-			Color.FromArgb( 191, 0, 191 ), // purple
-			Color.FromArgb( 191, 191, 0 ), // gold
-			Color.FromArgb( 191, 191, 191 ), // gray
-			Color.FromArgb( 64, 64, 64 ), // dark gray
-			Color.FromArgb( 64, 64, 255 ), // blue
-			Color.FromArgb( 64, 255, 64 ), // lime
-			Color.FromArgb( 64, 255, 255 ), // teal
-			Color.FromArgb( 255, 64, 64 ), // red
-			Color.FromArgb( 255, 64, 255 ), // pink
-			Color.FromArgb( 255, 255, 64 ), // yellow
-			Color.FromArgb( 255, 255, 255 ), // white
-		};
-
-		static List<DrawTextArgs> parts = new List<DrawTextArgs>( 64 );
-		public static List<DrawTextArgs> SplitText( IGraphicsApi graphics, string value, bool shadow ) {
-			int code = 0xF;
+		static List<TextPart> parts = new List<TextPart>( 64 );
+		static Color white = Color.FromArgb( 255, 255, 255 );
+		struct TextPart {
+			public string Text;
+			public Color TextColour;
+			
+			public TextPart( string text, Color col ) {
+				Text = text;
+				TextColour = col;
+			}
+		}
+		
+		static void GetTextParts( string value ) {
+			if( String.Equals( value, lastSplitText ) ) {
+				return;
+			}
+			
 			parts.Clear();
+			if( String.IsNullOrEmpty( value ) ) {
+			} else if( value.IndexOf( '&' ) == -1 ) {
+				parts.Add( new TextPart( value, white ) );
+			} else {
+				SplitText( value );
+			}
+			lastSplitText = value;
+		}
+		
+		static string lastSplitText;
+		static void SplitText( string value ) {
+			int code = 0xF;
 			for( int i = 0; i < value.Length; i++ ) {
 				int nextAnd = value.IndexOf( '&', i );
 				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					parts.Add( new DrawTextArgs( graphics, part, colours[code], shadow ) );
+					Color col = Color.FromArgb(
+						191 * ( ( code >> 2 ) & 0x1 ) + 64 * ( code >> 3 ),
+						191 * ( ( code >> 1 ) & 0x1 ) + 64 * ( code >> 3 ),
+						191 * ( ( code >> 0 ) & 0x1 ) + 64 * ( code >> 3 ) );
+					parts.Add( new TextPart( part, col ) );
 				}
 				i += partLength + 1;
 				
@@ -174,7 +172,6 @@ namespace ClassicalSharp {
 					}
 				}
 			}
-			return parts;
 		}
 	}
 }

@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace ClassicalSharp {
 	
-	public sealed class TextWidget : Widget {	
+	public sealed class TextWidget : Widget {
 		
 		public TextWidget( Game window, Font font ) : base( window ) {
 			this.font = font;
@@ -22,43 +22,27 @@ namespace ClassicalSharp {
 		}
 		
 		Texture texture;
-		string textCache = null;
 		public int XOffset = 0, YOffset = 0;
 		int defaultHeight;
 		readonly Font font;
 		
 		public override void Init() {
 			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
-			texture.Height = defaultHeight;
-			UpdateDimensions();
+			Height = defaultHeight;
 		}
 		
 		public void SetText( string text ) {
 			GraphicsApi.DeleteTexture( ref texture );
-			textCache = text;
 			if( String.IsNullOrEmpty( text ) ) {
-				texture = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
-				UpdateDimensions();
-				return;
-			}
-			
-			List<DrawTextArgs> parts = null;
-			Size size = new Size( 0, defaultHeight );
-			parts = Utils2D.SplitText( GraphicsApi, text, true );
-			size = Utils2D.MeasureSize( parts, font, true );
-			
-			X = CalcOffset( Window.Width, size.Width, XOffset, HorizontalDocking );
-			Y = CalcOffset( Window.Height, size.Height, YOffset, VerticalDocking );
-			texture = Utils2D.MakeTextTexture( parts, font, size, X, Y );
-			UpdateDimensions();
-		}
-		
-		public string GetText() {
-			return textCache;
-		}
-		
-		void UpdateDimensions() {
-			Height = texture.Height;
+				texture = new Texture();
+				Height = defaultHeight;
+			} else {
+				DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
+				texture = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+				X = texture.X1 = CalcOffset( Window.Width, texture.Width, XOffset, HorizontalDocking );
+				Y = texture.Y1 = CalcOffset( Window.Height, texture.Height, YOffset, VerticalDocking );
+				Height = texture.Height;
+			}		
 			Width = texture.Width;
 		}
 		

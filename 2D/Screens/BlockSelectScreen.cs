@@ -130,15 +130,15 @@ namespace ClassicalSharp {
 			
 			Block block = blocksTable[selectedIndex].BlockId;
 			UpdateBlockInfoString( block );
-			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, buffer.value, true );
-			Size size = Utils2D.MeasureSize( parts, font, true );
+			Size size = Utils2D.MeasureSize( buffer.value, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;
 			
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					Utils2D.DrawText( g, parts, font, 0, 0 );
+					DrawTextArgs args = new DrawTextArgs( GraphicsApi, buffer.value, true );
+					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
 				blockInfoTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, x, y );
 			}

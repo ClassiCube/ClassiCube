@@ -40,10 +40,9 @@ namespace ClassicalSharp {
 			get { return (float)GetMaxHeight( jumpVel ); }
 		}
 		
-		public LocalPlayer( byte id, Game window ) : base( id, window ) {
+		public LocalPlayer( Game window ) : base( window ) {
 			DisplayName = window.Username;
 			SkinName = window.Username;
-			map = window.Map;
 		}
 		
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {

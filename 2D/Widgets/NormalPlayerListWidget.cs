@@ -50,9 +50,8 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( Player player ) {
-			List<DrawTextArgs> parts = Utils2D.SplitText( GraphicsApi, player.DisplayName, true );
-			Size size = Utils2D.MeasureSize( parts, font, true );
-			Texture tex = Utils2D.MakeTextTexture( parts, font, size, 0, 0 );
+			DrawTextArgs args = new DrawTextArgs( GraphicsApi, player.DisplayName, true );
+			Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
 			info[namesCount] = new PlayerInfo( player );
 			textures[namesCount] = tex;
 			namesCount++;

@@ -16,20 +16,14 @@ namespace ClassicalSharp {
 			get { return new Vector3( Position.X, Position.Y + EyeHeight, Position.Z ); }
 		}
 		
-		public override float StepSize {
-			get { return 0.5f; }
-		}
-		
 		public Game Window;
-		public byte ID;
 		public string DisplayName, SkinName;
-		public string ModelName;
-		protected PlayerRenderer renderer;
 		public SkinType SkinType;
+		protected PlayerRenderer renderer;		
 		
-		public Player( byte id, Game window ) : base( window ) {
-			ID = id;
+		public Player( Game window ) : base( window ) {
 			Window = window;
+			StepSize = 0.5f;
 			SkinType = Window.DefaultPlayerSkinType;
 			SetModel( "humanoid" );
 		}
@@ -45,7 +39,6 @@ namespace ClassicalSharp {
 		}
 		
 		Block GetBlock( Vector3 coords ) {
-			if( map == null || map.IsNotLoaded ) return Block.Air;
 			Vector3I blockCoords = Vector3I.Floor( coords );
 			return map.IsValidPos( blockCoords ) ?
 				(Block)map.GetBlock( blockCoords ) : Block.Air;
@@ -65,16 +58,14 @@ namespace ClassicalSharp {
 			float dx = newPos.X - oldPos.X;
 			float dz = newPos.Z - oldPos.Z;
 			double distance = Math.Sqrt( dx * dx + dz * dz );
-			bool moves = distance > 0.05;
 			
-			if( moves ) {
+			if( distance > 0.05 ) {
 				walkTimeN += (float)distance * 2 * (float)( 20 * delta );
 				swingN += (float)delta * 3;
-				if( swingN > 1 ) swingN = 1;
 			} else {
 				swingN -= (float)delta * 3;
-				if( swingN < 0 ) swingN = 0;
 			}
+			Utils.Clamp( ref swingN, 0, 1 );
 		}
 		
 		const float armMax = (float)( 90 * Math.PI / 180.0 );

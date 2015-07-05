@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
 			Map = new Map( this );
-			LocalPlayer = new LocalPlayer( 255, this );
+			LocalPlayer = new LocalPlayer( this );
 			Players[255] = LocalPlayer;
 			width = Width;
 			height = Height;

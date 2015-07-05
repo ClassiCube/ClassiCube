@@ -54,13 +54,13 @@ namespace ClassicalSharp.Model {
 		
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
-		protected override void DrawPlayerModel( Player player, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
 			graphics.Texturing = true;
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			
-			DrawRotate( 0, 0.5f, -0.1875f, -pitch, 0, 0, Set.Head );
+			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Set.Head );
 			Set.Link.Render();
 			Set.End.Render();
 			// TODO: leg animations
