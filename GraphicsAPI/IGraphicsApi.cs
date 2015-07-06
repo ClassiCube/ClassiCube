@@ -126,8 +126,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount );
 		
-		public abstract void EndVbBatch();
-		
 		public abstract void BeginIndexedVbBatch();
 		
 		public abstract void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,

@@ -51,7 +51,6 @@ namespace ClassicalSharp.Selections {
 				box.Render( delta );
 			}
 			Graphics.AlphaBlending = false;
-			Graphics.EndVbBatch();
 		}
 		
 		public void Dispose() {

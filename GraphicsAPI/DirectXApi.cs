@@ -269,9 +269,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetStreamSource( 0, vBuffers[id], 0, batchStride );
 			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
 		}
-
-		public override void EndVbBatch() {
-		}
 		
 		public override void BeginIndexedVbBatch() {
 			device.VertexFormat = formatMapping[(int)VertexFormat.Pos3fTex2fCol4b];

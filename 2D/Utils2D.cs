@@ -140,10 +140,8 @@ namespace ClassicalSharp {
 			} else {
 				SplitText( value );
 			}
-			lastSplitText = value;
 		}
 		
-		static string lastSplitText;
 		static void SplitText( string value ) {
 			int code = 0xF;
 			for( int i = 0; i < value.Length; i++ ) {
