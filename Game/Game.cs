@@ -327,11 +327,9 @@ namespace ClassicalSharp {
 			}
 			if( Network.UsingPlayerClick ) {
 				byte targetId = Players.GetClosetPlayer( this );
-				for( int i = 0; i < buttonsDown.Length; i++ ) {
-					if( !buttonsDown[i] ) continue;
-					Network.SendPlayerClick( (MouseButton)i, false, targetId, SelectedPos );
-					buttonsDown[i] = false;
-				}
+				ButtonStateChanged( MouseButton.Left, false, targetId );
+				ButtonStateChanged( MouseButton.Right, false, targetId );
+				ButtonStateChanged( MouseButton.Middle, false, targetId );
 			}
 		}
 		

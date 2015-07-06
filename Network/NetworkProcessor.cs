@@ -70,7 +70,6 @@ namespace ClassicalSharp {
 		
 		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 			Player p = Window.LocalPlayer;
-			Console.WriteLine( "CLICK: " + button + "," + buttonDown );
 			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
 			                pos.BlockPos, pos.BlockFace );
 		}
@@ -114,17 +113,17 @@ namespace ClassicalSharp {
 			CheckForWomEnvironment();
 		}
 		
-		readonly int[] packetSizes = new int[] {
+		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
 			8, 86, 2, 4, 66, 69, 2, 8, 138,
 		};
 		
-		static string[] clientExtensions = new string[] {
+		static string[] clientExtensions = {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
 			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
-			"EnvWeatherType",
+			"EnvWeatherType", "PlayerClick", // NOTE: There are no plans to support TextHotKey.
 		};
 		
 		

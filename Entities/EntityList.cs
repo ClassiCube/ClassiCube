@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		}
 		
 		public byte GetClosetPlayer( Game game ) {
-			Player localP = game.LocalPlayer;
+			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
 			Vector3 dir = Utils.GetDirVector( localP.YawRadians, localP.PitchRadians );
 			float closestDist = float.PositiveInfinity;
@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 				if( p == null ) continue;
 				float t0, t1;
 				if( Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
-					if( t0 < closestDist ) {
+					if( t0 < closestDist && closestDist < localP.ReachDistance ) {
 						closestDist = t0;
 						targetId = (byte)i;
 					}
