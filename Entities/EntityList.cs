@@ -57,7 +57,8 @@ namespace ClassicalSharp {
 			get { return Players[id]; }
 			set { 
 				Players[id] = value;
-				value.ID = (byte)id;
+				if( value != null )
+					value.ID = (byte)id;
 			}
 		}
 	}
