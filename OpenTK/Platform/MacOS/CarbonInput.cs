@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Diagnostics;
-using System.Text;
+using OpenTK.Input;
 
 namespace OpenTK.Platform.MacOS
 {
-    using Input;
-
     class CarbonInput : IInputDriver
     {
         List<KeyboardDevice> dummy_keyboard_list = new List<KeyboardDevice>(1);

@@ -10,31 +10,15 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using AGLContext = System.IntPtr;
+using AGLDevice = System.IntPtr;
+using AGLDrawable = System.IntPtr;
+using AGLPixelFormat = System.IntPtr;
+using GLenum = System.UInt32;
 
 namespace OpenTK.Platform.MacOS
 {
     #pragma warning disable 0169
-    
-    /*
-    ** Macintosh device type.
-    */
-    using AGLDevice = IntPtr;
-
-    /*
-    ** Macintosh drawable type.
-    */
-    using AGLDrawable = IntPtr;
-
-    /*
-    ** AGL opaque data.
-    */
-    using AGLRendererInfo = IntPtr;
-    using AGLPixelFormat = IntPtr;
-    using AGLContext = IntPtr;
-    using AGLPbuffer = IntPtr;
-
-    using GLenum = UInt32;
-
     unsafe static partial class Agl
     {
         

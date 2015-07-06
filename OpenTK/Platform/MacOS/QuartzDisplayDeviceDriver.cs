@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using OpenTK.Platform.MacOS.Carbon;
 
 namespace OpenTK.Platform.MacOS
 {
-    using System.Drawing;
-    using Carbon;
-
     class QuartzDisplayDeviceDriver : IDisplayDeviceDriver
     {
         static object display_lock = new object();

@@ -28,11 +28,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OpenTK.Graphics;
 
 namespace OpenTK.Platform.MacOS
 {
-    using Graphics;
-
     class MacOSFactory : IPlatformFactory
     {
         #region IPlatformFactory Members

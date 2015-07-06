@@ -30,13 +30,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Text;
+using OpenTK.Graphics;
+using OpenTK.Platform.MacOS.Carbon;
 
 namespace OpenTK.Platform.MacOS
 {
-    using Carbon;
-    using Graphics;
-
     class CarbonGLNative : INativeWindow
     {
         #region Fields

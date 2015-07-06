@@ -11,17 +11,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using OpenTK.Graphics;
+using OpenTK.Platform.MacOS.Carbon;
+using AGLPixelFormat = System.IntPtr;
 using Control = System.Windows.Forms.Control;
 
 namespace OpenTK.Platform.MacOS
 {
-    using Carbon;
-    using Graphics;
-
-    using AGLRendererInfo = IntPtr;
-    using AGLPixelFormat = IntPtr;
-    using AGLContext = IntPtr;
-    using AGLPbuffer = IntPtr;
 
     class AglContext : DesktopGraphicsContext 
     {
@@ -40,55 +36,39 @@ namespace OpenTK.Platform.MacOS
             this.graphics_mode = mode;
             this.carbonWindow = (CarbonWindowInfo)window;
 
-            CreateContext(mode, carbonWindow, IntPtr.Zero, true);
+            CreateContext(mode, carbonWindow, true);
         }
 
-
-        private void AddPixelAttrib(List<int> aglAttributes, Agl.PixelFormatAttribute pixelFormatAttribute)
+        private void AddPixelAttrib(List<int> attribs, Agl.PixelFormatAttribute name, int value)
         {
-            Debug.Print(pixelFormatAttribute.ToString());
-
-            aglAttributes.Add((int)pixelFormatAttribute);
+            attribs.Add((int)name);
+            attribs.Add(value);
         }
-        private void AddPixelAttrib(List<int> aglAttributes, Agl.PixelFormatAttribute pixelFormatAttribute, int value)
+        
+        void CreateContext(GraphicsMode mode, CarbonWindowInfo carbonWindow, bool fullscreen)
         {
-            Debug.Print("{0} : {1}", pixelFormatAttribute, value);
+            List<int> attribs = new List<int>();
 
-            aglAttributes.Add((int)pixelFormatAttribute);
-            aglAttributes.Add(value);
-        }
-        void CreateContext(GraphicsMode mode, CarbonWindowInfo carbonWindow, 
-            IntPtr shareContextRef, bool fullscreen)
-        {
-            List<int> aglAttributes = new  List<int>();
-
-            Debug.Print("AGL pixel format attributes:");
-            Debug.Indent();
-
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_RGBA);
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_DOUBLEBUFFER);
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_RED_SIZE, mode.ColorFormat.Red);
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_GREEN_SIZE, mode.ColorFormat.Green);
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_BLUE_SIZE, mode.ColorFormat.Blue);
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_ALPHA_SIZE, mode.ColorFormat.Alpha);
+            attribs.Add((int)Agl.PixelFormatAttribute.AGL_RGBA);
+            attribs.Add((int)Agl.PixelFormatAttribute.AGL_DOUBLEBUFFER);
+            AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_RED_SIZE, mode.ColorFormat.Red);
+            AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_GREEN_SIZE, mode.ColorFormat.Green);
+            AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_BLUE_SIZE, mode.ColorFormat.Blue);
+            AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_ALPHA_SIZE, mode.ColorFormat.Alpha);
 
             if (mode.Depth > 0)
-                AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_DEPTH_SIZE, mode.Depth);
+                AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_DEPTH_SIZE, mode.Depth);
 
             if (mode.Stencil > 0)
-                AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_STENCIL_SIZE, mode.Stencil);
+                AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_STENCIL_SIZE, mode.Stencil);
 
             if (fullscreen)
-            {
-                AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_FULLSCREEN);
-            }
-            AddPixelAttrib(aglAttributes, Agl.PixelFormatAttribute.AGL_NONE);
+                attribs.Add((int)Agl.PixelFormatAttribute.AGL_FULLSCREEN);
+            attribs.Add((int)Agl.PixelFormatAttribute.AGL_NONE);
 
-            Debug.Unindent();
-
-            Debug.Write("Attribute array:  ");
-            for (int i = 0; i < aglAttributes.Count; i++)
-                Debug.Write(aglAttributes[i].ToString() + "  ");
+            Debug.Write("AGL Attribute array:  ");
+            for (int i = 0; i < attribs.Count; i++)
+                Debug.Write(attribs[i].ToString() + "  ");
             Debug.WriteLine("");
 
             AGLPixelFormat myAGLPixelFormat;
@@ -108,10 +88,7 @@ namespace OpenTK.Platform.MacOS
                 if (status != OSStatus.NoError)
                     throw new MacOSException(status, "DMGetGDeviceByDisplayID failed.");
 
-                myAGLPixelFormat = Agl.aglChoosePixelFormat(
-                    ref gdevice, 1,
-                    aglAttributes.ToArray());
-
+                myAGLPixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs.ToArray());
                 Agl.AglError err = Agl.GetError();
 
                 if (err == Agl.AglError.BadPixelFormat)
@@ -119,7 +96,7 @@ namespace OpenTK.Platform.MacOS
                     Debug.Print("Failed to create full screen pixel format.");
                     Debug.Print("Trying again to create a non-fullscreen pixel format.");
 
-                    CreateContext(mode, carbonWindow, shareContextRef, false);
+                    CreateContext(mode, carbonWindow, false);
                     return;
                 }
             }
@@ -127,16 +104,16 @@ namespace OpenTK.Platform.MacOS
             {
                 myAGLPixelFormat = Agl.aglChoosePixelFormat(
                     IntPtr.Zero, 0, 
-                    aglAttributes.ToArray());
+                    attribs.ToArray());
 
                 MyAGLReportError("aglChoosePixelFormat");
             }
 
 
-			Debug.Print("Creating AGL context.  Sharing with {0}", shareContextRef);
+			Debug.Print("Creating AGL context.");
 
             // create the context and share it with the share reference.
-            Handle = new ContextHandle( Agl.aglCreateContext(myAGLPixelFormat, shareContextRef));
+            Handle = new ContextHandle( Agl.aglCreateContext(myAGLPixelFormat, IntPtr.Zero));
             MyAGLReportError("aglCreateContext");
 
             // Free the pixel format from memory.

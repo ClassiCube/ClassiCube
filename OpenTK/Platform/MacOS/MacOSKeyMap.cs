@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using OpenTK.Input;
+using OpenTK.Platform.MacOS.Carbon;
 
 namespace OpenTK.Platform.MacOS
 {
-    using Carbon;
-    using Input;
-
     class MacOSKeyMap : Dictionary<MacOSKeyCode, Key>
     {
         public MacOSKeyMap()
