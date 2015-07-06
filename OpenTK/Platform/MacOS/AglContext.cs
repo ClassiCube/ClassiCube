@@ -89,7 +89,7 @@ namespace OpenTK.Platform.MacOS
                     throw new MacOSException(status, "DMGetGDeviceByDisplayID failed.");
 
                 myAGLPixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs.ToArray());
-                Agl.AglError err = Agl.GetError();
+                Agl.AglError err = Agl.aglGetError();
 
                 if (err == Agl.AglError.BadPixelFormat)
                 {
@@ -99,14 +99,9 @@ namespace OpenTK.Platform.MacOS
                     CreateContext(mode, carbonWindow, false);
                     return;
                 }
-            }
-            else
-            {
-                myAGLPixelFormat = Agl.aglChoosePixelFormat(
-                    IntPtr.Zero, 0, 
-                    attribs.ToArray());
-
-                MyAGLReportError("aglChoosePixelFormat");
+            } else {
+                myAGLPixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
+                Agl.CheckReturnValue( 0, "aglChoosePixelFormat" );
             }
 
 
@@ -114,11 +109,11 @@ namespace OpenTK.Platform.MacOS
 
             // create the context and share it with the share reference.
             Handle = new ContextHandle( Agl.aglCreateContext(myAGLPixelFormat, IntPtr.Zero));
-            MyAGLReportError("aglCreateContext");
+             Agl.CheckReturnValue( 0, "aglCreateContext" );
 
             // Free the pixel format from memory.
             Agl.aglDestroyPixelFormat(myAGLPixelFormat);
-            MyAGLReportError("aglDestroyPixelFormat");
+            Agl.CheckReturnValue( 0, "aglDestroyPixelFormat" );
 
             Debug.Print("IsControl: {0}", carbonWindow.IsControl);
             
@@ -183,22 +178,20 @@ namespace OpenTK.Platform.MacOS
             glrect[2] = rect.Width;
             glrect[3] = rect.Height;
 
-            Agl.aglSetInteger(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT, glrect);
-            MyAGLReportError("aglSetInteger");
+            byte code = Agl.aglSetInteger(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT, glrect);
+            Agl.CheckReturnValue( code, "aglSetInteger" );
 
-            Agl.aglEnable(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT);
-            MyAGLReportError("aglEnable");
-  
+            code = Agl.aglEnable(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT);
+            Agl.CheckReturnValue( code, "aglEnable" );
         }
+        
         void SetDrawable(CarbonWindowInfo carbonWindow)
         {
             IntPtr windowPort = GetWindowPortForWindowInfo(carbonWindow);
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
-            Agl.aglSetDrawable(Handle.Handle, windowPort);
-
-            MyAGLReportError("aglSetDrawable");
-        
+            byte code = Agl.aglSetDrawable(Handle.Handle, windowPort);
+            Agl.CheckReturnValue( code, "aglSetDrawable" );
         }
 
         private static IntPtr GetWindowPortForWindowInfo(CarbonWindowInfo carbonWindow)
@@ -255,27 +248,10 @@ namespace OpenTK.Platform.MacOS
 		private CarbonGLNative GetCarbonWindow(CarbonWindowInfo carbonWindow)
 		{
 			WeakReference r = CarbonGLNative.WindowRefMap[carbonWindow.WindowRef];
-
-			if (r.IsAlive)
-			{
-				return (CarbonGLNative) r.Target;
-			}
-			else
-				return null;
+			return r.IsAlive ? (CarbonGLNative)r.Target : null;
 		}
 
-        void MyAGLReportError(string function)
-        {
-            Agl.AglError err = Agl.GetError();
-
-            if (err != Agl.AglError.NoError)
-                throw new MacOSException((OSStatus)err, string.Format(
-                    "AGL Error from function {0}: {1}  {2}", 
-                    function, err, Agl.ErrorString(err)));
-        }
-
         bool firstFullScreen = false;
-
         internal void SetFullScreen(CarbonWindowInfo info, out int width, out int height)
         {
 			CarbonGLNative wind = GetCarbonWindow(info);
@@ -284,7 +260,8 @@ namespace OpenTK.Platform.MacOS
 				wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, Handle.Handle);
 
 			CG.DisplayCapture(GetQuartzDevice(info));
-			Agl.aglSetFullScreen(Handle.Handle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
+			byte code = Agl.aglSetFullScreen(Handle.Handle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
+			Agl.CheckReturnValue(code, "aglSetFullScreen");
 			MakeCurrent(info);
 
 			width = wind.TargetDisplayDevice.Width;
@@ -305,8 +282,10 @@ namespace OpenTK.Platform.MacOS
         internal void UnsetFullScreen(CarbonWindowInfo windowInfo)
         {
 			Debug.Print("Unsetting AGL fullscreen.");
-            Agl.aglSetDrawable(Handle.Handle, IntPtr.Zero);
-			Agl.aglUpdateContext(Handle.Handle);
+            byte code = Agl.aglSetDrawable(Handle.Handle, IntPtr.Zero);
+            Agl.CheckReturnValue( code, "aglSetDrawable" );
+			code = Agl.aglUpdateContext(Handle.Handle);
+			Agl.CheckReturnValue( code, "aglUpdateContext" );
 			
 			CG.DisplayRelease(GetQuartzDevice(windowInfo));
 			Debug.Print("Resetting drawable.");
@@ -332,13 +311,13 @@ namespace OpenTK.Platform.MacOS
             }
 
             Agl.aglSwapBuffers(Handle.Handle);  
-            MyAGLReportError("aglSwapBuffers");       
+            Agl.CheckReturnValue( 0, "aglSwapBuffers" );
         }
         
         public override void MakeCurrent(IWindowInfo window)
         {
-            if (Agl.aglSetCurrentContext(Handle.Handle) == false)
-                MyAGLReportError("aglSetCurrentContext");
+            byte code = Agl.aglSetCurrentContext(Handle.Handle);
+            Agl.CheckReturnValue(code, "aglSetCurrentContext" );
         }
 
         public override bool IsCurrent
@@ -394,23 +373,16 @@ namespace OpenTK.Platform.MacOS
 			// like the finalizer thread.  It's untested, but worst case is probably
 			// an exception on application exit, which would be logged to the console.
 			Debug.Print("Destroying context");
-            if (Agl.aglDestroyContext(Handle.Handle) == true)
-            {
-				Debug.Print("Context destruction completed successfully.");
-				Handle = ContextHandle.Zero;
-			    return;
+            byte code = Agl.aglDestroyContext(Handle.Handle);
+            try {
+            	Agl.CheckReturnValue(code, "aglDestroyContext" );
+            	Handle = ContextHandle.Zero;
+            	Debug.Print("Context destruction completed successfully.");
+            } catch( MacOSException ) {
+            	Debug.WriteLine("Failed to destroy context.");
+            	if( disposing )
+            		throw;
             }
-
-            // failed to destroy context.
-            Debug.WriteLine("Failed to destroy context.");
-            Debug.WriteLine(Agl.ErrorString(Agl.GetError()));
-
-            // don't throw an exception from the finalizer thread.
-            if (disposing)
-            {
-                throw new MacOSException((OSStatus)Agl.GetError(), Agl.ErrorString(Agl.GetError()));
-            }
-
             IsDisposed = true;
         }
 

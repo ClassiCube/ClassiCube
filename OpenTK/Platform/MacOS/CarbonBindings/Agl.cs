@@ -263,120 +263,61 @@ namespace OpenTK.Platform.MacOS
         }
         /************************************************************************/
         
-        /*
-         ** Pixel format functions
-         */
+        // Pixel format functions
         [DllImport(agl)] internal static extern AGLPixelFormat aglChoosePixelFormat(ref AGLDevice gdevs, int ndev, int []attribs);
         [DllImport(agl)] internal static extern AGLPixelFormat aglChoosePixelFormat(IntPtr gdevs, int ndev, int []attribs);
         [DllImport(agl)] internal static extern void aglDestroyPixelFormat(AGLPixelFormat pix);
         
-        /*
-         ** Context functions
-         */
+        // Context functions
         [DllImport(agl)] internal static extern AGLContext aglCreateContext(AGLPixelFormat pix, AGLContext share);
-        [DllImport(agl,EntryPoint="aglDestroyContext")] static extern byte _aglDestroyContext(AGLContext ctx);
-        internal static bool aglDestroyContext(AGLContext context)
-        {
-            return (_aglDestroyContext(context) != 0) ? true : false;
-        }
+        [DllImport(agl)] internal static extern byte aglDestroyContext(AGLContext ctx);
 
-        [DllImport(agl)] static extern byte aglCopyContext(AGLContext src, AGLContext dst, uint mask);
+        [DllImport(agl)] internal static extern byte aglCopyContext(AGLContext src, AGLContext dst, uint mask);
         [DllImport(agl)] internal static extern byte aglUpdateContext(AGLContext ctx);
 
-        /*
-         ** Current state functions
-         */
-        #region --- aglSetCurrentContext ---
-
-        [DllImport(agl,EntryPoint="aglSetCurrentContext")] static extern byte _aglSetCurrentContext(AGLContext ctx);
-        internal static bool aglSetCurrentContext(IntPtr context)
-        {
-            byte retval = _aglSetCurrentContext(context);
-            return retval != 0;
-        }
-
-        #endregion
-
-        [DllImport(agl)] internal static extern AGLContext aglGetCurrentContext();
+        // Current state functions
+        [DllImport(agl)] internal static extern byte aglSetCurrentContext(AGLContext ctx);
+        [DllImport(agl)] internal static extern AGLContext aglGetCurrentContext();       
         
+        // Drawable Functions
+        [DllImport(agl)] internal static extern byte aglSetDrawable(AGLContext ctx, AGLDrawable draw);
+
+        [DllImport(agl)] internal static extern byte aglSetFullScreen(AGLContext ctx, int width, int height, int freq, int device);
         
-        /*
-         ** Drawable Functions
-         */
-        [DllImport(agl,EntryPoint="aglSetDrawable")] 
-        static extern byte _aglSetDrawable(AGLContext ctx, AGLDrawable draw);
-
-        internal static void aglSetDrawable(AGLContext ctx, AGLDrawable draw)
-        {
-            byte retval = _aglSetDrawable(ctx, draw);
-
-            if (retval == 0)
-            {
-                AglError err = GetError();
-
-                throw new MacOSException(err, ErrorString(err));
-            }
-        }
-
-        [DllImport(agl, EntryPoint = "aglSetFullScreen")]
-        static extern byte _aglSetFullScreen(AGLContext ctx, int width, int height, int freq, int device);
-        internal static void aglSetFullScreen(AGLContext ctx, int width, int height, int freq, int device)
-        {
-            byte retval = _aglSetFullScreen(ctx, width, height, freq, device);
-
-            if (retval == 0)
-            {
-                AglError err = GetError();
-                Debug.Print("AGL Error: {0}", err);
-                Debug.Indent();
-                Debug.Print(ErrorString(err));
-                Debug.Unindent();
-
-                throw new MacOSException(err, ErrorString(err));
-            }
-        }
-        /*
-         ** Virtual screen functions
-         */
+        // Virtual screen functions
         [DllImport(agl)] static extern byte aglSetVirtualScreen(AGLContext ctx, int screen);
         [DllImport(agl)] static extern int aglGetVirtualScreen(AGLContext ctx);
         
-        /*
-         ** Obtain version numbers
-         */
+        // Obtain version numbers
         [DllImport(agl)] static extern void aglGetVersion(int *major, int *minor);
         
-        /*
-         ** Global library options
-         */
-        [DllImport(agl)] static extern byte aglConfigure(GLenum pname, uint param);
+        // Global library options
+        [DllImport(agl)] internal static extern byte aglConfigure(GLenum pname, uint param);
         
-        /*
-         ** Swap functions
-         */
+        // Swap functions
         [DllImport(agl)] internal static extern void aglSwapBuffers(AGLContext ctx);
         
-        /*
-         ** Per context options
-         */
+        // Per context options
         [DllImport(agl)] internal static extern byte aglEnable(AGLContext ctx, ParameterNames pname);
         [DllImport(agl)] internal static extern byte aglDisable(AGLContext ctx, ParameterNames pname);
-        [DllImport(agl)] static extern byte aglIsEnabled(AGLContext ctx, GLenum pname);
-        [DllImport(agl)]
-        internal static extern byte aglSetInteger(AGLContext ctx, ParameterNames pname, ref int @params);
-        [DllImport(agl)]
-        internal static extern byte aglSetInteger(AGLContext ctx, ParameterNames pname, int []@params);
-        [DllImport(agl)]
-        static extern byte aglGetInteger(AGLContext ctx, GLenum pname, int* @params);
+        [DllImport(agl)] internal static extern byte aglIsEnabled(AGLContext ctx, GLenum pname);
+        [DllImport(agl)] internal static extern byte aglSetInteger(AGLContext ctx, ParameterNames pname, ref int @params);
+        [DllImport(agl)] internal static extern byte aglSetInteger(AGLContext ctx, ParameterNames pname, int []@params);
+        [DllImport(agl)] internal static extern byte aglGetInteger(AGLContext ctx, GLenum pname, int* @params);
 
-        /*
-         ** Error functions
-         */
-        [DllImport(agl,EntryPoint="aglGetError")] internal static extern AglError GetError();
-        [DllImport(agl,EntryPoint="aglErrorString")] static extern IntPtr _aglErrorString(AglError code);
-        internal static string ErrorString(AglError code)
-        {
-            return Marshal.PtrToStringAnsi(_aglErrorString(code));
+        // Error functions
+        [DllImport(agl)] internal static extern AglError aglGetError();
+        [DllImport(agl)] static extern IntPtr aglErrorString(AglError code);
+        
+        internal static void CheckReturnValue( byte code, string function ) {
+        	if( code != 0 ) return;
+        	AglError errCode = aglGetError();
+        	if( errCode == AglError.NoError ) return;
+        	
+        	string error = new String( (sbyte*)aglErrorString( errCode ) );
+        	throw new MacOSException( (OSStatus)errCode, String.Format(
+        		"AGL Error from function {0}: {1}  {2}",
+        		function, errCode, error) );
         }
 
         #pragma warning restore 0169
