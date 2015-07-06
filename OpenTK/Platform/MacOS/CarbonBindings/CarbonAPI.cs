@@ -1,11 +1,5 @@
-//
-//  
-//  Carbon.cs
-//
 //  Created by Erik Ylvisaker on 3/17/08.
 //  Copyright 2008. All rights reserved.
-//
-//
 
 using System;
 using System.Runtime.InteropServices;

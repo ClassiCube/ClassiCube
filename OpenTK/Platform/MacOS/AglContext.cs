@@ -1,11 +1,5 @@
-//
-//  
-//  AglContext.cs
-//
 //  Created by Erik Ylvisaker on 3/17/08.
 //  Copyright 2008. All rights reserved.
-//
-//
 
 using System;
 using System.Collections.Generic;
@@ -114,11 +108,8 @@ namespace OpenTK.Platform.MacOS
             // Free the pixel format from memory.
             Agl.aglDestroyPixelFormat(myAGLPixelFormat);
             Agl.CheckReturnValue( 0, "aglDestroyPixelFormat" );
-
-            Debug.Print("IsControl: {0}", carbonWindow.IsControl);
             
             SetDrawable(carbonWindow);
-            SetBufferRect(carbonWindow);
             Update(carbonWindow);
             
             MakeCurrent(carbonWindow);
@@ -145,69 +136,16 @@ namespace OpenTK.Platform.MacOS
 			return QuartzDisplayDeviceDriver.HandleTo(window.TargetDisplayDevice);
 
 		}
-
-        void SetBufferRect(CarbonWindowInfo carbonWindow)
-        {
-            if (carbonWindow.IsControl == false)
-                return;
-            
-            System.Windows.Forms.Control ctrl = Control.FromHandle(carbonWindow.WindowRef);
-                
-            if (ctrl.TopLevelControl == null)
-                return;
-                
-            Rect rect = API.GetControlBounds(carbonWindow.WindowRef);
-            System.Windows.Forms.Form frm = (System.Windows.Forms.Form) ctrl.TopLevelControl;
-
-            System.Drawing.Point loc =
-                frm.PointToClient(ctrl.PointToScreen(System.Drawing.Point.Empty));
-
-            rect.X = (short)loc.X;
-            rect.Y = (short)loc.Y;
-            
-            Debug.Print("Setting buffer_rect for control.");
-            Debug.Print("MacOS Coordinate Rect:   {0}", rect);
-            
-            rect.Y = (short)(ctrl.TopLevelControl.ClientSize.Height - rect.Y - rect.Height);
-            Debug.Print("  AGL Coordinate Rect:   {0}", rect);
-            
-            int[] glrect = new int[4];
-
-            glrect[0] = rect.X;
-            glrect[1] = rect.Y;
-            glrect[2] = rect.Width;
-            glrect[3] = rect.Height;
-
-            byte code = Agl.aglSetInteger(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT, glrect);
-            Agl.CheckReturnValue( code, "aglSetInteger" );
-
-            code = Agl.aglEnable(Handle.Handle, Agl.ParameterNames.AGL_BUFFER_RECT);
-            Agl.CheckReturnValue( code, "aglEnable" );
-        }
         
         void SetDrawable(CarbonWindowInfo carbonWindow)
         {
-            IntPtr windowPort = GetWindowPortForWindowInfo(carbonWindow);
+            IntPtr windowPort = API.GetWindowPort(carbonWindow.WindowRef);
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
             byte code = Agl.aglSetDrawable(Handle.Handle, windowPort);
             Agl.CheckReturnValue( code, "aglSetDrawable" );
         }
-
-        private static IntPtr GetWindowPortForWindowInfo(CarbonWindowInfo carbonWindow)
-        {
-            IntPtr windowPort;
-            if (carbonWindow.IsControl)
-            {
-                IntPtr controlOwner = API.GetControlOwner(carbonWindow.WindowRef);
-                
-                windowPort = API.GetWindowPort(controlOwner);
-            }
-            else
-                windowPort = API.GetWindowPort(carbonWindow.WindowRef);
-
-            return windowPort;
-        }
+        
         public override void Update(IWindowInfo window)      
         {
             CarbonWindowInfo carbonWindow = (CarbonWindowInfo)window;
@@ -240,7 +178,6 @@ namespace OpenTK.Platform.MacOS
 				return;
 			
             SetDrawable(carbonWindow);
-            SetBufferRect(carbonWindow);
 
             Agl.aglUpdateContext(Handle.Handle);
         }
@@ -279,6 +216,7 @@ namespace OpenTK.Platform.MacOS
 
 			mIsFullscreen = true;
         }
+        
         internal void UnsetFullScreen(CarbonWindowInfo windowInfo)
         {
 			Debug.Print("Unsetting AGL fullscreen.");
@@ -297,49 +235,25 @@ namespace OpenTK.Platform.MacOS
 
         #region IGraphicsContext Members
 
-        bool firstSwap = false;
-        public override void SwapBuffers()
-        {
-            // this is part of the hack to avoid dropping the first frame when
-            // using multiple GLControls.
-            if (firstSwap == false && carbonWindow.IsControl)
-            {
-                Debug.WriteLine("--> Resetting drawable. <--");
-                firstSwap = true;
-                SetDrawable(carbonWindow); 
-                Update(carbonWindow);    
-            }
-
+        public override void SwapBuffers() {
             Agl.aglSwapBuffers(Handle.Handle);  
             Agl.CheckReturnValue( 0, "aglSwapBuffers" );
         }
         
-        public override void MakeCurrent(IWindowInfo window)
-        {
-            byte code = Agl.aglSetCurrentContext(Handle.Handle);
+        public override void MakeCurrent( IWindowInfo window ) {
+            byte code = Agl.aglSetCurrentContext( Handle.Handle );
             Agl.CheckReturnValue(code, "aglSetCurrentContext" );
         }
 
-        public override bool IsCurrent
-        {
-            get
-            {
-                return (Handle.Handle == Agl.aglGetCurrentContext());
-            }
+        public override bool IsCurrent {
+            get {  return Handle.Handle == Agl.aglGetCurrentContext(); }
         }
 
-        public override bool VSync
-        {
-            get
-            {
-                return mVSync;
-            }
-            set
-            {
+        public override bool VSync {
+            get { return mVSync; }
+            set {
                 int intVal = value ? 1 : 0;
-
                 Agl.aglSetInteger(Handle.Handle, Agl.ParameterNames.AGL_SWAP_INTERVAL, ref intVal);
-
                 mVSync = value;
             }
         }
@@ -348,13 +262,11 @@ namespace OpenTK.Platform.MacOS
 
         #region IDisposable Members
 
-        ~AglContext()
-        {
+        ~AglContext() {
             Dispose(false);
         }
 
-        public override void Dispose()
-        {
+        public override void Dispose() {
             Dispose(true);
         }
 

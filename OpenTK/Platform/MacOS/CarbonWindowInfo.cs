@@ -41,7 +41,6 @@ namespace OpenTK.Platform.MacOS
         IntPtr windowRef;
         bool ownHandle = false;
         bool disposed = false;
-        bool isControl = false;
 		bool goFullScreenHack = false;
 		bool goWindowedHack = false;
 
@@ -52,12 +51,10 @@ namespace OpenTK.Platform.MacOS
         /// </summary>
         /// <param name="windowRef">A valid Carbon window reference.</param>
         /// <param name="ownHandle"></param>
-        /// <param name="isControl"></param>
-        public CarbonWindowInfo(IntPtr windowRef, bool ownHandle, bool isControl)
+        public CarbonWindowInfo(IntPtr windowRef, bool ownHandle)
         {
             this.windowRef = windowRef;
             this.ownHandle = ownHandle;
-            this.isControl = isControl;
         }
 
         #endregion
@@ -87,10 +84,7 @@ namespace OpenTK.Platform.MacOS
         /// <summary>
         /// Gets a value indicating whether this instance refers to a System.Windows.Forms.Control.
         /// </summary>
-        public bool IsControl
-        {
-            get { return isControl; }
-        }
+        public const bool IsControl = false;
 
         /// <summary>Returns a System.String that represents the current window.</summary>
         /// <returns>A System.String that represents the current window.</returns>
