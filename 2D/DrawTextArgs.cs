@@ -12,6 +12,7 @@ namespace ClassicalSharp {
 		public bool UseShadow;
 		public Color ShadowColour;
 		public IGraphicsApi Graphics;
+		internal bool SkipPartsCheck;
 		
 		public DrawTextArgs( IGraphicsApi graphics, string text, Color col, bool useShadow ) : 
 			this( graphics, text, col, useShadow, Color.Black ) {
@@ -27,6 +28,7 @@ namespace ClassicalSharp {
 			TextColour = col;
 			UseShadow = useShadow;
 			ShadowColour = shadowCol;
+			SkipPartsCheck = false;
 		}		
 	}
 }

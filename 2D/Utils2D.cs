@@ -61,11 +61,12 @@ namespace ClassicalSharp {
 		}
 		
 		public static void DrawText( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
-			GetTextParts( args.Text );
+			if( !args.SkipPartsCheck )
+				GetTextParts( args.Text );
 			DrawTextNoCheck( g, font, ref args, x, y );
 		}
 		
-		private static void DrawTextNoCheck( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
+		static void DrawTextNoCheck( Graphics g, Font font, ref DrawTextArgs args, float x, float y ) {
 			g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
 			
@@ -132,10 +133,6 @@ namespace ClassicalSharp {
 		}
 		
 		static void GetTextParts( string value ) {
-			if( String.Equals( value, lastSplitText ) ) {
-				return;
-			}
-			
 			parts.Clear();
 			if( String.IsNullOrEmpty( value ) ) {
 			} else if( value.IndexOf( '&' ) == -1 ) {

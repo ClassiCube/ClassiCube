@@ -65,6 +65,7 @@ namespace ClassicalSharp {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( GraphicsApi, value, Color.White, false );
+					args.SkipPartsCheck = true;
 					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
 				chatInputTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 10, y );
