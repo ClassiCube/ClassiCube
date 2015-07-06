@@ -80,9 +80,7 @@ namespace ClassicalSharp {
 				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
 				
 				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
-					pickedPos.BlockPos = Vector3I.MinusOne;
-					pickedPos.BlockFace = (CpeBlockFace)255;
-					pickedPos.Valid = false;
+					pickedPos.SetAsInvalid();
 					return;
 				}
 				
@@ -91,7 +89,8 @@ namespace ClassicalSharp {
 					// since some blocks do not occupy a whole cell.				
 					float t0, t1;
 					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-						pickedPos.UpdateBlockPos( min, max, origin, dir, t0, t1 );
+						Vector3 intersect = origin + dir * t0;
+						pickedPos.SetAsValid( min, max, intersect );
 						return;
 					}
 				}
@@ -124,14 +123,13 @@ namespace ClassicalSharp {
 		public bool Valid = true;
 		public CpeBlockFace BlockFace;
 		
-		public void UpdateBlockPos( Vector3 p1, Vector3 p2, Vector3 origin, Vector3 dir, float t0, float t1 ) {
-			Min = Vector3.Min( p1, p2 );
-			Max = Vector3.Max( p1, p2 );
+		public void SetAsValid( Vector3 min, Vector3 max, Vector3 intersect ) {
+			Min = min;
+			Max = max;
 			BlockPos = Vector3I.Truncate( Min );
 			Valid = true;
 			
 			Vector3I normal = Vector3I.Zero;
-			Vector3 intersect = origin + dir * t0;
 			float dist = float.PositiveInfinity;
 			TestAxis( intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal, CpeBlockFace.XMin );
 			TestAxis( intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal, CpeBlockFace.XMax );
@@ -140,6 +138,12 @@ namespace ClassicalSharp {
 			TestAxis( intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal, CpeBlockFace.ZMin );
 			TestAxis( intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal, CpeBlockFace.ZMax );
 			TranslatedPos = BlockPos + normal;
+		}
+		
+		public void SetAsInvalid() {
+			Valid = false;
+			BlockPos = TranslatedPos = Vector3I.MinusOne;
+			BlockFace = (CpeBlockFace)255;
 		}
 		
 		void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal, 

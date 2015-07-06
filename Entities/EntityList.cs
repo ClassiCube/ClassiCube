@@ -32,7 +32,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public byte GetClosetPlayer( Vector3 eyePos, Vector3 dir ) {
+		public byte GetClosetPlayer( Game game ) {
+			Player localP = game.LocalPlayer;
+			Vector3 eyePos = localP.EyePosition;
+			Vector3 dir = Utils.GetDirVector( localP.YawRadians, localP.PitchRadians );
 			float closestDist = float.PositiveInfinity;
 			byte targetId = 255;
 			

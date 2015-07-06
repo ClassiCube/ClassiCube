@@ -238,7 +238,7 @@ namespace ClassicalSharp {
 				bool middle = IsMousePressed( MouseButton.Middle );
 				PickBlocks( true, left, right, middle );
 			} else {
-				SelectedPos.Valid = false;
+				SelectedPos.SetAsInvalid();
 			}
 			
 			Graphics.Mode2D( Width, Height );
@@ -324,6 +324,14 @@ namespace ClassicalSharp {
 			if( screen != null ) {
 				screen.Window = this;
 				screen.Init();
+			}
+			if( Network.UsingPlayerClick ) {
+				byte targetId = Players.GetClosetPlayer( this );
+				for( int i = 0; i < buttonsDown.Length; i++ ) {
+					if( !buttonsDown[i] ) continue;
+					Network.SendPlayerClick( (MouseButton)i, false, targetId, SelectedPos );
+					buttonsDown[i] = false;
+				}
 			}
 		}
 		

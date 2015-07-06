@@ -30,9 +30,19 @@ namespace ClassicalSharp {
 			Mouse.ButtonUp += MouseButtonUp;
 		}
 
+		bool[] buttonsDown = new bool[3];
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
 			if( activeScreen == null || !activeScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
+				if( SendPlayerClick( e.Button ) && buttonsDown[(int)e.Button] ) {
+					byte targetId = Players.GetClosetPlayer( this );
+					Network.SendPlayerClick( e.Button, false, targetId, SelectedPos );
+					buttonsDown[(int)e.Button] = false;
+				}
 			}
+		}
+		
+		bool SendPlayerClick( MouseButton button ) {
+			return Network.UsingPlayerClick && button <= MouseButton.Middle;
 		}
 
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
@@ -121,12 +131,14 @@ namespace ClassicalSharp {
 		
 		DateTime lastClick = DateTime.MinValue;
 		void PickBlocks( bool cooldown, bool left, bool right, bool middle ) {
-			int buttonsDown = ( left ? 1 : 0 ) + ( right ? 1 : 0 ) + ( middle ? 1 : 0 );
-			if( !SelectedPos.Valid || buttonsDown > 1 || ScreenLockedInput || HeldBlock == Block.Air ) return;
 			DateTime now = DateTime.UtcNow;
 			double delta = ( now - lastClick ).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
 			lastClick = now;
+			ButtonStateChanged( !cooldown, left, right, middle );
+			
+			int buttonsDown = ( left ? 1 : 0 ) + ( right ? 1 : 0 ) + ( middle ? 1 : 0 );
+			if( !SelectedPos.Valid || buttonsDown > 1 || ScreenLockedInput || HeldBlock == Block.Air ) return;
 			
 			if( middle ) {
 				Vector3I pos = SelectedPos.BlockPos;
@@ -151,6 +163,19 @@ namespace ClassicalSharp {
 					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
 				}
+			}
+		}
+		
+		void ButtonStateChanged( bool fromClick, bool left, bool right, bool middle ) {
+			if( !Network.UsingPlayerClick ) return;
+			
+			byte targetId = Players.GetClosetPlayer( this );
+			for( int i = 0; i < buttonsDown.Length; i++ ) {
+				if( !buttonsDown[i] ) continue;
+				
+				if( !fromClick )
+					Network.SendPlayerClick( (MouseButton)i, false, targetId, SelectedPos );
+				Network.SendPlayerClick( (MouseButton)i, true, targetId, SelectedPos );
 			}
 		}
 		

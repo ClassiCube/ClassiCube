@@ -70,6 +70,7 @@ namespace ClassicalSharp {
 		
 		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 			Player p = Window.LocalPlayer;
+			Console.WriteLine( "CLICK: " + button + "," + buttonDown );
 			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
 			                pos.BlockPos, pos.BlockFace );
 		}
