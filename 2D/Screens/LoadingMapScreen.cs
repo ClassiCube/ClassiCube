@@ -19,11 +19,13 @@ namespace ClassicalSharp {
 		float progX, progY = 100f;
 		int	progWidth = 200, progHeight = 40;
 		
-		public override void Render( double delta ) {			
+		public override void Render( double delta ) {		
 			GraphicsApi.ClearColour( FastColour.Black );
+			GraphicsApi.Texturing = true;
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
 			progressBoxTexture.Render( GraphicsApi );
+			GraphicsApi.Texturing = false;
 			GraphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, FastColour.White );
 		}
 		

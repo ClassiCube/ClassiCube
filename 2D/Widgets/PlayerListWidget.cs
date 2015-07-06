@@ -28,7 +28,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
+			GraphicsApi.Texturing = false;
 			GraphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );
+			GraphicsApi.Texturing = true;
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid ) {

@@ -36,10 +36,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( IGraphicsApi graphics ) {
-			graphics.Texturing = true;
 			graphics.Bind2DTexture( ID );
 			graphics.Draw2DTexture( ref this );
-			graphics.Texturing = false;
 		}
 		
 		public void RenderNoBind( IGraphicsApi graphics ) {

@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Draw2DQuad( 0, 0, Window.Width, Window.Height, new FastColour( 255, 255, 255, 100 ) );
+			GraphicsApi.Texturing = true;
 			controlsWidget.Render( delta );
 			gameWidget.Render( delta );
 			exitWidget.Render( delta );
@@ -25,6 +26,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < keysRight.Length; i++ ) {
 				keysRight[i].Render( delta );
 			}
+			GraphicsApi.Texturing = false;
 		}
 		
 		Font titleFont, keyStatusFont, textFont;

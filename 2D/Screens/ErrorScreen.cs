@@ -17,8 +17,10 @@ namespace ClassicalSharp {
 		}	
 		
 		public override void Render( double delta ) {
+			GraphicsApi.Texturing = true;
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
+			GraphicsApi.Texturing = false;
 		}
 		
 		public override void Init() {

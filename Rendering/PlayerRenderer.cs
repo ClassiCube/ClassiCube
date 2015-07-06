@@ -53,6 +53,7 @@ namespace ClassicalSharp.Renderers {
 			mat = Matrix4.Scale( nameScale, -nameScale, nameScale ) * mat; // -y to flip text
 			mat = Matrix4.Translate( -nameWidth / 2f, -nameHeight, 0f ) * mat;
 			Graphics.MultiplyMatrix( ref mat );
+			Graphics.Texturing = true;
 			nameTexture.Render( Graphics );
 			
 			Graphics.PopMatrix();

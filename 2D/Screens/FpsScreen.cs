@@ -15,8 +15,10 @@ namespace ClassicalSharp {
 		TextWidget fpsTextWidget;
 		
 		public override void Render( double delta ) {
+			GraphicsApi.Texturing = true;
 			UpdateFPS( delta );
 			fpsTextWidget.Render( delta );
+			GraphicsApi.Texturing = false;
 		}
 		
 		double accumulator, maxDelta;

@@ -119,14 +119,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			int texId = 0;
 			Gl.glGenTextures( 1, &texId );
-			Gl.glEnable( EnableCap.Texture2D );
 			Gl.glBindTexture( TextureTarget.Texture2D, texId );
 			Gl.glTexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
 			Gl.glTexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
 
 			Gl.glTexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
-			Gl.glDisable( EnableCap.Texture2D );
 			return texId;
 		}
 		
