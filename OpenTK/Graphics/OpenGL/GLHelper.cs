@@ -6,18 +6,9 @@
  */
 #endregion
 
-#region --- Using Directives ---
-
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Reflection;
 using System.Diagnostics;
-using System.Reflection.Emit;
-
-
-#endregion
+using System.Reflection;
 
 namespace OpenTK.Graphics.OpenGL
 {
@@ -41,54 +32,47 @@ namespace OpenTK.Graphics.OpenGL
     /// extensions, and under different entry points. Always check if all required extensions are still supported
     /// when changing visuals or pixel formats.
     /// </para>
-    /// <para>
-    /// You may retrieve the entry point for an OpenGL function using the GL.GetDelegate method.
-    /// </para>
     /// </remarks>
     /// <see href="http://opengl.org/registry/"/>
-    public sealed partial class GL : GraphicsBindingsBase
+    public sealed partial class GL : BindingsBase
     {
-        #region --- Fields ---
 
         internal const string Library = "opengl32.dll";
 
         static readonly object sync_root = new object();
 
-        #endregion
-
-        #region --- Constructor ---
-
         static GL() { }
         
-        public GL() : base( typeof( Delegates ), typeof( Core ), 2 ) {
+        public GL() : base( typeof( Core ) ) {
         }
-
-        #endregion
-
-        #region --- Public Members ---
-
-        /// <summary>
-        /// Loads all OpenGL entry points (core and extension).
-        /// This method is provided for compatibility purposes with older OpenTK versions.
-        /// </summary>
-        [Obsolete("If you are using a context constructed outside of OpenTK, create a new GraphicsContext and pass your context handle to it. Otherwise, there is no need to call this method.")]
-        public static void LoadAll()
-        {
-            new GL().LoadEntryPoints();
+        
+        protected override IntPtr GetAddress( string funcname ) {
+            return (GraphicsContext.CurrentContext as IGraphicsContextInternal).GetAddress( funcname );
         }
+        
+        internal void LoadEntryPoints() {
+            // Using reflection is more than 3 times faster than directly loading delegates on the first
+            // run, probably due to code generation overhead. Subsequent runs are faster with direct loading
+            // than with reflection, but the first time is more significant.
 
-        #endregion
+            int supported = 0; 
+            FieldInfo[] delegates = typeof( Delegates ).GetFields( BindingFlags.Static | BindingFlags.Public );
 
-        #region --- Protected Members ---
+            Debug.Write("Loading OpenGL function pointers... ");
+            Stopwatch time = Stopwatch.StartNew();
 
-        /// <summary>
-        /// Returns a synchronization token unique for the GL class.
-        /// </summary>
-        protected override object SyncRoot
-        {
-            get { return sync_root; }
+            foreach (FieldInfo f in delegates) {
+                Delegate d = LoadDelegate( f.Name, f.FieldType );
+                if (d != null) supported++;
+
+                lock (sync_root) {
+                    f.SetValue(null, d);
+                }
+            }
+
+            time.Stop();
+            Debug.Print("{0} extensions loaded in {1} ms.", supported, time.Elapsed.TotalMilliseconds);
+            time.Reset();
         }
-
-        #endregion
     }
 }

@@ -25,7 +25,7 @@ namespace OpenTK.Platform.Windows
 	/// Provides methods to create and control an opengl context on the Windows platform.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
 	/// </summary>
-	internal sealed class WinGLContext : DesktopGraphicsContext
+	internal sealed class WinGLContext : GraphicsContextBase
 	{
 		static object SyncRoot = new object();
 
@@ -71,9 +71,9 @@ namespace OpenTK.Platform.Windows
 				SetGraphicsModePFD(format, (WinWindowInfo)window);
 
 				Debug.Write("Falling back to GL2... ");
-				Handle = new ContextHandle(Wgl.Imports.CreateContext(window.DeviceContext));
+				Handle = new ContextHandle(Wgl.wglCreateContext(window.DeviceContext));
 				if (Handle == ContextHandle.Zero)
-					Handle = new ContextHandle(Wgl.Imports.CreateContext(window.DeviceContext));
+					Handle = new ContextHandle(Wgl.wglCreateContext(window.DeviceContext));
 				if (Handle == ContextHandle.Zero)
 					throw new GraphicsContextException(
 						String.Format("Context creation failed. Wgl.CreateContext() error: {0}.",
@@ -91,7 +91,7 @@ namespace OpenTK.Platform.Windows
 
 		public override void SwapBuffers()
 		{
-			if (!Functions.SwapBuffers(Wgl.Imports.GetCurrentDC()))
+			if (!Functions.SwapBuffers(Wgl.wglGetCurrentDC()))
 				throw new GraphicsContextException(String.Format(
 					"Failed to swap buffers for context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
 		}
@@ -104,15 +104,14 @@ namespace OpenTK.Platform.Windows
 		{
 			bool success;
 
-			if (window != null)
-			{
+			if (window != null) {
 				if (((WinWindowInfo)window).WindowHandle == IntPtr.Zero)
 					throw new ArgumentException("window", "Must point to a valid window.");
 
-				success = Wgl.Imports.MakeCurrent(((WinWindowInfo)window).DeviceContext, Handle.Handle);
+				success = Wgl.wglMakeCurrent(((WinWindowInfo)window).DeviceContext, Handle.Handle);
+			} else {
+				success = Wgl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
 			}
-			else
-				success = Wgl.Imports.MakeCurrent(IntPtr.Zero, IntPtr.Zero);
 
 			if (!success)
 				throw new GraphicsContextException(String.Format(
@@ -125,7 +124,7 @@ namespace OpenTK.Platform.Windows
 
 		public override bool IsCurrent
 		{
-			get { return Wgl.Imports.GetCurrentContext() == Handle.Handle; }
+			get { return Wgl.wglGetCurrentContext() == Handle.Handle; }
 		}
 
 		#endregion
@@ -135,16 +134,13 @@ namespace OpenTK.Platform.Windows
 		/// <summary>
 		/// Gets or sets a System.Boolean indicating whether SwapBuffer calls are synced to the screen refresh rate.
 		/// </summary>
-		public override bool VSync
-		{
-			get
-			{
-				return vsync_supported && Wgl.Ext.GetSwapInterval() != 0;
+		public override bool VSync {
+			get {
+				return vsync_supported && Wgl.wglGetSwapIntervalEXT() != 0;
 			}
-			set
-			{
+			set {
 				if (vsync_supported)
-					Wgl.Ext.SwapInterval(value ? 1 : 0);
+					Wgl.wglSwapIntervalEXT(value ? 1 : 0);
 			}
 		}
 
@@ -154,11 +150,10 @@ namespace OpenTK.Platform.Windows
 
 		public override void LoadAll()
 		{
-			Wgl.LoadAll();
-			vsync_supported = Wgl.Arb.SupportsExtension(this, "WGL_EXT_swap_control") &&
-				Wgl.Delegates.wglGetSwapIntervalEXT != null && Wgl.Delegates.wglSwapIntervalEXT != null;
-
-			base.LoadAll();
+			new Wgl().LoadEntryPoints();
+			vsync_supported = Wgl.wglGetSwapIntervalEXT != null 
+				&& Wgl.wglSwapIntervalEXT != null;
+			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints();
 		}
 
 		#endregion
@@ -180,7 +175,7 @@ namespace OpenTK.Platform.Windows
 
 		public override IntPtr GetAddress(string function_string)
 		{
-			return Wgl.Imports.GetProcAddress(function_string);
+			return Wgl.wglGetProcAddress(function_string);
 		}
 
 		#endregion
@@ -242,20 +237,6 @@ namespace OpenTK.Platform.Windows
 
 		#endregion
 
-		#region --- Internal Methods ---
-
-		#region internal IntPtr DeviceContext
-
-		internal IntPtr DeviceContext
-		{
-			get { return Wgl.Imports.GetCurrentDC(); }
-		}
-
-
-		#endregion
-
-		#endregion
-
 		#region --- Overrides ---
 
 		/// <summary>Returns a System.String describing this OpenGL context.</summary>
@@ -306,7 +287,7 @@ namespace OpenTK.Platform.Windows
 				try
 				{
 					// This will fail if the user calls Dispose() on thread X when the context is current on thread Y.
-					if (!Wgl.Imports.DeleteContext(Handle.Handle))
+					if (!Wgl.wglDeleteContext(Handle.Handle))
 						Debug.Print("Failed to destroy OpenGL context {0}. Error: {1}",
 						            Handle.ToString(), Marshal.GetLastWin32Error());
 				}

@@ -1116,7 +1116,6 @@ namespace OpenTK.Platform.MacOS
         public event EventHandler<EventArgs> TitleChanged;
         public event EventHandler<EventArgs> ClientSizeChanged;
         public event EventHandler<EventArgs> VisibleChanged;
-        public event EventHandler<EventArgs> WindowInfoChanged;
         public event EventHandler<EventArgs> FocusedChanged;
         public event EventHandler<EventArgs> WindowBorderChanged;
         public event EventHandler<EventArgs> WindowStateChanged;

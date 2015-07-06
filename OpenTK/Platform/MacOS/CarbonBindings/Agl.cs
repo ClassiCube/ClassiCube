@@ -64,8 +64,6 @@ namespace OpenTK.Platform.MacOS {
         // Context functions
         [DllImport(agl)] internal static extern AGLContext aglCreateContext(AGLPixelFormat pix, AGLContext share);
         [DllImport(agl)] internal static extern byte aglDestroyContext(AGLContext ctx);
-
-        [DllImport(agl)] internal static extern byte aglCopyContext(AGLContext src, AGLContext dst, uint mask);
         [DllImport(agl)] internal static extern byte aglUpdateContext(AGLContext ctx);
 
         // Current state functions

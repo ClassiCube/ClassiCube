@@ -13,7 +13,7 @@ using Control = System.Windows.Forms.Control;
 namespace OpenTK.Platform.MacOS
 {
 
-    class AglContext : DesktopGraphicsContext 
+    class AglContext : GraphicsContextBase
     {
         bool mVSync = false;
         // Todo: keep track of which display adapter was specified when the context was created.
@@ -323,6 +323,10 @@ namespace OpenTK.Platform.MacOS
 
             return symbol;
         }
+        
+		public override void LoadAll() {
+			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints();
+		}
 
         #endregion
     }

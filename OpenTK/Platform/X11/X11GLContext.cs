@@ -19,7 +19,7 @@ namespace OpenTK.Platform.X11
 	/// Provides methods to create and control an opengl context on the X11 platform.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
 	/// </summary>
-	internal sealed class X11GLContext : DesktopGraphicsContext
+	internal sealed class X11GLContext : GraphicsContextBase
 	{
 		#region Fields
 
@@ -230,7 +230,7 @@ namespace OpenTK.Platform.X11
 					GLXErrorCode error_code = 0;
 					using (new XLock(Display))
 					{
-						error_code = Glx.Imports.SwapInterval(value ? 1 : 0);
+						error_code = Glx.glXSwapIntervalSGI(value ? 1 : 0);
 					}
 					if (error_code != X11.GLXErrorCode.NO_ERROR)
 						Debug.Print("VSync = {0} failed, error code: {1}.", value, error_code);
@@ -258,10 +258,9 @@ namespace OpenTK.Platform.X11
 		public override void LoadAll()
 		{
 			new Glx().LoadEntryPoints();
-			vsync_supported = this.GetAddress("glXSwapIntervalSGI") != IntPtr.Zero;
+			vsync_supported = Glx.glXSwapIntervalSGI != null;
 			Debug.Print("Context supports vsync: {0}.", vsync_supported);
-
-			base.LoadAll();
+			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints();
 		}
 
 		#endregion

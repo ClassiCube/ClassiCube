@@ -1,63 +1,56 @@
-namespace OpenTK.Platform.Windows
-{
-	using System;
-	using System.Runtime.InteropServices;
+using System;
+using System.Runtime.InteropServices;
+using System.Security;
+
+namespace OpenTK.Platform.Windows {
+	
 	#pragma warning disable 0649
-    #pragma warning disable 3019
-    #pragma warning disable 1591
 
-	partial class Wgl
-	{
-		public static partial class Ext
-		{
-			public static Boolean SwapInterval(int interval) {
-				return Delegates.wglSwapIntervalEXT((int)interval);
-			}
+	internal partial class Wgl : BindingsBase {
 
-			public static int GetSwapInterval() {
-				return Delegates.wglGetSwapIntervalEXT();
-			}
+		const string Library = "OPENGL32.DLL";
+		static readonly object sync_root = new object();
+
+		public Wgl() : base( null ) {
+		}
+
+		protected override IntPtr GetAddress( string funcname ) {
+			return Wgl.wglGetProcAddress( funcname );
 		}
 		
-		internal static partial class Delegates
-        {
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate IntPtr GetExtensionsStringARB(IntPtr hdc);
-            internal static GetExtensionsStringARB wglGetExtensionsStringARB;
+		internal void LoadEntryPoints() {
+			lock( sync_root ) {
+				wglGetSwapIntervalEXT = 
+					GetExtensionDelegate<GetSwapIntervalEXT>( "wglGetSwapIntervalEXT" );
+				wglSwapIntervalEXT = 
+					GetExtensionDelegate<SwapIntervalEXT>( "wglSwapIntervalEXT" );
+			}
+		}
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate IntPtr GetExtensionsStringEXT();
-            internal static GetExtensionsStringEXT wglGetExtensionsStringEXT;
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate Boolean SwapIntervalEXT(int interval);
-            internal static SwapIntervalEXT wglSwapIntervalEXT;
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            internal delegate int GetSwapIntervalEXT();
-            internal static GetSwapIntervalEXT wglGetSwapIntervalEXT;
-        }
+		[SuppressUnmanagedCodeSecurity()]
+		internal delegate Boolean SwapIntervalEXT(int interval);
+		internal static SwapIntervalEXT wglSwapIntervalEXT;
+		[SuppressUnmanagedCodeSecurity()]
+		internal delegate int GetSwapIntervalEXT();
+		internal static GetSwapIntervalEXT wglGetSwapIntervalEXT;
 		
-		internal static partial class Imports
-        {
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglCreateContext", ExactSpelling = true, SetLastError=true)]
-            internal extern static IntPtr CreateContext(IntPtr hDc);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglDeleteContext", ExactSpelling = true, SetLastError = true)]
-            internal extern static Boolean DeleteContext(IntPtr oldContext);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglGetCurrentContext", ExactSpelling = true, SetLastError=true)]
-            internal extern static IntPtr GetCurrentContext();
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglMakeCurrent", ExactSpelling = true, SetLastError=true)]
-            internal extern static Boolean MakeCurrent(IntPtr hDc, IntPtr newContext);
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglGetCurrentDC", ExactSpelling = true, SetLastError = true)]
-            internal extern static IntPtr GetCurrentDC();
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(Wgl.Library, EntryPoint = "wglGetProcAddress", ExactSpelling = true, SetLastError = true)]
-            internal extern static IntPtr GetProcAddress(String lpszProc);
-        }
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static IntPtr wglCreateContext(IntPtr hDc);
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static Boolean wglDeleteContext(IntPtr oldContext);
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static IntPtr wglGetCurrentContext();
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static Boolean wglMakeCurrent(IntPtr hDc, IntPtr newContext);
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static IntPtr wglGetCurrentDC();
+		[SuppressUnmanagedCodeSecurity()]
+		[DllImport(Library, SetLastError = true)]
+		internal extern static IntPtr wglGetProcAddress(String lpszProc);
 	}
 }

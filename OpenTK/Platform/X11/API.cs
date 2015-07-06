@@ -412,7 +412,6 @@ namespace OpenTK.Platform.X11
     /// <summary>
     /// Defines LATIN-1 and miscellaneous keys.
     /// </summary>
-    [CLSCompliant(false)]
     internal enum XKey
     {
         /*

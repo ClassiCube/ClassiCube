@@ -1069,8 +1069,6 @@ namespace OpenTK.Platform.Windows
 
         public event EventHandler<EventArgs> VisibleChanged;
 
-        public event EventHandler<EventArgs> WindowInfoChanged;
-
         public event EventHandler<EventArgs> FocusedChanged;
 
         public event EventHandler<EventArgs> WindowBorderChanged;

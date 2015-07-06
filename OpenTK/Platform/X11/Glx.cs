@@ -50,8 +50,27 @@ namespace OpenTK.Platform.X11
 
 	#endregion
 
-	partial class Glx
+	partial class Glx : BindingsBase
 	{
+		const string Library = "libGL.so.1";
+		static readonly object sync_root = new object();
+
+		// Disable BeforeFieldInit optimization.
+		static Glx() { }
+		
+		public Glx() : base( null ) {
+		}
+
+		protected override IntPtr GetAddress(string funcname) {
+			return Glx.GetProcAddress(funcname);
+		}
+		
+		internal void LoadEntryPoints() {
+			lock( sync_root ) {
+				glXSwapIntervalSGI =
+					GetExtensionDelegate<SwapIntervalSGI>( "glXSwapIntervalSGI" );
+			}
+		}
 
 		[DllImport(Library, EntryPoint = "glXIsDirect")]
 		public static extern bool IsDirect(IntPtr dpy, IntPtr context);
@@ -91,18 +110,9 @@ namespace OpenTK.Platform.X11
 		[DllImport(Library, EntryPoint = "glXGetVisualFromFBConfig")]
 		public unsafe extern static IntPtr GetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
 
-		public static partial class Imports {
-			public static GLXErrorCode SwapInterval(int interval) {
-				return (GLXErrorCode)Delegates.glXSwapIntervalSGI(interval);
-			}
-		}
-
-		internal static partial class Delegates
-		{
-			[SuppressUnmanagedCodeSecurity]
-			public delegate int SwapIntervalSGI(int interval);
-			public static SwapIntervalSGI glXSwapIntervalSGI = null;
-		}
+		[SuppressUnmanagedCodeSecurity]
+		public delegate GLXErrorCode SwapIntervalSGI(int interval);
+		public static SwapIntervalSGI glXSwapIntervalSGI;
 	}
 }
 

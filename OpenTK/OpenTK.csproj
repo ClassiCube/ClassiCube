@@ -64,7 +64,6 @@
     <Compile Include="NativeWindow.cs" />
     <Compile Include="Graphics\Color4.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
-    <Compile Include="Graphics\GraphicsBindingsBase.cs" />
     <Compile Include="Graphics\GraphicsContext.cs" />
     <Compile Include="Graphics\GraphicsContextBase.cs" />
     <Compile Include="Graphics\GraphicsContextException.cs" />
@@ -95,7 +94,6 @@
     <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
-    <Compile Include="Platform\DesktopGraphicsContext.cs" />
     <Compile Include="Platform\Factory.cs" />
     <Compile Include="Platform\IDisplayDeviceDriver.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
@@ -118,7 +116,6 @@
     <Compile Include="Platform\PlatformException.cs" />
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
-    <Compile Include="Platform\Windows\WglHelper.cs" />
     <Compile Include="Platform\Windows\WinDisplayDevice.cs" />
     <Compile Include="Platform\Windows\WinFactory.cs" />
     <Compile Include="Platform\Windows\WinGLContext.cs" />
@@ -127,9 +124,8 @@
     <Compile Include="Platform\Windows\WinMMJoystick.cs" />
     <Compile Include="Platform\Windows\WinWindowInfo.cs" />
     <Compile Include="Platform\X11\API.cs" />
-    <Compile Include="Platform\X11\Bindings\Glx.cs" />
     <Compile Include="Platform\X11\Functions.cs" />
-    <Compile Include="Platform\X11\GlxHelper.cs" />
+    <Compile Include="Platform\X11\Glx.cs" />
     <Compile Include="Platform\X11\Structs.cs" />
     <Compile Include="Platform\X11\X11DisplayDevice.cs" />
     <Compile Include="Platform\X11\X11Factory.cs" />
@@ -154,7 +150,6 @@
     <Folder Include="Platform\MacOS\CarbonBindings" />
     <Folder Include="Platform\Windows" />
     <Folder Include="Platform\X11" />
-    <Folder Include="Platform\X11\Bindings" />
     <Folder Include="Properties" />
   </ItemGroup>
   <ItemGroup>

@@ -25,250 +25,239 @@
 //
 #endregion
 
-namespace OpenTK.Graphics.OpenGL
-{
-    using System;
-    using System.Text;
-    using System.Runtime.InteropServices;
-    #pragma warning disable 3019
-    #pragma warning disable 1591
+using System;
+using System.Runtime.InteropServices;
+using System.Security;
 
-    partial class GL
-    {
+namespace OpenTK.Graphics.OpenGL {
+	
+    partial class GL {
 
-        internal static partial class Core
-        {           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glAlphaFunc", ExactSpelling = true)]
-            internal extern static void AlphaFunc(OpenTK.Graphics.OpenGL.AlphaFunction func, Single @ref);
+        internal static partial class Core {           
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glAlphaFunc(AlphaFunction func, Single @ref);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindBuffer", ExactSpelling = true)]
-            internal extern static void BindBuffer(OpenTK.Graphics.OpenGL.BufferTarget target, Int32 buffer);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindBufferARB", ExactSpelling = true)]
-            internal extern static void BindBufferARB(OpenTK.Graphics.OpenGL.BufferTargetArb target, Int32 buffer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBindBuffer(BufferTarget target, Int32 buffer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBindBufferARB(BufferTarget target, Int32 buffer);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBindTexture", ExactSpelling = true)]
-            internal extern static void BindTexture(OpenTK.Graphics.OpenGL.TextureTarget target, Int32 texture);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBindTexture(TextureTarget target, Int32 texture);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBlendFunc", ExactSpelling = true)]
-            internal extern static void BlendFunc(OpenTK.Graphics.OpenGL.BlendingFactor sfactor, OpenTK.Graphics.OpenGL.BlendingFactor dfactor);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBlendFunc(BlendingFactor sfactor, BlendingFactor dfactor);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBufferData", ExactSpelling = true)]
-            internal extern static void BufferData(OpenTK.Graphics.OpenGL.BufferTarget target, IntPtr size, IntPtr data, OpenTK.Graphics.OpenGL.BufferUsageHint usage);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBufferDataARB", ExactSpelling = true)]
-            internal extern static void BufferDataARB(OpenTK.Graphics.OpenGL.BufferTargetArb target, IntPtr size, IntPtr data, OpenTK.Graphics.OpenGL.BufferUsageArb usage);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBufferData(BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBufferDataARB(BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBufferSubData", ExactSpelling = true)]
-            internal extern static void BufferSubData(OpenTK.Graphics.OpenGL.BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glBufferSubDataARB", ExactSpelling = true)]
-            internal extern static void BufferSubDataARB(OpenTK.Graphics.OpenGL.BufferTargetArb target, IntPtr offset, IntPtr size, IntPtr data);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBufferSubData(BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glBufferSubDataARB(BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glClear", ExactSpelling = true)]
-            internal extern static void Clear(OpenTK.Graphics.OpenGL.ClearBufferMask mask);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glClear(ClearBufferMask mask);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glClearColor", ExactSpelling = true)]
-            internal extern static void ClearColor(Single red, Single green, Single blue, Single alpha);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glClearColor(Single red, Single green, Single blue, Single alpha);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glClearDepth", ExactSpelling = true)]
-            internal extern static void ClearDepth(Double depth);          
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glClearDepth(Double depth);          
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glColorMask", ExactSpelling = true)]
-            internal extern static void ColorMask(bool red, bool green, bool blue, bool alpha);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glColorMask(bool red, bool green, bool blue, bool alpha);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glColorPointer", ExactSpelling = true)]
-            internal extern static void ColorPointer(Int32 size, OpenTK.Graphics.OpenGL.ColorPointerType type, Int32 stride, IntPtr pointer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glColorPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glCullFace", ExactSpelling = true)]
-            internal extern static void CullFace(OpenTK.Graphics.OpenGL.CullFaceMode mode);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glCullFace(CullFaceMode mode);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteBuffers", ExactSpelling = true)]
-            internal extern static unsafe void DeleteBuffers(Int32 n, Int32* buffers);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteBuffersARB", ExactSpelling = true)]
-            internal extern static unsafe void DeleteBuffersARB(Int32 n, Int32* buffers);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glDeleteBuffers(Int32 n, Int32* buffers);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glDeleteBuffersARB(Int32 n, Int32* buffers);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDeleteTextures", ExactSpelling = true)]
-            internal extern static unsafe void DeleteTextures(Int32 n, Int32* textures);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glDeleteTextures(Int32 n, Int32* textures);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDepthFunc", ExactSpelling = true)]
-            internal extern static void DepthFunc(OpenTK.Graphics.OpenGL.DepthFunction func);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDepthMask", ExactSpelling = true)]
-            internal extern static void DepthMask(bool flag);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDepthRange", ExactSpelling = true)]
-            internal extern static void DepthRange(Double near, Double far);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDepthFunc(DepthFunction func);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDepthMask(bool flag);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDepthRange(Double near, Double far);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDisable", ExactSpelling = true)]
-            internal extern static void Disable(OpenTK.Graphics.OpenGL.EnableCap cap);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDisableClientState", ExactSpelling = true)]
-            internal extern static void DisableClientState(OpenTK.Graphics.OpenGL.ArrayCap array);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDisable(EnableCap cap);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDisableClientState(ArrayCap array);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDrawArrays", ExactSpelling = true)]
-            internal extern static void DrawArrays(OpenTK.Graphics.OpenGL.BeginMode mode, Int32 first, Int32 count);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDrawArrays(BeginMode mode, Int32 first, Int32 count);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glDrawElements", ExactSpelling = true)]
-            internal extern static void DrawElements(OpenTK.Graphics.OpenGL.BeginMode mode, Int32 count, OpenTK.Graphics.OpenGL.DrawElementsType type, IntPtr indices);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glDrawElements(BeginMode mode, Int32 count, DrawElementsType type, IntPtr indices);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glEnable", ExactSpelling = true)]
-            internal extern static void Enable(OpenTK.Graphics.OpenGL.EnableCap cap);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glEnableClientState", ExactSpelling = true)]
-            internal extern static void EnableClientState(OpenTK.Graphics.OpenGL.ArrayCap array);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glEnable(EnableCap cap);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glEnableClientState(ArrayCap array);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFinish", ExactSpelling = true)]
-            internal extern static void Finish();
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glFinish();
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFlush", ExactSpelling = true)]
-            internal extern static void Flush();
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glFlush();
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFogf", ExactSpelling = true)]
-            internal extern static void Fogf(OpenTK.Graphics.OpenGL.FogParameter pname, Single param);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glFogf(FogParameter pname, Single param);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFogfv", ExactSpelling = true)]
-            internal extern static unsafe void Fogfv(OpenTK.Graphics.OpenGL.FogParameter pname, Single* @params);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFogi", ExactSpelling = true)]
-            internal extern static void Fogi(OpenTK.Graphics.OpenGL.FogParameter pname, Int32 param);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFogiv", ExactSpelling = true)]
-            internal extern static unsafe void Fogiv(OpenTK.Graphics.OpenGL.FogParameter pname, Int32* @params);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glFogfv(FogParameter pname, Single* @params);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glFogi(FogParameter pname, Int32 param);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glFrontFace", ExactSpelling = true)]
-            internal extern static void FrontFace(OpenTK.Graphics.OpenGL.FrontFaceDirection mode);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glFrontFace(FrontFaceDirection mode);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGenBuffers", ExactSpelling = true)]
-            internal extern static unsafe void GenBuffers(Int32 n, [OutAttribute] Int32* buffers);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGenBuffersARB", ExactSpelling = true)]
-            internal extern static unsafe void GenBuffersARB(Int32 n, [OutAttribute] Int32* buffers);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glGenBuffers(Int32 n, [OutAttribute] Int32* buffers);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glGenBuffersARB(Int32 n, [OutAttribute] Int32* buffers);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGenTextures", ExactSpelling = true)]
-            internal extern static unsafe void GenTextures(Int32 n, [OutAttribute] Int32* textures);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glGenTextures(Int32 n, [OutAttribute] Int32* textures);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetError", ExactSpelling = true)]
-            internal extern static OpenTK.Graphics.OpenGL.ErrorCode GetError();
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static ErrorCode glGetError();
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetFloatv", ExactSpelling = true)]
-            internal extern static unsafe void GetFloatv(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] Single* @params);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glGetFloatv(GetPName pname, [OutAttribute] Single* @params);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetIntegerv", ExactSpelling = true)]
-            internal extern static unsafe void GetIntegerv(OpenTK.Graphics.OpenGL.GetPName pname, [OutAttribute] Int32* @params);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glGetIntegerv(GetPName pname, [OutAttribute] Int32* @params);
           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glGetString", ExactSpelling = true)]
-            internal extern static System.IntPtr GetString(OpenTK.Graphics.OpenGL.StringName name);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static System.IntPtr glGetString(StringName name);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glHint", ExactSpelling = true)]
-            internal extern static void Hint(OpenTK.Graphics.OpenGL.HintTarget target, OpenTK.Graphics.OpenGL.HintMode mode);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glHint(HintTarget target, HintMode mode);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsBuffer", ExactSpelling = true)]
-            internal extern static bool IsBuffer(Int32 buffer);
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsBufferARB", ExactSpelling = true)]
-            internal extern static bool IsBufferARB(Int32 buffer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static bool glIsBuffer(Int32 buffer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static bool glIsBufferARB(Int32 buffer);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glIsTexture", ExactSpelling = true)]
-            internal extern static bool IsTexture(Int32 texture);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static bool glIsTexture(Int32 texture);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glLoadIdentity", ExactSpelling = true)]
-            internal extern static void LoadIdentity();
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glLoadIdentity();
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glLoadMatrixf", ExactSpelling = true)]
-            internal extern static unsafe void LoadMatrixf(Single* m);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glLoadMatrixf(Single* m);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glMatrixMode", ExactSpelling = true)]
-            internal extern static void MatrixMode(OpenTK.Graphics.OpenGL.MatrixMode mode);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glMatrixMode(OpenGL.MatrixMode mode);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glMultMatrixf", ExactSpelling = true)]
-            internal extern static unsafe void MultMatrixf(Single* m);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static unsafe void glMultMatrixf(Single* m);
+
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glPopMatrix();
+
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glPushMatrix();
+
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glReadPixels(Int32 x, Int32 y, Int32 width, Int32 height, PixelFormat format, PixelType type, [OutAttribute] IntPtr pixels);      
+            
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glShadeModel(ShadingModel mode);     
+
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glTexCoordPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
+            
+           	[SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glTexImage2D(TextureTarget target, Int32 level, PixelInternalFormat internalformat, Int32 width, Int32 height, Int32 border, PixelFormat format, PixelType type, IntPtr pixels);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glPolygonMode", ExactSpelling = true)]
-            internal extern static void PolygonMode(OpenTK.Graphics.OpenGL.MaterialFace face, OpenTK.Graphics.OpenGL.PolygonMode mode);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glTexParameterf(TextureTarget target, TextureParameterName pname, Single param);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glPopMatrix", ExactSpelling = true)]
-            internal extern static void PopMatrix();
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glPushMatrix", ExactSpelling = true)]
-            internal extern static void PushMatrix();
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glReadPixels", ExactSpelling = true)]
-            internal extern static void ReadPixels(Int32 x, Int32 y, Int32 width, Int32 height, OpenTK.Graphics.OpenGL.PixelFormat format, OpenTK.Graphics.OpenGL.PixelType type, [OutAttribute] IntPtr pixels);      
-            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glShadeModel", ExactSpelling = true)]
-            internal extern static void ShadeModel(OpenTK.Graphics.OpenGL.ShadingModel mode);     
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glTexCoordPointer", ExactSpelling = true)]
-            internal extern static void TexCoordPointer(Int32 size, OpenTK.Graphics.OpenGL.TexCoordPointerType type, Int32 stride, IntPtr pointer);
-            
-           	[System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glTexImage2D", ExactSpelling = true)]
-            internal extern static void TexImage2D(OpenTK.Graphics.OpenGL.TextureTarget target, Int32 level, OpenTK.Graphics.OpenGL.PixelInternalFormat internalformat, Int32 width, Int32 height, Int32 border, OpenTK.Graphics.OpenGL.PixelFormat format, OpenTK.Graphics.OpenGL.PixelType type, IntPtr pixels);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glTexParameteri(TextureTarget target, TextureParameterName pname, Int32 param);
            
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glTexParameterf", ExactSpelling = true)]
-            internal extern static void TexParameterf(OpenTK.Graphics.OpenGL.TextureTarget target, OpenTK.Graphics.OpenGL.TextureParameterName pname, Single param);
-
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glTexParameteri", ExactSpelling = true)]
-            internal extern static void TexParameteri(OpenTK.Graphics.OpenGL.TextureTarget target, OpenTK.Graphics.OpenGL.TextureParameterName pname, Int32 param);
-           
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glTexSubImage2D", ExactSpelling = true)]
-            internal extern static void TexSubImage2D(OpenTK.Graphics.OpenGL.TextureTarget target, Int32 level, Int32 xoffset, Int32 yoffset, Int32 width, Int32 height, OpenTK.Graphics.OpenGL.PixelFormat format, OpenTK.Graphics.OpenGL.PixelType type, IntPtr pixels);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glTexSubImage2D(TextureTarget target, Int32 level, Int32 xoffset, Int32 yoffset, Int32 width, Int32 height, PixelFormat format, PixelType type, IntPtr pixels);
             
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glVertexPointer", ExactSpelling = true)]
-            internal extern static void VertexPointer(Int32 size, OpenTK.Graphics.OpenGL.VertexPointerType type, Int32 stride, IntPtr pointer);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glVertexPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
 
-            [System.Security.SuppressUnmanagedCodeSecurity()]
-            [System.Runtime.InteropServices.DllImport(GL.Library, EntryPoint = "glViewport", ExactSpelling = true)]
-            internal extern static void Viewport(Int32 x, Int32 y, Int32 width, Int32 height);
+            [SuppressUnmanagedCodeSecurity()]
+            [DllImport(Library)]
+            internal extern static void glViewport(Int32 x, Int32 y, Int32 width, Int32 height);
         }
     }
 }

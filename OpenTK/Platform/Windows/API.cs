@@ -270,7 +270,7 @@ namespace OpenTK.Platform.Windows
         /// <param name="flags">Not used</param>
         /// <returns>True if there is a message pending.</returns>
         [System.Security.SuppressUnmanagedCodeSecurity]
-        [DllImport("User32.dll"), CLSCompliant(false)]
+        [DllImport("User32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool PeekMessage(ref MSG msg, IntPtr hWnd, int messageFilterMin, int messageFilterMax, int flags);
 
@@ -292,7 +292,7 @@ namespace OpenTK.Platform.Windows
         /// To get extended error information, call GetLastError.
         /// </returns>
         [System.Security.SuppressUnmanagedCodeSecurity]
-        [DllImport("User32.dll"), CLSCompliant(false)]
+        [DllImport("User32.dll")]
         //[return: MarshalAs(UnmanagedType.Bool)]
         internal static extern INT GetMessage(ref MSG msg,
             IntPtr windowHandle, int messageFilterMin, int messageFilterMax);
@@ -308,35 +308,25 @@ namespace OpenTK.Platform.Windows
 
         #region PostMessage
 
-        [CLSCompliant(false)]
         [System.Security.SuppressUnmanagedCodeSecurity]
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        internal static extern BOOL PostMessage(
-            HWND hWnd,
-            WindowMessage Msg,
-            WPARAM wParam,
-            LPARAM lParam
-        );
+        internal static extern BOOL PostMessage(HWND hWnd, WindowMessage Msg, WPARAM wParam, LPARAM lParam);
 
         #endregion
 
         #region DispatchMessage
 
-#if RELEASE
         [System.Security.SuppressUnmanagedCodeSecurity]
-#endif
-        [DllImport("User32.dll"), CLSCompliant(false)]
+        [DllImport("User32.dll")]
         internal static extern LRESULT DispatchMessage(ref MSG msg);
 
         #endregion
 
         #region TranslateMessage
 
-#if RELEASE
         [System.Security.SuppressUnmanagedCodeSecurity]
-#endif
-        [DllImport("User32.dll"), CLSCompliant(false)]
+        [DllImport("User32.dll")]
         internal static extern BOOL TranslateMessage(ref MSG lpMsg);
 
         #endregion
@@ -354,11 +344,6 @@ namespace OpenTK.Platform.Windows
 
         #region GetDC
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="hwnd"></param>
-        /// <returns></returns>
         [DllImport("user32.dll")]
         internal static extern IntPtr GetDC(IntPtr hwnd);
 
@@ -366,12 +351,6 @@ namespace OpenTK.Platform.Windows
 
         #region ReleaseDC
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="hwnd"></param>
-        /// <param name="DC"></param>
-        /// <returns></returns>
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool ReleaseDC(IntPtr hwnd, IntPtr DC);
@@ -2365,7 +2344,7 @@ namespace OpenTK.Platform.Windows
 
     #region Message
 
-    [StructLayout(LayoutKind.Sequential), CLSCompliant(false)]
+    [StructLayout(LayoutKind.Sequential)]
     internal struct MSG
     {
         internal IntPtr HWnd;

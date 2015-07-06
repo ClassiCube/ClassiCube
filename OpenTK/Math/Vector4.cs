@@ -887,30 +887,6 @@ namespace OpenTK
             return !left.Equals(right);
         }
 
-        /// <summary>
-        /// Returns a pointer to the first element of the specified instance.
-        /// </summary>
-        /// <param name="v">The instance.</param>
-        /// <returns>A pointer to the first element of v.</returns>
-        [CLSCompliant(false)]
-        unsafe public static explicit operator float*(Vector4 v)
-        {
-            return &v.X;
-        }
-
-        /// <summary>
-        /// Returns a pointer to the first element of the specified instance.
-        /// </summary>
-        /// <param name="v">The instance.</param>
-        /// <returns>A pointer to the first element of v.</returns>
-        public static explicit operator IntPtr(Vector4 v)
-        {
-            unsafe
-            {
-                return (IntPtr)(&v.X);
-            }
-        }
-
         #endregion
 
         #region Overrides

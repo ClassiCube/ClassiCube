@@ -85,19 +85,6 @@ namespace OpenTK.Graphics.OpenGL
         ElementArrayBuffer = ((int)0x8893),
     }
 
-    public enum BufferTargetArb : int
-    {
-        ArrayBuffer = ((int)0x8892),
-        ElementArrayBuffer = ((int)0x8893),
-    }
-
-    public enum BufferUsageArb : int
-    {
-        StreamDraw = ((int)0x88E0),
-        StaticDraw = ((int)0x88E4),
-        DynamicDraw = ((int)0x88E8),
-    }
-
     public enum BufferUsageHint : int
     {
         StreamDraw = ((int)0x88E0),
@@ -114,10 +101,9 @@ namespace OpenTK.Graphics.OpenGL
         ColorBufferBit = ((int)0x00004000),
     }
 
-    public enum ColorPointerType : int
+    public enum PointerType : int
     {
         UnsignedByte = ((int)0x1401),
-
         Float = ((int)0x1406),
     }
 
@@ -268,8 +254,6 @@ namespace OpenTK.Graphics.OpenGL
         BlendSrc = ((int)0x0BE1),
         Blend = ((int)0x0BE2),
 
-        AuxBuffers = ((int)0x0C00),
-
         ColorClearValue = ((int)0x0C22),
         ColorWritemask = ((int)0x0C23),
         IndexMode = ((int)0x0C30),
@@ -389,11 +373,6 @@ namespace OpenTK.Graphics.OpenGL
         Extensions = ((int)0x1F03),
     }
 
-    public enum TexCoordPointerType : int
-    {
-        Float = ((int)0x1406),
-    }
-
     public enum TextureMagFilter : int
     {
         Nearest = ((int)0x2600),
@@ -440,10 +419,5 @@ namespace OpenTK.Graphics.OpenGL
         Repeat = ((int)0x2901),
         ClampToBorder = ((int)0x812D),
         ClampToEdge = ((int)0x812F),
-    }
-
-    public enum VertexPointerType : int
-    {
-        Float = ((int)0x1406),
     }
 }

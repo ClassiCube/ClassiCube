@@ -38,31 +38,25 @@ namespace OpenTK.Platform.Windows
     {
         #region IPlatformFactory Members
 
-        public virtual INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)
-        {
+        public virtual INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
             return new WinGLNative(x, y, width, height, title, options, device);
         }
 
-        public virtual IDisplayDeviceDriver CreateDisplayDeviceDriver()
-        {
+        public virtual IDisplayDeviceDriver CreateDisplayDeviceDriver() {
             return new WinDisplayDeviceDriver();
         }
 
-        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor)
-        {
+        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor) {
             return new WinGLContext(mode, (WinWindowInfo)window, major, minor);
         }
 
-        public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
-        {
-            return (GraphicsContext.GetCurrentContextDelegate)delegate
-            {
-                return new ContextHandle(Wgl.Imports.GetCurrentContext());
+        public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext() {
+            return delegate {
+                return new ContextHandle(Wgl.wglGetCurrentContext());
             };
         }
 
-        public virtual IGraphicsMode CreateGraphicsMode()
-        {
+        public virtual IGraphicsMode CreateGraphicsMode() {
         	return new IGraphicsMode();
         }
         

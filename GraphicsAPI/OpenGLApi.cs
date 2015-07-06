@@ -194,9 +194,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = 0;
 			Gl.glGenBuffersARB( 1, &id );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, id );
-			Gl.glBufferDataARB( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageArb.DynamicDraw );
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			Gl.glBufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -204,11 +204,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = 0;
 			Gl.glGenBuffersARB( 1, &id );
 			int sizeInBytes = count * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, id );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			Gl.glBufferDataARB( BufferTargetArb.ArrayBuffer, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject(), BufferUsageArb.StaticDraw );
+			Gl.glBufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject(), BufferUsageHint.StaticDraw );
 			handle.Free();
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, 0 );
 			return id;
 		}
 		
@@ -216,19 +216,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = 0;
 			Gl.glGenBuffersARB( 1, &id );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			Gl.glBindBufferARB( BufferTargetArb.ElementArrayBuffer, id );
+			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, id );
 			fixed( ushort* ptr = indices ) {
-				Gl.glBufferDataARB( BufferTargetArb.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageArb.StaticDraw );
+				Gl.glBufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
 			}
-			Gl.glBindBufferARB( BufferTargetArb.ElementArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
 			return id;
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
 			int sizeInBytes = count * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, vb );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, vb );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			Gl.glBufferSubDataARB( BufferTargetArb.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject() );
+			Gl.glBufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject() );
 			handle.Free();
 			
 			BeginVbBatch( format );
@@ -303,44 +303,44 @@ namespace ClassicalSharp.GraphicsAPI {
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
 		                                        int startVertex, int startIndex ) {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, vb );
-			Gl.glBindBufferARB( BufferTargetArb.ElementArrayBuffer, ib );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, vb );
+			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, ib );
 			
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
-			Gl.glVertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( offset ) );
-			Gl.glColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
-			Gl.glTexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( offset + 16 ) );
+			Gl.glVertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
+			Gl.glColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
+			Gl.glTexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
 			Gl.glDrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 		
 		public override void EndVbBatch() {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, 0 );
 		}
 		
 		public override void EndIndexedVbBatch() {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, 0 );
-			Gl.glBindBufferARB( BufferTargetArb.ElementArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, 0 );
+			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
 		}
 		
 		void DrawVbPos3fTex2f( DrawMode mode, int id, int offset, int verticesCount ) {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, id );
-			Gl.glVertexPointer( 3, VertexPointerType.Float, 20, new IntPtr( 0 ) );
-			Gl.glTexCoordPointer( 2, TexCoordPointerType.Float, 20, new IntPtr( 12 ) );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			Gl.glVertexPointer( 3, PointerType.Float, 20, new IntPtr( 0 ) );
+			Gl.glTexCoordPointer( 2, PointerType.Float, 20, new IntPtr( 12 ) );
 			Gl.glDrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
 		void DrawVbPos3fCol4b( DrawMode mode, int id, int offset, int verticesCount ) {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, id );
-			Gl.glVertexPointer( 3, VertexPointerType.Float, 16, new IntPtr( 0 ) );
-			Gl.glColorPointer( 4, ColorPointerType.UnsignedByte, 16, new IntPtr( 12 ) );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			Gl.glVertexPointer( 3, PointerType.Float, 16, new IntPtr( 0 ) );
+			Gl.glColorPointer( 4, PointerType.UnsignedByte, 16, new IntPtr( 12 ) );
 			Gl.glDrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		
 		void DrawVbPos3fTex2fCol4b( DrawMode mode, int id, int offset, int verticesCount ) {
-			Gl.glBindBufferARB( BufferTargetArb.ArrayBuffer, id );
-			Gl.glVertexPointer( 3, VertexPointerType.Float, 24, new IntPtr( 0 ) );
-			Gl.glColorPointer( 4, ColorPointerType.UnsignedByte, 24, new IntPtr( 12 ) );
-			Gl.glTexCoordPointer( 2, TexCoordPointerType.Float, 24, new IntPtr( 16 ) );
+			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			Gl.glVertexPointer( 3, PointerType.Float, 24, new IntPtr( 0 ) );
+			Gl.glColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( 12 ) );
+			Gl.glTexCoordPointer( 2, PointerType.Float, 24, new IntPtr( 16 ) );
 			Gl.glDrawArrays( modeMappings[(int)mode], offset, verticesCount );
 		}
 		#endregion
