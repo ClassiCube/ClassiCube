@@ -36,28 +36,29 @@ namespace ClassicalSharp {
 		public void AddChat( string text ) {
 			ChatLog.Add( text );
 			LogChatToFile( text );
-			RaiseEvent( ChatReceived, new ChatEventArgs( text, 0 ) );
+			chatArgs.Text = text;
+			chatArgs.Type = CpeMessage.Normal;
+			RaiseEvent( ChatReceived, chatArgs );
 		}
 		
-		ChatEventArgs chatArgs = new ChatEventArgs( "", 0 );
-		public void AddChat( string text, byte type ) {
-			CpeMessageType cpeType = (CpeMessageType)type;
-			if( cpeType == 0 ) {
+		ChatEventArgs chatArgs = new ChatEventArgs();
+		public void AddChat( string text, CpeMessage type ) {
+			if( type == CpeMessage.Normal ) {
 				ChatLog.Add( text );
 				LogChatToFile( text );
-			} else if( cpeType == CpeMessageType.Status1 ) {
+			} else if( type == CpeMessage.Status1 ) {
 				Status1 = text;
-			} else if( cpeType == CpeMessageType.Status2 ) {
+			} else if( type == CpeMessage.Status2 ) {
 				Status2 = text;
-			} else if( cpeType == CpeMessageType.Status3 ) {
+			} else if( type == CpeMessage.Status3 ) {
 				Status3 = text;
-			} else if( cpeType == CpeMessageType.BottomRight1 ) {
+			} else if( type == CpeMessage.BottomRight1 ) {
 				BottomRight1 = text;
-			} else if( cpeType == CpeMessageType.BottomRight2 ) {
+			} else if( type == CpeMessage.BottomRight2 ) {
 				BottomRight2 = text;
-			} else if( cpeType == CpeMessageType.BottomRight3 ) {
+			} else if( type == CpeMessage.BottomRight3 ) {
 				BottomRight3 = text;
-			} else if( cpeType == CpeMessageType.Announcement ) {
+			} else if( type == CpeMessage.Announcement ) {
 				Announcement = text;
 			}
 			chatArgs.Text = text;

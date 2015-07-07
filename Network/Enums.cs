@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		CpePlayerClick = 34,
 	}
 	
-	public enum CpeMessageType {
+	public enum CpeMessage {
 		Normal = 0,
 		Status1 = 1,
 		Status2 = 2,

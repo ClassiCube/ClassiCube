@@ -19,10 +19,8 @@ namespace ClassicalSharp {
 		bool suppressNextPress = true;
 		DateTime announcementDisplayTime;
 
-		int pageNumber, pagesCount;
-		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		int chatIndex;
-		Texture pageTexture;
+		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		
 		public override void Render( double delta ) {
 			normalChat.Render( delta );
@@ -37,9 +35,6 @@ namespace ClassicalSharp {
 			if( Window.Announcement != null && ( DateTime.UtcNow - announcementDisplayTime ).TotalSeconds > 5 ) {
 				Window.Announcement = null;
 				GraphicsApi.DeleteTexture( ref announcementTex );
-			}
-			if( HistoryMode ) {
-				pageTexture.Render( GraphicsApi );
 			}
 		}
 		
@@ -68,7 +63,8 @@ namespace ClassicalSharp {
 			normalChat.VerticalDocking = Docking.BottomOrRight;
 			normalChat.Init();
 			
-			InitChat();
+			chatIndex = Window.ChatLog.Count - chatLines;
+			ResetChat();
 			status.SetText( 0, Window.Status1 );
 			status.SetText( 1, Window.Status2 );
 			status.SetText( 2, Window.Status3 );
@@ -84,15 +80,18 @@ namespace ClassicalSharp {
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
-			CpeMessageType type = (CpeMessageType)e.Type;
-			if( type == CpeMessageType.Normal ) UpdateChat( e.Text );
-			else if( type == CpeMessageType.Status1 ) status.SetText( 0, e.Text );
-			else if( type == CpeMessageType.Status2 ) status.SetText( 1, e.Text );
-			else if( type == CpeMessageType.Status3 ) status.SetText( 2, e.Text );
-			else if( type == CpeMessageType.BottomRight1 ) bottomRight.SetText( 2, e.Text );
-			else if( type == CpeMessageType.BottomRight2 ) bottomRight.SetText( 1, e.Text );
-			else if( type == CpeMessageType.BottomRight3 ) bottomRight.SetText( 0, e.Text );
-			else if( type == CpeMessageType.Announcement ) UpdateAnnouncement( e.Text );
+			CpeMessage type = e.Type;
+			if( type == CpeMessage.Normal ) {
+				chatIndex++;
+				List<string> chat = Window.ChatLog;
+				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1] );
+			} else if( type >= CpeMessage.Status1 && type <= CpeMessage.Status3 ) {
+				status.SetText( (int)( type - CpeMessage.Status1 ), e.Text );
+			} else if( type >= CpeMessage.BottomRight1 && type <= CpeMessage.BottomRight3 ) {
+				bottomRight.SetText( 2 - (int)( type - CpeMessage.BottomRight1 ), e.Text );
+			} else if( type == CpeMessage.Announcement ) {
+				UpdateAnnouncement( e.Text );
+			}
 		}
 
 		public override void Dispose() {
@@ -108,7 +107,6 @@ namespace ClassicalSharp {
 			textInput.Dispose();
 			status.Dispose();
 			bottomRight.Dispose();
-			GraphicsApi.DeleteTexture( ref pageTexture );
 			GraphicsApi.DeleteTexture( ref announcementTex );
 			Window.ChatReceived -= ChatReceived;
 		}
@@ -116,27 +114,10 @@ namespace ClassicalSharp {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			announcementTex.X1 += ( width - oldWidth ) / 2;
 			announcementTex.Y1 += ( height - oldHeight ) / 2;
-			pageTexture.Y1 += height - oldHeight;
 			textInput.OnResize( oldWidth, oldHeight, width, height );
 			status.OnResize( oldWidth, oldHeight, width, height );
 			bottomRight.OnResize( oldWidth, oldHeight, width, height );
 			normalChat.OnResize( oldWidth, oldHeight, width, height );
-		}
-		
-		void InitChat() {
-			if( !HistoryMode ) {
-				List<string> chat = Window.ChatLog;
-				int count = Math.Min( chat.Count, chatLines );
-				for( int i = 0; i < count; i++ ) {
-					UpdateChat( chat[chat.Count - count + i] );
-				}
-			} else {
-				pagesCount = Window.ChatLog.Count / chatLines + 1;
-				// When opening the screen history, use the most recent 'snapshot' of chat messages.
-				pageNumber = pagesCount;
-				MakePageNumberTexture();
-				SetChatHistoryStart( ( pagesCount - 1 ) * chatLines );
-			}
 		}
 		
 		void UpdateAnnouncement( string text ) {
@@ -144,22 +125,15 @@ namespace ClassicalSharp {
 			DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
 			announcementTex = Utils2D.MakeTextTexture( announcementFont, 0, 0, ref args );
 			announcementTex.X1 = Window.Width / 2 - announcementTex.Width / 2;
-			announcementTex.Y1 = Window.Height / 4 - announcementTex.Height / 2; 
+			announcementTex.Y1 = Window.Height / 4 - announcementTex.Height / 2;
 		}
 		
-		void UpdateChat( string text ) {
-			if( !HistoryMode ) {
-				normalChat.PushUpAndReplaceLast( text );
-			} else {
-				if( chatIndex < 0 ) return;
-				normalChat.PushUpAndReplaceLast( text );
-				chatIndex--;
-				int oldPagesCount = pagesCount;
-				pageTexture.Y1 = normalChat.CalcUsedY() - pageTexture.Height;
-				pagesCount = Window.ChatLog.Count / chatLines + 1;
-				if( oldPagesCount != pagesCount ) {
-					MakePageNumberTexture();
-				}
+		void ResetChat() {
+			normalChat.Dispose();
+			List<string> chat = Window.ChatLog;
+			for( int i = chatIndex; i < chatIndex + chatLines; i++ ) {
+				if( i >= 0 && i < chat.Count )
+					normalChat.PushUpAndReplaceLast( chat[i] );
 			}
 		}
 		
@@ -188,6 +162,17 @@ namespace ClassicalSharp {
 					HandlesAllInput = false;
 					Window.Camera.RegrabMouse();
 					textInput.SendTextInBufferAndReset();
+				} else if( key == Key.PageUp ) {
+					chatIndex -= chatLines;
+					int minIndex = Math.Min( 0, Window.ChatLog.Count - chatLines );
+					if( chatIndex < minIndex )
+						chatIndex = minIndex;
+					ResetChat();
+				} else if( key == Key.PageDown ) {
+					chatIndex += chatLines;
+					if( chatIndex > Window.ChatLog.Count - chatLines )
+						chatIndex = Window.ChatLog.Count - chatLines;
+					ResetChat();
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
@@ -198,50 +183,20 @@ namespace ClassicalSharp {
 				OpenTextInputBar( "" );
 			} else if( key == Key.Slash ) {
 				OpenTextInputBar( "/" );
-			}  else if( key == Window.Keys[KeyMapping.ChatHistoryMode] ) {
-				HistoryMode = !HistoryMode;
-				normalChat.Dispose();		
-				InitChat();
-			} else if( HistoryMode && key == Key.PageUp ) {
-				pageNumber--;
-				if( pageNumber <= 0 ) pageNumber = 1;
-				MakePageNumberTexture();
-				SetChatHistoryStart( ( pageNumber - 1 ) * chatLines );
-			} else if( HistoryMode && key == Key.PageDown ) {
-				pageNumber++;
-				if( pageNumber > pagesCount ) pageNumber = pagesCount;
-				MakePageNumberTexture();
-				SetChatHistoryStart( ( pageNumber - 1 ) * chatLines );
 			} else {
 				return false;
 			}
 			return true;
 		}
 		
-		void MakePageNumberTexture() {
-			GraphicsApi.DeleteTexture( ref pageTexture );
-			string text = "Page " + pageNumber + " of " + pagesCount;
-			Size size = Utils2D.MeasureSize( text, historyFont, false );
-			int y = normalChat.CalcUsedY() - size.Height;
-
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, Color.Yellow, false );
-					Utils2D.DrawText( g, historyFont, ref args, 0, 0 );
-				}
-				pageTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 10, y );
-			}
-		}
-		
-		void SetChatHistoryStart( int index ) {
-			normalChat.Dispose();
-			chatIndex = chatLines - 1;
-			List<string> chat = Window.ChatLog;
-			int max = Math.Min( chat.Count, index + chatLines );
-			for( int i = index; i < max; i++ ) {
-				UpdateChat( chat[i] );
-			}
+		public override bool HandlesMouseScroll( int delta ) {
+			if( !HandlesAllInput ) return false;
+			chatIndex += -delta;
+			int maxIndex = Window.ChatLog.Count - chatLines;
+			int minIndex = Math.Min( 0, maxIndex );	
+			Utils.Clamp( ref chatIndex, minIndex, maxIndex );
+			ResetChat();
+			return true;
 		}
 	}
 }

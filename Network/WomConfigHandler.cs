@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 					} else if( key == "environment.side" ) {
 						//GetWomImageAsync( "side", value );
 					} else if( key == "user.detail" && !useMessageTypes ) {
-						Window.AddChat( value, 2 );
+						Window.AddChat( value, CpeMessage.Status2 );
 					}
 				}
 			}

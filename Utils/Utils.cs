@@ -26,6 +26,11 @@ namespace ClassicalSharp {
 			if( value > max ) value = max;
 		}
 		
+		public static void Clamp( ref int value, int min, int max ) {
+			if( value < min ) value = min;
+			if( value > max ) value = max;
+		}
+		
 		public static int NextPowerOf2( int value ) {
 			int next = 1;
 			while( value > next ) {

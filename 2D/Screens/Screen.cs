@@ -39,11 +39,15 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
+		public virtual bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			return false;
+		}
+		
 		public virtual bool HandlesMouseMove( int mouseX, int mouseY ) {
 			return false;
 		}
 		
-		public virtual bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+		public virtual bool HandlesMouseScroll( int delta ) {
 			return false;
 		}
 		

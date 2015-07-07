@@ -40,15 +40,6 @@ namespace ClassicalSharp {
 			UpdateDimensions();
 		}
 		
-		public int CalcUsedY() {
-			int y = Y;
-			for( int i = 0; i < textures.Length; i++ ) {
-				if( textures[i].IsValid ) break;
-				y += defaultHeight;
-			}
-			return y;
-		}
-		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
 			GraphicsApi.DeleteTexture( ref textures[0] );

@@ -116,14 +116,9 @@ namespace ClassicalSharp {
 	
 	public sealed class ChatEventArgs : EventArgs {
 		
-		public byte Type;
+		public CpeMessage Type;
 		
 		public string Text;
-		
-		public ChatEventArgs( string text, byte type ) {
-			Type = type;
-			Text = text;
-		}
 	}
 	
 	public sealed class MapLoadingEventArgs : EventArgs {

@@ -395,7 +395,7 @@ namespace ClassicalSharp {
 					{
 						byte messageType = reader.ReadUInt8();
 						string text = reader.ReadChatString( ref messageType, useMessageTypes );
-						Window.AddChat( text, messageType );
+						Window.AddChat( text, (CpeMessage)messageType );
 					} break;
 					
 				case PacketId.Kick:

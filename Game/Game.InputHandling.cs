@@ -56,32 +56,31 @@ namespace ClassicalSharp {
 		}
 
 		void MouseMove( object sender, MouseMoveEventArgs e ) {
-			if( activeScreen == null || !activeScreen.HandlesMouseMove( e.X, e.Y ) ) {
-				
+			if( activeScreen == null || !activeScreen.HandlesMouseMove( e.X, e.Y ) ) {			
 			}
 		}
 
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			if( !Camera.MouseZoom( e ) && CanChangeHeldBlock ) {
-				int diffIndex = -e.Delta % BlocksHotbar.Length;
-				int newIndex = HeldBlockIndex + diffIndex;
+			if( activeScreen == null || !activeScreen.HandlesMouseScroll( e.Delta ) ) {
+				if( Camera.MouseZoom( e ) || !CanChangeHeldBlock ) return;
+				
+				int diff = -e.Delta % BlocksHotbar.Length;
+				int newIndex = HeldBlockIndex + diff;
 				if( newIndex < 0 ) newIndex += BlocksHotbar.Length;
 				if( newIndex >= BlocksHotbar.Length ) newIndex -= BlocksHotbar.Length;
 				HeldBlockIndex = newIndex;
-			}
+			}	
 		}
 
 		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
 			char key = e.KeyChar;
-			if( activeScreen == null || !activeScreen.HandlesKeyPress( key ) ) {
-				
+			if( activeScreen == null || !activeScreen.HandlesKeyPress( key ) ) {				
 			}
 		}
 		
 		void KeyUpHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
-			if( activeScreen == null || !activeScreen.HandlesKeyUp( key ) ) {
-				
+			if( activeScreen == null || !activeScreen.HandlesKeyUp( key ) ) {				
 			}
 		}
 

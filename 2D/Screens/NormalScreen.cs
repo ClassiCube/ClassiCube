@@ -93,5 +93,9 @@ namespace ClassicalSharp {
 			}
 			return false;
 		}
+		
+		public override bool HandlesMouseScroll( int delta ) {
+			return chat.HandlesMouseScroll( delta );
+		}
 	}
 }
