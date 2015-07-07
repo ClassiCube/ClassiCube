@@ -18,9 +18,7 @@ namespace ClassicalSharp {
 		TextGroupWidget status, bottomRight, normalChat;
 		bool suppressNextPress = true;
 		DateTime announcementDisplayTime;
-
 		int chatIndex;
-		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		
 		public override void Render( double delta ) {
 			normalChat.Render( delta );
@@ -68,9 +66,9 @@ namespace ClassicalSharp {
 			status.SetText( 0, Window.Status1 );
 			status.SetText( 1, Window.Status2 );
 			status.SetText( 2, Window.Status3 );
-			bottomRight.SetText( 0, Window.BottomRight1 );
+			bottomRight.SetText( 2, Window.BottomRight1 );
 			bottomRight.SetText( 1, Window.BottomRight2 );
-			bottomRight.SetText( 2, Window.BottomRight3 );
+			bottomRight.SetText( 0, Window.BottomRight3 );
 			UpdateAnnouncement( Window.Announcement );
 			if( !String.IsNullOrEmpty( Window.chatInInputBuffer ) ) {
 				OpenTextInputBar( Window.chatInInputBuffer );
