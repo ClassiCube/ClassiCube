@@ -60,6 +60,7 @@
     <Compile Include="Network\ClassicNetwork.cs" />
     <Compile Include="Network\ClassicNetwork.Wom.cs" />
     <Compile Include="Renderers\PickingRenderer.cs" />
+    <Compile Include="Shaders\FXAAFilter.cs" />
     <Compile Include="Shaders\GrayscaleFilter.cs" />
     <Compile Include="StandardChunkMeshBuilder.cs" />
     <Compile Include="DefaultCommands.cs" />

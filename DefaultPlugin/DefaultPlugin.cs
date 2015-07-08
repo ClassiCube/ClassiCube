@@ -48,6 +48,7 @@ namespace DefaultPlugin {
 					new PluginModule( PluginModuleType.MapRenderer, typeof( StandardMapRenderer ) ),
 					
 					new PluginModule( PluginModuleType.PostProcessingShader, typeof( GrayscaleFilter ) ),
+					new PluginModule( PluginModuleType.PostProcessingShader, typeof( FXAAFilter ) ),
 					
 					new PluginModule( PluginModuleType.NetworkProcessor, typeof( ClassicNetworkProcessor ) ),
 					new PluginModule( PluginModuleType.BlockInfo, typeof( ClassicBlockInfo ) ),

@@ -31,6 +31,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( shader.ProgramId <= 0 ) {
 				shader.Init( api );
 			}
+			shader.RenderTargetResized( window.Width, window.Height );
 		}
 
 		void Resize( object sender, EventArgs e ) {
