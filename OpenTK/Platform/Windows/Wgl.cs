@@ -20,10 +20,8 @@ namespace OpenTK.Platform.Windows {
 		
 		internal void LoadEntryPoints() {
 			lock( sync_root ) {
-				wglGetSwapIntervalEXT = 
-					GetExtensionDelegate<GetSwapIntervalEXT>( "wglGetSwapIntervalEXT" );
-				wglSwapIntervalEXT = 
-					GetExtensionDelegate<SwapIntervalEXT>( "wglSwapIntervalEXT" );
+				GetExtensionDelegate( "wglGetSwapIntervalEXT", out wglGetSwapIntervalEXT );
+				GetExtensionDelegate( "wglSwapIntervalEXT", out wglSwapIntervalEXT );
 			}
 		}
 

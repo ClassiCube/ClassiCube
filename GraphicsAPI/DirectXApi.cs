@@ -34,13 +34,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 
 		public DirectXApi( Game game ) {
-			PresentParameters args = new PresentParameters();
-			args.Windowed = true;
-			args.SwapEffect = SwapEffect.Discard;
-			args.PresentationInterval = PresentInterval.Immediate;
-			args.EnableAutoDepthStencil = true;
-			args.AutoDepthStencilFormat = DepthFormat.D24X8; // D32 doesn't work
-			
+			PresentParameters args = GetPresentArgs( 640, 480 );
 			// Code to get window handle from WinWindowInfo class
 			OpenTK.Platform.IWindowInfo info = game.WindowInfo;
 			Type type = info.GetType();
@@ -55,30 +49,29 @@ namespace ClassicalSharp.GraphicsAPI {
 			viewStack = new MatrixStack( 32, device, TransformType.View );
 			projStack = new MatrixStack( 4, device, TransformType.Projection );
 			texStack = new MatrixStack( 4, device, TransformType.Texture0 );
-			
-			device.SetRenderState( RenderStates.FillMode, (int)FillMode.Solid );
-			FaceCulling = false;
-			device.SetRenderState( RenderStates.ColorVertex, false );
-			device.SetRenderState( RenderStates.Lighting, false );
-			device.SetRenderState( RenderStates.SpecularEnable, false );
-			device.SetRenderState( RenderStates.DebugMonitorToken, false );
+			SetDefaultRenderStates();
 		}
 		
+		bool alphaTest, alphaBlend;
 		public override bool AlphaTest {
-			set { device.SetRenderState( RenderStates.AlphaTestEnable, value ); }
+			set { alphaTest = value; device.SetRenderState( RenderStates.AlphaTestEnable, value ); }
 		}
 
 		public override bool AlphaBlending {
-			set { device.SetRenderState( RenderStates.AlphaBlendEnable, value ); }
+			set { alphaBlend = value; device.SetRenderState( RenderStates.AlphaBlendEnable, value ); }
 		}
 
 		Compare[] compareFuncs = {
 			Compare.Always, Compare.NotEqual, Compare.Never, Compare.Less,
 			Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
 		};
+		Compare alphaTestFunc;
+		int alphaTestRef;
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
-			device.SetRenderState( RenderStates.AlphaFunction, (int)compareFuncs[(int)func] );
-			device.SetRenderState( RenderStates.ReferenceAlpha, (int)( value * 255 ) );
+			alphaTestFunc = compareFuncs[(int)func];
+			device.SetRenderState( RenderStates.AlphaFunction, (int)alphaTestFunc );
+			alphaTestRef = (int)( value * 255 );
+			device.SetRenderState( RenderStates.ReferenceAlpha, alphaTestRef );
 		}
 
 		Blend[] blendFuncs = {
@@ -86,34 +79,46 @@ namespace ClassicalSharp.GraphicsAPI {
 			Blend.SourceAlpha, Blend.InvSourceAlpha,
 			Blend.DestinationAlpha, Blend.InvDestinationAlpha,
 		};
-		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
-			device.SetRenderState( RenderStates.SourceBlend, (int)blendFuncs[(int)srcFunc] );
-			device.SetRenderState( RenderStates.DestinationBlend, (int)blendFuncs[(int)dstFunc] );
+		Blend srcFunc, dstFunc;
+		public override void AlphaBlendFunc( BlendFunc srcBlendFunc, BlendFunc dstBlendFunc ) {
+			srcFunc = blendFuncs[(int)srcBlendFunc];
+			dstFunc = blendFuncs[(int)dstBlendFunc];
+			device.SetRenderState( RenderStates.SourceBlend, (int)srcFunc );
+			device.SetRenderState( RenderStates.DestinationBlend, (int)dstFunc );
 		}
 
+		bool fogEnable;
 		public override bool Fog {
-			set { device.SetRenderState( RenderStates.FogEnable, value ); }
+			set { fogEnable = value; device.SetRenderState( RenderStates.FogEnable, value ); }
 		}
 
+		int fogCol;
 		public override void SetFogColour( FastColour col ) {
-			device.SetRenderState( RenderStates.FogColor, col.ToColor().ToArgb() );
+			fogCol = col.ToArgb();
+			device.SetRenderState( RenderStates.FogColor, fogCol );
 		}
 
+		float fogDensity, fogStart, fogEnd;
 		public override void SetFogDensity( float value ) {
+			fogDensity = value;
 			device.SetRenderState( RenderStates.FogDensity, value );
 		}
 		
 		public override void SetFogStart( float value ) {
+			fogStart = value;
 			device.SetRenderState( RenderStates.FogStart, value );
 		}
 
 		public override void SetFogEnd( float value ) {
+			fogEnd = value;
 			device.SetRenderState( RenderStates.FogEnd, value );
 		}
 
 		FogMode[] modes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		FogMode fogMode;
 		public override void SetFogMode( Fog mode ) {
-			device.SetRenderState( RenderStates.FogTableMode, (int)modes[(int)mode] );
+			fogMode = modes[(int)mode];
+			device.SetRenderState( RenderStates.FogTableMode, (int)fogMode );
 		}
 		
 		public override bool FaceCulling {
@@ -161,23 +166,26 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void ClearColour( FastColour col ) {
-			lastClearCol = col.ToColor().ToArgb();
+			lastClearCol = col.ToArgb();
 		}
 
 		public override bool ColourWrite {
 			set { device.SetRenderState( RenderStates.ColorWriteEnable, value ? 0xF : 0x0 ); }
 		}
 
+		Compare depthTestFunc;
 		public override void DepthTestFunc( CompareFunc func ) {
-			device.SetRenderState( RenderStates.ZBufferFunction, (int)compareFuncs[(int)func] );
+			depthTestFunc = compareFuncs[(int)func];
+			device.SetRenderState( RenderStates.ZBufferFunction, (int)depthTestFunc );
 		}
 
+		bool depthTest, depthWrite;
 		public override bool DepthTest {
-			set { device.SetRenderState( RenderStates.ZEnable, value ); }
+			set { depthTest = value; device.SetRenderState( RenderStates.ZEnable, value ); }
 		}
 
 		public override bool DepthWrite {
-			set { device.SetRenderState( RenderStates.ZBufferWriteEnable, value ); }
+			set { depthWrite = value; device.SetRenderState( RenderStates.ZBufferWriteEnable, value ); }
 		}
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
@@ -317,7 +325,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( curStack == texStack ) {
 				device.SetTextureStageState( 0, TextureStageStates.TextureTransform, (int)TextureTransform.Disable );
 			}
-			curStack.SetTop( ref identity );		
+			curStack.SetTop( ref identity );
 		}
 
 		public override void PushMatrix() {
@@ -385,8 +393,45 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void OnWindowResize( int newWidth, int newHeight ) {
-			//throw new NotSupportedException();
-			// TODO: temp disabled to get Direct3D sort of working.
+			PresentParameters args = GetPresentArgs( newWidth, newHeight );
+			device.Reset( args );
+			SetDefaultRenderStates();
+			device.SetRenderState( RenderStates.AlphaTestEnable, alphaTest );
+			device.SetRenderState( RenderStates.AlphaBlendEnable, alphaBlend );
+			device.SetRenderState( RenderStates.AlphaFunction, (int)alphaTestFunc );
+			device.SetRenderState( RenderStates.ReferenceAlpha, alphaTestRef );
+			device.SetRenderState( RenderStates.SourceBlend, (int)srcFunc );
+			device.SetRenderState( RenderStates.DestinationBlend, (int)dstFunc );
+			device.SetRenderState( RenderStates.FogEnable, fogEnable );
+			device.SetRenderState( RenderStates.FogColor, fogCol );
+			device.SetRenderState( RenderStates.FogDensity, fogDensity );
+			device.SetRenderState( RenderStates.FogStart, fogStart );
+			device.SetRenderState( RenderStates.FogEnd, fogEnd );
+			device.SetRenderState( RenderStates.FogTableMode, (int)fogMode );
+			device.SetRenderState( RenderStates.ZBufferFunction, (int)depthTestFunc );
+			device.SetRenderState( RenderStates.ZEnable, depthTest );
+			device.SetRenderState( RenderStates.ZBufferWriteEnable, depthWrite );
+		}
+		
+		void SetDefaultRenderStates() {
+			device.SetRenderState( RenderStates.FillMode, (int)FillMode.Solid );
+			FaceCulling = false;
+			device.SetRenderState( RenderStates.ColorVertex, false );
+			device.SetRenderState( RenderStates.Lighting, false );
+			device.SetRenderState( RenderStates.SpecularEnable, false );
+			device.SetRenderState( RenderStates.DebugMonitorToken, false );
+		}
+		
+		PresentParameters GetPresentArgs( int width, int height ) {
+			PresentParameters args = new PresentParameters();
+			args.AutoDepthStencilFormat = DepthFormat.D24X8; // D32 doesn't work
+			args.BackBufferWidth = width;
+			args.BackBufferHeight = height;
+			args.EnableAutoDepthStencil = true;
+			args.PresentationInterval = PresentInterval.Immediate;
+			args.SwapEffect = SwapEffect.Discard;
+			args.Windowed = true;
+			return args;
 		}
 		
 		unsafe void memcpy( IntPtr sourcePtr, IntPtr destPtr, int bytes ) {

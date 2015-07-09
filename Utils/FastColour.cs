@@ -59,6 +59,10 @@ namespace ClassicalSharp {
 			return new Color4( R, G, B, A );
 		}
 		
+		public int ToArgb() {
+			return A << 24 | R << 16 | G << 8 | B;
+		}
+		
 		public override string ToString() {
 			return R + ", " + G + ", " + B + " : " + A;
 		}

@@ -67,8 +67,7 @@ namespace OpenTK.Platform.X11
 		
 		internal void LoadEntryPoints() {
 			lock( sync_root ) {
-				glXSwapIntervalSGI =
-					GetExtensionDelegate<SwapIntervalSGI>( "glXSwapIntervalSGI" );
+				GetExtensionDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
 			}
 		}
 
