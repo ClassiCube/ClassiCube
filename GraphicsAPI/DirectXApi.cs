@@ -392,8 +392,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.Present();
 		}
 		
-		public override void OnWindowResize( int newWidth, int newHeight ) {
-			PresentParameters args = GetPresentArgs( newWidth, newHeight );
+		bool vsync = false;
+		public override void SetVSync( Game game, bool value ) {
+			vsync = value;
+			game.VSync = value ? OpenTK.VSyncMode.On : OpenTK.VSyncMode.Off;
+			RecreateDevice( game );
+		}
+		
+		public override void OnWindowResize( Game game ) {
+			RecreateDevice( game );
+		}
+		
+		void RecreateDevice( Game game ) {
+			PresentParameters args = GetPresentArgs( game.Width, game.Height );
 			device.Reset( args );
 			SetDefaultRenderStates();
 			device.SetRenderState( RenderStates.AlphaTestEnable, alphaTest );
@@ -428,7 +439,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			args.BackBufferWidth = width;
 			args.BackBufferHeight = height;
 			args.EnableAutoDepthStencil = true;
-			args.PresentationInterval = PresentInterval.Immediate;
+			args.PresentationInterval = vsync ? PresentInterval.One : PresentInterval.Immediate;
 			args.SwapEffect = SwapEffect.Discard;
 			args.Windowed = true;
 			return args;

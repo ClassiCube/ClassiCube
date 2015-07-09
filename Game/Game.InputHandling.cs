@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 				bool useThirdPerson = Camera is FirstPersonCamera;
 				SetCamera( useThirdPerson );
 			} else if( key == Keys[KeyMapping.VSync] ) {
-				VSync = VSync == VSyncMode.Off ? VSyncMode.On : VSyncMode.Off;
+				Graphics.SetVSync( this, VSync == VSyncMode.Off );
 			} else if( key == Keys[KeyMapping.ViewDistance] ) {
 				for( int i = 0; i < viewDistances.Length; i++ ) {
 					int newDist = viewDistances[i];

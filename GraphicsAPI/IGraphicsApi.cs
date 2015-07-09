@@ -153,9 +153,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void TakeScreenshot( string output, Size size );
 		
-		public virtual void CheckResources() {
-		}
-		
 		public virtual void PrintApiSpecificInfo() {
 		}
 		
@@ -163,7 +160,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void EndFrame( Game game );
 		
-		public abstract void OnWindowResize( int newWidth, int newHeight );
+		public abstract void SetVSync( Game game, bool value );
+		
+		public abstract void OnWindowResize( Game game );
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );

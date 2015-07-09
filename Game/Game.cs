@@ -148,7 +148,7 @@ namespace ClassicalSharp {
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
 			
-			VSync = VSyncMode.On;
+			Graphics.SetVSync( this, true );
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
@@ -274,7 +274,6 @@ namespace ClassicalSharp {
 			Picking.Dispose();
 			ParticleManager.Dispose();
 			Players.Dispose();
-			Graphics.CheckResources();
 			AsyncDownloader.Dispose();
 			if( writer != null ) {
 				writer.Close();
@@ -294,7 +293,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnResize( EventArgs e ) {
 			base.OnResize( e );
-			Graphics.OnWindowResize( Width, Height );
+			Graphics.OnWindowResize( this );
 			UpdateProjection();
 			if( activeScreen != null ) {
 				activeScreen.OnResize( width, height, Width, Height );

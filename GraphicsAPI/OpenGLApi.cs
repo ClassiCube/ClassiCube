@@ -374,6 +374,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			game.SwapBuffers();
 		}
 		
+		public override void SetVSync( Game game, bool value ) {
+			game.VSync = value ? VSyncMode.On : VSyncMode.Off;
+		}
+		
 		public unsafe override void PrintApiSpecificInfo() {
 			Console.WriteLine( "OpenGL vendor: " + new String( (sbyte*)Gl.glGetString( StringName.Vendor ) ) );
 			Console.WriteLine( "OpenGL renderer: " + new String( (sbyte*)Gl.glGetString( StringName.Renderer ) ) );
@@ -400,8 +404,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void OnWindowResize( int newWidth, int newHeight ) {
-			Gl.glViewport( 0, 0, newWidth, newHeight );
+		public override void OnWindowResize( Game game ) {
+			Gl.glViewport( 0, 0, game.Width, game.Height );
 		}
 		
 		static void ToggleCap( EnableCap cap, bool value ) {
