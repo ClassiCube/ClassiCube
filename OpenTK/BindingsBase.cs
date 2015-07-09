@@ -43,32 +43,24 @@ namespace OpenTK {
 		protected abstract IntPtr GetAddress( string funcname );
 
 		// Tries to load the specified core or extension function.
-		protected Delegate LoadDelegate( string name, Type signature ) {
-			Delegate d = GetExtensionDelegate(name, signature);
-			if( d != null ) return d;
+		protected internal void LoadDelegate<T>( string name, out T del ) where T : class {
+			GetExtensionDelegate( name, out del );
+			if( del != null ) return;
 			
 			try {
-				return Delegate.CreateDelegate( signature, CoreClass, name );
+				del = (T)(object)Delegate.CreateDelegate( typeof( T ), CoreClass, name );
 			} catch( ArgumentException ) {
-				return null;
+				del = null;
 			}
 		}
 
-		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.
-		Delegate GetExtensionDelegate( string name, Type signature ) {
-			IntPtr address = GetAddress(name);
-			if (address == IntPtr.Zero || address == new IntPtr(1) ||
-			    address == new IntPtr(2) || address == new IntPtr(-1)) {
-				return null; // Workaround for buggy nvidia drivers which return 1 or 2 instead of IntPtr.Zero for some extensions.
-			}
-			return Marshal.GetDelegateForFunctionPointer(address, signature);
-		}
-		
+		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.		
 		protected internal void GetExtensionDelegate<T>( string name, out T del ) where T : class {
 			IntPtr address = GetAddress( name );
 			if (address == IntPtr.Zero || address == new IntPtr(1) ||
 			    address == new IntPtr(2) || address == new IntPtr(-1)) {
 				del = null;
+				return;
 			}
 			del = (T)(object)Marshal.GetDelegateForFunctionPointer( address, typeof(T) );
 		}

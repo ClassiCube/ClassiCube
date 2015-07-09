@@ -136,14 +136,6 @@ namespace OpenTK.Graphics.OpenGL {
 
             [SuppressUnmanagedCodeSecurity()]
             [DllImport(Library)]
-            internal extern static void glFinish();
-
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
-            internal extern static void glFlush();
-
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
             internal extern static void glFogf(FogParameter pname, Single param);
 
             [SuppressUnmanagedCodeSecurity()]
@@ -152,10 +144,6 @@ namespace OpenTK.Graphics.OpenGL {
             [SuppressUnmanagedCodeSecurity()]
             [DllImport(Library)]
             internal extern static void glFogi(FogParameter pname, Int32 param);
-            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
-            internal extern static void glFrontFace(FrontFaceDirection mode);
            
             [SuppressUnmanagedCodeSecurity()]
             [DllImport(Library)]

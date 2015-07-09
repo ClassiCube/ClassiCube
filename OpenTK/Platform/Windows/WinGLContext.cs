@@ -52,8 +52,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public WinGLContext(GraphicsMode format, WinWindowInfo window,
-		                    int major, int minor)
+		public WinGLContext(GraphicsMode format, WinWindowInfo window)
 		{
 			// There are many ways this code can break when accessed by multiple threads. The biggest offender is
 			// the sharedContext stuff, which will only become valid *after* this constructor returns.
@@ -154,7 +153,7 @@ namespace OpenTK.Platform.Windows
 			new Wgl().LoadEntryPoints();
 			vsync_supported = Wgl.wglGetSwapIntervalEXT != null 
 				&& Wgl.wglSwapIntervalEXT != null;
-			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints();
+			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints( this );
 		}
 
 		#endregion

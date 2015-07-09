@@ -147,40 +147,6 @@ namespace OpenTK
 
         #endregion
 
-        #region public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device)
-
-        /// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-        /// <param name="width">The width of the GameWindow in pixels.</param>
-        /// <param name="height">The height of the GameWindow in pixels.</param>
-        /// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GameWindow.</param>
-        /// <param name="title">The title of the GameWindow.</param>
-        /// <param name="options">GameWindow options regarding window appearance and behavior.</param>
-        /// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the GameWindow in.</param>
-        public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device)
-            : this(width, height, mode, title, options, device, 1, 0)
-        { }
-
-        #endregion
-
-        #region public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device, int major, int minor, GraphicsContextFlags flags)
-
-        /// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-        /// <param name="width">The width of the GameWindow in pixels.</param>
-        /// <param name="height">The height of the GameWindow in pixels.</param>
-        /// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GameWindow.</param>
-        /// <param name="title">The title of the GameWindow.</param>
-        /// <param name="options">GameWindow options regarding window appearance and behavior.</param>
-        /// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the GameWindow in.</param>
-        /// <param name="major">The major version for the OpenGL GraphicsContext.</param>
-        /// <param name="minor">The minor version for the OpenGL GraphicsContext.</param>
-        /// <param name="flags">The GraphicsContextFlags version for the OpenGL GraphicsContext.</param>
-        public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device,
-            int major, int minor)
-            : this(width, height, mode, title, options, device, major, minor, null)
-        { }
-
-        #endregion
-
         #region public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device, int major, int minor, GraphicsContextFlags flags, IGraphicsContext sharedContext)
 
         /// <summary>Constructs a new GameWindow with the specified attributes.</summary>
@@ -190,19 +156,14 @@ namespace OpenTK
         /// <param name="title">The title of the GameWindow.</param>
         /// <param name="options">GameWindow options regarding window appearance and behavior.</param>
         /// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the GameWindow in.</param>
-        /// <param name="major">The major version for the OpenGL GraphicsContext.</param>
-        /// <param name="minor">The minor version for the OpenGL GraphicsContext.</param>
-        /// <param name="flags">The GraphicsContextFlags version for the OpenGL GraphicsContext.</param>
-        /// <param name="sharedContext">An IGraphicsContext to share resources with.</param>
-        public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device,
-                          int major, int minor, IGraphicsContext sharedContext)
+        public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device)
             : base(width, height, title, options,
                    mode == null ? GraphicsMode.Default : mode,
                    device == null ? DisplayDevice.Default : device)
         {
             try
             {
-                glContext = new GraphicsContext(mode == null ? GraphicsMode.Default : mode, WindowInfo, major, minor);
+                glContext = new GraphicsContext(mode == null ? GraphicsMode.Default : mode, WindowInfo);
                 glContext.MakeCurrent(WindowInfo);
                 (glContext as IGraphicsContextInternal).LoadAll();
 

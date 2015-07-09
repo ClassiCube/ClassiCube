@@ -127,14 +127,6 @@ namespace OpenTK.Graphics.OpenGL {
 			public static EnableClientState glEnableClientState;
 
 			[SuppressUnmanagedCodeSecurity()]
-			public delegate void Finish();
-			public static Finish glFinish;
-
-			[SuppressUnmanagedCodeSecurity()]
-			public delegate void Flush();
-			public static Flush glFlush;
-
-			[SuppressUnmanagedCodeSecurity()]
 			public delegate void Fogf(FogParameter pname, Single param);
 			public static Fogf glFogf;
 
@@ -144,10 +136,6 @@ namespace OpenTK.Graphics.OpenGL {
 			[SuppressUnmanagedCodeSecurity()]
 			public delegate void Fogi(FogParameter pname, Int32 param);
 			public static Fogi glFogi;
-			
-			[SuppressUnmanagedCodeSecurity()]
-			public delegate void FrontFace(FrontFaceDirection mode);
-			public static FrontFace glFrontFace;
 			
 			[SuppressUnmanagedCodeSecurity()]
 			public unsafe delegate void GenBuffers(Int32 n, [OutAttribute] Int32* buffers);

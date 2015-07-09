@@ -42,14 +42,8 @@ namespace OpenTK.Platform.Windows
             return new WinDisplayDeviceDriver();
         }
 
-        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor) {
-            return new WinGLContext(mode, (WinWindowInfo)window, major, minor);
-        }
-
-        public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext() {
-            return delegate {
-                return Wgl.wglGetCurrentContext();
-            };
+        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
+            return new WinGLContext(mode, (WinWindowInfo)window);
         }
 
         public virtual IGraphicsMode CreateGraphicsMode() {

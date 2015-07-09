@@ -36,7 +36,7 @@ namespace OpenTK.Platform.X11
 
 		#region --- Constructors ---
 
-		public X11GLContext(GraphicsMode mode, IWindowInfo window, bool direct, int major, int minor)
+		public X11GLContext(GraphicsMode mode, IWindowInfo window)
 		{
 			if (mode == null)
 				throw new ArgumentNullException("mode");
@@ -52,21 +52,19 @@ namespace OpenTK.Platform.X11
 			currentWindow = (X11WindowInfo)window;
 			currentWindow.VisualInfo = SelectVisual(mode, currentWindow);
 			
-			Debug.Write("Creating X11GLContext context: ");
-			Debug.Write(direct ? "direct, " : "indirect, ");
-			
+			Debug.Write("Creating X11GLContext context: ");			
 			Debug.Write("Using legacy context creation... ");
 			
 			XVisualInfo info = currentWindow.VisualInfo;
 			using (new XLock(Display))
 			{
 				// Cannot pass a Property by reference.
-				ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, direct);
+				ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, true);
 
 				if (ContextHandle == IntPtr.Zero)
 				{
-					Debug.WriteLine(String.Format("failed. Trying direct: {0}... ", !direct));
-					ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, !direct);
+					Debug.WriteLine("failed. Trying indirect... ");
+					ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, false);
 				}
 			}
 			
@@ -259,7 +257,7 @@ namespace OpenTK.Platform.X11
 			new Glx().LoadEntryPoints();
 			vsync_supported = Glx.glXSwapIntervalSGI != null;
 			Debug.Print("Context supports vsync: {0}.", vsync_supported);
-			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints();
+			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints( this );
 		}
 
 		#endregion

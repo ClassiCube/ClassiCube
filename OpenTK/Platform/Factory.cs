@@ -46,7 +46,7 @@ namespace OpenTK.Platform
             if (Configuration.RunningOnWindows) Default = new Windows.WinFactory();
             else if (Configuration.RunningOnMacOS) Default = new MacOS.MacOSFactory();
             else if (Configuration.RunningOnX11) Default = new X11.X11Factory();
-            else Default = new UnsupportedPlatform();
+            else throw new NotSupportedException( "Running on an unsupported platform, please refer to http://www.opentk.com for more information." );
         }
 
         #endregion
@@ -74,57 +74,14 @@ namespace OpenTK.Platform
             return default_implementation.CreateDisplayDeviceDriver();
         }
 
-        public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor)
+        public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window)
         {
-            return default_implementation.CreateGLContext(mode, window, major, minor);
-        }
-
-        public GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
-        {
-            return default_implementation.CreateGetCurrentGraphicsContext();
+        	return default_implementation.CreateGLContext(mode, window);
         }
 
         public IGraphicsMode CreateGraphicsMode()
         {
             return default_implementation.CreateGraphicsMode();
-        }
-
-        class UnsupportedPlatform : IPlatformFactory
-        {
-            #region Fields
-            
-            static readonly string error_string = "Please, refer to http://www.opentk.com for more information.";
-            
-            #endregion
-            
-            #region IPlatformFactory Members
-
-            public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)
-            {
-                throw new PlatformNotSupportedException(error_string);
-            }
-
-            public IDisplayDeviceDriver CreateDisplayDeviceDriver()
-            {
-                throw new PlatformNotSupportedException(error_string);
-            }
-
-            public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor)
-            {
-                throw new PlatformNotSupportedException(error_string);
-            }
-
-            public GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
-            {
-                throw new PlatformNotSupportedException(error_string);
-            }
-
-            public IGraphicsMode CreateGraphicsMode()
-            {
-                throw new PlatformNotSupportedException(error_string);
-            }
-            
-            #endregion
         }
 
         #endregion

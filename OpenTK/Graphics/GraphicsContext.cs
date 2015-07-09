@@ -25,106 +25,32 @@ namespace OpenTK.Graphics
 		IGraphicsContext implementation;  // The actual render context implementation for the underlying platform.
 		bool disposed;
 
-		readonly static object SyncRoot = new object();
-		// Maps OS-specific context handles to GraphicsContext weak references.
-		readonly static Dictionary<IntPtr, WeakReference> available_contexts = new Dictionary<IntPtr, WeakReference>();
-
 		#endregion
 
 		#region --- Constructors ---
-		
-		/// <summary>
-		/// Constructs a new GraphicsContext with the specified GraphicsMode and attaches it to the specified window.
-		/// </summary>
-		/// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GraphicsContext.</param>
-		/// <param name="window">The OpenTK.Platform.IWindowInfo to attach the GraphicsContext to.</param>
-		public GraphicsContext(GraphicsMode mode, IWindowInfo window)
-			: this(mode, window, 1, 0)
-		{ }
 
 		/// <summary>
 		/// Constructs a new GraphicsContext with the specified GraphicsMode, version and flags,  and attaches it to the specified window.
 		/// </summary>
 		/// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GraphicsContext.</param>
 		/// <param name="window">The OpenTK.Platform.IWindowInfo to attach the GraphicsContext to.</param>
-		/// <param name="major">The major version of the new GraphicsContext.</param>
-		/// <param name="minor">The minor version of the new GraphicsContext.</param>
-		/// <param name="flags">The GraphicsContextFlags for the GraphicsContext.</param>
-		/// <remarks>
-		/// Different hardware supports different flags, major and minor versions. Invalid parameters will be silently ignored.
-		/// </remarks>
-		public GraphicsContext(GraphicsMode mode, IWindowInfo window, int major, int minor)
+		public GraphicsContext(GraphicsMode mode, IWindowInfo window)
 		{
-			lock (SyncRoot)
-			{
-				if (mode == null) throw new ArgumentNullException("mode", "Must be a valid GraphicsMode.");
-				if (window == null) throw new ArgumentNullException("window", "Must point to a valid window.");
+			if (mode == null) throw new ArgumentNullException("mode", "Must be a valid GraphicsMode.");
+			if (window == null) throw new ArgumentNullException("window", "Must point to a valid window.");
 
-				// Silently ignore invalid major and minor versions.
-				if (major <= 0) major = 1;
-				if (minor < 0) minor = 0;
-
-				Debug.Print("Creating GraphicsContext.");
-				try
-				{
-					Debug.Indent();
-					Debug.Print("GraphicsMode: {0}", mode);
-					Debug.Print("IWindowInfo: {0}", window);
-					Debug.Print("Requested version: {0}.{1}", major, minor);
+			Debug.Print("Creating GraphicsContext.");
+			try {
+				Debug.Indent();
+				Debug.Print("GraphicsMode: {0}", mode);
+				Debug.Print("IWindowInfo: {0}", window);
 					
-					IPlatformFactory factory = Factory.Default;
-					implementation = factory.CreateGLContext(mode, window, major, minor);
-					// Note: this approach does not allow us to mix native and EGL contexts in the same process.
-					// This should not be a problem, as this use-case is not interesting for regular applications.
-					GetCurrentContext = factory.CreateGetCurrentGraphicsContext();
-
-					available_contexts.Add((this as IGraphicsContextInternal).Context, new WeakReference(this));
-				}
-				finally
-				{
-					Debug.Unindent();
-				}
+				IPlatformFactory factory = Factory.Default;
+				implementation = factory.CreateGLContext(mode, window);
+			} finally {
+				Debug.Unindent();
 			}
 		}
-		#endregion
-
-		#region Private Members
-
-		#endregion
-
-		#region --- Static Members ---
-
-		#region public static IGraphicsContext CurrentContext
-
-		internal delegate IntPtr GetCurrentContextDelegate();
-		internal static GetCurrentContextDelegate GetCurrentContext;
-
-		/// <summary>
-		/// Gets the GraphicsContext that is current in the calling thread.
-		/// </summary>
-		/// <remarks>
-		/// Note: this property will not function correctly when both desktop and EGL contexts are
-		/// available in the same process. This scenario is very unlikely to appear in practice.
-		/// </remarks>
-		public static IGraphicsContext CurrentContext
-		{
-			get
-			{
-				lock (SyncRoot)
-				{
-					if (available_contexts.Count > 0)
-					{
-						IntPtr handle = GetCurrentContext();
-						if (handle != IntPtr.Zero)
-							return (GraphicsContext)available_contexts[handle].Target;
-					}
-					return null;
-				}
-			}
-		}
-
-		#endregion
-
 		#endregion
 
 		#region --- IGraphicsContext Members ---
@@ -194,9 +120,6 @@ namespace OpenTK.Graphics
 		/// </exception>
 		public void LoadAll()
 		{
-			if (GraphicsContext.CurrentContext != this)
-				throw new GraphicsContextException();
-
 			implementation.LoadAll();
 		}
 		
@@ -217,7 +140,7 @@ namespace OpenTK.Graphics
 		/// </summary>
 		public GraphicsMode GraphicsMode
 		{
-			get { return (implementation as IGraphicsContext).GraphicsMode; }
+			get { return implementation.GraphicsMode; }
 		}
 
 		/// <summary>
@@ -251,10 +174,6 @@ namespace OpenTK.Graphics
 			if (!IsDisposed)
 			{
 				Debug.Print("Disposing context {0}.", (this as IGraphicsContextInternal).Context.ToString());
-				lock (SyncRoot)
-				{
-					available_contexts.Remove((this as IGraphicsContextInternal).Context);
-				}
 
 				if (manual) {
 					if (implementation != null)

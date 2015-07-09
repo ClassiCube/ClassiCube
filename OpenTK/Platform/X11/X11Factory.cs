@@ -55,16 +55,9 @@ namespace OpenTK.Platform.X11
             return new X11DisplayDevice();
         }
 
-        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window, int major, int minor)
+        public virtual IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window)
         {
-            return new X11GLContext(mode, window, true, major, minor);
-        }
-
-        public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
-        {
-            return delegate {
-                return Glx.GetCurrentContext();
-            };
+            return new X11GLContext(mode, window);
         }
 
         public virtual IGraphicsMode CreateGraphicsMode()
