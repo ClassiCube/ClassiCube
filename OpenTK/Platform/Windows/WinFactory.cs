@@ -26,14 +26,10 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using OpenTK.Graphics;
 
 namespace OpenTK.Platform.Windows
 {
-    using Graphics;
-    using OpenTK.Input;
-
     class WinFactory : IPlatformFactory 
     {
         #region IPlatformFactory Members
@@ -52,7 +48,7 @@ namespace OpenTK.Platform.Windows
 
         public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext() {
             return delegate {
-                return new ContextHandle(Wgl.wglGetCurrentContext());
+                return Wgl.wglGetCurrentContext();
             };
         }
 

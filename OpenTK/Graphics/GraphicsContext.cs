@@ -27,7 +27,7 @@ namespace OpenTK.Graphics
 
 		readonly static object SyncRoot = new object();
 		// Maps OS-specific context handles to GraphicsContext weak references.
-		readonly static Dictionary<ContextHandle, WeakReference> available_contexts = new Dictionary<ContextHandle, WeakReference>();
+		readonly static Dictionary<IntPtr, WeakReference> available_contexts = new Dictionary<IntPtr, WeakReference>();
 
 		#endregion
 
@@ -76,18 +76,7 @@ namespace OpenTK.Graphics
 					implementation = factory.CreateGLContext(mode, window, major, minor);
 					// Note: this approach does not allow us to mix native and EGL contexts in the same process.
 					// This should not be a problem, as this use-case is not interesting for regular applications.
-					// Note 2: some platforms may not support a direct way of getting the current context
-					// (this happens e.g. with DummyGLContext). In that case, we use a slow fallback which
-					// iterates through all known contexts and checks if any is current (check GetCurrentContext
-					// declaration).
-					if (GetCurrentContext == null)
-					{
-						GetCurrentContextDelegate temp = factory.CreateGetCurrentGraphicsContext();
-						if (temp != null)
-						{
-							GetCurrentContext = temp;
-						}
-					}
+					GetCurrentContext = factory.CreateGetCurrentGraphicsContext();
 
 					available_contexts.Add((this as IGraphicsContextInternal).Context, new WeakReference(this));
 				}
@@ -107,25 +96,8 @@ namespace OpenTK.Graphics
 
 		#region public static IGraphicsContext CurrentContext
 
-		internal delegate ContextHandle GetCurrentContextDelegate();
-		internal static GetCurrentContextDelegate GetCurrentContext = delegate
-		{
-			// Note: this is a slow, generic fallback for use with DummyGLContext.
-			// Most other platforms can query the current context directly (via
-			// [Wgl|Glx|Agl|Egl].GetCurrentContext()) so the GraphicsContext
-			// constructor will replace this implementation with a platform-specific
-			// one, if it exists.
-			foreach (WeakReference weak_ref in available_contexts.Values)
-			{
-				IGraphicsContext context = (IGraphicsContext)weak_ref.Target;
-				if (context.IsCurrent)
-				{
-					return (context as IGraphicsContextInternal).Context;
-				}
-			}
-
-			return ContextHandle.Zero;
-		};
+		internal delegate IntPtr GetCurrentContextDelegate();
+		internal static GetCurrentContextDelegate GetCurrentContext;
 
 		/// <summary>
 		/// Gets the GraphicsContext that is current in the calling thread.
@@ -142,8 +114,8 @@ namespace OpenTK.Graphics
 				{
 					if (available_contexts.Count > 0)
 					{
-						ContextHandle handle = GetCurrentContext();
-						if (handle.Handle != IntPtr.Zero)
+						IntPtr handle = GetCurrentContext();
+						if (handle != IntPtr.Zero)
 							return (GraphicsContext)available_contexts[handle].Target;
 					}
 					return null;
@@ -156,30 +128,6 @@ namespace OpenTK.Graphics
 		#endregion
 
 		#region --- IGraphicsContext Members ---
-
-		/// <summary>
-		/// Creates an OpenGL context with the specified direct/indirect rendering mode and sharing state with the
-		/// specified IGraphicsContext.
-		/// </summary>
-		/// <param name="direct">Set to true for direct rendering or false otherwise.</param>
-		/// <param name="source">The source IGraphicsContext to share state from.</param>.
-		/// <remarks>
-		/// <para>
-		/// Direct rendering is the default rendering mode for OpenTK, since it can provide higher performance
-		/// in some circumastances.
-		/// </para>
-		/// <para>
-		/// The 'direct' parameter is a hint, and will ignored if the specified mode is not supported (e.g. setting
-		/// indirect rendering on Windows platforms).
-		/// </para>
-		/// </remarks>
-		void CreateContext(bool direct, IGraphicsContext source)
-		{
-			lock (SyncRoot)
-			{
-				available_contexts.Add((this as IGraphicsContextInternal).Context, new WeakReference(this));
-			}
-		}
 
 		/// <summary>
 		/// Swaps buffers on a context. This presents the rendered scene to the user.
@@ -259,7 +207,7 @@ namespace OpenTK.Graphics
 		/// <summary>
 		/// Gets a handle to the OpenGL rendering context.
 		/// </summary>
-		ContextHandle IGraphicsContextInternal.Context
+		IntPtr IGraphicsContextInternal.Context
 		{
 			get { return ((IGraphicsContextInternal)implementation).Context; }
 		}

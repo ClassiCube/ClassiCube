@@ -62,9 +62,8 @@ namespace OpenTK.Platform.X11
 
         public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
         {
-            return (GraphicsContext.GetCurrentContextDelegate)delegate
-            {
-                return new ContextHandle(Glx.GetCurrentContext());
+            return delegate {
+                return Glx.GetCurrentContext();
             };
         }
 

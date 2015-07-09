@@ -102,8 +102,8 @@ namespace OpenTK.Platform.MacOS
 			Debug.Print("Creating AGL context.");
 
             // create the context and share it with the share reference.
-            Handle = new ContextHandle( Agl.aglCreateContext(myAGLPixelFormat, IntPtr.Zero));
-             Agl.CheckReturnValue( 0, "aglCreateContext" );
+            ContextHandle = Agl.aglCreateContext(myAGLPixelFormat, IntPtr.Zero);
+            Agl.CheckReturnValue( 0, "aglCreateContext" );
 
             // Free the pixel format from memory.
             Agl.aglDestroyPixelFormat(myAGLPixelFormat);
@@ -114,7 +114,7 @@ namespace OpenTK.Platform.MacOS
             
             MakeCurrent(carbonWindow);
 
-            Debug.Print("context: {0}", Handle.Handle);
+            Debug.Print("context: {0}", ContextHandle);
         }
 
 		private IntPtr GetQuartzDevice(CarbonWindowInfo carbonWindow)
@@ -142,7 +142,7 @@ namespace OpenTK.Platform.MacOS
             IntPtr windowPort = API.GetWindowPort(carbonWindow.WindowRef);
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
-            byte code = Agl.aglSetDrawable(Handle.Handle, windowPort);
+            byte code = Agl.aglSetDrawable(ContextHandle, windowPort);
             Agl.CheckReturnValue( code, "aglSetDrawable" );
         }
         
@@ -179,7 +179,7 @@ namespace OpenTK.Platform.MacOS
 			
             SetDrawable(carbonWindow);
 
-            Agl.aglUpdateContext(Handle.Handle);
+            Agl.aglUpdateContext(ContextHandle);
         }
 
 		private CarbonGLNative GetCarbonWindow(CarbonWindowInfo carbonWindow)
@@ -194,10 +194,10 @@ namespace OpenTK.Platform.MacOS
 			CarbonGLNative wind = GetCarbonWindow(info);
 
 			Debug.Print("Switching to full screen {0}x{1} on context {2}", 
-				wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, Handle.Handle);
+				wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);
 
 			CG.DisplayCapture(GetQuartzDevice(info));
-			byte code = Agl.aglSetFullScreen(Handle.Handle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
+			byte code = Agl.aglSetFullScreen(ContextHandle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
 			Agl.CheckReturnValue(code, "aglSetFullScreen");
 			MakeCurrent(info);
 
@@ -220,9 +220,9 @@ namespace OpenTK.Platform.MacOS
         internal void UnsetFullScreen(CarbonWindowInfo windowInfo)
         {
 			Debug.Print("Unsetting AGL fullscreen.");
-            byte code = Agl.aglSetDrawable(Handle.Handle, IntPtr.Zero);
+            byte code = Agl.aglSetDrawable(ContextHandle, IntPtr.Zero);
             Agl.CheckReturnValue( code, "aglSetDrawable" );
-			code = Agl.aglUpdateContext(Handle.Handle);
+			code = Agl.aglUpdateContext(ContextHandle);
 			Agl.CheckReturnValue( code, "aglUpdateContext" );
 			
 			CG.DisplayRelease(GetQuartzDevice(windowInfo));
@@ -236,24 +236,24 @@ namespace OpenTK.Platform.MacOS
         #region IGraphicsContext Members
 
         public override void SwapBuffers() {
-            Agl.aglSwapBuffers(Handle.Handle);  
+            Agl.aglSwapBuffers(ContextHandle);  
             Agl.CheckReturnValue( 0, "aglSwapBuffers" );
         }
         
         public override void MakeCurrent( IWindowInfo window ) {
-            byte code = Agl.aglSetCurrentContext( Handle.Handle );
+            byte code = Agl.aglSetCurrentContext( ContextHandle );
             Agl.CheckReturnValue(code, "aglSetCurrentContext" );
         }
 
         public override bool IsCurrent {
-            get {  return Handle.Handle == Agl.aglGetCurrentContext(); }
+            get {  return ContextHandle == Agl.aglGetCurrentContext(); }
         }
 
         public override bool VSync {
             get { return mVSync; }
             set {
                 int intVal = value ? 1 : 0;
-                Agl.aglSetInteger(Handle.Handle, Agl.ParameterNames.AGL_SWAP_INTERVAL, ref intVal);
+                Agl.aglSetInteger(ContextHandle, Agl.ParameterNames.AGL_SWAP_INTERVAL, ref intVal);
                 mVSync = value;
             }
         }
@@ -272,7 +272,7 @@ namespace OpenTK.Platform.MacOS
 
         void Dispose(bool disposing)
         {
-            if (IsDisposed || Handle.Handle == IntPtr.Zero)
+            if (IsDisposed || ContextHandle == IntPtr.Zero)
                 return;
 
             Debug.Print("Disposing of AGL context.");
@@ -285,10 +285,10 @@ namespace OpenTK.Platform.MacOS
 			// like the finalizer thread.  It's untested, but worst case is probably
 			// an exception on application exit, which would be logged to the console.
 			Debug.Print("Destroying context");
-            byte code = Agl.aglDestroyContext(Handle.Handle);
+            byte code = Agl.aglDestroyContext(ContextHandle);
             try {
             	Agl.CheckReturnValue(code, "aglDestroyContext" );
-            	Handle = ContextHandle.Zero;
+            	ContextHandle = IntPtr.Zero;
             	Debug.Print("Context destruction completed successfully.");
             } catch( MacOSException ) {
             	Debug.WriteLine("Failed to destroy context.");

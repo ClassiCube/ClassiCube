@@ -71,15 +71,15 @@ namespace OpenTK.Platform.Windows
 				SetGraphicsModePFD(format, (WinWindowInfo)window);
 
 				Debug.Write("Falling back to GL2... ");
-				Handle = new ContextHandle(Wgl.wglCreateContext(window.DeviceContext));
-				if (Handle == ContextHandle.Zero)
-					Handle = new ContextHandle(Wgl.wglCreateContext(window.DeviceContext));
-				if (Handle == ContextHandle.Zero)
+				ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
+				if (ContextHandle == IntPtr.Zero)
+					ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
+				if (ContextHandle == IntPtr.Zero)
 					throw new GraphicsContextException(
 						String.Format("Context creation failed. Wgl.CreateContext() error: {0}.",
 						              Marshal.GetLastWin32Error()));
 				
-				Debug.WriteLine(String.Format("success! (id: {0})", Handle));
+				Debug.WriteLine(String.Format("success! (id: {0})", ContextHandle));
 			}
 		}
 
@@ -91,7 +91,7 @@ namespace OpenTK.Platform.Windows
 
 		public override void SwapBuffers()
 		{
-			if (!Functions.SwapBuffers(Wgl.wglGetCurrentDC()))
+			if (!Functions.SwapBuffers(dc))
 				throw new GraphicsContextException(String.Format(
 					"Failed to swap buffers for context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
 		}
@@ -100,6 +100,7 @@ namespace OpenTK.Platform.Windows
 
 		#region MakeCurrent
 
+		IntPtr dc;
 		public override void MakeCurrent(IWindowInfo window)
 		{
 			bool success;
@@ -108,7 +109,7 @@ namespace OpenTK.Platform.Windows
 				if (((WinWindowInfo)window).WindowHandle == IntPtr.Zero)
 					throw new ArgumentException("window", "Must point to a valid window.");
 
-				success = Wgl.wglMakeCurrent(((WinWindowInfo)window).DeviceContext, Handle.Handle);
+				success = Wgl.wglMakeCurrent(((WinWindowInfo)window).DeviceContext, ContextHandle);
 			} else {
 				success = Wgl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
 			}
@@ -116,7 +117,7 @@ namespace OpenTK.Platform.Windows
 			if (!success)
 				throw new GraphicsContextException(String.Format(
 					"Failed to make context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
-
+			dc = Wgl.wglGetCurrentDC();
 		}
 		#endregion
 
@@ -124,7 +125,7 @@ namespace OpenTK.Platform.Windows
 
 		public override bool IsCurrent
 		{
-			get { return Wgl.wglGetCurrentContext() == Handle.Handle; }
+			get { return Wgl.wglGetCurrentContext() == ContextHandle; }
 		}
 
 		#endregion
@@ -266,8 +267,7 @@ namespace OpenTK.Platform.Windows
 				}
 				else
 				{
-					Debug.Print("[Warning] OpenGL context {0} leaked. Did you forget to call IGraphicsContext.Dispose()?",
-					            Handle.Handle);
+					Debug.Print("[Warning] OpenGL context {0} leaked. Did you forget to call IGraphicsContext.Dispose()?",  ContextHandle);
 				}
 				IsDisposed = true;
 			}
@@ -282,14 +282,14 @@ namespace OpenTK.Platform.Windows
 
 		private void DestroyContext()
 		{
-			if (Handle != ContextHandle.Zero)
+			if (ContextHandle != IntPtr.Zero)
 			{
 				try
 				{
 					// This will fail if the user calls Dispose() on thread X when the context is current on thread Y.
-					if (!Wgl.wglDeleteContext(Handle.Handle))
+					if (!Wgl.wglDeleteContext(ContextHandle))
 						Debug.Print("Failed to destroy OpenGL context {0}. Error: {1}",
-						            Handle.ToString(), Marshal.GetLastWin32Error());
+						            ContextHandle.ToString(), Marshal.GetLastWin32Error());
 				}
 				catch (AccessViolationException e)
 				{
@@ -299,7 +299,7 @@ namespace OpenTK.Platform.Windows
 					Debug.WriteLine(e.ToString());
 					Debug.Unindent();
 				}
-				Handle = ContextHandle.Zero;
+				ContextHandle = IntPtr.Zero;
 			}
 		}
 

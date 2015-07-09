@@ -51,7 +51,6 @@ namespace OpenTK.Platform.X11
 			
 			currentWindow = (X11WindowInfo)window;
 			currentWindow.VisualInfo = SelectVisual(mode, currentWindow);
-			ContextHandle shareHandle = (ContextHandle)IntPtr.Zero;
 			
 			Debug.Write("Creating X11GLContext context: ");
 			Debug.Write(direct ? "direct, " : "indirect, ");
@@ -62,23 +61,23 @@ namespace OpenTK.Platform.X11
 			using (new XLock(Display))
 			{
 				// Cannot pass a Property by reference.
-				Handle = new ContextHandle(Glx.CreateContext(Display, ref info, shareHandle.Handle, direct));
+				ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, direct);
 
-				if (Handle == ContextHandle.Zero)
+				if (ContextHandle == IntPtr.Zero)
 				{
 					Debug.WriteLine(String.Format("failed. Trying direct: {0}... ", !direct));
-					Handle = new ContextHandle(Glx.CreateContext(Display, ref info, IntPtr.Zero, !direct));
+					ContextHandle = Glx.CreateContext(Display, ref info, IntPtr.Zero, !direct);
 				}
 			}
 			
-			if (Handle != ContextHandle.Zero)
-				Debug.Print("Context created (id: {0}).", Handle);
+			if (ContextHandle != IntPtr.Zero)
+				Debug.Print("Context created (id: {0}).", ContextHandle);
 			else
 				throw new GraphicsContextException("Failed to create OpenGL context. Glx.CreateContext call returned 0.");
 
 			using (new XLock(Display))
 			{
-				if (!Glx.IsDirect(Display, Handle.Handle))
+				if (!Glx.IsDirect(Display, ContextHandle))
 					Debug.Print("Warning: Context is not direct.");
 			}
 		}
@@ -156,7 +155,7 @@ namespace OpenTK.Platform.X11
 			if (window == null)
 			{
 				Debug.Write(String.Format("Releasing context {0} from thread {1} (Display: {2})... ",
-				                          Handle, System.Threading.Thread.CurrentThread.ManagedThreadId, Display));
+				                          ContextHandle, System.Threading.Thread.CurrentThread.ManagedThreadId, Display));
 
 				bool result;
 				using (new XLock(Display))
@@ -175,14 +174,14 @@ namespace OpenTK.Platform.X11
 				bool result;
 
 				Debug.Write(String.Format("Making context {0} current on thread {1} (Display: {2}, Screen: {3}, Window: {4})... ",
-				                          Handle, System.Threading.Thread.CurrentThread.ManagedThreadId, Display, w.Screen, w.WindowHandle));
+				                          ContextHandle, System.Threading.Thread.CurrentThread.ManagedThreadId, Display, w.Screen, w.WindowHandle));
 
-				if (Display == IntPtr.Zero || w.WindowHandle == IntPtr.Zero || Handle == ContextHandle.Zero)
+				if (Display == IntPtr.Zero || w.WindowHandle == IntPtr.Zero || ContextHandle == IntPtr.Zero)
 					throw new InvalidOperationException("Invalid display, window or context.");
 
 				using (new XLock(Display))
 				{
-					result = Glx.MakeCurrent(Display, w.WindowHandle, Handle.Handle);
+					result = Glx.MakeCurrent(Display, w.WindowHandle, ContextHandle);
 					if (result)
 					{
 						currentWindow = w;
@@ -208,7 +207,7 @@ namespace OpenTK.Platform.X11
 			{
 				using (new XLock(Display))
 				{
-					return Glx.GetCurrentContext() == Handle.Handle;
+					return Glx.GetCurrentContext() == ContextHandle;
 				}
 			}
 		}
@@ -302,7 +301,7 @@ namespace OpenTK.Platform.X11
 					}
 					using (new XLock(display))
 					{
-						Glx.DestroyContext(display, Handle.Handle);
+						Glx.DestroyContext(display, ContextHandle);
 					}
 				}
 			}

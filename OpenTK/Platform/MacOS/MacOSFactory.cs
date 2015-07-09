@@ -53,9 +53,8 @@ namespace OpenTK.Platform.MacOS
 
         public virtual GraphicsContext.GetCurrentContextDelegate CreateGetCurrentGraphicsContext()
         {
-            return (GraphicsContext.GetCurrentContextDelegate)delegate
-            {
-                return new ContextHandle(Agl.aglGetCurrentContext());
+            return delegate {
+                return Agl.aglGetCurrentContext();
             };
         }
 

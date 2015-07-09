@@ -39,7 +39,7 @@ namespace OpenTK.Graphics
 
         bool disposed;
         
-        protected ContextHandle Handle;
+        protected IntPtr ContextHandle;
         protected GraphicsMode Mode;
 
         #endregion
@@ -78,7 +78,7 @@ namespace OpenTK.Graphics
 
         public abstract void LoadAll();
 
-        public ContextHandle Context { get { return Handle; } }
+        public IntPtr Context { get { return ContextHandle; } }
 
         public abstract IntPtr GetAddress(string function);
 

@@ -79,7 +79,7 @@ namespace OpenTK.Graphics
         /// <summary>
         /// Gets a handle to the OpenGL rendering context.
         /// </summary>
-        ContextHandle Context { get; }
+        IntPtr Context { get; }
 
         /// <summary>
         /// Gets the address of an OpenGL extension function.
