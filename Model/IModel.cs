@@ -50,7 +50,7 @@ namespace ClassicalSharp.Model {
 			ZPlane( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2, _64x64 ); // back
 			XPlane( x, y + endsH, sidesW, sidesH, z2, z1, y1, y2, x2, _64x64 ); // left
 			XPlane( x + sidesW + bodyW, y + endsH, sidesW, sidesH, z1, z2, y1, y2, x1, _64x64 ); // right
-			return new ModelPart( this.vb, index - 36, 6 * 6, graphics );		
+			return new ModelPart( index - 36, 6 * 6, graphics );		
 		}
 		
 		protected ModelPart MakeRotatedPart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Model {
 				vertex.Y = z;
 				vertices[i] = vertex;
 			}
-			return new ModelPart( this.vb, index - 36, 6 * 6, graphics );	
+			return new ModelPart( index - 36, 6 * 6, graphics );	
 		}
 		
 		protected static TextureRectangle SkinTexCoords( int x, int y, int width, int height, float skinWidth, float skinHeight ) {
@@ -126,7 +126,7 @@ namespace ClassicalSharp.Model {
 			}
 			mat = Matrix4.Translate( -x, -y, -z ) * mat;
 			graphics.MultiplyMatrix( ref mat );
-			part.Render();
+			part.Render( vb );
 			graphics.PopMatrix();
 		}
 	}

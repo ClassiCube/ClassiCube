@@ -1,8 +1,7 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 

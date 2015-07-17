@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set64x32, Set64x64, Set64x64Slim;
 		public PlayerModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 7 * 3];
+			vertices = new VertexPos3fTex2fCol4b[partVertices * ( 7 * 2 + 2 )];
 			Set64x32 = new ModelSet();
 			Set64x32.Head = MakeHead( false );
 			Set64x32.Torso = MakeTorso( false );
@@ -30,18 +30,15 @@ namespace ClassicalSharp.Model {
 			Set64x64.Hat = MakeHat( true );
 			
 			Set64x64Slim = new ModelSet();
-			Set64x64Slim.Head = MakeHead( true );
-			Set64x64Slim.Torso = MakeTorso( true );
-			Set64x64Slim.LeftLeg = MakeLeftLeg( 16, 48, 0, 0.25f, true );
-			Set64x64Slim.RightLeg = MakeRightLeg( 0, 16, 0, 0.25f, true );
+			Set64x64Slim.Head = Set64x64.Head;
+			Set64x64Slim.Torso = Set64x64.Torso;
+			Set64x64Slim.LeftLeg = Set64x64.LeftLeg;
+			Set64x64Slim.RightLeg = Set64x64.RightLeg;
 			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
-			Set64x64Slim.Hat = MakeHat( true );
+			Set64x64Slim.Hat = Set64x64.Hat;
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			Set64x32.SetVb( vb );
-			Set64x64.SetVb( vb );
-			Set64x64Slim.SetVb( vb );
 			vertices = null;
 			
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
@@ -101,7 +98,7 @@ namespace ClassicalSharp.Model {
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, model.Head );
-			model.Torso.Render();
+			model.Torso.Render( vb );
 			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( 0, 1.5f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
@@ -118,11 +115,6 @@ namespace ClassicalSharp.Model {
 		class ModelSet {
 			
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
-					LeftArm.Vb = RightArm.Vb = Hat.Vb = vb;
-			}
 		}
 	}
 }

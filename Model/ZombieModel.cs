@@ -1,26 +1,22 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 
 	public class ZombieModel : IModel {
 		
-		ModelSet Set;
 		public ZombieModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Torso = MakeTorso();
-			Set.LeftLeg = MakeLeftLeg( 0.25f, 0f );
-			Set.RightLeg = MakeRightLeg( 0, 0.25f );
-			Set.LeftArm = MakeLeftArm( 0.5f, 0.25f );
-			Set.RightArm = MakeRightArm( 0.25f, 0.5f );
+			Head = MakeHead();
+			Torso = MakeTorso();
+			LeftLeg = MakeLeftLeg( 0.25f, 0f );
+			RightLeg = MakeRightLeg( 0, 0.25f );
+			LeftArm = MakeLeftArm( 0.5f, 0.25f );
+			RightArm = MakeRightArm( 0.25f, 0.5f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			Set.SetVb( vb );
 			vertices = null;		
 			DefaultTexId = graphics.LoadTexture( "zombie.png" );
 		}
@@ -66,12 +62,12 @@ namespace ClassicalSharp.Model {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Set.Head );
-			Set.Torso.Render();
-			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, Set.LeftLeg );
-			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, Set.RightLeg );
-			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, Set.LeftArm );
-			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, Set.RightArm );
+			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
+			Torso.Render( vb );
+			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, LeftLeg );
+			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, RightLeg );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
 			graphics.AlphaTest = true;
 		}
 		
@@ -80,14 +76,6 @@ namespace ClassicalSharp.Model {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLeg.Vb = RightLeg.Vb =
-					LeftArm.Vb = RightArm.Vb = vb;
-			}
-		}
+		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 	}
 }

@@ -1,37 +1,33 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 
 	public class SheepModel : IModel {
-		
-		ModelSet Set;
+
 		public bool Fur = true;
 		int furTextureId;
 		
 		public SheepModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 * ( Fur ? 2 : 1 )];
-			Set = new ModelSet( Fur );
-			Set.Head = MakeHead();
-			Set.Torso = MakeTorso();
-			Set.LeftLegFront = MakeLeg( -0.3125f, -0.0625f, -0.4375f, -0.1875f );
-			Set.RightLegFront = MakeLeg( 0.0625f, 0.3125f, -0.4375f, -0.1875f );
-			Set.LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
-			Set.RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
+			Head = MakeHead();
+			Torso = MakeTorso();
+			LeftLegFront = MakeLeg( -0.3125f, -0.0625f, -0.4375f, -0.1875f );
+			RightLegFront = MakeLeg( 0.0625f, 0.3125f, -0.4375f, -0.1875f );
+			LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
+			RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			if( Fur ) {
-				Set.FurHead = MakeFurHead();
-				Set.FurTorso = MakeFurTorso();
-				Set.FurLeftLegFront = MakeFurLeg( -0.34375f, -0.03125f, -0.46875f, -0.15625f );
-				Set.FurRightLegFront = MakeFurLeg( 0.03125f, 0.34375f, -0.46875f, -0.15625f );
-				Set.FurLeftLegBack = MakeFurLeg( -0.34375f, -0.03125f, 0.28125f, 0.59375f );
-				Set.FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
+				FurHead = MakeFurHead();
+				FurTorso = MakeFurTorso();
+				FurLeftLegFront = MakeFurLeg( -0.34375f, -0.03125f, -0.46875f, -0.15625f );
+				FurRightLegFront = MakeFurLeg( 0.03125f, 0.34375f, -0.46875f, -0.15625f );
+				FurLeftLegBack = MakeFurLeg( -0.34375f, -0.03125f, 0.28125f, 0.59375f );
+				FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "sheep.png" );
 			furTextureId = graphics.LoadTexture( "sheep_fur.png" );
@@ -78,21 +74,21 @@ namespace ClassicalSharp.Model {
 			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
-			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Set.Head );
-			Set.Torso.Render();
-			DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, Set.LeftLegFront );
-			DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, Set.RightLegFront );
-			DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, Set.LeftLegBack );
-			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, Set.RightLegBack );
+			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Head );
+			Torso.Render( vb );
+			DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, LeftLegFront );
+			DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, RightLegFront );
+			DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, LeftLegBack );
+			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, RightLegBack );
 			graphics.AlphaTest = true;
 			if( Fur ) {
 				graphics.Bind2DTexture( furTextureId );
-				Set.FurTorso.Render();
-				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Set.FurHead );
-				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, Set.FurLeftLegFront );
-				DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, Set.FurRightLegFront );
-				DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, Set.FurLeftLegBack );
-				DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, Set.FurRightLegBack );
+				FurTorso.Render( vb );
+				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, FurHead );
+				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, FurLeftLegFront );
+				DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, FurRightLegFront );
+				DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, FurLeftLegBack );
+				DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, FurRightLegBack );
 			}
 		}
 		
@@ -104,24 +100,7 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		class ModelSet {
-			
-			bool fur;
-			public ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
-			public ModelPart FurHead, FurTorso, FurLeftLegFront, FurRightLegFront,
-			FurLeftLegBack, FurRightLegBack;
-			public ModelSet( bool fur ) {
-				this.fur = fur;
-			}
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Torso.Vb = LeftLegFront.Vb = RightLegFront.Vb
-					= LeftLegBack.Vb = RightLegBack.Vb = vb;
-				if( fur ) {
-					FurHead.Vb = FurTorso.Vb = FurLeftLegFront.Vb = FurRightLegFront.Vb
-					= FurLeftLegBack.Vb = FurRightLegBack.Vb = vb;
-				}
-			}
-		}
+		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;
+		ModelPart FurHead, FurTorso, FurLeftLegFront, FurRightLegFront, FurLeftLegBack, FurRightLegBack;
 	}
 }

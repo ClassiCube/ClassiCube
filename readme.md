@@ -4,7 +4,7 @@ ClassicalSharp is a custom Minecraft Classic client written in C# that works on 
 You can get the latest binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
 
 ### Note on the project
-Due to time constraints, **I am no longer actively working on the project.** Reported bugs and the like will probably still be fixed, but work on version 2.0 has stopped for now. 
+Due to time constraints, I am no longer really actively working on the project. Reported bugs and the like will probably still be fixed and small changes implemented, but **work on version 2.0 has stopped for now.** 
 
 Version 0.8 (released along with this message) implements the entire CPE specification (excluding TextHotKey), and should be stable and fast enough for you to use.
 

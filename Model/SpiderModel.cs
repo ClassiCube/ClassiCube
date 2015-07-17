@@ -1,25 +1,21 @@
-﻿using OpenTK;
-using System;
-using System.Drawing;
+﻿using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp.Model {
 
 	public class SpiderModel : IModel {
 		
-		ModelSet Set;
 		public SpiderModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[partVertices * 5];
-			Set = new ModelSet();
-			Set.Head = MakeHead();
-			Set.Link = MakeLink();
-			Set.End = MakeEnd();
-			Set.LeftLeg = MakeLeg( -1.1875f, -0.1875f );
-			Set.RightLeg = MakeLeg( 0.1875f, 1.1875f );
+			Head = MakeHead();
+			Link = MakeLink();
+			End = MakeEnd();
+			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
+			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
 			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			Set.SetVb( vb );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
 		}
@@ -60,18 +56,18 @@ namespace ClassicalSharp.Model {
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			
-			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Set.Head );
-			Set.Link.Render();
-			Set.End.Render();
+			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Head );
+			Link.Render( vb );
+			End.Render( vb );
 			// TODO: leg animations
-			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -eighthPi, eighthPi, Set.LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -quarterPi, eighthPi, Set.LeftLeg );		
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -quarterPi, -eighthPi, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, -eighthPi, -eighthPi, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, eighthPi, -eighthPi, Set.RightLeg );
-			DrawRotate( 0.1875f, 0.5f, 0, 0, quarterPi, -eighthPi, Set.RightLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -eighthPi, eighthPi, LeftLeg );
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -quarterPi, eighthPi, LeftLeg );		
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -quarterPi, -eighthPi, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, -eighthPi, -eighthPi, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, eighthPi, -eighthPi, RightLeg );
+			DrawRotate( 0.1875f, 0.5f, 0, 0, quarterPi, -eighthPi, RightLeg );
 		}
 		
 		public override void Dispose() {
@@ -79,14 +75,6 @@ namespace ClassicalSharp.Model {
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
-		class ModelSet {
-			
-			public ModelPart Head, Link, End, LeftLeg, RightLeg;
-			
-			public void SetVb( int vb ) {
-				Head.Vb = Link.Vb = LeftLeg.Vb = RightLeg.Vb =
-					End.Vb = vb;
-			}
-		}
+		ModelPart Head, Link, End, LeftLeg, RightLeg;
 	}
 }

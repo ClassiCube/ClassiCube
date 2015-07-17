@@ -5,20 +5,18 @@ namespace ClassicalSharp {
 	
 	public class ModelPart {
 		
-		public int Vb;
 		public int Offset = 0;
 		public int Count;
 		public IGraphicsApi Graphics;
 		
-		public ModelPart( int vb, int offset, int count, IGraphicsApi graphics ) {
+		public ModelPart( int offset, int count, IGraphicsApi graphics ) {
 			Offset = offset;
 			Count = count;
 			Graphics = graphics;
-			Vb = vb;
 		}
 		
-		public void Render() {
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, Vb, Offset, Count );
+		public void Render( int vb ) {
+			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, vb, Offset, Count );
 		}
 	}
 	
