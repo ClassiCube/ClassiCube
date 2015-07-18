@@ -520,11 +520,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void TakeScreenshot( string output, Size size ) {
-			using( Surface backbuffer = device.GetBackBuffer( 0, 0, BackBufferType.Mono ) ) {
-				SurfaceLoader.Save( output, ImageFileFormat.Png, backbuffer );
-				// D3DX SurfaceLoader is the easiest way.. I tried to save manually and failed, as according to MSDN:
-				// "This method fails on render targets unless they were created as lockable
-				// (or, in the case of back buffers, with LockableBackBuffer of a PresentFlag)."
+			using( Surface backbuffer = device.GetBackBuffer( 0, 0, BackBufferType.Mono ),
+			      tempSurface = device.CreateOffscreenPlainSurface( size.Width, size.Height, Format.X8R8G8B8, Pool.SystemMemory ) ) {
+				device.GetRenderTargetData( backbuffer, tempSurface );
+				GraphicsStream ptr = tempSurface.LockRectangle( LockFlags.ReadOnly | LockFlags.NoDirtyUpdate );
+				
+				using( Bitmap bmp = new Bitmap( size.Width, size.Height, size.Width * 4,
+				                               System.Drawing.Imaging.PixelFormat.Format32bppRgb, ptr.InternalData ) ) {
+					bmp.Save( output, System.Drawing.Imaging.ImageFormat.Png );
+				}
+				tempSurface.UnlockRectangle();
 			}
 		}
 	}
