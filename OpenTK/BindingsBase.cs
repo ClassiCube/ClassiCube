@@ -53,16 +53,17 @@ namespace OpenTK {
 				del = null;
 			}
 		}
+		
+		protected bool IsInvalidAddress( IntPtr address ) {
+			return address == IntPtr.Zero || address == new IntPtr(1) ||
+				address == new IntPtr(2) || address == new IntPtr(-1);
+		}
 
-		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.		
+		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.
 		protected internal void GetExtensionDelegate<T>( string name, out T del ) where T : class {
 			IntPtr address = GetAddress( name );
-			if (address == IntPtr.Zero || address == new IntPtr(1) ||
-			    address == new IntPtr(2) || address == new IntPtr(-1)) {
-				del = null;
-				return;
-			}
-			del = (T)(object)Marshal.GetDelegateForFunctionPointer( address, typeof(T) );
+			del = IsInvalidAddress( address ) ? null :
+				(T)(object)Marshal.GetDelegateForFunctionPointer( address, typeof( T ) );
 		}
 	}
 }

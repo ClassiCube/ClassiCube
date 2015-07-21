@@ -12,6 +12,7 @@ namespace ClassicalSharp {
 		protected internal int PlayerTextureId = -1, MobTextureId = -1;
 		
 		public override void Despawn() {
+			if( api == null ) return;
 			api.DeleteTexture( ref PlayerTextureId );
 			api.DeleteTexture( ref nameTex.ID );
 		}
