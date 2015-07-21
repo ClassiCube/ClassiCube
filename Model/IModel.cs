@@ -23,15 +23,15 @@ namespace ClassicalSharp.Model {
 		
 		public abstract BoundingBox PickingBounds { get; }
 		
-		public void RenderModel( Player p, PlayerRenderer renderer ) {
+		public void RenderModel( Player p ) {
 			graphics.PushMatrix();
 			Matrix4 mat = Matrix4.RotateY( -p.YawRadians ) * Matrix4.Translate( p.Position );
 			graphics.MultiplyMatrix( ref mat );
-			DrawPlayerModel( p, renderer );
+			DrawPlayerModel( p );
 			graphics.PopMatrix();
 		}
 		
-		protected abstract void DrawPlayerModel( Player p, PlayerRenderer renderer );
+		protected abstract void DrawPlayerModel( Player p );
 		
 		public abstract void Dispose();
 		

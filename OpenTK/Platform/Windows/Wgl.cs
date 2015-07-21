@@ -3,8 +3,6 @@ using System.Runtime.InteropServices;
 using System.Security;
 
 namespace OpenTK.Platform.Windows {
-	
-	#pragma warning disable 0649
 
 	internal partial class Wgl : BindingsBase {
 
@@ -25,29 +23,35 @@ namespace OpenTK.Platform.Windows {
 			}
 		}
 
-		[SuppressUnmanagedCodeSecurity()]
+		[SuppressUnmanagedCodeSecurity]
 		internal delegate Boolean SwapIntervalEXT(int interval);
 		internal static SwapIntervalEXT wglSwapIntervalEXT;
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		internal delegate int GetSwapIntervalEXT();
 		internal static GetSwapIntervalEXT wglGetSwapIntervalEXT;
 		
-		[SuppressUnmanagedCodeSecurity()]
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static IntPtr wglCreateContext(IntPtr hDc);
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static Boolean wglDeleteContext(IntPtr oldContext);
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static IntPtr wglGetCurrentContext();
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static Boolean wglMakeCurrent(IntPtr hDc, IntPtr newContext);
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static IntPtr wglGetCurrentDC();
-		[SuppressUnmanagedCodeSecurity()]
+		
+		[SuppressUnmanagedCodeSecurity]
 		[DllImport(Library, SetLastError = true)]
 		internal extern static IntPtr wglGetProcAddress(String lpszProc);
 	}

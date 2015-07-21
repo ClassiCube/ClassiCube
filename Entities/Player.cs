@@ -7,7 +7,7 @@ using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp {
 
-	public abstract class Player : Entity {
+	public abstract partial class Player : Entity {
 		
 		public const float EyeHeight = 1.625f;
 		
@@ -18,8 +18,7 @@ namespace ClassicalSharp {
 		
 		public Game Window;
 		public string DisplayName, SkinName;
-		public SkinType SkinType;
-		protected PlayerRenderer renderer;		
+		public SkinType SkinType;	
 		
 		public Player( Game window ) : base( window ) {
 			Window = window;
@@ -93,22 +92,22 @@ namespace ClassicalSharp {
 			Window.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
 			if( item != null && item.Bmp != null ) {
 				Bitmap bmp = item.Bmp;
-				Window.Graphics.DeleteTexture( ref renderer.PlayerTextureId );
+				Window.Graphics.DeleteTexture( ref PlayerTextureId );
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
-					renderer.PlayerTextureId = Window.Graphics.LoadTexture( bmp );				
-					renderer.MobTextureId = -1;
+					PlayerTextureId = Window.Graphics.LoadTexture( bmp );				
+					MobTextureId = -1;
 					
 					// Custom mob textures.
 					if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
-						renderer.MobTextureId = renderer.PlayerTextureId;
+						MobTextureId = PlayerTextureId;
 					}
 				} catch( NotSupportedException ) {
 					string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
 					Utils.LogWarning( formatString, SkinName, bmp.Width, bmp.Height );
-					renderer.MobTextureId = -1;
-					renderer.PlayerTextureId = -1;
+					MobTextureId = -1;
+					PlayerTextureId = -1;
 					SkinType = Window.DefaultPlayerSkinType;
 				}
 				bmp.Dispose();
@@ -121,9 +120,7 @@ namespace ClassicalSharp {
 			ModelName = modelName;
 			Model = Window.ModelCache.GetModel( ModelName );
 			lastModelChange = DateTime.UtcNow;
-			if( renderer != null ) {
-				renderer.MobTextureId = -1;
-			}
+			MobTextureId = -1;
 		}
 	}
 }

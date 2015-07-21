@@ -50,9 +50,9 @@ namespace ClassicalSharp.Model {
 		
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
-		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			graphics.AlphaTest = true;
 			

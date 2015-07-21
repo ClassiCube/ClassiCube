@@ -84,7 +84,6 @@ namespace OpenTK.Graphics.OpenGL
 			//LoadDelegate( "glShadeModel", out Delegates.glShadeModel );
 			LoadDelegate( "glTexCoordPointer", out Delegates.glTexCoordPointer );
 			LoadDelegate( "glTexImage2D", out Delegates.glTexImage2D );
-			//LoadDelegate( "glTexParameterf", out Delegates.glTexParameterf );
 			LoadDelegate( "glTexParameteri", out Delegates.glTexParameteri );
 			LoadDelegate( "glTexSubImage2D", out Delegates.glTexSubImage2D );
 			LoadDelegate( "glVertexPointer", out Delegates.glVertexPointer );

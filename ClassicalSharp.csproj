@@ -81,7 +81,6 @@
   <ItemGroup>
     <Reference Include="Microsoft.DirectX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="Microsoft.DirectX.Direct3D" Condition=" '$(Configuration)' == 'Debug_DX32' " />
-    <Reference Include="Microsoft.DirectX.Direct3DX" Condition=" '$(Configuration)' == 'Debug_DX32' " />
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -119,6 +118,7 @@
     <Compile Include="Entities\Particles\ParticleManager.cs" />
     <Compile Include="Entities\Particles\TerrainParticle.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Player.Rendering.cs" />
     <Compile Include="Game\Game.Chat.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
@@ -169,7 +169,6 @@
     <Compile Include="Rendering\MapEnvRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.cs" />
     <Compile Include="Rendering\PickingRenderer.cs" />
-    <Compile Include="Rendering\PlayerRenderer.cs" />
     <Compile Include="Rendering\StandardEnvRenderer.cs" />
     <Compile Include="Rendering\WeatherRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />

@@ -62,12 +62,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void Despawn() {
-			if( renderer != null ) {
-				renderer.Dispose();
-			}
-		}
-		
 		public override void Tick( double delta ) {
 			if( Window.Map.IsNotLoaded ) return;
 			//Window.Title = ( GC.GetTotalMemory( false ) / 1024.0 / 1024.0 ).ToString(); // TODO: temp debug statement
@@ -82,19 +76,19 @@ namespace ClassicalSharp {
 			nextPos = Position;
 			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos, delta );
-			if( renderer != null ) {
+			if( api != null ) {
 				CheckSkin();
 			}
 		}
 		
 		public override void Render( double deltaTime, float t ) {
 			if( !Window.Camera.IsThirdPerson ) return;
-			if( renderer == null ) {
-				renderer = new PlayerRenderer( this, Window );
+			if( api == null ) {
+				InitRenderingData();
 				Window.AsyncDownloader.DownloadSkin( SkinName );
 			}
 			SetCurrentAnimState( t );
-			renderer.Render( deltaTime );
+			RenderModel( deltaTime );
 		}
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {

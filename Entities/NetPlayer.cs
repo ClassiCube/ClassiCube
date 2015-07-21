@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		public NetPlayer( string displayName, string skinName, Game window ) : base( window ) {
 			DisplayName = displayName;
 			SkinName = Utils.StripColours( skinName );
-			renderer = new PlayerRenderer( this, window );
+			InitRenderingData();
 		}
 		
 		// Last known position and orientation sent by the server.
@@ -40,10 +40,6 @@ namespace ClassicalSharp {
 				AddState( new State( tickCount, midPos, midYaw, midPitch ) );
 				AddState( new State( tickCount, serverPos, serverYaw, serverPitch ) );
 			}
-		}
-		
-		public override void Despawn() {
-			renderer.Dispose();
 		}
 		
 		struct State {
@@ -97,7 +93,7 @@ namespace ClassicalSharp {
 			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
 			
 			SetCurrentAnimState( t );
-			renderer.Render( deltaTime );
+			RenderModel( deltaTime );
 		}
 	}
 }

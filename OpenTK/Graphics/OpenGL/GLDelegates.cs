@@ -216,10 +216,6 @@ namespace OpenTK.Graphics.OpenGL {
 			public static TexImage2D glTexImage2D;
 			
 			[SuppressUnmanagedCodeSecurity()]
-			public delegate void TexParameterf(TextureTarget target, TextureParameterName pname, Single param);
-			public static TexParameterf glTexParameterf;
-			
-			[SuppressUnmanagedCodeSecurity()]
 			public delegate void TexParameteri(TextureTarget target, TextureParameterName pname, Int32 param);
 			public static TexParameteri glTexParameteri;
 			

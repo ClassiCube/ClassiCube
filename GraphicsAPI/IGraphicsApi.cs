@@ -184,8 +184,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawDynamicVb( DrawMode.TriangleStrip, quadVb, quadVertices, VertexFormat.Pos3fCol4b, 4 );
 		}
 		
-		VertexPos3fTex2f[] texVertices = new VertexPos3fTex2f[4];
-		int texVb;
+		internal VertexPos3fTex2f[] texVerts = new VertexPos3fTex2f[4];
+		internal int texVb;
 		public virtual void Draw2DTexture( ref Texture tex ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			#if USE_DX
@@ -197,11 +197,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			y2 -= 0.5f;
 			#endif
 			// Have to order them this way because it's a triangle strip.
-			texVertices[0] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
-			texVertices[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
-			texVertices[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
-			texVertices[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVertices, VertexFormat.Pos3fTex2f, 4 );
+			texVerts[0] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
+			texVerts[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
+			texVerts[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
+			texVerts[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
+			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVerts, VertexFormat.Pos3fTex2f, 4 );
 		}
 		
 		public void Mode2D( float width, float height ) {

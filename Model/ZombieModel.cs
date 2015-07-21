@@ -57,9 +57,9 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -4 / 16f, 0, -4 / 16f, 4 / 16f, 32 / 16f, 4 / 16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player p, PlayerRenderer renderer ) {
+		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = renderer.MobTextureId <= 0 ? DefaultTexId : renderer.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
 			graphics.Bind2DTexture( texId );
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
