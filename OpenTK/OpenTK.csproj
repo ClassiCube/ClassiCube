@@ -91,7 +91,6 @@
     <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
-    <Compile Include="Platform\Factory.cs" />
     <Compile Include="Platform\IDisplayDeviceDriver.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
     <Compile Include="Platform\IWindowInfo.cs" />

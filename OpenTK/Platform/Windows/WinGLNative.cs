@@ -26,14 +26,12 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
-using OpenTK.Graphics;
 using OpenTK.Input;
-using System.Collections.Generic;
-using System.IO;
-using System.Drawing;
 
 namespace OpenTK.Platform.Windows
 {
@@ -75,11 +73,6 @@ namespace OpenTK.Platform.Windows
             client_rectangle = new Rectangle(),
             previous_bounds = new Rectangle(); // Used to restore previous size when leaving fullscreen mode.
         Icon icon;
-
-        const ClassStyle DefaultClassStyle = ClassStyle.OwnDC;
-
-        readonly IntPtr DefaultWindowProcedure =
-            Marshal.GetFunctionPointerForDelegate(new WindowProcedure(Functions.DefWindowProc));
 
         // Used for IInputDriver implementation
         WinMMJoystick joystick_driver = new WinMMJoystick();
@@ -554,7 +547,7 @@ namespace OpenTK.Platform.Windows
             {
                 ExtendedWindowClass wc = new ExtendedWindowClass();
                 wc.Size = ExtendedWindowClass.SizeInBytes;
-                wc.Style = DefaultClassStyle;
+                wc.Style = ClassStyle.OwnDC;
                 wc.Instance = Instance;
                 wc.WndProc = WindowProcedureDelegate;
                 wc.ClassName = ClassName;

@@ -33,218 +33,160 @@ namespace OpenTK.Graphics.OpenGL {
 	
     partial class GL {
 
-        internal static partial class Core {           
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+        internal static class Core {           
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glAlphaFunc(AlphaFunction func, Single @ref);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBindBuffer(BufferTarget target, Int32 buffer);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBindBufferARB(BufferTarget target, Int32 buffer);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBindTexture(TextureTarget target, Int32 texture);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBlendFunc(BlendingFactor sfactor, BlendingFactor dfactor);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBufferData(BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBufferDataARB(BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBufferSubData(BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glBufferSubDataARB(BufferTarget target, IntPtr offset, IntPtr size, IntPtr data);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glClear(ClearBufferMask mask);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glClearColor(Single red, Single green, Single blue, Single alpha);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glClearDepth(Double depth);          
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glColorMask(bool red, bool green, bool blue, bool alpha);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glColorPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glCullFace(CullFaceMode mode);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glDeleteBuffers(Int32 n, Int32* buffers);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glDeleteBuffersARB(Int32 n, Int32* buffers);
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glDeleteTextures(Int32 n, Int32* textures);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDepthFunc(DepthFunction func);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDepthMask(bool flag);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
-            internal extern static void glDepthRange(Double near, Double far);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDisable(EnableCap cap);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDisableClientState(ArrayCap array);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDrawArrays(BeginMode mode, Int32 first, Int32 count);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glDrawElements(BeginMode mode, Int32 count, DrawElementsType type, IntPtr indices);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glEnable(EnableCap cap);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glEnableClientState(ArrayCap array);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glFogf(FogParameter pname, Single param);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glFogfv(FogParameter pname, Single* @params);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glFogi(FogParameter pname, Int32 param);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glGenBuffers(Int32 n, [OutAttribute] Int32* buffers);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glGenBuffersARB(Int32 n, [OutAttribute] Int32* buffers);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glGenTextures(Int32 n, [OutAttribute] Int32* textures);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static ErrorCode glGetError();
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glGetFloatv(GetPName pname, [OutAttribute] Single* @params);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glGetIntegerv(GetPName pname, [OutAttribute] Int32* @params);
           
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static System.IntPtr glGetString(StringName name);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glHint(HintTarget target, HintMode mode);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static bool glIsBuffer(Int32 buffer);
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static bool glIsBufferARB(Int32 buffer);
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static bool glIsTexture(Int32 texture);
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glLoadIdentity();
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glLoadMatrixf(Single* m);
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glMatrixMode(OpenGL.MatrixMode mode);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static unsafe void glMultMatrixf(Single* m);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glPopMatrix();
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glPushMatrix();
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glReadPixels(Int32 x, Int32 y, Int32 width, Int32 height, PixelFormat format, PixelType type, [OutAttribute] IntPtr pixels);      
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glShadeModel(ShadingModel mode);     
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glTexCoordPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
             
-           	[SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+           	[SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glTexImage2D(TextureTarget target, Int32 level, PixelInternalFormat internalformat, Int32 width, Int32 height, Int32 border, PixelFormat format, PixelType type, IntPtr pixels);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glTexParameterf(TextureTarget target, TextureParameterName pname, Single param);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glTexParameteri(TextureTarget target, TextureParameterName pname, Int32 param);
            
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glTexSubImage2D(TextureTarget target, Int32 level, Int32 xoffset, Int32 yoffset, Int32 width, Int32 height, PixelFormat format, PixelType type, IntPtr pixels);
             
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glVertexPointer(Int32 size, PointerType type, Int32 stride, IntPtr pointer);
 
-            [SuppressUnmanagedCodeSecurity()]
-            [DllImport(Library)]
+            [SuppressUnmanagedCodeSecurity, DllImport(Library)]
             internal extern static void glViewport(Int32 x, Int32 y, Int32 width, Int32 height);
         }
     }

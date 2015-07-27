@@ -75,21 +75,6 @@ namespace OpenTK.Platform.Windows
     /// For internal use by OpenTK only!
     /// Exposes useful native WINAPI methods and structures.
     /// </summary>
-    internal static class API
-    {
-        // Prevent BeforeFieldInit optimization, and initialize 'size' fields.
-        static API()
-        {
-            PixelFormatDescriptorVersion = 1;
-            PixelFormatDescriptorSize = (short)Marshal.SizeOf(typeof(PixelFormatDescriptor));
-            WindowInfoSize = Marshal.SizeOf(typeof(WindowInfo));
-        }
-
-        internal static readonly short PixelFormatDescriptorSize;
-        internal static readonly short PixelFormatDescriptorVersion;
-        internal static readonly int WindowInfoSize;
-    }
-
     internal static class Functions
     {
         #region Window functions
@@ -807,6 +792,9 @@ namespace OpenTK.Platform.Windows
         internal int LayerMask;
         internal int VisibleMask;
         internal int DamageMask;
+        
+        public const short DefaultVersion = 1;
+        public const short DefaultSize = 40;
     }
     
     #endregion

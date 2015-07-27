@@ -146,10 +146,6 @@ namespace OpenTK.Graphics.OpenGL
         Blend = ((int)0x0BE2),
 
         Texture2D = ((int)0x0DE1),
-        PolygonOffsetPoint = ((int)0x2A01),
-        PolygonOffsetLine = ((int)0x2A02),
-
-        PolygonOffsetFill = ((int)0x8037),
 
         VertexArray = ((int)0x8074),
         NormalArray = ((int)0x8075),
@@ -172,11 +168,6 @@ namespace OpenTK.Graphics.OpenGL
 
         TableTooLargeExt = ((int)0x8031),
         TextureTooLargeExt = ((int)0x8065),
-    }
-
-    public enum ExtBgra : int
-    {
-        BgraExt = ((int)0x80E1),
     }
 
     public enum ExtVertexArrayBgra : int

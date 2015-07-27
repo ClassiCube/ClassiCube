@@ -595,11 +595,11 @@ namespace OpenTK.Platform.MacOS
         {
             MacOSKeyModifiers modifiers = API.GetEventKeyModifiers(inEvent);
 
-            bool caps = (modifiers & MacOSKeyModifiers.CapsLock) != 0 ? true : false;
-            bool control = (modifiers & MacOSKeyModifiers.Control) != 0 ? true : false;
-            bool command = (modifiers & MacOSKeyModifiers.Command) != 0 ? true : false;
-            bool option = (modifiers & MacOSKeyModifiers.Option) != 0 ? true : false;
-            bool shift = (modifiers & MacOSKeyModifiers.Shift) != 0 ? true : false;
+            bool caps = (modifiers & MacOSKeyModifiers.CapsLock) != 0;
+            bool control = (modifiers & MacOSKeyModifiers.Control) != 0;
+            bool command = (modifiers & MacOSKeyModifiers.Command) != 0;
+            bool option = (modifiers & MacOSKeyModifiers.Option) != 0;
+            bool shift = (modifiers & MacOSKeyModifiers.Shift) != 0;
 
             Debug.Print("Modifiers Changed: {0}", modifiers);
 

@@ -26,9 +26,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-
 using OpenTK.Graphics;
 
 namespace OpenTK.Platform
@@ -42,5 +39,16 @@ namespace OpenTK.Platform
         IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window);
         
         IGraphicsMode CreateGraphicsMode();
+    }
+    
+    internal static class Factory  {
+        public static readonly IPlatformFactory Default;
+
+        static Factory() {
+            if (Configuration.RunningOnWindows) Default = new Windows.WinFactory();
+            else if (Configuration.RunningOnMacOS) Default = new MacOS.MacOSFactory();
+            else if (Configuration.RunningOnX11) Default = new X11.X11Factory();
+            else throw new NotSupportedException( "Running on an unsupported platform, please refer to http://www.opentk.com for more information." );
+        }
     }
 }

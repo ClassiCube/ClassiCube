@@ -189,9 +189,9 @@ namespace OpenTK.Platform.Windows
 			// Find out what we really got as a format:
 			IntPtr deviceContext = window.DeviceContext;
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
-			pfd.Size = API.PixelFormatDescriptorSize;
-			pfd.Version = API.PixelFormatDescriptorVersion;
-			Functions.DescribePixelFormat(deviceContext, modeIndex, API.PixelFormatDescriptorSize, ref pfd);
+			pfd.Size = PixelFormatDescriptor.DefaultSize;
+			pfd.Version = PixelFormatDescriptor.DefaultVersion;
+			Functions.DescribePixelFormat(deviceContext, modeIndex, pfd.Size, ref pfd);
 			
 			Mode = new GraphicsMode(
 				(IntPtr)modeIndex, new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
@@ -211,8 +211,8 @@ namespace OpenTK.Platform.Windows
 
 			Debug.Write("Selecting pixel format PFD... ");
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
-			pfd.Size = API.PixelFormatDescriptorSize;
-			pfd.Version = API.PixelFormatDescriptorVersion;
+			pfd.Size = PixelFormatDescriptor.DefaultSize;
+			pfd.Version = PixelFormatDescriptor.DefaultVersion;
 			pfd.Flags =
 				PixelFormatDescriptorFlags.SUPPORT_OPENGL |
 				PixelFormatDescriptorFlags.DRAW_TO_WINDOW;
