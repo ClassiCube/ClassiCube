@@ -7,7 +7,6 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using BmpPixelFormat = System.Drawing.Imaging.PixelFormat;
 using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
-using Gl = OpenTK.Graphics.OpenGL.GL.Delegates;
 
 namespace ClassicalSharp.GraphicsAPI {
 
@@ -18,9 +17,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe OpenGLApi() {
 			int texDims;
-			Gl.glGetIntegerv( GetPName.MaxTextureSize, &texDims );
+			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
 			textureDimensions = texDims;
-			string extensions = new String( (sbyte*)Gl.glGetString( StringName.Extensions ) );
+			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
 			
 			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
 				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
@@ -33,7 +32,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
 			setupBatchFuncTex2f = SetupVbPos3fTex2f;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
-			Gl.glEnableClientState( ArrayCap.VertexArray );
+			GL.EnableClientState( ArrayCap.VertexArray );
 		}
 
 		public override int MaxTextureDimensions {
@@ -55,7 +54,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			AlphaFunction.Gequal, AlphaFunction.Greater,
 		};
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
-			Gl.glAlphaFunc( alphaFuncs[(int)func], value );
+			GL.AlphaFunc( alphaFuncs[(int)func], value );
 		}
 		
 		BlendingFactor[] blendFuncs = {
@@ -64,7 +63,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
 		};
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
-			Gl.glBlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)destFunc] );
+			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)destFunc] );
 		}
 		
 		public override bool Fog {
@@ -75,7 +74,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void SetFogColour( FastColour col ) {			
 			if( col != lastFogCol ) {
 				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
-				Gl.glFogfv( FogParameter.FogColor, &colRGBA.X );
+				GL.Fogfv( FogParameter.FogColor, &colRGBA.X );
 				lastFogCol = col;
 			}
 		}
@@ -95,7 +94,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		static void FogParam( FogParameter param, float value, ref float last ) {
 			if( value != last ) {
-				Gl.glFogf( param, value );
+				GL.Fogf( param, value );
 				last = value;
 			}
 		}
@@ -104,7 +103,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 		public override void SetFogMode( Fog mode ) {
 			if( mode != lastFogMode ) {
-				Gl.glFogi( FogParameter.FogMode, (int)fogModes[(int)mode] );
+				GL.Fogi( FogParameter.FogMode, (int)fogModes[(int)mode] );
 				lastFogMode = mode;
 			}
 		}
@@ -119,29 +118,29 @@ namespace ClassicalSharp.GraphicsAPI {
 				Utils.LogWarning( "Creating a non power of two texture." );
 			
 			int texId = 0;
-			Gl.glGenTextures( 1, &texId );
-			Gl.glBindTexture( TextureTarget.Texture2D, texId );
-			Gl.glTexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
-			Gl.glTexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
+			GL.GenTextures( 1, &texId );
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
 
-			Gl.glTexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
+			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
 			return texId;
 		}
 		
 		public override void Bind2DTexture( int texture ) {
-			Gl.glBindTexture( TextureTarget.Texture2D, texture );
+			GL.BindTexture( TextureTarget.Texture2D, texture );
 		}
 		
 		public unsafe override void DeleteTexture( ref int texId ) {
 			if( texId <= 0 ) return;
 			int id = texId;
-			Gl.glDeleteTextures( 1, &id );
+			GL.DeleteTextures( 1, &id );
 			texId = -1;
 		}
 		
 		public override bool IsValidTexture( int texId ) {
-			return Gl.glIsTexture( texId );
+			return GL.IsTexture( texId );
 		}
 		
 		public override bool Texturing {
@@ -149,19 +148,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void Clear() {
-			Gl.glClear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
+			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}
 		
 		FastColour lastClearCol;
 		public override void ClearColour( FastColour col ) {
 			if( col != lastClearCol ) {
-				Gl.glClearColor( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
+				GL.ClearColor( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 				lastClearCol = col;
 			}
 		}
 		
 		public override bool ColourWrite {
-			set { Gl.glColorMask( value, value, value, value ); }
+			set { GL.ColorMask( value, value, value, value ); }
 		}
 		
 		DepthFunction[] depthFuncs = {
@@ -171,7 +170,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthFunction.Gequal, DepthFunction.Greater,
 		};
 		public override void DepthTestFunc( CompareFunc func ) {
-			Gl.glDepthFunc( depthFuncs[(int)func] );
+			GL.DepthFunc( depthFuncs[(int)func] );
 		}
 		
 		public override bool DepthTest {
@@ -179,7 +178,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool DepthWrite {
-			set { Gl.glDepthMask( value ); }
+			set { GL.DepthMask( value ); }
 		}
 		
 		#region Vertex buffers
@@ -189,75 +188,75 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = 0;
-			Gl.glGenBuffersARB( 1, &id );
+			GL.GenBuffersARB( 1, &id );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
-			Gl.glBufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
 			return id;
 		}
 		
 		public unsafe override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = 0;
-			Gl.glGenBuffersARB( 1, &id );
+			GL.GenBuffersARB( 1, &id );
 			int sizeInBytes = count * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			Gl.glBufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject(), BufferUsageHint.StaticDraw );
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject(), BufferUsageHint.StaticDraw );
 			handle.Free();
 			return id;
 		}
 		
 		public unsafe override int InitIb( ushort[] indices, int indicesCount ) {
 			int id = 0;
-			Gl.glGenBuffersARB( 1, &id );
+			GL.GenBuffersARB( 1, &id );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, id );
+			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, id );
 			fixed( ushort* ptr = indices ) {
-				Gl.glBufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
+				GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
 			}
 			return id;
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, VertexFormat format, int count ) {
 			int sizeInBytes = count * strideSizes[(int)format];
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			Gl.glBufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject() );
+			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject() );
 			handle.Free();
 			
 			BeginVbBatch( format );
 			setupBatchFunc();
-			Gl.glDrawArrays( modeMappings[(int)mode], 0, count );
+			GL.DrawArrays( modeMappings[(int)mode], 0, count );
 		}
 		
 		public unsafe override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
-			Gl.glDeleteBuffersARB( 1, &id );
+			GL.DeleteBuffersARB( 1, &id );
 		}
 		
 		public unsafe override void DeleteVb( int id ) {
 			if( id <= 0 ) return;
-			Gl.glDeleteBuffersARB( 1, &id );
+			GL.DeleteBuffersARB( 1, &id );
 		}
 		
 		public unsafe override void DeleteIb( int id ) {
 			if( id <= 0 ) return;
-			Gl.glDeleteBuffersARB( 1, &id );
+			GL.DeleteBuffersARB( 1, &id );
 		}
 		
 		public override bool IsValidVb( int vb ) {
-			return Gl.glIsBufferARB( vb );
+			return GL.IsBufferARB( vb );
 		}
 		
 		public override bool IsValidIb( int ib ) {
-			return Gl.glIsBufferARB( ib );
+			return GL.IsBufferARB( ib );
 		}
 		
 		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
 			BeginVbBatch( format );
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			setupBatchFunc();
-			Gl.glDrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
+			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;
@@ -265,24 +264,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( format == batchFormat ) return;
 			
 			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
-				Gl.glDisableClientState( ArrayCap.ColorArray );
-				Gl.glDisableClientState( ArrayCap.TextureCoordArray );
+				GL.DisableClientState( ArrayCap.ColorArray );
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
 			} else if( batchFormat == VertexFormat.Pos3fTex2f ) {
-				Gl.glDisableClientState( ArrayCap.TextureCoordArray );
+				GL.DisableClientState( ArrayCap.TextureCoordArray );
 			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
-				Gl.glDisableClientState( ArrayCap.ColorArray );
+				GL.DisableClientState( ArrayCap.ColorArray );
 			}
 			
 			batchFormat = format;
 			if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				Gl.glEnableClientState( ArrayCap.ColorArray );
-				Gl.glEnableClientState( ArrayCap.TextureCoordArray );
+				GL.EnableClientState( ArrayCap.ColorArray );
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
 			} else if( format == VertexFormat.Pos3fTex2f ) {
-				Gl.glEnableClientState( ArrayCap.TextureCoordArray );
+				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2f;
 			} else if( format == VertexFormat.Pos3fCol4b ) {
-				Gl.glEnableClientState( ArrayCap.ColorArray );
+				GL.EnableClientState( ArrayCap.ColorArray );
 				setupBatchFunc = setupBatchFuncCol4b;
 			}
 		}
@@ -292,42 +291,42 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			setupBatchFunc();
-			Gl.glDrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
+			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
 		                                        int startVertex, int startIndex ) {
-			Gl.glBindBufferARB( BufferTarget.ArrayBuffer, vb );
-			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, ib );
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, vb );
+			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, ib );
 			
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
-			Gl.glVertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
-			Gl.glColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
-			Gl.glTexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
-			Gl.glDrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
+			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
+			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 		
 		public override void EndIndexedVbBatch() {
-			Gl.glBindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
+			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
 		}
 		
 		void SetupVbPos3fTex2f() {
-			Gl.glVertexPointer( 3, PointerType.Float, 20, new IntPtr( 0 ) );
-			Gl.glTexCoordPointer( 2, PointerType.Float, 20, new IntPtr( 12 ) );		
+			GL.VertexPointer( 3, PointerType.Float, 20, new IntPtr( 0 ) );
+			GL.TexCoordPointer( 2, PointerType.Float, 20, new IntPtr( 12 ) );		
 		}
 		
 		void SetupVbPos3fCol4b() {
-			Gl.glVertexPointer( 3, PointerType.Float, 16, new IntPtr( 0 ) );
-			Gl.glColorPointer( 4, PointerType.UnsignedByte, 16, new IntPtr( 12 ) );
+			GL.VertexPointer( 3, PointerType.Float, 16, new IntPtr( 0 ) );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, 16, new IntPtr( 12 ) );
 		}
 		
 		void SetupVbPos3fTex2fCol4b() {
-			Gl.glVertexPointer( 3, PointerType.Float, 24, new IntPtr( 0 ) );
-			Gl.glColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( 12 ) );
-			Gl.glTexCoordPointer( 2, PointerType.Float, 24, new IntPtr( 16 ) );
+			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( 0 ) );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( 12 ) );
+			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( 16 ) );
 		}
 		#endregion
 		
@@ -339,31 +338,31 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void SetMatrixMode( MatrixType mode ) {
 			MatrixMode glMode = matrixModes[(int)mode];
 			if( glMode != lastMode ) {
-				Gl.glMatrixMode( glMode );
+				GL.MatrixMode( glMode );
 				lastMode = glMode;
 			}
 		}
 		
 		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
 			fixed( Single* ptr = &matrix.Row0.X )
-				Gl.glLoadMatrixf( ptr );
+				GL.LoadMatrixf( ptr );
 		}
 		
 		public override void LoadIdentityMatrix() {
-			Gl.glLoadIdentity();
+			GL.LoadIdentity();
 		}
 		
 		public override void PushMatrix() {
-			Gl.glPushMatrix();
+			GL.PushMatrix();
 		}
 		
 		public override void PopMatrix() {
-			Gl.glPopMatrix();
+			GL.PopMatrix();
 		}
 		
 		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
 			fixed( Single* ptr = &matrix.Row0.X )
-				Gl.glMultMatrixf( ptr );
+				GL.MultMatrixf( ptr );
 		}
 		
 		#endregion
@@ -376,15 +375,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void SetVSync( Game game, bool value ) {
-			game.VSync = value ? VSyncMode.On : VSyncMode.Off;
+			game.VSync = value;
 		}
 		
 		public unsafe override void PrintApiSpecificInfo() {
-			Console.WriteLine( "OpenGL vendor: " + new String( (sbyte*)Gl.glGetString( StringName.Vendor ) ) );
-			Console.WriteLine( "OpenGL renderer: " + new String( (sbyte*)Gl.glGetString( StringName.Renderer ) ) );
-			Console.WriteLine( "OpenGL version: " + new String( (sbyte*)Gl.glGetString( StringName.Version ) ) );
+			Console.WriteLine( "OpenGL vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
+			Console.WriteLine( "OpenGL renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
+			Console.WriteLine( "OpenGL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
 			int depthBits = 0;
-			Gl.glGetIntegerv( GetPName.DepthBits, &depthBits );
+			GL.GetIntegerv( GetPName.DepthBits, &depthBits );
 			Console.WriteLine( "Depth buffer bits: " + depthBits );
 			if( depthBits < 24 ) {
 				Utils.LogWarning( "Depth buffer is less than 24 bits, you may see some issues " +
@@ -398,7 +397,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void TakeScreenshot( string output, Size size ) {
 			using( Bitmap bmp = new Bitmap( size.Width, size.Height, BmpPixelFormat.Format32bppRgb ) ) { // ignore alpha component
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-					Gl.glReadPixels( 0, 0, size.Width, size.Height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
+					GL.ReadPixels( 0, 0, size.Width, size.Height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
 				}
 				bmp.RotateFlip( RotateFlipType.RotateNoneFlipY );
 				bmp.Save( output, ImageFormat.Png );
@@ -406,20 +405,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void OnWindowResize( Game game ) {
-			Gl.glViewport( 0, 0, game.Width, game.Height );
+			GL.Viewport( 0, 0, game.Width, game.Height );
 		}
 		
 		static void ToggleCap( EnableCap cap, bool value ) {
-			if( value ) Gl.glEnable( cap );
-			else Gl.glDisable( cap );
+			if( value ) GL.Enable( cap );
+			else GL.Disable( cap );
 		}
 
 		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-			Gl.glEnable( EnableCap.Texture2D );
-			Gl.glBindTexture( TextureTarget.Texture2D, texId );
-			Gl.glTexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
+			GL.Enable( EnableCap.Texture2D );
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
 			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
-			Gl.glDisable( EnableCap.Texture2D );
+			GL.Disable( EnableCap.Texture2D );
 		}
 	}
 }

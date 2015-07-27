@@ -83,7 +83,7 @@ namespace OpenTK
         double target_render_period;
         // TODO: Implement these:
         double render_time;
-        VSyncMode vsync;
+        bool vsync;
 
         Stopwatch render_watch = new Stopwatch();
         double next_render = 0.0;
@@ -167,7 +167,7 @@ namespace OpenTK
                 glContext.MakeCurrent(WindowInfo);
                 (glContext as IGraphicsContextInternal).LoadAll();
 
-                VSync = VSyncMode.On;
+                VSync = true;
 
                 //glWindow.WindowInfoChanged += delegate(object sender, EventArgs e) { OnWindowInfoChangedInternal(e); };
             }
@@ -635,7 +635,7 @@ namespace OpenTK
         /// <summary>
         /// Gets or sets the VSyncMode.
         /// </summary>
-        public VSyncMode VSync
+        public bool VSync
         {
             get
             {
@@ -645,7 +645,7 @@ namespace OpenTK
             set
             {
                 EnsureUndisposed();
-                Context.VSync = (vsync = value) != VSyncMode.Off;
+                Context.VSync = (vsync = value);
             }
         }
 
@@ -782,28 +782,4 @@ namespace OpenTK
 
         #endregion
     }
-
-    #region public enum VSyncMode
-
-    /// <summary>
-    /// Enumerates available VSync modes.
-    /// </summary>
-    public enum VSyncMode
-    {
-        /// <summary>
-        /// Vsync disabled.
-        /// </summary>
-        Off = 0,
-        /// <summary>
-        /// VSync enabled.
-        /// </summary>
-        On,
-        /// <summary>
-        /// VSync enabled, unless framerate falls below one half of target framerate.
-        /// If no target framerate is specified, this behaves exactly like <see cref="VSyncMode.On"/>.
-        /// </summary>
-        Adaptive,
-    }
-
-    #endregion
 }

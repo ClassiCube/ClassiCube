@@ -9,17 +9,14 @@ namespace OpenTK.Platform.Windows {
 		const string Library = "OPENGL32.DLL";
 		static readonly object sync_root = new object();
 
-		public Wgl() : base( null ) {
-		}
-
 		protected override IntPtr GetAddress( string funcname ) {
 			return Wgl.wglGetProcAddress( funcname );
 		}
 		
 		internal void LoadEntryPoints() {
 			lock( sync_root ) {
-				GetExtensionDelegate( "wglGetSwapIntervalEXT", out wglGetSwapIntervalEXT );
-				GetExtensionDelegate( "wglSwapIntervalEXT", out wglSwapIntervalEXT );
+				LoadDelegate( "wglGetSwapIntervalEXT", out wglGetSwapIntervalEXT );
+				LoadDelegate( "wglSwapIntervalEXT", out wglSwapIntervalEXT );
 			}
 		}
 

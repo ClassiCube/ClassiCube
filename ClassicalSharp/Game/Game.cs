@@ -117,7 +117,7 @@ namespace ClassicalSharp {
 			#if !USE_DX
 			Graphics = new OpenGLApi();
 			#else
-			Graphics = new DirectXApi( this );
+			Graphics = new Direct3D9Api( this );
 			#endif
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );

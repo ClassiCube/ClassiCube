@@ -34,33 +34,16 @@ namespace OpenTK {
 	/// Provides a common foundation for all flat API bindings and implements the extension loading interface.
 	/// </summary>
 	public abstract class BindingsBase {
-		protected readonly Type CoreClass;
-
-		public BindingsBase( Type coreType ) {
-			CoreClass = coreType;
-		}
 
 		protected abstract IntPtr GetAddress( string funcname );
-
-		// Tries to load the specified core or extension function.
-		protected internal void LoadDelegate<T>( string name, out T del ) where T : class {
-			GetExtensionDelegate( name, out del );
-			if( del != null ) return;
-			
-			try {
-				del = (T)(object)Delegate.CreateDelegate( typeof( T ), CoreClass, name );
-			} catch( ArgumentException ) {
-				del = null;
-			}
-		}
 		
-		protected bool IsInvalidAddress( IntPtr address ) {
+		public static bool IsInvalidAddress( IntPtr address ) {
 			return address == IntPtr.Zero || address == new IntPtr(1) ||
 				address == new IntPtr(2) || address == new IntPtr(-1);
 		}
 
 		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.
-		protected internal void GetExtensionDelegate<T>( string name, out T del ) where T : class {
+		protected internal void LoadDelegate<T>( string name, out T del ) where T : class {
 			IntPtr address = GetAddress( name );
 			del = IsInvalidAddress( address ) ? null :
 				(T)(object)Marshal.GetDelegateForFunctionPointer( address, typeof( T ) );

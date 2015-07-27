@@ -173,9 +173,11 @@ namespace OpenTK.Platform.Windows
 
 		#region GetAddress
 
-		public override IntPtr GetAddress(string function_string)
-		{
-			return Wgl.wglGetProcAddress(function_string);
+		public override IntPtr GetAddress(string funcName) {
+			IntPtr dynAddress = Wgl.wglGetProcAddress(funcName);
+			if( !BindingsBase.IsInvalidAddress( dynAddress ) )
+				return dynAddress;
+			return Functions.GetProcAddress( opengl32Handle, funcName );
 		}
 
 		#endregion

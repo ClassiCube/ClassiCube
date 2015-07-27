@@ -24,14 +24,13 @@ SOFTWARE.
 
 using System;
 using System.Runtime.InteropServices;
-using System.Xml.Serialization;
+
 namespace OpenTK
 {
     /// <summary>Represents a 4D vector using four single-precision floating-point numbers.</summary>
     /// <remarks>
     /// The Vector4 structure is suitable for interoperation with unmanaged code requiring four consecutive floats.
     /// </remarks>
-    [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public struct Vector4 : IEquatable<Vector4>
     {
@@ -747,13 +746,11 @@ namespace OpenTK
         /// <summary>
         /// Gets or sets an OpenTK.Vector2 with the X and Y components of this instance.
         /// </summary>
-        [XmlIgnore]
         public Vector2 Xy { get { return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
 
         /// <summary>
         /// Gets or sets an OpenTK.Vector3 with the X, Y and Z components of this instance.
         /// </summary>
-        [XmlIgnore]
         public Vector3 Xyz { get { return new Vector3(X, Y, Z); } set { X = value.X; Y = value.Y; Z = value.Z; } }
 
         #endregion

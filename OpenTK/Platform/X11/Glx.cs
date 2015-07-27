@@ -57,9 +57,6 @@ namespace OpenTK.Platform.X11
 
 		// Disable BeforeFieldInit optimization.
 		static Glx() { }
-		
-		public Glx() : base( null ) {
-		}
 
 		protected override IntPtr GetAddress(string funcname) {
 			return Glx.GetProcAddress(funcname);
@@ -67,7 +64,7 @@ namespace OpenTK.Platform.X11
 		
 		internal void LoadEntryPoints() {
 			lock( sync_root ) {
-				GetExtensionDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
+				LoadDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
 			}
 		}
 

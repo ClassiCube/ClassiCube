@@ -24,7 +24,6 @@ SOFTWARE.
 
 using System;
 using System.Runtime.InteropServices;
-using System.Xml.Serialization;
 namespace OpenTK
 {
     /// <summary>
@@ -33,7 +32,6 @@ namespace OpenTK
     /// <remarks>
     /// The Vector3 structure is suitable for interoperation with unmanaged code requiring three consecutive floats.
     /// </remarks>
-    [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public struct Vector3 : IEquatable<Vector3>
     {
@@ -964,7 +962,6 @@ namespace OpenTK
         /// <summary>
         /// Gets or sets an OpenTK.Vector2 with the X and Y components of this instance.
         /// </summary>
-        [XmlIgnore]
         public Vector2 Xy { get { return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
 
         #endregion

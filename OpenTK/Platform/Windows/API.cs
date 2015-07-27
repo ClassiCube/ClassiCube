@@ -373,23 +373,14 @@ namespace OpenTK.Platform.Windows
 
         #region DLL handling
 
-        #region SetLastError
-
         [DllImport("kernel32.dll")]
         internal static extern void SetLastError(DWORD dwErrCode);
 
-        #endregion
-        #region LoadLibrary
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dllName"></param>
-        /// <returns></returns>
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr LoadLibrary(string dllName);
 
-        #endregion
+        [DllImport("kernel32", SetLastError = true)]
+        internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
         #endregion
 

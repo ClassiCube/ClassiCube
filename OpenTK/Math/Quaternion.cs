@@ -25,14 +25,10 @@ SOFTWARE.
 using System;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
-using System.Xml.Serialization;
 
 namespace OpenTK
 {
-    /// <summary>
-    /// Represents a Quaternion.
-    /// </summary>
-    [Serializable]
+    /// <summary> Represents a Quaternion. </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct Quaternion : IEquatable<Quaternion>
     {
@@ -81,19 +77,16 @@ namespace OpenTK
         /// <summary>
         /// Gets or sets the X component of this instance.
         /// </summary>
-        [XmlIgnore]
         public float X { get { return xyz.X; } set { xyz.X = value; } }
 
         /// <summary>
         /// Gets or sets the Y component of this instance.
         /// </summary>
-        [XmlIgnore]
         public float Y { get { return xyz.Y; } set { xyz.Y = value; } }
 
         /// <summary>
         /// Gets or sets the Z component of this instance.
         /// </summary>
-        [XmlIgnore]
         public float Z { get { return xyz.Z; } set { xyz.Z = value; } }
 
         /// <summary>

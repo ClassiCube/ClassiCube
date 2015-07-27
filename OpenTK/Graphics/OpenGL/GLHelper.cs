@@ -16,13 +16,8 @@ namespace OpenTK.Graphics.OpenGL
 	/// </summary>
 	public sealed partial class GL : BindingsBase
 	{
-		internal const string Library = "opengl32.dll";
 		static readonly object sync_root = new object();
-
 		static GL() { }
-		
-		public GL() : base( typeof( Core ) ) {
-		}
 		
 		GraphicsContextBase context;
 		protected override IntPtr GetAddress( string funcname ) {
@@ -33,61 +28,59 @@ namespace OpenTK.Graphics.OpenGL
 			this.context = context;
 			Debug.Write("Loading OpenGL function pointers... ");
 
-			LoadDelegate( "glAlphaFunc", out Delegates.glAlphaFunc );
-			LoadDelegate( "glBindBuffer", out Delegates.glBindBuffer );
-			LoadDelegate( "glBindBufferARB", out Delegates.glBindBufferARB );
-			LoadDelegate( "glBindTexture", out Delegates.glBindTexture );
-			LoadDelegate( "glBlendFunc", out Delegates.glBlendFunc );
-			LoadDelegate( "glBufferData", out Delegates.glBufferData );
-			LoadDelegate( "glBufferDataARB", out Delegates.glBufferDataARB );
-			LoadDelegate( "glBufferSubData", out Delegates.glBufferSubData );
-			LoadDelegate( "glBufferSubDataARB", out Delegates.glBufferSubDataARB );
-			LoadDelegate( "glClear", out Delegates.glClear );
-			LoadDelegate( "glClearColor", out Delegates.glClearColor );
-			LoadDelegate( "glClearDepth", out Delegates.glClearDepth );
-			LoadDelegate( "glColorMask", out Delegates.glColorMask );
-			LoadDelegate( "glColorPointer", out Delegates.glColorPointer );
-			LoadDelegate( "glCullFace", out Delegates.glCullFace );
-			LoadDelegate( "glDeleteBuffers", out Delegates.glDeleteBuffers );
-			LoadDelegate( "glDeleteBuffersARB", out Delegates.glDeleteBuffersARB );
-			LoadDelegate( "glDeleteTextures", out Delegates.glDeleteTextures );
-			LoadDelegate( "glDepthFunc", out Delegates.glDepthFunc );
-			LoadDelegate( "glDepthMask", out Delegates.glDepthMask );
-			//LoadDelegate( "glDepthRange", out Delegates.glDepthRange );
-			LoadDelegate( "glDisable", out Delegates.glDisable );
-			LoadDelegate( "glDisableClientState", out Delegates.glDisableClientState );
-			LoadDelegate( "glDrawArrays", out Delegates.glDrawArrays );
-			LoadDelegate( "glDrawElements", out Delegates.glDrawElements );
-			LoadDelegate( "glEnable", out Delegates.glEnable );
-			LoadDelegate( "glEnableClientState", out Delegates.glEnableClientState );
-			LoadDelegate( "glFogf", out Delegates.glFogf );
-			LoadDelegate( "glFogfv", out Delegates.glFogfv );
-			LoadDelegate( "glFogi", out Delegates.glFogi );
-			LoadDelegate( "glGenBuffers", out Delegates.glGenBuffers );
-			LoadDelegate( "glGenBuffersARB", out Delegates.glGenBuffersARB );
-			LoadDelegate( "glGenTextures", out Delegates.glGenTextures );
-			//LoadDelegate( "glGetError", out Delegates.glGetError );
-			//LoadDelegate( "glGetFloatv", out Delegates.glGetFloatv );
-			LoadDelegate( "glGetIntegerv", out Delegates.glGetIntegerv );
-			LoadDelegate( "glGetString", out Delegates.glGetString );
-			LoadDelegate( "glHint", out Delegates.glHint );
-			LoadDelegate( "glIsBuffer", out Delegates.glIsBuffer );
-			LoadDelegate( "glIsBufferARB", out Delegates.glIsBufferARB );
-			LoadDelegate( "glIsTexture", out Delegates.glIsTexture );
-			LoadDelegate( "glLoadIdentity", out Delegates.glLoadIdentity );
-			LoadDelegate( "glLoadMatrixf", out Delegates.glLoadMatrixf );
-			LoadDelegate( "glMatrixMode", out Delegates.glMatrixMode );
-			LoadDelegate( "glMultMatrixf", out Delegates.glMultMatrixf );
-			LoadDelegate( "glPopMatrix", out Delegates.glPopMatrix );
-			LoadDelegate( "glPushMatrix", out Delegates.glPushMatrix );
-			LoadDelegate( "glReadPixels", out Delegates.glReadPixels );
-			//LoadDelegate( "glShadeModel", out Delegates.glShadeModel );
-			LoadDelegate( "glTexCoordPointer", out Delegates.glTexCoordPointer );
-			LoadDelegate( "glTexImage2D", out Delegates.glTexImage2D );
-			LoadDelegate( "glTexParameteri", out Delegates.glTexParameteri );
-			LoadDelegate( "glTexSubImage2D", out Delegates.glTexSubImage2D );
-			LoadDelegate( "glVertexPointer", out Delegates.glVertexPointer );
-			LoadDelegate( "glViewport", out Delegates.glViewport );
+			AlphaFuncAddress = GetAddress( "glAlphaFunc" );
+			BindBufferAddress = GetAddress( "glBindBuffer" );
+			BindBufferARBAddress = GetAddress( "glBindBufferARB" );
+			BindTextureAddress = GetAddress( "glBindTexture" );
+			BlendFuncAddress = GetAddress( "glBlendFunc" );
+			BufferDataAddress = GetAddress( "glBufferData" );
+			BufferDataARBAddress = GetAddress( "glBufferDataARB" );
+			BufferSubDataAddress = GetAddress( "glBufferSubData" );
+			BufferSubDataARBAddress = GetAddress( "glBufferSubDataARB" );
+			ClearAddress = GetAddress( "glClear" );
+			ClearColorAddress = GetAddress( "glClearColor" );
+			ColorMaskAddress = GetAddress( "glColorMask" );
+			ColorPointerAddress = GetAddress( "glColorPointer" );
+			CullFaceAddress = GetAddress( "glCullFace" );
+			DeleteBuffersAddress = GetAddress( "glDeleteBuffers" );
+			DeleteBuffersARBAddress = GetAddress( "glDeleteBuffersARB" );
+			DeleteTexturesAddress = GetAddress( "glDeleteTextures" );
+			DepthFuncAddress = GetAddress( "glDepthFunc" );
+			DepthMaskAddress = GetAddress( "glDepthMask" );
+			DisableAddress = GetAddress( "glDisable" );
+			DisableClientStateAddress = GetAddress( "glDisableClientState" );
+			DrawArraysAddress = GetAddress( "glDrawArrays" );
+			DrawElementsAddress = GetAddress( "glDrawElements" );
+			EnableAddress = GetAddress( "glEnable" );
+			EnableClientStateAddress = GetAddress( "glEnableClientState" );
+			FogfAddress = GetAddress( "glFogf" );
+			FogfvAddress = GetAddress( "glFogfv" );
+			FogiAddress = GetAddress( "glFogi" );
+			GenBuffersAddress = GetAddress( "glGenBuffers" );
+			GenBuffersARBAddress = GetAddress( "glGenBuffersARB" );
+			GenTexturesAddress = GetAddress( "glGenTextures" );
+			GetErrorAddress = GetAddress( "glGetError" );
+			GetFloatvAddress = GetAddress( "glGetFloatv" );
+			GetIntegervAddress = GetAddress( "glGetIntegerv" );
+			GetStringAddress = GetAddress( "glGetString" );
+			HintAddress = GetAddress( "glHint" );
+			IsBufferAddress = GetAddress( "glIsBuffer" );
+			IsBufferARBAddress = GetAddress( "glIsBufferARB" );
+			IsTextureAddress = GetAddress( "glIsTexture" );
+			LoadIdentityAddress = GetAddress( "glLoadIdentity" );
+			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );
+			MatrixModeAddress = GetAddress( "glMatrixMode" );
+			MultMatrixfAddress = GetAddress( "glMultMatrixf" );
+			PopMatrixAddress = GetAddress( "glPopMatrix" );
+			PushMatrixAddress = GetAddress( "glPushMatrix" );
+			ReadPixelsAddress = GetAddress( "glReadPixels" );
+			ShadeModelAddress = GetAddress( "glShadeModel" );
+			TexCoordPointerAddress = GetAddress( "glTexCoordPointer" );
+			TexImage2DAddress = GetAddress( "glTexImage2D" );
+			TexParameteriAddress = GetAddress( "glTexParameteri" );
+			TexSubImage2DAddress = GetAddress( "glTexSubImage2D" );
+			VertexPointerAddress = GetAddress( "glVertexPointer" );
+			ViewportAddress = GetAddress( "glViewport" );
 		}
 	}
 }
