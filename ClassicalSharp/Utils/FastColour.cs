@@ -55,10 +55,6 @@ namespace ClassicalSharp {
 			return Color.FromArgb( A, R, G, B );
 		}
 		
-		public Color4 ToColor4() {
-			return new Color4( R, G, B, A );
-		}
-		
 		public int ToArgb() {
 			return A << 24 | R << 16 | G << 8 | B;
 		}

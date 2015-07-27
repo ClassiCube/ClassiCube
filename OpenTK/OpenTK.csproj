@@ -61,7 +61,6 @@
     <Compile Include="INativeWindow.cs" />
     <Compile Include="KeyPressEventArgs.cs" />
     <Compile Include="NativeWindow.cs" />
-    <Compile Include="Graphics\Color4.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
     <Compile Include="Graphics\GraphicsContext.cs" />
     <Compile Include="Graphics\GraphicsContextBase.cs" />

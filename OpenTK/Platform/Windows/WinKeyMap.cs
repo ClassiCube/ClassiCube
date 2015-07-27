@@ -12,29 +12,24 @@ namespace OpenTK.Platform.Windows
 {
 	internal class WinKeyMap : Dictionary<int, Input.Key>
 	{
-		/// <summary>
-		/// Initializes the map between VirtualKeys and OpenTK.Key
-		/// </summary>
+		/// <summary> Initializes the map between VirtualKeys and OpenTK.Key </summary>
 		internal WinKeyMap()
 		{
 			AddKey(VirtualKeys.ESCAPE, Key.Escape);
 
 			// Function keys
-			for (int i = 0; i < 24; i++)
-			{
+			for (int i = 0; i < 24; i++) {
 				AddKey((VirtualKeys)((int)VirtualKeys.F1 + i), Key.F1 + i);
 			}
 
 			// Number keys (0-9)
-			for (int i = 0; i <= 9; i++)
-			{
-				AddKey((VirtualKeys)(0x30 + i), Key.Number0 + i);
+			for (int i = 0; i <= 9; i++) {
+				AddKey((VirtualKeys)('0' + i), Key.Number0 + i);
 			}
 
 			// Letters (A-Z)
-			for (int i = 0; i < 26; i++)
-			{
-				AddKey((VirtualKeys)(0x41 + i), Key.A + i);
+			for (int i = 0; i < 26; i++) {
+				AddKey((VirtualKeys)('A' + i), Key.A + i);
 			}
 
 			AddKey(VirtualKeys.TAB, Key.Tab);
