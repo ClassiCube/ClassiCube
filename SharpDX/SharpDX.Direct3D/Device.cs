@@ -50,8 +50,8 @@ namespace SharpDX.Direct3D9
 			DrawIndexedPrimitiveUP(type, minimumVertexIndex, vertexCount, primitiveCount, (IntPtr)Interop.Fixed(ref indexData[startIndex]), indexDataFormat, (IntPtr)Interop.Fixed(ref vertexData[startVertex]), Interop.SizeOf<T>());
 		}
 
-		public void Present() {
-			Present(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		public Result Present() {
+			return Present(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
 		}
 		
 		public Result TestCooperativeLevel() {
@@ -95,13 +95,12 @@ namespace SharpDX.Direct3D9
 		public void Reset(params PresentParameters[] presentationParametersRef) {
 			Result res;
 			fixed (void* presentParamsRef = presentationParametersRef)
-				res= Interop.Calli(comPointer, (IntPtr)presentParamsRef,(*(IntPtr**)comPointer)[16]);
+				res = Interop.Calli(comPointer, (IntPtr)presentParamsRef,(*(IntPtr**)comPointer)[16]);
 			res.CheckError();
 		}
 		
-		internal void Present(IntPtr sourceRectRef, IntPtr destRectRef, IntPtr hDestWindowOverride, IntPtr dirtyRegionRef) {
-			Result res = Interop.Calli(comPointer, sourceRectRef, destRectRef, hDestWindowOverride, dirtyRegionRef,(*(IntPtr**)comPointer)[17]);
-			res.CheckError();
+		internal Result Present(IntPtr sourceRectRef, IntPtr destRectRef, IntPtr hDestWindowOverride, IntPtr dirtyRegionRef) {
+			return Interop.Calli(comPointer, sourceRectRef, destRectRef, hDestWindowOverride, dirtyRegionRef,(*(IntPtr**)comPointer)[17]);
 		}
 		
 		public Surface GetBackBuffer(int iSwapChain, int iBackBuffer, BackBufferType type) {

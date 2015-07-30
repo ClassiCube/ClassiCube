@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 			}
 			
-			Console.WriteLine( "Starting " + Utils.AppName + ".." );
+			Utils.Log( "Starting " + Utils.AppName + ".." );
 			if( !AllResourcesExist( "terrain.png", "char.png", "clouds.png" ) ) {
 				return;
 			}
@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 		
 		static void Fail( string text ) {
 			Utils.LogWarning( text );
-			Console.WriteLine( "Press any key to exit.." );
+			Utils.Log( "Press any key to exit.." );
 			Console.ReadKey( true );
 		}
 

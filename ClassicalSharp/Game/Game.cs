@@ -108,8 +108,8 @@ namespace ClassicalSharp {
 		void PrintGraphicsInfo() {
 			Console.ForegroundColor = ConsoleColor.Green;
 			Graphics.PrintApiSpecificInfo();
-			Console.WriteLine( "Max 2D texture dimensions: " + Graphics.MaxTextureDimensions );
-			Console.WriteLine( "== End of graphics info ==" );
+			Utils.Log( "Max 2D texture dimensions: " + Graphics.MaxTextureDimensions );
+			Utils.Log( "== End of graphics info ==" );
 			Console.ResetColor();
 		}
 		

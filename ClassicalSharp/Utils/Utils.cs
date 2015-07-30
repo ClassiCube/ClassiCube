@@ -156,10 +156,22 @@ namespace ClassicalSharp {
 			return new Vector3( (float)x, (float)y, (float)z );
 		}
 		
+		public static void Log( string text ) {
+			Console.WriteLine( text );
+		}
+		
+		public static void Log( string text, params object[] args ) {
+			Log( String.Format( text, args ) );
+		}
+		
 		public static void LogWarning( string text ) {
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine( text );
 			Console.ResetColor();
+		}
+		
+		public static void LogWarning( string text, params object[] args ) {
+			LogWarning( String.Format( text, args ) );
 		}
 		
 		public static void LogError( string text ) {
@@ -168,20 +180,16 @@ namespace ClassicalSharp {
 			Console.ResetColor();
 		}
 		
+		public static void LogError( string text, params object[] args ) {
+			LogError( String.Format( text, args ) );
+		}
+		
 		public static void LogDebug( string text ) {
 			#if DEBUG
 			Console.ForegroundColor = ConsoleColor.DarkGray;
 			Console.WriteLine( text );
 			Console.ResetColor();
 			#endif
-		}
-		
-		public static void LogWarning( string text, params object[] args ) {
-			LogWarning( String.Format( text, args ) );
-		}
-		
-		public static void LogError( string text, params object[] args ) {
-			LogError( String.Format( text, args ) );
 		}
 		
 		public static void LogDebug( string text, params object[] args ) {

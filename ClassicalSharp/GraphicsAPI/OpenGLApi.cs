@@ -379,12 +379,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public unsafe override void PrintApiSpecificInfo() {
-			Console.WriteLine( "OpenGL vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
-			Console.WriteLine( "OpenGL renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
-			Console.WriteLine( "OpenGL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
+			Utils.Log( "OpenGL vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
+			Utils.Log( "OpenGL renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
+			Utils.Log( "OpenGL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
 			int depthBits = 0;
 			GL.GetIntegerv( GetPName.DepthBits, &depthBits );
-			Console.WriteLine( "Depth buffer bits: " + depthBits );
+			Utils.Log( "Depth buffer bits: " + depthBits );
 			if( depthBits < 24 ) {
 				Utils.LogWarning( "Depth buffer is less than 24 bits, you may see some issues " +
 				                 "with disappearing and/or 'white' graphics." );

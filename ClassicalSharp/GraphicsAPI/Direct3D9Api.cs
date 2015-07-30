@@ -2,8 +2,8 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using SharpDX;
 using SharpDX.Direct3D9;
 using D3D = SharpDX.Direct3D9;
@@ -413,7 +413,24 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EndFrame( Game game ) {
 			device.EndScene();
-			device.Present();
+			int code = device.Present().Code;
+			if( code >= 0 ) return;
+			
+			if( (uint)code != (uint)Direct3DError.DeviceLost )
+				throw new SharpDXException( code );
+			
+			// TODO: Make sure this actually works on all graphics cards.
+			Utils.LogDebug( "Lost Direct3D device." );
+			while( true ) {
+				Thread.Sleep( 50 );
+				code = device.TestCooperativeLevel().Code;
+				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
+					Utils.Log( "Retrieved Direct3D device again." );
+					RecreateDevice( game );
+					break;
+				}
+				game.Network.Tick( 1 / 20.0 );
+			}
 		}
 		
 		bool vsync = false;
@@ -547,10 +564,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void PrintApiSpecificInfo() {
-			Console.WriteLine( "D3D tex memory available: " + (uint)device.AvailableTextureMemory );
-			Console.WriteLine( "D3D vertex processing: " + createFlags );
-			Console.WriteLine( "D3D depth buffer format: " + depthFormat );
-			Console.WriteLine( "D3D device caps: " + caps.DeviceCaps );
+			Utils.Log( "D3D tex memory available: " + (uint)device.AvailableTextureMemory );
+			Utils.Log( "D3D vertex processing: " + createFlags );
+			Utils.Log( "D3D depth buffer format: " + depthFormat );
+			Utils.Log( "D3D device caps: " + caps.DeviceCaps );
 		}
 
 		public unsafe override void TakeScreenshot( string output, Size size ) {
