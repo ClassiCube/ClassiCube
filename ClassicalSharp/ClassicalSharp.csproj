@@ -190,7 +190,7 @@
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SharpDX\SharpDX.csproj" Condition=" '$(Configuration)' == 'Debug_DX32' " >
+    <ProjectReference Include="..\SharpDX\SharpDX.csproj" Condition=" '$(Configuration)' == 'Debug_DX32' ">
       <Project>{B4D984DF-85B8-4BBF-8C3B-5CEF905F40D9}</Project>
       <Name>SharpDX</Name>
     </ProjectReference>

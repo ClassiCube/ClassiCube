@@ -36,17 +36,27 @@ namespace ClassicalSharp {
 			public int vIndex, vCount;
 			public int iIndex, iCount;
 			
-			public DrawInfo1DPart() {
-				vertices = new VertexPos3fTex2fCol4b[0];
-				indices = new ushort[0];
-			}
-			
 			public void ExpandToCapacity() {
 				vCount = ( iCount / 6 ) * 4;
 
-				if( vCount > vertices.Length ) {
+				if( vertices == null || vCount > vertices.Length ) {
 					vertices = new VertexPos3fTex2fCol4b[vCount];
 					indices = new ushort[iCount];
+					MakeIndices();
+				}
+			}
+			
+			void MakeIndices() {
+				int element = 0;
+				for( int i = 0; i < iCount; ) {
+					indices[i++] = (ushort)( element + 0 );
+					indices[i++] = (ushort)( element + 1 );
+					indices[i++] = (ushort)( element + 2 );
+					
+					indices[i++] = (ushort)( element + 2 );
+					indices[i++] = (ushort)( element + 3 );
+					indices[i++] = (ushort)( element + 0 );
+					element += 4;
 				}
 			}
 			
@@ -132,7 +142,7 @@ namespace ClassicalSharp {
 			info.IndicesCount = part.iCount;
 			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
-			if( parts == null ) 
+			if( parts == null )
 				parts = new ChunkPartInfo[arraysCount];
 			parts[i] = info;
 		}
@@ -196,7 +206,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
@@ -215,7 +224,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
@@ -237,7 +245,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
@@ -259,7 +266,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
@@ -281,7 +287,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
@@ -303,7 +308,6 @@ namespace ClassicalSharp {
 			DrawInfo1D info = drawInfoBuffer[drawInfoIndex];
 			DrawInfo1DPart part = isTranslucent ? info.Translucent : info.Solid;
 			
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
@@ -321,7 +325,6 @@ namespace ClassicalSharp {
 			DrawInfo1DPart part = drawInfoBuffer[drawInfoIndex].Sprite;
 			
 			// Draw stretched Z axis
-			AddIndices( part );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col );
 			part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col );
@@ -332,7 +335,6 @@ namespace ClassicalSharp {
 			int startX = X;
 			
 			for( int i = 0; i < count; i++ ) {
-				AddIndices( part );
 				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col );
 				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col );
 				part.vertices[part.vIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
@@ -340,17 +342,6 @@ namespace ClassicalSharp {
 				X++;
 			}
 			X = startX;
-		}
-		
-		void AddIndices( DrawInfo1DPart part ) {
-			int element = part.vIndex;
-			part.indices[part.iIndex++] = (ushort)( element + 0 );
-			part.indices[part.iIndex++] = (ushort)( element + 1 );
-			part.indices[part.iIndex++] = (ushort)( element + 2 );
-			
-			part.indices[part.iIndex++] = (ushort)( element + 2 );
-			part.indices[part.iIndex++] = (ushort)( element + 3 );
-			part.indices[part.iIndex++] = (ushort)( element + 0 );
 		}
 	}
 }
