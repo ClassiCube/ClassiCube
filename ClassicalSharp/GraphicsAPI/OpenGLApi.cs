@@ -296,8 +296,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		public override void BindIndexedVb( int vb, int ib ) {
+		public override void BindVb( int vb ) {
 			GL.BindBufferARB( BufferTarget.ArrayBuffer, vb );
+		}
+		
+		public override void BindIb( int ib ) {
 			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, ib );
 		}
 		

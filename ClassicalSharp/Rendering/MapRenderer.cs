@@ -56,6 +56,7 @@ namespace ClassicalSharp {
 			game.OnNewMapLoaded -= OnNewMapLoaded;
 			game.EnvVariableChanged -= EnvVariableChanged;
 			builder.Dispose();
+			api.DeleteIb( chunkIb );
 		}
 		
 		public void Refresh() {
@@ -123,7 +124,6 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < parts.Length; i++ ) {
 				api.DeleteVb( parts[i].VbId );
-				api.DeleteIb( parts[i].IbId );
 			}
 			parts = null;
 		}
@@ -188,11 +188,15 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			if( chunks == null ) return;
 			UpdateSortOrder();
-			UpdateChunks();
+			UpdateChunks();			
+			if( chunkIb == -1 ) 
+				MakeIndices();
 			
+			api.BindIb( chunkIb );
 			RenderNormal();
 			game.MapEnvRenderer.RenderMapSides( deltaTime );
 			game.MapEnvRenderer.RenderMapEdges( deltaTime );
+			api.BindIb( chunkIb );
 			RenderTranslucent();
 		}
 
@@ -257,7 +261,7 @@ namespace ClassicalSharp {
 		
 		// Render solid and fully transparent to fill depth buffer.
 		// These blocks are treated as having an alpha value of either none or full.
-		void RenderNormal() {		
+		void RenderNormal() {
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			api.BeginIndexedVbBatch();
 			api.Texturing = true;
@@ -272,11 +276,28 @@ namespace ClassicalSharp {
 			api.EndIndexedVbBatch();
 		}
 		
+		int chunkIb = -1;
+		void MakeIndices() {
+			int element = 0;
+			ushort[] indices = new ushort[maxIndices];
+			for( int i = 0; i < indices.Length; ) {
+				indices[i++] = (ushort)( element + 0 );
+				indices[i++] = (ushort)( element + 1 );
+				indices[i++] = (ushort)( element + 2 );
+				
+				indices[i++] = (ushort)( element + 2 );
+				indices[i++] = (ushort)( element + 3 );
+				indices[i++] = (ushort)( element + 0 );
+				element += 4;
+			}
+			chunkIb = api.InitIb( indices, indices.Length );
+		}
+		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
 		void RenderTranslucent() {
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
-			api.BeginIndexedVbBatch();			
+			api.BeginIndexedVbBatch();
 			api.Texturing = false;
 			api.AlphaBlending = false;
 			api.ColourWrite = false;

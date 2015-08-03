@@ -34,7 +34,6 @@ namespace ClassicalSharp {
 		
 		class DrawInfo {
 			public VertexPos3fTex2fCol4b[] vertices;
-			public ushort[] indices;
 			public int vCount, iCount;
 			public DrawInfoFaceData vIndex;
 			public DrawInfoFaceData Count;
@@ -45,8 +44,6 @@ namespace ClassicalSharp {
 
 				if( vertices == null || vCount > vertices.Length ) {
 					vertices = new VertexPos3fTex2fCol4b[vCount];
-					indices = new ushort[iCount];
-					MakeIndices();
 				}				
 				vIndex.left = spriteCount / 6 * 4;
 				vIndex.right = vIndex.left + Count.left / 6 * 4;
@@ -54,20 +51,6 @@ namespace ClassicalSharp {
 				vIndex.back = vIndex.front + Count.front / 6 * 4;
 				vIndex.bottom = vIndex.back + Count.back / 6 * 4;
 				vIndex.top = vIndex.bottom + Count.bottom / 6 * 4;
-			}
-			
-			void MakeIndices() {
-				int element = 0;
-				for( int i = 0; i < iCount; ) {
-					indices[i++] = (ushort)( element + 0 );
-					indices[i++] = (ushort)( element + 1 );
-					indices[i++] = (ushort)( element + 2 );
-					
-					indices[i++] = (ushort)( element + 2 );
-					indices[i++] = (ushort)( element + 3 );
-					indices[i++] = (ushort)( element + 0 );
-					element += 4;
-				}
 			}
 			
 			public void ResetState() {
@@ -147,7 +130,6 @@ namespace ClassicalSharp {
 			
 			ChunkPartInfo info;
 			info.VbId = Graphics.InitVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount );
-			info.IbId = Graphics.InitIb( part.indices, part.iCount );
 			info.IndicesCount = part.iCount;
 			info.leftCount = (ushort)part.Count.left; info.rightCount = (ushort)part.Count.right;
 			info.frontCount = (ushort)part.Count.front; info.backCount = (ushort)part.Count.back;

@@ -128,7 +128,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void BeginIndexedVbBatch();
 		
-		public abstract void BindIndexedVb( int vb, int ib );
+		public abstract void BindVb( int vb );
+		
+		public abstract void BindIb( int ib );
 		
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex );
 		
@@ -140,10 +142,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void LoadMatrix( ref Matrix4 matrix );
 		
-		public virtual void LoadIdentityMatrix() {
-			Matrix4 identity = Matrix4.Identity;
-			LoadMatrix( ref identity );
-		}
+		public abstract void LoadIdentityMatrix();
 		
 		public abstract void MultiplyMatrix( ref Matrix4 matrix );
 		
@@ -154,8 +153,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void TakeScreenshot( string output, Size size );
 		
-		public virtual void PrintApiSpecificInfo() {
-		}
+		public abstract void PrintApiSpecificInfo();
 		
 		public abstract void BeginFrame( Game game );
 		

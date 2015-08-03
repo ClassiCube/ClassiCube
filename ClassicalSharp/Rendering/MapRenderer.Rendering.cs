@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart( ChunkInfo info, ref ChunkPartInfo part ) {
-			api.BindIndexedVb( part.VbId, part.IbId );
+			api.BindVb( part.VbId );
 			bool drawLeft = info.DrawLeft && part.leftCount > 0;
 			bool drawRight = info.DrawRight && part.rightCount > 0;
 			bool drawBottom = info.DrawBottom && part.bottomCount > 0;
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 				if( part.IndicesCount > maxIndices ) {
 					int part1Count = maxIndices - part.bottomIndex;
 					api.DrawIndexedVb( mode, part1Count, 0, part.bottomIndex );
-					api.DrawIndexedVb( mode, part.bottomCount + part.topCount - part1Count, maxVertex, part.bottomIndex );
+					api.DrawIndexedVb( mode, part.bottomCount + part.topCount - part1Count, maxVertex, 0 );
 				} else {
 					api.DrawIndexedVb( mode, part.bottomCount + part.topCount, 0, part.bottomIndex );
 				}
@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 				if( part.IndicesCount > maxIndices &&
 				   ( part1Count = maxIndices - part.bottomIndex ) < part.bottomCount ) {					
 					api.DrawIndexedVb( mode, part1Count, 0, part.bottomIndex );
-					api.DrawIndexedVb( mode, part.bottomCount - part1Count, maxVertex, part.bottomIndex );
+					api.DrawIndexedVb( mode, part.bottomCount - part1Count, maxVertex, 0 );
 				} else {
 					api.DrawIndexedVb( mode, part.bottomCount, 0, part.bottomIndex );
 				}
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 				if( part.IndicesCount > maxIndices &&
 				   ( part1Count = maxIndices - part.topIndex ) < part.topCount ) {
 					api.DrawIndexedVb( mode, part1Count, 0, part.topIndex );
-					api.DrawIndexedVb( mode, part.topCount - part1Count, maxVertex, part.topIndex );
+					api.DrawIndexedVb( mode, part.topCount - part1Count, maxVertex, 0 );
 				} else {
 					api.DrawIndexedVb( mode, part.topCount, 0, part.topIndex );
 				}
