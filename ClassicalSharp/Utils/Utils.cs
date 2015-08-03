@@ -206,7 +206,7 @@ namespace ClassicalSharp {
 			return a + ( b - a ) * t;
 		}
 		
-		internal static int CountVertices( int axis1Len, int axis2Len, int axisSize ) {
+		internal static int CountIndices( int axis1Len, int axis2Len, int axisSize ) {
 			int cellsAxis1 = axis1Len / axisSize + ( axis1Len % axisSize != 0 ? 1 : 0 );
 			int cellsAxis2 = axis2Len / axisSize + ( axis2Len % axisSize != 0 ? 1 : 0 );
 			return cellsAxis1 * cellsAxis2 * 6;

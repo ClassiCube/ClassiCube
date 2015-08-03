@@ -45,6 +45,7 @@ namespace ClassicalSharp {
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
 		internal string skinServer, chatInInputBuffer;
+		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
 		
@@ -119,6 +120,7 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
+			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
@@ -186,6 +188,7 @@ namespace ClassicalSharp {
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
 			Graphics.BeginFrame( this );
+			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
 			imageCheckAccumulator += e.Time;
 			ticksAccumulator += e.Time;
@@ -278,6 +281,7 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
+			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Utils2D.Dispose();
 			base.Dispose();

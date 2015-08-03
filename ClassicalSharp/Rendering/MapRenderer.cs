@@ -56,7 +56,6 @@ namespace ClassicalSharp {
 			game.OnNewMapLoaded -= OnNewMapLoaded;
 			game.EnvVariableChanged -= EnvVariableChanged;
 			builder.Dispose();
-			api.DeleteIb( chunkIb );
 		}
 		
 		public void Refresh() {
@@ -188,14 +187,10 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			if( chunks == null ) return;
 			UpdateSortOrder();
-			UpdateChunks();			
-			if( chunkIb == -1 ) 
-				MakeIndices();
+			UpdateChunks();
 			
-			api.BindIb( chunkIb );
 			RenderNormal();
 			game.MapEnvRenderer.Render( deltaTime );
-			api.BindIb( chunkIb );
 			RenderTranslucent();
 		}
 
@@ -272,25 +267,6 @@ namespace ClassicalSharp {
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
-		}
-		
-		int chunkIb = -1;
-		unsafe void MakeIndices() {
-			int element = 0;
-			ushort* indices = stackalloc ushort[maxIndices];
-			IntPtr ptr = (IntPtr)indices;
-			
-			for( int i = 0; i < maxIndices; i += 6 ) {
-				*indices++ = (ushort)( element + 0 );
-				*indices++ = (ushort)( element + 1 );
-				*indices++ = (ushort)( element + 2 );
-				
-				*indices++ = (ushort)( element + 2 );
-				*indices++ = (ushort)( element + 3 );
-				*indices++ = (ushort)( element + 0 );
-				element += 4;
-			}
-			chunkIb = api.CreateIb( ptr, maxIndices );
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.

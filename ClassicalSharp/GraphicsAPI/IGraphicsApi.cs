@@ -128,6 +128,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex );
 		
+		/// <summary> Optimised version of DrawIndexedVb for VertexFormat.Pos3fTex2fCol4b </summary>
+		//public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex );
+		
 		protected static int[] strideSizes = { 20, 16, 24 };
 		
 		public abstract void SetMatrixMode( MatrixType mode );
@@ -220,6 +223,25 @@ namespace ClassicalSharp.GraphicsAPI {
 			PopMatrix();
 			DepthTest = true;
 			AlphaBlending = false;
+		}
+		
+		public unsafe int MakeDefaultIb() {
+			const int maxIndices = 65536 / 4 * 6;
+			int element = 0;
+			ushort* indices = stackalloc ushort[maxIndices];
+			IntPtr ptr = (IntPtr)indices;
+			
+			for( int i = 0; i < maxIndices; i += 6 ) {
+				*indices++ = (ushort)( element + 0 );
+				*indices++ = (ushort)( element + 1 );
+				*indices++ = (ushort)( element + 2 );
+				
+				*indices++ = (ushort)( element + 2 );
+				*indices++ = (ushort)( element + 3 );
+				*indices++ = (ushort)( element + 0 );
+				element += 4;
+			}
+			return CreateIb( ptr, maxIndices );
 		}
 	}
 
