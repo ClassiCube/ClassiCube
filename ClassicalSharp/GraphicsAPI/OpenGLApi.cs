@@ -296,12 +296,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
 		
-		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
-		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
-		                                        int startVertex, int startIndex ) {
+		public override void BindIndexedVb( int vb, int ib ) {
 			GL.BindBufferARB( BufferTarget.ArrayBuffer, vb );
 			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, ib );
-			
+		}
+		
+		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
+		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
 			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
 			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );

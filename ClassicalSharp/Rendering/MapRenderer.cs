@@ -6,28 +6,27 @@ namespace ClassicalSharp {
 	
 	// TODO: optimise chunk rendering
 	//  --> reduce iterations: liquid and sprite pass only need 1 row
-	public class MapRenderer : IDisposable {
+	public partial class MapRenderer : IDisposable {
 		
 		class ChunkInfo {
 			
-			public short CentreX, CentreY, CentreZ;
+			public ushort CentreX, CentreY, CentreZ;
 			public bool Visible = true;
 			public bool Empty = false;
+			public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
 			
-			public ChunkPartInfo[] SolidParts;
-			public ChunkPartInfo[] SpriteParts;
+			public ChunkPartInfo[] NormalParts;
 			public ChunkPartInfo[] TranslucentParts;
 			
 			public ChunkInfo( int x, int y, int z ) {
-				CentreX = (short)( x + 8 );
-				CentreY = (short)( y + 8 );
-				CentreZ = (short)( z + 8 );
+				CentreX = (ushort)( x + 8 );
+				CentreY = (ushort)( y + 8 );
+				CentreZ = (ushort)( z + 8 );
 			}
 		}
 		
-		public Game Window;
-		public IGraphicsApi Graphics;
-		
+		Game game;
+		IGraphicsApi api;
 		int _1Dcount = 1;
 		ChunkMeshBuilder builder;
 		
@@ -37,30 +36,30 @@ namespace ClassicalSharp {
 		int elementsPerBitmap = 0;
 		
 		public MapRenderer( Game window ) {
-			Window = window;
+			game = window;
 			_1Dcount = window.TerrainAtlas1D.TexIds.Length;
 			builder = new ChunkMeshBuilder( window );
-			Graphics = window.Graphics;
+			api = window.Graphics;
 			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
-			Window.TerrainAtlasChanged += TerrainAtlasChanged;
-			Window.OnNewMap += OnNewMap;
-			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;
+			game.TerrainAtlasChanged += TerrainAtlasChanged;
+			game.OnNewMap += OnNewMap;
+			game.OnNewMapLoaded += OnNewMapLoaded;
+			game.EnvVariableChanged += EnvVariableChanged;
 		}
 		
 		public void Dispose() {
 			ClearChunkCache();
 			chunks = null;
 			unsortedChunks = null;
-			Window.TerrainAtlasChanged -= TerrainAtlasChanged;
-			Window.OnNewMap -= OnNewMap;
-			Window.OnNewMapLoaded -= OnNewMapLoaded;
-			Window.EnvVariableChanged -= EnvVariableChanged;
+			game.TerrainAtlasChanged -= TerrainAtlasChanged;
+			game.OnNewMap -= OnNewMap;
+			game.OnNewMapLoaded -= OnNewMapLoaded;
+			game.EnvVariableChanged -= EnvVariableChanged;
 			builder.Dispose();
 		}
 		
 		public void Refresh() {
-			if( chunks != null && !Window.Map.IsNotLoaded ) {
+			if( chunks != null && !game.Map.IsNotLoaded ) {
 				ClearChunkCache();
 				CreateChunkCache();
 			}
@@ -73,16 +72,16 @@ namespace ClassicalSharp {
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			_1Dcount = Window.TerrainAtlas1D.TexIds.Length;
-			bool fullResetRequired = elementsPerBitmap != Window.TerrainAtlas1D.elementsPerBitmap;
+			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
+			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
 				Refresh();
 			}
-			elementsPerBitmap = Window.TerrainAtlas1D.elementsPerBitmap;
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
-			Window.ChunkUpdates = 0;
+			game.ChunkUpdates = 0;
 			ClearChunkCache();
 			chunks = null;
 			unsortedChunks = null;
@@ -92,9 +91,9 @@ namespace ClassicalSharp {
 		
 		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded( object sender, EventArgs e ) {
-			width = NextMultipleOf16( Window.Map.Width );
-			height = NextMultipleOf16( Window.Map.Height );
-			length = NextMultipleOf16( Window.Map.Length );
+			width = NextMultipleOf16( game.Map.Width );
+			height = NextMultipleOf16( game.Map.Height );
+			length = NextMultipleOf16( game.Map.Length );
 			chunksX = width >> 4;
 			chunksY = height >> 4;
 			chunksZ = length >> 4;
@@ -115,8 +114,7 @@ namespace ClassicalSharp {
 		
 		void DeleteChunk( ChunkInfo info ) {
 			info.Empty = false;
-			DeleteData( ref info.SolidParts );
-			DeleteData( ref info.SpriteParts );
+			DeleteData( ref info.NormalParts );
 			DeleteData( ref info.TranslucentParts );
 		}
 		
@@ -124,8 +122,8 @@ namespace ClassicalSharp {
 			if( parts == null ) return;
 			
 			for( int i = 0; i < parts.Length; i++ ) {
-				Graphics.DeleteVb( parts[i].VbId );
-				Graphics.DeleteIb( parts[i].IbId );
+				api.DeleteVb( parts[i].VbId );
+				api.DeleteIb( parts[i].IbId );
 			}
 			parts = null;
 		}
@@ -191,170 +189,116 @@ namespace ClassicalSharp {
 			if( chunks == null ) return;
 			UpdateSortOrder();
 			UpdateChunks();
-			int[] texIds = Window.TerrainAtlas1D.TexIds;
 			
-			// Render solid and fully transparent to fill depth buffer.
-			// These blocks are treated as having an alpha value of either none or full.
-			Graphics.BeginIndexedVbBatch();
-			Graphics.Texturing = true;
-			Graphics.AlphaTest = true;
-			Graphics.FaceCulling = true;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
-				RenderSolidBatch( batch );
-			}
-			Graphics.FaceCulling = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
-				RenderSpriteBatch( batch );
-			}
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
-			Graphics.EndIndexedVbBatch();
-			Window.MapEnvRenderer.RenderMapSides( deltaTime );
-			Window.MapEnvRenderer.RenderMapEdges( deltaTime );
-			
-			// Render translucent(liquid) blocks. These 'blend' into other blocks.
-			Graphics.BeginIndexedVbBatch();
-			bool canCullTranslucent = !Window.BlockInfo.IsTranslucent(
-				(byte)Window.LocalPlayer.BlockAtHead );
-			if( canCullTranslucent )
-				Graphics.FaceCulling = true;
-			
-			// First fill depth buffer
-			Graphics.Texturing = false;
-			Graphics.AlphaBlending = false;
-			Graphics.ColourWrite = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				RenderTranslucentBatchDepthPass( batch );
-			}
-			// Then actually draw the transluscent blocks
-			Graphics.AlphaBlending = true;
-			Graphics.Texturing = true;
-			Graphics.ColourWrite = true;
-			Graphics.DepthWrite = false; // we already calculated depth values in depth pass
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				Graphics.Bind2DTexture( texIds[batch] );
-				RenderTranslucentBatch( batch );
-			}
-			Graphics.DepthWrite = true;
-			Graphics.AlphaTest = false;
-			Graphics.AlphaBlending = false;
-			Graphics.Texturing = false;
-			if( canCullTranslucent )
-				Graphics.FaceCulling = false;
-			Graphics.EndIndexedVbBatch();
+			RenderNormal();
+			game.MapEnvRenderer.RenderMapSides( deltaTime );
+			game.MapEnvRenderer.RenderMapEdges( deltaTime );
+			RenderTranslucent();
 		}
 
 		int[] distances;
 		void UpdateSortOrder() {
-			Player p = Window.LocalPlayer;
-			Vector3I newChunkPos = Vector3I.Floor( p.Position );
+			Player p = game.LocalPlayer;
+			Vector3I newChunkPos = Vector3I.Floor( p.EyePosition );
 			newChunkPos.X = ( newChunkPos.X & ~0x0F ) + 8;
 			newChunkPos.Y = ( newChunkPos.Y & ~0x0F ) + 8;
 			newChunkPos.Z = ( newChunkPos.Z & ~0x0F ) + 8;
-			if( newChunkPos != chunkPos ) {
-				chunkPos = newChunkPos;
-				for( int i = 0; i < distances.Length; i++ ) {
-					ChunkInfo info = chunks[i];
-					distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ, chunkPos.X, chunkPos.Y, chunkPos.Z );
-				}
-				// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
-				Array.Sort( distances, chunks );
+			if( newChunkPos == chunkPos ) return;
+			
+			chunkPos = newChunkPos;
+			for( int i = 0; i < distances.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ, chunkPos.X, chunkPos.Y, chunkPos.Z );
+			}
+			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
+			Array.Sort( distances, chunks );
+			
+			Vector3I pPos = newChunkPos;
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				int dX1 = ( info.CentreX - 8 ) - pPos.X, dX2 = ( info.CentreX + 8 ) - pPos.X;
+				int dY1 = ( info.CentreY - 8 ) - pPos.Y, dY2 = ( info.CentreY + 8 ) - pPos.Y;
+				int dZ1 = ( info.CentreZ - 8 ) - pPos.Z, dZ2 = ( info.CentreZ + 8 ) - pPos.Z;
+				
+				// Back face culling: make sure that the chunk is definitely entirely back facing.
+				info.DrawLeft = !( dX1 <= 0 && dX2 <= 0 );
+				info.DrawRight = !( dX1 >= 0 && dX2 >= 0 );
+				info.DrawFront = !( dZ1 <= 0 && dZ2 <= 0 );
+				info.DrawBack = !( dZ1 >= 0 && dZ2 >= 0 );
+				info.DrawBottom = !( dY1 <= 0 && dY2 <= 0 );
+				info.DrawTop = !( dY1 >= 0 && dY2 >= 0 );
 			}
 		}
 		
 		void UpdateChunks() {
 			int chunksUpdatedThisFrame = 0;
-			int adjViewDistSqr = ( Window.ViewDistance + 14 ) * ( Window.ViewDistance + 14 );
+			int adjViewDistSqr = ( game.ViewDistance + 14 ) * ( game.ViewDistance + 14 );
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
 				int distSqr = distances[i];
 				bool inRange = distSqr <= adjViewDistSqr;
 				
-				if( info.SolidParts == null && info.SpriteParts == null && info.TranslucentParts == null ) {
+				if( info.NormalParts == null && info.TranslucentParts == null ) {
 					if( inRange && chunksUpdatedThisFrame < 4 ) {
-						Window.ChunkUpdates++;
+						game.ChunkUpdates++;
 						builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-						                    ref info.SolidParts, ref info.SpriteParts, ref info.TranslucentParts );
-						if( info.SolidParts == null && info.SpriteParts == null && info.TranslucentParts == null ) {
+						                    ref info.NormalParts, ref info.TranslucentParts );
+						if( info.NormalParts == null && info.TranslucentParts == null ) {
 							info.Empty = true;
 						}
 						chunksUpdatedThisFrame++;
 					}
 				}
 				info.Visible = inRange &&
-					Window.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
+					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}
 		
-		const DrawMode mode = DrawMode.Triangles;
-		const int maxVertex = 65536;
-		const int maxIndices = maxVertex / 4 * 6;
-		void RenderSolidBatch( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				if( info.SolidParts == null || !info.Visible ) continue;
-
-				ChunkPartInfo part = info.SolidParts[batch];
-				if( part.IndicesCount > 0 ) {
-					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
-					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
-					}
-					Window.Vertices += part.IndicesCount;
-				}
+		// Render solid and fully transparent to fill depth buffer.
+		// These blocks are treated as having an alpha value of either none or full.
+		void RenderNormal() {		
+			int[] texIds = game.TerrainAtlas1D.TexIds;
+			api.BeginIndexedVbBatch();
+			api.Texturing = true;
+			api.AlphaTest = true;
+			
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				api.Bind2DTexture( texIds[batch] );
+				RenderNormalBatch( batch );
 			}
+			api.AlphaTest = false;
+			api.Texturing = false;
+			api.EndIndexedVbBatch();
 		}
 		
-		void RenderSpriteBatch( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				if( info.SpriteParts == null || !info.Visible ) continue;
-
-				ChunkPartInfo part = info.SpriteParts[batch];
-				if( part.IndicesCount > 0 ) {
-					Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
-					Window.Vertices += part.IndicesCount;
-				}
+		// Render translucent(liquid) blocks. These 'blend' into other blocks.
+		void RenderTranslucent() {
+			// First fill depth buffer
+			int[] texIds = game.TerrainAtlas1D.TexIds;
+			api.BeginIndexedVbBatch();			
+			api.Texturing = false;
+			api.AlphaBlending = false;
+			api.ColourWrite = false;
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				RenderTranslucentBatchDepthPass( batch );
 			}
-		}
-
-		void RenderTranslucentBatch( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				if( info.TranslucentParts == null || !info.Visible ) continue;
-				ChunkPartInfo part = info.TranslucentParts[batch];
-				if( part.IndicesCount > 0 ) {
-					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
-					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
-					}
-					Window.Vertices += part.IndicesCount;
-				}
+			
+			// Then actually draw the transluscent blocks
+			api.AlphaBlending = true;
+			api.Texturing = true;
+			api.ColourWrite = true;
+			api.DepthWrite = false; // we already calculated depth values in depth pass
+			
+			for( int batch = 0; batch < _1Dcount; batch++ ) {
+				api.Bind2DTexture( texIds[batch] );
+				RenderTranslucentBatch( batch );
 			}
-		}
-		
-		void RenderTranslucentBatchDepthPass( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				if( info.TranslucentParts == null || !info.Visible ) continue;
-
-				ChunkPartInfo part = info.TranslucentParts[batch];
-				if( part.IndicesCount > 0 ) {
-					if( part.IndicesCount > maxIndices ) {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, maxIndices, 0, 0 );
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount - maxIndices, maxVertex, maxIndices );
-					} else {
-						Graphics.DrawIndexedVbBatch( mode, part.VbId, part.IbId, part.IndicesCount, 0, 0 );
-					}
-				}
-			}
+			api.DepthWrite = true;
+			api.AlphaTest = false;
+			api.AlphaBlending = false;
+			api.Texturing = false;
+			api.EndIndexedVbBatch();
 		}
 	}
 }

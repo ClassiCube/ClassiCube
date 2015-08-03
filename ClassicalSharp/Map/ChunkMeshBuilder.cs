@@ -92,12 +92,11 @@ namespace ClassicalSharp {
 			return allAir || allSolid;
 		}
 		
-		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] solidParts, 
-		                        ref ChunkPartInfo[] spriteParts, ref ChunkPartInfo[] translucentParts ) {
+		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] normalParts, ref ChunkPartInfo[] translucentParts ) {
 			if( !BuildChunk( x, y, z ) )
 				return;
 			
-			GetChunkInfo( x, y, z, ref solidParts, ref spriteParts, ref translucentParts );
+			GetChunkInfo( x, y, z, ref normalParts, ref translucentParts );
 		}
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
@@ -337,11 +336,9 @@ namespace ClassicalSharp {
 		
 		public int VbId, IbId;
 		public int IndicesCount;
-		
-		public ChunkPartInfo( int vb, int ib, int indices ) {
-			VbId = vb;
-			IbId = ib;
-			IndicesCount = indices;
-		}
+		public int leftIndex, rightIndex, frontIndex, 
+		backIndex, bottomIndex, topIndex;
+		public ushort leftCount, rightCount, frontCount,
+		backCount, bottomCount, topCount, spriteCount;
 	}
 }
