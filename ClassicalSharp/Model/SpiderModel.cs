@@ -15,7 +15,7 @@ namespace ClassicalSharp.Model {
 			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "spider.png" );
 		}

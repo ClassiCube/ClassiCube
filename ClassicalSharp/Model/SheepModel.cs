@@ -27,7 +27,7 @@ namespace ClassicalSharp.Model {
 				FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "sheep.png" );
 			furTextureId = graphics.LoadTexture( "sheep_fur.png" );

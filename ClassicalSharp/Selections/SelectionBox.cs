@@ -51,7 +51,7 @@ namespace ClassicalSharp.Selections {
 			Line( ref index, p2.X, p1.Y, p1.Z, p2.X, p2.Y, p1.Z, lineCol );
 			Line( ref index, p2.X, p1.Y, p2.Z, p2.X, p2.Y, p2.Z, lineCol );
 			Line( ref index, p1.X, p1.Y, p2.Z, p1.X, p2.Y, p2.Z, lineCol );
-			LineVb = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b, LineVerticesCount );
+			LineVb = Graphics.CreateVb( vertices, VertexFormat.Pos3fCol4b, LineVerticesCount );
 			
 			index = 0;
 			RenderYPlane( ref index, p1.X, p1.Z, p2.X, p2.Z, p1.Y, col ); // bottom
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Selections {
 			RenderXPlane( ref index, p1.X, p2.X, p1.Y, p2.Y, p2.Z, col );
 			RenderZPlane( ref index, p1.Z, p2.Z, p1.Y, p2.Y, p1.X, col );
 			RenderZPlane( ref index, p1.Z, p2.Z, p1.Y, p2.Y, p2.X, col );
-			Vb = Graphics.InitVb( vertices, VertexFormat.Pos3fCol4b, VerticesCount );
+			Vb = Graphics.CreateVb( vertices, VertexFormat.Pos3fCol4b, VerticesCount );
 		}
 		
 		void Line( ref int index, float x1, float y1, float z1, float x2, float y2, float z2, FastColour col ) {

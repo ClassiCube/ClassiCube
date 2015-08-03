@@ -16,7 +16,7 @@ namespace ClassicalSharp.Model {
 			LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
 			RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "creeper.png" );
 		}

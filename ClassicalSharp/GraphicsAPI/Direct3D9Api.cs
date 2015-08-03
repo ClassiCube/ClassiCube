@@ -180,10 +180,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			Delete( textures, texId );
 			texId = -1;
 		}
-		
-		public override bool IsValidTexture( int texId ) {
-			return texId < textures.Length && textures[texId] != null;
-		}
 
 		int lastClearCol;
 		public override void Clear() {
@@ -233,13 +229,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse,
 		};
 
-		public override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
+		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			VertexBuffer buffer = CreateVb( vertices, count, format );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
-		public override int InitIb( ushort[] indices, int count ) {
-			IndexBuffer buffer = CreateIb( indices, count );
+		public unsafe override int CreateIb( ushort[] indices, int count ) {
+			IndexBuffer buffer;
+			fixed( ushort* src = indices )
+				buffer = CreateIndexBuffer( (IntPtr)src, count );
+			
+			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
+		}
+		
+		public override int CreateIb( IntPtr indices, int count ) {
+			IndexBuffer buffer = CreateIndexBuffer( indices, count );
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 
@@ -257,14 +261,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			return buffer;
 		}
 		
-		unsafe IndexBuffer CreateIb( ushort[] indices, int count ) {
-			int sizeInBytes = count * 2;
+		unsafe IndexBuffer CreateIndexBuffer( IntPtr src, int count ) {
+			int sizeInBytes = count * sizeof( ushort );
 			IndexBuffer buffer = new IndexBuffer( device, sizeInBytes, Usage.None, Pool.Managed, true );
 			
 			IntPtr vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
-			fixed( ushort* src = indices ) {
-				memcpy( (IntPtr)src, vbData, sizeInBytes );
-			}
+			memcpy( src, vbData, sizeInBytes );
 			buffer.Unlock();
 			return buffer;
 		}
@@ -275,14 +277,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void DeleteIb( int ib ) {
 			Delete( iBuffers, ib );
-		}
-		
-		public override bool IsValidVb( int vb ) {
-			return IsValid( vBuffers, vb );
-		}
-		
-		public override bool IsValidIb( int ib ) {
-			return IsValid( iBuffers, ib );
 		}
 
 		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
@@ -318,10 +312,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
-		}
-
-		public override void EndIndexedVbBatch() {
-			device.SetIndices( null );
 		}
 
 		#endregion
@@ -548,10 +538,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				return vertices - 2;
 			}
 			return vertices / 2;
-		}
-		
-		static bool IsValid<T>( T[] array, int id ) {
-			return id > 0 && id < array.Length && array[id] != null;
 		}
 		
 		protected unsafe override void LoadOrthoMatrix( float width, float height ) {

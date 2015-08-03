@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 			DrawZPlane( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices  );			
-			sidesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			sidesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		void RebuildEdgesModern( int waterLevel ) {
@@ -171,7 +171,7 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
 			}			
-			edgesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			edgesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		#endregion
@@ -196,7 +196,7 @@ namespace ClassicalSharp {
 			DrawZPlaneParts( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawXPlaneParts( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
 			DrawXPlaneParts( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
-			sidesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			sidesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		void RebuildEdgesLegacy( int waterLevel ) {
@@ -209,7 +209,7 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlaneParts( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
 			}
-			edgesVboId = Graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			edgesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		const int axisSize = 128;	

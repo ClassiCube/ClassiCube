@@ -64,9 +64,6 @@ namespace OpenTK.Graphics.OpenGL
 			GetIntegervAddress = GetAddress( "glGetIntegerv" );
 			GetStringAddress = GetAddress( "glGetString" );
 			HintAddress = GetAddress( "glHint" );
-			IsBufferAddress = GetAddress( "glIsBuffer" );
-			IsBufferARBAddress = GetAddress( "glIsBufferARB" );
-			IsTextureAddress = GetAddress( "glIsTexture" );
 			LoadIdentityAddress = GetAddress( "glLoadIdentity" );
 			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );
 			MatrixModeAddress = GetAddress( "glMatrixMode" );

@@ -16,7 +16,7 @@ namespace ClassicalSharp.Model {
 			LeftArm = MakeLeftArm( 0.375f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.375f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "skeleton.png" );
 		}

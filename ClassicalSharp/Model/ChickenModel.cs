@@ -18,7 +18,7 @@ namespace ClassicalSharp.Model {
 			LeftWing = MakeWing( -0.25f, -0.1875f );
 			RightWing = MakeWing( 0.1875f, 0.25f );
 			
-			vb = graphics.InitVb( vertices, VertexFormat.Pos3fTex2fCol4b );
+			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
 			DefaultTexId = graphics.LoadTexture( "chicken.png" );
 		}

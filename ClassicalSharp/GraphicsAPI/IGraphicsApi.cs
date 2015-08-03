@@ -51,8 +51,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteTexture( ref texture.ID );
 		}
 		
-		public abstract bool IsValidTexture( int texId );
-		
 		
 		/// <summary> Whether fog is currently enabled. </summary>
 		public abstract bool Fog { set; }
@@ -100,27 +98,27 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
 		
-		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
-		
-		public virtual int InitVb<T>( T[] vertices, VertexFormat format ) where T : struct {
-			return InitVb( vertices, format, vertices.Length );
+		public virtual int CreateVb<T>( T[] vertices, VertexFormat format ) where T : struct {
+			return CreateVb( vertices, format, vertices.Length );
 		}
 		
-		public abstract int InitVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct;
+		public abstract int CreateVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct;
 		
-		public abstract int InitIb( ushort[] indices, int indicesCount );
+		public abstract int CreateIb( ushort[] indices, int indicesCount );
 		
-		public abstract int InitIb( IntPtr indices, int indicesCount );
+		public abstract int CreateIb( IntPtr indices, int indicesCount );
 		
-		public abstract bool IsValidVb( int vb );
+		public abstract void BindVb( int vb );
 		
-		public abstract bool IsValidIb( int ib );
+		public abstract void BindIb( int ib );
 		
 		public abstract void DeleteDynamicVb( int id );
 		
 		public abstract void DeleteVb( int id );
 		
 		public abstract void DeleteIb( int ib );
+		
+		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
 		
 		public abstract void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount );
 		
@@ -130,13 +128,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void BeginIndexedVbBatch();
 		
-		public abstract void BindVb( int vb );
-		
-		public abstract void BindIb( int ib );
-		
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex );
-		
-		public abstract void EndIndexedVbBatch();
 		
 		protected static int[] strideSizes = { 20, 16, 24 };
 		

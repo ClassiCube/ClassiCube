@@ -139,10 +139,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			texId = -1;
 		}
 		
-		public override bool IsValidTexture( int texId ) {
-			return GL.IsTexture( texId );
-		}
-		
 		public override bool Texturing {
 			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
@@ -193,21 +189,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public unsafe override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
+		public unsafe override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
 			return id;
 		}
 		
-		public unsafe override int InitIb( ushort[] indices, int indicesCount ) {
+		public unsafe override int CreateIb( ushort[] indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
 			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
 			return id;
 		}
 		
-		public unsafe override int InitIb( IntPtr indices, int indicesCount ) {
+		public unsafe override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );		
 			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
@@ -244,14 +240,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void DeleteIb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffersARB( 1, &id );
-		}
-		
-		public override bool IsValidVb( int vb ) {
-			return GL.IsBufferARB( vb );
-		}
-		
-		public override bool IsValidIb( int ib ) {
-			return GL.IsBufferARB( ib );
 		}
 		
 		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
@@ -313,10 +301,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
 			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
-		}
-		
-		public override void EndIndexedVbBatch() {
-			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
 		}
 		
 		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );

@@ -273,24 +273,25 @@ namespace ClassicalSharp {
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
-			api.EndIndexedVbBatch();
 		}
 		
 		int chunkIb = -1;
-		void MakeIndices() {
+		unsafe void MakeIndices() {
 			int element = 0;
-			ushort[] indices = new ushort[maxIndices];
-			for( int i = 0; i < indices.Length; ) {
-				indices[i++] = (ushort)( element + 0 );
-				indices[i++] = (ushort)( element + 1 );
-				indices[i++] = (ushort)( element + 2 );
+			ushort* indices = stackalloc ushort[maxIndices];
+			IntPtr ptr = (IntPtr)indices;
+			
+			for( int i = 0; i < maxIndices; i += 6 ) {
+				*indices++ = (ushort)( element + 0 );
+				*indices++ = (ushort)( element + 1 );
+				*indices++ = (ushort)( element + 2 );
 				
-				indices[i++] = (ushort)( element + 2 );
-				indices[i++] = (ushort)( element + 3 );
-				indices[i++] = (ushort)( element + 0 );
+				*indices++ = (ushort)( element + 2 );
+				*indices++ = (ushort)( element + 3 );
+				*indices++ = (ushort)( element + 0 );
 				element += 4;
 			}
-			chunkIb = api.InitIb( indices, indices.Length );
+			chunkIb = api.CreateIb( ptr, maxIndices );
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
@@ -319,7 +320,6 @@ namespace ClassicalSharp {
 			api.AlphaTest = false;
 			api.AlphaBlending = false;
 			api.Texturing = false;
-			api.EndIndexedVbBatch();
 		}
 	}
 }

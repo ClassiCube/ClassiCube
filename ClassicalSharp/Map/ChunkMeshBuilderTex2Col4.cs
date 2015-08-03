@@ -129,7 +129,7 @@ namespace ClassicalSharp {
 			if( part.iCount == 0 ) return;
 			
 			ChunkPartInfo info;
-			info.VbId = Graphics.InitVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount );
+			info.VbId = Graphics.CreateVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount );
 			info.IndicesCount = part.iCount;
 			info.leftCount = (ushort)part.Count.left; info.rightCount = (ushort)part.Count.right;
 			info.frontCount = (ushort)part.Count.front; info.backCount = (ushort)part.Count.back;

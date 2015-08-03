@@ -164,18 +164,6 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( (int)target, (int)mode, HintAddress );
 		} static IntPtr HintAddress;
 		
-		public static bool IsBuffer( int buffer ) {
-			return Interop.Calli_UInt8( buffer, IsBufferAddress ) != 0;
-		} static IntPtr IsBufferAddress;
-		
-		public static bool IsBufferARB( int buffer ) {
-			return Interop.Calli_UInt8( buffer, IsBufferARBAddress ) != 0;
-		} static IntPtr IsBufferARBAddress;
-
-		public static bool IsTexture( int texture ) {
-			return Interop.Calli_UInt8( texture, IsTextureAddress ) != 0;
-		} static IntPtr IsTextureAddress;
-		
 		public static void LoadIdentity() {
 			Interop.Calli( LoadIdentityAddress );
 		} static IntPtr LoadIdentityAddress;
