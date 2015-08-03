@@ -110,6 +110,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int InitIb( ushort[] indices, int indicesCount );
 		
+		public abstract int InitIb( IntPtr indices, int indicesCount );
+		
 		public abstract bool IsValidVb( int vb );
 		
 		public abstract bool IsValidIb( int ib );

@@ -184,45 +184,47 @@ namespace ClassicalSharp.GraphicsAPI {
 		#region Vertex buffers
 		
 		Action setupBatchFunc;
-		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;		
+		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;	
 		
 		public unsafe override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
-			int id = 0;
-			GL.GenBuffersARB( 1, &id );
+			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
 			return id;
 		}
 		
 		public unsafe override int InitVb<T>( T[] vertices, VertexFormat format, int count ) {
-			int id = 0;
-			GL.GenBuffersARB( 1, &id );
+			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject(), BufferUsageHint.StaticDraw );
-			handle.Free();
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
 			return id;
 		}
 		
 		public unsafe override int InitIb( ushort[] indices, int indicesCount ) {
+			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
+			int sizeInBytes = indicesCount * sizeof( ushort );
+			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
+			return id;
+		}
+		
+		public unsafe override int InitIb( IntPtr indices, int indicesCount ) {
+			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
+			int sizeInBytes = indicesCount * sizeof( ushort );		
+			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
+			return id;
+		}
+		
+		unsafe static int GenAndBind( BufferTarget target ) {
 			int id = 0;
 			GL.GenBuffersARB( 1, &id );
-			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, id );
-			fixed( ushort* ptr = indices ) {
-				GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), (IntPtr)ptr, BufferUsageHint.StaticDraw );
-			}
+			GL.BindBufferARB( target, id );
 			return id;
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, VertexFormat format, int count ) {
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), handle.AddrOfPinnedObject() );
-			handle.Free();
+			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
 			BeginVbBatch( format );
 			setupBatchFunc();
@@ -317,20 +319,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, 0 );
 		}
 		
+		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );
 		void SetupVbPos3fTex2f() {
-			GL.VertexPointer( 3, PointerType.Float, 20, new IntPtr( 0 ) );
-			GL.TexCoordPointer( 2, PointerType.Float, 20, new IntPtr( 12 ) );		
+			GL.VertexPointer( 3, PointerType.Float, VertexPos3fTex2f.Size, zero );
+			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2f.Size, twelve );
 		}
 		
 		void SetupVbPos3fCol4b() {
-			GL.VertexPointer( 3, PointerType.Float, 16, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, PointerType.UnsignedByte, 16, new IntPtr( 12 ) );
+			GL.VertexPointer( 3, PointerType.Float, VertexPos3fCol4b.Size, zero );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexPos3fCol4b.Size, twelve );
 		}
 		
 		void SetupVbPos3fTex2fCol4b() {
-			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( 0 ) );
-			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( 12 ) );
-			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( 16 ) );
+			GL.VertexPointer( 3, PointerType.Float, VertexPos3fTex2fCol4b.Size, zero );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexPos3fTex2fCol4b.Size, twelve );
+			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2fCol4b.Size, sixteen );
 		}
 		#endregion
 		

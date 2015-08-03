@@ -38,6 +38,11 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( (int)target, size, data, (int)usage, BufferDataARBAddress );
 		} static IntPtr BufferDataARBAddress;
 		
+		public static void BufferDataARB<T>( BufferTarget target, IntPtr size, T[] data, BufferUsageHint usage ) where T : struct {
+			IntPtr dataPtr = Interop.Fixed( ref data[0] );
+			Interop.Calli( (int)target, size, dataPtr, (int)usage, BufferDataARBAddress );
+		}
+		
 		public static void BufferSubData( BufferTarget target, IntPtr offset, IntPtr size, IntPtr data ) {
 			Interop.Calli( (int)target, offset, size, data, BufferSubDataAddress );
 		} static IntPtr BufferSubDataAddress;
@@ -45,6 +50,11 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void BufferSubDataARB( BufferTarget target, IntPtr offset, IntPtr size, IntPtr data ) {
 			Interop.Calli( (int)target, offset, size, data, BufferSubDataARBAddress );
 		} static IntPtr BufferSubDataARBAddress;
+		
+		public static void BufferSubDataARB<T>( BufferTarget target, IntPtr offset, IntPtr size, T[] data ) where T : struct {
+			IntPtr dataPtr = Interop.Fixed( ref data[0] );
+			Interop.Calli( (int)target, offset, size, dataPtr, BufferSubDataARBAddress );
+		}
 
 		public static void Clear( ClearBufferMask mask ) {
 			Interop.Calli( (int)mask, ClearAddress );

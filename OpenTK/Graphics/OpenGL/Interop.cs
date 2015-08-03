@@ -5,6 +5,7 @@ namespace OpenTK.Graphics.OpenGL {
 	internal static unsafe class Interop {
 		
 		static Exception rewriteEx = new NotImplementedException( "You need to run InteropPatcher on this dll." );
+		public static IntPtr Fixed<T>( ref T data ) { throw rewriteEx; }
 		public static void Calli( IntPtr address ) { throw rewriteEx; }
 		public static int Calli_Int32( IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, IntPtr address ) { throw rewriteEx; }

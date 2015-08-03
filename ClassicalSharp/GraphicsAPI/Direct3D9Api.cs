@@ -306,11 +306,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetVertexFormat( formatMapping[(int)VertexFormat.Pos3fTex2fCol4b] );
 			batchStride = VertexPos3fTex2fCol4b.Size;
 		}
-
-		public override void DrawIndexedVbBatch( DrawMode mode, int vb, int ib, int indicesCount,
-		                                        int startVertex, int startIndex ) {
-			device.SetIndices( iBuffers[ib] );
+		
+		public override void BindVb( int vb ) {
 			device.SetStreamSource( 0, vBuffers[vb], 0, batchStride );
+		}
+		
+		public override void BindIb( int ib ) {
+			device.SetIndices( iBuffers[ib] );
+		}
+
+		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
