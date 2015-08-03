@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				MakeOptimisedTexture( fastBmp );
-				TexId = graphics.LoadTexture( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
+				TexId = graphics.CreateTexture( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
 			}
 		}
 		
@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 				using( Bitmap bmp = new Bitmap( elementSize, elementSize ) ) {
 					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
 						Utils.MovePortion( x * elementSize, y * elementSize, 0, 0, atlas, dst, elementSize );
-						return graphics.LoadTexture( dst );
+						return graphics.CreateTexture( dst );
 					}
 				}
 			}

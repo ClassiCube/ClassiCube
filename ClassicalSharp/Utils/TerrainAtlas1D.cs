@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 							Utils.MovePortion( x * elemSize, y * elemSize, 0, y_1D * elemSize, atlas, dst, elemSize );
 							index++;
 						}
-						TexIds[i] = graphics.LoadTexture( dst );
+						TexIds[i] = graphics.CreateTexture( dst );
 					}
 					atlas1d.Dispose();
 				}

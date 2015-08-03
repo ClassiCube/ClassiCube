@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			GraphicsApi.Texturing = true;
-			GraphicsApi.Bind2DTexture( Window.TerrainAtlas.TexId );
+			GraphicsApi.BindTexture( Window.TerrainAtlas.TexId );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				Texture texture = blocksTable[i].Texture;

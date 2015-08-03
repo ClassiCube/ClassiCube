@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using BmpPixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -12,9 +11,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 	public class OpenGLApi : IGraphicsApi {
 		
-		int textureDimensions;
-		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
-		
+		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };		
 		public unsafe OpenGLApi() {
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
@@ -34,10 +31,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
 			GL.EnableClientState( ArrayCap.VertexArray );
 		}
-
-		public override int MaxTextureDimensions {
-			get { return textureDimensions; }
-		}
 		
 		public override bool AlphaTest {
 			set { ToggleCap( EnableCap.AlphaTest, value ); }
@@ -47,14 +40,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Blend, value ); }
 		}
 		
-		AlphaFunction[] alphaFuncs = {
-			AlphaFunction.Always, AlphaFunction.Notequal,
-			AlphaFunction.Never, AlphaFunction.Less,
-			AlphaFunction.Lequal, AlphaFunction.Equal,
-			AlphaFunction.Gequal, AlphaFunction.Greater,
+		Compare[] compareFuncs = {
+			Compare.Always, Compare.Notequal, Compare.Never, Compare.Less,
+			Compare.Lequal, Compare.Equal, Compare.Gequal, Compare.Greater,
 		};
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
-			GL.AlphaFunc( alphaFuncs[(int)func], value );
+			GL.AlphaFunc( compareFuncs[(int)func], value );
 		}
 		
 		BlendingFactor[] blendFuncs = {
@@ -112,37 +103,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.CullFace, value ); }
 		}
 		
-
-		public unsafe override int LoadTexture( int width, int height, IntPtr scan0 ) {
-			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
-				Utils.LogWarning( "Creating a non power of two texture." );
-			
-			int texId = 0;
-			GL.GenTextures( 1, &texId );
-			GL.BindTexture( TextureTarget.Texture2D, texId );
-			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
-			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
-
-			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
-			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
-			return texId;
-		}
-		
-		public override void Bind2DTexture( int texture ) {
-			GL.BindTexture( TextureTarget.Texture2D, texture );
-		}
-		
-		public unsafe override void DeleteTexture( ref int texId ) {
-			if( texId <= 0 ) return;
-			int id = texId;
-			GL.DeleteTextures( 1, &id );
-			texId = -1;
-		}
-		
-		public override bool Texturing {
-			set { ToggleCap( EnableCap.Texture2D, value ); }
-		}
-		
 		public override void Clear() {
 			GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
 		}
@@ -159,14 +119,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.ColorMask( value, value, value, value ); }
 		}
 		
-		DepthFunction[] depthFuncs = {
-			DepthFunction.Always, DepthFunction.Notequal,
-			DepthFunction.Never, DepthFunction.Less,
-			DepthFunction.Lequal, DepthFunction.Equal,
-			DepthFunction.Gequal, DepthFunction.Greater,
-		};
 		public override void DepthTestFunc( CompareFunc func ) {
-			GL.DepthFunc( depthFuncs[(int)func] );
+			GL.DepthFunc( compareFuncs[(int)func] );
 		}
 		
 		public override bool DepthTest {
@@ -177,43 +131,79 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { GL.DepthMask( value ); }
 		}
 		
-		#region Vertex buffers
+		#region Texturing
+		int textureDimensions;
+		public override int MaxTextureDimensions {
+			get { return textureDimensions; }
+		}
 		
+		public override bool Texturing {
+			set { ToggleCap( EnableCap.Texture2D, value ); }
+		}
+		
+		public unsafe override int CreateTexture( int width, int height, IntPtr scan0 ) {
+			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
+				Utils.LogWarning( "Creating a non power of two texture." );
+			
+			int texId = 0;
+			GL.GenTextures( 1, &texId );
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureFilter.Nearest );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureFilter.Nearest );
+
+			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
+			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
+			return texId;
+		}
+		
+		public override void BindTexture( int texture ) {
+			GL.BindTexture( TextureTarget.Texture2D, texture );
+		}
+		
+		public unsafe override void DeleteTexture( ref int texId ) {
+			if( texId <= 0 ) return;
+			int id = texId;
+			GL.DeleteTextures( 1, &id );
+			texId = -1;
+		}				
+		#endregion
+		
+		#region Vertex/index buffers		
 		Action setupBatchFunc;
-		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;	
+		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsage.DynamicDraw );
 			return id;
 		}
 		
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateIb( ushort[] indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
+			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );		
-			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
+			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
@@ -316,10 +306,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2fCol4b.Size, sixteen );
 		}
 		#endregion
-		
-		
+				
 		#region Matrix manipulation
-
 		MatrixMode lastMode = 0;
 		MatrixMode[] matrixModes = { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
 		public override void SetMatrixMode( MatrixType mode ) {

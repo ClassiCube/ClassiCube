@@ -267,7 +267,7 @@ namespace ClassicalSharp {
 			api.AlphaTest = true;
 			
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				api.Bind2DTexture( texIds[batch] );
+				api.BindTexture( texIds[batch] );
 				RenderNormalBatch( batch );
 			}
 			api.AlphaTest = false;
@@ -312,7 +312,7 @@ namespace ClassicalSharp {
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			for( int batch = 0; batch < _1Dcount; batch++ ) {
-				api.Bind2DTexture( texIds[batch] );
+				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
 			api.DepthWrite = true;

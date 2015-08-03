@@ -10,7 +10,7 @@ namespace OpenTK.Graphics.OpenGL {
 	[InteropPatch]
 	unsafe partial class GL {
 		
-		public static void AlphaFunc( AlphaFunction func, float value ) {
+		public static void AlphaFunc( Compare func, float value ) {
 			Interop.Calli( (int)func, value, AlphaFuncAddress );
 		} static IntPtr AlphaFuncAddress;
 
@@ -30,15 +30,15 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( (int)sfactor, (int)dfactor, BlendFuncAddress );
 		} static IntPtr BlendFuncAddress;
 		
-		public static void BufferData( BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage ) {
+		public static void BufferData( BufferTarget target, IntPtr size, IntPtr data, BufferUsage usage ) {
 			Interop.Calli( (int)target, size, data, (int)usage, BufferDataAddress );
 		} static IntPtr BufferDataAddress;
 		
-		public static void BufferDataARB( BufferTarget target, IntPtr size, IntPtr data, BufferUsageHint usage ) {
+		public static void BufferDataARB( BufferTarget target, IntPtr size, IntPtr data, BufferUsage usage ) {
 			Interop.Calli( (int)target, size, data, (int)usage, BufferDataARBAddress );
 		} static IntPtr BufferDataARBAddress;
 		
-		public static void BufferDataARB<T>( BufferTarget target, IntPtr size, T[] data, BufferUsageHint usage ) where T : struct {
+		public static void BufferDataARB<T>( BufferTarget target, IntPtr size, T[] data, BufferUsage usage ) where T : struct {
 			IntPtr dataPtr = Interop.Fixed( ref data[0] );
 			Interop.Calli( (int)target, size, dataPtr, (int)usage, BufferDataARBAddress );
 		}
@@ -88,7 +88,7 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( n, textures, DeleteTexturesAddress );
 		} static IntPtr DeleteTexturesAddress;
 		
-		public static void DepthFunc( DepthFunction func ) {
+		public static void DepthFunc( Compare func ) {
 			Interop.Calli( (int)func, DepthFuncAddress );
 		} static IntPtr DepthFuncAddress;
 		

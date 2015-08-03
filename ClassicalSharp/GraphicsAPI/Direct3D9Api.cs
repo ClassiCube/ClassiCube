@@ -158,8 +158,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int MaxTextureDimensions {
 			get { return Math.Min( caps.MaxTextureHeight, caps.MaxTextureWidth ); }
 		}
+		
+		public override bool Texturing {
+			set { if( !value ) device.SetTexture( 0, null ); }
+		}
 
-		public override int LoadTexture( int width, int height, IntPtr scan0 ) {
+		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			D3D.Texture texture = new D3D.Texture( device, width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
 			LockedRectangle vbData = texture.LockRectangle( 0, LockFlags.None );
 			IntPtr dest = vbData.DataPointer;
@@ -168,12 +172,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref textures, texture, texBufferSize );
 		}
 
-		public override void Bind2DTexture( int texId ) {
+		public override void BindTexture( int texId ) {
 			device.SetTexture( 0, textures[texId] );
-		}
-
-		public override bool Texturing {
-			set { if( !value ) device.SetTexture( 0, null ); }
 		}
 
 		public override void DeleteTexture( ref int texId ) {
@@ -305,7 +305,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
-
 		#endregion
 
 

@@ -69,7 +69,7 @@ namespace ClassicalSharp.Renderers {
 			base.Init();
 			Graphics.Fog = true;
 			ResetAllEnv( null, null );
-			cloudTexture = Graphics.LoadTexture( "clouds.png" );
+			cloudTexture = Graphics.CreateTexture( "clouds.png" );
 			Window.ViewDistanceChanged += ResetAllEnv;
 		}
 		
@@ -97,7 +97,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Graphics.AlphaTest = true;
 			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( cloudTexture );
+			Graphics.BindTexture( cloudTexture );
 			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			Graphics.DrawVb( DrawMode.Triangles, cloudsVbo, 0, cloudsVertices );
 			Graphics.AlphaTest = false;

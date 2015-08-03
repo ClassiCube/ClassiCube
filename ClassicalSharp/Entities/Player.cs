@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
-					PlayerTextureId = Window.Graphics.LoadTexture( bmp );				
+					PlayerTextureId = Window.Graphics.CreateTexture( bmp );				
 					MobTextureId = -1;
 					
 					// Custom mob textures.

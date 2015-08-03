@@ -29,8 +29,8 @@ namespace ClassicalSharp.Model {
 			
 			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
-			DefaultTexId = graphics.LoadTexture( "sheep.png" );
-			furTextureId = graphics.LoadTexture( "sheep_fur.png" );
+			DefaultTexId = graphics.CreateTexture( "sheep.png" );
+			furTextureId = graphics.CreateTexture( "sheep_fur.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Head );
 			Torso.Render( vb );
@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, RightLegBack );
 			graphics.AlphaTest = true;
 			if( Fur ) {
-				graphics.Bind2DTexture( furTextureId );
+				graphics.BindTexture( furTextureId );
 				FurTorso.Render( vb );
 				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, FurHead );
 				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, FurLeftLegFront );

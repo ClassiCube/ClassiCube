@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static Texture Make2DTexture( IGraphicsApi graphics, Bitmap bmp, Size used, int x1, int y1 ) {
-			int texId = graphics.LoadTexture( bmp );
+			int texId = graphics.CreateTexture( bmp );
 			return new Texture( texId, x1, y1, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
 		}

@@ -18,7 +18,7 @@ namespace ClassicalSharp.Model {
 			
 			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;		
-			DefaultTexId = graphics.LoadTexture( "zombie.png" );
+			DefaultTexId = graphics.CreateTexture( "zombie.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
 			Torso.Render( vb );

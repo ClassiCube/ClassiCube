@@ -35,7 +35,7 @@ namespace ClassicalSharp.Model {
 				return;
 			}
 			
-			graphics.Bind2DTexture( window.TerrainAtlas.TexId );
+			graphics.BindTexture( window.TerrainAtlas.TexId );
 			blockHeight = window.BlockInfo.BlockHeight( block );
 			atlas = window.TerrainAtlas;
 			BlockInfo = window.BlockInfo;

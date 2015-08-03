@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 			if( weather == Weather.Sunny ) return;
 			
 			graphics.Texturing = true;
-			graphics.Bind2DTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
+			graphics.BindTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
 			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)Window.accumulator * speed;
@@ -95,8 +95,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			rainTexture = graphics.LoadTexture( "rain.png" );
-			snowTexture = graphics.LoadTexture( "snow.png" );
+			rainTexture = graphics.CreateTexture( "rain.png" );
+			snowTexture = graphics.CreateTexture( "snow.png" );
 			Window.OnNewMap += OnNewMap;
 			Window.OnNewMapLoaded += OnNewMapLoaded;
 		}

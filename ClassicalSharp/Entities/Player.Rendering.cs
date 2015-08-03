@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		
 		void DrawName() {
 			api.Texturing = true;
-			api.Bind2DTexture( nameTex.ID );
+			api.BindTexture( nameTex.ID );
 			
 			float x1 = -nameTex.Width * 0.5f / 50f, y1 = nameTex.Height / 50f;
 			float x2 = nameTex.Width * 0.5f / 50f, y2 = 0;

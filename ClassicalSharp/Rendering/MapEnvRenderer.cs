@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			if( sidesVboId == -1 || edgesVboId == -1 ) return;
 			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( sideTexId );
+			Graphics.BindTexture( sideTexId );
 			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			Graphics.DrawVb( DrawMode.Triangles, sidesVboId, 0, sidesVertices );
 			
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			if( Window.LocalPlayer.EyePosition.Y >= 0 ) {
 				Graphics.AlphaBlending = true;
-				Graphics.Bind2DTexture( edgeTexId );
+				Graphics.BindTexture( edgeTexId );
 				Graphics.DrawVb( DrawMode.Triangles, edgesVboId, 0, edgesVertices );
 				Graphics.AlphaBlending = false;
 			}

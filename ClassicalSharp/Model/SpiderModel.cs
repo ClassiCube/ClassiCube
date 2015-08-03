@@ -17,7 +17,7 @@ namespace ClassicalSharp.Model {
 			
 			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 			vertices = null;
-			DefaultTexId = graphics.LoadTexture( "spider.png" );
+			DefaultTexId = graphics.CreateTexture( "spider.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -53,7 +53,7 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
-			graphics.Bind2DTexture( texId );
+			graphics.BindTexture( texId );
 			graphics.AlphaTest = true;
 			
 			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Head );

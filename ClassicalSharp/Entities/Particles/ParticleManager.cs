@@ -32,7 +32,7 @@ namespace ClassicalSharp.Particles {
 			}
 			
 			Graphics.Texturing = true;
-			Graphics.Bind2DTexture( Window.TerrainAtlas.TexId );
+			Graphics.BindTexture( Window.TerrainAtlas.TexId );
 			Graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
 			Graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );

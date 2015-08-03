@@ -16,34 +16,34 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract bool Texturing { set; }
 		
-		public virtual int LoadTexture( string path ) {
+		public int CreateTexture( string path ) {
 			if( !File.Exists( path ) ) {
 				throw new FileNotFoundException( path + " not found" );
 			}
 			using( Bitmap bmp = new Bitmap( path ) ) {
-				return LoadTexture( bmp );
+				return CreateTexture( bmp );
 			}
 		}
 		
-		public virtual int LoadTexture( Bitmap bmp ) {
+		public int CreateTexture( Bitmap bmp ) {
 			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
 			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-			int texId = LoadTexture( data.Width, data.Height, data.Scan0 );
+			int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
 			bmp.UnlockBits( data );
 			return texId;
 		}
 		
-		public virtual int LoadTexture( FastBitmap bmp ) {
+		public int CreateTexture( FastBitmap bmp ) {
 			if( !bmp.IsLocked )
 				bmp.LockBits();
-			int texId = LoadTexture( bmp.Width, bmp.Height, bmp.Scan0 );
+			int texId = CreateTexture( bmp.Width, bmp.Height, bmp.Scan0 );
 			bmp.UnlockBits();
 			return texId;
 		}
 		
-		public abstract int LoadTexture( int width, int height, IntPtr scan0 );
+		public abstract int CreateTexture( int width, int height, IntPtr scan0 );
 		
-		public abstract void Bind2DTexture( int texId );
+		public abstract void BindTexture( int texId );
 		
 		public abstract void DeleteTexture( ref int texId );
 		

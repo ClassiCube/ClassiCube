@@ -29,27 +29,14 @@ using System;
 
 namespace OpenTK.Graphics.OpenGL
 {
-    public enum AlphaFunction : int
-    {
-        Never = 0x0200,
-        Less = 0x0201,
-        Equal = 0x0202,
-        Lequal = 0x0203,
-        Greater = 0x0204,
-        Notequal = 0x0205,
-        Gequal = 0x0206,
-        Always = 0x0207,
-    }
 
-    public enum ArrayCap : int
-    {
+    public enum ArrayCap : int {
         VertexArray = 0x8074,
         ColorArray = 0x8076,
         TextureCoordArray = 0x8078,
     }
 
-    public enum BeginMode : int
-    {
+    public enum BeginMode : int {
         Points = 0x0000,
         Lines = 0x0001,
         LineLoop = 0x0002,
@@ -57,12 +44,9 @@ namespace OpenTK.Graphics.OpenGL
         Triangles = 0x0004,
         TriangleStrip = 0x0005,
         TriangleFan = 0x0006,
-        Quads = 0x0007,
-        QuadStrip = 0x0008,
     }
 
-    public enum BlendingFactor : int
-    {
+    public enum BlendingFactor : int {
         Zero = 0,
         SrcAlpha = 0x0302,
         OneMinusSrcAlpha = 0x0303,
@@ -71,41 +55,35 @@ namespace OpenTK.Graphics.OpenGL
         One = 1,
     }
 
-    public enum BufferTarget : int
-    {
+    public enum BufferTarget : int {
         ArrayBuffer = 0x8892,
         ElementArrayBuffer = 0x8893,
     }
 
-    public enum BufferUsageHint : int
-    {
+    public enum BufferUsage : int {
         StreamDraw = 0x88E0,
         StaticDraw = 0x88E4,
         DynamicDraw = 0x88E8,
     }
 
     [Flags]
-    public enum ClearBufferMask : int
-    {
+    public enum ClearBufferMask : int {
         DepthBufferBit = 0x00000100,
         ColorBufferBit = 0x00004000,
     }
 
-    public enum PointerType : int
-    {
+    public enum PointerType : int {
         UnsignedByte = 0x1401,
         Float = 0x1406,
     }
 
-    public enum CullFaceMode : int
-    {
+    public enum CullFaceMode : int {
         Front = 0x0404,
         Back = 0x0405,
         FrontAndBack = 0x0408,
     }
 
-    public enum DepthFunction : int
-    {
+    public enum Compare : int {
         Never = 0x0200,
         Less = 0x0201,
         Equal = 0x0202,
@@ -116,16 +94,12 @@ namespace OpenTK.Graphics.OpenGL
         Always = 0x0207,
     }
 
-    public enum DrawElementsType : int
-    {
+    public enum DrawElementsType : int {
         UnsignedShort = 0x1403,
-        UnsignedInt = 0x1405,
     }
 
-    public enum EnableCap : int
-    {
+    public enum EnableCap : int {
         CullFace = 0x0B44,
-
         Fog = 0x0B60,
         DepthTest = 0x0B71,
         StencilTest = 0x0B90,
@@ -133,18 +107,14 @@ namespace OpenTK.Graphics.OpenGL
         AlphaTest = 0x0BC0,
         Dither = 0x0BD0,
         Blend = 0x0BE2,
-
         Texture2D = 0x0DE1,
 
         VertexArray = 0x8074,
         ColorArray = 0x8076,
         TextureCoordArray = 0x8078,
-       
-        DepthClamp = 0x864F,
     }
 
-    public enum ErrorCode : int
-    {
+    public enum ErrorCode : int {
         NoError = 0,
         InvalidEnum = 0x0500,
         InvalidValue = 0x0501,
@@ -156,20 +126,17 @@ namespace OpenTK.Graphics.OpenGL
         TextureTooLargeExt = 0x8065,
     }
 
-    public enum ExtVertexArrayBgra : int
-    {
+    public enum ExtVertexArrayBgra : int {
         Bgra = 0x80E1,
     }
 
-    public enum FogMode : int
-    {
+    public enum FogMode : int {
         Exp = 0x0800,
         Exp2 = 0x0801,
         Linear = 0x2601,
     }
 
-    public enum FogParameter : int
-    {
+    public enum FogParameter : int {
         FogDensity = 0x0B62,
         FogStart = 0x0B63,
         FogEnd = 0x0B64,
@@ -177,29 +144,18 @@ namespace OpenTK.Graphics.OpenGL
         FogColor = 0x0B66,
     }
 
-    public enum FrontFaceDirection : int
-    {
+    public enum FrontFaceDirection : int {
         Cw = 0x0900,
         Ccw = 0x0901,
     }
 
-    public enum GetPName : int
-    {
+    public enum GetPName : int {
         CurrentColor = 0x0B00,
-
-        PointSize = 0x0B11,
-
-        LineWidth = 0x0B21,
 
         PolygonMode = 0x0B40,
         PolygonSmooth = 0x0B41,
-
-        CullFace = 0x0B44,
-        CullFaceMode = 0x0B45,
         FrontFace = 0x0B46,
-
         ShadeModel = 0x0B54,
-
         Fog = 0x0B60,
         
         FogDensity = 0x0B62,
@@ -268,24 +224,16 @@ namespace OpenTK.Graphics.OpenGL
         DepthBits = 0x0D56,
        
         Texture2D = 0x0DE1,
-
         TextureBinding2D = 0x8069,
-        
-        TextureBindingRectangle = 0x84F6,
-        MaxRectangleTextureSize = 0x84F8,
-
-        DepthClamp = 0x864F,
     }
 
-    public enum HintMode : int
-    {
+    public enum HintMode : int {
         DontCare = 0x1100,
         Fastest = 0x1101,
         Nicest = 0x1102,
     }
 
-    public enum HintTarget : int
-    {
+    public enum HintTarget : int {
         PerspectiveCorrectionHint = 0x0C50,
         PointSmoothHint = 0x0C51,
         LineSmoothHint = 0x0C52,
@@ -295,99 +243,50 @@ namespace OpenTK.Graphics.OpenGL
         GenerateMipmapHint = 0x8192,
     }
 
-    public enum MaterialFace : int
-    {
-        Front = 0x0404,
-        Back = 0x0405,
-        FrontAndBack = 0x0408,
-    }
-
-    public enum MatrixMode : int
-    {
+    public enum MatrixMode : int {
         Modelview = 0x1700,
         Projection = 0x1701,
         Texture = 0x1702,
         Color = 0x1800,
     }
 
-    public enum PixelFormat : int
-    {
+    public enum PixelFormat : int {
         Rgba = 0x1908,
-
         Bgra = 0x80E1,
     }
 
-    public enum PixelInternalFormat : int
-    {
+    public enum PixelInternalFormat : int {
         Rgba = 0x1908,
-
         Rgba8 = 0x8058,
     }
 
-    public enum PixelType : int
-    {
+    public enum PixelType : int {
         UnsignedByte = 0x1401,
     }
 
-    public enum ShadingModel : int
-    {
+    public enum ShadingModel : int {
         Flat = 0x1D00,
         Smooth = 0x1D01,
     }
 
-    public enum StringName : int
-    {
+    public enum StringName : int {
         Vendor = 0x1F00,
         Renderer = 0x1F01,
         Version = 0x1F02,
         Extensions = 0x1F03,
     }
 
-    public enum TextureMagFilter : int
-    {
+    public enum TextureFilter : int {
         Nearest = 0x2600,
         Linear = 0x2601,
     }
 
-    public enum TextureMinFilter : int
-    {
-        Nearest = 0x2600,
-        Linear = 0x2601,
-        NearestMipmapNearest = 0x2700,
-        LinearMipmapNearest = 0x2701,
-        NearestMipmapLinear = 0x2702,
-        LinearMipmapLinear = 0x2703,
-    }
-
-    public enum TextureParameterName : int
-    {
+    public enum TextureParameterName : int {
         TextureMagFilter = 0x2800,
         TextureMinFilter = 0x2801,
-        TextureWrapS = 0x2802,
-        TextureWrapT = 0x2803,
-
-        ClampToBorder = 0x812D,
-        ClampToEdge = 0x812F,
-
-        GenerateMipmap = 0x8191,
     }
 
-    public enum TextureTarget : int
-    {
+    public enum TextureTarget : int {
         Texture2D = 0x0DE1,
-
-        ProxyTexture2D = 0x8064,
-        
-        TextureRectangle = 0x84F5,
-
-        ProxyTextureRectangle = 0x84F7,
-    }
-
-    public enum TextureWrapMode : int
-    {
-        Clamp = 0x2900,
-        Repeat = 0x2901,
-        ClampToBorder = 0x812D,
-        ClampToEdge = 0x812F,
     }
 }
