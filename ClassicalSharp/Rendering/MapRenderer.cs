@@ -194,8 +194,7 @@ namespace ClassicalSharp {
 			
 			api.BindIb( chunkIb );
 			RenderNormal();
-			game.MapEnvRenderer.RenderMapSides( deltaTime );
-			game.MapEnvRenderer.RenderMapEdges( deltaTime );
+			game.MapEnvRenderer.Render( deltaTime );
 			api.BindIb( chunkIb );
 			RenderTranslucent();
 		}
@@ -263,7 +262,7 @@ namespace ClassicalSharp {
 		// These blocks are treated as having an alpha value of either none or full.
 		void RenderNormal() {
 			int[] texIds = game.TerrainAtlas1D.TexIds;
-			api.BeginIndexedVbBatch();
+			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			api.Texturing = true;
 			api.AlphaTest = true;
 			
@@ -298,7 +297,7 @@ namespace ClassicalSharp {
 		void RenderTranslucent() {
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
-			api.BeginIndexedVbBatch();
+			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			api.Texturing = false;
 			api.AlphaBlending = false;
 			api.ColourWrite = false;

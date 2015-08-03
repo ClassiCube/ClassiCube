@@ -182,28 +182,35 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action setupBatchFunc;
 		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;	
 		
-		public unsafe override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
 			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsageHint.DynamicDraw );
 			return id;
 		}
 		
-		public unsafe override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
+		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
 			return id;
 		}
 		
-		public unsafe override int CreateIb( ushort[] indices, int indicesCount ) {
+		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
+			int id = GenAndBind( BufferTarget.ArrayBuffer );
+			int sizeInBytes = count * strideSizes[(int)format];
+			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsageHint.StaticDraw );
+			return id;
+		}
+		
+		public override int CreateIb( ushort[] indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
 			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
 			return id;
 		}
 		
-		public unsafe override int CreateIb( IntPtr indices, int indicesCount ) {
+		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );		
 			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsageHint.StaticDraw );
@@ -242,13 +249,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DeleteBuffersARB( 1, &id );
 		}
 		
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
-			BeginVbBatch( format );
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
-			setupBatchFunc();
-			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
-		}
-		
 		VertexFormat batchFormat = (VertexFormat)999;
 		public override void BeginVbBatch( VertexFormat format ) {
 			if( format == batchFormat ) return;
@@ -276,11 +276,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void BeginIndexedVbBatch() {
-			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		public override void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
 			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			setupBatchFunc();
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );

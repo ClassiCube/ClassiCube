@@ -27,6 +27,7 @@ namespace ClassicalSharp.Model {
 			graphics.PushMatrix();
 			Matrix4 mat = Matrix4.RotateY( -p.YawRadians ) * Matrix4.Translate( p.Position );
 			graphics.MultiplyMatrix( ref mat );
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
 			graphics.PopMatrix();
 		}

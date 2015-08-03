@@ -29,7 +29,8 @@ namespace ClassicalSharp.Renderers {
 			
 			Vector3 pos = Window.LocalPlayer.EyePosition;
 			if( pos.Y < Map.Height + skyOffset ) {
-				Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fCol4b, skyVbo, 0, skyVertices );
+				Graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+				Graphics.DrawVb( DrawMode.Triangles, skyVbo, 0, skyVertices );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
@@ -97,7 +98,8 @@ namespace ClassicalSharp.Renderers {
 			Graphics.AlphaTest = true;
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( cloudTexture );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, cloudsVbo, 0, cloudsVertices );
+			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			Graphics.DrawVb( DrawMode.Triangles, cloudsVbo, 0, cloudsVertices );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			

@@ -104,6 +104,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int CreateVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct;
 		
+		public abstract int CreateVb( IntPtr vertices, VertexFormat format, int count );
+		
 		public abstract int CreateIb( ushort[] indices, int indicesCount );
 		
 		public abstract int CreateIb( IntPtr indices, int indicesCount );
@@ -120,13 +122,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
 		
-		public abstract void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount );
-		
 		public abstract void BeginVbBatch( VertexFormat format );
 		
-		public abstract void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount );
-		
-		public abstract void BeginIndexedVbBatch();
+		public abstract void DrawVb( DrawMode mode, int id, int startVertex, int verticesCount );
 		
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex );
 		

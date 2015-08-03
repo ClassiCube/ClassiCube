@@ -19,9 +19,9 @@ namespace ClassicalSharp.Selections {
 		
 		public void Render( double delta ) {
 			Graphics.DepthWrite = false;
-			Graphics.DrawVbBatch( DrawMode.Triangles, Vb, 0, VerticesCount );
+			Graphics.DrawVb( DrawMode.Triangles, Vb, 0, VerticesCount );
 			Graphics.DepthWrite = true;
-			Graphics.DrawVbBatch( DrawMode.Lines, LineVb, 0, LineVerticesCount );
+			Graphics.DrawVb( DrawMode.Lines, LineVb, 0, LineVerticesCount );
 		}
 		
 		static VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[VerticesCount];

@@ -230,7 +230,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
-			VertexBuffer buffer = CreateVb( vertices, count, format );
+			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
+			VertexBuffer buffer = CreateVertexBuffer( handle.AddrOfPinnedObject(), count, format );
+			handle.Free();
+			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
+		}
+		
+		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
+			VertexBuffer buffer = CreateVertexBuffer( vertices, count, format );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
@@ -247,26 +254,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 
-		unsafe VertexBuffer CreateVb<T>( T[] vertices, int count, VertexFormat format ) {
-			int sizeInBytes = count * strideSizes[(int)format];
-			D3D.VertexFormat d3dFormat = formatMapping[(int)format];
-			VertexBuffer buffer = new VertexBuffer( device, sizeInBytes, Usage.None, d3dFormat, Pool.Managed );
+		unsafe VertexBuffer CreateVertexBuffer( IntPtr src, int count, VertexFormat format ) {
+			int size = count * strideSizes[(int)format];
+			VertexBuffer buffer = new VertexBuffer( device, size, Usage.None, formatMapping[(int)format], Pool.Managed );
 			
-			IntPtr vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			IntPtr source = handle.AddrOfPinnedObject();
-			memcpy( source, vbData, sizeInBytes );
+			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
+			memcpy( src, vbData, size );
 			buffer.Unlock();
-			handle.Free();
 			return buffer;
 		}
 		
 		unsafe IndexBuffer CreateIndexBuffer( IntPtr src, int count ) {
-			int sizeInBytes = count * sizeof( ushort );
-			IndexBuffer buffer = new IndexBuffer( device, sizeInBytes, Usage.None, Pool.Managed, true );
+			int size = count * sizeof( ushort );
+			IndexBuffer buffer = new IndexBuffer( device, size, Usage.None, Pool.Managed, true );
 			
-			IntPtr vbData = buffer.Lock( 0, sizeInBytes, LockFlags.None );
-			memcpy( src, vbData, sizeInBytes );
+			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
+			memcpy( src, vbData, size );
 			buffer.Unlock();
 			return buffer;
 		}
@@ -279,26 +282,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			Delete( iBuffers, ib );
 		}
 
-		public override void DrawVb( DrawMode mode, VertexFormat format, int id, int startVertex, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0, strideSizes[(int)format] );
-			device.SetVertexFormat( formatMapping[(int)format] );
-			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
-		}
-
 		int batchStride;
 		public override void BeginVbBatch( VertexFormat format ) {
 			device.SetVertexFormat( formatMapping[(int)format] );
 			batchStride = strideSizes[(int)format];
 		}
 
-		public override void DrawVbBatch( DrawMode mode, int id, int startVertex, int verticesCount ) {
+		public override void DrawVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
 			device.SetStreamSource( 0, vBuffers[id], 0, batchStride );
 			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
-		}
-		
-		public override void BeginIndexedVbBatch() {
-			device.SetVertexFormat( formatMapping[(int)VertexFormat.Pos3fTex2fCol4b] );
-			batchStride = VertexPos3fTex2fCol4b.Size;
 		}
 		
 		public override void BindVb( int vb ) {

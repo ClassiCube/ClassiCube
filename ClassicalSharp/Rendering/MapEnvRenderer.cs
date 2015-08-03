@@ -39,27 +39,22 @@ namespace ClassicalSharp {
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
 			ResetSidesAndEdges( null, null );
 		}
-
-		public void RenderMapSides( double deltaTime ) {
-			if( sidesVboId == -1 ) return;
-			
+		
+		public void Render( double deltaTime ) {
+			if( sidesVboId == -1 || edgesVboId == -1 ) return;
 			Graphics.Texturing = true;
 			Graphics.Bind2DTexture( sideTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, sidesVboId, 0, sidesVertices );
-			Graphics.Texturing = false;
-		}
-		
-		public void RenderMapEdges( double deltaTime ) {
-			if( edgesVboId == -1 ) return;
+			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			Graphics.DrawVb( DrawMode.Triangles, sidesVboId, 0, sidesVertices );
+			
 			// Do not draw water when we cannot see it.
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			if( Window.LocalPlayer.EyePosition.Y < 0 ) return;
-			
-			Graphics.Texturing = true;
-			Graphics.AlphaBlending = true;
-			Graphics.Bind2DTexture( edgeTexId );
-			Graphics.DrawVb( DrawMode.Triangles, VertexFormat.Pos3fTex2fCol4b, edgesVboId, 0, edgesVertices );
-			Graphics.AlphaBlending = false;
+			if( Window.LocalPlayer.EyePosition.Y >= 0 ) {
+				Graphics.AlphaBlending = true;
+				Graphics.Bind2DTexture( edgeTexId );
+				Graphics.DrawVb( DrawMode.Triangles, edgesVboId, 0, edgesVertices );
+				Graphics.AlphaBlending = false;
+			}
 			Graphics.Texturing = false;
 		}
 		
@@ -160,7 +155,7 @@ namespace ClassicalSharp {
 			DrawZPlane( 0, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawZPlane( Map.Length, 0, Map.Width, 0, groundLevel, sidesCol, vertices );
 			DrawXPlane( 0, 0, Map.Length, 0, groundLevel, sidesCol, vertices );
-			DrawXPlane( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices  );			
+			DrawXPlane( Map.Width, 0, Map.Length, 0, groundLevel, sidesCol, vertices  );
 			sidesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
@@ -170,7 +165,7 @@ namespace ClassicalSharp {
 			
 			foreach( Rectangle rec in OutsideMap( Window.ViewDistance ) ) {
 				DrawYPlane( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, edgesCol, vertices );
-			}			
+			}
 			edgesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
@@ -212,7 +207,7 @@ namespace ClassicalSharp {
 			edgesVboId = Graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
 		}
 		
-		const int axisSize = 128;	
+		const int axisSize = 128;
 		void DrawXPlaneParts( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
@@ -265,7 +260,7 @@ namespace ClassicalSharp {
 				Window.Graphics.DeleteTexture( ref texId );
 				texId = Window.TerrainAtlas.LoadTextureElement( texLoc );
 			}
-		}	
+		}
 		
 		void DrawXPlane( int x, int z1, int z2, int y1, int y2, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
 			TextureRectangle rec = new TextureRectangle( 0, 0, z2 - z1, y2 - y1 );
