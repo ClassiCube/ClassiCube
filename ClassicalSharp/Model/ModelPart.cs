@@ -3,18 +3,17 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public class ModelPart {
+	public struct ModelPart {
 		
-		public int Offset = 0;
-		public int Count;
+		public int Offset, Count;
 		
-		public ModelPart( int offset, int count ) {
-			Offset = offset;
-			Count = count;
+		public ModelPart( int vertexOffset, int vertexCount ) {
+			Offset = vertexOffset / 4 * 6;
+			Count = vertexCount / 4 * 6;
 		}
 		
 		public void Render( IGraphicsApi api ) {
-			api.DrawVb( DrawMode.Triangles, Offset, Count );
+			api.DrawIndexedVb_T2fC4b( DrawMode.Triangles, Count, 0, Offset );
 		}
 	}
 	
