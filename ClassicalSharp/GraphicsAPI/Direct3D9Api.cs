@@ -18,7 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		Device device;
 		Direct3D d3d;
 		Capabilities caps;
-		const int texBufferSize = 512, iBufferSize = 1024, vBufferSize = 2048;
+		const int texBufferSize = 512, iBufferSize = 256, vBufferSize = 2048;
 		
 		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
 		VertexBuffer[] vBuffers = new VertexBuffer[vBufferSize];
@@ -288,8 +288,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			batchStride = strideSizes[(int)format];
 		}
 
-		public override void DrawVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
-			device.SetStreamSource( 0, vBuffers[id], 0, batchStride );
+		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
 			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
 		}
 		
@@ -301,7 +300,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetIndices( iBuffers[ib] );
 		}
 
-		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
+		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
+			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
+		}
+		
+		public override void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}

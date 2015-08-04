@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 			Graphics.BindTexture( sideTexId );
 			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			Graphics.BindVb( sidesVb );
-			Graphics.DrawIndexedVb( DrawMode.Triangles, sidesIndices, 0, 0 );
+			Graphics.DrawIndexedVb_T2fC4b( DrawMode.Triangles, sidesIndices, 0, 0 );
 			
 			// Do not draw water when we cannot see it.
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 				Graphics.AlphaBlending = true;
 				Graphics.BindTexture( edgeTexId );
 				Graphics.BindVb( edgesVb );
-				Graphics.DrawIndexedVb( DrawMode.Triangles, edgesIndices, 0, 0 );
+				Graphics.DrawIndexedVb_T2fC4b( DrawMode.Triangles, edgesIndices, 0, 0 );
 				Graphics.AlphaBlending = false;
 			}
 			Graphics.Texturing = false;

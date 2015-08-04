@@ -266,8 +266,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void DrawVb( DrawMode mode, int id, int startVertex, int verticesCount ) {
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
+		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
 			setupBatchFunc();
 			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
 		}
@@ -280,8 +279,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, ib );
 		}
 		
-		const DrawElementsType indexType = DrawElementsType.UnsignedShort;		
-		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
+		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
+		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
+			setupBatchFunc();
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
+		}
+		
+		public override void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
 			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
 			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );

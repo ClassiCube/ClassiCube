@@ -98,7 +98,7 @@ namespace ClassicalSharp.Model {
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, model.Head );
-			model.Torso.Render( vb );
+			model.Torso.Render( graphics );
 			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( 0, 1.5f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );

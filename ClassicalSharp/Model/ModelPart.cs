@@ -7,16 +7,14 @@ namespace ClassicalSharp {
 		
 		public int Offset = 0;
 		public int Count;
-		public IGraphicsApi Graphics;
 		
-		public ModelPart( int offset, int count, IGraphicsApi graphics ) {
+		public ModelPart( int offset, int count ) {
 			Offset = offset;
 			Count = count;
-			Graphics = graphics;
 		}
 		
-		public void Render( int vb ) {
-			Graphics.DrawVb( DrawMode.Triangles, vb, Offset, Count );
+		public void Render( IGraphicsApi api ) {
+			api.DrawVb( DrawMode.Triangles, Offset, Count );
 		}
 	}
 	

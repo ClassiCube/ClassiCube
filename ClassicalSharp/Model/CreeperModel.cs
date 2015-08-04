@@ -51,7 +51,7 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.125f, 0, -p.PitchRadians, 0, 0, Head );
-			Torso.Render( vb );
+			Torso.Render( graphics );
 			DrawRotate( 0, 0.375f, -0.125f, p.leftLegXRot, 0, 0, LeftLegFront );
 			DrawRotate( 0, 0.375f, -0.125f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 0.375f, 0.125f, p.rightLegXRot, 0, 0, LeftLegBack );

@@ -57,8 +57,8 @@ namespace ClassicalSharp.Model {
 			graphics.AlphaTest = true;
 			
 			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Head );
-			Link.Render( vb );
-			End.Render( vb );
+			Link.Render( graphics );
+			End.Render( graphics );
 			// TODO: leg animations
 			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, LeftLeg );

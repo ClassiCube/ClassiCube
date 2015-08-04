@@ -47,7 +47,7 @@ namespace ClassicalSharp.Model {
 			const float y1 = 0f, y2 = 0.3125f, z2 = 0.0625f, z1 = -0.125f;		
 			YPlane( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
 			ZPlane( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
-			return new ModelPart( index - 12, 2 * 6, graphics );
+			return new ModelPart( index - 12, 2 * 6 );
 		}
 		
 		public override float NameYOffset {
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head );
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head2 );
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head3 );
-			Torso.Render( vb );
+			Torso.Render( graphics );
 			DrawRotate( 0, 0.3125f, 0.0625f, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 0.3125f, 0.0625f, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( -0.1875f, 0.6875f, 0, 0, 0, -Math.Abs( p.leftArmXRot ), LeftWing );

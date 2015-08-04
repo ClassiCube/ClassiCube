@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 				DrawPart( info, ref part );
 				
 				if( part.spriteCount > 0 )
-					api.DrawIndexedVb( mode, part.spriteCount, 0, 0 );
+					api.DrawIndexedVb_T2fC4b( mode, part.spriteCount, 0, 0 );
 				game.Vertices += part.IndicesCount;
 			}
 		}
@@ -60,51 +60,51 @@ namespace ClassicalSharp {
 			
 			if( drawLeft && drawRight ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb( mode, part.leftCount + part.rightCount, 0, part.leftIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.leftCount + part.rightCount, 0, part.leftIndex );
 				api.FaceCulling = false;
 			} else if( drawLeft ) {
-				api.DrawIndexedVb( mode, part.leftCount, 0, part.leftIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.leftCount, 0, part.leftIndex );
 			} else if( drawRight ) {
-				api.DrawIndexedVb( mode, part.rightCount, 0, part.rightIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.rightCount, 0, part.rightIndex );
 			}
 			
 			if( drawFront && drawBack ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb( mode, part.frontCount + part.backCount, 0, part.frontIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.frontCount + part.backCount, 0, part.frontIndex );
 				api.FaceCulling = false;
 			} else if( drawFront ) {
-				api.DrawIndexedVb( mode, part.frontCount, 0, part.frontIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.frontCount, 0, part.frontIndex );
 			} else if( drawBack ) {
-				api.DrawIndexedVb( mode, part.backCount, 0, part.backIndex );
+				api.DrawIndexedVb_T2fC4b( mode, part.backCount, 0, part.backIndex );
 			}
 			
 			if( drawBottom && drawTop ) {
 				api.FaceCulling = true;
 				if( part.IndicesCount > maxIndices ) {
 					int part1Count = maxIndices - part.bottomIndex;
-					api.DrawIndexedVb( mode, part1Count, 0, part.bottomIndex );
-					api.DrawIndexedVb( mode, part.bottomCount + part.topCount - part1Count, maxVertex, 0 );
+					api.DrawIndexedVb_T2fC4b( mode, part1Count, 0, part.bottomIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.bottomCount + part.topCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb( mode, part.bottomCount + part.topCount, 0, part.bottomIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.bottomCount + part.topCount, 0, part.bottomIndex );
 				}
 				api.FaceCulling = false;
 			} else if( drawBottom ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
 				   ( part1Count = maxIndices - part.bottomIndex ) < part.bottomCount ) {					
-					api.DrawIndexedVb( mode, part1Count, 0, part.bottomIndex );
-					api.DrawIndexedVb( mode, part.bottomCount - part1Count, maxVertex, 0 );
+					api.DrawIndexedVb_T2fC4b( mode, part1Count, 0, part.bottomIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.bottomCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb( mode, part.bottomCount, 0, part.bottomIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.bottomCount, 0, part.bottomIndex );
 				}
 			} else if( drawTop ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
 				   ( part1Count = maxIndices - part.topIndex ) < part.topCount ) {
-					api.DrawIndexedVb( mode, part1Count, 0, part.topIndex );
-					api.DrawIndexedVb( mode, part.topCount - part1Count, maxVertex, 0 );
+					api.DrawIndexedVb_T2fC4b( mode, part1Count, 0, part.topIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.topCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb( mode, part.topCount, 0, part.topIndex );
+					api.DrawIndexedVb_T2fC4b( mode, part.topCount, 0, part.topIndex );
 				}
 				
 			}
