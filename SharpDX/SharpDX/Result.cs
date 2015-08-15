@@ -22,31 +22,6 @@ using System.Runtime.InteropServices;
 
 namespace SharpDX {
 	
-	[StructLayout(LayoutKind.Sequential)]
-	public struct Result {
-		public int Code;
-
-		public Result(int code) {
-			Code = code;
-		}
-
-		public static implicit operator int( Result result ) {
-			return result.Code;
-		}
-
-		public static implicit operator Result( int result ) {
-			return new Result( result );
-		}
-
-		public override string ToString() {
-			return String.Format( "HRESULT = 0x{0:X}", Code );
-		}
-
-		public void CheckError() {
-			if( Code < 0 ) { throw new SharpDXException( Code ); }
-		}
-	}
-	
 	public enum Direct3DError : uint {
 		Ok = 0,		
 		NotFound = 2150 | 0x88760000u,

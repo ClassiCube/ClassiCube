@@ -48,8 +48,8 @@ namespace SharpDX.Direct3D9 {
 		
 		public AdapterDetails GetAdapterIdentifier( int adapter ) {			
 			var identifierNative = new AdapterDetails.Native();
-			Result res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			
 			AdapterDetails identifier = new AdapterDetails();
 			identifier.MarshalFrom(ref identifierNative);			
@@ -62,15 +62,15 @@ namespace SharpDX.Direct3D9 {
 		
 		public DisplayMode EnumAdapterModes(int adapter, Format format, int mode) {
 			DisplayMode modeRef = new DisplayMode();
-			Result res = Interop.Calli(comPointer, adapter, (int)format, mode, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[7]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, adapter, (int)format, mode, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[7]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return modeRef;
 		}
 		
 		public DisplayMode GetAdapterDisplayMode(int adapter) {
 			DisplayMode modeRef = new DisplayMode();
-			Result res = Interop.Calli(comPointer, adapter, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[8]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, adapter, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[8]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return modeRef;
 		}
 		
@@ -86,8 +86,8 @@ namespace SharpDX.Direct3D9 {
 		
 		public Capabilities GetDeviceCaps(int adapter, DeviceType deviceType) {
 			Capabilities capsRef = new Capabilities();
-			Result res = Interop.Calli(comPointer, adapter, (int)deviceType, (IntPtr)(void*)&capsRef,(*(IntPtr**)comPointer)[14]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, adapter, (int)deviceType, (IntPtr)(void*)&capsRef,(*(IntPtr**)comPointer)[14]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return capsRef;
 		}
 		
@@ -97,9 +97,10 @@ namespace SharpDX.Direct3D9 {
 		
 		public Device CreateDevice(int adapter, DeviceType deviceType, IntPtr hFocusWindow, CreateFlags behaviorFlags,  PresentParameters presentParams) {
 			IntPtr devicePtr = IntPtr.Zero;
-			Result res = Interop.Calli(comPointer, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)(void*)&presentParams, 
+			int res = Interop.Calli(comPointer, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)(void*)&presentParams, 
 			                           (IntPtr)(void*)&devicePtr,(*(IntPtr**)comPointer)[16]);
-			res.CheckError();
+			
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return new Device( devicePtr );
 		}
 	}

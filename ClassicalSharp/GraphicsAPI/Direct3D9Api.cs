@@ -399,7 +399,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EndFrame( Game game ) {
 			device.EndScene();
-			int code = device.Present().Code;
+			int code = device.Present();
 			if( code >= 0 ) return;
 			
 			if( (uint)code != (uint)Direct3DError.DeviceLost )
@@ -409,7 +409,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Utils.LogDebug( "Lost Direct3D device." );
 			while( true ) {
 				Thread.Sleep( 50 );
-				code = device.TestCooperativeLevel().Code;
+				code = device.TestCooperativeLevel();
 				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
 					Utils.Log( "Retrieved Direct3D device again." );
 					RecreateDevice( game );

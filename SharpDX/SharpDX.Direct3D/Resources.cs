@@ -49,14 +49,14 @@ namespace SharpDX.Direct3D9 {
 		
 		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {
 			IntPtr pOut;
-			Result res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return pOut;
 		}
 		
 		public void Unlock() {
-			Result res = Interop.Calli(comPointer, (*(IntPtr**)comPointer)[12]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, (*(IntPtr**)comPointer)[12]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 	}
 	
@@ -68,14 +68,14 @@ namespace SharpDX.Direct3D9 {
 		
 		public LockedRectangle LockRectangle(LockFlags flags) {
 			LockedRectangle lockedRect = new LockedRectangle();
-			Result res = Interop.Calli(comPointer, (IntPtr)(void*)&lockedRect, IntPtr.Zero, (int)flags,(*(IntPtr**)comPointer)[13]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, (IntPtr)(void*)&lockedRect, IntPtr.Zero, (int)flags,(*(IntPtr**)comPointer)[13]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return lockedRect;
 		}
 		
 		public void UnlockRectangle() {
-			Result res = Interop.Calli(comPointer,(*(IntPtr**)comPointer)[14]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer,(*(IntPtr**)comPointer)[14]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 	}
 	
@@ -87,14 +87,14 @@ namespace SharpDX.Direct3D9 {
 
 		public LockedRectangle LockRectangle(int level, LockFlags flags) {
 			LockedRectangle lockedRect = new LockedRectangle();
-			Result res = Interop.Calli(comPointer, level, (IntPtr)(void*)&lockedRect, IntPtr.Zero, (int)flags,(*(IntPtr**)comPointer)[19]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, level, (IntPtr)(void*)&lockedRect, IntPtr.Zero, (int)flags,(*(IntPtr**)comPointer)[19]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return lockedRect;
 		}
 		
 		public void UnlockRectangle(int level) {
-			Result res = Interop.Calli(comPointer, level,(*(IntPtr**)comPointer)[20]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, level,(*(IntPtr**)comPointer)[20]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 	}
 	
@@ -106,14 +106,14 @@ namespace SharpDX.Direct3D9 {
 		
 		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {
 			IntPtr pOut;
-			Result res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return pOut;
 		}
 		
 		public void Unlock() {
-			Result res = Interop.Calli(comPointer,(*(IntPtr**)comPointer)[12]);
-			res.CheckError();
+			int res = Interop.Calli(comPointer,(*(IntPtr**)comPointer)[12]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 	}
 }
