@@ -42,9 +42,9 @@ namespace SharpDX.Direct3D9 {
 	}
 	
 	[InteropPatch]
-	public unsafe class IndexBuffer : Resource {
+	public unsafe class DataBuffer : Resource { // Either 'VertexBuffer' or 'IndexBuffer
 		
-		public IndexBuffer(IntPtr nativePtr) : base(nativePtr) {
+		public DataBuffer(IntPtr nativePtr) : base(nativePtr) {
 		}
 		
 		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {
@@ -52,6 +52,19 @@ namespace SharpDX.Direct3D9 {
 			int res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 			return pOut;
+		}
+		
+		public void SetData( IntPtr data, int bytes, LockFlags flags ) {
+			IntPtr dst = Lock( 0, bytes, flags );
+			Direct3D.memcpy( data, dst, bytes );
+			Unlock();
+		}
+		
+		public void SetData<T>( T[] data, int bytes, LockFlags flags ) where T : struct {
+			IntPtr src = Interop.Fixed( ref data[0] );	
+			IntPtr dst = Lock( 0, bytes, flags );
+			Direct3D.memcpy( src, dst, bytes );
+			Unlock();
 		}
 		
 		public void Unlock() {
@@ -92,27 +105,14 @@ namespace SharpDX.Direct3D9 {
 			return lockedRect;
 		}
 		
+		public void SetData( IntPtr data, int bytes, int level, LockFlags flags ) {
+			LockedRectangle rect = LockRectangle( level, flags );
+			Direct3D.memcpy( data, rect.DataPointer, bytes );
+			UnlockRectangle( level );
+		}
+		
 		public void UnlockRectangle(int level) {
 			int res = Interop.Calli(comPointer, level,(*(IntPtr**)comPointer)[20]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-		}
-	}
-	
-	[InteropPatch]
-	public unsafe class VertexBuffer : Resource {
-		
-		public VertexBuffer(IntPtr nativePtr) : base(nativePtr) {
-		}
-		
-		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {
-			IntPtr pOut;
-			int res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return pOut;
-		}
-		
-		public void Unlock() {
-			int res = Interop.Calli(comPointer,(*(IntPtr**)comPointer)[12]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 	}

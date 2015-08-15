@@ -21,8 +21,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		const int texBufferSize = 512, iBufferSize = 256, vBufferSize = 2048;
 		
 		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
-		VertexBuffer[] vBuffers = new VertexBuffer[vBufferSize];
-		IndexBuffer[] iBuffers = new IndexBuffer[iBufferSize];
+		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
+		DataBuffer[] iBuffers = new DataBuffer[iBufferSize];
 		MatrixStack viewStack, projStack, texStack;
 		MatrixStack curStack;
 		PrimitiveType[] modeMappings = {
@@ -165,10 +165,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
-			LockedRectangle vbData = texture.LockRectangle( 0, LockFlags.None );
-			IntPtr dest = vbData.DataPointer;
-			memcpy( scan0, dest, width * height * 4 );
-			texture.UnlockRectangle( 0 );
+			texture.SetData( scan0, width * height * 4, 0, LockFlags.None );
 			return GetOrExpand( ref textures, texture, texBufferSize );
 		}
 
@@ -230,48 +227,31 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
-			GCHandle handle = GCHandle.Alloc( vertices, GCHandleType.Pinned );
-			VertexBuffer buffer = CreateVertexBuffer( handle.AddrOfPinnedObject(), count, format );
-			handle.Free();
+			int size = count * strideSizes[(int)format];
+			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
+			buffer.SetData( vertices, size, LockFlags.None );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
 		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
-			VertexBuffer buffer = CreateVertexBuffer( vertices, count, format );
+			int size = count * strideSizes[(int)format];
+			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
+			buffer.SetData( vertices, size, LockFlags.None );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
 		public unsafe override int CreateIb( ushort[] indices, int indicesCount ) {
-			IndexBuffer buffer;
-			fixed( ushort* src = indices )
-				buffer = CreateIndexBuffer( (IntPtr)src, indicesCount );
-			
+			int size = indicesCount * sizeof( ushort );
+			DataBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
+			buffer.SetData( indices, size, LockFlags.None );
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
-			IndexBuffer buffer = CreateIndexBuffer( indices, indicesCount );
+			int size = indicesCount * sizeof( ushort );
+			DataBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
+			buffer.SetData( indices, size, LockFlags.None );
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
-		}
-
-		unsafe VertexBuffer CreateVertexBuffer( IntPtr src, int count, VertexFormat format ) {
-			int size = count * strideSizes[(int)format];
-			VertexBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
-			
-			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
-			memcpy( src, vbData, size );
-			buffer.Unlock();
-			return buffer;
-		}
-		
-		unsafe IndexBuffer CreateIndexBuffer( IntPtr src, int count ) {
-			int size = count * sizeof( ushort );
-			IndexBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
-			
-			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
-			memcpy( src, vbData, size );
-			buffer.Unlock();
-			return buffer;
 		}
 
 		public override void DeleteVb( int vb ) {
@@ -474,29 +454,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			args.Windowed = true;
 			return args;
 		}
-		
-		unsafe void memcpy( IntPtr srcPtr, IntPtr dstPtr, int bytes ) {
-			byte* srcByte, dstByte;
-			if( memcpy64Bit ) {
-				long* srcLong = (long*)srcPtr, dstLong = (long*)dstPtr;
-				while( bytes >= 8 ) {
-					*dstLong++ = *srcLong++;
-					bytes -= 8;
-				}
-				srcByte = (byte*)srcLong; dstByte = (byte*)dstLong;
-			} else {
-				int* srcInt = (int*)srcPtr, dstInt = (int*)dstPtr;
-				while( bytes >= 4 ) {
-					*dstInt++ = *srcInt++;
-					bytes -= 4;
-				}
-				srcByte = (byte*)srcInt; dstByte = (byte*)dstInt;
-			}
-			for( int i = 0; i < bytes; i++ ) {
-				*dstByte++ = *srcByte++;
-			}
-		}
-		
+
 		static int GetOrExpand<T>( ref T[] array, T value, int expSize ) {
 			// Find first free slot
 			for( int i = 1; i < array.Length; i++ ) {

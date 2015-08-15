@@ -80,18 +80,18 @@ namespace SharpDX.Direct3D9
 			return new Texture( pOut );
 		}
 		
-		public VertexBuffer CreateVertexBuffer(int length, Usage usage, VertexFormat vertexFormat, Pool pool) {
+		public DataBuffer CreateVertexBuffer(int length, Usage usage, VertexFormat vertexFormat, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
 			int res = Interop.Calli(comPointer, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[26]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
-			return new VertexBuffer( pOut );
+			return new DataBuffer( pOut );
 		}
 		
-		public IndexBuffer CreateIndexBuffer(int length, Usage usage, Format format, Pool pool) {
+		public DataBuffer CreateIndexBuffer(int length, Usage usage, Format format, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
 			int res = Interop.Calli(comPointer, length, (int)usage, (int)format, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[27]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
-			return new IndexBuffer( pOut );
+			return new DataBuffer( pOut );
 		}
 		
 		public void GetRenderTargetData(Surface renderTarget, Surface destSurface) {
@@ -189,12 +189,12 @@ namespace SharpDX.Direct3D9
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 		
-		public void SetStreamSource(int streamNumber, VertexBuffer streamData, int offsetInBytes, int stride) {
+		public void SetStreamSource(int streamNumber, DataBuffer streamData, int offsetInBytes, int stride) {
 			int res = Interop.Calli(comPointer, streamNumber,(streamData == null)?IntPtr.Zero:streamData.comPointer,offsetInBytes, stride,(*(IntPtr**)comPointer)[100]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 		
-		public void SetIndices(IndexBuffer indexData) {
+		public void SetIndices(DataBuffer indexData) {
 			int res = Interop.Calli(comPointer,(indexData == null)?IntPtr.Zero:indexData.comPointer,(*(IntPtr**)comPointer)[104]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
