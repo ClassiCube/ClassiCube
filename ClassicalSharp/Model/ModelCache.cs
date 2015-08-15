@@ -4,7 +4,7 @@ using System.IO;
 
 namespace ClassicalSharp.Model {
 
-	public class ModelCache {
+	public class ModelCache : IDisposable {
 		
 		Game window;
 		public ModelCache( Game window ) {

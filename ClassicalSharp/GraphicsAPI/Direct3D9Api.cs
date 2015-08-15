@@ -49,14 +49,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			PresentParameters args = GetPresentArgs( 640, 480 );
 			try {
-				device = new Device( d3d, adapter, DeviceType.Hardware, windowHandle, createFlags, args );
+				device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
 			} catch( SharpDXException ) {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
-					device = new Device( d3d, adapter, DeviceType.Hardware, windowHandle, createFlags, args );
+					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
 				} catch ( SharpDXException ) {
 					createFlags = CreateFlags.SoftwareVertexProcessing;
-					device = new Device( d3d, adapter, DeviceType.Hardware, windowHandle, createFlags, args );
+					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
 				}
 			}
 			
@@ -99,12 +99,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			Blend.SourceAlpha, Blend.InverseSourceAlpha,
 			Blend.DestinationAlpha, Blend.InverseDestinationAlpha,
 		};
-		Blend srcFunc, dstFunc;
-		public override void AlphaBlendFunc( BlendFunc srcBlendFunc, BlendFunc dstBlendFunc ) {
-			srcFunc = blendFuncs[(int)srcBlendFunc];
-			dstFunc = blendFuncs[(int)dstBlendFunc];
-			device.SetRenderState( RenderState.SourceBlend, (int)srcFunc );
-			device.SetRenderState( RenderState.DestinationBlend, (int)dstFunc );
+		Blend srcBlendFunc, dstBlendFunc;
+		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
+			srcBlendFunc = blendFuncs[(int)srcFunc];
+			dstBlendFunc = blendFuncs[(int)dstFunc];
+			device.SetRenderState( RenderState.SourceBlend, (int)srcBlendFunc );
+			device.SetRenderState( RenderState.DestinationBlend, (int)dstBlendFunc );
 		}
 
 		bool fogEnable;
@@ -140,12 +140,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		FogMode[] modes = { FogMode.Linear, FogMode.Exponential, FogMode.ExponentialSquared };
-		FogMode fogMode;
-		public override void SetFogMode( Fog mode ) {
-			FogMode newMode = modes[(int)mode];
-			if( newMode == fogMode ) return;
-			fogMode = newMode;
-			device.SetRenderState( RenderState.FogTableMode, (int)fogMode );
+		FogMode fogTableMode;
+		public override void SetFogMode( Fog fogMode ) {
+			FogMode newMode = modes[(int)fogMode];
+			if( newMode == fogTableMode ) return;
+			fogTableMode = newMode;
+			device.SetRenderState( RenderState.FogTableMode, (int)fogTableMode );
 		}
 		
 		public override bool FaceCulling {
@@ -164,7 +164,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
-			D3D.Texture texture = new D3D.Texture( device, width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
+			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
 			LockedRectangle vbData = texture.LockRectangle( 0, LockFlags.None );
 			IntPtr dest = vbData.DataPointer;
 			memcpy( scan0, dest, width * height * 4 );
@@ -241,22 +241,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
-		public unsafe override int CreateIb( ushort[] indices, int count ) {
+		public unsafe override int CreateIb( ushort[] indices, int indicesCount ) {
 			IndexBuffer buffer;
 			fixed( ushort* src = indices )
-				buffer = CreateIndexBuffer( (IntPtr)src, count );
+				buffer = CreateIndexBuffer( (IntPtr)src, indicesCount );
 			
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 		
-		public override int CreateIb( IntPtr indices, int count ) {
-			IndexBuffer buffer = CreateIndexBuffer( indices, count );
+		public override int CreateIb( IntPtr indices, int indicesCount ) {
+			IndexBuffer buffer = CreateIndexBuffer( indices, indicesCount );
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 
 		unsafe VertexBuffer CreateVertexBuffer( IntPtr src, int count, VertexFormat format ) {
 			int size = count * strideSizes[(int)format];
-			VertexBuffer buffer = new VertexBuffer( device, size, Usage.None, formatMapping[(int)format], Pool.Managed );
+			VertexBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
 			
 			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
 			memcpy( src, vbData, size );
@@ -266,7 +266,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		unsafe IndexBuffer CreateIndexBuffer( IntPtr src, int count ) {
 			int size = count * sizeof( ushort );
-			IndexBuffer buffer = new IndexBuffer( device, size, Usage.None, Pool.Managed, true );
+			IndexBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
 			
 			IntPtr vbData = buffer.Lock( 0, size, LockFlags.None );
 			memcpy( src, vbData, size );
@@ -306,7 +306,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, startVertex,
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, 0,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
 		#endregion
@@ -385,10 +385,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				device.SetTransform( matrixType, ref stack[stackIndex] );
 			}
 
-			public Matrix GetTop() {
-				return stack[stackIndex];
-			}
-
 			public void Pop() {
 				stackIndex--;
 				device.SetTransform( matrixType, ref stack[stackIndex] );
@@ -442,14 +438,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetRenderState( RenderState.AlphaBlendEnable, alphaBlend );
 			device.SetRenderState( RenderState.AlphaFunc, (int)alphaTestFunc );
 			device.SetRenderState( RenderState.AlphaRef, alphaTestRef );
-			device.SetRenderState( RenderState.SourceBlend, (int)srcFunc );
-			device.SetRenderState( RenderState.DestinationBlend, (int)dstFunc );
+			device.SetRenderState( RenderState.SourceBlend, (int)srcBlendFunc );
+			device.SetRenderState( RenderState.DestinationBlend, (int)dstBlendFunc );
 			device.SetRenderState( RenderState.FogEnable, fogEnable );
 			device.SetRenderState( RenderState.FogColor, fogCol );
 			device.SetRenderState( RenderState.FogDensity, fogDensity );
 			device.SetRenderState( RenderState.FogStart, fogStart );
 			device.SetRenderState( RenderState.FogEnd, fogEnd );
-			device.SetRenderState( RenderState.FogTableMode, (int)fogMode );
+			device.SetRenderState( RenderState.FogTableMode, (int)fogTableMode );
 			device.SetRenderState( RenderState.ZFunc, (int)depthTestFunc );
 			device.SetRenderState( RenderState.ZEnable, depthTest );
 			device.SetRenderState( RenderState.ZWriteEnable, depthWrite );

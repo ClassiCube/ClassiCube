@@ -78,7 +78,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool AlphaBlending { set; }
 		
 		/// <summary> Sets the alpha blend function that isused when alpha blending is enabled. </summary>
-		public abstract void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc );
+		public abstract void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc );
 		
 		/// <summary> Clears the underlying back and/or front buffer. </summary>
 		public abstract void Clear();
@@ -116,7 +116,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteDynamicVb( int id );
 		
-		public abstract void DeleteVb( int id );
+		public abstract void DeleteVb( int vb );
 		
 		public abstract void DeleteIb( int ib );
 		

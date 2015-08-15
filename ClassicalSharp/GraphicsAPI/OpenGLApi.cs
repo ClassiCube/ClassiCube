@@ -53,8 +53,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
 			BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
 		};
-		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc destFunc ) {
-			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)destFunc] );
+		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
+			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc] );
 		}
 		
 		public override bool Fog {
@@ -229,14 +229,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DeleteBuffersARB( 1, &id );
 		}
 		
-		public unsafe override void DeleteVb( int id ) {
-			if( id <= 0 ) return;
-			GL.DeleteBuffersARB( 1, &id );
+		public unsafe override void DeleteVb( int vb ) {
+			if( vb <= 0 ) return;
+			GL.DeleteBuffersARB( 1, &vb );
 		}
 		
-		public unsafe override void DeleteIb( int id ) {
-			if( id <= 0 ) return;
-			GL.DeleteBuffersARB( 1, &id );
+		public unsafe override void DeleteIb( int ib ) {
+			if( ib <= 0 ) return;
+			GL.DeleteBuffersARB( 1, &ib );
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;

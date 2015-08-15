@@ -20,10 +20,10 @@ namespace ClassicalSharp.Network {
 		
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
-			client = new WebClient();
-			client.Proxy = null;
+			WebRequest.DefaultWebProxy = null;
+			client = new WebClient();			
 			
-			worker = new Thread( DownloadThreadWorker );
+			worker = new Thread( DownloadThreadWorker, 256 * 1024 );
 			worker.Name = "ClassicalSharp.ImageDownloader";
 			worker.IsBackground = true;
 			worker.Start();

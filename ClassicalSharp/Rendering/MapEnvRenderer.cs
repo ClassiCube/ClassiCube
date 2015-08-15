@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		int edgeTexId, sideTexId;
 		int sidesIndices, edgesIndices;
 		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgesCol = FastColour.White;
-		bool legacy = false;
+		bool legacy;
 		
 		public void SetUseLegacyMode( bool legacy ) {
 			this.legacy = legacy;

@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public class EntityList {
+	public class EntityList : IDisposable {
 		
 		public int MaxCount = 256;
 		public Player[] Players = new Player[256];

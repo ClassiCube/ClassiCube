@@ -118,13 +118,6 @@ namespace ClassicalSharp {
 				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
 		
-		void GetChunkInfo( int x, int y, int z, ref ChunkPartInfo[] normalParts, ref ChunkPartInfo[] translucentParts ) {
-			for( int i = 0; i < arraysCount; i++ ) {
-				SetPartInfo( drawInfoNormal[i], i, ref normalParts );
-				SetPartInfo( drawInfoTranslucent[i], i, ref translucentParts );
-			}
-		}
-		
 		void SetPartInfo( DrawInfo part, int i, ref ChunkPartInfo[] parts ) {
 			if( part.iCount == 0 ) return;
 			

@@ -26,10 +26,10 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -0.5f, 0f, -0.5f, 0.5f, blockHeight, 0.5f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player player ) {
+		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
-			block = Byte.Parse( player.ModelName );
+			block = Byte.Parse( p.ModelName );
 			if( block == 0 ) {
 				blockHeight = 1;
 				return;

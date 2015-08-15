@@ -19,8 +19,11 @@
 // THE SOFTWARE.
 
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("SharpDX.Direct3D9")]
 [assembly: AssemblyDescription("Assembly providing DirectX - Direct3D9 managed API")]
 [assembly: AssemblyProduct("SharpDX.Direct3D9")]
 [assembly: System.Security.AllowPartiallyTrustedCallers]
+[assembly: ComVisible(false)]
+[assembly: AssemblyVersion("0.8")]

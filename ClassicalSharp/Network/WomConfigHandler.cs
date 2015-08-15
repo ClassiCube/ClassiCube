@@ -34,17 +34,18 @@ namespace ClassicalSharp {
 					string value = parts[1].TrimStart();
 					
 					if( key == "environment.cloud" ) {
-						FastColour col = ParseWomColourString( value );
+						FastColour col = ParseWomColour( value, Map.DefaultCloudsColour );
 						Window.Map.SetCloudsColour( col );
 					} else if( key == "environment.sky" ) {
-						FastColour col = ParseWomColourString( value );
+						FastColour col = ParseWomColour( value, Map.DefaultSkyColour );
 						Window.Map.SetSkyColour( col );
 					} else if( key == "environment.fog" ) {
-						FastColour col = ParseWomColourString( value );
+						FastColour col = ParseWomColour( value, Map.DefaultFogColour );
 						Window.Map.SetFogColour( col );
 					} else if( key == "environment.level" ) {
-						int waterLevel = Int32.Parse( value );
-						Window.Map.SetWaterLevel( waterLevel );
+						int waterLevel = 0;
+						if( Int32.TryParse( value, out waterLevel ) )
+							Window.Map.SetWaterLevel( waterLevel );
 					} else if( key == "environment.terrain" ) {
 						GetWomImageAsync( "terrain", value );
 					} else if( key == "environment.edge" ) { // TODO: custom edges and sides
@@ -79,12 +80,10 @@ namespace ClassicalSharp {
 			sendWomId = true;
 		}
 		
-		static FastColour ParseWomColourString( string value ) {
-			int col = Int32.Parse( value );
-			int r = ( col & 0xFF0000 ) >> 16;
-			int g = ( col & 0x00FF00 ) >> 8;
-			int b = ( col & 0x0000FF );
-			return new FastColour( r, g, b );
+		static FastColour ParseWomColour( string value, FastColour defaultCol ) {
+			int col;
+			return Int32.TryParse( value, out col ) ? 
+				new FastColour( ( col & 0xFF0000 ) >> 16, ( col & 0xFF00 ) >> 8, col & 0xFF ) : defaultCol;
 		}
 	}
 }

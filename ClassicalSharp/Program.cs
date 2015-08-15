@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace ClassicalSharp {
 	
-	class Program {
+	static class Program {
 		
 		[STAThread]
 		public static void Main( string[] args ) {

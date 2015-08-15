@@ -27,33 +27,7 @@ namespace SharpDX.Direct3D9
 	{
 		public Device(IntPtr nativePtr) : base(nativePtr) {
 		}
-		
-		public Device(Direct3D direct3D, int adapter, DeviceType deviceType, IntPtr hFocusWindow, CreateFlags behaviorFlags, params PresentParameters[] presentationParametersRef) {
-			direct3D.CreateDevice(adapter, deviceType, hFocusWindow, behaviorFlags, presentationParametersRef, this);
-		}
-		
-		public void DrawIndexedUserPrimitives<S, T>(PrimitiveType type, int minimumVertexIndex, int vertexCount, int primitiveCount, S[] indexData, Format indexDataFormat, T[] vertexData)
-			where S : struct
-			where T : struct {
-			DrawIndexedUserPrimitives(type, 0, 0, minimumVertexIndex, vertexCount, primitiveCount, indexData, indexDataFormat, vertexData);
-		}
 
-		public void DrawIndexedUserPrimitives<S, T>(PrimitiveType type, int startIndex, int minimumVertexIndex, int vertexCount, int primitiveCount, S[] indexData, Format indexDataFormat, T[] vertexData)
-			where S : struct
-			where T : struct {
-			DrawIndexedUserPrimitives(type, startIndex, 0, minimumVertexIndex, vertexCount, primitiveCount, indexData, indexDataFormat, vertexData);
-		}
-
-		public void DrawIndexedUserPrimitives<S, T>(PrimitiveType type, int startIndex, int startVertex, int minimumVertexIndex, int vertexCount, int primitiveCount, S[] indexData, Format indexDataFormat, T[] vertexData)
-			where S : struct
-			where T : struct {
-			DrawIndexedPrimitiveUP(type, minimumVertexIndex, vertexCount, primitiveCount, (IntPtr)Interop.Fixed(ref indexData[startIndex]), indexDataFormat, (IntPtr)Interop.Fixed(ref vertexData[startVertex]), Interop.SizeOf<T>());
-		}
-
-		public Result Present() {
-			return Present(IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
-		}
-		
 		public Result TestCooperativeLevel() {
 			return Interop.Calli(comPointer,(*(IntPtr**)comPointer)[3]);
 		}
@@ -69,10 +43,10 @@ namespace SharpDX.Direct3D9
 		
 		public Capabilities Capabilities {
 			get {
-				Capabilities capsRef = new Capabilities();
-				Result res = Interop.Calli(comPointer, (IntPtr)(void*)&capsRef,(*(IntPtr**)comPointer)[7]);
+				Capabilities caps = new Capabilities();
+				Result res = Interop.Calli(comPointer, (IntPtr)(void*)&caps,(*(IntPtr**)comPointer)[7]);
 				res.CheckError();
-				return capsRef;
+				return caps;
 			}
 		}
 		
@@ -83,24 +57,13 @@ namespace SharpDX.Direct3D9
 			return modeRef;
 		}
 		
-		public CreationParameters CreationParameters {
-			get {
-				CreationParameters parametersRef = new CreationParameters();
-				Result res = Interop.Calli(comPointer, (IntPtr)(void*)&parametersRef,(*(IntPtr**)comPointer)[9]);
-				res.CheckError();
-				return parametersRef;
-			}
-		}
-		
-		public void Reset(params PresentParameters[] presentationParametersRef) {
-			Result res;
-			fixed (void* presentParamsRef = presentationParametersRef)
-				res = Interop.Calli(comPointer, (IntPtr)presentParamsRef,(*(IntPtr**)comPointer)[16]);
+		public void Reset( PresentParameters presentParams ) {
+			Result res = Interop.Calli(comPointer, (IntPtr)(void*)&presentParams,(*(IntPtr**)comPointer)[16]);
 			res.CheckError();
 		}
 		
-		internal Result Present(IntPtr sourceRectRef, IntPtr destRectRef, IntPtr hDestWindowOverride, IntPtr dirtyRegionRef) {
-			return Interop.Calli(comPointer, sourceRectRef, destRectRef, hDestWindowOverride, dirtyRegionRef,(*(IntPtr**)comPointer)[17]);
+		public Result Present() {
+			return Interop.Calli(comPointer, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero,(*(IntPtr**)comPointer)[17]);
 		}
 		
 		public Surface GetBackBuffer(int iSwapChain, int iBackBuffer, BackBufferType type) {
@@ -110,25 +73,25 @@ namespace SharpDX.Direct3D9
 			return ( backBufferOut == IntPtr.Zero ) ? null : new Surface( backBufferOut );
 		}
 		
-		internal void CreateTexture(int width, int height, int levels, Usage usage, Format format, Pool pool, Texture textureOut) {
+		public Texture CreateTexture(int width, int height, int levels, Usage usage, Format format, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
 			Result res = Interop.Calli(comPointer, width, height, levels, (int)usage, (int)format, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[23]);
-			textureOut.comPointer = pOut;
 			res.CheckError();
+			return new Texture( pOut );
 		}
 		
-		internal void CreateVertexBuffer(int length, Usage usage, VertexFormat vertexFormat, Pool pool, VertexBuffer vertexBufferOut) {
+		public VertexBuffer CreateVertexBuffer(int length, Usage usage, VertexFormat vertexFormat, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
-			Result res = Interop.Calli(comPointer, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)(void*)&pOut,IntPtr.Zero,(*(IntPtr**)comPointer)[26]);
-			vertexBufferOut.comPointer = pOut;
+			Result res = Interop.Calli(comPointer, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[26]);
 			res.CheckError();
+			return new VertexBuffer( pOut );
 		}
 		
-		internal void CreateIndexBuffer(int length, int usage, Format format, Pool pool, IndexBuffer indexBufferOut) {
+		public IndexBuffer CreateIndexBuffer(int length, Usage usage, Format format, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
-			Result res = Interop.Calli(comPointer, length, usage, (int)format, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[27]);
-			indexBufferOut.comPointer = pOut;
+			Result res = Interop.Calli(comPointer, length, (int)usage, (int)format, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[27]);
 			res.CheckError();
+			return new IndexBuffer( pOut );
 		}
 		
 		public void GetRenderTargetData(Surface renderTarget, Surface destSurface) {
@@ -140,7 +103,7 @@ namespace SharpDX.Direct3D9
 			IntPtr pOut = IntPtr.Zero;
 			Result res = Interop.Calli(comPointer, width, height, (int)format, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[36]);
 			res.CheckError();
-			return (pOut == IntPtr.Zero) ? null : new Surface(pOut);
+			return new Surface(pOut);
 		}
 
 		public void BeginScene() {
@@ -161,7 +124,7 @@ namespace SharpDX.Direct3D9
 		public void SetTransform(TransformState state, ref Matrix matrixRef) {
 			Result res;
 			fixed (void* matrixRef_ = &matrixRef)
-				res= Interop.Calli(comPointer, (int)state, (IntPtr)matrixRef_,(*(IntPtr**)comPointer)[44]);
+				res = Interop.Calli(comPointer, (int)state, (IntPtr)matrixRef_,(*(IntPtr**)comPointer)[44]);
 			res.CheckError();
 		}
 		
@@ -189,7 +152,7 @@ namespace SharpDX.Direct3D9
 		}
 		
 		public void DrawPrimitives(PrimitiveType type, int startVertex, int primitiveCount) {
-			Result res = Interop.Calli(comPointer,(int)type, startVertex, primitiveCount,(*(IntPtr**)comPointer)[81]);
+			Result res = Interop.Calli(comPointer, (int)type, startVertex, primitiveCount,(*(IntPtr**)comPointer)[81]);
 			res.CheckError();
 		}
 		
@@ -205,6 +168,14 @@ namespace SharpDX.Direct3D9
 		internal void DrawPrimitiveUP(PrimitiveType type, int primitiveCount, IntPtr dataRef, int stride) {
 			Result res = Interop.Calli(comPointer, (int)type, primitiveCount, dataRef, stride,(*(IntPtr**)comPointer)[83]);
 			res.CheckError();
+		}
+
+		public void DrawIndexedUserPrimitives<S, T>(PrimitiveType type, int startIndex, int startVertex, int minimumVertexIndex,
+		                                            int vertexCount, int primitiveCount, S[] indexData, Format indexDataFormat, T[] vertexData)
+			where S : struct
+			where T : struct {
+			DrawIndexedPrimitiveUP(type, minimumVertexIndex, vertexCount, primitiveCount, (IntPtr)Interop.Fixed(ref indexData[startIndex]),
+			                       indexDataFormat, (IntPtr)Interop.Fixed(ref vertexData[startVertex]), Interop.SizeOf<T>());
 		}
 		
 		internal void DrawIndexedPrimitiveUP(PrimitiveType type, int minVertexIndex, int numVertices, int primitiveCount,

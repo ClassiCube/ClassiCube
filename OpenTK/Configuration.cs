@@ -26,12 +26,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Reflection;
 
 namespace OpenTK
 {
@@ -45,14 +41,11 @@ namespace OpenTK
         // Detects the underlying OS and runtime.
         static Configuration()
         {
-            if (System.Environment.OSVersion.Platform == PlatformID.Win32NT ||
-                System.Environment.OSVersion.Platform == PlatformID.Win32S ||
-                System.Environment.OSVersion.Platform == PlatformID.Win32Windows ||
-                System.Environment.OSVersion.Platform == PlatformID.WinCE)
+        	PlatformID platform = Environment.OSVersion.Platform;
+            if( platform == PlatformID.Win32NT || platform == PlatformID.Win32S ||
+               platform == PlatformID.Win32Windows || platform == PlatformID.WinCE )
                 runningOnWindows = true;
-            else if (System.Environment.OSVersion.Platform == PlatformID.Unix ||
-                     System.Environment.OSVersion.Platform == (PlatformID)4)
-            {
+            else if ( platform == PlatformID.Unix || platform == (PlatformID)4 ) {
                 // Distinguish between Linux, Mac OS X and other Unix operating systems.
                 string kernel_name = DetectUnixKernel();
                 switch (kernel_name)
@@ -198,7 +191,7 @@ namespace OpenTK
             Debug.WriteLine(uts.machine);
             Debug.Unindent();
 
-            return uts.sysname.ToString();
+            return uts.sysname;
         }
 
         [DllImport("libc")]

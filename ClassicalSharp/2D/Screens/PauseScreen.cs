@@ -74,6 +74,7 @@ namespace ClassicalSharp {
 			textFont.Dispose();
 			titleFont.Dispose();
 			keyStatusFont.Dispose();
+			keyStatusWidget.Dispose();
 			gameWidget.Dispose();
 			controlsWidget.Dispose();
 			exitWidget.Dispose();

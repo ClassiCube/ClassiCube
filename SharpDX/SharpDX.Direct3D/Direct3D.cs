@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace SharpDX.Direct3D9 {
 	
@@ -37,22 +38,22 @@ namespace SharpDX.Direct3D9 {
 
 		public List<AdapterInformation> Adapters;
 		
-		public const int SdkVersion = 32;
-		[DllImport("d3d9.dll", CallingConvention = CallingConvention.StdCall)]
-		private static extern IntPtr Direct3DCreate9(int arg0);
+		const int SdkVersion = 32;
+		[SuppressUnmanagedCodeSecurity, DllImport( "d3d9.dll" )]
+		static extern IntPtr Direct3DCreate9( int sdkVersion );
 		
 		public int GetAdapterCount() {
 			return Interop.Calli(comPointer,(*(IntPtr**)comPointer)[4]);
 		}
 		
-		public AdapterDetails GetAdapterIdentifier(int adapter) {
-			AdapterDetails identifierRef = new AdapterDetails();
-			var identifierRef_ = new AdapterDetails.__Native();
-			Result res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierRef_,(*(IntPtr**)comPointer)[5]);
-			
-			identifierRef.MarshalFrom(ref identifierRef_);
+		public AdapterDetails GetAdapterIdentifier( int adapter ) {			
+			var identifierNative = new AdapterDetails.Native();
+			Result res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
 			res.CheckError();
-			return identifierRef;
+			
+			AdapterDetails identifier = new AdapterDetails();
+			identifier.MarshalFrom(ref identifierNative);			
+			return identifier;
 		}
 		
 		public int GetAdapterModeCount(int adapter, Format format) {
@@ -94,14 +95,12 @@ namespace SharpDX.Direct3D9 {
 			return Interop.Calli_IntPtr(comPointer, adapter,(*(IntPtr**)comPointer)[15]);
 		}
 		
-		internal void CreateDevice(int adapter, DeviceType deviceType, IntPtr hFocusWindow, CreateFlags behaviorFlags,
-		                           PresentParameters[] presentationParametersRef, Device device) {
-			IntPtr pOut = IntPtr.Zero;
-			Result res;
-			fixed (void* presentParams_ = presentationParametersRef)
-				res = Interop.Calli(comPointer, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)presentParams_, (IntPtr)(void*)&pOut,(*(IntPtr**)comPointer)[16]);
-			device.comPointer = pOut;
+		public Device CreateDevice(int adapter, DeviceType deviceType, IntPtr hFocusWindow, CreateFlags behaviorFlags,  PresentParameters presentParams) {
+			IntPtr devicePtr = IntPtr.Zero;
+			Result res = Interop.Calli(comPointer, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)(void*)&presentParams, 
+			                           (IntPtr)(void*)&devicePtr,(*(IntPtr**)comPointer)[16]);
 			res.CheckError();
+			return new Device( devicePtr );
 		}
 	}
 }

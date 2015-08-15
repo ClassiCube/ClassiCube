@@ -281,6 +281,9 @@ namespace ClassicalSharp {
 			if( writer != null ) {
 				writer.Close();
 			}
+			if( activeScreen != null ) {
+				activeScreen.Dispose();
+			}
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Utils2D.Dispose();

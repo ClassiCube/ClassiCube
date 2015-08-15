@@ -109,7 +109,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
-		double blendFactor( int x ) {
+		double BlendFactor( int x ) {
 			//return -0.05 + 0.22 * Math.Log( Math.Pow( x, 0.25 ) );
 			double blend = -0.13 + 0.28 * Math.Log( Math.Pow( x, 0.25 ) );
 			if( blend < 0 ) blend = 0;
@@ -134,7 +134,7 @@ namespace ClassicalSharp.Renderers {
 				adjFogCol = new FastColour( 153, 25, 0 );
 			} else {
 				// Blend fog and sky together
-				float blend = (float)blendFactor( Window.ViewDistance );
+				float blend = (float)BlendFactor( Window.ViewDistance );
 				adjFogCol.R = (byte)Utils.Lerp( fogCol.R, skyCol.R, blend );
 				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );
 				adjFogCol.B = (byte)Utils.Lerp( fogCol.B, skyCol.B, blend );

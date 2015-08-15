@@ -6,8 +6,7 @@ namespace ClassicalSharp {
 	
 	public class NetPlayer : Player {
 		
-		int tickCount = 0;
-		
+		int tickCount;		
 		public NetPlayer( string displayName, string skinName, Game window ) : base( window ) {
 			DisplayName = displayName;
 			SkinName = Utils.StripColours( skinName );

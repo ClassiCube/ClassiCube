@@ -53,7 +53,7 @@ namespace SharpDX.Direct3D9
 		public int WhqlLevel;
 
 		[StructLayout(LayoutKind.Sequential)]
-		internal struct __Native {
+		internal struct Native {
 			public fixed byte Driver[512];
 			public fixed byte Description[512];
 			public fixed byte DeviceName[32];
@@ -66,7 +66,7 @@ namespace SharpDX.Direct3D9
 			public int WhqlLevel;
 		}
 		
-		internal void MarshalFrom(ref __Native native) {
+		internal void MarshalFrom(ref Native native) {
 			fixed (void* __ptr = native.Driver)
 				Driver = Marshal.PtrToStringAnsi((IntPtr)__ptr);
 			fixed (void* __ptr = native.Description)

@@ -102,12 +102,4 @@ namespace SharpDX.Direct3D9 {
 		public int MaxVertexShader30InstructionSlots;
 		public int MaxPixelShader30InstructionSlots;
 	}
-	
-	[StructLayout(LayoutKind.Sequential)]
-	public struct CreationParameters {
-		public int AdapterOrdinal;
-		public DeviceType DeviceType;
-		public IntPtr HFocusWindow;
-		public int BehaviorFlags;
-	}
 }

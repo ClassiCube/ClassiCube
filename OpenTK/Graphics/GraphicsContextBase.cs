@@ -64,12 +64,6 @@ namespace OpenTK.Graphics
 
         public GraphicsMode GraphicsMode { get { return Mode; } }
 
-        public bool ErrorChecking
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
         #endregion
 
         #region IGraphicsContextInternal Members

@@ -17,7 +17,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		FastColour col = FastColour.White;
-		int index = 0;
+		int index;
 		const int verticesCount = 24 * ( 3 * 2 );
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
 		const float size = 0.0625f;

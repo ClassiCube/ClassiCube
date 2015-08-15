@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	// Class used to minimise memory allocations of strings. 
 	// Really, only useful for FpsScreen and TextInputWidget as they allocate lots of very small strings.
 	// Seriously, you should *not* use this anywhere else, as Empty and Length are O(N).
-	internal unsafe class UnsafeString {
+	internal sealed unsafe class UnsafeString {
 		
 		internal string value;
 		internal int capacity;

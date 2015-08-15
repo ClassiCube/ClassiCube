@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 		BlockDrawInfo[] blocksTable;
 		Texture selectedBlock, blockInfoTexture;
 		int blockSize = 48;
-		int selectedIndex = 0;
+		int selectedIndex;
 		const int blocksPerRow = 10;
 		int rows;
 		int startX, startY;

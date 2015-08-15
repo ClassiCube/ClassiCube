@@ -47,10 +47,6 @@ namespace SharpDX.Direct3D9 {
 		public IndexBuffer(IntPtr nativePtr) : base(nativePtr) {
 		}
 		
-		public IndexBuffer(Device device, int sizeInBytes, Usage usage, Pool pool, bool sixteenBit) : base(IntPtr.Zero) {
-			device.CreateIndexBuffer(sizeInBytes, (int)usage, sixteenBit ? Format.Index16 : Format.Index32, pool, this);
-		}
-		
 		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {
 			IntPtr pOut;
 			Result res = Interop.Calli(comPointer, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)comPointer)[11]);
@@ -88,10 +84,6 @@ namespace SharpDX.Direct3D9 {
 		
 		public Texture(IntPtr nativePtr) : base(nativePtr) {
 		}
-		
-		public Texture(Device device, int width, int height, int levelCount, Usage usage, Format format, Pool pool) : base(IntPtr.Zero) {
-			device.CreateTexture(width, height, levelCount, usage, format, pool, this);
-		}
 
 		public LockedRectangle LockRectangle(int level, LockFlags flags) {
 			LockedRectangle lockedRect = new LockedRectangle();
@@ -110,10 +102,6 @@ namespace SharpDX.Direct3D9 {
 	public unsafe class VertexBuffer : Resource {
 		
 		public VertexBuffer(IntPtr nativePtr) : base(nativePtr) {
-		}
-		
-		public VertexBuffer(Device device, int sizeInBytes, Usage usage, VertexFormat format, Pool pool) : base(IntPtr.Zero) {
-			device.CreateVertexBuffer(sizeInBytes, usage, format, pool, this);
 		}
 		
 		public IntPtr Lock( int offsetToLock, int sizeToLock, LockFlags flags ) {

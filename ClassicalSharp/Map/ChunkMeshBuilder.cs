@@ -96,7 +96,10 @@ namespace ClassicalSharp {
 			if( !BuildChunk( x, y, z ) )
 				return;
 			
-			GetChunkInfo( x, y, z, ref normalParts, ref translucentParts );
+			for( int i = 0; i < arraysCount; i++ ) {
+				SetPartInfo( drawInfoNormal[i], i, ref normalParts );
+				SetPartInfo( drawInfoTranslucent[i], i, ref translucentParts );
+			}
 		}
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {

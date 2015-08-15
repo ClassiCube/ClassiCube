@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Model {
 
-	public abstract class IModel {
+	public abstract class IModel : IDisposable {
 		
 		protected Game window;
 		protected IGraphicsApi graphics;

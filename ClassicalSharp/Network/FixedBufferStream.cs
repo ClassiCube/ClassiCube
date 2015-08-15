@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			return _buffer[_position++];
 		}
 		
-		public override long Seek( long offset, SeekOrigin loc ) {
+		public override long Seek( long offset, SeekOrigin origin ) {
 			throw new NotSupportedException();
 		}
 		

@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Particles {
 	
-	public class ParticleManager {
+	public class ParticleManager : IDisposable {
 		
 		List<Particle> particles = new List<Particle>();
 		public Game Window;
@@ -55,7 +55,6 @@ namespace ClassicalSharp.Particles {
 			Graphics.DeleteDynamicVb( vb );
 		}
 		
-		int particleId = 0;
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = Window.BlockInfo.GetOptimTextureLoc( block, TileSide.Left );
@@ -85,8 +84,7 @@ namespace ClassicalSharp.Particles {
 				particleRec.V2 = particleRec.V1 + elementYSize;
 				double life = 3 - rnd.NextDouble();
 				
-				particles.Add( new TerrainParticle( Window, pos, velocity, particleId, life, particleRec ) );
-				particleId++;
+				particles.Add( new TerrainParticle( Window, pos, velocity, life, particleRec ) );
 			}
 		}
 	}

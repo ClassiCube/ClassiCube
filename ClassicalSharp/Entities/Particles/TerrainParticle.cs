@@ -9,8 +9,8 @@ namespace ClassicalSharp.Particles {
 		const float gravity = 2.4f;
 		double maxY = 0;
 		
-		public TerrainParticle( Game window, Vector3 pos, Vector3 velocity, int id, double lifetime, TextureRectangle rec )
-			: base( window, pos, velocity, id, lifetime ) {
+		public TerrainParticle( Game window, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec )
+			: base( window, pos, velocity, lifetime ) {
 			Rectangle = rec;
 			maxY = Position.Y;
 		}

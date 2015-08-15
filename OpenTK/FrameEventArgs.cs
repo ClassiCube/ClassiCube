@@ -62,7 +62,7 @@ namespace OpenTK
             internal set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException( "value <= 0" );
                 elapsed = value;
             }
         }

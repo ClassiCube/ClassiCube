@@ -25,12 +25,12 @@ namespace ClassicalSharp {
 		public Game Window;
 		public string ServerName, ServerMotd;
 		public bool Disconnected;
-		bool sendHeldBlock = false;
-		bool useMessageTypes = false;
-		bool useBlockPermissions = false;
-		bool receivedFirstPosition = false;
-		public bool UsingExtPlayerList = false;
-		public bool UsingPlayerClick = false;
+		bool sendHeldBlock;
+		bool useMessageTypes;
+		bool useBlockPermissions;
+		bool receivedFirstPosition;
+		public bool UsingExtPlayerList;
+		public bool UsingPlayerClick;
 		
 		public void Connect( IPAddress address, int port ) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 		#region Writing
 		
 		static byte[] outBuffer = new byte[131];
-		static int outIndex = 0;
+		static int outIndex;
 		private static void MakeLoginPacket( string username, string verKey ) {
 			WriteUInt8( (byte)PacketId.Handshake );
 			WriteUInt8( 7 ); // protocol version
