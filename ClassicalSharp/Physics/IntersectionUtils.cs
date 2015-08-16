@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			if( v < 0 || u + v > 1 ) return false;
 
 			float t = Vector3.Dot( edge2, q ) * invDet;
-			I = orig + t * dir;
+			I = orig + dir * t;
 			return t > 0.000001f;
 		}
 	}

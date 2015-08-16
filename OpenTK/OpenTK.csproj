@@ -83,9 +83,7 @@
     <Compile Include="Input\KeyboardKeyEventArgs.cs" />
     <Compile Include="Input\MouseButton.cs" />
     <Compile Include="Input\MouseDevice.cs" />
-    <Compile Include="Math\MathHelper.cs" />
     <Compile Include="Math\Matrix4.cs" />
-    <Compile Include="Math\Quaternion.cs" />
     <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
