@@ -6,10 +6,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 #pragma warning disable 3019    // CLS-compliance checking
 #pragma warning disable 0649    // struct members not explicitly initialized
@@ -51,39 +49,19 @@ namespace OpenTK.Platform.X11
 
     internal static class API
     {
-        #region --- Fields ---
-
-        private const string _dll_name = "libX11";
-        private const string _dll_name_vid = "libXxf86vm";
-
         static Display defaultDisplay;
-        static int defaultScreen;
-        static Window rootWindow;
         static int screenCount;
 
         internal static Display DefaultDisplay { get { return defaultDisplay; } }
-        static int DefaultScreen { get { return defaultScreen; } }
-        //internal static Window RootWindow { get { return rootWindow; } }
-        internal static int ScreenCount { get { return screenCount; } }
-        
+        internal static int ScreenCount { get { return screenCount; } }        
         internal static object Lock = new object();
 
-        #endregion
-
-        static API()
-        {
-            int has_threaded_x = Functions.XInitThreads();
-            Debug.Print("Initializing threaded X11: {0}.", has_threaded_x.ToString());
-        
-            defaultDisplay = Functions.XOpenDisplay(IntPtr.Zero);
-                
+        static API() {
+            defaultDisplay = Functions.XOpenDisplay_Safe(IntPtr.Zero);                
             if (defaultDisplay == IntPtr.Zero)
                 throw new PlatformException("Could not establish connection to the X-Server.");
 
-            using (new XLock(defaultDisplay))
-            {
-                screenCount = Functions.XScreenCount(DefaultDisplay);
-            }
+            screenCount = Functions.XScreenCount(DefaultDisplay);
             Debug.Print("Display connection: {0}, Screen count: {1}", DefaultDisplay, ScreenCount);
 
             //AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
@@ -95,21 +73,8 @@ namespace OpenTK.Platform.X11
             {
                 Functions.XCloseDisplay(defaultDisplay);
                 defaultDisplay = IntPtr.Zero;
-                defaultScreen = 0;
-                rootWindow = IntPtr.Zero;
             }
         }
-
-        #region XFree
-
-        /// <summary>
-        /// Frees the memory used by an X structure. Only use on unmanaged structures!
-        /// </summary>
-        /// <param name="buffer">A pointer to the structure that will be freed.</param>
-        [DllImport(_dll_name, EntryPoint = "XFree")]
-        extern public static void Free(IntPtr buffer);
-
-        #endregion
 
         #region Pointer and Keyboard functions
 
@@ -133,8 +98,8 @@ namespace OpenTK.Platform.X11
         /// <para>Diagnostics:</para>
         /// <para>BadValue:    Some numeric value falls outside the range of values accepted by the request. Unless a specific range is specified for an argument, the full range defined by the argument's type is accepted. Any argument defined as a set of alternatives can generate this error.</para>
         /// </remarks>
-        [DllImport(_dll_name, EntryPoint = "XGetKeyboardMapping")]
-        public static extern KeySym GetKeyboardMapping(Display display, KeyCode first_keycode, int keycode_count,
+        [DllImport("libX11")]
+        public static extern KeySym XGetKeyboardMapping(Display display, KeyCode first_keycode, int keycode_count,
             ref int keysyms_per_keycode_return);
 
         /// <summary>
@@ -144,13 +109,13 @@ namespace OpenTK.Platform.X11
         /// <param name="min_keycodes_return">Returns the minimum number of KeyCodes</param>
         /// <param name="max_keycodes_return">Returns the maximum number of KeyCodes.</param>
         /// <remarks> The minimum number of KeyCodes returned is never less than 8, and the maximum number of KeyCodes returned is never greater than 255. Not all KeyCodes in this range are required to have corresponding keys.</remarks>
-        [DllImport(_dll_name, EntryPoint = "XDisplayKeycodes")]
-        public static extern void DisplayKeycodes(Display display, ref int min_keycodes_return, ref int max_keycodes_return);
+        [DllImport("libX11")]
+        public static extern void XDisplayKeycodes(Display display, ref int min_keycodes_return, ref int max_keycodes_return);
 
         #endregion
 
-        [DllImport(_dll_name, EntryPoint = "XLookupKeysym")]
-        public static extern KeySym LookupKeysym(ref XKeyEvent key_event, int index);
+        [DllImport("libX11")]
+        public static extern KeySym XLookupKeysym(ref XKeyEvent key_event, int index);
 
     }
     #endregion
@@ -172,12 +137,6 @@ namespace OpenTK.Platform.X11
         public long blueMask;
         public int ColormapSize;
         public int BitsPerRgb;
-
-        public override string ToString()
-        {
-            return String.Format("id ({0}), screen ({1}), depth ({2}), class ({3})",
-                VisualID, Screen, Depth, Class);
-        }
     }
 
     #endregion
@@ -188,7 +147,7 @@ namespace OpenTK.Platform.X11
     {
         internal int Width, Height;
         internal int MWidth, MHeight;
-    };
+    }
 
     #endregion
 
@@ -226,7 +185,7 @@ namespace OpenTK.Platform.X11
         delegate int FreePrivateDelegate(XExtData extension);
         FreePrivateDelegate FreePrivate;    /* called to free private storage */
         XPointer private_data;    /* buffer private to this extension. */
-    };
+    }
 
     #endregion
     
@@ -295,69 +254,6 @@ namespace OpenTK.Platform.X11
 
     #region X11 Constants and Enums
 
-    internal struct Constants
-    {
-        public const int QueuedAlready = 0;
-        public const int QueuedAfterReading = 1;
-        public const int QueuedAfterFlush = 2;
-
-        public const int CopyFromParent = 0;
-        public const int CWX = 1;
-        public const int InputOutput = 1;
-        public const int InputOnly = 2;
-
-        /* The hints we recognize */
-        public const string XA_WIN_PROTOCOLS           = "_WIN_PROTOCOLS";
-        public const string XA_WIN_ICONS               = "_WIN_ICONS";
-        public const string XA_WIN_WORKSPACE           = "_WIN_WORKSPACE";
-        public const string XA_WIN_WORKSPACE_COUNT     = "_WIN_WORKSPACE_COUNT";
-        public const string XA_WIN_WORKSPACE_NAMES     = "_WIN_WORKSPACE_NAMES";
-        public const string XA_WIN_LAYER               = "_WIN_LAYER";
-        public const string XA_WIN_STATE               = "_WIN_STATE";
-        public const string XA_WIN_HINTS               = "_WIN_HINTS";
-        public const string XA_WIN_WORKAREA            = "_WIN_WORKAREA";
-        public const string XA_WIN_CLIENT_LIST         = "_WIN_CLIENT_LIST";
-        public const string XA_WIN_APP_STATE           = "_WIN_APP_STATE";
-        public const string XA_WIN_EXPANDED_SIZE       = "_WIN_EXPANDED_SIZE";
-        public const string XA_WIN_CLIENT_MOVING       = "_WIN_CLIENT_MOVING";
-        public const string XA_WIN_SUPPORTING_WM_CHECK = "_WIN_SUPPORTING_WM_CHECK";
-    }
-
-    internal enum WindowLayer
-    {
-        Desktop    = 0,
-        Below      = 2,
-        Normal     = 4,
-        OnTop      = 6,
-        Dock       = 8,
-        AboveDock  = 10,
-        Menu       = 12,
-    }
-
-    internal enum WindowState
-    {
-        Sticky           = (1<<0), /* everyone knows sticky */
-        Minimized        = (1<<1), /* ??? */
-        MaximizedVertically = (1<<2), /* window in maximized V state */
-        MaximizedHorizontally = (1<<3), /* window in maximized H state */
-        Hidden           = (1<<4), /* not on taskbar but window visible */
-        Shaded           = (1<<5), /* shaded (NeXT style), */
-        HID_WORKSPACE    = (1<<6), /* not on current desktop */
-        HID_TRANSIENT    = (1<<7), /* owner of transient is hidden */
-        FixedPosition    = (1<<8), /* window is fixed in position even */
-        ArrangeIgnore    = (1<<9),  /* ignore for auto arranging */
-    }
-
-    internal enum WindowHints
-    {
-        SkipFocus = (1<<0), /* "alt-tab" skips this win */
-        SkipWinlist = (1<<1), /* not in win list */
-        SkipTaskbar = (1<<2), /* not on taskbar */
-        GroupTransient = (1<<3), /* ??????? */
-        FocusOnClick = (1<<4), /* app only accepts focus when clicked */
-        DoNotCover = (1<<5),  /* attempt to not cover this window */
-    }
-
     internal enum ErrorCodes : int
     {
         Success = 0,
@@ -378,33 +274,6 @@ namespace OpenTK.Platform.X11
         BadName = 15,
         BadLength = 16,
         BadImplementation = 17,
-    }
-
-    [Flags]
-    internal enum CreateWindowMask : long//: ulong
-    {
-        CWBackPixmap    = (1L<<0),
-        CWBackPixel     = (1L<<1),
-        CWSaveUnder        = (1L<<10),
-        CWEventMask        = (1L<<11),
-        CWDontPropagate    = (1L<<12),
-        CWColormap      = (1L<<13),
-        CWCursor        = (1L<<14),
-        CWBorderPixmap    = (1L<<2),
-        CWBorderPixel    = (1L<<3),
-        CWBitGravity    = (1L<<4),
-        CWWinGravity    = (1L<<5),
-        CWBackingStore    = (1L<<6),
-        CWBackingPlanes    = (1L<<7),
-        CWBackingPixel     = (1L<<8),
-        CWOverrideRedirect    = (1L<<9),
-
-        //CWY    = (1<<1),
-        //CWWidth    = (1<<2),
-        //CWHeight    = (1<<3),
-        //CWBorderWidth    = (1<<4),
-        //CWSibling    = (1<<5),
-        //CWStackMode    = (1<<6),
     }
 
     #region XKey
@@ -557,55 +426,30 @@ namespace OpenTK.Platform.X11
         F9                          = 0xffc6,
         F10                         = 0xffc7,
         F11                         = 0xffc8,
-        L1                          = 0xffc8,
         F12                         = 0xffc9,
-        L2                          = 0xffc9,
         F13                         = 0xffca,
-        L3                          = 0xffca,
         F14                         = 0xffcb,
-        L4                          = 0xffcb,
         F15                         = 0xffcc,
-        L5                          = 0xffcc,
         F16                         = 0xffcd,
-        L6                          = 0xffcd,
         F17                         = 0xffce,
-        L7                          = 0xffce,
         F18                         = 0xffcf,
-        L8                          = 0xffcf,
         F19                         = 0xffd0,
-        L9                          = 0xffd0,
         F20                         = 0xffd1,
-        L10                         = 0xffd1,
         F21                         = 0xffd2,
-        R1                          = 0xffd2,
         F22                         = 0xffd3,
-        R2                          = 0xffd3,
         F23                         = 0xffd4,
-        R3                          = 0xffd4,
         F24                         = 0xffd5,
-        R4                          = 0xffd5,
         F25                         = 0xffd6,
-        R5                          = 0xffd6,
         F26                         = 0xffd7,
-        R6                          = 0xffd7,
         F27                         = 0xffd8,
-        R7                          = 0xffd8,
         F28                         = 0xffd9,
-        R8                          = 0xffd9,
         F29                         = 0xffda,
-        R9                          = 0xffda,
         F30                         = 0xffdb,
-        R10                         = 0xffdb,
         F31                         = 0xffdc,
-        R11                         = 0xffdc,
         F32                         = 0xffdd,
-        R12                         = 0xffdd,
         F33                         = 0xffde,
-        R13                         = 0xffde,
         F34                         = 0xffdf,
-        R14                         = 0xffdf,
         F35                         = 0xffe0,
-        R15                         = 0xffe0,
 
         /* Modifiers */
 
@@ -762,134 +606,11 @@ namespace OpenTK.Platform.X11
         All = 0x1FF,
     }
 
-    #region internal enum MouseMask
-
-    internal enum MouseMask
-    {
-        Button1MotionMask = (1 << 8),
-        Button2MotionMask = (1 << 9),
-        Button3MotionMask = (1 << 10),
-        Button4MotionMask = (1 << 11),
-        Button5MotionMask = (1 << 12),
-        Button1Mask = (1 << 8),
-        Button2Mask = (1 << 9),
-        Button3Mask = (1 << 10),
-        Button4Mask = (1 << 11),
-        Button5Mask = (1 << 12),
-        Button6Mask = (1 << 13),
-        Button7Mask = (1 << 14),
-        Button8Mask = (1 << 15),
-        ShiftMask = (1 << 0),
-        LockMask = (1 << 1),
-        ControlMask = (1 << 2),
-        Mod1Mask = (1 << 3),
-        Mod2Mask = (1 << 4),
-        Mod3Mask = (1 << 5),
-        Mod4Mask = (1 << 6),
-        Mod5Mask = (1 << 7),
-    }
-
-    #endregion
-
     #endregion
 
     internal static partial class Functions
     {
         internal const string X11Library = "libX11";
-
-        #region XCreateWindow
-
-        /// <summary>
-        /// The XCreateWindow function creates an unmapped subwindow for a specified parent window, returns the window ID of the created window, and causes the X server to generate a CreateNotify event. The created window is placed on top in the stacking order with respect to siblings.
-        /// </summary>
-        /// <param name="display">Specifies the connection to the X server.</param>
-        /// <param name="parent">Specifies the parent window.</param>
-        /// <param name="x">Specify the x coordinates, which are the top-left outside corner of the window's borders and are relative to the inside of the parent window's borders.</param>
-        /// <param name="y">Specify the y coordinates, which are the top-left outside corner of the window's borders and are relative to the inside of the parent window's borders.</param>
-        /// <param name="width">Specify the width, which is the created window's inside dimensions and do not include the created window's borders.</param>
-        /// <param name="height">Specify the height, which is the created window's inside dimensions and do not include the created window's borders.</param>
-        /// <param name="border_width">Specifies the width of the created window's border in pixels.</param>
-        /// <param name="depth">Specifies the window's depth. A depth of CopyFromParent means the depth is taken from the parent.</param>
-        /// <param name="class">Specifies the created window's class. You can pass InputOutput, InputOnly, or CopyFromParent. A class of CopyFromParent means the class is taken from the parent.</param>
-        /// <param name="visual">Specifies the visual type. A visual of CopyFromParent means the visual type is taken from the parent.</param>
-        /// <param name="valuemask">Specifies which window attributes are defined in the attributes argument. This mask is the bitwise inclusive OR of the valid attribute mask bits. If valuemask is zero, the attributes are ignored and are not referenced.</param>
-        /// <param name="attributes">Specifies the structure from which the values (as specified by the value mask) are to be taken. The value mask should have the appropriate bits set to indicate which attributes have been set in the structure.</param>
-        /// <returns>The window ID of the created window.</returns>
-        /// <remarks>
-        /// The coordinate system has the X axis horizontal and the Y axis vertical with the origin [0, 0] at the upper-left corner. Coordinates are integral, in terms of pixels, and coincide with pixel centers. Each window and pixmap has its own coordinate system. For a window, the origin is inside the border at the inside, upper-left corner. 
-        /// <para>The border_width for an InputOnly window must be zero, or a BadMatch error results. For class InputOutput, the visual type and depth must be a combination supported for the screen, or a BadMatch error results. The depth need not be the same as the parent, but the parent must not be a window of class InputOnly, or a BadMatch error results. For an InputOnly window, the depth must be zero, and the visual must be one supported by the screen. If either condition is not met, a BadMatch error results. The parent window, however, may have any depth and class. If you specify any invalid window attribute for a window, a BadMatch error results. </para>
-        /// <para>The created window is not yet displayed (mapped) on the user's display. To display the window, call XMapWindow(). The new window initially uses the same cursor as its parent. A new cursor can be defined for the new window by calling XDefineCursor(). The window will not be visible on the screen unless it and all of its ancestors are mapped and it is not obscured by any of its ancestors. </para>
-        /// <para>XCreateWindow can generate BadAlloc BadColor, BadCursor, BadMatch, BadPixmap, BadValue, and BadWindow errors. </para>
-        /// <para>The XCreateSimpleWindow function creates an unmapped InputOutput subwindow for a specified parent window, returns the window ID of the created window, and causes the X server to generate a CreateNotify event. The created window is placed on top in the stacking order with respect to siblings. Any part of the window that extends outside its parent window is clipped. The border_width for an InputOnly window must be zero, or a BadMatch error results. XCreateSimpleWindow inherits its depth, class, and visual from its parent. All other window attributes, except background and border, have their default values. </para>
-        /// <para>XCreateSimpleWindow can generate BadAlloc, BadMatch, BadValue, and BadWindow errors.</para>
-        /// </remarks>
-        [DllImport(X11Library, EntryPoint = "XCreateWindow")]//, CLSCompliant(false)]
-        public extern static Window XCreateWindow(Display display, Window parent,
-            int x, int y, int width, int height, int border_width, int depth,
-            int @class, IntPtr visual, UIntPtr valuemask, ref XSetWindowAttributes attributes);
-
-        #endregion
-
-        #region XChangeWindowAttributes
-
-        [DllImport(X11Library)]
-        internal static extern void XChangeWindowAttributes(Display display, Window w, UIntPtr valuemask, ref XSetWindowAttributes attributes);
-
-        internal static void XChangeWindowAttributes(Display display, Window w, SetWindowValuemask valuemask, ref XSetWindowAttributes attributes)
-        {
-            XChangeWindowAttributes(display, w, (UIntPtr)valuemask, ref attributes);
-        }
-
-        #endregion
-
-        #region XQueryKeymap
-
-        /*
-        /// <summary>
-        /// The XQueryKeymap() function returns a bit vector for the logical state of the keyboard, where each bit set to 1 indicates that the corresponding key is currently pressed down. The vector is represented as 32 bytes. Byte N (from 0) contains the bits for keys 8N to 8N + 7 with the least-significant bit in the byte representing key 8N.
-        /// </summary>
-        /// <param name="display">Specifies the connection to the X server.</param>
-        /// <param name="keys">Returns an array of bytes that identifies which keys are pressed down. Each bit represents one key of the keyboard.</param>
-        /// <remarks>Note that the logical state of a device (as seen by client applications) may lag the physical state if device event processing is frozen.</remarks>
-        [DllImport(_dll_name, EntryPoint = "XQueryKeymap")]
-        extern public static void XQueryKeymap(IntPtr display, [MarshalAs(UnmanagedType.LPArray, SizeConst = 32), In, Out] Keymap keys);
-        */
-
-        /// <summary>
-        /// The XQueryKeymap() function returns a bit vector for the logical state of the keyboard, where each bit set to 1 indicates that the corresponding key is currently pressed down. The vector is represented as 32 bytes. Byte N (from 0) contains the bits for keys 8N to 8N + 7 with the least-significant bit in the byte representing key 8N.
-        /// </summary>
-        /// <param name="display">Specifies the connection to the X server.</param>
-        /// <param name="keys">Returns an array of bytes that identifies which keys are pressed down. Each bit represents one key of the keyboard.</param>
-        /// <remarks>Note that the logical state of a device (as seen by client applications) may lag the physical state if device event processing is frozen.</remarks>
-        [DllImport(X11Library, EntryPoint = "XQueryKeymap")]
-        extern public static void XQueryKeymap(IntPtr display, byte[] keys);
-
-        #endregion
-
-        #region XMaskEvent
-
-        /// <summary>
-        /// The XMaskEvent() function searches the event queue for the events associated with the specified mask. When it finds a match, XMaskEvent() removes that event and copies it into the specified XEvent structure. The other events stored in the queue are not discarded. If the event you requested is not in the queue, XMaskEvent() flushes the output buffer and blocks until one is received.
-        /// </summary>
-        /// <param name="display">Specifies the connection to the X server.</param>
-        /// <param name="event_mask">Specifies the event mask.</param>
-        /// <param name="e">Returns the matched event's associated structure.</param>
-        [DllImport(X11Library, EntryPoint = "XMaskEvent")]
-        extern public static void XMaskEvent(IntPtr display, EventMask event_mask, ref XEvent e);
-
-        #endregion
-
-        #region XPutBackEvent
-
-        /// <summary>
-        /// The XPutBackEvent() function pushes an event back onto the head of the display's event queue by copying the event into the queue. This can be useful if you read an event and then decide that you would rather deal with it later. There is no limit to the number of times in succession that you can call XPutBackEvent().
-        /// </summary>
-        /// <param name="display">Specifies the connection to the X server.</param>
-        /// <param name="event">Specifies the event.</param>
-        [DllImport(X11Library, EntryPoint = "XPutBackEvent")]
-        public static extern void XPutBackEvent(IntPtr display, ref XEvent @event);
-        
-        #endregion
 
         #region Xrandr
 
@@ -1014,17 +735,11 @@ namespace OpenTK.Platform.X11
 
         #region Display, Screen and Window functions
 
-        #region XScreenCount
-
         [DllImport(X11Library)]
         public static extern int XScreenCount(Display display);
 
-        #endregion
-
-        #region XListDepths
-
         [DllImport(X11Library)]
-        unsafe static extern int *XListDepths(Display display, int screen_number, int* count_return);
+        unsafe static extern int* XListDepths(Display display, int screen_number, int* count_return);
 
         public static int[] XListDepths(Display display, int screen_number)
         {
@@ -1043,42 +758,6 @@ namespace OpenTK.Platform.X11
         }
 
         #endregion
-
-        #endregion
-    }
-
-    // Helper structure for calling XLock/UnlockDisplay
-    struct XLock : IDisposable
-    {
-        IntPtr _display;
-
-        public IntPtr Display
-        {
-            get
-            {
-                if (_display == IntPtr.Zero)
-                    throw new InvalidOperationException("Internal error (XLockDisplay with IntPtr.Zero). Please report this at http://www.opentk.com/node/add/project-issue/opentk");
-                return _display;
-            }
-            set
-            {
-                if (value == IntPtr.Zero)
-                    throw new ArgumentException();
-                _display = value;
-            }
-        }
-
-        public XLock(IntPtr display)
-            : this()
-        {
-            Display = display;
-            Functions.XLockDisplay(Display);
-        }
-
-        public void Dispose()
-        {
-            Functions.XUnlockDisplay(Display);
-        }
     }
 }
 

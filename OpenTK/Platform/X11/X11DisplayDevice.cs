@@ -36,8 +36,6 @@ namespace OpenTK.Platform.X11
 
         static X11DisplayDevice()
         {
-            using (new XLock(API.DefaultDisplay))
-            {
                 List<DisplayDevice> devices = new List<DisplayDevice>();
                 bool xinerama_supported = false;
                 try
@@ -82,7 +80,6 @@ namespace OpenTK.Platform.X11
                         Debug.Print("XF86 query failed, no DisplayDevice support available.");
                     }
                 }
-            }
         }
 
         internal X11DisplayDevice() { }
@@ -249,8 +246,6 @@ namespace OpenTK.Platform.X11
 
         static bool ChangeResolutionXRandR(DisplayDevice device, DisplayResolution resolution)
         {
-            using (new XLock(API.DefaultDisplay))
-            {
                 int screen = deviceToScreen[device];
                 IntPtr root = Functions.XRootWindow(API.DefaultDisplay, screen);
                 IntPtr screen_config = Functions.XRRGetScreenInfo(API.DefaultDisplay, root);
@@ -269,7 +264,6 @@ namespace OpenTK.Platform.X11
 
                 return 0 == Functions.XRRSetScreenConfigAndRate(API.DefaultDisplay, screen_config, root, new_resolution_index,
                     current_rotation, (short)(resolution != null ? resolution.RefreshRate : 0), lastConfigUpdate[screen]);
-            }
         }
 
         static bool ChangeResolutionXF86(DisplayDevice device, DisplayResolution resolution)

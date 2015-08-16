@@ -6,12 +6,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-using OpenTK.Input;
 using System.Drawing;
+using System.Runtime.InteropServices;
+using OpenTK.Input;
 
 namespace OpenTK.Platform.X11
 {
@@ -23,7 +21,6 @@ namespace OpenTK.Platform.X11
     internal sealed class X11Input : IInputDriver
     {
         X11Joystick joystick_driver = new X11Joystick();
-        //X11WindowInfo window;
         KeyboardDevice keyboard = new KeyboardDevice();
         MouseDevice mouse = new MouseDevice();
 
@@ -31,8 +28,6 @@ namespace OpenTK.Platform.X11
         int firstKeyCode, lastKeyCode; // The smallest and largest KeyCode supported by the X server.
         int keysyms_per_keycode;    // The number of KeySyms for each KeyCode.
         IntPtr[] keysyms;
-
-        //bool disposed;
 
         #region --- Constructors ---
 
@@ -53,19 +48,17 @@ namespace OpenTK.Platform.X11
             //window = new X11WindowInfo(attach);
             X11WindowInfo window = (X11WindowInfo)attach;
             
-            using (new XLock(window.Display))
-            {
                 // Init keyboard
-                API.DisplayKeycodes(window.Display, ref firstKeyCode, ref lastKeyCode);
+                API.XDisplayKeycodes(window.Display, ref firstKeyCode, ref lastKeyCode);
                 Debug.Print("First keycode: {0}, last {1}", firstKeyCode, lastKeyCode);
     
-                IntPtr keysym_ptr = API.GetKeyboardMapping(window.Display, (byte)firstKeyCode,
+                IntPtr keysym_ptr = API.XGetKeyboardMapping(window.Display, (byte)firstKeyCode,
                     lastKeyCode - firstKeyCode + 1, ref keysyms_per_keycode);
                 Debug.Print("{0} keysyms per keycode.", keysyms_per_keycode);
     
                 keysyms = new IntPtr[(lastKeyCode - firstKeyCode + 1) * keysyms_per_keycode];
                 Marshal.PtrToStructure(keysym_ptr, keysyms);
-                API.Free(keysym_ptr);
+                Functions.XFree(keysym_ptr);
     
                 // Request that auto-repeat is only set on devices that support it physically.
                 // This typically means that it's turned off for keyboards (which is what we want).
@@ -73,62 +66,9 @@ namespace OpenTK.Platform.X11
                 // be reset before the program exits.
                 bool supported;
                 Functions.XkbSetDetectableAutoRepeat(window.Display, true, out supported);
-            }
-
             Debug.Unindent();
         }
 
-        #endregion
-
-        #region private void InternalPoll()
-#if false
-        private void InternalPoll()
-        {
-            X11.XEvent e = new XEvent();
-            try
-            {
-                while (!disposed)
-                {
-                    Functions.XMaskEvent(window.Display,
-                        EventMask.PointerMotionMask | EventMask.PointerMotionHintMask |
-                        EventMask.ButtonPressMask | EventMask.ButtonReleaseMask |
-                        EventMask.KeyPressMask | EventMask.KeyReleaseMask |
-                        EventMask.StructureNotifyMask, ref e);
-
-                    if (disposed)
-                        return;
-
-                    switch (e.type)
-                    {
-                        case XEventName.KeyPress:
-                        case XEventName.KeyRelease:
-                            keyboardDriver.ProcessKeyboardEvent(ref e.KeyEvent);
-                            break;
-
-                        case XEventName.ButtonPress:
-                        case XEventName.ButtonRelease:
-                            mouseDriver.ProcessButton(ref e.ButtonEvent);
-                            break;
-
-                        case XEventName.MotionNotify:
-                            mouseDriver.ProcessMotion(ref e.MotionEvent);
-                            break;
-
-                        case XEventName.DestroyNotify:
-                            Functions.XPutBackEvent(window.Display, ref e);
-                            Functions.XAutoRepeatOn(window.Display);
-                            return;
-                    }
-                }
-            }
-            catch (ThreadAbortException expt)
-            {
-                Functions.XUnmapWindow(window.Display, window.Handle);
-                Functions.XDestroyWindow(window.Display, window.Handle);
-                return;
-            }
-        }
-#endif
         #endregion
 
         #region internal void ProcessEvent(ref XEvent e)
@@ -141,8 +81,8 @@ namespace OpenTK.Platform.X11
                 case XEventName.KeyRelease:
                     bool pressed = e.type == XEventName.KeyPress;
 
-                    IntPtr keysym = API.LookupKeysym(ref e.KeyEvent, 0);
-                    IntPtr keysym2 = API.LookupKeysym(ref e.KeyEvent, 1);
+                    IntPtr keysym = API.XLookupKeysym(ref e.KeyEvent, 0);
+                    IntPtr keysym2 = API.XLookupKeysym(ref e.KeyEvent, 1);
 
                     if (keymap.ContainsKey((XKey)keysym))
                         keyboard[keymap[(XKey)keysym]] = pressed;
@@ -211,58 +151,18 @@ namespace OpenTK.Platform.X11
         	set { System.Windows.Forms.Cursor.Position = value; }
         }
 
-        #region public IList<JoystickDevice> Joysticks
-
-        public IList<JoystickDevice> Joysticks
-        {
+        public IList<JoystickDevice> Joysticks {
             get { return joystick_driver.Joysticks; }
         }
 
-        #endregion
-
-        #region public void Poll()
-
-        /// <summary>
-        /// Polls and updates state of all keyboard, mouse and joystick devices.
-        /// </summary>
-        public void Poll()
-        {
+        /// <summary> Polls and updates state of all keyboard, mouse and joystick devices. </summary>
+        public void Poll() {
             joystick_driver.Poll();
         }
 
         #endregion
 
-        #endregion
-
-        #region --- IDisposable Members ---
-
-        public void Dispose()
-        {
-            //this.Dispose(true);
-            //GC.SuppressFinalize(this);
+        public void Dispose() {
         }
-
-        //private void Dispose(bool manual)
-        //{
-        //    if (!disposed)
-        //    {
-        //        //disposing = true;
-        //        if (pollingThread != null && pollingThread.IsAlive)
-        //            pollingThread.Abort();
-
-        //        if (manual)
-        //        {
-        //        }
-
-        //        disposed = true;
-        //    }
-        //}
-
-        //~X11Input()
-        //{
-        //    this.Dispose(false);
-        //}
-
-        #endregion
     }
 }

@@ -33,16 +33,6 @@ namespace OpenTK.Platform.X11
 {
     class X11Factory : IPlatformFactory
     {
-        #region Constructors
-
-        public X11Factory()
-        {
-            int result = Functions.XInitThreads();
-            Debug.Print("Initializing threaded X: {0}.", result != 0 ? "success" : "failed");
-        }
-
-        #endregion
-
         #region IPlatformFactory Members
 
         public virtual INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)

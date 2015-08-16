@@ -65,12 +65,7 @@ namespace OpenTK.Platform.X11
             // the above lines returns 0 - false and 1 - true.
             
             gfx = new GraphicsMode(info.VisualID, new ColorFormat(r, g, b, a), depth, stencil, buffers);
-            
-            using (new XLock(display))
-            {
-                Functions.XFree(visual);
-            }
-            
+            Functions.XFree(visual);          
             return gfx;
         }
 
@@ -84,10 +79,7 @@ namespace OpenTK.Platform.X11
             // Select a visual that matches the parameters set by the user.
             IntPtr display = API.DefaultDisplay;
             IntPtr visual = IntPtr.Zero;
-            using (new XLock(display))
-            {
-                try
-                {
+                try {
                     int screen = Functions.XDefaultScreen(display);
                     IntPtr root = Functions.XRootWindow(display, screen);
                     Debug.Print("Display: {0}, Screen: {1}, RootWindow: {2}", display, screen, root);
@@ -105,13 +97,10 @@ namespace OpenTK.Platform.X11
                             Functions.XFree((IntPtr)fbconfigs);
                         }
                     }
-                }
-                catch (EntryPointNotFoundException)
-                {
+                } catch (EntryPointNotFoundException) {
                     Debug.Print("Function glXChooseFBConfig not supported.");
                     return IntPtr.Zero;
                 }
-            }
             return visual;
         }
 
@@ -119,10 +108,7 @@ namespace OpenTK.Platform.X11
         IntPtr SelectVisualUsingChooseVisual( int[] visualAttribs ) {
             Debug.Print("Falling back to glXChooseVisual.");
             IntPtr display = API.DefaultDisplay;
-            
-            using (new XLock(display)) {
-                return Glx.ChooseVisual(display, Functions.XDefaultScreen(display), visualAttribs);
-            }
+            return Glx.ChooseVisual(display, Functions.XDefaultScreen(display), visualAttribs);
         }
         
         int[] GetVisualAttribs( ColorFormat color, int depth, int stencil, int buffers ) {
