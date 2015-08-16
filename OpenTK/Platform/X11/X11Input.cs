@@ -26,8 +26,6 @@ namespace OpenTK.Platform.X11
         //X11WindowInfo window;
         KeyboardDevice keyboard = new KeyboardDevice();
         MouseDevice mouse = new MouseDevice();
-        List<KeyboardDevice> dummy_keyboard_list = new List<KeyboardDevice>(1);
-        List<MouseDevice> dummy_mice_list = new List<MouseDevice>(1);
 
         X11KeyMap keymap = new X11KeyMap();
         int firstKeyCode, lastKeyCode; // The smallest and largest KeyCode supported by the X server.
@@ -54,13 +52,6 @@ namespace OpenTK.Platform.X11
 
             //window = new X11WindowInfo(attach);
             X11WindowInfo window = (X11WindowInfo)attach;
-
-            // Init mouse
-            mouse.Description = "Default X11 mouse";
-            mouse.DeviceID = IntPtr.Zero;
-            mouse.NumberOfButtons = 5;
-            mouse.NumberOfWheels = 1;
-            dummy_mice_list.Add(mouse);
             
             using (new XLock(window.Display))
             {
@@ -75,12 +66,6 @@ namespace OpenTK.Platform.X11
                 keysyms = new IntPtr[(lastKeyCode - firstKeyCode + 1) * keysyms_per_keycode];
                 Marshal.PtrToStructure(keysym_ptr, keysyms);
                 API.Free(keysym_ptr);
-    
-                KeyboardDevice kb = new KeyboardDevice();
-                keyboard.Description = "Default X11 keyboard";
-                keyboard.NumberOfKeys = lastKeyCode - firstKeyCode + 1;
-                keyboard.DeviceID = IntPtr.Zero;
-                dummy_keyboard_list.Add(keyboard);
     
                 // Request that auto-repeat is only set on devices that support it physically.
                 // This typically means that it's turned off for keyboards (which is what we want).
@@ -212,23 +197,13 @@ namespace OpenTK.Platform.X11
 
         #region --- IInputDriver Members ---
 
-        #region public IList<Keyboard> Keyboard
-
-        public IList<KeyboardDevice> Keyboard
-        {
-            get { return dummy_keyboard_list;  }//return keyboardDriver.Keyboard;
+        public KeyboardDevice Keyboard {
+        	get { return keyboard; }
         }
 
-        #endregion
-
-        #region public IList<Mouse> Mouse
-
-        public IList<MouseDevice> Mouse
-        {
-            get { return (IList<MouseDevice>)dummy_mice_list; } //return mouseDriver.Mouse;
+        public MouseDevice Mouse {
+        	get { return mouse; }
         }
-
-        #endregion
         
         // TODO: Implement using native API, rather than through Mono.
         public Point DesktopCursorPos {

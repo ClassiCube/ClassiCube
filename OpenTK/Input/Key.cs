@@ -27,9 +27,7 @@
 
 namespace OpenTK.Input
 {
-    /// <summary>
-    /// The available keyboard keys.
-    /// </summary>
+    /// <summary> The available keyboard keys. </summary>
     public enum Key : int
     {
         /// <summary>A key outside the known keys.</summary>

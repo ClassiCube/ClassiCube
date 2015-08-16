@@ -32,18 +32,16 @@ using System.Diagnostics;
 using System.Drawing;
 using OpenTK.Graphics;
 using OpenTK.Platform.MacOS.Carbon;
+using OpenTK.Input;
 
 namespace OpenTK.Platform.MacOS
 {
-    class CarbonGLNative : INativeWindow
+    class CarbonGLNative : INativeWindow, IInputDriver
     {
         #region Fields
 
         CarbonWindowInfo window;
-        CarbonInput mInputDriver;
-
         static MacOSKeyMap Keymap = new MacOSKeyMap();
-
         IntPtr uppHandler;
 
         string title = "OpenTK Window";
@@ -108,6 +106,7 @@ namespace OpenTK.Platform.MacOS
                 new Rect((short)x, (short)y, (short)width, (short)height));
 			
 			mDisplayDevice = device;
+			dummy_joystick_list.Add(new JoystickDevice<object>(0, 0, 0));
         }
 
         #endregion
@@ -196,8 +195,6 @@ namespace OpenTK.Platform.MacOS
 
         void ConnectEvents()
         {
-            mInputDriver = new CarbonInput();
-
             EventTypeSpec[] eventTypes = new EventTypeSpec[]
             {
                 new EventTypeSpec(EventClass.Window, WindowEventKind.WindowClose),
@@ -369,17 +366,16 @@ namespace OpenTK.Platform.MacOS
             switch (evt.KeyboardEventKind)
             {
                 case KeyboardEventKind.RawKeyRepeat:
-                    InputDriver.Keyboard[0].KeyRepeat = true;
+                    keyboard.KeyRepeat = true;
                     goto case KeyboardEventKind.RawKeyDown;
 
                 case KeyboardEventKind.RawKeyDown:
 					OnKeyPress(mKeyPressArgs);
-                    InputDriver.Keyboard[0][Keymap[code]] = true;
+                    keyboard[Keymap[code]] = true;
                     return OSStatus.NoError;
 
                 case KeyboardEventKind.RawKeyUp:
-                    InputDriver.Keyboard[0][Keymap[code]] = false;
-
+                    keyboard[Keymap[code]] = false;
 					return OSStatus.NoError;
 
                 case KeyboardEventKind.RawKeyModifiersChanged:
@@ -441,8 +437,8 @@ namespace OpenTK.Platform.MacOS
         }
         protected OSStatus ProcessMouseEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
         {
-            System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Mouse);
-            MouseButton button = MouseButton.Primary;
+            Debug.Assert(evt.EventClass == EventClass.Mouse);
+            MacOSMouseButton button;
             HIPoint pt = new HIPoint();
 			HIPoint screenLoc =  new HIPoint();
 
@@ -484,20 +480,18 @@ namespace OpenTK.Platform.MacOS
 
                     switch (button)
                     {
-                        case MouseButton.Primary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Left] = true;
+                        case MacOSMouseButton.Primary:
+                            mouse[MouseButton.Left] = true;
                             break;
 
-                        case MouseButton.Secondary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Right] = true;
+                        case MacOSMouseButton.Secondary:
+                            mouse[MouseButton.Right] = true;
                             break;
 
-                        case MouseButton.Tertiary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Middle] = true;
+                        case MacOSMouseButton.Tertiary:
+                            mouse[MouseButton.Middle] = true;
                             break;
                     }
-
-
 					return OSStatus.NoError;
 
                 case MouseEventKind.MouseUp:
@@ -505,29 +499,25 @@ namespace OpenTK.Platform.MacOS
 
                     switch (button)
                     {
-                        case MouseButton.Primary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Left] = false;
+                        case MacOSMouseButton.Primary:
+                            mouse[MouseButton.Left] = false;
                             break;
 
-                        case MouseButton.Secondary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Right] = false;
+                        case MacOSMouseButton.Secondary:
+                            mouse[MouseButton.Right] = false;
                             break;
 
-                        case MouseButton.Tertiary:
-                            InputDriver.Mouse[0][OpenTK.Input.MouseButton.Middle] = false;
+                        case MacOSMouseButton.Tertiary:
+                            mouse[MouseButton.Middle] = false;
                             break;
                     }
-
                     button = API.GetEventMouseButton(inEvent);
-
 					return OSStatus.NoError;
 
 				case MouseEventKind.WheelMoved:
 
 					int delta = API.GetEventMouseWheelDelta(inEvent) / 3;
-
-					InputDriver.Mouse[0].Wheel += delta;
-
+					mouse.Wheel += delta;
 					return OSStatus.NoError;
 
                 case MouseEventKind.MouseMoved:
@@ -535,32 +525,23 @@ namespace OpenTK.Platform.MacOS
 					
 					//Debug.Print("Mouse Location: {0}, {1}", pt.X, pt.Y);
 
-					if (this.windowState == WindowState.Fullscreen)
-					{
-						if (mousePosInClient.X != InputDriver.Mouse[0].X ||
-							mousePosInClient.Y != InputDriver.Mouse[0].Y)
-						{
-							InputDriver.Mouse[0].Position = mousePosInClient;
+					if (windowState == WindowState.Fullscreen) {
+						if (mousePosInClient.X != mouse.X || mousePosInClient.Y != mouse.Y) {
+							mouse.Position = mousePosInClient;
 						}
-					}
-					else
-					{
+					} else {
 						// ignore clicks in the title bar
 						if (pt.Y < 0)
 							return OSStatus.EventNotHandled;
 
-						if (mousePosInClient.X != InputDriver.Mouse[0].X ||
-							mousePosInClient.Y != InputDriver.Mouse[0].Y)
-						{
-							InputDriver.Mouse[0].Position = mousePosInClient;
+						if (mousePosInClient.X != mouse.X || mousePosInClient.Y != mouse.Y) {
+							mouse.Position = mousePosInClient;
 						}
 					}
-
                     return OSStatus.EventNotHandled;
 
                 default:
                     Debug.Print("{0}", evt);
-
                     return OSStatus.EventNotHandled;
             }
         }
@@ -591,6 +572,7 @@ namespace OpenTK.Platform.MacOS
             code = API.GetEventKeyboardKeyCode(inEvent);
             charCode = API.GetEventKeyboardChar(inEvent);
         }
+        
         private void ProcessModifierKey(IntPtr inEvent)
         {
             MacOSKeyModifiers modifiers = API.GetEventKeyModifiers(inEvent);
@@ -603,42 +585,35 @@ namespace OpenTK.Platform.MacOS
 
             Debug.Print("Modifiers Changed: {0}", modifiers);
 
-            Input.KeyboardDevice keyboard = InputDriver.Keyboard[0];
+            if (keyboard[Key.AltLeft] ^ option)
+                keyboard[Key.AltLeft] = option;
 
-            if (keyboard[OpenTK.Input.Key.AltLeft] ^ option)
-                keyboard[OpenTK.Input.Key.AltLeft] = option;
+            if (keyboard[Key.ShiftLeft] ^ shift)
+                keyboard[Key.ShiftLeft] = shift;
 
-            if (keyboard[OpenTK.Input.Key.ShiftLeft] ^ shift)
-                keyboard[OpenTK.Input.Key.ShiftLeft] = shift;
+            if (keyboard[Key.WinLeft] ^ command)
+                keyboard[Key.WinLeft] = command;
 
-            if (keyboard[OpenTK.Input.Key.WinLeft] ^ command)
-                keyboard[OpenTK.Input.Key.WinLeft] = command;
+            if (keyboard[Key.ControlLeft] ^ control)
+                keyboard[Key.ControlLeft] = control;
 
-            if (keyboard[OpenTK.Input.Key.ControlLeft] ^ control)
-                keyboard[OpenTK.Input.Key.ControlLeft] = control;
-
-            if (keyboard[OpenTK.Input.Key.CapsLock] ^ caps)
-                keyboard[OpenTK.Input.Key.CapsLock] = caps;
+            if (keyboard[Key.CapsLock] ^ caps)
+                keyboard[Key.CapsLock] = caps;
 
         }
 
-        Rect GetRegion()
-        {
-            Rect retval = API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
-
-            return retval;
+        Rect GetRegion() {
+            return API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
         }
 
-        void SetLocation(short x, short y)
-        {
+        void SetLocation(short x, short y) {
             if (windowState == WindowState.Fullscreen)
                 return;
 
             API.MoveWindow(window.WindowRef, x, y, false);
         }
 
-        void SetSize(short width, short height)
-        {
+        void SetSize(short width, short height) {
             if (WindowState == WindowState.Fullscreen)
                 return;
 
@@ -651,26 +626,21 @@ namespace OpenTK.Platform.MacOS
             API.SizeWindow(window.WindowRef, width, height, true);
         }
 
-		void SetClientSize(short width, short height)
-		{
+		void SetClientSize(short width, short height) {
 			if (WindowState == WindowState.Fullscreen)
 				return;
 			
 			API.SizeWindow(window.WindowRef, width, height, true);
 		}
 		
-        protected void OnResize()
-        {
+        protected void OnResize() {
             LoadSize();
-
-            if (Resize != null)
-            {
+            if (Resize != null) {
                 Resize(this, EventArgs.Empty);
             }
         }
 
-        private void LoadSize()
-        {
+        private void LoadSize() {
             if (WindowState == WindowState.Fullscreen)
                 return;
 
@@ -724,14 +694,9 @@ namespace OpenTK.Platform.MacOS
             get { return true; }
         }
 
-        public OpenTK.Input.IInputDriver InputDriver
-        {
-            get
-            {
-                return mInputDriver;
-            }
+        public IInputDriver InputDriver {
+            get { return this; }
         }
-
 
         public Icon Icon
         {
@@ -836,28 +801,14 @@ namespace OpenTK.Platform.MacOS
             }
         }
 
-        public Point Location
-        {
-            get
-            {
-                return Bounds.Location;
-            }
-            set
-            {
-                SetLocation((short)value.X, (short)value.Y);
-            }
+        public Point Location {
+            get { return Bounds.Location; }
+            set { SetLocation((short)value.X, (short)value.Y); }
         }
 
-        public Size Size
-        {
-            get
-            {
-                return bounds.Size;
-            }
-            set
-            {
-                SetSize((short)value.Width, (short)value.Height);
-            }
+        public Size Size {
+            get { return bounds.Size; }
+            set { SetSize((short)value.Width, (short)value.Height); }
         }
 
         public int Width
@@ -872,28 +823,14 @@ namespace OpenTK.Platform.MacOS
             set { SetClientSize((short)Width, (short)value); }
         }
 
-        public int X
-        {
-            get
-            {
-                return ClientRectangle.X;
-            }
-            set
-            {
-                Location = new Point(value, Y);
-            }
+        public int X {
+            get { return ClientRectangle.X; }
+            set { Location = new Point(value, Y); }
         }
 
-        public int Y
-        {
-            get
-            {
-                return ClientRectangle.Y;
-            }
-            set
-            {
-                Location = new Point(X, value);
-            }
+        public int Y {
+            get { return ClientRectangle.Y; }
+            set { Location = new Point(X, value); }
         }
 
         public Rectangle ClientRectangle
@@ -1123,6 +1060,41 @@ namespace OpenTK.Platform.MacOS
         public event EventHandler<EventArgs> MouseEnter;
         public event EventHandler<EventArgs> MouseLeave;
 
+        #endregion
+        
+        #region IInputDriver Members
+        
+        KeyboardDevice keyboard = new KeyboardDevice();
+    	MouseDevice mouse = new MouseDevice();
+        List<JoystickDevice> dummy_joystick_list = new List<JoystickDevice>(1);
+
+        public void Poll() {
+        }
+        
+        public KeyboardDevice Keyboard {
+        	get { return keyboard; }
+        }
+
+        public MouseDevice Mouse {
+        	get { return mouse; }
+        }
+        
+        // TODO: Implement using native API, rather than through Mono.
+        // http://webnnel.googlecode.com/svn/trunk/lib/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/CarbonEventsCore.h
+        // GetPos --> GetGlobalMouse (no 64 bit support?), and HIGetMousePosition()
+        // https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/Quartz_Services_Ref/index.html#//apple_ref/c/func/CGWarpMouseCursorPosition
+        // SetPos --> CGWarpMouseCursorPosition
+        // Note that: CGPoint uses float on 32 bit systems, double on 64 bit systems
+        // The rest of the MacOS OpenTK API will probably need to be fixed for this too...
+        public Point DesktopCursorPos {
+        	get { return System.Windows.Forms.Cursor.Position; }
+        	set { System.Windows.Forms.Cursor.Position = value; }
+        }
+
+        public IList<JoystickDevice> Joysticks {
+            get { return dummy_joystick_list; }
+        }
+        
         #endregion
     }
 }

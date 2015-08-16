@@ -209,7 +209,7 @@ namespace OpenTK.Platform.MacOS.Carbon
         MouseExited = 9,
         WheelMoved = 10,
     }
-    internal enum MouseButton : short
+    internal enum MacOSMouseButton : short
     {
         Primary = 1,
         Secondary = 2,
@@ -586,190 +586,110 @@ namespace OpenTK.Platform.MacOS.Carbon
         #endregion
         #region --- Getting Event Parameters ---
 
-		[DllImport(carbon,EntryPoint="CreateEvent")]
-		static extern OSStatus _CreateEvent( IntPtr inAllocator,
+        [DllImport(carbon)]
+		static extern OSStatus CreateEvent( IntPtr inAllocator,
 			EventClass inClassID, UInt32 kind, EventTime when,
-			EventAttributes flags,out IntPtr outEvent);
-
-		internal static IntPtr CreateWindowEvent(WindowEventKind kind)
-		{
+			EventAttributes flags, out IntPtr outEvent);
+        
+		internal static IntPtr CreateWindowEvent(WindowEventKind kind) {
 			IntPtr retval;
-
-			OSStatus stat = _CreateEvent(IntPtr.Zero, EventClass.Window, (uint)kind, 
-				0, EventAttributes.kEventAttributeNone, out retval);
+			OSStatus stat = CreateEvent(IntPtr.Zero, EventClass.Window, (uint)kind,
+			                             0, EventAttributes.kEventAttributeNone, out retval);
 
 			if (stat != OSStatus.NoError)
-			{
 				throw new MacOSException(stat);
-			}
-
 			return retval;
 		}
 
-        [DllImport(carbon)]
-        static extern OSStatus GetEventParameter(
-            IntPtr inEvent, EventParamName inName, EventParamType inDesiredType,
-            IntPtr outActualType, uint inBufferSize, IntPtr outActualSize, IntPtr outData);
+		[DllImport(carbon)]
+		static extern OSStatus GetEventParameter(
+			IntPtr inEvent, EventParamName inName, EventParamType inDesiredType,
+			IntPtr outActualType, int inBufferSize, IntPtr outActualSize, IntPtr outData);
 
-        static internal MacOSKeyCode GetEventKeyboardKeyCode(IntPtr inEvent)
-        {
-            int code;
+		internal unsafe static MacOSKeyCode GetEventKeyboardKeyCode(IntPtr inEvent) {
+			int code;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.KeyCode, EventParamType.typeUInt32, IntPtr.Zero,
+				sizeof(uint), IntPtr.Zero, (IntPtr)(void*)&code);
 
-            unsafe
-            {
-                int* codeAddr = &code;
+			if (result != OSStatus.NoError)
+				throw new MacOSException(result);
+			return (MacOSKeyCode)code;
+		}
 
-                OSStatus result = API.GetEventParameter(inEvent,
-                     EventParamName.KeyCode, EventParamType.typeUInt32, IntPtr.Zero,
-                     (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(UInt32)), IntPtr.Zero,
-                     (IntPtr) codeAddr);
+		internal unsafe static char GetEventKeyboardChar(IntPtr inEvent) {
+			char code;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.KeyMacCharCode, EventParamType.typeChar, IntPtr.Zero,
+				Marshal.SizeOf(typeof(char)), IntPtr.Zero, (IntPtr)(void*)&code);
 
-                if (result != OSStatus.NoError)
-                {
-                    throw new MacOSException(result);
-                }
-            }
+			if (result != OSStatus.NoError)
+				throw new MacOSException(result);
+			return code;
+		}
 
-            return (MacOSKeyCode)code;
-        }
+		internal unsafe static MacOSMouseButton GetEventMouseButton(IntPtr inEvent) {
+			int button;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.MouseButton, EventParamType.typeMouseButton, IntPtr.Zero,
+				sizeof(short), IntPtr.Zero, (IntPtr)(void*)&button);
 
-        internal static char GetEventKeyboardChar(IntPtr inEvent)
-        {
-            char code;
-
-            unsafe
-            {
-                char* codeAddr = &code;
-
-                OSStatus result = API.GetEventParameter(inEvent,
-                     EventParamName.KeyMacCharCode, EventParamType.typeChar, IntPtr.Zero,
-                     (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(char)), IntPtr.Zero,
-                     (IntPtr)codeAddr);
-
-                if (result != OSStatus.NoError)
-                {
-                    throw new MacOSException(result);
-                }
-            }
-
-            return code;
-        }
-
-        static internal MouseButton GetEventMouseButton(IntPtr inEvent)
-        {
-            int button;
-
-            unsafe
-            {
-                int* btn = &button;
-
-                OSStatus result = API.GetEventParameter(inEvent,
-                        EventParamName.MouseButton, EventParamType.typeMouseButton, IntPtr.Zero,
-                        (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(short)), IntPtr.Zero,
-                        (IntPtr)btn);
-
-                if (result != OSStatus.NoError)
-                    throw new MacOSException(result);
-            }
-
-            return (MouseButton)button;
-        }
-		static internal int GetEventMouseWheelDelta(IntPtr inEvent)
-		{
+			if (result != OSStatus.NoError)
+				throw new MacOSException(result);
+			return (MacOSMouseButton)button;
+		}
+		
+		internal unsafe static int GetEventMouseWheelDelta(IntPtr inEvent) {
 			int delta;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.MouseWheelDelta, EventParamType.typeSInt32,
+				IntPtr.Zero, sizeof(int), IntPtr.Zero, (IntPtr)(void*)&delta);
 
-			unsafe
-			{
-				int* d = &delta;
-
-				OSStatus result = API.GetEventParameter(inEvent,
-					 EventParamName.MouseWheelDelta, EventParamType.typeSInt32,
-					 IntPtr.Zero, (uint)sizeof(int), IntPtr.Zero, (IntPtr)d);
-
-				if (result != OSStatus.NoError)
-					throw new MacOSException(result);
-			}
-
+			if (result != OSStatus.NoError)
+				throw new MacOSException(result);
 			return delta;
 		}
 
-        static internal OSStatus GetEventWindowMouseLocation(IntPtr inEvent, out HIPoint pt)
-        {
-            HIPoint point;
+		internal unsafe static OSStatus GetEventWindowMouseLocation(IntPtr inEvent, out HIPoint pt) {
+			HIPoint point;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.WindowMouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
+				Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
 
-            unsafe
-            {
-                HIPoint* parm = &point;
-
-                OSStatus result = API.GetEventParameter(inEvent,
-                        EventParamName.WindowMouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
-                        (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero,
-                        (IntPtr)parm);
-
-                pt = point;
-
-                return result;
-            }
-
-        }
-
-		static internal OSStatus GetEventWindowRef(IntPtr inEvent, out IntPtr windowRef)
-		{
-			IntPtr retval;
-
-			unsafe
-			{
-				IntPtr* parm = &retval;
-				OSStatus result = API.GetEventParameter(inEvent,
-					EventParamName.WindowRef, EventParamType.typeWindowRef, IntPtr.Zero,
-					(uint)sizeof(IntPtr), IntPtr.Zero, (IntPtr)parm);
-
-				windowRef = retval;
-
-				return result;
-			}
+			pt = point;
+			return result;
 		}
 
-        static internal OSStatus GetEventMouseLocation(IntPtr inEvent, out HIPoint pt)
-        {
-            HIPoint point;
+		internal unsafe static OSStatus GetEventWindowRef(IntPtr inEvent, out IntPtr windowRef) {
+			IntPtr retval;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.WindowRef, EventParamType.typeWindowRef, IntPtr.Zero,
+				sizeof(IntPtr), IntPtr.Zero, (IntPtr)(void*)&retval);
 
-            unsafe
-            {
-                HIPoint* parm = &point;
+			windowRef = retval;
+			return result;
+		}
 
-                OSStatus result = API.GetEventParameter(inEvent,
-                        EventParamName.MouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
-                        (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero,
-                        (IntPtr)parm);
+		internal unsafe static OSStatus GetEventMouseLocation(IntPtr inEvent, out HIPoint pt) {
+			HIPoint point;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.MouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
+				Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
 
-                pt = point;
+			pt = point;
+			return result;
+		}
+		
+		internal unsafe static MacOSKeyModifiers GetEventKeyModifiers(IntPtr inEvent) {
+			uint code;
+			OSStatus result = API.GetEventParameter(inEvent,
+				EventParamName.KeyModifiers, EventParamType.typeUInt32, IntPtr.Zero,
+				sizeof(uint), IntPtr.Zero, (IntPtr)(void*)&code);
 
-                return result;
-            }
-
-        }
-        static internal MacOSKeyModifiers GetEventKeyModifiers(IntPtr inEvent)
-        {
-            uint code;
-
-            unsafe
-            {
-                uint* codeAddr = &code;
-
-                OSStatus result = API.GetEventParameter(inEvent,
-                     EventParamName.KeyModifiers, EventParamType.typeUInt32, IntPtr.Zero,
-                     (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(uint)), IntPtr.Zero,
-                     (IntPtr)codeAddr);
-
-                if (result != OSStatus.NoError)
-                {
-                    throw new MacOSException(result);
-                }
-            }
-
-            return (MacOSKeyModifiers)code;
-        }
+			if (result != OSStatus.NoError)
+				throw new MacOSException(result);
+			return (MacOSKeyModifiers)code;
+		}
 
         #endregion
         #region --- Event Handlers ---

@@ -474,7 +474,7 @@ namespace OpenTK
         /// </summary>
         public KeyboardDevice Keyboard
         {
-            get { return InputDriver.Keyboard.Count > 0 ? InputDriver.Keyboard[0] : null; }
+            get { return InputDriver.Keyboard; }
         }
 
         #endregion
@@ -484,9 +484,8 @@ namespace OpenTK
         /// <summary>
         /// Gets the primary Mouse device, or null if no Mouse exists.
         /// </summary>
-        public MouseDevice Mouse
-        {
-            get { return InputDriver.Mouse.Count > 0 ? InputDriver.Mouse[0] : null; }
+        public MouseDevice Mouse {
+            get { return InputDriver.Mouse; }
         }
 
         #endregion

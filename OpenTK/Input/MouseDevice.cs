@@ -35,89 +35,18 @@ namespace OpenTK.Input
     /// </summary>
     public sealed class MouseDevice : IInputDevice
     {
-        #region --- Fields ---
-
-        string description;
-        IntPtr id;
-        int numButtons, numWheels;
         readonly bool[] button_state = new bool[(int)MouseButton.LastButton];
         float wheel, last_wheel;
-        Point pos = new Point(), last_pos = new Point();
+        Point pos, last_pos;
         MouseMoveEventArgs move_args = new MouseMoveEventArgs();
         MouseButtonEventArgs button_args = new MouseButtonEventArgs();
         MouseWheelEventArgs wheel_args = new MouseWheelEventArgs();
 
-        #endregion
-
-        #region --- IInputDevice Members ---
-
-        #region public string Description
-
-        /// <summary>
-        /// Gets a string describing this MouseDevice.
-        /// </summary>
-        public string Description
-        {
-            get { return description; }
-            internal set { description = value; }
-        }
-
-        #endregion
-
-        #region public InputDeviceType DeviceType
-
-        /// <summary>
-        /// Gets a value indicating the InputDeviceType of this InputDevice. 
-        /// </summary>
-        public InputDeviceType DeviceType
-        {
+        public InputDeviceType DeviceType {
             get { return InputDeviceType.Mouse; }
         }
 
-        #endregion
-
-        #endregion
-
         #region --- Public Members ---
-
-        #region public int NumberOfButtons
-
-        /// <summary>
-        /// Gets an integer representing the number of buttons on this MouseDevice.
-        /// </summary>
-        public int NumberOfButtons
-        {
-            get { return numButtons; }
-            internal set { numButtons = value; }
-        }
-
-        #endregion
-
-        #region public int NumberOfWheels
-
-        /// <summary>
-        /// Gets an integer representing the number of wheels on this MouseDevice.
-        /// </summary>
-        public int NumberOfWheels
-        {
-            get { return numWheels; }
-            internal set { numWheels = value; }
-        }
-
-        #endregion
-
-        #region public IntPtr DeviceID
-
-        /// <summary>
-        /// Gets an IntPtr representing a device dependent ID.
-        /// </summary>
-        public IntPtr DeviceID
-        {
-            get { return id; }
-            internal set { id = value; }
-        }
-
-        #endregion
 
         #region public int Wheel
 
@@ -257,30 +186,7 @@ namespace OpenTK.Input
         /// Occurs when one of the mouse wheels is moved.
         /// </summary>
         public event EventHandler<MouseWheelEventArgs> WheelChanged = delegate { };
-
-        #region --- Overrides ---
-
-        /// <summary>
-        /// Calculates the hash code for this instance.
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return (int)(numButtons ^ numWheels ^ id.GetHashCode() ^ description.GetHashCode());
-        }
-
-        /// <summary>
-        /// Returns a <see cref="System.String"/> that describes this instance.
-        /// </summary>
-        /// <returns>A <see cref="System.String"/> that describes this instance.</returns>
-        public override string ToString()
-        {
-            return String.Format("ID: {0} ({1}). Buttons: {2}, Wheels: {3}",
-                DeviceID, Description, NumberOfButtons, NumberOfWheels);
-        }
-
-        #endregion
-
+        
         #endregion
     }
 

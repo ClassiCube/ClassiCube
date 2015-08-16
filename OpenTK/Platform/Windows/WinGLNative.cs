@@ -78,8 +78,6 @@ namespace OpenTK.Platform.Windows
         WinMMJoystick joystick_driver = new WinMMJoystick();
         KeyboardDevice keyboard = new KeyboardDevice();
         MouseDevice mouse = new MouseDevice();
-        IList<KeyboardDevice> keyboards = new List<KeyboardDevice>(1);
-        IList<MouseDevice> mice = new List<MouseDevice>(1);
         static readonly WinKeyMap KeyMap = new WinKeyMap();
         const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
         static readonly uint ShiftRightScanCode = Functions.MapVirtualKey(VirtualKeys.RSHIFT, 0);         // Used to distinguish left and right shift keys.
@@ -112,18 +110,6 @@ namespace OpenTK.Platform.Windows
                 CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, options, device, window.WindowHandle), window);
 
             exists = true;
-
-            keyboard.Description = "Standard Windows keyboard";
-            keyboard.NumberOfFunctionKeys = 12;
-            keyboard.NumberOfKeys = 101;
-            keyboard.NumberOfLeds = 3;
-
-            mouse.Description = "Standard Windows mouse";
-            mouse.NumberOfButtons = 3;
-            mouse.NumberOfWheels = 1;
-
-            keyboards.Add(keyboard);
-            mice.Add(mouse);
         }
 
         #endregion
@@ -1125,29 +1111,18 @@ namespace OpenTK.Platform.Windows
 
         #region IInputDriver Members
 
-        public void Poll()
-        {
+        public void Poll() {
             joystick_driver.Poll();
         }
-
-        #endregion
-
-        #region IKeyboardDriver Members
-
-        public IList<KeyboardDevice> Keyboard
-        {
-            get { return keyboards; }
-        }
-
-        #endregion
-
-        #region IMouseDriver Members
-
-        public IList<MouseDevice> Mouse
-        {
-            get { return mice; }
+        
+        public KeyboardDevice Keyboard {
+            get { return keyboard; }
         }
         
+        public MouseDevice Mouse {
+            get { return mouse; }
+        }
+
         public Point DesktopCursorPos {
         	get {
         		Point pos = default( Point );
@@ -1158,7 +1133,7 @@ namespace OpenTK.Platform.Windows
         		Functions.SetCursorPos( value.X, value.Y );
         	}
         }
-
+        
         #endregion
 
         #region IJoystickDriver Members

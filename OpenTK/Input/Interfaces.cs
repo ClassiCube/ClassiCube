@@ -12,9 +12,6 @@ namespace OpenTK.Input {
 	
     /// <summary> Defines a common interface for all input devices. </summary>
     public interface IInputDevice {
-    	
-        /// <summary> Gets a System.String with a unique description of this IInputDevice instance. </summary>
-        string Description { get; }
 
         /// <summary> Gets an OpenTK.Input.InputDeviceType value, representing the device type of this IInputDevice instance. </summary>
         InputDeviceType DeviceType { get; }
@@ -32,10 +29,18 @@ namespace OpenTK.Input {
     }
     
     /// <summary> Defines the interface for an input driver. </summary>
-    public interface IInputDriver : IKeyboardDriver, IMouseDriver, IJoystickDriver, IDisposable {
-    	
+    public interface IInputDriver : IJoystickDriver, IDisposable {
+
+    	 /// <summary> Gets the list of available KeyboardDevices. </summary>
+       KeyboardDevice Keyboard { get; }
+        
+         /// <summary> Gets the list of available MouseDevices. </summary>
+        MouseDevice Mouse { get; }
+        
         /// <summary> Updates the state of the driver. </summary>
         void Poll();
+        
+        Point DesktopCursorPos { get; set; }
     }
     
     /// <summary> Defines the interface for JoystickDevice drivers. </summary>
@@ -43,21 +48,5 @@ namespace OpenTK.Input {
     	
         /// <summary> Gets the list of available JoystickDevices. </summary>
         IList<JoystickDevice> Joysticks { get; }
-    }
-    
-    /// <summary> Defines the interface for KeyboardDevice drivers. </summary>
-    public interface IKeyboardDriver {
-    	
-        /// <summary> Gets the list of available KeyboardDevices. </summary>
-        IList<KeyboardDevice> Keyboard { get; }
-    }
-    
-    /// <summary> Defines the interface for MouseDevice drivers. </summary>
-    public interface IMouseDriver {
-    	
-        /// <summary> Gets the list of available MouseDevices. </summary>
-        IList<MouseDevice> Mouse { get; }
-        
-        Point DesktopCursorPos { get; set; }
     }
 }

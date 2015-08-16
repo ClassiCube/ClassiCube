@@ -13,11 +13,7 @@ namespace OpenTK.Input
     /// </summary>
     public sealed class KeyboardDevice : IInputDevice
     {
-        //private IKeyboard keyboard;
         private bool[] keys = new bool[(int)Key.LastKey];
-        private string description;
-        private int numKeys, numFKeys, numLeds;
-        private IntPtr devID;
         private bool repeat;
         private KeyboardKeyEventArgs args = new KeyboardKeyEventArgs();
 
@@ -55,42 +51,6 @@ namespace OpenTK.Input
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets an integer representing the number of keys on this KeyboardDevice.
-        /// </summary>
-        public int NumberOfKeys
-        {
-            get { return numKeys; }
-            internal set { numKeys = value; }
-        }
-
-        /// <summary>
-        /// Gets an integer representing the number of function keys (F-keys) on this KeyboardDevice.
-        /// </summary>
-        public int NumberOfFunctionKeys
-        {
-            get { return numFKeys; }
-            internal set { numFKeys = value; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating the number of led indicators on this KeyboardDevice.
-        /// </summary>
-        public int NumberOfLeds
-        {
-            get { return numLeds; }
-            internal set { numLeds = value; }
-        }
-
-        /// <summary>
-        /// Gets an IntPtr representing a device dependent ID.
-        /// </summary>
-        public IntPtr DeviceID
-        {
-            get { return devID; }
-            internal set { devID = value; }
         }
 
         #region public bool KeyRepeat
@@ -138,50 +98,10 @@ namespace OpenTK.Input
         #endregion
 
         #endregion
-
-        #region --- IInputDevice Members ---
-
-        /// <summary>
-        /// Gets a <see cref="System.String"/> which describes this instance.
-        /// </summary>
-        public string Description
-        {
-            get { return description; }
-            internal set { description = value; }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="InputDeviceType"/> for this instance.
-        /// </summary>
-        public InputDeviceType DeviceType
-        {
+        
+        public InputDeviceType DeviceType {
             get { return InputDeviceType.Keyboard; }
         }
-
-        #endregion
-
-        #region --- Public Methods ---
-
-        /// <summary>Returns the hash code for this KeyboardDevice.</summary>
-        /// <returns>A 32-bit signed integer hash code.</returns>
-        public override int GetHashCode()
-        {
-            //return base.GetHashCode();
-            return (int)(numKeys ^ numFKeys ^ numLeds ^ devID.GetHashCode() ^ description.GetHashCode());
-        }
-
-        /// <summary>
-        /// Returns a System.String representing this KeyboardDevice.
-        /// </summary>
-        /// <returns>A System.String representing this KeyboardDevice.</returns>
-        public override string ToString()
-        {
-            //return base.ToString();
-            return String.Format("ID: {0} ({1}). Keys: {2}, Function keys: {3}, Leds: {4}",
-                DeviceID, Description, NumberOfKeys, NumberOfFunctionKeys, NumberOfLeds);
-        }
-
-        #endregion
 
         #region --- Internal Methods ---
 

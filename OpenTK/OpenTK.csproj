@@ -93,7 +93,6 @@
     <Compile Include="Platform\MacOS\CarbonBindings\MacOSKeys.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\QuartzDisplayServicesAPI.cs" />
     <Compile Include="Platform\MacOS\CarbonGLNative.cs" />
-    <Compile Include="Platform\MacOS\CarbonInput.cs" />
     <Compile Include="Platform\MacOS\CarbonWindowInfo.cs" />
     <Compile Include="Platform\MacOS\EventInfo.cs" />
     <Compile Include="Platform\MacOS\MacOSException.cs" />
