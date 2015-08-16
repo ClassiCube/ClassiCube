@@ -72,15 +72,10 @@
     <Compile Include="Graphics\IGraphicsMode.cs" />
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />
     <Compile Include="Graphics\OpenGL\GLHelper.cs" />
-    <Compile Include="Input\IInputDevice.cs" />
-    <Compile Include="Input\IInputDriver.cs" />
-    <Compile Include="Input\IJoystickDriver.cs" />
-    <Compile Include="Input\IKeyboardDriver.cs" />
-    <Compile Include="Input\IMouseDriver.cs" />
+    <Compile Include="Input\Interfaces.cs" />
     <Compile Include="Input\JoystickDevice.cs" />
     <Compile Include="Input\Key.cs" />
     <Compile Include="Input\KeyboardDevice.cs" />
-    <Compile Include="Input\KeyboardKeyEventArgs.cs" />
     <Compile Include="Input\MouseButton.cs" />
     <Compile Include="Input\MouseDevice.cs" />
     <Compile Include="Math\Matrix4.cs" />

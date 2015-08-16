@@ -4,14 +4,7 @@
  */
 #endregion
 
-#region --- Using directives ---
-
 using System;
-
-using OpenTK.Input;
-using System.Diagnostics;
-
-#endregion
 
 namespace OpenTK.Input
 {
@@ -204,5 +197,11 @@ namespace OpenTK.Input
         #endregion
 
         #endregion
+    }
+    
+    public class KeyboardKeyEventArgs : EventArgs {
+
+        /// <summary> Gets the <see cref="Key"/> that generated this event. </summary>
+        public Key Key;
     }
 }
