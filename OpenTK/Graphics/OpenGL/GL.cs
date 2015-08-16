@@ -1,11 +1,6 @@
 ﻿using System;
 
 namespace OpenTK.Graphics.OpenGL {
-
-	[AttributeUsage( AttributeTargets.Struct | AttributeTargets.Class )]
-    public sealed class InteropPatchAttribute : Attribute {
-			
-    }
 	
 	[InteropPatch]
 	unsafe partial class GL {

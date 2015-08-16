@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Security;
+using OpenTK;
 
 namespace SharpDX.Direct3D9 {
 	
@@ -40,7 +40,7 @@ namespace SharpDX.Direct3D9 {
 		public List<AdapterInformation> Adapters;
 		
 		const int SdkVersion = 32;
-		[SuppressUnmanagedCodeSecurity, DllImport( "d3d9.dll" )]
+		[DllImport( "d3d9.dll" )]
 		static extern IntPtr Direct3DCreate9( int sdkVersion );
 		
 		public int GetAdapterCount() {
@@ -48,7 +48,7 @@ namespace SharpDX.Direct3D9 {
 		}
 		
 		public AdapterDetails GetAdapterIdentifier( int adapter ) {			
-			var identifierNative = new AdapterDetails.Native();
+			AdapterDetails.Native identifierNative = new AdapterDetails.Native();
 			int res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 			

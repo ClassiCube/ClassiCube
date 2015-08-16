@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 using System;
+using OpenTK;
 
 namespace SharpDX.Direct3D9
 {
@@ -121,7 +122,7 @@ namespace SharpDX.Direct3D9
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 
-		public void SetTransform(TransformState state, ref Matrix matrixRef) {
+		public void SetTransform(TransformState state, ref Matrix4 matrixRef) {
 			int res;
 			fixed (void* matrixRef_ = &matrixRef)
 				res = Interop.Calli(comPointer, (int)state, (IntPtr)matrixRef_,(*(IntPtr**)comPointer)[44]);

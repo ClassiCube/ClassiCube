@@ -96,57 +96,27 @@ namespace OpenTK
 
         #region --- Public Methods ---
 
-        #region public static bool RunningOnWindows
-
         /// <summary>Gets a System.Boolean indicating whether OpenTK is running on a Windows platform.</summary>
         public static bool RunningOnWindows { get { return runningOnWindows; } }
 
-        #endregion
-
-        #region public static bool RunningOnX11
-
         /// <summary>Gets a System.Boolean indicating whether OpenTK is running on an X11 platform.</summary>
-        public static bool RunningOnX11
-        {
-            get { return runningOnX11; }
-        }
+        public static bool RunningOnX11 { get { return runningOnX11; } }
 
-        /// <summary>
-        /// Gets a <see cref="System.Boolean"/> indicating whether OpenTK is running on a Unix platform.
-        /// </summary>
-        public static bool RunningOnUnix
-        {
-            get { return runningOnUnix; }
-        }
-
-        #endregion
-
-        #region public static bool RunningOnLinux
+        /// <summary> Gets a System.Boolean indicating whether OpenTK is running on a Unix platform. </summary>
+        public static bool RunningOnUnix { get { return runningOnUnix; } }
 
         /// <summary>Gets a System.Boolean indicating whether OpenTK is running on an X11 platform.</summary>
         public static bool RunningOnLinux { get { return runningOnLinux; } }
 
-        #endregion
-
-        #region public static bool RunningOnMacOS
-
         /// <summary>Gets a System.Boolean indicating whether OpenTK is running on a MacOS platform.</summary>
         public static bool RunningOnMacOS { get { return runningOnMacOS; } }
 
-        #endregion
-
-        #region public static bool RunningOnMono
-
-        /// <summary>
-        /// Gets a System.Boolean indicating whether OpenTK is running on the Mono runtime.
-        /// </summary>
+        /// <summary> Gets a System.Boolean indicating whether OpenTK is running on the Mono runtime. </summary>
         public static bool RunningOnMono { get { return runningOnMono; } }
 
         #endregion
 
         #region --- Private Methods ---
-
-        #region private static string DetectUnixKernel()
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         struct utsname
@@ -171,12 +141,8 @@ namespace OpenTK
 
         }
 
-        /// <summary>
-        /// Detects the unix kernel by p/invoking uname (libc).
-        /// </summary>
-        /// <returns></returns>
-        private static string DetectUnixKernel()
-        {
+        /// <summary> Detects the unix kernel by p/invoking uname (libc). </summary>
+        private static string DetectUnixKernel() {
             Debug.Print("Size: {0}", Marshal.SizeOf(typeof(utsname)).ToString());
             Debug.Flush();
             utsname uts = new utsname();
@@ -196,10 +162,6 @@ namespace OpenTK
 
         [DllImport("libc")]
         private static extern void uname(out utsname uname_struct);
-
-        #endregion
-
-        #endregion
 
         #endregion
     }

@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 using System;
+using OpenTK;
 
 namespace SharpDX.Direct3D9 {
 

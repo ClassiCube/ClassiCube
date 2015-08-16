@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Threading;
 using SharpDX;
 using SharpDX.Direct3D9;
@@ -305,16 +304,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
-			Matrix4 transposed = matrix;
-			Matrix dxMatrix = *(Matrix*)&transposed;
 			if( curStack == texStack ) {
-				dxMatrix.M31 = dxMatrix.M41; // NOTE: this hack fixes the texture movements.
+				matrix.M31 = matrix.M41; // NOTE: this hack fixes the texture movements.
 				device.SetTextureStageState( 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2 );
 			}
-			curStack.SetTop( ref dxMatrix );
+			curStack.SetTop( ref matrix );
 		}
 
-		Matrix identity = Matrix.Identity;
+		Matrix4 identity = Matrix4.Identity;
 		public override void LoadIdentityMatrix() {
 			if( curStack == texStack ) {
 				device.SetTextureStageState( 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable );
@@ -331,21 +328,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
-			Matrix4 transposed = matrix;
-			Matrix dxMatrix = *(Matrix*)&transposed;
-			curStack.MultiplyTop( ref dxMatrix );
+			curStack.MultiplyTop( ref matrix );
 		}
 
 		class MatrixStack
 		{
-			Matrix[] stack;
+			Matrix4[] stack;
 			int stackIndex;
 			Device device;
 			TransformState matrixType;
 
 			public MatrixStack( int capacity, Device device, TransformState matrixType ) {
-				stack = new Matrix[capacity];
-				stack[0] = Matrix.Identity;
+				stack = new Matrix4[capacity];
+				stack[0] = Matrix4.Identity;
 				this.device = device;
 				this.matrixType = matrixType;
 			}
@@ -355,12 +350,12 @@ namespace ClassicalSharp.GraphicsAPI {
 				stackIndex++; // exact same, we don't need to update DirectX state.
 			}
 
-			public void SetTop( ref Matrix matrix ) {
+			public void SetTop( ref Matrix4 matrix ) {
 				stack[stackIndex] = matrix;
 				device.SetTransform( matrixType, ref stack[stackIndex] );
 			}
 
-			public void MultiplyTop( ref Matrix matrix ) {
+			public void MultiplyTop( ref Matrix4 matrix ) {
 				stack[stackIndex] = matrix * stack[stackIndex];
 				device.SetTransform( matrixType, ref stack[stackIndex] );
 			}
@@ -493,8 +488,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
 			matrix.M33 = -1;
 			matrix.M43 = 0;
-			Matrix dxMatrix = *(Matrix*)&matrix;
-			curStack.SetTop( ref dxMatrix );
+			curStack.SetTop( ref matrix );
 		}
 		
 		public override void Dispose() {
