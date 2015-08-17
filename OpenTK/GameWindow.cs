@@ -455,18 +455,6 @@ namespace OpenTK
 
         #endregion
 
-        #region Joysticks
-
-        /// <summary>
-        /// Gets a readonly IList containing all available OpenTK.Input.JoystickDevices.
-        /// </summary>
-        public IList<JoystickDevice> Joysticks
-        {
-            get { return InputDriver.Joysticks; }
-        }
-
-        #endregion
-
         #region Keyboard
 
         /// <summary>

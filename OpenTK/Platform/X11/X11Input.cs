@@ -20,7 +20,6 @@ namespace OpenTK.Platform.X11
     /// </summary>
     internal sealed class X11Input : IInputDriver
     {
-        X11Joystick joystick_driver = new X11Joystick();
         KeyboardDevice keyboard = new KeyboardDevice();
         MouseDevice mouse = new MouseDevice();
 
@@ -149,15 +148,6 @@ namespace OpenTK.Platform.X11
         public Point DesktopCursorPos {
         	get { return System.Windows.Forms.Cursor.Position; }
         	set { System.Windows.Forms.Cursor.Position = value; }
-        }
-
-        public IList<JoystickDevice> Joysticks {
-            get { return joystick_driver.Joysticks; }
-        }
-
-        /// <summary> Polls and updates state of all keyboard, mouse and joystick devices. </summary>
-        public void Poll() {
-            joystick_driver.Poll();
         }
 
         #endregion

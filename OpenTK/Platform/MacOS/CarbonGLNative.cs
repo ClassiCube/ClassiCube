@@ -106,7 +106,6 @@ namespace OpenTK.Platform.MacOS
                 new Rect((short)x, (short)y, (short)width, (short)height));
 			
 			mDisplayDevice = device;
-			dummy_joystick_list.Add(new JoystickDevice<object>(0, 0, 0));
         }
 
         #endregion
@@ -1066,10 +1065,6 @@ namespace OpenTK.Platform.MacOS
         
         KeyboardDevice keyboard = new KeyboardDevice();
     	MouseDevice mouse = new MouseDevice();
-        List<JoystickDevice> dummy_joystick_list = new List<JoystickDevice>(1);
-
-        public void Poll() {
-        }
         
         public KeyboardDevice Keyboard {
         	get { return keyboard; }
@@ -1089,10 +1084,6 @@ namespace OpenTK.Platform.MacOS
         public Point DesktopCursorPos {
         	get { return System.Windows.Forms.Cursor.Position; }
         	set { System.Windows.Forms.Cursor.Position = value; }
-        }
-
-        public IList<JoystickDevice> Joysticks {
-            get { return dummy_joystick_list; }
         }
         
         #endregion

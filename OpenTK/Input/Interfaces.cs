@@ -5,7 +5,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 
 namespace OpenTK.Input {
@@ -23,30 +22,17 @@ namespace OpenTK.Input {
         Keyboard,
         /// <summary> Device is a mouse. </summary>
         Mouse,
-        /// <summary> Device is a Human Interface Device. Joysticks, joypads, pens
-        /// and some specific usb keyboards/mice fall into this category. </summary>
-        Hid
     }
     
     /// <summary> Defines the interface for an input driver. </summary>
-    public interface IInputDriver : IJoystickDriver, IDisposable {
+    public interface IInputDriver : IDisposable {
 
-    	/// <summary> Gets the list of available KeyboardDevices. </summary>
+    	/// <summary> Gets the available KeyboardDevice. </summary>
     	KeyboardDevice Keyboard { get; }
         
-        /// <summary> Gets the list of available MouseDevices. </summary>
+        /// <summary> Gets the available MouseDevice. </summary>
         MouseDevice Mouse { get; }
         
-        /// <summary> Updates the state of the driver. </summary>
-        void Poll();
-        
         Point DesktopCursorPos { get; set; }
-    }
-    
-    /// <summary> Defines the interface for JoystickDevice drivers. </summary>
-    public interface IJoystickDriver {
-    	
-        /// <summary> Gets the list of available JoystickDevices. </summary>
-        IList<JoystickDevice> Joysticks { get; }
     }
 }

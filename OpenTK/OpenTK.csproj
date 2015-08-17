@@ -73,7 +73,6 @@
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />
     <Compile Include="Graphics\OpenGL\GLHelper.cs" />
     <Compile Include="Input\Interfaces.cs" />
-    <Compile Include="Input\JoystickDevice.cs" />
     <Compile Include="Input\Key.cs" />
     <Compile Include="Input\KeyboardDevice.cs" />
     <Compile Include="Input\MouseButton.cs" />
@@ -105,7 +104,6 @@
     <Compile Include="Platform\Windows\WinGLContext.cs" />
     <Compile Include="Platform\Windows\WinGLNative.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />
-    <Compile Include="Platform\Windows\WinMMJoystick.cs" />
     <Compile Include="Platform\Windows\WinWindowInfo.cs" />
     <Compile Include="Platform\X11\API.cs" />
     <Compile Include="Platform\X11\Functions.cs" />
@@ -116,7 +114,6 @@
     <Compile Include="Platform\X11\X11GLNative.cs" />
     <Compile Include="Platform\X11\X11GraphicsMode.cs" />
     <Compile Include="Platform\X11\X11Input.cs" />
-    <Compile Include="Platform\X11\X11Joystick.cs" />
     <Compile Include="Platform\X11\X11KeyMap.cs" />
     <Compile Include="Platform\X11\X11WindowInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

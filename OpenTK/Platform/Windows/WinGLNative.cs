@@ -75,7 +75,6 @@ namespace OpenTK.Platform.Windows
         Icon icon;
 
         // Used for IInputDriver implementation
-        WinMMJoystick joystick_driver = new WinMMJoystick();
         KeyboardDevice keyboard = new KeyboardDevice();
         MouseDevice mouse = new MouseDevice();
         static readonly WinKeyMap KeyMap = new WinKeyMap();
@@ -1110,10 +1109,6 @@ namespace OpenTK.Platform.Windows
         #endregion
 
         #region IInputDriver Members
-
-        public void Poll() {
-            joystick_driver.Poll();
-        }
         
         public KeyboardDevice Keyboard {
             get { return keyboard; }
@@ -1134,15 +1129,6 @@ namespace OpenTK.Platform.Windows
         	}
         }
         
-        #endregion
-
-        #region IJoystickDriver Members
-
-        public IList<JoystickDevice> Joysticks
-        {
-            get { return joystick_driver.Joysticks; }
-        }
-
         #endregion
 
         #region IDisposable Members
