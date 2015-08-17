@@ -8,13 +8,12 @@ using System;
 using System.Collections.Generic;
 using OpenTK.Input;
 
-namespace OpenTK.Platform.Windows
-{
-	internal class WinKeyMap : Dictionary<int, Input.Key>
-	{
+namespace OpenTK.Platform.Windows {
+	
+	internal class WinKeyMap : Dictionary<int, Key> {
+		
 		/// <summary> Initializes the map between VirtualKeys and OpenTK.Key </summary>
-		internal WinKeyMap()
-		{
+		internal WinKeyMap() {
 			AddKey(VirtualKeys.ESCAPE, Key.Escape);
 
 			// Function keys
@@ -76,8 +75,7 @@ namespace OpenTK.Platform.Windows
 			AddKey(VirtualKeys.SLEEP, Key.Sleep);
 
 			// Keypad
-			for (int i = 0; i <= 9; i++)
-			{
+			for (int i = 0; i <= 9; i++) {
 				AddKey((VirtualKeys)((int)VirtualKeys.NUMPAD0 + i), Key.Keypad0 + i);
 			}
 			AddKey(VirtualKeys.DECIMAL, Key.KeypadDecimal);

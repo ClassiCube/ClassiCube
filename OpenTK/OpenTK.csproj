@@ -96,14 +96,12 @@
     <Compile Include="Platform\MacOS\CarbonWindowInfo.cs" />
     <Compile Include="Platform\MacOS\EventInfo.cs" />
     <Compile Include="Platform\MacOS\MacOSException.cs" />
-    <Compile Include="Platform\MacOS\MacOSFactory.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />
     <Compile Include="Platform\MacOS\QuartzDisplayDeviceDriver.cs" />
     <Compile Include="Platform\PlatformException.cs" />
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
     <Compile Include="Platform\Windows\WinDisplayDevice.cs" />
-    <Compile Include="Platform\Windows\WinFactory.cs" />
     <Compile Include="Platform\Windows\WinGLContext.cs" />
     <Compile Include="Platform\Windows\WinGLNative.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />
@@ -114,7 +112,6 @@
     <Compile Include="Platform\X11\Glx.cs" />
     <Compile Include="Platform\X11\Structs.cs" />
     <Compile Include="Platform\X11\X11DisplayDevice.cs" />
-    <Compile Include="Platform\X11\X11Factory.cs" />
     <Compile Include="Platform\X11\X11GLContext.cs" />
     <Compile Include="Platform\X11\X11GLNative.cs" />
     <Compile Include="Platform\X11\X11GraphicsMode.cs" />

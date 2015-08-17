@@ -16,7 +16,6 @@ namespace OpenTK.Platform.X11
 {
     internal class X11DisplayDevice : IDisplayDeviceDriver
     {
-        static object display_lock = new object();
         // Store a mapping between resolutions and their respective
         // size_index (needed for XRRSetScreenConfig). The size_index
         // is simply the sequence number of the resolution as returned by
@@ -95,7 +94,7 @@ namespace OpenTK.Platform.X11
             if (NativeMethods.XineramaQueryExtension(API.DefaultDisplay, out event_base, out error_base) &&
                 NativeMethods.XineramaIsActive(API.DefaultDisplay))
             {
-                IList<XineramaScreenInfo> screens = NativeMethods.XineramaQueryScreens(API.DefaultDisplay);
+            	XineramaScreenInfo[] screens = NativeMethods.XineramaQueryScreens(API.DefaultDisplay);
                 bool first = true;
                 foreach (XineramaScreenInfo screen in screens)
                 {
@@ -311,30 +310,20 @@ namespace OpenTK.Platform.X11
             public static extern bool XineramaQueryExtension(IntPtr dpy, out int event_basep, out int error_basep);
 
             [DllImport(Xinerama)]
-            public static extern int XineramaQueryVersion (IntPtr dpy, out int major_versionp, out int minor_versionp);
-
-            [DllImport(Xinerama)]
             public static extern bool XineramaIsActive(IntPtr dpy);
 
             [DllImport(Xinerama)]
             static extern IntPtr XineramaQueryScreens(IntPtr dpy, out int number);
 
-            public static IList<XineramaScreenInfo> XineramaQueryScreens(IntPtr dpy)
-            {
-                int number;
-                IntPtr screen_ptr = XineramaQueryScreens(dpy, out number);
-                List<XineramaScreenInfo> screens = new List<XineramaScreenInfo>(number);
-
-                unsafe
-                {
-                    XineramaScreenInfo* ptr = (XineramaScreenInfo*)screen_ptr;
-                    while (--number >= 0)
-                    {
-                        screens.Add(*ptr);
-                        ptr++;
-                    }
+            public unsafe static XineramaScreenInfo[] XineramaQueryScreens(IntPtr dpy) {
+                int count;
+                IntPtr screen_ptr = XineramaQueryScreens(dpy, out count);
+                XineramaScreenInfo* ptr = (XineramaScreenInfo*)screen_ptr;
+                 
+                XineramaScreenInfo[] screens = new XineramaScreenInfo[count];
+                for( int i = 0; i < screens.Length; i++ ) {
+                	screens[i] = *ptr++;
                 }
-
                 return screens;
             }
         }

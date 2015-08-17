@@ -31,10 +31,10 @@ namespace OpenTK.Input {
     /// <summary> Defines the interface for an input driver. </summary>
     public interface IInputDriver : IJoystickDriver, IDisposable {
 
-    	 /// <summary> Gets the list of available KeyboardDevices. </summary>
-       KeyboardDevice Keyboard { get; }
+    	/// <summary> Gets the list of available KeyboardDevices. </summary>
+    	KeyboardDevice Keyboard { get; }
         
-         /// <summary> Gets the list of available MouseDevices. </summary>
+        /// <summary> Gets the list of available MouseDevices. </summary>
         MouseDevice Mouse { get; }
         
         /// <summary> Updates the state of the driver. </summary>
