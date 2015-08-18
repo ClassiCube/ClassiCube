@@ -184,7 +184,7 @@ namespace ClassicalSharp {
 			int i = atlas.Get1DIndex( BlockInfo.GetOptimTextureLoc( tile, face ) );
 			DrawInfo part = BlockInfo.IsTranslucent( tile ) ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
-			
+
 			DrawInfoFaceData counts = part.Count;
 			int* ptr = &counts.left;
 			ptr += face;

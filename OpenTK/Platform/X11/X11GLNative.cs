@@ -1154,15 +1154,6 @@ namespace OpenTK.Platform.X11
 
         #endregion
 
-        #region public bool IsIdle
-
-        public bool IsIdle
-        {
-            get { throw new Exception("The method or operation is not implemented."); }
-        }
-
-        #endregion
-
         #region public IntPtr Handle
 
         /// <summary>

@@ -283,11 +283,9 @@ namespace OpenTK.Platform.X11
     /// </summary>
     internal enum XKey
     {
-        /*
-         * TTY function keys, cleverly chosen to map to ASCII, for convenience of
+        /* TTY function keys, cleverly chosen to map to ASCII, for convenience of
          * programming, but could have been arbitrary (at the cost of lookup
-         * tables in client code).
-         */
+         * tables in client code). */
 
         BackSpace                   = 0xff08,  /* Back space, back char */
         Tab                         = 0xff09,
@@ -300,75 +298,24 @@ namespace OpenTK.Platform.X11
         Escape                      = 0xff1b,
         Delete                      = 0xffff,  /* Delete, rubout */
 
-
-
-        /* International & multi-key character composition */
-
-        Multi_key                   = 0xff20,  /* Multi-key character compose */
-        Codeinput                   = 0xff37,
-        SingleCandidate             = 0xff3c,
-        MultipleCandidate           = 0xff3d,
-        PreviousCandidate           = 0xff3e,
-                
-        /* Japanese keyboard support */
-
-        Kanji                       = 0xff21,  /* Kanji, Kanji convert */
-        Muhenkan                    = 0xff22,  /* Cancel Conversion */
-        Henkan_Mode                 = 0xff23,  /* Start/Stop Conversion */
-        Henkan                      = 0xff23,  /* Alias for Henkan_Mode */
-        Romaji                      = 0xff24,  /* to Romaji */
-        Hiragana                    = 0xff25,  /* to Hiragana */
-        Katakana                    = 0xff26,  /* to Katakana */
-        Hiragana_Katakana           = 0xff27,  /* Hiragana/Katakana toggle */
-        Zenkaku                     = 0xff28,  /* to Zenkaku */
-        Hankaku                     = 0xff29,  /* to Hankaku */
-        Zenkaku_Hankaku             = 0xff2a,  /* Zenkaku/Hankaku toggle */
-        Touroku                     = 0xff2b,  /* Add to Dictionary */
-        Massyo                      = 0xff2c,  /* Delete from Dictionary */
-        Kana_Lock                   = 0xff2d,  /* Kana Lock */
-        Kana_Shift                  = 0xff2e,  /* Kana Shift */
-        Eisu_Shift                  = 0xff2f,  /* Alphanumeric Shift */
-        Eisu_toggle                 = 0xff30,  /* Alphanumeric toggle */
-        Kanji_Bangou                = 0xff37,  /* Codeinput */
-        Zen_Koho                    = 0xff3d,  /* Multiple/All Candidate(s) */
-        Mae_Koho                    = 0xff3e,  /* Previous Candidate */
-
-        /* 0xff31 thru 0xff3f are under XK_KOREAN */
-
         /* Cursor control & motion */
-
         Home                        = 0xff50,
         Left                        = 0xff51,  /* Move left, left arrow */
         Up                          = 0xff52,  /* Move up, up arrow */
         Right                       = 0xff53,  /* Move right, right arrow */
         Down                        = 0xff54,  /* Move down, down arrow */
-        Prior                       = 0xff55,  /* Prior, previous */
         Page_Up                     = 0xff55,
-        Next                        = 0xff56,  /* Next */
         Page_Down                   = 0xff56,
         End                         = 0xff57,  /* EOL */
-        Begin                       = 0xff58,  /* BOL */
-
 
         /* Misc functions */
-
-        Select                      = 0xff60,  /* Select, mark */
         Print                       = 0xff61,
-        Execute                     = 0xff62,  /* Execute, run, do */
         Insert                      = 0xff63,  /* Insert, insert here */
-        Undo                        = 0xff65,
-        Redo                        = 0xff66,  /* Redo, again */
         Menu                        = 0xff67,
-        Find                        = 0xff68,  /* Find, search */
-        Cancel                      = 0xff69,  /* Cancel, stop, abort, exit */
-        Help                        = 0xff6a,  /* Help */
         Break                       = 0xff6b,
-        Mode_switch                 = 0xff7e,  /* Character set switch */
-        script_switch               = 0xff7e,  /* Alias for mode_switch */
         Num_Lock                    = 0xff7f,
 
         /* Keypad functions, keypad numbers cleverly chosen to map to ASCII */
-
         KP_Space                    = 0xff80,  /* Space */
         KP_Tab                      = 0xff89,
         KP_Enter                    = 0xff8d,  /* Enter */

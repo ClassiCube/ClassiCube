@@ -8,9 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-
 using OpenTK.Input;
 
 namespace OpenTK.Platform.X11
@@ -19,8 +16,6 @@ namespace OpenTK.Platform.X11
     {
         internal X11KeyMap()
         {
-            try
-            {
                 this.Add(XKey.Escape, Key.Escape);
                 this.Add(XKey.Return, Key.Enter);
                 this.Add(XKey.space, Key.Space);
@@ -46,28 +41,23 @@ namespace OpenTK.Platform.X11
                 this.Add(XKey.Caps_Lock, Key.CapsLock);
                 this.Add(XKey.Num_Lock, Key.NumLock);
 
-                for (int i = (int)XKey.F1; i <= (int)XKey.F35; i++)
-                {
+                for (int i = (int)XKey.F1; i <= (int)XKey.F35; i++) {
                     this.Add((XKey)i, (Key)((int)Key.F1 + (i - (int)XKey.F1)));
                 }
 
-                for (int i = (int)XKey.a; i <= (int)XKey.z; i++)
-                {
+                for (int i = (int)XKey.a; i <= (int)XKey.z; i++) {
                     this.Add((XKey)i, (Key)((int)Key.A + (i - (int)XKey.a)));
                 }
 
-                for (int i = (int)XKey.A; i <= (int)XKey.Z; i++)
-                {
+                for (int i = (int)XKey.A; i <= (int)XKey.Z; i++) {
                     this.Add((XKey)i, (Key)((int)Key.A + (i - (int)XKey.A)));
                 }
 
-                for (int i = (int)XKey.Number0; i <= (int)XKey.Number9; i++)
-                {
+                for (int i = (int)XKey.Number0; i <= (int)XKey.Number9; i++) {
                     this.Add((XKey)i, (Key)((int)Key.Number0 + (i - (int)XKey.Number0)));
                 }
 
-                for (int i = (int)XKey.KP_0; i <= (int)XKey.KP_9; i++)
-                {
+                for (int i = (int)XKey.KP_0; i <= (int)XKey.KP_9; i++) {
                     this.Add((XKey)i, (Key)((int)Key.Keypad0 + (i - (int)XKey.KP_0)));
                 }
 
@@ -127,12 +117,6 @@ namespace OpenTK.Platform.X11
                 this.Add(XKey.KP_Page_Up, Key.Keypad9);
                 this.Add(XKey.KP_Delete, Key.KeypadDecimal);
                 this.Add(XKey.KP_Enter, Key.KeypadEnter);
-
-            }
-            catch (ArgumentException e)
-            {
-                Debug.Print("Exception while creating keymap: '{0}'.", e.ToString());
-            }
         }
     }
 }

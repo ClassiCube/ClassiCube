@@ -5,15 +5,11 @@
  */
 #endregion
 
-#region --- Using Directives ---
-
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Security;
-
-#endregion
+using System.Text;
 
 /* TODO: Update the description of TimeBeginPeriod and other native methods. Update Timer. */
 
@@ -65,8 +61,6 @@ namespace OpenTK.Platform.Windows
 
     using DWORD_PTR = System.IntPtr;
     using UINT_PTR = System.UIntPtr;
-
-    using TIMERPROC = Functions.TimerProc;
 
     #endregion
 
@@ -611,19 +605,6 @@ namespace OpenTK.Platform.Windows
         #endregion
 
         #endregion
-
-        #region Timer Functions
-
-        [DllImport("user32.dll", SetLastError=true)]
-        public static extern UINT_PTR SetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
-
-        [DllImport("user32.dll", SetLastError=true)]
-        public static extern BOOL KillTimer(HWND hWnd, UINT_PTR uIDEvent);
-
-        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        public delegate void TimerProc(HWND hwnd, WindowMessage uMsg, UINT_PTR idEvent, DWORD dwTime);
-
-        #endregion
     }
 
     #region --- Constants ---
@@ -807,15 +788,6 @@ namespace OpenTK.Platform.Windows
         private short Size;
         internal short DriverExtra;
         internal int Fields;
-
-        //internal short Orientation;
-        //internal short PaperSize;
-        //internal short PaperLength;
-        //internal short PaperWidth;
-        //internal short Scale;
-        //internal short Copies;
-        //internal short DefaultSource;
-        //internal short PrintQuality;
 
         internal POINT Position;
         internal DWORD DisplayOrientation;

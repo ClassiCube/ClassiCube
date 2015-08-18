@@ -688,11 +688,6 @@ namespace OpenTK.Platform.MacOS
             get { return window; }
         }
 
-        public bool IsIdle
-        {
-            get { return true; }
-        }
-
         public IInputDriver InputDriver {
             get { return this; }
         }
@@ -1040,7 +1035,6 @@ namespace OpenTK.Platform.MacOS
 
 		#endregion
 
-		public event EventHandler<EventArgs> Idle;
         public event EventHandler<EventArgs> Load;
         public event EventHandler<EventArgs> Unload;
         public event EventHandler<EventArgs> Move;
