@@ -3,11 +3,6 @@ ClassicalSharp is a custom Minecraft Classic client written in C# that works on 
 
 You can get the latest binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
 
-#### Note on future of the project
-Due to time constraints and lack of interest, I am no longer working on version 2.0 for now.
-
-Version 0.8 (released along with this message) implements the entire CPE specification (excluding TextHotKey), and should be stable and fast enough for you to use.
-
 #### What ClassicalSharp is
 * Works with both minecraft.net and classicube.net accounts.
 * Lightweight, minimal memory usage compared to the standard client.
@@ -22,8 +17,9 @@ It does not:
 * Linux: Mono.
 * Mac OS X: Mono. (Not tested at all yet - likely just crashes)
 
-*When building from source and targeting Mono, either use the Mono compiler or
-define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map on Mono.*
+##### Mono specific notes
+You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.
+Also, if you are using an older mono version, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.
 
 #### Instructions
 The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
@@ -47,3 +43,8 @@ Some points to note:
 #### Client commands
 * To see a list of all built in commands, type `/client commands`.
 * To see help for a given built in command, type `/client help <command name>`.
+
+#### *Note on future of the project*
+Due to time constraints and lack of interest, I am no longer working on version 2.0 for now.
+
+Version 0.8 (released along with this message) implements the entire CPE specification (excluding TextHotKey), and should be stable and fast enough for you to use.

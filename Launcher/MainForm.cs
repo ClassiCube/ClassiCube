@@ -218,7 +218,11 @@ namespace Launcher {
 			Process process = null;
 			
 			try {
-				process = Process.Start( "classicalsharp.exe", args );
+				if( Type.GetType( "Mono.Runtime" ) != null ) {
+					process = Process.Start( "mono", "\"ClassicalSharp.exe\" " + args );
+				} else {
+					process = Process.Start( "ClassicalSharp.exe", args );
+				}
 			} catch( Win32Exception ex ) {
 				if( ex.Message.Contains( "The system cannot find the file specified" ) ) {
 					MessageBox.Show( missingExeMessage );
