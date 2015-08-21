@@ -159,6 +159,7 @@ namespace Launcher {
 		}
 		
 		void DisplayWebException( WebException ex, string action, Action<int, string> target ) {
+			Program.LogException( ex );
 			string host = HostServer;
 			if( ex.Status == WebExceptionStatus.Timeout ) {
 				string text = "Failed to " + action + ":" +

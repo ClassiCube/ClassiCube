@@ -37,7 +37,8 @@ namespace Launcher {
 			
 			try {
 				client.DownloadFile( resUri + uri, output );
-			} catch( WebException ) {
+			} catch( WebException ex ) {
+				Program.LogException( ex );
 				MessageBox.Show( "Unable to download or save " + output, "Failed to download or save resource", MessageBoxButtons.OK, MessageBoxIcon.Error );
 				return false;
 			}
