@@ -135,12 +135,17 @@ namespace ClassicalSharp {
 			if( didBlock == nowBlocks ) return;
 			
 			int index = ( x * Length ) + z;
-			if( nowBlocks ) {
-				if( y > GetLightHeight( x, z ) ) {
+			int height = heightmap[index];
+			if( height == short.MaxValue ) {
+				// We have to calculate the entire column for visibility, because the old/new block info is
+				// useless if there is another block higher than block.y that stops rain.
+				CalcHeightAt( x, maxY, z, index );
+			} else if( y >= height ) {
+				if( nowBlocks ) {
 					heightmap[index] = (short)y;
-				}
-			} else {
-				if( y >= GetLightHeight( x, z ) ) {
+				} else {
+					// Part of the column is now visible to rain, we don't know how exactly how high it should be though.
+					// However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y
 					CalcHeightAt( x, y, z, index );
 				}
 			}

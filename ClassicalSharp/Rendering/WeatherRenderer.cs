@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 			int index = 0;
 			graphics.AlphaBlending = true;
 			FastColour col = FastColour.White;
-			for( int dx = - 4; dx <= 4; dx++ ) {
+			for( int dx = -4; dx <= 4; dx++ ) {
 				for( int dz = -4; dz <= 4; dz++ ) {
 					int rainY = Math.Max( pos.Y, GetRainHeight( pos.X + dx, pos.Z + dz ) + 1 );
 					int height = Math.Min( 6 - ( rainY - pos.Y ), 6 );
@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 		}
 		
 		float AlphaAt( float x ) {
+			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
 			return (float)( 0.05 * x * x - 8 * x + 178 );
 		}
 		
@@ -124,14 +125,12 @@ namespace ClassicalSharp {
 					return y;
 				}
 				mapIndex -= oneY;
-			}
-			
+			}		
 			heightmap[index] = -1;
 			return -1;
 		}
 		
 		bool BlocksRain( byte block ) {
-			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
 			return !( block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) );
 		}
 		
@@ -141,12 +140,18 @@ namespace ClassicalSharp {
 			if( didBlock == nowBlocks ) return;
 			
 			int index = ( x * length ) + z;
-			if( nowBlocks ) {
-				if( y > GetRainHeight( x, z ) ) {
+			int height = heightmap[index];
+			if( height == short.MaxValue ) {
+				if( map.Weather == Weather.Sunny ) return;
+				// We have to calculate the entire column for visibility, because the old/new block info is
+				// useless if there is another block higher than block.y that stops rain.
+				CalcHeightAt( x, maxY, z, index );
+			} else if( y >= height ) {
+				if( nowBlocks ) {
 					heightmap[index] = (short)y;
-				}
-			} else {
-				if( y >= GetRainHeight( x, z ) ) {
+				} else {
+					// Part of the column is now visible to rain, we don't know how exactly how high it should be though.
+					// However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y
 					CalcHeightAt( x, y, z, index );
 				}
 			}

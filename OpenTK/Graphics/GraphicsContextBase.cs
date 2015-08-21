@@ -26,25 +26,17 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using OpenTK.Platform;
 
-namespace OpenTK.Graphics
-{
+namespace OpenTK.Graphics {
+	
     // Provides the foundation for all IGraphicsContext implementations.
-    abstract class GraphicsContextBase : IGraphicsContext, IGraphicsContextInternal
-    {
-        #region Fields
+    abstract class GraphicsContextBase : IGraphicsContext {
 
         bool disposed;
         
         protected IntPtr ContextHandle;
         protected GraphicsMode Mode;
-
-        #endregion
-
-        #region IGraphicsContext Members
 
         public abstract void SwapBuffers();
 
@@ -52,8 +44,7 @@ namespace OpenTK.Graphics
 
         public abstract bool IsCurrent { get; }
 
-        public bool IsDisposed
-        {
+        public bool IsDisposed {
             get { return disposed; }
             protected set { disposed = value; }
         }
@@ -64,10 +55,6 @@ namespace OpenTK.Graphics
 
         public GraphicsMode GraphicsMode { get { return Mode; } }
 
-        #endregion
-
-        #region IGraphicsContextInternal Members
-
         public IGraphicsContext Implementation { get { return this; } }
 
         public abstract void LoadAll();
@@ -76,12 +63,15 @@ namespace OpenTK.Graphics
 
         public abstract IntPtr GetAddress(string function);
 
-        #endregion
-
-        #region IDisposable Members
-
-        public abstract void Dispose();
-
-        #endregion
+        public void Dispose() {
+        	Dispose( true );
+        	GC.SuppressFinalize( this );
+        }
+        
+        protected abstract void Dispose( bool calledManually );
+        
+        ~GraphicsContextBase() {
+			Dispose(false);
+		}
     }
 }

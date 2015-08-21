@@ -6,7 +6,7 @@
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights to 
+// in the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
 // the Software, and to permit persons to whom the Software is furnished to do
 // so, subject to the following conditions:
@@ -36,38 +36,38 @@ using OpenTK.Input;
 
 namespace OpenTK.Platform.MacOS
 {
-    class CarbonGLNative : INativeWindow, IInputDriver
-    {
-        #region Fields
+	class CarbonGLNative : INativeWindow
+	{
+		#region Fields
 
-        CarbonWindowInfo window;
-        static MacOSKeyMap Keymap = new MacOSKeyMap();
-        IntPtr uppHandler;
+		CarbonWindowInfo window;
+		static MacOSKeyMap Keymap = new MacOSKeyMap();
+		IntPtr uppHandler;
 
-        string title = "OpenTK Window";
-        Rectangle bounds, clientRectangle;
+		string title = "OpenTK Window";
+		Rectangle bounds, clientRectangle;
 		Rectangle windowedBounds;
-        bool mIsDisposed = false;
+		bool mIsDisposed = false;
 		bool mExists = true;
 		DisplayDevice mDisplayDevice;
 
-        WindowAttributes mWindowAttrib;
-        WindowClass mWindowClass;
-        WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
-        int mTitlebarHeight;
-        private WindowBorder windowBorder = WindowBorder.Resizable;
-        private WindowState windowState = WindowState.Normal;
+		WindowAttributes mWindowAttrib;
+		WindowClass mWindowClass;
+		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
+		int mTitlebarHeight;
+		private WindowBorder windowBorder = WindowBorder.Resizable;
+		private WindowState windowState = WindowState.Normal;
 
-        static Dictionary<IntPtr, WeakReference> mWindows = new Dictionary<IntPtr, WeakReference>();
+		static Dictionary<IntPtr, WeakReference> mWindows = new Dictionary<IntPtr, WeakReference>();
 
-		KeyPressEventArgs mKeyPressArgs = new KeyPressEventArgs((char)0);
+		KeyPressEventArgs mKeyPressArgs = new KeyPressEventArgs();
 
 		bool mMouseIn = false;
 		bool mIsActive = false;
 
 		Icon mIcon;
 
-        #endregion
+		#endregion
 
 		#region AGL Device Hack
 
@@ -79,276 +79,274 @@ namespace OpenTK.Platform.MacOS
 		#region Constructors
 
 		static CarbonGLNative()
-        {
-            Application.Initialize();
-        }
+		{
+			Application.Initialize();
+		}
 
-        CarbonGLNative()
-            : this(WindowClass.Document,
-            WindowAttributes.StandardDocument |
-            WindowAttributes.StandardHandler |
-            WindowAttributes.InWindowMenu |
-            WindowAttributes.LiveResize)
-        { }
+		CarbonGLNative()
+			: this(WindowClass.Document,
+			       WindowAttributes.StandardDocument |
+			       WindowAttributes.StandardHandler |
+			       WindowAttributes.InWindowMenu |
+			       WindowAttributes.LiveResize)
+		{ }
 
 
-        CarbonGLNative(WindowClass @class, WindowAttributes attrib)
-        {
-            mWindowClass = @class;
-            mWindowAttrib = attrib;
-        }
+		CarbonGLNative(WindowClass @class, WindowAttributes attrib)
+		{
+			mWindowClass = @class;
+			mWindowAttrib = attrib;
+		}
 
-        public CarbonGLNative(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)
-        {
+		public CarbonGLNative(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)
+		{
 			CreateNativeWindow(WindowClass.Document,
-                WindowAttributes.StandardDocument | WindowAttributes.StandardHandler |
-                WindowAttributes.InWindowMenu | WindowAttributes.LiveResize,
-                new Rect((short)x, (short)y, (short)width, (short)height));
+			                   WindowAttributes.StandardDocument | WindowAttributes.StandardHandler |
+			                   WindowAttributes.InWindowMenu | WindowAttributes.LiveResize,
+			                   new Rect((short)x, (short)y, (short)width, (short)height));
 			
 			mDisplayDevice = device;
-        }
+		}
 
-        #endregion
+		#endregion
 
-        #region IDisposable
+		#region IDisposable
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (mIsDisposed)
-                return;
+		protected virtual void Dispose(bool disposing)
+		{
+			if (mIsDisposed)
+				return;
 
-            Debug.Print("Disposing of CarbonGLNative window.");
+			Debug.Print("Disposing of CarbonGLNative window.");
 
 			API.DisposeWindow(window.WindowRef);
 
-            mIsDisposed = true;
+			mIsDisposed = true;
 			mExists = false;
 
-            if (disposing)
-            {
-                mWindows.Remove(window.WindowRef);
+			if (disposing)
+			{
+				mWindows.Remove(window.WindowRef);
 
-                window.Dispose();
-                window = null;
-            }
+				window.Dispose();
+				window = null;
+			}
 
-            DisposeUPP();
+			DisposeUPP();
 
-        }
+		}
 
-        ~CarbonGLNative()
-        {
-            Dispose(false);
-        }
+		~CarbonGLNative()
+		{
+			Dispose(false);
+		}
 
-        #endregion
+		#endregion
 
-        #region Private Members
+		#region Private Members
 
-        void DisposeUPP()
-        {
-            if (uppHandler != IntPtr.Zero)
-            {
-                //API.RemoveEventHandler(uppHandler);
-                //API.DisposeEventHandlerUPP(uppHandler);
-            }
+		void DisposeUPP()
+		{
+			if (uppHandler != IntPtr.Zero)
+			{
+				//API.RemoveEventHandler(uppHandler);
+				//API.DisposeEventHandlerUPP(uppHandler);
+			}
 
-            uppHandler = IntPtr.Zero;
-        }
+			uppHandler = IntPtr.Zero;
+		}
 
-        void CreateNativeWindow(WindowClass @class, WindowAttributes attrib, Rect r)
-        {
-            Debug.Print("Creating window...");
-            Debug.Indent();
+		void CreateNativeWindow(WindowClass @class, WindowAttributes attrib, Rect r)
+		{
+			Debug.Print("Creating window...");
+			Debug.Indent();
 
-            IntPtr windowRef = API.CreateNewWindow(@class, attrib, r);
-            API.SetWindowTitle(windowRef, title);
+			IntPtr windowRef = API.CreateNewWindow(@class, attrib, r);
+			API.SetWindowTitle(windowRef, title);
 
-            window = new CarbonWindowInfo(windowRef, true);
+			window = new CarbonWindowInfo(windowRef, true);
 
-            SetLocation(r.X, r.Y);
-            SetSize(r.Width, r.Height);
+			SetLocation(r.X, r.Y);
+			SetSize(r.Width, r.Height);
 
-            Debug.Unindent();
-            Debug.Print("Created window.");
+			Debug.Unindent();
+			Debug.Print("Created window.");
 
-            mWindows.Add(windowRef, new WeakReference(this));
+			mWindows.Add(windowRef, new WeakReference(this));
 
-            LoadSize();
+			LoadSize();
 
-            Rect titleSize = API.GetWindowBounds(window.WindowRef, WindowRegionCode.TitleBarRegion);
-            mTitlebarHeight = titleSize.Height;
+			Rect titleSize = API.GetWindowBounds(window.WindowRef, WindowRegionCode.TitleBarRegion);
+			mTitlebarHeight = titleSize.Height;
 
-            Debug.Print("Titlebar size: {0}", titleSize);
+			Debug.Print("Titlebar size: {0}", titleSize);
 
-            ConnectEvents();
+			ConnectEvents();
 
-            System.Diagnostics.Debug.Print("Attached window events.");
-        }
+			System.Diagnostics.Debug.Print("Attached window events.");
+		}
 
-        void ConnectEvents()
-        {
-            EventTypeSpec[] eventTypes = new EventTypeSpec[]
-            {
-                new EventTypeSpec(EventClass.Window, WindowEventKind.WindowClose),
-                new EventTypeSpec(EventClass.Window, WindowEventKind.WindowClosed),
-                new EventTypeSpec(EventClass.Window, WindowEventKind.WindowBoundsChanged),
+		void ConnectEvents()
+		{
+			EventTypeSpec[] eventTypes = new EventTypeSpec[]
+			{
+				new EventTypeSpec(EventClass.Window, WindowEventKind.WindowClose),
+				new EventTypeSpec(EventClass.Window, WindowEventKind.WindowClosed),
+				new EventTypeSpec(EventClass.Window, WindowEventKind.WindowBoundsChanged),
 				new EventTypeSpec(EventClass.Window, WindowEventKind.WindowActivate),
 				new EventTypeSpec(EventClass.Window, WindowEventKind.WindowDeactivate),
 
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseDown),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseUp),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseMoved),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseDragged),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseEntered),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseExited),
-                //new EventTypeSpec(EventClass.Mouse, MouseEventKind.WheelMoved),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseDown),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseUp),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseMoved),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseDragged),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseEntered),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.MouseExited),
+				//new EventTypeSpec(EventClass.Mouse, MouseEventKind.WheelMoved),
 
-                //new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyDown),
-                //new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyRepeat),
-                //new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyUp),
-                //new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyModifiersChanged),
-            };
+				//new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyDown),
+				//new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyRepeat),
+				//new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyUp),
+				//new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyModifiersChanged),
+			};
 
-            MacOSEventHandler handler = EventHandler;
-            uppHandler = API.NewEventHandlerUPP(handler);
+			MacOSEventHandler handler = EventHandler;
+			uppHandler = API.NewEventHandlerUPP(handler);
 
-            API.InstallWindowEventHandler(window.WindowRef, uppHandler, eventTypes, window.WindowRef, IntPtr.Zero);
+			API.InstallWindowEventHandler(window.WindowRef, uppHandler, eventTypes, window.WindowRef, IntPtr.Zero);
 
-            Application.WindowEventHandler = this;
-        }
+			Application.WindowEventHandler = this;
+		}
 
-        void Activate()
-        {
-            API.SelectWindow(window.WindowRef);
-        }
+		void Activate()
+		{
+			API.SelectWindow(window.WindowRef);
+		}
 
-        void Show()
-        {
-            IntPtr parent = IntPtr.Zero;
+		void Show()
+		{
+			IntPtr parent = IntPtr.Zero;
 
-            API.ShowWindow(window.WindowRef);
-            API.RepositionWindow(window.WindowRef, parent, WindowPositionMethod);
-            API.SelectWindow(window.WindowRef);
-        }
+			API.ShowWindow(window.WindowRef);
+			API.RepositionWindow(window.WindowRef, parent, WindowPositionMethod);
+			API.SelectWindow(window.WindowRef);
+		}
 
-        void Hide()
-        {
-            API.HideWindow(window.WindowRef);
-        }
+		void Hide()
+		{
+			API.HideWindow(window.WindowRef);
+		}
 
-        internal void SetFullscreen(AglContext context)
-        {
-            windowedBounds = bounds;
+		internal void SetFullscreen(AglContext context)
+		{
+			windowedBounds = bounds;
 
 			int width, height;
 
-            context.SetFullScreen(window, out width, out height);
+			context.SetFullScreen(window, out width, out height);
 
-            Debug.Print("Prev Size: {0}, {1}", Width, Height);
+			Debug.Print("Prev Size: {0}, {1}", Width, Height);
 			clientRectangle.Size = new Size(width, height);
 			Debug.Print("New Size: {0}, {1}", Width, Height);
 
 			// TODO: if we go full screen we need to make this use the device specified.
-            bounds = mDisplayDevice.Bounds;
+			bounds = mDisplayDevice.Bounds;
 
-            
+			
 			windowState = WindowState.Fullscreen;
-        }
+		}
 
-        internal void UnsetFullscreen(AglContext context)
-        {
-            context.UnsetFullScreen(window);
+		internal void UnsetFullscreen(AglContext context)
+		{
+			context.UnsetFullScreen(window);
 
 			Debug.Print("Telling Carbon to reset window state to " + windowState.ToString());
 			SetCarbonWindowState();
 
-            SetSize((short)windowedBounds.Width, (short)windowedBounds.Height);
-        }
+			SetSize((short)windowedBounds.Width, (short)windowedBounds.Height);
+		}
 
-        bool IsDisposed
-        {
-            get { return mIsDisposed; }
-        }
+		bool IsDisposed
+		{
+			get { return mIsDisposed; }
+		}
 
-        WindowPositionMethod WindowPositionMethod
-        {
-            get { return mPositionMethod; }
-            set { mPositionMethod = value; }
-        }
+		WindowPositionMethod WindowPositionMethod
+		{
+			get { return mPositionMethod; }
+			set { mPositionMethod = value; }
+		}
 
-        internal OSStatus DispatchEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
-        {
-            switch (evt.EventClass)
-            {
-                case EventClass.Window:
-                    return ProcessWindowEvent(inCaller, inEvent, evt, userData);
+		internal OSStatus DispatchEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
+		{
+			switch (evt.EventClass)
+			{
+				case EventClass.Window:
+					return ProcessWindowEvent(inCaller, inEvent, evt, userData);
 
-                case EventClass.Mouse:
-                    return ProcessMouseEvent(inCaller, inEvent, evt, userData);
+				case EventClass.Mouse:
+					return ProcessMouseEvent(inCaller, inEvent, evt, userData);
 
-                case EventClass.Keyboard:
-                    return ProcessKeyboardEvent(inCaller, inEvent, evt, userData);
+				case EventClass.Keyboard:
+					return ProcessKeyboardEvent(inCaller, inEvent, evt, userData);
 
-                default:
-                    return OSStatus.EventNotHandled;
-            }
-        }
+				default:
+					return OSStatus.EventNotHandled;
+			}
+		}
 
-        protected static OSStatus EventHandler(IntPtr inCaller, IntPtr inEvent, IntPtr userData)
-        {
-            // bail out if the window passed in is not actually our window.
-            // I think this happens if using winforms with a GameWindow sometimes.
-            if (mWindows.ContainsKey(userData) == false)
-                return OSStatus.EventNotHandled;
+		protected static OSStatus EventHandler(IntPtr inCaller, IntPtr inEvent, IntPtr userData)
+		{
+			// bail out if the window passed in is not actually our window.
+			// I think this happens if using winforms with a GameWindow sometimes.
+			if (!mWindows.ContainsKey(userData))
+				return OSStatus.EventNotHandled;
 
-            WeakReference reference = mWindows[userData];
+			WeakReference reference = mWindows[userData];
 
-            // bail out if the CarbonGLNative window has been garbage collected.
-            if (reference.IsAlive == false)
-            {
-                mWindows.Remove(userData);
-                return OSStatus.EventNotHandled;
-            }
+			// bail out if the CarbonGLNative window has been garbage collected.
+			if (!reference.IsAlive) {
+				mWindows.Remove(userData);
+				return OSStatus.EventNotHandled;
+			}
 
 			CarbonGLNative window = (CarbonGLNative)reference.Target;
 			EventInfo evt = new EventInfo(inEvent);
 
-            //Debug.Print("Processing {0} event for {1}.", evt, window.window);
+			//Debug.Print("Processing {0} event for {1}.", evt, window.window);
 
-            if (window == null)
-            {
-                Debug.WriteLine("Window for event not found.");
-                return OSStatus.EventNotHandled;
-            }
+			if (window == null) {
+				Debug.WriteLine("Window for event not found.");
+				return OSStatus.EventNotHandled;
+			}
 
-            switch (evt.EventClass)
-            {
-                case EventClass.Window:
-                    return window.ProcessWindowEvent(inCaller, inEvent, evt, userData);
+			switch (evt.EventClass)
+			{
+				case EventClass.Window:
+					return window.ProcessWindowEvent(inCaller, inEvent, evt, userData);
 
-                case EventClass.Mouse:
-                    return window.ProcessMouseEvent(inCaller, inEvent, evt, userData);
+				case EventClass.Mouse:
+					return window.ProcessMouseEvent(inCaller, inEvent, evt, userData);
 
-                case EventClass.Keyboard:
-                    return window.ProcessKeyboardEvent(inCaller, inEvent, evt, userData);
+				case EventClass.Keyboard:
+					return window.ProcessKeyboardEvent(inCaller, inEvent, evt, userData);
 
-                default:
-                    return OSStatus.EventNotHandled;
-            }
-        }
+				default:
+					return OSStatus.EventNotHandled;
+			}
+		}
 
-        private OSStatus ProcessKeyboardEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
-        {
-            System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Keyboard);
-            MacOSKeyCode code = (MacOSKeyCode)0;
-            char charCode = '\0';
+		private OSStatus ProcessKeyboardEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
+		{
+			System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Keyboard);
+			MacOSKeyCode code = (MacOSKeyCode)0;
+			char charCode = '\0';
 
 			//Debug.Print("Processing keyboard event {0}", evt.KeyboardEventKind);
 
@@ -362,63 +360,61 @@ namespace OpenTK.Platform.MacOS
 					break;
 			}
 
-            switch (evt.KeyboardEventKind)
-            {
-                case KeyboardEventKind.RawKeyRepeat:
-                    keyboard.KeyRepeat = true;
-                    goto case KeyboardEventKind.RawKeyDown;
+			switch (evt.KeyboardEventKind)
+			{
+				case KeyboardEventKind.RawKeyRepeat:
+					keyboard.KeyRepeat = true;
+					goto case KeyboardEventKind.RawKeyDown;
 
-                case KeyboardEventKind.RawKeyDown:
+				case KeyboardEventKind.RawKeyDown:
 					OnKeyPress(mKeyPressArgs);
-                    keyboard[Keymap[code]] = true;
-                    return OSStatus.NoError;
-
-                case KeyboardEventKind.RawKeyUp:
-                    keyboard[Keymap[code]] = false;
+					keyboard[Keymap[code]] = true;
 					return OSStatus.NoError;
 
-                case KeyboardEventKind.RawKeyModifiersChanged:
-                    ProcessModifierKey(inEvent);
+				case KeyboardEventKind.RawKeyUp:
+					keyboard[Keymap[code]] = false;
 					return OSStatus.NoError;
 
-                default:
-                    return OSStatus.EventNotHandled;
-            }
+				case KeyboardEventKind.RawKeyModifiersChanged:
+					ProcessModifierKey(inEvent);
+					return OSStatus.NoError;
 
+				default:
+					return OSStatus.EventNotHandled;
+			}
+		}
 
-        }
+		private OSStatus ProcessWindowEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
+		{
+			System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Window);
 
-        private OSStatus ProcessWindowEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
-        {
-            System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Window);
+			switch (evt.WindowEventKind)
+			{
+				case WindowEventKind.WindowClose:
+					CancelEventArgs cancel = new CancelEventArgs();
+					OnClosing(cancel);
 
-            switch (evt.WindowEventKind)
-            {
-                case WindowEventKind.WindowClose:
-                    CancelEventArgs cancel = new CancelEventArgs();
-                    OnClosing(cancel);
+					if (cancel.Cancel)
+						return OSStatus.NoError;
+					else
+						return OSStatus.EventNotHandled;
 
-                    if (cancel.Cancel)
-                        return OSStatus.NoError;
-                    else
-                        return OSStatus.EventNotHandled;
-
-                case WindowEventKind.WindowClosed:
+				case WindowEventKind.WindowClosed:
 					mExists = false;
 					OnClosed();
 
-                    return OSStatus.NoError;
+					return OSStatus.NoError;
 
-                case WindowEventKind.WindowBoundsChanged:
-                    int thisWidth = Width;
-                    int thisHeight = Height;
+				case WindowEventKind.WindowBoundsChanged:
+					int thisWidth = Width;
+					int thisHeight = Height;
 
-                    LoadSize();
+					LoadSize();
 
-                    if (thisWidth != Width || thisHeight != Height)
-                        OnResize();
+					if (thisWidth != Width || thisHeight != Height)
+						OnResize();
 
-                    return OSStatus.EventNotHandled;
+					return OSStatus.EventNotHandled;
 
 				case WindowEventKind.WindowActivate:
 					OnActivate();
@@ -428,38 +424,38 @@ namespace OpenTK.Platform.MacOS
 					OnDeactivate();
 					return OSStatus.EventNotHandled;
 
-                default:
-                    Debug.Print("{0}", evt);
+				default:
+					Debug.Print("{0}", evt);
 
-                    return OSStatus.EventNotHandled;
-            }
-        }
-        protected OSStatus ProcessMouseEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
-        {
-            Debug.Assert(evt.EventClass == EventClass.Mouse);
-            MacOSMouseButton button;
-            HIPoint pt = new HIPoint();
+					return OSStatus.EventNotHandled;
+			}
+		}
+		protected OSStatus ProcessMouseEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
+		{
+			Debug.Assert(evt.EventClass == EventClass.Mouse);
+			MacOSMouseButton button;
+			HIPoint pt = new HIPoint();
 			HIPoint screenLoc =  new HIPoint();
 
 			OSStatus err = API.GetEventMouseLocation(inEvent, out screenLoc);
 
-            if (this.windowState == WindowState.Fullscreen)
-            {
+			if (this.windowState == WindowState.Fullscreen)
+			{
 				pt = screenLoc;
-            }
-            else
-            {
-                err = API.GetEventWindowMouseLocation(inEvent, out pt);
-            }
+			}
+			else
+			{
+				err = API.GetEventWindowMouseLocation(inEvent, out pt);
+			}
 
-            if (err != OSStatus.NoError)
-            {
-                // this error comes up from the application event handler.
-                if (err != OSStatus.EventParameterNotFound)
-                {
-                    throw new MacOSException(err);
-                }
-            }
+			if (err != OSStatus.NoError)
+			{
+				// this error comes up from the application event handler.
+				if (err != OSStatus.EventParameterNotFound)
+				{
+					throw new MacOSException(err);
+				}
+			}
 
 			Point mousePosInClient = new Point((int)pt.X, (int)pt.Y);
 			if (this.windowState != WindowState.Fullscreen)
@@ -472,45 +468,45 @@ namespace OpenTK.Platform.MacOS
 			API.GetEventWindowRef(inEvent, out thisEventWindow);
 			CheckEnterLeaveEvents(thisEventWindow, mousePosInClient);
 			
-            switch (evt.MouseEventKind)
-            {
-                case MouseEventKind.MouseDown:
-                    button = API.GetEventMouseButton(inEvent);
-
-                    switch (button)
-                    {
-                        case MacOSMouseButton.Primary:
-                            mouse[MouseButton.Left] = true;
-                            break;
-
-                        case MacOSMouseButton.Secondary:
-                            mouse[MouseButton.Right] = true;
-                            break;
-
-                        case MacOSMouseButton.Tertiary:
-                            mouse[MouseButton.Middle] = true;
-                            break;
-                    }
-					return OSStatus.NoError;
-
-                case MouseEventKind.MouseUp:
+			switch (evt.MouseEventKind)
+			{
+				case MouseEventKind.MouseDown:
 					button = API.GetEventMouseButton(inEvent);
 
-                    switch (button)
-                    {
-                        case MacOSMouseButton.Primary:
-                            mouse[MouseButton.Left] = false;
-                            break;
+					switch (button)
+					{
+						case MacOSMouseButton.Primary:
+							mouse[MouseButton.Left] = true;
+							break;
 
-                        case MacOSMouseButton.Secondary:
-                            mouse[MouseButton.Right] = false;
-                            break;
+						case MacOSMouseButton.Secondary:
+							mouse[MouseButton.Right] = true;
+							break;
 
-                        case MacOSMouseButton.Tertiary:
-                            mouse[MouseButton.Middle] = false;
-                            break;
-                    }
-                    button = API.GetEventMouseButton(inEvent);
+						case MacOSMouseButton.Tertiary:
+							mouse[MouseButton.Middle] = true;
+							break;
+					}
+					return OSStatus.NoError;
+
+				case MouseEventKind.MouseUp:
+					button = API.GetEventMouseButton(inEvent);
+
+					switch (button)
+					{
+						case MacOSMouseButton.Primary:
+							mouse[MouseButton.Left] = false;
+							break;
+
+						case MacOSMouseButton.Secondary:
+							mouse[MouseButton.Right] = false;
+							break;
+
+						case MacOSMouseButton.Tertiary:
+							mouse[MouseButton.Middle] = false;
+							break;
+					}
+					button = API.GetEventMouseButton(inEvent);
 					return OSStatus.NoError;
 
 				case MouseEventKind.WheelMoved:
@@ -519,8 +515,8 @@ namespace OpenTK.Platform.MacOS
 					mouse.Wheel += delta;
 					return OSStatus.NoError;
 
-                case MouseEventKind.MouseMoved:
-                case MouseEventKind.MouseDragged:
+				case MouseEventKind.MouseMoved:
+				case MouseEventKind.MouseDragged:
 					
 					//Debug.Print("Mouse Location: {0}, {1}", pt.X, pt.Y);
 
@@ -537,13 +533,13 @@ namespace OpenTK.Platform.MacOS
 							mouse.Position = mousePosInClient;
 						}
 					}
-                    return OSStatus.EventNotHandled;
+					return OSStatus.EventNotHandled;
 
-                default:
-                    Debug.Print("{0}", evt);
-                    return OSStatus.EventNotHandled;
-            }
-        }
+				default:
+					Debug.Print("{0}", evt);
+					return OSStatus.EventNotHandled;
+			}
+		}
 
 		private void CheckEnterLeaveEvents(IntPtr eventWindowRef, Point pt)
 		{
@@ -552,7 +548,7 @@ namespace OpenTK.Platform.MacOS
 
 			bool thisIn = eventWindowRef == window.WindowRef;
 
-			if (pt.Y < 0) 
+			if (pt.Y < 0)
 				thisIn = false;
 
 			if (thisIn != mMouseIn)
@@ -566,64 +562,64 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-        private static void GetCharCodes(IntPtr inEvent, out MacOSKeyCode code, out char charCode)
-        {
-            code = API.GetEventKeyboardKeyCode(inEvent);
-            charCode = API.GetEventKeyboardChar(inEvent);
-        }
-        
-        private void ProcessModifierKey(IntPtr inEvent)
-        {
-            MacOSKeyModifiers modifiers = API.GetEventKeyModifiers(inEvent);
+		private static void GetCharCodes(IntPtr inEvent, out MacOSKeyCode code, out char charCode)
+		{
+			code = API.GetEventKeyboardKeyCode(inEvent);
+			charCode = API.GetEventKeyboardChar(inEvent);
+		}
+		
+		private void ProcessModifierKey(IntPtr inEvent)
+		{
+			MacOSKeyModifiers modifiers = API.GetEventKeyModifiers(inEvent);
 
-            bool caps = (modifiers & MacOSKeyModifiers.CapsLock) != 0;
-            bool control = (modifiers & MacOSKeyModifiers.Control) != 0;
-            bool command = (modifiers & MacOSKeyModifiers.Command) != 0;
-            bool option = (modifiers & MacOSKeyModifiers.Option) != 0;
-            bool shift = (modifiers & MacOSKeyModifiers.Shift) != 0;
+			bool caps = (modifiers & MacOSKeyModifiers.CapsLock) != 0;
+			bool control = (modifiers & MacOSKeyModifiers.Control) != 0;
+			bool command = (modifiers & MacOSKeyModifiers.Command) != 0;
+			bool option = (modifiers & MacOSKeyModifiers.Option) != 0;
+			bool shift = (modifiers & MacOSKeyModifiers.Shift) != 0;
 
-            Debug.Print("Modifiers Changed: {0}", modifiers);
+			Debug.Print("Modifiers Changed: {0}", modifiers);
 
-            if (keyboard[Key.AltLeft] ^ option)
-                keyboard[Key.AltLeft] = option;
+			if (keyboard[Key.AltLeft] ^ option)
+				keyboard[Key.AltLeft] = option;
 
-            if (keyboard[Key.ShiftLeft] ^ shift)
-                keyboard[Key.ShiftLeft] = shift;
+			if (keyboard[Key.ShiftLeft] ^ shift)
+				keyboard[Key.ShiftLeft] = shift;
 
-            if (keyboard[Key.WinLeft] ^ command)
-                keyboard[Key.WinLeft] = command;
+			if (keyboard[Key.WinLeft] ^ command)
+				keyboard[Key.WinLeft] = command;
 
-            if (keyboard[Key.ControlLeft] ^ control)
-                keyboard[Key.ControlLeft] = control;
+			if (keyboard[Key.ControlLeft] ^ control)
+				keyboard[Key.ControlLeft] = control;
 
-            if (keyboard[Key.CapsLock] ^ caps)
-                keyboard[Key.CapsLock] = caps;
+			if (keyboard[Key.CapsLock] ^ caps)
+				keyboard[Key.CapsLock] = caps;
 
-        }
+		}
 
-        Rect GetRegion() {
-            return API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
-        }
+		Rect GetRegion() {
+			return API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
+		}
 
-        void SetLocation(short x, short y) {
-            if (windowState == WindowState.Fullscreen)
-                return;
+		void SetLocation(short x, short y) {
+			if (windowState == WindowState.Fullscreen)
+				return;
 
-            API.MoveWindow(window.WindowRef, x, y, false);
-        }
+			API.MoveWindow(window.WindowRef, x, y, false);
+		}
 
-        void SetSize(short width, short height) {
-            if (WindowState == WindowState.Fullscreen)
-                return;
+		void SetSize(short width, short height) {
+			if (WindowState == WindowState.Fullscreen)
+				return;
 
 			// The bounds of the window should be the size specified, but
 			// API.SizeWindow sets the content region size.  So
 			// we reduce the size to get the correct bounds.
 			width -= (short)(bounds.Width - clientRectangle.Width);
 			height -= (short)(bounds.Height - clientRectangle.Height);
-            
-            API.SizeWindow(window.WindowRef, width, height, true);
-        }
+			
+			API.SizeWindow(window.WindowRef, width, height, true);
+		}
 
 		void SetClientSize(short width, short height) {
 			if (WindowState == WindowState.Fullscreen)
@@ -632,77 +628,72 @@ namespace OpenTK.Platform.MacOS
 			API.SizeWindow(window.WindowRef, width, height, true);
 		}
 		
-        protected void OnResize() {
-            LoadSize();
-            if (Resize != null) {
-                Resize(this, EventArgs.Empty);
-            }
-        }
+		protected void OnResize() {
+			LoadSize();
+			if (Resize != null) {
+				Resize(this, EventArgs.Empty);
+			}
+		}
 
-        private void LoadSize() {
-            if (WindowState == WindowState.Fullscreen)
-                return;
+		private void LoadSize() {
+			if (WindowState == WindowState.Fullscreen)
+				return;
 
 			Rect r = API.GetWindowBounds(window.WindowRef, WindowRegionCode.StructureRegion);
 			bounds = new Rectangle(r.X, r.Y, r.Width, r.Height);
 
 			r = API.GetWindowBounds(window.WindowRef, WindowRegionCode.GlobalPortRegion);
 			clientRectangle = new Rectangle(0, 0, r.Width, r.Height);
-        }
+		}
 
-        #endregion
+		#endregion
 
 		#region INativeWindow Members
 
 		public void ProcessEvents()
-        {
-            Application.ProcessEvents();
-        }
+		{
+			Application.ProcessEvents();
+		}
 
-        public Point PointToClient(Point point)
-        {
-            IntPtr handle = window.WindowRef;
+		public Point PointToClient(Point point)
+		{
+			IntPtr handle = window.WindowRef;
 
-            Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
-            Debug.Print("Rect: {0}", r);
+			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
+			Debug.Print("Rect: {0}", r);
 
-            return new Point(point.X - r.X, point.Y - r.Y);
-        }
-        public Point PointToScreen(Point point)
-        {
+			return new Point(point.X - r.X, point.Y - r.Y);
+		}
+		public Point PointToScreen(Point point)
+		{
 			IntPtr handle = window.WindowRef;
 
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
 			Debug.Print("Rect: {0}", r);
 
 			return new Point(point.X + r.X, point.Y + r.Y);
-        }
+		}
 
-        public bool Exists
-        {
-            get { return mExists; }
-        }
+		public bool Exists
+		{
+			get { return mExists; }
+		}
 
-        public IWindowInfo WindowInfo
-        {
-            get { return window; }
-        }
+		public IWindowInfo WindowInfo
+		{
+			get { return window; }
+		}
 
-        public IInputDriver InputDriver {
-            get { return this; }
-        }
-
-        public Icon Icon
-        {
+		public Icon Icon {
 			get { return mIcon; }
-            set {
+			set {
 				SetIcon(value);
 			}
-        }
+		}
 
 		private void SetIcon(Icon icon)
 		{
-			// The code for this function was adapted from Mono's 
+			// The code for this function was adapted from Mono's
 			// XplatUICarbon implementation, written by Geoff Norton
 			// http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/XplatUICarbon.cs?view=markup&pathrev=136932
 			if (icon == null)
@@ -751,111 +742,111 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-        public string Title
-        {
-            get
-            {
-                return title;
-            }
-            set
-            {
-                API.SetWindowTitle(window.WindowRef, value);
-                title = value;
-            }
-        }
+		public string Title
+		{
+			get
+			{
+				return title;
+			}
+			set
+			{
+				API.SetWindowTitle(window.WindowRef, value);
+				title = value;
+			}
+		}
 
-        public bool Visible
-        {
-            get { return API.IsWindowVisible(window.WindowRef); }
-            set
-            {
-                if (value && Visible == false)
-                    Show();
-                else
-                    Hide();
-            }
-        }
+		public bool Visible
+		{
+			get { return API.IsWindowVisible(window.WindowRef); }
+			set
+			{
+				if (value && Visible == false)
+					Show();
+				else
+					Hide();
+			}
+		}
 
-        public bool Focused
-        {
+		public bool Focused
+		{
 			get { return this.mIsActive; }
-        }
+		}
 
-        public Rectangle Bounds
-        {
-            get
-            {
+		public Rectangle Bounds
+		{
+			get
+			{
 				
 				return bounds;
-            }
-            set
-            {
-                Location = value.Location;
-                Size = value.Size;
-            }
-        }
+			}
+			set
+			{
+				Location = value.Location;
+				Size = value.Size;
+			}
+		}
 
-        public Point Location {
-            get { return Bounds.Location; }
-            set { SetLocation((short)value.X, (short)value.Y); }
-        }
+		public Point Location {
+			get { return Bounds.Location; }
+			set { SetLocation((short)value.X, (short)value.Y); }
+		}
 
-        public Size Size {
-            get { return bounds.Size; }
-            set { SetSize((short)value.Width, (short)value.Height); }
-        }
+		public Size Size {
+			get { return bounds.Size; }
+			set { SetSize((short)value.Width, (short)value.Height); }
+		}
 
-        public int Width
-        {
-            get { return ClientRectangle.Width; }
-            set { SetClientSize((short)value, (short)Height); }
-        }
+		public int Width
+		{
+			get { return ClientRectangle.Width; }
+			set { SetClientSize((short)value, (short)Height); }
+		}
 
-        public int Height
-        {
-            get { return ClientRectangle.Height; }
-            set { SetClientSize((short)Width, (short)value); }
-        }
+		public int Height
+		{
+			get { return ClientRectangle.Height; }
+			set { SetClientSize((short)Width, (short)value); }
+		}
 
-        public int X {
-            get { return ClientRectangle.X; }
-            set { Location = new Point(value, Y); }
-        }
+		public int X {
+			get { return ClientRectangle.X; }
+			set { Location = new Point(value, Y); }
+		}
 
-        public int Y {
-            get { return ClientRectangle.Y; }
-            set { Location = new Point(X, value); }
-        }
+		public int Y {
+			get { return ClientRectangle.Y; }
+			set { Location = new Point(X, value); }
+		}
 
-        public Rectangle ClientRectangle
-        {
-            get
-            {
+		public Rectangle ClientRectangle
+		{
+			get
+			{
 				return clientRectangle;
-            }
-            set
-            {
+			}
+			set
+			{
 				// just set the size, and ignore the location value.
 				// this is the behavior of the Windows WinGLNative.
 				ClientSize = value.Size;
-            }
-        }
+			}
+		}
 
-        public Size ClientSize
-        {
-            get
-            {
-                return clientRectangle.Size;
-            }
-            set
-            {
+		public Size ClientSize
+		{
+			get
+			{
+				return clientRectangle.Size;
+			}
+			set
+			{
 				API.SizeWindow(window.WindowRef, (short)value.Width, (short)value.Height, true);
 				OnResize();
-            }
-        }
+			}
+		}
 
-        public void Close()
-        {
+		public void Close()
+		{
 			CancelEventArgs e = new CancelEventArgs();
 			OnClosing(e);
 
@@ -865,52 +856,52 @@ namespace OpenTK.Platform.MacOS
 			OnClosed();
 
 			Dispose();
-        }
+		}
 
-        public WindowState WindowState
-        {
-            get
-            {
-                if (windowState == WindowState.Fullscreen)
-                    return WindowState.Fullscreen;
+		public WindowState WindowState
+		{
+			get
+			{
+				if (windowState == WindowState.Fullscreen)
+					return WindowState.Fullscreen;
 
-                if (Carbon.API.IsWindowCollapsed(window.WindowRef))
-                    return WindowState.Minimized;
+				if (Carbon.API.IsWindowCollapsed(window.WindowRef))
+					return WindowState.Minimized;
 
-                if (Carbon.API.IsWindowInStandardState(window.WindowRef))
-                {
-                    return WindowState.Maximized;
-                }
+				if (Carbon.API.IsWindowInStandardState(window.WindowRef))
+				{
+					return WindowState.Maximized;
+				}
 
-                return WindowState.Normal;
-            }
-            set
-            {
-                if (value == WindowState)
-                    return;
+				return WindowState.Normal;
+			}
+			set
+			{
+				if (value == WindowState)
+					return;
 
-                Debug.Print("Switching window state from {0} to {1}", WindowState, value);
+				Debug.Print("Switching window state from {0} to {1}", WindowState, value);
 				WindowState oldState = WindowState;
 
 				windowState = value;
 
 				if (oldState == WindowState.Fullscreen)
-                {
+				{
 					window.GoWindowedHack = true;
 
 					// when returning from full screen, wait until the context is updated
 					// to actually do the work.
 					return;
-                }
+				}
 
-                if (oldState == WindowState.Minimized)
-                {
-                    API.CollapseWindow(window.WindowRef, false);
-                }
+				if (oldState == WindowState.Minimized)
+				{
+					API.CollapseWindow(window.WindowRef, false);
+				}
 
 				SetCarbonWindowState();
-            }
-        }
+			}
+		}
 
 		private void SetCarbonWindowState()
 		{
@@ -924,8 +915,8 @@ namespace OpenTK.Platform.MacOS
 					break;
 
 				case WindowState.Maximized:
-					// hack because mac os has no concept of maximized. Instead windows are "zoomed" 
-					// meaning they are maximized up to their reported ideal size.  So we report a 
+					// hack because mac os has no concept of maximized. Instead windows are "zoomed"
+					// meaning they are maximized up to their reported ideal size.  So we report a
 					// large ideal size.
 					idealSize = new CarbonPoint(9000, 9000);
 					API.ZoomWindowIdeal(window.WindowRef, WindowPartCode.inZoomOut, ref idealSize);
@@ -967,12 +958,7 @@ namespace OpenTK.Platform.MacOS
 				if (windowBorder == WindowBorder.Resizable)
 				{
 					API.ChangeWindowAttributes(window.WindowRef, WindowAttributes.Resizable | WindowAttributes.FullZoom,
-											   WindowAttributes.NoAttributes);
-				}
-				else if (windowBorder == WindowBorder.Fixed)
-				{
-					API.ChangeWindowAttributes(window.WindowRef, WindowAttributes.NoAttributes,
-											   WindowAttributes.Resizable | WindowAttributes.FullZoom);
+					                           WindowAttributes.NoAttributes);
 				}
 
 				if (WindowBorderChanged != null)
@@ -1035,51 +1021,51 @@ namespace OpenTK.Platform.MacOS
 
 		#endregion
 
-        public event EventHandler<EventArgs> Load;
-        public event EventHandler<EventArgs> Unload;
-        public event EventHandler<EventArgs> Move;
-        public event EventHandler<EventArgs> Resize;
-        public event EventHandler<CancelEventArgs> Closing;
-        public event EventHandler<EventArgs> Closed;
-        public event EventHandler<EventArgs> Disposed;
-        public event EventHandler<EventArgs> IconChanged;
-        public event EventHandler<EventArgs> TitleChanged;
-        public event EventHandler<EventArgs> ClientSizeChanged;
-        public event EventHandler<EventArgs> VisibleChanged;
-        public event EventHandler<EventArgs> FocusedChanged;
-        public event EventHandler<EventArgs> WindowBorderChanged;
-        public event EventHandler<EventArgs> WindowStateChanged;
-        public event EventHandler<KeyPressEventArgs> KeyPress;
-        public event EventHandler<EventArgs> MouseEnter;
-        public event EventHandler<EventArgs> MouseLeave;
+		public event EventHandler<EventArgs> Load;
+		public event EventHandler<EventArgs> Unload;
+		public event EventHandler<EventArgs> Move;
+		public event EventHandler<EventArgs> Resize;
+		public event EventHandler<CancelEventArgs> Closing;
+		public event EventHandler<EventArgs> Closed;
+		public event EventHandler<EventArgs> Disposed;
+		public event EventHandler<EventArgs> IconChanged;
+		public event EventHandler<EventArgs> TitleChanged;
+		public event EventHandler<EventArgs> ClientSizeChanged;
+		public event EventHandler<EventArgs> VisibleChanged;
+		public event EventHandler<EventArgs> FocusedChanged;
+		public event EventHandler<EventArgs> WindowBorderChanged;
+		public event EventHandler<EventArgs> WindowStateChanged;
+		public event EventHandler<KeyPressEventArgs> KeyPress;
+		public event EventHandler<EventArgs> MouseEnter;
+		public event EventHandler<EventArgs> MouseLeave;
 
-        #endregion
-        
-        #region IInputDriver Members
-        
-        KeyboardDevice keyboard = new KeyboardDevice();
-    	MouseDevice mouse = new MouseDevice();
-        
-        public KeyboardDevice Keyboard {
-        	get { return keyboard; }
-        }
+		#endregion
+		
+		#region IInputDriver Members
+		
+		KeyboardDevice keyboard = new KeyboardDevice();
+		MouseDevice mouse = new MouseDevice();
+		
+		public KeyboardDevice Keyboard {
+			get { return keyboard; }
+		}
 
-        public MouseDevice Mouse {
-        	get { return mouse; }
-        }
-        
-        // TODO: Implement using native API, rather than through Mono.
-        // http://webnnel.googlecode.com/svn/trunk/lib/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/CarbonEventsCore.h
-        // GetPos --> GetGlobalMouse (no 64 bit support?), and HIGetMousePosition()
-        // https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/Quartz_Services_Ref/index.html#//apple_ref/c/func/CGWarpMouseCursorPosition
-        // SetPos --> CGWarpMouseCursorPosition
-        // Note that: CGPoint uses float on 32 bit systems, double on 64 bit systems
-        // The rest of the MacOS OpenTK API will probably need to be fixed for this too...
-        public Point DesktopCursorPos {
-        	get { return System.Windows.Forms.Cursor.Position; }
-        	set { System.Windows.Forms.Cursor.Position = value; }
-        }
-        
-        #endregion
-    }
+		public MouseDevice Mouse {
+			get { return mouse; }
+		}
+		
+		// TODO: Implement using native API, rather than through Mono.
+		// http://webnnel.googlecode.com/svn/trunk/lib/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/CarbonEventsCore.h
+		// GetPos --> GetGlobalMouse (no 64 bit support?), and HIGetMousePosition()
+		// https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/Quartz_Services_Ref/index.html#//apple_ref/c/func/CGWarpMouseCursorPosition
+		// SetPos --> CGWarpMouseCursorPosition
+		// Note that: CGPoint uses float on 32 bit systems, double on 64 bit systems
+		// The rest of the MacOS OpenTK API will probably need to be fixed for this too...
+		public Point DesktopCursorPos {
+			get { return System.Windows.Forms.Cursor.Position; }
+			set { System.Windows.Forms.Cursor.Position = value; }
+		}
+		
+		#endregion
+	}
 }

@@ -118,40 +118,40 @@ namespace OpenTK {
 			result.Z = blend * (b.Z - a.Z) + a.Z;
 		}
 
-        public static float Dot(Vector3 left, Vector3 right) {
-            return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
-        }
+		public static float Dot(Vector3 left, Vector3 right) {
+			return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+		}
 
-        public static void Dot(ref Vector3 left, ref Vector3 right, out float result) {
-            result = left.X * right.X + left.Y * right.Y + left.Z * right.Z;
-        }
+		public static void Dot(ref Vector3 left, ref Vector3 right, out float result) {
+			result = left.X * right.X + left.Y * right.Y + left.Z * right.Z;
+		}
 		
 		public static Vector3 Cross(Vector3 left, Vector3 right) {
-            return new Vector3(left.Y * right.Z - left.Z * right.Y,
-                left.Z * right.X - left.X * right.Z,
-                left.X * right.Y - left.Y * right.X);
-        }
+			return new Vector3(left.Y * right.Z - left.Z * right.Y,
+			                   left.Z * right.X - left.X * right.Z,
+			                   left.X * right.Y - left.Y * right.X);
+		}
 
-        public static void Cross(ref Vector3 left, ref Vector3 right, out Vector3 result) {
-            result = new Vector3(left.Y * right.Z - left.Z * right.Y,
-                left.Z * right.X - left.X * right.Z,
-                left.X * right.Y - left.Y * right.X);
-        }
+		public static void Cross(ref Vector3 left, ref Vector3 right, out Vector3 result) {
+			result = new Vector3(left.Y * right.Z - left.Z * right.Y,
+			                     left.Z * right.X - left.X * right.Z,
+			                     left.X * right.Y - left.Y * right.X);
+		}
 		
-        public static Vector3 Normalize(Vector3 vec) {
-            float scale = 1f / vec.Length;
-            vec.X *= scale;
-            vec.Y *= scale;
-            vec.Z *= scale;
-            return vec;
-        }
+		public static Vector3 Normalize(Vector3 vec) {
+			float scale = 1f / vec.Length;
+			vec.X *= scale;
+			vec.Y *= scale;
+			vec.Z *= scale;
+			return vec;
+		}
 
-        public static void Normalize(ref Vector3 vec, out Vector3 result) {
-            float scale = 1f / vec.Length;
-            result.X = vec.X * scale;
-            result.Y = vec.Y * scale;
-            result.Z = vec.Z * scale;
-        }
+		public static void Normalize(ref Vector3 vec, out Vector3 result) {
+			float scale = 1f / vec.Length;
+			result.X = vec.X * scale;
+			result.Y = vec.Y * scale;
+			result.Z = vec.Z * scale;
+		}
 
 		public static Vector3 operator + (Vector3 left, Vector3 right) {
 			left.X += right.X;
@@ -213,10 +213,7 @@ namespace OpenTK {
 		}
 
 		public override bool Equals(object obj) {
-			if (!(obj is Vector3))
-				return false;
-
-			return this.Equals((Vector3)obj);
+			return (obj is Vector3) && Equals((Vector3)obj);
 		}
 
 		public bool Equals(Vector3 other) {

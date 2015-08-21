@@ -26,7 +26,7 @@ namespace OpenTK.Platform.Windows {
 		static WinGLContext() {
 			// Dynamically load the OpenGL32.dll in order to use the extension loading capabilities of Wgl.
 			if (opengl32Handle == IntPtr.Zero) {
-				opengl32Handle = Functions.LoadLibrary(opengl32Name);
+				opengl32Handle = API.LoadLibrary(opengl32Name);
 				if (opengl32Handle == IntPtr.Zero)
 					throw new ApplicationException(String.Format("LoadLibrary(\"{0}\") call failed with code {1}",
 					                                             opengl32Name, Marshal.GetLastWin32Error()));
@@ -57,7 +57,7 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		public override void SwapBuffers() {
-			if (!Functions.SwapBuffers(dc))
+			if (!API.SwapBuffers(dc))
 				throw new GraphicsContextException(String.Format(
 					"Failed to swap buffers for context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
 		}
@@ -105,7 +105,7 @@ namespace OpenTK.Platform.Windows {
 			IntPtr dynAddress = Wgl.wglGetProcAddress(funcName);
 			if( !BindingsBase.IsInvalidAddress( dynAddress ) )
 				return dynAddress;
-			return Functions.GetProcAddress( opengl32Handle, funcName );
+			return API.GetProcAddress( opengl32Handle, funcName );
 		}
 
 
@@ -116,7 +116,7 @@ namespace OpenTK.Platform.Windows {
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
 			pfd.Size = PixelFormatDescriptor.DefaultSize;
 			pfd.Version = PixelFormatDescriptor.DefaultVersion;
-			Functions.DescribePixelFormat(deviceContext, modeIndex, pfd.Size, ref pfd);
+			API.DescribePixelFormat(deviceContext, modeIndex, pfd.Size, ref pfd);
 			
 			Mode = new GraphicsMode(
 				(IntPtr)modeIndex, new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
@@ -124,7 +124,7 @@ namespace OpenTK.Platform.Windows {
 				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
 			
 			Debug.WriteLine(modeIndex);
-			if (!Functions.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
+			if (!API.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
 				throw new GraphicsContextException(String.Format(
 					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));
 		}
@@ -155,7 +155,7 @@ namespace OpenTK.Platform.Windows {
 			if (format.Depth <= 0) pfd.Flags |= PixelFormatDescriptorFlags.DEPTH_DONTCARE;
 			if (format.Buffers > 1) pfd.Flags |= PixelFormatDescriptorFlags.DOUBLEBUFFER;
 
-			modeIndex = Functions.ChoosePixelFormat(deviceContext, ref pfd);
+			modeIndex = API.ChoosePixelFormat(deviceContext, ref pfd);
 			if (modeIndex == 0)
 				throw new GraphicsModeException("The requested GraphicsMode is not available.");
 		}
@@ -164,12 +164,7 @@ namespace OpenTK.Platform.Windows {
 			return ContextHandle.ToString();
 		}
 
-		public override void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		private void Dispose(bool calledManually) {
+		protected override void Dispose(bool calledManually) {
 			if (IsDisposed) return;
 			
 			if (calledManually) {
@@ -178,10 +173,6 @@ namespace OpenTK.Platform.Windows {
 				Debug.Print("[Warning] OpenGL context {0} leaked. Did you forget to call IGraphicsContext.Dispose()?",  ContextHandle);
 			}
 			IsDisposed = true;
-		}
-
-		~WinGLContext() {
-			Dispose(false);
 		}
 
 		private void DestroyContext() {

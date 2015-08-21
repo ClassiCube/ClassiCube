@@ -10,8 +10,8 @@ using System;
 
 namespace OpenTK.Platform
 {
-    /// <summary>Descibes an OS window.</summary>
-    public interface IWindowInfo : IDisposable
-    {
-    }
+	/// <summary>Descibes an OS window.</summary>
+	public interface IWindowInfo : IDisposable
+	{
+	}
 }

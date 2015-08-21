@@ -59,7 +59,7 @@ namespace OpenTK.Platform.X11
 		static Glx() { }
 
 		protected override IntPtr GetAddress(string funcname) {
-			return Glx.GetProcAddress(funcname);
+			return glXGetProcAddress(funcname);
 		}
 		
 		internal void LoadEntryPoints() {
@@ -68,43 +68,40 @@ namespace OpenTK.Platform.X11
 			}
 		}
 
-		[DllImport(Library, EntryPoint = "glXIsDirect")]
-		public static extern bool IsDirect(IntPtr dpy, IntPtr context);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern bool glXIsDirect(IntPtr dpy, IntPtr context);
 
-		[DllImport(Library, EntryPoint = "glXCreateContext")]
-		public static extern IntPtr CreateContext(IntPtr dpy, IntPtr vis, IntPtr shareList, bool direct);
-
-		[DllImport(Library, EntryPoint = "glXCreateContext")]
-		public static extern IntPtr CreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern IntPtr glXCreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);
 		
-		[DllImport(Library, EntryPoint = "glXDestroyContext")]
-		public static extern void DestroyContext(IntPtr dpy, IntPtr context);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern void glXDestroyContext(IntPtr dpy, IntPtr context);
 
-		[DllImport(Library, EntryPoint = "glXGetCurrentContext")]
-		public static extern IntPtr GetCurrentContext();
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern IntPtr glXGetCurrentContext();
 
-		[DllImport(Library, EntryPoint = "glXMakeCurrent")]
-		public static extern bool MakeCurrent(IntPtr display, IntPtr drawable, IntPtr context);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern bool glXMakeCurrent(IntPtr display, IntPtr drawable, IntPtr context);
 
-		[DllImport(Library, EntryPoint = "glXSwapBuffers")]
-		public static extern void SwapBuffers(IntPtr display, IntPtr drawable);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern void glXSwapBuffers(IntPtr display, IntPtr drawable);
 
-		[DllImport(Library, EntryPoint = "glXGetProcAddress")]
-		public static extern IntPtr GetProcAddress([MarshalAs(UnmanagedType.LPTStr)] string procName);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPTStr)] string procName);
 
-		[DllImport(Library, EntryPoint = "glXGetConfig")]
-		public static extern int GetConfig(IntPtr dpy, ref XVisualInfo vis, GLXAttribute attrib, out int value);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern int glXGetConfig(IntPtr dpy, ref XVisualInfo vis, GLXAttribute attrib, out int value);
 
-		[DllImport(Library, EntryPoint = "glXChooseVisual")]
-		public static extern IntPtr ChooseVisual(IntPtr dpy, int screen, int[] attriblist);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public static extern IntPtr glXChooseVisual(IntPtr dpy, int screen, int[] attriblist);
 
 		// Returns an array of GLXFBConfig structures.
-		[DllImport(Library, EntryPoint = "glXChooseFBConfig")]
-		public unsafe extern static IntPtr* ChooseFBConfig(IntPtr dpy, int screen, int[] attriblist, out int fbount);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public unsafe extern static IntPtr* glXChooseFBConfig(IntPtr dpy, int screen, int[] attriblist, out int fbount);
 
 		// Returns a pointer to an XVisualInfo structure.
-		[DllImport(Library, EntryPoint = "glXGetVisualFromFBConfig")]
-		public unsafe extern static IntPtr GetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public unsafe extern static IntPtr glXGetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
 
 		[SuppressUnmanagedCodeSecurity]
 		public delegate GLXErrorCode SwapIntervalSGI(int interval);

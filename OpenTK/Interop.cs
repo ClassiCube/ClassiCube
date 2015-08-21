@@ -62,22 +62,22 @@ namespace OpenTK {
 		public static void Calli( int arg0, int arg1, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, float arg1, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int* arg1, IntPtr address ) { throw rewriteEx; }
-		public static void Calli( int arg0, float* arg1, IntPtr address ) { throw rewriteEx; }	
-		public static void Calli( int arg0, int arg1, int arg2, IntPtr address ) { throw rewriteEx; }	
+		public static void Calli( int arg0, float* arg1, IntPtr address ) { throw rewriteEx; }
+		public static void Calli( int arg0, int arg1, int arg2, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int arg1, int arg2, int* arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int arg1, int arg2, IntPtr arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int arg1, int arg2, int arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( float arg0, float arg1, float arg2, float arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( byte arg0, byte arg1, byte arg2, byte arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, IntPtr arg1, IntPtr arg2, IntPtr arg3, IntPtr address ) { throw rewriteEx; }
-		public static void Calli( int arg0, IntPtr arg1, IntPtr arg2, int arg3, IntPtr address ) { throw rewriteEx; }	
+		public static void Calli( int arg0, IntPtr arg1, IntPtr arg2, int arg3, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, IntPtr arg6, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, IntPtr arg8, IntPtr address ) { throw rewriteEx; }
 	}
 	
 	/// <summary> Indicates that the specified type needs to have interop patching performed on it. </summary>
 	[AttributeUsage( AttributeTargets.Struct | AttributeTargets.Class )]
-    public sealed class InteropPatchAttribute : Attribute {
-			
-    }
+	public sealed class InteropPatchAttribute : Attribute {
+		
+	}
 }

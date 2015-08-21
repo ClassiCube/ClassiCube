@@ -186,10 +186,7 @@ namespace OpenTK {
 		}
 		
 		public override bool Equals(object obj) {
-			if (!(obj is Vector4))
-				return false;
-
-			return this.Equals((Vector4)obj);
+			return (obj is Vector4) && Equals((Vector4)obj);
 		}
 
 		public bool Equals(Vector4 other) {

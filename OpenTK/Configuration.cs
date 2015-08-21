@@ -6,7 +6,7 @@
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights to 
+// in the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
 // the Software, and to permit persons to whom the Software is furnished to do
 // so, subject to the following conditions:
@@ -29,140 +29,57 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace OpenTK
-{
-    /// <summary>Provides information about the underlying OS and runtime.</summary>
-    public static class Configuration
-    {
-        static bool runningOnWindows, runningOnUnix, runningOnX11, runningOnMacOS, runningOnLinux, runningOnMono;
+namespace OpenTK {
+	
+	/// <summary>Provides information about the underlying OS and runtime.</summary>
+	public static class Configuration {
+		
+		public static bool RunningOnWindows, RunningOnUnix, RunningOnX11, 
+		RunningOnMacOS, RunningOnLinux, RunningOnMono;
 
-        #region --- Constructors ---
+		// Detects the underlying OS and runtime.
+		unsafe static Configuration() {
+			PlatformID platform = Environment.OSVersion.Platform;
+			if( platform == PlatformID.Win32NT || platform == PlatformID.Win32S ||
+			   platform == PlatformID.Win32Windows || platform == PlatformID.WinCE )
+				RunningOnWindows = true;
+			else if ( platform == PlatformID.Unix || platform == (PlatformID)4 ) {
+				sbyte* ascii = stackalloc sbyte[8192];
+				uname( ascii );
+				// Distinguish between Linux, Mac OS X and other Unix operating systems.
+				string kernel = new String( ascii );
+				if( kernel == "Linux" ) {
+					RunningOnLinux = RunningOnUnix = true;
+				} else if( kernel == "Darwin" ) {
+					RunningOnMacOS = RunningOnUnix = true;
+				} else if( !String.IsNullOrEmpty( kernel ) ) {
+					RunningOnUnix = true;
+				} else {
+					throw new PlatformNotSupportedException("Unknown platform. Please file a bug report at http://www.opentk.com/");
+				}
+			}
+			else
+				throw new PlatformNotSupportedException("Unknown platform. Please report this error at http://www.opentk.com.");
 
-        // Detects the underlying OS and runtime.
-        static Configuration()
-        {
-        	PlatformID platform = Environment.OSVersion.Platform;
-            if( platform == PlatformID.Win32NT || platform == PlatformID.Win32S ||
-               platform == PlatformID.Win32Windows || platform == PlatformID.WinCE )
-                runningOnWindows = true;
-            else if ( platform == PlatformID.Unix || platform == (PlatformID)4 ) {
-                // Distinguish between Linux, Mac OS X and other Unix operating systems.
-                string kernel_name = DetectUnixKernel();
-                switch (kernel_name)
-                {
-                    case null:
-                    case "":
-                        throw new PlatformNotSupportedException(
-                            "Unknown platform. Please file a bug report at http://www.opentk.com/node/add/project-issue/opentk");
+			// Detect whether X is present.
+			// Hack: it seems that this check will cause X to initialize itself on Mac OS X Leopard and newer.
+			// We don't want that (we'll be using the native interfaces anyway), so we'll avoid this check when we detect Mac OS X.
+			if( !RunningOnMacOS && !RunningOnWindows ) {
+				try { RunningOnX11 = OpenTK.Platform.X11.API.DefaultDisplay != IntPtr.Zero; }
+				catch { }
+			}
 
-                    case "Linux":
-                        runningOnLinux = runningOnUnix = true;
-                        break;
+			// Detect the Mono runtime (code taken from http://mono.wikia.com/wiki/Detecting_if_program_is_running_in_Mono).
+			if( Type.GetType("Mono.Runtime") != null )
+				RunningOnMono = true;
+			
+			Debug.Print("Detected configuration: {0} / {1}",
+			            RunningOnWindows ? "Windows" : RunningOnLinux ? "Linux" : RunningOnMacOS ? "MacOS" :
+			            RunningOnUnix ? "Unix" : RunningOnX11 ? "X11" : "Unknown Platform",
+			            RunningOnMono ? "Mono" : ".Net");
+		}
 
-                    case "Darwin":
-                        runningOnMacOS = runningOnUnix = true;
-                        break;
-
-                    default:
-                        runningOnUnix = true;
-                        break;
-                }
-            }
-            else
-                throw new PlatformNotSupportedException("Unknown platform. Please report this error at http://www.opentk.com.");
-
-            // Detect whether X is present.
-            // Hack: it seems that this check will cause X to initialize itself on Mac OS X Leopard and newer.
-            // We don't want that (we'll be using the native interfaces anyway), so we'll avoid this check
-            // when we detect Mac OS X.
-            if (!runningOnMacOS && !runningOnWindows)
-            {
-                try { runningOnX11 = OpenTK.Platform.X11.API.DefaultDisplay != IntPtr.Zero; }
-                catch { }
-            }
-
-            // Detect the Mono runtime (code taken from http://mono.wikia.com/wiki/Detecting_if_program_is_running_in_Mono).
-            Type t = Type.GetType("Mono.Runtime");
-            if (t != null)
-                runningOnMono = true;
-            
-            Debug.Print("Detected configuration: {0} / {1}",
-                RunningOnWindows ? "Windows" : RunningOnLinux ? "Linux" : RunningOnMacOS ? "MacOS" :
-                runningOnUnix ? "Unix" : RunningOnX11 ? "X11" : "Unknown Platform",
-                RunningOnMono ? "Mono" : ".Net");
-        }
-
-        #endregion
-
-        #region --- Public Methods ---
-
-        /// <summary>Gets a System.Boolean indicating whether OpenTK is running on a Windows platform.</summary>
-        public static bool RunningOnWindows { get { return runningOnWindows; } }
-
-        /// <summary>Gets a System.Boolean indicating whether OpenTK is running on an X11 platform.</summary>
-        public static bool RunningOnX11 { get { return runningOnX11; } }
-
-        /// <summary> Gets a System.Boolean indicating whether OpenTK is running on a Unix platform. </summary>
-        public static bool RunningOnUnix { get { return runningOnUnix; } }
-
-        /// <summary>Gets a System.Boolean indicating whether OpenTK is running on an X11 platform.</summary>
-        public static bool RunningOnLinux { get { return runningOnLinux; } }
-
-        /// <summary>Gets a System.Boolean indicating whether OpenTK is running on a MacOS platform.</summary>
-        public static bool RunningOnMacOS { get { return runningOnMacOS; } }
-
-        /// <summary> Gets a System.Boolean indicating whether OpenTK is running on the Mono runtime. </summary>
-        public static bool RunningOnMono { get { return runningOnMono; } }
-
-        #endregion
-
-        #region --- Private Methods ---
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        struct utsname
-        {
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string sysname;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string nodename;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string release;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string version;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            public string machine;
-
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 1024)]
-            public string extraJustInCase;
-
-        }
-
-        /// <summary> Detects the unix kernel by p/invoking uname (libc). </summary>
-        private static string DetectUnixKernel() {
-            Debug.Print("Size: {0}", Marshal.SizeOf(typeof(utsname)).ToString());
-            Debug.Flush();
-            utsname uts = new utsname();
-            uname(out uts);
-
-            Debug.WriteLine("System:");
-            Debug.Indent();
-            Debug.WriteLine(uts.sysname);
-            Debug.WriteLine(uts.nodename);
-            Debug.WriteLine(uts.release);
-            Debug.WriteLine(uts.version);
-            Debug.WriteLine(uts.machine);
-            Debug.Unindent();
-
-            return uts.sysname;
-        }
-
-        [DllImport("libc")]
-        private static extern void uname(out utsname uname_struct);
-
-        #endregion
-    }
+		[DllImport("libc")]
+		unsafe static extern void uname(sbyte* uname_struct);
+	}
 }

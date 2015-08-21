@@ -63,7 +63,6 @@
     <Compile Include="KeyPressEventArgs.cs" />
     <Compile Include="NativeWindow.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
-    <Compile Include="Graphics\GraphicsContext.cs" />
     <Compile Include="Graphics\GraphicsContextBase.cs" />
     <Compile Include="Graphics\GraphicsContextException.cs" />
     <Compile Include="Graphics\GraphicsMode.cs" />
@@ -72,7 +71,6 @@
     <Compile Include="Graphics\IGraphicsMode.cs" />
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />
     <Compile Include="Graphics\OpenGL\GLHelper.cs" />
-    <Compile Include="Input\Interfaces.cs" />
     <Compile Include="Input\Key.cs" />
     <Compile Include="Input\KeyboardDevice.cs" />
     <Compile Include="Input\MouseButton.cs" />
@@ -113,7 +111,6 @@
     <Compile Include="Platform\X11\X11GLContext.cs" />
     <Compile Include="Platform\X11\X11GLNative.cs" />
     <Compile Include="Platform\X11\X11GraphicsMode.cs" />
-    <Compile Include="Platform\X11\X11Input.cs" />
     <Compile Include="Platform\X11\X11KeyMap.cs" />
     <Compile Include="Platform\X11\X11WindowInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

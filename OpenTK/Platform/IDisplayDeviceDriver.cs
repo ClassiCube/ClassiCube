@@ -10,9 +10,9 @@ using System;
 
 namespace OpenTK.Platform
 {
-    internal interface IDisplayDeviceDriver
-    {
-        bool TryChangeResolution(DisplayDevice device, DisplayResolution resolution);
-        bool TryRestoreResolution(DisplayDevice device);
-    }
+	internal interface IDisplayDeviceDriver
+	{
+		bool TryChangeResolution(DisplayDevice device, DisplayResolution resolution);
+		bool TryRestoreResolution(DisplayDevice device);
+	}
 }

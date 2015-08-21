@@ -7,22 +7,17 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-
 using OpenTK.Platform;
 
-namespace OpenTK.Graphics
-{
-    /// <summary>
-    /// Provides methods for creating and interacting with an OpenGL context.
-    /// </summary>
-    public interface IGraphicsContext : IDisposable
-    {
-        /// <summary>Swaps buffers, presenting the rendered scene to the user.</summary>
+namespace OpenTK.Graphics {
+	
+    /// <summary> Provides methods for creating and interacting with an OpenGL context. </summary>
+    public interface IGraphicsContext : IDisposable {
+    	
+        /// <summary> Swaps buffers, presenting the rendered scene to the user. </summary>
         void SwapBuffers();
 
-        /// <summary>Makes the GraphicsContext current in the calling thread.</summary>
+        /// <summary> Makes the GraphicsContext current in the calling thread. </summary>
         /// <param name="window">An OpenTK.Platform.IWindowInfo structure that points to a valid window.</param>
         /// <remarks>
         /// <para>OpenGL commands in one thread, affect the GraphicsContext which is current in that thread.</para>
@@ -30,65 +25,34 @@ namespace OpenTK.Graphics
         /// </remarks>
         void MakeCurrent(IWindowInfo window);
 
-        /// <summary>
-        /// Gets a <see cref="System.Boolean"/> indicating whether this instance is current in the calling thread.
-        /// </summary>
+        /// <summary> Gets a <see cref="System.Boolean"/> indicating whether this instance is current in the calling thread. </summary>
         bool IsCurrent { get; }
 
-        /// <summary>
-        /// Gets a <see cref="System.Boolean"/> indicating whether this instance has been disposed.
-        /// It is an error to access any instance methods if this property returns true.
-        /// </summary>
+        /// <summary> Gets a <see cref="System.Boolean"/> indicating whether this instance has been disposed.
+        /// It is an error to access any instance methods if this property returns true. </summary>
         bool IsDisposed { get; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether VSyncing is enabled.
-        /// </summary>
+        /// <summary> Gets or sets a value indicating whether VSyncing is enabled. </summary>
         bool VSync { get; set; }
 
-        /// <summary>
-        /// Updates the graphics context.  This must be called when the region the graphics context
-        /// is drawn to is resized.
-        /// </summary>
+        /// <summary> Updates the graphics context.  This must be called when the region the graphics context
+        /// is drawn to is resized. </summary>
         /// <param name="window"></param>
         void Update(IWindowInfo window);
 
         /// <summary>Gets the GraphicsMode of this instance.</summary>
         GraphicsMode GraphicsMode { get; }
 
-        /// <summary>
-        /// Loads all OpenGL entry points. Requires this instance to be current on the calling thread.
-        /// </summary>
-        void LoadAll();
-    }
-
-    // Functions for internal use by OpenTK.
-    // TODO: RegisterForDisposal/DisposeResources for 0.3.15 (GC & OpenGL)
-    // TODO: Remove or move GetDisplayModes to another class.
-    /// <summary>
-    /// Provides methods to create new GraphicsContexts. Should only be used for extending OpenTK.
-    /// </summary>
-    public interface IGraphicsContextInternal
-    {
-
-        /// <summary>
-        /// Loads all OpenGL entry points. Requires this instance to be current on the calling thread.
-        /// </summary>
+        /// <summary> Loads all OpenGL entry points. Requires this instance to be current on the calling thread. </summary>
         void LoadAll();
 
-        /// <summary>
-        /// Gets a handle to the OpenGL rendering context.
-        /// </summary>
+        /// <summary> Gets a handle to the OpenGL rendering context. </summary>
         IntPtr Context { get; }
 
-        /// <summary>
-        /// Gets the address of an OpenGL extension function.
-        /// </summary>
+        /// <summary> Gets the address of an OpenGL extension function. </summary>
         /// <param name="function">The name of the OpenGL function (e.g. "glGetString")</param>
-        /// <returns>
-        /// A pointer to the specified function or IntPtr.Zero if the function isn't
-        /// available in the current opengl context.
-        /// </returns>
+        /// <returns> A pointer to the specified function or IntPtr.Zero if the function isn't
+        /// available in the current opengl context. </returns>
         IntPtr GetAddress(string function);
     }
 }

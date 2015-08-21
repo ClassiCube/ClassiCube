@@ -163,12 +163,9 @@ namespace OpenTK {
 		public override int GetHashCode() {
 			return X.GetHashCode() ^ Y.GetHashCode();
 		}
-
+		
 		public override bool Equals(object obj) {
-			if (!(obj is Vector2))
-				return false;
-
-			return this.Equals((Vector2)obj);
+			return (obj is Vector2) && Equals((Vector2)obj);
 		}
 		
 		public bool Equals(Vector2 other) {

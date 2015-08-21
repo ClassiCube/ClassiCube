@@ -74,44 +74,44 @@ namespace OpenTK.Platform.MacOS {
 }
 
 namespace OpenTK.Platform.Windows {
-    class WinFactory : IPlatformFactory {
+	class WinFactory : IPlatformFactory {
 		
-        public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-            return new WinGLNative(x, y, width, height, title, options, device);
-        }
+		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
+			return new WinGLNative(x, y, width, height, title, options, device);
+		}
 
-        public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
-            return new WinDisplayDeviceDriver();
-        }
+		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
+			return new WinDisplayDeviceDriver();
+		}
 
-        public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
-            return new WinGLContext(mode, (WinWindowInfo)window);
-        }
+		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
+			return new WinGLContext(mode, (WinWindowInfo)window);
+		}
 
-        public IGraphicsMode CreateGraphicsMode() {
-        	return new IGraphicsMode();
-        }
-    }
+		public IGraphicsMode CreateGraphicsMode() {
+			return new IGraphicsMode();
+		}
+	}
 }
 
 namespace OpenTK.Platform.X11 {
-    class X11Factory : IPlatformFactory {
+	class X11Factory : IPlatformFactory {
 
-        public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-            return new X11GLNative(x, y, width, height, title, mode, options, device);
-        }
+		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
+			return new X11GLNative(x, y, width, height, title, mode, options, device);
+		}
 
-        public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
-            return new X11DisplayDevice();
-        }
+		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
+			return new X11DisplayDevice();
+		}
 
-        public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
-            return new X11GLContext(mode, window);
-        }
+		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
+			return new X11GLContext(mode, window);
+		}
 
-        public IGraphicsMode CreateGraphicsMode() {
-            return new X11GraphicsMode();
-        }
-    }
+		public IGraphicsMode CreateGraphicsMode() {
+			return new X11GraphicsMode();
+		}
+	}
 }
 

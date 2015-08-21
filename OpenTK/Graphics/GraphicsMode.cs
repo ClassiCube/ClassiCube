@@ -7,15 +7,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 
-namespace OpenTK.Graphics
-{
+namespace OpenTK.Graphics {
+	
     /// <summary>Defines the format for graphics operations.</summary>
-    public class GraphicsMode : IEquatable<GraphicsMode>
-    {
+    public class GraphicsMode : IEquatable<GraphicsMode> {
+    	
         ColorFormat color_format;
         int depth, stencil, buffers;
         IntPtr? index = null;  // The id of the pixel format or visual.
@@ -23,25 +21,14 @@ namespace OpenTK.Graphics
         static GraphicsMode defaultMode;
         static IGraphicsMode implementation;
         static readonly object SyncRoot = new object();
-
-        #region --- Constructors ---
-
-        #region static GraphicsMode()
         
-        static GraphicsMode()
-        {
-            lock (SyncRoot)
-            {
+        static GraphicsMode() {
+            lock (SyncRoot) {
                 implementation = Platform.Factory.Default.CreateGraphicsMode();
             }
         }
 
-        #endregion
-
-        #region internal GraphicsMode(IntPtr? index, ColorFormat color, int depth, int stencil, int samples, ColorFormat accum, int buffers, bool stereo)
-
-        internal GraphicsMode(IntPtr? index, ColorFormat color, int depth, int stencil, int buffers)
-        {
+        internal GraphicsMode(IntPtr? index, ColorFormat color, int depth, int stencil, int buffers) {
             if (depth < 0) throw new ArgumentOutOfRangeException("depth", "Must be greater than, or equal to zero.");
             if (stencil < 0) throw new ArgumentOutOfRangeException("stencil", "Must be greater than, or equal to zero.");
             if (buffers <= 0) throw new ArgumentOutOfRangeException("buffers", "Must be greater than zero.");
@@ -53,10 +40,6 @@ namespace OpenTK.Graphics
             this.Buffers = buffers;
         }
 
-        #endregion
-
-        #region public GraphicsMode(ColorFormat color, int depth, int stencil, int samples, ColorFormat accum, int buffers, bool stereo)
-
         /// <summary>Constructs a new GraphicsMode with the specified parameters.</summary>
         /// <param name="color">The ColorFormat of the color buffer.</param>
         /// <param name="depth">The number of bits in the depth buffer.</param>
@@ -65,111 +48,41 @@ namespace OpenTK.Graphics
         public GraphicsMode(ColorFormat color, int depth, int stencil, int buffers)
             : this(null, color, depth, stencil, buffers) { }
 
-        #endregion
-
-        #endregion
-
-        #region --- Public Methods ---
-
-        #region public IntPtr Index
-
-        /// <summary>
-        /// Gets a nullable <see cref="System.IntPtr"/> value, indicating the platform-specific index for this GraphicsMode.
-        /// </summary>
-        public IntPtr? Index
-        {
-            get
-            {
-                LazySelectGraphicsMode();
-                return index;
-            }
+        /// <summary> Gets a nullable <see cref="System.IntPtr"/> value, indicating the platform-specific index for this GraphicsMode. </summary>
+        public IntPtr? Index {
+            get { LazySelectGraphicsMode(); return index; }
             set { index = value; }
         }
 
-        #endregion
-
-        #region public int ColorFormat
-
-        /// <summary>
-        /// Gets an OpenTK.Graphics.ColorFormat that describes the color format for this GraphicsFormat.
-        /// </summary>
-        public ColorFormat ColorFormat
-        {
-            get
-            {
-                LazySelectGraphicsMode();
-                return color_format;
-            }
+        /// <summary> Gets an OpenTK.Graphics.ColorFormat that describes the color format for this GraphicsFormat. </summary>
+        public ColorFormat ColorFormat {
+            get { LazySelectGraphicsMode(); return color_format; }
             private set { color_format = value; }
         }
 
-        #endregion
-
-        #region public int Depth
-
-        /// <summary>
-        /// Gets a System.Int32 that contains the bits per pixel for the depth buffer
-        /// for this GraphicsFormat.
-        /// </summary>
-        public int Depth
-        {
-            get
-            {
-                LazySelectGraphicsMode();
-                return depth;
-            }
+        /// <summary> Gets a System.Int32 that contains the bits per pixel for the depth buffer for this GraphicsFormat. </summary>
+        public int Depth {
+            get { LazySelectGraphicsMode(); return depth; }
             private set { depth = value; }
         }
 
-        #endregion
-
-        #region public int Stencil
-
-        /// <summary>
-        /// Gets a System.Int32 that contains the bits per pixel for the stencil buffer
-        /// of this GraphicsFormat.
-        /// </summary>
-        public int Stencil
-        {
-            get
-            {
-                LazySelectGraphicsMode();
-                return stencil;
-            }
+        /// <summary> Gets a System.Int32 that contains the bits per pixel for the stencil buffer of this GraphicsFormat. </summary>
+        public int Stencil {
+            get { LazySelectGraphicsMode(); return stencil; }
             private set { stencil = value; }
         }
 
-        #endregion
-
-        #region public int Buffers
-
-        /// <summary>
-        /// Gets a System.Int32 containing the number of buffers associated with this
-        /// DisplayMode.
-        /// </summary>
-        public int Buffers
-        {
-            get
-            {
-                LazySelectGraphicsMode();
-                return buffers;
-            }
+        /// <summary> Gets a System.Int32 containing the number of buffers associated with this DisplayMode. </summary>
+        public int Buffers {
+            get { LazySelectGraphicsMode(); return buffers; }
             private set { buffers = value; }
         }
 
-        #endregion
-
-        #region public static GraphicsFormat Default
-
         /// <summary>Returns an OpenTK.GraphicsFormat compatible with the underlying platform.</summary>
-        public static GraphicsMode Default
-        {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    if (defaultMode == null)
-                    {
+        public static GraphicsMode Default {
+            get {
+                lock (SyncRoot) {
+                    if (defaultMode == null) {
                         Debug.Print("Creating default GraphicsMode ({0}, {1}, {2}, {3}).", DisplayDevice.Default.BitsPerPixel,
                                     16, 0, 2);
                         defaultMode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 16, 0, 2);
@@ -179,19 +92,11 @@ namespace OpenTK.Graphics
             }
         }
 
-        #endregion
-
-        #endregion
-
-        #region --- Private Methods ---
-
         // Queries the implementation for the actual graphics mode if this hasn't been done already.
         // This method allows for lazy evaluation of the actual GraphicsMode and should be called
         // by all GraphicsMode properties.
-        void LazySelectGraphicsMode()
-        {
-            if (index == null)
-            {
+        void LazySelectGraphicsMode() {
+            if (index == null) {
                 GraphicsMode mode = implementation.SelectGraphicsMode(color_format, depth, stencil, buffers);
 
                 Index = mode.Index;
@@ -202,55 +107,31 @@ namespace OpenTK.Graphics
             }
         }
 
-        #endregion
-
-        #region --- Overrides ---
-
         /// <summary>Returns a System.String describing the current GraphicsFormat.</summary>
-        /// <returns>! System.String describing the current GraphicsFormat.</returns>
-        public override string ToString()
-        {
+        /// <returns> System.String describing the current GraphicsFormat.</returns>
+        public override string ToString() {
             return String.Format("Index: {0}, Color: {1}, Depth: {2}, Stencil: {3}, Buffers: {4}",
                 Index, ColorFormat, Depth, Stencil, Buffers);
         }
 
-        /// <summary>
-        /// Returns the hashcode for this instance.
-        /// </summary>
+        /// <summary> Returns the hashcode for this instance. </summary>
         /// <returns>A <see cref="System.Int32"/> hashcode for this instance.</returns>
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             return Index.GetHashCode();
         }
 
-        /// <summary>
-        /// Indicates whether obj is equal to this instance.
-        /// </summary>
+        /// <summary> Indicates whether obj is equal to this instance. </summary>
         /// <param name="obj">An object instance to compare for equality.</param>
         /// <returns>True, if obj equals this instance; false otherwise.</returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is GraphicsMode)
-            {
-                return Equals((GraphicsMode)obj);
-            }
-            return false;
+        public override bool Equals(object obj) {
+        	return (obj is GraphicsMode) && Equals((GraphicsMode)obj);
         }
 
-        #endregion
-
-        #region IEquatable<GraphicsMode> Members
-
-        /// <summary>
-        /// Indicates whether other represents the same mode as this instance.
-        /// </summary>
+        /// <summary> Indicates whether other represents the same mode as this instance. </summary>
         /// <param name="other">The GraphicsMode to compare to.</param>
         /// <returns>True, if other is equal to this instance; false otherwise.</returns>
-        public bool Equals(GraphicsMode other)
-        {
+        public bool Equals(GraphicsMode other) {
             return Index.HasValue && Index == other.Index;
         }
-
-        #endregion
     }
 }
