@@ -30,7 +30,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		};
 		static Format[] depthFormats = { Format.D32, Format.D24X8, Format.D24S8, Format.D24X4S4, Format.D16, Format.D15S1 };
 		Format depthFormat, viewFormat = Format.X8R8G8B8;
-		bool memcpy64Bit;
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
 		public Direct3D9Api( Game game ) {

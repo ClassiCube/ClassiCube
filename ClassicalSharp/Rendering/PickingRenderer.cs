@@ -6,12 +6,10 @@ namespace ClassicalSharp.Renderers {
 	
 	public class PickingRenderer {
 		
-		Game window;
 		IGraphicsApi graphics;
 		int vb;
 		
 		public PickingRenderer( Game window ) {
-			this.window = window;
 			graphics = window.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
 		}

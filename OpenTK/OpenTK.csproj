@@ -25,7 +25,7 @@
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <FileAlignment>4096</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Debug_DX'">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
     <OutputPath>..\output\debug\</OutputPath>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>None</DebugType>
