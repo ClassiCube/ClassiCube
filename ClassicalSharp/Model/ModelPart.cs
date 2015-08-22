@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Render( IGraphicsApi api ) {
-			api.DrawIndexedVb_T2fC4b( DrawMode.Triangles, Count, 0, Offset );
+			api.DrawIndexedVb_TrisT2fC4b( Count, Offset );
 		}
 	}
 	

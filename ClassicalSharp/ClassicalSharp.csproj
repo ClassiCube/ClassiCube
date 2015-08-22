@@ -193,7 +193,4 @@
       <Name>OpenTK</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="ProfilingSessions\Session20150818_190424.sdps" />
-  </ItemGroup>
 </Project>

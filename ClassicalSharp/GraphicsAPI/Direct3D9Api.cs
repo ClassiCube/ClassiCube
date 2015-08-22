@@ -282,9 +282,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
 		
-		public override void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], startVertex, 0,
-			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
+		internal override void DrawIndexedVb_TrisT2fC4b( DrawMode mode, int indicesCount, int startIndex ) {
+			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, 0, 0,
+			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
+		}
+		
+		internal override void DrawIndexedVb_TrisT2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
+			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, startVertex, 0,
+			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
 		}
 		#endregion
 

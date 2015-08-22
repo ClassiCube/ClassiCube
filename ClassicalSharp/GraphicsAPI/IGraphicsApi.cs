@@ -129,7 +129,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex );
 		
 		/// <summary> Optimised version of DrawIndexedVb for VertexFormat.Pos3fTex2fCol4b </summary>
-		public abstract void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int offsetVertex, int startIndex );
+		internal abstract void DrawIndexedVb_TrisT2fC4b( int indicesCount, int offsetVertex, int startIndex );
+		
+		internal abstract void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex );
 		
 		protected static int[] strideSizes = { 20, 16, 24 };
 		

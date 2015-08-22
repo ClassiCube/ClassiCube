@@ -100,7 +100,7 @@ namespace ClassicalSharp.Renderers {
 			Graphics.BindTexture( cloudTexture );
 			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			Graphics.BindVb( cloudsVb );
-			Graphics.DrawIndexedVb_T2fC4b( DrawMode.Triangles, cloudsIndices, 0, 0 );
+			Graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );
 			Graphics.AlphaTest = false;
 			Graphics.Texturing = false;
 			

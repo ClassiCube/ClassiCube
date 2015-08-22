@@ -285,12 +285,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 		
-		public override void DrawIndexedVb_T2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
+		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex ) {
+			GL.VertexPointer( 3, PointerType.Float, 24, zero );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, twelve );
+			GL.TexCoordPointer( 2, PointerType.Float, 24, sixteen );
+			GL.DrawElements( BeginMode.Triangles, indicesCount, indexType, new IntPtr( startIndex * 2 ) );
+		}
+		
+		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startVertex, int startIndex ) {
 			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
 			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
 			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
 			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
+			GL.DrawElements( BeginMode.Triangles, indicesCount, indexType, new IntPtr( startIndex * 2 ) );
 		}
 		
 		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );
