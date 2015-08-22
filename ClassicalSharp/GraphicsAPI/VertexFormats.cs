@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -95,6 +96,11 @@ namespace ClassicalSharp {
 		
 		public VertexPos3fTex2f( float x, float y, float z, float u, float v ) {
 			X = x; Y = y; Z = z;
+			U = u; V = v;
+		}
+		
+		public VertexPos3fTex2f( Vector3 p, float u, float v ) {
+			X = p.X; Y = p.Y; Z = p.Z;
 			U = u; V = v;
 		}
 		

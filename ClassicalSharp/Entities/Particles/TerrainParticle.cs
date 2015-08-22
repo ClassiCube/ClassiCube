@@ -5,27 +5,26 @@ namespace ClassicalSharp.Particles {
 
 	public sealed class TerrainParticle : Particle {
 		
-		public TextureRectangle Rectangle;
 		const float gravity = 2.4f;
 		double maxY = 0;
 		
-		public TerrainParticle( Game window, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec )
-			: base( window, pos, velocity, lifetime ) {
-			Rectangle = rec;
+		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec )
+			: base( game, pos, velocity, lifetime, rec ) {		
 			maxY = Position.Y;
 		}
 		
 		public override void Render( double delta, float t, VertexPos3fTex2f[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
-			float x1 = Position.X, y1 = Position.Y, z1 = Position.Z,
-			x2 = Position.X + Size.X, y2 = Position.Y + Size.Y;
-			vertices[index++] = new VertexPos3fTex2f( x1, y1, z1, Rectangle.U1, Rectangle.V2 );
-			vertices[index++] = new VertexPos3fTex2f( x1, y2, z1, Rectangle.U1, Rectangle.V1 );
-			vertices[index++] = new VertexPos3fTex2f( x2, y2, z1, Rectangle.U2, Rectangle.V1 );
+			Vector3 p111, p121, p212, p222;
+			TranslatePoints( out p111, out p121, out p212, out p222 );
 			
-			vertices[index++] = new VertexPos3fTex2f( x1, y1, z1, Rectangle.U1, Rectangle.V2 );
-			vertices[index++] = new VertexPos3fTex2f( x2, y1, z1, Rectangle.U2, Rectangle.V2 );
-			vertices[index++] = new VertexPos3fTex2f( x2, y2, z1, Rectangle.U2, Rectangle.V1 );
+			vertices[index++] = new VertexPos3fTex2f( p111, Rectangle.U1, Rectangle.V2 );
+			vertices[index++] = new VertexPos3fTex2f( p121, Rectangle.U1, Rectangle.V1 );
+			vertices[index++] = new VertexPos3fTex2f( p222, Rectangle.U2, Rectangle.V1 );
+			
+			vertices[index++] = new VertexPos3fTex2f( p222, Rectangle.U2, Rectangle.V1 );
+			vertices[index++] = new VertexPos3fTex2f( p212, Rectangle.U2, Rectangle.V2 );
+			vertices[index++] = new VertexPos3fTex2f( p111, Rectangle.U1, Rectangle.V2 );
 		}
 
 		public override bool Tick( double delta ) {
@@ -34,8 +33,8 @@ namespace ClassicalSharp.Particles {
 			int startY = (int)Math.Floor( Position.Y );
 			Position += Velocity * (float)delta;
 			int endY = (int)Math.Floor( Position.Y );			
-			Utils.Clamp( ref Position.X, 0, Window.Map.Width - 0.01f );
-			Utils.Clamp( ref Position.Z, 0, Window.Map.Length - 0.01f );
+			Utils.Clamp( ref Position.X, 0, game.Map.Width - 0.01f );
+			Utils.Clamp( ref Position.Z, 0, game.Map.Length - 0.01f );
 			
 			if( endY <= startY ) {
 				for( int y = startY; y >= endY; y-- ) {
@@ -43,10 +42,10 @@ namespace ClassicalSharp.Particles {
 						return CollideWithGround( 0 ) ? true : base.Tick( delta );
 					}
 					byte block = GetBlock( (int)Position.X, y, (int)Position.Z );
-					if( block == 0 || Window.BlockInfo.IsSprite( block ) || Window.BlockInfo.IsLiquid( block ) )
+					if( block == 0 || game.BlockInfo.IsSprite( block ) || game.BlockInfo.IsLiquid( block ) )
 						continue;
 					
-					float groundHeight = y + Window.BlockInfo.BlockHeight( block );				
+					float groundHeight = y + game.BlockInfo.BlockHeight( block );				
 					if( Position.Y < groundHeight ) {
 						return CollideWithGround( groundHeight ) ? true : base.Tick( delta );
 					}
@@ -60,8 +59,8 @@ namespace ClassicalSharp.Particles {
 		byte GetBlock( int x, int y, int z ) {
 			// If particles are spawned at the top of the map, they can occasionally
 			// go outside the top of the map. This is okay, so handle this case.
-			if( y >= Window.Map.Height ) return 0;
-			return Window.Map.GetBlock( x, y, z );
+			if( y >= game.Map.Height ) return 0;
+			return game.Map.GetBlock( x, y, z );
 		}
 		
 		bool CollideWithGround( float y ) {
