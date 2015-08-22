@@ -63,7 +63,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			projStack = new MatrixStack( 4, device, TransformState.Projection );
 			texStack = new MatrixStack( 4, device, TransformState.Texture0 );
 			SetDefaultRenderStates();
-			memcpy64Bit = IntPtr.Size == 8;
 		}
 		
 		bool alphaTest, alphaBlend;
