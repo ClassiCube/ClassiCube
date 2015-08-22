@@ -212,12 +212,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		Vector3 lastPos, nextPos;
-		float lastYaw, nextYaw, lastPitch, nextPitch;
+		internal Vector3 lastPos, nextPos;
+		internal float lastYaw, nextYaw, lastPitch, nextPitch;
 		public void SetInterpPosition( float t ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
-			YawDegrees = Utils.Lerp( lastYaw, nextYaw, t );
-			PitchDegrees = Utils.Lerp( lastPitch, nextPitch, t );
+			YawDegrees = Utils.InterpAngle( lastYaw, nextYaw, t );
+			PitchDegrees = Utils.InterpAngle( lastPitch, nextPitch, t );
 		}
 		
 		internal void HandleKeyDown( Key key ) {

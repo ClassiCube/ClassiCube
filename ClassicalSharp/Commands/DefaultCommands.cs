@@ -277,9 +277,9 @@ namespace ClassicalSharp.Commands {
 			if( !reader.NextInt( out newDist ) ) {
 				Window.AddChat( "View distance: " + Window.ViewDistance );
 			} else if( newDist < 8 ) {
-				Window.AddChat( "&e/client info: &cThat view distance is way too small." );
+				Window.AddChat( "&e/client viewdistance: &cThat view distance is way too small." );
 			} else if( newDist > 4096 ) {
-				Window.AddChat( "&e/client info: &cThat view distance is way too large." );
+				Window.AddChat( "&e/client viewdistance: &cThat view distance is way too large." );
 			} else {
 				Window.SetViewDistance( newDist );
 			}

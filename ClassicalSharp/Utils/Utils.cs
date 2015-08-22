@@ -218,8 +218,8 @@ namespace ClassicalSharp {
 			// but without adjusting for this case, we would interpolate back the whole 350* degrees.
 			bool invertLeft = leftAngle > 270 && rightAngle < 90;
 			bool invertRight = rightAngle > 270 && leftAngle < 90;
-			if( invertLeft ) leftAngle = 360 - leftAngle;
-			if( invertRight ) rightAngle = 360 - rightAngle;
+			if( invertLeft ) leftAngle = leftAngle - 360;
+			if( invertRight ) rightAngle = rightAngle - 360;
 			
 			return Lerp( leftAngle, rightAngle, t );
 		}

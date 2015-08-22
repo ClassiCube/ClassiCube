@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 	
 	public abstract class PerspectiveCamera : Camera {
 		
-		protected Player player;
+		protected LocalPlayer player;
 		public PerspectiveCamera( Game game ) {
 			this.game = game;
 			player = game.LocalPlayer;
@@ -49,7 +49,6 @@ namespace ClassicalSharp {
 		}
 		
 		Point previous, delta;
-		Vector2 Orientation;
 		void CentreMousePosition() {
 			if( !game.Focused ) return;
 			Point current = game.DesktopCursorPos;
@@ -70,20 +69,17 @@ namespace ClassicalSharp {
 			delta = Point.Empty;
 		}
 		
+		static readonly float sensiFactor = (float)Utils.RadiansToDegrees( 0.0002f );
 		private void UpdateMouseRotation() {
-			float sensitivity = 0.0002f * game.MouseSensitivity;
-			Orientation.X += delta.X * sensitivity;
-			Orientation.Y += delta.Y * sensitivity;
-
-			Utils.Clamp( ref Orientation.Y, halfPi + 0.01f, threeHalfPi - 0.01f );
-			LocationUpdate update = LocationUpdate.MakeOri(
-				(float)Utils.RadiansToDegrees( Orientation.X ),
-				(float)Utils.RadiansToDegrees( Orientation.Y - Math.PI )
-			);
+			float sensitivity = sensiFactor * game.MouseSensitivity;
+			float yaw = player.nextYaw + delta.X * sensitivity;
+			float pitch = player.nextPitch + delta.Y * sensitivity;
+			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
+			// Need to make sure we don't cross the vertical axes, because that gets weird.
+			if( update.Pitch >= 90 && update.Pitch <= 270 )
+				update.Pitch = player.nextPitch < 180 ? 89.9f : 270.1f;
 			game.LocalPlayer.SetLocation( update, true );
 		}
-		const float halfPi = (float)( Math.PI / 2 );
-		const float threeHalfPi = (float)( 3 * Math.PI / 2 );
 
 		public override void Tick( double elapsed ) {
 			if( game.ScreenLockedInput ) return;
@@ -97,7 +93,7 @@ namespace ClassicalSharp {
 		public ThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
-		float distance = 3;		
+		float distance = 3;
 		public override bool MouseZoom( MouseWheelEventArgs e ) {
 			distance -= e.DeltaPrecise;
 			if( distance < 2 ) distance = 2;

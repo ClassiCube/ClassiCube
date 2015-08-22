@@ -16,8 +16,10 @@ namespace ClassicalSharp {
 		public LocationUpdate( float x, float y, float z, float yaw, float pitch,
 		                      bool incPos, bool relPos, bool incOri ) {
 			Pos = new Vector3( x, y, z );
-			Yaw = yaw;
-			Pitch = pitch;
+			Yaw = yaw % 360;
+			if( Yaw < 0 ) Yaw += 360;
+			Pitch = pitch % 360;
+			if( Pitch < 0 ) Pitch += 360;
 			IncludesPosition = incPos;
 			RelativePosition = relPos;
 			IncludesOrientation = incOri;
