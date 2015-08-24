@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 				}				
 				
 				if( part.spriteCount > 0 )
-					api.DrawIndexedVb_TrisT2fC4b( part.spriteCount, 0, 0 );
+					api.DrawIndexedVb_TrisT2fC4b( part.spriteCount, 0 );
 				game.Vertices += part.IndicesCount;
 			}
 		}

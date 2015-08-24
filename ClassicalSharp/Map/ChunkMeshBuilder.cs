@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
 			if( ReadChunkData( x1, y1, z1 ) ) return false;
-			
+
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
 			
@@ -83,10 +83,14 @@ namespace ClassicalSharp {
 							if( block == 11 ) block = 10; // Still lava --> Lava
 							
 							if( allAir && block != 0 ) allAir = false;
-							if( allSolid && !BlockInfo.IsOpaque( block ) ) allSolid = false;
+							if( allSolid && !BlockInfo.isOpaque[block] ) allSolid = false;
 							chunkPtr[chunkIndex] = block;
 						}
 					}
+				}
+				
+				if( !( allAir || allSolid ) ) {
+					map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
 				}
 			}
 			return allAir || allSolid;

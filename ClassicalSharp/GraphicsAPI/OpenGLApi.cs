@@ -11,7 +11,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 	public class OpenGLApi : IGraphicsApi {
 		
-		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };		
+		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
 		public unsafe OpenGLApi() {
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
@@ -62,7 +62,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		FastColour lastFogCol = FastColour.Black;
-		public unsafe override void SetFogColour( FastColour col ) {			
+		public unsafe override void SetFogColour( FastColour col ) {
 			if( col != lastFogCol ) {
 				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 				GL.Fogfv( FogParameter.FogColor, &colRGBA.X );
@@ -100,7 +100,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool FaceCulling {
-			set { ToggleCap( EnableCap.CullFace, value ); }
+			set { 
+				if( value ) GL.Enable( EnableCap.CullFace );
+				else GL.Disable( EnableCap.CullFace );
+			}
 		}
 		
 		public override void Clear() {
@@ -165,10 +168,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = texId;
 			GL.DeleteTextures( 1, &id );
 			texId = -1;
-		}				
+		}
 		#endregion
 		
-		#region Vertex/index buffers		
+		#region Vertex/index buffers
 		Action setupBatchFunc;
 		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
 		
@@ -202,7 +205,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
-			int sizeInBytes = indicesCount * sizeof( ushort );		
+			int sizeInBytes = indicesCount * sizeof( ushort );
 			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
 			return id;
 		}
@@ -317,7 +320,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2fCol4b.Size, sixteen );
 		}
 		#endregion
-				
+		
 		#region Matrix manipulation
 		MatrixMode lastMode = 0;
 		MatrixMode[] matrixModes = { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };

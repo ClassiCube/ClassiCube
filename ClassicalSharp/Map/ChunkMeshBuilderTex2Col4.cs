@@ -70,37 +70,29 @@ namespace ClassicalSharp {
 		bool IsLit( int x, int y, int z, int face ) {
 			switch( face ) {
 				case TileSide.Left:
-					return x <= 0 || IsLitAdj( x - 1, y, z );
+					return x <= 0 || y > GetLightHeightAdj( x - 1, z );
 					
 				case TileSide.Right:
-					return x >= maxX || IsLitAdj( x + 1, y, z );
+					return x >= maxX || y > GetLightHeightAdj( x + 1, z );
 					
 				case TileSide.Front:
-					return z <= 0 || IsLitAdj( x, y, z - 1 );
+					return z <= 0 || y > GetLightHeightAdj( x, z - 1 );
 					
 				case TileSide.Back:
-					return z >= maxZ || IsLitAdj( x, y, z + 1 );
+					return z >= maxZ || y > GetLightHeightAdj( x, z + 1 );
 					
 				case TileSide.Bottom:
-					return y <= 0 || IsLit( x, y - 1, z );
+					return y <= 0 || ( y - 1 ) > map.heightmap[( z * width ) + x];
 					
 				case TileSide.Top:
-					return y >= maxY || IsLit( x, y + 1, z );
+					return y >= maxY || ( y + 1 ) > map.heightmap[( z * width ) + x];
 			}
 			return true;
 		}
 		
-		bool IsLit( int x, int y, int z ) {
-			return y > GetLightHeight( x, z );
-		}
-		
-		bool IsLitAdj( int x, int y, int z ) {
-			return y > GetLightHeightAdj( x, z );
-		}
-		
 		FastColour GetColour( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
 			if( !map.IsValidPos( x, y, z ) ) return sunlight;
-			return y > GetLightHeight( x, z ) ? sunlight : shadow;
+			return y > map.heightmap[( z * width ) + x] ? sunlight : shadow;
 		}
 		
 		FastColour GetColourAdj( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
@@ -108,12 +100,8 @@ namespace ClassicalSharp {
 			return y > GetLightHeightAdj( x, z ) ? sunlight : shadow;
 		}
 		
-		int GetLightHeight( int x, int z ) {
-			return map.GetLightHeight( x, z );
-		}
-		
 		int GetLightHeightAdj( int x, int z ) {
-			int y = map.GetLightHeight( x, z );
+			int y = map.heightmap[( z * width ) + x];
 			return y == -1 ? -1 :
 				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
