@@ -64,46 +64,30 @@ namespace ClassicalSharp {
 		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
 			return tile == initialTile && !BlockInfo.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
-				( IsLit( startX, startY, startZ, face ) == IsLit( x, y, z, face ) );
+				( IsLit( X, Y, Z, face ) == IsLit( x, y, z, face ) );
 		}
 		
 		bool IsLit( int x, int y, int z, int face ) {
 			switch( face ) {
 				case TileSide.Left:
-					return x <= 0 || y > GetLightHeightAdj( x - 1, z );
+					return x <= 0 || y > map.heightmap[( z * width ) + (x - 1)];
 					
 				case TileSide.Right:
-					return x >= maxX || y > GetLightHeightAdj( x + 1, z );
+					return x >= maxX || y > map.heightmap[( z * width ) + (x + 1)];
 					
 				case TileSide.Front:
-					return z <= 0 || y > GetLightHeightAdj( x, z - 1 );
+					return z <= 0 || y > map.heightmap[( (z - 1) * width ) + x];
 					
 				case TileSide.Back:
-					return z >= maxZ || y > GetLightHeightAdj( x, z + 1 );
+					return z >= maxZ || y > map.heightmap[( (z + 1) * width ) + x];
 					
 				case TileSide.Bottom:
-					return y <= 0 || ( y - 1 ) > map.heightmap[( z * width ) + x];
+					return y <= 0 || (y - 1) > map.heightmap[( z * width ) + x];
 					
 				case TileSide.Top:
-					return y >= maxY || ( y + 1 ) > map.heightmap[( z * width ) + x];
+					return y >= maxY || (y + 1) > map.heightmap[( z * width ) + x];
 			}
 			return true;
-		}
-		
-		FastColour GetColour( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
-			if( !map.IsValidPos( x, y, z ) ) return sunlight;
-			return y > map.heightmap[( z * width ) + x] ? sunlight : shadow;
-		}
-		
-		FastColour GetColourAdj( int x, int y, int z, ref FastColour sunlight, ref FastColour shadow ) {
-			if( !map.IsValidPos( x, y, z ) ) return sunlight;
-			return y > GetLightHeightAdj( x, z ) ? sunlight : shadow;
-		}
-		
-		int GetLightHeightAdj( int x, int z ) {
-			int y = map.heightmap[( z * width ) + x];
-			return y == -1 ? -1 :
-				( BlockInfo.BlockHeight( map.GetBlock( x, y, z ) ) == 1 ? y : y - 1 );
 		}
 		
 		void SetPartInfo( DrawInfo part, int i, ref ChunkPartInfo[] parts ) {
@@ -174,9 +158,7 @@ namespace ClassicalSharp {
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.Count;
-			int* ptr = &counts.left;
-			ptr += face;
-			*ptr += 6;
+			*( &counts.left + face ) += 6;
 			part.Count = counts;
 		}
 		
@@ -184,7 +166,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Left );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColourAdj( X - 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
+			FastColour col = X > 0 ? ( Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
+				: map.SunlightXSide;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -204,7 +187,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColourAdj( X + 1, Y, Z, ref map.SunlightXSide, ref map.ShadowlightXSide );
+			FastColour col = X < maxX ? ( Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
+				: map.SunlightXSide;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -224,7 +208,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Back );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColourAdj( X, Y, Z + 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
+			FastColour col = Z < maxZ ? ( Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
+				: map.SunlightZSide;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -244,7 +229,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Front );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColourAdj( X, Y, Z - 1, ref map.SunlightZSide, ref map.ShadowlightZSide );
+			FastColour col = Z > 0 ? ( Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
+				: map.SunlightZSide;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -264,7 +250,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColour( X, Y - 1, Z, ref map.SunlightYBottom, ref map.ShadowlightYBottom );
+			FastColour col = Y > 0 ? ( (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
+				: map.SunlightYBottom;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -281,7 +268,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
+			FastColour col = Y < maxY ? ( (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+				: map.Sunlight;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 				isTranslucent = BlockInfo.IsTranslucent( tile );
@@ -298,7 +286,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = GetColour( X, Y + 1, Z, ref map.Sunlight, ref map.Shadowlight );
+			FastColour col = Y < maxY ? ( (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+				: map.Sunlight;
 			if( blockHeight == -1 ) {
 				blockHeight = BlockInfo.BlockHeight( tile );
 			}

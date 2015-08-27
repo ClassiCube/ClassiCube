@@ -119,14 +119,14 @@ namespace ClassicalSharp {
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
 				if( info.BlocksLight( block ) ) {
-					heightmap[index] = (short)y;
+					heightmap[index] = (short)( y - 1 );
 					return y;
 				}
 				mapIndex -= oneY;
 			}
 			
-			heightmap[index] = -1;
-			return -1;
+			heightmap[index] = -10;
+			return -10;
 		}
 		
 		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
@@ -140,9 +140,9 @@ namespace ClassicalSharp {
 				// We have to calculate the entire column for visibility, because the old/new block info is
 				// useless if there is another block higher than block.y that stops rain.
 				CalcHeightAt( x, maxY, z, index );
-			} else if( y >= height ) {
+			} else if( y > height ) {
 				if( nowBlocks ) {
-					heightmap[index] = (short)y;
+					heightmap[index] = (short)( y - 1 );
 				} else {
 					// Part of the column is now visible to light, we don't know how exactly how high it should be though.
 					// However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y
@@ -255,7 +255,7 @@ namespace ClassicalSharp {
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
 						if( x < xCount && info.blocksLight[mapPtr[mapIndex]] ) {
-							heightmap[heightmapIndex + x] = (short)y;
+							heightmap[heightmapIndex + x] = (short)( y - 1 );
 							elemsLeft--;
 							skip[index] = 0;
 							int offset = prevRunCount + curRunCount;
@@ -290,7 +290,7 @@ namespace ClassicalSharp {
 				for( int x = 0; x < xCount; x++ ) {
 					int height = heightmap[heightmapIndex];
 					if( height == short.MaxValue )
-						heightmap[heightmapIndex] = -1;
+						heightmap[heightmapIndex] = -10;
 					heightmapIndex++;
 				}
 			}
