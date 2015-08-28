@@ -4,7 +4,7 @@ namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
 		
-		bool[] hidden = new bool[BlocksCount * BlocksCount * 6];
+		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
 
 		void SetupCullingCache() {
 			for( byte tile = 1; tile < BlocksCount; tile++ ) {
@@ -29,11 +29,11 @@ namespace ClassicalSharp {
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {
-			hidden[( tile * BlocksCount + block ) * 6 + tileSide] = value;
+			hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide] = value;
 		}
 		
 		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
-			return hidden[( tile * BlocksCount + block ) * 6 + tileSide];
+			return hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide];
 		}
 	}
 }

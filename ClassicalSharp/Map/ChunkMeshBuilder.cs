@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 		
 		int width, length, height;
 		int maxX, maxY, maxZ;
-		byte[] counts = new byte[chunkSize3 * 6];
+		byte[] counts = new byte[chunkSize3 * TileSide.Sides];
 		byte[] chunk = new byte[extChunkSize3];
 		
 		bool BuildChunk( int x1, int y1, int z1 ) {
@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 						if( z > maxZ ) break;
 						
 						int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
-						int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 );
+						int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 + 1 ) - 1;
 						
 						for( int xx = -1; xx < 17; xx++ ) {
 							int x = xx + x1;
@@ -112,11 +112,11 @@ namespace ClassicalSharp {
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
 			blockHeight = -1;
-			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
+			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			int count = 0;
 			
 			if( BlockInfo.IsSprite( tile ) ) {
-				count = counts[index + TileSide.Top];
+				count = counts[index];
 				if( count != 0 ) {
 					DrawSprite( count );
 				}
@@ -165,25 +165,25 @@ namespace ClassicalSharp {
 						chunkIndex++;
 						byte tile = chunk[chunkIndex];
 						if( tile == 0 ) continue;
-						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * 6;
+						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 						
-						// Sprites only use the top face to indicate stretching count, so we can take a shortcut here.
+						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
 						if( BlockInfo.IsSprite( tile ) ) {
-							if( counts[countIndex + TileSide.Top] != 0 ) {
+							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
-								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, TileSide.Top );
+								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, 0 );
 								AddSpriteVertices( tile, count );
-								counts[countIndex + TileSide.Top] = (byte)count;
+								counts[countIndex] = (byte)count;
 							}
 						} else {
 							X = x; Y = y; Z = z;
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -18 );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, maxZ, TileSide.Back, 18 );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -324 );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, maxY + 2, TileSide.Top, 324 );
+							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );
+							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, maxZ, TileSide.Back, extChunkSize );
+							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -extChunkSize2 );
+							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, maxY + 2, TileSide.Top, extChunkSize2 );
 						}
 					}
 				}
@@ -191,29 +191,31 @@ namespace ClassicalSharp {
 		}
 		
 		void TestAndStretchX( int xx, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
+			index += tileSide;
 			if( value == test ) {
-				counts[index + tileSide] = 0;
-			} else if( counts[index + tileSide] != 0 ) {
+				counts[index] = 0;
+			} else if( counts[index] != 0 ) {
 				if( BlockInfo.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
-					counts[index + tileSide] = 0;
+					counts[index] = 0;
 				} else {
 					int count = StretchX( xx, index, X, Y, Z, chunkIndex, tile, tileSide );
 					AddVertices( tile, count, tileSide );
-					counts[index + tileSide] = (byte)count;
+					counts[index] = (byte)count;
 				}
 			}
 		}
 		
 		void TestAndStretchZ( int zz, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
+			index += tileSide;
 			if( value == test ) {
-				counts[index + tileSide] = 0;
-			} else if( counts[index + tileSide] != 0 ) {
+				counts[index] = 0;
+			} else if( counts[index] != 0 ) {
 				if( BlockInfo.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
-					counts[index + tileSide] = 0;
+					counts[index] = 0;
 				} else {
 					int count = StretchZ( zz, index, X, Y, Z, chunkIndex, tile, tileSide );
 					AddVertices( tile, count, tileSide );
-					counts[index + tileSide] = (byte)count;
+					counts[index] = (byte)count;
 				}
 			}
 		}
@@ -245,14 +247,14 @@ namespace ClassicalSharp {
 			int count = 1;
 			x++;
 			chunkIndex++;
-			countIndex += 6;
+			countIndex += TileSide.Sides;
 			int max = chunkSize - xx;
-			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
+			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {			
+				counts[countIndex] = 0;
 				count++;
-				counts[countIndex + face] = 0;
 				x++;
 				chunkIndex++;
-				countIndex += 6;
+				countIndex += TileSide.Sides;
 			}
 			return count;
 		}
@@ -261,14 +263,14 @@ namespace ClassicalSharp {
 			int count = 1;
 			z++;
 			chunkIndex += extChunkSize;
-			countIndex += chunkSize * 6;
+			countIndex += chunkSize * TileSide.Sides;
 			int max = chunkSize - zz;
-			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
+			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {				
+				counts[countIndex] = 0;
 				count++;
-				counts[countIndex + face] = 0;
 				z++;
 				chunkIndex += extChunkSize;
-				countIndex += chunkSize * 6;
+				countIndex += chunkSize * TileSide.Sides;
 			}
 			return count;
 		}

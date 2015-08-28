@@ -11,6 +11,7 @@ namespace ClassicalSharp {
 		public const int Back = 3;
 		public const int Bottom = 4;
 		public const int Top = 5;
+		public const int Sides = 6;
 	}
 	
 	public class TerrainAtlas2D : IDisposable {
