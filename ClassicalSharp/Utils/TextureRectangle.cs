@@ -2,6 +2,7 @@
 
 namespace ClassicalSharp {
 	
+	/// <summary> Stores the four texture coordinates that bound a textured quad. </summary>
 	public struct TextureRectangle {
 		public float U1, V1, U2, V2;
 		

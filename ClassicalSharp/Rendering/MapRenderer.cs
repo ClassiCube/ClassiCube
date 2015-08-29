@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 		}
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Variable == EnvVariable.SunlightColour || e.Variable == EnvVariable.ShadowlightColour ) {
+			if( e.Var == EnvVariable.SunlightColour || e.Var == EnvVariable.ShadowlightColour ) {
 				Refresh();
 			}
 		}

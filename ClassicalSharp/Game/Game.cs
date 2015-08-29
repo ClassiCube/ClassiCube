@@ -103,7 +103,7 @@ namespace ClassicalSharp {
 		
 		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
 			LoadAtlas( newAtlas );
-			RaiseEvent( TerrainAtlasChanged );
+			Raise( TerrainAtlasChanged );
 		}
 		
 		void PrintGraphicsInfo() {
@@ -172,7 +172,7 @@ namespace ClassicalSharp {
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
-			RaiseEvent( ViewDistanceChanged );
+			Raise( ViewDistanceChanged );
 			UpdateProjection();
 		}
 		

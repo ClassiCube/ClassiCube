@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Threading;
-using System.IO;
 using System.Text;
 using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp.Commands {
 	
+	/// <summary> Command that displays the list of all currently registered client commands. </summary>
 	public sealed class CommandsCommand : Command {
 		
 		public CommandsCommand() {
@@ -38,6 +36,7 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that modifies various aspects of the environment of the current map. </summary>
 	public sealed class EnvCommand : Command {
 		
 		public EnvCommand() {
@@ -100,6 +99,7 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that displays information about an input client command. </summary>
 	public sealed class HelpCommand : Command {
 		
 		public HelpCommand() {
@@ -209,6 +209,7 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that modifies the font size of chat in the normal gui screen. </summary>
 	public sealed class ChatFontSizeCommand : Command {
 		
 		public ChatFontSizeCommand() {
@@ -239,6 +240,7 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that modifies how sensitive the client is to changes in the mouse position. </summary>
 	public sealed class MouseSensitivityCommand : Command {
 		
 		public MouseSensitivityCommand() {
@@ -261,6 +263,7 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that modifies how far the client can see. </summary>
 	public sealed class ViewDistanceCommand : Command {
 		
 		public ViewDistanceCommand() {

@@ -18,6 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			textureDimensions = texDims;
 			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
 			
+			// NOTE: Not sure if there are any >= 1.5 drivers that support vbos but don't expose the ARB extension.
 			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
 				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
 				Utils.LogWarning( "You may need to install and/or update your video card drivers." );

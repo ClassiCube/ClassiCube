@@ -8,10 +8,11 @@ using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
+	/// <summary> Abstracts a 3D graphics rendering API. </summary>
+	/// <remarks> Only Direct3D9 and OpenGL support are implemented. </remarks>
 	public abstract class IGraphicsApi {
 		
-		/// <summary> Maximum supported length of a dimension
-		/// (i.e. max width and max height) in a 2D texture. </summary>
+		/// <summary> Maximum supported length of a dimension (width and height) of a 2D texture. </summary>
 		public abstract int MaxTextureDimensions { get; }
 		
 		public abstract bool Texturing { set; }
@@ -227,7 +228,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			AlphaBlending = false;
 		}
 		
-		public unsafe int MakeDefaultIb() {
+		internal unsafe int MakeDefaultIb() {
 			const int maxIndices = 65536 / 4 * 6;
 			int element = 0;
 			ushort* indices = stackalloc ushort[maxIndices];

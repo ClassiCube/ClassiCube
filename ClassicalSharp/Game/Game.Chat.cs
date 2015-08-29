@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 			LogChatToFile( text );
 			chatArgs.Text = text;
 			chatArgs.Type = CpeMessage.Normal;
-			RaiseEvent( ChatReceived, chatArgs );
+			Raise( ChatReceived, chatArgs );
 		}
 		
 		ChatEventArgs chatArgs = new ChatEventArgs();
@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 			}
 			chatArgs.Text = text;
 			chatArgs.Type = type;
-			RaiseEvent( ChatReceived, chatArgs );
+			Raise( ChatReceived, chatArgs );
 		}
 		
 		DateTime last = new DateTime( 1, 1, 1 );

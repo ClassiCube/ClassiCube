@@ -3,6 +3,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Represents a 3D integer vector. </summary>
 	public struct Vector3I {
 		
 		public static Vector3I Zero = new Vector3I( 0, 0, 0 );

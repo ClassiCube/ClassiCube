@@ -89,11 +89,11 @@ namespace ClassicalSharp {
 		}
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Variable == EnvVariable.EdgeBlock ) {
+			if( e.Var == EnvVariable.EdgeBlock ) {
 				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			} else if( e.Variable == EnvVariable.SidesBlock ) {
+			} else if( e.Var == EnvVariable.SidesBlock ) {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
-			} else if( e.Variable == EnvVariable.WaterLevel ) {
+			} else if( e.Var == EnvVariable.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
 			}
 		}

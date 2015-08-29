@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 
 namespace ClassicalSharp {
 
+	/// <summary> Wrapper around a bitmap that allows extremely fast manipulation of 32bpp images. </summary>
 	public unsafe class FastBitmap : IDisposable {
 		
 		public FastBitmap( Bitmap bmp, bool lockBits ) {
@@ -57,19 +58,19 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public int GetPixel( int x, int y ) {
-			// TODO: Does this work with big-endian systems?
-			int* row = (int*)( scan0Byte + ( y * Stride ) );
-			return row[x]; // b g r a
-		}
-		
+		/// <summary> Returns a pointer to the start of the y'th scanline. </summary>
 		public int* GetRowPtr( int y ) {
 			return (int*)( scan0Byte + ( y * Stride ) );
 		}
 		
-		public void SetPixel( int x, int y, int col ) {
-			int* row = (int*)( scan0Byte + ( y * Stride ) );
-			row[x] = col;
+		internal static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
+			for( int y = 0; y < size; y++ ) {
+				int* srcRow = src.GetRowPtr( srcY + y );
+				int* dstRow = dst.GetRowPtr( dstY + y );
+				for( int x = 0; x < size; x++ ) {
+					dstRow[dstX + x] = srcRow[srcX + x];
+				}
+			}
 		}
 	}
 }

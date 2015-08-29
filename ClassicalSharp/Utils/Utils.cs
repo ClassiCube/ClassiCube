@@ -239,15 +239,5 @@ namespace ClassicalSharp {
 				throw new NotSupportedException( "unsupported skin dimensions: " + bmp.Width + ", " + bmp.Height );
 			}
 		}
-		
-		internal unsafe static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
-			for( int y = 0; y < size; y++ ) {
-				int* srcRow = src.GetRowPtr( srcY + y );
-				int* dstRow = dst.GetRowPtr( dstY + y );
-				for( int x = 0; x < size; x++ ) {
-					dstRow[dstX + x] = srcRow[srcX + x];
-				}
-			}
-		}
 	}
 }

@@ -1,9 +1,10 @@
 ﻿using System;
-using ClassicalSharp.Model;
 using OpenTK;
 
 namespace ClassicalSharp {
 
+	/// <summary> Stores data that describes either a relative position, 
+	/// full position, or an orientation update for an entity. </summary>
 	public struct LocationUpdate {
 		
 		public Vector3 Pos;

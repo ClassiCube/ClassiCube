@@ -2,6 +2,8 @@
 
 namespace ClassicalSharp.Commands {
 
+	/// <summary> Reads and parses arguments for a client command. </summary>
+	/// <remarks> Spaces are designated as the argument separators. </remarks>
 	public class CommandReader {
 		
 		string rawInput;
@@ -16,7 +18,7 @@ namespace ClassicalSharp.Commands {
 			}
 			
 			string arg = rawInput.Substring( curOffset, next - curOffset );
-			curOffset = next + 1; // skip space
+			curOffset = next + 1; // skip following space
 			return arg;
 		}
 		

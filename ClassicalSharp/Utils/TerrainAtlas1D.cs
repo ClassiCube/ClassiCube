@@ -4,7 +4,8 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public class TerrainAtlas1D : IDisposable {
+	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
+	public sealed class TerrainAtlas1D : IDisposable {
 		
 		int usedElementsPerAtlas1D;
 		internal int elementsPerBitmap;
@@ -52,7 +53,7 @@ namespace ClassicalSharp {
 						for( int y_1D = 0; y_1D < usedElementsPerAtlas1D; y_1D++ ) {
 							int x = index & 0x0F;
 							int y = index >> 4;
-							Utils.MovePortion( x * elemSize, y * elemSize, 0, y_1D * elemSize, atlas, dst, elemSize );
+							FastBitmap.MovePortion( x * elemSize, y * elemSize, 0, y_1D * elemSize, atlas, dst, elemSize );
 							index++;
 						}
 						TexIds[i] = graphics.CreateTexture( dst );

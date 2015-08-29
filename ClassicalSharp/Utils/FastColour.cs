@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Drawing;
-using OpenTK.Graphics;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Structure that can be used for quick manipulations of A/R/G/B colours. </summary>
+	/// <remarks> This structure is **not** suitable for interop with OpenGL or Direct3D. </remarks>
 	public struct FastColour {
 		
 		public byte A, R, G, B;

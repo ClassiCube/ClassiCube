@@ -31,11 +31,11 @@ namespace ClassicalSharp.Renderers {
 		public abstract void Render( double deltaTime );
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Variable == EnvVariable.SkyColour ) {
+			if( e.Var == EnvVariable.SkyColour ) {
 				SkyColourChanged();
-			} else if( e.Variable == EnvVariable.FogColour ) {
+			} else if( e.Var == EnvVariable.FogColour ) {
 				FogColourChanged();
-			} else if( e.Variable == EnvVariable.CloudsColour ) {
+			} else if( e.Var == EnvVariable.CloudsColour ) {
 				CloudsColourChanged();
 			}
 		}
