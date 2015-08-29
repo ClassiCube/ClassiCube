@@ -282,12 +282,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
 		
-		internal override void DrawIndexedVb_TrisT2fC4b( DrawMode mode, int indicesCount, int startIndex ) {
+		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex ) {
 			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, 0, 0,
 			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
 		}
 		
-		internal override void DrawIndexedVb_TrisT2fC4b( DrawMode mode, int indicesCount, int startVertex, int startIndex ) {
+		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startVertex, int startIndex ) {
 			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, startVertex, 0,
 			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
 		}
@@ -501,10 +501,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void PrintApiSpecificInfo() {
-			Utils.Log( "D3D tex memory available: " + (uint)device.AvailableTextureMemory );
-			Utils.Log( "D3D vertex processing: " + createFlags );
-			Utils.Log( "D3D depth buffer format: " + depthFormat );
-			Utils.Log( "D3D device caps: " + caps.DeviceCaps );
+			Utils.Log( "--Using Direct3D 9--" );
+			Utils.Log( "Tex memory available: " + (uint)device.AvailableTextureMemory );
+			Utils.Log( "Vertex processing mode: " + createFlags );
+			Utils.Log( "Depth buffer format: " + depthFormat );			
+			Utils.Log( "Adapter description: " + d3d.Adapters[0].Details.Description );
+			Utils.Log( "Device caps: " + caps.DeviceCaps );
 		}
 
 		public unsafe override void TakeScreenshot( string output, Size size ) {

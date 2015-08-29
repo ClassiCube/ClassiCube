@@ -369,9 +369,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public unsafe override void PrintApiSpecificInfo() {
-			Utils.Log( "OpenGL vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
-			Utils.Log( "OpenGL renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
-			Utils.Log( "OpenGL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
+			Utils.Log( "--Using OpenGL--" );
+			Utils.Log( "Vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
+			Utils.Log( "Renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
+			Utils.Log( "Version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
 			int depthBits = 0;
 			GL.GetIntegerv( GetPName.DepthBits, &depthBits );
 			Utils.Log( "Depth buffer bits: " + depthBits );

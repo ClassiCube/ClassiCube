@@ -76,8 +76,9 @@ namespace ClassicalSharp {
 			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
 				Refresh();
+				chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			}
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
