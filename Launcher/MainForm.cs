@@ -40,7 +40,29 @@ namespace Launcher {
 			cc.Filter = e =>
 				e.Name.IndexOf( txtCCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
 				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
+			KeyPreview = true;
+			KeyDown += KeyDownHandler;
 		}
+
+		void KeyDownHandler(object sender, KeyEventArgs e) {
+			if( e.KeyCode != Keys.Enter ) return;
+			
+			if( tabs.SelectedTab == tabLocal ) {
+				BtnLanConnectClick( null, null );
+			} else if( tabs.SelectedTab == tabMinecraftNet ) {
+				if( tabMC.SelectedTab == tabMCSignIn )
+					mc.DoSignIn();
+				else if( tabMC.SelectedTab == tabMCServers )
+					mc.ConnectToServer();
+			} else if( tabs.SelectedTab == tabClassicubeNet ) {
+				if( tabCC.SelectedTab == tabCCSignIn )
+					cc.DoSignIn();
+				else if( tabCC.SelectedTab == tabCCServers )
+					cc.ConnectToServer();
+			}
+			e.Handled = true;
+		}
+
 		GameState mc, cc;
 		
 		void DisplayResourcesDialog( object sender, EventArgs e ) {
