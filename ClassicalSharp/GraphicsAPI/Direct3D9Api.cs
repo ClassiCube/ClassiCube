@@ -283,7 +283,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex ) {
-			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, 0, 0,
+			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, 0, startIndex / 6 * 4,
 			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
 		}
 		
