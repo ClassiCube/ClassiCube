@@ -10,7 +10,7 @@ You can get the latest binaries [here](https://github.com/UnknownShadow200/Class
 
 It does not:
 * Work with 'modern/premium' Minecraft servers.
-* Provide single-player support.
+* Provide single-player support. (But I am working on adding it)
 
 #### Requirements
 * Windows: .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
@@ -18,8 +18,8 @@ It does not:
 * Mac OS X: Mono. (Not tested at all yet - likely just crashes)
 
 ##### Mono specific notes
-You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.
-Also, if you are using an older mono version, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.
+*You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
+*Also, if you are using an older mono version, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.*
 
 #### Instructions
 The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
@@ -43,8 +43,3 @@ Some points to note:
 #### Client commands
 * To see a list of all built in commands, type `/client commands`.
 * To see help for a given built in command, type `/client help <command name>`.
-
-#### *Note on future of the project*
-Due to time constraints and lack of interest, I am no longer working on version 2.0 for now.
-
-Version 0.8 (released along with this message) implements the entire CPE specification (excluding TextHotKey), and should be stable and fast enough for you to use.
