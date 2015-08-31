@@ -14,31 +14,31 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	public partial class NetworkProcessor {
+	public partial class NetworkProcessor : INetworkProcessor {
 		
 		public NetworkProcessor( Game window ) {
-			Window = window;
+			game = window;
+		}
+		
+		public override bool IsSinglePlayer {
+			get { return false; }
 		}
 		
 		Socket socket;
 		NetworkStream stream;
-		public Game Window;
-		public string ServerName, ServerMotd;
-		public bool Disconnected;
+		Game game;		
 		bool sendHeldBlock;
 		bool useMessageTypes;
 		bool useBlockPermissions;
 		bool receivedFirstPosition;
-		public bool UsingExtPlayerList;
-		public bool UsingPlayerClick;
 		
-		public void Connect( IPAddress address, int port ) {
+		public override void Connect( IPAddress address, int port ) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
 			try {
 				socket.Connect( address, port );
 			} catch( SocketException ex ) {
 				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
-				Window.Disconnect( "&eUnable to reach " + address + ":" + port,
+				game.Disconnect( "&eUnable to reach " + address + ":" + port,
 				                  "Unable to establish an underlying connection" );
 				Dispose();
 				return;
@@ -46,55 +46,55 @@ namespace ClassicalSharp {
 			stream = new NetworkStream( socket, true );
 			reader = new FastNetReader( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
-			MakeLoginPacket( Window.Username, Window.Mppass );
+			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
 		}
 		
-		public void SendChat( string text ) {
+		public override void SendChat( string text ) {
 			if( !String.IsNullOrEmpty( text ) ) {
 				MakeMessagePacket( text );
 				SendPacket();
 			}
 		}
 		
-		public void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)Window.HeldBlock : (byte)0xFF;
+		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
+			byte payload = sendHeldBlock ? (byte)game.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
 		}
 		
-		public void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
 			MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block );
 			SendPacket();
 		}
 		
-		public void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
-			Player p = Window.LocalPlayer;
+		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
+			Player p = game.LocalPlayer;
 			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
 			                pos.BlockPos, pos.BlockFace );
 		}
 		
-		public void Dispose() {
+		public override void Dispose() {
 			socket.Close();
 			Disconnected = true;
 		}
 		
 		void CheckForNewTerrainAtlas() {
 			DownloadedItem item;
-			Window.AsyncDownloader.TryGetItem( "terrain", out item );
+			game.AsyncDownloader.TryGetItem( "terrain", out item );
 			if( item != null && item.Bmp != null ) {
-				Window.ChangeTerrainAtlas( item.Bmp );
+				game.ChangeTerrainAtlas( item.Bmp );
 			}
 		}
 		
-		public void Tick( double delta ) {
+		public override void Tick( double delta ) {
 			if( Disconnected ) return;
 			
 			try {
 				reader.ReadPendingData();
 			} catch( IOException ex ) {
 				Utils.LogError( "Error while reading packets: {0}{1}", Environment.NewLine, ex );
-				Window.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
+				game.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
 				Dispose();
 				return;
 			}
@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 				ReadPacket( opcode );
 			}
 			
-			Player player = Window.LocalPlayer;
+			Player player = game.LocalPlayer;
 			if( receivedFirstPosition ) {
 				SendPosition( player.Position, player.YawDegrees, player.PitchDegrees );
 			}
@@ -232,7 +232,7 @@ namespace ClassicalSharp {
 				stream.Write( outBuffer, 0, packetLength );
 			} catch( IOException ex ) {
 				Utils.LogError( "Error while writing packets: {0}{1}", Environment.NewLine, ex );
-				Window.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
+				game.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
 				Dispose();
 			}
 		}
@@ -262,11 +262,11 @@ namespace ClassicalSharp {
 						ServerMotd = reader.ReadAsciiString();
 						byte userType = reader.ReadUInt8();
 						if( !useBlockPermissions ) {
-							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
 						}
-						Window.LocalPlayer.UserType = userType;
+						game.LocalPlayer.UserType = userType;
 						receivedFirstPosition = false;
-						Window.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
+						game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 					} break;
 					
 				case PacketId.Ping:
@@ -274,10 +274,10 @@ namespace ClassicalSharp {
 					
 				case PacketId.LevelInitialise:
 					{
-						Window.Map.Reset();
-						Window.RaiseOnNewMap();
-						Window.SelectionManager.Dispose();
-						Window.SetNewScreen( new LoadingMapScreen( Window, ServerName, ServerMotd ) );
+						game.Map.Reset();
+						game.RaiseOnNewMap();
+						game.SelectionManager.Dispose();
+						game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 						if( ServerMotd.Contains( "cfg=" ) ) {
 							ReadWomConfigurationAsync();
 						}
@@ -322,20 +322,20 @@ namespace ClassicalSharp {
 						}
 						reader.Remove( 1024 );
 						byte progress = reader.ReadUInt8();
-						Window.RaiseMapLoading( progress );
+						game.RaiseMapLoading( progress );
 					} break;
 					
 				case PacketId.LevelFinalise:
 					{
-						Window.SetNewScreen( new NormalScreen( Window ) );
+						game.SetNewScreen( new NormalScreen( game ) );
 						int mapWidth = reader.ReadInt16();
 						int mapHeight = reader.ReadInt16();
 						int mapLength = reader.ReadInt16();
 						
 						double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 						Utils.LogDebug( "map loading took:" + loadingMs );
-						Window.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
-						Window.RaiseOnNewMapLoaded();
+						game.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
+						game.RaiseOnNewMapLoaded();
 						map = null;
 						gzipStream.Close();
 						if( sendWomId && !sentWomId ) {
@@ -352,7 +352,7 @@ namespace ClassicalSharp {
 						int y = reader.ReadInt16();
 						int z = reader.ReadInt16();
 						byte type = reader.ReadUInt8();
-						Window.UpdateBlock( x, y, z, type );
+						game.UpdateBlock( x, y, z, type );
 					} break;
 					
 				case PacketId.AddEntity:
@@ -383,11 +383,11 @@ namespace ClassicalSharp {
 				case PacketId.RemoveEntity:
 					{
 						byte entityId = reader.ReadUInt8();
-						Player player = Window.Players[entityId];
+						Player player = game.Players[entityId];
 						if( entityId != 0xFF && player != null ) {
-							Window.RaiseEntityRemoved( entityId );
+							game.RaiseEntityRemoved( entityId );
 							player.Despawn();
-							Window.Players[entityId] = null;
+							game.Players[entityId] = null;
 						}
 					} break;
 					
@@ -395,13 +395,13 @@ namespace ClassicalSharp {
 					{
 						byte messageType = reader.ReadUInt8();
 						string text = reader.ReadChatString( ref messageType, useMessageTypes );
-						Window.AddChat( text, (CpeMessage)messageType );
+						game.AddChat( text, (CpeMessage)messageType );
 					} break;
 					
 				case PacketId.Kick:
 					{
 						string reason = reader.ReadAsciiString();
-						Window.Disconnect( "&eLost connection to the server", reason );
+						game.Disconnect( "&eLost connection to the server", reason );
 						Dispose();
 					} break;
 					
@@ -409,9 +409,9 @@ namespace ClassicalSharp {
 					{
 						byte userType = reader.ReadUInt8();
 						if( !useBlockPermissions ) {
-							Window.CanDelete[(int)Block.Bedrock] = userType == 0x64;
+							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
 						}
-						Window.LocalPlayer.UserType = userType;
+						game.LocalPlayer.UserType = userType;
 					} break;
 					
 				case PacketId.CpeExtInfo:
@@ -451,7 +451,7 @@ namespace ClassicalSharp {
 					
 				case PacketId.CpeSetClickDistance:
 					{
-						Window.LocalPlayer.ReachDistance = reader.ReadInt16() / 32f;
+						game.LocalPlayer.ReachDistance = reader.ReadInt16() / 32f;
 					} break;
 					
 				case PacketId.CpeCustomBlockSupportLevel:
@@ -462,10 +462,10 @@ namespace ClassicalSharp {
 
 						if( supportLevel == 1 ) {
 							for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
-								Window.CanPlace[i] = true;
-								Window.CanDelete[i] = true;
+								game.CanPlace[i] = true;
+								game.CanDelete[i] = true;
 							}
-							Window.RaiseBlockPermissionsChanged();
+							game.RaiseBlockPermissionsChanged();
 						} else {
 							Utils.LogWarning( "Server's block support level is {0}, this client only supports level 1.", supportLevel );
 							Utils.LogWarning( "You won't be able to see or use blocks from levels above level 1" );
@@ -476,9 +476,9 @@ namespace ClassicalSharp {
 					{
 						byte blockType = reader.ReadUInt8();
 						bool canChange = reader.ReadUInt8() == 0;
-						Window.CanChangeHeldBlock = true;
-						Window.HeldBlock = (Block)blockType;
-						Window.CanChangeHeldBlock = canChange;
+						game.CanChangeHeldBlock = true;
+						game.HeldBlock = (Block)blockType;
+						game.CanChangeHeldBlock = canChange;
 					} break;
 					
 				case PacketId.CpeExtAddPlayerName:
@@ -489,14 +489,14 @@ namespace ClassicalSharp {
 						string groupName = reader.ReadAsciiString();
 						byte groupRank = reader.ReadUInt8();
 						if( nameId >= 0 && nameId <= 255 ) {
-							CpeListInfo oldInfo = Window.CpePlayersList[nameId];
+							CpeListInfo oldInfo = game.CpePlayersList[nameId];
 							CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
-							Window.CpePlayersList[nameId] = info;
+							game.CpePlayersList[nameId] = info;
 							
 							if( oldInfo != null ) {
-								Window.RaiseCpeListInfoChanged( (byte)nameId );
+								game.RaiseCpeListInfoChanged( (byte)nameId );
 							} else {
-								Window.RaiseCpeListInfoAdded( (byte)nameId );
+								game.RaiseCpeListInfoAdded( (byte)nameId );
 							}
 						}
 					} break;
@@ -513,7 +513,7 @@ namespace ClassicalSharp {
 					{
 						short nameId = reader.ReadInt16();
 						if( nameId >= 0 && nameId <= 255 ) {
-							Window.RaiseCpeListInfoRemoved( (byte)nameId );
+							game.RaiseCpeListInfoRemoved( (byte)nameId );
 						}
 					} break;
 					
@@ -536,13 +536,13 @@ namespace ClassicalSharp {
 						Vector3I p1 = Vector3I.Min( startX, startY, startZ, endX, endY, endZ );
 						Vector3I p2 = Vector3I.Max( startX, startY, startZ, endX, endY, endZ );
 						FastColour col = new FastColour( r, g, b, a );
-						Window.SelectionManager.AddSelection( selectionId, p1, p2, col );
+						game.SelectionManager.AddSelection( selectionId, p1, p2, col );
 					} break;
 					
 				case PacketId.CpeRemoveSelection:
 					{
 						byte selectionId = reader.ReadUInt8();
-						Window.SelectionManager.RemoveSelection( selectionId );
+						game.SelectionManager.RemoveSelection( selectionId );
 					} break;
 					
 				case PacketId.CpeEnvColours:
@@ -555,15 +555,15 @@ namespace ClassicalSharp {
 						FastColour col = new FastColour( red, green, blue );
 
 						if( variable == 0 ) { // sky colour
-							Window.Map.SetSkyColour( invalid ? Map.DefaultSkyColour : col );
+							game.Map.SetSkyColour( invalid ? Map.DefaultSkyColour : col );
 						} else if( variable == 1 ) { // clouds colour
-							Window.Map.SetCloudsColour( invalid ? Map.DefaultCloudsColour : col );
+							game.Map.SetCloudsColour( invalid ? Map.DefaultCloudsColour : col );
 						} else if( variable == 2 ) { // fog colour
-							Window.Map.SetFogColour( invalid ? Map.DefaultFogColour : col );
+							game.Map.SetFogColour( invalid ? Map.DefaultFogColour : col );
 						} else if( variable == 3 ) { // ambient light (shadow light)
-							Window.Map.SetShadowlight( invalid ? Map.DefaultShadowlight : col );
+							game.Map.SetShadowlight( invalid ? Map.DefaultShadowlight : col );
 						} else if( variable == 4 ) { // diffuse light (sun light)
-							Window.Map.SetSunlight( invalid ? Map.DefaultSunlight : col );
+							game.Map.SetSunlight( invalid ? Map.DefaultSunlight : col );
 						}
 					} break;
 					
@@ -573,22 +573,22 @@ namespace ClassicalSharp {
 						bool canPlace = reader.ReadUInt8() != 0;
 						bool canDelete = reader.ReadUInt8() != 0;
 						if( blockId == 0 ) {
-							for( int i = 1; i < Window.CanPlace.Length; i++ ) {
-								Window.CanPlace[i] = canPlace;
-								Window.CanDelete[i] = canDelete;
+							for( int i = 1; i < game.CanPlace.Length; i++ ) {
+								game.CanPlace[i] = canPlace;
+								game.CanDelete[i] = canDelete;
 							}
 						} else {
-							Window.CanPlace[blockId] = canPlace;
-							Window.CanDelete[blockId] = canDelete;
+							game.CanPlace[blockId] = canPlace;
+							game.CanDelete[blockId] = canDelete;
 						}
-						Window.RaiseBlockPermissionsChanged();
+						game.RaiseBlockPermissionsChanged();
 					} break;
 					
 				case PacketId.CpeChangeModel:
 					{
 						byte playerId = reader.ReadUInt8();
 						string modelName = reader.ReadAsciiString().ToLowerInvariant();
-						Player player = Window.Players[playerId];
+						Player player = game.Players[playerId];
 						if( player != null ) {
 							player.SetModel( modelName );
 						}
@@ -600,36 +600,36 @@ namespace ClassicalSharp {
 						byte sideBlock = reader.ReadUInt8();
 						byte edgeBlock = reader.ReadUInt8();
 						short waterLevel = reader.ReadInt16();
-						Window.Map.SetWaterLevel( waterLevel );
-						Window.Map.SetEdgeBlock( (Block)edgeBlock );
-						Window.Map.SetSidesBlock( (Block)sideBlock );
+						game.Map.SetWaterLevel( waterLevel );
+						game.Map.SetEdgeBlock( (Block)edgeBlock );
+						game.Map.SetSidesBlock( (Block)sideBlock );
 						if( url == String.Empty ) {
 							Bitmap bmp = new Bitmap( "terrain.png" );
-							Window.ChangeTerrainAtlas( bmp );
+							game.ChangeTerrainAtlas( bmp );
 						} else {
-							Window.AsyncDownloader.DownloadImage( url, true, "terrain" );
+							game.AsyncDownloader.DownloadImage( url, true, "terrain" );
 						}
 						Utils.LogDebug( "Image url: " + url );
 					} break;
 					
 				case PacketId.CpeEnvWeatherType:
 					{
-						Window.Map.SetWeather( (Weather)reader.ReadUInt8() );
+						game.Map.SetWeather( (Weather)reader.ReadUInt8() );
 					} break;
 					
 				case PacketId.CpeHackControl:
 					{
-						Window.LocalPlayer.CanFly = reader.ReadUInt8() != 0;
-						Window.LocalPlayer.CanNoclip = reader.ReadUInt8() != 0;
-						Window.LocalPlayer.CanSpeed = reader.ReadUInt8() != 0;
-						Window.LocalPlayer.CanRespawn = reader.ReadUInt8() != 0;
-						Window.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
-						if( !Window.CanUseThirdPersonCamera ) {
-							Window.SetCamera( false );
+						game.LocalPlayer.CanFly = reader.ReadUInt8() != 0;
+						game.LocalPlayer.CanNoclip = reader.ReadUInt8() != 0;
+						game.LocalPlayer.CanSpeed = reader.ReadUInt8() != 0;
+						game.LocalPlayer.CanRespawn = reader.ReadUInt8() != 0;
+						game.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
+						if( !game.CanUseThirdPersonCamera ) {
+							game.SetCamera( false );
 						}
 						float jumpHeight = reader.ReadInt16() / 32f;
 						if( jumpHeight < 0 ) jumpHeight = 1.4f;
-						Window.LocalPlayer.CalculateJumpVelocity( jumpHeight );
+						game.LocalPlayer.CalculateJumpVelocity( jumpHeight );
 					} break;
 					
 				case PacketId.CpeExtAddEntity2:
@@ -647,19 +647,19 @@ namespace ClassicalSharp {
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
-				Player oldPlayer = Window.Players[entityId];
+				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
-					Window.RaiseEntityRemoved( entityId );
+					game.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
-				Window.Players[entityId] = new NetPlayer( displayName, skinName, Window );
-				Window.RaiseEntityAdded( entityId );
-				Window.AsyncDownloader.DownloadSkin( skinName );
+				game.Players[entityId] = new NetPlayer( displayName, skinName, game );
+				game.RaiseEntityAdded( entityId );
+				game.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {
 				ReadAbsoluteLocation( entityId, false );
 				if( entityId == 0xFF ) {
-					Window.LocalPlayer.SpawnPoint = Window.LocalPlayer.Position;
+					game.LocalPlayer.SpawnPoint = game.LocalPlayer.Position;
 				}
 			}
 		}
@@ -706,7 +706,7 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateLocation( byte playerId, LocationUpdate update, bool interpolate ) {
-			Player player = Window.Players[playerId];
+			Player player = game.Players[playerId];
 			if( player != null ) {
 				player.SetLocation( update, interpolate );
 			}

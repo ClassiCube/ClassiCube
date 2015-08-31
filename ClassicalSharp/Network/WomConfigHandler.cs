@@ -12,14 +12,14 @@ namespace ClassicalSharp {
 		
 		void CheckForWomEnvironment() {
 			DownloadedItem item;
-			Window.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
+			game.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
 			if( item != null && item.Page != null ) {
 				ParseWomConfig( item.Page );
 			}
 			
-			Window.AsyncDownloader.TryGetItem( womTerrainIdentifier, out item );
+			game.AsyncDownloader.TryGetItem( womTerrainIdentifier, out item );
 			if( item != null && item.Bmp != null ) {
-				Window.ChangeTerrainAtlas( item.Bmp );
+				game.ChangeTerrainAtlas( item.Bmp );
 			}
 		}
 		
@@ -35,17 +35,17 @@ namespace ClassicalSharp {
 					
 					if( key == "environment.cloud" ) {
 						FastColour col = ParseWomColour( value, Map.DefaultCloudsColour );
-						Window.Map.SetCloudsColour( col );
+						game.Map.SetCloudsColour( col );
 					} else if( key == "environment.sky" ) {
 						FastColour col = ParseWomColour( value, Map.DefaultSkyColour );
-						Window.Map.SetSkyColour( col );
+						game.Map.SetSkyColour( col );
 					} else if( key == "environment.fog" ) {
 						FastColour col = ParseWomColour( value, Map.DefaultFogColour );
-						Window.Map.SetFogColour( col );
+						game.Map.SetFogColour( col );
 					} else if( key == "environment.level" ) {
 						int waterLevel = 0;
 						if( Int32.TryParse( value, out waterLevel ) )
-							Window.Map.SetWaterLevel( waterLevel );
+							game.Map.SetWaterLevel( waterLevel );
 					} else if( key == "environment.terrain" ) {
 						GetWomImageAsync( "terrain", value );
 					} else if( key == "environment.edge" ) { // TODO: custom edges and sides
@@ -53,7 +53,7 @@ namespace ClassicalSharp {
 					} else if( key == "environment.side" ) {
 						//GetWomImageAsync( "side", value );
 					} else if( key == "user.detail" && !useMessageTypes ) {
-						Window.AddChat( value, CpeMessage.Status2 );
+						game.AddChat( value, CpeMessage.Status2 );
 					}
 				}
 			}
@@ -63,20 +63,20 @@ namespace ClassicalSharp {
 			const string hostFormat = "http://files.worldofminecraft.com/skin.php?type={0}&id={1}";
 			string url = String.Format( hostFormat, type, Uri.EscapeDataString( id ) );
 			string identifier = "wom" + type + "_" + womCounter;
-			Window.AsyncDownloader.DownloadImage( url, true, identifier );
+			game.AsyncDownloader.DownloadImage( url, true, identifier );
 		}
 		
 		void ReadWomConfigurationAsync() {
 			string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
 			string url = "http://" + host;
-			url = url.Replace( "$U", Window.Username );
+			url = url.Replace( "$U", game.Username );
 			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
 			// different world, the environment settings from the last world are not loaded in the
 			// new world if the async 'get request' didn't complete before the new world was loaded.
 			womCounter++;
 			womEnvIdentifier = "womenv_" + womCounter;
 			womTerrainIdentifier = "womterrain_" + womCounter;
-			Window.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
+			game.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
 			sendWomId = true;
 		}
 		

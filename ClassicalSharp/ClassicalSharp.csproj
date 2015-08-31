@@ -128,11 +128,13 @@
     <Compile Include="Model\SpiderModel.cs" />
     <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
-    <Compile Include="Network\FastNetReader.cs" />
-    <Compile Include="Network\FixedBufferStream.cs" />
-    <Compile Include="Network\GZipHeaderReader.cs" />
+    <Compile Include="Network\INetworkProcessor.cs" />
+    <Compile Include="Network\SinglePlayerServer.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
-    <Compile Include="Network\AsyncDownloader.cs" />
+    <Compile Include="Network\Utils\AsyncDownloader.cs" />
+    <Compile Include="Network\Utils\FastNetReader.cs" />
+    <Compile Include="Network\Utils\FixedBufferStream.cs" />
+    <Compile Include="Network\Utils\GZipHeaderReader.cs" />
     <Compile Include="Network\WomConfigHandler.cs" />
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
@@ -184,6 +186,7 @@
     <Folder Include="Map" />
     <Folder Include="Game" />
     <Folder Include="Model" />
+    <Folder Include="Network\Utils" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />
   </ItemGroup>

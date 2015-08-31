@@ -278,7 +278,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, startIndex / 6 * 4,
 			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
 		}
 		

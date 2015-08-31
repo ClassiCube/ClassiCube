@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 # SharpDevelop 4.4
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassicalSharp", "ClassicalSharp\ClassicalSharp.csproj", "{BEB1C785-5CAD-48FF-A886-876BF0A318D4}"
 EndProject
@@ -21,14 +21,14 @@ Global
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.Build.0 = Debug|Any CPU	
-		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.ActiveCfg = Debug|Any CPU		
+		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.Build.0 = Debug|Any CPU
+		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.ActiveCfg = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug_DX|Any CPU.Build.0 = Debug_DX|Any CPU
-		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug_DX|Any CPU.ActiveCfg = Debug_DX|Any CPU		
+		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug_DX|Any CPU.ActiveCfg = Debug_DX|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Release|Any CPU.Build.0 = Release|Any CPU

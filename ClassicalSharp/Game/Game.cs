@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		
 		public IGraphicsApi Graphics;
 		public Map Map;
-		public NetworkProcessor Network;
+		public INetworkProcessor Network;
 		
 		public EntityList Players = new EntityList();
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
