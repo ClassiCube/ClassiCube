@@ -275,8 +275,6 @@ namespace ClassicalSharp {
 				case PacketId.LevelInitialise:
 					{
 						game.Map.Reset();
-						game.RaiseOnNewMap();
-						game.SelectionManager.Dispose();
 						game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 						if( ServerMotd.Contains( "cfg=" ) ) {
 							ReadWomConfigurationAsync();

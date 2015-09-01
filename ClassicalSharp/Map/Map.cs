@@ -51,6 +51,9 @@ namespace ClassicalSharp {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
+			
+			game.RaiseOnNewMap();
+			game.SelectionManager.Dispose();
 		}
 		
 		public void SetSidesBlock( Block block ) {

@@ -58,11 +58,9 @@ namespace ClassicalSharp.Singleplayer {
 			
 			path = Path.GetFileName( path );
 			try {
-				using( FileStream fs = File.OpenRead( path ) ) {
+				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 					int width, height, length;
 					game.Map.Reset();
-					game.RaiseOnNewMap();
-					game.SelectionManager.Dispose();
 					
 					byte[] blocks = MapFcm3.Load( fs, game, out width, out height, out length );
 					game.Map.UseRawMap( blocks, width, height, length );
@@ -89,7 +87,7 @@ namespace ClassicalSharp.Singleplayer {
 			if( String.IsNullOrEmpty( path ) ) return;
 			
 			path = Path.GetFileName( path );
-			using( FileStream fs = File.Create( path ) ) {
+			using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
 				MapFcm3.Save( fs, game );
 			}
 		}

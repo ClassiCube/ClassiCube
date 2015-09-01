@@ -316,7 +316,6 @@ namespace ClassicalSharp {
 		public void Disconnect( string title, string reason ) {
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
 			Map.Reset();
-			RaiseOnNewMap();
 			Map.mapData = null;
 			GC.Collect();
 		}

@@ -57,7 +57,6 @@ namespace ClassicalSharp.Singleplayer {
 			game.LocalPlayer.UserType = 0x64;
 			
 			game.Map.Reset();
-			game.RaiseOnNewMap();
 			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 		}
 		
