@@ -139,7 +139,11 @@ namespace ClassicalSharp {
 			MapRenderer = new MapRenderer( this );
 			MapEnvRenderer = new MapEnvRenderer( this );
 			EnvRenderer = new StandardEnvRenderer( this );
-			Network = new NetworkProcessor( this );
+			if( IPAddress == null ) {
+				Network = new Singleplayer.SinglePlayerServer( this );
+			} else {
+				Network = new NetworkProcessor( this );
+			}
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			Camera = firstPersonCam;

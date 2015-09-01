@@ -34,7 +34,6 @@ namespace SharpDX.Direct3D9 {
 			Adapters = new List<AdapterInformation>( count );
 			for( int i = 0; i < count; i++ )
 				Adapters.Add( new AdapterInformation( this, i ) );
-			memcpy64Bit = IntPtr.Size == 8;
 		}
 
 		public List<AdapterInformation> Adapters;
@@ -103,30 +102,6 @@ namespace SharpDX.Direct3D9 {
 			
 			if( res < 0 ) { throw new SharpDXException( res ); }
 			return new Device( devicePtr );
-		}
-		
-		// TODO: Place this in a utilities class.
-		static bool memcpy64Bit;
-		internal static unsafe void memcpy( IntPtr srcPtr, IntPtr dstPtr, int bytes ) {
-			byte* srcByte, dstByte;
-			if( memcpy64Bit ) {
-				long* srcLong = (long*)srcPtr, dstLong = (long*)dstPtr;
-				while( bytes >= 8 ) {
-					*dstLong++ = *srcLong++;
-					bytes -= 8;
-				}
-				srcByte = (byte*)srcLong; dstByte = (byte*)dstLong;
-			} else {
-				int* srcInt = (int*)srcPtr, dstInt = (int*)dstPtr;
-				while( bytes >= 4 ) {
-					*dstInt++ = *srcInt++;
-					bytes -= 4;
-				}
-				srcByte = (byte*)srcInt; dstByte = (byte*)dstInt;
-			}
-			for( int i = 0; i < bytes; i++ ) {
-				*dstByte++ = *srcByte++;
-			}
 		}
 	}
 }

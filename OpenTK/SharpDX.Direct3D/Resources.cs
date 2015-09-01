@@ -57,14 +57,14 @@ namespace SharpDX.Direct3D9 {
 		
 		public void SetData( IntPtr data, int bytes, LockFlags flags ) {
 			IntPtr dst = Lock( 0, bytes, flags );
-			Direct3D.memcpy( data, dst, bytes );
+			MemUtils.memcpy( data, dst, bytes );
 			Unlock();
 		}
 		
 		public void SetData<T>( T[] data, int bytes, LockFlags flags ) where T : struct {
 			IntPtr src = Interop.Fixed( ref data[0] );	
 			IntPtr dst = Lock( 0, bytes, flags );
-			Direct3D.memcpy( src, dst, bytes );
+			MemUtils.memcpy( src, dst, bytes );
 			Unlock();
 		}
 		
@@ -108,7 +108,7 @@ namespace SharpDX.Direct3D9 {
 		
 		public void SetData( IntPtr data, int bytes, int level, LockFlags flags ) {
 			LockedRectangle rect = LockRectangle( level, flags );
-			Direct3D.memcpy( data, rect.DataPointer, bytes );
+			MemUtils.memcpy( data, rect.DataPointer, bytes );
 			UnlockRectangle( level );
 		}
 		

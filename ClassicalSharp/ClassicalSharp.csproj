@@ -33,8 +33,8 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <StartAction>Project</StartAction>
-    <StartArguments>wwwf null 127.0.0.1 25566</StartArguments>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartArguments>wwwf null 127.0.0.1 25566</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>..\output\release\</OutputPath>
@@ -129,7 +129,6 @@
     <Compile Include="Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\INetworkProcessor.cs" />
-    <Compile Include="Network\SinglePlayerServer.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\Utils\AsyncDownloader.cs" />
     <Compile Include="Network\Utils\FastNetReader.cs" />
@@ -156,6 +155,8 @@
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
+    <Compile Include="Singleplayer\Commands.cs" />
+    <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
@@ -187,6 +188,7 @@
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
+    <Folder Include="Singleplayer" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />
   </ItemGroup>

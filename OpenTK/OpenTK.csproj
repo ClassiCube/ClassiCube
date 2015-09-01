@@ -51,7 +51,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindingsBase.cs" />
-    <Compile Include="Configuration.cs" />
     <Compile Include="DisplayDevice.cs" />
     <Compile Include="DisplayResolution.cs" />
     <Compile Include="FrameEventArgs.cs" />
@@ -62,6 +61,7 @@
     <Compile Include="INativeWindow.cs" />
     <Compile Include="Interop.cs" />
     <Compile Include="KeyPressEventArgs.cs" />
+    <Compile Include="MemUtils.cs" />
     <Compile Include="NativeWindow.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
     <Compile Include="Graphics\GraphicsContextBase.cs" />
@@ -80,6 +80,7 @@
     <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
+    <Compile Include="Platform\Configuration.cs" />
     <Compile Include="Platform\IDisplayDeviceDriver.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
     <Compile Include="Platform\IWindowInfo.cs" />

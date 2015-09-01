@@ -23,7 +23,7 @@ namespace ClassicalSharp.Commands {
 			RegisterCommand( new ViewDistanceCommand() );
 		}
 		
-		void RegisterCommand( Command command ) {
+		public void RegisterCommand( Command command ) {
 			command.Window = Window;
 			foreach( Command cmd in RegisteredCommands ) {
 				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {

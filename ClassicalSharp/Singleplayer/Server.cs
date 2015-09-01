@@ -3,7 +3,7 @@ using System.Net;
 using OpenTK;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Singleplayer {
 
 	public sealed class SinglePlayerServer : INetworkProcessor {
 		
@@ -23,7 +23,8 @@ namespace ClassicalSharp {
 			}
 			game.RaiseBlockPermissionsChanged();
 			NewMap();
-			MapLoaded();
+			MakeMap( 128, 128, 128 );
+			game.CommandManager.RegisterCommand( new GenerateCommand() );
 		}
 		
 		public override void SendChat( string text ) {
@@ -48,7 +49,7 @@ namespace ClassicalSharp {
 			if( Disconnected ) return;
 		}
 		
-		void NewMap() {
+		internal void NewMap() {
 			ServerName = "Single player";
 			ServerMotd = "Generating a map..";
 			game.LocalPlayer.UserType = 0x64;
@@ -58,25 +59,25 @@ namespace ClassicalSharp {
 			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 		}
 		
-		void MapLoaded() {
-			game.SetNewScreen( new NormalScreen( game ) );
-			int width = 16, height = 16, length = 16;
+		internal unsafe void MakeMap( int width, int height, int length ) {
 			byte[] map = new byte[width * height * length];
-			MapSet( width, length, map, 0, height / 2 - 2, (byte)Block.Dirt );
-			MapSet( width, length, map, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
+			var sw = System.Diagnostics.Stopwatch.StartNew();
+			fixed( byte* ptr = map ) {
+				MapSet( width, length, ptr, 0, height / 2 - 2, (byte)Block.Dirt );
+				MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
+			}
 			game.Map.UseRawMap( map, width, height, length );
 			game.RaiseOnNewMapLoaded();
+			game.SetNewScreen( new NormalScreen( game ) );
 			ResetPlayerPosition();
 			game.AddChat( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
 		}
 		
-		void MapSet( int width, int length, byte[] map, int yStart, int yEnd, byte block ) {
+		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {
 			int startIndex = yStart * length * width;
 			int endIndex = ( yEnd * length + (length - 1) ) * width + (width - 1);
-			for( int i = startIndex; i <= endIndex; i++ ) {
-				map[i] = block;
-			}
+			MemUtils.memset( (IntPtr)ptr, block, startIndex, endIndex - startIndex + 1 );
 		}
 		
 		void ResetPlayerPosition() {

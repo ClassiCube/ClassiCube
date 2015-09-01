@@ -18,31 +18,41 @@ namespace ClassicalSharp {
 			if( !AllResourcesExist( "terrain.png", "char.png", "clouds.png" ) ) {
 				return;
 			}
-			if( args.Length < 4 ) {
+			if( args.Length == 0 ) {
+				Utils.Log( "Starting singleplayer mode." );
+				using( Game game = new Game() ) {
+					game.Username = "LocalPlayer";
+					game.skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
+					game.Run();
+				}
+			} else if( args.Length < 4 ) {
 				Fail( "ClassicalSharp.exe is only the raw client. You must either use the launcher or"
 				     + " provide command line arguments to start the client." );
-				return;
+			} else {
+				RunMultiplayer( args );
+			}
+		}
+		
+		static void RunMultiplayer( string[] args ) {
+			IPAddress ip = null;
+			if( !IPAddress.TryParse( args[2], out ip ) ) {
+				Fail( "Invalid IP \"" + args[2] + '"' );
 			}
 
-            IPAddress ip = null;
-            if( !IPAddress.TryParse( args[2], out ip ) ) {
-                Fail( "Invalid IP \"" + args[2] + '"' );
-            }
+			int port = 0;
+			if( !Int32.TryParse( args[3], out port ) ) {
+				Fail( "Invalid port \"" + args[3] + '"' );
+				return;
+			} else if( port < ushort.MinValue || port > ushort.MaxValue ) {
+				Fail( "Specified port " + port + " is out of valid range." );
+			}
 
-            int port = 0;
-            if( !Int32.TryParse( args[3], out port ) ) {
-                Fail( "Invalid port \"" + args[3] + '"' );
-                return;
-            } else if( port < ushort.MinValue || port > ushort.MaxValue ) {
-                Fail( "Specified port " + port + " is out of valid range." );
-            }
-
-            string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
+			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
 			using( Game game = new Game() ) {
 				game.Username = args[0];
 				game.Mppass = args[1];
 				game.IPAddress = ip;
-                game.Port = port;
+				game.Port = port;
 				game.skinServer = skinServer;
 				game.Run();
 			}
@@ -87,7 +97,7 @@ namespace ClassicalSharp {
 				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" +
 				Environment.NewLine + Environment.NewLine + error;
 			
-			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + message, "ClassicalSharp has crashed" );			
+			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + message, "ClassicalSharp has crashed" );
 			Environment.Exit( 1 );
 		}
 	}
