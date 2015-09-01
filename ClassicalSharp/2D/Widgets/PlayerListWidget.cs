@@ -28,13 +28,13 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = false;
-			GraphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );
-			GraphicsApi.Texturing = true;
+			graphicsApi.Texturing = false;
+			graphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );
+			graphicsApi.Texturing = true;
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid ) {
-					texture.Render( GraphicsApi );
+					texture.Render( graphicsApi );
 				}
 			}
 		}
@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture tex = textures[i];
-				GraphicsApi.DeleteTexture( ref tex );
+				graphicsApi.DeleteTexture( ref tex );
 				textures[i] = tex;
 			}
 		}
@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		protected void UpdateTableDimensions() {
 			int width = xMax - xMin;
 			X = xMin - boundsSize;
-			Y = Window.Height / 2 - yHeight / 2 - boundsSize;
+			Y = game.Height / 2 - yHeight / 2 - boundsSize;
 			Width = width + boundsSize * 2;
 			Height = yHeight + boundsSize * 2;
 		}
@@ -123,9 +123,9 @@ namespace ClassicalSharp {
 		
 		protected void SortPlayerInfo() {
 			SortInfoList();
-			int centreX = Window.Width / 2;
+			int centreX = game.Width / 2;
 			CalcMaxColumnHeight();
-			int y = Window.Height / 2 - yHeight / 2;
+			int y = game.Height / 2 - yHeight / 2;
 			
 			int midCol = columns / 2;
 			int offset = 0;

@@ -7,11 +7,11 @@ namespace ClassicalSharp.Selections {
 	
 	public class SelectionManager : IDisposable {
 		
-		public Game Window;
+		protected Game game;
 		public IGraphicsApi Graphics;
 		
 		public SelectionManager( Game window ) {
-			Window = window;
+			game = window;
 			Graphics = window.Graphics;
 		}
 		
@@ -36,7 +36,7 @@ namespace ClassicalSharp.Selections {
 		Vector3 pos;
 		SelectionBoxComparer comparer = new SelectionBoxComparer();
 		public void Render( double delta ) {
-			Player player = Window.LocalPlayer;
+			Player player = game.LocalPlayer;
 			pos = player.Position;
 			if( selections.Count == 0 ) return;
 			// TODO: Proper selection box sorting. But this is very difficult because

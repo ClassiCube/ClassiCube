@@ -7,13 +7,14 @@ namespace ClassicalSharp {
 	
 	public unsafe sealed class MapEnvRenderer : IDisposable {
 		
-		public Map Map;
-		public Game Window;
-		public IGraphicsApi Graphics;
+		Map map;
+		Game game;
+		IGraphicsApi graphics;
 		
-		public MapEnvRenderer( Game window ) {
-			Window = window;
-			Map = Window.Map;
+		public MapEnvRenderer( Game game ) {
+			this.game = game;
+			map = game.Map;
+			graphics = game.Graphics;
 		}
 		
 		int sidesVb = -1, edgesVb = -1;
@@ -28,71 +29,70 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			Window.OnNewMap += OnNewMap;
-			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;
-			Window.ViewDistanceChanged += ResetSidesAndEdges;
-			Window.TerrainAtlasChanged += ResetTextures;
+			game.OnNewMap += OnNewMap;
+			game.OnNewMapLoaded += OnNewMapLoaded;
+			game.EnvVariableChanged += EnvVariableChanged;
+			game.ViewDistanceChanged += ResetSidesAndEdges;
+			game.TerrainAtlasChanged += ResetTextures;
 			
-			Graphics = Window.Graphics;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 			ResetSidesAndEdges( null, null );
 		}
 		
 		public void Render( double deltaTime ) {
 			if( sidesVb == -1 || edgesVb == -1 ) return;
-			Graphics.Texturing = true;
-			Graphics.BindTexture( sideTexId );
-			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-			Graphics.BindVb( sidesVb );
-			Graphics.DrawIndexedVb_TrisT2fC4b( sidesIndices, 0 );
+			graphics.Texturing = true;
+			graphics.BindTexture( sideTexId );
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.BindVb( sidesVb );
+			graphics.DrawIndexedVb_TrisT2fC4b( sidesIndices, 0 );
 			
 			// Do not draw water when we cannot see it.
 			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			if( Window.LocalPlayer.EyePosition.Y >= 0 ) {
-				Graphics.AlphaBlending = true;
-				Graphics.BindTexture( edgeTexId );
-				Graphics.BindVb( edgesVb );
-				Graphics.DrawIndexedVb_TrisT2fC4b( edgesIndices, 0 );
-				Graphics.AlphaBlending = false;
+			if( game.LocalPlayer.EyePosition.Y >= 0 ) {
+				graphics.AlphaBlending = true;
+				graphics.BindTexture( edgeTexId );
+				graphics.BindVb( edgesVb );
+				graphics.DrawIndexedVb_TrisT2fC4b( edgesIndices, 0 );
+				graphics.AlphaBlending = false;
 			}
-			Graphics.Texturing = false;
+			graphics.Texturing = false;
 		}
 		
 		public void Dispose() {
-			Window.OnNewMap -= OnNewMap;
-			Window.OnNewMapLoaded -= OnNewMapLoaded;
-			Window.EnvVariableChanged -= EnvVariableChanged;
-			Window.ViewDistanceChanged -= ResetSidesAndEdges;
-			Window.TerrainAtlasChanged -= ResetTextures;
+			game.OnNewMap -= OnNewMap;
+			game.OnNewMapLoaded -= OnNewMapLoaded;
+			game.EnvVariableChanged -= EnvVariableChanged;
+			game.ViewDistanceChanged -= ResetSidesAndEdges;
+			game.TerrainAtlasChanged -= ResetTextures;
 			
-			Graphics.DeleteTexture( ref edgeTexId );
-			Graphics.DeleteTexture( ref sideTexId );
-			Graphics.DeleteVb( sidesVb );
-			Graphics.DeleteVb( edgesVb );
+			graphics.DeleteTexture( ref edgeTexId );
+			graphics.DeleteTexture( ref sideTexId );
+			graphics.DeleteVb( sidesVb );
+			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
-			Graphics.DeleteVb( sidesVb );
-			Graphics.DeleteVb( edgesVb );
+			graphics.DeleteVb( sidesVb );
+			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
 		
 		void OnNewMapLoaded( object sender, EventArgs e ) {
-			CalculateRects( Window.ViewDistance );
-			RebuildSides( Map.GroundHeight, legacy ? 128 : 65536 );
-			RebuildEdges( Map.WaterHeight, legacy ? 128 : 65536 );
+			CalculateRects( game.ViewDistance );
+			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
+			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
 		}
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Var == EnvVariable.EdgeBlock ) {
-				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
+				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
 			} else if( e.Var == EnvVariable.SidesBlock ) {
-				MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 			} else if( e.Var == EnvVariable.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
 			}
@@ -100,17 +100,17 @@ namespace ClassicalSharp {
 		
 		void ResetTextures( object sender, EventArgs e ) {
 			lastEdgeTexLoc = lastSideTexLoc = -1;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, Map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, Map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
-			if( Window.Map.IsNotLoaded ) return;
-			Graphics.DeleteVb( sidesVb );
-			Graphics.DeleteVb( edgesVb );
-			CalculateRects( Window.ViewDistance );
-			RebuildSides( Map.GroundHeight, legacy ? 128 : 65536 );		
-			RebuildEdges( Map.WaterHeight, legacy ? 128 : 65536 );
+			if( game.Map.IsNotLoaded ) return;
+			graphics.DeleteVb( sidesVb );
+			graphics.DeleteVb( edgesVb );
+			CalculateRects( game.ViewDistance );
+			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );		
+			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
 		}
 		
 		void RebuildSides( int groundLevel, int axisSize ) {
@@ -118,21 +118,21 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in rects ) {
 				sidesIndices += Utils.CountIndices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			sidesIndices += Utils.CountIndices( Map.Width, Map.Length, axisSize ); // YPlane beneath map
-			sidesIndices += 2 * Utils.CountIndices( Map.Width, groundLevel, axisSize ); // ZPlanes
-			sidesIndices += 2 * Utils.CountIndices( Map.Length, groundLevel, axisSize ); // XPlanes
+			sidesIndices += Utils.CountIndices( map.Width, map.Length, axisSize ); // YPlane beneath map
+			sidesIndices += 2 * Utils.CountIndices( map.Width, groundLevel, axisSize ); // ZPlanes
+			sidesIndices += 2 * Utils.CountIndices( map.Length, groundLevel, axisSize ); // XPlanes
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesIndices / 6 * 4];
 			IntPtr ptr = (IntPtr)vertices;
 			
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, sidesCol, ref vertices );
 			}
-			DrawY( 0, 0, Map.Width, Map.Length, 0, axisSize, sidesCol, ref vertices );
-			DrawZ( 0, 0, Map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawZ( Map.Length, 0, Map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawX( 0, 0, Map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawX( Map.Width, 0, Map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			sidesVb = Graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesIndices / 6 * 4 );
+			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, sidesCol, ref vertices );
+			DrawZ( 0, 0, map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
+			DrawZ( map.Length, 0, map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
+			DrawX( 0, 0, map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
+			DrawX( map.Width, 0, map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
+			sidesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesIndices / 6 * 4 );
 		}
 		
 		void RebuildEdges( int waterLevel, int axisSize ) {
@@ -146,7 +146,7 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, edgesCol, ref vertices );
 			}
-			edgesVb = Graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesIndices / 6 * 4 );
+			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesIndices / 6 * 4 );
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
@@ -208,20 +208,20 @@ namespace ClassicalSharp {
 		
 		Rectangle[] rects = new Rectangle[4];
 		void CalculateRects( int extent ) {
-			rects[0] = new Rectangle( -extent, -extent, extent + Map.Width + extent, extent );
-			rects[1] = new Rectangle( -extent, Map.Length, extent + Map.Width + extent, extent );
+			rects[0] = new Rectangle( -extent, -extent, extent + map.Width + extent, extent );
+			rects[1] = new Rectangle( -extent, map.Length, extent + map.Width + extent, extent );
 			
-			rects[2] = new Rectangle( -extent, 0, extent, Map.Length );
-			rects[3] = new Rectangle( Map.Width, 0, extent, Map.Length );			
+			rects[2] = new Rectangle( -extent, 0, extent, map.Length );
+			rects[3] = new Rectangle( map.Width, 0, extent, map.Length );			
 		}
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
 		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
-			int texLoc = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
+			int texLoc = game.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
 			if( texLoc != lastTexLoc ) {
 				lastTexLoc = texLoc;
-				Window.Graphics.DeleteTexture( ref texId );
-				texId = Window.TerrainAtlas.LoadTextureElement( texLoc );
+				game.Graphics.DeleteTexture( ref texId );
+				texId = game.TerrainAtlas.LoadTextureElement( texLoc );
 			}
 		}
 	}

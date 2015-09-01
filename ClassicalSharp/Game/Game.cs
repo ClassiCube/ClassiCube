@@ -332,7 +332,7 @@ namespace ClassicalSharp {
 			}
 			activeScreen = screen;
 			if( screen != null ) {
-				screen.Window = this;
+				screen.game = this;
 				screen.Init();
 			}
 			if( Network.UsingPlayerClick ) {

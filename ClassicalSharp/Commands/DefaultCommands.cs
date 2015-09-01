@@ -19,7 +19,7 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			List<string> commandNames = new List<string>();
 			StringBuilder buffer = new StringBuilder( 64 );
-			foreach( Command cmd in Window.CommandManager.RegisteredCommands ) {
+			foreach( Command cmd in game.CommandManager.RegisteredCommands ) {
 				string name = cmd.Name;
 				if( buffer.Length + name.Length > 64 ) {
 					commandNames.Add( buffer.ToString() );
@@ -31,7 +31,7 @@ namespace ClassicalSharp.Commands {
 				commandNames.Add( buffer.ToString() );
 			}
 			foreach( string part in commandNames ) {
-				Window.AddChat( part );
+				game.AddChat( part );
 			}
 		}
 	}
@@ -54,27 +54,27 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				Window.AddChat( "Fog colour: " + Window.Map.FogCol.ToRGBHexString() );
-				Window.AddChat( "Clouds colour: " + Window.Map.CloudsCol.ToRGBHexString() );
-				Window.AddChat( "Sky colour: " + Window.Map.SkyCol.ToRGBHexString() );
+				game.AddChat( "Fog colour: " + game.Map.FogCol.ToRGBHexString() );
+				game.AddChat( "Clouds colour: " + game.Map.CloudsCol.ToRGBHexString() );
+				game.AddChat( "Sky colour: " + game.Map.SkyCol.ToRGBHexString() );
 			} else if( Utils.CaselessEquals( property, "skycol" ) ) {
-				ReadHexColourAnd( reader, c => Window.Map.SetSkyColour( c ) );
+				ReadHexColourAnd( reader, c => game.Map.SetSkyColour( c ) );
 			} else if( Utils.CaselessEquals( property, "fogcol" ) ) {
-				ReadHexColourAnd( reader, c => Window.Map.SetFogColour( c ) );
+				ReadHexColourAnd( reader, c => game.Map.SetFogColour( c ) );
 			} else if( Utils.CaselessEquals( property, "cloudscol" )
 			          || Utils.CaselessEquals( property, "cloudcol" ) ) {
-				ReadHexColourAnd( reader, c => Window.Map.SetCloudsColour( c ) );
+				ReadHexColourAnd( reader, c => game.Map.SetCloudsColour( c ) );
 			} else if( Utils.CaselessEquals( property, "suncol" ) ) {
-				ReadHexColourAnd( reader, c => Window.Map.SetSunlight( c ) );
+				ReadHexColourAnd( reader, c => game.Map.SetSunlight( c ) );
 			} else if( Utils.CaselessEquals( property, "shadowcol" ) ) {
-				ReadHexColourAnd( reader, c => Window.Map.SetShadowlight( c ) );
+				ReadHexColourAnd( reader, c => game.Map.SetShadowlight( c ) );
 			} else if( Utils.CaselessEquals( property, "cloudsspeed" )
 			          || Utils.CaselessEquals( property, "cloudspeed" ) ) {
 				float speed;
 				if( !reader.NextFloat( out speed ) ) {
-					Window.AddChat( "&e/client env: &cInvalid clouds speed." );
+					game.AddChat( "&e/client env: &cInvalid clouds speed." );
 				} else {
-					StandardEnvRenderer env = Window.EnvRenderer as StandardEnvRenderer;
+					StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
 					if( env != null ) {
 						env.CloudsSpeed = speed;
 					}
@@ -82,9 +82,9 @@ namespace ClassicalSharp.Commands {
 			} else if( Utils.CaselessEquals( property, "weather" ) ) {
 				int weather;
 				if( !reader.NextInt( out weather ) || weather < 0 || weather > 2 ) {
-					Window.AddChat( "&e/client env: &cInvalid weather." );
+					game.AddChat( "&e/client env: &cInvalid weather." );
 				} else {
-					Window.Map.SetWeather( (Weather)weather );
+					game.Map.SetWeather( (Weather)weather );
 				}
 			}
 		}
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Commands {
 		void ReadHexColourAnd( CommandReader reader, Action<FastColour> action ) {
 			FastColour colour;
 			if( !reader.NextHexColour( out colour ) ) {
-				Window.AddChat( "&e/client env: &cInvalid hex colour." );
+				game.AddChat( "&e/client env: &cInvalid hex colour." );
 			} else {
 				action( colour );
 			}
@@ -113,13 +113,13 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string cmdName = reader.Next();
 			if( cmdName == null ) {
-				Window.AddChat( "&e/client help: No command name specified. See /client commands for a list of commands." );
+				game.AddChat( "&e/client help: No command name specified. See /client commands for a list of commands." );
 			} else {
-				Command cmd = Window.CommandManager.GetMatchingCommand( cmdName );
+				Command cmd = game.CommandManager.GetMatchingCommand( cmdName );
 				if( cmd != null ) {
 					string[] help = cmd.Help;
 					for( int i = 0; i < help.Length; i++ ) {
-						Window.AddChat( help[i] );
+						game.AddChat( help[i] );
 					}
 				}
 			}
@@ -139,26 +139,26 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				Window.AddChat( "&e/client info: &cYou didn't specify a property." );
+				game.AddChat( "&e/client info: &cYou didn't specify a property." );
 			} else if( Utils.CaselessEquals( property, "pos" ) ) {
-				Window.AddChat( "Feet: " + Window.LocalPlayer.Position );
-				Window.AddChat( "Eye: " + Window.LocalPlayer.EyePosition );
+				game.AddChat( "Feet: " + game.LocalPlayer.Position );
+				game.AddChat( "Eye: " + game.LocalPlayer.EyePosition );
 			} else if( Utils.CaselessEquals( property, "target" ) ) {
-				PickedPos pos = Window.SelectedPos;
+				PickedPos pos = game.SelectedPos;
 				if( !pos.Valid ) {
-					Window.AddChat( "Currently not targeting a block" );
+					game.AddChat( "Currently not targeting a block" );
 				} else {
-					Window.AddChat( "Currently targeting at: " + pos.BlockPos );
+					game.AddChat( "Currently targeting at: " + pos.BlockPos );
 				}
 			} else if( Utils.CaselessEquals( property, "dimensions" ) ) {
-				Window.AddChat( "map width: " + Window.Map.Width );
-				Window.AddChat( "map height: " + Window.Map.Height );
-				Window.AddChat( "map length: " + Window.Map.Length );
+				game.AddChat( "map width: " + game.Map.Width );
+				game.AddChat( "map height: " + game.Map.Height );
+				game.AddChat( "map length: " + game.Map.Length );
 			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
-				float jumpHeight = Window.LocalPlayer.JumpHeight;
-				Window.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
+				float jumpHeight = game.LocalPlayer.JumpHeight;
+				game.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
-				Window.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
+				game.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}
 		}
 	}
@@ -178,21 +178,20 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				Window.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
+				game.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
 				SetNewRenderType( true, true, true );
-				Window.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
+				game.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
 			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
 				SetNewRenderType( true, false, true );
-				Window.AddChat( "&e/client rendertype: &fRender type is now legacy." );
+				game.AddChat( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( Utils.CaselessEquals( property, "normal" ) ) {
 				SetNewRenderType( false, false, false );
-				Window.AddChat( "&e/client rendertype: &fRender type is now normal." );
+				game.AddChat( "&e/client rendertype: &fRender type is now normal." );
 			}
 		}
 		
 		void SetNewRenderType( bool legacy, bool minimal, bool legacyEnv ) {
-			Game game = Window;
 			game.MapEnvRenderer.SetUseLegacyMode( legacy );
 			if( minimal ) {
 				game.EnvRenderer.Dispose();
@@ -223,19 +222,19 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			int fontSize;
 			if( !reader.NextInt( out fontSize ) ) {
-				Window.AddChat( "&e/client chatsize: &cInvalid font size." );
+				game.AddChat( "&e/client chatsize: &cInvalid font size." );
 			} else {
 				if( fontSize < 6 ) {
-					Window.AddChat( "&e/client chatsize: &cFont size too small." );
+					game.AddChat( "&e/client chatsize: &cFont size too small." );
 					return;
 				} else if( fontSize > 30 ) {
-					Window.AddChat( "&e/client chatsize: &cFont size too big." );
+					game.AddChat( "&e/client chatsize: &cFont size too big." );
 					return;
 				}
-				Window.ChatFontSize = fontSize;
-				Window.SetNewScreen( null );
-				Window.chatInInputBuffer = null;
-				Window.SetNewScreen( new NormalScreen( Window ) );
+				game.ChatFontSize = fontSize;
+				game.SetNewScreen( null );
+				game.chatInInputBuffer = null;
+				game.SetNewScreen( new NormalScreen( game ) );
 			}
 		}
 	}
@@ -254,11 +253,11 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			int sensitivity;
 			if( !reader.NextInt( out sensitivity ) ) {
-				Window.AddChat( "&e/client sensitivity: Current sensitivity is: " + Window.MouseSensitivity );
+				game.AddChat( "&e/client sensitivity: Current sensitivity is: " + game.MouseSensitivity );
 			} else if( sensitivity < 1 || sensitivity > 100 ) {
-				Window.AddChat( "&e/client sensitivity: &cMouse sensitivity must be between 1 to 100." );
+				game.AddChat( "&e/client sensitivity: &cMouse sensitivity must be between 1 to 100." );
 			} else {
-				Window.MouseSensitivity = sensitivity;
+				game.MouseSensitivity = sensitivity;
 			}
 		}
 	}
@@ -278,13 +277,13 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			int newDist;
 			if( !reader.NextInt( out newDist ) ) {
-				Window.AddChat( "View distance: " + Window.ViewDistance );
+				game.AddChat( "View distance: " + game.ViewDistance );
 			} else if( newDist < 8 ) {
-				Window.AddChat( "&e/client viewdistance: &cThat view distance is way too small." );
+				game.AddChat( "&e/client viewdistance: &cThat view distance is way too small." );
 			} else if( newDist > 4096 ) {
-				Window.AddChat( "&e/client viewdistance: &cThat view distance is way too large." );
+				game.AddChat( "&e/client viewdistance: &cThat view distance is way too large." );
 			} else {
-				Window.SetViewDistance( newDist );
+				game.SetViewDistance( newDist );
 			}
 		}
 	}

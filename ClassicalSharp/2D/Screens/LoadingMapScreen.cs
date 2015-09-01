@@ -20,29 +20,29 @@ namespace ClassicalSharp {
 		int	progWidth = 200, progHeight = 40;
 		
 		public override void Render( double delta ) {		
-			GraphicsApi.ClearColour( FastColour.Black );
-			GraphicsApi.Texturing = true;
+			graphicsApi.ClearColour( FastColour.Black );
+			graphicsApi.Texturing = true;
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
-			progressBoxTexture.Render( GraphicsApi );
-			GraphicsApi.Texturing = false;
-			GraphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, FastColour.White );
+			progressBoxTexture.Render( graphicsApi );
+			graphicsApi.Texturing = false;
+			graphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, FastColour.White );
 		}
 		
 		public override void Init() {
-			GraphicsApi.Fog = false;
-			titleWidget = TextWidget.Create( Window, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
-			messageWidget = TextWidget.Create( Window, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
-			progX = Window.Width / 2f - progWidth / 2f;
+			graphicsApi.Fog = false;
+			titleWidget = TextWidget.Create( game, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
+			messageWidget = TextWidget.Create( game, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
+			progX = game.Width / 2f - progWidth / 2f;
 			
 			Size size = new Size( progWidth, progHeight );
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRectBounds( g, Color.White, 5f, 0, 0, progWidth, progHeight );
 				}
-				progressBoxTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, (int)progX, (int)progY );
+				progressBoxTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, (int)progX, (int)progY );
 			}
-			Window.MapLoading += MapLoading;
+			game.MapLoading += MapLoading;
 		}
 
 		void MapLoading( object sender, MapLoadingEventArgs e ) {
@@ -53,8 +53,8 @@ namespace ClassicalSharp {
 			font.Dispose();
 			messageWidget.Dispose();
 			titleWidget.Dispose();
-			GraphicsApi.DeleteTexture( ref progressBoxTexture );
-			Window.MapLoading -= MapLoading;
+			graphicsApi.DeleteTexture( ref progressBoxTexture );
+			game.MapLoading -= MapLoading;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

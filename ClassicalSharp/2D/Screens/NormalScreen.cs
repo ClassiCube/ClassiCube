@@ -15,18 +15,30 @@ namespace ClassicalSharp {
 		Font playerFont;
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
+			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			hotbar.Render( delta );
 			if( playerList != null ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
-				if( !Window.IsKeyDown( KeyMapping.PlayerList ) ) {
+				if( !game.IsKeyDown( KeyMapping.PlayerList ) ) {
 					playerList.Dispose();
 					playerList = null;
 				}
 			}
-			GraphicsApi.Texturing = false;
+			graphicsApi.Texturing = false;
+			DrawCrosshairs();
+		}
+		
+		const int crosshairExtent = 20, crosshairWeight = 2;
+		void DrawCrosshairs() {
+			int curCol = 150 + (int)( 50 * Math.Abs( Math.Sin( game.accumulator ) ) );
+			FastColour col = new FastColour( curCol, curCol, curCol );
+			float centreX = game.Width / 2, centreY = game.Height / 2;
+			graphicsApi.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
+			                       crosshairExtent * 2, crosshairWeight * 2, col );
+			graphicsApi.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
+			                       crosshairWeight * 2, crosshairExtent * 2, col );			
 		}
 		
 		public override void Dispose() {
@@ -48,13 +60,13 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			playerFont = new Font( "Arial", 12 );
-			chat = new ChatScreen( Window );
-			chat.Window = Window;
+			chat = new ChatScreen( game );
+			chat.game = game;
 			const int blockSize = 32;
 			chat.ChatLogYOffset = blockSize + blockSize;
 			chat.ChatInputYOffset = blockSize + blockSize / 2;
 			chat.Init();
-			hotbar = new BlockHotbarWidget( Window );
+			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
 		}
 		
@@ -67,12 +79,12 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == Window.Keys[KeyMapping.PlayerList] ) {
+			if( key == game.Keys[KeyMapping.PlayerList] ) {
 				if( playerList == null ) {
-					if( Window.Network.UsingExtPlayerList ) {
-						playerList = new ExtPlayerListWidget( Window, playerFont );
+					if( game.Network.UsingExtPlayerList ) {
+						playerList = new ExtPlayerListWidget( game, playerFont );
 					} else {
-						playerList = new NormalPlayerListWidget( Window, playerFont );
+						playerList = new NormalPlayerListWidget( game, playerFont );
 					}
 					playerList.Init();
 				}
@@ -84,7 +96,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( key == Window.Keys[KeyMapping.PlayerList] ) {
+			if( key == game.Keys[KeyMapping.PlayerList] ) {
 				if( playerList != null ) {
 					playerList.Dispose();
 					playerList = null;

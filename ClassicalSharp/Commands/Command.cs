@@ -8,7 +8,7 @@ namespace ClassicalSharp.Commands {
 		
 		public string[] Help { get; set; }
 		
-		public Game Window;
+		protected internal Game game;
 		
 		public abstract void Execute( CommandReader reader );
 	}

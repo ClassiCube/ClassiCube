@@ -4,7 +4,7 @@ namespace ClassicalSharp {
 
 	public class Map {
 
-		public Game Window;
+		Game game;
 		BlockInfo info;
 		internal byte[] mapData;
 		public int Width, Height, Length;
@@ -29,9 +29,9 @@ namespace ClassicalSharp {
 			get { return WaterHeight - 2; }
 		}
 		
-		public Map( Game window ) {
-			Window = window;
-			info = window.BlockInfo;
+		public Map( Game game ) {
+			this.game = game;
+			info = game.BlockInfo;
 			SetSunlight( DefaultSunlight );
 			SetShadowlight( DefaultShadowlight );
 		}
@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			Window.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
+			game.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
 		}
 		
 		public void SetEdgeBlock( Block block ) {
@@ -68,44 +68,44 @@ namespace ClassicalSharp {
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			Window.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
+			game.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
 		}
 		
 		public void SetWaterLevel( int level ) {
 			WaterHeight = level;
-			Window.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
+			game.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
 		}
 		
 		public void SetWeather( Weather weather ) {
 			Weather = weather;
-			Window.RaiseEnvVariableChanged( EnvVariable.Weather );
+			game.RaiseEnvVariableChanged( EnvVariable.Weather );
 		}
 		
 		public void SetSkyColour( FastColour col ) {
 			SkyCol = col;
-			Window.RaiseEnvVariableChanged( EnvVariable.SkyColour );
+			game.RaiseEnvVariableChanged( EnvVariable.SkyColour );
 		}
 		
 		public void SetFogColour( FastColour col ) {
 			FogCol = col;
-			Window.RaiseEnvVariableChanged( EnvVariable.FogColour );
+			game.RaiseEnvVariableChanged( EnvVariable.FogColour );
 		}
 		
 		public void SetCloudsColour( FastColour col ) {
 			CloudsCol = col;
-			Window.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
+			game.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
 		}
 		
 		public void SetSunlight( FastColour value ) {
 			Sunlight = value;
 			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
-			Window.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
+			game.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
 		}
 		
 		public void SetShadowlight( FastColour value ) {
 			Shadowlight = value;
 			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
-			Window.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
+			game.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
 		
 		public int GetLightHeight( int x, int z ) {
@@ -177,7 +177,7 @@ namespace ClassicalSharp {
 			byte oldBlock = mapData[index];
 			mapData[index] = blockId;
 			UpdateHeight( x, y, z, oldBlock, blockId );
-			Window.WeatherRenderer.UpdateHeight( x, y, z, oldBlock, blockId );
+			game.WeatherRenderer.UpdateHeight( x, y, z, oldBlock, blockId );
 		}
 		
 		public void SetBlock( Vector3I p, byte blockId ) {

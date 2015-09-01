@@ -23,26 +23,26 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			Window.EntityAdded += PlayerSpawned;
-			Window.EntityRemoved += PlayerDespawned;
+			game.EntityAdded += PlayerSpawned;
+			game.EntityRemoved += PlayerDespawned;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			Window.EntityAdded -= PlayerSpawned;
-			Window.EntityRemoved -= PlayerDespawned;
+			game.EntityAdded -= PlayerSpawned;
+			game.EntityRemoved -= PlayerDespawned;
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
-			Player player = Window.Players[e.Id];
+			Player player = game.Players[e.Id];
 			AddPlayerInfo( player );
 			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < Window.Players.MaxCount; i++ ) {
-				Player player = Window.Players[i];
+			for( int i = 0; i < game.Players.MaxCount; i++ ) {
+				Player player = game.Players[i];
 				if( player != null ) {
 					AddPlayerInfo( player );
 				}
@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( Player player ) {
-			DrawTextArgs args = new DrawTextArgs( GraphicsApi, player.DisplayName, true );
+			DrawTextArgs args = new DrawTextArgs( graphicsApi, player.DisplayName, true );
 			Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
 			info[namesCount] = new PlayerInfo( player );
 			textures[namesCount] = tex;
@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.PlayerId == e.Id ) {
 					Texture tex = textures[i];
-					GraphicsApi.DeleteTexture( ref tex );
+					graphicsApi.DeleteTexture( ref tex );
 					RemoveItemAt( info, i );
 					RemoveItemAt( textures, i );
 					namesCount--;

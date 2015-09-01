@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Tick( double delta ) {
-			if( Window.Map.IsNotLoaded ) return;
+			if( game.Map.IsNotLoaded ) return;
 			//Window.Title = ( GC.GetTotalMemory( false ) / 1024.0 / 1024.0 ).ToString(); // TODO: temp debug statement
 			
 			float xMoving = 0, zMoving = 0;
@@ -82,28 +82,28 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double deltaTime, float t ) {
-			if( !Window.Camera.IsThirdPerson ) return;
+			if( !game.Camera.IsThirdPerson ) return;
 			if( api == null ) {
 				InitRenderingData();
-				Window.AsyncDownloader.DownloadSkin( SkinName );
+				game.AsyncDownloader.DownloadSkin( SkinName );
 			}
 			SetCurrentAnimState( t );
 			RenderModel( deltaTime );
 		}
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {
-			if( Window.ScreenLockedInput ) {
+			if( game.ScreenLockedInput ) {
 				jumping = speeding = flyingUp = flyingDown = false;
 			} else {
-				if( Window.IsKeyDown( KeyMapping.Forward ) ) xMoving -= 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Back ) ) xMoving += 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Left ) ) zMoving -= 0.98f;
-				if( Window.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
+				if( game.IsKeyDown( KeyMapping.Forward ) ) xMoving -= 0.98f;
+				if( game.IsKeyDown( KeyMapping.Back ) ) xMoving += 0.98f;
+				if( game.IsKeyDown( KeyMapping.Left ) ) zMoving -= 0.98f;
+				if( game.IsKeyDown( KeyMapping.Right ) ) zMoving += 0.98f;
 
-				jumping = Window.IsKeyDown( KeyMapping.Jump );
-				speeding = canSpeed && Window.IsKeyDown( KeyMapping.Speed );
-				flyingUp = Window.IsKeyDown( KeyMapping.FlyUp );
-				flyingDown = Window.IsKeyDown( KeyMapping.FlyDown );
+				jumping = game.IsKeyDown( KeyMapping.Jump );
+				speeding = canSpeed && game.IsKeyDown( KeyMapping.Speed );
+				flyingUp = game.IsKeyDown( KeyMapping.FlyUp );
+				flyingDown = game.IsKeyDown( KeyMapping.FlyDown );
 			}
 		}
 		
@@ -187,11 +187,11 @@ namespace ClassicalSharp {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {
 				CanFly = CanNoclip = CanSpeed = CanRespawn = false;
-				Window.CanUseThirdPersonCamera = false;
-				Window.SetCamera( false );
+				game.CanUseThirdPersonCamera = false;
+				game.SetCamera( false );
 			} else { // By default (this is also the case with WoM), we can use hacks.
 				CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				Window.CanUseThirdPersonCamera = true;
+				game.CanUseThirdPersonCamera = true;
 			}
 			
 			ParseFlag( b => CanFly = b, joined, "fly" );
@@ -221,14 +221,14 @@ namespace ClassicalSharp {
 		}
 		
 		internal void HandleKeyDown( Key key ) {
-			if( key == Window.Keys[KeyMapping.Respawn] && canRespawn ) {
+			if( key == game.Keys[KeyMapping.Respawn] && canRespawn ) {
 				LocationUpdate update = LocationUpdate.MakePos( SpawnPoint, false );
 				SetLocation( update, false );
-			} else if( key == Window.Keys[KeyMapping.SetSpawn] && canRespawn ) {
+			} else if( key == game.Keys[KeyMapping.SetSpawn] && canRespawn ) {
 				SpawnPoint = Position;
-			} else if( key == Window.Keys[KeyMapping.Fly] && canFly ) {
+			} else if( key == game.Keys[KeyMapping.Fly] && canFly ) {
 				flying = !flying;
-			} else if( key == Window.Keys[KeyMapping.NoClip] && canNoclip ) {
+			} else if( key == game.Keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
 			}
 		}

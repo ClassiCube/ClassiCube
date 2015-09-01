@@ -26,12 +26,12 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetText( int index, string text ) {
-			GraphicsApi.DeleteTexture( ref textures[index] );
+			graphicsApi.DeleteTexture( ref textures[index] );
 			
 			if( !String.IsNullOrEmpty( text ) ) {
-				DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
+				DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
 				Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
-				tex.X1 = CalcOffset( Window.Width, tex.Width, XOffset, HorizontalDocking );
+				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalDocking );
 				tex.Y1 = CalcY( index, tex.Height );
 				textures[index] = tex;
 			} else {
@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
-			GraphicsApi.DeleteTexture( ref textures[0] );
+			graphicsApi.DeleteTexture( ref textures[0] );
 			for( int i = 0; i < textures.Length - 1; i++ ) {
 				textures[i] = textures[i + 1];
 				textures[i].Y1 = y;
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 					textures[i].Y1 += deltaY;
 				}
 			} else {
-				y = Window.Height - YOffset;
+				y = game.Height - YOffset;
 				for( int i = index + 1; i < textures.Length; i++ ) {
 					y -= textures[i].Height;
 				}
@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < textures.Length; i++ ) {
 				Height += textures[i].Height;
 			}
-			Y = CalcOffset( Window.Height, Height, YOffset, VerticalDocking );
+			Y = CalcOffset( game.Height, Height, YOffset, VerticalDocking );
 			
 			Width = 0;
 			for( int i = 0; i < textures.Length; i++ ) {
@@ -91,21 +91,21 @@ namespace ClassicalSharp {
 					Width = width;
 				}
 			}
-			X = CalcOffset( Window.Width, Width, XOffset, HorizontalDocking );
+			X = CalcOffset( game.Width, Width, XOffset, HorizontalDocking );
 		}
 		
 		public override void Render( double delta ) {
 			for( int i = 0; i < textures.Length; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid ) {
-					texture.Render( GraphicsApi );
+					texture.Render( graphicsApi );
 				}
 			}
 		}
 		
 		public override void Dispose() {
 			for( int i = 0; i < textures.Length; i++ ) {
-				GraphicsApi.DeleteTexture( ref textures[i] );
+				graphicsApi.DeleteTexture( ref textures[i] );
 			}
 		}
 		

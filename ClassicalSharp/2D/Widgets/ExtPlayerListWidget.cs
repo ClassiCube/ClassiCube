@@ -49,16 +49,16 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			Window.CpeListInfoAdded += PlayerListInfoAdded;
-			Window.CpeListInfoRemoved += PlayerListInfoRemoved;
-			Window.CpeListInfoChanged += PlayerListInfoChanged;
+			game.CpeListInfoAdded += PlayerListInfoAdded;
+			game.CpeListInfoRemoved += PlayerListInfoRemoved;
+			game.CpeListInfoChanged += PlayerListInfoChanged;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			Window.CpeListInfoAdded -= PlayerListInfoAdded;
-			Window.CpeListInfoChanged -= PlayerListInfoChanged;
-			Window.CpeListInfoRemoved -= PlayerListInfoRemoved;
+			game.CpeListInfoAdded -= PlayerListInfoAdded;
+			game.CpeListInfoChanged -= PlayerListInfoChanged;
+			game.CpeListInfoRemoved -= PlayerListInfoRemoved;
 		}
 		
 		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
@@ -66,8 +66,8 @@ namespace ClassicalSharp {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
-					GraphicsApi.DeleteTexture( ref tex );
-					AddPlayerInfo( Window.CpePlayersList[e.Id], i );
+					graphicsApi.DeleteTexture( ref tex );
+					AddPlayerInfo( game.CpePlayersList[e.Id], i );
 					SortPlayerInfo();
 					return;
 				}
@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
-					GraphicsApi.DeleteTexture( ref tex );
+					graphicsApi.DeleteTexture( ref tex );
 					RemoveItemAt( textures, i );
 					RemoveItemAt( info, i );
 					namesCount--;
@@ -91,14 +91,14 @@ namespace ClassicalSharp {
 		}
 
 		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
-			AddPlayerInfo( Window.CpePlayersList[e.Id], -1 );
+			AddPlayerInfo( game.CpePlayersList[e.Id], -1 );
 			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < Window.CpePlayersList.Length; i++ ) {
-				CpeListInfo player = Window.CpePlayersList[i];
+			for( int i = 0; i < game.CpePlayersList.Length; i++ ) {
+				CpeListInfo player = game.CpePlayersList[i];
 				if( player != null ) {
 					AddPlayerInfo( player, -1 );
 				}
@@ -106,7 +106,7 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( CpeListInfo player, int index ) {
-			DrawTextArgs args = new DrawTextArgs( GraphicsApi, player.ListName, true );
+			DrawTextArgs args = new DrawTextArgs( graphicsApi, player.ListName, true );
 			Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
 			if( index < 0 ) {
 				info[namesCount] = new PlayerInfo( player );

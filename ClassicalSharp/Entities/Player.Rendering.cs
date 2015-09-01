@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected void InitRenderingData() {
-			api = Window.Graphics;
+			api = game.Graphics;
 			
 			using( Font font = new Font( "Arial", 14 ) ) {
 				DrawTextArgs args = new DrawTextArgs( api, DisplayName, true );
@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			float x2 = nameTex.Width * 0.5f / 50f, y2 = 0;
 			// NOTE: Do this instead with network player's yaw to have names rotate with them instead.
 			//yaw = Math.Pi - Player.YawRadians;
-			float angle = Window.LocalPlayer.YawRadians;
+			float angle = game.LocalPlayer.YawRadians;
 			float cosA = (float)Math.Cos( angle ), sinA = (float)Math.Sin( angle );
 			Vector3 pos = Position;
 			pos.Y += Model.NameYOffset;

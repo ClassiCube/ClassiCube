@@ -31,31 +31,31 @@ namespace ClassicalSharp {
 		UnsafeString buffer = new UnsafeString( 96 );
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
-			GraphicsApi.BindTexture( Window.TerrainAtlas.TexId );
+			graphicsApi.Texturing = true;
+			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				Texture texture = blocksTable[i].Texture;
-				texture.RenderNoBind( GraphicsApi );
+				texture.RenderNoBind( graphicsApi );
 			}
 			if( selectedIndex != -1 ) {
 				int col = selectedIndex % blocksPerRow;
 				int row = selectedIndex / blocksPerRow;
 				selectedBlock.X1 = startX + blockSize * col;
 				selectedBlock.Y1 = startY + blockSize * row;
-				selectedBlock.Render( GraphicsApi );
+				selectedBlock.Render( graphicsApi );
 			}
 			if( blockInfoTexture.IsValid ) {
-				blockInfoTexture.Render( GraphicsApi );
+				blockInfoTexture.Render( graphicsApi );
 			}
-			GraphicsApi.Texturing = false;
+			graphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {
 			font.Dispose();
-			GraphicsApi.DeleteTexture( ref selectedBlock );
-			GraphicsApi.DeleteTexture( ref blockInfoTexture );
-			Window.BlockPermissionsChanged -= BlockPermissionsChanged;
+			graphicsApi.DeleteTexture( ref selectedBlock );
+			graphicsApi.DeleteTexture( ref blockInfoTexture );
+			game.BlockPermissionsChanged -= BlockPermissionsChanged;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -74,13 +74,13 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			Window.BlockPermissionsChanged += BlockPermissionsChanged;
+			game.BlockPermissionsChanged += BlockPermissionsChanged;
 			Size size = new Size( blockSize, blockSize );
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
 				}
-				selectedBlock = Utils2D.Make2DTexture( GraphicsApi, bmp, size, 0, 0 );
+				selectedBlock = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 			RecreateBlockTextures();
 		}
@@ -113,9 +113,9 @@ namespace ClassicalSharp {
 					}
 				}
 				buffer.Append( ref ptr2, " (can place: " );
-				buffer.Append( ref ptr2, Window.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.CanPlace[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f, can delete: " );
-				buffer.Append( ref ptr2, Window.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f)" );
 			}
 		}
@@ -125,7 +125,7 @@ namespace ClassicalSharp {
 			if( selectedIndex == lastCreatedIndex ) return;
 			lastCreatedIndex = selectedIndex;
 			
-			GraphicsApi.DeleteTexture( ref blockInfoTexture );
+			graphicsApi.DeleteTexture( ref blockInfoTexture );
 			if( selectedIndex == -1 ) return;
 			
 			Block block = blocksTable[selectedIndex].BlockId;
@@ -141,36 +141,36 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( GraphicsApi, value, true );
+					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, true );
 					args.SkipPartsCheck = true;
 					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
-				blockInfoTexture = Utils2D.Make2DTexture( GraphicsApi, bmp, size, x, y );
+				blockInfoTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, x, y );
 			}
 		}
 		
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
 			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
-				if( Window.CanPlace[i] || Window.CanDelete[i] ) {
+				if( game.CanPlace[i] || game.CanDelete[i] ) {
 					blocksCount++;
 				}
 			}
 			
 			rows = blocksCount / blocksPerRow + ( blocksCount % blocksPerRow != 0 ? 1 : 0 );
-			startX = Window.Width / 2 - ( blockSize * blocksPerRow ) / 2;
-			startY = Window.Height / 2 - ( rows * blockSize ) / 2;
+			startX = game.Width / 2 - ( blockSize * blocksPerRow ) / 2;
+			startY = game.Height / 2 - ( rows * blockSize ) / 2;
 			int x = startX, y = startY;
 			blocksTable = new BlockDrawInfo[blocksCount];
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( Window.CanPlace[tile] || Window.CanDelete[tile] ) {
+				if( game.CanPlace[tile] || game.CanDelete[tile] ) {
 					Block block = (Block)tile;
-					int texId = Window.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
-					TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texId );
+					int texId = game.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
+					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;
-					float height = Window.BlockInfo.BlockHeight( (byte)block );
+					float height = game.BlockInfo.BlockHeight( (byte)block );
 					int blockY = y;
 					if( height != 1 ) {
 						rec.V1 = rec.V1 + TerrainAtlas2D.usedInvVerElemSize * height;
@@ -215,15 +215,15 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				BlockDrawInfo info = blocksTable[selectedIndex];
-				Window.HeldBlock = info.BlockId;
-				Window.SetNewScreen( new NormalScreen( Window ) );
+				game.HeldBlock = info.BlockId;
+				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == Window.Keys[KeyMapping.PauseOrExit] ) {
-				Window.SetNewScreen( new NormalScreen( Window ) );
+			if( key == game.Keys[KeyMapping.PauseOrExit] ) {
+				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;
 		}

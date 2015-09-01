@@ -15,10 +15,10 @@ namespace ClassicalSharp {
 		TextWidget fpsTextWidget;
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
+			graphicsApi.Texturing = true;
 			UpdateFPS( delta );
 			fpsTextWidget.Render( delta );
-			GraphicsApi.Texturing = false;
+			graphicsApi.Texturing = false;
 		}
 		
 		double accumulator, maxDelta;
@@ -34,8 +34,8 @@ namespace ClassicalSharp {
 					text.Clear( ptr2 )
 						.Append( ref ptr2, "FPS: " ).AppendNum( ref ptr2, (int)( fpsCount / accumulator ) )
 						.Append( ref ptr2, " (min " ).AppendNum( ref ptr2, (int)( 1f / maxDelta ) )
-						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, Window.ChunkUpdates )
-						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, Window.Vertices );
+						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, game.ChunkUpdates )
+						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, game.Vertices );
 				}
 				string textString = text.value;
 				if( Utils2D.needWinXpFix )
@@ -45,12 +45,12 @@ namespace ClassicalSharp {
 				maxDelta = 0;
 				accumulator = 0;
 				fpsCount = 0;
-				Window.ChunkUpdates = 0;
+				game.ChunkUpdates = 0;
 			}
 		}
 		
 		public override void Init() {
-			fpsTextWidget = new TextWidget( Window, font );
+			fpsTextWidget = new TextWidget( game, font );
 			fpsTextWidget.Init();
 			fpsTextWidget.SetText( "FPS: no data yet" );
 		}

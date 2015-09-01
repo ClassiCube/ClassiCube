@@ -7,12 +7,12 @@ namespace ClassicalSharp {
 	
 	public abstract class Widget : IDisposable {
 		
-		public Game Window;
-		public IGraphicsApi GraphicsApi;
+		protected internal Game game;
+		protected IGraphicsApi graphicsApi;
 		
-		public Widget( Game window ) {
-			Window = window;
-			GraphicsApi = window.Graphics;
+		public Widget( Game game ) {
+			this.game = game;
+			graphicsApi = game.Graphics;
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.LeftOrTop;
 		}

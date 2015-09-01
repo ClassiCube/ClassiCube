@@ -16,14 +16,14 @@ namespace ClassicalSharp {
 			get { return new Vector3( Position.X, Position.Y + EyeHeight, Position.Z ); }
 		}
 		
-		public Game Window;
+		protected Game game;
 		public string DisplayName, SkinName;
 		public SkinType SkinType;	
 		
-		public Player( Game window ) : base( window ) {
-			Window = window;
+		public Player( Game game ) : base( game ) {
+			this.game = game;
 			StepSize = 0.5f;
-			SkinType = Window.DefaultPlayerSkinType;
+			SkinType = game.DefaultPlayerSkinType;
 			SetModel( "humanoid" );
 		}
 		
@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 		protected void SetCurrentAnimState( float t ) {
 			float swing = Utils.Lerp( swingO, swingN, t );
 			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
-			float idleTime = (float)( Window.accumulator );
+			float idleTime = (float)( game.accumulator );
 			float idleXRot = (float)( Math.Sin( idleTime * idleXPeriod ) * idleMax );
 			float idleZRot = (float)( idleMax + Math.Cos( idleTime * idleZPeriod ) * idleMax );
 			
@@ -89,14 +89,14 @@ namespace ClassicalSharp {
 		
 		protected void CheckSkin() {
 			DownloadedItem item;
-			Window.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
+			game.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
 			if( item != null && item.Bmp != null ) {
 				Bitmap bmp = item.Bmp;
-				Window.Graphics.DeleteTexture( ref PlayerTextureId );
+				game.Graphics.DeleteTexture( ref PlayerTextureId );
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
-					PlayerTextureId = Window.Graphics.CreateTexture( bmp );				
+					PlayerTextureId = game.Graphics.CreateTexture( bmp );				
 					MobTextureId = -1;
 					
 					// Custom mob textures.
@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 					Utils.LogWarning( formatString, SkinName, bmp.Width, bmp.Height );
 					MobTextureId = -1;
 					PlayerTextureId = -1;
-					SkinType = Window.DefaultPlayerSkinType;
+					SkinType = game.DefaultPlayerSkinType;
 				}
 				bmp.Dispose();
 			}
@@ -118,7 +118,7 @@ namespace ClassicalSharp {
 		DateTime lastModelChange = new DateTime( 1, 1, 1 );
 		public void SetModel( string modelName ) {
 			ModelName = modelName;
-			Model = Window.ModelCache.GetModel( ModelName );
+			Model = game.ModelCache.GetModel( ModelName );
 			lastModelChange = DateTime.UtcNow;
 			MobTextureId = -1;
 		}

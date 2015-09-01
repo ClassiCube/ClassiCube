@@ -6,15 +6,15 @@ namespace ClassicalSharp {
 
 	public class WeatherRenderer {
 		
-		public Game Window;
+		Game game;
 		Map map;
 		IGraphicsApi graphics;
 		BlockInfo info;
-		public WeatherRenderer( Game window ) {
-			Window = window;
-			map = Window.Map;
-			graphics = window.Graphics;
-			info = Window.BlockInfo;
+		public WeatherRenderer( Game game ) {
+			this.game = game;
+			map = game.Map;
+			graphics = game.Graphics;
+			info = game.BlockInfo;
 			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
 		}
 		
@@ -29,9 +29,9 @@ namespace ClassicalSharp {
 			
 			graphics.Texturing = true;
 			graphics.BindTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
-			Vector3I pos = Vector3I.Floor( Window.LocalPlayer.Position );
+			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
-			vOffset = -(float)Window.accumulator * speed;
+			vOffset = -(float)game.accumulator * speed;
 			
 			int index = 0;
 			graphics.AlphaBlending = true;
@@ -98,13 +98,13 @@ namespace ClassicalSharp {
 		public void Init() {
 			rainTexture = graphics.CreateTexture( "rain.png" );
 			snowTexture = graphics.CreateTexture( "snow.png" );
-			Window.OnNewMap += OnNewMap;
-			Window.OnNewMapLoaded += OnNewMapLoaded;
+			game.OnNewMap += OnNewMap;
+			game.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		public void Dispose() {
-			Window.OnNewMap -= OnNewMap;
-			Window.OnNewMapLoaded -= OnNewMapLoaded;
+			game.OnNewMap -= OnNewMap;
+			game.OnNewMapLoaded -= OnNewMapLoaded;
 			graphics.DeleteTexture( ref rainTexture );
 			graphics.DeleteTexture( ref snowTexture );
 		}

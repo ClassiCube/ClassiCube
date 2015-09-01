@@ -6,9 +6,9 @@ namespace ClassicalSharp {
 	
 	public abstract partial class Entity {
 		
-		public Entity( Game window ) {
-			map = window.Map;
-			info = window.BlockInfo;
+		public Entity( Game game ) {
+			map = game.Map;
+			info = game.BlockInfo;
 		}
 		
 		public IModel Model;

@@ -9,10 +9,10 @@ namespace ClassicalSharp.Commands {
 			return Utils.CaselessStarts( input, "/client" );
 		}
 		
-		public Game Window;
+		protected Game game;
 		public List<Command> RegisteredCommands = new List<Command>();
 		public void Init( Game game ) {
-			Window = game;			
+			this.game = game;			
 			RegisterCommand( new CommandsCommand() );
 			RegisterCommand( new HelpCommand() );
 			RegisterCommand( new EnvCommand() );
@@ -24,7 +24,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public void RegisterCommand( Command command ) {
-			command.Window = Window;
+			command.game = game;
 			foreach( Command cmd in RegisteredCommands ) {
 				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {
 					throw new InvalidOperationException( "Another command already has name : " + command.Name );
@@ -39,7 +39,7 @@ namespace ClassicalSharp.Commands {
 			foreach( Command cmd in RegisteredCommands ) {
 				if( Utils.CaselessStarts( cmd.Name, commandName ) ) {
 					if( matchFound ) {
-						Window.AddChat( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
+						game.AddChat( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
 						return null;
 					}
 					matchFound = true;
@@ -48,7 +48,7 @@ namespace ClassicalSharp.Commands {
 			}
 			
 			if( matchingCommand == null ) {
-				Window.AddChat( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
+				game.AddChat( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
 			}
 			return matchingCommand;
 		}
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Commands {
 		public void Execute( string text ) {
 			CommandReader reader = new CommandReader( text );
 			if( reader.TotalArgs == 0 ) {
-				Window.AddChat( "&e/client: No command name specified. See /client commands for a list of commands." );
+				game.AddChat( "&e/client: No command name specified. See /client commands for a list of commands." );
 				return;
 			}
 			string commandName = reader.Next();

@@ -7,9 +7,9 @@ namespace ClassicalSharp.Renderers {
 
 	public unsafe class StandardEnvRenderer : EnvRenderer {
 		
-		public StandardEnvRenderer( Game window ) {
-			Window = window;
-			Map = Window.Map;
+		public StandardEnvRenderer( Game game ) {
+			this.game = game;
+			map = game.Map;
 		}
 		
 		int cloudTexture = -1, cloudsVb = -1, cloudsIndices;
@@ -26,11 +26,11 @@ namespace ClassicalSharp.Renderers {
 		public override void Render( double deltaTime ) {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
 			
-			Vector3 pos = Window.LocalPlayer.EyePosition;
-			if( pos.Y < Map.Height + skyOffset ) {
-				Graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
-				Graphics.BindVb( skyVb );
-				Graphics.DrawIndexedVb( DrawMode.Triangles, skyIndices, 0 );
+			Vector3 pos = game.LocalPlayer.EyePosition;
+			if( pos.Y < map.Height + skyOffset ) {
+				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+				graphics.BindVb( skyVb );
+				graphics.DrawIndexedVb( DrawMode.Triangles, skyIndices, 0 );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
@@ -54,23 +54,23 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMap( object sender, EventArgs e ) {
-			Graphics.Fog = false;
-			Graphics.DeleteVb( skyVb );
-			Graphics.DeleteVb( cloudsVb );
+			graphics.Fog = false;
+			graphics.DeleteVb( skyVb );
+			graphics.DeleteVb( cloudsVb );
 			skyVb = cloudsVb = -1;
 		}
 		
 		public override void OnNewMapLoaded( object sender, EventArgs e ) {
-			Graphics.Fog = true;
+			graphics.Fog = true;
 			ResetAllEnv( null, null );
 		}
 		
 		public override void Init() {
 			base.Init();
-			Graphics.Fog = true;
+			graphics.Fog = true;
 			ResetAllEnv( null, null );
-			cloudTexture = Graphics.CreateTexture( "clouds.png" );
-			Window.ViewDistanceChanged += ResetAllEnv;
+			cloudTexture = graphics.CreateTexture( "clouds.png" );
+			game.ViewDistanceChanged += ResetAllEnv;
 		}
 		
 		void ResetAllEnv( object sender, EventArgs e ) {
@@ -81,32 +81,32 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Dispose() {
 			base.Dispose();
-			Window.ViewDistanceChanged -= ResetAllEnv;
-			Graphics.DeleteVb( skyVb );
-			Graphics.DeleteVb( cloudsVb );
-			Graphics.DeleteTexture( ref cloudTexture );
+			game.ViewDistanceChanged -= ResetAllEnv;
+			graphics.DeleteVb( skyVb );
+			graphics.DeleteVb( cloudsVb );
+			graphics.DeleteTexture( ref cloudTexture );
 		}
 		
 		void RenderClouds( double delta ) {
-			double time = Window.accumulator;
+			double time = game.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
-			Graphics.SetMatrixMode( MatrixType.Texture );
+			graphics.SetMatrixMode( MatrixType.Texture );
 			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
-			Graphics.LoadMatrix( ref matrix );
-			Graphics.SetMatrixMode( MatrixType.Modelview );
+			graphics.LoadMatrix( ref matrix );
+			graphics.SetMatrixMode( MatrixType.Modelview );
 			
-			Graphics.AlphaTest = true;
-			Graphics.Texturing = true;
-			Graphics.BindTexture( cloudTexture );
-			Graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-			Graphics.BindVb( cloudsVb );
-			Graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
+			graphics.AlphaTest = true;
+			graphics.Texturing = true;
+			graphics.BindTexture( cloudTexture );
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.BindVb( cloudsVb );
+			graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );
+			graphics.AlphaTest = false;
+			graphics.Texturing = false;
 			
-			Graphics.SetMatrixMode( MatrixType.Texture );
-			Graphics.LoadIdentityMatrix();
-			Graphics.SetMatrixMode( MatrixType.Modelview );
+			graphics.SetMatrixMode( MatrixType.Texture );
+			graphics.LoadIdentityMatrix();
+			graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
 		double BlendFactor( int x ) {
@@ -118,64 +118,64 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetFog() {
-			if( Map.IsNotLoaded ) return;
-			FastColour fogCol = Map.FogCol;
-			FastColour skyCol = Map.SkyCol;
+			if( map.IsNotLoaded ) return;
+			FastColour fogCol = map.FogCol;
+			FastColour skyCol = map.SkyCol;
 			FastColour adjFogCol = fogCol;
-			Block headBlock = Window.LocalPlayer.BlockAtHead;
+			Block headBlock = game.LocalPlayer.BlockAtHead;
 			
 			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
-				Graphics.SetFogMode( Fog.Exp );
-				Graphics.SetFogDensity( 0.1f );
+				graphics.SetFogMode( Fog.Exp );
+				graphics.SetFogDensity( 0.1f );
 				adjFogCol = new FastColour( 5, 5, 51 );
 			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
-				Graphics.SetFogMode( Fog.Exp );
-				Graphics.SetFogDensity( 2f );
+				graphics.SetFogMode( Fog.Exp );
+				graphics.SetFogDensity( 2f );
 				adjFogCol = new FastColour( 153, 25, 0 );
 			} else {
 				// Blend fog and sky together
-				float blend = (float)BlendFactor( Window.ViewDistance );
+				float blend = (float)BlendFactor( game.ViewDistance );
 				adjFogCol.R = (byte)Utils.Lerp( fogCol.R, skyCol.R, blend );
 				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );
 				adjFogCol.B = (byte)Utils.Lerp( fogCol.B, skyCol.B, blend );
-				Graphics.SetFogMode( Fog.Linear );
-				Graphics.SetFogStart( 0 );
-				Graphics.SetFogEnd( Window.ViewDistance );
+				graphics.SetFogMode( Fog.Linear );
+				graphics.SetFogStart( 0 );
+				graphics.SetFogEnd( game.ViewDistance );
 			}
-			Graphics.ClearColour( adjFogCol );
-			Graphics.SetFogColour( adjFogCol );
+			graphics.ClearColour( adjFogCol );
+			graphics.SetFogColour( adjFogCol );
 		}
 		
 		void ResetClouds() {
-			if( Map.IsNotLoaded ) return;
-			Graphics.DeleteVb( cloudsVb );
-			ResetClouds( Window.ViewDistance, legacy ? 128 : 65536 );
+			if( map.IsNotLoaded ) return;
+			graphics.DeleteVb( cloudsVb );
+			ResetClouds( game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
-			if( Map.IsNotLoaded ) return;
-			Graphics.DeleteVb( skyVb );
-			ResetSky( Window.ViewDistance, legacy ? 128 : 65536 );
+			if( map.IsNotLoaded ) return;
+			graphics.DeleteVb( skyVb );
+			ResetSky( game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetClouds( int extent, int axisSize ) {
-			int x1 = -extent, x2 = Map.Width + extent;
-			int z1 = -extent, z2 = Map.Length + extent;
+			int x1 = -extent, x2 = map.Width + extent;
+			int z1 = -extent, z2 = map.Length + extent;
 			cloudsIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudsIndices / 6 * 4];
-			DrawCloudsY( x1, z1, x2, z2, Map.Height + 2, axisSize, Map.CloudsCol, vertices );
-			cloudsVb = Graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudsIndices / 6 * 4 );
+			DrawCloudsY( x1, z1, x2, z2, map.Height + 2, axisSize, map.CloudsCol, vertices );
+			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudsIndices / 6 * 4 );
 		}
 		
 		void ResetSky( int extent, int axisSize ) {
-			int x1 = -extent, x2 = Map.Width + extent;
-			int z1 = -extent, z2 = Map.Length + extent;
+			int x1 = -extent, x2 = map.Width + extent;
+			int z1 = -extent, z2 = map.Length + extent;
 			skyIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyIndices / 6 * 4];
-			DrawSkyY( x1, z1, x2, z2, Map.Height + skyOffset, axisSize, Map.SkyCol, vertices );
-			skyVb = Graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyIndices / 6 * 4 );
+			DrawSkyY( x1, z1, x2, z2, map.Height + skyOffset, axisSize, map.SkyCol, vertices );
+			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyIndices / 6 * 4 );
 		}
 		
 		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fCol4b* vertices ) {

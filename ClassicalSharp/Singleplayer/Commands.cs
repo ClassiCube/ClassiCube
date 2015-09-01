@@ -3,7 +3,7 @@ using ClassicalSharp.Commands;
 
 namespace ClassicalSharp.Singleplayer {
 	
-	/// <summary> Command that modifies the font size of chat in the normal gui screen. </summary>
+	/// <summary> Command that generates a new flatgrass map in singleplayer mode. </summary>
 	public sealed class GenerateCommand : Command {
 		
 		public GenerateCommand() {
@@ -19,23 +19,23 @@ namespace ClassicalSharp.Singleplayer {
 		public override void Execute( CommandReader reader ) {
 			int width, height, length;
 			if( !reader.NextInt( out width ) || !reader.NextInt( out height ) || !reader.NextInt( out length ) ) {
-				Window.AddChat( "&e/client generate: &cInvalid dimensions." );
+				game.AddChat( "&e/client generate: &cInvalid dimensions." );
 			} else {
 				if( width < 16 || height < 16 || length < 16 ) {
-					Window.AddChat( "&e/client generate: &cDimensions too small." );
+					game.AddChat( "&e/client generate: &cDimensions too small." );
 					return;
 				}
 				if( width > 1024 || height > 1024 || length > 1024 ) {
-					Window.AddChat( "&e/client generate: &cDimensions too large." );
+					game.AddChat( "&e/client generate: &cDimensions too large." );
 					return;
 				}
-				if( !( Window.Network is SinglePlayerServer ) ) {
-					Window.AddChat( "&e/client generate: &cThis command only works in singleplayer mode." );
+				if( !( game.Network is SinglePlayerServer ) ) {
+					game.AddChat( "&e/client generate: &cThis command only works in singleplayer mode." );
 					return;
 				}
-				SinglePlayerServer server = (SinglePlayerServer)Window.Network;
+				SinglePlayerServer server = (SinglePlayerServer)game.Network;
 				server.NewMap();
-				Window.chatInInputBuffer = "";
+				game.chatInInputBuffer = "";
 				server.MakeMap( width, height, length );
 			}
 		}

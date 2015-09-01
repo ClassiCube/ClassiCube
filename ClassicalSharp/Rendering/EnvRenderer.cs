@@ -5,15 +5,15 @@ namespace ClassicalSharp.Renderers {
 
 	public abstract class EnvRenderer : IDisposable {
 		
-		public Map Map;
-		public Game Window;	
-		public IGraphicsApi Graphics;
+		protected Map map;
+		protected Game game;	
+		protected IGraphicsApi graphics;
 		
 		public virtual void Init() {
-			Graphics = Window.Graphics;
-			Window.OnNewMap += OnNewMap;
-			Window.OnNewMapLoaded += OnNewMapLoaded;
-			Window.EnvVariableChanged += EnvVariableChanged;
+			graphics = game.Graphics;
+			game.OnNewMap += OnNewMap;
+			game.OnNewMapLoaded += OnNewMapLoaded;
+			game.EnvVariableChanged += EnvVariableChanged;
 		}		
 		
 		public virtual void OnNewMap( object sender, EventArgs e ) {
@@ -23,9 +23,9 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public virtual void Dispose() {
-			Window.OnNewMap -= OnNewMap;
-			Window.OnNewMapLoaded -= OnNewMapLoaded;
-			Window.EnvVariableChanged -= EnvVariableChanged;
+			game.OnNewMap -= OnNewMap;
+			game.OnNewMapLoaded -= OnNewMapLoaded;
+			game.EnvVariableChanged -= EnvVariableChanged;
 		}
 		
 		public abstract void Render( double deltaTime );

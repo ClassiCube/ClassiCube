@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using OpenTK.Input;
 using ClassicalSharp.GraphicsAPI;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
 	public abstract class Screen : IDisposable {
 		
-		public Game Window;
-		public IGraphicsApi GraphicsApi;
+		protected internal Game game;
+		protected IGraphicsApi graphicsApi;
 		
-		public Screen( Game window ) {
-			Window = window;
-			GraphicsApi = Window.Graphics;
+		public Screen( Game game ) {
+			this.game = game;
+			graphicsApi = game.Graphics;
 		}
 		
 		public virtual bool HandlesAllInput { get; protected set; }

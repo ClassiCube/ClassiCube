@@ -7,19 +7,19 @@ namespace ClassicalSharp {
 		
 		int X, Y, Z;
 		byte tile;
-		public BlockInfo BlockInfo;
+		BlockInfo info;
 		Map map;
-		public Game Window;
-		public IGraphicsApi Graphics;
+		Game game;
+		IGraphicsApi graphics;
 		const int chunkSize = 16, extChunkSize = 18;
 		const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
 		const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
 		
-		public ChunkMeshBuilder( Game window ) {
-			Window = window;
-			Graphics = window.Graphics;
-			BlockInfo = window.BlockInfo;
-			Window.TerrainAtlasChanged += TerrainAtlasChanged;
+		public ChunkMeshBuilder( Game game ) {
+			this.game = game;
+			graphics = game.Graphics;
+			info = game.BlockInfo;
+			game.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
 		int width, length, height;
@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 							if( block == 11 ) block = 10; // Still lava --> Lava
 							
 							if( allAir && block != 0 ) allAir = false;
-							if( allSolid && !BlockInfo.isOpaque[block] ) allSolid = false;
+							if( allSolid && !info.isOpaque[block] ) allSolid = false;
 							chunkPtr[chunkIndex] = block;
 						}
 					}
@@ -113,10 +113,10 @@ namespace ClassicalSharp {
 			X = x; Y = y; Z = z;
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			
-			if( BlockInfo.isSprite[tile] ) {
+			if( info.isSprite[tile] ) {
 				int count = counts[index];
 				if( count != 0 ) {
-					blockHeight = BlockInfo.heights[tile];
+					blockHeight = info.heights[tile];
 					DrawSprite( count );
 				}
 				return;
@@ -128,9 +128,9 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 && 
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			emitsLight = BlockInfo.emitsLight[tile];
-			blockHeight = BlockInfo.heights[tile];
-			isTranslucent = BlockInfo.isTranslucent[tile];
+			emitsLight = info.emitsLight[tile];
+			blockHeight = info.heights[tile];
+			isTranslucent = info.isTranslucent[tile];
 			
 			if( leftCount != 0 )
 				DrawLeftFace( leftCount );
@@ -166,7 +166,7 @@ namespace ClassicalSharp {
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
-						if( BlockInfo.IsSprite( tile ) ) {
+						if( info.IsSprite( tile ) ) {
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
 								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, 0 );
@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 							}
 						} else {
 							X = x; Y = y; Z = z;
-							emitsLight = BlockInfo.emitsLight[tile];
+							emitsLight = info.emitsLight[tile];
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );
@@ -193,7 +193,7 @@ namespace ClassicalSharp {
 			if( value == test ) {
 				counts[index] = 0;
 			} else if( counts[index] != 0 ) {
-				if( BlockInfo.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchX( xx, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -208,7 +208,7 @@ namespace ClassicalSharp {
 			if( value == test ) {
 				counts[index] = 0;
 			} else if( counts[index] != 0 ) {
-				if( BlockInfo.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchZ( zz, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -277,7 +277,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void OnNewMapLoaded() {
-			map = Window.Map;
+			map = game.Map;
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;

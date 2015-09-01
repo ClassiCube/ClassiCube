@@ -17,16 +17,16 @@ namespace ClassicalSharp {
 		}	
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Texturing = true;
+			graphicsApi.Texturing = true;
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
-			GraphicsApi.Texturing = false;
+			graphicsApi.Texturing = false;
 		}
 		
 		public override void Init() {
-			GraphicsApi.ClearColour( new FastColour( 65, 31, 31 ) );
-			titleWidget = TextWidget.Create( Window, 0, -30, title, Docking.Centre, Docking.Centre, titleFont );
-			messageWidget = TextWidget.Create( Window, 0, 10, message, Docking.Centre, Docking.Centre, messageFont );
+			graphicsApi.ClearColour( new FastColour( 65, 31, 31 ) );
+			titleWidget = TextWidget.Create( game, 0, -30, title, Docking.Centre, Docking.Centre, titleFont );
+			messageWidget = TextWidget.Create( game, 0, 10, message, Docking.Centre, Docking.Centre, messageFont );
 		}
 		
 		public override void Dispose() {

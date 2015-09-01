@@ -8,14 +8,14 @@ namespace ClassicalSharp.Particles {
 	public class ParticleManager : IDisposable {
 		
 		List<Particle> particles = new List<Particle>();
-		public Game Window;
-		public IGraphicsApi Graphics;
+		Game game;
+		IGraphicsApi graphics;
 		int vb;
 		
-		public ParticleManager( Game window ) {
-			Window = window;
-			Graphics = window.Graphics;
-			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
+		public ParticleManager( Game game ) {
+			this.game = game;
+			graphics = game.Graphics;
+			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
 		}
 		
 		VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[0];
@@ -31,13 +31,13 @@ namespace ClassicalSharp.Particles {
 				particles[i].Render( delta, t, vertices, ref index );
 			}
 			
-			Graphics.Texturing = true;
-			Graphics.BindTexture( Window.TerrainAtlas.TexId );
-			Graphics.AlphaTest = true;
+			graphics.Texturing = true;
+			graphics.BindTexture( game.TerrainAtlas.TexId );
+			graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
-			Graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );
-			Graphics.AlphaTest = false;
-			Graphics.Texturing = false;
+			graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );
+			graphics.AlphaTest = false;
+			graphics.Texturing = false;
 		}
 		
 		public void Tick( double delta ) {
@@ -52,13 +52,13 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Dispose() {
-			Graphics.DeleteDynamicVb( vb );
+			graphics.DeleteDynamicVb( vb );
 		}
 		
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
-			int texLoc = Window.BlockInfo.GetOptimTextureLoc( block, TileSide.Left );
-			TextureRectangle rec = Window.TerrainAtlas.GetTexRec( texLoc );
+			int texLoc = game.BlockInfo.GetOptimTextureLoc( block, TileSide.Left );
+			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texLoc );
 			
 			float invHorSize = TerrainAtlas2D.invElementSize;
 			float invVerSize = TerrainAtlas2D.usedInvVerElemSize;
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < 25; i++ ) {
 				double velX = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
 				double velZ = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
-				double velY = ( rnd.NextDouble() + 0.25 ) * Window.BlockInfo.BlockHeight( block );
+				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.BlockHeight( block );
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				double xOffset = rnd.NextDouble() - 0.125;
 				double yOffset = rnd.NextDouble() - 0.125;
@@ -84,7 +84,7 @@ namespace ClassicalSharp.Particles {
 				particleRec.V2 = particleRec.V1 + elementYSize;
 				double life = 3 - rnd.NextDouble();
 				
-				particles.Add( new TerrainParticle( Window, pos, velocity, life, particleRec ) );
+				particles.Add( new TerrainParticle( game, pos, velocity, life, particleRec ) );
 			}
 		}
 	}

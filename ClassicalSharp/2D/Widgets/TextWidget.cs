@@ -32,15 +32,15 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetText( string text ) {
-			GraphicsApi.DeleteTexture( ref texture );
+			graphicsApi.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Height = defaultHeight;
 			} else {
-				DrawTextArgs args = new DrawTextArgs( GraphicsApi, text, true );
+				DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
 				texture = Utils2D.MakeTextTexture( font, 0, 0, ref args );
-				X = texture.X1 = CalcOffset( Window.Width, texture.Width, XOffset, HorizontalDocking );
-				Y = texture.Y1 = CalcOffset( Window.Height, texture.Height, YOffset, VerticalDocking );
+				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalDocking );
+				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalDocking );
 				Height = texture.Height;
 			}		
 			Width = texture.Width;
@@ -48,12 +48,12 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			if( texture.IsValid ) {
-				texture.Render( GraphicsApi );
+				texture.Render( graphicsApi );
 			}
 		}
 		
 		public override void Dispose() {
-			GraphicsApi.DeleteTexture( ref texture );
+			graphicsApi.DeleteTexture( ref texture );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

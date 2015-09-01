@@ -14,8 +14,8 @@ namespace ClassicalSharp {
 		KeyMapWidget widgetToChange;
 		
 		public override void Render( double delta ) {
-			GraphicsApi.Draw2DQuad( 0, 0, Window.Width, Window.Height, new FastColour( 255, 255, 255, 100 ) );
-			GraphicsApi.Texturing = true;
+			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 255, 255, 255, 100 ) );
+			graphicsApi.Texturing = true;
 			controlsWidget.Render( delta );
 			gameWidget.Render( delta );
 			exitWidget.Render( delta );
@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < keysRight.Length; i++ ) {
 				keysRight[i].Render( delta );
 			}
-			GraphicsApi.Texturing = false;
+			graphicsApi.Texturing = false;
 		}
 		
 		Font titleFont, keyStatusFont, textFont;
@@ -38,10 +38,10 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
-			controlsWidget = TextWidget.Create( Window, 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
-			keyStatusWidget = TextWidget.Create( Window, 0, 80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
-			gameWidget = TextWidget.Create( Window, 0, 50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
-			exitWidget = TextWidget.Create( Window, 0, 10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
+			controlsWidget = TextWidget.Create( game, 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
+			keyStatusWidget = TextWidget.Create( game, 0, 80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
+			gameWidget = TextWidget.Create( game, 0, 50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
+			exitWidget = TextWidget.Create( game, 0, 10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
 				"Open chat", "Send chat", "Pause", "Open inventory" };
@@ -60,9 +60,9 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < widgets.Length; i++ ) {
 				KeyMapping mapping = (KeyMapping)( (int)start + i );
-				Key tkKey = Window.Keys[mapping];
+				Key tkKey = game.Keys[mapping];
 				string text = descriptions[i] + ": " + keyNames[(int)tkKey];
-				TextWidget widget = TextWidget.Create( Window, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
+				TextWidget widget = TextWidget.Create( game, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widget.XOffset = offset;
 				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
 				widgets[i] = new KeyMapWidget( widget, mapping, descriptions[i] );
@@ -106,14 +106,14 @@ namespace ClassicalSharp {
 				KeyMapWidget widget = widgetToChange;
 				widgetToChange = null;
 				string reason;
-				if( !Window.Keys.IsKeyOkay( key, out reason ) ) {
+				if( !game.Keys.IsKeyOkay( key, out reason ) ) {
 					const string format = "&eFailed to change mapping \"{0}\". &c({1})";
 					keyStatusWidget.SetText( String.Format( format, widget.Description, reason ) );
 				} else {
-					Key oldKey = Window.Keys[widget.Mapping];
+					Key oldKey = game.Keys[widget.Mapping];
 					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";
 					keyStatusWidget.SetText( String.Format( format, widget.Description, oldKey, key ) );
-					Window.Keys[widget.Mapping] = key;
+					game.Keys[widget.Mapping] = key;
 					widget.Widget.SetText( widget.Description + ": " + key );
 					if( Array.IndexOf( keysLeft, widget ) >= 0 ) {
 						ResizeKeysRight();
@@ -147,10 +147,10 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button != MouseButton.Left ) return false;
 			if( exitWidget.ContainsPoint( mouseX, mouseY ) ) {
-				Window.Exit();
+				game.Exit();
 				return true;
 			} else if( gameWidget.ContainsPoint( mouseX, mouseY ) ) {
-				Window.SetNewScreen( new NormalScreen( Window ) );
+				game.SetNewScreen( new NormalScreen( game ) );
 				return true;
 			} else if( widgetToChange == null ) {
 				for( int i = 0; i < keysLeft.Length; i++ ) {
@@ -172,8 +172,8 @@ namespace ClassicalSharp {
 		}
 		
 		void SetWidgetToChange( KeyMapWidget widget ) {
-			Key oldKey = Window.Keys[widget.Mapping];
-			if( !Window.Keys.IsLockedKey( oldKey ) ) {
+			Key oldKey = game.Keys[widget.Mapping];
+			if( !game.Keys.IsLockedKey( oldKey ) ) {
 				const string format = "&ePress new key for \"{0}\".";
 				keyStatusWidget.SetText( String.Format( format, widget.Description ) );
 				widgetToChange = widget;
