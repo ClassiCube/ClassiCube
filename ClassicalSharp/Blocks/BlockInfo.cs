@@ -11,7 +11,8 @@ namespace ClassicalSharp {
 		internal bool[] isSprite = new bool[BlocksCount];
 		internal bool[] isLiquid = new bool[BlocksCount];
 		internal float[] heights = new float[BlocksCount];
-		internal bool[] blocksLight = new bool[BlocksCount];		
+		internal bool[] blocksLight = new bool[BlocksCount];
+		internal bool[] emitsLight = new bool[BlocksCount];
 		public const byte MaxDefinedBlock = (byte)Block.StoneBrick;
 		public const byte BlocksCount = MaxDefinedBlock + 1;
 		
@@ -41,6 +42,7 @@ namespace ClassicalSharp {
 			SetIsSprite( Block.Rope, Block.Fire );
 			SetBlockHeight( 8 / 16f, Block.CobblestoneSlab );
 			SetBlockHeight( 2 / 16f, Block.Snow );
+			SetEmitsLight( true, Block.Lava, Block.StillLava );
 			SetupCullingCache();
 		}
 		
@@ -101,20 +103,24 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		void SetEmitsLight( bool emits, params Block[] ids ) {
+			for( int i = 0; i < ids.Length; i++ ) {
+				emitsLight[(int)ids[i]] = emits;
+			}
+		}
+		
 		/// <summary> Gets whether the given block id is opaque/not see through. </summary>
 		public bool IsOpaque( byte id ) {
 			return isOpaque[id];
 		}
 		
-		/// <summary> Gets whether the given block id is opaque/not see through,
-		/// and occupies a full block. </summary>
+		/// <summary> Gets whether the given block id is opaque/not see through, and occupies a full block. </summary>
 		public bool IsFullAndOpaque( byte id ) {
 			return isOpaque[id] && heights[id] == 1;
 		}
 		
 		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
-		/// <remarks> Note that these blocks's alpha values are treated as either 'fully see through'
-		/// or 'fully solid'. </remarks>
+		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
 		public bool IsTransparent( byte id ) {
 			return isTransparent[id];
 		}
@@ -125,8 +131,7 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
-		/// <remarks> Note that these blocks's colour values are blended into both
-		/// the transparent and opaque blocks behind them. </remarks>
+		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
 		public bool IsTranslucent( byte id ) {
 			return isTranslucent[id];
 		}
@@ -136,16 +141,18 @@ namespace ClassicalSharp {
 			return blocksLight[id];
 		}
 		
-		/// <summary> Gets whether the given block id is a sprite. <br/>
-		/// (flowers, saplings, fire, etc) </summary>
+		/// <summary> Gets whether the given block id is a sprite. (flowers, saplings, fire, etc) </summary>
 		public bool IsSprite( byte id ) {
 			return isSprite[id];
 		}
 		
-		/// <summary> Gets whether the given block id is a liquid. <br/>
-		/// (water or lava) </summary>
+		/// <summary> Gets whether the given block id is a liquid. (water or lava) </summary>
 		public bool IsLiquid( byte id ) {
 			return isLiquid[id];
+		}
+		
+		public bool EmitsLight( byte id ) {
+			return emitsLight[id];
 		}
 	}
 }

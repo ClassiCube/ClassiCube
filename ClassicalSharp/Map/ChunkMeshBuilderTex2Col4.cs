@@ -9,6 +9,7 @@ namespace ClassicalSharp {
 		DrawInfo[] drawInfoNormal, drawInfoTranslucent;
 		TerrainAtlas1D atlas;
 		int arraysCount = 0;
+		bool emitsLight;
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			int newArraysCount = Window.TerrainAtlas1D.TexIds.Length;
@@ -70,22 +71,22 @@ namespace ClassicalSharp {
 		bool IsLit( int x, int y, int z, int face ) {
 			switch( face ) {
 				case TileSide.Left:
-					return x <= 0 || y > map.heightmap[( z * width ) + (x - 1)];
+					return emitsLight || x <= 0 || y > map.heightmap[( z * width ) + (x - 1)];
 					
 				case TileSide.Right:
-					return x >= maxX || y > map.heightmap[( z * width ) + (x + 1)];
+					return emitsLight || x >= maxX || y > map.heightmap[( z * width ) + (x + 1)];
 					
 				case TileSide.Front:
-					return z <= 0 || y > map.heightmap[( (z - 1) * width ) + x];
+					return emitsLight || z <= 0 || y > map.heightmap[( (z - 1) * width ) + x];
 					
 				case TileSide.Back:
-					return z >= maxZ || y > map.heightmap[( (z + 1) * width ) + x];
+					return emitsLight || z >= maxZ || y > map.heightmap[( (z + 1) * width ) + x];
 					
 				case TileSide.Bottom:
-					return y <= 0 || (y - 1) > map.heightmap[( z * width ) + x];
+					return emitsLight || y <= 0 || (y - 1) > map.heightmap[( z * width ) + x];
 					
 				case TileSide.Top:
-					return y >= maxY || (y + 1) > map.heightmap[( z * width ) + x];
+					return emitsLight || y >= maxY || (y + 1) > map.heightmap[( z * width ) + x];
 			}
 			return true;
 		}
@@ -166,12 +167,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Left );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X > 0 ? ( Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
+			FastColour col = X > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
 				: map.SunlightXSide;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -187,12 +184,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X < maxX ? ( Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
+			FastColour col = X < maxX ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
 				: map.SunlightXSide;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -208,12 +201,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Back );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z < maxZ ? ( Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
+			FastColour col = Z < maxZ ? ( emitsLight || Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
 				: map.SunlightZSide;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -229,12 +218,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Front );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z > 0 ? ( Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
+			FastColour col = Z > 0 ? ( emitsLight || Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
 				: map.SunlightZSide;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -250,12 +235,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y > 0 ? ( (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
+			FastColour col = Y > 0 ? ( emitsLight || (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
 				: map.SunlightYBottom;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
 			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
@@ -268,12 +249,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
 				: map.Sunlight;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-				isTranslucent = BlockInfo.IsTranslucent( tile );
-			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
@@ -286,11 +263,8 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.GetOptimTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
 				: map.Sunlight;
-			if( blockHeight == -1 ) {
-				blockHeight = BlockInfo.BlockHeight( tile );
-			}
 			DrawInfo part = drawInfoNormal[i];
 			
 			// Draw stretched Z axis

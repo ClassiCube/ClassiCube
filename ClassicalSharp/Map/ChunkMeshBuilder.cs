@@ -111,42 +111,39 @@ namespace ClassicalSharp {
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
-			blockHeight = -1;
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
-			int count = 0;
 			
-			if( BlockInfo.IsSprite( tile ) ) {
-				count = counts[index];
+			if( BlockInfo.isSprite[tile] ) {
+				int count = counts[index];
 				if( count != 0 ) {
+					blockHeight = BlockInfo.heights[tile];
 					DrawSprite( count );
 				}
 				return;
 			}
 			
-			count = counts[index + TileSide.Left];
-			if( count != 0 ) {
-				DrawLeftFace( count );
-			}
-			count = counts[index + TileSide.Right];
-			if( count != 0 ) {
-				DrawRightFace( count );
-			}
-			count = counts[index + TileSide.Front];
-			if( count != 0 ) {
-				DrawFrontFace( count );
-			}
-			count = counts[index + TileSide.Back];
-			if( count != 0 ) {
-				DrawBackFace( count );
-			}
-			count = counts[index + TileSide.Bottom];
-			if( count != 0 ) {
-				DrawBottomFace( count );
-			}
-			count = counts[index + TileSide.Top];
-			if( count != 0 ) {
-				DrawTopFace( count );
-			}
+			int leftCount = counts[index++], rightCount = counts[index++],
+			frontCount = counts[index++], backCount = counts[index++],
+			bottomCount = counts[index++], topCount = counts[index++];		
+			if( leftCount == 0 && rightCount == 0 && frontCount == 0 && 
+			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
+			
+			emitsLight = BlockInfo.emitsLight[tile];
+			blockHeight = BlockInfo.heights[tile];
+			isTranslucent = BlockInfo.isTranslucent[tile];
+			
+			if( leftCount != 0 )
+				DrawLeftFace( leftCount );
+			if( rightCount != 0 )
+				DrawRightFace( rightCount );
+			if( frontCount != 0 )
+				DrawFrontFace( frontCount );
+			if( backCount != 0 )
+				DrawBackFace( backCount );
+			if( bottomCount != 0 )
+				DrawBottomFace( bottomCount );
+			if( topCount != 0 )
+				DrawTopFace( topCount );
 		}
 		
 		void Stretch( int x1, int y1, int z1 ) {
@@ -178,6 +175,7 @@ namespace ClassicalSharp {
 							}
 						} else {
 							X = x; Y = y; Z = z;
+							emitsLight = BlockInfo.emitsLight[tile];
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );
