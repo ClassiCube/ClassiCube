@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ClassicalSharp.Commands;
 
 namespace ClassicalSharp.Singleplayer {
@@ -37,6 +38,59 @@ namespace ClassicalSharp.Singleplayer {
 				server.NewMap();
 				game.chatInInputBuffer = "";
 				server.MakeMap( width, height, length );
+			}
+		}
+	}
+	
+	public sealed class LoadMapCommand : Command {
+		
+		public LoadMapCommand() {
+			Name = "LoadMap";
+			Help = new [] {
+				"&a/client loadmap [filename]",
+				"&bfilename: &eLoads a fcm map from the specified filename.",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			string path = reader.NextAll();
+			if( String.IsNullOrEmpty( path ) ) return;
+			
+			path = Path.GetFileName( path );
+			try {
+				using( FileStream fs = File.OpenRead( path ) ) {
+					int width, height, length;
+					game.Map.Reset();
+					game.RaiseOnNewMap();
+					game.SelectionManager.Dispose();
+					
+					byte[] blocks = MapFcm3.Load( fs, game, out width, out height, out length );
+					game.Map.UseRawMap( blocks, width, height, length );
+					game.RaiseOnNewMapLoaded();
+				}
+			} catch( FileNotFoundException ) {
+				game.AddChat( "&e/client load: Couldn't find file \"" + path + "\"" );
+			}
+		}
+	}
+	
+	public sealed class SaveMapCommand : Command {
+		
+		public SaveMapCommand() {
+			Name = "SaveMap";
+			Help = new [] {
+				"&a/client savemap [filename]",
+				"&bfilename: &eSpecifies name of the file to save the map as.",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			string path = reader.NextAll();
+			if( String.IsNullOrEmpty( path ) ) return;
+			
+			path = Path.GetFileName( path );
+			using( FileStream fs = File.Create( path ) ) {
+				MapFcm3.Save( fs, game );
 			}
 		}
 	}

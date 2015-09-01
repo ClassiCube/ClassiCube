@@ -25,6 +25,8 @@ namespace ClassicalSharp.Singleplayer {
 			NewMap();
 			MakeMap( 128, 128, 128 );
 			game.CommandManager.RegisterCommand( new GenerateCommand() );
+			game.CommandManager.RegisterCommand( new SaveMapCommand() );
+			game.CommandManager.RegisterCommand( new LoadMapCommand() );
 		}
 		
 		public override void SendChat( string text ) {
