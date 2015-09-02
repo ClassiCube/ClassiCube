@@ -74,6 +74,15 @@ namespace SharpDX.Direct3D9 {
 		}
 	}
 	
+	public unsafe class DynamicDataBuffer : DataBuffer {
+		
+		public VertexFormat Format;
+		public int MaxSize;
+		
+		public DynamicDataBuffer(IntPtr nativePtr) : base(nativePtr) {
+		}
+	}
+	
 	[InteropPatch]
 	public unsafe class Surface : Resource {
 		

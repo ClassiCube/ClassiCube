@@ -17,10 +17,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		Device device;
 		Direct3D d3d;
 		Capabilities caps;
-		const int texBufferSize = 512, iBufferSize = 256, vBufferSize = 2048;
+		const int texBufferSize = 512, iBufferSize = 32, vBufferSize = 2048;
 		
 		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
 		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
+		DynamicDataBuffer[] dynamicvBuffers = new DynamicDataBuffer[iBufferSize];
 		DataBuffer[] iBuffers = new DataBuffer[iBufferSize];
 		MatrixStack viewStack, projStack, texStack;
 		MatrixStack curStack;
@@ -63,6 +64,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			projStack = new MatrixStack( 4, device, TransformState.Projection );
 			texStack = new MatrixStack( 4, device, TransformState.Texture0 );
 			SetDefaultRenderStates();
+			InitDynamicBuffers();
 		}
 		
 		bool alphaTest, alphaBlend;
@@ -209,15 +211,27 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
-			return -1;
+			int size = maxVertices * strideSizes[(int)format];
+			DynamicDataBuffer buffer = device.CreateDynamicVertexBuffer( size, formatMapping[(int)format] );
+			
+			buffer.Format = formatMapping[(int)format];
+			buffer.MaxSize = size;
+			return GetOrExpand( ref dynamicvBuffers, buffer, iBufferSize );
 		}
 		
 		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
+			int size = count * strideSizes[(int)format];
+			DataBuffer buffer = dynamicvBuffers[vb];
+			buffer.SetData( vertices, size, LockFlags.Discard );
+			
 			device.SetVertexFormat( formatMapping[(int)format] );
-			device.DrawUserPrimitives( modeMappings[(int)mode], 0, NumPrimitives( count, mode ), vertices );
+			batchStride = strideSizes[(int)format];
+			device.SetStreamSource( 0, buffer, 0, batchStride );
+			device.DrawPrimitives( modeMappings[(int)mode], 0, NumPrimitives( count, mode ) );
 		}
 		
 		public override void DeleteDynamicVb( int id ) {
+			Delete( dynamicvBuffers, id );
 		}
 
 		#region Vertex buffers
@@ -415,8 +429,38 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		void RecreateDevice( Game game ) {
 			PresentParameters args = GetPresentArgs( game.Width, game.Height );
+			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
+				DynamicDataBuffer buffer = dynamicvBuffers[i];
+				if( buffer != null ) {
+					buffer.Dispose();
+				}
+			}
+			
 			device.Reset( args );
 			SetDefaultRenderStates();
+			RestoreRenderStates();
+			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
+				DynamicDataBuffer buffer = dynamicvBuffers[i];
+				if( buffer != null ) {					
+					dynamicvBuffers[i] = device.CreateDynamicVertexBuffer( buffer.MaxSize, buffer.Format );
+					dynamicvBuffers[i].Format = buffer.Format;
+					dynamicvBuffers[i].MaxSize = buffer.MaxSize;
+					buffer = dynamicvBuffers[i];
+				}
+			}
+		}
+		
+		void SetDefaultRenderStates() {
+			device.SetRenderState( RenderState.FillMode, (int)FillMode.Solid );
+			FaceCulling = false;
+			device.SetRenderState( RenderState.ColorVertex, false );
+			device.SetRenderState( RenderState.Lighting, false );
+			device.SetRenderState( RenderState.SpecularEnable, false );
+			device.SetRenderState( RenderState.LocalViewer, false );
+			device.SetRenderState( RenderState.DebugMonitorToken, false );
+		}
+		
+		void RestoreRenderStates() {
 			device.SetRenderState( RenderState.AlphaTestEnable, alphaTest );
 			device.SetRenderState( RenderState.AlphaBlendEnable, alphaBlend );
 			device.SetRenderState( RenderState.AlphaFunc, (int)alphaTestFunc );
@@ -432,16 +476,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetRenderState( RenderState.ZFunc, (int)depthTestFunc );
 			device.SetRenderState( RenderState.ZEnable, depthTest );
 			device.SetRenderState( RenderState.ZWriteEnable, depthWrite );
-		}
-		
-		void SetDefaultRenderStates() {
-			device.SetRenderState( RenderState.FillMode, (int)FillMode.Solid );
-			FaceCulling = false;
-			device.SetRenderState( RenderState.ColorVertex, false );
-			device.SetRenderState( RenderState.Lighting, false );
-			device.SetRenderState( RenderState.SpecularEnable, false );
-			device.SetRenderState( RenderState.LocalViewer, false );
-			device.SetRenderState( RenderState.DebugMonitorToken, false );
 		}
 		
 		PresentParameters GetPresentArgs( int width, int height ) {
