@@ -162,8 +162,13 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
-			texture.SetData( scan0, width * height * 4, 0, LockFlags.None );
+			texture.SetData( 0, LockFlags.None, scan0, width * height * 4 );
 			return GetOrExpand( ref textures, texture, texBufferSize );
+		}
+		
+		public override void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part ) {
+			D3D.Texture texture = textures[texId];
+			texture.SetPartData( 0, LockFlags.None, part.Scan0, texX, texY, part.Width, part.Height );
 		}
 
 		public override void BindTexture( int texId ) {

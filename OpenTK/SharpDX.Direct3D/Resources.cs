@@ -106,9 +106,32 @@ namespace SharpDX.Direct3D9 {
 			return lockedRect;
 		}
 		
-		public void SetData( IntPtr data, int bytes, int level, LockFlags flags ) {
+		public LockedRectangle LockRectangle(int level, D3DRect rect, LockFlags flags) {
+			LockedRectangle lockedRect = new LockedRectangle();
+			int res = Interop.Calli(comPointer, level, (IntPtr)(void*)&lockedRect, (IntPtr)(void*)&rect, (int)flags,(*(IntPtr**)comPointer)[19]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
+			return lockedRect;
+		}
+		
+		public void SetData( int level, LockFlags flags, IntPtr data,int bytes  ) {
 			LockedRectangle rect = LockRectangle( level, flags );
 			MemUtils.memcpy( data, rect.DataPointer, bytes );
+			UnlockRectangle( level );
+		}
+		
+		public void SetPartData( int level, LockFlags flags, IntPtr data, int x, int y, int width, int height ) {
+			D3DRect partRect;
+			partRect.Left = x; partRect.Top = y;
+			partRect.Right = x + width; partRect.Bottom = y + height;
+			LockedRectangle rect = LockRectangle( level, partRect, flags );
+			
+			// We need to copy scanline by scanline, as generally rect.stride != data.stride
+			byte* src = (byte*)data, dst = (byte*)rect.DataPointer;
+			for( int yy = 0; yy < height; yy++ ) {
+				MemUtils.memcpy( (IntPtr)src, (IntPtr)dst, width * 4 );
+				src += width * 4;
+				dst += rect.Pitch;			
+			}
 			UnlockRectangle( level );
 		}
 		

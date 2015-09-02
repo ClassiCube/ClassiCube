@@ -159,9 +159,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
 			return texId;
 		}
-		
+				
 		public override void BindTexture( int texture ) {
 			GL.BindTexture( TextureTarget.Texture2D, texture );
+		}		
+		
+		public override void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part ) {
+			GL.BindTexture( TextureTarget.Texture2D, texId );
+			GL.TexSubImage2D( TextureTarget.Texture2D, 0, texX, texY, part.Width, part.Height,
+			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
 		}
 		
 		public unsafe override void DeleteTexture( ref int texId ) {
@@ -402,14 +408,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		static void ToggleCap( EnableCap cap, bool value ) {
 			if( value ) GL.Enable( cap );
 			else GL.Disable( cap );
-		}
-
-		public void UpdateTexturePart( int texId, int x, int y, FastBitmap part ) {
-			GL.Enable( EnableCap.Texture2D );
-			GL.BindTexture( TextureTarget.Texture2D, texId );
-			GL.TexSubImage2D( TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
-			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
-			GL.Disable( EnableCap.Texture2D );
 		}
 	}
 }

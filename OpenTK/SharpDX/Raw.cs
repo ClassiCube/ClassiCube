@@ -50,5 +50,11 @@ namespace SharpDX {
 		public IntPtr DataPointer;
 	}
     
-    
+    [StructLayout( LayoutKind.Sequential )]
+    public struct D3DRect {
+    	public int Left;
+    	public int Top;
+    	public int Right;
+    	public int Bottom;
+    }
 }

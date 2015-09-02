@@ -44,6 +44,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract int CreateTexture( int width, int height, IntPtr scan0 );
 		
+		public abstract void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part );
+		
 		public abstract void BindTexture( int texId );
 		
 		public abstract void DeleteTexture( ref int texId );
