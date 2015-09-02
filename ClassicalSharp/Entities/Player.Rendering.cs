@@ -45,11 +45,13 @@ namespace ClassicalSharp {
 			pos.Y += Model.NameYOffset;
 			
 			// Inlined translation + rotation Y axis
-			api.texVerts[0] = new VertexPos3fTex2f( cosA * x2 + pos.X, y1 + pos.Y, sinA * x2 + pos.Z, nameTex.U2, nameTex.V1 );
-			api.texVerts[1] = new VertexPos3fTex2f( cosA * x2 + pos.X, y2 + pos.Y, sinA * x2 + pos.Z, nameTex.U2, nameTex.V2 );
-			api.texVerts[2] = new VertexPos3fTex2f( cosA * x1 + pos.X, y1 + pos.Y, sinA * x1 + pos.Z, nameTex.U1, nameTex.V1 );
+			api.texVerts[0] = new VertexPos3fTex2f( cosA * x1 + pos.X, y1 + pos.Y, sinA * x1 + pos.Z, nameTex.U1, nameTex.V1 );
+			api.texVerts[1] = new VertexPos3fTex2f( cosA * x2 + pos.X, y1 + pos.Y, sinA * x2 + pos.Z, nameTex.U2, nameTex.V1 );
+			api.texVerts[2] = new VertexPos3fTex2f( cosA * x2 + pos.X, y2 + pos.Y, sinA * x2 + pos.Z, nameTex.U2, nameTex.V2 );		
 			api.texVerts[3] = new VertexPos3fTex2f( cosA * x1 + pos.X, y2 + pos.Y, sinA * x1 + pos.Z, nameTex.U1, nameTex.V2 );
-			api.DrawDynamicVb( DrawMode.TriangleStrip, api.texVb, api.texVerts, VertexFormat.Pos3fTex2f, 4 );
+			
+			api.BeginVbBatch( VertexFormat.Pos3fTex2f );
+			api.DrawDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
 			api.Texturing = false;
 			api.AlphaTest = false;
 		}

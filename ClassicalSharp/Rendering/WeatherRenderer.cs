@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		int rainTexture, snowTexture;
 		short[] heightmap;
 		float vOffset;
-		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[12 * 9 * 9];
+		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * 9 * 9];
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
@@ -46,7 +46,8 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			graphics.DrawDynamicVb( DrawMode.Triangles, weatherVb, vertices, VertexFormat.Pos3fTex2fCol4b, index );
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 		}
@@ -61,21 +62,14 @@ namespace ClassicalSharp {
 			float v2 = height / 6f + v1;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
-			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
-			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );			
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
-			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );		
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, 0, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
 		}
 
 		int length, width, maxY, oneY;

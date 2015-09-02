@@ -35,7 +35,9 @@ namespace ClassicalSharp.Particles {
 			graphics.BindTexture( game.TerrainAtlas.TexId );
 			graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
-			graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2f, count );
+			
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2f );
+			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
 		}

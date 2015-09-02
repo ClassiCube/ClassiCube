@@ -21,10 +21,7 @@ namespace ClassicalSharp.Particles {
 			vertices[index++] = new VertexPos3fTex2f( p111, Rectangle.U1, Rectangle.V2 );
 			vertices[index++] = new VertexPos3fTex2f( p121, Rectangle.U1, Rectangle.V1 );
 			vertices[index++] = new VertexPos3fTex2f( p222, Rectangle.U2, Rectangle.V1 );
-			
-			vertices[index++] = new VertexPos3fTex2f( p222, Rectangle.U2, Rectangle.V1 );
 			vertices[index++] = new VertexPos3fTex2f( p212, Rectangle.U2, Rectangle.V2 );
-			vertices[index++] = new VertexPos3fTex2f( p111, Rectangle.U1, Rectangle.V2 );
 		}
 
 		public override bool Tick( double delta ) {

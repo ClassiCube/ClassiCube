@@ -8,9 +8,9 @@ namespace ClassicalSharp.Model {
 	public class BlockModel : IModel {
 		
 		byte block = (byte)Block.Air;
-		public BlockModel( Game window ) : base( window ) {
+		public BlockModel( Game game ) : base( game ) {
 			vertices = new VertexPos3fTex2fCol4b[6 * 6];
-			vb = window.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 6 * 6 );
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 		}
 		
 		public override float NameYOffset {
@@ -40,10 +40,12 @@ namespace ClassicalSharp.Model {
 			atlas = window.TerrainAtlas;
 			BlockInfo = window.BlockInfo;
 			index = 0;
+			
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			if( BlockInfo.IsSprite( block ) ) {
 				DrawXFace( 0f, TileSide.Right, false );
 				DrawZFace( 0f, TileSide.Back, false );
-				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2fCol4b, 6 * 2 );
+				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, 2 * 4, 2 * 6 );
 			} else {
 				DrawYFace( blockHeight, TileSide.Top );
 				DrawXFace( -0.5f, TileSide.Right, false );
@@ -51,7 +53,7 @@ namespace ClassicalSharp.Model {
 				DrawZFace( -0.5f, TileSide.Front, true );
 				DrawZFace( 0.5f, TileSide.Back, false );
 				DrawYFace( 0f, TileSide.Bottom );
-				graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fTex2fCol4b, 6 * 6 );
+				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, 6 * 4, 6 * 6 );
 			}
 		}
 		float blockHeight;
@@ -67,12 +69,9 @@ namespace ClassicalSharp.Model {
 			TextureRectangle rec = atlas.GetTexRec( texId );
 
 			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, -0.5f, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, -0.5f, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, 0.5f, rec.U2, rec.V2, col );
-			
+			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, -0.5f, rec.U2, rec.V1, col );			
 			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, 0.5f, rec.U2, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, 0.5f, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, -0.5f, rec.U1, rec.V1, col );
 		}
 
 		void DrawZFace( float z, int side, bool swapU ) {
@@ -86,10 +85,7 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, 0f, z, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, blockHeight, z, rec.U1, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, blockHeight, z, rec.U2, rec.V1, col );
-			
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, blockHeight, z, rec.U2, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, 0f, z, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, 0f, z, rec.U1, rec.V2, col );
 		}
 
 		void DrawXFace( float x, int side, bool swapU ) {
@@ -103,10 +99,7 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, -0.5f, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, -0.5f, rec.U1, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, 0.5f, rec.U2, rec.V1, col );
-			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, 0.5f, rec.U2, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, 0.5f, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, -0.5f, rec.U1, rec.V2, col );
 		}
 	}
 }

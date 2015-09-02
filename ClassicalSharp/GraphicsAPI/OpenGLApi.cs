@@ -224,14 +224,23 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, VertexFormat format, int count ) {
-			int sizeInBytes = count * strideSizes[(int)format];
+		int batchStride;
+		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, int count ) {
+			int sizeInBytes = count * batchStride;
 			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
 			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
-			BeginVbBatch( format );
 			setupBatchFunc();
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+		}
+		
+		public override void DrawDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount, int indicesCount ) {
+			int sizeInBytes = vCount * batchStride;
+			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			
+			setupBatchFunc();
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
 		public unsafe override void DeleteDynamicVb( int id ) {
@@ -267,12 +276,15 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.EnableClientState( ArrayCap.ColorArray );
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
+				batchStride = VertexPos3fTex2fCol4b.Size;
 			} else if( format == VertexFormat.Pos3fTex2f ) {
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2f;
+				batchStride = VertexPos3fTex2f.Size;
 			} else if( format == VertexFormat.Pos3fCol4b ) {
 				GL.EnableClientState( ArrayCap.ColorArray );
 				setupBatchFunc = setupBatchFuncCol4b;
+				batchStride = VertexPos3fCol4b.Size;
 			}
 		}
 		

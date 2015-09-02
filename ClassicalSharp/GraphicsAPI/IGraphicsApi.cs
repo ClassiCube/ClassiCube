@@ -123,7 +123,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteIb( int ib );
 		
-		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) where T : struct;
+		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
+		
+		public abstract void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) where T : struct;
 		
 		public abstract void BeginVbBatch( VertexFormat format );
 		
@@ -173,14 +175,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteDynamicVb( texVb );
 		}
 		
-		VertexPos3fCol4b[] quadVertices = new VertexPos3fCol4b[4];
+		VertexPos3fCol4b[] quadVerts = new VertexPos3fCol4b[4];
 		int quadVb;
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			quadVertices[0] = new VertexPos3fCol4b( x + width, y, 0, col );
-			quadVertices[1] = new VertexPos3fCol4b( x + width, y + height, 0, col );
-			quadVertices[2] = new VertexPos3fCol4b( x, y, 0, col );
-			quadVertices[3] = new VertexPos3fCol4b( x, y + height, 0, col );
-			DrawDynamicVb( DrawMode.TriangleStrip, quadVb, quadVertices, VertexFormat.Pos3fCol4b, 4 );
+			quadVerts[0] = new VertexPos3fCol4b( x, y, 0, col );
+			quadVerts[1] = new VertexPos3fCol4b( x + width, y, 0, col );
+			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );	
+			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
+			BeginVbBatch( VertexFormat.Pos3fCol4b );
+			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
 		internal VertexPos3fTex2f[] texVerts = new VertexPos3fTex2f[4];
@@ -195,12 +198,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			y1 -= 0.5f;
 			y2 -= 0.5f;
 			#endif
-			// Have to order them this way because it's a triangle strip.
-			texVerts[0] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
-			texVerts[1] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
-			texVerts[2] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
+			texVerts[0] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
+			texVerts[1] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
+			texVerts[2] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );		
 			texVerts[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			DrawDynamicVb( DrawMode.TriangleStrip, texVb, texVerts, VertexFormat.Pos3fTex2f, 4 );
+			BeginVbBatch( VertexFormat.Pos3fTex2f );
+			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
 		public void Mode2D( float width, float height ) {
@@ -259,7 +262,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	public enum DrawMode {
 		Triangles = 0,
 		Lines = 1,
-		TriangleStrip = 2,
 	}
 	
 	public enum CompareFunc {

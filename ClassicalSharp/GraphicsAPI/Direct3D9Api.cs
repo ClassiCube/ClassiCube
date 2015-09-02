@@ -219,15 +219,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref dynamicvBuffers, buffer, iBufferSize );
 		}
 		
-		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, VertexFormat format, int count ) {
-			int size = count * strideSizes[(int)format];
+		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) {
+			int size = count * batchStride;
 			DataBuffer buffer = dynamicvBuffers[vb];
 			buffer.SetData( vertices, size, LockFlags.Discard );
 			
-			device.SetVertexFormat( formatMapping[(int)format] );
-			batchStride = strideSizes[(int)format];
 			device.SetStreamSource( 0, buffer, 0, batchStride );
 			device.DrawPrimitives( modeMappings[(int)mode], 0, NumPrimitives( count, mode ) );
+		}
+		
+		public override void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) {
+			int size = vCount * batchStride;
+			DataBuffer buffer = dynamicvBuffers[vb];
+			buffer.SetData( vertices, size, LockFlags.Discard );
+			
+			device.SetStreamSource( 0, buffer, 0, batchStride );
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
 		
 		public override void DeleteDynamicVb( int id ) {
@@ -518,12 +525,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		static int NumPrimitives( int vertices, DrawMode mode ) {
-			if( mode == DrawMode.Triangles ) {
-				return vertices / 3;
-			} else if( mode == DrawMode.TriangleStrip ) {
-				return vertices - 2;
-			}
-			return vertices / 2;
+			return mode == DrawMode.Triangles ? vertices / 3 : vertices / 2;
 		}
 		
 		protected unsafe override void LoadOrthoMatrix( float width, float height ) {

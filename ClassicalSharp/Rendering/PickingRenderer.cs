@@ -16,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 		
 		FastColour col = FastColour.White;
 		int index;
-		const int verticesCount = 24 * ( 3 * 2 );
+		const int verticesCount = 16 * 6;
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
 		const float size = 0.0625f;
 		const float offset = 0.01f;
@@ -56,7 +56,9 @@ namespace ClassicalSharp.Renderers {
 			DrawZPlane( p2.Z, p2.X, p1.Y, p2.X - size, p2.Y );
 			DrawZPlane( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 			DrawZPlane( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
-			graphics.DrawDynamicVb( DrawMode.Triangles, vb, vertices, VertexFormat.Pos3fCol4b, verticesCount );
+			
+			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, verticesCount, verticesCount * 6 / 4 );
 		}
 		
 		public void Dispose() {
@@ -65,32 +67,23 @@ namespace ClassicalSharp.Renderers {
 		
 		void DrawXPlane( float x, float z1, float y1, float z2, float y2 ) {
 			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
-			
+			vertices[index++] = new VertexPos3fCol4b( x, y2, z1, col );		
 			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
 			vertices[index++] = new VertexPos3fCol4b( x, y1, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
 		}
 		
 		void DrawZPlane( float z, float x1, float y1, float x2, float y2 ) {
 			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
-			
+			vertices[index++] = new VertexPos3fCol4b( x1, y2, z, col );	
 			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
 			vertices[index++] = new VertexPos3fCol4b( x2, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
 		}
 		
 		void DrawYPlane( float y, float x1, float z1, float x2, float z2 ) {
 			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
 			vertices[index++] = new VertexPos3fCol4b( x1, y, z2, col );
 			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
-			
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
 			vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
 		}
 	}
 }
