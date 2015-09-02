@@ -12,8 +12,6 @@ namespace ClassicalSharp {
 		static Bitmap measuringBmp;
 		static Graphics measuringGraphics;
 		static Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );
-		internal static bool needWinXpFix;
-		internal static char[] trimChars = { '\0' };
 		
 		static Utils2D() {
 			format = StringFormat.GenericTypographic;
@@ -24,8 +22,6 @@ namespace ClassicalSharp {
 			measuringBmp = new Bitmap( 1, 1 );
 			measuringGraphics = Graphics.FromImage( measuringBmp );
 			measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-			OperatingSystem os = Environment.OSVersion;
-			needWinXpFix = os.Platform == PlatformID.Win32NT && os.Version.Major < 6;
 		}
 		
 		static SolidBrush GetOrCreateBrush( Color color ) {

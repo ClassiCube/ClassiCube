@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			typingLogPos = game.ChatInputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
-			chatInputText = new UnsafeString( 64 );
+			chatInputText = new StringBuffer( 64 );
 		}
 		
 		Texture chatInputTexture, chatCaretTexture;
@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		int caretPos = -1;
 		int typingLogPos = 0;
 		public int ChatInputYOffset;
-		internal UnsafeString chatInputText;
+		internal StringBuffer chatInputText;
 		readonly Font font, boldFont;
 		
 		public override void Render( double delta ) {
@@ -40,9 +40,7 @@ namespace ClassicalSharp {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( graphicsApi, "_", Color.White, false );
 			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
-			string value = chatInputText.value;
-			if( Utils2D.needWinXpFix )
-				value = value.TrimEnd( Utils2D.trimChars );
+			string value = chatInputText.UpdateCachedString();
 			
 			if( chatInputText.Empty ) {
 				caretPos = -1;
@@ -53,9 +51,12 @@ namespace ClassicalSharp {
 				chatCaretTexture.X1 = 10 + size.Width;
 				size.Width += chatCaretTexture.Width;
 			} else {
-				Size trimmedSize = Utils2D.MeasureSize( value.Substring( 0, caretPos ), font, false );
+				string subString = chatInputText.GetSubstring( caretPos );
+				Size trimmedSize = Utils2D.MeasureSize( subString, font, false );
+				chatInputText.RestoreLength();
+				
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = Utils2D.MeasureSize( value.Substring( caretPos, 1 ), font, false );
+				Size charSize = Utils2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
 				chatCaretTexture.Width = charSize.Width;
 			}
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );

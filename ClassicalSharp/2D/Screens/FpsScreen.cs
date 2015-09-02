@@ -6,10 +6,10 @@ namespace ClassicalSharp {
 	public class FpsScreen : Screen {
 		
 		readonly Font font;
-		UnsafeString text;
+		StringBuffer text;
 		public FpsScreen( Game window ) : base( window ) {
 			font = new Font( "Arial", 13 );
-			text = new UnsafeString( 96 );
+			text = new StringBuffer( 96 );
 		}
 		
 		TextWidget fpsTextWidget;
@@ -37,10 +37,8 @@ namespace ClassicalSharp {
 						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, game.ChunkUpdates )
 						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, game.Vertices );
 				}
-				string textString = text.value;
-				if( Utils2D.needWinXpFix )
-					textString = textString.TrimEnd( Utils2D.trimChars );
 				
+				string textString = text.UpdateCachedString();			
 				fpsTextWidget.SetText( textString );
 				maxDelta = 0;
 				accumulator = 0;

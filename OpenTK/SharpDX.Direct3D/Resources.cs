@@ -113,7 +113,7 @@ namespace SharpDX.Direct3D9 {
 			return lockedRect;
 		}
 		
-		public void SetData( int level, LockFlags flags, IntPtr data,int bytes  ) {
+		public void SetData( int level, LockFlags flags, IntPtr data, int bytes ) {
 			LockedRectangle rect = LockRectangle( level, flags );
 			MemUtils.memcpy( data, rect.DataPointer, bytes );
 			UnlockRectangle( level );

@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		int rows;
 		int startX, startY;
 		readonly Font font;
-		UnsafeString buffer = new UnsafeString( 96 );
+		StringBuffer buffer = new StringBuffer( 96 );
 		
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
@@ -130,9 +130,7 @@ namespace ClassicalSharp {
 			
 			Block block = blocksTable[selectedIndex].BlockId;
 			UpdateBlockInfoString( block );
-			string value = buffer.value;
-			if( Utils2D.needWinXpFix )
-				value = value.TrimEnd( Utils2D.trimChars );
+			string value = buffer.UpdateCachedString();
 			
 			Size size = Utils2D.MeasureSize( value, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;

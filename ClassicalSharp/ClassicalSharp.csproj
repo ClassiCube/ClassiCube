@@ -164,7 +164,7 @@
     <Compile Include="Utils\TerrainAtlas1D.cs" />
     <Compile Include="Utils\TerrainAtlas2D.cs" />
     <Compile Include="Utils\TextureRectangle.cs" />
-    <Compile Include="Utils\UnsafeString.cs" />
+    <Compile Include="Utils\StringBuffer.cs" />
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="Utils\Vector3I.cs" />
   </ItemGroup>
