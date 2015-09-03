@@ -32,6 +32,7 @@ namespace ClassicalSharp.Model {
 			pos = p.Position;
 			cosA = (float)Math.Cos( p.YawRadians );
 			sinA = (float)Math.Sin( p.YawRadians );
+			curCol = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? (byte)255 : (byte)178;
 
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
@@ -45,6 +46,7 @@ namespace ClassicalSharp.Model {
 		public int DefaultTexId;
 		
 		protected FastColour col = new FastColour( 178, 178, 178 );
+		protected byte curCol = 178;
 		protected VertexPos3fTex2fCol4b[] vertices;
 		protected int index;
 		
@@ -114,6 +116,7 @@ namespace ClassicalSharp.Model {
 				VertexPos3fTex2fCol4b vertex = vertices[part.Offset + i];
 				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				vertex.R = curCol; vertex.G = curCol; vertex.B = curCol;
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -134,6 +137,7 @@ namespace ClassicalSharp.Model {
 				
 				Vector3 newPos = Utils.RotateY( loc.X, loc.Y, loc.Z, cosA, sinA ) + offset;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				vertex.R = curCol; vertex.G = curCol; vertex.B = curCol;
 				cache.vertices[index++] = vertex;
 			}
 		}

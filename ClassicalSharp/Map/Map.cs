@@ -175,6 +175,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public bool IsLit( int x, int y, int z ) {
+			if( !IsValidPos( x, y, z ) ) return true;
+			return y > heightmap[z * Width + x];
+		}
+		
+		public bool IsLit( Vector3I p ) {
+			if( !IsValidPos( p.X, p.Y, p.Z ) ) return true;
+			return p.Y > heightmap[p.Z * Width + p.X];
+		}
+		
 		public void SetBlock( int x, int y, int z, byte blockId ) {
 			int index = ( y * Length + z ) * Width + x;
 			byte oldBlock = mapData[index];
