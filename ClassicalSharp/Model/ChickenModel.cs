@@ -17,8 +17,6 @@ namespace ClassicalSharp.Model {
 			LeftWing = MakeWing( -0.25f, -0.1875f );
 			RightWing = MakeWing( 0.1875f, 0.25f );
 			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;
 			DefaultTexId = graphics.CreateTexture( "chicken.png" );
 		}
 		
@@ -70,7 +68,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head );
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head2 );
 			DrawRotate( 0, 0.5625f, -0.1875f, -p.PitchRadians, 0, 0, Head3 );
-			Torso.Render( graphics );
+			DrawPart( Torso );
 			DrawRotate( 0, 0.3125f, 0.0625f, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 0.3125f, 0.0625f, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( -0.1875f, 0.6875f, 0, 0, 0, -Math.Abs( p.leftArmXRot ), LeftWing );
@@ -78,7 +76,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		

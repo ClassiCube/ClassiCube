@@ -14,8 +14,6 @@ namespace ClassicalSharp.Model {
 			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;
 			DefaultTexId = graphics.CreateTexture( "spider.png" );
 		}
 		
@@ -56,8 +54,8 @@ namespace ClassicalSharp.Model {
 			graphics.AlphaTest = true;
 			
 			DrawRotate( 0, 0.5f, -0.1875f, -p.PitchRadians, 0, 0, Head );
-			Link.Render( graphics );
-			End.Render( graphics );
+			DrawPart( Link );
+			DrawPart( End );
 			// TODO: leg animations
 			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, LeftLeg );
@@ -70,7 +68,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		

@@ -36,10 +36,7 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.Hat = Set64x64.Hat;
-			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;
-			
+
 			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
 				window.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
 				DefaultTexId = graphics.CreateTexture( bmp );
@@ -90,24 +87,24 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			int texId = p.PlayerTextureId <= 0 ? DefaultTexId : p.PlayerTextureId;
-			graphics.BindTexture( texId );		
+			graphics.BindTexture( texId );
+			
 			SkinType skinType = p.SkinType;
 			model = Set64x32;
 			if( skinType == SkinType.Type64x64 ) model = Set64x64;
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, model.Head );
-			model.Torso.Render( graphics );
+			DrawPart( model.Torso );
 			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( 0, 1.5f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
 			DrawRotate( 0, 1.5f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
-			DrawRotate( 0, 1.4375f, 0, -p.PitchRadians, 0, 0, model.Hat );
+			DrawRotate( 0, 1.4375f, 0, -p.PitchRadians, 0, 0, model.Hat );		
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		

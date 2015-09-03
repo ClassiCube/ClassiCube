@@ -1,18 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Model {
 
 	public class ModelCache : IDisposable {
 		
-		Game window;
+		Game game;
+		IGraphicsApi api;
 		public ModelCache( Game window ) {
-			this.window = window;
-			cache["humanoid"] = new PlayerModel( window );
+			this.game = window;
+			api = game.Graphics;		
 		}
 		
+		public void InitCache() {
+			vertices = new VertexPos3fTex2fCol4b[384];
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
+			cache["humanoid"] = new PlayerModel( game );
+		}
+		
+		internal int vb;
+		internal VertexPos3fTex2fCol4b[] vertices;
 		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();
+		
 		public IModel GetModel( string modelName ) {
 			IModel model;
 			byte blockId;
@@ -38,21 +49,21 @@ namespace ClassicalSharp.Model {
 		
 		IModel InitModel( string modelName ) {
 			if( modelName == "chicken" ) {
-				return new ChickenModel( window );
+				return new ChickenModel( game );
 			} else if( modelName == "creeper" ) {
-				return new CreeperModel( window );
+				return new CreeperModel( game );
 			} else if( modelName == "pig" ) {
-				return new PigModel( window );
+				return new PigModel( game );
 			} else if( modelName == "sheep" ) {
-				return new SheepModel( window );
+				return new SheepModel( game );
 			} else if( modelName == "skeleton" ) {
-				return new SkeletonModel( window );
+				return new SkeletonModel( game );
 			} else if( modelName == "spider" ) {
-				return new SpiderModel( window );
+				return new SpiderModel( game );
 			} else if( modelName == "zombie" ) {
-				return new ZombieModel( window );
+				return new ZombieModel( game );
 			} else if( modelName == "block" ) {
-				return new BlockModel( window );
+				return new BlockModel( game );
 			}
 			return null;
 		}
@@ -61,6 +72,7 @@ namespace ClassicalSharp.Model {
 			foreach( var entry in cache ) {
 				entry.Value.Dispose();
 			}
+			game.Graphics.DeleteDynamicVb( vb );
 		}
 	}
 }

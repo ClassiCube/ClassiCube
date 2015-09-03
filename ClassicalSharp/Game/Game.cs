@@ -122,6 +122,7 @@ namespace ClassicalSharp {
 			#endif
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
+			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );

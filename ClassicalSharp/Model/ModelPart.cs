@@ -8,12 +8,8 @@ namespace ClassicalSharp {
 		public int Offset, Count;
 		
 		public ModelPart( int vertexOffset, int vertexCount ) {
-			Offset = vertexOffset / 4 * 6;
-			Count = vertexCount / 4 * 6;
-		}
-		
-		public void Render( IGraphicsApi api ) {
-			api.DrawIndexedVb_TrisT2fC4b( Count, Offset );
+			Offset = vertexOffset;
+			Count = vertexCount;
 		}
 	}
 	

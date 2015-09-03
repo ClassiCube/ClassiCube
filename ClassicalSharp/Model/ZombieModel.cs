@@ -15,8 +15,6 @@ namespace ClassicalSharp.Model {
 			LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.5f );
 			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;		
 			DefaultTexId = graphics.CreateTexture( "zombie.png" );
 		}
 		
@@ -62,7 +60,7 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
-			Torso.Render( graphics );
+			DrawPart( Torso );
 			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
@@ -71,7 +69,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		

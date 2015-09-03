@@ -27,8 +27,6 @@ namespace ClassicalSharp.Model {
 				FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
 			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;
 			DefaultTexId = graphics.CreateTexture( "sheep.png" );
 			furTextureId = graphics.CreateTexture( "sheep_fur.png" );
 		}
@@ -75,7 +73,7 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Head );
-			Torso.Render( graphics );
+			DrawPart( Torso );
 			DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, LeftLegFront );
 			DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, LeftLegBack );
@@ -83,7 +81,7 @@ namespace ClassicalSharp.Model {
 			graphics.AlphaTest = true;
 			if( Fur ) {
 				graphics.BindTexture( furTextureId );
-				FurTorso.Render( graphics );
+				DrawPart( FurTorso );
 				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, FurHead );
 				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, FurLeftLegFront );
 				DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, FurRightLegFront );
@@ -93,7 +91,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 			if( Fur ) {
 				graphics.DeleteTexture( ref furTextureId );

@@ -7,14 +7,16 @@ namespace ClassicalSharp.Model {
 
 	public abstract class IModel : IDisposable {
 		
-		protected Game window;
+		protected Game game;
+		protected ModelCache cache;
 		protected IGraphicsApi graphics;
 		protected const int planeVertices = 4;
 		protected const int partVertices = 6 * planeVertices;
 
-		public IModel( Game window ) {
-			this.window = window;
-			graphics = window.Graphics;
+		public IModel( Game game ) {
+			this.game = game;
+			graphics = game.Graphics;
+			cache = game.ModelCache;
 		}
 		
 		public abstract float NameYOffset { get; }
@@ -23,14 +25,17 @@ namespace ClassicalSharp.Model {
 		
 		public abstract BoundingBox PickingBounds { get; }
 		
+		protected Vector3 pos;
+		protected float cosA, sinA;
 		public void RenderModel( Player p ) {
-			graphics.PushMatrix();
-			Matrix4 mat = Matrix4.RotateY( -p.YawRadians ) * Matrix4.Translate( p.Position );
-			graphics.MultiplyMatrix( ref mat );
+			index = 0;
+			pos = p.Position;
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
+
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-			graphics.BindVb( vb );
 			DrawPlayerModel( p );
-			graphics.PopMatrix();
+			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		protected abstract void DrawPlayerModel( Player p );
@@ -41,7 +46,7 @@ namespace ClassicalSharp.Model {
 		
 		protected FastColour col = new FastColour( 178, 178, 178 );
 		protected VertexPos3fTex2fCol4b[] vertices;
-		protected int index, vb;
+		protected int index;
 		
 		protected ModelPart MakePart( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
 		                             float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
@@ -104,8 +109,16 @@ namespace ClassicalSharp.Model {
 			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V1, col );
 		}
 		
+		protected void DrawPart( ModelPart part ) {
+			for( int i = 0; i < part.Count; i++ ) {
+				VertexPos3fTex2fCol4b vertex = vertices[part.Offset + i];
+				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, pos, cosA, sinA );
+				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				cache.vertices[index++] = vertex;
+			}
+		}
+		
 		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
-			graphics.PushMatrix();
 			Matrix4 mat = Matrix4.Translate( x, y, z );
 			if( angleZ != 0 ) {
 				mat = Matrix4.RotateZ( angleZ ) * mat;
@@ -117,9 +130,7 @@ namespace ClassicalSharp.Model {
 				mat = Matrix4.RotateX( angleX ) * mat;
 			}
 			mat = Matrix4.Translate( -x, -y, -z ) * mat;
-			graphics.MultiplyMatrix( ref mat );
-			part.Render( graphics );
-			graphics.PopMatrix();
+			DrawPart( part );
 		}
 	}
 }

@@ -8,8 +8,6 @@ namespace ClassicalSharp.Model {
 		
 		byte block = (byte)Block.Air;
 		public BlockModel( Game game ) : base( game ) {
-			vertices = new VertexPos3fTex2fCol4b[6 * 6];
-			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 		}
 		
 		public override float NameYOffset {
@@ -34,17 +32,14 @@ namespace ClassicalSharp.Model {
 				return;
 			}
 			
-			graphics.BindTexture( window.TerrainAtlas.TexId );
-			blockHeight = window.BlockInfo.BlockHeight( block );
-			atlas = window.TerrainAtlas;
-			BlockInfo = window.BlockInfo;
-			index = 0;
+			graphics.BindTexture( game.TerrainAtlas.TexId );
+			blockHeight = game.BlockInfo.BlockHeight( block );
+			atlas = game.TerrainAtlas;
+			BlockInfo = game.BlockInfo;
 			
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			if( BlockInfo.IsSprite( block ) ) {
 				DrawXFace( 0f, TileSide.Right, false );
 				DrawZFace( 0f, TileSide.Back, false );
-				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, 2 * 4, 2 * 6 );
 			} else {
 				DrawYFace( blockHeight, TileSide.Top );
 				DrawXFace( -0.5f, TileSide.Right, false );
@@ -52,7 +47,6 @@ namespace ClassicalSharp.Model {
 				DrawZFace( -0.5f, TileSide.Front, true );
 				DrawZFace( 0.5f, TileSide.Back, false );
 				DrawYFace( 0f, TileSide.Bottom );
-				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, 6 * 4, 6 * 6 );
 			}
 		}
 		float blockHeight;
@@ -60,17 +54,16 @@ namespace ClassicalSharp.Model {
 		BlockInfo BlockInfo;
 		
 		public override void Dispose() {
-			graphics.DeleteDynamicVb( vb );
 		}
 		
 		void DrawYFace( float y, int side ) {
 			int texId = BlockInfo.GetOptimTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, -0.5f, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, -0.5f, rec.U2, rec.V1, col );			
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, 0.5f, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, -0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, -0.5f, rec.U2, rec.V1, col );			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, 0.5f, rec.U1, rec.V2, col );
 		}
 
 		void DrawZFace( float z, int side, bool swapU ) {
@@ -81,10 +74,10 @@ namespace ClassicalSharp.Model {
 			}
 			if( swapU ) rec.SwapU();
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, 0f, z, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, blockHeight, z, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, blockHeight, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, 0f, z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, 0f, z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, blockHeight, z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, blockHeight, z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, 0f, z, rec.U2, rec.V2, col );
 		}
 
 		void DrawXFace( float x, int side, bool swapU ) {
@@ -95,10 +88,10 @@ namespace ClassicalSharp.Model {
 			}
 			if( swapU ) rec.SwapU();
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, -0.5f, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, -0.5f, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, 0.5f, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, -0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, -0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, 0.5f, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, 0.5f, rec.U2, rec.V2, col );
 		}
 	}
 }

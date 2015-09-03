@@ -15,8 +15,6 @@ namespace ClassicalSharp.Model {
 			LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
 			RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			
-			vb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b );
-			vertices = null;
 			DefaultTexId = graphics.CreateTexture( "pig.png" );
 		}
 		
@@ -50,7 +48,7 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 0.75f, -0.375f, -p.PitchRadians, 0, 0, Head );
-			Torso.Render( graphics );
+			DrawPart( Torso );
 			DrawRotate( 0, 0.375f, -0.3125f, p.leftLegXRot, 0, 0, LeftLegFront );
 			DrawRotate( 0, 0.375f, -0.3125f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 0.375f, 0.4375f, p.rightLegXRot, 0, 0, LeftLegBack );
@@ -59,7 +57,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void Dispose() {
-			graphics.DeleteVb( vb );
 			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
