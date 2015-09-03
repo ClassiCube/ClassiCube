@@ -44,31 +44,31 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeftArm( int x, int y, float x1, float x2, int width, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, width, 4, width, 12, -x2, -x1, 0.75f, 1.5f, -0.125f, 0.125f, _64x64 );
+			return MakePart( x, y, 4, 12, width, 4, width, 12, -x2, -x1, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeRightArm( int x, int y, float x1, float x2, int width, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, width, 4, width, 12, x1, x2, 0.75f, 1.5f, -0.125f, 0.125f, _64x64 );
+			return MakePart( x, y, 4, 12, width, 4, width, 12, x1, x2, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeHead( bool _64x64 ) {
-			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -0.25f, 0.25f, 1.5f, 2f, -0.25f, 0.25f, _64x64 );
+			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -4f/16, 4f/16, 24f/16f, 2f, -4f/16, 4f/16, _64x64 );
 		}
 		
 		ModelPart MakeTorso( bool _64x64 ) {
-			return MakePart( 16, 16, 4, 12, 8, 4, 8, 12, -0.25f, 0.25f, 0.75f, 1.5f, -0.125f, 0.125f, _64x64 );
+			return MakePart( 16, 16, 4, 12, 8, 4, 8, 12, -4f/16, 4f/16, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeHat( bool _64x64 ) {
-			return MakePart( 32, 0, 8, 8, 8, 8, 8, 8, -0.3125f, 0.3125f, 1.4375f, 2.0625f, -0.3125f, 0.3125f, _64x64 );
+			return MakePart( 32, 0, 8, 8, 8, 8, 8, 8, -4.5f/16, 4.5f/16, 23.5f/16f, 32.5f/16, -4.5f/16, 4.5f/16, _64x64 );
 		}
 		
 		ModelPart MakeLeftLeg( int x, int y, float x1, float x2, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 0.75f, -0.125f, 0.125f, _64x64 );
+			return MakePart( x, y, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeRightLeg( int x, int y, float x1, float x2, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 0.75f, -0.125f, 0.125f, _64x64 );
+			return MakePart( x, y, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
 		}
 		
 		public override float NameYOffset {
