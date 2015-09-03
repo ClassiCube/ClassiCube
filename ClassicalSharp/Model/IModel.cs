@@ -11,7 +11,7 @@ namespace ClassicalSharp.Model {
 		protected IGraphicsApi graphics;
 		protected const int planeVertices = 4;
 		protected const int partVertices = 6 * planeVertices;
-		
+
 		public IModel( Game window ) {
 			this.window = window;
 			graphics = window.Graphics;

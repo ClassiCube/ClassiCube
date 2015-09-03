@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Renderers;
 using OpenTK;
 
 namespace ClassicalSharp.Model {

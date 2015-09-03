@@ -128,6 +128,10 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
+		public static Vector3 RotateY( float x, float y, float z, Vector3 translate, float cosA, float sinA ) {
+			return new Vector3( cosA * x - sinA * z + translate.X, y + translate.Y, sinA * x + cosA * z + translate.Z );
+		}
+		
 		public static float DistanceSquared( Vector3 p1, Vector3 p2 ) {
 			float dx = p2.X - p1.X;
 			float dy = p2.Y - p1.Y;

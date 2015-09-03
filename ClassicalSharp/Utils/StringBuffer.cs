@@ -144,7 +144,7 @@ namespace ClassicalSharp {
 		/// <returns> The underlying string - ***do not*** store this because it is mutable!
 		/// You should only use this string for temporary measuring and drawing. </returns>
 		public string UpdateCachedString() {
-			return supportsLengthSetting ? value : value.TrimEnd( trimEnd );
+			return supportsLengthSetting ? SetLength( Length ) : value.TrimEnd( trimEnd );
 		}
 		static char[] trimEnd = { '\0' };
 		
