@@ -112,7 +112,7 @@ namespace ClassicalSharp.Model {
 		protected void DrawPart( ModelPart part ) {
 			for( int i = 0; i < part.Count; i++ ) {
 				VertexPos3fTex2fCol4b vertex = vertices[part.Offset + i];
-				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, pos, cosA, sinA );
+				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				cache.vertices[index++] = vertex;
 			}
@@ -120,17 +120,22 @@ namespace ClassicalSharp.Model {
 		
 		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
 			Matrix4 mat = Matrix4.Translate( x, y, z );
-			if( angleZ != 0 ) {
-				mat = Matrix4.RotateZ( angleZ ) * mat;
+			float cosX = (float)Math.Cos( -angleX ), sinX = (float)Math.Sin( -angleX );
+			float cosY = (float)Math.Cos( -angleY ), sinY = (float)Math.Sin( -angleY );
+			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
+			Vector3 offset = new Vector3( x, y, z ) + pos;
+			
+			for( int i = 0; i < part.Count; i++ ) {
+				VertexPos3fTex2fCol4b vertex = vertices[part.Offset + i];
+				Vector3 loc = new Vector3( vertex.X - x, vertex.Y - y, vertex.Z - z );
+				loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
+				loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
+				loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );				
+				
+				Vector3 newPos = Utils.RotateY( loc.X, loc.Y, loc.Z, cosA, sinA ) + offset;
+				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				cache.vertices[index++] = vertex;
 			}
-			if( angleY != 0 ) {
-				mat = Matrix4.RotateY( angleY ) * mat;
-			}
-			if( angleX != 0 ) {
-				mat = Matrix4.RotateX( angleX ) * mat;
-			}
-			mat = Matrix4.Translate( -x, -y, -z ) * mat;
-			DrawPart( part );
 		}
 	}
 }

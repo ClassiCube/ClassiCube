@@ -121,6 +121,7 @@ namespace ClassicalSharp {
 			float sinA = (float)Math.Sin( angle );
 			return new Vector3( cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z );
 		}
+
 		
 		public static Vector3 RotateY( float x, float y, float z, float angle ) {
 			float cosA = (float)Math.Cos( angle );
@@ -128,8 +129,16 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
-		public static Vector3 RotateY( float x, float y, float z, Vector3 translate, float cosA, float sinA ) {
-			return new Vector3( cosA * x - sinA * z + translate.X, y + translate.Y, sinA * x + cosA * z + translate.Z );
+		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
+			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
+		}
+		
+		public static Vector3 RotateY( float x, float y, float z, float cosA, float sinA ) {
+			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
+		}
+		
+		public static Vector3 RotateZ( float x, float y, float z, float cosA, float sinA ) {
+			return new Vector3( cosA * x + sinA * y, -sinA * x + cosA * y, z );
 		}
 		
 		public static float DistanceSquared( Vector3 p1, Vector3 p2 ) {

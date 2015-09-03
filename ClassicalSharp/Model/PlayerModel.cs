@@ -52,7 +52,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead( bool _64x64 ) {
-			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -4f/16, 4f/16, 24f/16f, 2f, -4f/16, 4f/16, _64x64 );
+			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -4f/16, 4f/16, 24f/16f, 32f/16f, -4f/16, 4f/16, _64x64 );
 		}
 		
 		ModelPart MakeTorso( bool _64x64 ) {
