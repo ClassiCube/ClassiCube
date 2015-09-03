@@ -803,13 +803,17 @@ namespace OpenTK.Platform.Windows
 
 		public Point DesktopCursorPos {
 			get {
-				Point pos = default( Point );
+				POINT pos = default( POINT );
 				API.GetCursorPos( ref pos );
-				return pos;
+				return new Point( pos.X, pos.Y );
 			}
 			set {
 				API.SetCursorPos( value.X, value.Y );
 			}
+		}
+		
+		public bool CursorVisible {
+			set { API.ShowCursor( value ? 1 : 0 ); }
 		}
 
 		public void Dispose() {

@@ -154,10 +154,13 @@ namespace OpenTK.Platform.Windows {
 		public static extern bool TrackMouseEvent(ref TrackMouseEventStructure lpEventTrack);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool GetCursorPos(ref Point point);
+		internal static extern bool GetCursorPos(ref POINT point);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SetCursorPos(int x, int y);
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		internal static extern bool ShowCursor( int value );
 	}
 
 	internal struct Constants {

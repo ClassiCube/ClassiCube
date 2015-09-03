@@ -820,6 +820,11 @@ namespace OpenTK.Platform.X11 {
 			set { System.Windows.Forms.Cursor.Position = value; }
 		}
 		
+		// TODO: Hide and show cursor
+		public bool CursorVisible {
+			set { }
+		}
+		
 		/// <summary> Returns true if a render window/context exists. </summary>
 		public bool Exists {
 			get { return exists; }

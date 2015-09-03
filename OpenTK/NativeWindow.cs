@@ -237,7 +237,12 @@ namespace OpenTK {
 			get { return implementation.Mouse; }
 		}
 		
-		/// <summary> Gets the primary Mouse device, or null if no Mouse exists. </summary>
+		/// <summary> Sets whether the cursor is visible in the window. </summary>
+		public bool CursorVisible {
+			set { implementation.CursorVisible = value; }
+		}
+		
+		/// <summary> Gets or sets the cursor position in screen coordinates. </summary>
 		public Point DesktopCursorPos {
 			get { return implementation.DesktopCursorPos; }
 			set { implementation.DesktopCursorPos = value; }

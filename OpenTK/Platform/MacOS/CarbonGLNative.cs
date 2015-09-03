@@ -1066,6 +1066,11 @@ namespace OpenTK.Platform.MacOS
 			set { System.Windows.Forms.Cursor.Position = value; }
 		}
 		
+		// TODO: Hide and show cursor
+		public bool CursorVisible {
+			set { }
+		}
+		
 		#endregion
 	}
 }

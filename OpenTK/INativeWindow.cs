@@ -111,7 +111,11 @@ namespace OpenTK {
 		/// <summary> Gets the available MouseDevice. </summary>
 		MouseDevice Mouse { get; }
 		
+		/// <summary> Gets or sets the cursor position in screen coordinates. </summary>
 		Point DesktopCursorPos { get; set; }
+		
+		/// <summary> Sets whether the cursor is visible in the window. </summary>
+		bool CursorVisible { set; }
 
 		/// <summary> Occurs whenever the window is moved. </summary>
 		event EventHandler<EventArgs> Move;

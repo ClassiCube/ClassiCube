@@ -25,12 +25,14 @@ namespace ClassicalSharp {
 					playerList.Dispose();
 					playerList = null;
 				}
+				graphicsApi.Texturing = false;
+			} else {
+				graphicsApi.Texturing = false;
+				DrawCrosshairs();
 			}
-			graphicsApi.Texturing = false;
-			DrawCrosshairs();
 		}
 		
-		const int crosshairExtent = 20, crosshairWeight = 2;
+		const int crosshairExtent = 15, crosshairWeight = 2;
 		void DrawCrosshairs() {
 			int curCol = 150 + (int)( 50 * Math.Abs( Math.Sin( game.accumulator ) ) );
 			FastColour col = new FastColour( curCol, curCol, curCol );
@@ -48,6 +50,7 @@ namespace ClassicalSharp {
 			if( playerList != null ) {
 				playerList.Dispose();
 			}
+			game.CursorVisible = true;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -68,6 +71,7 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
+			game.CursorVisible = false;
 		}
 		
 		public override bool HandlesAllInput {
