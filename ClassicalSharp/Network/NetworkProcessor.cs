@@ -341,7 +341,7 @@ namespace ClassicalSharp {
 							sentWomId = true;
 						}
 						gzipStream = null;
-						GC.Collect();
+						GC.Collect( 0 );
 					} break;
 					
 				case PacketId.SetBlock:

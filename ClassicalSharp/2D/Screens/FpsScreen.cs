@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, game.Vertices );
 				}
 				
-				string textString = text.UpdateCachedString();			
+				string textString = text.GetString();
 				fpsTextWidget.SetText( textString );
 				maxDelta = 0;
 				accumulator = 0;

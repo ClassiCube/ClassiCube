@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( graphicsApi, "_", Color.White, false );
 			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
-			string value = chatInputText.UpdateCachedString();
+			string value = chatInputText.GetString();
 			
 			if( chatInputText.Empty ) {
 				caretPos = -1;
@@ -50,27 +50,32 @@ namespace ClassicalSharp {
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
 				size.Width += chatCaretTexture.Width;
+				DrawString( size, value, true );
 			} else {
 				string subString = chatInputText.GetSubstring( caretPos );
 				Size trimmedSize = Utils2D.MeasureSize( subString, font, false );
-				chatInputText.RestoreLength();
 				
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
 				Size charSize = Utils2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
 				chatCaretTexture.Width = charSize.Width;
+				DrawString( size, value, false );
 			}
+		}
+		
+		void DrawString( Size size, string value, bool skipCheck ) {
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
-			
 			int y = game.Height - ChatInputYOffset - size.Height / 2;
+			
 			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
 					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, Color.White, false );
-					args.SkipPartsCheck = true;
+					args.SkipPartsCheck = skipCheck;
 					Utils2D.DrawText( g, font, ref args, 0, 0 );
 				}
 				chatInputTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 10, y );
 			}
+			
 			chatCaretTexture.Y1 = chatInputTexture.Y1;
 			Y = y;
 			Width = size.Width;

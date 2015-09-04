@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 			
 			Block block = blocksTable[selectedIndex].BlockId;
 			UpdateBlockInfoString( block );
-			string value = buffer.UpdateCachedString();
+			string value = buffer.GetString();
 			
 			Size size = Utils2D.MeasureSize( value, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;

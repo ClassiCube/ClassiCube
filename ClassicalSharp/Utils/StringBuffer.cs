@@ -3,33 +3,10 @@ using System.Reflection;
 
 namespace ClassicalSharp {
 	
-	// Class used to minimise memory allocations of strings.
-	// Really, only useful for FpsScreen and TextInputWidget as they allocate lots of very small strings.
-	// Seriously, you should *not* use this anywhere else, as Empty and Length are O(N).
 	internal sealed unsafe class StringBuffer {
 		
 		internal string value;
 		internal int capacity;
-		
-		static readonly FieldInfo arrayField, lengthField;
-		static bool supportsLengthSetting;
-		
-		static StringBuffer() {
-			if( OpenTK.Configuration.RunningOnMono )
-				return;
-			
-			arrayField = typeof( String ).GetField( "m_arrayLength", BindingFlags.NonPublic | BindingFlags.Instance );
-			lengthField = typeof( String ).GetField( "m_stringLength", BindingFlags.NonPublic | BindingFlags.Instance );
-			
-			// Make sure we are running on a framework that has both methods -
-			// otherwise we play it safe and just use TrimEnd().
-			if( arrayField != null && lengthField != null ) {
-				supportsLengthSetting = true;
-			} else {
-				arrayField = null;
-				lengthField = null;
-			}
-		}
 		
 		public StringBuffer( int capacity ) {
 			this.capacity = capacity;
@@ -140,11 +117,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		/// <summary> Hack that modifies the underlying string's length to avoid memory allocations. </summary>
-		/// <returns> The underlying string - ***do not*** store this because it is mutable!
-		/// You should only use this string for temporary measuring and drawing. </returns>
-		public string UpdateCachedString() {
-			return supportsLengthSetting ? SetLength( Length ) : value.TrimEnd( trimEnd );
+		public string GetString() {
+			return value.TrimEnd( trimEnd );
 		}
 		static char[] trimEnd = { '\0' };
 		
@@ -153,18 +127,7 @@ namespace ClassicalSharp {
 		}
 		
 		public string GetSubstring( int length ) {
-			return supportsLengthSetting ? SetLength( length ) : GetCopy( length );
-		}
-		
-		public void RestoreLength() {
-			if( supportsLengthSetting )
-				SetLength( Length );
-		}
-		
-		string SetLength( int len ) {
-			arrayField.SetValue( value, len + 1 );
-			lengthField.SetValue( value, len );
-			return value;
+			return GetCopy( length );
 		}
 		
 		string GetCopy( int len ) {
