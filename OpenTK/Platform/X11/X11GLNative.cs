@@ -143,8 +143,8 @@ namespace OpenTK.Platform.X11 {
 				(uint)SetWindowValuemask.BackPixel | (uint)SetWindowValuemask.BorderPixel;
 
 			window.WindowHandle = API.XCreateWindow(window.Display, window.RootWindow,
-			                                              x, y, width, height, 0, window.VisualInfo.Depth/*(int)CreateWindowArgs.CopyFromParent*/,
-			                                              (int)CreateWindowArgs.InputOutput, window.VisualInfo.Visual, (IntPtr)mask, ref attributes);
+			                                        x, y, width, height, 0, window.VisualInfo.Depth/*(int)CreateWindowArgs.CopyFromParent*/,
+			                                        (int)CreateWindowArgs.InputOutput, window.VisualInfo.Visual, (IntPtr)mask, ref attributes);
 
 			if (window.WindowHandle == IntPtr.Zero)
 				throw new ApplicationException("XCreateWindow call failed (returned 0).");
@@ -301,7 +301,7 @@ namespace OpenTK.Platform.X11 {
 				MotifWmHints hints = new MotifWmHints();
 				hints.flags = (IntPtr)MotifFlags.Decorations;
 				API.XChangeProperty(this.window.Display, this.Handle, atom, atom, 32, PropertyMode.Replace,
-				                          ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
+				                    ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
 				return true;
 			}
 			return false;
@@ -328,7 +328,7 @@ namespace OpenTK.Platform.X11 {
 				hints.flags = (IntPtr)MotifFlags.Decorations;
 				hints.decorations = (IntPtr)MotifDecorations.All;
 				API.XChangeProperty(this.window.Display, this.Handle, atom, atom, 32, PropertyMode.Replace,
-				                          ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
+				                    ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
 				return true;
 			}
 			return false;
@@ -360,8 +360,8 @@ namespace OpenTK.Platform.X11 {
 			IntPtr atom, nitems, bytes_after, prop = IntPtr.Zero;
 			int format;
 			API.XGetWindowProperty(window.Display, window.WindowHandle,
-			                             net_frame_extents, IntPtr.Zero, new IntPtr(16), false,
-			                             (IntPtr)Atom.XA_CARDINAL, out atom, out format, out nitems, out bytes_after, ref prop);
+			                       net_frame_extents, IntPtr.Zero, new IntPtr(16), false,
+			                       (IntPtr)Atom.XA_CARDINAL, out atom, out format, out nitems, out bytes_after, ref prop);
 
 			if (prop != IntPtr.Zero) {
 				if ((long)nitems == 4) {
@@ -635,8 +635,8 @@ namespace OpenTK.Platform.X11 {
 							data[index++] = (IntPtr)bitmap.GetPixel(x, y).ToArgb();
 					
 					API.XChangeProperty(window.Display, window.WindowHandle,
-					                          net_wm_icon, xa_cardinal, 32,
-					                          PropertyMode.Replace, data, size);
+					                    net_wm_icon, xa_cardinal, 32,
+					                    PropertyMode.Replace, data, size);
 
 					// Set XWMHints
 					DeleteIconPixmaps(window.Display, window.WindowHandle);
@@ -673,9 +673,9 @@ namespace OpenTK.Platform.X11 {
 				bool fullscreen = false, minimised = false;
 				int maximised = 0;
 				API.XGetWindowProperty(window.Display, window.WindowHandle,
-				                             net_wm_state, IntPtr.Zero, new IntPtr(256), false,
-				                             new IntPtr(4) /*XA_ATOM*/, out actual_atom, out actual_format,
-				                             out nitems, out bytes_after, ref prop);
+				                       net_wm_state, IntPtr.Zero, new IntPtr(256), false,
+				                       new IntPtr(4) /*XA_ATOM*/, out actual_atom, out actual_format,
+				                       out nitems, out bytes_after, ref prop);
 
 				if ((long)nitems > 0 && prop != IntPtr.Zero) {
 					for (int i = 0; i < (long)nitems; i++) {
@@ -720,12 +720,12 @@ namespace OpenTK.Platform.X11 {
 					API.XMapWindow(window.Display, window.WindowHandle);
 				else if (current_state == OpenTK.WindowState.Fullscreen)
 					API.SendNetWMMessage(window, net_wm_state, _remove,
-					                           net_wm_state_fullscreen,
-					                           IntPtr.Zero);
+					                     net_wm_state_fullscreen,
+					                     IntPtr.Zero);
 				else if (current_state == OpenTK.WindowState.Maximized)
 					API.SendNetWMMessage(window, net_wm_state, _toggle,
-					                           net_wm_state_maximized_horizontal,
-					                           net_wm_state_maximized_vertical);
+					                     net_wm_state_maximized_horizontal,
+					                     net_wm_state_maximized_vertical);
 				
 				API.XSync(window.Display, false);
 				// We can't resize the window if its border is fixed, so make it resizable first.
@@ -743,8 +743,8 @@ namespace OpenTK.Platform.X11 {
 						
 					case OpenTK.WindowState.Maximized:
 						API.SendNetWMMessage(window, net_wm_state, _add,
-						                           net_wm_state_maximized_horizontal,
-						                           net_wm_state_maximized_vertical);
+						                     net_wm_state_maximized_horizontal,
+						                     net_wm_state_maximized_vertical);
 						API.XRaiseWindow(window.Display, window.WindowHandle);
 						break;
 						
@@ -757,7 +757,7 @@ namespace OpenTK.Platform.X11 {
 						//_previous_window_border = this.WindowBorder;
 						//this.WindowBorder = WindowBorder.Hidden;
 						API.SendNetWMMessage(window, net_wm_state, _add,
-						                           net_wm_state_fullscreen, IntPtr.Zero);
+						                     net_wm_state_fullscreen, IntPtr.Zero);
 						API.XRaiseWindow(window.Display, window.WindowHandle);
 						break;
 				}
@@ -814,15 +814,40 @@ namespace OpenTK.Platform.X11 {
 			get { return mouse; }
 		}
 		
-		// TODO: Implement using native API, rather than through Mono.
 		public Point DesktopCursorPos {
-			get { return System.Windows.Forms.Cursor.Position; }
-			set { System.Windows.Forms.Cursor.Position = value; }
+			get {
+				IntPtr root, child;
+				int rootX, rootY, childX, childY, mask;
+				API.XQueryPointer( window.Display, window.RootWindow, out root, out child, out rootX, out rootY, out childX, out childY, out mask );
+				return new Point( rootX, rootY );
+			}
+			set {
+				IntPtr root, child;
+				int rootX, rootY, childX, childY, mask;
+				API.XQueryPointer( window.Display, window.RootWindow, out root, out child, out rootX, out rootY, out childX, out childY, out mask );
+				API.XWarpPointer( window.Display, IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, rootX, rootY );
+				API.XFlush( window.Display ); // TODO: not sure if XFlush call is necessary
+			}
 		}
 		
-		// TODO: Hide and show cursor
 		public bool CursorVisible {
-			set { }
+			set {
+				if( value ) {
+					API.XUndefineCursor( window.Display, window.WindowHandle );
+				} else {
+					if( blankCursor == IntPtr.Zero )
+						MakeBlankCursor();
+					API.XDefineCursor( window.Display, window.WindowHandle, blankCursor );
+				}
+			}
+		}
+		
+		IntPtr blankCursor;
+		void MakeBlankCursor() {
+			XColor color = default( XColor );
+			IntPtr pixmap = API.XCreatePixmap( window.Display, window.RootWindow, 1, 1, 1 );
+			blankCursor = API.XCreatePixmapCursor( window.Display, pixmap, pixmap, ref color, ref color, 0, 0 );		
+			API.XFreePixmap( window.Display, pixmap );
 		}
 		
 		/// <summary> Returns true if a render window/context exists. </summary>
@@ -876,7 +901,7 @@ namespace OpenTK.Platform.X11 {
 			ev.ClientMessageEvent.window = window.WindowHandle;
 			ev.ClientMessageEvent.ptr1 = wm_destroy;
 			API.XSendEvent(window.Display, window.WindowHandle, false,
-			                     EventMask.NoEventMask, ref ev);
+			               EventMask.NoEventMask, ref ev);
 			API.XFlush(window.Display);
 		}
 
