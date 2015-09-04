@@ -38,7 +38,7 @@ Note that the first time you run the launcher, a dialog box will pop up saying: 
 Some points to note:
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
 * Press F6 to change view distance. A smaller number of visible chunks can improve performance.
-* Press F7 to toggle VSync on (minimises CPU usage) or off (maximises chunk loading speed).
+* Press F7 to toggle VSync on or off. (on minimises CPU usage)
 
 #### Client commands
 * To see a list of all built in commands, type `/client commands`.
