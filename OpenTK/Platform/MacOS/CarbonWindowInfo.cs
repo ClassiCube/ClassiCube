@@ -80,12 +80,6 @@ namespace OpenTK.Platform.MacOS
 			set { goWindowedHack = value; }
 		}
 
-
-		/// <summary>
-		/// Gets a value indicating whether this instance refers to a System.Windows.Forms.Control.
-		/// </summary>
-		public const bool IsControl = false;
-
 		/// <summary>Returns a System.String that represents the current window.</summary>
 		/// <returns>A System.String that represents the current window.</returns>
 		public override string ToString()

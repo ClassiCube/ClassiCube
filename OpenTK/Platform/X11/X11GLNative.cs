@@ -825,7 +825,7 @@ namespace OpenTK.Platform.X11 {
 				IntPtr root, child;
 				int rootX, rootY, childX, childY, mask;
 				API.XQueryPointer( window.Display, window.RootWindow, out root, out child, out rootX, out rootY, out childX, out childY, out mask );
-				API.XWarpPointer( window.Display, IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, rootX, rootY );
+				API.XWarpPointer( window.Display, IntPtr.Zero, IntPtr.Zero, 0, 0, 0, 0, value.X - rootX, value.Y - rootY );
 				API.XFlush( window.Display ); // TODO: not sure if XFlush call is necessary
 			}
 		}
