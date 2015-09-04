@@ -188,7 +188,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			if( chunks == null ) return;
 			UpdateSortOrder();
-			UpdateChunks();
+			UpdateChunks( deltaTime );
 			
 			RenderNormal();
 			game.MapEnvRenderer.Render( deltaTime );
@@ -229,9 +229,13 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void UpdateChunks() {
+		int chunksTarget = 4;
+		void UpdateChunks( double deltaTime ) {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( game.ViewDistance + 14 ) * ( game.ViewDistance + 14 );
+			chunksTarget += deltaTime < 0.034 ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
+			Utils.Clamp( ref chunksTarget, 4, 12 );
+			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
@@ -239,7 +243,7 @@ namespace ClassicalSharp {
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.NormalParts == null && info.TranslucentParts == null ) {
-					if( inRange && chunksUpdatedThisFrame < 4 ) {
+					if( inRange && chunksUpdatedThisFrame < chunksTarget ) {
 						game.ChunkUpdates++;
 						builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
 						                    ref info.NormalParts, ref info.TranslucentParts );
