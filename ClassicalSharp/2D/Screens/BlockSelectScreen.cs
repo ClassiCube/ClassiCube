@@ -165,13 +165,13 @@ namespace ClassicalSharp {
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
 				if( game.CanPlace[tile] || game.CanDelete[tile] ) {
 					Block block = (Block)tile;
-					int texId = game.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Left );
+					int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;
 					float height = game.BlockInfo.BlockHeight( (byte)block );
 					int blockY = y;
 					if( height != 1 ) {
-						rec.V1 = rec.V1 + TerrainAtlas2D.usedInvVerElemSize * height;
+						rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
 						verSize = (int)( blockSize * height );
 						blockY = y + blockSize - verSize;
 					}

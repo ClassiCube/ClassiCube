@@ -217,7 +217,7 @@ namespace ClassicalSharp {
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
 		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
-			int texLoc = game.BlockInfo.GetOptimTextureLoc( (byte)block, TileSide.Top );
+			int texLoc = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Top );
 			if( texLoc != lastTexLoc ) {
 				lastTexLoc = texLoc;
 				game.Graphics.DeleteTexture( ref texId );

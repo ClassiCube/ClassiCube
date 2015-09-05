@@ -18,8 +18,7 @@ namespace ClassicalSharp {
 	public class TerrainAtlas2D : IDisposable {
 		
 		public const int ElementsPerRow = 16, RowsCount = 16;
-		public const float invElementSize = 0.0625f;
-		public const float usedInvVerElemSize = 0.125f;
+		public const float invElementSize = 1 / 16f;
 		public Bitmap AtlasBitmap;
 		public int elementSize;
 		public int TexId;
@@ -33,8 +32,7 @@ namespace ClassicalSharp {
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-				MakeOptimisedTexture( fastBmp );
-				TexId = graphics.CreateTexture( fastBmp.Width, fastBmp.Height / 2, fastBmp.Scan0 );
+				TexId = graphics.CreateTexture( fastBmp );
 			}
 		}
 		
@@ -56,8 +54,8 @@ namespace ClassicalSharp {
 		public TextureRectangle GetTexRec( int index ) {
 			int x = index & 0x0F;
 			int y = index >> 4;
-			return new TextureRectangle( x * invElementSize, y * usedInvVerElemSize, 
-			                            invElementSize, usedInvVerElemSize );
+			return new TextureRectangle( x * invElementSize, y * invElementSize,
+			                            invElementSize, invElementSize );
 		}
 		
 		public void Dispose() {
@@ -65,27 +63,6 @@ namespace ClassicalSharp {
 				AtlasBitmap.Dispose();
 			}
 			graphics.DeleteTexture( ref TexId );
-		}
-		
-		static ushort[] rowFlags = { 0xFFFF, 0xFFEE, 0xFFE0, 0xFFE0, 0xFFFF, 0xFA00 };
-		void MakeOptimisedTexture( FastBitmap atlas ) {
-			int srcIndex = 0, destIndex = 0;
-			int size = elementSize;
-			
-			for( int y = 0; y < 6; y++ ) {
-				int flags = rowFlags[y];
-				for( int x = 0; x < ElementsPerRow; x++ ) {
-					bool isUsed = ( flags & 1 << ( 15 - x ) ) != 0;
-					if( isUsed && srcIndex != destIndex ) {
-						int dstX = ( destIndex & 0x0F ) * size;
-						int dstY = ( destIndex >> 4 ) * size;
-						FastBitmap.MovePortion( x * size, y * size, dstX, dstY, atlas, atlas, size );
-					}
-					
-					srcIndex++;
-					if( isUsed ) destIndex++;
-				}
-			}
 		}
 	}
 }

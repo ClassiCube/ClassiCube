@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public float invElementSize;
 		public int[] TexIds;
 		IGraphicsApi graphics;
-		public readonly int UsedRows1D = 5;
+		public const int UsedRows1D = 6;
 		
 		public TerrainAtlas1D( IGraphicsApi graphics ) {
 			this.graphics = graphics;
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateState( TerrainAtlas2D atlas2D ) {
-			int maxVerSize = Math.Min( 2048, graphics.MaxTextureDimensions );
+			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
 			int totalElements = UsedRows1D * TerrainAtlas2D.ElementsPerRow;
 			int elemSize = atlas2D.elementSize;

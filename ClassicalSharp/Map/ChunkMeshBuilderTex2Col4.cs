@@ -147,14 +147,14 @@ namespace ClassicalSharp {
 		}
 		
 		void AddSpriteVertices( byte tile, int count ) {
-			int i = atlas.Get1DIndex( info.GetOptimTextureLoc( tile, TileSide.Left ) );
+			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, TileSide.Left ) );
 			DrawInfo part = drawInfoNormal[i];
 			part.spriteCount += 6 + 6 * count;
 			part.iCount += 6 + 6 * count;
 		}
 		
 		unsafe void AddVertices( byte tile, int count, int face ) {
-			int i = atlas.Get1DIndex( info.GetOptimTextureLoc( tile, face ) );
+			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, face ) );
 			DrawInfo part = info.IsTranslucent( tile ) ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
 
@@ -164,7 +164,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawLeftFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Left );
+			int texId = info.GetTextureLoc( tile, TileSide.Left );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = X > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
@@ -181,7 +181,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawRightFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Right );
+			int texId = info.GetTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = X < maxX ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
@@ -198,7 +198,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBackFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Back );
+			int texId = info.GetTextureLoc( tile, TileSide.Back );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = Z < maxZ ? ( emitsLight || Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
@@ -215,7 +215,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawFrontFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Front );
+			int texId = info.GetTextureLoc( tile, TileSide.Front );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = Z > 0 ? ( emitsLight || Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
@@ -232,7 +232,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBottomFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Bottom );
+			int texId = info.GetTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = Y > 0 ? ( emitsLight || (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
@@ -246,7 +246,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawTopFace( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Top );
+			int texId = info.GetTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
@@ -260,7 +260,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawSprite( int count ) {
-			int texId = info.GetOptimTextureLoc( tile, TileSide.Right );
+			int texId = info.GetTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
 			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 

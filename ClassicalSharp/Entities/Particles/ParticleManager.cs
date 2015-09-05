@@ -59,15 +59,14 @@ namespace ClassicalSharp.Particles {
 		
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
-			int texLoc = game.BlockInfo.GetOptimTextureLoc( block, TileSide.Left );
+			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left );
 			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texLoc );
 			
-			float invHorSize = TerrainAtlas2D.invElementSize;
-			float invVerSize = TerrainAtlas2D.usedInvVerElemSize;
-			int cellsCountX = (int)( 0.25f / invHorSize );
-			int cellsCountY = (int)( 0.25f / invVerSize );
-			float elementXSize = invHorSize * 0.25f;
-			float elementYSize = invVerSize * 0.25f;
+			float invSize = TerrainAtlas2D.invElementSize;
+			int cellsCountX = (int)( 0.25f / invSize );
+			int cellsCountY = (int)( 0.25f / invSize );
+			float elementXSize = invSize * 0.25f;
+			float elementYSize = invSize * 0.25f;
 			
 			Random rnd = new Random();
 			for( int i = 0; i < 25; i++ ) {
