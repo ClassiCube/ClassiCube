@@ -36,6 +36,13 @@ namespace ClassicalSharp {
 			G = (byte)g;
 			B = (byte)b;
 		}
+		
+		public FastColour( int argb ) {
+			A = (byte)( argb >> 24 );
+			R = (byte)( argb >> 16 );
+			G = (byte)( argb >> 8 );
+			B = (byte)argb;
+		}
 
 		public FastColour( Color c ) {
 			A = c.A;

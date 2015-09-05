@@ -81,9 +81,8 @@ namespace ClassicalSharp {
 		}
 		
 		static FastColour ParseWomColour( string value, FastColour defaultCol ) {
-			int col;
-			return Int32.TryParse( value, out col ) ? 
-				new FastColour( ( col & 0xFF0000 ) >> 16, ( col & 0xFF00 ) >> 8, col & 0xFF ) : defaultCol;
+			int argb;
+			return Int32.TryParse( value, out argb ) ? new FastColour( argb ) : defaultCol;
 		}
 	}
 }

@@ -39,6 +39,31 @@ namespace ClassicalSharp {
 					string group = ReadString( reader );
 					string key = ReadString( reader );
 					string value = ReadString( reader );
+					if( group == "CS_Client" ) {
+						int valueInt = Int32.Parse( value );
+						switch( key ) {
+							case "SkyCol":
+								game.Map.SetSkyColour( new FastColour( valueInt ) ); break;
+							case "CloudsCol":
+								game.Map.SetCloudsColour( new FastColour( valueInt ) ); break;	
+							case "FogCol":
+								game.Map.SetFogColour( new FastColour( valueInt ) ); break;	
+								
+							case "ClickDist":
+								game.LocalPlayer.ReachDistance = valueInt / 32f; break;
+							case "SunLight":
+								game.Map.SetSunlight( new FastColour( valueInt ) ); break;
+							case "ShadowLight":
+								game.Map.SetShadowlight( new FastColour( valueInt ) ); break;
+								
+							case "Weather":
+								game.Map.SetWeather( (Weather)valueInt ); break;
+							case "SidesBlock":
+								game.Map.SetSidesBlock( (Block)valueInt ); break;
+							case "EdgeBlock":
+								game.Map.SetEdgeBlock( (Block)valueInt ); break;
+						}
+					}
 					Console.WriteLine( group + "," + key + "," + value );
 				}
 				byte[] blocks = new byte[width * height * length];
@@ -98,10 +123,10 @@ namespace ClassicalSharp {
 		static void WriteMetadata( Stream stream, Game game ) {
 			BinaryWriter writer = new BinaryWriter( stream );
 			LocalPlayer p = game.LocalPlayer;
-			Map map = game.Map;	
+			Map map = game.Map;
 			
 			WriteMetadataEntry( writer, "SkyCol", map.SkyCol.ToArgb() );
-			WriteMetadataEntry( writer, "CloudsCol", map.CloudsCol.ToArgb() );		
+			WriteMetadataEntry( writer, "CloudsCol", map.CloudsCol.ToArgb() );
 			WriteMetadataEntry( writer, "FogCol", map.FogCol.ToArgb() );
 			
 			WriteMetadataEntry( writer, "ClickDist", (int)( p.ReachDistance * 32 ) );

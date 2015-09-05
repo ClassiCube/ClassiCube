@@ -235,7 +235,6 @@ namespace ClassicalSharp {
 			int adjViewDistSqr = ( game.ViewDistance + 14 ) * ( game.ViewDistance + 14 );
 			chunksTarget += deltaTime < 0.034 ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
-			Console.WriteLine( (deltaTime * 1000) + ":" + chunksTarget );
 			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
