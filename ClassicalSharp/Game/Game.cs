@@ -73,6 +73,13 @@ namespace ClassicalSharp {
 					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
 					return;
 				}
+				for( int i = 0; i < BlocksHotbar.Length; i++ ) {
+					if( BlocksHotbar[i] == value ) {
+						hotbarIndex = i;
+						RaiseHeldBlockChanged();
+						return;
+					}
+				}			
 				BlocksHotbar[hotbarIndex] = value;
 				RaiseHeldBlockChanged();
 			}
