@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 				ClearChunkCache();
 				CreateChunkCache();
 			}
+			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		}
 		
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
@@ -75,8 +76,7 @@ namespace ClassicalSharp {
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
-				Refresh();
-				chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
+				Refresh();				
 			}
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
 		}

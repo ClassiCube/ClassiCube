@@ -57,6 +57,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetSidesBlock( Block block ) {
+			if( block == SidesBlock ) return;
 			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set sides block to an invalid block: " + block );
 				block = Block.Bedrock;
@@ -66,6 +67,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetEdgeBlock( Block block ) {
+			if( block == EdgeBlock ) return;
 			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set edge block to an invalid block: " + block );
 				block = Block.StillWater;
@@ -75,38 +77,45 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetWaterLevel( int level ) {
+			if( level == WaterHeight ) return;
 			WaterHeight = level;
 			game.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
 		}
 		
 		public void SetWeather( Weather weather ) {
+			if( weather == Weather ) return;
 			Weather = weather;
 			game.RaiseEnvVariableChanged( EnvVariable.Weather );
 		}
 		
 		public void SetSkyColour( FastColour col ) {
+			if( col == SkyCol ) return;
 			SkyCol = col;
 			game.RaiseEnvVariableChanged( EnvVariable.SkyColour );
 		}
 		
 		public void SetFogColour( FastColour col ) {
+			if( col == FogCol ) return;
 			FogCol = col;
 			game.RaiseEnvVariableChanged( EnvVariable.FogColour );
 		}
 		
 		public void SetCloudsColour( FastColour col ) {
+			if( col == CloudsCol ) return;
 			CloudsCol = col;
 			game.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
 		}
 		
-		public void SetSunlight( FastColour value ) {
-			Sunlight = value;
+		public void SetSunlight( FastColour col ) {
+			if( col == Sunlight ) return;
+			Sunlight = col;
 			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
 			game.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
 		}
 		
-		public void SetShadowlight( FastColour value ) {
-			Shadowlight = value;
+		public void SetShadowlight( FastColour col ) {
+			if( col == Shadowlight ) return;
+			Shadowlight = col;
 			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
 			game.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
