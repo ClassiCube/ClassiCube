@@ -5,8 +5,6 @@ namespace ClassicalSharp {
 	public partial class BlockInfo {
 		
 		int[] textures = new int[BlocksCount * TileSide.Sides];	
-		const int Row1 = 0, Row2 = 16, Row3 = 32, Row4 = 48,
-		Row5 = 64, Row6 = 80, Row7 = 96, Row8 = 112, Row9 = 128;
 
 		void SetupOptimTextures() {
 			// Row 1
@@ -70,8 +68,7 @@ namespace ClassicalSharp {
 			for( int i = index; i < index + TileSide.Bottom; i++ ) {
 				textures[i] = textureId;
 			}
-		}
-		int texId;
+		}		
 		
 		void SetTopAndBottom( int textureId, Block blockId ) {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
@@ -86,10 +83,10 @@ namespace ClassicalSharp {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
 		}
 
+		int texId;
 		void SetAll( params Block[] blocks ) {
 			for( int i = 0; i < blocks.Length; i++ ) {
-				SetAll( texId, blocks[i] );
-				texId++;
+				SetAll( texId, blocks[i] ); texId++;
 			}
 		}
 		

@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 				if( part.IndicesCount > maxIndices ) {
 					DrawBigPart( info, ref part );
 				} else {
-					DrawPart( info, ref part );
+					DrawPart( info, ref part, true );
 				}				
 				
 				if( part.spriteCount > 0 )
@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				
 				if( part.IndicesCount == 0 ) continue;
-				DrawPart( info, ref part );
+				DrawPart( info, ref part, false );
 				game.Vertices += part.IndicesCount;
 			}
 		}
@@ -49,11 +49,11 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
-				DrawPart( info, ref part );
+				DrawPart( info, ref part, false );
 			}
 		}
 		
-		void DrawPart( ChunkInfo info, ref ChunkPartInfo part ) {
+		void DrawPart( ChunkInfo info, ref ChunkPartInfo part, bool faceCulling ) {
 			api.BindVb( part.VbId );
 			bool drawLeft = info.DrawLeft && part.leftCount > 0;
 			bool drawRight = info.DrawRight && part.rightCount > 0;
@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 			bool drawBack = info.DrawBack && part.backCount > 0;
 			
 			if( drawLeft && drawRight ) {
-				api.FaceCulling = true;
+				api.FaceCulling = faceCulling;
 				api.DrawIndexedVb_TrisT2fC4b( part.leftCount + part.rightCount, part.leftIndex );
 				api.FaceCulling = false;
 			} else if( drawLeft ) {
@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 			}
 			
 			if( drawFront && drawBack ) {
-				api.FaceCulling = true;
+				api.FaceCulling = faceCulling;
 				api.DrawIndexedVb_TrisT2fC4b( part.frontCount + part.backCount, part.frontIndex );
 				api.FaceCulling = false;
 			} else if( drawFront ) {
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 			}
 			
 			if( drawBottom && drawTop ) {
-				api.FaceCulling = true;
+				api.FaceCulling = faceCulling;
 				api.DrawIndexedVb_TrisT2fC4b( part.bottomCount + part.topCount, part.bottomIndex );
 				api.FaceCulling = false;
 			} else if( drawBottom ) {

@@ -8,9 +8,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using OpenTK.Graphics;
 
@@ -21,14 +20,6 @@ namespace OpenTK.Platform.X11
 		// Todo: Add custom visual selection algorithm, instead of ChooseFBConfig/ChooseVisual.
 		// It seems the Choose* methods do not take multisampling into account (at least on some
 		// drivers).
-		
-		#region Constructors
-
-		public X11GraphicsMode()
-		{
-		}
-
-		#endregion
 
 		#region IGraphicsMode Members
 
