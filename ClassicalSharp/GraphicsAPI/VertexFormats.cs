@@ -62,6 +62,12 @@ namespace ClassicalSharp {
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
+		public VertexPos3fTex2fCol4b( Vector3 p, float u, float v, FastColour c ) {
+			X = p.X; Y = p.Y; Z = p.Z;
+			U = u; V = v;
+			R = c.R; G = c.G; B = c.B; A = c.A;
+		}
+		
 		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, Color c ) {
 			X = x; Y = y; Z = z;
 			U = u; V = v;

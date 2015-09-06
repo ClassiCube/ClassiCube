@@ -15,16 +15,16 @@ namespace ClassicalSharp.Particles {
 		public ParticleManager( Game game ) {
 			this.game = game;
 			graphics = game.Graphics;
-			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2f, 1000 );
+			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 1000 );
 		}
 		
-		VertexPos3fTex2f[] vertices = new VertexPos3fTex2f[0];
+		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[0];
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
 			int count = particles.Count * 6;
 			if( count > vertices.Length ) {
-				vertices = new VertexPos3fTex2f[count];
+				vertices = new VertexPos3fTex2fCol4b[count];
 			}
 			int index = 0;
 			for( int i = 0; i < particles.Count; i++ ) {
@@ -36,7 +36,7 @@ namespace ClassicalSharp.Particles {
 			graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
 			
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2f );
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
