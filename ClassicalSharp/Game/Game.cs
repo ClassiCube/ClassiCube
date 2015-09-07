@@ -205,7 +205,7 @@ namespace ClassicalSharp {
 			imageCheckAccumulator += e.Time;
 			ticksAccumulator += e.Time;
 			Vertices = 0;
-			if( !Focused && !( activeScreen is PauseScreen ) && !Map.IsNotLoaded ) {
+			if( !Focused && ( activeScreen == null || !activeScreen.HandlesAllInput ) ) {
 				SetNewScreen( new PauseScreen( this ) );
 			}
 			
