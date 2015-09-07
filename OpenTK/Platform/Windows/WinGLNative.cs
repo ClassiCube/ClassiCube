@@ -212,7 +212,7 @@ namespace OpenTK.Platform.Windows
 					// This is due to inconsistent behavior of the WParam value on 64bit arch, whese
 					// wparam = 0xffffffffff880000 or wparam = 0x00000000ff100000
 					mouse.WheelPrecise += ((long)wParam << 32 >> 48) / 120.0f;
-					break;
+					return IntPtr.Zero;
 
 				case WindowMessage.LBUTTONDOWN:
 					mouse[MouseButton.Left] = true;
