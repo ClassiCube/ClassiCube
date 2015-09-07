@@ -13,15 +13,37 @@ namespace ClassicalSharp {
 		internal float[] heights = new float[BlocksCount];
 		internal bool[] blocksLight = new bool[BlocksCount];
 		internal bool[] emitsLight = new bool[BlocksCount];
-		public const byte MaxDefinedBlock = (byte)Block.StoneBrick;
-		public const byte BlocksCount = MaxDefinedBlock + 1;
+		internal string[] names = new string[BlocksCount];
+		internal FastColour[] fogColours = new FastColour[BlocksCount];
+		internal float[] fogDensities = new float[BlocksCount];
+		
+		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
+		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
+		public const byte MaxDefinedBlock = byte.MaxValue;
+		public const int BlocksCount = MaxDefinedBlock + 1;
 		
 		public void Init() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
 				heights[tile] = 1f;
 				blocksLight[tile] = true;
-				isOpaque[tile] = true;				
+				isOpaque[tile] = true;
+			}			
+			for( int i = 0; i < CpeBlocksCount; i++ ) {
+				names[i] = Enum.GetName( typeof( Block ), (byte)i );
 			}
+			for( int i = CpeBlocksCount; i < BlocksCount; i++ ) {
+				names[i] = "Invalid";
+			}
+			
+			fogDensities[(byte)Block.StillWater] = 0.1f; 
+			fogColours[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );
+			fogDensities[(byte)Block.Water] = 0.1f;
+			fogColours[(byte)Block.Water] = new FastColour( 5, 5, 51 );
+			fogDensities[(byte)Block.StillLava] = 2f;
+			fogColours[(byte)Block.StillLava] = new FastColour( 153, 25, 0 );
+			fogDensities[(byte)Block.Lava] = 2f;
+			fogColours[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
+			
 			SetupOptimTextures();
 			
 			SetIsTranslucent( Block.StillWater, Block.Water );
@@ -153,6 +175,18 @@ namespace ClassicalSharp {
 		
 		public bool EmitsLight( byte id ) {
 			return emitsLight[id];
+		}
+		
+		public float FogDensity( byte id ) {
+			return fogDensities[id];
+		}
+		
+		public FastColour FogColour( byte id ) {
+			return fogColours[id];
+		}
+		
+		public string GetName( byte id ) {
+			return names[id];
 		}
 	}
 }

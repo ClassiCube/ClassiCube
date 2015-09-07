@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public float invElementSize;
 		public int[] TexIds;
 		IGraphicsApi graphics;
-		public const int UsedRows1D = 6;
+		public const int UsedRows1D = 16; // TODO: This should not be constant.
 		
 		public TerrainAtlas1D( IGraphicsApi graphics ) {
 			this.graphics = graphics;

@@ -118,22 +118,19 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetFog() {
-			if( map.IsNotLoaded ) return;
-			FastColour fogCol = map.FogCol;
-			FastColour skyCol = map.SkyCol;
-			FastColour adjFogCol = fogCol;
+			if( map.IsNotLoaded ) return;			
+			FastColour adjFogCol = FastColour.White;
 			Block headBlock = game.LocalPlayer.BlockAtHead;
+			BlockInfo info = game.BlockInfo;
 			
-			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
+			if( info.FogDensity( (byte)headBlock ) != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( 0.1f );
-				adjFogCol = new FastColour( 5, 5, 51 );
-			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
-				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( 2f );
-				adjFogCol = new FastColour( 153, 25, 0 );
+				graphics.SetFogDensity( info.FogDensity( (byte)headBlock ) );
+				adjFogCol = info.FogColour( (byte)headBlock );
 			} else {
 				// Blend fog and sky together
+				FastColour fogCol = map.FogCol;
+				FastColour skyCol = map.SkyCol;
 				float blend = (float)BlendFactor( game.ViewDistance );
 				adjFogCol.R = (byte)Utils.Lerp( fogCol.R, skyCol.R, blend );
 				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );

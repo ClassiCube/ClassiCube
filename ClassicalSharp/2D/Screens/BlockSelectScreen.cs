@@ -94,7 +94,6 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
-		static readonly string[] blockNames = Enum.GetNames( typeof( Block ) );
 		unsafe void UpdateBlockInfoString( Block block ) {
 			fixed( char* ptr = buffer.value ) {
 				char* ptr2 = ptr;
@@ -103,13 +102,11 @@ namespace ClassicalSharp {
 				if( block == Block.TNT ) {
 					buffer.Append( ref ptr2, "TNT" );
 				} else {
-					string value = blockNames[(int)block];
-					for( int i = 0; i < value.Length; i++ ) {
-						char c = value[i];
-						if( Char.IsUpper( c ) && i > 0 ) {
-							buffer.Append( ref ptr2, ' ' );
-						}
-						buffer.Append( ref ptr2, c );
+					string value = game.BlockInfo.GetName( (byte)block );
+					if( (byte)block < BlockInfo.CpeBlocksCount ) {
+						SplitUppercase( value, ref ptr2 );
+					} else {
+						buffer.Append( ref ptr2, value );
 					}
 				}
 				buffer.Append( ref ptr2, " (can place: " );
@@ -117,6 +114,16 @@ namespace ClassicalSharp {
 				buffer.Append( ref ptr2, "&f, can delete: " );
 				buffer.Append( ref ptr2, game.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f)" );
+			}
+		}		
+		
+		unsafe void SplitUppercase( string value, ref char* ptr ) {
+			for( int i = 0; i < value.Length; i++ ) {
+				char c = value[i];
+				if( Char.IsUpper( c ) && i > 0 ) {
+					buffer.Append( ref ptr, ' ' );
+				}
+				buffer.Append( ref ptr, c );
 			}
 		}
 		

@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 		
 		public void SetSidesBlock( Block block ) {
 			if( block == SidesBlock ) return;
-			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set sides block to an invalid block: " + block );
 				block = Block.Bedrock;
 			}
@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 		
 		public void SetEdgeBlock( Block block ) {
 			if( block == EdgeBlock ) return;
-			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set edge block to an invalid block: " + block );
 				block = Block.StillWater;
 			}

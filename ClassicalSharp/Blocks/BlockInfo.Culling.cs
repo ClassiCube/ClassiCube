@@ -7,8 +7,9 @@ namespace ClassicalSharp {
 		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
 
 		void SetupCullingCache() {
-			for( byte tile = 1; tile < BlocksCount; tile++ ) {
-				for( byte neighbour = 1; neighbour < BlocksCount; neighbour++ ) {
+			for( int tileI = 1; tileI < BlocksCount; tileI++ ) {
+				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
+					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
 					bool hidden = IsHidden( tile, neighbour );
 					if( hidden ) {
 						SetHidden( tile, neighbour, TileSide.Left, true );

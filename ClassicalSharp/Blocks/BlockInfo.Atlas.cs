@@ -63,23 +63,23 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void SetSide( int textureId, Block blockId ) {
+		internal void SetSide( int textureId, Block blockId ) {
 			int index = (byte)blockId * TileSide.Sides;
 			for( int i = index; i < index + TileSide.Bottom; i++ ) {
 				textures[i] = textureId;
 			}
 		}		
 		
-		void SetTopAndBottom( int textureId, Block blockId ) {
+		internal void SetTopAndBottom( int textureId, Block blockId ) {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
 			textures[(byte)blockId * TileSide.Sides + TileSide.Top] = textureId;
 		}
 		
-		void SetTop( int textureId, Block blockId ) {
+		internal void SetTop( int textureId, Block blockId ) {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Top] = textureId;
 		}
 		
-		void SetBottom( int textureId, Block blockId ) {
+		internal void SetBottom( int textureId, Block blockId ) {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
 		}
 

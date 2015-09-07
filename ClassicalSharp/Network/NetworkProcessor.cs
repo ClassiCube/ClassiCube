@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		
 		Socket socket;
 		NetworkStream stream;
-		Game game;		
+		Game game;
 		bool sendHeldBlock;
 		bool useMessageTypes;
 		bool useBlockPermissions;
@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			} catch( SocketException ex ) {
 				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
 				game.Disconnect( "&eUnable to reach " + address + ":" + port,
-				                  "Unable to establish an underlying connection" );
+				                "Unable to establish an underlying connection" );
 				Dispose();
 				return;
 			}
@@ -642,24 +642,37 @@ namespace ClassicalSharp {
 				case PacketId.CpeDefineLiquid:
 					{
 						byte block = reader.ReadUInt8();
-						string name = reader.ReadAsciiString();
+						BlockInfo info = game.BlockInfo;
+						info.names[block] = reader.ReadAsciiString();
 						byte solidity = reader.ReadUInt8();
 						byte movementSpeed = reader.ReadUInt8();
-						byte topTexId = reader.ReadUInt8();
-						byte sidesTexId = reader.ReadUInt8();
-						byte bottomTexId = reader.ReadUInt8();
+						info.SetTop( reader.ReadUInt8(), (Block)block );
+						info.SetSide( reader.ReadUInt8(), (Block)block );
+						info.SetBottom( reader.ReadUInt8(), (Block)block );
 						reader.ReadUInt8(); // opacity hint, but we ignore this.
-						bool transmitsLight = reader.ReadUInt8() != 0;
+						info.blocksLight[block] = reader.ReadUInt8() == 0;
 						reader.ReadUInt8(); // walk sound, but we ignore this.
 						
 						if( opcode == (byte)PacketId.CpeDefineBlock ) {
 							byte shape = reader.ReadUInt8();
+							if( shape == 1 ) info.heights[block] = 1;
+							else if( shape == 2 ) info.heights[block] = 0.5f;
+							// TODO: upside down slab not properly supported
+							else if( shape == 3 ) info.heights[block] = 0.5f;
+							else if( shape == 4 ) info.isSprite[block] = true;
+							
 							byte blockDraw = reader.ReadUInt8();
+							if( blockDraw == 0 ) info.isOpaque[block] = true;
+							else if( blockDraw == 1 ) info.isTransparent[block] = true;
+							else if( blockDraw == 2 ) info.isTranslucent[block] = true;
+							else if( blockDraw == 3 ) info.isTranslucent[block] = true;
+							
+							Console.WriteLine( shape + "," + blockDraw );
 						} else {
 							byte fogDensity = reader.ReadUInt8();
-							byte fogR = reader.ReadUInt8();
-							byte fogG = reader.ReadUInt8();
-							byte fogB = reader.ReadUInt8();
+							info.fogDensities[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
+							info.fogColours[block] = new FastColour(
+								reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 						}
 					} break;
 					
