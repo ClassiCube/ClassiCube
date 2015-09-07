@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138,
+			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 76, 78,
 		};
 		
 		static string[] clientExtensions = {
@@ -636,6 +636,31 @@ namespace ClassicalSharp {
 						string displayName = reader.ReadAsciiString();
 						string skinName = reader.ReadAsciiString();
 						AddEntity( entityId, displayName, skinName, true );
+					} break;
+					
+				case PacketId.CpeDefineBlock:
+				case PacketId.CpeDefineLiquid:
+					{
+						byte block = reader.ReadUInt8();
+						string name = reader.ReadAsciiString();
+						byte solidity = reader.ReadUInt8();
+						byte movementSpeed = reader.ReadUInt8();
+						byte topTexId = reader.ReadUInt8();
+						byte sidesTexId = reader.ReadUInt8();
+						byte bottomTexId = reader.ReadUInt8();
+						reader.ReadUInt8(); // opacity hint, but we ignore this.
+						bool transmitsLight = reader.ReadUInt8() != 0;
+						reader.ReadUInt8(); // walk sound, but we ignore this.
+						
+						if( opcode == (byte)PacketId.CpeDefineBlock ) {
+							byte shape = reader.ReadUInt8();
+							byte blockDraw = reader.ReadUInt8();
+						} else {
+							byte fogDensity = reader.ReadUInt8();
+							byte fogR = reader.ReadUInt8();
+							byte fogG = reader.ReadUInt8();
+							byte fogB = reader.ReadUInt8();
+						}
 					} break;
 					
 				default:

@@ -39,6 +39,8 @@ namespace ClassicalSharp {
 		CpeHackControl = 32,
 		CpeExtAddEntity2 = 33,
 		CpePlayerClick = 34,
+		CpeDefineBlock = 35,
+		CpeDefineLiquid = 36,
 	}
 	
 	public enum CpeMessage {
