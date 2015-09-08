@@ -64,10 +64,10 @@ namespace ClassicalSharp {
 			if( activeScreen == null || !activeScreen.HandlesMouseScroll( e.Delta ) ) {
 				if( Camera.MouseZoom( e ) || !CanChangeHeldBlock ) return;
 				
-				int diff = -e.Delta % BlocksHotbar.Length;
+				int diff = -e.Delta % Hotbar.Length;
 				int newIndex = HeldBlockIndex + diff;
-				if( newIndex < 0 ) newIndex += BlocksHotbar.Length;
-				if( newIndex >= BlocksHotbar.Length ) newIndex -= BlocksHotbar.Length;
+				if( newIndex < 0 ) newIndex += Hotbar.Length;
+				if( newIndex >= Hotbar.Length ) newIndex -= Hotbar.Length;
 				HeldBlockIndex = newIndex;
 			}	
 		}

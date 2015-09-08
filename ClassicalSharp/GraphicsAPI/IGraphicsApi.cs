@@ -157,6 +157,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void PrintApiSpecificInfo();
 		
+		public void PrintGraphicsInfo() {
+			Console.ForegroundColor = ConsoleColor.Green;
+			PrintApiSpecificInfo();
+			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
+			Utils.Log( "== End of graphics info ==" );
+			Console.ResetColor();
+		}
+		
 		public abstract void BeginFrame( Game game );
 		
 		public abstract void EndFrame( Game game );

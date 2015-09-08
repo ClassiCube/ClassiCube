@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			Height = blockSize;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, game.BlocksHotbar[i] );
+				barTextures[i] = MakeTexture( x, y, game.Hotbar[i] );
 				x += blockSize;
 			}
 		}

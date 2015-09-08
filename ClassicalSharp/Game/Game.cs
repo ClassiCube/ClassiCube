@@ -51,8 +51,7 @@ namespace ClassicalSharp {
 		
 		int hotbarIndex = 0;
 		public bool CanChangeHeldBlock = true;
-		public Block[] BlocksHotbar = new Block[] { Block.Stone, Block.Cobblestone,
-			Block.Brick, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
+		public Block[] Hotbar = new Block[9];
 		
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
@@ -67,20 +66,20 @@ namespace ClassicalSharp {
 		}
 		
 		public Block HeldBlock {
-			get { return BlocksHotbar[hotbarIndex]; }
+			get { return Hotbar[hotbarIndex]; }
 			set {
 				if( !CanChangeHeldBlock ) {
 					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
 					return;
 				}
-				for( int i = 0; i < BlocksHotbar.Length; i++ ) {
-					if( BlocksHotbar[i] == value ) {
+				for( int i = 0; i < Hotbar.Length; i++ ) {
+					if( Hotbar[i] == value ) {
 						hotbarIndex = i;
 						RaiseHeldBlockChanged();
 						return;
 					}
 				}			
-				BlocksHotbar[hotbarIndex] = value;
+				Hotbar[hotbarIndex] = value;
 				RaiseHeldBlockChanged();
 			}
 		}
@@ -113,12 +112,14 @@ namespace ClassicalSharp {
 			Raise( TerrainAtlasChanged );
 		}
 		
-		void PrintGraphicsInfo() {
-			Console.ForegroundColor = ConsoleColor.Green;
-			Graphics.PrintApiSpecificInfo();
-			Utils.Log( "Max 2D texture dimensions: " + Graphics.MaxTextureDimensions );
-			Utils.Log( "== End of graphics info ==" );
-			Console.ResetColor();
+		public Game() : base() {
+			// We can't use enum array initaliser because this causes problems when building with mono
+			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
+			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
+			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
+			Hotbar[4] = Block.WoodenPlanks; Hotbar[5] = Block.Wood;
+			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Glass;
+			Hotbar[8] = Block.Slab;	
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
@@ -131,7 +132,7 @@ namespace ClassicalSharp {
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
-			PrintGraphicsInfo();
+			Graphics.PrintGraphicsInfo();
 			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
