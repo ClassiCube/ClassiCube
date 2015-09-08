@@ -188,5 +188,21 @@ namespace ClassicalSharp {
 		public string GetName( byte id ) {
 			return names[id];
 		}
+		
+		public void ResetBlockInfo( byte id ) {
+			isTransparent[id] = false;
+			isTranslucent[id] = false;
+			isOpaque[id] = true;
+			isSprite[id] = false;
+			isLiquid[id] = false;
+			heights[id] = 1;
+			blocksLight[id] = true;
+			emitsLight[id] = true;
+			names[id] = "Invalid";
+			fogColours[id] = default( FastColour );
+			fogDensities[id] = 0;
+			SetAll( 0, (Block)id );
+			SetupCullingCache();		
+		}
 	}
 }

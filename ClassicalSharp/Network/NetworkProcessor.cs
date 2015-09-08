@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 76, 78,
+			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 76, 78, 2,
 		};
 		
 		static string[] clientExtensions = {
@@ -643,6 +643,8 @@ namespace ClassicalSharp {
 					{
 						byte block = reader.ReadUInt8();
 						BlockInfo info = game.BlockInfo;
+						info.ResetBlockInfo( block );
+						
 						info.names[block] = reader.ReadAsciiString();
 						byte solidity = reader.ReadUInt8();
 						byte movementSpeed = reader.ReadUInt8();
@@ -674,6 +676,12 @@ namespace ClassicalSharp {
 							info.fogColours[block] = new FastColour(
 								reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 						}
+					} break;
+					
+				case PacketId.CpeRemoveBlockDefinition:
+					{
+						byte block = reader.ReadUInt8();
+						game.BlockInfo.ResetBlockInfo( block );
 					} break;
 					
 				default:
