@@ -4,54 +4,60 @@ namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
 		
-		int[] textures = new int[BlocksCount * TileSide.Sides];	
+		int[] textures = new int[BlocksCount * TileSide.Sides];
 
-		void SetupOptimTextures() {
+		void SetupTextures() {
 			// Row 1
-			SetAll( Block.Grass, Block.Stone, Block.Dirt );
-			SetSide( Block.Grass );
-			SetBottom( 0 + 2, Block.Grass );
-			SetAll( Block.WoodenPlanks );
-			SetSide( Block.DoubleSlab );
-			SetSide( 0 + 5, Block.Slab );
-			SetTopAndBottom( Block.DoubleSlab );
-			SetTopAndBottom( 0 + 6, Block.Slab );
-			SetAll( Block.Brick );
-			SetSide( Block.TNT );
-			SetTop( Block.TNT );
-			SetBottom( Block.TNT );
-			SetAll( Block.Rope, Block.Rose, Block.Dandelion, Block.Water, Block.Sapling );
+			SetAll( Block.Grass ); SetAll( Block.Stone );
+			SetAll( Block.Dirt ); SetSide( Block.Grass );
+			SetBottom( 0 + 2, Block.Grass ); SetAll( Block.WoodenPlanks );
+			SetSide( Block.DoubleSlab ); SetSide( 0 + 5, Block.Slab );
+			SetTopAndBottom( Block.DoubleSlab ); SetTopAndBottom( 0 + 6, Block.Slab );
+			SetAll( Block.Brick ); SetSide( Block.TNT );
+			SetTop( Block.TNT ); SetBottom( Block.TNT );
+			SetAll( Block.Rope ); SetAll( Block.Rose ); SetAll( Block.Dandelion );
+			SetAll( Block.Water ); SetAll( Block.Sapling );
 			SetAll( 0 + 14, Block.StillWater );
 			// Row 2
-			SetAll( Block.Cobblestone, Block.Bedrock, Block.Sand, Block.Gravel );
-			SetAll( 16 + 0, Block.CobblestoneSlab );
-			SetSide( Block.Wood );
-			SetTopAndBottom( Block.Wood );
-			SetAll( Block.Leaves );
-			SetTop( Block.IronBlock, Block.GoldBlock, Block.Sandstone, Block.Pillar );
+			SetAll( Block.Cobblestone ); SetAll( Block.Bedrock );
+			SetAll( Block.Sand ); SetAll( Block.Gravel );
+			SetAll( 16 + 0, Block.CobblestoneSlab ); SetSide( Block.Wood );
+			SetTopAndBottom( Block.Wood ); SetAll( Block.Leaves );
+			SetTop( Block.IronBlock ); SetTop( Block.GoldBlock );
+			SetTop( Block.Sandstone ); SetTop( Block.Pillar );
 			texId += 1;
-			SetAll( Block.RedMushroom, Block.BrownMushroom, Block.Lava );
-			SetAll( 16 + 14, Block.StillLava );
+			SetAll( Block.RedMushroom ); SetAll( Block.BrownMushroom );
+			SetAll( Block.Lava ); SetAll( 16 + 14, Block.StillLava );
 			texId += 1;
 			// Row 3
-			SetAll( Block.GoldOre, Block.IronOre, Block.CoalOre, Block.Bookshelf, 
-			       Block.MossyCobblestone, Block.Obsidian, Block.Fire );
-			SetTopAndBottom( 0 + 4, Block.Bookshelf );
-			SetSide( Block.IronBlock, Block.GoldBlock, Block.Sandstone, Block.Pillar );
+			SetAll( Block.GoldOre ); SetAll( Block.IronOre );
+			SetAll( Block.CoalOre ); SetAll( Block.Bookshelf );
+			SetAll(  Block.MossyCobblestone ); SetAll( Block.Obsidian );
+			SetAll(	Block.Fire ); SetTopAndBottom( 0 + 4, Block.Bookshelf );
+			SetSide( Block.IronBlock ); SetSide( Block.GoldBlock );
+			SetSide( Block.Sandstone ); SetSide( Block.Pillar );
 			texId += 5;
 			// Row 4
-			SetAll( Block.Sponge, Block.Glass, Block.Snow, Block.Ice, Block.StoneBrick, 
-			       Block.Crate, Block.CeramicTile );
-			SetBottom( Block.IronBlock, Block.GoldBlock, Block.Sandstone, Block.Pillar );
+			SetAll( Block.Sponge ); SetAll( Block.Glass ); 
+			SetAll( Block.Snow ); SetAll( Block.Ice ); 
+			SetAll( Block.StoneBrick ); SetAll( Block.Crate ); 
+			SetAll( Block.CeramicTile ); SetBottom( Block.IronBlock ); 
+			SetAll( Block.GoldBlock ); SetAll( Block.Sandstone ); 
+			SetAll( Block.Pillar );
 			texId += 5;
 			// Row 5
-			SetAll( Block.RedCloth, Block.OrangeCloth, Block.YellowCloth, Block.LimeCloth, 
-			       Block.GreenCloth, Block.AquaCloth, Block.CyanCloth, Block.BlueCloth, 
-			       Block.PurpleCloth, Block.IndigoCloth, Block.VioletCloth, Block.MagentaCloth,
-			       Block.PinkCloth, Block.BlackCloth, Block.GrayCloth, Block.WhiteCloth );
+			SetAll( Block.RedCloth ); SetAll( Block.OrangeCloth ); 
+			SetAll( Block.YellowCloth ); SetAll( Block.LimeCloth ); 
+			SetAll( Block.GreenCloth ); SetAll( Block.AquaCloth ); 
+			SetAll( Block.CyanCloth ); SetAll( Block.BlueCloth ); 
+			SetAll( Block.PurpleCloth ); SetAll( Block.IndigoCloth ); 
+			SetAll( Block.VioletCloth ); SetAll( Block.MagentaCloth ); 
+			SetAll( Block.PinkCloth ); SetAll( Block.BlackCloth );
+			SetAll( Block.GrayCloth ); SetAll( Block.WhiteCloth );
 			// Row 6
-			SetAll( Block.LightPinkWool, Block.ForestGreenWool, Block.BrownWool,
-			       Block.DeepBlueWool, Block.TurquoiseWool );
+			SetAll( Block.LightPinkWool ); SetAll( Block.ForestGreenWool );
+			SetAll( Block.BrownWool ); SetAll( Block.DeepBlueWool );
+			SetAll( Block.TurquoiseWool );
 			texId += 1;
 			SetAll( Block.Magma );
 		}
@@ -68,7 +74,7 @@ namespace ClassicalSharp {
 			for( int i = index; i < index + TileSide.Bottom; i++ ) {
 				textures[i] = textureId;
 			}
-		}		
+		}
 		
 		internal void SetTopAndBottom( int textureId, Block blockId ) {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
@@ -84,34 +90,24 @@ namespace ClassicalSharp {
 		}
 
 		int texId;
-		void SetAll( params Block[] blocks ) {
-			for( int i = 0; i < blocks.Length; i++ ) {
-				SetAll( texId, blocks[i] ); texId++;
-			}
+		void SetAll( Block blockId ) {
+			SetAll( texId, blockId ); texId++;
 		}
 		
-		void SetSide( params Block[] blocks ) {
-			for( int i = 0; i < blocks.Length; i++ ) {
-				SetSide( texId, blocks[i] ); texId++;
-			}
+		void SetSide( Block blockId ) {
+			SetSide( texId, blockId ); texId++;
 		}
 		
-		void SetTopAndBottom( params Block[] blocks ) {
-			for( int i = 0; i < blocks.Length; i++ ) {
-				SetTopAndBottom( texId, blocks[i] ); texId++;
-			}
+		void SetTopAndBottom( Block blockId ) {
+			SetTopAndBottom( texId, blockId ); texId++;
 		}
 		
-		void SetTop( params Block[] blocks ) {
-			for( int i = 0; i < blocks.Length; i++ ) {
-				SetTop( texId, blocks[i] ); texId++;
-			}
+		void SetTop( Block blockId ) {
+			SetTop( texId, blockId ); texId++;
 		}
 		
-		void SetBottom( params Block[] blocks ) {
-			for( int i = 0; i < blocks.Length; i++ ) {
-				SetBottom( texId, blocks[i] ); texId++;
-			}
+		void SetBottom( Block blockId ) {
+			SetBottom( texId, blockId ); texId++;
 		}
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>

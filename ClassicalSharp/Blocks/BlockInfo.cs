@@ -4,7 +4,7 @@ namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
-			
+		
 		internal bool[] isTransparent = new bool[BlocksCount];
 		internal bool[] isTranslucent = new bool[BlocksCount];
 		internal bool[] isOpaque = new bool[BlocksCount];
@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 				heights[tile] = 1f;
 				blocksLight[tile] = true;
 				isOpaque[tile] = true;
-			}			
+			}
 			for( int i = 0; i < CpeBlocksCount; i++ ) {
 				names[i] = Enum.GetName( typeof( Block ), (byte)i );
 			}
@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 				names[i] = "Invalid";
 			}
 			
-			fogDensities[(byte)Block.StillWater] = 0.1f; 
+			fogDensities[(byte)Block.StillWater] = 0.1f;
 			fogColours[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );
 			fogDensities[(byte)Block.Water] = 0.1f;
 			fogColours[(byte)Block.Water] = new FastColour( 5, 5, 51 );
@@ -44,27 +44,23 @@ namespace ClassicalSharp {
 			fogDensities[(byte)Block.Lava] = 2f;
 			fogColours[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
 			
-			SetupOptimTextures();
+			SetupTextures();
 			
-			SetIsTranslucent( Block.StillWater, Block.Water );
-			SetIsTransparent( Block.Glass, Block.Leaves, Block.Sapling,
-			                 Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			                 Block.Dandelion, Block.Slab );
-			SetIsSprite( Block.Rose, Block.Sapling, Block.Dandelion,
-			            Block.BrownMushroom, Block.RedMushroom );
-			SetBlockHeight( 8 / 16f, Block.Slab );
-			SetBlocksLight( false, Block.Glass, Block.Leaves, Block.Sapling,
-			               Block.RedMushroom, Block.BrownMushroom, Block.Rose,
-			               Block.Dandelion );
-			SetIsLiquid( Block.StillWater, Block.Water, Block.StillLava, Block.Lava );
-					
-			SetIsTransparent( Block.Snow, Block.Fire, Block.Rope, Block.CobblestoneSlab );
-			SetBlocksLight( false, Block.Fire, Block.Rope );
-			SetIsTranslucent( Block.Ice );
-			SetIsSprite( Block.Rope, Block.Fire );
-			SetBlockHeight( 8 / 16f, Block.CobblestoneSlab );
-			SetBlockHeight( 2 / 16f, Block.Snow );
-			SetEmitsLight( true, Block.Lava, Block.StillLava );
+			SetBlockHeight( Block.Slab, 8/16f );
+			SetBlockHeight( Block.CobblestoneSlab, 8/16f );
+			SetBlockHeight( Block.Snow, 2/16f );			
+			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water ); 
+			MarkTranslucent( Block.Ice );
+			MarkTransparent( Block.Glass ); MarkTransparent( Block.Leaves ); 
+			MarkTransparent( Block.Slab ); MarkTransparent( Block.Snow ); 
+			MarkTransparent( Block.CobblestoneSlab );
+			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling ); 
+			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom ); 
+			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope ); 
+			MarkSprite( Block.Fire );
+			SetIsLiquid( Block.StillWater ); SetIsLiquid( Block.Water );
+			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );					
+			SetEmitsLight( Block.Lava, true ); SetEmitsLight( Block.StillLava, true );
 			SetupCullingCache();
 		}
 		
@@ -87,48 +83,38 @@ namespace ClassicalSharp {
 			canDelete[(int)Block.StillLava] = false;
 		}
 		
-		void SetIsTransparent( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isTransparent[(int)ids[i]] = true;
-				isOpaque[(int)ids[i]] = false;
-			}
+		void MarkTransparent( Block id ) {
+			isTransparent[(int)id] = true;
+			blocksLight[(int)id] = false;
+			isOpaque[(int)id] = false;			
 		}
 		
-		void SetIsSprite( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isSprite[(int)ids[i]] = true;
-			}
+		void MarkSprite( Block id ) {
+			isSprite[(int)id] = true;
+			isTransparent[(int)id] = true;
+			blocksLight[(int)id] = false;
+			isOpaque[(int)id] = false;
 		}
 		
-		void SetIsTranslucent( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isTranslucent[(int)ids[i]] = true;
-				isOpaque[(int)ids[i]] = false;
-			}
+		void MarkTranslucent( Block id ) {
+			isTranslucent[(int)id] = true;
+			isOpaque[(int)id] = false;
 		}
 		
-		void SetIsLiquid( params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				isLiquid[(int)ids[i]] = true;
-			}
+		void SetIsLiquid( Block id ) {
+			isLiquid[(int)id] = true;
 		}
 		
-		void SetBlockHeight( float height, params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				heights[(int)ids[i]] = height;
-			}
+		void SetBlockHeight( Block id, float height ) {
+			heights[(int)id] = height;
 		}
 		
-		void SetBlocksLight( bool blocks, params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				blocksLight[(int)ids[i]] = blocks;
-			}
+		void SetBlocksLight( Block id, bool blocks ) {
+			blocksLight[(int)id] = blocks;
 		}
 		
-		void SetEmitsLight( bool emits, params Block[] ids ) {
-			for( int i = 0; i < ids.Length; i++ ) {
-				emitsLight[(int)ids[i]] = emits;
-			}
+		void SetEmitsLight( Block id, bool emits ) {
+			emitsLight[(int)id] = emits;
 		}
 		
 		/// <summary> Gets whether the given block id is opaque/not see through. </summary>
@@ -202,7 +188,7 @@ namespace ClassicalSharp {
 			fogColours[id] = default( FastColour );
 			fogDensities[id] = 0;
 			SetAll( 0, (Block)id );
-			SetupCullingCache();		
+			SetupCullingCache();
 		}
 	}
 }
