@@ -239,6 +239,7 @@ namespace OpenTK {
 		
 		/// <summary> Sets whether the cursor is visible in the window. </summary>
 		public bool CursorVisible {
+			get { return implementation.CursorVisible; }
 			set { implementation.CursorVisible = value; }
 		}
 		

@@ -807,13 +807,16 @@ namespace OpenTK.Platform.Windows
 				API.GetCursorPos( ref pos );
 				return new Point( pos.X, pos.Y );
 			}
-			set {
-				API.SetCursorPos( value.X, value.Y );
-			}
+			set { API.SetCursorPos( value.X, value.Y ); }
 		}
 		
+		bool cursorVisible = true;
 		public bool CursorVisible {
-			set { API.ShowCursor( value ? 1 : 0 ); }
+			get { return cursorVisible; }
+			set { 
+				cursorVisible = value;
+				API.ShowCursor( value ? 1 : 0 ); 
+			}
 		}
 
 		public void Dispose() {

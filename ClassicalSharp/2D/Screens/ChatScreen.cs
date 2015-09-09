@@ -94,7 +94,8 @@ namespace ClassicalSharp {
 
 		public override void Dispose() {
 			if( !textInput.chatInputText.Empty ) {
-				game.CursorVisible = false;
+				if( game.CursorVisible )
+					game.CursorVisible = false;
 				game.chatInInputBuffer = textInput.chatInputText.ToString();
 			}
 			chatFont.Dispose();
@@ -146,7 +147,8 @@ namespace ClassicalSharp {
 		}
 		
 		void OpenTextInputBar( string initialText ) {
-			game.CursorVisible = true;
+			if( !game.CursorVisible )
+				game.CursorVisible = true;
 			suppressNextPress = true;
 			HandlesAllInput = true;
 			textInput.chatInputText.Clear();
@@ -160,7 +162,8 @@ namespace ClassicalSharp {
 			if( HandlesAllInput ) { // text input bar
 				if( key == game.Keys[KeyMapping.SendChat] ) {
 					HandlesAllInput = false;
-					game.CursorVisible = false;
+					if( game.CursorVisible )
+						game.CursorVisible = false;
 					game.Camera.RegrabMouse();
 					textInput.SendTextInBufferAndReset();
 				} else if( key == Key.PageUp ) {

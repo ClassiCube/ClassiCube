@@ -830,8 +830,11 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		bool cursorVisible = true;
 		public bool CursorVisible {
+			get { return cursorVisible; }
 			set {
+				cursorVisible = value;
 				if( value ) {
 					API.XUndefineCursor( window.Display, window.WindowHandle );
 				} else {

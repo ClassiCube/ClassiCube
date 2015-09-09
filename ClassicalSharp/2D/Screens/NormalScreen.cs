@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
 			                       crosshairExtent * 2, crosshairWeight * 2, col );
 			graphicsApi.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
-			                       crosshairWeight * 2, crosshairExtent * 2, col );			
+			                       crosshairWeight * 2, crosshairExtent * 2, col );
 		}
 		
 		public override void Dispose() {
@@ -50,7 +50,8 @@ namespace ClassicalSharp {
 			if( playerList != null ) {
 				playerList.Dispose();
 			}
-			game.CursorVisible = true;
+			if( !game.CursorVisible )
+				game.CursorVisible = true;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -71,7 +72,8 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
-			game.CursorVisible = false;
+			if( game.CursorVisible )
+				game.CursorVisible = false;
 		}
 		
 		public override bool HandlesAllInput {

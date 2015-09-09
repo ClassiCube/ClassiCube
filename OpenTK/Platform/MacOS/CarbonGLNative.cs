@@ -1068,6 +1068,7 @@ namespace OpenTK.Platform.MacOS
 		
 		// TODO: Hide and show cursor
 		public bool CursorVisible {
+			get { return true; }
 			set { }
 		}
 		
