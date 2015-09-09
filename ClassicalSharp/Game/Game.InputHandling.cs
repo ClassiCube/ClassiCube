@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		}
 
 		void MouseMove( object sender, MouseMoveEventArgs e ) {
-			if( activeScreen == null || !activeScreen.HandlesMouseMove( e.X, e.Y ) ) {			
+			if( activeScreen == null || !activeScreen.HandlesMouseMove( e.X, e.Y ) ) {
 			}
 		}
 
@@ -69,18 +69,18 @@ namespace ClassicalSharp {
 				if( newIndex < 0 ) newIndex += Hotbar.Length;
 				if( newIndex >= Hotbar.Length ) newIndex -= Hotbar.Length;
 				HeldBlockIndex = newIndex;
-			}	
+			}
 		}
 
 		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
 			char key = e.KeyChar;
-			if( activeScreen == null || !activeScreen.HandlesKeyPress( key ) ) {				
+			if( activeScreen == null || !activeScreen.HandlesKeyPress( key ) ) {
 			}
 		}
 		
 		void KeyUpHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
-			if( activeScreen == null || !activeScreen.HandlesKeyUp( key ) ) {				
+			if( activeScreen == null || !activeScreen.HandlesKeyUp( key ) ) {
 			}
 		}
 
@@ -187,6 +187,13 @@ namespace ClassicalSharp {
 		public KeyMap Keys = new KeyMap();
 	}
 	
+	public enum KeyMapping {
+		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
+		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
+		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown,
+		PlayerList, ChatHistoryMode,
+	}
+	
 	public class KeyMap {
 		
 		public Key this[KeyMapping key] {
@@ -194,13 +201,7 @@ namespace ClassicalSharp {
 			set { Keys[(int)key] = value; }
 		}
 		
-		Key[] Keys = new Key[] {
-			Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
-			Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
-			Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, Key.E,
-			Key.Tab, Key.H,
-		};
-		
+		Key[] Keys;
 		bool IsReservedKey( Key key ) {
 			return IsLockedKey( key ) || key == Key.Slash || key == Key.BackSpace ||
 				( key >= Key.Insert && key <= Key.End ) ||
@@ -226,12 +227,25 @@ namespace ClassicalSharp {
 			reason = null;
 			return true;
 		}
-	}
-	
-	public enum KeyMapping {
-		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
-		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown,
-		PlayerList, ChatHistoryMode,
+		
+		public KeyMap() {
+			// See comment in Game() constructor
+			#if !__MonoCS__
+			Keys = new Key[] {
+				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
+				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
+				Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, Key.E,
+				Key.Tab, Key.H };
+			#else
+			Keys = new Key[23];
+			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
+			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Y; Keys[7] = Key.T;
+			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B; 
+			Keys[11] = Key.F12; Keys[12] = Key.F11; Keys[13] = Key.F7;
+			Keys[14] = Key.F5; Keys[15] = Key.F6; Keys[16] = Key.Z;
+			Keys[17] = Key.ShiftLeft; Keys[18] = Key.X; Keys[19] = Key.Q;
+			Keys[20] = Key.E; Keys[21] = Key.Tab; Keys[22] = Key.H;
+			#endif
+		}
 	}
 }

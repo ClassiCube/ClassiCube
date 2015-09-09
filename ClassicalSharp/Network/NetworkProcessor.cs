@@ -676,6 +676,7 @@ namespace ClassicalSharp {
 							info.fogColours[block] = new FastColour(
 								reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 						}
+						info.SetupCullingCache();
 					} break;
 					
 				case PacketId.CpeRemoveBlockDefinition:

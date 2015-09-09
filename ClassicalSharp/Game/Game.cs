@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 		
 		int hotbarIndex = 0;
 		public bool CanChangeHeldBlock = true;
-		public Block[] Hotbar = new Block[9];
+		public Block[] Hotbar;
 		
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 						RaiseHeldBlockChanged();
 						return;
 					}
-				}			
+				}
 				Hotbar[hotbarIndex] = value;
 				RaiseHeldBlockChanged();
 			}
@@ -102,8 +102,8 @@ namespace ClassicalSharp {
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
-			TerrainAtlas.Dispose();			
-			TerrainAtlas.UpdateState( bmp );						
+			TerrainAtlas.Dispose();
+			TerrainAtlas.UpdateState( bmp );
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
@@ -115,11 +115,17 @@ namespace ClassicalSharp {
 		public Game() : base() {
 			// We can't use enum array initaliser because this causes problems when building with mono
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
+			#if !__MonoCS__
+			Hotbar = new Block[] { Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt,
+				Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
+			#else
+			Hotbar = new Block[9];
 			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
 			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
 			Hotbar[4] = Block.WoodenPlanks; Hotbar[5] = Block.Wood;
 			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Glass;
-			Hotbar[8] = Block.Slab;	
+			Hotbar[8] = Block.Slab;
+			#endif
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
@@ -239,13 +245,13 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {		
+			if( visible ) {
 				Players.Render( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				if( SelectedPos.Valid )
 					Picking.Render( e.Time, SelectedPos );
-				EnvRenderer.Render( e.Time );			
+				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );

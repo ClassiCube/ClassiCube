@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 		
 		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
 
-		void SetupCullingCache() {
+		internal void SetupCullingCache() {
 			for( int tileI = 1; tileI < BlocksCount; tileI++ ) {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
 					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
