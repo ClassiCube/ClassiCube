@@ -47,11 +47,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.AlphaFunc( compareFuncs[(int)func], value );
 		}
 		
-		BlendingFactor[] blendFuncs = {
-			BlendingFactor.Zero, BlendingFactor.One,
-			BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
-			BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
-		};
+		BlendingFactor[] blendFuncs;
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
 			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc] );
 		}
