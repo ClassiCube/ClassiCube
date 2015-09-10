@@ -83,10 +83,10 @@ namespace ClassicalSharp {
 					return emitsLight || z >= maxZ || y > map.heightmap[( (z + 1) * width ) + x];
 					
 				case TileSide.Bottom:
-					return emitsLight || y <= 0 || (y - 1) > map.heightmap[( z * width ) + x];
+					return emitsLight || y <= 0 || y > map.heightmap[( z * width ) + x];
 					
 				case TileSide.Top:
-					return emitsLight || y >= maxY || (y + 1) > map.heightmap[( z * width ) + x];
+					return emitsLight || y >= maxY || y > map.heightmap[( z * width ) + x];
 			}
 			return true;
 		}
