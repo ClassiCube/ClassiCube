@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using OpenTK.Platform.MacOS.Carbon;
 
@@ -31,7 +30,6 @@ namespace OpenTK.Platform.MacOS
 			}
 
 			Debug.Print("CoreGraphics reported {0} display(s).", displayCount);
-			Debug.Indent();
 
 			for (int i = 0; i < displayCount; i++) {
 				IntPtr currentDisplay = displays[i];
@@ -88,7 +86,6 @@ namespace OpenTK.Platform.MacOS
 
 				displayMap.Add(opentk_dev, currentDisplay);
 			}
-			Debug.Unindent();
 		}
 
 

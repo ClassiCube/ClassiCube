@@ -6,7 +6,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics;
 
@@ -42,7 +41,7 @@ namespace OpenTK.Platform.Windows {
 
 			Debug.Print( "OpenGL will be bound to handle: {0}", window.WindowHandle );
 			SelectGraphicsModePFD(format, (WinWindowInfo)window);
-			Debug.Write( "Setting pixel format... " );
+			Debug.Print( "Setting pixel format... " );
 			SetGraphicsModePFD(format, (WinWindowInfo)window);
 
 			ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
@@ -123,7 +122,7 @@ namespace OpenTK.Platform.Windows {
 				pfd.DepthBits, pfd.StencilBits,
 				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
 			
-			Debug.WriteLine(modeIndex);
+			Debug.Print(modeIndex);
 			if (!API.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
 				throw new GraphicsContextException(String.Format(
 					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));
@@ -131,10 +130,10 @@ namespace OpenTK.Platform.Windows {
 
 		void SelectGraphicsModePFD(GraphicsMode format, WinWindowInfo window) {
 			IntPtr deviceContext = window.DeviceContext;
-			Debug.WriteLine(String.Format("Device context: {0}", deviceContext));
+			Debug.Print("Device context: {0}", deviceContext);
 			ColorFormat color = format.ColorFormat;
 
-			Debug.Write("Selecting pixel format PFD... ");
+			Debug.Print("Selecting pixel format PFD... ");
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
 			pfd.Size = PixelFormatDescriptor.DefaultSize;
 			pfd.Version = PixelFormatDescriptor.DefaultVersion;
@@ -184,11 +183,9 @@ namespace OpenTK.Platform.Windows {
 					Debug.Print("Failed to destroy OpenGL context {0}. Error: {1}",
 					            ContextHandle.ToString(), Marshal.GetLastWin32Error());
 			} catch (AccessViolationException e) {
-				Debug.WriteLine("An access violation occured while destroying the OpenGL context. Please report at http://www.opentk.com.");
-				Debug.Indent();
+				Debug.Print("An access violation occured while destroying the OpenGL context. Please report at http://www.opentk.com.");
 				Debug.Print("Marshal.GetLastWin32Error(): {0}", Marshal.GetLastWin32Error().ToString());
-				Debug.WriteLine(e.ToString());
-				Debug.Unindent();
+				Debug.Print(e.ToString());
 			}
 			ContextHandle = IntPtr.Zero;
 		}

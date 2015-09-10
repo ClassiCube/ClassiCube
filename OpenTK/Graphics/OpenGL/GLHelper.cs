@@ -7,7 +7,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 
 namespace OpenTK.Graphics.OpenGL
 {
@@ -26,7 +25,7 @@ namespace OpenTK.Graphics.OpenGL
 		
 		internal void LoadEntryPoints( GraphicsContextBase context ) {
 			this.context = context;
-			Debug.Write("Loading OpenGL function pointers... ");
+			Debug.Print("Loading OpenGL function pointers... ");
 
 			AlphaFuncAddress = GetAddress( "glAlphaFunc" );
 			BindBufferAddress = GetAddress( "glBindBuffer" );

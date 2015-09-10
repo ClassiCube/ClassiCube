@@ -26,15 +26,12 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using OpenTK.Graphics;
 using OpenTK.Input;
-using System.Drawing;
 
 namespace OpenTK.Platform.X11 {
 	
@@ -125,7 +122,7 @@ namespace OpenTK.Platform.X11 {
 				API.XGetVisualInfo(window.Display, XVisualInfoMask.ID, ref info, out dummy), typeof(XVisualInfo));
 
 			// Create a window on this display using the visual above
-			Debug.Write("Opening render window... ");
+			Debug.Print("Opening render window... ");
 
 			XSetWindowAttributes attributes = new XSetWindowAttributes();
 			attributes.background_pixel = IntPtr.Zero;
@@ -178,7 +175,7 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		void SetupInput() {
-			Debug.WriteLine("Initalizing X11 input driver.");
+			Debug.Print("Initalizing X11 input driver.");
 			
 			// Init keyboard
 			API.XDisplayKeycodes(window.Display, ref firstKeyCode, ref lastKeyCode);
@@ -198,7 +195,6 @@ namespace OpenTK.Platform.X11 {
 			// be reset before the program exits.
 			bool supported;
 			API.XkbSetDetectableAutoRepeat(window.Display, true, out supported);
-			Debug.Unindent();
 		}
 		
 		/// <summary> Registers the necessary atoms for GameWindow. </summary>
@@ -429,20 +425,20 @@ namespace OpenTK.Platform.X11 {
 
 					case XEventName.ClientMessage:
 						if (!isExiting && e.ClientMessageEvent.ptr1 == wm_destroy) {
-							Debug.WriteLine("Exit message received.");
+							Debug.Print("Exit message received.");
 							CancelEventArgs ce = new CancelEventArgs();
 							if (Closing != null)
 								Closing(this, ce);
 
 							if (!ce.Cancel) {
 								isExiting = true;
-								Debug.WriteLine("Destroying window.");
+								Debug.Print("Destroying window.");
 								API.XDestroyWindow(window.Display, window.WindowHandle);
 							}
 						} break;
 
 					case XEventName.DestroyNotify:
-						Debug.WriteLine("Window destroyed");
+						Debug.Print("Window destroyed");
 						exists = false;
 
 						if (Closed != null)
@@ -909,7 +905,7 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		public void DestroyWindow() {
-			Debug.WriteLine("X11GLNative shutdown sequence initiated.");
+			Debug.Print("X11GLNative shutdown sequence initiated.");
 			API.XDestroyWindow(window.Display, window.WindowHandle);
 		}
 

@@ -6,7 +6,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 3019    // CLS-compliance checking

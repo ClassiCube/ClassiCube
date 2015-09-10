@@ -7,7 +7,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 
 namespace OpenTK.Graphics {
 	

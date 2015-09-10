@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindingsBase.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="DisplayDevice.cs" />
     <Compile Include="DisplayResolution.cs" />
     <Compile Include="FrameEventArgs.cs" />
