@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		}
 		
 		public virtual Vector3 CollisionSize {
-			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f );
+			get { return new Vector3( 8/16f, 28.5f/16f, 8/16f );
 				//Model.CollisionSize; TODO: for non humanoid models, we also need to offset eye position.
 			}
 		}
