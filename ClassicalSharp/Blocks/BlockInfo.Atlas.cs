@@ -42,8 +42,8 @@ namespace ClassicalSharp {
 			SetAll( Block.Snow ); SetAll( Block.Ice ); 
 			SetAll( Block.StoneBrick ); SetAll( Block.Crate ); 
 			SetAll( Block.CeramicTile ); SetBottom( Block.IronBlock ); 
-			SetAll( Block.GoldBlock ); SetAll( Block.Sandstone ); 
-			SetAll( Block.Pillar );
+			SetBottom( Block.GoldBlock ); SetBottom( Block.Sandstone ); 
+			SetBottom( Block.Pillar );
 			texId += 5;
 			// Row 5
 			SetAll( Block.RedCloth ); SetAll( Block.OrangeCloth ); 
