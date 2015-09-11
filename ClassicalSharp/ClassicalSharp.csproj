@@ -159,11 +159,12 @@
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\Commands.cs" />
     <Compile Include="Singleplayer\Server.cs" />
+    <Compile Include="TexturePack\TerrainAtlas1D.cs" />
+    <Compile Include="TexturePack\TerrainAtlas2D.cs" />
+    <Compile Include="TexturePack\ZipExtractor.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
-    <Compile Include="Utils\TerrainAtlas1D.cs" />
-    <Compile Include="Utils\TerrainAtlas2D.cs" />
     <Compile Include="Utils\TextureRectangle.cs" />
     <Compile Include="Utils\StringBuffer.cs" />
     <Compile Include="Utils\Utils.cs" />
@@ -190,6 +191,7 @@
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
+    <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />
