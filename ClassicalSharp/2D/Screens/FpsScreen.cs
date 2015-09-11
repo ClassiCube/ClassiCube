@@ -14,9 +14,11 @@ namespace ClassicalSharp {
 		
 		TextWidget fpsTextWidget;
 		
-		public override void Render( double delta ) {
-			graphicsApi.Texturing = true;
+		public override void Render( double delta ) {		
 			UpdateFPS( delta );
+			if( game.HideGui ) return;
+			
+			graphicsApi.Texturing = true;
 			fpsTextWidget.Render( delta );
 			graphicsApi.Texturing = false;
 		}

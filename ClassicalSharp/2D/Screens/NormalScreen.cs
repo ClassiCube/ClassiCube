@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 		Font playerFont;
 		
 		public override void Render( double delta ) {
+			if( game.HideGui ) return;
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			hotbar.Render( delta );

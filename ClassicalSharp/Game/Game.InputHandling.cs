@@ -90,6 +90,8 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if( key == Key.F4 && ( IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ) ) ) {
 				Exit();
+			} else if( key == Keys[KeyMapping.HideGui] ) {
+				HideGui = !HideGui;
 			} else if( key == Keys[KeyMapping.Screenshot] ) {
 				screenshotRequested = true;
 			} else if( key == Keys[KeyMapping.Fullscreen] ) {
@@ -190,8 +192,8 @@ namespace ClassicalSharp {
 	public enum KeyMapping {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
 		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen, VSync,
-		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, FlyDown,
-		PlayerList, ChatHistoryMode,
+		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp, 
+		FlyDown, PlayerList, HideGui, 
 	}
 	
 	public class KeyMap {
@@ -234,8 +236,8 @@ namespace ClassicalSharp {
 			Keys = new Key[] {
 				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
 				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
-				Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, Key.E,
-				Key.Tab, Key.H };
+				Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, 
+				Key.E, Key.Tab, Key.F1 };
 			#else
 			Keys = new Key[23];
 			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
@@ -244,7 +246,7 @@ namespace ClassicalSharp {
 			Keys[11] = Key.F12; Keys[12] = Key.F11; Keys[13] = Key.F7;
 			Keys[14] = Key.F5; Keys[15] = Key.F6; Keys[16] = Key.Z;
 			Keys[17] = Key.ShiftLeft; Keys[18] = Key.X; Keys[19] = Key.Q;
-			Keys[20] = Key.E; Keys[21] = Key.Tab; Keys[22] = Key.H;
+			Keys[20] = Key.E; Keys[21] = Key.Tab; Keys[22] = Key.F1;
 			#endif
 		}
 	}

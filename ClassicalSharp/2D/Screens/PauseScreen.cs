@@ -38,24 +38,24 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			keyStatusFont = new Font( "Arial", 13, FontStyle.Italic );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
-			controlsWidget = TextWidget.Create( game, 0, 30, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
-			keyStatusWidget = TextWidget.Create( game, 0, 80, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
-			gameWidget = TextWidget.Create( game, 0, 50, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
-			exitWidget = TextWidget.Create( game, 0, 10, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
+			controlsWidget = TextWidget.Create( game, 0, 20, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
+			keyStatusWidget = TextWidget.Create( game, 0, 70, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
+			gameWidget = TextWidget.Create( game, 0, 40, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
+			exitWidget = TextWidget.Create( game, 0, 5, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
-				"Open chat", "Send chat", "Pause", "Open inventory" };
+				"Open chat", "Send chat", "Pause", "Open inventory", "Take screenshot" };
 			MakeKeys( KeyMapping.Forward, descriptionsLeft, 10, out keysLeft );
 			leftEnd = CalculateMaxWidth( keysLeft );
 			
-			string[] descriptionsRight = { "Take screenshot", "Toggle fullscreen", "Toggle VSync", "Toggle 3rd person camera",
-				"Change view distance", "Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list" };
-			MakeKeys( KeyMapping.Screenshot, descriptionsRight, leftEnd + 30, out keysRight );
+			string[] descriptionsRight = { "Toggle fullscreen", "Toggle VSync", "Toggle 3rd person camera", "Change view distance", 
+				"Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list", "Hide gui" };
+			MakeKeys( KeyMapping.Fullscreen, descriptionsRight, leftEnd + 30, out keysRight );
 		}
 		
 		int leftEnd;
 		void MakeKeys( KeyMapping start, string[] descriptions, int offset, out KeyMapWidget[] widgets ) {
-			int startY = controlsWidget.BottomRight.Y + 10;
+			int startY = controlsWidget.BottomRight.Y + 5;
 			widgets = new KeyMapWidget[descriptions.Length];
 			
 			for( int i = 0; i < widgets.Length; i++ ) {
@@ -80,6 +80,8 @@ namespace ClassicalSharp {
 			exitWidget.Dispose();
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				keysLeft[i].Dispose();
+			}
+			for( int i = 0; i < keysRight.Length; i++ ) {
 				keysRight[i].Dispose();
 			}
 		}
