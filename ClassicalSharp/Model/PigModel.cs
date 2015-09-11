@@ -15,7 +15,8 @@ namespace ClassicalSharp.Model {
 			LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
 			RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
 			
-			DefaultTexId = graphics.CreateTexture( "pig.png" );
+			if( cache.PigTexId <= 0 )
+				cache.PigTexId = graphics.CreateTexture( "pig.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -44,7 +45,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.PigTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 0.75f, -0.375f, -p.PitchRadians, 0, 0, Head );
@@ -54,10 +55,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.375f, 0.4375f, p.rightLegXRot, 0, 0, LeftLegBack );
 			DrawRotate( 0, 0.375f, 0.4375f, p.leftLegXRot, 0, 0, RightLegBack );
 			graphics.AlphaTest = true;
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;

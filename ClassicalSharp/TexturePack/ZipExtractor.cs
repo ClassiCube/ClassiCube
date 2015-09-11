@@ -3,6 +3,8 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using ClassicalSharp.Model;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.TexturePack {
 
@@ -46,7 +48,7 @@ namespace ClassicalSharp.TexturePack {
 				Utils.LogWarning( "May not be able to properly extract a .zip enty with a version later than 2.0" );
 			
 			byte[] data = DecompressEntry( reader, compressionMethod, compressedSize, uncompressedSize );
-			if( data != null ) 
+			if( data != null )
 				HandleZipEntry( fileName, data );
 		}
 		
@@ -69,14 +71,44 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 		
+		/*ChickenTexId, CreeperTexId, PigTexId, SheepTexId,
+		SkeletonTexId, SpiderTexId, ZombieTexId, SheepFurTexId, HumanoidTexId;*/
 		void HandleZipEntry( string filename, byte[] data ) {
 			Console.WriteLine( filename );
 			MemoryStream stream = new MemoryStream( data );
+			ModelCache cache = game.ModelCache;
+			IGraphicsApi api = game.Graphics;
 			
 			switch( filename ) {
 				case "terrain.png":
-					game.ChangeTerrainAtlas( new Bitmap( stream ) );
-					break;			
+					game.ChangeTerrainAtlas( new Bitmap( stream ) ); break;				
+				case "chicken.png":
+					UpdateTexture( ref cache.ChickenTexId, stream, false ); break;
+				case "creeper.png":
+					UpdateTexture( ref cache.CreeperTexId, stream, false ); break;
+				case "pig.png":
+					UpdateTexture( ref cache.PigTexId, stream, false ); break;
+				case "sheep.png":
+					UpdateTexture( ref cache.SheepTexId, stream, false ); break;
+				case "skeleton.png":
+					UpdateTexture( ref cache.SkeletonTexId, stream, false ); break;
+				case "spider.png":
+					UpdateTexture( ref cache.SpiderTexId, stream, false ); break;
+				case "zombie.png":
+					UpdateTexture( ref cache.ZombieTexId, stream, false ); break;
+				case "sheep_fur.png":
+					UpdateTexture( ref cache.SheepFurTexId, stream, false ); break;
+				case "char.png":
+					UpdateTexture( ref cache.HumanoidTexId, stream, true ); break;
+			}
+		}
+		
+		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
+			game.Graphics.DeleteTexture( ref texId );
+			using( Bitmap bmp = new Bitmap( stream ) ) {
+				if( setSkinType )
+					game.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
+				texId = game.Graphics.CreateTexture( bmp );
 			}
 		}
 	}

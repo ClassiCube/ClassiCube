@@ -1,5 +1,4 @@
 ﻿using System;
-using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -14,7 +13,8 @@ namespace ClassicalSharp.Model {
 			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			RightLeg = MakeLeg( 0.1875f, 1.1875f );
 			
-			DefaultTexId = graphics.CreateTexture( "spider.png" );
+			if( cache.SpiderTexId <= 0 )
+				cache.SpiderTexId = graphics.CreateTexture( "spider.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Model {
 		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.SpiderTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			graphics.AlphaTest = true;
 			
@@ -60,15 +60,11 @@ namespace ClassicalSharp.Model {
 			DrawRotate( -0.1875f, 0.5f, 0, 0, quarterPi, eighthPi, LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, eighthPi, eighthPi, LeftLeg );
 			DrawRotate( -0.1875f, 0.5f, 0, 0, -eighthPi, eighthPi, LeftLeg );
-			DrawRotate( -0.1875f, 0.5f, 0, 0, -quarterPi, eighthPi, LeftLeg );		
+			DrawRotate( -0.1875f, 0.5f, 0, 0, -quarterPi, eighthPi, LeftLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, -quarterPi, -eighthPi, RightLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, -eighthPi, -eighthPi, RightLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, eighthPi, -eighthPi, RightLeg );
 			DrawRotate( 0.1875f, 0.5f, 0, 0, quarterPi, -eighthPi, RightLeg );
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		ModelPart Head, Link, End, LeftLeg, RightLeg;

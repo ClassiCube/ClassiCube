@@ -17,7 +17,8 @@ namespace ClassicalSharp.Model {
 			LeftWing = MakeWing( -0.25f, -0.1875f );
 			RightWing = MakeWing( 0.1875f, 0.25f );
 			
-			DefaultTexId = graphics.CreateTexture( "chicken.png" );
+			if( cache.ChickenTexId <= 0 )
+				cache.ChickenTexId = graphics.CreateTexture( "chicken.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -61,7 +62,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.ChickenTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			graphics.AlphaTest = true;
 			
@@ -73,10 +74,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.3125f, 0.0625f, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( -0.1875f, 0.6875f, 0, 0, 0, -Math.Abs( p.leftArmXRot ), LeftWing );
 			DrawRotate( 0.1875f, 0.6875f, 0, 0, 0, Math.Abs( p.rightArmXRot ), RightWing );
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		ModelPart Head, Head2, Head3, Torso, LeftLeg, RightLeg, LeftWing, RightWing;

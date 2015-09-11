@@ -42,9 +42,8 @@ namespace ClassicalSharp.Model {
 		
 		protected abstract void DrawPlayerModel( Player p );
 		
-		public abstract void Dispose();
-		
-		public int DefaultTexId;
+		public virtual void Dispose() {
+		}
 		
 		protected FastColour col;
 		protected VertexPos3fTex2fCol4b[] vertices;

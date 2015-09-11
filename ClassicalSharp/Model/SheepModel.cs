@@ -27,8 +27,10 @@ namespace ClassicalSharp.Model {
 				FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
 			
-			DefaultTexId = graphics.CreateTexture( "sheep.png" );
-			furTextureId = graphics.CreateTexture( "sheep_fur.png" );
+			if( cache.SheepTexId <= 0 )
+				cache.SheepTexId = graphics.CreateTexture( "sheep.png" );
+			if( cache.SheepFurTexId <= 0 )
+				cache.SheepFurTexId = graphics.CreateTexture( "sheep_fur.png" );
 		}
 		
 		ModelPart MakeHead() {
@@ -69,7 +71,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.SheepTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, Head );
@@ -80,20 +82,13 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, RightLegBack );
 			graphics.AlphaTest = true;
 			if( Fur ) {
-				graphics.BindTexture( furTextureId );
+				graphics.BindTexture( cache.SheepFurTexId );
 				DrawPart( FurTorso );
 				DrawRotate( 0, 1.125f, -0.5f, -p.PitchRadians, 0, 0, FurHead );
 				DrawRotate( 0, 0.75f, -0.3125f, p.leftLegXRot, 0, 0, FurLeftLegFront );
 				DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, FurRightLegFront );
 				DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, FurLeftLegBack );
 				DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, FurRightLegBack );
-			}
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
-			if( Fur ) {
-				graphics.DeleteTexture( ref furTextureId );
 			}
 		}
 		

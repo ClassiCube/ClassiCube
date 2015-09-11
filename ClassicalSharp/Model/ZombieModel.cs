@@ -15,7 +15,8 @@ namespace ClassicalSharp.Model {
 			LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.5f );
 			
-			DefaultTexId = graphics.CreateTexture( "zombie.png" );
+			if( cache.ZombieTexId <= 0 )
+				cache.ZombieTexId = graphics.CreateTexture( "zombie.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
@@ -56,7 +57,7 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.ZombieTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
@@ -66,10 +67,6 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
 			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
 			graphics.AlphaTest = true;
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
 		}
 		
 		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;

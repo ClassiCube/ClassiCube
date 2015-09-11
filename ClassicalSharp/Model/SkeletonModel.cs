@@ -1,5 +1,4 @@
 ﻿using System;
-using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -15,7 +14,8 @@ namespace ClassicalSharp.Model {
 			LeftArm = MakeLeftArm( 0.375f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.375f );
 			
-			DefaultTexId = graphics.CreateTexture( "skeleton.png" );
+			if( cache.SkeletonTexId <= 0 )
+				cache.SkeletonTexId = graphics.CreateTexture( "skeleton.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
@@ -57,7 +57,7 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
-			int texId = p.MobTextureId <= 0 ? DefaultTexId : p.MobTextureId;
+			int texId = p.MobTextureId <= 0 ? cache.SkeletonTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
 			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, Head );
@@ -65,11 +65,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
-			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );			
-		}
-		
-		public override void Dispose() {
-			graphics.DeleteTexture( ref DefaultTexId );
+			DrawRotate( 0, 1.375f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
 		}
 		
 		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
