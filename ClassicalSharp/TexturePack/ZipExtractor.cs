@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -6,6 +7,11 @@ using System.Text;
 namespace ClassicalSharp.TexturePack {
 
 	public sealed class ZipExtractor {
+		
+		Game game;
+		public ZipExtractor( Game game ) {
+			this.game = game;
+		}
 		
 		static Encoding enc = Encoding.ASCII;
 		public void Extract( Stream stream ) {
@@ -65,6 +71,13 @@ namespace ClassicalSharp.TexturePack {
 		
 		void HandleZipEntry( string filename, byte[] data ) {
 			Console.WriteLine( filename );
+			MemoryStream stream = new MemoryStream( data );
+			
+			switch( filename ) {
+				case "terrain.png":
+					game.ChangeTerrainAtlas( new Bitmap( stream ) );
+					break;			
+			}
 		}
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using ClassicalSharp.TexturePack;
 using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp.Commands {
@@ -284,6 +286,32 @@ namespace ClassicalSharp.Commands {
 				game.AddChat( "&e/client viewdistance: &cThat view distance is way too large." );
 			} else {
 				game.SetViewDistance( newDist );
+			}
+		}
+	}
+	
+	/// <summary> Command that changes the client's texture pack. </summary>
+	public sealed class TexturePackCommand : Command {
+		
+		public TexturePackCommand() {
+			Name = "TexturePack";
+			Help = new [] {
+				"&a/client texturepack [path]",
+				"&bpath: &eLoads a texture pack from the specified path.",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			string path = reader.NextAll();
+			if( String.IsNullOrEmpty( path ) ) return;
+			
+			try {
+				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
+					ZipExtractor extractor = new ZipExtractor( game );
+					extractor.Extract( fs );
+				}
+			} catch( FileNotFoundException ) {
+				game.AddChat( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
 			}
 		}
 	}

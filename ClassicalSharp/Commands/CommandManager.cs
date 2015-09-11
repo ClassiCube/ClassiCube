@@ -21,6 +21,7 @@ namespace ClassicalSharp.Commands {
 			RegisterCommand( new ChatFontSizeCommand() );
 			RegisterCommand( new MouseSensitivityCommand() );
 			RegisterCommand( new ViewDistanceCommand() );
+			RegisterCommand( new TexturePackCommand() );
 		}
 		
 		public void RegisterCommand( Command command ) {
