@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 			Picking.GetPickedBlockPos( game, eyePos, dir, reach, pos );
 		}
 		
-		Point previous, delta;
+		internal Point previous, delta;
 		void CentreMousePosition() {
 			if( !game.Focused ) return;
 			Point current = game.DesktopCursorPos;

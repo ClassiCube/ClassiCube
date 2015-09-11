@@ -32,7 +32,8 @@ namespace ClassicalSharp.Model {
 			pos = p.Position;
 			cosA = (float)Math.Cos( p.YawRadians );
 			sinA = (float)Math.Sin( p.YawRadians );
-			curCol = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? (byte)255 : (byte)178;
+			Map map = game.Map;
+			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
@@ -45,8 +46,7 @@ namespace ClassicalSharp.Model {
 		
 		public int DefaultTexId;
 		
-		protected FastColour col = new FastColour( 178, 178, 178 );
-		protected byte curCol = 178;
+		protected FastColour col;
 		protected VertexPos3fTex2fCol4b[] vertices;
 		protected int index;
 		
@@ -87,28 +87,28 @@ namespace ClassicalSharp.Model {
 		protected void XPlane( int texX, int texY, int texWidth, int texHeight,
 		                      float z1, float z2, float y1, float y2, float x, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y1, z2, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V2, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y1, z2, rec.U2, rec.V2, FastColour.White );
 		}
 		
 		protected void YPlane( int texX, int texY, int texWidth, int texHeight,
 		                      float x1, float x2, float z1, float z2, float y, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z2, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z1, rec.U1, rec.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z1, rec.U2, rec.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y, z2, rec.U2, rec.V2, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y, z2, rec.U1, rec.V2, FastColour.White );
 		}
 		
 		protected void ZPlane( int texX, int texY, int texWidth, int texHeight,
 		                      float x1, float x2, float y1, float y2, float z, bool _64x64 ) {
 			TextureRectangle rec = SkinTexCoords( texX, texY, texWidth, texHeight, 64, _64x64 ? 64 : 32 );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V2, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V1, FastColour.White );
 		}
 		
 		protected void DrawPart( ModelPart part ) {
@@ -116,7 +116,7 @@ namespace ClassicalSharp.Model {
 				VertexPos3fTex2fCol4b vertex = vertices[part.Offset + i];
 				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
-				vertex.R = curCol; vertex.G = curCol; vertex.B = curCol;
+				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B;
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -137,7 +137,7 @@ namespace ClassicalSharp.Model {
 				
 				Vector3 newPos = Utils.RotateY( loc.X, loc.Y, loc.Z, cosA, sinA ) + offset;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
-				vertex.R = curCol; vertex.G = curCol; vertex.B = curCol;
+				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B;
 				cache.vertices[index++] = vertex;
 			}
 		}

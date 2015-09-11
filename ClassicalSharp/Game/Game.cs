@@ -358,7 +358,11 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetCamera( bool thirdPerson ) {
+			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
 			Camera = ( thirdPerson && CanUseThirdPersonCamera ) ? thirdPersonCam : firstPersonCam;
+			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
+			newCam.delta = oldCam.delta;
+			newCam.previous = oldCam.previous;
 			UpdateProjection();
 		}
 		
