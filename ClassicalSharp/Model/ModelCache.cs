@@ -15,7 +15,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public void InitCache() {
-			vertices = new VertexPos3fTex2fCol4b[384];
+			vertices = new VertexPos3fTex2fCol4b[24 * 12];
 			vb = api.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 			cache["humanoid"] = new PlayerModel( game );
 		}

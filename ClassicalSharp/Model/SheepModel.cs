@@ -8,7 +8,6 @@ namespace ClassicalSharp.Model {
 	public class SheepModel : IModel {
 
 		public bool Fur = true;
-		int furTextureId;
 		
 		public SheepModel( Game window ) : base( window ) {
 			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 * ( Fur ? 2 : 1 )];
@@ -80,7 +79,11 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 0.75f, -0.3125f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 0.75f, 0.4375f, p.rightLegXRot, 0, 0, LeftLegBack );
 			DrawRotate( 0, 0.75f, 0.4375f, p.leftLegXRot, 0, 0, RightLegBack );
+			// Need to draw the two parts separately.
+			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			graphics.AlphaTest = true;
+			index = 0;
+			
 			if( Fur ) {
 				graphics.BindTexture( cache.SheepFurTexId );
 				DrawPart( FurTorso );
