@@ -100,6 +100,9 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref cache.SheepFurTexId, stream, false ); break;
 				case "char.png":
 					UpdateTexture( ref cache.HumanoidTexId, stream, true ); break;
+				case "animations.png":
+				case "animation.png":
+					game.Animations.SetAtlas( new Bitmap( stream ) ); break;
 			}
 		}
 		

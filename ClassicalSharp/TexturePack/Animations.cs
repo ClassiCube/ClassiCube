@@ -20,7 +20,7 @@ namespace ClassicalSharp.TexturePack {
 			//DefineAnimation( 0, 0, 0, 0, 16, 7, 5 );
 		}
 		
-		public void SetAnimationAtlas( Bitmap bmp ) {
+		public void SetAtlas( Bitmap bmp ) {
 			Dispose();
 			this.bmp = bmp;
 			fastBmp = new FastBitmap( bmp, true );

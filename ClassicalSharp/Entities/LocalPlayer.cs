@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		public Vector3 SpawnPoint;
 		
-		public float ReachDistance = 50f;
+		public float ReachDistance = 5f;
 		
 		public byte UserType;
 		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
@@ -64,7 +64,6 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( game.Map.IsNotLoaded ) return;
-			//Window.Title = ( GC.GetTotalMemory( false ) / 1024.0 / 1024.0 ).ToString(); // TODO: temp debug statement
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
