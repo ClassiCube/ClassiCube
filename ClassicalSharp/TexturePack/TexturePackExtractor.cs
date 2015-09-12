@@ -27,7 +27,6 @@ namespace ClassicalSharp.TexturePack {
 			MemoryStream stream = new MemoryStream( data );
 			ModelCache cache = game.ModelCache;
 			IGraphicsApi api = game.Graphics;
-			
 			switch( filename ) {
 				case "terrain.png":
 					game.ChangeTerrainAtlas( new Bitmap( stream ) ); break;

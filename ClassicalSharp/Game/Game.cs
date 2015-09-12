@@ -149,6 +149,7 @@ namespace ClassicalSharp {
 			Graphics.PrintGraphicsInfo();
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
+			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
 			
@@ -177,7 +178,6 @@ namespace ClassicalSharp {
 			ParticleManager = new ParticleManager( this );
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
-			Animations = new Animations( this );
 			
 			Graphics.SetVSync( this, true );
 			Graphics.DepthTest = true;

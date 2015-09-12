@@ -17,7 +17,7 @@ namespace ClassicalSharp.TexturePack {
 		public Action<string, byte[], ZipEntry> ProcessZipEntry;
 		public Func<string, bool> ShouldProcessZipEntry;
 		public ZipEntry[] entries;
-		public int index;
+		int index;
 		
 		static Encoding enc = Encoding.ASCII;
 		public void Extract( Stream stream ) {
@@ -48,7 +48,6 @@ namespace ClassicalSharp.TexturePack {
 			
 			// Now read the local file header entries
 			for( int i = 0; i < entriesCount; i++ ) {
-				index = i;
 				ZipEntry entry = entries[i];
 				reader.BaseStream.Seek( entry.LocalHeaderOffset, SeekOrigin.Begin );
 				sig = reader.ReadUInt32();
@@ -57,6 +56,7 @@ namespace ClassicalSharp.TexturePack {
 				ReadLocalFileHeader( reader, entry );
 			}
 			entries = null;
+			index = 0;
 		}
 		
 		void ReadLocalFileHeader( BinaryReader reader, ZipEntry entry ) {

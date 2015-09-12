@@ -16,14 +16,14 @@ namespace ClassicalSharp.TexturePack {
 		public Animations( Game game ) {
 			this.game = game;
 			api = game.Graphics;
-			//SetAnimationAtlas( new Bitmap( "animation.png" ) );
-			//DefineAnimation( 0, 0, 0, 0, 16, 7, 5 );
 		}
 		
 		public void SetAtlas( Bitmap bmp ) {
 			Dispose();
 			this.bmp = bmp;
 			fastBmp = new FastBitmap( bmp, true );
+			//DefineAnimation( 14, 0, 0, 0, 16, 32, 5 ); // water
+			//DefineAnimation( 14, 1, 0, 16, 16, 20, 5 ); // lava
 		}
 		
 		public void Dispose() {

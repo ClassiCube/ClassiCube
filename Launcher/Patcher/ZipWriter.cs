@@ -25,15 +25,17 @@ namespace Launcher {
 			WriteLocalFileHeader( entry, data, data.Length );
 		}
 		
-		public void WriteTerrainImage( Bitmap bmp, ZipEntry entry ) {
-			MemoryStream data = new MemoryStream( entry.UncompressedDataSize );
+		public void WriteNewImage( Bitmap bmp, string filename ) {
+			MemoryStream data = new MemoryStream();
 			bmp.Save( data, ImageFormat.Png );
 			byte[] buffer = data.GetBuffer();
+			
+			ZipEntry entry = new ZipEntry();
 			entry.UncompressedDataSize = (int)data.Length;
 			entry.Crc32 = CRC32( buffer, entry.UncompressedDataSize );
-			entry.CompressedDataSize = entry.UncompressedDataSize;
-			
+			entry.CompressedDataSize = entry.UncompressedDataSize;	
 			entry.LocalHeaderOffset = (int)stream.Position;
+			entry.Filename = filename;
 			entries[entriesCount++] = entry;
 			WriteLocalFileHeader( entry, buffer, entry.UncompressedDataSize );
 		}
