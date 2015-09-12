@@ -12,9 +12,6 @@ namespace ClassicalSharp.Model {
 			End = MakeEnd();
 			LeftLeg = MakeLeg( -1.1875f, -0.1875f );
 			RightLeg = MakeLeg( 0.1875f, 1.1875f );
-			
-			if( cache.SpiderTexId <= 0 )
-				cache.SpiderTexId = graphics.CreateTexture( "spider.png" );
 		}
 		
 		ModelPart MakeHead() {

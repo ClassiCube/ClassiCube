@@ -306,10 +306,8 @@ namespace ClassicalSharp.Commands {
 			if( String.IsNullOrEmpty( path ) ) return;
 			
 			try {
-				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
-					ZipExtractor extractor = new ZipExtractor( game );
-					extractor.Extract( fs );
-				}
+				TexturePackExtractor extractor = new TexturePackExtractor();
+				extractor.Extract( path, game );
 			} catch( FileNotFoundException ) {
 				game.AddChat( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
 			}

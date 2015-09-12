@@ -25,11 +25,6 @@ namespace ClassicalSharp.Model {
 				FurLeftLegBack = MakeFurLeg( -0.34375f, -0.03125f, 0.28125f, 0.59375f );
 				FurRightLegBack = MakeFurLeg( 0.03125f, 0.34375f, 0.28125f, 0.59375f );
 			}
-			
-			if( cache.SheepTexId <= 0 )
-				cache.SheepTexId = graphics.CreateTexture( "sheep.png" );
-			if( cache.SheepFurTexId <= 0 )
-				cache.SheepFurTexId = graphics.CreateTexture( "sheep_fur.png" );
 		}
 		
 		ModelPart MakeHead() {

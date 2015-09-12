@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
+using ClassicalSharp.TexturePack;
 
 namespace ClassicalSharp {
 	
@@ -15,14 +16,15 @@ namespace ClassicalSharp {
 			}
 			
 			Utils.Log( "Starting " + Utils.AppName + ".." );
-			if( !AllResourcesExist( "terrain.png", "char.png", "clouds.png" ) ) {
+			if( !File.Exists( "default.zip" ) ) {
+				Fail( "default.zip not found. Cannot start." );
 				return;
 			}
-			if( args.Length == 0 ) {
+				
+			if( args.Length == 0 || args.Length == 1 ) {
 				Utils.Log( "Starting singleplayer mode." );
-				using( Game game = new Game() ) {
-					game.Username = "LocalPlayer";
-					game.skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
+				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
+				using( Game game = new Game( "LocalPlayer", null, skinServer, "default.zip" ) ) {
 					game.Run();
 				}
 			} else if( args.Length < 4 ) {
@@ -48,24 +50,11 @@ namespace ClassicalSharp {
 			}
 
 			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
-			using( Game game = new Game() ) {
-				game.Username = args[0];
-				game.Mppass = args[1];
+			using( Game game = new Game( args[0], args[1], skinServer, "default.zip" ) ) {
 				game.IPAddress = ip;
 				game.Port = port;
-				game.skinServer = skinServer;
 				game.Run();
 			}
-		}
-		
-		static bool AllResourcesExist( params string[] resources ) {
-			foreach( string resource in resources ) {
-				if( !File.Exists( resource ) ) {
-					Fail( resource + " not found. Cannot start." );
-					return false;
-				}
-			}
-			return true;
 		}
 		
 		static void Fail( string text ) {

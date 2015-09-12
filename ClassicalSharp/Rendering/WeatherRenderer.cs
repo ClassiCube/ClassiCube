@@ -19,7 +19,6 @@ namespace ClassicalSharp {
 		}
 		
 		int weatherVb;
-		int rainTexture, snowTexture;
 		short[] heightmap;
 		float vOffset;
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * 9 * 9];
@@ -28,7 +27,7 @@ namespace ClassicalSharp {
 			if( weather == Weather.Sunny ) return;
 			
 			graphics.Texturing = true;
-			graphics.BindTexture( weather == Weather.Rainy ? rainTexture : snowTexture );
+			graphics.BindTexture( weather == Weather.Rainy ? game.RainTextureId : game.SnowTextureId );
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)game.accumulator * speed;
@@ -90,8 +89,6 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			rainTexture = graphics.CreateTexture( "rain.png" );
-			snowTexture = graphics.CreateTexture( "snow.png" );
 			game.OnNewMap += OnNewMap;
 			game.OnNewMapLoaded += OnNewMapLoaded;
 		}
@@ -99,8 +96,6 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			game.OnNewMap -= OnNewMap;
 			game.OnNewMapLoaded -= OnNewMapLoaded;
-			graphics.DeleteTexture( ref rainTexture );
-			graphics.DeleteTexture( ref snowTexture );
 		}
 		
 		int GetRainHeight( int x, int z ) {

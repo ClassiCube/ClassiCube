@@ -162,7 +162,8 @@
     <Compile Include="TexturePack\Animations.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
-    <Compile Include="TexturePack\ZipExtractor.cs" />
+    <Compile Include="TexturePack\TexturePackExtractor.cs" />
+    <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />

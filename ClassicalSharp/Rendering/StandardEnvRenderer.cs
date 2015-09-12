@@ -12,7 +12,7 @@ namespace ClassicalSharp.Renderers {
 			map = game.Map;
 		}
 		
-		int cloudTexture = -1, cloudsVb = -1, cloudsIndices;
+		int cloudsVb = -1, cloudsIndices;
 		int skyOffset = 10, skyVb = -1, skyIndices;
 		public float CloudsSpeed = 1;
 		bool legacy;
@@ -69,7 +69,6 @@ namespace ClassicalSharp.Renderers {
 			base.Init();
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
-			cloudTexture = graphics.CreateTexture( "clouds.png" );
 			game.ViewDistanceChanged += ResetAllEnv;
 		}
 		
@@ -84,7 +83,6 @@ namespace ClassicalSharp.Renderers {
 			game.ViewDistanceChanged -= ResetAllEnv;
 			graphics.DeleteVb( skyVb );
 			graphics.DeleteVb( cloudsVb );
-			graphics.DeleteTexture( ref cloudTexture );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -97,7 +95,7 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
-			graphics.BindTexture( cloudTexture );
+			graphics.BindTexture( game.CloudsTextureId );
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( cloudsVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );

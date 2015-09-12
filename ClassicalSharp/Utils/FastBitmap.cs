@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			return (int*)( scan0Byte + ( y * Stride ) );
 		}
 		
-		internal static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
+		public static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
 			for( int y = 0; y < size; y++ ) {
 				int* srcRow = src.GetRowPtr( srcY + y );
 				int* dstRow = dst.GetRowPtr( dstY + y );

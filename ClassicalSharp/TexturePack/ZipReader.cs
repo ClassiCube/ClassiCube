@@ -1,19 +1,23 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Model;
 
 namespace ClassicalSharp.TexturePack {
 
-	public sealed class ZipExtractor {
+	public struct ZipEntry {
+		public int CompressedDataSize, UncompressedDataSize;
+		public int LocalHeaderOffset, CentralHeaderOffset;
+		public uint Crc32;
+		public string Filename;
+	}
+	
+	public sealed class ZipReader {
 		
-		Game game;
-		public ZipExtractor( Game game ) {
-			this.game = game;
-		}
+		public Action<string, byte[], ZipEntry> ProcessZipEntry;
+		public Func<string, bool> ShouldProcessZipEntry;
+		public ZipEntry[] entries;
+		public int index;
 		
 		static Encoding enc = Encoding.ASCII;
 		public void Extract( Stream stream ) {
@@ -27,7 +31,7 @@ namespace ClassicalSharp.TexturePack {
 			}
 			int entriesCount, centralDirectoryOffset;
 			ReadEndOfCentralDirectory( reader, out entriesCount, out centralDirectoryOffset );
-			ZipData[] entries = new ZipData[entriesCount];
+			entries = new ZipEntry[entriesCount];
 			reader.BaseStream.Seek( centralDirectoryOffset, SeekOrigin.Begin );
 			
 			// Read all the central directory entries
@@ -44,21 +48,18 @@ namespace ClassicalSharp.TexturePack {
 			
 			// Now read the local file header entries
 			for( int i = 0; i < entriesCount; i++ ) {
-				ZipData entry = entries[i];
+				index = i;
+				ZipEntry entry = entries[i];
 				reader.BaseStream.Seek( entry.LocalHeaderOffset, SeekOrigin.Begin );
 				sig = reader.ReadUInt32();
 				if( sig != 0x04034b50 )
 					throw new NotSupportedException( "Unsupported signature: " + sig.ToString( "X8" ) );
 				ReadLocalFileHeader( reader, entry );
 			}
+			entries = null;
 		}
 		
-		struct ZipData {
-			public int CompressedSize, UncompressedSize;
-			public int LocalHeaderOffset;
-		}
-		
-		void ReadLocalFileHeader( BinaryReader reader, ZipData entry ) {
+		void ReadLocalFileHeader( BinaryReader reader, ZipEntry entry ) {
 			ushort versionNeeded = reader.ReadUInt16();
 			ushort flags = reader.ReadUInt16();
 			ushort compressionMethod = reader.ReadUInt16();
@@ -66,30 +67,32 @@ namespace ClassicalSharp.TexturePack {
 			reader.ReadUInt32(); // CRC 32
 			
 			int compressedSize = reader.ReadInt32();
-			if( compressedSize == 0 ) compressedSize = entry.CompressedSize;
+			if( compressedSize == 0 ) compressedSize = entry.CompressedDataSize;
 			int uncompressedSize = reader.ReadInt32();
-			if( uncompressedSize == 0 ) uncompressedSize = entry.UncompressedSize;
+			if( uncompressedSize == 0 ) uncompressedSize = entry.UncompressedDataSize;
 			ushort fileNameLen = reader.ReadUInt16();
 			ushort extraFieldLen = reader.ReadUInt16();
 			string fileName = enc.GetString( reader.ReadBytes( fileNameLen ) );
-			reader.ReadBytes( extraFieldLen );
+			if( !ShouldProcessZipEntry( fileName ) ) return;
 			
+			reader.ReadBytes( extraFieldLen );
 			if( versionNeeded > 20 )
 				Utils.LogWarning( "May not be able to properly extract a .zip enty with a version later than 2.0" );
 			
 			byte[] data = DecompressEntry( reader, compressionMethod, compressedSize, uncompressedSize );
 			if( data != null )
-				HandleZipEntry( fileName, data );
+				ProcessZipEntry( fileName, data, entry );
 		}
 		
-		int index;
-		void ReadCentralDirectory( BinaryReader reader, ZipData[] entries ) {
+		void ReadCentralDirectory( BinaryReader reader, ZipEntry[] entries ) {
+			ZipEntry entry;
+			entry.CentralHeaderOffset = (int)( reader.BaseStream.Position - 4 );
 			reader.ReadUInt16(); // OS
 			ushort versionNeeded = reader.ReadUInt16();
 			ushort flags = reader.ReadUInt16();
 			ushort compressionMethod = reader.ReadUInt16();
 			reader.ReadUInt32(); // last modified
-			reader.ReadUInt32(); // CRC 32
+			uint crc32 = reader.ReadUInt32();
 			int compressedSize = reader.ReadInt32();
 			int uncompressedSize = reader.ReadInt32();
 			ushort fileNameLen = reader.ReadUInt16();
@@ -103,11 +106,12 @@ namespace ClassicalSharp.TexturePack {
 			string fileName = enc.GetString( reader.ReadBytes( fileNameLen ) );
 			reader.ReadBytes( extraFieldLen );
 			reader.ReadBytes( fileCommentLen );
-			
-			ZipData entry;
-			entry.CompressedSize = compressedSize;
-			entry.UncompressedSize = uncompressedSize;
+						
+			entry.CompressedDataSize = compressedSize;
+			entry.UncompressedDataSize = uncompressedSize;
 			entry.LocalHeaderOffset = localHeaderOffset;
+			entry.Filename = fileName;
+			entry.Crc32 = crc32;
 			entries[index++] = entry;
 		}
 		
@@ -142,55 +146,6 @@ namespace ClassicalSharp.TexturePack {
 				Utils.LogWarning( "Unsupported .zip entry compression method: " + compressionMethod );
 				reader.ReadBytes( compressedSize );
 				return null;
-			}
-		}
-		
-		void HandleZipEntry( string filename, byte[] data ) {
-			MemoryStream stream = new MemoryStream( data );
-			ModelCache cache = game.ModelCache;
-			IGraphicsApi api = game.Graphics;
-			
-			switch( filename ) {
-				case "terrain.png":
-					game.ChangeTerrainAtlas( new Bitmap( stream ) ); break;
-				case "mob/chicken.png":
-				case "chicken.png":
-					UpdateTexture( ref cache.ChickenTexId, stream, false ); break;
-				case "mob/creeper.png":
-				case "creeper.png":
-					UpdateTexture( ref cache.CreeperTexId, stream, false ); break;
-				case "mob/pig.png":
-				case "pig.png":
-					UpdateTexture( ref cache.PigTexId, stream, false ); break;
-				case "mob/sheep.png":
-				case "sheep.png":
-					UpdateTexture( ref cache.SheepTexId, stream, false ); break;
-				case "mob/skeleton.png":
-				case "skeleton.png":
-					UpdateTexture( ref cache.SkeletonTexId, stream, false ); break;
-				case "mob/spider.png":
-				case "spider.png":
-					UpdateTexture( ref cache.SpiderTexId, stream, false ); break;
-				case "mob/zombie.png":
-				case "zombie.png":
-					UpdateTexture( ref cache.ZombieTexId, stream, false ); break;
-				case "mob/sheep_fur.png":
-				case "sheep_fur.png":
-					UpdateTexture( ref cache.SheepFurTexId, stream, false ); break;
-				case "char.png":
-					UpdateTexture( ref cache.HumanoidTexId, stream, true ); break;
-				case "animations.png":
-				case "animation.png":
-					game.Animations.SetAtlas( new Bitmap( stream ) ); break;
-			}
-		}
-		
-		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
-			game.Graphics.DeleteTexture( ref texId );
-			using( Bitmap bmp = new Bitmap( stream ) ) {
-				if( setSkinType )
-					game.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
-				texId = game.Graphics.CreateTexture( bmp );
 			}
 		}
 	}

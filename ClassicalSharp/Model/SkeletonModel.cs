@@ -13,9 +13,6 @@ namespace ClassicalSharp.Model {
 			RightLeg = MakeRightLeg( 0.0625f, 0.1875f );
 			LeftArm = MakeLeftArm( 0.375f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.375f );
-			
-			if( cache.SkeletonTexId <= 0 )
-				cache.SkeletonTexId = graphics.CreateTexture( "skeleton.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {

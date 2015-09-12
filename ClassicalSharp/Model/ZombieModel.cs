@@ -14,9 +14,6 @@ namespace ClassicalSharp.Model {
 			RightLeg = MakeRightLeg( 0, 0.25f );
 			LeftArm = MakeLeftArm( 0.5f, 0.25f );
 			RightArm = MakeRightArm( 0.25f, 0.5f );
-			
-			if( cache.ZombieTexId <= 0 )
-				cache.ZombieTexId = graphics.CreateTexture( "zombie.png" );
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {

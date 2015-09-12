@@ -16,9 +16,6 @@ namespace ClassicalSharp.Model {
 			RightLeg = MakeLeg( 0f, 0.1875f, 0.0625f, 0.125f );
 			LeftWing = MakeWing( -0.25f, -0.1875f );
 			RightWing = MakeWing( 0.1875f, 0.25f );
-			
-			if( cache.ChickenTexId <= 0 )
-				cache.ChickenTexId = graphics.CreateTexture( "chicken.png" );
 		}
 		
 		ModelPart MakeHead() {

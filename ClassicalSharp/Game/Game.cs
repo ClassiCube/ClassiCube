@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer;
+		internal string skinServer, chatInInputBuffer, defaultTexPack;
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
@@ -102,6 +102,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public bool HideGui = false;
 		public Animations Animations;
+		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -115,7 +116,11 @@ namespace ClassicalSharp {
 			Raise( TerrainAtlasChanged );
 		}
 		
-		public Game() : base() {
+		public Game( string username, string mppass, string skinServer, string defaultTexPack ) : base() {
+			Username = username;
+			Mppass = mppass;
+			this.skinServer = skinServer;
+			this.defaultTexPack = defaultTexPack;
 			// We can't use enum array initaliser because this causes problems when building with mono
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
 			#if !__MonoCS__
@@ -142,10 +147,11 @@ namespace ClassicalSharp {
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			Graphics.PrintGraphicsInfo();
-			Bitmap terrainBmp = new Bitmap( "terrain.png" );
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
-			LoadAtlas( terrainBmp );
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( defaultTexPack, this );
+			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
@@ -311,6 +317,10 @@ namespace ClassicalSharp {
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Utils2D.Dispose();
+			Animations.Dispose();
+			Graphics.DeleteTexture( ref CloudsTextureId );
+			Graphics.DeleteTexture( ref RainTextureId );
+			Graphics.DeleteTexture( ref SnowTextureId );
 			base.Dispose();
 		}
 		

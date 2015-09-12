@@ -36,11 +36,6 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
 			Set64x64Slim.Hat = Set64x64.Hat;
-
-			using( Bitmap bmp = new Bitmap( "char.png" ) ) {
-				window.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
-				cache.HumanoidTexId = graphics.CreateTexture( bmp );
-			}
 		}
 		
 		ModelPart MakeLeftArm( int x, int y, float x1, float x2, int width, bool _64x64 ) {

@@ -14,9 +14,6 @@ namespace ClassicalSharp.Model {
 			RightLegFront = MakeLeg( 0.0625f, 0.3125f, -0.4375f, -0.1875f );
 			LeftLegBack = MakeLeg( -0.3125f, -0.0625f, 0.3125f, 0.5625f );
 			RightLegBack = MakeLeg( 0.0625f, 0.3125f, 0.3125f, 0.5625f );
-			
-			if( cache.PigTexId <= 0 )
-				cache.PigTexId = graphics.CreateTexture( "pig.png" );
 		}
 		
 		ModelPart MakeHead() {

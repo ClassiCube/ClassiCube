@@ -14,9 +14,6 @@ namespace ClassicalSharp.Model {
 			RightLegFront = MakeLeg( 0, 0.25f, -0.375f, -0.125f );
 			LeftLegBack = MakeLeg( -0.25f, 0, 0.125f, 0.375f );
 			RightLegBack = MakeLeg( 0, 0.25f, 0.125f, 0.375f );
-			
-			if( cache.CreeperTexId <= 0 )
-				cache.CreeperTexId = graphics.CreateTexture( "creeper.png" );
 		}
 		
 		ModelPart MakeHead() {
