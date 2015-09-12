@@ -9,6 +9,7 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
@@ -100,6 +101,7 @@ namespace ClassicalSharp {
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 30;
 		public bool HideGui = false;
+		public Animations Animations;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -169,6 +171,7 @@ namespace ClassicalSharp {
 			ParticleManager = new ParticleManager( this );
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
+			Animations = new Animations( this );
 			
 			Graphics.SetVSync( this, true );
 			Graphics.DepthTest = true;
@@ -229,6 +232,7 @@ namespace ClassicalSharp {
 				Players.Tick( ticksPeriod );
 				Camera.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
+				Animations.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
@@ -250,11 +254,11 @@ namespace ClassicalSharp {
 				Players.Render( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				if( SelectedPos.Valid )
-					Picking.Render( e.Time, SelectedPos );
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
+				if( SelectedPos.Valid )
+					Picking.Render( e.Time, SelectedPos );
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );

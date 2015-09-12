@@ -14,6 +14,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public FastBitmap( int width, int height, int stride, IntPtr scan0 ) {
+			Width = width;
+			Height = height;
+			Stride = stride;
+			Scan0 = scan0;
+			scan0Byte = (byte*)scan0;
+		}
+		
 		public Bitmap Bitmap;
 		BitmapData data;
 		byte* scan0Byte;
@@ -49,7 +57,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UnlockBits() {
-			if( data != null ) {
+			if( Bitmap != null && data != null ) {
 				Bitmap.UnlockBits( data );
 				data = null;
 				scan0Byte = (byte*)IntPtr.Zero;

@@ -14,17 +14,19 @@ namespace ClassicalSharp.Renderers {
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
 		}
 		
-		FastColour col = FastColour.White;
+		FastColour col = FastColour.Black;
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
-		const float size = 0.0625f;
+		const float size = 1/32f;
 		const float offset = 0.01f;
 		
 		public void Render( double delta, PickedPos pickedPos ) {
 			index = 0;
 			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
+			col.A = 220;
+			graphics.AlphaBlending = true;
 			
 			// bottom face
 			DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );
@@ -59,6 +61,7 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, verticesCount, verticesCount * 6 / 4 );
+			graphics.AlphaBlending = false;
 		}
 		
 		public void Dispose() {

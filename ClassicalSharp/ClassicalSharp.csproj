@@ -159,6 +159,7 @@
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\Commands.cs" />
     <Compile Include="Singleplayer\Server.cs" />
+    <Compile Include="TexturePack\Animations.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
     <Compile Include="TexturePack\ZipExtractor.cs" />

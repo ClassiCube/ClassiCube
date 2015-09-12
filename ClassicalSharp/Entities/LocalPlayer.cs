@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		public Vector3 SpawnPoint;
 		
-		public float ReachDistance = 5f;
+		public float ReachDistance = 50f;
 		
 		public byte UserType;
 		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
