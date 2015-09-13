@@ -741,8 +741,8 @@ namespace ClassicalSharp {
 			float x = reader.ReadInt16() / 32f;
 			float y = ( reader.ReadInt16() - 51 ) / 32f; // We have to do this.
 			float z = reader.ReadInt16() / 32f;
-			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() ) + 100f;
-			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() ) + 50f;
+			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
+			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			if( playerId == 0xFF ) {
 				receivedFirstPosition = true;
 			}
