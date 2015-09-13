@@ -31,8 +31,8 @@ namespace ClassicalSharp.Selections {
 			Min = Vector3I.Min( start, end );
 			Max = Vector3I.Max( start, end );			
 			int index = 0;
-			Vector3 p1 = (Vector3)Min + new Vector3( 0.0625f, 0.0625f, 0.0625f );
-			Vector3 p2 = (Vector3)Max - new Vector3( 0.0625f, 0.0625f, 0.0625f );
+			Vector3 p1 = (Vector3)Min + new Vector3( 1/16f, 1/16f, 1/16f );
+			Vector3 p2 = (Vector3)Max - new Vector3( 1/16f, 1/16f, 1/16f );
 			
 			RenderYPlane( ref index, p1.X, p1.Z, p2.X, p2.Z, p1.Y, col ); // bottom
 			RenderYPlane( ref index, p1.X, p1.Z, p2.X, p2.Z, p2.Y, col ); // top

@@ -13,19 +13,19 @@ namespace ClassicalSharp.Model {
 			Set64x32 = new ModelSet();
 			Set64x32.Head = MakeHead( false );
 			Set64x32.Torso = MakeTorso( false );
-			Set64x32.LeftLeg = MakeLeftLeg( 0, 16, 0.25f, 0f, false );
-			Set64x32.RightLeg = MakeRightLeg( 0, 16, 0, 0.25f, false );
-			Set64x32.LeftArm = MakeLeftArm( 40, 16, 0.5f, 0.25f, 4, false );
-			Set64x32.RightArm = MakeRightArm( 40, 16, 0.25f, 0.5f, 4, false );
+			Set64x32.LeftLeg = MakeLeftLeg( 0, 16, 4/16f, 0f, false );
+			Set64x32.RightLeg = MakeRightLeg( 0, 16, 0, 4/16f, false );
+			Set64x32.LeftArm = MakeLeftArm( 40, 16, 8/16f, 4/16f, 4, false );
+			Set64x32.RightArm = MakeRightArm( 40, 16, 4/16f, 8/16f, 4, false );
 			Set64x32.Hat = MakeHat( false );
 			
 			Set64x64 = new ModelSet();
 			Set64x64.Head = MakeHead( true );
 			Set64x64.Torso = MakeTorso( true );
-			Set64x64.LeftLeg = MakeLeftLeg( 16, 48, 0, 0.25f, true );
-			Set64x64.RightLeg = MakeRightLeg( 0, 16, 0, 0.25f, true );
-			Set64x64.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.5f, 4, true );
-			Set64x64.RightArm = MakeRightArm( 40, 16, 0.25f, 0.5f, 4, true );
+			Set64x64.LeftLeg = MakeLeftLeg( 16, 48, 0, 4/16f, true );
+			Set64x64.RightLeg = MakeRightLeg( 0, 16, 0, 4/16f, true );
+			Set64x64.LeftArm = MakeLeftArm( 32, 48, 4/16f, 8/16f, 4, true );
+			Set64x64.RightArm = MakeRightArm( 40, 16, 4/16f, 8/16f, 4, true );
 			Set64x64.Hat = MakeHat( true );
 			
 			Set64x64Slim = new ModelSet();
@@ -33,8 +33,8 @@ namespace ClassicalSharp.Model {
 			Set64x64Slim.Torso = Set64x64.Torso;
 			Set64x64Slim.LeftLeg = Set64x64.LeftLeg;
 			Set64x64Slim.RightLeg = Set64x64.RightLeg;
-			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 0.25f, 0.4375f, 3, true );
-			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 0.25f, 0.4375f, 3, true );
+			Set64x64Slim.LeftArm = MakeLeftArm( 32, 48, 4/16f, 7/16f, 3, true );
+			Set64x64Slim.RightArm = MakeRightArm( 40, 16, 4/16f, 7/16f, 3, true );
 			Set64x64Slim.Hat = Set64x64.Hat;
 		}
 		
@@ -71,11 +71,11 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f ); }
+			get { return new Vector3( 8/16f, 30/16f, 8/16f ); }
 		}
 		
 		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -8 / 16f, 0, -4 / 16f, 8 / 16f, 32 / 16f, 4 / 16f ); }
+			get { return new BoundingBox( -8/16f, 0, -4/16f, 8/16f, 32/16f, 4/16f ); }
 		}
 		
 		ModelSet model;
@@ -89,12 +89,12 @@ namespace ClassicalSharp.Model {
 			if( skinType == SkinType.Type64x64 ) model = Set64x64;
 			else if( skinType == SkinType.Type64x64Slim ) model = Set64x64Slim;
 			
-			DrawRotate( 0, 1.5f, 0, -p.PitchRadians, 0, 0, model.Head );
+			DrawRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, model.Head );
 			DrawPart( model.Torso );
-			DrawRotate( 0, 0.75f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
-			DrawRotate( 0, 0.75f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
-			DrawRotate( 0, 1.5f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
-			DrawRotate( 0, 1.5f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
+			DrawRotate( 0, 12/16f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
+			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
+			DrawRotate( 0, 24/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
+			DrawRotate( 0, 24/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
 			DrawRotate( 0, 1.4375f, 0, -p.PitchRadians, 0, 0, model.Hat );		
 		}

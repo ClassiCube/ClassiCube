@@ -77,7 +77,7 @@ namespace OpenTK.Platform.Windows
 				CreateWindow(x, y, width, height, title, options, device, IntPtr.Zero), null);
 			child_window = new WinWindowInfo(
 				CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, options, device, window.WindowHandle), window);
-
+			
 			exists = true;
 		}
 
