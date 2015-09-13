@@ -90,7 +90,15 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if( key == Key.F4 && ( IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ) ) ) {
 				Exit();
-			} else if( key == Keys[KeyMapping.HideGui] ) {
+			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
+				if( !HandleBuiltinKey( key ) ) {
+					LocalPlayer.HandleKeyDown( key );
+				}
+			}
+		}
+		
+		bool HandleBuiltinKey( Key key ) {
+			if( key == Keys[KeyMapping.HideGui] ) {
 				HideGui = !HideGui;
 			} else if( key == Keys[KeyMapping.Screenshot] ) {
 				screenshotRequested = true;
@@ -110,7 +118,7 @@ namespace ClassicalSharp {
 					int newDist = viewDistances[i];
 					if( newDist > ViewDistance ) {
 						SetViewDistance( newDist );
-						return;
+						return true;
 					}
 				}
 				SetViewDistance( viewDistances[0] );
@@ -120,13 +128,12 @@ namespace ClassicalSharp {
 				} else {
 					SetNewScreen( new NormalScreen( this ) );
 				}
-			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
-				if( key == Keys[KeyMapping.OpenInventory] ) {
-					SetNewScreen( new BlockSelectScreen( this ) );
-				} else {
-					LocalPlayer.HandleKeyDown( key );
-				}
+			} else if( key == Keys[KeyMapping.OpenInventory] ) {
+				SetNewScreen( new BlockSelectScreen( this ) );
+			} else {
+				return false;
 			}
+			return true;
 		}
 		
 		DateTime lastClick = DateTime.MinValue;
@@ -205,14 +212,10 @@ namespace ClassicalSharp {
 		
 		Key[] Keys;
 		bool IsReservedKey( Key key ) {
-			return IsLockedKey( key ) || key == Key.Slash || key == Key.BackSpace ||
+			return key == Key.Escape || key == Key.Slash || key == Key.BackSpace ||
 				( key >= Key.Insert && key <= Key.End ) ||
 				( key >= Key.Up && key <= Key.Right ) || // chat screen movement
 				( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
-		}
-		
-		public bool IsLockedKey( Key key ) {
-			return key == Key.Escape || ( key >= Key.F1 && key <= Key.F35 );
 		}
 		
 		public bool IsKeyOkay( Key key, out string reason ) {
@@ -236,7 +239,7 @@ namespace ClassicalSharp {
 			Keys = new Key[] {
 				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
 				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, Key.F7,
-				Key.F5, Key.F6, Key.Z, Key.ShiftLeft, Key.X, Key.Q, 
+				Key.F5, Key.F, Key.Z, Key.ShiftLeft, Key.X, Key.Q, 
 				Key.E, Key.Tab, Key.F1 };
 			#else
 			Keys = new Key[23];
@@ -244,7 +247,7 @@ namespace ClassicalSharp {
 			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Y; Keys[7] = Key.T;
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B; 
 			Keys[11] = Key.F12; Keys[12] = Key.F11; Keys[13] = Key.F7;
-			Keys[14] = Key.F5; Keys[15] = Key.F6; Keys[16] = Key.Z;
+			Keys[14] = Key.F5; Keys[15] = Key.F; Keys[16] = Key.Z;
 			Keys[17] = Key.ShiftLeft; Keys[18] = Key.X; Keys[19] = Key.Q;
 			Keys[20] = Key.E; Keys[21] = Key.Tab; Keys[22] = Key.F1;
 			#endif

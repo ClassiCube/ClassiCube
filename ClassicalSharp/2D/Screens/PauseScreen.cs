@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 		
 		void SetWidgetToChange( KeyMapWidget widget ) {
 			Key oldKey = game.Keys[widget.Mapping];
-			if( !game.Keys.IsLockedKey( oldKey ) ) {
+			if( oldKey != Key.Escape ) {
 				const string format = "&ePress new key for \"{0}\".";
 				keyStatusWidget.SetText( String.Format( format, widget.Description ) );
 				widgetToChange = widget;

@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Network;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
@@ -602,8 +603,8 @@ namespace ClassicalSharp {
 						game.Map.SetEdgeBlock( (Block)edgeBlock );
 						game.Map.SetSidesBlock( (Block)sideBlock );
 						if( url == String.Empty ) {
-							Bitmap bmp = new Bitmap( "terrain.png" );
-							game.ChangeTerrainAtlas( bmp );
+							TexturePackExtractor extractor = new TexturePackExtractor();
+							extractor.Extract( game.defaultTexPack, game );
 						} else {
 							game.AsyncDownloader.DownloadImage( url, true, "terrain" );
 						}
