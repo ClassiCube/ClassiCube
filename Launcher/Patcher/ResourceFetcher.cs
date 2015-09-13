@@ -75,13 +75,18 @@ namespace Launcher {
 			return filename.StartsWith( "assets/minecraft/textures" ) &&
 				( filename == "assets/minecraft/textures/environment/snow.png" ||
 				 filename == "assets/minecraft/textures/blocks/water_still.png" ||
-				 filename == "assets/minecraft/textures/blocks/lava_still.png" );
+				 filename == "assets/minecraft/textures/blocks/lava_still.png" ||
+				filename == "assets/minecraft/textures/entity/chicken.png" );
 		}
 		
 		void ProcessZipEntry_Modern( string filename, byte[] data, ZipEntry entry ) {
 			switch( filename ) {
 				case "assets/minecraft/textures/environment/snow.png":
 					entry.Filename = "snow.png";
+					writer.WriteZipEntry( entry, data );
+					break;
+				case "assets/minecraft/textures/entity/chicken.png":
+					entry.Filename = "mob/chicken.png";
 					writer.WriteZipEntry( entry, data );
 					break;
 				case "assets/minecraft/textures/blocks/water_still.png":
