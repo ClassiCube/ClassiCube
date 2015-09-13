@@ -60,10 +60,10 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, -0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, -0.5f, rec.U2, rec.V1, col );			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, y, 0.5f, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, y, 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + -0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + y, pos.Z + -0.5f, rec.U2, rec.V1, col );			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + y, pos.Z + 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + 0.5f, rec.U1, rec.V2, col );
 		}
 
 		void DrawZFace( float z, int side, bool swapU ) {
@@ -74,10 +74,10 @@ namespace ClassicalSharp.Model {
 			}
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, 0f, z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -0.5f, blockHeight, z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, blockHeight, z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( 0.5f, 0f, z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + 0f, pos.Z + z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + blockHeight, pos.Z + z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + blockHeight, pos.Z + z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + 0f, pos.Z + z, rec.U2, rec.V2, col );
 		}
 
 		void DrawXFace( float x, int side, bool swapU ) {
@@ -88,10 +88,10 @@ namespace ClassicalSharp.Model {
 			}
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, -0.5f, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, -0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, blockHeight, 0.5f, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0f, 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + -0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + -0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + 0.5f, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + 0.5f, rec.U2, rec.V2, col );
 		}
 	}
 }
