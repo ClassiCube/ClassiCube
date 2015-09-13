@@ -6,7 +6,7 @@ namespace Launcher {
 	
 	public partial class ResourceFetcher {
 		
-		const string animationsTxt = @"# This file defines the animations used in a texture pack for ClassicCube.
+		const string animationsTxt = @"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.
 # Each line is in the format: <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>
 # - TileX and TileY indicate the coordinates of the tile in terrain.png that 
 #     will be replaced by the animation frames. These range from 0 to 15. (inclusive of 15)
