@@ -226,7 +226,7 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.XBUTTONDOWN:
-					mouse[((wParam.ToInt32() & 0xFFFF0000) >> 16) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = true;
+					mouse[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = true;
 					break;
 
 				case WindowMessage.LBUTTONUP:
@@ -242,8 +242,7 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.XBUTTONUP:
-					// TODO: Is this correct?
-					mouse[((wParam.ToInt32() & 0xFFFF0000) >> 16) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = false;
+					mouse[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = false;
 					break;
 
 					// Keyboard events:
