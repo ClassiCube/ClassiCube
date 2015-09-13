@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Text;
 using ClassicalSharp.TexturePack;
 
 namespace Launcher {
@@ -22,22 +23,31 @@ namespace Launcher {
 			entry.CompressedDataSize = (int)entry.UncompressedDataSize;
 			entry.LocalHeaderOffset = (int)stream.Position;
 			entries[entriesCount++] = entry;
-			WriteLocalFileHeader( entry, data, data.Length );
+			WriteLocalFileEntry( entry, data, data.Length );
 		}
 		
 		public void WriteNewImage( Bitmap bmp, string filename ) {
 			MemoryStream data = new MemoryStream();
 			bmp.Save( data, ImageFormat.Png );
 			byte[] buffer = data.GetBuffer();
-			
+			WriteNewEntry( filename, buffer, (int)data.Length );
+		}
+		
+		public void WriteNewString( string text, string filename ) {
+			byte[] data = Encoding.ASCII.GetBytes( text );
+			WriteNewEntry( filename, data, data.Length );
+		}
+		
+		public void WriteNewEntry( string filename, byte[] data, int dataLength ) {
 			ZipEntry entry = new ZipEntry();
-			entry.UncompressedDataSize = (int)data.Length;
-			entry.Crc32 = CRC32( buffer, entry.UncompressedDataSize );
-			entry.CompressedDataSize = entry.UncompressedDataSize;	
+			entry.UncompressedDataSize = dataLength;
+			entry.Crc32 = CRC32( data, dataLength );
+			entry.CompressedDataSize = dataLength;
 			entry.LocalHeaderOffset = (int)stream.Position;
+			
 			entry.Filename = filename;
 			entries[entriesCount++] = entry;
-			WriteLocalFileHeader( entry, buffer, entry.UncompressedDataSize );
+			WriteLocalFileEntry( entry, data, dataLength );
 		}
 		
 		public void WriteCentralDirectoryRecords() {
@@ -49,7 +59,7 @@ namespace Launcher {
 			WriteEndOfCentralDirectoryRecord( (ushort)entriesCount, dirSize, dirOffset );
 		}
 		
-		void WriteLocalFileHeader( ZipEntry entry, byte[] data, int length ) {
+		void WriteLocalFileEntry( ZipEntry entry, byte[] data, int length ) {
 			writer.Write( 0x04034b50 ); // signature
 			writer.Write( (ushort)20 ); // version needed
 			writer.Write( (ushort)8 );  // bitflags

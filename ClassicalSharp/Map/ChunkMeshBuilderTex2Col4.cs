@@ -235,7 +235,7 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y > 0 ? ( emitsLight || (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
+			FastColour col = Y > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
 				: map.SunlightYBottom;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
@@ -249,7 +249,7 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+			FastColour col = Y < maxY ? ( emitsLight || Y > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
 				: map.Sunlight;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 

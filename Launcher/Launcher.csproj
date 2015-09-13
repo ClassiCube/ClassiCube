@@ -85,6 +85,7 @@
     </Compile>
     <Compile Include="MainForm.GameState.cs" />
     <Compile Include="MinecraftSession.cs" />
+    <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />

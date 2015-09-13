@@ -51,9 +51,9 @@ namespace ClassicalSharp {
 			SetBlockHeight( Block.Snow, 2/16f );			
 			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water ); 
 			MarkTranslucent( Block.Ice );
-			MarkTransparent( Block.Glass ); MarkTransparent( Block.Leaves ); 
-			MarkTransparent( Block.Slab ); MarkTransparent( Block.Snow ); 
-			MarkTransparent( Block.CobblestoneSlab );
+			MarkTransparent( Block.Glass, false ); MarkTransparent( Block.Leaves, false ); 
+			MarkTransparent( Block.Slab, true ); MarkTransparent( Block.Snow, true ); 
+			MarkTransparent( Block.CobblestoneSlab, true );
 			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling ); 
 			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom ); 
 			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope ); 
@@ -83,9 +83,9 @@ namespace ClassicalSharp {
 			canDelete[(int)Block.StillLava] = false;
 		}
 		
-		void MarkTransparent( Block id ) {
+		void MarkTransparent( Block id, bool blocks ) {
 			isTransparent[(int)id] = true;
-			blocksLight[(int)id] = false;
+			blocksLight[(int)id] = blocks;
 			isOpaque[(int)id] = false;			
 		}
 		

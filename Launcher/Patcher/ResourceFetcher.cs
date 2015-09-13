@@ -9,7 +9,7 @@ using ClassicalSharp.TexturePack;
 
 namespace Launcher {
 	
-	public class ResourceFetcher {
+	public partial class ResourceFetcher {
 		
 		const string classicJarUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
 		const string modernJarUri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
@@ -36,11 +36,12 @@ namespace Launcher {
 				reader.Extract( srcClassic );
 				
 				// Grab animations and snow
-				animBitmap = new Bitmap( 512, 32, PixelFormat.Format32bppArgb );
+				animBitmap = new Bitmap( 1024, 64, PixelFormat.Format32bppArgb );
 				reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Modern;
 				reader.ProcessZipEntry = ProcessZipEntry_Modern;
 				reader.Extract( srcModern );
 				writer.WriteNewImage( animBitmap, "animations.png" );
+				writer.WriteNewString( animationsTxt, "animations.txt" );
 				animBitmap.Dispose();
 				writer.WriteCentralDirectoryRecords();
 			}
@@ -76,7 +77,8 @@ namespace Launcher {
 				( filename == "assets/minecraft/textures/environment/snow.png" ||
 				 filename == "assets/minecraft/textures/blocks/water_still.png" ||
 				 filename == "assets/minecraft/textures/blocks/lava_still.png" ||
-				filename == "assets/minecraft/textures/entity/chicken.png" );
+				 filename == "assets/minecraft/textures/blocks/fire_layer_1.png" ||
+				 filename == "assets/minecraft/textures/entity/chicken.png" );
 		}
 		
 		void ProcessZipEntry_Modern( string filename, byte[] data, ZipEntry entry ) {
@@ -90,10 +92,13 @@ namespace Launcher {
 					writer.WriteZipEntry( entry, data );
 					break;
 				case "assets/minecraft/textures/blocks/water_still.png":
-					PatchAnimation( data, 0 );
+					PatchDefault( data, 0 );
 					break;
 				case "assets/minecraft/textures/blocks/lava_still.png":
-					PatchAnimation( data, 16 );
+					PatchCycle( data, 16 );
+					break;
+				case "assets/minecraft/textures/blocks/fire_layer_1.png":
+					PatchDefault( data, 32 );
 					break;
 			}
 		}
@@ -114,16 +119,11 @@ namespace Launcher {
 			}
 		}
 		
-		unsafe void PatchAnimation( byte[] data, int y ) {
-			// Sadly files in modern are 24 rgb, so we can't use fastbitmap here
-			using( Bitmap bmp = new Bitmap( new MemoryStream( data ) ) ) {			
-				for( int tile = 0; tile < bmp.Height; tile += 16 ) {
-					for( int yy = 0; yy < 16; yy++ ) {
-						for( int xx = 0; xx < 16; xx++ ) {
-							animBitmap.SetPixel( tile + xx, y + yy,
-							                    bmp.GetPixel( xx, tile + yy ) );
-						}
-					}
+		void CopyTile( int src, int dst, int y, Bitmap bmp ) {
+			for( int yy = 0; yy < 16; yy++ ) {
+				for( int xx = 0; xx < 16; xx++ ) {
+					animBitmap.SetPixel( dst + xx, y + yy,
+					                    bmp.GetPixel( xx, src + yy ) );
 				}
 			}
 		}

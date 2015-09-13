@@ -56,9 +56,6 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref cache.SheepFurTexId, stream, false ); break;
 				case "char.png":
 					UpdateTexture( ref cache.HumanoidTexId, stream, true ); break;
-				case "animations.png":
-				case "animation.png":
-					game.Animations.SetAtlas( new Bitmap( stream ) ); break;
 				case "clouds.png":
 				case "cloud.png":
 					UpdateTexture( ref game.CloudsTextureId, stream, false ); break;
@@ -66,6 +63,14 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref game.RainTextureId, stream, false ); break;
 				case "snow.png":
 					UpdateTexture( ref game.SnowTextureId, stream, false ); break;
+				case "animations.png":
+				case "animation.png":
+					game.Animations.SetAtlas( new Bitmap( stream ) ); break;
+				case "animations.txt":
+				case "animation.txt":
+					StreamReader reader = new StreamReader( stream );
+					game.Animations.ReadAnimationsDescription( reader );
+					break;
 			}
 		}
 		
