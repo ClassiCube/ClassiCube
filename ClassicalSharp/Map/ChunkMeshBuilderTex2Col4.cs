@@ -167,8 +167,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Left );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
-				: map.SunlightXSide;
+			FastColour col = emitsLight ? FastColour.White : 
+				X > 0 ? ( Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide ) : map.SunlightXSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -184,8 +184,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X < maxX ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
-				: map.SunlightXSide;
+			FastColour col = emitsLight ? FastColour.White : 
+				X < maxX ? ( Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide ) : map.SunlightXSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -201,8 +201,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Back );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z < maxZ ? ( emitsLight || Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
-				: map.SunlightZSide;
+			FastColour col = emitsLight ? FastColour.White : 
+				Z < maxZ ? ( Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide ) : map.SunlightZSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -218,8 +218,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Front );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z > 0 ? ( emitsLight || Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
-				: map.SunlightZSide;
+			FastColour col = emitsLight ? FastColour.White : 
+				Z > 0 ? ( Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide ) : map.SunlightZSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -235,8 +235,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
-				: map.SunlightYBottom;
+			FastColour col = emitsLight ? FastColour.White : 
+				Y > 0 ? ( (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) : map.SunlightYBottom;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
 			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
@@ -249,8 +249,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( emitsLight || Y > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
-				: map.Sunlight;
+			FastColour col = emitsLight ? FastColour.White : 
+				Y < maxY ? ( Y > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) : map.Sunlight;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );

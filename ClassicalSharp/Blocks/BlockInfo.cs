@@ -61,6 +61,7 @@ namespace ClassicalSharp {
 			SetIsLiquid( Block.StillWater ); SetIsLiquid( Block.Water );
 			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );					
 			SetEmitsLight( Block.Lava, true ); SetEmitsLight( Block.StillLava, true );
+			SetEmitsLight( Block.Magma, true ); SetEmitsLight( Block.Fire, true );
 			SetupCullingCache();
 		}
 		
