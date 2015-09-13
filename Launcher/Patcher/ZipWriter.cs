@@ -62,29 +62,25 @@ namespace Launcher {
 		void WriteLocalFileEntry( ZipEntry entry, byte[] data, int length ) {
 			writer.Write( 0x04034b50 ); // signature
 			writer.Write( (ushort)20 ); // version needed
-			writer.Write( (ushort)8 );  // bitflags
+			writer.Write( (ushort)0 );  // bitflags
 			writer.Write( (ushort)0 );  // compression method
 			writer.Write( 0 );          // last modified
-			writer.Write( 0 );          // CRC32
-			writer.Write( 0 );          // compressed size
-			writer.Write( 0 );          // uncompressed size
+			writer.Write( entry.Crc32 );
+			writer.Write( entry.CompressedDataSize );
+			writer.Write( entry.UncompressedDataSize );
 			writer.Write( (ushort)entry.Filename.Length );
 			writer.Write( (ushort)0 );  // extra field length
 			for( int i = 0; i < entry.Filename.Length; i++ )
 				writer.Write( (byte)entry.Filename[i] );
 			
 			writer.Write( data, 0, length );
-			// Data descriptor
-			writer.Write( entry.Crc32 );
-			writer.Write( entry.CompressedDataSize );
-			writer.Write( entry.UncompressedDataSize );
 		}
 		
 		void WriteCentralDirectoryHeaderEntry( ZipEntry entry ) {
 			writer.Write( 0x02014b50 ); // signature
 			writer.Write( (ushort)20 ); // version		
 			writer.Write( (ushort)20 ); // version needed
-			writer.Write( (ushort)8 );  // bitflags
+			writer.Write( (ushort)0 );  // bitflags
 			writer.Write( (ushort)0 );  // compression method
 			writer.Write( 0 );          // last modified
 			writer.Write( entry.Crc32 );
