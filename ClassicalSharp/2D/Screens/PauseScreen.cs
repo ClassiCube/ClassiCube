@@ -104,6 +104,10 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
+			if( key == game.Keys[KeyMapping.PauseOrExit] ) {
+				game.SetNewScreen( new NormalScreen( game ) );
+				return true;
+			}
 			if( widgetToChange != null ) {
 				KeyMapWidget widget = widgetToChange;
 				widgetToChange = null;

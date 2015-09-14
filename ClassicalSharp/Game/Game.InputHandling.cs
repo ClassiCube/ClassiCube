@@ -123,11 +123,7 @@ namespace ClassicalSharp {
 				}
 				SetViewDistance( viewDistances[0] );
 			} else if( key == Keys[KeyMapping.PauseOrExit] && !Map.IsNotLoaded ) {
-				if( !( activeScreen is PauseScreen ) ) {
-					SetNewScreen( new PauseScreen( this ) );
-				} else {
-					SetNewScreen( new NormalScreen( this ) );
-				}
+				SetNewScreen( new PauseScreen( this ) );
 			} else if( key == Keys[KeyMapping.OpenInventory] ) {
 				SetNewScreen( new BlockSelectScreen( this ) );
 			} else {
