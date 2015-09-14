@@ -48,5 +48,9 @@ namespace ClassicalSharp {
 		public bool ZIntersects( BoundingBox box ) {
 			return Max.Z >= box.Min.Z && Min.Z <= box.Max.Z;
 		}
+		
+		public override string ToString() {
+			return Min + " : " + Max;
+		}
 	}
 }
