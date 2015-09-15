@@ -219,12 +219,6 @@ namespace ClassicalSharp {
 				reason = "Given key is reserved for gui";
 				return false;
 			}
-			for( int i = 0; i < Keys.Length; i++ ) {
-				if( Keys[i] == key ) {
-					reason = "Key is already assigned";
-					return false;
-				}
-			}
 			reason = null;
 			return true;
 		}
