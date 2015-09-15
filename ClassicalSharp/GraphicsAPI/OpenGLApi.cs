@@ -419,7 +419,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		void InitFields() {
 			// See comment in Game() constructor
 			#if !__MonoCS__
-			modeMappings = new [] { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
+			modeMappings = new [] { BeginMode.Triangles, BeginMode.Lines };
 			blendFuncs = new [] {
 				BlendingFactor.Zero, BlendingFactor.One,
 				BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
@@ -432,9 +432,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			fogModes = new [] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 			matrixModes = new [] { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
 			#else			
-			modeMappings = new BeginMode[3];
+			modeMappings = new BeginMode[2];
 			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
-			modeMappings[2] = BeginMode.TriangleStrip;
 			blendFuncs = new BlendingFactor[6];
 			blendFuncs[0] = BlendingFactor.Zero; blendFuncs[1] = BlendingFactor.One;
 			blendFuncs[2] = BlendingFactor.SrcAlpha; blendFuncs[3] = BlendingFactor.OneMinusSrcAlpha;
