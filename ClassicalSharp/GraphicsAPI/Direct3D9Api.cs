@@ -598,7 +598,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			compareFuncs = new Compare[8];
 			compareFuncs[0] = Compare.Always; compareFuncs[1] = Compare.NotEqual; compareFuncs[2] = Compare.Never;
 			compareFuncs[3] = Compare.Less; compareFuncs[4] = Compare.LessEqual; compareFuncs[5] = Compare.Equal;
-			compareFuncs[6] = Compare.GreaterEqual; compareFuncs[7] = Compare.Equal;
+			compareFuncs[6] = Compare.GreaterEqual; compareFuncs[7] = Compare.Greater;
 			blendFuncs = new Blend[6];
 			blendFuncs[0] = Blend.Zero; blendFuncs[1] = Blend.One; blendFuncs[2] = Blend.SourceAlpha;
 			blendFuncs[3] = Blend.InverseSourceAlpha; blendFuncs[4] = Blend.DestinationAlpha;
