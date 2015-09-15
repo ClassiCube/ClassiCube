@@ -312,13 +312,10 @@ namespace OpenTK.Platform.Windows
 
 						default:
 							Key tkKey;
-							if (!KeyMap.TryGetMappedKey((VirtualKeys)wParam, out tkKey))
-							{
-								Debug.Print("Virtual key {0} ({1}) not mapped.", (VirtualKeys)wParam, (int)lParam);
+							if (!KeyMap.TryGetMappedKey((VirtualKeys)wParam, out tkKey)) {
+								Debug.Print("Virtual key {0} ({1}) not mapped.", (VirtualKeys)wParam, lParam.ToInt64());
 								break;
-							}
-							else
-							{
+							} else{
 								keyboard[tkKey] = pressed;
 							}
 							return IntPtr.Zero;
