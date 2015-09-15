@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			
 			if( info.isSprite[tile] ) {
-				int count = counts[index];
+				int count = counts[index + TileSide.Top];
 				if( count != 0 ) {
 					blockHeight = info.heights[tile];
 					DrawSprite( count );
@@ -167,9 +167,10 @@ namespace ClassicalSharp {
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
 						if( info.IsSprite( tile ) ) {
+							countIndex += TileSide.Top;
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
-								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, 0 );
+								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, TileSide.Top );
 								AddSpriteVertices( tile, count );
 								counts[countIndex] = (byte)count;
 							}

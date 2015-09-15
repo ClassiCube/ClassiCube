@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 
 		public static byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			BinaryReader reader = new BinaryReader( stream );
-
 			if( reader.ReadInt32() != Identifier || reader.ReadByte() != Revision ) {
 				throw new InvalidDataException( "Unexpected constant in .fcm file" );
 			}
