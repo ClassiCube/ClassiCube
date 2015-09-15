@@ -591,7 +591,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			depthFormats = new Format[6];
 			depthFormats[0] = Format.D32; depthFormats[1] = Format.D24X8; depthFormats[2] = Format.D24S8;
 			depthFormats[3] = Format.D24X4S4; depthFormats[4] = Format.D16; depthFormats[5] = Format.D15S1;
-			viewFormats = new Format[3];
+			viewFormats = new Format[4];
 			viewFormats[0] = Format.X8R8G8B8; viewFormats[1] = Format.R8G8B8;
 			viewFormats[2] = Format.R5G6B5; viewFormats[3] = Format.X1R5G5B5;
 			
