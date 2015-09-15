@@ -30,21 +30,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			PrimitiveType.TriangleStrip,
 		};
 		static Format[] depthFormats = { Format.D32, Format.D24X8, Format.D24S8, Format.D24X4S4, Format.D16, Format.D15S1 };
-		Format depthFormat, viewFormat = Format.X8R8G8B8;
+		static Format[] viewFormats = { Format.X8R8G8B8, Format.R5G6B5, Format.X1R5G5B5 };
+		Format depthFormat, viewFormat;
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
 		public Direct3D9Api( Game game ) {
 			IntPtr windowHandle = ((WinWindowInfo)game.WindowInfo).WindowHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;
-			
-			for( int i = 0; i < depthFormats.Length; i++ ) {
-				depthFormat = depthFormats[i];
-				if( d3d.CheckDepthStencilMatch( adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat ) ) break;
-				
-				if( i == depthFormats.Length - 1 )
-					throw new InvalidOperationException( "Unable to create a depth buffer with sufficient precision." );
-			}
+			FindCompatibleFormat( adapter );
 			
 			PresentParameters args = GetPresentArgs( 640, 480 );
 			try {
@@ -65,6 +59,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			texStack = new MatrixStack( 4, device, TransformState.Texture0 );
 			SetDefaultRenderStates();
 			InitDynamicBuffers();
+		}
+		
+		void FindCompatibleFormat( int adapter ) {			
+			for( int i = 0; i < viewFormats.Length; i++ ) {
+				viewFormat = viewFormats[i];
+				if( d3d.CheckDeviceType( adapter, DeviceType.Hardware, viewFormat, viewFormat, true ) ) break;
+				
+				if( i == viewFormats.Length - 1 )
+					throw new InvalidOperationException( "Unable to create a back buffer with sufficient precision." );
+			}
+			
+			for( int i = 0; i < depthFormats.Length; i++ ) {
+				depthFormat = depthFormats[i];
+				if( d3d.CheckDepthStencilMatch( adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat ) ) break;
+				
+				if( i == depthFormats.Length - 1 )
+					throw new InvalidOperationException( "Unable to create a depth buffer with sufficient precision." );
+			}
 		}
 		
 		bool alphaTest, alphaBlend;
@@ -545,7 +557,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			Utils.Log( "--Using Direct3D 9--" );
 			Utils.Log( "Tex memory available: " + (uint)device.AvailableTextureMemory );
 			Utils.Log( "Vertex processing mode: " + createFlags );
-			Utils.Log( "Depth buffer format: " + depthFormat );			
+			Utils.Log( "Depth buffer format: " + depthFormat );
+			Utils.Log( "Back buffer format: " + viewFormat );
 			Utils.Log( "Adapter description: " + d3d.Adapters[0].Details.Description );
 			Utils.Log( "Device caps: " + caps.DeviceCaps );
 		}
