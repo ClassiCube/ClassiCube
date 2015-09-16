@@ -11,6 +11,7 @@ namespace ClassicalSharp.TexturePack {
 		Game game;
 		public void Extract( string path, Game game ) {
 			this.game = game;
+			game.Animations.Dispose();
 			using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 				ZipReader reader = new ZipReader();
 				reader.ShouldProcessZipEntry = ShouldProcessZipEntry;

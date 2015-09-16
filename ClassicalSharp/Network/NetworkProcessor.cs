@@ -606,6 +606,7 @@ namespace ClassicalSharp {
 							TexturePackExtractor extractor = new TexturePackExtractor();
 							extractor.Extract( game.defaultTexPack, game );
 						} else {
+							game.Animations.Dispose();
 							game.AsyncDownloader.DownloadImage( url, true, "terrain" );
 						}
 						Utils.LogDebug( "Image url: " + url );

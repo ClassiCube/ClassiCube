@@ -29,7 +29,9 @@ namespace ClassicalSharp.TexturePack {
 			if( bmp != null ) {
 				fastBmp.Dispose();
 				bmp.Dispose();
+				bmp = null;
 			}
+			animations.Clear();
 		}
 		
 		public void Tick( double delta ) {
