@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 			height = 0;
 			return null;
 		}
-
+		
 		void HandleTypeCode( int typeCode, BinaryReader reader ) {
 			switch( typeCode ) {
 					
@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 					break;
 					
 				case 0x71: // TC_REFERENCE
+					reader.ReadInt32(); // handle
 					break;
 					
 				case 0x72: // TC_CLASSDESC

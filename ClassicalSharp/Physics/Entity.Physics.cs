@@ -9,6 +9,7 @@ namespace ClassicalSharp {
 		protected bool onGround;
 		protected Map map;
 		protected BlockInfo info;
+		public const float Adjustment = 0.001f;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
 			if( x < 0 || x >= map.Width || z < 0 || z >= map.Length || y < 0 ) return (byte)Block.Bedrock;
@@ -119,34 +120,35 @@ namespace ClassicalSharp {
 				if( tx > 1 || ty > 1 || tz > 1 )
 					Utils.LogWarning( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
+				float pushUpOffset = (blockBB.Max.Y - blockBB.Min.Y) * 0.25f;
 				
 				// Find which axis we collide with.
-				if( finalBB.Min.Y >= blockBB.Max.Y ) {
-					Position.Y = blockBB.Max.Y + 0.001f;
+				if( finalBB.Min.Y >= blockBB.Min.Y + pushUpOffset ) {
+					Position.Y = blockBB.Max.Y + Adjustment;
 					onGround = true;
 					ClipY( ref size, ref entityBB, ref entityExtentBB );
 				} else if( finalBB.Max.Y <= blockBB.Min.Y ) {
-					Position.Y = blockBB.Min.Y - size.Y - 0.001f;
+					Position.Y = blockBB.Min.Y - size.Y - Adjustment;
 					ClipY( ref size, ref entityBB, ref entityExtentBB );
 				} else {
 					if( finalBB.Min.X >= blockBB.Max.X ) {
 						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.X = blockBB.Max.X + size.X / 2 + 0.001f;
+							Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
 							ClipX( ref size, ref entityBB, ref entityExtentBB );
 						}
 					} else if( finalBB.Max.X <= blockBB.Min.X ) {
 						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.X = blockBB.Min.X - size.X / 2 - 0.001f;
+							Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
 							ClipX( ref size, ref entityBB, ref entityExtentBB );
 						}
 					} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
 						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.Z = blockBB.Max.Z + size.Z / 2 + 0.001f;
+							Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
 							ClipZ( ref size, ref entityBB, ref entityExtentBB );
 						}
 					} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
 						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.Z = blockBB.Min.Z - size.Z / 2 - 0.001f;
+							Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
 							ClipZ( ref size, ref entityBB, ref entityExtentBB );
 						}
 					}
@@ -161,12 +163,12 @@ namespace ClassicalSharp {
 				
 				// Adjust entity bounding box to include the block being tested
 				BoundingBox adjFinalBB = finalBB;				
-				adjFinalBB.Min.X = Math.Min( finalBB.Min.X, blockBB.Min.X + 0.01f );
-				adjFinalBB.Max.X = Math.Max( finalBB.Max.X, blockBB.Max.X - 0.01f );
-				adjFinalBB.Min.Y = (float)Math.Ceiling( blockBB.Max.Y ) + 0.01f;
+				adjFinalBB.Min.X = Math.Min( finalBB.Min.X, blockBB.Min.X + Adjustment );
+				adjFinalBB.Max.X = Math.Max( finalBB.Max.X, blockBB.Max.X - Adjustment );
+				adjFinalBB.Min.Y = (float)Math.Ceiling( blockBB.Max.Y ) + Adjustment;
 				adjFinalBB.Max.Y = adjFinalBB.Min.Y + size.Y;
-				adjFinalBB.Min.Z = Math.Min( finalBB.Min.Z, blockBB.Min.Z + 0.01f );
-				adjFinalBB.Max.Z = Math.Max( finalBB.Max.Z, blockBB.Max.Z - 0.01f );
+				adjFinalBB.Min.Z = Math.Min( finalBB.Min.Z, blockBB.Min.Z + Adjustment );
+				adjFinalBB.Max.Z = Math.Max( finalBB.Max.Z, blockBB.Max.Z - Adjustment );
 				
 				Vector3I min = Vector3I.Floor( adjFinalBB.Min );
 				Vector3I max = Vector3I.Floor( adjFinalBB.Max );
@@ -179,7 +181,7 @@ namespace ClassicalSharp {
 					}
 				}
 				
-				Position.Y = blockBB.Max.Y + 0.001f;
+				Position.Y = blockBB.Max.Y + Adjustment;
 				onGround = true;
 				ClipY( ref size, ref entityBB, ref entityExtentBB );
 				return true;
