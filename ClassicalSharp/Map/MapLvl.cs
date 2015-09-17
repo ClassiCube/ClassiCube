@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		const ushort streamMagic = 0xEDAC;
 		const ushort streamVersion = 0x0500;
 
-		public static byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			using( GZipStream decompressed = new GZipStream( stream, CompressionMode.Decompress ) ) {
 				BinaryReader reader = new BinaryReader( decompressed );
 				if( reader.ReadUInt32() != Identifier || reader.ReadByte() != Revision ) {
@@ -33,34 +33,31 @@ namespace ClassicalSharp {
 			height = 0;
 			return null;
 		}
-		
-		static string ReadString( BinaryReader reader ) {
-			int len = ( reader.ReadByte() << 8 ) | reader.ReadByte();
-			byte[] data = reader.ReadBytes( len );
-			return Encoding.ASCII.GetString( data );
-		}
 
-		static void HandleTypeCode( int typeCode, BinaryReader reader ) {
+		void HandleTypeCode( int typeCode, BinaryReader reader ) {
 			switch( typeCode ) {
 					
-				case 0x42: // prim_byte
-				case 0x43: // prim_char
-				case 0x44: // prim_double
-				case 0x46: // prim_float
-				case 0x49: // prim_integer
-				case 0x4A: // prim_long
-				case 0x53: // prim_short
-				case 0x5A: // prim_boolean
-					{
-						string fieldName = ReadString( reader );
-					} break;
+				case 0x42:
+					ReadPrimField( reader, FieldType.Byte ); break;
+				case 0x43:
+					ReadPrimField( reader, FieldType.Char ); break;
+				case 0x44:
+					ReadPrimField( reader, FieldType.Double ); break;
+				case 0x46:
+					ReadPrimField( reader, FieldType.Float ); break;
+				case 0x49:
+					ReadPrimField( reader, FieldType.Integer ); break;
+				case 0x4A:
+					ReadPrimField( reader, FieldType.Long ); break;
+				case 0x53:
+					ReadPrimField( reader, FieldType.Short ); break;
+				case 0x5A:
+					ReadPrimField( reader, FieldType.Boolean ); break;
 					
 				case 0x4C:
+					ReadPrimField( reader, FieldType.Object ); break;
 				case 0x5B:
-					{
-						string fieldName = ReadString( reader );
-					} break;
-					
+					ReadPrimField( reader, FieldType.Array ); break;					
 					
 				case 0x70: // TC_NULL
 					break;
@@ -73,7 +70,7 @@ namespace ClassicalSharp {
 						string className = ReadString( reader );
 						reader.ReadUInt64(); // serial identifier
 						reader.ReadByte(); // various flags
-						reader.ReadUInt16(); // number of fields
+						fields = new Field[(reader.ReadByte() << 8) | reader.ReadByte()];
 					} break;
 					
 				case 0x73: // TC_OBJECT
@@ -114,6 +111,31 @@ namespace ClassicalSharp {
 					break;
 					
 			}
+		}
+		
+		enum FieldType {
+			Byte, Char, Double, Float, Integer, Long,
+			Short, Boolean, Object, Array,
+		}
+		
+		struct Field {
+			public string Name;
+			public FieldType Type;
+		}
+		
+		static string ReadString( BinaryReader reader ) {
+			int len = ( reader.ReadByte() << 8 ) | reader.ReadByte();
+			byte[] data = reader.ReadBytes( len );
+			return Encoding.ASCII.GetString( data );
+		}
+		
+		Field[] fields;
+		int fieldIndex;
+		void ReadPrimField( BinaryReader reader, FieldType type ) {
+			Field field;
+			field.Name = ReadString( reader );
+			field.Type = type;
+			fields[fieldIndex++] = field;
 		}
 	}
 }

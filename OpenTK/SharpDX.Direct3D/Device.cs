@@ -169,29 +169,6 @@ namespace SharpDX.Direct3D9
 			int res = Interop.Calli(comPointer, (int)type, baseVertexIndex, minVertexIndex, numVertices, startIndex, primCount,(*(IntPtr**)comPointer)[82]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
-		
-		public void DrawUserPrimitives<T>(PrimitiveType type, int startIndex, int primitiveCount, T[] data) where T : struct {
-			DrawPrimitiveUP(type, primitiveCount, (IntPtr)Interop.Fixed(ref data[startIndex]), Interop.SizeOf<T>());
-		}
-		
-		internal void DrawPrimitiveUP(PrimitiveType type, int primitiveCount, IntPtr dataRef, int stride) {
-			int res = Interop.Calli(comPointer, (int)type, primitiveCount, dataRef, stride,(*(IntPtr**)comPointer)[83]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-		}
-
-		public void DrawIndexedUserPrimitives<S, T>(PrimitiveType type, int startIndex, int startVertex, int minimumVertexIndex,
-		                                            int vertexCount, int primitiveCount, S[] indexData, Format indexDataFormat, T[] vertexData)
-			where S : struct
-			where T : struct {
-			DrawIndexedPrimitiveUP(type, minimumVertexIndex, vertexCount, primitiveCount, (IntPtr)Interop.Fixed(ref indexData[startIndex]),
-			                       indexDataFormat, (IntPtr)Interop.Fixed(ref vertexData[startVertex]), Interop.SizeOf<T>());
-		}
-		
-		internal void DrawIndexedPrimitiveUP(PrimitiveType type, int minVertexIndex, int numVertices, int primitiveCount,
-		                                     IntPtr indexDataRef, Format indexDataFormat, IntPtr dataRef, int stride) {
-			int res = Interop.Calli(comPointer, (int)type, minVertexIndex, numVertices, primitiveCount, indexDataRef, (int)indexDataFormat, dataRef, stride,(*(IntPtr**)comPointer)[84]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-		}
 
 		public void SetVertexFormat(VertexFormat vertexFormat) {
 			int res = Interop.Calli(comPointer, (int)vertexFormat,(*(IntPtr**)comPointer)[89]);

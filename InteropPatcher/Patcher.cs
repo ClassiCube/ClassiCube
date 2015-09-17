@@ -62,12 +62,6 @@ namespace InteropPatcher {
 			ilProcessor.Replace(fixedtoPatch, ldlocFixed);
 		}
 
-		static void ReplaceSizeOfStructGeneric(MethodDefinition method, ILProcessor ilProcessor, Instruction fixedtoPatch) {
-			var paramT = ((GenericInstanceMethod)fixedtoPatch.Operand).GenericArguments[0];
-			var copyInstruction = ilProcessor.Create(OpCodes.Sizeof, paramT);
-			ilProcessor.Replace(fixedtoPatch, copyInstruction);
-		}
-
 		static void PatchMethod(MethodDefinition method) {
 			if( !method.HasBody ) return;
 			var ilProcessor = method.Body.GetILProcessor();
@@ -93,8 +87,6 @@ namespace InteropPatcher {
 						ilProcessor.Replace(instruction, callIInstruction);
 					} else if( desc.Name.StartsWith( "Fixed" ) ) {
 						ReplaceFixedStatement(method, ilProcessor, instruction);
-					} else if( desc.Name.StartsWith( "SizeOf" ) ) {
-						ReplaceSizeOfStructGeneric(method, ilProcessor, instruction);
 					}
 				}
 			}
@@ -102,25 +94,23 @@ namespace InteropPatcher {
 
 		static void PatchType( TypeDefinition type ) {
 			if( type.Name == "Interop" ) return;
+			
 			if( NeedsToBePatched( type ) ) {
 				Console.WriteLine( "Patching type: " + type );
-			} else {
-				return;
+				foreach( var method in type.Methods )
+					PatchMethod( method );
+				foreach( var nestedType in type.NestedTypes )
+					PatchType( nestedType );
 			}
-
-			foreach( var method in type.Methods )
-				PatchMethod( method );
-			foreach( var nestedType in type.NestedTypes )
-				PatchType( nestedType );
 		}
 		
 		static bool NeedsToBePatched( TypeDefinition type ) {
-            foreach( CustomAttribute attrib in type.CustomAttributes ) {
-                if( attrib.AttributeType.Name == "InteropPatchAttribute" )
-                    return true;
-            }
+			foreach( CustomAttribute attrib in type.CustomAttributes ) {
+				if( attrib.AttributeType.Name == "InteropPatchAttribute" )
+					return true;
+			}
 			return false;
-        }
+		}
 
 		public static void PatchFile( string file ) {
 			// Copy PDB from input assembly to output assembly if any
