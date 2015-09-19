@@ -97,8 +97,8 @@ namespace ClassicalSharp.Model {
 			DrawPart( model.Torso );
 			DrawRotate( 0, 12/16f, 0, p.leftLegXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
-			DrawRotate( 0, 22/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
-			DrawRotate( 0, 22/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
+			DrawRotate( -2/16f, 24/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
+			DrawRotate( 2/16f, 24/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
 			DrawRotate( 0, 23.5f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );		
 		}
