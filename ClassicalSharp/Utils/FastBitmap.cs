@@ -34,14 +34,17 @@ namespace ClassicalSharp {
 		public int Stride;		
 		public int Width, Height;
 		
+		public static bool CheckFormat( PixelFormat format ) {
+			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb;
+		}
+		
 		public void LockBits() {
 			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
 			if( data != null ) return;
 			
 			PixelFormat format = Bitmap.PixelFormat;
-			if( !( format == PixelFormat.Format32bppArgb || format == PixelFormat.Format32bppRgb ) ) {
+			if( !CheckFormat( format ) )
 				throw new NotSupportedException( "Unsupported bitmap pixel format: " + format );
-			}
 			
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
 			data = Bitmap.LockBits( rec, ImageLockMode.ReadWrite, format );

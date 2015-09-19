@@ -19,10 +19,24 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public int CreateTexture( Bitmap bmp ) {
 			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-			int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
-			bmp.UnlockBits( data );
-			return texId;
+			// Convert other pixel formats into 32bpp formats.
+			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+				Utils.LogDebug( "Converting " + bmp.PixelFormat + " into 32bpp image" );
+				using( Bitmap _32bmp = new Bitmap( bmp.Width, bmp.Height ) ) {
+					using( Graphics g = Graphics.FromImage( _32bmp ) )
+						g.DrawImage( bmp, 0, 0, bmp.Width, bmp.Height );
+					
+					BitmapData data = _32bmp.LockBits( rec, ImageLockMode.ReadOnly, _32bmp.PixelFormat );
+					int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
+					_32bmp.UnlockBits( data );
+					return texId;
+				}
+			} else {
+				BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
+				int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
+				bmp.UnlockBits( data );
+				return texId;
+			}
 		}
 		
 		public int CreateTexture( FastBitmap bmp ) {
@@ -179,7 +193,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
 			quadVerts[0] = new VertexPos3fCol4b( x, y, 0, col );
 			quadVerts[1] = new VertexPos3fCol4b( x + width, y, 0, col );
-			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );	
+			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
 			BeginVbBatch( VertexFormat.Pos3fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
@@ -199,7 +213,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			#endif
 			texVerts[0] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
 			texVerts[1] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
-			texVerts[2] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );		
+			texVerts[2] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
 			texVerts[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
 			BeginVbBatch( VertexFormat.Pos3fTex2f );
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
