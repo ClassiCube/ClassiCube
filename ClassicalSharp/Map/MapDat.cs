@@ -64,11 +64,11 @@ namespace ClassicalSharp {
 			byte typeCode = reader.ReadByte();
 			if( typeCode != TC_OBJECT ) ParseError( TC_OBJECT, typeCode );
 			ClassDescription desc = ReadClassDescription();
-			ReadClassData( desc.Fields, desc.Flags );
+			ReadClassData( desc.Fields );
 			return desc;
 		}	
 		
-		void ReadClassData( FieldDescription[] fields, byte flags ) {
+		void ReadClassData( FieldDescription[] fields ) {
 			for( int i = 0; i < fields.Length; i++ ) {
 				switch( fields[i].Type ) {
 					case FieldType.Byte:
@@ -158,9 +158,7 @@ namespace ClassicalSharp {
 		
 		struct ClassDescription {
 			public string ClassName;
-			public byte Flags;
 			public FieldDescription[] Fields;
-			public object Value;
 		}
 		
 		struct FieldDescription {

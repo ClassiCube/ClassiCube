@@ -57,7 +57,8 @@ namespace ClassicalSharp {
 			int cenX = bounds.Left + bounds.Width / 2;
 			int cenY = bounds.Top + bounds.Height / 2;
 			game.DesktopCursorPos = new Point( cenX, cenY );
-			previous = new Point( cenX, cenY );
+			// Fixes issues with large DPI displays on Windows >= 8.0.
+			previous = game.DesktopCursorPos;
 		}
 		
 		public override void RegrabMouse() {

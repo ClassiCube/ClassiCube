@@ -6,7 +6,7 @@ You can get the latest binaries [here](https://github.com/UnknownShadow200/Class
 #### What ClassicalSharp is
 * Works with both minecraft.net and classicube.net accounts.
 * Lightweight, minimal memory usage compared to the standard client.
-* Works with effectively all graphics cards that support OpenGL.
+* Works with effectively all graphics cards that support OpenGL or Direct3D 9.
 * Provides single-player support. (only flatgrass generator, but can load .dat and .fcm maps)
 
 It does not:
