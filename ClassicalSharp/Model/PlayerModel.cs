@@ -100,7 +100,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 22/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
 			DrawRotate( 0, 22/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			graphics.AlphaTest = true;
-			DrawRotate( 0, 1.4375f, 0, -p.PitchRadians, 0, 0, model.Hat );		
+			DrawRotate( 0, 23.5f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );		
 		}
 		
 		class ModelSet {
