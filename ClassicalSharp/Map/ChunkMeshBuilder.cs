@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			game.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		int width, length, height;
+		internal int width, length, height, edgeLevel;
 		int maxX, maxY, maxZ;
 		byte[] counts = new byte[chunkSize3 * TileSide.Sides];
 		byte[] chunk = new byte[extChunkSize3];
@@ -92,6 +92,8 @@ namespace ClassicalSharp {
 					}
 				}
 				
+				if( x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width || 
+				   y1 + chunkSize >= height || z1 + chunkSize >= length ) allSolid = false;
 				if( !( allAir || allSolid ) ) {
 					map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
 				}
@@ -124,8 +126,8 @@ namespace ClassicalSharp {
 			
 			int leftCount = counts[index++], rightCount = counts[index++],
 			frontCount = counts[index++], backCount = counts[index++],
-			bottomCount = counts[index++], topCount = counts[index++];		
-			if( leftCount == 0 && rightCount == 0 && frontCount == 0 && 
+			bottomCount = counts[index++], topCount = counts[index++];
+			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
 			emitsLight = info.emitsLight[tile];
@@ -191,10 +193,9 @@ namespace ClassicalSharp {
 		
 		void TestAndStretchX( int xx, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
-			if( value == test ) {
-				counts[index] = 0;
-			} else if( counts[index] != 0 ) {
-				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+			if( counts[index] != 0 ) {
+				if( (value == test && Y < edgeLevel) || 
+				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchX( xx, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -206,10 +207,9 @@ namespace ClassicalSharp {
 		
 		void TestAndStretchZ( int zz, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
-			if( value == test ) {
-				counts[index] = 0;
-			} else if( counts[index] != 0 ) {
-				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+			if( counts[index] != 0 ) {
+				if( (value == test && Y < edgeLevel) || 
+				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchZ( zz, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -219,7 +219,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		byte GetNeighbour( int chunkIndex, int face ) {
+		byte GetNeighbour( int chunkIndex, int face ) {			
 			switch( face ) {
 				case TileSide.Left:
 					return chunk[chunkIndex - 1]; // x - 1
@@ -248,7 +248,7 @@ namespace ClassicalSharp {
 			chunkIndex++;
 			countIndex += TileSide.Sides;
 			int max = chunkSize - xx;
-			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {			
+			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -264,7 +264,7 @@ namespace ClassicalSharp {
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * TileSide.Sides;
 			int max = chunkSize - zz;
-			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {				
+			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				z++;
@@ -282,6 +282,7 @@ namespace ClassicalSharp {
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
+			edgeLevel = map.GroundHeight;
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

@@ -69,6 +69,9 @@ namespace ClassicalSharp {
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Var == EnvVariable.SunlightColour || e.Var == EnvVariable.ShadowlightColour ) {
 				Refresh();
+			} else if( e.Var == EnvVariable.WaterLevel ) {
+				builder.edgeLevel = game.Map.WaterHeight;
+				Refresh();
 			}
 		}
 
