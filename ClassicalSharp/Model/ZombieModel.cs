@@ -65,8 +65,8 @@ namespace ClassicalSharp.Model {
 			DrawPart( Torso );
 			DrawRotate( 0, 12/16f, 0, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, RightLeg );
-			DrawRotate( 0, 22/16f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
-			DrawRotate( 0, 22/16f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
+			DrawRotate( -6/16f, 22/16f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
+			DrawRotate( 6/16f, 22/16f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
 			graphics.AlphaTest = true;
 		}
 		
