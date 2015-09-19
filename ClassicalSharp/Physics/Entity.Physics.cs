@@ -120,37 +120,33 @@ namespace ClassicalSharp {
 				if( tx > 1 || ty > 1 || tz > 1 )
 					Utils.LogWarning( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
-				float pushUpOffset = (blockBB.Max.Y - blockBB.Min.Y) * 0.25f;
 				
-				// Find which axis we collide with.
-				if( finalBB.Min.Y >= blockBB.Min.Y + pushUpOffset ) {
+				if( finalBB.Min.Y >= blockBB.Max.Y ) {
 					Position.Y = blockBB.Max.Y + Adjustment;
 					onGround = true;
 					ClipY( ref size, ref entityBB, ref entityExtentBB );
 				} else if( finalBB.Max.Y <= blockBB.Min.Y ) {
 					Position.Y = blockBB.Min.Y - size.Y - Adjustment;
 					ClipY( ref size, ref entityBB, ref entityExtentBB );
-				} else {
-					if( finalBB.Min.X >= blockBB.Max.X ) {
-						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
-							ClipX( ref size, ref entityBB, ref entityExtentBB );
-						}
-					} else if( finalBB.Max.X <= blockBB.Min.X ) {
-						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
-							ClipX( ref size, ref entityBB, ref entityExtentBB );
-						}
-					} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
-						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
-							ClipZ( ref size, ref entityBB, ref entityExtentBB );
-						}
-					} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
-						if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
-							Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
-							ClipZ( ref size, ref entityBB, ref entityExtentBB );
-						}
+				} else if( finalBB.Min.X >= blockBB.Max.X ) {
+					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
+						Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
+						ClipX( ref size, ref entityBB, ref entityExtentBB );
+					}
+				} else if( finalBB.Max.X <= blockBB.Min.X ) {
+					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
+						Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
+						ClipX( ref size, ref entityBB, ref entityExtentBB );
+					}
+				} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
+					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
+						Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
+						ClipZ( ref size, ref entityBB, ref entityExtentBB );
+					}
+				} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
+					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
+						Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
+						ClipZ( ref size, ref entityBB, ref entityExtentBB );
 					}
 				}
 			}
@@ -162,7 +158,7 @@ namespace ClassicalSharp {
 			if( yDist > 0 && yDist <= StepSize + 0.01f ) {
 				
 				// Adjust entity bounding box to include the block being tested
-				BoundingBox adjFinalBB = finalBB;				
+				BoundingBox adjFinalBB = finalBB;
 				adjFinalBB.Min.X = Math.Min( finalBB.Min.X, blockBB.Min.X + Adjustment );
 				adjFinalBB.Max.X = Math.Max( finalBB.Max.X, blockBB.Max.X - Adjustment );
 				adjFinalBB.Min.Y = (float)Math.Ceiling( blockBB.Max.Y ) + Adjustment;
