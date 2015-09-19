@@ -14,6 +14,13 @@ namespace ClassicalSharp.Model {
 			get { return blockHeight + 0.075f; }
 		}
 		
+		public override float EyeY {
+			get { 
+				byte block = Byte.Parse( game.LocalPlayer.ModelName );
+				return block == 0 ? 1 : game.BlockInfo.BlockHeight( block );
+			}
+		}
+		
 		const float adjust = 0.1f;
 		public override Vector3 CollisionSize {
 			get { return new Vector3( 1 - adjust, blockHeight - adjust, 1 - adjust ); }

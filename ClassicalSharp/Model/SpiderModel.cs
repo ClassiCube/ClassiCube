@@ -34,6 +34,10 @@ namespace ClassicalSharp.Model {
 			get { return 1.0125f; }
 		}
 		
+		public override float EyeY {
+			get { return 8/16f; }
+		}
+		
 		public override Vector3 CollisionSize {
 			get { return new Vector3( 15/16f, 12/16f, 15/16f ); }
 		}

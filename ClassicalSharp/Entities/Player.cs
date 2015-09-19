@@ -9,11 +9,9 @@ namespace ClassicalSharp {
 
 	public abstract partial class Player : Entity {
 		
-		public const float EyeHeight = 1.625f;
-		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, Position.Y + EyeHeight, Position.Z ); }
+			get { return new Vector3( Position.X, Position.Y + Model.EyeY, Position.Z ); }
 		}
 		
 		protected Game game;

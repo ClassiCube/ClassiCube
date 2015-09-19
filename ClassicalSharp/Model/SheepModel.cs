@@ -28,7 +28,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakePart( 0, 0, 8, 6, 6, 8, 6, 6, -3/16f, 3/16f, 1f, 22/16f, -14/16f, -6/16f, false );
+			return MakePart( 0, 0, 8, 6, 6, 8, 6, 6, -3/16f, 3/16f, 16/16f, 22/16f, -14/16f, -6/16f, false );
 		}
 		
 		ModelPart MakeTorso() {
@@ -53,6 +53,10 @@ namespace ClassicalSharp.Model {
 		
 		public override float NameYOffset {
 			get { return Fur ? 1.48125f: 1.075f; }
+		}
+		
+		public override float EyeY {
+			get { return 20/16f; }
 		}
 		
 		public override Vector3 CollisionSize {
