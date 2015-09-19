@@ -48,7 +48,9 @@ namespace ClassicalSharp.Singleplayer {
 			Name = "LoadMap";
 			Help = new [] {
 				"&a/client loadmap [filename]",
-				"&bfilename: &eLoads a fcm map from the specified filename.",
+				"&bfilename: &eLoads a map from the specified filename.",
+				"&eSupported formats are .fcm (fCraft map) and ",
+				"&e.dat (Original classic map or WoM saved map)",
 			};
 		}
 		
@@ -56,17 +58,31 @@ namespace ClassicalSharp.Singleplayer {
 			string path = reader.NextAll();
 			if( String.IsNullOrEmpty( path ) ) return;
 			
+			IMapFile mapFile;
+			if( path.EndsWith( ".dat" ) ) {
+				mapFile = new MapDat();
+			} else if( path.EndsWith( ".fcm" ) ) {
+				mapFile = new MapFcm3();
+			} else {
+				game.AddChat( "&e/client loadmap: Map format of file \"" + path + "\" not supported" );
+				return;
+			}
+			
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 					int width, height, length;
 					game.Map.Reset();
 					
-					byte[] blocks = MapFcm3.Load( fs, game, out width, out height, out length );
+					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
 					game.Map.UseRawMap( blocks, width, height, length );
 					game.RaiseOnNewMapLoaded();
+					
+					LocalPlayer p = game.LocalPlayer;
+					LocationUpdate update = LocationUpdate.MakePos( p.SpawnPoint, false );
+					p.SetLocation( update, false );
 				}
 			} catch( FileNotFoundException ) {
-				game.AddChat( "&e/client load: Couldn't find file \"" + path + "\"" );
+				game.AddChat( "&e/client loadmap: Couldn't find file \"" + path + "\"" );
 			}
 		}
 	}
@@ -86,7 +102,8 @@ namespace ClassicalSharp.Singleplayer {
 			if( String.IsNullOrEmpty( path ) ) return;
 			
 			using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-				MapFcm3.Save( fs, game );
+				MapFcm3 map = new MapFcm3();
+				map.Save( fs, game );
 			}
 		}
 	}

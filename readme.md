@@ -7,10 +7,10 @@ You can get the latest binaries [here](https://github.com/UnknownShadow200/Class
 * Works with both minecraft.net and classicube.net accounts.
 * Lightweight, minimal memory usage compared to the standard client.
 * Works with effectively all graphics cards that support OpenGL.
+* Provides single-player support. (only flatgrass generator, but can load .dat and .fcm maps)
 
 It does not:
 * Work with 'modern/premium' Minecraft servers.
-* Provide single-player support. (But I am working on adding it)
 
 #### Requirements
 * Windows: .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
@@ -27,7 +27,8 @@ The simple way to use ClassicalSharp is to use the launcher application. You can
 Note that the first time you run the launcher, a dialog box will pop up saying: *"Some required resources weren't found. Would you like to download them now?"* Just click OK. 
 (This is necessary because I cannot legally redistribute the assets of Minecraft Classic with the application)
 
-*Alternatively, you can pass command line arguments directly to the client. These are expected to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
+*Alternatively, you can pass command line arguments to run in multiplayer directly to the client. 
+These are expected to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
 
 #### Key combinations
 * Press escape (after joining a world) to switch to the pause menu. 

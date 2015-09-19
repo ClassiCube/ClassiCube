@@ -6,11 +6,20 @@ using System.Text;
 
 namespace ClassicalSharp {
 
-	public sealed class MapFcm3 {
+	public sealed class MapFcm3 : IMapFile {
+		
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;
+		
+		public override bool SupportsLoading { 
+			get { return true; } 
+		}
+		
+		public override bool SupportsSaving { 
+			get { return true; } 
+		}
 
-		public static byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			BinaryReader reader = new BinaryReader( stream );
 			if( reader.ReadInt32() != Identifier || reader.ReadByte() != Revision ) {
 				throw new InvalidDataException( "Unexpected constant in .fcm file" );
@@ -20,9 +29,9 @@ namespace ClassicalSharp {
 			height = reader.ReadInt16();
 			length = reader.ReadInt16();
 
-			int posX = reader.ReadInt32();
-			int posY = reader.ReadInt32();
-			int posZ = reader.ReadInt32();
+			game.LocalPlayer.SpawnPoint.X = reader.ReadInt32() / 32f;
+			game.LocalPlayer.SpawnPoint.Y = reader.ReadInt32() / 32f;
+			game.LocalPlayer.SpawnPoint.Z = reader.ReadInt32() / 32f;
 			byte yaw = reader.ReadByte();
 			byte pitch = reader.ReadByte();
 
@@ -71,7 +80,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		public static void Save( Stream stream, Game game ) {
+		public override void Save( Stream stream, Game game ) {
 			BinaryWriter writer = new BinaryWriter( stream );
 			LocalPlayer p = game.LocalPlayer;
 			Map map = game.Map;
