@@ -36,7 +36,7 @@ namespace ClassicalSharp.Particles {
 			Matrix4 camera = game.View;
 			Vector3 right = new Vector3( camera.Row0.X, camera.Row1.X, camera.Row2.X );
 			Vector3 up = new Vector3( camera.Row0.Y, camera.Row1.Y, camera.Row2.Y );
-			float x = Size.X * 8, y = Size.Y * 8;
+			float x = Size.X * 4, y = Size.Y * 4;
 			centre.Y += Size.Y / 2;
 			
 			p111 = Transform( -x, -y, ref centre, ref up, ref right );

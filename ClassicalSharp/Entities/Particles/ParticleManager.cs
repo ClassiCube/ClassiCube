@@ -83,7 +83,7 @@ namespace ClassicalSharp.Particles {
 				particleRec.V1 = (float)( rec.V1 + rnd.Next( 0, cellsCountY ) * elementYSize );
 				particleRec.U2 = particleRec.U1 + elementXSize;
 				particleRec.V2 = particleRec.V1 + elementYSize;
-				double life = 3 - rnd.NextDouble();
+				double life = 1.5 - rnd.NextDouble();
 				
 				particles.Add( new TerrainParticle( game, pos, velocity, life, particleRec ) );
 			}

@@ -5,8 +5,8 @@ namespace ClassicalSharp.Particles {
 
 	public sealed class TerrainParticle : Particle {
 		
-		const float gravity = 2.4f;
-		static Vector2 terrainSize = new Vector2( 1/16f, 1/16f );
+		const float gravity = 3.4f;
+		static Vector2 terrainSize = new Vector2( 1/8f, 1/8f );
 		
 		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec )
 			: base( game, pos, velocity, lifetime, rec ) {
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Particles {
 			
 			Velocity.Y -= gravity * (float)delta;
 			int startY = (int)Math.Floor( Position.Y );
-			Position += Velocity * (float)delta;
+			Position += Velocity * (float)delta * 3;
 			int endY = (int)Math.Floor( Position.Y );
 			Utils.Clamp( ref Position.X, 0, game.Map.Width - 0.01f );
 			Utils.Clamp( ref Position.Z, 0, game.Map.Length - 0.01f );
