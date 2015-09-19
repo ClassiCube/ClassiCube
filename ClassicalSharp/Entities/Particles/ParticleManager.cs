@@ -22,7 +22,7 @@ namespace ClassicalSharp.Particles {
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
-			int count = particles.Count * 6;
+			int count = particles.Count * 4;
 			if( count > vertices.Length ) {
 				vertices = new VertexPos3fTex2fCol4b[count];
 			}
