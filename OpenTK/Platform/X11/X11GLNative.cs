@@ -45,8 +45,6 @@ namespace OpenTK.Platform.X11 {
 		
 		const int _min_width = 30, _min_height = 30;
 		X11WindowInfo window = new X11WindowInfo();
-
-		const string MOTIF_WM_ATOM = "_MOTIF_WM_HINTS";
 		// The Atom class from Mono might be useful to avoid calling XInternAtom by hand (somewhat error prone).
 		IntPtr wm_destroy;
 		
@@ -63,6 +61,7 @@ namespace OpenTK.Platform.X11 {
 
 		IntPtr net_wm_icon;
 		IntPtr net_frame_extents;
+		IntPtr motif_wm_hints;
 
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
 		static readonly IntPtr _remove = (IntPtr)0;
@@ -102,7 +101,7 @@ namespace OpenTK.Platform.X11 {
 
 			Debug.Print("Creating X11GLNative window.");
 			// Open a display connection to the X server, and obtain the screen and root window.
-			window.Display = API.XOpenDisplay_Safe(IntPtr.Zero);
+			window.Display = API.DefaultDisplay;
 			if (window.Display == IntPtr.Zero)
 				throw new PlatformException("Could not open connection to X");
 			
@@ -211,6 +210,7 @@ namespace OpenTK.Platform.X11 {
 			net_wm_action_maximize_vertically = API.XInternAtom(window.Display, "_NET_WM_ACTION_MAXIMIZE_VERT", false);
 			net_wm_icon = API.XInternAtom(window.Display, "_NEW_WM_ICON", false);
 			net_frame_extents = API.XInternAtom(window.Display, "_NET_FRAME_EXTENTS", false);
+			motif_wm_hints = API.XInternAtom(window.Display, "_MOTIF_WM_HINTS", true);
 		}
 
 		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {
@@ -253,11 +253,8 @@ namespace OpenTK.Platform.X11 {
 
 		bool IsWindowBorderHidden {
 			get {
-				IntPtr prop = IntPtr.Zero;
-
 				// Test if decorations have been disabled through Motif.
-				IntPtr motif_hints_atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
-				if (motif_hints_atom != IntPtr.Zero) {
+				if (motif_wm_hints != IntPtr.Zero) {
 					// TODO: How to check if MotifWMHints decorations have been really disabled?
 					if (_decorations_hidden)
 						return true;
@@ -291,7 +288,7 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		bool DisableMotifDecorations() {
-			IntPtr atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
+			IntPtr atom = motif_wm_hints;
 			if (atom != IntPtr.Zero) {
 				//Functions.XGetWindowProperty(window.Display, window.WindowHandle, atom, IntPtr.Zero, IntPtr.Zero, false,
 				MotifWmHints hints = new MotifWmHints();
@@ -317,7 +314,7 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		bool EnableMotifDecorations() {
-			IntPtr atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
+			IntPtr atom = motif_wm_hints;
 			if (atom != IntPtr.Zero) {
 				//Functions.XDeleteProperty(this.window.Display, this.Handle, atom);
 				MotifWmHints hints = new MotifWmHints();
@@ -365,11 +362,6 @@ namespace OpenTK.Platform.X11 {
 					borderRight = Marshal.ReadIntPtr(prop, IntPtr.Size).ToInt32();
 					borderTop = Marshal.ReadIntPtr(prop, IntPtr.Size * 2).ToInt32();
 					borderBottom = Marshal.ReadIntPtr(prop, IntPtr.Size * 3).ToInt32();
-
-					//Debug.WriteLine(border_left);
-					//Debug.WriteLine(border_right);
-					//Debug.WriteLine(border_top);
-					//Debug.WriteLine(border_bottom);
 				}
 				API.XFree(prop);
 			}
@@ -390,7 +382,7 @@ namespace OpenTK.Platform.X11 {
 			Size newSize = new Size(
 				e.ConfigureEvent.width + borderLeft + borderRight,
 				e.ConfigureEvent.height + borderTop + borderBottom);
-			if (Bounds.Size != newSize) {
+			if (bounds.Size != newSize) {
 				bounds.Size = newSize;
 				client_rectangle.Size = new Size(e.ConfigureEvent.width, e.ConfigureEvent.height);
 

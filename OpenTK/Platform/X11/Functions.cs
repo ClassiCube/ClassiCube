@@ -23,15 +23,9 @@ using KeyCode = System.Byte;    // Or maybe ushort?
 namespace OpenTK.Platform.X11 {
 	
 	internal static class API {
-		internal static readonly object Lock = new object();
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static IntPtr XOpenDisplay(IntPtr display);
-		public static IntPtr XOpenDisplay_Safe(IntPtr display) {
-			lock (Lock) {
-				return XOpenDisplay(display);
-			}
-		}
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XCloseDisplay(IntPtr display);
@@ -354,28 +348,25 @@ namespace OpenTK.Platform.X11 {
 				depths[i] = *data++;
 			return depths;
 		}
-		
-		static Display defaultDisplay;
-		static int screenCount;
 
-		internal static Display DefaultDisplay { get { return defaultDisplay; } }
-		internal static int ScreenCount { get { return screenCount; } }
+		internal static Display DefaultDisplay;
+		internal static int ScreenCount;
 
 		static API() {
-			defaultDisplay = API.XOpenDisplay_Safe(IntPtr.Zero);
-			if (defaultDisplay == IntPtr.Zero)
+			DefaultDisplay = API.XOpenDisplay(IntPtr.Zero);
+			if (DefaultDisplay == IntPtr.Zero)
 				throw new PlatformException("Could not establish connection to the X-Server.");
 
-			screenCount = API.XScreenCount(DefaultDisplay);
+			ScreenCount = API.XScreenCount(DefaultDisplay);
 			Debug.Print("Display connection: {0}, Screen count: {1}", DefaultDisplay, ScreenCount);
 
 			//AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
 		}
 
 		static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-			if (defaultDisplay != IntPtr.Zero) {
-				API.XCloseDisplay(defaultDisplay);
-				defaultDisplay = IntPtr.Zero;
+			if (DefaultDisplay != IntPtr.Zero) {
+				API.XCloseDisplay(DefaultDisplay);
+				DefaultDisplay = IntPtr.Zero;
 			}
 		}
 

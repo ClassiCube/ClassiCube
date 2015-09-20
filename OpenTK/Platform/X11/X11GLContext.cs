@@ -71,14 +71,12 @@ namespace OpenTK.Platform.X11 {
 			info.Screen = currentWindow.Screen;
 			int items;
 			
-			lock (API.Lock) {
-				IntPtr vs = API.XGetVisualInfo(Display, XVisualInfoMask.ID | XVisualInfoMask.Screen, ref info, out items);
-				if (items == 0)
-					throw new GraphicsModeException(String.Format("Invalid GraphicsMode specified ({0}).", mode));
+			IntPtr vs = API.XGetVisualInfo(Display, XVisualInfoMask.ID | XVisualInfoMask.Screen, ref info, out items);
+			if (items == 0)
+				throw new GraphicsModeException(String.Format("Invalid GraphicsMode specified ({0}).", mode));
 
-				info = (XVisualInfo)Marshal.PtrToStructure(vs, typeof(XVisualInfo));
-				API.XFree(vs);
-			}
+			info = (XVisualInfo)Marshal.PtrToStructure(vs, typeof(XVisualInfo));
+			API.XFree(vs);
 			return info;
 		}
 

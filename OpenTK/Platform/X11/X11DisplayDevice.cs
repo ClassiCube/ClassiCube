@@ -110,8 +110,7 @@ namespace OpenTK.Platform.X11 {
 						Debug.Print("[Warning] XRandR returned an invalid resolution ({0}) for display device {1}", size, screen);
 						continue;
 					}
-					short[] rates = null;
-					rates = API.XRRRates(API.DefaultDisplay, screen, resolution_count);
+					short[] rates = API.XRRRates(API.DefaultDisplay, screen, resolution_count);
 
 					// It seems that XRRRates returns 0 for modes that are larger than the screen
 					// can support, as well as for all supported modes. On Ubuntu 7.10 the tool
@@ -172,11 +171,10 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		static float FindCurrentRefreshRate(int screen) {
-			short rate = 0;
 			IntPtr screen_config = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));
 			ushort rotation = 0;
 			int size = API.XRRConfigCurrentConfiguration(screen_config, out rotation);
-			rate = API.XRRConfigCurrentRate(screen_config);
+			short rate = API.XRRConfigCurrentRate(screen_config);
 			API.XRRFreeScreenConfigInfo(screen_config);
 			return (float)rate;
 		}

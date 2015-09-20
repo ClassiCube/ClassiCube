@@ -65,7 +65,7 @@ namespace OpenTK.Platform.X11
 
 		// See http://publib.boulder.ibm.com/infocenter/systems/index.jsp?topic=/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm
 		// for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual.
-		IntPtr SelectVisualUsingFBConfig( int[] visualAttribs ) {
+		unsafe IntPtr SelectVisualUsingFBConfig( int[] visualAttribs ) {
 			// Select a visual that matches the parameters set by the user.
 			IntPtr display = API.DefaultDisplay;
 			IntPtr visual = IntPtr.Zero;
@@ -74,18 +74,15 @@ namespace OpenTK.Platform.X11
 				IntPtr root = API.XRootWindow(display, screen);
 				Debug.Print("Display: {0}, Screen: {1}, RootWindow: {2}", display, screen, root);
 				
-				unsafe
+				Debug.Print("Getting FB config.");
+				int fbcount;
+				// Note that ChooseFBConfig returns an array of GLXFBConfig opaque structures (i.e. mapped to IntPtrs).
+				IntPtr* fbconfigs = Glx.glXChooseFBConfig(display, screen, visualAttribs, out fbcount);
+				if (fbcount > 0 && fbconfigs != null)
 				{
-					Debug.Print("Getting FB config.");
-					int fbcount;
-					// Note that ChooseFBConfig returns an array of GLXFBConfig opaque structures (i.e. mapped to IntPtrs).
-					IntPtr* fbconfigs = Glx.glXChooseFBConfig(display, screen, visualAttribs, out fbcount);
-					if (fbcount > 0 && fbconfigs != null)
-					{
-						// We want to use the first GLXFBConfig from the fbconfigs array (the first one is the best match).
-						visual = Glx.glXGetVisualFromFBConfig(display, *fbconfigs);
-						API.XFree((IntPtr)fbconfigs);
-					}
+					// We want to use the first GLXFBConfig from the fbconfigs array (the first one is the best match).
+					visual = Glx.glXGetVisualFromFBConfig(display, *fbconfigs);
+					API.XFree((IntPtr)fbconfigs);
 				}
 			} catch (EntryPointNotFoundException) {
 				Debug.Print("Function glXChooseFBConfig not supported.");
