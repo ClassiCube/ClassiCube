@@ -351,7 +351,10 @@ namespace ClassicalSharp {
 						int y = reader.ReadInt16();
 						int z = reader.ReadInt16();
 						byte type = reader.ReadUInt8();
-						game.UpdateBlock( x, y, z, type );
+						if( !game.Map.IsNotLoaded )
+							game.UpdateBlock( x, y, z, type );
+						else
+							Utils.LogWarning( "Server tried to update a block while still sending us the map!" );
 					} break;
 					
 				case PacketId.AddEntity:
@@ -513,6 +516,7 @@ namespace ClassicalSharp {
 						short nameId = reader.ReadInt16();
 						if( nameId >= 0 && nameId <= 255 ) {
 							game.RaiseCpeListInfoRemoved( (byte)nameId );
+							game.CpePlayersList[nameId] = null;
 						}
 					} break;
 					
