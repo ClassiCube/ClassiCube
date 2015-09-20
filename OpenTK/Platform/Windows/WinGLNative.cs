@@ -49,8 +49,6 @@ namespace OpenTK.Platform.Windows
 		bool class_registered, disposed, exists;
 		WinWindowInfo window, child_window;
 		WindowBorder windowBorder = WindowBorder.Resizable;
-		Nullable<WindowBorder> previous_window_border; // Set when changing to fullscreen state.
-		Nullable<WindowBorder> deferred_window_border; // Set to avoid changing borders during fullscreen state.
 		WindowState windowState = WindowState.Normal;
 		bool borderless_maximized_window_state = false; // Hack to get maximized mode with hidden border (not normally possible).
 		bool focused;
@@ -156,7 +154,7 @@ namespace OpenTK.Platform.Windows
 							case SizeMessage.RESTORED: new_state = borderless_maximized_window_state ?
 								WindowState.Maximized : WindowState.Normal; break;
 							case SizeMessage.MINIMIZED: new_state = WindowState.Minimized; break;
-							case SizeMessage.MAXIMIZED: new_state = WindowBorder == WindowBorder.Hidden ?
+							case SizeMessage.MAXIMIZED: new_state = windowBorder == WindowBorder.Hidden ?
 								WindowState.Fullscreen : WindowState.Maximized;
 							break;
 					}
@@ -458,22 +456,11 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		void HideBorder() {
+		void SetBorder( WindowBorder border ) {
 			suppress_resize++;
-			WindowBorder = WindowBorder.Hidden;
+			WindowBorder = border;
 			ProcessEvents();
 			suppress_resize--;
-		}
-
-		void RestoreBorder() {
-			suppress_resize++;
-			WindowBorder =
-				deferred_window_border.HasValue ? deferred_window_border.Value :
-				previous_window_border.HasValue ? previous_window_border.Value :
-				WindowBorder;
-			ProcessEvents();
-			suppress_resize--;
-			deferred_window_border = previous_window_border = null;
 		}
 
 		void ResetWindowState() {
@@ -621,28 +608,9 @@ namespace OpenTK.Platform.Windows
 						break;
 
 					case WindowState.Maximized:
-						// Note: if we use the MAXIMIZE command and the window border is Hidden (i.e. WS_POPUP),
-						// we will enter fullscreen mode - we don't want that! As a workaround, we'll resize the window
-						// manually to cover the whole working area of the current monitor.
-
 						// Reset state to avoid strange interactions with fullscreen/minimized windows.
 						ResetWindowState();
-
-						if (WindowBorder == WindowBorder.Hidden)
-						{
-							IntPtr current_monitor = API.MonitorFromWindow(window.WindowHandle, MonitorFrom.Nearest);
-							MonitorInfo info = new MonitorInfo();
-							info.Size = MonitorInfo.SizeInBytes;
-							API.GetMonitorInfo(current_monitor, ref info);
-
-							previous_bounds = Bounds;
-							borderless_maximized_window_state = true;
-							Bounds = info.Work.ToRectangle();
-						}
-						else
-						{
-							command = ShowWindowCommand.MAXIMIZE;
-						}
+						command = ShowWindowCommand.MAXIMIZE;
 						break;
 
 					case WindowState.Minimized:
@@ -656,24 +624,20 @@ namespace OpenTK.Platform.Windows
 
 						// Reset state to avoid strange side-effects from maximized/minimized windows.
 						ResetWindowState();
-
 						previous_bounds = Bounds;
-						previous_window_border = WindowBorder;
-						HideBorder();
+						SetBorder( WindowBorder.Hidden );
+						
 						command = ShowWindowCommand.MAXIMIZE;
-
 						API.SetForegroundWindow(window.WindowHandle);
-
 						break;
 				}
 
-				if (command != 0)
+				if( command != 0 )
 					API.ShowWindow(window.WindowHandle, command);
 
 				// Restore previous window border or apply pending border change when leaving fullscreen mode.
-				if (exiting_fullscreen) {
-					RestoreBorder();
-				}
+				if( exiting_fullscreen )
+					SetBorder( WindowBorder.Resizable );
 
 				// Restore previous window size/location if necessary
 				if (command == ShowWindowCommand.RESTORE && previous_bounds != Rectangle.Empty) {
@@ -683,18 +647,9 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public WindowBorder WindowBorder {
-			get { return windowBorder; }
+		WindowBorder WindowBorder {
 			set {
-				// Do not allow border changes during fullscreen mode.
-				// Defer them for when we leave fullscreen.
-				if (WindowState == WindowState.Fullscreen) {
-					deferred_window_border = value;
-					return;
-				}
-
-				if (windowBorder == value)
-					return;
+				if (windowBorder == value) return;
 
 				// We wish to avoid making an invisible window visible just to change the border.
 				// However, it's a good idea to make a visible window invisible temporarily, to
@@ -705,17 +660,11 @@ namespace OpenTK.Platform.Windows
 				// change the border, then go back to maximized/minimized.
 				WindowState state = WindowState;
 				ResetWindowState();
-
 				WindowStyle style = WindowStyle.ClipChildren | WindowStyle.ClipSiblings;
-
-				switch (value) {
-					case WindowBorder.Resizable:
-						style |= WindowStyle.OverlappedWindow;
-						break;
-
-					case WindowBorder.Hidden:
-						style |= WindowStyle.Popup;
-						break;
+				if( value == WindowBorder.Resizable ) {
+					style |= WindowStyle.OverlappedWindow;
+				} else {
+					style |= WindowStyle.Popup;
 				}
 
 				// Make sure client size doesn't change when changing the border style.

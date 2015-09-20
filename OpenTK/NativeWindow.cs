@@ -198,12 +198,6 @@ namespace OpenTK {
 			set { EnsureUndisposed(); implementation.Width = value; }
 		}
 		
-		/// <summary> Gets or states the border of the NativeWindow. </summary>
-		public WindowBorder WindowBorder {
-			get { return implementation.WindowBorder; }
-			set { implementation.WindowBorder = value; }
-		}
-		
 		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> of this window. </summary>
 		public IWindowInfo WindowInfo {
 			get {  EnsureUndisposed(); return implementation.WindowInfo; }
@@ -284,9 +278,6 @@ namespace OpenTK {
 
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
 		public event EventHandler<EventArgs> VisibleChanged;
-
-		/// <summary> Occurs when the <see cref="WindowBorder"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> WindowBorderChanged;
 
 		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
 		public event EventHandler<EventArgs> WindowStateChanged;
@@ -389,12 +380,6 @@ namespace OpenTK {
 			if (VisibleChanged != null) VisibleChanged(this, e);
 		}
 		
-		/// <summary> Called when the WindowBorder of this NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnWindowBorderChanged(EventArgs e) {
-			if (WindowBorderChanged != null) WindowBorderChanged(this, e);
-		}
-		
 		/// <summary> Called when the WindowState of this NativeWindow has changed. </summary>
 		/// <param name="e">Not used.</param>
 		protected virtual void OnWindowStateChanged(EventArgs e) {
@@ -436,8 +421,6 @@ namespace OpenTK {
 
 		private void OnVisibleChangedInternal(object sender, EventArgs e) { OnVisibleChanged(e); }
 		
-		private void OnWindowBorderChangedInternal(object sender, EventArgs e) { OnWindowBorderChanged(e); }
-		
 		private void OnWindowStateChangedInternal(object sender, EventArgs e) { OnWindowStateChanged(e); }
 		
 		private bool Events {
@@ -458,7 +441,6 @@ namespace OpenTK {
 					implementation.Resize += OnResizeInternal;
 					implementation.TitleChanged += OnTitleChangedInternal;
 					implementation.VisibleChanged += OnVisibleChangedInternal;
-					implementation.WindowBorderChanged += OnWindowBorderChangedInternal;
 					implementation.WindowStateChanged += OnWindowStateChangedInternal;
 					events = true;
 				} else if (events) {
@@ -474,7 +456,6 @@ namespace OpenTK {
 					implementation.Resize -= OnResizeInternal;
 					implementation.TitleChanged -= OnTitleChangedInternal;
 					implementation.VisibleChanged -= OnVisibleChangedInternal;
-					implementation.WindowBorderChanged -= OnWindowBorderChangedInternal;
 					implementation.WindowStateChanged -= OnWindowStateChangedInternal;
 					events = false;
 				} else {

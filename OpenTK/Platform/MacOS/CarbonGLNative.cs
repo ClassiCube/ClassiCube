@@ -939,30 +939,6 @@ namespace OpenTK.Platform.MacOS
 			OnResize();
 		}
 
-		public WindowBorder WindowBorder
-		{
-			get
-			{
-				return windowBorder;
-			}
-			set
-			{
-				if (windowBorder == value)
-					return;
-
-				windowBorder = value;
-
-				if (windowBorder == WindowBorder.Resizable)
-				{
-					API.ChangeWindowAttributes(window.WindowRef, WindowAttributes.Resizable | WindowAttributes.FullZoom,
-					                           WindowAttributes.NoAttributes);
-				}
-
-				if (WindowBorderChanged != null)
-					WindowBorderChanged(this, EventArgs.Empty);
-			}
-		}
-
 		#region --- Event wrappers ---
 
 		private void OnKeyPress(KeyPressEventArgs keyPressArgs)
@@ -1030,7 +1006,6 @@ namespace OpenTK.Platform.MacOS
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowBorderChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		public event EventHandler<EventArgs> MouseEnter;
