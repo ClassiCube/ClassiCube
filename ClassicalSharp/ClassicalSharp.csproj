@@ -168,6 +168,7 @@
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
+    <Compile Include="Utils\Options.cs" />
     <Compile Include="Utils\TextureRectangle.cs" />
     <Compile Include="Utils\StringBuffer.cs" />
     <Compile Include="Utils\Utils.cs" />
