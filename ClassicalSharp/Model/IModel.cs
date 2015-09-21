@@ -21,7 +21,7 @@ namespace ClassicalSharp.Model {
 		
 		public abstract float NameYOffset { get; }
 		
-		public abstract float EyeY { get; }
+		public abstract float GetEyeY( Player player );
 		
 		public abstract Vector3 CollisionSize { get; }
 		

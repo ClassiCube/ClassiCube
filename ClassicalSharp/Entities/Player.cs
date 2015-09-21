@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, Position.Y + Model.EyeY, Position.Z ); }
+			get { return new Vector3( Position.X, Position.Y + Model.GetEyeY( this ), Position.Z ); }
 		}
 		
 		protected Game game;

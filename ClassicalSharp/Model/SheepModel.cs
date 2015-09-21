@@ -55,8 +55,8 @@ namespace ClassicalSharp.Model {
 			get { return Fur ? 1.48125f: 1.075f; }
 		}
 		
-		public override float EyeY {
-			get { return 20/16f; }
+		public override float GetEyeY( Player player ) {
+			return 20/16f;
 		}
 		
 		public override Vector3 CollisionSize {
