@@ -186,7 +186,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool CanPick( byte block ) {
-			return !( block == 0 || ( BlockInfo.IsLiquid( block ) && !CanPlace[block] && !CanDelete[block] ) );
+			return !(block == 0 || (BlockInfo.IsLiquid( block ) && !(CanPlace[block] && CanDelete[block])));
 		}
 		
 		public KeyMap Keys = new KeyMap();

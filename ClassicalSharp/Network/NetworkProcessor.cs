@@ -261,11 +261,7 @@ namespace ClassicalSharp {
 						byte protocolVer = reader.ReadUInt8();
 						ServerName = reader.ReadAsciiString();
 						ServerMotd = reader.ReadAsciiString();
-						byte userType = reader.ReadUInt8();
-						if( !useBlockPermissions ) {
-							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
-						}
-						game.LocalPlayer.UserType = userType;
+						game.LocalPlayer.SetUserType( reader.ReadUInt8(), useBlockPermissions );
 						receivedFirstPosition = false;
 						game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 					} break;
@@ -409,11 +405,7 @@ namespace ClassicalSharp {
 					
 				case PacketId.SetPermission:
 					{
-						byte userType = reader.ReadUInt8();
-						if( !useBlockPermissions ) {
-							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
-						}
-						game.LocalPlayer.UserType = userType;
+						game.LocalPlayer.SetUserType( reader.ReadUInt8(), useBlockPermissions );
 					} break;
 					
 				case PacketId.CpeExtInfo:

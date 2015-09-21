@@ -149,7 +149,7 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float yMul = Math.Max( 1, multiply / 5f );		
+				float yMul = Math.Max( 1, multiply / 5f );
 				Move( xMoving, zMoving, factor * multiply, normalDrag, normalGrav, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
@@ -173,7 +173,7 @@ namespace ClassicalSharp {
 		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			AdjHeadingVelocity( zMoving, xMoving, factor );
 			Velocity.Y *= yMul;
-			if( !noClip ) 
+			if( !noClip )
 				MoveAndWallSlide();
 			Position += Velocity;
 			
@@ -209,6 +209,20 @@ namespace ClassicalSharp {
 				action( true );
 			} else if( joined.Contains( "-" + flag ) ) {
 				action( false );
+			}
+		}
+		
+		public void SetUserType( byte value, bool useBlockPermissions ) {
+			UserType = value;
+			if( !useBlockPermissions ) {
+				game.CanPlace[(int)Block.Bedrock] = value == 0x64;
+				game.CanDelete[(int)Block.Bedrock] = value == 0x64;
+				game.CanPlace[(int)Block.Grass] = value == 0x64;
+
+				game.CanPlace[(int)Block.Water] = value == 0x64;
+				game.CanPlace[(int)Block.StillWater] = value == 0x64;
+				game.CanPlace[(int)Block.Lava] = value == 0x64;
+				game.CanPlace[(int)Block.StillLava] = value == 0x64;
 			}
 		}
 		
