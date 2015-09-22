@@ -117,7 +117,7 @@ namespace ClassicalSharp {
 		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 76, 78, 2,
+			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 77, 79, 2,
 		};
 		
 		static string[] clientExtensions = {
@@ -609,9 +609,8 @@ namespace ClassicalSharp {
 					} break;
 					
 				case PacketId.CpeEnvWeatherType:
-					{
-						game.Map.SetWeather( (Weather)reader.ReadUInt8() );
-					} break;
+					game.Map.SetWeather( (Weather)reader.ReadUInt8() );
+					break;
 					
 				case PacketId.CpeHackControl:
 					{
@@ -645,7 +644,8 @@ namespace ClassicalSharp {
 						
 						info.Name[block] = reader.ReadAsciiString();
 						info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
-						byte movementSpeed = reader.ReadUInt8();
+						// TODO: Liquid collide type not properly supported.
+						info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
 						info.SetTop( reader.ReadUInt8(), (Block)block );
 						info.SetSide( reader.ReadUInt8(), (Block)block );
 						info.SetBottom( reader.ReadUInt8(), (Block)block );
@@ -668,7 +668,7 @@ namespace ClassicalSharp {
 							else if( blockDraw == 2 ) info.IsTranslucent[block] = true;
 							else if( blockDraw == 3 ) info.IsTranslucent[block] = true;
 							
-							Console.WriteLine( shape + "," + blockDraw );
+							Console.WriteLine( block + " : " + shape + "," + blockDraw );
 						} else {
 							byte fogDensity = reader.ReadUInt8();
 							info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
@@ -679,10 +679,8 @@ namespace ClassicalSharp {
 					} break;
 					
 				case PacketId.CpeRemoveBlockDefinition:
-					{
-						byte block = reader.ReadUInt8();
-						game.BlockInfo.ResetBlockInfo( block );
-					} break;
+					game.BlockInfo.ResetBlockInfo( reader.ReadUInt8() );
+					break;
 					
 				default:
 					throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );

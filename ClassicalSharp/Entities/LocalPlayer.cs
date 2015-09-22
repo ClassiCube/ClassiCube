@@ -138,8 +138,11 @@ namespace ClassicalSharp {
 		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
 		airDrag = new Vector3( 0.6f, 1f, 0.6f );
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		
 		void PhysicsTick( float xMoving, float zMoving ) {
 			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
+			multiply *= LowestSpeedModifier();
+			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {
@@ -271,6 +274,26 @@ namespace ClassicalSharp {
 			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
 			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
 			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
+		}
+		
+		float LowestSpeedModifier() {
+			BoundingBox bounds = CollisionBounds;
+			bounds.Min.Y -= 0.1f; // block standing on
+			Vector3I bbMin = Vector3I.Floor( bounds.Min );
+			Vector3I bbMax = Vector3I.Floor( bounds.Max );
+			float modifier = float.PositiveInfinity;
+			
+			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
+				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
+					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
+						if( !map.IsValidPos( x, y, z ) ) continue;
+						byte block = map.GetBlock( x, y, z );
+						if( block == 0 ) continue;
+						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
+					}
+				}
+			}
+			return modifier == float.PositiveInfinity ? 1 : modifier;
 		}
 	}
 }
