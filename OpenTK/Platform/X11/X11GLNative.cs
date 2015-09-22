@@ -670,7 +670,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler<EventArgs> TitleChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowBorderChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		public event EventHandler<EventArgs> MouseEnter;

@@ -48,9 +48,7 @@ namespace OpenTK.Platform.Windows
 
 		bool class_registered, disposed, exists;
 		WinWindowInfo window, child_window;
-		WindowBorder windowBorder = WindowBorder.Resizable;
 		WindowState windowState = WindowState.Normal;
-		bool borderless_maximized_window_state = false; // Hack to get maximized mode with hidden border (not normally possible).
 		bool focused;
 		bool mouse_outside_window = true;
 		bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
@@ -110,8 +108,7 @@ namespace OpenTK.Platform.Windows
 					WindowPosition* pos = (WindowPosition*)lParam;
 					if (window != null && pos->hwnd == window.WindowHandle) {
 						Point new_location = new Point(pos->x, pos->y);
-						if (Location != new_location)
-						{
+						if (Location != new_location) {
 							bounds.Location = new_location;
 							if (Move != null)
 								Move(this, EventArgs.Empty);
@@ -140,21 +137,19 @@ namespace OpenTK.Platform.Windows
 					if (wParam.ToInt64() == (long)GWL.STYLE) {
 						WindowStyle style = ((StyleStruct*)lParam)->New;
 						if ((style & WindowStyle.Popup) != 0)
-							windowBorder = WindowBorder.Hidden;
+							hiddenBorder = true;
 						else if ((style & WindowStyle.ThickFrame) != 0)
-							windowBorder = WindowBorder.Resizable;
+							hiddenBorder = false;
 					}
 					break;
 
 				case WindowMessage.SIZE:
 					SizeMessage state = (SizeMessage)wParam.ToInt64();
 					WindowState new_state = windowState;
-					switch (state)
-					{
-							case SizeMessage.RESTORED: new_state = borderless_maximized_window_state ?
-								WindowState.Maximized : WindowState.Normal; break;
+					switch (state) {
+							case SizeMessage.RESTORED: new_state = WindowState.Normal; break;
 							case SizeMessage.MINIMIZED: new_state = WindowState.Minimized; break;
-							case SizeMessage.MAXIMIZED: new_state = windowBorder == WindowBorder.Hidden ?
+							case SizeMessage.MAXIMIZED: new_state = hiddenBorder ?
 								WindowState.Fullscreen : WindowState.Maximized;
 							break;
 					}
@@ -456,9 +451,9 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		void SetBorder( WindowBorder border ) {
+		void SetHiddenBorder( bool hidden ) {
 			suppress_resize++;
-			WindowBorder = border;
+			HiddenBorder = hidden;
 			ProcessEvents();
 			suppress_resize--;
 		}
@@ -570,8 +565,7 @@ namespace OpenTK.Platform.Windows
 			set {
 				if (value) {
 					API.ShowWindow(window.WindowHandle, ShowWindowCommand.SHOW);
-					if (invisible_since_creation)
-					{
+					if (invisible_since_creation) {
 						API.BringWindowToTop(window.WindowHandle);
 						API.SetForegroundWindow(window.WindowHandle);
 					}
@@ -595,10 +589,8 @@ namespace OpenTK.Platform.Windows
 
 				ShowWindowCommand command = 0;
 				bool exiting_fullscreen = false;
-				borderless_maximized_window_state = false;
 
-				switch (value)
-				{
+				switch (value) {
 					case WindowState.Normal:
 						command = ShowWindowCommand.RESTORE;
 
@@ -625,7 +617,7 @@ namespace OpenTK.Platform.Windows
 						// Reset state to avoid strange side-effects from maximized/minimized windows.
 						ResetWindowState();
 						previous_bounds = Bounds;
-						SetBorder( WindowBorder.Hidden );
+						SetHiddenBorder( true );
 						
 						command = ShowWindowCommand.MAXIMIZE;
 						API.SetForegroundWindow(window.WindowHandle);
@@ -637,7 +629,7 @@ namespace OpenTK.Platform.Windows
 
 				// Restore previous window border or apply pending border change when leaving fullscreen mode.
 				if( exiting_fullscreen )
-					SetBorder( WindowBorder.Resizable );
+					SetHiddenBorder( false );
 
 				// Restore previous window size/location if necessary
 				if (command == ShowWindowCommand.RESTORE && previous_bounds != Rectangle.Empty) {
@@ -647,9 +639,10 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		WindowBorder WindowBorder {
+		bool hiddenBorder;
+		bool HiddenBorder {
 			set {
-				if (windowBorder == value) return;
+				if( hiddenBorder == value ) return;
 
 				// We wish to avoid making an invisible window visible just to change the border.
 				// However, it's a good idea to make a visible window invisible temporarily, to
@@ -661,19 +654,14 @@ namespace OpenTK.Platform.Windows
 				WindowState state = WindowState;
 				ResetWindowState();
 				WindowStyle style = WindowStyle.ClipChildren | WindowStyle.ClipSiblings;
-				if( value == WindowBorder.Resizable ) {
-					style |= WindowStyle.OverlappedWindow;
-				} else {
-					style |= WindowStyle.Popup;
-				}
+				style |= (value ? WindowStyle.Popup : WindowStyle.OverlappedWindow);
 
 				// Make sure client size doesn't change when changing the border style.
-				Size client_size = ClientSize;
-				Win32Rectangle rect = Win32Rectangle.From(client_size);
-				API.AdjustWindowRectEx(ref rect, style, false, ParentStyleEx);
+				Win32Rectangle rect = Win32Rectangle.From( ClientSize );
+				API.AdjustWindowRectEx( ref rect, style, false, ParentStyleEx );
 
 				// This avoids leaving garbage on the background window.
-				if (was_visible)
+				if( was_visible )
 					Visible = false;
 
 				API.SetWindowLong_N(window.WindowHandle, GetWindowLongOffsets.STYLE, (IntPtr)(int)style);
@@ -684,13 +672,9 @@ namespace OpenTK.Platform.Windows
 				// Force window to redraw update its borders, but only if it's
 				// already visible (invisible windows will change borders when
 				// they become visible, so no need to make them visiable prematurely).
-				if (was_visible)
+				if ( was_visible )
 					Visible = true;
-
 				WindowState = state;
-
-				if (WindowBorderChanged != null)
-					WindowBorderChanged(this, EventArgs.Empty);
 			}
 		}
 
@@ -719,7 +703,6 @@ namespace OpenTK.Platform.Windows
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowBorderChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		public event EventHandler<EventArgs> MouseEnter;

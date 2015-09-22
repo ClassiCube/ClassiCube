@@ -95,8 +95,8 @@ namespace OpenTK.Platform.X11 {
 		public extern static bool XTranslateCoordinates(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y, out int intdest_x_return, out int dest_y_return, out IntPtr child_return);
 
 		// Colormaps
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]//, CLSCompliant(false)]
-		public extern static uint XDefaultDepth(IntPtr display, int screen_number);
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XDefaultDepth(IntPtr display, int screen_number);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XDefaultScreen(IntPtr display);

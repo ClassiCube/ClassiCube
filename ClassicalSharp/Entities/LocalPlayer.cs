@@ -140,7 +140,6 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		void PhysicsTick( float xMoving, float zMoving ) {
 			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
-
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {

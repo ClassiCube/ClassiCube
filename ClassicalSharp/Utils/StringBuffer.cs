@@ -89,8 +89,7 @@ namespace ClassicalSharp {
 				*offsetPtr = c;
 			}
 		}
-		
-		
+				
 		public bool Empty {
 			get {
 				fixed( char* ptr = value ) {

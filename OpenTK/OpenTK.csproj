@@ -129,7 +129,6 @@
     <Compile Include="SharpDX\ComObject.cs" />
     <Compile Include="SharpDX\Raw.cs" />
     <Compile Include="SharpDX\Result.cs" />
-    <Compile Include="WindowBorder.cs" />
     <Compile Include="WindowState.cs" />
   </ItemGroup>
   <ItemGroup>

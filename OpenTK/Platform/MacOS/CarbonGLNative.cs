@@ -54,7 +54,6 @@ namespace OpenTK.Platform.MacOS
 		WindowClass mWindowClass;
 		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
 		int mTitlebarHeight;
-		private WindowBorder windowBorder = WindowBorder.Resizable;
 		private WindowState windowState = WindowState.Normal;
 
 		static Dictionary<IntPtr, WeakReference> mWindows = new Dictionary<IntPtr, WeakReference>();
