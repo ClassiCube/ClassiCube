@@ -19,9 +19,9 @@ namespace ClassicalSharp {
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, out BoundingBox box ) {
 			box = new BoundingBox( Vector3.Zero, Vector3.Zero );
-			if( CanWalkThrough( block ) ) return false;
+			if( info.CollideType[block] != BlockCollideType.Solid ) return false;
 			Vector3 min = new Vector3( x, y, z );
-			Vector3 max = new Vector3( x + 1, y + info.BlockHeight( block ), z + 1 );
+			Vector3 max = new Vector3( x + 1, y + info.Height[block], z + 1 );
 			box = new BoundingBox( min, max );
 			return true;
 		}
@@ -36,10 +36,6 @@ namespace ClassicalSharp {
 				Block = block;
 				this.tSquared = tSquared;
 			}
-		}
-		
-		bool CanWalkThrough( byte block ) {
-			return block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) || block == (byte)Block.Snow;
 		}
 		
 		// TODO: test for corner cases, and refactor this.
@@ -171,7 +167,7 @@ namespace ClassicalSharp {
 				for( int x = min.X; x <= max.X; x++ ) {
 					for( int y = min.Y; y <= max.Y; y++ ) {
 						for( int z = min.Z; z <= max.Z; z++ ) {
-							if( !CanWalkThrough( GetPhysicsBlockId( x, y, z ) ) )
+							if( info.CollideType[GetPhysicsBlockId( x, y, z )] == BlockCollideType.Solid )
 								return false;
 						}
 					}

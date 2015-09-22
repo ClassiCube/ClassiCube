@@ -65,7 +65,7 @@ namespace ClassicalSharp.Particles {
 			
 			float collideY = y;
 			if( topFace )
-				collideY += game.BlockInfo.BlockHeight( block );
+				collideY += game.BlockInfo.Height[block];
 			
 			bool collide = topFace ? (Position.Y < collideY) : (Position.Y > collideY );
 			if( collide ) {
@@ -78,7 +78,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		bool CanPassThrough( byte block ) {
-			return block == 0 || game.BlockInfo.IsSprite( block ) || game.BlockInfo.IsLiquid( block );
+			return block == 0 || game.BlockInfo.IsSprite[block] || game.BlockInfo.IsLiquid[block];
 		}
 		
 		public override void Dispose() {

@@ -72,7 +72,7 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < 25; i++ ) {
 				double velX = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
 				double velZ = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
-				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.BlockHeight( block );
+				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.Height[block];
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				double xOffset = rnd.NextDouble() - 0.125;
 				double yOffset = rnd.NextDouble() - 0.125;

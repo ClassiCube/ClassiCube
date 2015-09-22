@@ -643,35 +643,36 @@ namespace ClassicalSharp {
 						BlockInfo info = game.BlockInfo;
 						info.ResetBlockInfo( block );
 						
-						info.names[block] = reader.ReadAsciiString();
-						byte solidity = reader.ReadUInt8();
+						info.Name[block] = reader.ReadAsciiString();
+						info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
 						byte movementSpeed = reader.ReadUInt8();
 						info.SetTop( reader.ReadUInt8(), (Block)block );
 						info.SetSide( reader.ReadUInt8(), (Block)block );
 						info.SetBottom( reader.ReadUInt8(), (Block)block );
 						reader.ReadUInt8(); // opacity hint, but we ignore this.
-						info.blocksLight[block] = reader.ReadUInt8() == 0;
+						info.BlocksLight[block] = reader.ReadUInt8() == 0;
 						reader.ReadUInt8(); // walk sound, but we ignore this.
+						info.EmitsLight[block] = reader.ReadUInt8() != 0;
 						
 						if( opcode == (byte)PacketId.CpeDefineBlock ) {
 							byte shape = reader.ReadUInt8();
-							if( shape == 1 ) info.heights[block] = 1;
-							else if( shape == 2 ) info.heights[block] = 0.5f;
+							if( shape == 1 ) info.Height[block] = 1;
+							else if( shape == 2 ) info.Height[block] = 0.5f;
 							// TODO: upside down slab not properly supported
-							else if( shape == 3 ) info.heights[block] = 0.5f;
-							else if( shape == 4 ) info.isSprite[block] = true;
+							else if( shape == 3 ) info.Height[block] = 0.5f;
+							else if( shape == 4 ) info.IsSprite[block] = true;
 							
 							byte blockDraw = reader.ReadUInt8();
-							if( blockDraw == 0 ) info.isOpaque[block] = true;
-							else if( blockDraw == 1 ) info.isTransparent[block] = true;
-							else if( blockDraw == 2 ) info.isTranslucent[block] = true;
-							else if( blockDraw == 3 ) info.isTranslucent[block] = true;
+							if( blockDraw == 0 ) info.IsOpaque[block] = true;
+							else if( blockDraw == 1 ) info.IsTransparent[block] = true;
+							else if( blockDraw == 2 ) info.IsTranslucent[block] = true;
+							else if( blockDraw == 3 ) info.IsTranslucent[block] = true;
 							
 							Console.WriteLine( shape + "," + blockDraw );
 						} else {
 							byte fogDensity = reader.ReadUInt8();
-							info.fogDensities[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
-							info.fogColours[block] = new FastColour(
+							info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
+							info.FogColour[block] = new FastColour(
 								reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 						}
 						info.SetupCullingCache();

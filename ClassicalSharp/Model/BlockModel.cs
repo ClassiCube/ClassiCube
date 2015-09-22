@@ -16,7 +16,7 @@ namespace ClassicalSharp.Model {
 		
 		public override float GetEyeY( Player player ) {
 			byte block = Byte.Parse( player.ModelName );
-			return block == 0 ? 1 : game.BlockInfo.BlockHeight( block );
+			return block == 0 ? 1 : game.BlockInfo.Height[block];
 		}
 		
 		const float adjust = 0.1f;
@@ -38,11 +38,11 @@ namespace ClassicalSharp.Model {
 			}
 			
 			graphics.BindTexture( game.TerrainAtlas.TexId );
-			blockHeight = game.BlockInfo.BlockHeight( block );
+			blockHeight = game.BlockInfo.Height[block];
 			atlas = game.TerrainAtlas;
 			BlockInfo = game.BlockInfo;
 			
-			if( BlockInfo.IsSprite( block ) ) {
+			if( BlockInfo.IsSprite[block] ) {
 				DrawXFace( 0f, TileSide.Right, false );
 				DrawZFace( 0f, TileSide.Back, false );
 			} else {

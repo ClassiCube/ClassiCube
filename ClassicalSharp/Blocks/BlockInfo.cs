@@ -5,17 +5,38 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		internal bool[] isTransparent = new bool[BlocksCount];
-		internal bool[] isTranslucent = new bool[BlocksCount];
-		internal bool[] isOpaque = new bool[BlocksCount];
-		internal bool[] isSprite = new bool[BlocksCount];
-		internal bool[] isLiquid = new bool[BlocksCount];
-		internal float[] heights = new float[BlocksCount];
-		internal bool[] blocksLight = new bool[BlocksCount];
-		internal bool[] emitsLight = new bool[BlocksCount];
-		internal string[] names = new string[BlocksCount];
-		internal FastColour[] fogColours = new FastColour[BlocksCount];
-		internal float[] fogDensities = new float[BlocksCount];
+		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
+		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
+		public bool[] IsTransparent = new bool[BlocksCount];
+		
+		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
+		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
+		public bool[] IsTranslucent = new bool[BlocksCount];
+		
+		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
+		public bool[] IsOpaque = new bool[BlocksCount];
+		
+		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
+		public bool[] IsSprite = new bool[BlocksCount];
+		
+		/// <summary> Gets whether the given block id is a liquid. (e.g. water and lava) </summary>
+		public bool[] IsLiquid = new bool[BlocksCount];
+		
+		/// <summary> Gets the block height of the given block id. </summary>
+		public float[] Height = new float[BlocksCount];
+		
+		/// <summary> Gets whether the given block blocks sunlight. </summary>
+		public bool[] BlocksLight = new bool[BlocksCount];
+		
+		public bool[] EmitsLight = new bool[BlocksCount];
+		
+		public string[] Name = new string[BlocksCount];
+		
+		public FastColour[] FogColour = new FastColour[BlocksCount];
+		
+		public float[] FogDensity = new float[BlocksCount];
+		
+		public BlockCollideType[] CollideType = new BlockCollideType[BlocksCount];
 		
 		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
 		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
@@ -24,26 +45,27 @@ namespace ClassicalSharp {
 		
 		public void Init() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
-				heights[tile] = 1f;
-				blocksLight[tile] = true;
-				isOpaque[tile] = true;
+				Height[tile] = 1f;
+				BlocksLight[tile] = true;
+				IsOpaque[tile] = true;
+				CollideType[tile] = BlockCollideType.Solid;
 			}
 			for( int i = 0; i < CpeBlocksCount; i++ ) {
-				names[i] = Enum.GetName( typeof( Block ), (byte)i );
+				Name[i] = Enum.GetName( typeof( Block ), (byte)i );
 			}
 			for( int i = CpeBlocksCount; i < BlocksCount; i++ ) {
-				names[i] = "Invalid";
+				Name[i] = "Invalid";
 			}
 			
-			fogDensities[(byte)Block.StillWater] = 0.1f;
-			fogColours[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );
-			fogDensities[(byte)Block.Water] = 0.1f;
-			fogColours[(byte)Block.Water] = new FastColour( 5, 5, 51 );
-			fogDensities[(byte)Block.StillLava] = 2f;
-			fogColours[(byte)Block.StillLava] = new FastColour( 153, 25, 0 );
-			fogDensities[(byte)Block.Lava] = 2f;
-			fogColours[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
-			
+			FogDensity[(byte)Block.StillWater] = 0.1f;
+			FogColour[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );
+			FogDensity[(byte)Block.Water] = 0.1f;
+			FogColour[(byte)Block.Water] = new FastColour( 5, 5, 51 );
+			FogDensity[(byte)Block.StillLava] = 2f;
+			FogColour[(byte)Block.StillLava] = new FastColour( 153, 25, 0 );
+			FogDensity[(byte)Block.Lava] = 2f;
+			FogColour[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
+			CollideType[(byte)Block.Snow] = BlockCollideType.WalkThrough;
 			SetupTextures();
 			
 			SetBlockHeight( Block.Slab, 8/16f );
@@ -85,111 +107,62 @@ namespace ClassicalSharp {
 		}
 		
 		void MarkTransparent( Block id, bool blocks ) {
-			isTransparent[(int)id] = true;
-			blocksLight[(int)id] = blocks;
-			isOpaque[(int)id] = false;			
+			IsTransparent[(int)id] = true;
+			BlocksLight[(int)id] = blocks;
+			IsOpaque[(int)id] = false;			
 		}
 		
 		void MarkSprite( Block id ) {
-			isSprite[(int)id] = true;
-			isTransparent[(int)id] = true;
-			blocksLight[(int)id] = false;
-			isOpaque[(int)id] = false;
+			IsSprite[(int)id] = true;
+			IsTransparent[(int)id] = true;
+			BlocksLight[(int)id] = false;
+			IsOpaque[(int)id] = false;
+			CollideType[(int)id] = BlockCollideType.WalkThrough;
 		}
 		
 		void MarkTranslucent( Block id ) {
-			isTranslucent[(int)id] = true;
-			isOpaque[(int)id] = false;
+			IsTranslucent[(int)id] = true;
+			IsOpaque[(int)id] = false;
 		}
 		
 		void SetIsLiquid( Block id ) {
-			isLiquid[(int)id] = true;
+			IsLiquid[(int)id] = true;
+			CollideType[(int)id] = BlockCollideType.SwimThrough;
 		}
 		
 		void SetBlockHeight( Block id, float height ) {
-			heights[(int)id] = height;
+			Height[(int)id] = height;
 		}
 		
 		void SetBlocksLight( Block id, bool blocks ) {
-			blocksLight[(int)id] = blocks;
+			BlocksLight[(int)id] = blocks;
 		}
 		
 		void SetEmitsLight( Block id, bool emits ) {
-			emitsLight[(int)id] = emits;
-		}
-		
-		/// <summary> Gets whether the given block id is opaque/not see through. </summary>
-		public bool IsOpaque( byte id ) {
-			return isOpaque[id];
-		}
-		
-		/// <summary> Gets whether the given block id is opaque/not see through, and occupies a full block. </summary>
-		public bool IsFullAndOpaque( byte id ) {
-			return isOpaque[id] && heights[id] == 1;
-		}
-		
-		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
-		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
-		public bool IsTransparent( byte id ) {
-			return isTransparent[id];
-		}
-		
-		/// <summary> Gets the tile height of the given block id. </summary>
-		public float BlockHeight( byte id ) {
-			return heights[id];
-		}
-		
-		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
-		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
-		public bool IsTranslucent( byte id ) {
-			return isTranslucent[id];
-		}
-		
-		/// <summary> Gets whether the given block blocks sunlight. </summary>
-		public bool BlocksLight( byte id ) {
-			return blocksLight[id];
-		}
-		
-		/// <summary> Gets whether the given block id is a sprite. (flowers, saplings, fire, etc) </summary>
-		public bool IsSprite( byte id ) {
-			return isSprite[id];
-		}
-		
-		/// <summary> Gets whether the given block id is a liquid. (water or lava) </summary>
-		public bool IsLiquid( byte id ) {
-			return isLiquid[id];
-		}
-		
-		public bool EmitsLight( byte id ) {
-			return emitsLight[id];
-		}
-		
-		public float FogDensity( byte id ) {
-			return fogDensities[id];
-		}
-		
-		public FastColour FogColour( byte id ) {
-			return fogColours[id];
-		}
-		
-		public string GetName( byte id ) {
-			return names[id];
+			EmitsLight[(int)id] = emits;
 		}
 		
 		public void ResetBlockInfo( byte id ) {
-			isTransparent[id] = false;
-			isTranslucent[id] = false;
-			isOpaque[id] = true;
-			isSprite[id] = false;
-			isLiquid[id] = false;
-			heights[id] = 1;
-			blocksLight[id] = true;
-			emitsLight[id] = true;
-			names[id] = "Invalid";
-			fogColours[id] = default( FastColour );
-			fogDensities[id] = 0;
+			IsTransparent[id] = false;
+			IsTranslucent[id] = false;
+			IsOpaque[id] = true;
+			IsSprite[id] = false;
+			IsLiquid[id] = false;
+			Height[id] = 1;
+			BlocksLight[id] = true;
+			EmitsLight[id] = false;
+			Name[id] = "Invalid";
+			FogColour[id] = default( FastColour );
+			FogDensity[id] = 0;
+			CollideType[id] = BlockCollideType.Solid;
 			SetAll( 0, (Block)id );
 			SetupCullingCache();
 		}
+	}
+	
+	public enum BlockCollideType : byte {
+		WalkThrough, // i.e. gas or sprite
+		SwimThrough, // i.e. liquid
+		Solid,       // i.e. solid
 	}
 }

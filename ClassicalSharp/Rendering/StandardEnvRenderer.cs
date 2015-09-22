@@ -121,10 +121,10 @@ namespace ClassicalSharp.Renderers {
 			Block headBlock = game.LocalPlayer.BlockAtHead;
 			BlockInfo info = game.BlockInfo;
 			
-			if( info.FogDensity( (byte)headBlock ) != 0 ) {
+			if( info.FogDensity[(byte)headBlock] != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( info.FogDensity( (byte)headBlock ) );
-				adjFogCol = info.FogColour( (byte)headBlock );
+				graphics.SetFogDensity( info.FogDensity[(byte)headBlock] );
+				adjFogCol = info.FogColour[(byte)headBlock];
 			} else {
 				// Blend fog and sky together
 				FastColour fogCol = map.FogCol;

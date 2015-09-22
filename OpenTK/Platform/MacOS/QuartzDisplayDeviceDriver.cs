@@ -7,8 +7,6 @@ namespace OpenTK.Platform.MacOS
 {
 	class QuartzDisplayDeviceDriver : IDisplayDeviceDriver
 	{
-		static object display_lock = new object();
-
 		static Dictionary<DisplayDevice, IntPtr> displayMap =
 			new Dictionary<DisplayDevice, IntPtr>();
 

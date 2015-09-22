@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 							if( block == 11 ) block = 10; // Still lava --> Lava
 							
 							if( allAir && block != 0 ) allAir = false;
-							if( allSolid && !info.isOpaque[block] ) allSolid = false;
+							if( allSolid && !info.IsOpaque[block] ) allSolid = false;
 							chunkPtr[chunkIndex] = block;
 						}
 					}
@@ -115,10 +115,10 @@ namespace ClassicalSharp {
 			X = x; Y = y; Z = z;
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			
-			if( info.isSprite[tile] ) {
+			if( info.IsSprite[tile] ) {
 				int count = counts[index + TileSide.Top];
 				if( count != 0 ) {
-					blockHeight = info.heights[tile];
+					blockHeight = info.Height[tile];
 					DrawSprite( count );
 				}
 				return;
@@ -130,9 +130,9 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			emitsLight = info.emitsLight[tile];
-			blockHeight = info.heights[tile];
-			isTranslucent = info.isTranslucent[tile];
+			emitsLight = info.EmitsLight[tile];
+			blockHeight = info.Height[tile];
+			isTranslucent = info.IsTranslucent[tile];
 			
 			if( leftCount != 0 )
 				DrawLeftFace( leftCount );
@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
-						if( info.IsSprite( tile ) ) {
+						if( info.IsSprite[tile] ) {
 							countIndex += TileSide.Top;
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
@@ -178,7 +178,7 @@ namespace ClassicalSharp {
 							}
 						} else {
 							X = x; Y = y; Z = z;
-							emitsLight = info.emitsLight[tile];
+							emitsLight = info.EmitsLight[tile];
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );

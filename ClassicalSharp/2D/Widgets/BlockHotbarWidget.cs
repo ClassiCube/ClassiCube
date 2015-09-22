@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 			
 			int verSize = blockSize;
-			float height = game.BlockInfo.BlockHeight( (byte)block );
+			float height = game.BlockInfo.Height[(byte)block];
 			int blockY = y;
 			if( height != 1 ) {
 				rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;

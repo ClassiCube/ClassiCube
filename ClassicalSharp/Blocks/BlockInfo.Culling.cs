@@ -16,8 +16,8 @@ namespace ClassicalSharp {
 						SetHidden( tile, neighbour, TileSide.Right, true );
 						SetHidden( tile, neighbour, TileSide.Front, true );
 						SetHidden( tile, neighbour, TileSide.Back, true );
-						SetHidden( tile, neighbour, TileSide.Top, BlockHeight( tile ) == 1 );
-						SetHidden( tile, neighbour, TileSide.Bottom, BlockHeight( neighbour ) == 1 );
+						SetHidden( tile, neighbour, TileSide.Top, Height[tile] == 1 );
+						SetHidden( tile, neighbour, TileSide.Bottom, Height[neighbour] == 1 );
 					}
 				}
 			}
@@ -25,8 +25,8 @@ namespace ClassicalSharp {
 		
 		bool IsHidden( byte tile, byte block ) {
 			return 
-				( ( tile == block || ( IsOpaque( block ) && !IsLiquid( block ) ) ) && !IsSprite( tile ) ) || 
-				( IsLiquid( tile ) && block == (byte)Block.Ice );
+				((tile == block || (IsOpaque[block] && !IsLiquid[block])) && !IsSprite[tile]) ||
+				(IsLiquid[tile] && block == (byte)Block.Ice);
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {

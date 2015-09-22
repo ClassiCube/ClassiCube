@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 				if( block == Block.TNT ) {
 					buffer.Append( ref ptr2, "TNT" );
 				} else {
-					string value = game.BlockInfo.GetName( (byte)block );
+					string value = game.BlockInfo.Name[(byte)block];
 					if( (byte)block < BlockInfo.CpeBlocksCount ) {
 						SplitUppercase( value, ref ptr2 );
 					} else {
@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 					int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;
-					float height = game.BlockInfo.BlockHeight( (byte)block );
+					float height = game.BlockInfo.Height[(byte)block];
 					int blockY = y;
 					if( height != 1 ) {
 						rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;

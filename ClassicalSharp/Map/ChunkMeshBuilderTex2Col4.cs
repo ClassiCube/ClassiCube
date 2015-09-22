@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		
 		unsafe void AddVertices( byte tile, int count, int face ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, face ) );
-			DrawInfo part = info.IsTranslucent( tile ) ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = info.IsTranslucent[tile] ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.Count;

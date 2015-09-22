@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 			int mapIndex = ( maxY * Length + z ) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
-				if( info.BlocksLight( block ) ) {
+				if( info.BlocksLight[block] ) {
 					heightmap[index] = (short)( y - 1 );
 					return y;
 				}
@@ -142,8 +142,8 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = info.BlocksLight( oldBlock );
-			bool nowBlocks = info.BlocksLight( newBlock );
+			bool didBlock = info.BlocksLight[oldBlock];
+			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
 			
 			int index = ( z * Width ) + x;
@@ -276,7 +276,7 @@ namespace ClassicalSharp {
 						int curRunCount = skip[index];
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
-						if( x < xCount && info.blocksLight[mapPtr[mapIndex]] ) {
+						if( x < xCount && info.BlocksLight[mapPtr[mapIndex]] ) {
 							heightmap[heightmapIndex + x] = (short)( y - 1 );
 							elemsLeft--;
 							skip[index] = 0;

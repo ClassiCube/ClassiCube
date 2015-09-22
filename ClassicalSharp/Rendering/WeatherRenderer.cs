@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool BlocksRain( byte block ) {
-			return !( block == 0 || info.IsSprite( block ) || info.IsLiquid( block ) );
+			return !(block == 0 || info.IsSprite[block] || info.IsLiquid[block]);
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {

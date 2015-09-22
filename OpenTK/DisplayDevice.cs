@@ -28,7 +28,6 @@ namespace OpenTK {
 
 		static readonly List<DisplayDevice> available_displays = new List<DisplayDevice>();
 		static readonly IList<DisplayDevice> available_displays_readonly;
-		static readonly object display_lock = new object();
 		static DisplayDevice primary_display;
 		static Platform.IDisplayDeviceDriver implementation;
 
@@ -38,10 +37,7 @@ namespace OpenTK {
 		}
 
 		internal DisplayDevice() {
-			lock (display_lock) {
-				available_displays.Add(this);
-			}
-
+			available_displays.Add(this);
 			available_resolutions_readonly = available_resolutions.AsReadOnly();
 		}
 
@@ -92,11 +88,9 @@ namespace OpenTK {
 				if (value && primary_display != null && primary_display != this)
 					primary_display.IsPrimary = false;
 
-				lock (display_lock) {
-					primary = value;
-					if (value)
-						primary_display = this;
-				}
+				primary = value;
+				if (value)
+					primary_display = this;
 			}
 		}
 

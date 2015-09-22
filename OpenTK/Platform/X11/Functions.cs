@@ -103,10 +103,7 @@ namespace OpenTK.Platform.X11 {
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XSetTransientForHint(IntPtr display, IntPtr window, IntPtr prop_window);
-
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, ref MotifWmHints data, int nelements);
-
+		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr[] data, int nelements);
 
