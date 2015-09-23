@@ -143,7 +143,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal abstract void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex );
 		
-		protected static int[] strideSizes = { 20, 16, 24 };
+		protected static int[] strideSizes = { 16, 24 };
 		
 		public abstract void SetMatrixMode( MatrixType mode );
 		
@@ -180,7 +180,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2f, 4 );
+			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 4 );
 		}
 		
 		public virtual void Dispose() {
@@ -199,9 +199,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
-		internal VertexPos3fTex2f[] texVerts = new VertexPos3fTex2f[4];
+		internal VertexPos3fTex2fCol4b[] texVerts = new VertexPos3fTex2fCol4b[4];
 		internal int texVb;
-		public virtual void Draw2DTexture( ref Texture tex ) {
+		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
@@ -211,12 +211,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			y1 -= 0.5f;
 			y2 -= 0.5f;
 			#endif
-			texVerts[0] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
-			texVerts[1] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
-			texVerts[2] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );
-			texVerts[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			BeginVbBatch( VertexFormat.Pos3fTex2f );
+			texVerts[0] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
+			texVerts[1] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
+			texVerts[2] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
+			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
+			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+		}
+		
+		public void Draw2DTexture( ref Texture tex ) {
+			Draw2DTexture( ref tex, FastColour.White );
 		}
 		
 		public void Mode2D( float width, float height ) {
@@ -267,9 +271,8 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		Pos3fTex2f = 0,
-		Pos3fCol4b = 1,
-		Pos3fTex2fCol4b = 2,
+		Pos3fCol4b = 0,
+		Pos3fTex2fCol4b = 1,
 	}
 	
 	public enum DrawMode {

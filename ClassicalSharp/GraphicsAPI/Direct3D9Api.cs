@@ -579,7 +579,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				Blend.DestinationAlpha, Blend.InverseDestinationAlpha,
 			};
 			formatMapping = new [] {
-				D3D.VertexFormat.Position | D3D.VertexFormat.Texture2,
 				D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse,
 				D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse,
 			};
@@ -603,10 +602,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			blendFuncs[0] = Blend.Zero; blendFuncs[1] = Blend.One; blendFuncs[2] = Blend.SourceAlpha;
 			blendFuncs[3] = Blend.InverseSourceAlpha; blendFuncs[4] = Blend.DestinationAlpha;
 			blendFuncs[5] = Blend.InverseDestinationAlpha;
-			formatMapping = new D3D.VertexFormat[3];
-			formatMapping[0] = D3D.VertexFormat.Position | D3D.VertexFormat.Texture2;
-			formatMapping[1] = D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse;
-			formatMapping[2] = D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse;
+			formatMapping = new D3D.VertexFormat[2];
+			formatMapping[0] = D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse;
+			formatMapping[1] = D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse;
 			modes = new FogMode[3];
 			modes[0] = FogMode.Linear; modes[1] = FogMode.Exponential; modes[2] = FogMode.ExponentialSquared;
 			#endif

@@ -29,9 +29,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			base.InitDynamicBuffers();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
-			setupBatchFuncTex2f = SetupVbPos3fTex2f;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
 			GL.EnableClientState( ArrayCap.VertexArray );
+			GL.EnableClientState( ArrayCap.ColorArray );
 		}
 
 		public override bool AlphaTest {
@@ -173,8 +173,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endregion
 		
 		#region Vertex/index buffers
-		Action setupBatchFunc;
-		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
+		Action setupBatchFunc, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
@@ -257,26 +256,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( format == batchFormat ) return;
 			
 			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
 				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
 			}
 			
 			batchFormat = format;
 			if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
 				batchStride = VertexPos3fTex2fCol4b.Size;
-			} else if( format == VertexFormat.Pos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				setupBatchFunc = setupBatchFuncTex2f;
-				batchStride = VertexPos3fTex2f.Size;
-			} else if( format == VertexFormat.Pos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
+			} else {
 				setupBatchFunc = setupBatchFuncCol4b;
 				batchStride = VertexPos3fCol4b.Size;
 			}
@@ -317,10 +305,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );
-		void SetupVbPos3fTex2f() {
-			GL.VertexPointer( 3, PointerType.Float, VertexPos3fTex2f.Size, zero );
-			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2f.Size, twelve );
-		}
 		
 		void SetupVbPos3fCol4b() {
 			GL.VertexPointer( 3, PointerType.Float, VertexPos3fCol4b.Size, zero );

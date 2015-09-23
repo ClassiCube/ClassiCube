@@ -44,12 +44,13 @@ namespace ClassicalSharp {
 			Vector3 pos = Position;
 			pos.Y += Model.NameYOffset;
 			
-			api.texVerts[0] = new VertexPos3fTex2f( Utils.RotateY( x1, y1, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V1 );
-			api.texVerts[1] = new VertexPos3fTex2f( Utils.RotateY( x2, y1, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V1 );
-			api.texVerts[2] = new VertexPos3fTex2f( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V2 );		
-			api.texVerts[3] = new VertexPos3fTex2f( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V2 );
+			FastColour col = FastColour.White;
+			api.texVerts[0] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y1, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V1, col );
+			api.texVerts[1] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y1, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V1, col );
+			api.texVerts[2] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V2, col );	
+			api.texVerts[3] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V2, col );
 			
-			api.BeginVbBatch( VertexFormat.Pos3fTex2f );
+			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			api.DrawDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
 			api.Texturing = false;
 			api.AlphaTest = false;

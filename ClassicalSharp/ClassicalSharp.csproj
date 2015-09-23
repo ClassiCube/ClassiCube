@@ -71,6 +71,7 @@
     <Compile Include="2D\Screens\ErrorScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
+    <Compile Include="2D\Screens\NewPauseScreen.cs" />
     <Compile Include="2D\Screens\NormalScreen.cs" />
     <Compile Include="2D\Screens\PauseScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
@@ -79,7 +80,7 @@
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
-    <Compile Include="2D\Widgets\OptionsWidget.cs" />
+    <Compile Include="2D\Widgets\ButtonWidget.cs" />
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\TextInputWidget.cs" />
