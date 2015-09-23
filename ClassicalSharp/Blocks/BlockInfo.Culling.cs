@@ -21,6 +21,10 @@ namespace ClassicalSharp {
 					}
 				}
 			}
+			
+			for( int i = 0; i < TileSide.Sides; i++ ) {
+				SetHidden( (byte)Block.Leaves, (byte)Block.Leaves, i, false );
+			}
 		}
 		
 		bool IsHidden( byte tile, byte block ) {

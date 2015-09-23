@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			game.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		internal int width, length, height, edgeLevel;
+		internal int width, length, height, clipLevel;
 		int maxX, maxY, maxZ;
 		byte[] counts = new byte[chunkSize3 * TileSide.Sides];
 		byte[] chunk = new byte[extChunkSize3];
@@ -183,7 +183,11 @@ namespace ClassicalSharp {
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, maxZ, TileSide.Back, extChunkSize );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -extChunkSize2 );
+							
+							if( y > 0 )
+								TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -extChunkSize2 );
+							else
+								counts[countIndex + TileSide.Bottom] = 0;
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, maxY + 2, TileSide.Top, extChunkSize2 );
 						}
 					}
@@ -194,7 +198,7 @@ namespace ClassicalSharp {
 		void TestAndStretchX( int xx, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
 			if( counts[index] != 0 ) {
-				if( (value == test && Y < edgeLevel) || 
+				if( (value == test && Y < clipLevel) || 
 				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
@@ -208,7 +212,7 @@ namespace ClassicalSharp {
 		void TestAndStretchZ( int zz, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
 			if( counts[index] != 0 ) {
-				if( (value == test && Y < edgeLevel) || 
+				if( (value == test && Y < clipLevel) || 
 				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
@@ -282,7 +286,7 @@ namespace ClassicalSharp {
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
-			edgeLevel = map.GroundHeight;
+			clipLevel = Math.Max( 0, game.Map.GroundHeight );
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

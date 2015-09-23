@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 			if( e.Var == EnvVariable.SunlightColour || e.Var == EnvVariable.ShadowlightColour ) {
 				Refresh();
 			} else if( e.Var == EnvVariable.WaterLevel ) {
-				builder.edgeLevel = game.Map.WaterHeight;
+				builder.clipLevel = Math.Max( 0, game.Map.GroundHeight );
 				Refresh();
 			}
 		}
