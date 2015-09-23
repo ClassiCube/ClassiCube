@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class TextGroupWidget : Widget {
 		
-		public TextGroupWidget( Game window, int elementsCount, Font font ) : base( window ) {
+		public TextGroupWidget( Game game, int elementsCount, Font font ) : base( game ) {
 			ElementsCount = elementsCount;
 			this.font = font;
 		}

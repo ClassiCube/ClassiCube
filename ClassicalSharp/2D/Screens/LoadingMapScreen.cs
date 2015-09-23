@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	public class LoadingMapScreen : Screen {
 		
 		readonly Font font;
-		public LoadingMapScreen( Game window, string name, string motd ) : base( window ) {
+		public LoadingMapScreen( Game game, string name, string motd ) : base( game ) {
 			serverName = name;
 			serverMotd = motd;
 			font = new Font( "Arial", 14 );

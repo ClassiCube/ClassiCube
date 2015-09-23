@@ -31,6 +31,7 @@ namespace ClassicalSharp {
 		bool sendHeldBlock;
 		bool useMessageTypes;
 		bool useBlockPermissions;
+		bool usingTexturePack;
 		bool receivedFirstPosition;
 		
 		public override void Connect( IPAddress address, int port ) {
@@ -83,8 +84,13 @@ namespace ClassicalSharp {
 		void CheckForNewTerrainAtlas() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( "terrain", out item );
-			if( item != null && item.Bmp != null ) {
-				game.ChangeTerrainAtlas( item.Bmp );
+			if( item != null && item.Data != null ) {
+				game.ChangeTerrainAtlas( (Bitmap)item.Data );
+			}
+			game.AsyncDownloader.TryGetItem( "texturePack", out item );
+			if( item != null && item.Data != null ) {
+				TexturePackExtractor extractor = new TexturePackExtractor();
+				extractor.Extract( (byte[])item.Data, game );
 			}
 		}
 		
@@ -425,27 +431,31 @@ namespace ClassicalSharp {
 					
 				case PacketId.CpeExtEntry:
 					{
-						string extensionName = reader.ReadAsciiString();
-						int extensionVersion = reader.ReadInt32();
-						Utils.LogDebug( "cpe ext: " + extensionName + "," + extensionVersion );
-						if( extensionName == "HeldBlock" ) {
+						string extName = reader.ReadAsciiString();
+						int extVersion = reader.ReadInt32();
+						Utils.LogDebug( "cpe ext: " + extName + " , " + extVersion );
+						if( extName == "HeldBlock" ) {
 							sendHeldBlock = true;
-						} else if( extensionName == "MessageTypes" ) {
+						} else if( extName == "MessageTypes" ) {
 							useMessageTypes = true;
-						} else if( extensionName == "ExtPlayerList" ) {
+						} else if( extName == "ExtPlayerList" ) {
 							UsingExtPlayerList = true;
-						} else if( extensionName == "BlockPermissions" ) {
+						} else if( extName == "BlockPermissions" ) {
 							useBlockPermissions = true;
-						} else if( extensionName == "PlayerClick" ) {
+						} else if( extName == "PlayerClick" ) {
 							UsingPlayerClick = true;
+						} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
+							usingTexturePack = true;
 						}
 						cpeServerExtensionsCount--;
+						
 						if( cpeServerExtensionsCount == 0 ) {
 							MakeExtInfo( Utils.AppName, clientExtensions.Length );
 							SendPacket();
 							for( int i = 0; i < clientExtensions.Length; i++ ) {
-								string extName = clientExtensions[i];
-								MakeExtEntry( extName, extName == "ExtPlayerList" ? 2 : 1 );
+								string name = clientExtensions[i];
+								int version = (name == "ExtPlayerList" || name == "EnvMapApperance") ? 2 : 1;
+								MakeExtEntry( name, version );
 								SendPacket();
 							}
 						}
@@ -611,7 +621,11 @@ namespace ClassicalSharp {
 							extractor.Extract( game.defaultTexPack, game );
 						} else {
 							game.Animations.Dispose();
-							game.AsyncDownloader.DownloadImage( url, true, "terrain" );
+							if( usingTexturePack )
+								game.AsyncDownloader.DownloadData( url, true, "texturePack" );
+							else
+								game.AsyncDownloader.DownloadImage( url, true, "terrain" );
+							
 						}
 						Utils.LogDebug( "Image url: " + url );
 					} break;

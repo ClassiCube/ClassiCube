@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public class ChatScreen : Screen {
 		
-		public ChatScreen( Game window ) : base( window ) {
+		public ChatScreen( Game game ) : base( game ) {
 		}
 		
 		public int ChatInputYOffset, ChatLogYOffset;

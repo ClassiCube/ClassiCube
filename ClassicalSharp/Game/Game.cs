@@ -226,25 +226,8 @@ namespace ClassicalSharp {
 				SetNewScreen( new PauseScreen( this ) );
 			}
 			
-			if( imageCheckAccumulator > imageCheckPeriod ) {
-				imageCheckAccumulator -= imageCheckPeriod;
-				AsyncDownloader.PurgeOldEntries( 10 );
-			}
 			base.OnRenderFrame( e );
-			
-			int ticksThisFrame = 0;
-			while( ticksAccumulator >= ticksPeriod ) {
-				Network.Tick( ticksPeriod );
-				Players.Tick( ticksPeriod );
-				Camera.Tick( ticksPeriod );
-				ParticleManager.Tick( ticksPeriod );
-				Animations.Tick( ticksPeriod );
-				ticksThisFrame++;
-				ticksAccumulator -= ticksPeriod;
-			}
-			if( ticksThisFrame > ticksFrequency / 3 ) {
-				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
-			}
+			CheckScheduledTasks();
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
 			
@@ -281,47 +264,41 @@ namespace ClassicalSharp {
 			}
 			Graphics.Mode3D();
 			
-			if( screenshotRequested ) {
-				if( !Directory.Exists( "screenshots" ) ) {
-					Directory.CreateDirectory( "screenshots" );
-				}
-				string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
-				string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
-				Graphics.TakeScreenshot( path, ClientSize );
-				screenshotRequested = false;
-			}
+			if( screenshotRequested )
+				TakeScreenshot();
 			Graphics.EndFrame( this );
 		}
 		
-		public override void Dispose() {
-			MapRenderer.Dispose();
-			MapEnvRenderer.Dispose();
-			EnvRenderer.Dispose();
-			WeatherRenderer.Dispose();
-			SetNewScreen( null );
-			fpsScreen.Dispose();
-			SelectionManager.Dispose();
-			TerrainAtlas.Dispose();
-			TerrainAtlas1D.Dispose();
-			ModelCache.Dispose();
-			Picking.Dispose();
-			ParticleManager.Dispose();
-			Players.Dispose();
-			AsyncDownloader.Dispose();
-			if( writer != null ) {
-				writer.Close();
+		void CheckScheduledTasks() {
+			if( imageCheckAccumulator > imageCheckPeriod ) {
+				imageCheckAccumulator -= imageCheckPeriod;
+				AsyncDownloader.PurgeOldEntries( 10 );
 			}
-			if( activeScreen != null ) {
-				activeScreen.Dispose();
+			
+			int ticksThisFrame = 0;
+			while( ticksAccumulator >= ticksPeriod ) {
+				Network.Tick( ticksPeriod );
+				Players.Tick( ticksPeriod );
+				Camera.Tick( ticksPeriod );
+				ParticleManager.Tick( ticksPeriod );
+				Animations.Tick( ticksPeriod );
+				ticksThisFrame++;
+				ticksAccumulator -= ticksPeriod;
 			}
-			Graphics.DeleteIb( defaultIb );
-			Graphics.Dispose();
-			Utils2D.Dispose();
-			Animations.Dispose();
-			Graphics.DeleteTexture( ref CloudsTextureId );
-			Graphics.DeleteTexture( ref RainTextureId );
-			Graphics.DeleteTexture( ref SnowTextureId );
-			base.Dispose();
+			
+			if( ticksThisFrame > ticksFrequency / 3 ) {
+				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
+			}
+		}
+		
+		void TakeScreenshot() {
+			if( !Directory.Exists( "screenshots" ) ) {
+				Directory.CreateDirectory( "screenshots" );
+			}
+			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
+			string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
+			Graphics.TakeScreenshot( path, ClientSize );
+			screenshotRequested = false;
 		}
 		
 		public void UpdateProjection() {
@@ -386,6 +363,37 @@ namespace ClassicalSharp {
 			Map.SetBlock( x, y, z, block );
 			int newHeight = Map.GetLightHeight( x, z );
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
+		}
+		
+		public override void Dispose() {
+			MapRenderer.Dispose();
+			MapEnvRenderer.Dispose();
+			EnvRenderer.Dispose();
+			WeatherRenderer.Dispose();
+			SetNewScreen( null );
+			fpsScreen.Dispose();
+			SelectionManager.Dispose();
+			TerrainAtlas.Dispose();
+			TerrainAtlas1D.Dispose();
+			ModelCache.Dispose();
+			Picking.Dispose();
+			ParticleManager.Dispose();
+			Players.Dispose();
+			AsyncDownloader.Dispose();
+			if( writer != null ) {
+				writer.Close();
+			}
+			if( activeScreen != null ) {
+				activeScreen.Dispose();
+			}
+			Graphics.DeleteIb( defaultIb );
+			Graphics.Dispose();
+			Utils2D.Dispose();
+			Animations.Dispose();
+			Graphics.DeleteTexture( ref CloudsTextureId );
+			Graphics.DeleteTexture( ref RainTextureId );
+			Graphics.DeleteTexture( ref SnowTextureId );
+			base.Dispose();
 		}
 	}
 	

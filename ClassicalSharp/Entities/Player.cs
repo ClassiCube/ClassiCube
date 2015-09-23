@@ -88,8 +88,8 @@ namespace ClassicalSharp {
 		protected void CheckSkin() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
-			if( item != null && item.Bmp != null ) {
-				Bitmap bmp = item.Bmp;
+			if( item != null && item.Data != null ) {
+				Bitmap bmp = (Bitmap)item.Data;
 				game.Graphics.DeleteTexture( ref PlayerTextureId );
 				
 				try {

@@ -6,10 +6,10 @@ namespace ClassicalSharp {
 	
 	public sealed class BlockHotbarWidget : Widget {
 		
-		public BlockHotbarWidget( Game window ) : base( window ) {
+		public BlockHotbarWidget( Game game ) : base( game ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
-			window.HeldBlockChanged += HeldBlockChanged;
+			game.HeldBlockChanged += HeldBlockChanged;
 		}
 		
 		Texture[] barTextures = new Texture[9];

@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class ExtPlayerListWidget : PlayerListWidget {
 		
-		public ExtPlayerListWidget( Game window, Font font ) : base( window, font ) {
+		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];

@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class TextWidget : Widget {
 		
-		public TextWidget( Game window, Font font ) : base( window ) {
+		public TextWidget( Game game, Font font ) : base( game ) {
 			this.font = font;
 		}
 		

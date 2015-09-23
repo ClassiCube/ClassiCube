@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 		
 		readonly Font font;
 		StringBuffer text;
-		public FpsScreen( Game window ) : base( window ) {
+		public FpsScreen( Game game ) : base( game ) {
 			font = new Font( "Arial", 13 );
 			text = new StringBuffer( 96 );
 		}

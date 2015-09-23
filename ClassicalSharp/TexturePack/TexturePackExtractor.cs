@@ -10,17 +10,25 @@ namespace ClassicalSharp.TexturePack {
 		
 		Game game;
 		public void Extract( string path, Game game ) {
-			this.game = game;
-			game.Animations.Dispose();
-			using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
-				ZipReader reader = new ZipReader();
-				reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
-				reader.ProcessZipEntry = ProcessZipEntry;
-				reader.Extract( fs );
-			}
+			using( Stream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) )
+				Extract( fs, game );
 		}
 		
-		bool ShouldProcessZipEntry( string filename ) { 
+		public void Extract( byte[] data, Game game ) {
+			using( Stream fs = new MemoryStream( data ) )
+				Extract( fs, game );
+		}
+		
+		void Extract( Stream stream, Game game ) {
+			this.game = game;
+			game.Animations.Dispose();
+			ZipReader reader = new ZipReader();
+			reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
+			reader.ProcessZipEntry = ProcessZipEntry;
+			reader.Extract( stream );
+		}
+		
+		bool ShouldProcessZipEntry( string filename ) {
 			return true;
 		}
 		

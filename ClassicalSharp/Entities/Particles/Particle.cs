@@ -16,8 +16,8 @@ namespace ClassicalSharp.Particles {
 		
 		public abstract void Dispose();
 		
-		public Particle( Game window, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec ) {
-			game = window;
+		public Particle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec ) {
+			this.game = game;
 			Position = lastPos = nextPos = pos;
 			Velocity = velocity;
 			Lifetime = (float)lifetime;

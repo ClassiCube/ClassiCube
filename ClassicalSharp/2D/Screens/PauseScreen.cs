@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class PauseScreen : Screen {
 		
-		public PauseScreen( Game window ) : base( window ) {
+		public PauseScreen( Game game ) : base( game ) {
 		}
 		
 		TextWidget controlsWidget, gameWidget, exitWidget, keyStatusWidget;

@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		readonly Font titleFont, messageFont;
 		TextWidget titleWidget, messageWidget;
 		
-		public ErrorScreen( Game window, string title, string message ) : base( window ) {
+		public ErrorScreen( Game game, string title, string message ) : base( game ) {
 			this.title = title;
 			this.message = message;
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );

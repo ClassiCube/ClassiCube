@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
 		
-		public TextInputWidget( Game window, Font font, Font boldFont ) : base( window ) {
+		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
 			handlers[0] = new InputHandler( BackspaceKey, Key.BackSpace, 10 );
@@ -131,10 +131,10 @@ namespace ClassicalSharp {
 				return true;
 			}
 			
-			public void KeyTick( Game window ) {
+			public void KeyTick( Game game ) {
 				if( LastDown == DateTime.MinValue ) return;
-				if( window.IsKeyDown( AssociatedKey ) &&
-				   ( DateTime.UtcNow - LastDown ).TotalSeconds >= period ) {
+				if( game.IsKeyDown( AssociatedKey ) &&
+				   (DateTime.UtcNow - LastDown).TotalSeconds >= period ) {
 					KeyFunction();
 				}
 			}

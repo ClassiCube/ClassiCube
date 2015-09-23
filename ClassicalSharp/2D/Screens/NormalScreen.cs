@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class NormalScreen : Screen {
 		
-		public NormalScreen( Game window ) : base( window ) {
+		public NormalScreen( Game game ) : base( game ) {
 		}
 		
 		ChatScreen chat;

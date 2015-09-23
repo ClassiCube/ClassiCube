@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 					}
 				}
 			}
-			
+			// Leaves should show faces with their neighbours (matches Classic)
 			for( int i = 0; i < TileSide.Sides; i++ ) {
 				SetHidden( (byte)Block.Leaves, (byte)Block.Leaves, i, false );
 			}

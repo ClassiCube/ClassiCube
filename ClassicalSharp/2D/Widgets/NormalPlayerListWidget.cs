@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class NormalPlayerListWidget : PlayerListWidget {
 		
-		public NormalPlayerListWidget( Game window, Font font ) : base( window, font ) {
+		public NormalPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];		

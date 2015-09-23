@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public class BlockSelectScreen : Screen {
 		
-		public BlockSelectScreen( Game window ) : base( window ) {
+		public BlockSelectScreen( Game game ) : base( game ) {
 			font = new Font( "Arial", 13 );
 		}
 		
