@@ -73,14 +73,11 @@ namespace Launcher {
 			var sw = System.Diagnostics.Stopwatch.StartNew();
 			var response = GetHtml( publicServersUri, minecraftNetUri );
 			List<ServerListEntry> servers = new List<ServerListEntry>();
-			int index = -1;
+			bool foundStart = false;
 			int mode = 0;
 			
-			string hash = null;
-			string name = null;
-			string players = null;
-			string maxPlayers = null;
-			string uptime = null;
+			string hash = null, name = null, players = null;
+			string maxPlayers = null, uptime = null;
 			
 			foreach( string line in response ) {
 				if( line.StartsWith( "                                    <a href", ordinal ) ) {
@@ -92,10 +89,10 @@ namespace Launcher {
 					int nameEnd = line.IndexOf( '<', nameStart );
 					name = line.Substring( nameStart, nameEnd - nameStart );
 					name = WebUtility.HtmlDecode( name );
-					index++;
+					foundStart = true;
 					mode = 0;
 				}
-				if( index < 0 ) continue;
+				if( !foundStart ) continue;
 				
 				// NOTE: >16 checks that the line actually has a value.
 				// this check is necessary, as the page does have lines with just "            <td>"

@@ -107,6 +107,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		bool useLiquidGravity = false; // used by BlockDefinitions.
 		void UpdateVelocityYState() {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
@@ -123,6 +124,8 @@ namespace ClassicalSharp {
 
 			if( jumping ) {
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
+					Velocity.Y += speeding ? 0.08f : 0.04f;
+				} else if( useLiquidGravity ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
 				} else if( TouchesAnyRope() ) {
 					Velocity.Y += speeding ? 0.15f : 0.10f;
@@ -141,7 +144,8 @@ namespace ClassicalSharp {
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
 			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
-			multiply *= LowestSpeedModifier();
+			float modifier = LowestSpeedModifier();
+			multiply *= modifier;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
@@ -151,8 +155,9 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float yMul = Math.Max( 1, multiply / 5f );
-				Move( xMoving, zMoving, factor * multiply, normalDrag, normalGrav, yMul );
+				float yMul = modifier * Math.Max( 1, multiply / 5f );
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
+				Move( xMoving, zMoving, factor * multiply, normalDrag, gravity, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
 					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
@@ -282,6 +287,7 @@ namespace ClassicalSharp {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			float modifier = float.PositiveInfinity;
+			useLiquidGravity = false;
 			
 			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
@@ -289,7 +295,10 @@ namespace ClassicalSharp {
 						if( !map.IsValidPos( x, y, z ) ) continue;
 						byte block = map.GetBlock( x, y, z );
 						if( block == 0 ) continue;
+						
 						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
+						if( info.CollideType[block] == BlockCollideType.SwimThrough )
+							useLiquidGravity = true;
 					}
 				}
 			}
