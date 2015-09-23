@@ -84,9 +84,8 @@ namespace ClassicalSharp {
 		}
 		
 		public static void DrawRectBounds( Graphics g, Color colour, float lineWidth, int x, int y, int width, int height ) {
-			using( Pen pen = new Pen( colour, lineWidth ) ) {
+			using( Pen pen = new Pen( colour, lineWidth ) )
 				g.DrawRectangle( pen, x, y, width, height );
-			}
 		}
 		
 		public static Texture MakeTextTexture( Font font, int x1, int y1, ref DrawTextArgs args ) {

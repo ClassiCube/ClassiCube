@@ -91,6 +91,8 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if( key == Key.F4 && ( IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ) ) ) {
 				Exit();
+			} else if( key == Keys[KeyMapping.Screenshot] ) {
+				screenshotRequested = true;
 			} else if( activeScreen == null || !activeScreen.HandlesKeyDown( key ) ) {
 				if( !HandleBuiltinKey( key ) ) {
 					LocalPlayer.HandleKeyDown( key );
@@ -101,8 +103,6 @@ namespace ClassicalSharp {
 		bool HandleBuiltinKey( Key key ) {
 			if( key == Keys[KeyMapping.HideGui] ) {
 				HideGui = !HideGui;
-			} else if( key == Keys[KeyMapping.Screenshot] ) {
-				screenshotRequested = true;
 			} else if( key == Keys[KeyMapping.Fullscreen] ) {
 				WindowState state = WindowState;
 				if( state != WindowState.Minimized ) {
@@ -209,10 +209,10 @@ namespace ClassicalSharp {
 		
 		Key[] Keys;
 		bool IsReservedKey( Key key ) {
-			return key == Key.Escape || key == Key.Slash || key == Key.BackSpace ||
-				( key >= Key.Insert && key <= Key.End ) ||
-				( key >= Key.Up && key <= Key.Right ) || // chat screen movement
-				( key >= Key.Number0 && key <= Key.Number9 ); // block hotbar
+			return key == Key.Escape || key == Key.F12 || key == Key.Slash || key == Key.BackSpace ||
+				(key >= Key.Insert && key <= Key.End) ||
+				(key >= Key.Up && key <= Key.Right) || // chat screen movement
+				(key >= Key.Number0 && key <= Key.Number9); // block hotbar
 		}
 		
 		public bool IsKeyOkay( Key key, out string reason ) {

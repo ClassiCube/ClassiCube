@@ -62,9 +62,7 @@ namespace ClassicalSharp {
 				KeyMapping mapping = (KeyMapping)( (int)start + i );
 				Key tkKey = game.Keys[mapping];
 				string text = descriptions[i] + ": " + keyNames[(int)tkKey];
-				TextWidget widget = TextWidget.Create( game, 0, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
-				widget.XOffset = offset;
-				widget.MoveTo( widget.X + widget.XOffset, widget.Y );
+				TextWidget widget = TextWidget.Create( game, offset, startY, text, Docking.LeftOrTop, Docking.LeftOrTop, textFont );
 				widgets[i] = new KeyMapWidget( widget, mapping, descriptions[i] );
 				startY += widget.Height + 5;
 			}
@@ -179,7 +177,7 @@ namespace ClassicalSharp {
 		
 		void SetWidgetToChange( KeyMapWidget widget ) {
 			Key oldKey = game.Keys[widget.Mapping];
-			if( oldKey != Key.Escape ) {
+			if( oldKey != Key.Escape && oldKey != Key.F12 ) {
 				const string format = "&ePress new key for \"{0}\".";
 				keyStatusWidget.SetText( String.Format( format, widget.Description ) );
 				widgetToChange = widget;
