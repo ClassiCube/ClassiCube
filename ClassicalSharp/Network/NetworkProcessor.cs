@@ -102,6 +102,12 @@ namespace ClassicalSharp {
 			
 			while( reader.size > 0 ) {
 				byte opcode = reader.buffer[0];
+				// Fix for older D3 servers which wrote one byte too many for HackControl packets.
+				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
+					reader.Remove( 1 );
+					game.LocalPlayer.CalculateJumpVelocity( 1.4f ); // assume default jump height
+					continue;
+				}
 				if( reader.size < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}
@@ -251,9 +257,11 @@ namespace ClassicalSharp {
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
 		bool sendWomId = false, sentWomId = false;
+		PacketId lastOpcode;
 		
 		void ReadPacket( byte opcode ) {
 			reader.Remove( 1 ); // remove opcode
+			lastOpcode = (PacketId)opcode;
 			
 			switch( (PacketId)opcode ) {
 				case PacketId.Handshake:
