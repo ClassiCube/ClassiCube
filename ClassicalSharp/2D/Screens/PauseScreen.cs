@@ -48,9 +48,9 @@ namespace ClassicalSharp {
 			MakeKeys( KeyMapping.Forward, descriptionsLeft, 10, out keysLeft );
 			leftEnd = CalculateMaxWidth( keysLeft );
 			
-			string[] descriptionsRight = { "Toggle fullscreen", "Toggle VSync", "Toggle 3rd person camera", "Change view distance", 
+			string[] descriptionsRight = { "Toggle VSync",  "Toggle fullscreen", "Toggle 3rd person camera", "Change view distance", 
 				"Toggle fly", "Speed", "Toggle noclip", "Fly up", "Fly down", "Display player list", "Hide gui" };
-			MakeKeys( KeyMapping.Fullscreen, descriptionsRight, leftEnd + 30, out keysRight );
+			MakeKeys( KeyMapping.VSync, descriptionsRight, leftEnd + 30, out keysRight );
 		}
 		
 		int leftEnd;

@@ -47,7 +47,7 @@
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_DX' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\output\debug\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>Full</DebugType>
@@ -71,7 +71,11 @@
     <Compile Include="2D\Screens\ErrorScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
-    <Compile Include="2D\Screens\NewPauseScreen.cs" />
+    <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\KeyMappingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
+    <Compile Include="2D\Screens\Menu\NewPauseScreen.cs" />
+    <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
     <Compile Include="2D\Screens\NormalScreen.cs" />
     <Compile Include="2D\Screens\PauseScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
@@ -187,6 +191,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="2D\Screens" />
+    <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\Particles" />
