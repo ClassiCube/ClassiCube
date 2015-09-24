@@ -70,8 +70,8 @@ namespace ClassicalSharp {
 			descWidget = TextWidget.Create( game, 0, 100, text, Docking.Centre, Docking.Centre, regularFont );
 		}
 		
-		protected void OnWidgetClick( Game game ) {
-			if( selectedWidget == buttons[okayIndex] ) {
+		protected void OnWidgetClick( Game game, ButtonWidget widget ) {
+			if( widget == buttons[okayIndex] ) {
 				string text = inputWidget.GetText();
 				if( inputWidget.Validator.IsValidValue( text ) )
 					targetWidget.SetValue( game, text );
@@ -88,9 +88,9 @@ namespace ClassicalSharp {
 				inputWidget.Dispose();
 			targetWidget = selectedWidget;
 			
-			int index = Array.IndexOf<ButtonWidget>( buttons, selectedWidget );
+			int index = Array.IndexOf<ButtonWidget>( buttons, widget );
 			MenuInputValidator validator = validators[index];
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, selectedWidget.GetValue( game ),
+			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, widget.GetValue( game ),
 			                                     Docking.Centre, Docking.Centre, regularFont, titleFont,
 			                                     hintFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",

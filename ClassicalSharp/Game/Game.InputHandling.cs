@@ -112,8 +112,6 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyMapping.ThirdPersonCamera] ) {
 				bool useThirdPerson = Camera is FirstPersonCamera;
 				SetCamera( useThirdPerson );
-			} else if( key == Keys[KeyMapping.VSync] ) {
-				Graphics.SetVSync( this, !VSync );
 			} else if( key == Keys[KeyMapping.ViewDistance] ) {
 				for( int i = 0; i < viewDistances.Length; i++ ) {
 					int newDist = viewDistances[i];
@@ -195,7 +193,7 @@ namespace ClassicalSharp {
 	
 	public enum KeyMapping {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-		SendChat, PauseOrExit, OpenInventory, Screenshot, VSync, Fullscreen,
+		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen,
 		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp,
 		FlyDown, PlayerList, HideGui,
 	}
@@ -215,9 +213,14 @@ namespace ClassicalSharp {
 				(key >= Key.Number0 && key <= Key.Number9); // block hotbar
 		}
 		
-		public bool IsKeyOkay( Key key, out string reason ) {
+		public bool IsKeyOkay( Key oldKey, Key key, out string reason ) {
+			if( oldKey == Key.Escape || oldKey == Key.F12 ) {
+				reason = "This mapping is locked";
+				return false;
+			}
+			
 			if( IsReservedKey( key ) ) {
-				reason = "Given key is reserved for gui";
+				reason = "New key is reserved";
 				return false;
 			}
 			reason = null;
@@ -229,18 +232,18 @@ namespace ClassicalSharp {
 			#if !__MonoCS__
 			Keys = new Key[] {
 				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
-				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F7, Key.F11, 
+				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, 
 				Key.F5, Key.F, Key.Z, Key.ShiftLeft, Key.X, Key.Q,
 				Key.E, Key.Tab, Key.F1 };
 			#else
-			Keys = new Key[23];
+			Keys = new Key[22];
 			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
 			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Y; Keys[7] = Key.T;
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
-			Keys[11] = Key.F12; Keys[12] = Key.F7; Keys[13] = Key.F11;
-			Keys[14] = Key.F5; Keys[15] = Key.F; Keys[16] = Key.Z;
-			Keys[17] = Key.ShiftLeft; Keys[18] = Key.X; Keys[19] = Key.Q;
-			Keys[20] = Key.E; Keys[21] = Key.Tab; Keys[22] = Key.F1;
+			Keys[11] = Key.F12; Keys[12] = Key.F11; Keys[13] = Key.F5; 
+			Keys[14] = Key.F; Keys[15] = Key.Z; Keys[16] = Key.ShiftLeft; 
+			Keys[17] = Key.X; Keys[18] = Key.Q; Keys[19] = Key.E; 
+			Keys[20] = Key.Tab; Keys[21] = Key.F1;
 			#endif
 			LoadKeyBindings();
 		}

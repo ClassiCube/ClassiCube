@@ -13,7 +13,7 @@ namespace ClassicalSharp.TexturePack {
 		Bitmap bmp;
 		FastBitmap fastBmp;
 		List<AnimationData> animations = new List<AnimationData>();
-		public bool Enabled;
+		public bool Enabled = true;
 		
 		public Animations( Game game ) {
 			this.game = game;

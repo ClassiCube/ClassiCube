@@ -50,12 +50,12 @@ namespace ClassicalSharp {
 				     g => ((int)g.Map.Weather).ToString(),
 				     (g, v) => g.Map.SetWeather( (Weather)Int32.Parse( v ) ) ),
 				
-				Make( 140, 50, "Water level", Docking.Centre,OnWidgetClick,
+				Make( 140, 50, "Water level", Docking.Centre, OnWidgetClick,
 				     g => g.Map.WaterHeight.ToString(),
 				     (g, v) => g.Map.SetWaterLevel( Int32.Parse( v ) ) ),
 				
 				Make( 0, 5, "Back to menu", Docking.BottomOrRight,
-				     g => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
+				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
 			
@@ -72,7 +72,8 @@ namespace ClassicalSharp {
 			okayIndex = buttons.Length - 1;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Docking vDocking, Action<Game> onClick, Func<Game, string> getter, Action<Game, string> setter ) {
+		ButtonWidget Make( int x, int y, string text, Docking vDocking, Action<Game, ButtonWidget> onClick,
+		                  Func<Game, string> getter, Action<Game, string> setter ) {
 			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Docking.Centre, vDocking, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;

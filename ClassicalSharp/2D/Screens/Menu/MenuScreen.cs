@@ -47,7 +47,8 @@ namespace ClassicalSharp {
 			for( int i = 0; i < buttons.Length; i++ ) {
 				ButtonWidget widget = buttons[i];
 				if( widget != null && widget.ContainsPoint( mouseX, mouseY ) ) {
-					widget.OnClick( game );
+					if( widget.OnClick != null )
+						widget.OnClick( game, widget );
 					return true;
 				}
 			}

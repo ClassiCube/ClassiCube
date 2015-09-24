@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static ButtonWidget Create( Game game, int x, int y, int width, int height, string text, Docking horizontal,
-		                                  Docking vertical, Font font, Action<Game> onClick ) {
+		                                  Docking vertical, Font font, Action<Game, ButtonWidget> onClick ) {
 			ButtonWidget widget = new ButtonWidget( game, font );
 			widget.Init();
 			widget.HorizontalDocking = horizontal;
@@ -77,7 +77,7 @@ namespace ClassicalSharp {
 			Y = newY;
 		}
 		
-		public Action<Game> OnClick;
+		public Action<Game, ButtonWidget> OnClick;
 		public Func<Game, string> GetValue;
 		public Action<Game, string> SetValue;
 		public bool Active;
