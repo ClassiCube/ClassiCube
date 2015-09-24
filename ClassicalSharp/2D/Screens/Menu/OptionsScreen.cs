@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 				
 				Make( -140, 50, "VSync active", Docking.Centre, OnWidgetClick,
 				     g => g.VSync ? "yes" : "no",
-				     (g, v) => g.VSync = v == "yes" ),
+				     (g, v) => g.Graphics.SetVSync( g, v == "yes" ) ),
 				Make( 140, -50, "Mouse sensitivity", Docking.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => g.MouseSensitivity = Int32.Parse( v ) ),
@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 				     } ),
 				
 				Make( 0, 5, "Back to menu", Docking.BottomOrRight,
-				     g => g.SetNewScreen( new NewPauseScreen( g ) ), null, null ),
+				     g => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
 			validators = new MenuInputValidator[] {

@@ -4,9 +4,9 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class NewPauseScreen : MenuScreen {
+	public class PauseScreen : MenuScreen {
 		
-		public NewPauseScreen( Game game ) : base( game ) {
+		public PauseScreen( Game game ) : base( game ) {
 		}		
 		
 		public override void Init() {
@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 			buttons = new ButtonWidget[] {
 				Make( 0, -50, "Options", Docking.Centre, g => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( 0, 0, "Environment settings", Docking.Centre, g => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( 0, 50, "Key mappings", Docking.Centre, g => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
+				Make( 0, 50, "Key mappings", Docking.Centre, g => g.SetNewScreen( new OldPauseScreen( g ) ) ), // TODO: Temp fix
 				Make( 0, 55, "Back to game", Docking.BottomOrRight, g => g.SetNewScreen( new NormalScreen( g ) ) ),
 				Make( 0, 5, "Exit", Docking.BottomOrRight, g => g.Exit() ),
 			};

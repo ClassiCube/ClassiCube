@@ -125,8 +125,6 @@ namespace ClassicalSharp {
 				SetViewDistance( viewDistances[0] );
 			} else if( key == Keys[KeyMapping.PauseOrExit] && !Map.IsNotLoaded ) {
 				SetNewScreen( new PauseScreen( this ) );
-			} else if( key == Key.F9 && !Map.IsNotLoaded ) { // TODO: Temp gui debug
-				SetNewScreen( new NewPauseScreen( this ) );
 			} else if( key == Keys[KeyMapping.OpenInventory] ) {
 				SetNewScreen( new BlockSelectScreen( this ) );
 			} else {

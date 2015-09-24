@@ -4,12 +4,12 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class PauseScreen : Screen {
+	public class OldPauseScreen : Screen {
 		
-		public PauseScreen( Game game ) : base( game ) {
+		public OldPauseScreen( Game game ) : base( game ) {
 		}
 		
-		TextWidget controlsWidget, gameWidget, exitWidget, keyStatusWidget;
+		TextWidget controlsWidget, gameWidget, keyStatusWidget;
 		KeyMapWidget[] keysLeft, keysRight;
 		KeyMapWidget widgetToChange;
 		
@@ -18,7 +18,6 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = true;
 			controlsWidget.Render( delta );
 			gameWidget.Render( delta );
-			exitWidget.Render( delta );
 			keyStatusWidget.Render( delta );
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				keysLeft[i].Render( delta );
@@ -40,8 +39,7 @@ namespace ClassicalSharp {
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
 			controlsWidget = TextWidget.Create( game, 0, 20, "&eControls list", Docking.Centre, Docking.LeftOrTop, titleFont );
 			keyStatusWidget = TextWidget.Create( game, 0, 70, "", Docking.Centre, Docking.BottomOrRight, keyStatusFont );
-			gameWidget = TextWidget.Create( game, 0, 40, "&eBack to game", Docking.Centre, Docking.BottomOrRight, titleFont );
-			exitWidget = TextWidget.Create( game, 0, 5, "&eExit", Docking.Centre, Docking.BottomOrRight, titleFont );
+			gameWidget = TextWidget.Create( game, 0, 40, "&eBack to menu", Docking.Centre, Docking.BottomOrRight, titleFont );
 			
 			string[] descriptionsLeft = { "Forward", "Back", "Left", "Right", "Jump", "Respawn", "Set spawn",
 				"Open chat", "Send chat", "Pause", "Open inventory", "Take screenshot" };
@@ -75,7 +73,6 @@ namespace ClassicalSharp {
 			keyStatusWidget.Dispose();
 			gameWidget.Dispose();
 			controlsWidget.Dispose();
-			exitWidget.Dispose();
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				keysLeft[i].Dispose();
 			}
@@ -87,7 +84,6 @@ namespace ClassicalSharp {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			gameWidget.OnResize( oldWidth, oldHeight, width, height );
 			controlsWidget.OnResize( oldWidth, oldHeight, width, height );
-			exitWidget.OnResize( oldWidth, oldHeight, width, height );
 			keyStatusWidget.OnResize( oldWidth, oldHeight, width, height );
 			for( int i = 0; i < keysLeft.Length; i++ ) {
 				keysLeft[i].OnResize( oldWidth, oldHeight, width, height );
@@ -149,13 +145,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button != MouseButton.Left ) return false;
-			if( exitWidget.ContainsPoint( mouseX, mouseY ) ) {
-				game.Exit();
-				return true;
-			} else if( gameWidget.ContainsPoint( mouseX, mouseY ) ) {
-				game.SetNewScreen( new NormalScreen( game ) );
-				return true;
+			if( button != MouseButton.Left ) return true;
+			if( gameWidget.ContainsPoint( mouseX, mouseY ) ) {
+				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( widgetToChange == null ) {
 				for( int i = 0; i < keysLeft.Length; i++ ) {
 					KeyMapWidget widget = keysLeft[i];
@@ -172,7 +164,7 @@ namespace ClassicalSharp {
 					}
 				}
 			}
-			return false;
+			return true;
 		}
 		
 		void SetWidgetToChange( KeyMapWidget widget ) {

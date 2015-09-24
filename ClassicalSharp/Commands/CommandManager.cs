@@ -15,12 +15,8 @@ namespace ClassicalSharp.Commands {
 			this.game = game;			
 			RegisterCommand( new CommandsCommand() );
 			RegisterCommand( new HelpCommand() );
-			RegisterCommand( new EnvCommand() );
 			RegisterCommand( new InfoCommand() );
 			RegisterCommand( new RenderTypeCommand() );
-			RegisterCommand( new ChatFontSizeCommand() );
-			RegisterCommand( new MouseSensitivityCommand() );
-			RegisterCommand( new ViewDistanceCommand() );
 			RegisterCommand( new TexturePackCommand() );
 		}
 		

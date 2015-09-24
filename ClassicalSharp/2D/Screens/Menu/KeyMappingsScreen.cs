@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 			
 			MakeKeys( KeyMapping.Forward, descriptionsLeft, -140 );	
 			MakeKeys( KeyMapping.Screenshot, descriptionsRight, 140 );
-			buttons[index] = Make( 0, 5, "Back to menu", Docking.BottomOrRight, g => g.SetNewScreen( new NewPauseScreen( g ) ) );
+			buttons[index] = Make( 0, 5, "Back to menu", Docking.BottomOrRight, g => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
 		int index;

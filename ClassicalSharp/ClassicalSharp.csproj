@@ -75,10 +75,10 @@
     <Compile Include="2D\Screens\Menu\KeyMappingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
-    <Compile Include="2D\Screens\Menu\NewPauseScreen.cs" />
+    <Compile Include="2D\Screens\Menu\PauseScreen.cs" />
     <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
     <Compile Include="2D\Screens\NormalScreen.cs" />
-    <Compile Include="2D\Screens\PauseScreen.cs" />
+    <Compile Include="2D\Screens\OldPauseScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Utils2D.cs" />

@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 				     (g, v) => g.Map.SetWaterLevel( Int32.Parse( v ) ) ),
 				
 				Make( 0, 5, "Back to menu", Docking.BottomOrRight,
-				     g => g.SetNewScreen( new NewPauseScreen( g ) ), null, null ),
+				     g => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
 			
