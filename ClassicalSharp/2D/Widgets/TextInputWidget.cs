@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			chatCaretTexture.Y1 = chatInputTexture.Y1;
 			Y = y;
 			Width = size.Width;
-			Width = size.Height;
+			Height = size.Height;
 		}
 
 		public override void Dispose() {

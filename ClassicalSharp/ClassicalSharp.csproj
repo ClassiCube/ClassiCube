@@ -73,6 +73,7 @@
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\KeyMappingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\NewPauseScreen.cs" />
     <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
@@ -83,6 +84,8 @@
     <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
+    <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
@@ -193,6 +196,7 @@
     <Folder Include="2D\Screens" />
     <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
+    <Folder Include="2D\Widgets\Menu" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\Particles" />
     <Folder Include="GraphicsAPI" />

@@ -9,25 +9,33 @@ namespace ClassicalSharp {
 		public MenuScreen( Game game ) : base( game ) {
 		}		
 		protected ButtonWidget[] buttons;
-		protected Font titleFont;
+		protected Font titleFont, regularFont;
 		
 		public override void Render( double delta ) {
-			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 255, 255, 255, 100 ) );
+			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
 			graphicsApi.Texturing = true;
-			for( int i = 0; i < buttons.Length; i++ )
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
 				buttons[i].Render( delta );
+			}
 			graphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {
-			for( int i = 0; i < buttons.Length; i++ )
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
 				buttons[i].Dispose();
+			}
 			titleFont.Dispose();
+			if( regularFont != null )
+				regularFont.Dispose();
 		}
 
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			for( int i = 0; i < buttons.Length; i++ )
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
 				buttons[i].OnResize( oldWidth, oldHeight, width, height );
+			}				
 		}
 		
 		public override bool HandlesAllInput {
@@ -38,7 +46,7 @@ namespace ClassicalSharp {
 			if( button != MouseButton.Left ) return false;
 			for( int i = 0; i < buttons.Length; i++ ) {
 				ButtonWidget widget = buttons[i];
-				if( widget.ContainsPoint( mouseX, mouseY ) ) {
+				if( widget != null && widget.ContainsPoint( mouseX, mouseY ) ) {
 					widget.OnClick( game );
 					return true;
 				}
@@ -47,16 +55,36 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			for( int i = 0; i < buttons.Length; i++ )
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
 				buttons[i].Active = false;
+			}
+				
 			for( int i = 0; i < buttons.Length; i++ ) {
 				ButtonWidget widget = buttons[i];
-				if( widget.ContainsPoint( mouseX, mouseY ) ) {
+				if( widget != null && widget.ContainsPoint( mouseX, mouseY ) ) {
 					widget.Active = true;
+					WidgetSelected( widget );
 					return true;
 				}
 			}
+			WidgetSelected( null );
 			return false;
+		}
+		
+		public override bool HandlesKeyPress( char key ) {
+			return true;
+		}
+		
+		public override bool HandlesKeyDown( Key key ) {
+			return true;
+		}
+		
+		public override bool HandlesKeyUp( Key key ) {
+			return true;
+		}
+		
+		protected virtual void WidgetSelected( ButtonWidget widget ) {			
 		}
 	}
 }

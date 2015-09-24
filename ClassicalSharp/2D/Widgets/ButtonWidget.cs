@@ -40,8 +40,10 @@ namespace ClassicalSharp {
 		
 		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
 		//static FastColour boxCol = new FastColour( 29, 126, 192 ), shadowCol = new FastColour( 16, 72, 109 );
+		public string Text;
 		public void SetText( string text ) {
 			graphicsApi.DeleteTexture( ref texture );
+			Text = text;
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Height = defaultHeight;
@@ -76,6 +78,8 @@ namespace ClassicalSharp {
 		}
 		
 		public Action<Game> OnClick;
+		public Func<Game, string> GetValue;
+		public Action<Game, string> SetValue;
 		public bool Active;
 		
 		void MakeTexture( string text ) {

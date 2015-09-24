@@ -13,6 +13,7 @@ namespace ClassicalSharp.TexturePack {
 		Bitmap bmp;
 		FastBitmap fastBmp;
 		List<AnimationData> animations = new List<AnimationData>();
+		public bool Enabled;
 		
 		public Animations( Game game ) {
 			this.game = game;
@@ -35,7 +36,7 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		public void Tick( double delta ) {
-			if( animations.Count == 0 ) return;
+			if( animations.Count == 0 || !Enabled ) return;
 			
 			foreach( AnimationData anim in animations ) {
 				ApplyAnimation( anim );

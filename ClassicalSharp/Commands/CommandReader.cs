@@ -38,25 +38,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public bool NextHexColour( out FastColour value ) {
-			value = default( FastColour );
-			string next = Next();
-			if( String.IsNullOrEmpty( next ) || next.Length < 6 ) {
-				return false;
-			}
-
-			try {
-				int offset = next.Length > 6 ? 1 : 0;
-				if( next.Length > 6 && ( next[0] != '#' || next.Length > 7 ) ) {
-					return false;
-				}
-				int r = Utils.ParseHex( next[offset + 0] ) * 16 + Utils.ParseHex( next[offset + 1] );
-				int g = Utils.ParseHex( next[offset + 2] ) * 16 + Utils.ParseHex( next[offset + 3] );
-				int b = Utils.ParseHex( next[offset + 4] ) * 16 + Utils.ParseHex( next[offset + 5] );
-				value = new FastColour( r, g, b );
-				return true;
-			} catch( FormatException ) {
-				return false;
-			}
+			return FastColour.TryParse( Next(), out value );
 		}
 		
 		public bool NextOf<T>( out T value, TryParseFunc<T> parser ) {
