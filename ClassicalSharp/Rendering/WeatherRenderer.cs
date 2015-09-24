@@ -96,6 +96,7 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			game.OnNewMap -= OnNewMap;
 			game.OnNewMapLoaded -= OnNewMapLoaded;
+			graphics.DeleteDynamicVb( weatherVb );
 		}
 		
 		int GetRainHeight( int x, int z ) {
