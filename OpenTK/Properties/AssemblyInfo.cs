@@ -9,4 +9,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("OpenTK")]
 [assembly: System.Security.AllowPartiallyTrustedCallers]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("0.8")]
+[assembly: AssemblyVersion("0.95")]
