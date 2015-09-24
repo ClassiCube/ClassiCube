@@ -142,6 +142,12 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
+			try {
+				Options.Load();
+			} catch( IOException ) {
+				Utils.LogWarning( "Unable to load options.txt" );
+			}
+			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
@@ -201,6 +207,8 @@ namespace ClassicalSharp {
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
+			Options.Set( "viewdist", distance.ToString() );
+			Options.Save();
 			Raise( ViewDistanceChanged );
 			UpdateProjection();
 		}
@@ -332,10 +340,9 @@ namespace ClassicalSharp {
 			if( activeScreen != null ) {
 				activeScreen.Dispose();
 			}
-			if( activeScreen != null && activeScreen.HandlesAllInput ) {
-				Camera.RegrabMouse();
+			if( activeScreen != null && activeScreen.HandlesAllInput )
 				lastClick = DateTime.UtcNow;
-			}
+			
 			activeScreen = screen;
 			if( screen != null ) {
 				screen.game = this;
@@ -381,7 +388,7 @@ namespace ClassicalSharp {
 			Players.Dispose();
 			AsyncDownloader.Dispose();
 			if( writer != null ) {
-				writer.Close();
+				writer.Dispose();
 			}
 			if( activeScreen != null ) {
 				activeScreen.Dispose();

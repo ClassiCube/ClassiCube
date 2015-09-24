@@ -15,42 +15,45 @@ namespace ClassicalSharp {
 			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			
 			buttons = new ButtonWidget[] {
-				Make( -140, -100, "Clouds colour", Docking.Centre, OnWidgetClick,
+				Make( -140, -150, "Clouds colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.CloudsCol.ToRGBHexString(),
 				     (g, v) => g.Map.SetCloudsColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, -50, "Sky colour", Docking.Centre, OnWidgetClick,
+				Make( -140, -100, "Sky colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.SkyCol.ToRGBHexString(),
 				     (g, v) => g.Map.SetSkyColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, 0, "Fog colour", Docking.Centre, OnWidgetClick,
+				Make( -140, -50, "Fog colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.FogCol.ToRGBHexString(),
 				     (g, v) => g.Map.SetFogColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, 50, "Clouds speed", Docking.Centre, OnWidgetClick,
-				     g => {
-				     	StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	return env == null ? "(not active)" : env.CloudsSpeed.ToString();
-				     },
-				     (g, v) => {
-				     	StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
+				Make( -140, 0, "Clouds speed", Docking.Centre, OnWidgetClick,
+				     g => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
+				     	return env == null ? "(not active)" : env.CloudsSpeed.ToString(); },
+				     (g, v) => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
 				     	if( env != null ) 
-				     		env.CloudsSpeed = Single.Parse( v );
-				     } ),
+				     		env.CloudsSpeed = Single.Parse( v ); } ),
 				
-				Make( 140, -100, "Sunlight colour", Docking.Centre, OnWidgetClick,
+				Make( -140, 50, "Clouds offset", Docking.Centre, OnWidgetClick,
+				     g => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
+				     	return env == null ? "(not active)" : env.CloudsOffset.ToString(); },
+				     (g, v) => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
+				     	if( env != null ) 
+				     		env.SetCloudsOffset( Int32.Parse( v ) ); } ),
+				
+				Make( 140, -150, "Sunlight colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.Sunlight.ToRGBHexString(),
 				     (g, v) => g.Map.SetSunlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, -50, "Shadow colour", Docking.Centre, OnWidgetClick,
+				Make( 140, -100, "Shadow colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.Shadowlight.ToRGBHexString(),
 				     (g, v) => g.Map.SetShadowlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, 0, "Weather", Docking.Centre, OnWidgetClick,
+				Make( 140, -50, "Weather", Docking.Centre, OnWidgetClick,
 				     g => ((int)g.Map.Weather).ToString(),
 				     (g, v) => g.Map.SetWeather( (Weather)Int32.Parse( v ) ) ),
 				
-				Make( 140, 50, "Water level", Docking.Centre, OnWidgetClick,
+				Make( 140, 0, "Water level", Docking.Centre, OnWidgetClick,
 				     g => g.Map.WaterHeight.ToString(),
 				     (g, v) => g.Map.SetWaterLevel( Int32.Parse( v ) ) ),
 				
@@ -64,6 +67,7 @@ namespace ClassicalSharp {
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new RealValidator( 0, 1000 ),
+				new IntegerValidator( -1000, 1000 ),
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new IntegerValidator( 0, 2 ),

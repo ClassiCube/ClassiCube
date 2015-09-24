@@ -13,6 +13,24 @@ namespace ClassicalSharp {
 			return OptionsSet.TryGetValue( key, out value ) ? value : null;
 		}
 		
+		public static bool TryGetInt( string key, out int valueInt ) {
+			string value;
+			valueInt = 0;
+			OptionsSet.TryGetValue( key, out value );
+			
+			if( String.IsNullOrEmpty( value ) ) return false;
+			return Int32.TryParse( value, out valueInt );
+		}
+		
+		public static int GetInt( string key, int min, int max, int defValue ) {
+			int valueInt = 0;
+			if( TryGetInt( key, out valueInt ) ) {
+				Utils.Clamp( ref valueInt, min, max );
+				return valueInt;
+			}
+			return defValue;
+		}
+		
 		public static void Set( string key, string value ) {
 			OptionsSet[key] = value;
 		}

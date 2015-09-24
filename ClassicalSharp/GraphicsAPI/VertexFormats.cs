@@ -68,12 +68,6 @@ namespace ClassicalSharp {
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
-		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, Color c ) {
-			X = x; Y = y; Z = z;
-			U = u; V = v;
-			R = c.R; G = c.G; B = c.B; A = c.A;
-		}
-		
 		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, byte r, byte g, byte b, byte a ) {
 			X = x; Y = y; Z = z;
 			U = u; V = v;

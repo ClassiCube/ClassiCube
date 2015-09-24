@@ -249,12 +249,6 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadKeyBindings() {
-			try {
-				Options.Load();
-			} catch( IOException ) {
-				Utils.LogWarning( "Unable to load options.txt" );
-				return;
-			}
 			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];

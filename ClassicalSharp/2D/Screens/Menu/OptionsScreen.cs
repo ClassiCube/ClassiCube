@@ -15,16 +15,16 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				Make( -140, -50, "Use animations", Docking.Centre, OnWidgetClick,
-				     g => g.Animations.Enabled ? "y" : "n",
-				     (g, v) => g.Animations.Enabled = v == "y" ),
+				     g => g.Animations.Enabled ? "yes" : "no",
+				     (g, v) => g.Animations.Enabled = v == "yes" ),
 				
 				Make( -140, 0, "View distance", Docking.Centre, OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ) ) ),
 				
 				Make( -140, 50, "VSync active", Docking.Centre, OnWidgetClick,
-				     g => g.VSync ? "y" : "n",
-				     (g, v) => g.Graphics.SetVSync( g, v == "y" ) ),
+				     g => g.VSync ? "yes" : "no",
+				     (g, v) => g.Graphics.SetVSync( g, v == "yes" ) ),
 				Make( 140, -50, "Mouse sensitivity", Docking.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => g.MouseSensitivity = Int32.Parse( v ) ),

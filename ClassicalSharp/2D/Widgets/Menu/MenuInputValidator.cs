@@ -95,19 +95,19 @@ namespace ClassicalSharp {
 	public sealed class BooleanValidator : MenuInputValidator {
 		
 		public BooleanValidator() {
-			Range = "&7(y or n)";
+			Range = "&7(yes or no)";
 		}
 		
 		public override bool IsValidChar( char c ) {
-			return c == 'y' || c == 'n';
+			return c >= 'a' && c <= 'z';
 		}
 		
 		public override bool IsValidString( string s ) {
-			return s.Length <= 1;
+			return s.Length <= 3;
 		}	
 		
 		public override bool IsValidValue( string s ) {
-			return s == "y" || s == "n";
+			return s == "yes" || s == "no";
 		}
 	}
 }

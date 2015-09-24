@@ -75,6 +75,7 @@ namespace ClassicalSharp {
 			hotbar.Init();
 			if( game.CursorVisible )
 				game.CursorVisible = false;
+			game.Camera.RegrabMouse();
 		}
 		
 		public override bool HandlesAllInput {

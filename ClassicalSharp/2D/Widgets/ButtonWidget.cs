@@ -113,6 +113,7 @@ namespace ClassicalSharp {
 				texture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 		}
+		
 		GraphicsPath MakePath( float offset, float width, float height ) {
 			GraphicsPath path = new GraphicsPath();
 			float x1 = offset, y1 = offset;
