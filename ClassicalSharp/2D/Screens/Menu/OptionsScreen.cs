@@ -8,10 +8,6 @@ namespace ClassicalSharp {
 		public OptionsScreen( Game game ) : base( game ) {
 		}
 		
-		public override void Render( double delta ) {
-			base.Render( delta );
-		}
-		
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );

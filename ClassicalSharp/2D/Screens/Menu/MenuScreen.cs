@@ -11,14 +11,15 @@ namespace ClassicalSharp {
 		protected ButtonWidget[] buttons;
 		protected Font titleFont, regularFont;
 		
-		public override void Render( double delta ) {
+		protected void RenderMenuBounds() {
 			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
-			graphicsApi.Texturing = true;
+		}
+		
+		protected void RenderMenuButtons( double delta ) {
 			for( int i = 0; i < buttons.Length; i++ ) {
 				if( buttons[i] == null ) continue;
 				buttons[i].Render( delta );
 			}
-			graphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {

@@ -9,6 +9,13 @@ namespace ClassicalSharp {
 		public PauseScreen( Game game ) : base( game ) {
 		}		
 		
+		public override void Render( double delta ) {
+			RenderMenuBounds();
+			graphicsApi.Texturing = true;
+			RenderMenuButtons( delta );
+			graphicsApi.Texturing = false;
+		}
+		
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[] {

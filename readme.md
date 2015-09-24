@@ -32,13 +32,11 @@ These are expected to be in the form: `<username> <mppass> <ip> <port> <skin ser
 
 #### Key combinations
 * Press escape (after joining a world) to switch to the pause menu. 
-* The pause menu lists all of the key combinations used by the client. 
-  These key combinations can be reassigned by clicking on a key combination.
-* Press escape or click "Back to game" to return to the game.
+* Pause menu -> Key mappings lists all of the key combinations used by the client. 
 
 Some points to note:
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
-* Press F6 to change view distance. A smaller number of visible chunks can improve performance.
+* Press F6 to cycle view distance. A smaller number of visible chunks can improve performance.
 * Press F7 to toggle VSync on or off. (on minimises CPU usage)
 
 #### Client commands

@@ -16,11 +16,14 @@ namespace ClassicalSharp {
 		protected int okayIndex;
 		
 		public override void Render( double delta ) {
-			base.Render( delta );
+			RenderMenuBounds();
+			graphicsApi.Texturing = true;
+			RenderMenuButtons( delta );
 			if( inputWidget != null )
 				inputWidget.Render( delta );
 			if( descWidget != null )
 				descWidget.Render( delta );
+			graphicsApi.Texturing = false;
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
@@ -66,7 +69,7 @@ namespace ClassicalSharp {
 			if( descWidget != null )
 				descWidget.Dispose();
 			
-			string text = widget.Text + " : " + widget.GetValue( game );
+			string text = widget.Text + ": " + widget.GetValue( game );
 			descWidget = TextWidget.Create( game, 0, 100, text, Docking.Centre, Docking.Centre, regularFont );
 		}
 		
