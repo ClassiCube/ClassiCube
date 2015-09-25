@@ -132,7 +132,7 @@ namespace ClassicalSharp {
 				byte block = mapData[mapIndex];
 				if( info.BlocksLight[block] ) {
 					heightmap[index] = (short)( y - 1 );
-					return y;
+					return y - 1;
 				}
 				mapIndex -= oneY;
 			}

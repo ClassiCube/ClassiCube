@@ -149,19 +149,15 @@ namespace ClassicalSharp {
 		}
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
-			int cx = x >> 4;
-			int cy = y >> 4;
-			int cz = z >> 4;
+			int cx = x >> 4, bX = x & 0x0F;
+			int cy = y >> 4, bY = y & 0x0F;
+			int cz = z >> 4, bZ = z & 0x0F;
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
-			int newLightcy = newHeight == -1 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight == -1 ? 0 : oldHeight >> 4;
+			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
+			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
 			
-			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
-			int bX = x & 0x0F; // % 16
-			int bY = y & 0x0F;
-			int bZ = z & 0x0F;
-			
+			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );			
 			if( bX == 0 && cx > 0 ) ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
 			if( bY == 0 && cy > 0 ) ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
 			if( bZ == 0 && cz > 0 ) ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
