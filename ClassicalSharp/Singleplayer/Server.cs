@@ -8,8 +8,10 @@ namespace ClassicalSharp.Singleplayer {
 	public sealed class SinglePlayerServer : INetworkProcessor {
 		
 		Game game;
+		Physics physics;
 		public SinglePlayerServer( Game window ) {
 			game = window;
+			physics = new Physics( game );
 		}
 		
 		public override bool IsSinglePlayer {
@@ -39,6 +41,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+			if( place ) 
+				physics.OnBlockPlaced( x, y, z, block );
 		}
 		
 		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
@@ -49,6 +53,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
+			physics.Tick();
 		}
 		
 		internal void NewMap() {
@@ -73,6 +78,7 @@ namespace ClassicalSharp.Singleplayer {
 			ResetPlayerPosition();
 			game.AddChat( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
+			physics.ResetMap();
 		}
 		
 		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {

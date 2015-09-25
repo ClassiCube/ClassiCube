@@ -167,6 +167,7 @@
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\Commands.cs" />
+    <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="TexturePack\Animations.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />

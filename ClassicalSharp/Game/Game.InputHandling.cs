@@ -157,18 +157,18 @@ namespace ClassicalSharp {
 				Vector3I pos = SelectedPos.BlockPos;
 				byte block = Map.GetBlock( pos );
 				if( block != 0 && CanDelete[block] ) {
-					ParticleManager.BreakBlockEffect( pos, block );
-					Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)HeldBlock );
+					ParticleManager.BreakBlockEffect( pos, block );					
 					UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
+					Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)HeldBlock );
 				}
 			} else if( right ) {
 				Vector3I pos = SelectedPos.TranslatedPos;
 				if( !Map.IsValidPos( pos ) ) return;
 				
 				Block block = HeldBlock;
-				if( !CanPick( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {
-					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
+				if( !CanPick( Map.GetBlock( pos ) ) && CanPlace[(int)block] ) {					
 					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
+					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
 				}
 			}
 		}

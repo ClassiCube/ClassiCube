@@ -585,8 +585,9 @@ namespace ClassicalSharp {
 						byte blockId = reader.ReadUInt8();
 						bool canPlace = reader.ReadUInt8() != 0;
 						bool canDelete = reader.ReadUInt8() != 0;
+
 						if( blockId == 0 ) {
-							for( int i = 1; i < game.CanPlace.Length; i++ ) {
+							for( int i = 1; i < BlockInfo.CpeBlocksCount; i++ ) {
 								game.CanPlace[i] = canPlace;
 								game.CanDelete[i] = canDelete;
 							}

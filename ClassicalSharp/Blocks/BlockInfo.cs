@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 			SetEmitsLight( Block.Magma, true ); SetEmitsLight( Block.Fire, true );
 			SetupCullingCache();
 		}
-		
+
 		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
 			for( int tile = (int)Block.Stone; tile <= (int)Block.Obsidian; tile++ ) {
 				canPlace[tile] = true;
