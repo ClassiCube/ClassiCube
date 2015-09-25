@@ -124,6 +124,7 @@
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\IMapFile.cs" />
     <Compile Include="Map\Map.cs" />
+    <Compile Include="Map\MapCw.cs" />
     <Compile Include="Map\MapDat.cs" />
     <Compile Include="Map\MapFcm3.cs" />
     <Compile Include="Model\BlockModel.cs" />
