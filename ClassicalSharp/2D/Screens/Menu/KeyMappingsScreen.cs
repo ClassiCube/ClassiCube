@@ -63,7 +63,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( widget != null ) {
+			if( key == Key.Escape ) {
+				game.SetNewScreen( new NormalScreen( game ) );
+			} else if( widget != null ) {
 				int index = Array.IndexOf<ButtonWidget>( buttons, widget );
 				KeyMapping mapping = (KeyMapping)index;
 				Key oldKey = game.Keys[mapping];
