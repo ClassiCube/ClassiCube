@@ -49,6 +49,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void Dispose() {
+			physics.Dispose();
 		}
 		
 		public override void Tick( double delta ) {
@@ -78,7 +79,6 @@ namespace ClassicalSharp.Singleplayer {
 			ResetPlayerPosition();
 			game.AddChat( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
-			physics.ResetMap();
 		}
 		
 		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {

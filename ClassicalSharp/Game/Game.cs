@@ -253,9 +253,9 @@ namespace ClassicalSharp {
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
-				WeatherRenderer.Render( e.Time );
 				if( SelectedPos.Valid )
 					Picking.Render( e.Time, SelectedPos );
+				WeatherRenderer.Render( e.Time );				
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );

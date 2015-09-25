@@ -63,6 +63,8 @@ namespace ClassicalSharp.Singleplayer {
 				mapFile = new MapDat();
 			} else if( path.EndsWith( ".fcm" ) ) {
 				mapFile = new MapFcm3();
+			} else if( path.EndsWith( ".cw" ) ) {
+			    mapFile = new MapCw();
 			} else {
 				game.AddChat( "&e/client loadmap: Map format of file \"" + path + "\" not supported" );
 				return;

@@ -20,6 +20,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.Map;
 			info = game.BlockInfo;
+			game.OnNewMapLoaded += ResetMap;
 		}
 		
 		bool CheckItem( Queue<uint> queue, out int posIndex ) {
@@ -77,7 +78,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 		}
 		
-		public void ResetMap() {
+		void ResetMap( object sender, EventArgs e ) {
 			Lava.Clear();
 			Water.Clear();
 			Falling.Clear();
@@ -85,12 +86,15 @@ namespace ClassicalSharp.Singleplayer {
 			width = map.Width;
 			length = map.Length;
 			height = map.Height;
-			oneY = height * width;
+			oneY = width * length;
 			volume = height * width * length;
 		}
 		
+		public void Dispose() {
+			game.OnNewMapLoaded -= ResetMap;
+		}
+		
 		#region General
-		// TODO: tree growing
 		
 		void TickRandomBlocks() {
 			for( int y = 0; y < height; y += 16 ) {

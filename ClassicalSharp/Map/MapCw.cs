@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using System.Net;
+using System.Text;
 
 namespace ClassicalSharp {
 
@@ -14,22 +14,98 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool SupportsSaving {
-			get { return true; }
+			get { return false; }
 		}
 
 		BinaryReader reader;
+		Game game;
+		Map map;
 		NbtTag invalid = default( NbtTag );
+		
 		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Decompress ) ) {
 				reader = new BinaryReader( wrapper );
 				if( reader.ReadByte() != (byte)NbtTagType.Compound )
 					throw new InvalidDataException( "Nbt file must start with Tag_Compound" );
+				this.game = game;
+				map = game.Map;
 				
 				invalid.TagId = NbtTagType.Invalid;
 				NbtTag root = ReadTag( (byte)NbtTagType.Compound, true );
+				Dictionary<string, NbtTag> children = (Dictionary<string, NbtTag>)root.Value;
+				if( children.ContainsKey( "Metadata" ) )
+					ParseMetadata( children );
+				
+				Dictionary<string, NbtTag> spawn = (Dictionary<string, NbtTag>)children["Spawn"].Value;
+				LocalPlayer p = game.LocalPlayer;
+				p.SpawnPoint.X = (short)spawn["X"].Value;
+				p.SpawnPoint.Y = (short)spawn["Y"].Value;
+				p.SpawnPoint.Z = (short)spawn["Z"].Value;
+				
+				width = (short)children["X"].Value;
+				height = (short)children["Y"].Value;
+				length = (short)children["Z"].Value;
+				return (byte[])children["BlockArray"].Value;
 			}
-			length = width = height = 0;
-			return null;
+		}
+		
+		void ParseMetadata( Dictionary<string, NbtTag> children ) {
+			Dictionary<string, NbtTag> metadata = (Dictionary<string, NbtTag>)children["Metadata"].Value;
+			NbtTag cpeTag;
+			LocalPlayer p = game.LocalPlayer;			
+			if( !metadata.TryGetValue( "CPE", out cpeTag ) ) return;
+			
+			metadata = (Dictionary<string, NbtTag>)cpeTag.Value;
+			if( CheckKey( "ClickDistance", 1, metadata ) ) {
+				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
+			}
+			if( CheckKey( "EnvColors", 1, metadata ) ) {
+				map.SetSkyColour( GetColour( "Sky", Map.DefaultSkyColour ) );
+				map.SetCloudsColour( GetColour( "Cloud", Map.DefaultCloudsColour ) );
+				map.SetFogColour( GetColour( "Fog", Map.DefaultFogColour ) );
+				map.SetSunlight( GetColour( "Sunlight", Map.DefaultSunlight ) );
+				map.SetShadowlight( GetColour( "Ambient", Map.DefaultShadowlight ) );
+			}
+			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
+				string url = (string)curCpeExt["TextureURL"].Value;
+				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
+				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
+				map.SetSidesBlock( (Block)sidesBlock );
+				map.SetEdgeBlock( (Block)edgeBlock );
+				map.SetWaterLevel( (short)curCpeExt["SideLevel"].Value );
+			}
+			if( CheckKey( "EnvWeatherType", 1, metadata ) ) {
+				byte weather = (byte)curCpeExt["WeatherType"].Value;
+				map.SetWeather( (Weather)weather );
+			}
+		}
+		
+		FastColour GetColour( string key, FastColour def ) {
+			NbtTag tag;
+			if( !curCpeExt.TryGetValue( key, out tag ) )
+				return def;
+			
+			Dictionary<string, NbtTag> compound = (Dictionary<string, NbtTag>)tag.Value;
+			short r = (short)compound["R"].Value;
+			short g = (short)compound["G"].Value;
+			short b = (short)compound["B"].Value;
+			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
+			return invalid ? def : new FastColour( r, g, b );
+		}
+		
+		Dictionary<string, NbtTag> curCpeExt;
+		bool CheckKey( string key, int version, Dictionary<string, NbtTag> tag ) {
+			NbtTag value;
+			if( !tag.TryGetValue( key, out value ) ) return false;
+			if( value.TagId != NbtTagType.Compound ) return false;
+			
+			tag = (Dictionary<string, NbtTag>)value.Value;
+			if( !tag.TryGetValue( "ExtensionVersion", out value ) ) return false;
+			if( (int)value.Value == version ) {
+				curCpeExt = tag;
+				return true;
+			}
+			return false;
 		}
 		
 		unsafe NbtTag ReadTag( byte typeId, bool readTagName ) {
@@ -97,22 +173,12 @@ namespace ClassicalSharp {
 		class NbtList {
 			public NbtTagType ChildTagId;
 			public object[] ChildrenValues;
-		}
-		
+		}		
 		
 		enum NbtTagType : byte {
-			End = 0,
-			Int8 = 1,
-			Int16 = 2,
-			Int32 = 3,
-			Int64 = 4,
-			Real32 = 5,
-			Real64 = 6,
-			Int8Array = 7,
-			String = 8,
-			List = 9,
-			Compound = 10,
-			Int32Array = 11,
+			End, Int8, Int16, Int32, Int64, 
+			Real32, Real64, Int8Array, String, 
+			List, Compound, Int32Array,
 			Invalid = 255,
 		}
 		
