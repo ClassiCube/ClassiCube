@@ -19,9 +19,10 @@ namespace ClassicalSharp {
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[] {
-				Make( 0, -50, "Options", Docking.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
-				Make( 0, 0, "Environment settings", Docking.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( 0, 50, "Key mappings", Docking.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
+				Make( 0, -100, "Options", Docking.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
+				Make( 0, -50, "Environment settings", Docking.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
+				Make( 0, 0, "Key mappings", Docking.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
+				//Make( 0, 50, "Load/Save/Gen level", Docking.Centre, (g, w) => { } ),
 				Make( 0, 55, "Back to game", Docking.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
 				Make( 0, 5, "Quit game", Docking.BottomOrRight, (g, w) => g.Exit() ),
 			};

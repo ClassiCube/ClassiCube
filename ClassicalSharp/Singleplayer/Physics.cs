@@ -16,6 +16,12 @@ namespace ClassicalSharp.Singleplayer {
 		const uint posMask =  0x07FFFFFF;
 		const int tickShift = 27;
 		
+		bool enabled = true;
+		public bool Enabled {
+			get { return enabled; }
+			set { enabled = value; ClearQueuedEvents(); }
+		}
+		
 		public Physics( Game game ) {
 			this.game = game;
 			map = game.Map;
@@ -54,6 +60,8 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
+			if( !Enabled ) return;
+			
 			//if( (tickCount % 5) == 0 ) {
 			TickLava();
 			TickWater();
@@ -64,6 +72,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public void OnBlockPlaced( int x, int y, int z, byte block ) {
+			if( !Enabled ) return;
+			
 			int index = ( y * length + z ) * width + x;
 			if( block == (byte)Block.Lava ) {
 				Lava.Enqueue( defLavaTick | (uint)index );
@@ -79,15 +89,18 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void ResetMap( object sender, EventArgs e ) {
-			Lava.Clear();
-			Water.Clear();
-			Falling.Clear();
-			
+			ClearQueuedEvents();
 			width = map.Width;
 			length = map.Length;
 			height = map.Height;
 			oneY = width * length;
 			volume = height * width * length;
+		}
+		
+		void ClearQueuedEvents() {
+			Lava.Clear();
+			Water.Clear();
+			Falling.Clear();
 		}
 		
 		public void Dispose() {

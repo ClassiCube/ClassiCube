@@ -8,7 +8,7 @@ namespace ClassicalSharp.Singleplayer {
 	public sealed class SinglePlayerServer : INetworkProcessor {
 		
 		Game game;
-		Physics physics;
+		internal Physics physics;
 		public SinglePlayerServer( Game window ) {
 			game = window;
 			physics = new Physics( game );

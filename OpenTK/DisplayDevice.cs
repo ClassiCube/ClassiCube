@@ -178,13 +178,16 @@ namespace OpenTK {
 		public static DisplayDevice Default { get { return primary_display; } }
 
 		DisplayResolution FindResolution(int width, int height, int bitsPerPixel, float refreshRate) {
-			return available_resolutions.Find(delegate(DisplayResolution test) {
-			                                  	return
-			                                  		((width > 0 && width == test.Width) || width == 0) &&
-			                                  		((height > 0 && height == test.Height) || height == 0) &&
-			                                  		((bitsPerPixel > 0 && bitsPerPixel == test.BitsPerPixel) || bitsPerPixel == 0) &&
-			                                  		((refreshRate > 0 && System.Math.Abs(refreshRate - test.RefreshRate) < 1.0) || refreshRate == 0);
-			                                  });
+			for( int i = 0; i < available_resolutions.Count; i++ ) {
+				DisplayResolution res = available_resolutions[i];
+				bool match = ((width > 0 && width == res.Width) || width == 0) &&
+					((height > 0 && height == res.Height) || height == 0) &&
+					((bitsPerPixel > 0 && bitsPerPixel == res.BitsPerPixel) || bitsPerPixel == 0) &&
+					((refreshRate > 0 && System.Math.Abs(refreshRate - res.RefreshRate) < 1.0) || refreshRate == 0);
+				
+				if( match ) return res;
+			}
+			return null;
 		}
 
 		/// <summary> Returns a System.String representing this DisplayDevice. </summary>

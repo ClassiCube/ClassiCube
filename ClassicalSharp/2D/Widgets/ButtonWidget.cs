@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 
 namespace ClassicalSharp {
@@ -97,38 +95,12 @@ namespace ClassicalSharp {
 				using( Graphics g = Graphics.FromImage( bmp ) ) {
 					args.SkipPartsCheck = true;
 					g.SmoothingMode = SmoothingMode.HighQuality;
-					// Draw shadow rectangle
-					GraphicsPath path = MakePath( 1.3f, baseSize.Width, baseSize.Height );
-					using( Brush brush = new SolidBrush( shadowCol ) )
-						g.FillPath( brush, path );
-					path.Dispose();
-					// Draw base rectangle
-					path = MakePath( 0, baseSize.Width, baseSize.Height );
-					using( Brush brush = new SolidBrush( boxCol ) )
-						g.FillPath( brush, path );
-					path.Dispose();
-					
+					Utils2D.DrawRoundedRect( g, shadowCol, 1.3f, 1.3f, baseSize.Width, baseSize.Height );
+					Utils2D.DrawRoundedRect( g, boxCol, 0, 0, baseSize.Width, baseSize.Height );					
 					Utils2D.DrawText( g, font, ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
 				}
 				texture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
-		}
-		
-		GraphicsPath MakePath( float offset, float width, float height ) {
-			GraphicsPath path = new GraphicsPath();
-			float x1 = offset, y1 = offset;
-			float x2 = offset + width, y2 = offset + height;
-			const float r = 3, dia = r * 2;
-			path.AddArc( x1, y1, dia, dia, 180, 90 );
-			path.AddLine( x1 + r, y1, x2 - r, y1 );
-			path.AddArc( x2 - dia, y1, dia, dia, 270, 90 );
-			path.AddLine( x2, y1 + r, x2, y2 - r );
-			path.AddArc( x2 - dia, y2 - dia, dia, dia, 0, 90 );
-			path.AddLine( x1 + r, y2, x2 - r, y2 );
-			path.AddArc( x1, y2 - dia, dia, dia, 90, 90 );
-			path.AddLine( x1, y1 + r, x1, y2 - r );
-			path.CloseAllFigures();
-			return path;
 		}
 	}
 }
