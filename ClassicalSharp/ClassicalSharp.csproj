@@ -128,7 +128,7 @@
     <Compile Include="Map\MapCw.Exporter.cs" />
     <Compile Include="Map\MapCw.Importer.cs" />
     <Compile Include="Map\MapDat.Importer.cs" />
-    <Compile Include="Map\MapFcm3.Exporter.cs" />
+    <Compile Include="Map\MapFcm3.Importer.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />

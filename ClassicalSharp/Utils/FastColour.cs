@@ -59,6 +59,8 @@ namespace ClassicalSharp {
 			return result;
 		}
 		
+		
+		
 		public Color ToColor() {
 			return Color.FromArgb( A, R, G, B );
 		}

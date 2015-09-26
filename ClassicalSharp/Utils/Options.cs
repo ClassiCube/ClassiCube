@@ -7,32 +7,36 @@ namespace ClassicalSharp {
 	public static class Options {
 		
 		static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
+		public static bool HasChanged;
 		
 		public static string Get( string key ) {
 			string value;
 			return OptionsSet.TryGetValue( key, out value ) ? value : null;
 		}
 		
-		public static bool TryGetInt( string key, out int valueInt ) {
+		public static int GetInt( string key, int min, int max, int defValue ) {
 			string value;
-			valueInt = 0;
-			OptionsSet.TryGetValue( key, out value );
-			
-			if( String.IsNullOrEmpty( value ) ) return false;
-			return Int32.TryParse( value, out valueInt );
+			int valueInt = 0;
+			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value ) 
+			   || !Int32.TryParse( value, out valueInt ) )
+				return defValue;
+
+			Utils.Clamp( ref valueInt, min, max );
+			return valueInt;
 		}
 		
-		public static int GetInt( string key, int min, int max, int defValue ) {
-			int valueInt = 0;
-			if( TryGetInt( key, out valueInt ) ) {
-				Utils.Clamp( ref valueInt, min, max );
-				return valueInt;
-			}
-			return defValue;
+		public static bool GetBool( string key, bool defValue ) {
+			string value;
+			bool valueBool = false;
+			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value ) 
+			   || !Boolean.TryParse( value, out valueBool ) )
+				return defValue;
+			return valueBool;
 		}
 		
 		public static void Set( string key, string value ) {
 			OptionsSet[key] = value;
+			HasChanged = true;
 		}
 		
 		public const string OptionsFile = "options.txt";

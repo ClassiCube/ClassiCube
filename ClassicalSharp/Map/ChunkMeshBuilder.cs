@@ -172,9 +172,8 @@ namespace ClassicalSharp {
 							countIndex += TileSide.Top;
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
-								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, TileSide.Top );
-								AddSpriteVertices( tile, count );
-								counts[countIndex] = (byte)count;
+								AddSpriteVertices( tile, 1 );
+								counts[countIndex] = 1;
 							}
 						} else {
 							X = x; Y = y; Z = z;

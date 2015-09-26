@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 		internal string skinServer, chatInInputBuffer, defaultTexPack;
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
-		FpsScreen fpsScreen;		
+		FpsScreen fpsScreen;
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -97,6 +97,7 @@ namespace ClassicalSharp {
 			} catch( IOException ) {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
+			Keys = new KeyMap();
 			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
@@ -159,7 +160,6 @@ namespace ClassicalSharp {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
 			Options.Set( "viewdist", distance.ToString() );
-			Options.Save();
 			Raise( ViewDistanceChanged );
 			UpdateProjection();
 		}
@@ -206,7 +206,7 @@ namespace ClassicalSharp {
 				MapRenderer.Render( e.Time );
 				if( SelectedPos.Valid )
 					Picking.Render( e.Time, SelectedPos );
-				WeatherRenderer.Render( e.Time );				
+				WeatherRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
@@ -351,6 +351,14 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref CloudsTextureId );
 			Graphics.DeleteTexture( ref RainTextureId );
 			Graphics.DeleteTexture( ref SnowTextureId );
+			
+			if( Options.HasChanged ) {
+				try {
+					Options.Save();
+				} catch( IOException ) {
+					Utils.LogWarning( "Unable to save options.txt" );
+				}
+			}
 			base.Dispose();
 		}
 	}

@@ -192,7 +192,7 @@ namespace ClassicalSharp {
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 		
-		public KeyMap Keys = new KeyMap();
+		public KeyMap Keys;
 	}
 	
 	public enum KeyMapping {
@@ -278,11 +278,6 @@ namespace ClassicalSharp {
 			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				Options.Set( "key-" + names[i], Keys[i].ToString() );
-			}
-			try {
-				Options.Save();
-			} catch( IOException ) {
-				Utils.LogWarning( "Unable to sace options.txt" );
 			}
 		}
 	}
