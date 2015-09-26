@@ -124,9 +124,10 @@
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\IMapFile.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Map\MapCw.cs" />
-    <Compile Include="Map\MapDat.cs" />
-    <Compile Include="Map\MapFcm3.cs" />
+    <Compile Include="Map\MapCw.Exporter.cs" />
+    <Compile Include="Map\MapCw.Importer.cs" />
+    <Compile Include="Map\MapDat.Importer.cs" />
+    <Compile Include="Map\MapFcm3.Exporter.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />

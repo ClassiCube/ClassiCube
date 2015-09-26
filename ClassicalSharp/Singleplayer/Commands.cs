@@ -112,7 +112,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-					MapFcm3 map = new MapFcm3();
+					IMapFile map = new MapCw();
 					map.Save( fs, game );
 				}
 				game.AddChat( "&e/client savemap: Successfully saved map as \"" + path + "\"" );

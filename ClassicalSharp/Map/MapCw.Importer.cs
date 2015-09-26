@@ -7,14 +7,10 @@ using System.Text;
 
 namespace ClassicalSharp {
 
-	public sealed class MapCw : IMapFile {
+	public sealed partial class MapCw : IMapFile {
 		
 		public override bool SupportsLoading {
 			get { return true; }
-		}
-		
-		public override bool SupportsSaving {
-			get { return false; }
 		}
 
 		BinaryReader reader;
@@ -38,10 +34,11 @@ namespace ClassicalSharp {
 				
 				Dictionary<string, NbtTag> spawn = (Dictionary<string, NbtTag>)children["Spawn"].Value;
 				LocalPlayer p = game.LocalPlayer;
-				p.SpawnPoint.X = (short)spawn["X"].Value;
-				p.SpawnPoint.Y = (short)spawn["Y"].Value;
-				p.SpawnPoint.Z = (short)spawn["Z"].Value;
+				p.SpawnPoint.X = (short)spawn["X"].Value / 32f;
+				p.SpawnPoint.Y = (short)spawn["Y"].Value / 32f;
+				p.SpawnPoint.Z = (short)spawn["Z"].Value / 32f;
 				
+				map.Uuid = new Guid( (byte[])children["UUID"].Value );
 				width = (short)children["X"].Value;
 				height = (short)children["Y"].Value;
 				length = (short)children["Z"].Value;
@@ -185,9 +182,11 @@ namespace ClassicalSharp {
 		long ReadInt64() { return IPAddress.HostToNetworkOrder( reader.ReadInt64() ); }
 		int ReadInt32() { return IPAddress.HostToNetworkOrder( reader.ReadInt32() ); }
 		short ReadInt16() { return IPAddress.HostToNetworkOrder( reader.ReadInt16() ); }
-		string ReadString() { return Encoding.UTF8.GetString( reader.ReadBytes( (ushort)ReadInt16() ) ); }
-
-		public override void Save( Stream stream, Game game ) {
+		
+		string ReadString() {
+			int len = (ushort)ReadInt16();
+			byte[] data = reader.ReadBytes( len );
+			return Encoding.UTF8.GetString( data ); 
 		}
 	}
 }

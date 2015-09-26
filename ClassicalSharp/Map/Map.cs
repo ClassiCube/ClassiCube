@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
 		public Weather Weather = Weather.Sunny;
+		public Guid Uuid;
 		
 		public int GroundHeight {
 			get { return WaterHeight - 2; }
@@ -51,6 +52,7 @@ namespace ClassicalSharp {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
+			Uuid = Guid.NewGuid();
 			
 			game.RaiseOnNewMap();
 			game.SelectionManager.Dispose();
