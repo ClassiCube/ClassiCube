@@ -219,18 +219,17 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void SetUserType( byte value, bool useBlockPermissions ) {
+		public void SetUserType( byte value ) {
 			UserType = value;
-			if( !useBlockPermissions ) {
-				game.CanPlace[(int)Block.Bedrock] = value == 0x64;
-				game.CanDelete[(int)Block.Bedrock] = value == 0x64;
-				game.CanPlace[(int)Block.Grass] = value == 0x64;
+			Inventory inv = game.Inventory;
+			inv.CanPlace[(int)Block.Bedrock] = value == 0x64;
+			inv.CanDelete[(int)Block.Bedrock] = value == 0x64;
+			inv.CanPlace[(int)Block.Grass] = value == 0x64;
 
-				game.CanPlace[(int)Block.Water] = value == 0x64;
-				game.CanPlace[(int)Block.StillWater] = value == 0x64;
-				game.CanPlace[(int)Block.Lava] = value == 0x64;
-				game.CanPlace[(int)Block.StillLava] = value == 0x64;
-			}
+			inv.CanPlace[(int)Block.Water] = value == 0x64;
+			inv.CanPlace[(int)Block.StillWater] = value == 0x64;
+			inv.CanPlace[(int)Block.Lava] = value == 0x64;
+			inv.CanPlace[(int)Block.StillLava] = value == 0x64;
 		}
 		
 		internal Vector3 lastPos, nextPos;

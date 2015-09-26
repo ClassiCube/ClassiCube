@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			SetupCullingCache();
 		}
 
-		public void SetDefaultBlockPermissions( bool[] canPlace, bool[] canDelete ) {
+		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
 			for( int tile = (int)Block.Stone; tile <= (int)Block.Obsidian; tile++ ) {
 				canPlace[tile] = true;
 				canDelete[tile] = true;

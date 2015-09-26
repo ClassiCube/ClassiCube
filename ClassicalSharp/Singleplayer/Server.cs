@@ -20,8 +20,8 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void Connect( IPAddress address, int port ) {
 			for( int i = (int)Block.Stone; i <= (int)Block.StoneBrick; i++ ) {
-				game.CanPlace[i] = true;
-				game.CanDelete[i] = true;
+				game.Inventory.CanPlace[i] = true;
+				game.Inventory.CanDelete[i] = true;
 			}
 			game.RaiseBlockPermissionsChanged();
 			NewMap();

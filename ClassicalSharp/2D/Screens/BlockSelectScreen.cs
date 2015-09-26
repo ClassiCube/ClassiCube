@@ -110,9 +110,9 @@ namespace ClassicalSharp {
 					}
 				}
 				buffer.Append( ref ptr2, " (can place: " );
-				buffer.Append( ref ptr2, game.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f, can delete: " );
-				buffer.Append( ref ptr2, game.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f)" );
 			}
 		}		
@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
 			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
-				if( game.CanPlace[i] || game.CanDelete[i] ) {
+				if( game.Inventory.CanPlace[i] || game.Inventory.CanDelete[i] ) {
 					blocksCount++;
 				}
 			}
@@ -170,13 +170,14 @@ namespace ClassicalSharp {
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( game.CanPlace[tile] || game.CanDelete[tile] ) {
+				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] ) {
 					Block block = (Block)tile;
 					int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;
 					float height = game.BlockInfo.Height[(byte)block];
 					int blockY = y;
+					
 					if( height != 1 ) {
 						rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
 						verSize = (int)( blockSize * height );
@@ -220,7 +221,7 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				BlockDrawInfo info = blocksTable[selectedIndex];
-				game.HeldBlock = info.BlockId;
+				game.Inventory.HeldBlock = info.BlockId;
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;

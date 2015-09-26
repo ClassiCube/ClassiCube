@@ -30,7 +30,6 @@ namespace ClassicalSharp {
 		Game game;
 		bool sendHeldBlock;
 		bool useMessageTypes;
-		bool useBlockPermissions;
 		bool usingTexturePack;
 		bool receivedFirstPosition;
 		
@@ -60,7 +59,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)game.HeldBlock : (byte)0xFF;
+			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
 		}
@@ -275,7 +274,7 @@ namespace ClassicalSharp {
 						byte protocolVer = reader.ReadUInt8();
 						ServerName = reader.ReadAsciiString();
 						ServerMotd = reader.ReadAsciiString();
-						game.LocalPlayer.SetUserType( reader.ReadUInt8(), useBlockPermissions );
+						game.LocalPlayer.SetUserType( reader.ReadUInt8() );
 						receivedFirstPosition = false;
 						game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 					} break;
@@ -419,7 +418,7 @@ namespace ClassicalSharp {
 					
 				case PacketId.SetPermission:
 					{
-						game.LocalPlayer.SetUserType( reader.ReadUInt8(), useBlockPermissions );
+						game.LocalPlayer.SetUserType( reader.ReadUInt8() );
 					} break;
 					
 				case PacketId.CpeExtInfo:
@@ -440,8 +439,6 @@ namespace ClassicalSharp {
 							useMessageTypes = true;
 						} else if( extName == "ExtPlayerList" ) {
 							UsingExtPlayerList = true;
-						} else if( extName == "BlockPermissions" ) {
-							useBlockPermissions = true;
 						} else if( extName == "PlayerClick" ) {
 							UsingPlayerClick = true;
 						} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
@@ -474,8 +471,8 @@ namespace ClassicalSharp {
 
 						if( supportLevel == 1 ) {
 							for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
-								game.CanPlace[i] = true;
-								game.CanDelete[i] = true;
+								game.Inventory.CanPlace[i] = true;
+								game.Inventory.CanDelete[i] = true;
 							}
 							game.RaiseBlockPermissionsChanged();
 						} else {
@@ -488,9 +485,9 @@ namespace ClassicalSharp {
 					{
 						byte blockType = reader.ReadUInt8();
 						bool canChange = reader.ReadUInt8() == 0;
-						game.CanChangeHeldBlock = true;
-						game.HeldBlock = (Block)blockType;
-						game.CanChangeHeldBlock = canChange;
+						game.Inventory.CanChangeHeldBlock = true;
+						game.Inventory.HeldBlock = (Block)blockType;
+						game.Inventory.CanChangeHeldBlock = canChange;
 					} break;
 					
 				case PacketId.CpeExtAddPlayerName:
@@ -585,15 +582,16 @@ namespace ClassicalSharp {
 						byte blockId = reader.ReadUInt8();
 						bool canPlace = reader.ReadUInt8() != 0;
 						bool canDelete = reader.ReadUInt8() != 0;
-
+						Inventory inv = game.Inventory;
+						
 						if( blockId == 0 ) {
 							for( int i = 1; i < BlockInfo.CpeBlocksCount; i++ ) {
-								game.CanPlace[i] = canPlace;
-								game.CanDelete[i] = canDelete;
+								inv.CanPlace.SetNotOverridable( canPlace, i );
+								inv.CanDelete.SetNotOverridable( canDelete, i );
 							}
 						} else {
-							game.CanPlace[blockId] = canPlace;
-							game.CanDelete[blockId] = canDelete;
+							inv.CanPlace.SetNotOverridable( canPlace, blockId );
+							inv.CanDelete.SetNotOverridable( canDelete, blockId );
 						}
 						game.RaiseBlockPermissionsChanged();
 					} break;

@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				game.HeldBlockIndex = (int)key - (int)Key.Number1;
+				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
 				return true;
 			}
 			return false;
@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			Height = blockSize;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, game.Hotbar[i] );
+				barTextures[i] = MakeTexture( x, y, game.Inventory.Hotbar[i] );
 				x += blockSize;
 			}
 		}
@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 			int selectedX = 0;
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				barTextures[i].RenderNoBind( graphicsApi );
-				if( i == game.HeldBlockIndex ) {
+				if( i == game.Inventory.HeldBlockIndex ) {
 					selectedX = barTextures[i].X1;
 				}
 			}
@@ -69,8 +69,8 @@ namespace ClassicalSharp {
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
-			int index = game.HeldBlockIndex;
-			Block block = game.HeldBlock;
+			int index = game.Inventory.HeldBlockIndex;
+			Block block = game.Inventory.HeldBlock;
 			int x = barTextures[index].X1;
 			barTextures[index] = MakeTexture( x, Y, block );
 		}

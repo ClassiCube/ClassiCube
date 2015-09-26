@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		public MapEnvRenderer MapEnvRenderer;
 		public EnvRenderer EnvRenderer;
 		public WeatherRenderer WeatherRenderer;
+		public Inventory Inventory;
 		
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
@@ -48,45 +49,7 @@ namespace ClassicalSharp {
 		internal string skinServer, chatInInputBuffer, defaultTexPack;
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
-		FpsScreen fpsScreen;
-		
-		int hotbarIndex = 0;
-		public bool CanChangeHeldBlock = true;
-		public Block[] Hotbar;
-		
-		public int HeldBlockIndex {
-			get { return hotbarIndex; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				hotbarIndex = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public Block HeldBlock {
-			get { return Hotbar[hotbarIndex]; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				for( int i = 0; i < Hotbar.Length; i++ ) {
-					if( Hotbar[i] == value ) {
-						hotbarIndex = i;
-						RaiseHeldBlockChanged();
-						return;
-					}
-				}
-				Hotbar[hotbarIndex] = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public bool[] CanPlace = new bool[256];
-		public bool[] CanDelete = new bool[256];
+		FpsScreen fpsScreen;		
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -121,19 +84,6 @@ namespace ClassicalSharp {
 			Mppass = mppass;
 			this.skinServer = skinServer;
 			this.defaultTexPack = defaultTexPack;
-			// We can't use enum array initaliser because this causes problems when building with mono
-			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
-			#if !__MonoCS__
-			Hotbar = new Block[] { Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt,
-				Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
-			#else
-			Hotbar = new Block[9];
-			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
-			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
-			Hotbar[4] = Block.WoodenPlanks; Hotbar[5] = Block.Wood;
-			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Glass;
-			Hotbar[8] = Block.Slab;
-			#endif
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
@@ -158,10 +108,11 @@ namespace ClassicalSharp {
 			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
+			Inventory = new Inventory( this );
 			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
-			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
+			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
 			Players[255] = LocalPlayer;
