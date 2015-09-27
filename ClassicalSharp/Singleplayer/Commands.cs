@@ -91,35 +91,4 @@ namespace ClassicalSharp.Singleplayer {
 			}
 		}
 	}
-	
-	public sealed class SaveMapCommand : Command {
-		
-		public SaveMapCommand() {
-			Name = "SaveMap";
-			Help = new [] {
-				"&a/client savemap [filename]",
-				"&bfilename: &eSpecifies name of the file to save the map as.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			string path = reader.NextAll();
-			if( String.IsNullOrEmpty( path ) ) return;
-			
-			if( File.Exists( path ) ) {
-				game.AddChat( "&e/client savemap: \"" + path + "\" already exists" );
-				return;
-			}
-			try {
-				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-					IMapFile map = new MapCw();
-					map.Save( fs, game );
-				}
-				game.AddChat( "&e/client savemap: Successfully saved map as \"" + path + "\"" );
-			} catch( Exception ex ) {
-				Utils.LogError( "Error while trying to save map: {0}{1}", Environment.NewLine, ex );
-				game.AddChat( "&e/client savemap: Failed to save map as \"" + path + "\"" );
-			}
-		}
-	}
 }

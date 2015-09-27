@@ -99,15 +99,12 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool IsValidChar( char c ) {
-			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ';
+			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ' ||
+				(c >= '0' && c <= '9');
 		}
 		
 		public override bool IsValidString( string s ) {
 			return true;
-		}
-		
-		public override bool IsValidValue( string s ) {
-			return s.Length > 0;
 		}
 	}
 	
