@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class PigModel : IModel {
 		
 		public PigModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new ModelVertex[partVertices * 6];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLegFront = MakeLeg( -5/16f, -1/16f, -7/16f, -3/16f );

@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class ZombieModel : IModel {
 		
 		public ZombieModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new ModelVertex[partVertices * 6];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLeg = MakeLeftLeg( 4/16f, 0f );

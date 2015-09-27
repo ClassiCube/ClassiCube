@@ -26,6 +26,13 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = false;
 		}
 		
+		public override void Init() {
+			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			regularFont = new Font( "Arial", 16, FontStyle.Regular );
+			hintFont = new Font( "Arial", 14, FontStyle.Italic );
+			game.Keyboard.KeyRepeat = true;
+		}
+		
 		public override bool HandlesKeyPress( char key ) {
 			if( inputWidget == null ) return true;
 			return inputWidget.HandlesKeyPress( key );
@@ -59,6 +66,7 @@ namespace ClassicalSharp {
 			if( inputWidget != null )
 				inputWidget.Dispose();
 			hintFont.Dispose();
+			game.Keyboard.KeyRepeat = false;
 			base.Dispose();
 		}
 		

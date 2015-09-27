@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 				Make( 0, -100, "Options", Docking.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( 0, -50, "Environment settings", Docking.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
 				Make( 0, 0, "Key mappings", Docking.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
-				//Make( 0, 50, "Load/Save/Gen level", Docking.Centre, (g, w) => { } ),
+				Make( 0, 50, "Load/Save/Gen level", Docking.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				Make( 0, 55, "Back to game", Docking.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
 				Make( 0, 5, "Quit game", Docking.BottomOrRight, (g, w) => g.Exit() ),
 			};

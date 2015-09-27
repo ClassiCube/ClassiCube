@@ -92,6 +92,25 @@ namespace ClassicalSharp {
 		}
 	}
 	
+	public sealed class PathValidator : MenuInputValidator {
+		
+		public PathValidator() {
+			Range = "&7(Enter filename)";
+		}
+		
+		public override bool IsValidChar( char c ) {
+			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ';
+		}
+		
+		public override bool IsValidString( string s ) {
+			return true;
+		}
+		
+		public override bool IsValidValue( string s ) {
+			return s.Length > 0;
+		}
+	}
+	
 	public sealed class BooleanValidator : MenuInputValidator {
 		
 		public BooleanValidator() {

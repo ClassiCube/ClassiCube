@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class ChickenModel : IModel {
 		
 		public ChickenModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 + planeVertices * 2 * 2];
+			vertices = new ModelVertex[partVertices * 6 + planeVertices * 2 * 2];
 			Head = MakeHead();
 			Head2 = MakeHead2(); // TODO: Find a more appropriate name.
 			Head3 = MakeHead3();

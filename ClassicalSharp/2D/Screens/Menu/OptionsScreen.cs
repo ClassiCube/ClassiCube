@@ -10,9 +10,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			hintFont = new Font( "Arial", 14, FontStyle.Italic );
+			base.Init();
 			INetworkProcessor network = game.Network;
 			
 			buttons = new ButtonWidget[] {

@@ -6,7 +6,7 @@ namespace ClassicalSharp.Model {
 	public class SpiderModel : IModel {
 		
 		public SpiderModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 5];
+			vertices = new ModelVertex[partVertices * 5];
 			Head = MakeHead();
 			Link = MakeLink();
 			End = MakeEnd();

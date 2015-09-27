@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class CreeperModel : IModel {
 		
 		public CreeperModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6];
+			vertices = new ModelVertex[partVertices * 6];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLegFront = MakeLeg( -4/16f, 0, -6/16f, -2/16f );

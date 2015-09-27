@@ -10,12 +10,6 @@ namespace ClassicalSharp {
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
-			handlers[0] = new InputHandler( BackspaceKey, Key.BackSpace, 10 );
-			handlers[1] = new InputHandler( DeleteKey, Key.Delete, 10 );
-			handlers[2] = new InputHandler( LeftKey, Key.Left, 10 );
-			handlers[3] = new InputHandler( RightKey, Key.Right, 10 );
-			handlers[4] = new InputHandler( UpKey, Key.Up, 5 );
-			handlers[5] = new InputHandler( DownKey, Key.Down, 5 );
 			typingLogPos = game.ChatInputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
@@ -33,7 +27,6 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			chatCaretTexture.Render( graphicsApi );
-			TickInput( delta );
 		}
 
 		public override void Init() {
@@ -109,53 +102,6 @@ namespace ClassicalSharp {
 		}
 		
 		#region Input handling
-		InputHandler[] handlers = new InputHandler[6];
-		
-		class InputHandler {
-			public Action KeyFunction;
-			public DateTime LastDown;
-			public Key AssociatedKey;
-			public double accumulator, period;
-			
-			public InputHandler( Action func, Key key, int frequency ) {
-				KeyFunction = func;
-				AssociatedKey = key;
-				LastDown = DateTime.MinValue;
-				period = 1.0 / frequency;
-			}
-			
-			public bool HandlesKeyDown( Key key ) {
-				if( key != AssociatedKey ) return false;
-				LastDown = DateTime.UtcNow;
-				KeyFunction();
-				return true;
-			}
-			
-			public void KeyTick( Game game ) {
-				if( LastDown == DateTime.MinValue ) return;
-				if( game.IsKeyDown( AssociatedKey ) &&
-				   (DateTime.UtcNow - LastDown).TotalSeconds >= period ) {
-					KeyFunction();
-				}
-			}
-			
-			public bool HandlesKeyUp( Key key ) {
-				if( key != AssociatedKey ) return false;
-				LastDown = DateTime.MinValue;
-				return true;
-			}
-		}
-		
-		void TickInput( double delta ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				InputHandler handler = handlers[i];
-				handler.accumulator += delta;
-				while( handler.accumulator > handler.period ) {
-					handler.KeyTick( game );
-					handler.accumulator -= handler.period;
-				}
-			}
-		}
 		
 		public override bool HandlesKeyPress( char key ) {
 			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
@@ -170,6 +116,18 @@ namespace ClassicalSharp {
 				return true;
 			}
 			return false;
+		}
+		
+		public override bool HandlesKeyDown( Key key ) {
+			if( key == Key.Down ) DownKey();
+			else if( key == Key.Up ) UpKey();
+			else if( key == Key.Left ) LeftKey();
+			else if( key == Key.Right ) RightKey();
+			else if( key == Key.BackSpace ) BackspaceKey();
+			else if( key == Key.Delete ) DeleteKey();
+			else if( !OtherKey( key ) ) return false;
+			
+			return true;
 		}
 		
 		void BackspaceKey() {
@@ -240,10 +198,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override bool HandlesKeyDown( Key key ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				if( handlers[i].HandlesKeyDown( key ) ) return true;
-			}
+		bool OtherKey( Key key ) {
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			if( key == Key.V && controlDown && chatInputText.Length < 64 ) {
 				string text = Clipboard.GetText();
@@ -277,14 +232,6 @@ namespace ClassicalSharp {
 			}
 			return false;
 		}
-		
-		public override bool HandlesKeyUp( Key key ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				if( handlers[i].HandlesKeyUp( key ) ) return true;
-			}
-			return false;
-		}
-		
 		#endregion
 	}
 }

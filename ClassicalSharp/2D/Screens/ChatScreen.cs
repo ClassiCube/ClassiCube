@@ -151,6 +151,7 @@ namespace ClassicalSharp {
 				game.CursorVisible = true;
 			suppressNextPress = true;
 			HandlesAllInput = true;
+			game.Keyboard.KeyRepeat = true;
 			textInput.chatInputText.Clear();
 			textInput.chatInputText.Append( 0, initialText );
 			textInput.Init();
@@ -165,6 +166,7 @@ namespace ClassicalSharp {
 					if( game.CursorVisible )
 						game.CursorVisible = false;
 					game.Camera.RegrabMouse();
+					game.Keyboard.KeyRepeat = false;
 					
 					if( key == game.Keys[KeyMapping.PauseOrExit] )
 						textInput.chatInputText.Clear();

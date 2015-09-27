@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		public bool Fur = true;
 		
 		public SheepModel( Game window ) : base( window ) {
-			vertices = new VertexPos3fTex2fCol4b[partVertices * 6 * ( Fur ? 2 : 1 )];
+			vertices = new ModelVertex[partVertices * 6 * ( Fur ? 2 : 1 )];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLegFront = MakeLeg( -5/16f, -1/16f, -7/16f, -3/16f );

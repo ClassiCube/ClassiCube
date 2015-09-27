@@ -10,9 +10,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			hintFont = new Font( "Arial", 14, FontStyle.Italic );
+			base.Init();
 			
 			buttons = new ButtonWidget[] {
 				Make( -140, -150, "Clouds colour", Docking.Centre, OnWidgetClick,
