@@ -26,13 +26,13 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool IsValidChar( char c ) {
-			return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') 
+			return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')
 				|| (c >= 'a' && c <= 'f');
 		}
 		
 		public override bool IsValidString( string s ) {
 			return s.Length <= 6;
-		}	
+		}
 		
 		public override bool IsValidValue( string s ) {
 			FastColour col;
@@ -99,8 +99,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool IsValidChar( char c ) {
-			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == ' ' ||
-				(c >= '0' && c <= '9');
+			return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
+			         || c == '<' || c == '>' || c == '|' || c == '"');
 		}
 		
 		public override bool IsValidString( string s ) {
@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 		
 		public override bool IsValidString( string s ) {
 			return s.Length <= 3;
-		}	
+		}
 		
 		public override bool IsValidValue( string s ) {
 			return s == "yes" || s == "no";

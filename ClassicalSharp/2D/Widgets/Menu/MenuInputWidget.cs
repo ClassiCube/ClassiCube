@@ -107,6 +107,7 @@ namespace ClassicalSharp {
 		static bool IsInvalidChar( char c ) {
 			// Make sure we're in the printable text range from 0x20 to 0x7E
 			return c < ' ' || c == '&' || c > '~';
+			// TODO: Uncomment this for full unicode support for save level screen?
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
