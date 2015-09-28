@@ -48,31 +48,32 @@ namespace ClassicalSharp {
 		}
 
 		public override void Init() {
-			DrawTextArgs caretArgs = new DrawTextArgs( graphicsApi, "_", Color.White, false );
-			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
+			DrawTextArgs caretArgs = new DrawTextArgs( "_", Color.White, false );
+			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			SetText( chatInputText.GetString() );
 		}
 		
 		public void SetText( string value ) {
 			chatInputText.Append( 0, value );
-			Size textSize = Utils2D.MeasureSize( value, font, false );
+			Size textSize = game.Drawer2D.MeasureSize( value, font, false );
 			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ), 
 			                     Math.Max( textSize.Height, DesiredMaxHeight ) );
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, size.Width, size.Height );
-					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, Color.White, false );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
+					DrawTextArgs args = new DrawTextArgs( value, Color.White, false );
 					args.SkipPartsCheck = true;
-					Utils2D.DrawText( g, font, ref args, 0, 0 );
+					drawer.DrawText( font, ref args, 0, 0 );
 					
 					string range = Validator.Range;
-					Size hintSize = Utils2D.MeasureSize( range, hintFont, true );
-					args = new DrawTextArgs( graphicsApi, range, Color.White, false );
+					Size hintSize = drawer.MeasureSize( range, hintFont, true );
+					args = new DrawTextArgs( range, Color.White, false );
 					args.SkipPartsCheck = true;
-					Utils2D.DrawText( g, hintFont, ref args, size.Width - hintSize.Width, 0 );
+					drawer.DrawText( hintFont, ref args, size.Width - hintSize.Width, 0 );
+					chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
-				chatInputTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 			
 			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalDocking );

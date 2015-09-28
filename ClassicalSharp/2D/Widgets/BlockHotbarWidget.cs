@@ -28,11 +28,12 @@ namespace ClassicalSharp {
 			int y = game.Height - blockSize;
 			
 			Size size = new Size( 32, 32 );
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, y );
 				}
-				selectedBlock = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, y );
 			}
 			
 			int x = game.Width / 2 - ( blockSize * barTextures.Length ) / 2;

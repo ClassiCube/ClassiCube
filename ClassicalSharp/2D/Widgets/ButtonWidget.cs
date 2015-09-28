@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		readonly Font font;
 		
 		public override void Init() {
-			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
+			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
 			Height = defaultHeight;
 		}
 		
@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			if( texture.IsValid ) {				
+			if( texture.IsValid ) {
 				FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
 				graphicsApi.BindTexture( texture.ID );
 				graphicsApi.Draw2DTexture( ref texture, col );
@@ -80,9 +80,8 @@ namespace ClassicalSharp {
 		public Action<Game, string> SetValue;
 		public bool Active;
 		
-		void MakeTexture( string text ) {
-			DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
-			Size size = Utils2D.MeasureSize( text, font, true );
+		void MakeTexture( string text ) {			
+			Size size = game.Drawer2D.MeasureSize( text, font, true );
 			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;
 			size.Width = Math.Max( size.Width, DesiredMaxWidth );
 			int yOffset = Math.Max( size.Height, DesiredMaxHeight ) - size.Height;
@@ -91,15 +90,17 @@ namespace ClassicalSharp {
 			const int borderSize = 3; // 1 px for base border, 2 px for shadow, 1 px for offset text
 			size.Width += borderSize; size.Height += borderSize;
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );					
+					drawer.DrawRoundedRect( shadowCol, 1.3f, 1.3f, baseSize.Width, baseSize.Height );
+					drawer.DrawRoundedRect( boxCol, 0, 0, baseSize.Width, baseSize.Height );
+					
+					DrawTextArgs args = new DrawTextArgs( text, true );
 					args.SkipPartsCheck = true;
-					g.SmoothingMode = SmoothingMode.HighQuality;
-					Utils2D.DrawRoundedRect( g, shadowCol, 1.3f, 1.3f, baseSize.Width, baseSize.Height );
-					Utils2D.DrawRoundedRect( g, boxCol, 0, 0, baseSize.Width, baseSize.Height );					
-					Utils2D.DrawText( g, font, ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
+					drawer.DrawText( font, ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
+					texture = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
-				texture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 		}
 	}

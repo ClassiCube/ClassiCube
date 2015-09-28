@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 		public EnvRenderer EnvRenderer;
 		public WeatherRenderer WeatherRenderer;
 		public Inventory Inventory;
+		public IDrawer2D Drawer2D;
 		
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
@@ -98,6 +99,7 @@ namespace ClassicalSharp {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
 			Keys = new KeyMap();
+			Drawer2D = new GdiDrawer2D( this );
 			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
@@ -346,7 +348,7 @@ namespace ClassicalSharp {
 			}
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
-			Utils2D.Dispose();
+			Drawer2D.DisposeInstance();
 			Animations.Dispose();
 			Graphics.DeleteTexture( ref CloudsTextureId );
 			Graphics.DeleteTexture( ref RainTextureId );

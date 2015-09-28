@@ -31,14 +31,14 @@ namespace ClassicalSharp {
 
 		public override void Init() {
 			X = 10;
-			DrawTextArgs caretArgs = new DrawTextArgs( graphicsApi, "_", Color.White, false );
-			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
+			DrawTextArgs caretArgs = new DrawTextArgs( "_", Color.White, false );
+			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			string value = chatInputText.GetString();
 			
 			if( chatInputText.Empty ) {
 				caretPos = -1;
 			}
-			Size size = Utils2D.MeasureSize( value, font, false );
+			Size size = game.Drawer2D.MeasureSize( value, font, false );
 			
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
@@ -46,10 +46,10 @@ namespace ClassicalSharp {
 				DrawString( size, value, true );
 			} else {
 				string subString = chatInputText.GetSubstring( caretPos );
-				Size trimmedSize = Utils2D.MeasureSize( subString, font, false );
+				Size trimmedSize = game.Drawer2D.MeasureSize( subString, font, false );
 				
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = Utils2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
+				Size charSize = game.Drawer2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
 				chatCaretTexture.Width = charSize.Width;
 				DrawString( size, value, false );
 			}
@@ -59,14 +59,15 @@ namespace ClassicalSharp {
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
 			int y = game.Height - ChatInputYOffset - size.Height / 2;
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, Color.White, false );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
+					DrawTextArgs args = new DrawTextArgs( value, Color.White, false );
 					args.SkipPartsCheck = skipCheck;
-					Utils2D.DrawText( g, font, ref args, 0, 0 );
+					drawer.DrawText(  font, ref args, 0, 0 );
+					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );
 				}
-				chatInputTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 10, y );
 			}
 			
 			chatCaretTexture.Y1 = chatInputTexture.Y1;
@@ -133,7 +134,7 @@ namespace ClassicalSharp {
 		void BackspaceKey() {
 			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {
-					chatInputText.DeleteAt( chatInputText.Length - 1 );				
+					chatInputText.DeleteAt( chatInputText.Length - 1 );
 				} else {
 					caretPos--;
 					chatInputText.DeleteAt( caretPos );

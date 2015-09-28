@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			textures = new Texture[ElementsCount];
-			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
+			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
 			for( int i = 0; i < textures.Length; i++ ) {
 				textures[i].Height = defaultHeight;
 			}
@@ -29,8 +29,8 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref textures[index] );
 			
 			if( !String.IsNullOrEmpty( text ) ) {
-				DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
-				Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+				DrawTextArgs args = new DrawTextArgs( text, true );
+				Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalDocking );
 				tex.Y1 = CalcY( index, tex.Height );
 				textures[index] = tex;

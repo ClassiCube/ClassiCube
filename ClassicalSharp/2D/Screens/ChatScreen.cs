@@ -122,8 +122,8 @@ namespace ClassicalSharp {
 		
 		void UpdateAnnouncement( string text ) {
 			announcementDisplayTime = DateTime.UtcNow;
-			DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
-			announcementTex = Utils2D.MakeTextTexture( announcementFont, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( text, true );
+			announcementTex = game.Drawer2D.MakeTextTexture( announcementFont, 0, 0, ref args );
 			announcementTex.X1 = game.Width / 2 - announcementTex.Width / 2;
 			announcementTex.Y1 = game.Height / 4 - announcementTex.Height / 2;
 		}

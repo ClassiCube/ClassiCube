@@ -76,11 +76,12 @@ namespace ClassicalSharp {
 		public override void Init() {
 			game.BlockPermissionsChanged += BlockPermissionsChanged;
 			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
-				selectedBlock = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 			RecreateBlockTextures();
 		}
@@ -139,18 +140,19 @@ namespace ClassicalSharp {
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
-			Size size = Utils2D.MeasureSize( value, font, true );
+			Size size = game.Drawer2D.MeasureSize( value, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, true );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
+					DrawTextArgs args = new DrawTextArgs( value, true );
 					args.SkipPartsCheck = true;
-					Utils2D.DrawText( g, font, ref args, 0, 0 );
-				}
-				blockInfoTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, x, y );
+					drawer.DrawText( font, ref args, 0, 0 );
+					blockInfoTexture = drawer.Make2DTexture( bmp, size, x, y );
+				}		
 			}
 		}
 		

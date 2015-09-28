@@ -65,7 +65,9 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="2D\DrawTextArgs.cs" />
+    <Compile Include="2D\Drawing\DrawTextArgs.cs" />
+    <Compile Include="2D\Drawing\GdiDrawer2D.cs" />
+    <Compile Include="2D\Drawing\IDrawer2D.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />
@@ -81,7 +83,6 @@
     <Compile Include="2D\Screens\NormalScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
-    <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
@@ -197,6 +198,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="2D\Drawing" />
     <Folder Include="2D\Screens" />
     <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
