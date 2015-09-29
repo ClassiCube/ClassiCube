@@ -226,7 +226,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void Mode2D( float width, float height ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
-			LoadIdentityMatrix();
 			DepthTest = false;
 			LoadOrthoMatrix( width, height );
 			SetMatrixMode( MatrixType.Modelview );
@@ -236,7 +235,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		protected virtual void LoadOrthoMatrix( float width, float height ) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
+			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, -10000, 10000 );
 			LoadMatrix( ref matrix );
 		}
 		

@@ -9,20 +9,15 @@ namespace ClassicalSharp {
 		public string Text;
 		
 		public bool UseShadow;
-		public Color ShadowColour;
 		internal bool SkipPartsCheck;
 		
-		public DrawTextArgs( string text, Color col, bool useShadow ) : 
-			this( text, col, useShadow, Color.Black ) { }
-		
 		public DrawTextArgs( string text, bool useShadow ) : 
-			this( text, Color.White, useShadow, Color.Black ) { }
+			this( text, Color.White, useShadow ) { }
 		
-		public DrawTextArgs( string text, Color col, bool useShadow, Color shadowCol ) {
+		public DrawTextArgs( string text, Color col, bool useShadow ) {
 			Text = text;
 			TextColour = col;
 			UseShadow = useShadow;
-			ShadowColour = shadowCol;
 			SkipPartsCheck = false;
 		}		
 	}

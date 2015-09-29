@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			Brush shadowBrush = GetOrCreateBrush( args.ShadowColour );
+			Brush shadowBrush = GetOrCreateBrush( Color.Black );
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
 				Brush textBrush = GetOrCreateBrush( part.TextColour );

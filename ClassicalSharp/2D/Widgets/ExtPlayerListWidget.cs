@@ -106,7 +106,7 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( CpeListInfo player, int index ) {
-			DrawTextArgs args = new DrawTextArgs(player.ListName, true );
+			DrawTextArgs args = new DrawTextArgs( player.ListName, true );
 			Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 			if( index < 0 ) {
 				info[namesCount] = new PlayerInfo( player );

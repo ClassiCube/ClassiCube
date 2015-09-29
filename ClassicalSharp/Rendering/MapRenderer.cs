@@ -79,9 +79,9 @@ namespace ClassicalSharp {
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
-				Refresh();				
+				Refresh();
 			}
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
 			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
 			
-			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );			
+			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
 			if( bX == 0 && cx > 0 ) ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
 			if( bY == 0 && cy > 0 ) ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
 			if( bZ == 0 && cz > 0 ) ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
