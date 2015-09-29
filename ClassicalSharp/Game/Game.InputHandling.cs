@@ -168,12 +168,38 @@ namespace ClassicalSharp {
 				Vector3I pos = SelectedPos.TranslatedPos;
 				if( !Map.IsValidPos( pos ) ) return;
 				
-				Block block = inv.HeldBlock;
-				if( !CanPick( Map.GetBlock( pos ) ) && inv.CanPlace[(int)block] ) {					
-					UpdateBlock( pos.X, pos.Y, pos.Z, (byte)block );
-					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, (byte)block );
+				byte block = (byte)inv.HeldBlock;
+				if( !CanPick( Map.GetBlock( pos ) ) && inv.CanPlace[block] 
+				   && CheckIsFree( pos, block ) ) {
+					UpdateBlock( pos.X, pos.Y, pos.Z, block );
+					Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
 				}
 			}
+		}
+		
+		bool CheckIsFree( Vector3I pos, byte newBlock ) {
+			float height = BlockInfo.Height[newBlock];
+			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z, 
+			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
+			
+			for( int id = 0; id < 255; id++ ) {
+				Player player = Players[id];
+				if( player == null ) continue;
+				if( player.CollisionBounds.Intersects( blockBB ) ) return false;
+			}
+			
+			BoundingBox localBB = LocalPlayer.CollisionBounds;
+			if( localBB.Intersects( blockBB ) ) {
+				localBB.Min.Y += 0.25f + Entity.Adjustment;
+				if( localBB.Intersects( blockBB ) ) return false;
+				
+				// Push player up if they are jumping and trying to place a block underneath them.
+				Vector3 p = LocalPlayer.Position;
+				p.Y = pos.Y + height + Entity.Adjustment;
+				LocationUpdate update = LocationUpdate.MakePos( p, false );
+				LocalPlayer.SetLocation( update, false );
+			}
+			return true;
 		}
 		
 		void ButtonStateChanged( MouseButton button, bool pressed, byte targetId ) {

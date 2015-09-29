@@ -20,10 +20,10 @@ It **does not** work with 'modern/premium' Minecraft servers.
 Initially, you will need to run launcher.exe to download the required assets from minecraft.net. 
 Just click 'OK' to the dialog box that appears when you start the launcher.
 
-##### Singleplayer
+**Singleplayer**
 Run classicalsharp.exe.
 
-##### Multiplayer
+**Multiplayer**
 Run launcher.exe. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
 
 ##### Mono specific notes

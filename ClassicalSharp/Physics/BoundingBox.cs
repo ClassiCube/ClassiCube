@@ -22,12 +22,12 @@ namespace ClassicalSharp {
 			return new BoundingBox( Min + amount, Max + amount );
 		}
 
-		public bool Intersects( BoundingBox box ) {
-			if( Max.X >= box.Min.X && Min.X <= box.Max.X ) {
-				if( Max.Y < box.Min.Y || Min.Y > box.Max.Y ) {
+		public bool Intersects( BoundingBox other ) {
+			if( Max.X >= other.Min.X && Min.X <= other.Max.X ) {
+				if( Max.Y < other.Min.Y || Min.Y > other.Max.Y ) {
 					return false;
 				}
-				return Max.Z >= box.Min.Z && Min.Z <= box.Max.Z;
+				return Max.Z >= other.Min.Z && Min.Z <= other.Max.Z;
 			}
 			return false;
 		}

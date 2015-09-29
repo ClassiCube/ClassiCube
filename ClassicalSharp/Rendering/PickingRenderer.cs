@@ -25,7 +25,7 @@ namespace ClassicalSharp.Renderers {
 			index = 0;
 			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
-			col.A = 220;
+			col.A = 150;
 			graphics.AlphaBlending = true;
 			
 			// bottom face

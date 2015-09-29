@@ -17,6 +17,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract bool Texturing { set; }
 		
+		internal float MinZNear = 0.1f;
+		
 		public int CreateTexture( Bitmap bmp ) {
 			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
 			// Convert other pixel formats into 32bpp formats.

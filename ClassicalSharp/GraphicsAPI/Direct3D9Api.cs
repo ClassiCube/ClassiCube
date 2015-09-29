@@ -31,6 +31,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
 		public Direct3D9Api( Game game ) {
+			MinZNear = 0.05f;
 			IntPtr windowHandle = ((WinWindowInfo)game.WindowInfo).WindowHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;

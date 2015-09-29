@@ -38,7 +38,8 @@ namespace ClassicalSharp {
 		public override Matrix4 GetProjection() {
 			float fovy = (float)Utils.DegreesToRadians( 70 );
 			float aspectRatio = (float)game.Width / game.Height;
-			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, 0.1f, game.ViewDistance );
+			float zNear = game.Graphics.MinZNear;
+			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, zNear, game.ViewDistance );
 		}
 		
 		public override void GetPickedBlock( PickedPos pos ) {
