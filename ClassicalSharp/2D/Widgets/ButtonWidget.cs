@@ -93,8 +93,8 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );					
-					drawer.DrawRoundedRect( shadowCol, 1.3f, 1.3f, baseSize.Width, baseSize.Height );
-					drawer.DrawRoundedRect( boxCol, 0, 0, baseSize.Width, baseSize.Height );
+					drawer.DrawRoundedRect( shadowCol, 3, 1.3f, 1.3f, baseSize.Width, baseSize.Height );
+					drawer.DrawRoundedRect( boxCol, 3, 0, 0, baseSize.Width, baseSize.Height );
 					
 					DrawTextArgs args = new DrawTextArgs( text, true );
 					args.SkipPartsCheck = true;

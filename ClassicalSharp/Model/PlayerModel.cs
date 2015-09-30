@@ -89,12 +89,13 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( -6/16f, 22/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
 			DrawRotate( 6/16f, 22/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
-			graphics.AlphaTest = true;
-			DrawRotate( 0, 23.5f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );		
+			if( p.RenderHat ) {
+				graphics.AlphaTest = true;
+				DrawRotate( 0, 23.5f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
+			}
 		}
 		
-		class ModelSet {
-			
+		class ModelSet {		
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat;
 		}
 	}

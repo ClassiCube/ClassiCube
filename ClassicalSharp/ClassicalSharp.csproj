@@ -66,7 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="2D\Drawing\DrawTextArgs.cs" />
-    <Compile Include="2D\Drawing\GdiDrawer2D.cs" />
+    <Compile Include="2D\Drawing\GdiPlusDrawer2D.cs" />
     <Compile Include="2D\Drawing\IDrawer2D.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />

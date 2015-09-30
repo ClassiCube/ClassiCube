@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public abstract class Screen : IDisposable {
 		
-		protected internal Game game;
+		protected Game game;
 		protected IGraphicsApi graphicsApi;
 		
 		public Screen( Game game ) {

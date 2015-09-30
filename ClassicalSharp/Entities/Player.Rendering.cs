@@ -10,6 +10,7 @@ namespace ClassicalSharp {
 		protected IGraphicsApi api;
 		protected Texture nameTex;
 		protected internal int PlayerTextureId = -1, MobTextureId = -1;
+		internal bool RenderHat = true;
 		
 		public override void Despawn() {
 			if( api == null ) return;

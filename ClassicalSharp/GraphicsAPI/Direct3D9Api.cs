@@ -3,10 +3,10 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading;
+using OpenTK;
 using SharpDX;
 using SharpDX.Direct3D9;
 using D3D = SharpDX.Direct3D9;
-using Matrix4 = OpenTK.Matrix4;
 using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
@@ -395,11 +395,11 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#endregion
 		
-		public override void BeginFrame( Game game ) {
+		public override void BeginFrame( GameWindow game ) {
 			device.BeginScene();
 		}
 		
-		public override void EndFrame( Game game ) {
+		public override void EndFrame( GameWindow game ) {
 			device.EndScene();
 			int code = device.Present();
 			if( code >= 0 ) return;
@@ -417,22 +417,22 @@ namespace ClassicalSharp.GraphicsAPI {
 					RecreateDevice( game );
 					break;
 				}
-				game.Network.Tick( 1 / 20.0 );
+				LostContextFunction( 1 / 20.0 );
 			}
 		}
 		
 		bool vsync = false;
-		public override void SetVSync( Game game, bool value ) {
+		public override void SetVSync( GameWindow game, bool value ) {
 			vsync = value;
 			game.VSync = value;
 			RecreateDevice( game );
 		}
 		
-		public override void OnWindowResize( Game game ) {
+		public override void OnWindowResize( GameWindow game ) {
 			RecreateDevice( game );
 		}
 		
-		void RecreateDevice( Game game ) {
+		void RecreateDevice( GameWindow game ) {
 			PresentParameters args = GetPresentArgs( game.Width, game.Height );
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];

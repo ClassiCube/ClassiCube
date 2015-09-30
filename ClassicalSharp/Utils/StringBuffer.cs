@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ClassicalSharp {
 	
-	internal sealed unsafe class StringBuffer {
+	public sealed unsafe class StringBuffer {
 		
 		internal string value;
 		internal int capacity;

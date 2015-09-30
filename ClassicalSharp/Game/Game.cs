@@ -99,7 +99,7 @@ namespace ClassicalSharp {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
 			Keys = new KeyMap();
-			Drawer2D = new GdiDrawer2D( this );
+			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
@@ -129,6 +129,8 @@ namespace ClassicalSharp {
 			} else {
 				Network = new NetworkProcessor( this );
 			}
+			Graphics.LostContextFunction = Network.Tick;
+			
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			Camera = firstPersonCam;
@@ -290,17 +292,14 @@ namespace ClassicalSharp {
 		
 		Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
-			if( activeScreen != null ) {
+			if( activeScreen != null )
 				activeScreen.Dispose();
-			}
 			if( activeScreen != null && activeScreen.HandlesAllInput )
 				lastClick = DateTime.UtcNow;
 			
 			activeScreen = screen;
-			if( screen != null ) {
-				screen.game = this;
+			if( screen != null )
 				screen.Init();
-			}
 			if( Network.UsingPlayerClick ) {
 				byte targetId = Players.GetClosetPlayer( this );
 				ButtonStateChanged( MouseButton.Left, false, targetId );

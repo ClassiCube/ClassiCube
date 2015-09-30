@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public sealed class GdiDrawer2D : IDrawer2D {
+	public sealed class GdiPlusDrawer2D : IDrawer2D {
 		
 		StringFormat format;
 		Bitmap measuringBmp;
@@ -15,8 +16,8 @@ namespace ClassicalSharp {
 		
 		Graphics g;
 		
-		public GdiDrawer2D( Game game ) {
-			graphics = game.Graphics;
+		public GdiPlusDrawer2D( IGraphicsApi graphics ) {
+			this.graphics = graphics;
 			format = StringFormat.GenericTypographic;
 			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
 			format.Trimming = StringTrimming.None;
@@ -64,11 +65,11 @@ namespace ClassicalSharp {
 				g.DrawRectangle( pen, x, y, width, height );
 		}
 		
-		public override void DrawRoundedRect( Color colour, float x, float y, float width, float height ) {
+		public override void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height ) {
 			GraphicsPath path = new GraphicsPath();
 			float x1 = x, y1 = y, x2 = x + width, y2 = y + height;
 			
-			const float r = 3, dia = r * 2;
+			float r = radius, dia = radius * 2;
 			path.AddArc( x1, y1, dia, dia, 180, 90 );
 			path.AddLine( x1 + r, y1, x2 - r, y1 );
 			path.AddArc( x2 - dia, y1, dia, dia, 270, 90 );

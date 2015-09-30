@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		
 		public abstract void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height );
 		
-		public abstract void DrawRoundedRect( Color colour, float x, float y, float width, float height );
+		public abstract void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height );
 		
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();

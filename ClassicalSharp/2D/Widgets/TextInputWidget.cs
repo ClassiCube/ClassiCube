@@ -221,6 +221,7 @@ namespace ClassicalSharp {
 				} else {
 					chatInputText.Append( caretPos, text );
 					caretPos += text.Length;
+					if( caretPos >= chatInputText.Length ) caretPos = -1;
 				}
 				Dispose();
 				Init();

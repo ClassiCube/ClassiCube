@@ -353,14 +353,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		public override void BeginFrame( Game game ) {
+		public override void BeginFrame( GameWindow game ) {
 		}
 		
-		public override void EndFrame( Game game ) {
+		public override void EndFrame( GameWindow game ) {
 			game.SwapBuffers();
 		}
 		
-		public override void SetVSync( Game game, bool value ) {
+		public override void SetVSync( GameWindow game, bool value ) {
 			game.VSync = value;
 		}
 		

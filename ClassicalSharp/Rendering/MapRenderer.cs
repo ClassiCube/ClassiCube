@@ -275,6 +275,8 @@ namespace ClassicalSharp {
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
 		void RenderTranslucent() {
+			Block block = game.LocalPlayer.BlockAtHead;
+			drawAllFaces = block == Block.Water || block == Block.StillWater;
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );

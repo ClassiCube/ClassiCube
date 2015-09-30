@@ -172,13 +172,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			Console.ResetColor();
 		}
 		
-		public abstract void BeginFrame( Game game );
+		public abstract void BeginFrame( GameWindow game );
 		
-		public abstract void EndFrame( Game game );
+		public abstract void EndFrame( GameWindow game );
 		
-		public abstract void SetVSync( Game game, bool value );
+		public abstract void SetVSync( GameWindow game, bool value );
 		
-		public abstract void OnWindowResize( Game game );
+		public abstract void OnWindowResize( GameWindow game );
+		
+		public Action<double> LostContextFunction;
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );

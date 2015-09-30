@@ -66,7 +66,6 @@ namespace ClassicalSharp {
 		public override void Init() {
 			playerFont = new Font( "Arial", 12 );
 			chat = new ChatScreen( game );
-			chat.game = game;
 			const int blockSize = 32;
 			chat.ChatLogYOffset = blockSize + blockSize;
 			chat.ChatInputYOffset = blockSize + blockSize / 2;
