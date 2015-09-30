@@ -6,10 +6,10 @@ namespace ClassicalSharp {
 	
 	public sealed class BlockHotbarWidget : Widget {
 		
-		public BlockHotbarWidget( Game window ) : base( window ) {
+		public BlockHotbarWidget( Game game ) : base( game ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
-			window.HeldBlockChanged += HeldBlockChanged;
+			game.HeldBlockChanged += HeldBlockChanged;
 		}
 		
 		Texture[] barTextures = new Texture[9];
@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				game.HeldBlockIndex = (int)key - (int)Key.Number1;
+				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
 				return true;
 			}
 			return false;
@@ -28,11 +28,12 @@ namespace ClassicalSharp {
 			int y = game.Height - blockSize;
 			
 			Size size = new Size( 32, 32 );
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, y );
 				}
-				selectedBlock = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, y );
 			}
 			
 			int x = game.Width / 2 - ( blockSize * barTextures.Length ) / 2;
@@ -42,7 +43,7 @@ namespace ClassicalSharp {
 			Height = blockSize;
 			
 			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, game.BlocksHotbar[i] );
+				barTextures[i] = MakeTexture( x, y, game.Inventory.Hotbar[i] );
 				x += blockSize;
 			}
 		}
@@ -54,7 +55,7 @@ namespace ClassicalSharp {
 			int selectedX = 0;
 			for( int i = 0; i < barTextures.Length; i++ ) {
 				barTextures[i].RenderNoBind( graphicsApi );
-				if( i == game.HeldBlockIndex ) {
+				if( i == game.Inventory.HeldBlockIndex ) {
 					selectedX = barTextures[i].X1;
 				}
 			}
@@ -69,8 +70,8 @@ namespace ClassicalSharp {
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
-			int index = game.HeldBlockIndex;
-			Block block = game.HeldBlock;
+			int index = game.Inventory.HeldBlockIndex;
+			Block block = game.Inventory.HeldBlock;
 			int x = barTextures[index].X1;
 			barTextures[index] = MakeTexture( x, Y, block );
 		}
@@ -80,7 +81,7 @@ namespace ClassicalSharp {
 			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 			
 			int verSize = blockSize;
-			float height = game.BlockInfo.BlockHeight( (byte)block );
+			float height = game.BlockInfo.Height[(byte)block];
 			int blockY = y;
 			if( height != 1 ) {
 				rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;

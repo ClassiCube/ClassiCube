@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindingsBase.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="DisplayDevice.cs" />
     <Compile Include="DisplayResolution.cs" />
     <Compile Include="FrameEventArgs.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Platform\MacOS\MacOSException.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />
     <Compile Include="Platform\MacOS\QuartzDisplayDeviceDriver.cs" />
+    <Compile Include="Platform\Minimal.cs" />
     <Compile Include="Platform\PlatformException.cs" />
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
@@ -128,7 +130,6 @@
     <Compile Include="SharpDX\ComObject.cs" />
     <Compile Include="SharpDX\Raw.cs" />
     <Compile Include="SharpDX\Result.cs" />
-    <Compile Include="WindowBorder.cs" />
     <Compile Include="WindowState.cs" />
   </ItemGroup>
   <ItemGroup>

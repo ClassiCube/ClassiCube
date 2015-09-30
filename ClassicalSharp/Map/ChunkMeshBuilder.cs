@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			game.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		int width, length, height;
+		internal int width, length, height, clipLevel;
 		int maxX, maxY, maxZ;
 		byte[] counts = new byte[chunkSize3 * TileSide.Sides];
 		byte[] chunk = new byte[extChunkSize3];
@@ -86,12 +86,14 @@ namespace ClassicalSharp {
 							if( block == 11 ) block = 10; // Still lava --> Lava
 							
 							if( allAir && block != 0 ) allAir = false;
-							if( allSolid && !info.isOpaque[block] ) allSolid = false;
+							if( allSolid && !info.IsOpaque[block] ) allSolid = false;
 							chunkPtr[chunkIndex] = block;
 						}
 					}
 				}
 				
+				if( x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width || 
+				   y1 + chunkSize >= height || z1 + chunkSize >= length ) allSolid = false;
 				if( !( allAir || allSolid ) ) {
 					map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
 				}
@@ -113,10 +115,10 @@ namespace ClassicalSharp {
 			X = x; Y = y; Z = z;
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			
-			if( info.isSprite[tile] ) {
-				int count = counts[index];
+			if( info.IsSprite[tile] ) {
+				int count = counts[index + TileSide.Top];
 				if( count != 0 ) {
-					blockHeight = info.heights[tile];
+					blockHeight = info.Height[tile];
 					DrawSprite( count );
 				}
 				return;
@@ -124,13 +126,13 @@ namespace ClassicalSharp {
 			
 			int leftCount = counts[index++], rightCount = counts[index++],
 			frontCount = counts[index++], backCount = counts[index++],
-			bottomCount = counts[index++], topCount = counts[index++];		
-			if( leftCount == 0 && rightCount == 0 && frontCount == 0 && 
+			bottomCount = counts[index++], topCount = counts[index++];
+			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			emitsLight = info.emitsLight[tile];
-			blockHeight = info.heights[tile];
-			isTranslucent = info.isTranslucent[tile];
+			emitsLight = info.EmitsLight[tile];
+			blockHeight = info.Height[tile];
+			isTranslucent = info.IsTranslucent[tile];
 			
 			if( leftCount != 0 )
 				DrawLeftFace( leftCount );
@@ -166,21 +168,25 @@ namespace ClassicalSharp {
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
-						if( info.IsSprite( tile ) ) {
+						if( info.IsSprite[tile] ) {
+							countIndex += TileSide.Top;
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
-								int count = StretchX( xx, countIndex, x, y, z, chunkIndex, tile, 0 );
-								AddSpriteVertices( tile, count );
-								counts[countIndex] = (byte)count;
+								AddSpriteVertices( tile, 1 );
+								counts[countIndex] = 1;
 							}
 						} else {
 							X = x; Y = y; Z = z;
-							emitsLight = info.emitsLight[tile];
+							emitsLight = info.EmitsLight[tile];
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, maxZ, TileSide.Back, extChunkSize );
-							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -extChunkSize2 );
+							
+							if( y > 0 )
+								TestAndStretchX( xx, countIndex, tile, chunkIndex, y, 0, TileSide.Bottom, -extChunkSize2 );
+							else
+								counts[countIndex + TileSide.Bottom] = 0;
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, y, maxY + 2, TileSide.Top, extChunkSize2 );
 						}
 					}
@@ -190,10 +196,9 @@ namespace ClassicalSharp {
 		
 		void TestAndStretchX( int xx, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
-			if( value == test ) {
-				counts[index] = 0;
-			} else if( counts[index] != 0 ) {
-				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+			if( counts[index] != 0 ) {
+				if( (value == test && Y < clipLevel) || 
+				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchX( xx, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -205,10 +210,9 @@ namespace ClassicalSharp {
 		
 		void TestAndStretchZ( int zz, int index, byte tile, int chunkIndex, int value, int test, int tileSide, int offset ) {
 			index += tileSide;
-			if( value == test ) {
-				counts[index] = 0;
-			} else if( counts[index] != 0 ) {
-				if( info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide ) ) {
+			if( counts[index] != 0 ) {
+				if( (value == test && Y < clipLevel) || 
+				   (value != test && info.IsFaceHidden( tile, chunk[chunkIndex + offset], tileSide )) ) {
 					counts[index] = 0;
 				} else {
 					int count = StretchZ( zz, index, X, Y, Z, chunkIndex, tile, tileSide );
@@ -218,7 +222,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		byte GetNeighbour( int chunkIndex, int face ) {
+		byte GetNeighbour( int chunkIndex, int face ) {			
 			switch( face ) {
 				case TileSide.Left:
 					return chunk[chunkIndex - 1]; // x - 1
@@ -247,7 +251,7 @@ namespace ClassicalSharp {
 			chunkIndex++;
 			countIndex += TileSide.Sides;
 			int max = chunkSize - xx;
-			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {			
+			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -263,7 +267,7 @@ namespace ClassicalSharp {
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * TileSide.Sides;
 			int max = chunkSize - zz;
-			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {				
+			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				z++;
@@ -281,6 +285,7 @@ namespace ClassicalSharp {
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
+			clipLevel = Math.Max( 0, game.Map.GroundHeight );
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

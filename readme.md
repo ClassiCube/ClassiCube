@@ -6,38 +6,37 @@ You can get the latest binaries [here](https://github.com/UnknownShadow200/Class
 #### What ClassicalSharp is
 * Works with both minecraft.net and classicube.net accounts.
 * Lightweight, minimal memory usage compared to the standard client.
-* Works with effectively all graphics cards that support OpenGL.
+* Works with effectively all graphics cards that support OpenGL or Direct3D 9.
+* Provides single-player support. (only flatgrass generator, but can load .dat and .fcm maps)
 
-It does not:
-* Work with 'modern/premium' Minecraft servers.
-* Provide single-player support. (But I am working on adding it)
+It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
 * Windows: .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
 * Linux: Mono.
 * Mac OS X: Mono. (Not tested at all yet - likely just crashes)
 
+#### Instructions
+Initially, you will need to run launcher.exe to download the required assets from minecraft.net. 
+Just click 'OK' to the dialog box that appears when you start the launcher.
+
+**Singleplayer**
+Run classicalsharp.exe.
+
+**Multiplayer**
+Run launcher.exe. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
+
 ##### Mono specific notes
 *You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
 *Also, if you are using an older mono version, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.*
 
-#### Instructions
-The simple way to use ClassicalSharp is to use the launcher application. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
-
-Note that the first time you run the launcher, a dialog box will pop up saying: *"Some required resources weren't found. Would you like to download them now?"* Just click OK. 
-(This is necessary because I cannot legally redistribute the assets of Minecraft Classic with the application)
-
-*Alternatively, you can pass command line arguments directly to the client. These are expected to be in the form: `<username> <mppass> <ip> <port> <skin server>`, where skin server is optional.*
-
 #### Key combinations
 * Press escape (after joining a world) to switch to the pause menu. 
-* The pause menu lists all of the key combinations used by the client. 
-  These key combinations can be reassigned by clicking on a key combination.
-* Press escape or click "Back to game" to return to the game.
+* Pause menu -> Key mappings lists all of the key combinations used by the client. 
 
 Some points to note:
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
-* Press F6 to change view distance. A smaller number of visible chunks can improve performance.
+* Press F6 to cycle view distance. A smaller number of visible chunks can improve performance.
 * Press F7 to toggle VSync on or off. (on minimises CPU usage)
 
 #### Client commands

@@ -7,15 +7,9 @@ namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
 		
-		public TextInputWidget( Game window, Font font, Font boldFont ) : base( window ) {
+		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
-			handlers[0] = new InputHandler( BackspaceKey, Key.BackSpace, 10 );
-			handlers[1] = new InputHandler( DeleteKey, Key.Delete, 10 );
-			handlers[2] = new InputHandler( LeftKey, Key.Left, 10 );
-			handlers[3] = new InputHandler( RightKey, Key.Right, 10 );
-			handlers[4] = new InputHandler( UpKey, Key.Up, 5 );
-			handlers[5] = new InputHandler( DownKey, Key.Down, 5 );
 			typingLogPos = game.ChatInputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
@@ -33,19 +27,18 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			chatCaretTexture.Render( graphicsApi );
-			TickInput( delta );
 		}
 
 		public override void Init() {
 			X = 10;
-			DrawTextArgs caretArgs = new DrawTextArgs( graphicsApi, "_", Color.White, false );
-			chatCaretTexture = Utils2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
+			DrawTextArgs caretArgs = new DrawTextArgs( "_", Color.White, false );
+			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			string value = chatInputText.GetString();
 			
 			if( chatInputText.Empty ) {
 				caretPos = -1;
 			}
-			Size size = Utils2D.MeasureSize( value, font, false );
+			Size size = game.Drawer2D.MeasureSize( value, font, false );
 			
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
@@ -53,10 +46,10 @@ namespace ClassicalSharp {
 				DrawString( size, value, true );
 			} else {
 				string subString = chatInputText.GetSubstring( caretPos );
-				Size trimmedSize = Utils2D.MeasureSize( subString, font, false );
+				Size trimmedSize = game.Drawer2D.MeasureSize( subString, font, false );
 				
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = Utils2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
+				Size charSize = game.Drawer2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
 				chatCaretTexture.Width = charSize.Width;
 				DrawString( size, value, false );
 			}
@@ -66,20 +59,21 @@ namespace ClassicalSharp {
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
 			int y = game.Height - ChatInputYOffset - size.Height / 2;
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, Color.White, false );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
+					DrawTextArgs args = new DrawTextArgs( value, Color.White, false );
 					args.SkipPartsCheck = skipCheck;
-					Utils2D.DrawText( g, font, ref args, 0, 0 );
+					drawer.DrawText(  font, ref args, 0, 0 );
+					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );
 				}
-				chatInputTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, 10, y );
 			}
 			
 			chatCaretTexture.Y1 = chatInputTexture.Y1;
 			Y = y;
 			Width = size.Width;
-			Width = size.Height;
+			Height = size.Height;
 		}
 
 		public override void Dispose() {
@@ -109,53 +103,6 @@ namespace ClassicalSharp {
 		}
 		
 		#region Input handling
-		InputHandler[] handlers = new InputHandler[6];
-		
-		class InputHandler {
-			public Action KeyFunction;
-			public DateTime LastDown;
-			public Key AssociatedKey;
-			public double accumulator, period;
-			
-			public InputHandler( Action func, Key key, int frequency ) {
-				KeyFunction = func;
-				AssociatedKey = key;
-				LastDown = DateTime.MinValue;
-				period = 1.0 / frequency;
-			}
-			
-			public bool HandlesKeyDown( Key key ) {
-				if( key != AssociatedKey ) return false;
-				LastDown = DateTime.UtcNow;
-				KeyFunction();
-				return true;
-			}
-			
-			public void KeyTick( Game window ) {
-				if( LastDown == DateTime.MinValue ) return;
-				if( window.IsKeyDown( AssociatedKey ) &&
-				   ( DateTime.UtcNow - LastDown ).TotalSeconds >= period ) {
-					KeyFunction();
-				}
-			}
-			
-			public bool HandlesKeyUp( Key key ) {
-				if( key != AssociatedKey ) return false;
-				LastDown = DateTime.MinValue;
-				return true;
-			}
-		}
-		
-		void TickInput( double delta ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				InputHandler handler = handlers[i];
-				handler.accumulator += delta;
-				while( handler.accumulator > handler.period ) {
-					handler.KeyTick( game );
-					handler.accumulator -= handler.period;
-				}
-			}
-		}
 		
 		public override bool HandlesKeyPress( char key ) {
 			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
@@ -172,10 +119,22 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
+		public override bool HandlesKeyDown( Key key ) {
+			if( key == Key.Down ) DownKey();
+			else if( key == Key.Up ) UpKey();
+			else if( key == Key.Left ) LeftKey();
+			else if( key == Key.Right ) RightKey();
+			else if( key == Key.BackSpace ) BackspaceKey();
+			else if( key == Key.Delete ) DeleteKey();
+			else if( !OtherKey( key ) ) return false;
+			
+			return true;
+		}
+		
 		void BackspaceKey() {
 			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {
-					chatInputText.DeleteAt( chatInputText.Length - 1 );				
+					chatInputText.DeleteAt( chatInputText.Length - 1 );
 				} else {
 					caretPos--;
 					chatInputText.DeleteAt( caretPos );
@@ -240,10 +199,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override bool HandlesKeyDown( Key key ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				if( handlers[i].HandlesKeyDown( key ) ) return true;
-			}
+		bool OtherKey( Key key ) {
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			if( key == Key.V && controlDown && chatInputText.Length < 64 ) {
 				string text = Clipboard.GetText();
@@ -265,6 +221,7 @@ namespace ClassicalSharp {
 				} else {
 					chatInputText.Append( caretPos, text );
 					caretPos += text.Length;
+					if( caretPos >= chatInputText.Length ) caretPos = -1;
 				}
 				Dispose();
 				Init();
@@ -277,14 +234,6 @@ namespace ClassicalSharp {
 			}
 			return false;
 		}
-		
-		public override bool HandlesKeyUp( Key key ) {
-			for( int i = 0; i < handlers.Length; i++ ) {
-				if( handlers[i].HandlesKeyUp( key ) ) return true;
-			}
-			return false;
-		}
-		
 		#endregion
 	}
 }

@@ -22,7 +22,7 @@ namespace ClassicalSharp.Particles {
 		public void Render( double delta, float t ) {
 			if( particles.Count == 0 ) return;
 			
-			int count = particles.Count * 6;
+			int count = particles.Count * 4;
 			if( count > vertices.Length ) {
 				vertices = new VertexPos3fTex2fCol4b[count];
 			}
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < 25; i++ ) {
 				double velX = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
 				double velZ = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
-				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.BlockHeight( block );
+				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.Height[block];
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				double xOffset = rnd.NextDouble() - 0.125;
 				double yOffset = rnd.NextDouble() - 0.125;
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Particles {
 				particleRec.V1 = (float)( rec.V1 + rnd.Next( 0, cellsCountY ) * elementYSize );
 				particleRec.U2 = particleRec.U1 + elementXSize;
 				particleRec.V2 = particleRec.V1 + elementYSize;
-				double life = 3 - rnd.NextDouble();
+				double life = 1.5 - rnd.NextDouble();
 				
 				particles.Add( new TerrainParticle( game, pos, velocity, life, particleRec ) );
 			}

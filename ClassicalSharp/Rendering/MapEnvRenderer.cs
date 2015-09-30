@@ -20,7 +20,6 @@ namespace ClassicalSharp {
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
 		int sidesIndices, edgesIndices;
-		static readonly FastColour sidesCol = new FastColour( 128, 128, 128 ), edgesCol = FastColour.White;
 		bool legacy;
 		
 		public void SetUseLegacyMode( bool legacy ) {
@@ -95,6 +94,8 @@ namespace ClassicalSharp {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 			} else if( e.Var == EnvVariable.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
+			} else if( e.Var == EnvVariable.SunlightColour ) {
+				ResetSidesAndEdges( null, null );
 			}
 		}
 		
@@ -124,14 +125,15 @@ namespace ClassicalSharp {
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesIndices / 6 * 4];
 			IntPtr ptr = (IntPtr)vertices;
 			
+			FastColour col = map.SunlightYBottom;
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, sidesCol, ref vertices );
-			}
-			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, sidesCol, ref vertices );
-			DrawZ( 0, 0, map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawZ( map.Length, 0, map.Width, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawX( 0, 0, map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
-			DrawX( map.Width, 0, map.Length, 0, groundLevel, axisSize, sidesCol, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
+			}			
+			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, ref vertices );
+			DrawZ( 0, 0, map.Width, 0, groundLevel, axisSize, col, ref vertices );
+			DrawZ( map.Length, 0, map.Width, 0, groundLevel, axisSize, col, ref vertices );
+			DrawX( 0, 0, map.Length, 0, groundLevel, axisSize, col, ref vertices );
+			DrawX( map.Width, 0, map.Length, 0, groundLevel, axisSize, col, ref vertices );
 			sidesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesIndices / 6 * 4 );
 		}
 		
@@ -144,7 +146,7 @@ namespace ClassicalSharp {
 			IntPtr ptr = (IntPtr)vertices;
 			
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, edgesCol, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, game.Map.Sunlight, ref vertices );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesIndices / 6 * 4 );
 		}

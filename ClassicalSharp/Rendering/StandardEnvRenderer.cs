@@ -12,10 +12,16 @@ namespace ClassicalSharp.Renderers {
 			map = game.Map;
 		}
 		
-		int cloudTexture = -1, cloudsVb = -1, cloudsIndices;
-		int skyOffset = 10, skyVb = -1, skyIndices;
-		public float CloudsSpeed = 1;
+		int cloudsVb = -1, cloudsIndices, skyVb = -1, skyIndices;
+		public float CloudsSpeed = 1;		
+		public int CloudsOffset = 2;
 		bool legacy;
+		
+		public void SetCloudsOffset( int offset ) {
+			CloudsOffset = offset;
+			ResetClouds();
+			ResetSky();
+		}
 		
 		public void SetUseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
@@ -27,18 +33,13 @@ namespace ClassicalSharp.Renderers {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
 			
 			Vector3 pos = game.LocalPlayer.EyePosition;
-			if( pos.Y < map.Height + skyOffset ) {
+			if( pos.Y < map.Height + CloudsOffset + 8 ) {
 				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 				graphics.BindVb( skyVb );
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyIndices, 0 );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
-		}
-
-		public void SetSkyOffset( int offset ) {
-			skyOffset = offset;
-			ResetSky();
 		}
 		
 		protected override void CloudsColourChanged() {
@@ -69,7 +70,6 @@ namespace ClassicalSharp.Renderers {
 			base.Init();
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
-			cloudTexture = graphics.CreateTexture( "clouds.png" );
 			game.ViewDistanceChanged += ResetAllEnv;
 		}
 		
@@ -84,7 +84,6 @@ namespace ClassicalSharp.Renderers {
 			game.ViewDistanceChanged -= ResetAllEnv;
 			graphics.DeleteVb( skyVb );
 			graphics.DeleteVb( cloudsVb );
-			graphics.DeleteTexture( ref cloudTexture );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -97,7 +96,7 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
-			graphics.BindTexture( cloudTexture );
+			graphics.BindTexture( game.CloudsTextureId );
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( cloudsVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );
@@ -118,22 +117,19 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetFog() {
-			if( map.IsNotLoaded ) return;
-			FastColour fogCol = map.FogCol;
-			FastColour skyCol = map.SkyCol;
-			FastColour adjFogCol = fogCol;
+			if( map.IsNotLoaded ) return;			
+			FastColour adjFogCol = FastColour.White;
 			Block headBlock = game.LocalPlayer.BlockAtHead;
+			BlockInfo info = game.BlockInfo;
 			
-			if( headBlock == Block.Water || headBlock == Block.StillWater ) {
+			if( info.FogDensity[(byte)headBlock] != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( 0.1f );
-				adjFogCol = new FastColour( 5, 5, 51 );
-			} else if( headBlock == Block.Lava || headBlock == Block.StillLava ) {
-				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( 2f );
-				adjFogCol = new FastColour( 153, 25, 0 );
+				graphics.SetFogDensity( info.FogDensity[(byte)headBlock] );
+				adjFogCol = info.FogColour[(byte)headBlock];
 			} else {
 				// Blend fog and sky together
+				FastColour fogCol = map.FogCol;
+				FastColour skyCol = map.SkyCol;
 				float blend = (float)BlendFactor( game.ViewDistance );
 				adjFogCol.R = (byte)Utils.Lerp( fogCol.R, skyCol.R, blend );
 				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );
@@ -164,7 +160,7 @@ namespace ClassicalSharp.Renderers {
 			cloudsIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudsIndices / 6 * 4];
-			DrawCloudsY( x1, z1, x2, z2, map.Height + 2, axisSize, map.CloudsCol, vertices );
+			DrawCloudsY( x1, z1, x2, z2, map.Height + CloudsOffset, axisSize, map.CloudsCol, vertices );
 			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudsIndices / 6 * 4 );
 		}
 		
@@ -174,7 +170,7 @@ namespace ClassicalSharp.Renderers {
 			skyIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyIndices / 6 * 4];
-			DrawSkyY( x1, z1, x2, z2, map.Height + skyOffset, axisSize, map.SkyCol, vertices );
+			DrawSkyY( x1, z1, x2, z2, map.Height + CloudsOffset + 8, axisSize, map.SkyCol, vertices );
 			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyIndices / 6 * 4 );
 		}
 		

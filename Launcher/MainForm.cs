@@ -10,7 +10,7 @@ namespace Launcher {
 	
 	public partial class MainForm : Form {
 		
-		public const string AppName = "ClassicalSharp Launcher 0.9";
+		public const string AppName = "ClassicalSharp Launcher 0.95";
 		
 		public MainForm() {
 			InitializeComponent();

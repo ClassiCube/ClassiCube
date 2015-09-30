@@ -56,9 +56,6 @@ namespace OpenTK {
 		
 		/// <summary> Gets or sets the <see cref="OpenTK.WindowState"/> for this window. </summary>
 		WindowState WindowState { get; set; }
-		
-		/// <summary> Gets or sets the <see cref="OpenTK.WindowBorder"/> for this window. </summary>
-		WindowBorder WindowBorder { get; set; }
 
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure the contains the external bounds of this window, in screen coordinates.
 		/// External bounds include the title bar, borders and drawing area of the window. </summary>
@@ -114,8 +111,8 @@ namespace OpenTK {
 		/// <summary> Gets or sets the cursor position in screen coordinates. </summary>
 		Point DesktopCursorPos { get; set; }
 		
-		/// <summary> Sets whether the cursor is visible in the window. </summary>
-		bool CursorVisible { set; }
+		/// <summary> Gets or sets whether the cursor is visible in the window. </summary>
+		bool CursorVisible { get; set; }
 
 		/// <summary> Occurs whenever the window is moved. </summary>
 		event EventHandler<EventArgs> Move;
@@ -143,9 +140,6 @@ namespace OpenTK {
 
 		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
 		event EventHandler<EventArgs> FocusedChanged;
-
-		/// <summary> Occurs when the <see cref="WindowBorder"/> property of the window changes. </summary>
-		event EventHandler<EventArgs> WindowBorderChanged;
 
 		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
 		event EventHandler<EventArgs> WindowStateChanged;

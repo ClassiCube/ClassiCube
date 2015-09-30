@@ -7,16 +7,18 @@ namespace ClassicalSharp {
 		
 		readonly Font font;
 		StringBuffer text;
-		public FpsScreen( Game window ) : base( window ) {
+		public FpsScreen( Game game ) : base( game ) {
 			font = new Font( "Arial", 13 );
 			text = new StringBuffer( 96 );
 		}
 		
 		TextWidget fpsTextWidget;
 		
-		public override void Render( double delta ) {
-			graphicsApi.Texturing = true;
+		public override void Render( double delta ) {		
 			UpdateFPS( delta );
+			if( game.HideGui ) return;
+			
+			graphicsApi.Texturing = true;
 			fpsTextWidget.Render( delta );
 			graphicsApi.Texturing = false;
 		}

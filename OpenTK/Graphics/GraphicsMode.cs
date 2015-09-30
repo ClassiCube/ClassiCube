@@ -7,7 +7,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 
 namespace OpenTK.Graphics {
 	
@@ -20,12 +19,9 @@ namespace OpenTK.Graphics {
 
         static GraphicsMode defaultMode;
         static IGraphicsMode implementation;
-        static readonly object SyncRoot = new object();
         
         static GraphicsMode() {
-            lock (SyncRoot) {
-                implementation = Platform.Factory.Default.CreateGraphicsMode();
-            }
+        	implementation = Platform.Factory.Default.CreateGraphicsMode();
         }
 
         internal GraphicsMode(IntPtr? index, ColorFormat color, int depth, int stencil, int buffers) {
@@ -81,14 +77,11 @@ namespace OpenTK.Graphics {
         /// <summary>Returns an OpenTK.GraphicsFormat compatible with the underlying platform.</summary>
         public static GraphicsMode Default {
             get {
-                lock (SyncRoot) {
-                    if (defaultMode == null) {
-                        Debug.Print("Creating default GraphicsMode ({0}, {1}, {2}, {3}).", DisplayDevice.Default.BitsPerPixel,
-                                    16, 0, 2);
-                        defaultMode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 16, 0, 2);
-                    }
-                    return defaultMode;
-                }
+        		if (defaultMode == null) {
+        			Debug.Print("Creating default GraphicsMode ({0}, {1}, {2}, {3}).", DisplayDevice.Default.BitsPerPixel, 16, 0, 2);
+        			defaultMode = new GraphicsMode(DisplayDevice.Default.BitsPerPixel, 16, 0, 2);
+        		}
+        		return defaultMode;
             }
         }
 

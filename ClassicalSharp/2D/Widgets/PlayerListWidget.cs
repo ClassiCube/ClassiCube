@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public abstract class PlayerListWidget : Widget {
 		
 		protected readonly Font font;
-		public PlayerListWidget( Game window, Font font ) : base( window ) {
+		public PlayerListWidget( Game game, Font font ) : base( game ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.Centre;
 			this.font = font;

@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public class BlockSelectScreen : Screen {
 		
-		public BlockSelectScreen( Game window ) : base( window ) {
+		public BlockSelectScreen( Game game ) : base( game ) {
 			font = new Font( "Arial", 13 );
 		}
 		
@@ -76,11 +76,12 @@ namespace ClassicalSharp {
 		public override void Init() {
 			game.BlockPermissionsChanged += BlockPermissionsChanged;
 			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
-				selectedBlock = Utils2D.Make2DTexture( graphicsApi, bmp, size, 0, 0 );
 			}
 			RecreateBlockTextures();
 		}
@@ -94,7 +95,6 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
-		static readonly string[] blockNames = Enum.GetNames( typeof( Block ) );
 		unsafe void UpdateBlockInfoString( Block block ) {
 			fixed( char* ptr = buffer.value ) {
 				char* ptr2 = ptr;
@@ -103,20 +103,28 @@ namespace ClassicalSharp {
 				if( block == Block.TNT ) {
 					buffer.Append( ref ptr2, "TNT" );
 				} else {
-					string value = blockNames[(int)block];
-					for( int i = 0; i < value.Length; i++ ) {
-						char c = value[i];
-						if( Char.IsUpper( c ) && i > 0 ) {
-							buffer.Append( ref ptr2, ' ' );
-						}
-						buffer.Append( ref ptr2, c );
+					string value = game.BlockInfo.Name[(byte)block];
+					if( (byte)block < BlockInfo.CpeBlocksCount ) {
+						SplitUppercase( value, ref ptr2 );
+					} else {
+						buffer.Append( ref ptr2, value );
 					}
 				}
 				buffer.Append( ref ptr2, " (can place: " );
-				buffer.Append( ref ptr2, game.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f, can delete: " );
-				buffer.Append( ref ptr2, game.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+				buffer.Append( ref ptr2, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 				buffer.Append( ref ptr2, "&f)" );
+			}
+		}		
+		
+		unsafe void SplitUppercase( string value, ref char* ptr ) {
+			for( int i = 0; i < value.Length; i++ ) {
+				char c = value[i];
+				if( Char.IsUpper( c ) && i > 0 ) {
+					buffer.Append( ref ptr, ' ' );
+				}
+				buffer.Append( ref ptr, c );
 			}
 		}
 		
@@ -132,25 +140,26 @@ namespace ClassicalSharp {
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
-			Size size = Utils2D.MeasureSize( value, font, true );
+			Size size = game.Drawer2D.MeasureSize( value, font, true );
 			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
 			int y = startY - size.Height;
 			
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRect( g, backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( graphicsApi, value, true );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
+					DrawTextArgs args = new DrawTextArgs( value, true );
 					args.SkipPartsCheck = true;
-					Utils2D.DrawText( g, font, ref args, 0, 0 );
-				}
-				blockInfoTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, x, y );
+					drawer.DrawText( font, ref args, 0, 0 );
+					blockInfoTexture = drawer.Make2DTexture( bmp, size, x, y );
+				}		
 			}
 		}
 		
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
 			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
-				if( game.CanPlace[i] || game.CanDelete[i] ) {
+				if( game.Inventory.CanPlace[i] || game.Inventory.CanDelete[i] ) {
 					blocksCount++;
 				}
 			}
@@ -163,13 +172,14 @@ namespace ClassicalSharp {
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( game.CanPlace[tile] || game.CanDelete[tile] ) {
+				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] ) {
 					Block block = (Block)tile;
 					int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
 					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
 					int verSize = blockSize;
-					float height = game.BlockInfo.BlockHeight( (byte)block );
+					float height = game.BlockInfo.Height[(byte)block];
 					int blockY = y;
+					
 					if( height != 1 ) {
 						rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
 						verSize = (int)( blockSize * height );
@@ -213,14 +223,15 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				BlockDrawInfo info = blocksTable[selectedIndex];
-				game.HeldBlock = info.BlockId;
+				game.Inventory.HeldBlock = info.BlockId;
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Keys[KeyMapping.PauseOrExit] ) {
+			if( key == game.Keys[KeyMapping.PauseOrExit] || 
+			   key == game.Keys[KeyMapping.OpenInventory] ) {
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;

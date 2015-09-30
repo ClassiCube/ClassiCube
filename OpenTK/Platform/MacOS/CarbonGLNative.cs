@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using OpenTK.Graphics;
 using OpenTK.Platform.MacOS.Carbon;
@@ -55,7 +54,6 @@ namespace OpenTK.Platform.MacOS
 		WindowClass mWindowClass;
 		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
 		int mTitlebarHeight;
-		private WindowBorder windowBorder = WindowBorder.Resizable;
 		private WindowState windowState = WindowState.Normal;
 
 		static Dictionary<IntPtr, WeakReference> mWindows = new Dictionary<IntPtr, WeakReference>();
@@ -165,7 +163,6 @@ namespace OpenTK.Platform.MacOS
 		void CreateNativeWindow(WindowClass @class, WindowAttributes attrib, Rect r)
 		{
 			Debug.Print("Creating window...");
-			Debug.Indent();
 
 			IntPtr windowRef = API.CreateNewWindow(@class, attrib, r);
 			API.SetWindowTitle(windowRef, title);
@@ -175,7 +172,6 @@ namespace OpenTK.Platform.MacOS
 			SetLocation(r.X, r.Y);
 			SetSize(r.Width, r.Height);
 
-			Debug.Unindent();
 			Debug.Print("Created window.");
 
 			mWindows.Add(windowRef, new WeakReference(this));
@@ -189,7 +185,7 @@ namespace OpenTK.Platform.MacOS
 
 			ConnectEvents();
 
-			System.Diagnostics.Debug.Print("Attached window events.");
+			Debug.Print("Attached window events.");
 		}
 
 		void ConnectEvents()
@@ -322,7 +318,7 @@ namespace OpenTK.Platform.MacOS
 			//Debug.Print("Processing {0} event for {1}.", evt, window.window);
 
 			if (window == null) {
-				Debug.WriteLine("Window for event not found.");
+				Debug.Print("Window for event not found.");
 				return OSStatus.EventNotHandled;
 			}
 
@@ -344,7 +340,7 @@ namespace OpenTK.Platform.MacOS
 
 		private OSStatus ProcessKeyboardEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
 		{
-			System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Keyboard);
+			Debug.Assert(evt.EventClass == EventClass.Keyboard);
 			MacOSKeyCode code = (MacOSKeyCode)0;
 			char charCode = '\0';
 
@@ -386,7 +382,7 @@ namespace OpenTK.Platform.MacOS
 
 		private OSStatus ProcessWindowEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData)
 		{
-			System.Diagnostics.Debug.Assert(evt.EventClass == EventClass.Window);
+			Debug.Assert(evt.EventClass == EventClass.Window);
 
 			switch (evt.WindowEventKind)
 			{
@@ -942,30 +938,6 @@ namespace OpenTK.Platform.MacOS
 			OnResize();
 		}
 
-		public WindowBorder WindowBorder
-		{
-			get
-			{
-				return windowBorder;
-			}
-			set
-			{
-				if (windowBorder == value)
-					return;
-
-				windowBorder = value;
-
-				if (windowBorder == WindowBorder.Resizable)
-				{
-					API.ChangeWindowAttributes(window.WindowRef, WindowAttributes.Resizable | WindowAttributes.FullZoom,
-					                           WindowAttributes.NoAttributes);
-				}
-
-				if (WindowBorderChanged != null)
-					WindowBorderChanged(this, EventArgs.Empty);
-			}
-		}
-
 		#region --- Event wrappers ---
 
 		private void OnKeyPress(KeyPressEventArgs keyPressArgs)
@@ -1033,7 +1005,6 @@ namespace OpenTK.Platform.MacOS
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowBorderChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		public event EventHandler<EventArgs> MouseEnter;
@@ -1068,6 +1039,7 @@ namespace OpenTK.Platform.MacOS
 		
 		// TODO: Hide and show cursor
 		public bool CursorVisible {
+			get { return true; }
 			set { }
 		}
 		

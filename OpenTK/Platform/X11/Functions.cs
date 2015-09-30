@@ -7,7 +7,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using Window = System.IntPtr;
@@ -24,15 +23,9 @@ using KeyCode = System.Byte;    // Or maybe ushort?
 namespace OpenTK.Platform.X11 {
 	
 	internal static class API {
-		internal static readonly object Lock = new object();
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static IntPtr XOpenDisplay(IntPtr display);
-		public static IntPtr XOpenDisplay_Safe(IntPtr display) {
-			lock (Lock) {
-				return XOpenDisplay(display);
-			}
-		}
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XCloseDisplay(IntPtr display);
@@ -102,18 +95,15 @@ namespace OpenTK.Platform.X11 {
 		public extern static bool XTranslateCoordinates(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y, out int intdest_x_return, out int dest_y_return, out IntPtr child_return);
 
 		// Colormaps
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]//, CLSCompliant(false)]
-		public extern static uint XDefaultDepth(IntPtr display, int screen_number);
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XDefaultDepth(IntPtr display, int screen_number);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XDefaultScreen(IntPtr display);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XSetTransientForHint(IntPtr display, IntPtr window, IntPtr prop_window);
-
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, ref MotifWmHints data, int nelements);
-
+		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr[] data, int nelements);
 
@@ -355,28 +345,25 @@ namespace OpenTK.Platform.X11 {
 				depths[i] = *data++;
 			return depths;
 		}
-		
-		static Display defaultDisplay;
-		static int screenCount;
 
-		internal static Display DefaultDisplay { get { return defaultDisplay; } }
-		internal static int ScreenCount { get { return screenCount; } }
+		internal static Display DefaultDisplay;
+		internal static int ScreenCount;
 
 		static API() {
-			defaultDisplay = API.XOpenDisplay_Safe(IntPtr.Zero);
-			if (defaultDisplay == IntPtr.Zero)
+			DefaultDisplay = API.XOpenDisplay(IntPtr.Zero);
+			if (DefaultDisplay == IntPtr.Zero)
 				throw new PlatformException("Could not establish connection to the X-Server.");
 
-			screenCount = API.XScreenCount(DefaultDisplay);
+			ScreenCount = API.XScreenCount(DefaultDisplay);
 			Debug.Print("Display connection: {0}, Screen count: {1}", DefaultDisplay, ScreenCount);
 
 			//AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
 		}
 
 		static void CurrentDomain_ProcessExit(object sender, EventArgs e) {
-			if (defaultDisplay != IntPtr.Zero) {
-				API.XCloseDisplay(defaultDisplay);
-				defaultDisplay = IntPtr.Zero;
+			if (DefaultDisplay != IntPtr.Zero) {
+				API.XCloseDisplay(DefaultDisplay);
+				DefaultDisplay = IntPtr.Zero;
 			}
 		}
 

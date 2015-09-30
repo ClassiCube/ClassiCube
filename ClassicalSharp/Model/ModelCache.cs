@@ -15,21 +15,23 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public void InitCache() {
-			vertices = new VertexPos3fTex2fCol4b[384];
-			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
+			vertices = new VertexPos3fTex2fCol4b[24 * 12];
+			vb = api.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 			cache["humanoid"] = new PlayerModel( game );
 		}
 		
 		internal int vb;
 		internal VertexPos3fTex2fCol4b[] vertices;
 		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();
+		internal int ChickenTexId, CreeperTexId, PigTexId, SheepTexId,
+		SkeletonTexId, SpiderTexId, ZombieTexId, SheepFurTexId, HumanoidTexId;
 		
 		public IModel GetModel( string modelName ) {
 			IModel model;
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) ) {
 				modelName = "block";
-				if( blockId == 0 || blockId > BlockInfo.MaxDefinedBlock )
+				if( blockId == 0 )
 					return cache["humanoid"];
 			}
 			
@@ -72,7 +74,16 @@ namespace ClassicalSharp.Model {
 			foreach( var entry in cache ) {
 				entry.Value.Dispose();
 			}
-			game.Graphics.DeleteDynamicVb( vb );
+			api.DeleteDynamicVb( vb );
+			api.DeleteTexture( ref ChickenTexId );
+			api.DeleteTexture( ref CreeperTexId );
+			api.DeleteTexture( ref PigTexId );
+			api.DeleteTexture( ref SheepTexId );
+			api.DeleteTexture( ref SkeletonTexId );
+			api.DeleteTexture( ref SpiderTexId );
+			api.DeleteTexture( ref ZombieTexId );
+			api.DeleteTexture( ref SheepFurTexId );
+			api.DeleteTexture( ref HumanoidTexId );			
 		}
 	}
 }

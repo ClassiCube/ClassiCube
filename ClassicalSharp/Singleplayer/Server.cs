@@ -8,8 +8,10 @@ namespace ClassicalSharp.Singleplayer {
 	public sealed class SinglePlayerServer : INetworkProcessor {
 		
 		Game game;
+		internal Physics physics;
 		public SinglePlayerServer( Game window ) {
 			game = window;
+			physics = new Physics( game );
 		}
 		
 		public override bool IsSinglePlayer {
@@ -18,14 +20,13 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void Connect( IPAddress address, int port ) {
 			for( int i = (int)Block.Stone; i <= (int)Block.StoneBrick; i++ ) {
-				game.CanPlace[i] = true;
-				game.CanDelete[i] = true;
+				game.Inventory.CanPlace[i] = true;
+				game.Inventory.CanDelete[i] = true;
 			}
 			game.RaiseBlockPermissionsChanged();
 			NewMap();
 			MakeMap( 128, 128, 128 );
 			game.CommandManager.RegisterCommand( new GenerateCommand() );
-			game.CommandManager.RegisterCommand( new SaveMapCommand() );
 			game.CommandManager.RegisterCommand( new LoadMapCommand() );
 		}
 		
@@ -39,16 +40,20 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+			if( place ) 
+				physics.OnBlockPlaced( x, y, z, block );
 		}
 		
 		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 		}
 		
 		public override void Dispose() {
+			physics.Dispose();
 		}
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
+			physics.Tick();
 		}
 		
 		internal void NewMap() {

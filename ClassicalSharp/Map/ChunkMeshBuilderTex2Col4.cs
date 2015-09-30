@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 
 				if( vertices == null || vCount > vertices.Length ) {
 					vertices = new VertexPos3fTex2fCol4b[vCount];
-				}				
+				}
 				vIndex.left = spriteCount / 6 * 4;
 				vIndex.right = vIndex.left + Count.left / 6 * 4;
 				vIndex.front = vIndex.right + Count.right / 6 * 4;
@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 					return emitsLight || y <= 0 || (y - 1) > map.heightmap[( z * width ) + x];
 					
 				case TileSide.Top:
-					return emitsLight || y >= maxY || (y + 1) > map.heightmap[( z * width ) + x];
+					return emitsLight || y >= maxY || y > map.heightmap[( z * width ) + x];
 			}
 			return true;
 		}
@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		
 		unsafe void AddVertices( byte tile, int count, int face ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, face ) );
-			DrawInfo part = info.IsTranslucent( tile ) ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = info.IsTranslucent[tile] ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.Count;
@@ -167,8 +167,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Left );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X > 0 ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide )
-				: map.SunlightXSide;
+			FastColour col = emitsLight ? FastColour.White :
+				X > 0 ? ( Y > map.heightmap[( Z * width ) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide ) : map.SunlightXSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -184,8 +184,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Right );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = X < maxX ? ( emitsLight || Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide )
-				: map.SunlightXSide;
+			FastColour col = emitsLight ? FastColour.White :
+				X < maxX ? ( Y > map.heightmap[( Z * width ) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide ) : map.SunlightXSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -201,8 +201,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Back );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z < maxZ ? ( emitsLight || Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
-				: map.SunlightZSide;
+			FastColour col = emitsLight ? FastColour.White :
+				Z < maxZ ? ( Y > map.heightmap[( (Z + 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide ) : map.SunlightZSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -218,8 +218,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Front );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Z > 0 ? ( emitsLight || Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide )
-				: map.SunlightZSide;
+			FastColour col = emitsLight ? FastColour.White :
+				Z > 0 ? ( Y > map.heightmap[( (Z - 1) * width ) + X] ? map.SunlightZSide : map.ShadowlightZSide ) : map.SunlightZSide;
 			if( blockHeight != 1 ) {
 				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
 			}
@@ -235,8 +235,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Bottom );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y > 0 ? ( emitsLight || (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) 
-				: map.SunlightYBottom;
+			FastColour col = emitsLight ? FastColour.White :
+				Y > 0 ? ( (Y - 1) > map.heightmap[( Z * width ) + X] ? map.SunlightYBottom : map.ShadowlightYBottom ) : map.SunlightYBottom;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
 			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
@@ -249,8 +249,8 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( tile, TileSide.Top );
 			int i;
 			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
-				: map.Sunlight;
+			FastColour col = emitsLight ? FastColour.White :
+				Y < maxY ? ( Y > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) : map.Sunlight;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
@@ -262,29 +262,22 @@ namespace ClassicalSharp {
 		void DrawSprite( int count ) {
 			int texId = info.GetTextureLoc( tile, TileSide.Right );
 			int i;
-			TextureRectangle rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = Y < maxY ? ( emitsLight || (Y + 1) > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight ) 
+			TextureRectangle rec = atlas.GetTexRec( texId, 1, out i );
+			FastColour col = Y < maxY ? ( emitsLight || Y > map.heightmap[( Z * width ) + X] ? map.Sunlight : map.Shadowlight )
 				: map.Sunlight;
 			DrawInfo part = drawInfoNormal[i];
 			
-			// Draw stretched Z axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X, Y, Z + 0.5f, rec.U2, rec.V2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 0.5f, rec.U2, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 0.5f, rec.U1, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 0.5f, rec.U1, rec.V2, col );
+			// Draw Z axis
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, rec.U2, rec.V2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, rec.U2, rec.V1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, rec.U1, rec.V1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, rec.U1, rec.V2, col );
 			
 			// Draw X axis
-			rec.U2 = 1;
-			int startX = X;
-			
-			for( int j = 0; j < count; j++ ) {
-				part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z, rec.U1, rec.V2, col );
-				part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z, rec.U1, rec.V1, col );
-				part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-				part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 0.5f, Y, Z + 1, rec.U2, rec.V2, col );
-				X++;
-			}
-			X = startX;
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, rec.U1, rec.V2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, rec.U1, rec.V1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, rec.U2, rec.V1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 2.5f/16, rec.U2, rec.V2, col );
 		}
 	}
 }

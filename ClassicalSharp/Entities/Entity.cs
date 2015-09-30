@@ -33,8 +33,8 @@ namespace ClassicalSharp {
 		}
 		
 		public virtual Vector3 CollisionSize {
-			get { return new Vector3( 8 / 16f, 30 / 16f, 8 / 16f );
-				//Model.CollisionSize; TODO: for non humanoid models, we also need to offset eye position.
+			get { return new Vector3( 8/16f, 28.5f/16f, 8/16f );
+				//Model.CollisionSize; TODO: for non humanoid models
 			}
 		}
 		
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 						if( !map.IsValidPos( x, y, z ) ) continue;
 						byte block = map.GetBlock( x, y, z );
 						if( condition( block ) ) {
-							float blockHeight = info.BlockHeight( block );
+							float blockHeight = info.Height[block];
 							Vector3 min = new Vector3( x, y, z );
 							Vector3 max = new Vector3( x + 1, y + blockHeight, z + 1 );
 							BoundingBox blockBB = new BoundingBox( min, max );

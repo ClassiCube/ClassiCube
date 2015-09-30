@@ -3,7 +3,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
 using System.Drawing;
 using EventTime = System.Double;
 

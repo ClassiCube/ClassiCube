@@ -17,21 +17,28 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract bool Texturing { set; }
 		
-		public int CreateTexture( string path ) {
-			if( !File.Exists( path ) ) {
-				throw new FileNotFoundException( path + " not found" );
-			}
-			using( Bitmap bmp = new Bitmap( path ) ) {
-				return CreateTexture( bmp );
-			}
-		}
+		internal float MinZNear = 0.1f;
 		
 		public int CreateTexture( Bitmap bmp ) {
 			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-			BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-			int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
-			bmp.UnlockBits( data );
-			return texId;
+			// Convert other pixel formats into 32bpp formats.
+			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+				Utils.LogDebug( "Converting " + bmp.PixelFormat + " into 32bpp image" );
+				using( Bitmap _32bmp = new Bitmap( bmp.Width, bmp.Height ) ) {
+					using( Graphics g = Graphics.FromImage( _32bmp ) )
+						g.DrawImage( bmp, 0, 0, bmp.Width, bmp.Height );
+					
+					BitmapData data = _32bmp.LockBits( rec, ImageLockMode.ReadOnly, _32bmp.PixelFormat );
+					int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
+					_32bmp.UnlockBits( data );
+					return texId;
+				}
+			} else {
+				BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
+				int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
+				bmp.UnlockBits( data );
+				return texId;
+			}
 		}
 		
 		public int CreateTexture( FastBitmap bmp ) {
@@ -138,7 +145,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal abstract void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex );
 		
-		protected static int[] strideSizes = { 20, 16, 24 };
+		protected static int[] strideSizes = { 16, 24 };
 		
 		public abstract void SetMatrixMode( MatrixType mode );
 		
@@ -157,17 +164,27 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void PrintApiSpecificInfo();
 		
-		public abstract void BeginFrame( Game game );
+		public void PrintGraphicsInfo() {
+			Console.ForegroundColor = ConsoleColor.Green;
+			PrintApiSpecificInfo();
+			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
+			Utils.Log( "== End of graphics info ==" );
+			Console.ResetColor();
+		}
 		
-		public abstract void EndFrame( Game game );
+		public abstract void BeginFrame( GameWindow game );
 		
-		public abstract void SetVSync( Game game, bool value );
+		public abstract void EndFrame( GameWindow game );
 		
-		public abstract void OnWindowResize( Game game );
+		public abstract void SetVSync( GameWindow game, bool value );
+		
+		public abstract void OnWindowResize( GameWindow game );
+		
+		public Action<double> LostContextFunction;
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2f, 4 );
+			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 4 );
 		}
 		
 		public virtual void Dispose() {
@@ -180,15 +197,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
 			quadVerts[0] = new VertexPos3fCol4b( x, y, 0, col );
 			quadVerts[1] = new VertexPos3fCol4b( x + width, y, 0, col );
-			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );	
+			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
 			BeginVbBatch( VertexFormat.Pos3fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
-		internal VertexPos3fTex2f[] texVerts = new VertexPos3fTex2f[4];
+		internal VertexPos3fTex2fCol4b[] texVerts = new VertexPos3fTex2fCol4b[4];
 		internal int texVb;
-		public virtual void Draw2DTexture( ref Texture tex ) {
+		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
@@ -198,18 +215,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			y1 -= 0.5f;
 			y2 -= 0.5f;
 			#endif
-			texVerts[0] = new VertexPos3fTex2f( x1, y1, 0, tex.U1, tex.V1 );
-			texVerts[1] = new VertexPos3fTex2f( x2, y1, 0, tex.U2, tex.V1 );
-			texVerts[2] = new VertexPos3fTex2f( x2, y2, 0, tex.U2, tex.V2 );		
-			texVerts[3] = new VertexPos3fTex2f( x1, y2, 0, tex.U1, tex.V2 );
-			BeginVbBatch( VertexFormat.Pos3fTex2f );
+			texVerts[0] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
+			texVerts[1] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
+			texVerts[2] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
+			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
+			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+		}
+		
+		public void Draw2DTexture( ref Texture tex ) {
+			Draw2DTexture( ref tex, FastColour.White );
 		}
 		
 		public void Mode2D( float width, float height ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
-			LoadIdentityMatrix();
 			DepthTest = false;
 			LoadOrthoMatrix( width, height );
 			SetMatrixMode( MatrixType.Modelview );
@@ -219,7 +239,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		protected virtual void LoadOrthoMatrix( float width, float height ) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
+			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, -10000, 10000 );
 			LoadMatrix( ref matrix );
 		}
 		
@@ -254,9 +274,8 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		Pos3fTex2f = 0,
-		Pos3fCol4b = 1,
-		Pos3fTex2fCol4b = 2,
+		Pos3fCol4b = 0,
+		Pos3fTex2fCol4b = 1,
 	}
 	
 	public enum DrawMode {

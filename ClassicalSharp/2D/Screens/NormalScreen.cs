@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class NormalScreen : Screen {
 		
-		public NormalScreen( Game window ) : base( window ) {
+		public NormalScreen( Game game ) : base( game ) {
 		}
 		
 		ChatScreen chat;
@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 		Font playerFont;
 		
 		public override void Render( double delta ) {
+			if( game.HideGui ) return;
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			hotbar.Render( delta );
@@ -40,7 +41,7 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
 			                       crosshairExtent * 2, crosshairWeight * 2, col );
 			graphicsApi.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
-			                       crosshairWeight * 2, crosshairExtent * 2, col );			
+			                       crosshairWeight * 2, crosshairExtent * 2, col );
 		}
 		
 		public override void Dispose() {
@@ -50,7 +51,8 @@ namespace ClassicalSharp {
 			if( playerList != null ) {
 				playerList.Dispose();
 			}
-			game.CursorVisible = true;
+			if( !game.CursorVisible )
+				game.CursorVisible = true;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -64,14 +66,15 @@ namespace ClassicalSharp {
 		public override void Init() {
 			playerFont = new Font( "Arial", 12 );
 			chat = new ChatScreen( game );
-			chat.game = game;
 			const int blockSize = 32;
 			chat.ChatLogYOffset = blockSize + blockSize;
 			chat.ChatInputYOffset = blockSize + blockSize / 2;
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
-			game.CursorVisible = false;
+			if( game.CursorVisible )
+				game.CursorVisible = false;
+			game.Camera.RegrabMouse();
 		}
 		
 		public override bool HandlesAllInput {

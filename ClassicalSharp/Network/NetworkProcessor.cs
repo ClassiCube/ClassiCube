@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Network;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
@@ -26,10 +27,10 @@ namespace ClassicalSharp {
 		
 		Socket socket;
 		NetworkStream stream;
-		Game game;		
+		Game game;
 		bool sendHeldBlock;
 		bool useMessageTypes;
-		bool useBlockPermissions;
+		bool usingTexturePack;
 		bool receivedFirstPosition;
 		
 		public override void Connect( IPAddress address, int port ) {
@@ -39,7 +40,7 @@ namespace ClassicalSharp {
 			} catch( SocketException ex ) {
 				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
 				game.Disconnect( "&eUnable to reach " + address + ":" + port,
-				                  "Unable to establish an underlying connection" );
+				                "Unable to establish an underlying connection" );
 				Dispose();
 				return;
 			}
@@ -58,7 +59,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)game.HeldBlock : (byte)0xFF;
+			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
 		}
@@ -82,8 +83,13 @@ namespace ClassicalSharp {
 		void CheckForNewTerrainAtlas() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( "terrain", out item );
-			if( item != null && item.Bmp != null ) {
-				game.ChangeTerrainAtlas( item.Bmp );
+			if( item != null && item.Data != null ) {
+				game.ChangeTerrainAtlas( (Bitmap)item.Data );
+			}
+			game.AsyncDownloader.TryGetItem( "texturePack", out item );
+			if( item != null && item.Data != null ) {
+				TexturePackExtractor extractor = new TexturePackExtractor();
+				extractor.Extract( (byte[])item.Data, game );
 			}
 		}
 		
@@ -101,6 +107,12 @@ namespace ClassicalSharp {
 			
 			while( reader.size > 0 ) {
 				byte opcode = reader.buffer[0];
+				// Fix for older D3 servers which wrote one byte too many for HackControl packets.
+				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
+					reader.Remove( 1 );
+					game.LocalPlayer.CalculateJumpVelocity( 1.4f ); // assume default jump height
+					continue;
+				}
 				if( reader.size < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}
@@ -116,7 +128,7 @@ namespace ClassicalSharp {
 		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 76, 78,
+			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 77, 79, 2,
 		};
 		
 		static string[] clientExtensions = {
@@ -250,9 +262,11 @@ namespace ClassicalSharp {
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
 		bool sendWomId = false, sentWomId = false;
+		PacketId lastOpcode;
 		
 		void ReadPacket( byte opcode ) {
 			reader.Remove( 1 ); // remove opcode
+			lastOpcode = (PacketId)opcode;
 			
 			switch( (PacketId)opcode ) {
 				case PacketId.Handshake:
@@ -260,11 +274,7 @@ namespace ClassicalSharp {
 						byte protocolVer = reader.ReadUInt8();
 						ServerName = reader.ReadAsciiString();
 						ServerMotd = reader.ReadAsciiString();
-						byte userType = reader.ReadUInt8();
-						if( !useBlockPermissions ) {
-							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
-						}
-						game.LocalPlayer.UserType = userType;
+						game.LocalPlayer.SetUserType( reader.ReadUInt8() );
 						receivedFirstPosition = false;
 						game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 					} break;
@@ -350,7 +360,10 @@ namespace ClassicalSharp {
 						int y = reader.ReadInt16();
 						int z = reader.ReadInt16();
 						byte type = reader.ReadUInt8();
-						game.UpdateBlock( x, y, z, type );
+						if( !game.Map.IsNotLoaded )
+							game.UpdateBlock( x, y, z, type );
+						else
+							Utils.LogWarning( "Server tried to update a block while still sending us the map!" );
 					} break;
 					
 				case PacketId.AddEntity:
@@ -405,11 +418,7 @@ namespace ClassicalSharp {
 					
 				case PacketId.SetPermission:
 					{
-						byte userType = reader.ReadUInt8();
-						if( !useBlockPermissions ) {
-							game.CanDelete[(int)Block.Bedrock] = userType == 0x64;
-						}
-						game.LocalPlayer.UserType = userType;
+						game.LocalPlayer.SetUserType( reader.ReadUInt8() );
 					} break;
 					
 				case PacketId.CpeExtInfo:
@@ -421,27 +430,29 @@ namespace ClassicalSharp {
 					
 				case PacketId.CpeExtEntry:
 					{
-						string extensionName = reader.ReadAsciiString();
-						int extensionVersion = reader.ReadInt32();
-						Utils.LogDebug( "cpe ext: " + extensionName + "," + extensionVersion );
-						if( extensionName == "HeldBlock" ) {
+						string extName = reader.ReadAsciiString();
+						int extVersion = reader.ReadInt32();
+						Utils.LogDebug( "cpe ext: " + extName + " , " + extVersion );
+						if( extName == "HeldBlock" ) {
 							sendHeldBlock = true;
-						} else if( extensionName == "MessageTypes" ) {
+						} else if( extName == "MessageTypes" ) {
 							useMessageTypes = true;
-						} else if( extensionName == "ExtPlayerList" ) {
+						} else if( extName == "ExtPlayerList" ) {
 							UsingExtPlayerList = true;
-						} else if( extensionName == "BlockPermissions" ) {
-							useBlockPermissions = true;
-						} else if( extensionName == "PlayerClick" ) {
+						} else if( extName == "PlayerClick" ) {
 							UsingPlayerClick = true;
+						} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
+							usingTexturePack = true;
 						}
 						cpeServerExtensionsCount--;
+						
 						if( cpeServerExtensionsCount == 0 ) {
 							MakeExtInfo( Utils.AppName, clientExtensions.Length );
 							SendPacket();
 							for( int i = 0; i < clientExtensions.Length; i++ ) {
-								string extName = clientExtensions[i];
-								MakeExtEntry( extName, extName == "ExtPlayerList" ? 2 : 1 );
+								string name = clientExtensions[i];
+								int version = (name == "ExtPlayerList" || name == "EnvMapApperance") ? 2 : 1;
+								MakeExtEntry( name, version );
 								SendPacket();
 							}
 						}
@@ -460,8 +471,8 @@ namespace ClassicalSharp {
 
 						if( supportLevel == 1 ) {
 							for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
-								game.CanPlace[i] = true;
-								game.CanDelete[i] = true;
+								game.Inventory.CanPlace[i] = true;
+								game.Inventory.CanDelete[i] = true;
 							}
 							game.RaiseBlockPermissionsChanged();
 						} else {
@@ -474,9 +485,9 @@ namespace ClassicalSharp {
 					{
 						byte blockType = reader.ReadUInt8();
 						bool canChange = reader.ReadUInt8() == 0;
-						game.CanChangeHeldBlock = true;
-						game.HeldBlock = (Block)blockType;
-						game.CanChangeHeldBlock = canChange;
+						game.Inventory.CanChangeHeldBlock = true;
+						game.Inventory.HeldBlock = (Block)blockType;
+						game.Inventory.CanChangeHeldBlock = canChange;
 					} break;
 					
 				case PacketId.CpeExtAddPlayerName:
@@ -512,6 +523,7 @@ namespace ClassicalSharp {
 						short nameId = reader.ReadInt16();
 						if( nameId >= 0 && nameId <= 255 ) {
 							game.RaiseCpeListInfoRemoved( (byte)nameId );
+							game.CpePlayersList[nameId] = null;
 						}
 					} break;
 					
@@ -570,14 +582,16 @@ namespace ClassicalSharp {
 						byte blockId = reader.ReadUInt8();
 						bool canPlace = reader.ReadUInt8() != 0;
 						bool canDelete = reader.ReadUInt8() != 0;
+						Inventory inv = game.Inventory;
+						
 						if( blockId == 0 ) {
-							for( int i = 1; i < game.CanPlace.Length; i++ ) {
-								game.CanPlace[i] = canPlace;
-								game.CanDelete[i] = canDelete;
+							for( int i = 1; i < BlockInfo.CpeBlocksCount; i++ ) {
+								inv.CanPlace.SetNotOverridable( canPlace, i );
+								inv.CanDelete.SetNotOverridable( canDelete, i );
 							}
 						} else {
-							game.CanPlace[blockId] = canPlace;
-							game.CanDelete[blockId] = canDelete;
+							inv.CanPlace.SetNotOverridable( canPlace, blockId );
+							inv.CanDelete.SetNotOverridable( canDelete, blockId );
 						}
 						game.RaiseBlockPermissionsChanged();
 					} break;
@@ -602,18 +616,22 @@ namespace ClassicalSharp {
 						game.Map.SetEdgeBlock( (Block)edgeBlock );
 						game.Map.SetSidesBlock( (Block)sideBlock );
 						if( url == String.Empty ) {
-							Bitmap bmp = new Bitmap( "terrain.png" );
-							game.ChangeTerrainAtlas( bmp );
+							TexturePackExtractor extractor = new TexturePackExtractor();
+							extractor.Extract( game.defaultTexPack, game );
 						} else {
-							game.AsyncDownloader.DownloadImage( url, true, "terrain" );
+							game.Animations.Dispose();
+							if( usingTexturePack )
+								game.AsyncDownloader.DownloadData( url, true, "texturePack" );
+							else
+								game.AsyncDownloader.DownloadImage( url, true, "terrain" );
+							
 						}
 						Utils.LogDebug( "Image url: " + url );
 					} break;
 					
 				case PacketId.CpeEnvWeatherType:
-					{
-						game.Map.SetWeather( (Weather)reader.ReadUInt8() );
-					} break;
+					game.Map.SetWeather( (Weather)reader.ReadUInt8() );
+					break;
 					
 				case PacketId.CpeHackControl:
 					{
@@ -642,26 +660,48 @@ namespace ClassicalSharp {
 				case PacketId.CpeDefineLiquid:
 					{
 						byte block = reader.ReadUInt8();
-						string name = reader.ReadAsciiString();
-						byte solidity = reader.ReadUInt8();
-						byte movementSpeed = reader.ReadUInt8();
-						byte topTexId = reader.ReadUInt8();
-						byte sidesTexId = reader.ReadUInt8();
-						byte bottomTexId = reader.ReadUInt8();
+						BlockInfo info = game.BlockInfo;
+						info.ResetBlockInfo( block );
+						
+						info.Name[block] = reader.ReadAsciiString();
+						info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
+						// TODO: Liquid collide type not properly supported.
+						info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
+						info.SetTop( reader.ReadUInt8(), (Block)block );
+						info.SetSide( reader.ReadUInt8(), (Block)block );
+						info.SetBottom( reader.ReadUInt8(), (Block)block );
 						reader.ReadUInt8(); // opacity hint, but we ignore this.
-						bool transmitsLight = reader.ReadUInt8() != 0;
+						info.BlocksLight[block] = reader.ReadUInt8() == 0;
 						reader.ReadUInt8(); // walk sound, but we ignore this.
+						info.EmitsLight[block] = reader.ReadUInt8() != 0;
 						
 						if( opcode == (byte)PacketId.CpeDefineBlock ) {
 							byte shape = reader.ReadUInt8();
+							if( shape == 1 ) info.Height[block] = 1;
+							else if( shape == 2 ) info.Height[block] = 0.5f;
+							// TODO: upside down slab not properly supported
+							else if( shape == 3 ) info.Height[block] = 0.5f;
+							else if( shape == 4 ) info.IsSprite[block] = true;
+							
 							byte blockDraw = reader.ReadUInt8();
+							if( blockDraw == 0 ) info.IsOpaque[block] = true;
+							else if( blockDraw == 1 ) info.IsTransparent[block] = true;
+							else if( blockDraw == 2 ) info.IsTranslucent[block] = true;
+							else if( blockDraw == 3 ) info.IsTranslucent[block] = true;
+							
+							Console.WriteLine( block + " : " + shape + "," + blockDraw );
 						} else {
 							byte fogDensity = reader.ReadUInt8();
-							byte fogR = reader.ReadUInt8();
-							byte fogG = reader.ReadUInt8();
-							byte fogB = reader.ReadUInt8();
+							info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
+							info.FogColour[block] = new FastColour(
+								reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 						}
+						info.SetupCullingCache();
 					} break;
+					
+				case PacketId.CpeRemoveBlockDefinition:
+					game.BlockInfo.ResetBlockInfo( reader.ReadUInt8() );
+					break;
 					
 				default:
 					throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );
@@ -718,6 +758,7 @@ namespace ClassicalSharp {
 		void ReadAbsoluteLocation( byte playerId, bool interpolate ) {
 			float x = reader.ReadInt16() / 32f;
 			float y = ( reader.ReadInt16() - 51 ) / 32f; // We have to do this.
+			if( playerId == 255 ) y += 22/32f;
 			float z = reader.ReadInt16() / 32f;
 			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );

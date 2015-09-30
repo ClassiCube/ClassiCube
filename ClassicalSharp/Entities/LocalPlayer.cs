@@ -48,6 +48,7 @@ namespace ClassicalSharp {
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {
 			if( update.IncludesPosition ) {
 				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
+				nextPos.Y += Entity.Adjustment;
 				if( !interpolate ) {
 					lastPos = Position = nextPos;
 				}
@@ -64,7 +65,6 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( game.Map.IsNotLoaded ) return;
-			//Window.Title = ( GC.GetTotalMemory( false ) / 1024.0 / 1024.0 ).ToString(); // TODO: temp debug statement
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
@@ -107,6 +107,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		bool useLiquidGravity = false; // used by BlockDefinitions.
 		void UpdateVelocityYState() {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
@@ -124,6 +125,8 @@ namespace ClassicalSharp {
 			if( jumping ) {
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
+				} else if( useLiquidGravity ) {
+					Velocity.Y += speeding ? 0.08f : 0.04f;
 				} else if( TouchesAnyRope() ) {
 					Velocity.Y += speeding ? 0.15f : 0.10f;
 				} else if( onGround ) {
@@ -138,9 +141,12 @@ namespace ClassicalSharp {
 		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
 		airDrag = new Vector3( 0.6f, 1f, 0.6f );
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		
 		void PhysicsTick( float xMoving, float zMoving ) {
 			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
-
+			float modifier = LowestSpeedModifier();
+			multiply *= modifier;
+			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {
@@ -149,8 +155,9 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float yMul = Math.Max( 1, multiply / 5f );		
-				Move( xMoving, zMoving, factor * multiply, normalDrag, normalGrav, yMul );
+				float yMul = modifier * Math.Max( 1, multiply / 5f );
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
+				Move( xMoving, zMoving, factor * multiply, normalDrag, gravity, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
 					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
@@ -173,7 +180,7 @@ namespace ClassicalSharp {
 		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			AdjHeadingVelocity( zMoving, xMoving, factor );
 			Velocity.Y *= yMul;
-			if( !noClip ) 
+			if( !noClip )
 				MoveAndWallSlide();
 			Position += Velocity;
 			
@@ -210,6 +217,19 @@ namespace ClassicalSharp {
 			} else if( joined.Contains( "-" + flag ) ) {
 				action( false );
 			}
+		}
+		
+		public void SetUserType( byte value ) {
+			UserType = value;
+			Inventory inv = game.Inventory;
+			inv.CanPlace[(int)Block.Bedrock] = value == 0x64;
+			inv.CanDelete[(int)Block.Bedrock] = value == 0x64;
+			inv.CanPlace[(int)Block.Grass] = value == 0x64;
+
+			inv.CanPlace[(int)Block.Water] = value == 0x64;
+			inv.CanPlace[(int)Block.StillWater] = value == 0x64;
+			inv.CanPlace[(int)Block.Lava] = value == 0x64;
+			inv.CanPlace[(int)Block.StillLava] = value == 0x64;
 		}
 		
 		internal Vector3 lastPos, nextPos;
@@ -258,6 +278,30 @@ namespace ClassicalSharp {
 			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
 			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
 			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
+		}
+		
+		float LowestSpeedModifier() {
+			BoundingBox bounds = CollisionBounds;
+			bounds.Min.Y -= 0.1f; // block standing on
+			Vector3I bbMin = Vector3I.Floor( bounds.Min );
+			Vector3I bbMax = Vector3I.Floor( bounds.Max );
+			float modifier = float.PositiveInfinity;
+			useLiquidGravity = false;
+			
+			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
+				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
+					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
+						if( !map.IsValidPos( x, y, z ) ) continue;
+						byte block = map.GetBlock( x, y, z );
+						if( block == 0 ) continue;
+						
+						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
+						if( info.CollideType[block] == BlockCollideType.SwimThrough )
+							useLiquidGravity = true;
+					}
+				}
+			}
+			return modifier == float.PositiveInfinity ? 1 : modifier;
 		}
 	}
 }

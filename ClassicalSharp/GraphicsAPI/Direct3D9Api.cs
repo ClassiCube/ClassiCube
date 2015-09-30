@@ -3,10 +3,10 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading;
+using OpenTK;
 using SharpDX;
 using SharpDX.Direct3D9;
 using D3D = SharpDX.Direct3D9;
-using Matrix4 = OpenTK.Matrix4;
 using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
@@ -23,28 +23,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
 		DynamicDataBuffer[] dynamicvBuffers = new DynamicDataBuffer[iBufferSize];
 		DataBuffer[] iBuffers = new DataBuffer[iBufferSize];
-		MatrixStack viewStack, projStack, texStack;
-		MatrixStack curStack;
-		PrimitiveType[] modeMappings = {
-			PrimitiveType.TriangleList, PrimitiveType.LineList,
-			PrimitiveType.TriangleStrip,
-		};
-		static Format[] depthFormats = { Format.D32, Format.D24X8, Format.D24S8, Format.D24X4S4, Format.D16, Format.D15S1 };
-		Format depthFormat, viewFormat = Format.X8R8G8B8;
+		
+		MatrixStack viewStack, projStack, texStack, curStack;
+		PrimitiveType[] modeMappings;
+		Format[] depthFormats, viewFormats;
+		Format depthFormat, viewFormat;
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
 		public Direct3D9Api( Game game ) {
+			MinZNear = 0.05f;
 			IntPtr windowHandle = ((WinWindowInfo)game.WindowInfo).WindowHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;
-			
-			for( int i = 0; i < depthFormats.Length; i++ ) {
-				depthFormat = depthFormats[i];
-				if( d3d.CheckDepthStencilMatch( adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat ) ) break;
-				
-				if( i == depthFormats.Length - 1 )
-					throw new InvalidOperationException( "Unable to create a depth buffer with sufficient precision." );
-			}
+			InitFields();
+			FindCompatibleFormat( adapter );
 			
 			PresentParameters args = GetPresentArgs( 640, 480 );
 			try {
@@ -67,6 +59,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			InitDynamicBuffers();
 		}
 		
+		void FindCompatibleFormat( int adapter ) {
+			for( int i = 0; i < viewFormats.Length; i++ ) {
+				viewFormat = viewFormats[i];
+				if( d3d.CheckDeviceType( adapter, DeviceType.Hardware, viewFormat, viewFormat, true ) ) break;
+				
+				if( i == viewFormats.Length - 1 )
+					throw new InvalidOperationException( "Unable to create a back buffer with sufficient precision." );
+			}
+			
+			for( int i = 0; i < depthFormats.Length; i++ ) {
+				depthFormat = depthFormats[i];
+				if( d3d.CheckDepthStencilMatch( adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat ) ) break;
+				
+				if( i == depthFormats.Length - 1 )
+					throw new InvalidOperationException( "Unable to create a depth buffer with sufficient precision." );
+			}
+		}
+		
 		bool alphaTest, alphaBlend;
 		public override bool AlphaTest {
 			set { if( value == alphaTest ) return;
@@ -80,10 +90,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 
-		Compare[] compareFuncs = {
-			Compare.Always, Compare.NotEqual, Compare.Never, Compare.Less,
-			Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
-		};
+		Compare[] compareFuncs;
 		Compare alphaTestFunc;
 		int alphaTestRef;
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
@@ -93,11 +100,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetRenderState( RenderState.AlphaRef, alphaTestRef );
 		}
 
-		Blend[] blendFuncs = {
-			Blend.Zero, Blend.One,
-			Blend.SourceAlpha, Blend.InverseSourceAlpha,
-			Blend.DestinationAlpha, Blend.InverseDestinationAlpha,
-		};
+		Blend[] blendFuncs;
 		Blend srcBlendFunc, dstBlendFunc;
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
 			srcBlendFunc = blendFuncs[(int)srcFunc];
@@ -138,7 +141,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetRenderState( RenderState.FogEnd, value );
 		}
 
-		FogMode[] modes = { FogMode.Linear, FogMode.Exponential, FogMode.ExponentialSquared };
+		FogMode[] modes;
 		FogMode fogTableMode;
 		public override void SetFogMode( Fog fogMode ) {
 			FogMode newMode = modes[(int)fogMode];
@@ -243,12 +246,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#region Vertex buffers
 
-		D3D.VertexFormat[] formatMapping = {
-			D3D.VertexFormat.Position | D3D.VertexFormat.Texture2,
-			D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse,
-			D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse,
-		};
-
+		D3D.VertexFormat[] formatMapping;
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int size = count * strideSizes[(int)format];
 			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
@@ -397,11 +395,11 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#endregion
 		
-		public override void BeginFrame( Game game ) {
+		public override void BeginFrame( GameWindow game ) {
 			device.BeginScene();
 		}
 		
-		public override void EndFrame( Game game ) {
+		public override void EndFrame( GameWindow game ) {
 			device.EndScene();
 			int code = device.Present();
 			if( code >= 0 ) return;
@@ -419,22 +417,22 @@ namespace ClassicalSharp.GraphicsAPI {
 					RecreateDevice( game );
 					break;
 				}
-				game.Network.Tick( 1 / 20.0 );
+				LostContextFunction( 1 / 20.0 );
 			}
 		}
 		
 		bool vsync = false;
-		public override void SetVSync( Game game, bool value ) {
+		public override void SetVSync( GameWindow game, bool value ) {
 			vsync = value;
 			game.VSync = value;
 			RecreateDevice( game );
 		}
 		
-		public override void OnWindowResize( Game game ) {
+		public override void OnWindowResize( GameWindow game ) {
 			RecreateDevice( game );
 		}
 		
-		void RecreateDevice( Game game ) {
+		void RecreateDevice( GameWindow game ) {
 			PresentParameters args = GetPresentArgs( game.Width, game.Height );
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
@@ -448,7 +446,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			RestoreRenderStates();
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
-				if( buffer != null ) {					
+				if( buffer != null ) {
 					dynamicvBuffers[i] = device.CreateDynamicVertexBuffer( buffer.MaxSize, buffer.Format );
 					dynamicvBuffers[i].Format = buffer.Format;
 					dynamicvBuffers[i].MaxSize = buffer.MaxSize;
@@ -529,9 +527,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		protected unsafe override void LoadOrthoMatrix( float width, float height ) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, 0, 1 );
-			matrix.M33 = -1;
-			matrix.M43 = 0;
+			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, -10000, 10000 );
+			const float zN = -10000, zF = 10000;
+			matrix.M33 = 1 / (zN - zF);
+			matrix.M43 = zN / (zN - zF);
+			matrix.M44 = 1;
 			curStack.SetTop( ref matrix );
 		}
 		
@@ -545,7 +545,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			Utils.Log( "--Using Direct3D 9--" );
 			Utils.Log( "Tex memory available: " + (uint)device.AvailableTextureMemory );
 			Utils.Log( "Vertex processing mode: " + createFlags );
-			Utils.Log( "Depth buffer format: " + depthFormat );			
+			Utils.Log( "Depth buffer format: " + depthFormat );
+			Utils.Log( "Back buffer format: " + viewFormat );
 			Utils.Log( "Adapter description: " + d3d.Adapters[0].Details.Description );
 			Utils.Log( "Device caps: " + caps.DeviceCaps );
 		}
@@ -563,6 +564,53 @@ namespace ClassicalSharp.GraphicsAPI {
 				}
 				tempSurface.UnlockRectangle();
 			}
+		}
+		
+		void InitFields() {
+			// See comment in Game() constructor
+			#if !__MonoCS__
+			modeMappings = new [] { PrimitiveType.TriangleList, PrimitiveType.LineList };
+			depthFormats = new [] { Format.D32, Format.D24X8, Format.D24S8, Format.D24X4S4, Format.D16, Format.D15S1 };
+			viewFormats = new [] { Format.X8R8G8B8, Format.R8G8B8, Format.R5G6B5, Format.X1R5G5B5 };
+			
+			compareFuncs = new [] {
+				Compare.Always, Compare.NotEqual, Compare.Never, Compare.Less,
+				Compare.LessEqual, Compare.Equal, Compare.GreaterEqual, Compare.Greater,
+			};
+			blendFuncs = new [] {
+				Blend.Zero, Blend.One, Blend.SourceAlpha, Blend.InverseSourceAlpha,
+				Blend.DestinationAlpha, Blend.InverseDestinationAlpha,
+			};
+			formatMapping = new [] {
+				D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse,
+				D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse,
+			};
+			modes = new [] { FogMode.Linear, FogMode.Exponential, FogMode.ExponentialSquared };
+			
+			#else
+			modeMappings = new PrimitiveType[2];
+			modeMappings[0] = PrimitiveType.TriangleList; modeMappings[1] = PrimitiveType.LineList;
+			depthFormats = new Format[6];
+			depthFormats[0] = Format.D32; depthFormats[1] = Format.D24X8; depthFormats[2] = Format.D24S8;
+			depthFormats[3] = Format.D24X4S4; depthFormats[4] = Format.D16; depthFormats[5] = Format.D15S1;
+			viewFormats = new Format[4];
+			viewFormats[0] = Format.X8R8G8B8; viewFormats[1] = Format.R8G8B8;
+			viewFormats[2] = Format.R5G6B5; viewFormats[3] = Format.X1R5G5B5;
+			
+			compareFuncs = new Compare[8];
+			compareFuncs[0] = Compare.Always; compareFuncs[1] = Compare.NotEqual; compareFuncs[2] = Compare.Never;
+			compareFuncs[3] = Compare.Less; compareFuncs[4] = Compare.LessEqual; compareFuncs[5] = Compare.Equal;
+			compareFuncs[6] = Compare.GreaterEqual; compareFuncs[7] = Compare.Greater;
+			blendFuncs = new Blend[6];
+			blendFuncs[0] = Blend.Zero; blendFuncs[1] = Blend.One; blendFuncs[2] = Blend.SourceAlpha;
+			blendFuncs[3] = Blend.InverseSourceAlpha; blendFuncs[4] = Blend.DestinationAlpha;
+			blendFuncs[5] = Blend.InverseDestinationAlpha;
+			formatMapping = new D3D.VertexFormat[2];
+			formatMapping[0] = D3D.VertexFormat.Position | D3D.VertexFormat.Diffuse;
+			formatMapping[1] = D3D.VertexFormat.Position | D3D.VertexFormat.Texture2 | D3D.VertexFormat.Diffuse;
+			modes = new FogMode[3];
+			modes[0] = FogMode.Linear; modes[1] = FogMode.Exponential; modes[2] = FogMode.ExponentialSquared;
+			#endif
 		}
 	}
 }

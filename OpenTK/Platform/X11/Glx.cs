@@ -53,7 +53,6 @@ namespace OpenTK.Platform.X11
 	partial class Glx : BindingsBase
 	{
 		const string Library = "libGL.so.1";
-		static readonly object sync_root = new object();
 
 		// Disable BeforeFieldInit optimization.
 		static Glx() { }
@@ -63,9 +62,7 @@ namespace OpenTK.Platform.X11
 		}
 		
 		internal void LoadEntryPoints() {
-			lock( sync_root ) {
-				LoadDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
-			}
+			LoadDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
 		}
 
 		[SuppressUnmanagedCodeSecurity, DllImport( Library )]

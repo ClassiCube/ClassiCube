@@ -26,15 +26,12 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using OpenTK.Graphics;
 using OpenTK.Input;
-using System.Drawing;
 
 namespace OpenTK.Platform.X11 {
 	
@@ -48,8 +45,6 @@ namespace OpenTK.Platform.X11 {
 		
 		const int _min_width = 30, _min_height = 30;
 		X11WindowInfo window = new X11WindowInfo();
-
-		const string MOTIF_WM_ATOM = "_MOTIF_WM_HINTS";
 		// The Atom class from Mono might be useful to avoid calling XInternAtom by hand (somewhat error prone).
 		IntPtr wm_destroy;
 		
@@ -58,14 +53,10 @@ namespace OpenTK.Platform.X11 {
 		IntPtr net_wm_state_fullscreen;
 		IntPtr net_wm_state_maximized_horizontal;
 		IntPtr net_wm_state_maximized_vertical;
-		
-		IntPtr net_wm_allowed_actions;
-		IntPtr net_wm_action_resize;
-		IntPtr net_wm_action_maximize_horizontally;
-		IntPtr net_wm_action_maximize_vertically;
 
 		IntPtr net_wm_icon;
 		IntPtr net_frame_extents;
+		IntPtr motif_wm_hints;
 
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
 		static readonly IntPtr _remove = (IntPtr)0;
@@ -105,7 +96,7 @@ namespace OpenTK.Platform.X11 {
 
 			Debug.Print("Creating X11GLNative window.");
 			// Open a display connection to the X server, and obtain the screen and root window.
-			window.Display = API.XOpenDisplay_Safe(IntPtr.Zero);
+			window.Display = API.DefaultDisplay;
 			if (window.Display == IntPtr.Zero)
 				throw new PlatformException("Could not open connection to X");
 			
@@ -125,7 +116,7 @@ namespace OpenTK.Platform.X11 {
 				API.XGetVisualInfo(window.Display, XVisualInfoMask.ID, ref info, out dummy), typeof(XVisualInfo));
 
 			// Create a window on this display using the visual above
-			Debug.Write("Opening render window... ");
+			Debug.Print("Opening render window... ");
 
 			XSetWindowAttributes attributes = new XSetWindowAttributes();
 			attributes.background_pixel = IntPtr.Zero;
@@ -178,7 +169,7 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		void SetupInput() {
-			Debug.WriteLine("Initalizing X11 input driver.");
+			Debug.Print("Initalizing X11 input driver.");
 			
 			// Init keyboard
 			API.XDisplayKeycodes(window.Display, ref firstKeyCode, ref lastKeyCode);
@@ -198,7 +189,6 @@ namespace OpenTK.Platform.X11 {
 			// be reset before the program exits.
 			bool supported;
 			API.XkbSetDetectableAutoRepeat(window.Display, true, out supported);
-			Debug.Unindent();
 		}
 		
 		/// <summary> Registers the necessary atoms for GameWindow. </summary>
@@ -209,12 +199,9 @@ namespace OpenTK.Platform.X11 {
 			net_wm_state_fullscreen = API.XInternAtom(window.Display, "_NET_WM_STATE_FULLSCREEN", false);
 			net_wm_state_maximized_horizontal = API.XInternAtom(window.Display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
 			net_wm_state_maximized_vertical = API.XInternAtom(window.Display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
-			net_wm_allowed_actions = API.XInternAtom(window.Display, "_NET_WM_ALLOWED_ACTIONS", false);
-			net_wm_action_resize = API.XInternAtom(window.Display, "_NET_WM_ACTION_RESIZE", false);
-			net_wm_action_maximize_horizontally = API.XInternAtom(window.Display, "_NET_WM_ACTION_MAXIMIZE_HORZ", false);
-			net_wm_action_maximize_vertically = API.XInternAtom(window.Display, "_NET_WM_ACTION_MAXIMIZE_VERT", false);
 			net_wm_icon = API.XInternAtom(window.Display, "_NEW_WM_ICON", false);
 			net_frame_extents = API.XInternAtom(window.Display, "_NET_FRAME_EXTENTS", false);
+			motif_wm_hints = API.XInternAtom(window.Display, "_MOTIF_WM_HINTS", true);
 		}
 
 		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {
@@ -254,85 +241,6 @@ namespace OpenTK.Platform.X11 {
 			else
 				Debug.Print("KeyCode {0} (Keysym: {1}, {2}) not mapped.", e.KeyEvent.keycode, (XKey)keysym, (XKey)keysym2);
 		}
-
-		bool IsWindowBorderHidden {
-			get {
-				IntPtr prop = IntPtr.Zero;
-
-				// Test if decorations have been disabled through Motif.
-				IntPtr motif_hints_atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
-				if (motif_hints_atom != IntPtr.Zero) {
-					// TODO: How to check if MotifWMHints decorations have been really disabled?
-					if (_decorations_hidden)
-						return true;
-				}
-				
-				// Some WMs remove decorations when the transient_for hint is set. Most new ones do not (but those
-				// should obey the Motif hint). Anyway, if this hint is set, we say the decorations have been remove
-				// although there is a slight chance this is not the case.
-				IntPtr transient_for_parent;
-				API.XGetTransientForHint(window.Display, window.WindowHandle, out transient_for_parent);
-				if (transient_for_parent != IntPtr.Zero)
-					return true;
-				
-				return false;
-			}
-		}
-		
-		void DisableWindowDecorations() {
-			if (DisableMotifDecorations()) {
-				Debug.Print("Removed decorations through motif.");
-				_decorations_hidden = true;
-			}
-			
-			// Some WMs remove decorations when this hint is set. Doesn't hurt to try.
-			API.XSetTransientForHint(this.window.Display, this.Handle, this.window.RootWindow);
-			
-			if (_decorations_hidden) {
-				API.XUnmapWindow(this.window.Display, this.Handle);
-				API.XMapWindow(this.window.Display, this.Handle);
-			}
-		}
-		
-		bool DisableMotifDecorations() {
-			IntPtr atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
-			if (atom != IntPtr.Zero) {
-				//Functions.XGetWindowProperty(window.Display, window.WindowHandle, atom, IntPtr.Zero, IntPtr.Zero, false,
-				MotifWmHints hints = new MotifWmHints();
-				hints.flags = (IntPtr)MotifFlags.Decorations;
-				API.XChangeProperty(this.window.Display, this.Handle, atom, atom, 32, PropertyMode.Replace,
-				                    ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
-				return true;
-			}
-			return false;
-		}
-
-		void EnableWindowDecorations() {
-			if (EnableMotifDecorations()) {
-				Debug.Print("Activated decorations through motif.");
-				_decorations_hidden = false;
-			}
-			
-			API.XSetTransientForHint(this.window.Display, this.Handle, IntPtr.Zero);
-			if (!_decorations_hidden) {
-				API.XUnmapWindow(this.window.Display, this.Handle);
-				API.XMapWindow(this.window.Display, this.Handle);
-			}
-		}
-
-		bool EnableMotifDecorations() {
-			IntPtr atom = API.XInternAtom(this.window.Display, MOTIF_WM_ATOM, true);
-			if (atom != IntPtr.Zero) {
-				//Functions.XDeleteProperty(this.window.Display, this.Handle, atom);
-				MotifWmHints hints = new MotifWmHints();
-				hints.flags = (IntPtr)MotifFlags.Decorations;
-				hints.decorations = (IntPtr)MotifDecorations.All;
-				API.XChangeProperty(this.window.Display, this.Handle, atom, atom, 32, PropertyMode.Replace,
-				                    ref hints, Marshal.SizeOf(hints) / IntPtr.Size);
-				return true;
-			}
-			return false;
-		}
 		
 		static void DeleteIconPixmaps(IntPtr display, IntPtr window) {
 			IntPtr wmHints_ptr = API.XGetWMHints(display, window);
@@ -369,11 +277,6 @@ namespace OpenTK.Platform.X11 {
 					borderRight = Marshal.ReadIntPtr(prop, IntPtr.Size).ToInt32();
 					borderTop = Marshal.ReadIntPtr(prop, IntPtr.Size * 2).ToInt32();
 					borderBottom = Marshal.ReadIntPtr(prop, IntPtr.Size * 3).ToInt32();
-
-					//Debug.WriteLine(border_left);
-					//Debug.WriteLine(border_right);
-					//Debug.WriteLine(border_top);
-					//Debug.WriteLine(border_bottom);
 				}
 				API.XFree(prop);
 			}
@@ -394,7 +297,7 @@ namespace OpenTK.Platform.X11 {
 			Size newSize = new Size(
 				e.ConfigureEvent.width + borderLeft + borderRight,
 				e.ConfigureEvent.height + borderTop + borderBottom);
-			if (Bounds.Size != newSize) {
+			if (bounds.Size != newSize) {
 				bounds.Size = newSize;
 				client_rectangle.Size = new Size(e.ConfigureEvent.width, e.ConfigureEvent.height);
 
@@ -429,20 +332,20 @@ namespace OpenTK.Platform.X11 {
 
 					case XEventName.ClientMessage:
 						if (!isExiting && e.ClientMessageEvent.ptr1 == wm_destroy) {
-							Debug.WriteLine("Exit message received.");
+							Debug.Print("Exit message received.");
 							CancelEventArgs ce = new CancelEventArgs();
 							if (Closing != null)
 								Closing(this, ce);
 
 							if (!ce.Cancel) {
 								isExiting = true;
-								Debug.WriteLine("Destroying window.");
+								Debug.Print("Destroying window.");
 								API.XDestroyWindow(window.Display, window.WindowHandle);
 							}
 						} break;
 
 					case XEventName.DestroyNotify:
-						Debug.WriteLine("Window destroyed");
+						Debug.Print("Window destroyed");
 						exists = false;
 
 						if (Closed != null)
@@ -728,13 +631,6 @@ namespace OpenTK.Platform.X11 {
 					                     net_wm_state_maximized_vertical);
 				
 				API.XSync(window.Display, false);
-				// We can't resize the window if its border is fixed, so make it resizable first.
-				bool temporary_resizable = false;
-				WindowBorder previous_state = WindowBorder;
-				if (WindowBorder != WindowBorder.Resizable) {
-					temporary_resizable = true;
-					WindowBorder = WindowBorder.Resizable;
-				}
 
 				switch (value) {
 					case OpenTK.WindowState.Normal:
@@ -754,38 +650,12 @@ namespace OpenTK.Platform.X11 {
 						break;
 						
 					case OpenTK.WindowState.Fullscreen:
-						//_previous_window_border = this.WindowBorder;
-						//this.WindowBorder = WindowBorder.Hidden;
 						API.SendNetWMMessage(window, net_wm_state, _add,
 						                     net_wm_state_fullscreen, IntPtr.Zero);
 						API.XRaiseWindow(window.Display, window.WindowHandle);
 						break;
 				}
-
-				if (temporary_resizable)
-					WindowBorder = previous_state;
-
 				ProcessEvents();
-			}
-		}
-
-		public WindowBorder WindowBorder {
-			get { return IsWindowBorderHidden ? WindowBorder.Hidden : WindowBorder.Resizable; }
-			set {
-				if (WindowBorder == value) return;
-
-				if (WindowBorder == WindowBorder.Hidden)
-					EnableWindowDecorations();
-				if( value == WindowBorder.Resizable ) {
-					Debug.Print("Making WindowBorder resizable.");
-					SetWindowMinMax(_min_width, _min_height, -1, -1);
-				} else {
-					Debug.Print("Making WindowBorder hidden.");
-					DisableWindowDecorations();
-				}
-				
-				if (WindowBorderChanged != null)
-					WindowBorderChanged(this, EventArgs.Empty);
 			}
 		}
 
@@ -800,7 +670,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler<EventArgs> TitleChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowBorderChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		public event EventHandler<EventArgs> MouseEnter;
@@ -830,8 +699,11 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		bool cursorVisible = true;
 		public bool CursorVisible {
+			get { return cursorVisible; }
 			set {
+				cursorVisible = value;
 				if( value ) {
 					API.XUndefineCursor( window.Display, window.WindowHandle );
 				} else {
@@ -906,7 +778,7 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		public void DestroyWindow() {
-			Debug.WriteLine("X11GLNative shutdown sequence initiated.");
+			Debug.Print("X11GLNative shutdown sequence initiated.");
 			API.XDestroyWindow(window.Display, window.WindowHandle);
 		}
 

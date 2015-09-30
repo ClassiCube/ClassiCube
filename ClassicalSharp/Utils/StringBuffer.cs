@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ClassicalSharp {
 	
-	internal sealed unsafe class StringBuffer {
+	public sealed unsafe class StringBuffer {
 		
 		internal string value;
 		internal int capacity;
@@ -89,8 +89,7 @@ namespace ClassicalSharp {
 				*offsetPtr = c;
 			}
 		}
-		
-		
+				
 		public bool Empty {
 			get {
 				fixed( char* ptr = value ) {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using ClassicalSharp.TexturePack;
 using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp.Commands {
@@ -32,69 +34,6 @@ namespace ClassicalSharp.Commands {
 			}
 			foreach( string part in commandNames ) {
 				game.AddChat( part );
-			}
-		}
-	}
-	
-	/// <summary> Command that modifies various aspects of the environment of the current map. </summary>
-	public sealed class EnvCommand : Command {
-		
-		public EnvCommand() {
-			Name = "Env";
-			Help = new [] {
-				"&a/client env [property] [value]",
-				"&bproperties: &eskycol, fogcol, cloudscol, cloudsspeed,",
-				"     &esuncol, shadowcol, weather",
-				"&bcol properties: &evalue must be a hex colour code (either #RRGGBB or RRGGBB).",
-				"&bcloudsspeed: &evalue must be a decimal number. (e.g. 0.5, 1, 4.5).",
-				"&eIf no args are given, the current env variables will be displayed.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			string property = reader.Next();
-			if( property == null ) {
-				game.AddChat( "Fog colour: " + game.Map.FogCol.ToRGBHexString() );
-				game.AddChat( "Clouds colour: " + game.Map.CloudsCol.ToRGBHexString() );
-				game.AddChat( "Sky colour: " + game.Map.SkyCol.ToRGBHexString() );
-			} else if( Utils.CaselessEquals( property, "skycol" ) ) {
-				ReadHexColourAnd( reader, c => game.Map.SetSkyColour( c ) );
-			} else if( Utils.CaselessEquals( property, "fogcol" ) ) {
-				ReadHexColourAnd( reader, c => game.Map.SetFogColour( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudscol" )
-			          || Utils.CaselessEquals( property, "cloudcol" ) ) {
-				ReadHexColourAnd( reader, c => game.Map.SetCloudsColour( c ) );
-			} else if( Utils.CaselessEquals( property, "suncol" ) ) {
-				ReadHexColourAnd( reader, c => game.Map.SetSunlight( c ) );
-			} else if( Utils.CaselessEquals( property, "shadowcol" ) ) {
-				ReadHexColourAnd( reader, c => game.Map.SetShadowlight( c ) );
-			} else if( Utils.CaselessEquals( property, "cloudsspeed" )
-			          || Utils.CaselessEquals( property, "cloudspeed" ) ) {
-				float speed;
-				if( !reader.NextFloat( out speed ) ) {
-					game.AddChat( "&e/client env: &cInvalid clouds speed." );
-				} else {
-					StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-					if( env != null ) {
-						env.CloudsSpeed = speed;
-					}
-				}
-			} else if( Utils.CaselessEquals( property, "weather" ) ) {
-				int weather;
-				if( !reader.NextInt( out weather ) || weather < 0 || weather > 2 ) {
-					game.AddChat( "&e/client env: &cInvalid weather." );
-				} else {
-					game.Map.SetWeather( (Weather)weather );
-				}
-			}
-		}
-		
-		void ReadHexColourAnd( CommandReader reader, Action<FastColour> action ) {
-			FastColour colour;
-			if( !reader.NextHexColour( out colour ) ) {
-				game.AddChat( "&e/client env: &cInvalid hex colour." );
-			} else {
-				action( colour );
 			}
 		}
 	}
@@ -208,82 +147,26 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
-	/// <summary> Command that modifies the font size of chat in the normal gui screen. </summary>
-	public sealed class ChatFontSizeCommand : Command {
+	/// <summary> Command that changes the client's texture pack. </summary>
+	public sealed class TexturePackCommand : Command {
 		
-		public ChatFontSizeCommand() {
-			Name = "ChatSize";
+		public TexturePackCommand() {
+			Name = "TexturePack";
 			Help = new [] {
-				"&a/client chatsize [fontsize]",
-				"&bfontsize: &eWhole number specifying the new font size for chat.",
+				"&a/client texturepack [path]",
+				"&bpath: &eLoads a texture pack from the specified path.",
 			};
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			int fontSize;
-			if( !reader.NextInt( out fontSize ) ) {
-				game.AddChat( "&e/client chatsize: &cInvalid font size." );
-			} else {
-				if( fontSize < 6 ) {
-					game.AddChat( "&e/client chatsize: &cFont size too small." );
-					return;
-				} else if( fontSize > 30 ) {
-					game.AddChat( "&e/client chatsize: &cFont size too big." );
-					return;
-				}
-				game.ChatFontSize = fontSize;
-				game.SetNewScreen( null );
-				game.chatInInputBuffer = null;
-				game.SetNewScreen( new NormalScreen( game ) );
-			}
-		}
-	}
-	
-	/// <summary> Command that modifies how sensitive the client is to changes in the mouse position. </summary>
-	public sealed class MouseSensitivityCommand : Command {
-		
-		public MouseSensitivityCommand() {
-			Name = "Sensitivity";
-			Help = new [] {
-				"&a/client sensitivity [mouse sensitivity]",
-				"&bmouse sensitivity: &eInteger between 1 to 100 specifiying the mouse sensitivity.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			int sensitivity;
-			if( !reader.NextInt( out sensitivity ) ) {
-				game.AddChat( "&e/client sensitivity: Current sensitivity is: " + game.MouseSensitivity );
-			} else if( sensitivity < 1 || sensitivity > 100 ) {
-				game.AddChat( "&e/client sensitivity: &cMouse sensitivity must be between 1 to 100." );
-			} else {
-				game.MouseSensitivity = sensitivity;
-			}
-		}
-	}
-	
-	/// <summary> Command that modifies how far the client can see. </summary>
-	public sealed class ViewDistanceCommand : Command {
-		
-		public ViewDistanceCommand() {
-			Name = "ViewDistance";
-			Help = new [] {
-				"&a/client viewdistance [range]",
-				"&brange: &eInteger specifying how far you can see before fog appears.",
-				"&eThe minimum range is 8, the maximum is 4096.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			int newDist;
-			if( !reader.NextInt( out newDist ) ) {
-				game.AddChat( "View distance: " + game.ViewDistance );
-			} else if( newDist < 8 ) {
-				game.AddChat( "&e/client viewdistance: &cThat view distance is way too small." );
-			} else if( newDist > 4096 ) {
-				game.AddChat( "&e/client viewdistance: &cThat view distance is way too large." );
-			} else {
-				game.SetViewDistance( newDist );
+			string path = reader.NextAll();
+			if( String.IsNullOrEmpty( path ) ) return;
+			
+			try {
+				TexturePackExtractor extractor = new TexturePackExtractor();
+				extractor.Extract( path, game );
+			} catch( FileNotFoundException ) {
+				game.AddChat( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
 			}
 		}
 	}

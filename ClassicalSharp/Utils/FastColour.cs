@@ -59,6 +59,8 @@ namespace ClassicalSharp {
 			return result;
 		}
 		
+		
+		
 		public Color ToColor() {
 			return Color.FromArgb( A, R, G, B );
 		}
@@ -112,5 +114,33 @@ namespace ClassicalSharp {
 		public static FastColour Yellow = new FastColour( 255, 255, 0 );
 		public static FastColour Magenta = new FastColour( 255, 0, 255 );
 		public static FastColour Cyan = new FastColour( 0, 255, 255 );
+		
+		public static bool TryParse( string input, out FastColour value ) {
+			value = default( FastColour );
+			if( input == null || input.Length < 6 ) return false;
+			
+			try {
+				int i = input.Length > 6 ? 1 : 0;
+				if( input.Length > 6 && (input[0] != '#' || input.Length > 7) )
+					return false;
+				
+				int r = Utils.ParseHex( input[i + 0] ) * 16 + Utils.ParseHex( input[i + 1] );
+				int g = Utils.ParseHex( input[i + 2] ) * 16 + Utils.ParseHex( input[i + 3] );
+				int b = Utils.ParseHex( input[i + 4] ) * 16 + Utils.ParseHex( input[i + 5] );
+				value = new FastColour( r, g, b );
+				return true;
+			} catch( FormatException ) {
+				return false;
+			}
+		}
+		
+		public static FastColour Parse( string input ) {
+			int i = input.Length > 6 ? 1 : 0;
+			
+			int r = Utils.ParseHex( input[i + 0] ) * 16 + Utils.ParseHex( input[i + 1] );
+			int g = Utils.ParseHex( input[i + 2] ) * 16 + Utils.ParseHex( input[i + 3] );
+			int b = Utils.ParseHex( input[i + 4] ) * 16 + Utils.ParseHex( input[i + 5] );
+			return new FastColour( r, g, b );
+		}
 	}
 }

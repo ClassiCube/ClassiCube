@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 
 namespace OpenTK {
@@ -29,7 +28,6 @@ namespace OpenTK {
 
 		static readonly List<DisplayDevice> available_displays = new List<DisplayDevice>();
 		static readonly IList<DisplayDevice> available_displays_readonly;
-		static readonly object display_lock = new object();
 		static DisplayDevice primary_display;
 		static Platform.IDisplayDeviceDriver implementation;
 
@@ -39,10 +37,7 @@ namespace OpenTK {
 		}
 
 		internal DisplayDevice() {
-			lock (display_lock) {
-				available_displays.Add(this);
-			}
-
+			available_displays.Add(this);
 			available_resolutions_readonly = available_resolutions.AsReadOnly();
 		}
 
@@ -93,11 +88,9 @@ namespace OpenTK {
 				if (value && primary_display != null && primary_display != this)
 					primary_display.IsPrimary = false;
 
-				lock (display_lock) {
-					primary = value;
-					if (value)
-						primary_display = this;
-				}
+				primary = value;
+				if (value)
+					primary_display = this;
 			}
 		}
 
@@ -185,13 +178,16 @@ namespace OpenTK {
 		public static DisplayDevice Default { get { return primary_display; } }
 
 		DisplayResolution FindResolution(int width, int height, int bitsPerPixel, float refreshRate) {
-			return available_resolutions.Find(delegate(DisplayResolution test) {
-			                                  	return
-			                                  		((width > 0 && width == test.Width) || width == 0) &&
-			                                  		((height > 0 && height == test.Height) || height == 0) &&
-			                                  		((bitsPerPixel > 0 && bitsPerPixel == test.BitsPerPixel) || bitsPerPixel == 0) &&
-			                                  		((refreshRate > 0 && System.Math.Abs(refreshRate - test.RefreshRate) < 1.0) || refreshRate == 0);
-			                                  });
+			for( int i = 0; i < available_resolutions.Count; i++ ) {
+				DisplayResolution res = available_resolutions[i];
+				bool match = ((width > 0 && width == res.Width) || width == 0) &&
+					((height > 0 && height == res.Height) || height == 0) &&
+					((bitsPerPixel > 0 && bitsPerPixel == res.BitsPerPixel) || bitsPerPixel == 0) &&
+					((refreshRate > 0 && System.Math.Abs(refreshRate - res.RefreshRate) < 1.0) || refreshRate == 0);
+				
+				if( match ) return res;
+			}
+			return null;
 		}
 
 		/// <summary> Returns a System.String representing this DisplayDevice. </summary>

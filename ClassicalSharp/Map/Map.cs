@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
 		public Weather Weather = Weather.Sunny;
+		public Guid Uuid;
 		
 		public int GroundHeight {
 			get { return WaterHeight - 2; }
@@ -51,6 +52,7 @@ namespace ClassicalSharp {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
+			Uuid = Guid.NewGuid();
 			
 			game.RaiseOnNewMap();
 			game.SelectionManager.Dispose();
@@ -58,7 +60,7 @@ namespace ClassicalSharp {
 		
 		public void SetSidesBlock( Block block ) {
 			if( block == SidesBlock ) return;
-			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set sides block to an invalid block: " + block );
 				block = Block.Bedrock;
 			}
@@ -68,7 +70,7 @@ namespace ClassicalSharp {
 		
 		public void SetEdgeBlock( Block block ) {
 			if( block == EdgeBlock ) return;
-			if( block > (Block)BlockInfo.MaxDefinedBlock ) {
+			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
 				Utils.LogWarning( "Tried to set edge block to an invalid block: " + block );
 				block = Block.StillWater;
 			}
@@ -130,9 +132,9 @@ namespace ClassicalSharp {
 			int mapIndex = ( maxY * Length + z ) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
-				if( info.BlocksLight( block ) ) {
+				if( info.BlocksLight[block] ) {
 					heightmap[index] = (short)( y - 1 );
-					return y;
+					return y - 1;
 				}
 				mapIndex -= oneY;
 			}
@@ -142,8 +144,8 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = info.BlocksLight( oldBlock );
-			bool nowBlocks = info.BlocksLight( newBlock );
+			bool didBlock = info.BlocksLight[oldBlock];
+			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
 			
 			int index = ( z * Width ) + x;
@@ -276,7 +278,7 @@ namespace ClassicalSharp {
 						int curRunCount = skip[index];
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
-						if( x < xCount && info.blocksLight[mapPtr[mapIndex]] ) {
+						if( x < xCount && info.BlocksLight[mapPtr[mapIndex]] ) {
 							heightmap[heightmapIndex + x] = (short)( y - 1 );
 							elemsLeft--;
 							skip[index] = 0;

@@ -16,7 +16,7 @@ namespace OpenTK.Platform.Windows {
 	
 	internal static class API {
 		
-		[DllImport("user32.dll")]
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int cx, int cy, SetWindowPosFlags flags);
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
@@ -25,17 +25,17 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool AdjustWindowRectEx(ref Win32Rectangle lpRect, WindowStyle dwStyle, bool bMenu, ExtendedWindowStyle dwExStyle);
 
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr CreateWindowEx(ExtendedWindowStyle ExStyle, IntPtr ClassAtom, IntPtr WindowName, WindowStyle Style,
 			int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);
 		
-		[DllImport("user32.dll", SetLastError = true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool DestroyWindow(IntPtr windowHandle);	
 		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern ushort RegisterClassEx(ref ExtendedWindowClass window_class);
 
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern short UnregisterClass(IntPtr className, IntPtr instance);
 		
 		internal static IntPtr SetWindowLong_N(IntPtr handle, GetWindowLongOffsets item, IntPtr newValue) {
@@ -95,10 +95,10 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("gdi32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SwapBuffers(IntPtr dc);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
+		[DllImport("kernel32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr LoadLibrary(string dllName);
 
-		[DllImport("kernel32", SetLastError = true)]
+		[DllImport("kernel32", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
@@ -107,10 +107,10 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);		
 		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SetWindowText(IntPtr hWnd, [MarshalAs(UnmanagedType.LPTStr)] string lpString);
 		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern int GetWindowText(IntPtr hWnd, [MarshalAs(UnmanagedType.LPTStr), In, Out] StringBuilder lpString, int nMaxCount);
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
@@ -120,37 +120,37 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal extern static bool GetClientRect(IntPtr windowHandle, out Win32Rectangle clientRectangle);
 
-		[DllImport("user32.dll")]
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		public static extern bool IsWindowVisible(IntPtr intPtr);
 
-		[DllImport("user32.dll")]
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
 
-		[DllImport("user32.dll", SetLastError=true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool SetForegroundWindow(IntPtr hWnd);
 
-		[DllImport("user32.dll", SetLastError = true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool BringWindowToTop(IntPtr hWnd);
 
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		public static extern int ChangeDisplaySettingsEx([MarshalAs(UnmanagedType.LPTStr)] string lpszDeviceName,
 		                                                  DeviceMode lpDevMode, IntPtr hwnd, ChangeDisplaySettingsEnum dwflags, IntPtr lParam);
 
-		[DllImport("user32.dll", SetLastError = true, CharSet=CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet=CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		public static extern bool EnumDisplayDevices([MarshalAs(UnmanagedType.LPTStr)] string lpDevice,
 		                                             int iDevNum, [In, Out] WindowsDisplayDevice lpDisplayDevice, uint dwFlags);
 
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool EnumDisplaySettings([MarshalAs(UnmanagedType.LPTStr)] string device_name,
 		                                                int graphics_mode, [In, Out] DeviceMode device_mode);
 
-		[DllImport("user32.dll", SetLastError = true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
 
-		[DllImport("user32.dll", SetLastError = true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr MonitorFromWindow(IntPtr hwnd, MonitorFrom dwFlags);
 		
-		[DllImport("user32.dll", SetLastError = true)]
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool TrackMouseEvent(ref TrackMouseEventStructure lpEventTrack);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
@@ -613,28 +613,6 @@ namespace OpenTK.Platform.Windows {
 		DECIMAL      = 0x6E,
 		DIVIDE       = 0x6F,
 		F1           = 0x70,
-		F2           = 0x71,
-		F3           = 0x72,
-		F4           = 0x73,
-		F5           = 0x74,
-		F6           = 0x75,
-		F7           = 0x76,
-		F8           = 0x77,
-		F9           = 0x78,
-		F10          = 0x79,
-		F11          = 0x7A,
-		F12          = 0x7B,
-		F13          = 0x7C,
-		F14          = 0x7D,
-		F15          = 0x7E,
-		F16          = 0x7F,
-		F17          = 0x80,
-		F18          = 0x81,
-		F19          = 0x82,
-		F20          = 0x83,
-		F21          = 0x84,
-		F22          = 0x85,
-		F23          = 0x86,
 		F24          = 0x87,
 
 		NUMLOCK      = 0x90,

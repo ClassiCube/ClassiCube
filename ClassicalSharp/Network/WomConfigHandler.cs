@@ -1,5 +1,6 @@
 ﻿// This class was partially based on information from http://files.worldofminecraft.com/texturing/
 using System;
+using System.Drawing;
 using System.IO;
 using ClassicalSharp.Network;
 
@@ -13,13 +14,13 @@ namespace ClassicalSharp {
 		void CheckForWomEnvironment() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
-			if( item != null && item.Page != null ) {
-				ParseWomConfig( item.Page );
+			if( item != null && item.Data != null ) {
+				ParseWomConfig( (string)item.Data );
 			}
 			
 			game.AsyncDownloader.TryGetItem( womTerrainIdentifier, out item );
-			if( item != null && item.Bmp != null ) {
-				game.ChangeTerrainAtlas( item.Bmp );
+			if( item != null && item.Data != null ) {
+				game.ChangeTerrainAtlas( (Bitmap)item.Data );
 			}
 		}
 		

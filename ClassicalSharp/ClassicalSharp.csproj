@@ -19,7 +19,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <BaseAddress>4194304</BaseAddress>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -65,20 +65,30 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="2D\DrawTextArgs.cs" />
+    <Compile Include="2D\Drawing\DrawTextArgs.cs" />
+    <Compile Include="2D\Drawing\GdiPlusDrawer2D.cs" />
+    <Compile Include="2D\Drawing\IDrawer2D.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
+    <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\KeyMappingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
+    <Compile Include="2D\Screens\Menu\PauseScreen.cs" />
+    <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\SaveLevelScreen.cs" />
     <Compile Include="2D\Screens\NormalScreen.cs" />
-    <Compile Include="2D\Screens\PauseScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
-    <Compile Include="2D\Utils2D.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
+    <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\ButtonWidget.cs" />
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\TextInputWidget.cs" />
@@ -102,6 +112,7 @@
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\Game.Events.cs" />
     <Compile Include="Game\Game.InputHandling.cs" />
+    <Compile Include="Game\Inventory.cs" />
     <Compile Include="GraphicsAPI\Direct3D9Api.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />
@@ -114,8 +125,12 @@
     <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\ChunkMeshBuilder.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
+    <Compile Include="Map\IMapFile.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Map\MapFcm3.cs" />
+    <Compile Include="Map\MapCw.Exporter.cs" />
+    <Compile Include="Map\MapCw.Importer.cs" />
+    <Compile Include="Map\MapDat.Importer.cs" />
+    <Compile Include="Map\MapFcm3.Importer.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />
@@ -157,12 +172,17 @@
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\Commands.cs" />
+    <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
+    <Compile Include="TexturePack\Animations.cs" />
+    <Compile Include="TexturePack\TerrainAtlas1D.cs" />
+    <Compile Include="TexturePack\TerrainAtlas2D.cs" />
+    <Compile Include="TexturePack\TexturePackExtractor.cs" />
+    <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
-    <Compile Include="Utils\TerrainAtlas1D.cs" />
-    <Compile Include="Utils\TerrainAtlas2D.cs" />
+    <Compile Include="Utils\Options.cs" />
     <Compile Include="Utils\TextureRectangle.cs" />
     <Compile Include="Utils\StringBuffer.cs" />
     <Compile Include="Utils\Utils.cs" />
@@ -178,8 +198,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="2D\Drawing" />
     <Folder Include="2D\Screens" />
+    <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
+    <Folder Include="2D\Widgets\Menu" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\Particles" />
     <Folder Include="GraphicsAPI" />
@@ -189,6 +212,7 @@
     <Folder Include="Game" />
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
+    <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />
     <Folder Include="Physics" />

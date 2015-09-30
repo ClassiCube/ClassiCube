@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class ExtPlayerListWidget : PlayerListWidget {
 		
-		public ExtPlayerListWidget( Game window, Font font ) : base( window, font ) {
+		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];
@@ -106,8 +106,8 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( CpeListInfo player, int index ) {
-			DrawTextArgs args = new DrawTextArgs( graphicsApi, player.ListName, true );
-			Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( player.ListName, true );
+			Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 			if( index < 0 ) {
 				info[namesCount] = new PlayerInfo( player );
 				textures[namesCount] = tex;

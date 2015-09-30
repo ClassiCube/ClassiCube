@@ -7,9 +7,8 @@ namespace ClassicalSharp.Particles {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
-		public Vector2 Size = new Vector2( 1 / 16f, 1 / 16f );
 		public TextureRectangle Rectangle;
-		public double Lifetime;
+		public float Lifetime;
 		protected Game game;
 		protected Vector3 lastPos, nextPos;
 
@@ -17,26 +16,27 @@ namespace ClassicalSharp.Particles {
 		
 		public abstract void Dispose();
 		
-		public Particle( Game window, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec ) {
-			game = window;
+		public Particle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec ) {
+			this.game = game;
 			Position = lastPos = nextPos = pos;
 			Velocity = velocity;
-			Lifetime = lifetime;
+			Lifetime = (float)lifetime;
 			Rectangle = rec;
 		}
 		
 		public virtual bool Tick( double delta ) {
-			Lifetime -= delta;
+			Lifetime -= (float)delta;
 			return Lifetime < 0;
 		}
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
+		protected static Vector2 Size;
 		protected void TranslatePoints( out Vector3 p111, out Vector3 p121, out Vector3 p212, out Vector3 p222 ) {			
 			Vector3 centre = Position;
 			Matrix4 camera = game.View;
 			Vector3 right = new Vector3( camera.Row0.X, camera.Row1.X, camera.Row2.X );
 			Vector3 up = new Vector3( camera.Row0.Y, camera.Row1.Y, camera.Row2.Y );
-			float x = Size.X * 8, y = Size.Y * 8;
+			float x = Size.X * 4, y = Size.Y * 4;
 			centre.Y += Size.Y / 2;
 			
 			p111 = Transform( -x, -y, ref centre, ref up, ref right );

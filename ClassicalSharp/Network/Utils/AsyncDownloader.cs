@@ -21,7 +21,7 @@ namespace ClassicalSharp.Network {
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
-			client = new WebClient();			
+			client = new WebClient();
 			
 			worker = new Thread( DownloadThreadWorker, 256 * 1024 );
 			worker.Name = "ClassicalSharp.ImageDownloader";
@@ -33,20 +33,24 @@ namespace ClassicalSharp.Network {
 			string strippedSkinName = Utils.StripColours( skinName );
 			string url = Utils.IsUrl( skinName ) ? skinName :
 				skinServer + strippedSkinName + ".png";
-			AddRequestToQueue( url, true, "skin_" + strippedSkinName, true );
+			AddRequest( url, true, "skin_" + strippedSkinName, 0 );
 		}
 		
 		public void DownloadImage( string url, bool priority, string identifier ) {
-			AddRequestToQueue( url, priority, identifier, true );
+			AddRequest( url, priority, identifier, 0 );
 		}
 		
 		public void DownloadPage( string url, bool priority, string identifier ) {
-			AddRequestToQueue( url, priority, identifier, false );
+			AddRequest( url, priority, identifier, 1 );
 		}
 		
-		void AddRequestToQueue( string url, bool priority, string identifier, bool image ) {
+		public void DownloadData( string url, bool priority, string identifier ) {
+			AddRequest( url, priority, identifier, 2 );
+		}
+		
+		void AddRequest( string url, bool priority, string identifier, byte type ) {
 			lock( requestLocker )  {
-				DownloadRequest request = new DownloadRequest( url, identifier, image );
+				DownloadRequest request = new DownloadRequest( url, identifier, type );
 				if( priority ) {
 					requests.Insert( 0, request );
 				} else {
@@ -74,7 +78,7 @@ namespace ClassicalSharp.Network {
 				
 				foreach( var item in downloaded ) {
 					DateTime timestamp = item.Value.TimeDownloaded;
-					if( ( now - timestamp ).TotalSeconds > seconds ) {
+					if( (now - timestamp).TotalSeconds > seconds ) {
 						itemsToRemove.Add( item.Key );
 					}
 				}
@@ -84,9 +88,9 @@ namespace ClassicalSharp.Network {
 					DownloadedItem item;
 					downloaded.TryGetValue( key, out item );
 					downloaded.Remove( key );
-					if( item.Bmp != null ) {
-						item.Bmp.Dispose();
-					}
+					Bitmap bmp = item.Data as Bitmap;
+					if( bmp != null )
+						bmp.Dispose();
 				}
 			}
 		}
@@ -124,29 +128,30 @@ namespace ClassicalSharp.Network {
 		
 		void DownloadItem( DownloadRequest request ) {
 			string url = request.Url;
-			bool isImage = request.IsImage;
-			Utils.LogDebug( "Downloading " + ( isImage ? "image" : "page" ) + " from: " + url );
-			Bitmap bmp = null;
-			string page = null;
+			byte type = request.Type;
+			string dataType = type == 0 ? "image" : (type == 1 ? "string" : "raw");
+			Utils.LogDebug( "Downloading " + dataType + " from: " + url );
+			object value = null;
 			
 			try {
-				if( isImage ) {
+				if( type == 0 ) {
 					byte[] data = client.DownloadData( url );
-					using( MemoryStream stream = new MemoryStream( data ) ) {
-						bmp = new Bitmap( stream );
-					}
-				} else {
-					page = client.DownloadString( url );
+					using( MemoryStream stream = new MemoryStream( data ) )
+						value = new Bitmap( stream );
+				} else if( type == 1 ) {
+					value = client.DownloadString( url );
+				} else if( type == 2 ) {
+					value = client.DownloadData( url );
 				}
-				Utils.LogDebug( "Downloaded from: " + request.Url );
+				Utils.LogDebug( "Downloaded from: " + url );
 			} catch( Exception ex ) {
 				if( !( ex is WebException || ex is ArgumentException ) ) throw;
-				Utils.LogDebug( "Failed to download from: " + request.Url );
+				Utils.LogDebug( "Failed to download from: " + url );
 			}
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
-				DownloadedItem newItem = new DownloadedItem( bmp, page, request.TimeAdded, request.Url );
+				DownloadedItem newItem = new DownloadedItem( value, request.TimeAdded, url );
 				
 				if( downloaded.TryGetValue( request.Identifier, out oldItem ) ) {
 					if( oldItem.TimeAdded > newItem.TimeAdded ) {
@@ -155,8 +160,9 @@ namespace ClassicalSharp.Network {
 						newItem = old;
 					}
 
-					if( oldItem.Bmp != null )
-						oldItem.Bmp.Dispose();
+					Bitmap oldBmp = oldItem.Data as Bitmap;
+					if( oldBmp != null )
+						oldBmp.Dispose();
 				}
 				downloaded[request.Identifier] = newItem;
 			}
@@ -166,13 +172,13 @@ namespace ClassicalSharp.Network {
 			
 			public string Url;
 			public string Identifier;
-			public bool IsImage;
+			public byte Type; // 0 = bitmap, 1 = string, 2 = byte[]
 			public DateTime TimeAdded;
 			
-			public DownloadRequest( string url, string identifier, bool isImage ) {
+			public DownloadRequest( string url, string identifier, byte type ) {
 				Url = url;
 				Identifier = identifier;
-				IsImage = isImage;
+				Type = type;
 				TimeAdded = DateTime.UtcNow;
 			}
 		}
@@ -180,14 +186,12 @@ namespace ClassicalSharp.Network {
 	
 	public class DownloadedItem {
 		
-		public Bitmap Bmp;
-		public string Page;
+		public object Data;
 		public DateTime TimeAdded, TimeDownloaded;
 		public string Url;
 		
-		public DownloadedItem( Bitmap bmp, string page, DateTime timeAdded, string url ) {
-			Bmp = bmp;
-			Page = page;
+		public DownloadedItem( object data, DateTime timeAdded, string url ) {
+			Data = data;
 			TimeAdded = timeAdded;
 			TimeDownloaded = DateTime.UtcNow;
 			Url = url;

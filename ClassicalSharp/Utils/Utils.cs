@@ -14,12 +14,13 @@ namespace ClassicalSharp {
 	public delegate TResult Func<TResult>();
 	public delegate TResult Func<T1, TResult>( T1 arg1 );
 	public delegate TResult Func<T1, T2, TResult>( T1 arg1, T2 arg2 );
+	public delegate TResult Func<T1, T2, T3, TResult>( T1 arg1, T2 arg2, T3 arg3 );
 	public delegate bool TryParseFunc<T>( string s, out T value );
 	// ################################################################
 	
 	public static class Utils {
 		
-		public static string AppName = "ClassicalSharp 0.9";
+		public static string AppName = "ClassicalSharp 0.95";
 		
 		public static void Clamp( ref float value, float min, float max ) {
 			if( value < min ) value = min;
@@ -121,12 +122,17 @@ namespace ClassicalSharp {
 			float sinA = (float)Math.Sin( angle );
 			return new Vector3( cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z );
 		}
-
 		
 		public static Vector3 RotateY( float x, float y, float z, float angle ) {
 			float cosA = (float)Math.Cos( angle );
 			float sinA = (float)Math.Sin( angle );
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
+		}
+		
+		public static Vector3 RotateX( Vector3 v, float angle ) {
+			float cosA = (float)Math.Cos( angle );
+			float sinA = (float)Math.Sin( angle );
+			return new Vector3( v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z );
 		}
 		
 		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {

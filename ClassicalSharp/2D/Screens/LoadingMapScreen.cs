@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	public class LoadingMapScreen : Screen {
 		
 		readonly Font font;
-		public LoadingMapScreen( Game window, string name, string motd ) : base( window ) {
+		public LoadingMapScreen( Game game, string name, string motd ) : base( game ) {
 			serverName = name;
 			serverMotd = motd;
 			font = new Font( "Arial", 14 );
@@ -36,11 +36,12 @@ namespace ClassicalSharp {
 			progX = game.Width / 2f - progWidth / 2f;
 			
 			Size size = new Size( progWidth, progHeight );
-			using( Bitmap bmp = Utils2D.CreatePow2Bitmap( size ) ) {
-				using( Graphics g = Graphics.FromImage( bmp ) ) {
-					Utils2D.DrawRectBounds( g, Color.White, 5f, 0, 0, progWidth, progHeight );
-				}
-				progressBoxTexture = Utils2D.Make2DTexture( graphicsApi, bmp, size, (int)progX, (int)progY );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( Color.White, 5f, 0, 0, progWidth, progHeight );
+					progressBoxTexture = drawer.Make2DTexture( bmp, size, (int)progX, (int)progY );
+				}			
 			}
 			game.MapLoading += MapLoading;
 		}

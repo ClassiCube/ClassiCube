@@ -9,11 +9,9 @@ namespace ClassicalSharp {
 
 	public abstract partial class Player : Entity {
 		
-		public const float EyeHeight = 1.625f;
-		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, Position.Y + EyeHeight, Position.Z ); }
+			get { return new Vector3( Position.X, Position.Y + Model.GetEyeY( this ), Position.Z ); }
 		}
 		
 		protected Game game;
@@ -90,8 +88,8 @@ namespace ClassicalSharp {
 		protected void CheckSkin() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( "skin_" + SkinName, out item );
-			if( item != null && item.Bmp != null ) {
-				Bitmap bmp = item.Bmp;
+			if( item != null && item.Data != null ) {
+				Bitmap bmp = (Bitmap)item.Data;
 				game.Graphics.DeleteTexture( ref PlayerTextureId );
 				
 				try {

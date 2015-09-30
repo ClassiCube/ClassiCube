@@ -38,7 +38,8 @@ namespace ClassicalSharp {
 		public override Matrix4 GetProjection() {
 			float fovy = (float)Utils.DegreesToRadians( 70 );
 			float aspectRatio = (float)game.Width / game.Height;
-			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, 0.1f, game.ViewDistance );
+			float zNear = game.Graphics.MinZNear;
+			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, zNear, game.ViewDistance );
 		}
 		
 		public override void GetPickedBlock( PickedPos pos ) {
@@ -48,7 +49,7 @@ namespace ClassicalSharp {
 			Picking.GetPickedBlockPos( game, eyePos, dir, reach, pos );
 		}
 		
-		Point previous, delta;
+		internal Point previous, delta;
 		void CentreMousePosition() {
 			if( !game.Focused ) return;
 			Point current = game.DesktopCursorPos;
@@ -57,7 +58,8 @@ namespace ClassicalSharp {
 			int cenX = bounds.Left + bounds.Width / 2;
 			int cenY = bounds.Top + bounds.Height / 2;
 			game.DesktopCursorPos = new Point( cenX, cenY );
-			previous = new Point( cenX, cenY );
+			// Fixes issues with large DPI displays on Windows >= 8.0.
+			previous = game.DesktopCursorPos;
 		}
 		
 		public override void RegrabMouse() {

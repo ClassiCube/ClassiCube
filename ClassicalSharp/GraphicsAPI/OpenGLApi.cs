@@ -11,8 +11,9 @@ namespace ClassicalSharp.GraphicsAPI {
 
 	public class OpenGLApi : IGraphicsApi {
 		
-		BeginMode[] modeMappings = { BeginMode.Triangles, BeginMode.Lines, BeginMode.TriangleStrip };
+		BeginMode[] modeMappings;
 		public unsafe OpenGLApi() {
+			InitFields();
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
 			textureDimensions = texDims;
@@ -28,11 +29,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			base.InitDynamicBuffers();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
-			setupBatchFuncTex2f = SetupVbPos3fTex2f;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
 			GL.EnableClientState( ArrayCap.VertexArray );
+			GL.EnableClientState( ArrayCap.ColorArray );
 		}
-		
+
 		public override bool AlphaTest {
 			set { ToggleCap( EnableCap.AlphaTest, value ); }
 		}
@@ -41,19 +42,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Blend, value ); }
 		}
 		
-		Compare[] compareFuncs = {
-			Compare.Always, Compare.Notequal, Compare.Never, Compare.Less,
-			Compare.Lequal, Compare.Equal, Compare.Gequal, Compare.Greater,
-		};
+		Compare[] compareFuncs;
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
 			GL.AlphaFunc( compareFuncs[(int)func], value );
 		}
 		
-		BlendingFactor[] blendFuncs = {
-			BlendingFactor.Zero, BlendingFactor.One,
-			BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
-			BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
-		};
+		BlendingFactor[] blendFuncs;
 		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
 			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc] );
 		}
@@ -92,7 +86,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		Fog lastFogMode = (Fog)999;
-		FogMode[] fogModes = { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+		FogMode[] fogModes;
 		public override void SetFogMode( Fog mode ) {
 			if( mode != lastFogMode ) {
 				GL.Fogi( FogParameter.FogMode, (int)fogModes[(int)mode] );
@@ -101,7 +95,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool FaceCulling {
-			set { 
+			set {
 				if( value ) GL.Enable( EnableCap.CullFace );
 				else GL.Disable( EnableCap.CullFace );
 			}
@@ -159,10 +153,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
 			return texId;
 		}
-				
+		
 		public override void BindTexture( int texture ) {
 			GL.BindTexture( TextureTarget.Texture2D, texture );
-		}		
+		}
 		
 		public override void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part ) {
 			GL.BindTexture( TextureTarget.Texture2D, texId );
@@ -179,8 +173,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endregion
 		
 		#region Vertex/index buffers
-		Action setupBatchFunc;
-		Action setupBatchFuncTex2f, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
+		Action setupBatchFunc, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
@@ -263,26 +256,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( format == batchFormat ) return;
 			
 			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
 				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fTex2f ) {
-				GL.DisableClientState( ArrayCap.TextureCoordArray );
-			} else if( batchFormat == VertexFormat.Pos3fCol4b ) {
-				GL.DisableClientState( ArrayCap.ColorArray );
 			}
 			
 			batchFormat = format;
 			if( format == VertexFormat.Pos3fTex2fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
 				batchStride = VertexPos3fTex2fCol4b.Size;
-			} else if( format == VertexFormat.Pos3fTex2f ) {
-				GL.EnableClientState( ArrayCap.TextureCoordArray );
-				setupBatchFunc = setupBatchFuncTex2f;
-				batchStride = VertexPos3fTex2f.Size;
-			} else if( format == VertexFormat.Pos3fCol4b ) {
-				GL.EnableClientState( ArrayCap.ColorArray );
+			} else {
 				setupBatchFunc = setupBatchFuncCol4b;
 				batchStride = VertexPos3fCol4b.Size;
 			}
@@ -323,10 +305,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );
-		void SetupVbPos3fTex2f() {
-			GL.VertexPointer( 3, PointerType.Float, VertexPos3fTex2f.Size, zero );
-			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2f.Size, twelve );
-		}
 		
 		void SetupVbPos3fCol4b() {
 			GL.VertexPointer( 3, PointerType.Float, VertexPos3fCol4b.Size, zero );
@@ -342,7 +320,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#region Matrix manipulation
 		MatrixMode lastMode = 0;
-		MatrixMode[] matrixModes = { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
+		MatrixMode[] matrixModes;
 		public override void SetMatrixMode( MatrixType mode ) {
 			MatrixMode glMode = matrixModes[(int)mode];
 			if( glMode != lastMode ) {
@@ -375,14 +353,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		public override void BeginFrame( Game game ) {
+		public override void BeginFrame( GameWindow game ) {
 		}
 		
-		public override void EndFrame( Game game ) {
+		public override void EndFrame( GameWindow game ) {
 			game.SwapBuffers();
 		}
 		
-		public override void SetVSync( Game game, bool value ) {
+		public override void SetVSync( GameWindow game, bool value ) {
 			game.VSync = value;
 		}
 		
@@ -420,6 +398,42 @@ namespace ClassicalSharp.GraphicsAPI {
 		static void ToggleCap( EnableCap cap, bool value ) {
 			if( value ) GL.Enable( cap );
 			else GL.Disable( cap );
+		}
+		
+		void InitFields() {
+			// See comment in Game() constructor
+			#if !__MonoCS__
+			modeMappings = new [] { BeginMode.Triangles, BeginMode.Lines };
+			blendFuncs = new [] {
+				BlendingFactor.Zero, BlendingFactor.One,
+				BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
+				BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
+			};
+			compareFuncs = new [] {
+				Compare.Always, Compare.Notequal, Compare.Never, Compare.Less,
+				Compare.Lequal, Compare.Equal, Compare.Gequal, Compare.Greater,
+			};
+			fogModes = new [] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
+			matrixModes = new [] { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
+			#else			
+			modeMappings = new BeginMode[2];
+			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
+			blendFuncs = new BlendingFactor[6];
+			blendFuncs[0] = BlendingFactor.Zero; blendFuncs[1] = BlendingFactor.One;
+			blendFuncs[2] = BlendingFactor.SrcAlpha; blendFuncs[3] = BlendingFactor.OneMinusSrcAlpha;
+			blendFuncs[4] = BlendingFactor.DstAlpha; blendFuncs[5] = BlendingFactor.OneMinusDstAlpha;
+			compareFuncs = new Compare[8];
+			compareFuncs[0] = Compare.Always; compareFuncs[1] = Compare.Notequal;
+			compareFuncs[2] = Compare.Never; compareFuncs[3] = Compare.Less;
+			compareFuncs[4] = Compare.Lequal; compareFuncs[5] = Compare.Equal;
+			compareFuncs[6] = Compare.Gequal; compareFuncs[7] = Compare.Greater;
+			fogModes = new FogMode[3];
+			fogModes[0] = FogMode.Linear; fogModes[1] = FogMode.Exp;
+			fogModes[2] = FogMode.Exp2;
+			matrixModes = new MatrixMode[3];
+			matrixModes[0] = MatrixMode.Projection; matrixModes[1] = MatrixMode.Modelview;
+			matrixModes[2] = MatrixMode.Texture;
+			#endif
 		}
 	}
 }

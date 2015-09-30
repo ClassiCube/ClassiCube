@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class NormalPlayerListWidget : PlayerListWidget {
 		
-		public NormalPlayerListWidget( Game window, Font font ) : base( window, font ) {
+		public NormalPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];		
@@ -50,8 +50,8 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( Player player ) {
-			DrawTextArgs args = new DrawTextArgs( graphicsApi, player.DisplayName, true );
-			Texture tex = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( player.DisplayName, true );
+			Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 			info[namesCount] = new PlayerInfo( player );
 			textures[namesCount] = tex;
 			namesCount++;

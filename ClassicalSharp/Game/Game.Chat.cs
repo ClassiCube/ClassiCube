@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 			
 			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {
 				if( writer != null ) {
-					writer.Close();
+					writer.Dispose();
 					writer = null;
 				}
 				OpenChatFile( now );

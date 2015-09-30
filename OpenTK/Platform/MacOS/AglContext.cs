@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics;
 using OpenTK.Platform.MacOS.Carbon;
@@ -58,10 +57,10 @@ namespace OpenTK.Platform.MacOS {
 				attribs.Add((int)Agl.PixelFormatAttribute.AGL_FULLSCREEN);
 			attribs.Add((int)Agl.PixelFormatAttribute.AGL_NONE);
 
-			Debug.Write("AGL Attribute array:  ");
+			Debug.Print("AGL Attribute array:  ");
 			for (int i = 0; i < attribs.Count; i++)
-				Debug.Write(attribs[i].ToString() + "  ");
-			Debug.WriteLine("");
+				Debug.Print(attribs[i].ToString() + "  ");
+			Debug.Print("");
 
 			AGLPixelFormat aglPixelFormat;
 
@@ -277,7 +276,7 @@ namespace OpenTK.Platform.MacOS {
 				ContextHandle = IntPtr.Zero;
 				Debug.Print("Context destruction completed successfully.");
 			} catch( MacOSException ) {
-				Debug.WriteLine("Failed to destroy context.");
+				Debug.Print("Failed to destroy context.");
 				if( disposing )
 					throw;
 			}

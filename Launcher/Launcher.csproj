@@ -33,7 +33,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <SignAssembly>False</SignAssembly>
     <DelaySign>False</DelaySign>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoStdLib>False</NoStdLib>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
@@ -55,6 +55,7 @@
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>..\output\release\</OutputPath>
@@ -63,6 +64,8 @@
     <Optimize>True</Optimize>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <DefineConstants>TRACE</DefineConstants>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -82,9 +85,11 @@
     </Compile>
     <Compile Include="MainForm.GameState.cs" />
     <Compile Include="MinecraftSession.cs" />
+    <Compile Include="Patcher\Animations.cs" />
+    <Compile Include="Patcher\ResourceFetcher.cs" />
+    <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResourceFetcher.cs" />
     <Compile Include="ServerListEntry.cs" />
     <Compile Include="WebUtility.cs" />
   </ItemGroup>
@@ -117,6 +122,15 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassicalSharp\ClassicalSharp.csproj">
+      <Project>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</Project>
+      <Name>ClassicalSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Patcher" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

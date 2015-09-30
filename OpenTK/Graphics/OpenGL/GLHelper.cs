@@ -7,16 +7,12 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 
-namespace OpenTK.Graphics.OpenGL
-{
-	/// <summary>
-	/// OpenGL bindings for .NET, implementing the full OpenGL API, including extensions.
-	/// </summary>
-	public sealed partial class GL : BindingsBase
-	{
-		static readonly object sync_root = new object();
+namespace OpenTK.Graphics.OpenGL {
+	
+	/// <summary> OpenGL bindings for .NET, implementing the full OpenGL API, including extensions. </summary>
+	public sealed partial class GL : BindingsBase {
+		
 		static GL() { }
 		
 		GraphicsContextBase context;
@@ -26,7 +22,7 @@ namespace OpenTK.Graphics.OpenGL
 		
 		internal void LoadEntryPoints( GraphicsContextBase context ) {
 			this.context = context;
-			Debug.Write("Loading OpenGL function pointers... ");
+			Debug.Print("Loading OpenGL function pointers... ");
 
 			AlphaFuncAddress = GetAddress( "glAlphaFunc" );
 			BindBufferAddress = GetAddress( "glBindBuffer" );

@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	public class ChatScreen : Screen {
 		
-		public ChatScreen( Game window ) : base( window ) {
+		public ChatScreen( Game game ) : base( game ) {
 		}
 		
 		public int ChatInputYOffset, ChatLogYOffset;
@@ -94,7 +94,8 @@ namespace ClassicalSharp {
 
 		public override void Dispose() {
 			if( !textInput.chatInputText.Empty ) {
-				game.CursorVisible = false;
+				if( game.CursorVisible )
+					game.CursorVisible = false;
 				game.chatInInputBuffer = textInput.chatInputText.ToString();
 			}
 			chatFont.Dispose();
@@ -121,8 +122,8 @@ namespace ClassicalSharp {
 		
 		void UpdateAnnouncement( string text ) {
 			announcementDisplayTime = DateTime.UtcNow;
-			DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
-			announcementTex = Utils2D.MakeTextTexture( announcementFont, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( text, true );
+			announcementTex = game.Drawer2D.MakeTextTexture( announcementFont, 0, 0, ref args );
 			announcementTex.X1 = game.Width / 2 - announcementTex.Width / 2;
 			announcementTex.Y1 = game.Height / 4 - announcementTex.Height / 2;
 		}
@@ -146,9 +147,11 @@ namespace ClassicalSharp {
 		}
 		
 		void OpenTextInputBar( string initialText ) {
-			game.CursorVisible = true;
+			if( !game.CursorVisible )
+				game.CursorVisible = true;
 			suppressNextPress = true;
 			HandlesAllInput = true;
+			game.Keyboard.KeyRepeat = true;
 			textInput.chatInputText.Clear();
 			textInput.chatInputText.Append( 0, initialText );
 			textInput.Init();
@@ -158,10 +161,15 @@ namespace ClassicalSharp {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == game.Keys[KeyMapping.SendChat] ) {
+				if( key == game.Keys[KeyMapping.SendChat] || key == game.Keys[KeyMapping.PauseOrExit] ) {
 					HandlesAllInput = false;
-					game.CursorVisible = false;
+					if( game.CursorVisible )
+						game.CursorVisible = false;
 					game.Camera.RegrabMouse();
+					game.Keyboard.KeyRepeat = false;
+					
+					if( key == game.Keys[KeyMapping.PauseOrExit] )
+						textInput.chatInputText.Clear();
 					textInput.SendTextInBufferAndReset();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;
@@ -174,6 +182,8 @@ namespace ClassicalSharp {
 					if( chatIndex > game.ChatLog.Count - chatLines )
 						chatIndex = game.ChatLog.Count - chatLines;
 					ResetChat();
+				} else if( key == game.Keys[KeyMapping.HideGui] ) {
+					game.HideGui = !game.HideGui;
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
@@ -194,7 +204,7 @@ namespace ClassicalSharp {
 			if( !HandlesAllInput ) return false;
 			chatIndex += -delta;
 			int maxIndex = game.ChatLog.Count - chatLines;
-			int minIndex = Math.Min( 0, maxIndex );	
+			int minIndex = Math.Min( 0, maxIndex );
 			Utils.Clamp( ref chatIndex, minIndex, maxIndex );
 			ResetChat();
 			return true;

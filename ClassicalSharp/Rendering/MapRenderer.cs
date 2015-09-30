@@ -69,6 +69,9 @@ namespace ClassicalSharp {
 		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
 			if( e.Var == EnvVariable.SunlightColour || e.Var == EnvVariable.ShadowlightColour ) {
 				Refresh();
+			} else if( e.Var == EnvVariable.WaterLevel ) {
+				builder.clipLevel = Math.Max( 0, game.Map.GroundHeight );
+				Refresh();
 			}
 		}
 
@@ -76,9 +79,9 @@ namespace ClassicalSharp {
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			if( fullResetRequired ) {
-				Refresh();				
+				Refresh();
 			}
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -146,19 +149,15 @@ namespace ClassicalSharp {
 		}
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
-			int cx = x >> 4;
-			int cy = y >> 4;
-			int cz = z >> 4;
+			int cx = x >> 4, bX = x & 0x0F;
+			int cy = y >> 4, bY = y & 0x0F;
+			int cz = z >> 4, bZ = z & 0x0F;
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
-			int newLightcy = newHeight == -1 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight == -1 ? 0 : oldHeight >> 4;
+			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
+			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
 			
 			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
-			int bX = x & 0x0F; // % 16
-			int bY = y & 0x0F;
-			int bZ = z & 0x0F;
-			
 			if( bX == 0 && cx > 0 ) ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
 			if( bY == 0 && cy > 0 ) ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
 			if( bZ == 0 && cz > 0 ) ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
@@ -276,6 +275,8 @@ namespace ClassicalSharp {
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
 		void RenderTranslucent() {
+			Block block = game.LocalPlayer.BlockAtHead;
+			drawAllFaces = block == Block.Water || block == Block.StillWater;
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );

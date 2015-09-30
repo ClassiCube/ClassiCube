@@ -30,7 +30,6 @@ using System;
 using System.ComponentModel;
 using System.Collections;
 using System.Drawing;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 // X11 Version

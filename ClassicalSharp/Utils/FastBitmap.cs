@@ -14,6 +14,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public FastBitmap( int width, int height, int stride, IntPtr scan0 ) {
+			Width = width;
+			Height = height;
+			Stride = stride;
+			Scan0 = scan0;
+			scan0Byte = (byte*)scan0;
+		}
+		
 		public Bitmap Bitmap;
 		BitmapData data;
 		byte* scan0Byte;
@@ -26,14 +34,17 @@ namespace ClassicalSharp {
 		public int Stride;		
 		public int Width, Height;
 		
+		public static bool CheckFormat( PixelFormat format ) {
+			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb;
+		}
+		
 		public void LockBits() {
 			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
 			if( data != null ) return;
 			
 			PixelFormat format = Bitmap.PixelFormat;
-			if( !( format == PixelFormat.Format32bppArgb || format == PixelFormat.Format32bppRgb ) ) {
+			if( !CheckFormat( format ) )
 				throw new NotSupportedException( "Unsupported bitmap pixel format: " + format );
-			}
 			
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
 			data = Bitmap.LockBits( rec, ImageLockMode.ReadWrite, format );
@@ -49,7 +60,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UnlockBits() {
-			if( data != null ) {
+			if( Bitmap != null && data != null ) {
 				Bitmap.UnlockBits( data );
 				data = null;
 				scan0Byte = (byte*)IntPtr.Zero;
@@ -63,7 +74,7 @@ namespace ClassicalSharp {
 			return (int*)( scan0Byte + ( y * Stride ) );
 		}
 		
-		internal static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
+		public static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
 			for( int y = 0; y < size; y++ ) {
 				int* srcRow = src.GetRowPtr( srcY + y );
 				int* dstRow = dst.GetRowPtr( dstY + y );

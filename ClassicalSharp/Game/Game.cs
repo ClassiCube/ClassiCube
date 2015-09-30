@@ -9,6 +9,7 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
@@ -37,6 +38,8 @@ namespace ClassicalSharp {
 		public MapEnvRenderer MapEnvRenderer;
 		public EnvRenderer EnvRenderer;
 		public WeatherRenderer WeatherRenderer;
+		public Inventory Inventory;
+		public IDrawer2D Drawer2D;
 		
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
@@ -44,49 +47,10 @@ namespace ClassicalSharp {
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer;
+		internal string skinServer, chatInInputBuffer, defaultTexPack;
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
-		
-		int hotbarIndex = 0;
-		public bool CanChangeHeldBlock = true;
-		public Block[] BlocksHotbar = new Block[] { Block.Stone, Block.Cobblestone,
-			Block.Brick, Block.Dirt, Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
-		
-		public int HeldBlockIndex {
-			get { return hotbarIndex; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				hotbarIndex = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public Block HeldBlock {
-			get { return BlocksHotbar[hotbarIndex]; }
-			set {
-				if( !CanChangeHeldBlock ) {
-					AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
-					return;
-				}
-				for( int i = 0; i < BlocksHotbar.Length; i++ ) {
-					if( BlocksHotbar[i] == value ) {
-						hotbarIndex = i;
-						RaiseHeldBlockChanged();
-						return;
-					}
-				}			
-				BlocksHotbar[hotbarIndex] = value;
-				RaiseHeldBlockChanged();
-			}
-		}
-		
-		public bool[] CanPlace = new bool[256];
-		public bool[] CanDelete = new bool[256];
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -100,11 +64,14 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 30;
+		public bool HideGui = false;
+		public Animations Animations;
+		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
-			TerrainAtlas.Dispose();			
-			TerrainAtlas.UpdateState( bmp );						
+			TerrainAtlas.Dispose();
+			TerrainAtlas.UpdateState( bmp );
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
@@ -113,12 +80,11 @@ namespace ClassicalSharp {
 			Raise( TerrainAtlasChanged );
 		}
 		
-		void PrintGraphicsInfo() {
-			Console.ForegroundColor = ConsoleColor.Green;
-			Graphics.PrintApiSpecificInfo();
-			Utils.Log( "Max 2D texture dimensions: " + Graphics.MaxTextureDimensions );
-			Utils.Log( "== End of graphics info ==" );
-			Console.ResetColor();
+		public Game( string username, string mppass, string skinServer, string defaultTexPack ) : base() {
+			Username = username;
+			Mppass = mppass;
+			this.skinServer = skinServer;
+			this.defaultTexPack = defaultTexPack;
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
@@ -127,18 +93,29 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
+			try {
+				Options.Load();
+			} catch( IOException ) {
+				Utils.LogWarning( "Unable to load options.txt" );
+			}
+			Keys = new KeyMap();
+			Drawer2D = new GdiPlusDrawer2D( Graphics );
+			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
 			defaultIb = Graphics.MakeDefaultIb();
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
-			PrintGraphicsInfo();
-			Bitmap terrainBmp = new Bitmap( "terrain.png" );
+			Graphics.PrintGraphicsInfo();
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics );
-			LoadAtlas( terrainBmp );
+			Animations = new Animations( this );
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( defaultTexPack, this );
+			Inventory = new Inventory( this );
+			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
-			BlockInfo.SetDefaultBlockPermissions( CanPlace, CanDelete );
+			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
 			Players[255] = LocalPlayer;
@@ -152,6 +129,8 @@ namespace ClassicalSharp {
 			} else {
 				Network = new NetworkProcessor( this );
 			}
+			Graphics.LostContextFunction = Network.Tick;
+			
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			Camera = firstPersonCam;
@@ -184,6 +163,7 @@ namespace ClassicalSharp {
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
+			Options.Set( "viewdist", distance.ToString() );
 			Raise( ViewDistanceChanged );
 			UpdateProjection();
 		}
@@ -209,24 +189,8 @@ namespace ClassicalSharp {
 				SetNewScreen( new PauseScreen( this ) );
 			}
 			
-			if( imageCheckAccumulator > imageCheckPeriod ) {
-				imageCheckAccumulator -= imageCheckPeriod;
-				AsyncDownloader.PurgeOldEntries( 10 );
-			}
 			base.OnRenderFrame( e );
-			
-			int ticksThisFrame = 0;
-			while( ticksAccumulator >= ticksPeriod ) {
-				Network.Tick( ticksPeriod );
-				Players.Tick( ticksPeriod );
-				Camera.Tick( ticksPeriod );
-				ParticleManager.Tick( ticksPeriod );
-				ticksThisFrame++;
-				ticksAccumulator -= ticksPeriod;
-			}
-			if( ticksThisFrame > ticksFrequency / 3 ) {
-				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
-			}
+			CheckScheduledTasks();
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
 			
@@ -238,14 +202,14 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {		
+			if( visible ) {
 				Players.Render( e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
+				EnvRenderer.Render( e.Time );
+				MapRenderer.Render( e.Time );
 				if( SelectedPos.Valid )
 					Picking.Render( e.Time, SelectedPos );
-				EnvRenderer.Render( e.Time );			
-				MapRenderer.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
@@ -263,43 +227,41 @@ namespace ClassicalSharp {
 			}
 			Graphics.Mode3D();
 			
-			if( screenshotRequested ) {
-				if( !Directory.Exists( "screenshots" ) ) {
-					Directory.CreateDirectory( "screenshots" );
-				}
-				string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
-				string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
-				Graphics.TakeScreenshot( path, ClientSize );
-				screenshotRequested = false;
-			}
+			if( screenshotRequested )
+				TakeScreenshot();
 			Graphics.EndFrame( this );
 		}
 		
-		public override void Dispose() {
-			MapRenderer.Dispose();
-			MapEnvRenderer.Dispose();
-			EnvRenderer.Dispose();
-			WeatherRenderer.Dispose();
-			SetNewScreen( null );
-			fpsScreen.Dispose();
-			SelectionManager.Dispose();
-			TerrainAtlas.Dispose();
-			TerrainAtlas1D.Dispose();
-			ModelCache.Dispose();
-			Picking.Dispose();
-			ParticleManager.Dispose();
-			Players.Dispose();
-			AsyncDownloader.Dispose();
-			if( writer != null ) {
-				writer.Close();
+		void CheckScheduledTasks() {
+			if( imageCheckAccumulator > imageCheckPeriod ) {
+				imageCheckAccumulator -= imageCheckPeriod;
+				AsyncDownloader.PurgeOldEntries( 10 );
 			}
-			if( activeScreen != null ) {
-				activeScreen.Dispose();
+			
+			int ticksThisFrame = 0;
+			while( ticksAccumulator >= ticksPeriod ) {
+				Network.Tick( ticksPeriod );
+				Players.Tick( ticksPeriod );
+				Camera.Tick( ticksPeriod );
+				ParticleManager.Tick( ticksPeriod );
+				Animations.Tick( ticksPeriod );
+				ticksThisFrame++;
+				ticksAccumulator -= ticksPeriod;
 			}
-			Graphics.DeleteIb( defaultIb );
-			Graphics.Dispose();
-			Utils2D.Dispose();
-			base.Dispose();
+			
+			if( ticksThisFrame > ticksFrequency / 3 ) {
+				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
+			}
+		}
+		
+		void TakeScreenshot() {
+			if( !Directory.Exists( "screenshots" ) ) {
+				Directory.CreateDirectory( "screenshots" );
+			}
+			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
+			string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
+			Graphics.TakeScreenshot( path, ClientSize );
+			screenshotRequested = false;
 		}
 		
 		public void UpdateProjection() {
@@ -330,18 +292,14 @@ namespace ClassicalSharp {
 		
 		Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
-			if( activeScreen != null ) {
+			if( activeScreen != null )
 				activeScreen.Dispose();
-			}
-			if( activeScreen != null && activeScreen.HandlesAllInput ) {
-				Camera.RegrabMouse();
+			if( activeScreen != null && activeScreen.HandlesAllInput )
 				lastClick = DateTime.UtcNow;
-			}
+			
 			activeScreen = screen;
-			if( screen != null ) {
-				screen.game = this;
+			if( screen != null )
 				screen.Init();
-			}
 			if( Network.UsingPlayerClick ) {
 				byte targetId = Players.GetClosetPlayer( this );
 				ButtonStateChanged( MouseButton.Left, false, targetId );
@@ -351,15 +309,58 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetCamera( bool thirdPerson ) {
+			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
 			Camera = ( thirdPerson && CanUseThirdPersonCamera ) ? thirdPersonCam : firstPersonCam;
+			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
+			newCam.delta = oldCam.delta;
+			newCam.previous = oldCam.previous;
 			UpdateProjection();
 		}
 		
 		public void UpdateBlock( int x, int y, int z, byte block ) {
-			int oldHeight = Map.GetLightHeight( x, z );
+			int oldHeight = Map.GetLightHeight( x, z ) + 1;
 			Map.SetBlock( x, y, z, block );
-			int newHeight = Map.GetLightHeight( x, z );
+			int newHeight = Map.GetLightHeight( x, z ) + 1;
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
+		}
+		
+		public override void Dispose() {
+			MapRenderer.Dispose();
+			MapEnvRenderer.Dispose();
+			EnvRenderer.Dispose();
+			WeatherRenderer.Dispose();
+			SetNewScreen( null );
+			fpsScreen.Dispose();
+			SelectionManager.Dispose();
+			TerrainAtlas.Dispose();
+			TerrainAtlas1D.Dispose();
+			ModelCache.Dispose();
+			Picking.Dispose();
+			ParticleManager.Dispose();
+			Players.Dispose();
+			AsyncDownloader.Dispose();
+			if( writer != null ) {
+				writer.Dispose();
+			}
+			if( activeScreen != null ) {
+				activeScreen.Dispose();
+			}
+			Graphics.DeleteIb( defaultIb );
+			Graphics.Dispose();
+			Drawer2D.DisposeInstance();
+			Animations.Dispose();
+			Graphics.DeleteTexture( ref CloudsTextureId );
+			Graphics.DeleteTexture( ref RainTextureId );
+			Graphics.DeleteTexture( ref SnowTextureId );
+			
+			if( Options.HasChanged ) {
+				try {
+					Options.Save();
+				} catch( IOException ) {
+					Utils.LogWarning( "Unable to save options.txt" );
+				}
+			}
+			base.Dispose();
 		}
 	}
 	

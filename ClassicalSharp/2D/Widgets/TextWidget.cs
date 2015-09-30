@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class TextWidget : Widget {
 		
-		public TextWidget( Game window, Font font ) : base( window ) {
+		public TextWidget( Game game, Font font ) : base( game ) {
 			this.font = font;
 		}
 		
@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		readonly Font font;
 		
 		public override void Init() {
-			defaultHeight = Utils2D.MeasureSize( "I", font, true ).Height;
+			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
 			Height = defaultHeight;
 		}
 		
@@ -37,8 +37,8 @@ namespace ClassicalSharp {
 				texture = new Texture();
 				Height = defaultHeight;
 			} else {
-				DrawTextArgs args = new DrawTextArgs( graphicsApi, text, true );
-				texture = Utils2D.MakeTextTexture( font, 0, 0, ref args );
+				DrawTextArgs args = new DrawTextArgs( text, true );
+				texture = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalDocking );
 				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalDocking );
 				Height = texture.Height;

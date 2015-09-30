@@ -48,7 +48,9 @@ namespace ClassicalSharp.Singleplayer {
 			Name = "LoadMap";
 			Help = new [] {
 				"&a/client loadmap [filename]",
-				"&bfilename: &eLoads a fcm map from the specified filename.",
+				"&bfilename: &eLoads a map from the specified filename.",
+				"&eSupported formats are .fcm (fCraft map) and ",
+				"&e.dat (Original classic map or WoM saved map)",
 			};
 		}
 		
@@ -56,39 +58,36 @@ namespace ClassicalSharp.Singleplayer {
 			string path = reader.NextAll();
 			if( String.IsNullOrEmpty( path ) ) return;
 			
-			path = Path.GetFileName( path );
+			IMapFile mapFile;
+			if( path.EndsWith( ".dat" ) ) {
+				mapFile = new MapDat();
+			} else if( path.EndsWith( ".fcm" ) ) {
+				mapFile = new MapFcm3();
+			} else if( path.EndsWith( ".cw" ) ) {
+			    mapFile = new MapCw();
+			} else {
+				game.AddChat( "&e/client loadmap: Map format of file \"" + path + "\" not supported" );
+				return;
+			}
+			
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 					int width, height, length;
 					game.Map.Reset();
 					
-					byte[] blocks = MapFcm3.Load( fs, game, out width, out height, out length );
+					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
 					game.Map.UseRawMap( blocks, width, height, length );
 					game.RaiseOnNewMapLoaded();
+					
+					LocalPlayer p = game.LocalPlayer;
+					LocationUpdate update = LocationUpdate.MakePos( p.SpawnPoint, false );
+					p.SetLocation( update, false );
 				}
 			} catch( FileNotFoundException ) {
-				game.AddChat( "&e/client load: Couldn't find file \"" + path + "\"" );
-			}
-		}
-	}
-	
-	public sealed class SaveMapCommand : Command {
-		
-		public SaveMapCommand() {
-			Name = "SaveMap";
-			Help = new [] {
-				"&a/client savemap [filename]",
-				"&bfilename: &eSpecifies name of the file to save the map as.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			string path = reader.NextAll();
-			if( String.IsNullOrEmpty( path ) ) return;
-			
-			path = Path.GetFileName( path );
-			using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-				MapFcm3.Save( fs, game );
+				game.AddChat( "&e/client loadmap: Couldn't find file \"" + path + "\"" );
+			} catch( Exception ex ) {
+				Utils.LogError( "Error while trying to load map: {0}{1}", Environment.NewLine, ex );
+				game.AddChat( "&e/client loadmap: Failed to load map \"" + path + "\"" );
 			}
 		}
 	}
