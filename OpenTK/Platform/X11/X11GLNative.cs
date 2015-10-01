@@ -72,7 +72,6 @@ namespace OpenTK.Platform.X11 {
 		// Used for event loop.
 		XEvent e = new XEvent();
 		bool disposed, exists, isExiting;
-		bool _decorations_hidden = false;
 
 		// Keyboard input
 		readonly byte[] ascii = new byte[16];
@@ -97,24 +96,14 @@ namespace OpenTK.Platform.X11 {
 			Debug.Print("Creating X11GLNative window.");
 			// Open a display connection to the X server, and obtain the screen and root window.
 			window.Display = API.DefaultDisplay;
-			if (window.Display == IntPtr.Zero)
-				throw new PlatformException("Could not open connection to X");
-			
 			window.Screen = API.XDefaultScreen(window.Display); //API.DefaultScreen;
 			window.RootWindow = API.XRootWindow(window.Display, window.Screen); // API.RootWindow;
 
 			Debug.Print("Display: {0}, Screen {1}, Root window: {2}", window.Display, window.Screen, window.RootWindow);
 			RegisterAtoms(window);
-			XVisualInfo info = new XVisualInfo();
-			
-			if (!mode.Index.HasValue)
-				throw new GraphicsModeException("Invalid or unsupported GraphicsMode.");
-
-			info.VisualID = mode.Index.Value;
-			int dummy;
-			window.VisualInfo = (XVisualInfo)Marshal.PtrToStructure(
-				API.XGetVisualInfo(window.Display, XVisualInfoMask.ID, ref info, out dummy), typeof(XVisualInfo));
-
+			XVisualInfo info = new XVisualInfo();	
+			mode = X11GLContext.SelectGraphicsMode( mode, out info );
+			window.VisualInfo = info;
 			// Create a window on this display using the visual above
 			Debug.Print("Opening render window... ");
 

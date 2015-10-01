@@ -11,11 +11,7 @@ namespace OpenTK.Graphics.OpenGL {
 
 		public static void BindBuffer( BufferTarget target, int buffer ) {
 			Interop.Calli( (int)target, buffer, BindBufferAddress );
-		} static IntPtr BindBufferAddress;
-		
-		public static void BindBufferARB( BufferTarget target, int buffer ) {
-			Interop.Calli( (int)target, buffer, BindBufferARBAddress );
-		} static IntPtr BindBufferARBAddress;
+		} static IntPtr BindBufferAddress, BindBufferARBAddress;
 
 		public static void BindTexture( TextureTarget target, int texture ) {
 			Interop.Calli( (int)target, texture, BindTextureAddress );
@@ -27,28 +23,20 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void BufferData( BufferTarget target, IntPtr size, IntPtr data, BufferUsage usage ) {
 			Interop.Calli( (int)target, size, data, (int)usage, BufferDataAddress );
-		} static IntPtr BufferDataAddress;
+		} static IntPtr BufferDataAddress, BufferDataARBAddress;
 		
-		public static void BufferDataARB( BufferTarget target, IntPtr size, IntPtr data, BufferUsage usage ) {
-			Interop.Calli( (int)target, size, data, (int)usage, BufferDataARBAddress );
-		} static IntPtr BufferDataARBAddress;
-		
-		public static void BufferDataARB<T>( BufferTarget target, IntPtr size, T[] data, BufferUsage usage ) where T : struct {
+		public static void BufferData<T>( BufferTarget target, IntPtr size, T[] data, BufferUsage usage ) where T : struct {
 			IntPtr dataPtr = Interop.Fixed( ref data[0] );
-			Interop.Calli( (int)target, size, dataPtr, (int)usage, BufferDataARBAddress );
+			Interop.Calli( (int)target, size, dataPtr, (int)usage, BufferDataAddress );
 		}
 		
 		public static void BufferSubData( BufferTarget target, IntPtr offset, IntPtr size, IntPtr data ) {
 			Interop.Calli( (int)target, offset, size, data, BufferSubDataAddress );
-		} static IntPtr BufferSubDataAddress;
+		} static IntPtr BufferSubDataAddress, BufferSubDataARBAddress;
 		
-		public static void BufferSubDataARB( BufferTarget target, IntPtr offset, IntPtr size, IntPtr data ) {
-			Interop.Calli( (int)target, offset, size, data, BufferSubDataARBAddress );
-		} static IntPtr BufferSubDataARBAddress;
-		
-		public static void BufferSubDataARB<T>( BufferTarget target, IntPtr offset, IntPtr size, T[] data ) where T : struct {
+		public static void BufferSubData<T>( BufferTarget target, IntPtr offset, IntPtr size, T[] data ) where T : struct {
 			IntPtr dataPtr = Interop.Fixed( ref data[0] );
-			Interop.Calli( (int)target, offset, size, dataPtr, BufferSubDataARBAddress );
+			Interop.Calli( (int)target, offset, size, dataPtr, BufferSubDataAddress );
 		}
 
 		public static void Clear( ClearBufferMask mask ) {
@@ -73,11 +61,7 @@ namespace OpenTK.Graphics.OpenGL {
 
 		public static void DeleteBuffers( int n, int* buffers ) {
 			Interop.Calli( n, buffers, DeleteBuffersAddress );
-		} static IntPtr DeleteBuffersAddress;
-		
-		public static void DeleteBuffersARB( int n, int* buffers ) {
-			Interop.Calli( n, buffers, DeleteBuffersARBAddress );
-		} static IntPtr DeleteBuffersARBAddress;
+		} static IntPtr DeleteBuffersAddress, DeleteBuffersARBAddress;
 
 		public static void DeleteTextures( int n, int* textures ) {
 			Interop.Calli( n, textures, DeleteTexturesAddress );
@@ -129,11 +113,7 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void GenBuffers( int n, int* buffers ) {
 			Interop.Calli( n, buffers, GenBuffersAddress );
-		} static IntPtr GenBuffersAddress;
-		
-		public static void GenBuffersARB( int n, int* buffers ) {
-			Interop.Calli( n, buffers, GenBuffersARBAddress );
-		} static IntPtr GenBuffersARBAddress;
+		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;
 		
 		public static void GenTextures( int n, int* buffers ) {
 			Interop.Calli( n, buffers, GenTexturesAddress );

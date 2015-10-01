@@ -16,7 +16,6 @@ namespace OpenTK.Platform.MacOS {
 		// Todo: keep track of which display adapter was specified when the context was created.
 		// IntPtr displayID;
 		
-		GraphicsMode graphics_mode;
 		CarbonWindowInfo carbonWindow;
 		bool mIsFullscreen = false;
 
@@ -24,7 +23,7 @@ namespace OpenTK.Platform.MacOS {
 		{
 			Debug.Print("Window info: {0}", window);
 
-			this.graphics_mode = mode;
+			Mode = mode;
 			this.carbonWindow = (CarbonWindowInfo)window;
 
 			CreateContext(mode, carbonWindow, true);

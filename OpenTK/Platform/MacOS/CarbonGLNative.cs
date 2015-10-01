@@ -96,7 +96,7 @@ namespace OpenTK.Platform.MacOS
 			mWindowAttrib = attrib;
 		}
 
-		public CarbonGLNative(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device)
+		public CarbonGLNative(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device)
 		{
 			CreateNativeWindow(WindowClass.Document,
 			                   WindowAttributes.StandardDocument | WindowAttributes.StandardHandler |

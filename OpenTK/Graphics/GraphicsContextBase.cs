@@ -55,8 +55,6 @@ namespace OpenTK.Graphics {
 
         public GraphicsMode GraphicsMode { get { return Mode; } }
 
-        public IGraphicsContext Implementation { get { return this; } }
-
         public abstract void LoadAll();
 
         public IntPtr Context { get { return ContextHandle; } }

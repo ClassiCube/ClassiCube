@@ -17,21 +17,30 @@ namespace ClassicalSharp.GraphicsAPI {
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
 			textureDimensions = texDims;
-			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
-			
-			// NOTE: Not sure if there are any >= 1.5 drivers that support vbos but don't expose the ARB extension.
-			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
-				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
-				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
-				Utils.LogWarning( "Alternatively, you can download the 'DLCompatibility build." );
-				throw new InvalidOperationException( "Cannot use OpenGL vbos." );
-			}
+			CheckVboSupport();
 			base.InitDynamicBuffers();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
 			GL.EnableClientState( ArrayCap.VertexArray );
 			GL.EnableClientState( ArrayCap.ColorArray );
+		}
+		
+		unsafe void CheckVboSupport() {
+			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
+			string version = new String( (sbyte*)GL.GetString( StringName.Version ) );
+			int major = (int)( version[0] - '0' ); // x.y. (and so forth)
+			int minor = (int)( version[2] - '0' );
+			if( (major > 1) || (major == 1 && minor >= 5) ) return; // Supported in core since 1.5
+			
+			Utils.LogDebug( "Using ARB vertex buffer objects" );		
+			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
+				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
+				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
+				Utils.LogWarning( "Alternatively, you can download the Direct3D9 build." );
+				throw new InvalidOperationException( "VBO support required for OpenGL build" );
+			}
+			GL.UseArbVboAddresses();
 		}
 
 		public override bool AlphaTest {
@@ -178,50 +187,50 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsage.DynamicDraw );
+			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), IntPtr.Zero, BufferUsage.DynamicDraw );
 			return id;
 		}
 		
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
+			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
 			int id = GenAndBind( BufferTarget.ArrayBuffer );
 			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BufferDataARB( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
+			GL.BufferData( BufferTarget.ArrayBuffer, new IntPtr( sizeInBytes ), vertices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateIb( ushort[] indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
+			GL.BufferData( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.BufferDataARB( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
+			GL.BufferData( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
 			return id;
 		}
 		
 		unsafe static int GenAndBind( BufferTarget target ) {
 			int id = 0;
-			GL.GenBuffersARB( 1, &id );
-			GL.BindBufferARB( target, id );
+			GL.GenBuffers( 1, &id );
+			GL.BindBuffer( target, id );
 			return id;
 		}
 		
 		int batchStride;
 		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, int count ) {
 			int sizeInBytes = count * batchStride;
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
 			setupBatchFunc();
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
@@ -229,8 +238,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void DrawDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount, int indicesCount ) {
 			int sizeInBytes = vCount * batchStride;
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubDataARB( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
 			
 			setupBatchFunc();
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
@@ -238,17 +247,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
-			GL.DeleteBuffersARB( 1, &id );
+			GL.DeleteBuffers( 1, &id );
 		}
 		
 		public unsafe override void DeleteVb( int vb ) {
 			if( vb <= 0 ) return;
-			GL.DeleteBuffersARB( 1, &vb );
+			GL.DeleteBuffers( 1, &vb );
 		}
 		
 		public unsafe override void DeleteIb( int ib ) {
 			if( ib <= 0 ) return;
-			GL.DeleteBuffersARB( 1, &ib );
+			GL.DeleteBuffers( 1, &ib );
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;
@@ -276,11 +285,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void BindVb( int vb ) {
-			GL.BindBufferARB( BufferTarget.ArrayBuffer, vb );
+			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 		}
 		
 		public override void BindIb( int ib ) {
-			GL.BindBufferARB( BufferTarget.ElementArrayBuffer, ib );
+			GL.BindBuffer( BufferTarget.ElementArrayBuffer, ib );
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
@@ -391,7 +400,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void OnWindowResize( Game game ) {
+		public override void OnWindowResize( GameWindow game ) {
 			GL.Viewport( 0, 0, game.Width, game.Height );
 		}
 		

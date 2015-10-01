@@ -29,18 +29,21 @@ namespace ClassicalSharp {
 		IGraphicsApi api;
 		int _1Dcount = 1;
 		ChunkMeshBuilder builder;
+		BlockInfo info;
 		
 		int width, height, length;
 		ChunkInfo[] chunks, unsortedChunks;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
 		
-		public MapRenderer( Game window ) {
-			game = window;
-			_1Dcount = window.TerrainAtlas1D.TexIds.Length;
-			builder = new ChunkMeshBuilder( window );
-			api = window.Graphics;
-			elementsPerBitmap = window.TerrainAtlas1D.elementsPerBitmap;
+		public MapRenderer( Game game ) {
+			this.game = game;
+			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
+			builder = new ChunkMeshBuilder( game );
+			api = game.Graphics;
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
+			info = game.BlockInfo;
+			
 			game.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.OnNewMap += OnNewMap;
 			game.OnNewMapLoaded += OnNewMapLoaded;
@@ -155,15 +158,29 @@ namespace ClassicalSharp {
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
 			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
-			
+			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;			
 			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
-			if( bX == 0 && cx > 0 ) ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 0 && cy > 0 ) ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
-			if( bZ == 0 && cz > 0 ) ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
-			if( bX == 15 && cx < chunksX - 1 ) ResetChunkAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 15 && cy < chunksY - 1 ) ResetChunkAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
-			if( bZ == 15 && cz < chunksZ - 1 ) ResetChunkAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
+			
+			if( bX == 0 && cx > 0 && NeedsUpdate( x, y, z, x - 1, y, z ) )
+				ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
+			if( bY == 0 && cy > 0 && NeedsUpdate( x, y, z, x, y - 1, z ) )
+				ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
+			if( bZ == 0 && cz > 0 && NeedsUpdate( x, y, z, x, y, z - 1 ) )
+				ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
+			
+			if( bX == 15 && cx < chunksX - 1 && NeedsUpdate( x, y, z, x + 1, y, z ) )
+				ResetChunkAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
+			if( bY == 15 && cy < chunksY - 1 && NeedsUpdate( x, y, z, x, y + 1, z ) )
+				ResetChunkAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
+			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( x, y, z, x, y, z + 1 ) )
+				ResetChunkAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
+		}
+		
+		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
+			byte b1 = game.Map.SafeGetBlock( x1, y1, z1 );
+			byte b2 = game.Map.SafeGetBlock( x2, y2, z2 );
+			Console.WriteLine( (Block)b1 + " : " + (Block)b2 );
+			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
 		}
 		
 		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
@@ -181,6 +198,7 @@ namespace ClassicalSharp {
 		void ResetChunk( int cx, int cy, int cz ) {
 			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
+			Console.WriteLine( cx + " : " + cy + " : " + cz );
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
 		
@@ -214,17 +232,17 @@ namespace ClassicalSharp {
 			Vector3I pPos = newChunkPos;
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				int dX1 = ( info.CentreX - 8 ) - pPos.X, dX2 = ( info.CentreX + 8 ) - pPos.X;
-				int dY1 = ( info.CentreY - 8 ) - pPos.Y, dY2 = ( info.CentreY + 8 ) - pPos.Y;
-				int dZ1 = ( info.CentreZ - 8 ) - pPos.Z, dZ2 = ( info.CentreZ + 8 ) - pPos.Z;
+				int dX1 = (info.CentreX - 8) - pPos.X, dX2 = (info.CentreX + 8) - pPos.X;
+				int dY1 = (info.CentreY - 8) - pPos.Y, dY2 = (info.CentreY + 8) - pPos.Y;
+				int dZ1 = (info.CentreZ - 8) - pPos.Z, dZ2 = (info.CentreZ + 8) - pPos.Z;
 				
 				// Back face culling: make sure that the chunk is definitely entirely back facing.
-				info.DrawLeft = !( dX1 <= 0 && dX2 <= 0 );
-				info.DrawRight = !( dX1 >= 0 && dX2 >= 0 );
-				info.DrawFront = !( dZ1 <= 0 && dZ2 <= 0 );
-				info.DrawBack = !( dZ1 >= 0 && dZ2 >= 0 );
-				info.DrawBottom = !( dY1 <= 0 && dY2 <= 0 );
-				info.DrawTop = !( dY1 >= 0 && dY2 >= 0 );
+				info.DrawLeft = !(dX1 <= 0 && dX2 <= 0);
+				info.DrawRight = !(dX1 >= 0 && dX2 >= 0);
+				info.DrawFront = !(dZ1 <= 0 && dZ2 <= 0);
+				info.DrawBack = !(dZ1 >= 0 && dZ2 >= 0);
+				info.DrawBottom = !(dY1 <= 0 && dY2 <= 0);
+				info.DrawTop = !(dY1 >= 0 && dY2 >= 0);
 			}
 		}
 		

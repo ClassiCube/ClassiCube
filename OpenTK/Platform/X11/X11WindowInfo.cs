@@ -26,52 +26,30 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OpenTK.Platform.X11
-{
+namespace OpenTK.Platform.X11 {
+	
 	/// \internal
 	/// <summary>Describes an X11 window.</summary>
-	sealed class X11WindowInfo : IWindowInfo
-	{
-		IntPtr handle, rootWindow, display;
-		X11WindowInfo parent;
-		int screen;
-		XVisualInfo visualInfo;
-		EventMask eventMask;
-
-		/// <summary>Constructs a new X11WindowInfo class.</summary>
-		public X11WindowInfo() { }
-
-		/// <summary> Constructs a new X11WindowInfo class from the specified window handle and parent. </summary>
-		/// <param name="handle">The handle of the window.</param>
-		/// <param name="parent">The parent of the window.</param>
-		public X11WindowInfo(IntPtr handle, X11WindowInfo parent) {
-			this.handle = handle;
-			this.parent = parent;
-			if (parent != null) {
-				this.rootWindow = parent.rootWindow;
-				this.display = parent.display;
-				this.screen = parent.screen;
-				this.visualInfo = parent.visualInfo;
-			}
-		}
+	sealed class X11WindowInfo : IWindowInfo {
 
 		/// <summary>Gets or sets the handle of the window.</summary>
-		public IntPtr WindowHandle { get { return handle; } set { handle = value; } }
-		/// <summary>Gets or sets the parent of the window.</summary>
-		public X11WindowInfo Parent { get { return parent; } set { parent = value; } }
+		public IntPtr WindowHandle;
+		
 		/// <summary>Gets or sets the X11 root window.</summary>
-		public IntPtr RootWindow { get { return rootWindow; } set { rootWindow = value; } }
+		public IntPtr RootWindow;
+		
 		/// <summary>Gets or sets the connection to the X11 display.</summary>
-		public IntPtr Display { get { return display; } set { display = value; } }
+		public IntPtr Display;
+		
 		/// <summary>Gets or sets the X11 screen.</summary>
-		public int Screen { get { return screen; } set { screen = value; } }
+		public int Screen;
+		
 		/// <summary>Gets or sets the X11 VisualInfo.</summary>
-		public XVisualInfo VisualInfo { get { return visualInfo; } set { visualInfo = value; } }
+		public XVisualInfo VisualInfo;
+		
 		/// <summary>Gets or sets the X11 EventMask.</summary>
-		public EventMask EventMask { get { return eventMask; } set { eventMask = value; } }
+		public EventMask EventMask;
 
 		/// <summary> Disposes of this X11WindowInfo instance. </summary>
 		public void Dispose() {
@@ -80,8 +58,8 @@ namespace OpenTK.Platform.X11
 		/// <summary>Returns a System.String that represents the current window.</summary>
 		/// <returns>A System.String that represents the current window.</returns>
 		public override string ToString() {
-			return String.Format("X11.WindowInfo: Display {0}, Screen {1}, Handle {2}, Parent: ({3})",
-			                     Display, Screen, WindowHandle, Parent != null ? Parent.ToString() : "null");
+			return String.Format("X11.WindowInfo: Display {0}, Screen {1}, Handle {2}",
+			                     Display, Screen, WindowHandle);
 		}
 
 		/// <summary>Checks if <c>this</c> and <c>obj</c> reference the same X11 window.</summary>
@@ -91,13 +69,13 @@ namespace OpenTK.Platform.X11
 			X11WindowInfo other = obj as X11WindowInfo;
 			if (other == null) return false;
 			// TODO: Assumes windows will have unique handles per X11 display.
-			return handle == other.handle && display == other.display;
+			return WindowHandle == other.WindowHandle && Display == other.Display;
 		}
 
 		/// <summary>Returns the hash code for this instance.</summary>
 		/// <returns>A hash code for the current <c>X11WindowInfo</c>.</returns>
 		public override int GetHashCode() {
-			return handle.GetHashCode() ^ display.GetHashCode();
+			return WindowHandle.GetHashCode() ^ Display.GetHashCode();
 		}
 	}
 }

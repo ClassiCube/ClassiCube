@@ -28,7 +28,7 @@ namespace ClassicalSharp.Particles {
 
 		public override bool Tick( double delta ) {
 			lastPos = Position = nextPos;
-			byte curBlock = GetBlockSafe( (int)Position.X, (int)Position.Y, (int)Position.Z );
+			byte curBlock = game.Map.SafeGetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
 			if( !CanPassThrough( curBlock ) ) return true;
 			
 			Velocity.Y -= gravity * (float)delta;
@@ -48,11 +48,6 @@ namespace ClassicalSharp.Particles {
 			return base.Tick( delta );
 		}
 		
-		byte GetBlockSafe( int x, int y, int z ) {
-			if( !game.Map.IsValidPos( x, y, z ) ) return 0;
-			return game.Map.GetBlock( x, y, z );
-		}
-		
 		bool TestY( int y, bool topFace ) {
 			if( y < 0 ) {
 				Position.Y = nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
@@ -60,7 +55,7 @@ namespace ClassicalSharp.Particles {
 				return false;
 			}
 			
-			byte block = GetBlockSafe( (int)Position.X, y, (int)Position.Z );
+			byte block = game.Map.SafeGetBlock( (int)Position.X, y, (int)Position.Z );
 			if( CanPassThrough( block ) ) return true;
 			
 			float collideY = y;

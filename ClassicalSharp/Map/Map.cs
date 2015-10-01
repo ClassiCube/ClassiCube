@@ -212,6 +212,11 @@ namespace ClassicalSharp {
 			return mapData[( y * Length + z ) * Width + x];
 		}
 		
+		public byte SafeGetBlock( int x, int y, int z ) {
+			return IsValidPos( x, y, z ) ? mapData[( y * Length + z ) * Width + x] 
+				: (byte)0;
+		}
+		
 		public byte GetBlock( Vector3I p ) {
 			return mapData[( p.Y * Length + p.Z ) * Width + p.X];
 		}

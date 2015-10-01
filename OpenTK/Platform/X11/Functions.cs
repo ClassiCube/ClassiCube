@@ -163,13 +163,6 @@ namespace OpenTK.Platform.X11 {
 		public extern static bool XkbSetDetectableAutoRepeat(IntPtr display, bool detectable, out bool supported);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr XGetVisualInfo(IntPtr display, IntPtr vinfo_mask, ref XVisualInfo template, out int nitems);
-		
-		public static IntPtr XGetVisualInfo(IntPtr display, XVisualInfoMask vinfo_mask, ref XVisualInfo template, out int nitems) {
-			return XGetVisualInfo(display, (IntPtr)(int)vinfo_mask, ref template, out nitems);
-		}
-		
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr XCreateColormap(Display display, Window window, IntPtr visual, int alloc);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]

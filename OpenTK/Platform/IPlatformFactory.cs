@@ -36,8 +36,6 @@ namespace OpenTK.Platform {
 		IDisplayDeviceDriver CreateDisplayDeviceDriver();
 
 		IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window);
-		
-		IGraphicsMode CreateGraphicsMode();
 	}
 	
 	internal static class Factory {
@@ -56,7 +54,7 @@ namespace OpenTK.Platform.MacOS {
 	class MacOSFactory : IPlatformFactory {
 		
 		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-			return new CarbonGLNative(x, y, width, height, title, mode, options, device);
+			return new CarbonGLNative(x, y, width, height, title, options, device);
 		}
 
 		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
@@ -65,10 +63,6 @@ namespace OpenTK.Platform.MacOS {
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
 			return new AglContext(mode, window);
-		}
-
-		public IGraphicsMode CreateGraphicsMode() {
-			return new IGraphicsMode();
 		}
 	}
 }
@@ -87,10 +81,6 @@ namespace OpenTK.Platform.Windows {
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
 			return new WinGLContext(mode, (WinWindowInfo)window);
 		}
-
-		public IGraphicsMode CreateGraphicsMode() {
-			return new IGraphicsMode();
-		}
 	}
 }
 
@@ -107,10 +97,6 @@ namespace OpenTK.Platform.X11 {
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
 			return new X11GLContext(mode, window);
-		}
-
-		public IGraphicsMode CreateGraphicsMode() {
-			return new X11GraphicsMode();
 		}
 	}
 }

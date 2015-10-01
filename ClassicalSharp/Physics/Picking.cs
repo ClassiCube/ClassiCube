@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			// For each step, determine which distance to the next voxel boundary is lowest (i.e.
 			// which voxel boundary is nearest) and walk that way.
 			while( iterations < 10000 ) {
-				byte block = map.IsValidPos( x, y, z ) ? map.GetBlock( x, y, z ) : (byte)0;
+				byte block = map.SafeGetBlock( x, y, z );
 				Vector3 min = new Vector3( x, y, z );
 				Vector3 max = min + new Vector3( 1, block == 0 ? 1 : info.Height[block], 1 );
 				

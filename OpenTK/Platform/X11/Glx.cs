@@ -99,6 +99,9 @@ namespace OpenTK.Platform.X11
 		// Returns a pointer to an XVisualInfo structure.
 		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
 		public unsafe extern static IntPtr glXGetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
+		
+		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		public extern static bool glXQueryVersion(IntPtr dpy, ref int major, ref int minor);
 
 		[SuppressUnmanagedCodeSecurity]
 		public delegate GLXErrorCode SwapIntervalSGI(int interval);

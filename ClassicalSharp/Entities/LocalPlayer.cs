@@ -291,8 +291,7 @@ namespace ClassicalSharp {
 			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
 					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
-						if( !map.IsValidPos( x, y, z ) ) continue;
-						byte block = map.GetBlock( x, y, z );
+						byte block = map.SafeGetBlock( x, y, z );
 						if( block == 0 ) continue;
 						
 						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );

@@ -72,14 +72,19 @@ namespace OpenTK.Graphics {
 
         /// <summary>Gets the bits per pixel for the Red channel.</summary>
         public int Red { get { return red; } private set { red = (byte)value; } }
+        
         /// <summary>Gets the bits per pixel for the Green channel.</summary>
         public int Green { get { return green; } private set { green = (byte)value; } }
+        
         /// <summary>Gets the bits per pixel for the Blue channel.</summary>
         public int Blue { get { return blue; } private set { blue = (byte)value; } }
+        
         /// <summary>Gets the bits per pixel for the Alpha channel.</summary>
         public int Alpha { get { return alpha; } private set { alpha = (byte)value; } }
+        
         /// <summary>Gets a System.Boolean indicating whether this ColorFormat is indexed.</summary>
         public bool IsIndexed { get { return isIndexed; } private set { isIndexed = value; } }
+        
         /// <summary>Gets the sum of Red, Green, Blue and Alpha bits per pixel.</summary>
         public int BitsPerPixel { get { return bitsPerPixel; } private set { bitsPerPixel = value; } }
 
@@ -88,7 +93,7 @@ namespace OpenTK.Graphics {
         }
 
         public override bool Equals( object obj ) {
-			return (obj is ColorFormat) && Equals( (ColorFormat)obj) ;
+			return (obj is ColorFormat) && Equals( (ColorFormat)obj );
 		}
         
 		public bool Equals(ColorFormat other) {

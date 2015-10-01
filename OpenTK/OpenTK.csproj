@@ -70,7 +70,6 @@
     <Compile Include="Graphics\GraphicsMode.cs" />
     <Compile Include="Graphics\GraphicsModeException.cs" />
     <Compile Include="Graphics\IGraphicsContext.cs" />
-    <Compile Include="Graphics\IGraphicsMode.cs" />
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />
     <Compile Include="Graphics\OpenGL\GLHelper.cs" />
     <Compile Include="Input\Key.cs" />
@@ -114,7 +113,6 @@
     <Compile Include="Platform\X11\X11DisplayDevice.cs" />
     <Compile Include="Platform\X11\X11GLContext.cs" />
     <Compile Include="Platform\X11\X11GLNative.cs" />
-    <Compile Include="Platform\X11\X11GraphicsMode.cs" />
     <Compile Include="Platform\X11\X11KeyMap.cs" />
     <Compile Include="Platform\X11\X11WindowInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

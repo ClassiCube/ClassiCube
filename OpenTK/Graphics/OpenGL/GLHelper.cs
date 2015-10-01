@@ -75,5 +75,13 @@ namespace OpenTK.Graphics.OpenGL {
 			VertexPointerAddress = GetAddress( "glVertexPointer" );
 			ViewportAddress = GetAddress( "glViewport" );
 		}
+		
+		public static void UseArbVboAddresses() {
+			BindBufferAddress = BindBufferARBAddress;
+			BufferDataAddress = BufferDataARBAddress;
+			BufferSubDataAddress = BufferSubDataARBAddress;
+			DeleteBuffersAddress = DeleteBuffersARBAddress;
+			GenBuffersAddress = GenBuffersARBAddress;
+		}
 	}
 }
