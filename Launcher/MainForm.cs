@@ -46,10 +46,12 @@ namespace Launcher {
 
 		void KeyDownHandler(object sender, KeyEventArgs e) {
 			if( e.KeyCode != Keys.Enter ) return;
-			
+            if (tabs.SelectedTab == directConnect){
+                dcConnectBtnClick( null, null );
+            }
 			if( tabs.SelectedTab == tabLocal ) {
 				BtnLanConnectClick( null, null );
-			} else if( tabs.SelectedTab == tabMinecraftNet ) {
+            } else if( tabs.SelectedTab == tabMinecraftNet ) {
 				if( tabMC.SelectedTab == tabMCSignIn )
 					mc.DoSignIn();
 				else if( tabMC.SelectedTab == tabMCServers )
@@ -156,6 +158,37 @@ namespace Launcher {
 			                                       txtLanIP.Text, txtLanPort.Text );
 			StartClient( data, cbLocalSkinServerCC.Checked );
 		}
+
+        void dcConnectBtnClick(object sender, System.EventArgs e)
+        {
+            IPAddress address;
+            if (!IPAddress.TryParse(dcIP.Text, out address))
+            {
+                MessageBox.Show("Invalid IP address specified.");
+                return;
+            }
+
+            ushort port;
+            if (!UInt16.TryParse(dcPort.Text, out port))
+            {
+                MessageBox.Show("Invalid port specified.");
+                return;
+            }
+            if (String.IsNullOrEmpty(dcUsername.Text))
+            {
+                MessageBox.Show("Please enter a username.");
+                return;
+            }
+
+            if (String.IsNullOrEmpty(dcMppass.Text))
+            {
+                MessageBox.Show("Please enter a Mppass.");
+                return;
+            }
+            GameStartData data = new GameStartData(dcUsername.Text, dcMppass.Text,
+                                                   dcIP.Text, dcPort.Text);
+            StartClient(data, dcUseCCSkins.Checked);
+        }
 		
 		#endregion
 		
@@ -253,5 +286,7 @@ namespace Launcher {
 				}
 			}
 		}
+
+        
 	}
 }
