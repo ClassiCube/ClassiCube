@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			game.TerrainAtlasChanged -= TerrainAtlasChanged;
+			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 		}
 		
 		[StructLayout( LayoutKind.Sequential )]

@@ -51,6 +51,9 @@ namespace ClassicalSharp {
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
+		public Events Events = new Events();
+		public InputHandler InputHandler;
+		public ChatLog Chat;
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -67,6 +70,7 @@ namespace ClassicalSharp {
 		public bool HideGui = false;
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
+		internal bool screenshotRequested;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -77,7 +81,7 @@ namespace ClassicalSharp {
 		
 		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
 			LoadAtlas( newAtlas );
-			Raise( TerrainAtlasChanged );
+			Events.RaiseTerrainAtlasChanged();
 		}
 		
 		public Game( string username, string mppass, string skinServer, string defaultTexPack ) : base() {
@@ -98,10 +102,13 @@ namespace ClassicalSharp {
 			} catch( IOException ) {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
-			Keys = new KeyMap();
-			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
+			Keys = new KeyMap();
+			InputHandler = new InputHandler( this );
+			Chat = new ChatLog( this );
+			Drawer2D = new GdiPlusDrawer2D( Graphics );			
 			defaultIb = Graphics.MakeDefaultIb();
+			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
@@ -147,7 +154,6 @@ namespace ClassicalSharp {
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
-			RegisterInputHandlers();
 			Title = Utils.AppName;
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
@@ -155,6 +161,7 @@ namespace ClassicalSharp {
 			EnvRenderer.Init();
 			MapEnvRenderer.Init();
 			Picking = new PickingRenderer( this );
+			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect( IPAddress, Port );
@@ -164,7 +171,7 @@ namespace ClassicalSharp {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
 			Options.Set( "viewdist", distance.ToString() );
-			Raise( ViewDistanceChanged );
+			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
 		}
 		
@@ -215,7 +222,7 @@ namespace ClassicalSharp {
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				bool middle = IsMousePressed( MouseButton.Middle );
-				PickBlocks( true, left, right, middle );
+				InputHandler.PickBlocks( true, left, right, middle );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
@@ -290,22 +297,15 @@ namespace ClassicalSharp {
 			GC.Collect();
 		}
 		
-		Screen activeScreen;
+		internal Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
-			if( activeScreen != null )
-				activeScreen.Dispose();
-			if( activeScreen != null && activeScreen.HandlesAllInput )
-				lastClick = DateTime.UtcNow;
+			InputHandler.ScreenChanged( activeScreen, screen );
 			
+			if( activeScreen != null )
+				activeScreen.Dispose();			
 			activeScreen = screen;
 			if( screen != null )
 				screen.Init();
-			if( Network.UsingPlayerClick ) {
-				byte targetId = Players.GetClosetPlayer( this );
-				ButtonStateChanged( MouseButton.Left, false, targetId );
-				ButtonStateChanged( MouseButton.Right, false, targetId );
-				ButtonStateChanged( MouseButton.Middle, false, targetId );
-			}
 		}
 		
 		public void SetCamera( bool thirdPerson ) {
@@ -324,6 +324,20 @@ namespace ClassicalSharp {
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
 		}
 		
+		public KeyMap Keys;
+		public bool IsKeyDown( Key key ) {
+			return Keyboard[key];
+		}
+		
+		public bool IsKeyDown( KeyMapping mapping ) {
+			Key key = Keys[mapping];
+			return Keyboard[key];
+		}
+		
+		public bool IsMousePressed( MouseButton button ) {
+			return Mouse[button];
+		}
+		
 		public override void Dispose() {
 			MapRenderer.Dispose();
 			MapEnvRenderer.Dispose();
@@ -339,9 +353,7 @@ namespace ClassicalSharp {
 			ParticleManager.Dispose();
 			Players.Dispose();
 			AsyncDownloader.Dispose();
-			if( writer != null ) {
-				writer.Dispose();
-			}
+			Chat.Dispose();
 			if( activeScreen != null ) {
 				activeScreen.Dispose();
 			}
@@ -361,6 +373,11 @@ namespace ClassicalSharp {
 				}
 			}
 			base.Dispose();
+		}
+		
+		internal bool CanPick( byte block ) {
+			return !(block == 0 || (BlockInfo.IsLiquid[block] && 
+			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 	}
 	

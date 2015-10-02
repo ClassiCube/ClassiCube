@@ -2,7 +2,7 @@
 
 namespace ClassicalSharp {
 
-	public partial class Game {
+	public sealed class Events {
 		
 		/// <summary> Raised when an entity is spawned in the current world. </summary>
 		public event EventHandler<IdEventArgs> EntityAdded;
@@ -40,6 +40,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the terrain atlas ("terrain.png") is changed. </summary>
 		public event EventHandler TerrainAtlasChanged;
+		internal void RaiseTerrainAtlasChanged() { Raise( TerrainAtlasChanged );  }
 		
 		/// <summary> Raised when an environment variable is changed by the user, CPE, or WoM config. </summary>
 		public event EventHandler<EnvVariableEventArgs> EnvVariableChanged;
@@ -47,7 +48,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the user changed their view/fog distance. </summary>
 		public event EventHandler ViewDistanceChanged;
-		
+		internal void RaiseViewDistanceChanged() { Raise( ViewDistanceChanged );  }
 		
 		/// <summary> Raised when the held block is changed by the user or by CPE. </summary>
 		public event EventHandler HeldBlockChanged;
@@ -59,12 +60,13 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the server or a client-side command sends a message. </summary>
 		public event EventHandler<ChatEventArgs> ChatReceived;	
-		
+		internal void RaiseChatReceived( string text, CpeMessage type ) { chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs );  }
 	
 		// Cache event instances so we don't create needless new objects.
-		IdEventArgs idArgs = new IdEventArgs( 0 );
-		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs( 0 );	
-		EnvVariableEventArgs envArgs = new EnvVariableEventArgs( 0 );
+		IdEventArgs idArgs = new IdEventArgs();
+		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs();	
+		EnvVariableEventArgs envArgs = new EnvVariableEventArgs();
+		ChatEventArgs chatArgs = new ChatEventArgs();
 				
 		void Raise( EventHandler handler ) {
 			if( handler != null ) {
@@ -82,10 +84,6 @@ namespace ClassicalSharp {
 	public sealed class IdEventArgs : EventArgs {
 		
 		public byte Id;
-		
-		public IdEventArgs( byte id ) {
-			Id = id;
-		}
 	}
 	
 	public sealed class ChatEventArgs : EventArgs {
@@ -98,19 +96,11 @@ namespace ClassicalSharp {
 	public sealed class MapLoadingEventArgs : EventArgs {
 		
 		public int Progress;
-		
-		public MapLoadingEventArgs( int progress ) {
-			Progress = progress;
-		}
 	}
 	
 	public sealed class EnvVariableEventArgs : EventArgs {
 		
 		public EnvVariable Var;
-		
-		public EnvVariableEventArgs( EnvVariable variable ) {
-			Var = variable;
-		}
 	}
 	
 	public enum EnvVariable {

@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 					} else if( key == "environment.side" ) {
 						//GetWomImageAsync( "side", value );
 					} else if( key == "user.detail" && !useMessageTypes ) {
-						game.AddChat( value, CpeMessage.Status2 );
+						game.Chat.Add( value, CpeMessage.Status2 );
 					}
 				}
 			}

@@ -23,7 +23,7 @@ namespace ClassicalSharp.Singleplayer {
 				game.Inventory.CanPlace[i] = true;
 				game.Inventory.CanDelete[i] = true;
 			}
-			game.RaiseBlockPermissionsChanged();
+			game.Events.RaiseBlockPermissionsChanged();
 			NewMap();
 			MakeMap( 128, 128, 128 );
 			game.CommandManager.RegisterCommand( new GenerateCommand() );
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void SendChat( string text ) {
 			if( !String.IsNullOrEmpty( text ) ) {
-				game.AddChat( text, CpeMessage.Normal );
+				game.Chat.Add( text, CpeMessage.Normal );
 			}
 		}
 		
@@ -73,10 +73,10 @@ namespace ClassicalSharp.Singleplayer {
 				MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
 			}
 			game.Map.UseRawMap( map, width, height, length );
-			game.RaiseOnNewMapLoaded();
+			game.Events.RaiseOnNewMapLoaded();
 			game.SetNewScreen( new NormalScreen( game ) );
 			ResetPlayerPosition();
-			game.AddChat( "&ePlaying single player", CpeMessage.Status1 );
+			game.Chat.Add( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
 		}
 		

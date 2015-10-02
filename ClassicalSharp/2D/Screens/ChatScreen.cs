@@ -30,16 +30,16 @@ namespace ClassicalSharp {
 			if( HandlesAllInput ) {
 				textInput.Render( delta );
 			}
-			if( game.Announcement != null && ( DateTime.UtcNow - announcementDisplayTime ).TotalSeconds > 5 ) {
-				game.Announcement = null;
+			if( game.Chat.Announcement != null && (DateTime.UtcNow - announcementDisplayTime).TotalSeconds > 5 ) {
+				game.Chat.Announcement = null;
 				graphicsApi.DeleteTexture( ref announcementTex );
 			}
 		}
 		
 		Font chatFont, chatBoldFont, historyFont, announcementFont;
 		public override void Init() {
-			chatFont = new Font( "Arial", game.ChatFontSize );
-			chatBoldFont = new Font( "Arial", game.ChatFontSize, FontStyle.Bold );
+			chatFont = new Font( "Arial", game.Chat.FontSize );
+			chatBoldFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
 			announcementFont = new Font( "Arial", 14 );
 			historyFont = new Font( "Arial", 12, FontStyle.Italic );
 			
@@ -61,27 +61,29 @@ namespace ClassicalSharp {
 			normalChat.VerticalDocking = Docking.BottomOrRight;
 			normalChat.Init();
 			
-			chatIndex = game.ChatLog.Count - chatLines;
+			ChatLog chat = game.Chat;
+			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
-			status.SetText( 0, game.Status1 );
-			status.SetText( 1, game.Status2 );
-			status.SetText( 2, game.Status3 );
-			bottomRight.SetText( 2, game.BottomRight1 );
-			bottomRight.SetText( 1, game.BottomRight2 );
-			bottomRight.SetText( 0, game.BottomRight3 );
-			UpdateAnnouncement( game.Announcement );
+			status.SetText( 0, chat.Status1 );
+			status.SetText( 1, chat.Status2 );
+			status.SetText( 2, chat.Status3 );
+			bottomRight.SetText( 2, chat.BottomRight1 );
+			bottomRight.SetText( 1, chat.BottomRight2 );
+			bottomRight.SetText( 0,chat.BottomRight3 );
+			UpdateAnnouncement( chat.Announcement );
+			
 			if( !String.IsNullOrEmpty( game.chatInInputBuffer ) ) {
 				OpenTextInputBar( game.chatInInputBuffer );
 				game.chatInInputBuffer = null;
 			}
-			game.ChatReceived += ChatReceived;
+			game.Events.ChatReceived += ChatReceived;
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
 			CpeMessage type = e.Type;
 			if( type == CpeMessage.Normal ) {
 				chatIndex++;
-				List<string> chat = game.ChatLog;
+				List<string> chat = game.Chat.Log;
 				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1] );
 			} else if( type >= CpeMessage.Status1 && type <= CpeMessage.Status3 ) {
 				status.SetText( (int)( type - CpeMessage.Status1 ), e.Text );
@@ -108,7 +110,7 @@ namespace ClassicalSharp {
 			status.Dispose();
 			bottomRight.Dispose();
 			graphicsApi.DeleteTexture( ref announcementTex );
-			game.ChatReceived -= ChatReceived;
+			game.Events.ChatReceived -= ChatReceived;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -130,7 +132,7 @@ namespace ClassicalSharp {
 		
 		void ResetChat() {
 			normalChat.Dispose();
-			List<string> chat = game.ChatLog;
+			List<string> chat = game.Chat.Log;
 			for( int i = chatIndex; i < chatIndex + chatLines; i++ ) {
 				if( i >= 0 && i < chat.Count )
 					normalChat.PushUpAndReplaceLast( chat[i] );
@@ -173,14 +175,14 @@ namespace ClassicalSharp {
 					textInput.SendTextInBufferAndReset();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;
-					int minIndex = Math.Min( 0, game.ChatLog.Count - chatLines );
+					int minIndex = Math.Min( 0, game.Chat.Log.Count - chatLines );
 					if( chatIndex < minIndex )
 						chatIndex = minIndex;
 					ResetChat();
 				} else if( key == Key.PageDown ) {
 					chatIndex += chatLines;
-					if( chatIndex > game.ChatLog.Count - chatLines )
-						chatIndex = game.ChatLog.Count - chatLines;
+					if( chatIndex > game.Chat.Log.Count - chatLines )
+						chatIndex = game.Chat.Log.Count - chatLines;
 					ResetChat();
 				} else if( key == game.Keys[KeyMapping.HideGui] ) {
 					game.HideGui = !game.HideGui;
@@ -203,7 +205,7 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseScroll( int delta ) {
 			if( !HandlesAllInput ) return false;
 			chatIndex += -delta;
-			int maxIndex = game.ChatLog.Count - chatLines;
+			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min( 0, maxIndex );
 			Utils.Clamp( ref chatIndex, minIndex, maxIndex );
 			ResetChat();

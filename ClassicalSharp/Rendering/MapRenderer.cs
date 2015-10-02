@@ -44,20 +44,20 @@ namespace ClassicalSharp {
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			info = game.BlockInfo;
 			
-			game.TerrainAtlasChanged += TerrainAtlasChanged;
-			game.OnNewMap += OnNewMap;
-			game.OnNewMapLoaded += OnNewMapLoaded;
-			game.EnvVariableChanged += EnvVariableChanged;
+			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
+			game.Events.OnNewMap += OnNewMap;
+			game.Events.OnNewMapLoaded += OnNewMapLoaded;
+			game.Events.EnvVariableChanged += EnvVariableChanged;
 		}
 		
 		public void Dispose() {
 			ClearChunkCache();
 			chunks = null;
 			unsortedChunks = null;
-			game.TerrainAtlasChanged -= TerrainAtlasChanged;
-			game.OnNewMap -= OnNewMap;
-			game.OnNewMapLoaded -= OnNewMapLoaded;
-			game.EnvVariableChanged -= EnvVariableChanged;
+			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
+			game.Events.OnNewMap -= OnNewMap;
+			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
+			game.Events.EnvVariableChanged -= EnvVariableChanged;
 			builder.Dispose();
 		}
 		

@@ -330,7 +330,7 @@ namespace ClassicalSharp {
 						}
 						reader.Remove( 1024 );
 						byte progress = reader.ReadUInt8();
-						game.RaiseMapLoading( progress );
+						game.Events.RaiseMapLoading( progress );
 					} break;
 					
 				case PacketId.LevelFinalise:
@@ -343,7 +343,7 @@ namespace ClassicalSharp {
 						double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 						Utils.LogDebug( "map loading took:" + loadingMs );
 						game.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
-						game.RaiseOnNewMapLoaded();
+						game.Events.RaiseOnNewMapLoaded();
 						map = null;
 						gzipStream.Close();
 						if( sendWomId && !sentWomId ) {
@@ -396,7 +396,7 @@ namespace ClassicalSharp {
 						byte entityId = reader.ReadUInt8();
 						Player player = game.Players[entityId];
 						if( entityId != 0xFF && player != null ) {
-							game.RaiseEntityRemoved( entityId );
+							game.Events.RaiseEntityRemoved( entityId );
 							player.Despawn();
 							game.Players[entityId] = null;
 						}
@@ -406,7 +406,7 @@ namespace ClassicalSharp {
 					{
 						byte messageType = reader.ReadUInt8();
 						string text = reader.ReadChatString( ref messageType, useMessageTypes );
-						game.AddChat( text, (CpeMessage)messageType );
+						game.Chat.Add( text, (CpeMessage)messageType );
 					} break;
 					
 				case PacketId.Kick:
@@ -474,7 +474,7 @@ namespace ClassicalSharp {
 								game.Inventory.CanPlace[i] = true;
 								game.Inventory.CanDelete[i] = true;
 							}
-							game.RaiseBlockPermissionsChanged();
+							game.Events.RaiseBlockPermissionsChanged();
 						} else {
 							Utils.LogWarning( "Server's block support level is {0}, this client only supports level 1.", supportLevel );
 							Utils.LogWarning( "You won't be able to see or use blocks from levels above level 1" );
@@ -503,9 +503,9 @@ namespace ClassicalSharp {
 							game.CpePlayersList[nameId] = info;
 							
 							if( oldInfo != null ) {
-								game.RaiseCpeListInfoChanged( (byte)nameId );
+								game.Events.RaiseCpeListInfoChanged( (byte)nameId );
 							} else {
-								game.RaiseCpeListInfoAdded( (byte)nameId );
+								game.Events.RaiseCpeListInfoAdded( (byte)nameId );
 							}
 						}
 					} break;
@@ -522,7 +522,7 @@ namespace ClassicalSharp {
 					{
 						short nameId = reader.ReadInt16();
 						if( nameId >= 0 && nameId <= 255 ) {
-							game.RaiseCpeListInfoRemoved( (byte)nameId );
+							game.Events.RaiseCpeListInfoRemoved( (byte)nameId );
 							game.CpePlayersList[nameId] = null;
 						}
 					} break;
@@ -593,7 +593,7 @@ namespace ClassicalSharp {
 							inv.CanPlace.SetNotOverridable( canPlace, blockId );
 							inv.CanDelete.SetNotOverridable( canDelete, blockId );
 						}
-						game.RaiseBlockPermissionsChanged();
+						game.Events.RaiseBlockPermissionsChanged();
 					} break;
 					
 				case PacketId.CpeChangeModel:
@@ -712,11 +712,11 @@ namespace ClassicalSharp {
 			if( entityId != 0xFF ) {
 				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
-					game.RaiseEntityRemoved( entityId );
+					game.Events.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game );
-				game.RaiseEntityAdded( entityId );
+				game.Events.RaiseEntityAdded( entityId );
 				game.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {

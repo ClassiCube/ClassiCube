@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			this.game = game;
 			graphics = game.Graphics;
 			info = game.BlockInfo;
-			game.TerrainAtlasChanged += TerrainAtlasChanged;
+			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
 		internal int width, length, height, clipLevel;

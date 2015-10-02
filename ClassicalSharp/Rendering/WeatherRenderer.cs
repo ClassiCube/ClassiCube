@@ -89,13 +89,13 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.OnNewMap += OnNewMap;
-			game.OnNewMapLoaded += OnNewMapLoaded;
+			game.Events.OnNewMap += OnNewMap;
+			game.Events.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		public void Dispose() {
-			game.OnNewMap -= OnNewMap;
-			game.OnNewMapLoaded -= OnNewMapLoaded;
+			game.Events.OnNewMap -= OnNewMap;
+			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
 			graphics.DeleteDynamicVb( weatherVb );
 		}
 		

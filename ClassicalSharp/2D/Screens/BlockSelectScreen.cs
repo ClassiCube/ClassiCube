@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 			font.Dispose();
 			graphicsApi.DeleteTexture( ref selectedBlock );
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
-			game.BlockPermissionsChanged -= BlockPermissionsChanged;
+			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			game.BlockPermissionsChanged += BlockPermissionsChanged;
+			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
 			Size size = new Size( blockSize, blockSize );
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {

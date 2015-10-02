@@ -70,7 +70,7 @@ namespace ClassicalSharp.Renderers {
 			base.Init();
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
-			game.ViewDistanceChanged += ResetAllEnv;
+			game.Events.ViewDistanceChanged += ResetAllEnv;
 		}
 		
 		void ResetAllEnv( object sender, EventArgs e ) {
@@ -81,7 +81,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.ViewDistanceChanged -= ResetAllEnv;
+			game.Events.ViewDistanceChanged -= ResetAllEnv;
 			graphics.DeleteVb( skyVb );
 			graphics.DeleteVb( cloudsVb );
 		}

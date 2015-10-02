@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		public BlockHotbarWidget( Game game ) : base( game ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
-			game.HeldBlockChanged += HeldBlockChanged;
+			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
 		
 		Texture[] barTextures = new Texture[9];
@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref selectedBlock );
-			game.HeldBlockChanged -= HeldBlockChanged;
+			game.Events.HeldBlockChanged -= HeldBlockChanged;
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {

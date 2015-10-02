@@ -28,11 +28,11 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.OnNewMap += OnNewMap;
-			game.OnNewMapLoaded += OnNewMapLoaded;
-			game.EnvVariableChanged += EnvVariableChanged;
-			game.ViewDistanceChanged += ResetSidesAndEdges;
-			game.TerrainAtlasChanged += ResetTextures;
+			game.Events.OnNewMap += OnNewMap;
+			game.Events.OnNewMapLoaded += OnNewMapLoaded;
+			game.Events.EnvVariableChanged += EnvVariableChanged;
+			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
+			game.Events.TerrainAtlasChanged += ResetTextures;
 			
 			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
@@ -60,11 +60,11 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			game.OnNewMap -= OnNewMap;
-			game.OnNewMapLoaded -= OnNewMapLoaded;
-			game.EnvVariableChanged -= EnvVariableChanged;
-			game.ViewDistanceChanged -= ResetSidesAndEdges;
-			game.TerrainAtlasChanged -= ResetTextures;
+			game.Events.OnNewMap -= OnNewMap;
+			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
+			game.Events.EnvVariableChanged -= EnvVariableChanged;
+			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
+			game.Events.TerrainAtlasChanged -= ResetTextures;
 			
 			graphics.DeleteTexture( ref edgeTexId );
 			graphics.DeleteTexture( ref sideTexId );

@@ -33,7 +33,7 @@ namespace ClassicalSharp.Commands {
 				commandNames.Add( buffer.ToString() );
 			}
 			foreach( string part in commandNames ) {
-				game.AddChat( part );
+				game.Chat.Add( part );
 			}
 		}
 	}
@@ -52,13 +52,13 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string cmdName = reader.Next();
 			if( cmdName == null ) {
-				game.AddChat( "&e/client help: No command name specified. See /client commands for a list of commands." );
+				game.Chat.Add( "&e/client help: No command name specified. See /client commands for a list of commands." );
 			} else {
 				Command cmd = game.CommandManager.GetMatchingCommand( cmdName );
 				if( cmd != null ) {
 					string[] help = cmd.Help;
 					for( int i = 0; i < help.Length; i++ ) {
-						game.AddChat( help[i] );
+						game.Chat.Add( help[i] );
 					}
 				}
 			}
@@ -78,26 +78,26 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				game.AddChat( "&e/client info: &cYou didn't specify a property." );
+				game.Chat.Add( "&e/client info: &cYou didn't specify a property." );
 			} else if( Utils.CaselessEquals( property, "pos" ) ) {
-				game.AddChat( "Feet: " + game.LocalPlayer.Position );
-				game.AddChat( "Eye: " + game.LocalPlayer.EyePosition );
+				game.Chat.Add( "Feet: " + game.LocalPlayer.Position );
+				game.Chat.Add( "Eye: " + game.LocalPlayer.EyePosition );
 			} else if( Utils.CaselessEquals( property, "target" ) ) {
 				PickedPos pos = game.SelectedPos;
 				if( !pos.Valid ) {
-					game.AddChat( "Currently not targeting a block" );
+					game.Chat.Add( "Currently not targeting a block" );
 				} else {
-					game.AddChat( "Currently targeting at: " + pos.BlockPos );
+					game.Chat.Add( "Currently targeting at: " + pos.BlockPos );
 				}
 			} else if( Utils.CaselessEquals( property, "dimensions" ) ) {
-				game.AddChat( "map width: " + game.Map.Width );
-				game.AddChat( "map height: " + game.Map.Height );
-				game.AddChat( "map length: " + game.Map.Length );
+				game.Chat.Add( "map width: " + game.Map.Width );
+				game.Chat.Add( "map height: " + game.Map.Height );
+				game.Chat.Add( "map length: " + game.Map.Length );
 			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
 				float jumpHeight = game.LocalPlayer.JumpHeight;
-				game.AddChat( jumpHeight.ToString( "F2" ) + " blocks" );
+				game.Chat.Add( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
-				game.AddChat( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
+				game.Chat.Add( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}
 		}
 	}
@@ -117,16 +117,16 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				game.AddChat( "&e/client rendertype: &cYou didn't specify a new render type." );
+				game.Chat.Add( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
 				SetNewRenderType( true, true, true );
-				game.AddChat( "&e/client rendertype: &fRender type is now fast legacy." );
+				game.Chat.Add( "&e/client rendertype: &fRender type is now fast legacy." );
 			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
 				SetNewRenderType( true, false, true );
-				game.AddChat( "&e/client rendertype: &fRender type is now legacy." );
+				game.Chat.Add( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( Utils.CaselessEquals( property, "normal" ) ) {
 				SetNewRenderType( false, false, false );
-				game.AddChat( "&e/client rendertype: &fRender type is now normal." );
+				game.Chat.Add( "&e/client rendertype: &fRender type is now normal." );
 			}
 		}
 		
@@ -166,7 +166,7 @@ namespace ClassicalSharp.Commands {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( path, game );
 			} catch( FileNotFoundException ) {
-				game.AddChat( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
+				game.Chat.Add( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
 			}
 		}
 	}

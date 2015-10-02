@@ -23,14 +23,14 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			game.EntityAdded += PlayerSpawned;
-			game.EntityRemoved += PlayerDespawned;
+			game.Events.EntityAdded += PlayerSpawned;
+			game.Events.EntityRemoved += PlayerDespawned;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.EntityAdded -= PlayerSpawned;
-			game.EntityRemoved -= PlayerDespawned;
+			game.Events.EntityAdded -= PlayerSpawned;
+			game.Events.EntityRemoved -= PlayerDespawned;
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {

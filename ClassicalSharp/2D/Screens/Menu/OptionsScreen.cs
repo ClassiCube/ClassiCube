@@ -31,8 +31,8 @@ namespace ClassicalSharp {
 				     (g, v) => g.MouseSensitivity = Int32.Parse( v ) ),
 				
 				Make( 140, 0, "Chat font size", Docking.Centre, OnWidgetClick,
-				     g => g.ChatFontSize.ToString(),
-				     (g, v) => g.ChatFontSize = Int32.Parse( v ) ),
+				     g => g.Chat.FontSize.ToString(),
+				     (g, v) => g.Chat.FontSize = Int32.Parse( v ) ),
 				
 				!network.IsSinglePlayer ? null :
 					Make( 140, 50, "Singleplayer physics", Docking.Centre, OnWidgetClick,

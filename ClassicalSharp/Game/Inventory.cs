@@ -33,11 +33,11 @@ namespace ClassicalSharp {
 			get { return hotbarIndex; }
 			set {
 				if( !CanChangeHeldBlock ) {
-					game.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
+					game.Chat.Add( "&e/client: &cThe server has forbidden you from changing your held block." );
 					return;
 				}
 				hotbarIndex = value;
-				game.RaiseHeldBlockChanged();
+				game.Events.RaiseHeldBlockChanged();
 			}
 		}
 		
@@ -45,18 +45,18 @@ namespace ClassicalSharp {
 			get { return Hotbar[hotbarIndex]; }
 			set {
 				if( !CanChangeHeldBlock ) {
-					game.AddChat( "&e/client: &cThe server has forbidden you from changing your held block." );
+					game.Chat.Add( "&e/client: &cThe server has forbidden you from changing your held block." );
 					return;
 				}
 				for( int i = 0; i < Hotbar.Length; i++ ) {
 					if( Hotbar[i] == value ) {
 						hotbarIndex = i;
-						game.RaiseHeldBlockChanged();
+						game.Events.RaiseHeldBlockChanged();
 						return;
 					}
 				}
 				Hotbar[hotbarIndex] = value;
-				game.RaiseHeldBlockChanged();
+				game.Events.RaiseHeldBlockChanged();
 			}
 		}
 	}

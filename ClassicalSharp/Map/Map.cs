@@ -54,8 +54,7 @@ namespace ClassicalSharp {
 			Weather = Weather.Sunny;
 			Uuid = Guid.NewGuid();
 			
-			game.RaiseOnNewMap();
-			game.SelectionManager.Dispose();
+			game.Events.RaiseOnNewMap();
 		}
 		
 		public void SetSidesBlock( Block block ) {
@@ -65,7 +64,7 @@ namespace ClassicalSharp {
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			game.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
 		}
 		
 		public void SetEdgeBlock( Block block ) {
@@ -75,51 +74,51 @@ namespace ClassicalSharp {
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			game.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
 		}
 		
 		public void SetWaterLevel( int level ) {
 			if( level == WaterHeight ) return;
 			WaterHeight = level;
-			game.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
 		}
 		
 		public void SetWeather( Weather weather ) {
 			if( weather == Weather ) return;
 			Weather = weather;
-			game.RaiseEnvVariableChanged( EnvVariable.Weather );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.Weather );
 		}
 		
 		public void SetSkyColour( FastColour col ) {
 			if( col == SkyCol ) return;
 			SkyCol = col;
-			game.RaiseEnvVariableChanged( EnvVariable.SkyColour );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.SkyColour );
 		}
 		
 		public void SetFogColour( FastColour col ) {
 			if( col == FogCol ) return;
 			FogCol = col;
-			game.RaiseEnvVariableChanged( EnvVariable.FogColour );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.FogColour );
 		}
 		
 		public void SetCloudsColour( FastColour col ) {
 			if( col == CloudsCol ) return;
 			CloudsCol = col;
-			game.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
 		}
 		
 		public void SetSunlight( FastColour col ) {
 			if( col == Sunlight ) return;
 			Sunlight = col;
 			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
-			game.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
 		}
 		
 		public void SetShadowlight( FastColour col ) {
 			if( col == Shadowlight ) return;
 			Shadowlight = col;
 			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
-			game.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
+			game.Events.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
 		}
 		
 		public int GetLightHeight( int x, int z ) {

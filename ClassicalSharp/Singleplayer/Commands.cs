@@ -20,18 +20,18 @@ namespace ClassicalSharp.Singleplayer {
 		public override void Execute( CommandReader reader ) {
 			int width, height, length;
 			if( !reader.NextInt( out width ) || !reader.NextInt( out height ) || !reader.NextInt( out length ) ) {
-				game.AddChat( "&e/client generate: &cInvalid dimensions." );
+				game.Chat.Add( "&e/client generate: &cInvalid dimensions." );
 			} else {
 				if( width < 16 || height < 16 || length < 16 ) {
-					game.AddChat( "&e/client generate: &cDimensions too small." );
+					game.Chat.Add( "&e/client generate: &cDimensions too small." );
 					return;
 				}
 				if( width > 1024 || height > 1024 || length > 1024 ) {
-					game.AddChat( "&e/client generate: &cDimensions too large." );
+					game.Chat.Add( "&e/client generate: &cDimensions too large." );
 					return;
 				}
 				if( !( game.Network is SinglePlayerServer ) ) {
-					game.AddChat( "&e/client generate: &cThis command only works in singleplayer mode." );
+					game.Chat.Add( "&e/client generate: &cThis command only works in singleplayer mode." );
 					return;
 				}
 				SinglePlayerServer server = (SinglePlayerServer)game.Network;
@@ -66,7 +66,7 @@ namespace ClassicalSharp.Singleplayer {
 			} else if( path.EndsWith( ".cw" ) ) {
 			    mapFile = new MapCw();
 			} else {
-				game.AddChat( "&e/client loadmap: Map format of file \"" + path + "\" not supported" );
+				game.Chat.Add( "&e/client loadmap: Map format of file \"" + path + "\" not supported" );
 				return;
 			}
 			
@@ -77,17 +77,17 @@ namespace ClassicalSharp.Singleplayer {
 					
 					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
 					game.Map.UseRawMap( blocks, width, height, length );
-					game.RaiseOnNewMapLoaded();
+					game.Events.RaiseOnNewMapLoaded();
 					
 					LocalPlayer p = game.LocalPlayer;
 					LocationUpdate update = LocationUpdate.MakePos( p.SpawnPoint, false );
 					p.SetLocation( update, false );
 				}
 			} catch( FileNotFoundException ) {
-				game.AddChat( "&e/client loadmap: Couldn't find file \"" + path + "\"" );
+				game.Chat.Add( "&e/client loadmap: Couldn't find file \"" + path + "\"" );
 			} catch( Exception ex ) {
 				Utils.LogError( "Error while trying to load map: {0}{1}", Environment.NewLine, ex );
-				game.AddChat( "&e/client loadmap: Failed to load map \"" + path + "\"" );
+				game.Chat.Add( "&e/client loadmap: Failed to load map \"" + path + "\"" );
 			}
 		}
 	}

@@ -26,7 +26,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.Map;
 			info = game.BlockInfo;
-			game.OnNewMapLoaded += ResetMap;
+			game.Events.OnNewMapLoaded += ResetMap;
 		}
 		
 		bool CheckItem( Queue<uint> queue, out int posIndex ) {
@@ -104,7 +104,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public void Dispose() {
-			game.OnNewMapLoaded -= ResetMap;
+			game.Events.OnNewMapLoaded -= ResetMap;
 		}
 		
 		#region General

@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalDocking = Docking.LeftOrTop;
 			VerticalDocking = Docking.BottomOrRight;
-			typingLogPos = game.ChatInputLog.Count; // Index of newest entry + 1.
+			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
 			chatInputText = new StringBuffer( 64 );
@@ -96,8 +96,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void SendTextInBufferAndReset() {
-			game.SendChat( chatInputText.ToString() );
-			typingLogPos = game.ChatInputLog.Count; // Index of newest entry + 1.
+			game.Chat.Send( chatInputText.ToString() );
+			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			chatInputText.Clear();
 			Dispose();
 		}
@@ -173,11 +173,11 @@ namespace ClassicalSharp {
 		}
 		
 		void UpKey() {
-			if( game.ChatInputLog.Count > 0 ) {
+			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos--;
 				if( typingLogPos < 0 ) typingLogPos = 0;
 				chatInputText.Clear();
-				chatInputText.Append( 0, game.ChatInputLog[typingLogPos] );
+				chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
 				caretPos = -1;
 				Dispose();
 				Init();
@@ -185,13 +185,13 @@ namespace ClassicalSharp {
 		}
 		
 		void DownKey() {
-			if( game.ChatInputLog.Count > 0 ) {
+			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos++;
 				chatInputText.Clear();
-				if( typingLogPos >= game.ChatInputLog.Count ) {
-					typingLogPos = game.ChatInputLog.Count;
+				if( typingLogPos >= game.Chat.InputLog.Count ) {
+					typingLogPos = game.Chat.InputLog.Count;
 				} else {
-					chatInputText.Append( 0, game.ChatInputLog[typingLogPos] );
+					chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
 				caretPos = -1;
 				Dispose();

@@ -19,7 +19,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <BaseAddress>4194304</BaseAddress>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -108,11 +108,12 @@
     <Compile Include="Entities\Particles\TerrainParticle.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Player.Rendering.cs" />
-    <Compile Include="Game\Game.Chat.cs" />
+    <Compile Include="Game\ChatLog.cs" />
     <Compile Include="Game\Game.cs" />
-    <Compile Include="Game\Game.Events.cs" />
-    <Compile Include="Game\Game.InputHandling.cs" />
+    <Compile Include="Game\Events.cs" />
+    <Compile Include="Game\InputHandler.cs" />
     <Compile Include="Game\Inventory.cs" />
+    <Compile Include="Game\KeyMap.cs" />
     <Compile Include="GraphicsAPI\Direct3D9Api.cs" />
     <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
     <Compile Include="GraphicsAPI\OpenGLApi.cs" />

@@ -49,16 +49,16 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			game.CpeListInfoAdded += PlayerListInfoAdded;
-			game.CpeListInfoRemoved += PlayerListInfoRemoved;
-			game.CpeListInfoChanged += PlayerListInfoChanged;
+			game.Events.CpeListInfoAdded += PlayerListInfoAdded;
+			game.Events.CpeListInfoRemoved += PlayerListInfoRemoved;
+			game.Events.CpeListInfoChanged += PlayerListInfoChanged;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.CpeListInfoAdded -= PlayerListInfoAdded;
-			game.CpeListInfoChanged -= PlayerListInfoChanged;
-			game.CpeListInfoRemoved -= PlayerListInfoRemoved;
+			game.Events.CpeListInfoAdded -= PlayerListInfoAdded;
+			game.Events.CpeListInfoChanged -= PlayerListInfoChanged;
+			game.Events.CpeListInfoRemoved -= PlayerListInfoRemoved;
 		}
 		
 		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
