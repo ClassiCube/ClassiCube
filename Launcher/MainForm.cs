@@ -2,9 +2,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Windows.Forms;
+using ClassicalSharp;
 
 namespace Launcher {
 	
@@ -15,7 +16,6 @@ namespace Launcher {
 		public MainForm() {
 			InitializeComponent();
 			AdjustTabs();
-			SetTooltips();
 			// hide tabs at start
 			tabMC.TabPages.Remove( tabMCServers );
 			tabCC.TabPages.Remove( tabCCServers );
@@ -42,13 +42,14 @@ namespace Launcher {
 				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
 			KeyPreview = true;
 			KeyDown += KeyDownHandler;
+			LoadResumeInfo();
 		}
 
 		void KeyDownHandler(object sender, KeyEventArgs e) {
 			if( e.KeyCode != Keys.Enter ) return;
 			
-			if( tabs.SelectedTab == tabLocal ) {
-				BtnLanConnectClick( null, null );
+			if( tabs.SelectedTab == tabDC ) {
+				BtnDCconnectClick( null, null );
 			} else if( tabs.SelectedTab == tabMinecraftNet ) {
 				if( tabMC.SelectedTab == tabMCSignIn )
 					mc.DoSignIn();
@@ -78,18 +79,6 @@ namespace Launcher {
 				}
 			}
 		}
-
-		void SetTooltips() {
-			toolTip.SetToolTip( lblLanUser, "The username to use when connecting to the local server. " + Environment.NewLine +
-			                   "(this doesn't have to be your minecraft.net or classicube.net username)" );
-			toolTip.SetToolTip( lblLanIP, "The IP address of the local server (i.e. either LAN or on the same computer)" + Environment.NewLine +
-			                   "Valid IPv4 local addresses: 127.0.0.1, 192.168.*.*, 10.*.*.*, and 172.16.*.* to 172.31.*.*"  + Environment.NewLine +
-			                   "Valid IPv6 local addresses: ::1, fd**:****:****:: and fd**:****:****:****:****:****:****:****" );
-			toolTip.SetToolTip( lblLanPort, "The port number of the local server." + Environment.NewLine +
-			                   "Must be greater or equal to 0, and less than 65536" );
-			toolTip.SetToolTip( cbLocalSkinServerCC, "If checked, skins are downloaded from classicube.net instead of minecraft.net." );
-			toolTip.IsBalloon = true;
-		}
 		
 		void MainFormResizeEnd( object sender, EventArgs e ) {
 			AdjustTabs();
@@ -115,48 +104,56 @@ namespace Launcher {
 			control.Height = ClientSize.Height - formLoc.Y - connectButton.Height - 5;
 		}
 		
-		#region Local tab
-		
-		bool IsPrivateIP( IPAddress address ) {
-			if( IPAddress.IsLoopback( address ) ) return true; // 127.0.0.1 or 0000:0000:0000:0000:0000:0000:0000:0001
-			if( address.AddressFamily == AddressFamily.InterNetwork ) {
-				byte[] bytes = address.GetAddressBytes();
-				if( bytes[0] == 192 && bytes[1] == 168 ) return true; // 192.168.0.0 to 192.168.255.255
-				if( bytes[0] == 10 ) return true; // 10.0.0.0 to 10.255.255.255
-				if( bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31 ) return true;
-			} else if( address.AddressFamily == AddressFamily.InterNetworkV6 ) {
-				byte[] bytes = address.GetAddressBytes();
-				if( bytes[0] == 0xFD ) return true; // fd00:0000:0000:0000:xxxx:xxxx:xxxx:xxxx
-			}
-			return false;
-		}
+		#region Direct connection tab
 
-		void BtnLanConnectClick( object sender, System.EventArgs e ) {
+		void BtnDCconnectClick( object sender, EventArgs e ) {
 			IPAddress address;
-			if( !IPAddress.TryParse( txtLanIP.Text, out address ) ) {
+			if( !IPAddress.TryParse( txtDCip.Text, out address ) ) {
 				MessageBox.Show( "Invalid IP address specified." );
-				return;
-			}
-			if( !IsPrivateIP( address ) ) {
-				MessageBox.Show( "Given IP address is not a local LAN address." );
 				return;
 			}
 			
 			ushort port;
-			if( !UInt16.TryParse( txtLanPort.Text, out port ) ) {
+			if( !UInt16.TryParse( txtDCport.Text, out port ) ) {
 				MessageBox.Show( "Invalid port specified." );
 				return;
 			}
-			if( String.IsNullOrEmpty( txtLanUser.Text ) ) {
+			if( String.IsNullOrEmpty( txtDCuser.Text ) ) {
 				MessageBox.Show( "Please enter a username." );
 				return;
 			}
-
-			GameStartData data = new GameStartData( txtLanUser.Text, "lan",
-			                                       txtLanIP.Text, txtLanPort.Text );
-			StartClient( data, cbLocalSkinServerCC.Checked );
+			
+			string mppass = txtDCmppass.Text;
+			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
+			GameStartData data = new GameStartData( txtDCuser.Text, mppass,
+			                                       txtDCip.Text, txtDCport.Text );
+			StartClient( data, cbDCccskins.Checked );
 		}
 		
+		void LoadResumeInfo() {
+			try {
+				Options.Load();
+			} catch( IOException ) {
+				return;
+			}
+			
+			txtDCuser.Text = Options.Get( "launcher-username" ) ?? "";
+			txtDCip.Text = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
+			txtDCport.Text = Options.Get( "launcher-port" ) ?? "25565";
+			cbDCccskins.Checked = Options.GetBool( "launcher-ccskins", false );
+
+			IPAddress address;
+			if( !IPAddress.TryParse( txtDCip.Text, out address ) )
+				txtDCip.Text = "127.0.0.1";
+			ushort port;
+			if( !UInt16.TryParse( txtDCport.Text, out port ) )
+				txtDCport.Text = "25565";
+			
+			string mppass = Options.Get( "launcher-mppass" ) ?? null;
+			mppass = DecodeMppass( mppass, txtDCuser.Text );
+			if( mppass != null )
+				txtDCmppass.Text = mppass;
+		}
 		#endregion
 		
 		NameComparer mcNameComparer = new NameComparer( 0 );
@@ -238,6 +235,7 @@ namespace Launcher {
 				data.Ip + " " + data.Port + " " + skinServer;
 			System.Diagnostics.Debug.WriteLine( "starting..." + args );
 			Process process = null;
+			UpdateOptions( data, classicubeSkins );
 			
 			try {
 				if( Type.GetType( "Mono.Runtime" ) != null ) {
@@ -251,6 +249,49 @@ namespace Launcher {
 				} else {
 					throw;
 				}
+			}
+		}
+		
+		static string EncodeMppass( string mppass, string user ) {
+			if( String.IsNullOrEmpty( mppass ) || String.IsNullOrEmpty( user ) ) return "";
+			
+			byte[] c = new byte[1 + mppass.Length];
+			for( int i = 0; i < mppass.Length; i++ ) {
+				c[i + 1] = (byte)( mppass[i] ^ user[i % user.Length] ^ 0x43 );
+			}
+			c[0] = 1; // format version
+			// TODO: version 2 using CryptProtectData for Windows
+			return Convert.ToBase64String( c );
+		}
+		
+		static string DecodeMppass( string encoded, string user ) {
+			if( String.IsNullOrEmpty( encoded ) || String.IsNullOrEmpty( user ) ) return null;
+			
+			byte[] data;
+			try {
+				data = Convert.FromBase64String( encoded );
+			} catch( FormatException ) {
+				return null;
+			}
+			if( data.Length == 0 || data[0] != 1 ) return null;
+			
+			char[] c = new char[data.Length - 1];
+			for( int i = 0; i < c.Length; i++ ) {
+				c[i] = (char)( data[i + 1] ^ user[i % user.Length] ^ 0x43 );
+			}
+			return new String( c );
+		}
+		
+		internal static void UpdateOptions( GameStartData data, bool classiCubeSkins ) {
+			Options.Set( "launcher-username", data.Username );
+			Options.Set( "launcher-ip", data.Ip );
+			Options.Set( "launcher-port", data.Port );
+			Options.Set( "launcher-mppass", EncodeMppass( data.Mppass, data.Username ) );
+			Options.Set( "launcher-ccskins", classiCubeSkins.ToString() );
+			
+			try {
+				Options.Save();
+			} catch( IOException ) {
 			}
 		}
 	}

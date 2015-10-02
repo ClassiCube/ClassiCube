@@ -140,7 +140,7 @@ namespace ClassicalSharp.TexturePack {
 					index += read;
 				}
 				
-				deflater.Close();
+				deflater.Dispose();
 				return data;
 			} else {
 				Utils.LogWarning( "Unsupported .zip entry compression method: " + compressionMethod );

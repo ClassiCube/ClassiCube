@@ -345,7 +345,7 @@ namespace ClassicalSharp {
 						game.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
 						game.Events.RaiseOnNewMapLoaded();
 						map = null;
-						gzipStream.Close();
+						gzipStream.Dispose();
 						if( sendWomId && !sentWomId ) {
 							SendChat( "/womid WoMClient-2.0.7" );
 							sentWomId = true;

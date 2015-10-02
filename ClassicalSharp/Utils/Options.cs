@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 		public static int GetInt( string key, int min, int max, int defValue ) {
 			string value;
 			int valueInt = 0;
-			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value ) 
+			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
 			   || !Int32.TryParse( value, out valueInt ) )
 				return defValue;
 
@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		public static bool GetBool( string key, bool defValue ) {
 			string value;
 			bool valueBool = false;
-			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value ) 
+			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
 			   || !Boolean.TryParse( value, out valueBool ) )
 				return defValue;
 			return valueBool;
@@ -43,10 +43,10 @@ namespace ClassicalSharp {
 		
 		public static void Load() {
 			try {
-				using( StreamReader reader = new StreamReader( OptionsFile, false ) )
-					LoadFrom( reader );
+				using( Stream fs = File.OpenRead( OptionsFile ) )
+					using( StreamReader reader = new StreamReader( fs, false ) )
+						LoadFrom( reader );
 			} catch( FileNotFoundException ) {
-				
 			}
 		}
 		
@@ -67,13 +67,17 @@ namespace ClassicalSharp {
 		}
 		
 		public static void Save() {
-			using( StreamWriter writer = new StreamWriter( OptionsFile ) ) {
-				foreach( KeyValuePair<string, string> pair in OptionsSet ) {
-					writer.Write( pair.Key );
-					writer.Write( '=' );
-					writer.Write( pair.Value );
-					writer.WriteLine();
-				}
+			using( Stream fs = File.Create( OptionsFile ) )
+				using( StreamWriter writer = new StreamWriter( fs ) )
+					SaveTo( writer );
+		}
+		
+		static void SaveTo( StreamWriter writer ) {
+			foreach( KeyValuePair<string, string> pair in OptionsSet ) {
+				writer.Write( pair.Key );
+				writer.Write( '=' );
+				writer.Write( pair.Value );
+				writer.WriteLine();
 			}
 		}
 	}

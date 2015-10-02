@@ -10,7 +10,7 @@ namespace ClassicalSharp.Network {
 	/// <summary> Specialised producer and consumer queue for downloading images and pages asynchronously. </summary>
 	public class AsyncDownloader : IDisposable {
 		
-		EventWaitHandle handle = new AutoResetEvent( false );
+		EventWaitHandle handle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		Thread worker;
 		readonly object requestLocker = new object();
 		List<DownloadRequest> requests = new List<DownloadRequest>();
@@ -67,7 +67,7 @@ namespace ClassicalSharp.Network {
 			handle.Set();
 			
 			worker.Join();
-			handle.Close();
+			((IDisposable)handle).Dispose();
 			client.Dispose();
 		}
 		

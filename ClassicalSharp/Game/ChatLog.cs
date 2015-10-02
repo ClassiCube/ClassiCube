@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 
 	public sealed class ChatLog : IDisposable {
 		
-		public string Status1, Status2, Status3, BottomRight1, 
+		public string Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement;
 		
 		Game game;
@@ -73,10 +73,10 @@ namespace ClassicalSharp {
 		DateTime last = new DateTime( 1, 1, 1 );
 		StreamWriter writer = null;
 		void LogChatToFile( string text ) {
-			DateTime now = DateTime.Now;			
+			DateTime now = DateTime.Now;
 			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {
 				Dispose();
-				OpenChatFile( now );				
+				OpenChatFile( now );
 			}
 			
 			last = now;

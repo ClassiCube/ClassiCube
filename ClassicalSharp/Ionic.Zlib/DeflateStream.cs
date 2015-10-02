@@ -21,12 +21,12 @@ namespace Ionic.Zlib {
 			z = new ZlibCodec();
 		}		
 
-		public void Close() {
+		public void Dispose() {
 			z.EndInflate();
 			z = null;
 			
 			if( !_leaveOpen )
-				_stream.Close();
+				_stream.Dispose();
 			_stream = null;
 		}
 
