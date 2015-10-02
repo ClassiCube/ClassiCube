@@ -58,9 +58,8 @@ namespace SharpDX.Direct3D9
 			return modeRef;
 		}
 		
-		public void Reset( PresentParameters presentParams ) {
-			int res = Interop.Calli(comPointer, (IntPtr)(void*)&presentParams,(*(IntPtr**)comPointer)[16]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
+		public int Reset( PresentParameters presentParams ) {
+			return Interop.Calli(comPointer, (IntPtr)(void*)&presentParams,(*(IntPtr**)comPointer)[16]);
 		}
 		
 		public int Present() {

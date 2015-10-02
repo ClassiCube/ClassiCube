@@ -360,10 +360,13 @@ namespace ClassicalSharp {
 						int y = reader.ReadInt16();
 						int z = reader.ReadInt16();
 						byte type = reader.ReadUInt8();
-						if( !game.Map.IsNotLoaded )
-							game.UpdateBlock( x, y, z, type );
-						else
+						
+						if( game.Map.IsNotLoaded )
 							Utils.LogWarning( "Server tried to update a block while still sending us the map!" );
+						else if( !game.Map.IsValidPos( x, y, z ) )
+							Utils.LogWarning( "Server tried to update a block at an invalid position!" );
+						else
+							game.UpdateBlock( x, y, z, type );
 					} break;
 					
 				case PacketId.AddEntity:

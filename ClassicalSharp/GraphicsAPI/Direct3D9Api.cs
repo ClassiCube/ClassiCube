@@ -409,13 +409,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			// TODO: Make sure this actually works on all graphics cards.
 			Utils.LogDebug( "Lost Direct3D device." );
+			LoopUntilRetrieved();
+			RecreateDevice( game );
+		}
+		
+		void LoopUntilRetrieved() {
 			while( true ) {
 				Thread.Sleep( 50 );
-				code = device.TestCooperativeLevel();
+				uint code = (uint)device.TestCooperativeLevel();
 				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
 					Utils.Log( "Retrieved Direct3D device again." );
-					RecreateDevice( game );
-					break;
+					return;
 				}
 				LostContextFunction( 1 / 20.0 );
 			}
@@ -441,7 +445,9 @@ namespace ClassicalSharp.GraphicsAPI {
 				}
 			}
 			
-			device.Reset( args );
+			while( (uint)device.Reset( args ) == (uint)Direct3DError.DeviceLost )
+				LoopUntilRetrieved();
+			
 			SetDefaultRenderStates();
 			RestoreRenderStates();
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
