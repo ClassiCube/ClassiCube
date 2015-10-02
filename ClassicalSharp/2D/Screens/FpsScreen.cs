@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		
 		TextWidget fpsTextWidget;
 		
-		public override void Render( double delta ) {		
+		public override void Render( double delta ) {
 			UpdateFPS( delta );
 			if( game.HideGui ) return;
 			
@@ -24,21 +24,19 @@ namespace ClassicalSharp {
 		}
 		
 		double accumulator, maxDelta;
-		int fpsCount;	
-		unsafe void UpdateFPS( double delta ) {
+		int fpsCount;
+		void UpdateFPS( double delta ) {
 			fpsCount++;
 			maxDelta = Math.Max( maxDelta, delta );
 			accumulator += delta;
 
-			if( accumulator >= 1 )  {
-				fixed( char* ptr = text.value ) {
-					char* ptr2 = ptr;
-					text.Clear( ptr2 )
-						.Append( ref ptr2, "FPS: " ).AppendNum( ref ptr2, (int)( fpsCount / accumulator ) )
-						.Append( ref ptr2, " (min " ).AppendNum( ref ptr2, (int)( 1f / maxDelta ) )
-						.Append( ref ptr2, "), chunks/s: " ).AppendNum( ref ptr2, game.ChunkUpdates )
-						.Append( ref ptr2, ", vertices: " ).AppendNum( ref ptr2, game.Vertices );
-				}
+			if( accumulator >= 1 ) {
+				int index = 0;
+				text.Clear()
+					.Append( ref index, "FPS: " ).AppendNum( ref index, (int)(fpsCount / accumulator) )
+					.Append( ref index, " (min " ).AppendNum( ref index, (int)(1f / maxDelta) )
+					.Append( ref index, "), chunks/s: " ).AppendNum( ref index, game.ChunkUpdates )
+					.Append( ref index, ", vertices: " ).AppendNum( ref index, game.Vertices );
 				
 				string textString = text.GetString();
 				fpsTextWidget.SetText( textString );

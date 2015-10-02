@@ -95,36 +95,34 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
-		unsafe void UpdateBlockInfoString( Block block ) {
-			fixed( char* ptr = buffer.value ) {
-				char* ptr2 = ptr;
-				buffer.Clear( ptr );
-				buffer.Append( ref ptr2, "&f" );
-				if( block == Block.TNT ) {
-					buffer.Append( ref ptr2, "TNT" );
+		void UpdateBlockInfoString( Block block ) {
+			int index = 0;
+			buffer.Clear();
+			buffer.Append( ref index, "&f" );
+			if( block == Block.TNT ) {
+				buffer.Append( ref index, "TNT" );
+			} else {
+				string value = game.BlockInfo.Name[(byte)block];
+				if( (byte)block < BlockInfo.CpeBlocksCount ) {
+					SplitUppercase( value, ref index );
 				} else {
-					string value = game.BlockInfo.Name[(byte)block];
-					if( (byte)block < BlockInfo.CpeBlocksCount ) {
-						SplitUppercase( value, ref ptr2 );
-					} else {
-						buffer.Append( ref ptr2, value );
-					}
+					buffer.Append( ref index, value );
 				}
-				buffer.Append( ref ptr2, " (can place: " );
-				buffer.Append( ref ptr2, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
-				buffer.Append( ref ptr2, "&f, can delete: " );
-				buffer.Append( ref ptr2, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
-				buffer.Append( ref ptr2, "&f)" );
 			}
-		}		
+			buffer.Append( ref index, " (can place: " );
+			buffer.Append( ref index, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+			buffer.Append( ref index, "&f, can delete: " );
+			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+			buffer.Append( ref index, "&f)" );
+		}
 		
-		unsafe void SplitUppercase( string value, ref char* ptr ) {
+		void SplitUppercase( string value, ref int index ) {
 			for( int i = 0; i < value.Length; i++ ) {
 				char c = value[i];
 				if( Char.IsUpper( c ) && i > 0 ) {
-					buffer.Append( ref ptr, ' ' );
+					buffer.Append( ref index, ' ' );
 				}
-				buffer.Append( ref ptr, c );
+				buffer.Append( ref index, c );
 			}
 		}
 		
@@ -152,7 +150,7 @@ namespace ClassicalSharp {
 					args.SkipPartsCheck = true;
 					drawer.DrawText( font, ref args, 0, 0 );
 					blockInfoTexture = drawer.Make2DTexture( bmp, size, x, y );
-				}		
+				}
 			}
 		}
 		
@@ -230,7 +228,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Keys[KeyMapping.PauseOrExit] || 
+			if( key == game.Keys[KeyMapping.PauseOrExit] ||
 			   key == game.Keys[KeyMapping.OpenInventory] ) {
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
