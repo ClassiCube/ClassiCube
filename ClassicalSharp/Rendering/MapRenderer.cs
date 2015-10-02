@@ -179,7 +179,6 @@ namespace ClassicalSharp {
 		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
 			byte b1 = game.Map.SafeGetBlock( x1, y1, z1 );
 			byte b2 = game.Map.SafeGetBlock( x2, y2, z2 );
-			Console.WriteLine( (Block)b1 + " : " + (Block)b2 );
 			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
 		}
 		
@@ -198,7 +197,6 @@ namespace ClassicalSharp {
 		void ResetChunk( int cx, int cy, int cz ) {
 			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
-			Console.WriteLine( cx + " : " + cy + " : " + cz );
 			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
 		}
 		

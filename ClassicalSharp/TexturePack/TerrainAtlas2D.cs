@@ -23,12 +23,20 @@ namespace ClassicalSharp {
 		public int elementSize;
 		public int TexId;
 		IGraphicsApi graphics;
+		IDrawer2D drawer;
 		
-		public TerrainAtlas2D( IGraphicsApi graphics ) {
+		public TerrainAtlas2D( IGraphicsApi graphics, IDrawer2D drawer ) {
 			this.graphics = graphics;
+			this.drawer = drawer;
 		}
 		
 		public void UpdateState( Bitmap bmp ) {
+			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+				Utils.LogWarning( "Converting terrain atlas to 32bpp image" );
+				Bitmap newBmp = drawer.ConvertTo32Bpp( bmp );
+				bmp.Dispose();
+				bmp = newBmp;
+			}
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {

@@ -84,7 +84,6 @@ namespace ClassicalSharp {
 				return;
 			}
 			text = Path.ChangeExtension( text, ".cw" );
-			Console.WriteLine( text );
 			
 			if( File.Exists( text ) ) {
 				MakeDescWidget( "&eFilename already exists" );

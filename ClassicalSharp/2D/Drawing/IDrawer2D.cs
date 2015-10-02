@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
 		
+		public abstract Bitmap ConvertTo32Bpp( Bitmap src );
 		
 		public abstract Size MeasureSize( string text, Font font, bool shadow );
 		

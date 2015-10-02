@@ -235,7 +235,7 @@ namespace Launcher {
 				data.Ip + " " + data.Port + " " + skinServer;
 			System.Diagnostics.Debug.WriteLine( "starting..." + args );
 			Process process = null;
-			UpdateOptions( data, classicubeSkins );
+			UpdateResumeInfo( data, classicubeSkins );
 			
 			try {
 				if( Type.GetType( "Mono.Runtime" ) != null ) {
@@ -282,7 +282,7 @@ namespace Launcher {
 			return new String( c );
 		}
 		
-		internal static void UpdateOptions( GameStartData data, bool classiCubeSkins ) {
+		internal static void UpdateResumeInfo( GameStartData data, bool classiCubeSkins ) {
 			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );

@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			Graphics.PrintGraphicsInfo();
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
-			TerrainAtlas = new TerrainAtlas2D( Graphics );
+			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );

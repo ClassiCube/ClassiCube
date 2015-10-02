@@ -88,7 +88,14 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			g.Dispose();
 			g = null;
-		}		
+		}
+
+		public override Bitmap ConvertTo32Bpp( Bitmap src ) {
+			Bitmap bmp = new Bitmap( src.Width, src.Height );
+			using( Graphics g = Graphics.FromImage( bmp ) )
+				g.DrawImage( src, 0, 0, src.Width, src.Height );
+			return bmp;
+		}
 		
 		public override Size MeasureSize( string text, Font font, bool shadow ) {
 			GetTextParts( text );
