@@ -56,6 +56,7 @@ namespace ClassicalSharp {
 			result.R = (byte)( value.R * t );
 			result.G = (byte)( value.G * t );
 			result.B = (byte)( value.B * t );
+			result.A = 50;
 			return result;
 		}	
 		

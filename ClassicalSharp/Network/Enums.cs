@@ -42,6 +42,8 @@ namespace ClassicalSharp {
 		CpeDefineBlock = 35,
 		CpeDefineLiquid = 36,
 		CpeRemoveBlockDefinition = 37,
+		
+		Max,
 	}
 	
 	public enum CpeMessage {

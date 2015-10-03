@@ -10,6 +10,7 @@ namespace ClassicalSharp {
 		
 		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
 		int womCounter = 0;
+		bool sendWomId = false, sentWomId = false;
 		
 		void CheckForWomEnvironment() {
 			DownloadedItem item;
