@@ -91,6 +91,11 @@ namespace ClassicalSharp {
 			if( item != null && item.Data != null ) {
 				Bitmap bmp = (Bitmap)item.Data;
 				game.Graphics.DeleteTexture( ref PlayerTextureId );
+				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+					Bitmap newBmp = game.Drawer2D.ConvertTo32Bpp( bmp );
+					bmp.Dispose();
+					bmp = newBmp;
+				}
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
@@ -101,16 +106,40 @@ namespace ClassicalSharp {
 					if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
 						MobTextureId = PlayerTextureId;
 					}
+					RenderHat = HasHat( bmp, SkinType );
 				} catch( NotSupportedException ) {
 					string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
 					Utils.LogWarning( formatString, SkinName, bmp.Width, bmp.Height );
 					MobTextureId = -1;
 					PlayerTextureId = -1;
 					SkinType = game.DefaultPlayerSkinType;
+					RenderHat = false;
 				}
 				bmp.Dispose();
 			}
 			
+		}
+		
+		unsafe bool HasHat( Bitmap bmp, SkinType skinType ) {
+			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+				int sizeX = (bmp.Width / 64) * 32;
+				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
+				int sizeY = (bmp.Height / yScale) * 16;
+				int fullWhite = FastColour.White.ToArgb();
+				int fullBlack = FastColour.Black.ToArgb();
+				
+				for( int y = 0; y < sizeY; y++ ) {
+					int* row = fastBmp.GetRowPtr( y );
+					row += sizeX;
+					for( int x = 0; x < sizeX; x++ ) {
+						int pixel = row[x];
+						if( !(pixel == fullWhite || pixel == fullBlack) ) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
 		}
 		
 		DateTime lastModelChange = new DateTime( 1, 1, 1 );

@@ -57,9 +57,7 @@ namespace ClassicalSharp {
 			result.G = (byte)( value.G * t );
 			result.B = (byte)( value.B * t );
 			return result;
-		}
-		
-		
+		}	
 		
 		public Color ToColor() {
 			return Color.FromArgb( A, R, G, B );

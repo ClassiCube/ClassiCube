@@ -92,8 +92,10 @@ namespace ClassicalSharp {
 
 		public override Bitmap ConvertTo32Bpp( Bitmap src ) {
 			Bitmap bmp = new Bitmap( src.Width, src.Height );
-			using( Graphics g = Graphics.FromImage( bmp ) )
+			using( Graphics g = Graphics.FromImage( bmp ) ) {
+				g.InterpolationMode = InterpolationMode.NearestNeighbor;
 				g.DrawImage( src, 0, 0, src.Width, src.Height );
+			}
 			return bmp;
 		}
 		
