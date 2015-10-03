@@ -40,6 +40,8 @@ namespace ClassicalSharp {
 		
 		public float[] SpeedMultiplier = new float[BlocksCount];
 		
+		public bool[] CullWithNeighbours = new bool[BlocksCount];
+		
 		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
 		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
 		public const byte MaxDefinedBlock = byte.MaxValue;
@@ -52,6 +54,7 @@ namespace ClassicalSharp {
 				IsOpaque[tile] = true;
 				CollideType[tile] = BlockCollideType.Solid;
 				SpeedMultiplier[tile] = 1;
+				CullWithNeighbours[tile] = true;
 			}
 			for( int i = 0; i < CpeBlocksCount; i++ ) {
 				Name[i] = Enum.GetName( typeof( Block ), (byte)i );
@@ -70,6 +73,7 @@ namespace ClassicalSharp {
 			FogColour[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
 			CollideType[(byte)Block.Snow] = BlockCollideType.WalkThrough;
 			SpeedMultiplier[0] = 1f;
+			CullWithNeighbours[(byte)Block.Leaves] = false;
 			SetupTextures();
 			
 			SetBlockHeight( Block.Slab, 8/16f );
@@ -155,6 +159,8 @@ namespace ClassicalSharp {
 			Height[id] = 1;
 			BlocksLight[id] = true;
 			EmitsLight[id] = false;
+			CullWithNeighbours[id] = true;
+			
 			Name[id] = "Invalid";
 			FogColour[id] = default( FastColour );
 			FogDensity[id] = 0;

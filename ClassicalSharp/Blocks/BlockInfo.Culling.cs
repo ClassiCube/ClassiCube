@@ -11,24 +11,21 @@ namespace ClassicalSharp {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
 					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
 					bool hidden = IsHidden( tile, neighbour );
-					if( hidden ) {
-						SetHidden( tile, neighbour, TileSide.Left, true );
-						SetHidden( tile, neighbour, TileSide.Right, true );
-						SetHidden( tile, neighbour, TileSide.Front, true );
-						SetHidden( tile, neighbour, TileSide.Back, true );
-						SetHidden( tile, neighbour, TileSide.Top, Height[tile] == 1 );
-						SetHidden( tile, neighbour, TileSide.Bottom, Height[neighbour] == 1 );
-					}
+					if( tile == neighbour && !CullWithNeighbours[tile] )
+						hidden = false;
+					
+					SetHidden( tile, neighbour, TileSide.Left, hidden );
+					SetHidden( tile, neighbour, TileSide.Right, hidden );
+					SetHidden( tile, neighbour, TileSide.Front, hidden );
+					SetHidden( tile, neighbour, TileSide.Back, hidden );
+					SetHidden( tile, neighbour, TileSide.Top, hidden && Height[tile] == 1 );
+					SetHidden( tile, neighbour, TileSide.Bottom, hidden && Height[neighbour] == 1 );
 				}
-			}
-			// Leaves should show faces with their neighbours (matches Classic)
-			for( int i = 0; i < TileSide.Sides; i++ ) {
-				SetHidden( (byte)Block.Leaves, (byte)Block.Leaves, i, false );
 			}
 		}
 		
 		bool IsHidden( byte tile, byte block ) {
-			return 
+			return
 				((tile == block || (IsOpaque[block] && !IsLiquid[block])) && !IsSprite[tile]) ||
 				(IsLiquid[tile] && block == (byte)Block.Ice);
 		}

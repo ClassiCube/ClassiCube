@@ -17,26 +17,15 @@ namespace Launcher {
 			InitializeComponent();
 			AdjustTabs();
 			// hide tabs at start
-			tabMC.TabPages.Remove( tabMCServers );
 			tabCC.TabPages.Remove( tabCCServers );
 			Shown += DisplayResourcesDialog;
-			
-			mc = new GameState() { Progress = prgMCStatus, Status = lblMCStatus,
-				Username = txtMCUser, Password = txtMCPassword, HostServer = "minecraft.net",
-				Session = new MinecraftSession(), SignInButton = btnMCSignIn, Tab = tabMC,
-				ServersTab = tabMCServers, ServersTable = tblMCServers, Hash = txtMCHash,
-				form = this };
+
 			cc = new GameState() { Progress = prgCCStatus, Status = lblCCStatus,
 				Username = txtCCUser, Password = txtCCPassword, HostServer = "classicube.net",
 				Session = new ClassicubeSession(), SignInButton = btnCCSignIn, Tab = tabCC,
 				ServersTab = tabCCServers, ServersTable = tblCCServers, Hash = txtCCHash,
 				form = this };
 			
-			mc.Filter = e =>
-				// NOTE: using ToLower().Contains() allocates too many unecessary strings.
-				e.Name.IndexOf( txtMCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
-				&& ( cbMCHideEmpty.Checked ? e.Players[0] != '0' : true )
-				&& ( cbMCHideInvalid.Checked ? Int32.Parse( e.Players ) < 600 : true );
 			cc.Filter = e =>
 				e.Name.IndexOf( txtCCSearch.Text, StringComparison.OrdinalIgnoreCase ) >= 0
 				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
@@ -50,11 +39,6 @@ namespace Launcher {
 			
 			if( tabs.SelectedTab == tabDC ) {
 				BtnDCconnectClick( null, null );
-			} else if( tabs.SelectedTab == tabMinecraftNet ) {
-				if( tabMC.SelectedTab == tabMCSignIn )
-					mc.DoSignIn();
-				else if( tabMC.SelectedTab == tabMCServers )
-					mc.ConnectToServer();
 			} else if( tabs.SelectedTab == tabClassicubeNet ) {
 				if( tabCC.SelectedTab == tabCCSignIn )
 					cc.DoSignIn();
@@ -87,12 +71,9 @@ namespace Launcher {
 		void AdjustTabs() {
 			tabs.Width = ClientSize.Width + 6;
 			tabs.Height = ClientSize.Height + 3;
-			tabMC.Width = tabCC.Width = tabs.Width;
-			tabMC.Height = tabCC.Height = tabs.SelectedTab.Size.Height + 10;
+			tabCC.Width = tabs.Width;
+			tabCC.Height = tabs.SelectedTab.Size.Height + 10;
 			
-			if( tblMCServers.IsHandleCreated ) {
-				AdjustTablePos( tblMCServers, btnMCConnect );
-			}
 			if( tblCCServers.IsHandleCreated ) {
 				AdjustTablePos( tblCCServers, btnCCConnect );
 			}
@@ -154,43 +135,7 @@ namespace Launcher {
 			if( mppass != null )
 				txtDCmppass.Text = mppass;
 		}
-		#endregion
-		
-		NameComparer mcNameComparer = new NameComparer( 0 );
-		NumericalComparer mcPlayersComparer = new NumericalComparer( 1 );
-		NumericalComparer mcMaxPlayersComparer = new NumericalComparer( 2 );
-		UptimeComparer mcUptimeComparer = new UptimeComparer( 3 );
-		void tblMCServersColumnClick( object sender, ColumnClickEventArgs e ) {
-			if( e.Column == 0 ) {
-				mcNameComparer.Invert = !mcNameComparer.Invert;
-				tblMCServers.ListViewItemSorter = mcNameComparer;
-			} else if( e.Column == 1 ) {
-				mcPlayersComparer.Invert = !mcPlayersComparer.Invert;
-				tblMCServers.ListViewItemSorter = mcPlayersComparer;
-			} else if( e.Column == 2 ) {
-				mcMaxPlayersComparer.Invert = !mcMaxPlayersComparer.Invert;
-				tblMCServers.ListViewItemSorter = mcMaxPlayersComparer;
-			} else if( e.Column == 3 ) {
-				mcUptimeComparer.Invert = !mcUptimeComparer.Invert;
-				tblMCServers.ListViewItemSorter = mcUptimeComparer;
-			}
-			tblMCServers.Sort();
-		}
-		
-		void txtMCSearchTextChanged( object sender, EventArgs e ) { mc.FilterList(); }
-		
-		void cbMCHideEmptyCheckedChanged( object sender, EventArgs e ) { mc.FilterList(); }
-		
-		void cbMCHideInvalidCheckedChanged(object sender, EventArgs e ) { mc.FilterList(); }
-		
-		void tblMCServersClick( object sender, EventArgs e ) { mc.ServerTableClick(); }
-		
-		void txtMCHashTextChanged( object sender, EventArgs e ) { mc.HashChanged(); }
-		
-		void btnMCConnectClick( object sender, EventArgs e ) { mc.ConnectToServer(); }
-		
-		void btnMCSignInClick( object sender, EventArgs e ) { mc.DoSignIn(); }
-		
+		#endregion		
 
 		NameComparer ccNameComparer = new NameComparer( 0 );
 		NumericalComparer ccPlayersComparer = new NumericalComparer( 1 );
@@ -237,18 +182,15 @@ namespace Launcher {
 			Process process = null;
 			UpdateResumeInfo( data, classicubeSkins );
 			
-			try {
-				if( Type.GetType( "Mono.Runtime" ) != null ) {
-					process = Process.Start( "mono", "\"ClassicalSharp.exe\" " + args );
-				} else {
-					process = Process.Start( "ClassicalSharp.exe", args );
-				}
-			} catch( Win32Exception ex ) {
-				if( ex.Message.Contains( "The system cannot find the file specified" ) ) {
-					MessageBox.Show( missingExeMessage );
-				} else {
-					throw;
-				}
+			if( !File.Exists( "ClassicalSharp.exe" ) ) {
+				MessageBox.Show( missingExeMessage );
+				return;
+			}
+			
+			if( Type.GetType( "Mono.Runtime" ) != null ) {
+				process = Process.Start( "mono", "\"ClassicalSharp.exe\" " + args );
+			} else {
+				process = Process.Start( "ClassicalSharp.exe", args );
 			}
 		}
 		

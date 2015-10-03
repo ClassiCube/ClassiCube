@@ -53,29 +53,6 @@ namespace Launcher
 			this.txtCCSearch = new System.Windows.Forms.TextBox();
 			this.lblCCSearch = new System.Windows.Forms.Label();
 			this.tabMinecraftNet = new System.Windows.Forms.TabPage();
-			this.tabMC = new System.Windows.Forms.TabControl();
-			this.tabMCSignIn = new System.Windows.Forms.TabPage();
-			this.prgMCStatus = new System.Windows.Forms.ProgressBar();
-			this.lblMCStatusLabel = new System.Windows.Forms.Label();
-			this.lblMCStatus = new System.Windows.Forms.Label();
-			this.lbMCUser = new System.Windows.Forms.Label();
-			this.btnMCSignIn = new System.Windows.Forms.Button();
-			this.txtMCUser = new System.Windows.Forms.TextBox();
-			this.txtMCPassword = new System.Windows.Forms.TextBox();
-			this.lblMCPass = new System.Windows.Forms.Label();
-			this.tabMCServers = new System.Windows.Forms.TabPage();
-			this.cbMCHideInvalid = new System.Windows.Forms.CheckBox();
-			this.txtMCHash = new System.Windows.Forms.TextBox();
-			this.lblMCHash = new System.Windows.Forms.Label();
-			this.btnMCConnect = new System.Windows.Forms.Button();
-			this.tblMCServers = new System.Windows.Forms.ListView();
-			this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
-			this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
-			this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
-			this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
-			this.cbMCHideEmpty = new System.Windows.Forms.CheckBox();
-			this.txtMCSearch = new System.Windows.Forms.TextBox();
-			this.lblMCSearch = new System.Windows.Forms.Label();
 			this.tabDC = new System.Windows.Forms.TabPage();
 			this.lblDChint = new System.Windows.Forms.Label();
 			this.txtDCmppass = new System.Windows.Forms.TextBox();
@@ -89,14 +66,13 @@ namespace Launcher
 			this.lblDCaddress = new System.Windows.Forms.Label();
 			this.lblDCuser = new System.Windows.Forms.Label();
 			this.tabs = new System.Windows.Forms.TabControl();
+			this.lblMCdead = new System.Windows.Forms.Label();
+			this.lblMCdead2 = new System.Windows.Forms.Label();
 			this.tabClassicubeNet.SuspendLayout();
 			this.tabCC.SuspendLayout();
 			this.tabCCSignIn.SuspendLayout();
 			this.tabCCServers.SuspendLayout();
 			this.tabMinecraftNet.SuspendLayout();
-			this.tabMC.SuspendLayout();
-			this.tabMCSignIn.SuspendLayout();
-			this.tabMCServers.SuspendLayout();
 			this.tabDC.SuspendLayout();
 			this.tabs.SuspendLayout();
 			this.SuspendLayout();
@@ -332,7 +308,8 @@ namespace Launcher
 			// 
 			// tabMinecraftNet
 			// 
-			this.tabMinecraftNet.Controls.Add(this.tabMC);
+			this.tabMinecraftNet.Controls.Add(this.lblMCdead2);
+			this.tabMinecraftNet.Controls.Add(this.lblMCdead);
 			this.tabMinecraftNet.Location = new System.Drawing.Point(4, 22);
 			this.tabMinecraftNet.Name = "tabMinecraftNet";
 			this.tabMinecraftNet.Padding = new System.Windows.Forms.Padding(3);
@@ -340,237 +317,6 @@ namespace Launcher
 			this.tabMinecraftNet.TabIndex = 1;
 			this.tabMinecraftNet.Text = "minecraft.net";
 			this.tabMinecraftNet.UseVisualStyleBackColor = true;
-			// 
-			// tabMC
-			// 
-			this.tabMC.Controls.Add(this.tabMCSignIn);
-			this.tabMC.Controls.Add(this.tabMCServers);
-			this.tabMC.Location = new System.Drawing.Point(0, 0);
-			this.tabMC.Name = "tabMC";
-			this.tabMC.SelectedIndex = 0;
-			this.tabMC.Size = new System.Drawing.Size(482, 444);
-			this.tabMC.TabIndex = 2;
-			// 
-			// tabMCSignIn
-			// 
-			this.tabMCSignIn.Controls.Add(this.prgMCStatus);
-			this.tabMCSignIn.Controls.Add(this.lblMCStatusLabel);
-			this.tabMCSignIn.Controls.Add(this.lblMCStatus);
-			this.tabMCSignIn.Controls.Add(this.lbMCUser);
-			this.tabMCSignIn.Controls.Add(this.btnMCSignIn);
-			this.tabMCSignIn.Controls.Add(this.txtMCUser);
-			this.tabMCSignIn.Controls.Add(this.txtMCPassword);
-			this.tabMCSignIn.Controls.Add(this.lblMCPass);
-			this.tabMCSignIn.Location = new System.Drawing.Point(4, 22);
-			this.tabMCSignIn.Name = "tabMCSignIn";
-			this.tabMCSignIn.Padding = new System.Windows.Forms.Padding(3);
-			this.tabMCSignIn.Size = new System.Drawing.Size(474, 418);
-			this.tabMCSignIn.TabIndex = 0;
-			this.tabMCSignIn.Text = "Sign in";
-			this.tabMCSignIn.UseVisualStyleBackColor = true;
-			// 
-			// prgMCStatus
-			// 
-			this.prgMCStatus.ForeColor = System.Drawing.SystemColors.Desktop;
-			this.prgMCStatus.Location = new System.Drawing.Point(10, 200);
-			this.prgMCStatus.Name = "prgMCStatus";
-			this.prgMCStatus.Size = new System.Drawing.Size(200, 20);
-			this.prgMCStatus.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-			this.prgMCStatus.TabIndex = 8;
-			// 
-			// lblMCStatusLabel
-			// 
-			this.lblMCStatusLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCStatusLabel.Location = new System.Drawing.Point(10, 180);
-			this.lblMCStatusLabel.Name = "lblMCStatusLabel";
-			this.lblMCStatusLabel.Size = new System.Drawing.Size(77, 20);
-			this.lblMCStatusLabel.TabIndex = 7;
-			this.lblMCStatusLabel.Text = "Status:";
-			// 
-			// lblMCStatus
-			// 
-			this.lblMCStatus.AutoSize = true;
-			this.lblMCStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCStatus.Location = new System.Drawing.Point(10, 230);
-			this.lblMCStatus.Name = "lblMCStatus";
-			this.lblMCStatus.Size = new System.Drawing.Size(0, 17);
-			this.lblMCStatus.TabIndex = 6;
-			// 
-			// lbMCUser
-			// 
-			this.lbMCUser.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lbMCUser.Location = new System.Drawing.Point(10, 10);
-			this.lbMCUser.Name = "lbMCUser";
-			this.lbMCUser.Size = new System.Drawing.Size(81, 20);
-			this.lbMCUser.TabIndex = 0;
-			this.lbMCUser.Text = "Username";
-			// 
-			// btnMCSignIn
-			// 
-			this.btnMCSignIn.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnMCSignIn.Location = new System.Drawing.Point(10, 120);
-			this.btnMCSignIn.Name = "btnMCSignIn";
-			this.btnMCSignIn.Size = new System.Drawing.Size(100, 30);
-			this.btnMCSignIn.TabIndex = 4;
-			this.btnMCSignIn.Text = "Sign in";
-			this.btnMCSignIn.UseVisualStyleBackColor = true;
-			this.btnMCSignIn.Click += new System.EventHandler(this.btnMCSignInClick);
-			// 
-			// txtMCUser
-			// 
-			this.txtMCUser.Location = new System.Drawing.Point(10, 30);
-			this.txtMCUser.MaxLength = 64;
-			this.txtMCUser.Name = "txtMCUser";
-			this.txtMCUser.Size = new System.Drawing.Size(100, 20);
-			this.txtMCUser.TabIndex = 1;
-			// 
-			// txtMCPassword
-			// 
-			this.txtMCPassword.Location = new System.Drawing.Point(10, 80);
-			this.txtMCPassword.MaxLength = 64;
-			this.txtMCPassword.Name = "txtMCPassword";
-			this.txtMCPassword.PasswordChar = '*';
-			this.txtMCPassword.Size = new System.Drawing.Size(100, 20);
-			this.txtMCPassword.TabIndex = 3;
-			// 
-			// lblMCPass
-			// 
-			this.lblMCPass.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCPass.Location = new System.Drawing.Point(10, 60);
-			this.lblMCPass.Name = "lblMCPass";
-			this.lblMCPass.Size = new System.Drawing.Size(77, 20);
-			this.lblMCPass.TabIndex = 2;
-			this.lblMCPass.Text = "Password";
-			// 
-			// tabMCServers
-			// 
-			this.tabMCServers.Controls.Add(this.cbMCHideInvalid);
-			this.tabMCServers.Controls.Add(this.txtMCHash);
-			this.tabMCServers.Controls.Add(this.lblMCHash);
-			this.tabMCServers.Controls.Add(this.btnMCConnect);
-			this.tabMCServers.Controls.Add(this.tblMCServers);
-			this.tabMCServers.Controls.Add(this.cbMCHideEmpty);
-			this.tabMCServers.Controls.Add(this.txtMCSearch);
-			this.tabMCServers.Controls.Add(this.lblMCSearch);
-			this.tabMCServers.Location = new System.Drawing.Point(4, 22);
-			this.tabMCServers.Name = "tabMCServers";
-			this.tabMCServers.Padding = new System.Windows.Forms.Padding(3);
-			this.tabMCServers.Size = new System.Drawing.Size(474, 418);
-			this.tabMCServers.TabIndex = 1;
-			this.tabMCServers.Text = "minecraft.net server";
-			this.tabMCServers.UseVisualStyleBackColor = true;
-			// 
-			// cbMCHideInvalid
-			// 
-			this.cbMCHideInvalid.AutoSize = true;
-			this.cbMCHideInvalid.Location = new System.Drawing.Point(230, 21);
-			this.cbMCHideInvalid.Name = "cbMCHideInvalid";
-			this.cbMCHideInvalid.Size = new System.Drawing.Size(118, 17);
-			this.cbMCHideInvalid.TabIndex = 10;
-			this.cbMCHideInvalid.Text = "Hide invalid servers";
-			this.cbMCHideInvalid.UseVisualStyleBackColor = true;
-			this.cbMCHideInvalid.CheckedChanged += new System.EventHandler(this.cbMCHideInvalidCheckedChanged);
-			// 
-			// txtMCHash
-			// 
-			this.txtMCHash.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.txtMCHash.BackColor = System.Drawing.SystemColors.Window;
-			this.txtMCHash.Location = new System.Drawing.Point(137, 389);
-			this.txtMCHash.Name = "txtMCHash";
-			this.txtMCHash.Size = new System.Drawing.Size(190, 20);
-			this.txtMCHash.TabIndex = 9;
-			this.txtMCHash.TextChanged += new System.EventHandler(this.txtMCHashTextChanged);
-			// 
-			// lblMCHash
-			// 
-			this.lblMCHash.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.lblMCHash.AutoSize = true;
-			this.lblMCHash.Location = new System.Drawing.Point(3, 392);
-			this.lblMCHash.Name = "lblMCHash";
-			this.lblMCHash.Size = new System.Drawing.Size(134, 13);
-			this.lblMCHash.TabIndex = 8;
-			this.lblMCHash.Text = "minecraft.net/classic/play/";
-			// 
-			// btnMCConnect
-			// 
-			this.btnMCConnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnMCConnect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.btnMCConnect.Location = new System.Drawing.Point(367, 382);
-			this.btnMCConnect.Name = "btnMCConnect";
-			this.btnMCConnect.Size = new System.Drawing.Size(100, 30);
-			this.btnMCConnect.TabIndex = 7;
-			this.btnMCConnect.Text = "Connect";
-			this.btnMCConnect.UseVisualStyleBackColor = true;
-			this.btnMCConnect.Click += new System.EventHandler(this.btnMCConnectClick);
-			// 
-			// tblMCServers
-			// 
-			this.tblMCServers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-									this.columnHeader1,
-									this.columnHeader2,
-									this.columnHeader3,
-									this.columnHeader4});
-			this.tblMCServers.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.tblMCServers.FullRowSelect = true;
-			this.tblMCServers.GridLines = true;
-			this.tblMCServers.HideSelection = false;
-			this.tblMCServers.Location = new System.Drawing.Point(0, 40);
-			this.tblMCServers.Name = "tblMCServers";
-			this.tblMCServers.Size = new System.Drawing.Size(474, 335);
-			this.tblMCServers.TabIndex = 6;
-			this.tblMCServers.UseCompatibleStateImageBehavior = false;
-			this.tblMCServers.View = System.Windows.Forms.View.Details;
-			this.tblMCServers.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.tblMCServersColumnClick);
-			this.tblMCServers.Click += new System.EventHandler(this.tblMCServersClick);
-			// 
-			// columnHeader1
-			// 
-			this.columnHeader1.Text = "Name";
-			this.columnHeader1.Width = 100;
-			// 
-			// columnHeader2
-			// 
-			this.columnHeader2.Text = "Players";
-			this.columnHeader2.Width = 90;
-			// 
-			// columnHeader3
-			// 
-			this.columnHeader3.Text = "Max players";
-			this.columnHeader3.Width = 90;
-			// 
-			// columnHeader4
-			// 
-			this.columnHeader4.Text = "Uptime";
-			this.columnHeader4.Width = 100;
-			// 
-			// cbMCHideEmpty
-			// 
-			this.cbMCHideEmpty.AutoSize = true;
-			this.cbMCHideEmpty.Location = new System.Drawing.Point(230, 3);
-			this.cbMCHideEmpty.Name = "cbMCHideEmpty";
-			this.cbMCHideEmpty.Size = new System.Drawing.Size(116, 17);
-			this.cbMCHideEmpty.TabIndex = 3;
-			this.cbMCHideEmpty.Text = "Hide empty servers";
-			this.cbMCHideEmpty.UseVisualStyleBackColor = true;
-			this.cbMCHideEmpty.CheckedChanged += new System.EventHandler(this.cbMCHideEmptyCheckedChanged);
-			// 
-			// txtMCSearch
-			// 
-			this.txtMCSearch.Location = new System.Drawing.Point(80, 10);
-			this.txtMCSearch.Name = "txtMCSearch";
-			this.txtMCSearch.Size = new System.Drawing.Size(100, 20);
-			this.txtMCSearch.TabIndex = 2;
-			this.txtMCSearch.TextChanged += new System.EventHandler(this.txtMCSearchTextChanged);
-			// 
-			// lblMCSearch
-			// 
-			this.lblMCSearch.AutoSize = true;
-			this.lblMCSearch.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCSearch.Location = new System.Drawing.Point(10, 10);
-			this.lblMCSearch.Name = "lblMCSearch";
-			this.lblMCSearch.Size = new System.Drawing.Size(64, 20);
-			this.lblMCSearch.TabIndex = 1;
-			this.lblMCSearch.Text = "Search:";
 			// 
 			// tabDC
 			// 
@@ -704,6 +450,24 @@ namespace Launcher
 			this.tabs.Size = new System.Drawing.Size(482, 466);
 			this.tabs.TabIndex = 0;
 			// 
+			// lblMCdead
+			// 
+			this.lblMCdead.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblMCdead.Location = new System.Drawing.Point(20, 20);
+			this.lblMCdead.Name = "lblMCdead";
+			this.lblMCdead.Size = new System.Drawing.Size(380, 23);
+			this.lblMCdead.TabIndex = 0;
+			this.lblMCdead.Text = "Classic has been removed from minecraft.net.";
+			// 
+			// lblMCdead2
+			// 
+			this.lblMCdead2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblMCdead2.Location = new System.Drawing.Point(20, 62);
+			this.lblMCdead2.Name = "lblMCdead2";
+			this.lblMCdead2.Size = new System.Drawing.Size(300, 41);
+			this.lblMCdead2.TabIndex = 1;
+			this.lblMCdead2.Text = "But don\'t despair! You can sign up for an account at classicube.net.";
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -720,16 +484,13 @@ namespace Launcher
 			this.tabCCServers.ResumeLayout(false);
 			this.tabCCServers.PerformLayout();
 			this.tabMinecraftNet.ResumeLayout(false);
-			this.tabMC.ResumeLayout(false);
-			this.tabMCSignIn.ResumeLayout(false);
-			this.tabMCSignIn.PerformLayout();
-			this.tabMCServers.ResumeLayout(false);
-			this.tabMCServers.PerformLayout();
 			this.tabDC.ResumeLayout(false);
 			this.tabDC.PerformLayout();
 			this.tabs.ResumeLayout(false);
 			this.ResumeLayout(false);
 		}
+		private System.Windows.Forms.Label lblMCdead;
+		private System.Windows.Forms.Label lblMCdead2;
 		private System.Windows.Forms.Label lblDChint;
 		private System.Windows.Forms.Label lblDCuser;
 		private System.Windows.Forms.Label lblDCaddress;
@@ -741,29 +502,6 @@ namespace Launcher
 		private System.Windows.Forms.TextBox txtDCport;
 		private System.Windows.Forms.TextBox txtDCuser;
 		private System.Windows.Forms.TextBox txtDCmppass;
-		private System.Windows.Forms.CheckBox cbMCHideInvalid;
-		private System.Windows.Forms.Label lblMCSearch;
-		private System.Windows.Forms.TextBox txtMCSearch;
-		private System.Windows.Forms.CheckBox cbMCHideEmpty;
-		private System.Windows.Forms.ColumnHeader columnHeader4;
-		private System.Windows.Forms.ColumnHeader columnHeader3;
-		private System.Windows.Forms.ColumnHeader columnHeader2;
-		private System.Windows.Forms.ColumnHeader columnHeader1;
-		private System.Windows.Forms.ListView tblMCServers;
-		private System.Windows.Forms.Button btnMCConnect;
-		private System.Windows.Forms.Label lblMCHash;
-		private System.Windows.Forms.TextBox txtMCHash;
-		private System.Windows.Forms.TabPage tabMCServers;
-		private System.Windows.Forms.Label lblMCPass;
-		private System.Windows.Forms.TextBox txtMCPassword;
-		private System.Windows.Forms.TextBox txtMCUser;
-		private System.Windows.Forms.Button btnMCSignIn;
-		private System.Windows.Forms.Label lbMCUser;
-		private System.Windows.Forms.Label lblMCStatus;
-		private System.Windows.Forms.Label lblMCStatusLabel;
-		private System.Windows.Forms.ProgressBar prgMCStatus;
-		private System.Windows.Forms.TabPage tabMCSignIn;
-		private System.Windows.Forms.TabControl tabMC;
 		private System.Windows.Forms.TextBox txtCCHash;
 		private System.Windows.Forms.Label lblCCPlayUrl;
 		private System.Windows.Forms.Button btnCCConnect;

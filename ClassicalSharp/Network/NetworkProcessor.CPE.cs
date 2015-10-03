@@ -289,7 +289,11 @@ namespace ClassicalSharp {
 			
 			info.Name[block] = reader.ReadAsciiString();
 			info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
-			// TODO: Liquid collide type not properly supported.
+			if( info.CollideType[block] != BlockCollideType.Solid ) {
+				info.IsTransparent[block] = true;
+				info.IsOpaque[block] = false;
+			}
+			
 			info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
 			info.SetTop( reader.ReadUInt8(), (Block)block );
 			info.SetSide( reader.ReadUInt8(), (Block)block );
@@ -298,21 +302,30 @@ namespace ClassicalSharp {
 			reader.ReadUInt8(); // walk sound, but we ignore this.
 			info.EmitsLight[block] = reader.ReadUInt8() != 0;
 			
-			
 			byte shape = reader.ReadUInt8();
-			if( shape == 1 ) info.Height[block] = 1;
-			else if( shape == 2 ) info.Height[block] = 0.5f;
-			// TODO: upside down slab not properly supported
-			else if( shape == 3 ) info.Height[block] = 0.5f;
-			else if( shape == 4 ) info.IsSprite[block] = true;
+			if( shape == 2 ) {
+				info.Height[block] = 0.5f;
+			} else if( shape == 3 ) { // TODO: upside down slab not properly supported
+				info.Height[block] = 0.5f;
+			} else if( shape == 4 ) {
+				info.IsSprite[block] = true;
+			}
+			if( info.IsOpaque[block] )
+				info.IsOpaque[block] = shape == 0;
+			if( shape != 1 )
+				info.IsTransparent[block] = true;
 			
 			byte blockDraw = reader.ReadUInt8();
-			if( blockDraw == 0 ) info.IsOpaque[block] = true;
-			else if( blockDraw == 1 ) info.IsTransparent[block] = true;
-			else if( blockDraw == 2 ) info.IsTransparent[block] = true; // TODO: hide neighbours
-			else if( blockDraw == 3 ) info.IsTranslucent[block] = true;
-			
-			Console.WriteLine( block + " : " + shape + "," + blockDraw );
+			if( blockDraw == 1 ) {
+				info.IsTransparent[block] = true;
+			} else if( blockDraw == 2 ) {
+				info.IsTransparent[block] = true;
+				info.CullWithNeighbours[block] = false;
+			} else if( blockDraw == 3 ) {
+				info.IsTranslucent[block] = true;
+			}
+			if( info.IsOpaque[block] )
+				info.IsOpaque[block] = blockDraw == 0;
 			
 			byte fogDensity = reader.ReadUInt8();
 			info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
