@@ -40,10 +40,7 @@ namespace ClassicalSharp {
 		CpeExtAddEntity2 = 33,
 		CpePlayerClick = 34,
 		CpeDefineBlock = 35,
-		CpeDefineLiquid = 36,
-		CpeRemoveBlockDefinition = 37,
-		
-		Max,
+		CpeRemoveBlockDefinition = 36,
 	}
 	
 	public enum CpeMessage {

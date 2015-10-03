@@ -440,7 +440,6 @@ namespace ClassicalSharp {
 		int maxHandledPacket;
 		
 		void SetupHandlers() {
-			maxHandledPacket = (int)PacketId.Max;
 			handlers = new Action[] { HandleHandshake, HandlePing, HandleLevelInit,
 				HandleLevelDataChunk, HandleLevelFinalise, null, HandleSetBlock,
 				HandleAddEntity, HandleEntityTeleport, HandleRelPosAndOrientationUpdate,
@@ -453,9 +452,9 @@ namespace ClassicalSharp {
 				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
 				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,
 				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2, 
-				null, HandleCpeDefineBlockOrLiquid, HandleCpeDefineBlockOrLiquid, 
-				HandleCpeRemoveBlockDefinition
+				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition,
 			};
+			maxHandledPacket = handlers.Length;
 		}
 	}
 }
