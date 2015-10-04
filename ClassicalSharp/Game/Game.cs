@@ -216,9 +216,9 @@ namespace ClassicalSharp {
 				EnvRenderer.Render( e.Time );
 				MapRenderer.Render( e.Time );
 				if( SelectedPos.Valid )
-					Picking.Render( e.Time, SelectedPos );
-				WeatherRenderer.Render( e.Time );
+					Picking.Render( e.Time, SelectedPos );			
 				SelectionManager.Render( e.Time );
+				WeatherRenderer.Render( e.Time );
 				bool left = IsMousePressed( MouseButton.Left );
 				bool right = IsMousePressed( MouseButton.Right );
 				bool middle = IsMousePressed( MouseButton.Middle );

@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateState( TerrainAtlas2D atlas2D ) {
-			int maxVerSize = Math.Min( 2048, graphics.MaxTextureDimensions );
+			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
 			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.ElementsPerRow;
 			int elemSize = atlas2D.elementSize;
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		}
 		
 		public int CalcMaxUsedRow( TerrainAtlas2D atlas2D, BlockInfo info ) {
-			int maxVerSize = Math.Min( 2048, graphics.MaxTextureDimensions );
+			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
 			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;	
 			Utils.LogDebug( "Used atlases: " + Utils.CeilDiv( totalElements, verElements ) );

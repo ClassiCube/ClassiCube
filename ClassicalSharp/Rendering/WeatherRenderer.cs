@@ -34,6 +34,7 @@ namespace ClassicalSharp {
 			
 			int index = 0;
 			graphics.AlphaBlending = true;
+			graphics.DepthWrite = false;
 			FastColour col = FastColour.White;
 			for( int dx = -4; dx <= 4; dx++ ) {
 				for( int dz = -4; dz <= 4; dz++ ) {
@@ -49,6 +50,7 @@ namespace ClassicalSharp {
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
+			graphics.DepthWrite = true;
 		}
 		
 		float AlphaAt( float x ) {
@@ -57,7 +59,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
-			float v1 = vOffset + ( z & 0x01 ) * 0.5f - ( x & 0x0F ) * 0.0625f;
+			float v1 = vOffset + (z & 0x01) * 0.5f - (x & 0x0F) * 0.0625f;
 			float v2 = height / 6f + v1;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
