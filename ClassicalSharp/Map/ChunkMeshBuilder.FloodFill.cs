@@ -5,88 +5,85 @@ namespace ClassicalSharp {
 	
 	public partial class ChunkMeshBuilder {
 
-		unsafe void FloodFill( byte* chunkPtr, int startIndex ) {
-			int* stack = stackalloc int[chunkSize3];
-			ushort* didFlags = stackalloc ushort[chunkSize2];
-			OpenTK.MemUtils.memset( (IntPtr)didFlags, 0x00, 0, chunkSize2 * 2 );
+		unsafe int ComputeOcclusion() {
+			int* didFlags = stackalloc int[chunkSize2];
+			OpenTK.MemUtils.memset( (IntPtr)didFlags, 0x00, 0, chunkSize2 * sizeof( int ) );
+			int* stack = stackalloc int[chunkSize3 * 4];
+			
+			int i = 0;
+			bool solidX = true, solidY = true, solidZ = true;
+			for( int y = 0; y < 16; y++ ) {
+				for( int z = 0; z < 16; z++ ) {
+					int flagIndex = (y << 4) | z;
+					int chunkIndex = (y + 1) * extChunkSize2 + (z + 1) * extChunkSize + (0 + 1);
+					for( int x = 0; x < 16; x++ ) {
+						byte block = chunk[chunkIndex];
+						if( info.IsOpaque[block] ) {
+							didFlags[flagIndex] |= (1 << x);
+						} else {
+							FloodFill( didFlags, stack, i, ref solidX, ref solidY, ref solidZ );
+						}
+						
+						i++;
+						chunkIndex++;
+					}
+				}
+			}
+			return (solidX ? 0x1 : 0) | (solidZ ? 0x2 : 0) | (solidY ? 0x4 : 0);
+		}
+		
+		unsafe void FloodFill( int* didFlags, int* stack, int startIndex,
+		                      ref bool solidX, ref bool solidY, ref bool solidZ ) {
 			int index = 0;
 			stack[index++] = startIndex;
+			bool tX0 = false, tX1 = false, tY0 = false, 
+			tY1 = false, tZ0 = false, tZ1 = false;
 			
 			while( index > 0 ) {
-				int bIndex = stack[index--];
+				int bIndex = stack[--index];
 				int x = (bIndex & 0x0F);
 				int z = ((bIndex >> 4) & 0x0F );
 				int y = ((bIndex >> 8) & 0x0F);
+				int flagIndex = (y << 4) | z;
+				didFlags[flagIndex] |= (1 << x);
 				
 				int chunkIndex = (y + 1) * extChunkSize2 + (z + 1) * extChunkSize + (x + 1);
-				byte block = chunkPtr[chunkIndex];
+				byte block = chunk[chunkIndex];
 				if( !info.IsOpaque[block] ) {
-					if( x < 15 ) stack[index++] = (y << 8) | (z << 4) | (x + 1);
-					if( x > 0 ) stack[index++] =  (y << 8) | (z << 4) | (x - 1);
-					if( z < 15 ) stack[index++] = (y << 8) | ((z + 1) << 4) | x;
-					if( z > 0 ) stack[index++] =  (y << 8) | ((z - 1) << 4) | x;
-					if( y < 15 ) stack[index++] = ((y + 1) << 8) | (z << 4) | x;
-					if( y > 0 ) stack[index++] =  ((y - 1) << 8) | (z << 4) | x;
+					if( x == 0 )
+						tX0 = true;
+					else if( (didFlags[flagIndex] & (1 << (x - 1))) == 0 )
+						stack[index++] = (y << 8) | (z << 4) | (x - 1);
+					
+					if( x == 15 )
+						tX1 = true;
+					else if( (didFlags[flagIndex] & (1 << (x + 1))) == 0 )
+						stack[index++] = (y << 8) | (z << 4) | (x + 1);
+					
+					if( z == 0 )
+						tZ0 = true;
+					else if( (didFlags[flagIndex - 1] & (1 << x)) == 0 )
+						stack[index++] = (y << 8) | ((z - 1) << 4) | x;
+					
+					if( z == 15 )
+						tZ1 = true;
+					else if( (didFlags[flagIndex + 1] & (1 << x)) == 0 )
+						stack[index++] = (y << 8) | ((z + 1) << 4) | x;
+					
+					if( y == 0 ) 
+						tY0 = true;
+					else if( (didFlags[flagIndex - 16] & (1 << x)) == 0 )
+						stack[index++] = ((y - 1) << 8) | (z << 4) | x;
+					
+					if( y == 15 ) 
+						tY1 = true;
+					else if( (didFlags[flagIndex + 16] & (1 << x)) == 0 )
+						stack[index++] = ((y + 1) << 8) | (z << 4) | x;
 				}
 			}
+			if( tX0 && tX1 ) solidX = false;
+			if( tY0 && tY1 ) solidY = false;
+			if( tZ0 && tZ1 ) solidZ = false;
 		}
-		
-		// TODO: Move to maprenderer
-		/*void SimpleOcclusionCulling() {
-			Vector3 p = game.LocalPlayer.EyePosition;
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo chunk = chunks[i];
-				chunk.Visible = true;
-				int cx = chunk.CentreX >> 4;
-				int cy = chunk.CentreY >> 4;
-				int cz = chunk.CentreZ >> 4;
-				
-				int x1 = chunk.CentreX - 8, x2 = chunk.CentreX + 8;
-				int y1 = chunk.CentreY - 8, y2 = chunk.CentreY + 8;
-				int z1 = chunk.CentreZ - 8, z2 = chunk.CentreZ + 8;
-				float minDist = float.PositiveInfinity;
-				int xOffset = -1, yOffset = 0, zOffset = 0;
-				
-				// TODO: two axes with same distance
-				minDist = DistToRecSquared( p, x1, y1, z1, x1, y2, z2 ); // left
-				float rightDist = DistToRecSquared( p, x2, y1, z1, x2, y2, z2 );
-				if( rightDist < minDist ) {
-					minDist = rightDist; xOffset = 1;
-				}
-				
-				float frontDist = DistToRecSquared( p, x1, y1, z1, x2, y2, z1 );
-				if( frontDist < minDist ) {
-					minDist = frontDist; xOffset = 0; zOffset = -1;
-				}
-				
-				float backDist = DistToRecSquared( p, x1, y1, z2, x2, y2, z2 );
-				if( backDist < minDist ) {
-					minDist = backDist; xOffset = 0; zOffset = 1;
-				}
-				
-				float bottomDist = DistToRecSquared( p, x1, y1, z1, x2, y1, z2 );
-				if( bottomDist < minDist ) {
-					minDist = bottomDist; xOffset = 0; zOffset = 0; yOffset = -1;
-				}
-				
-				float topDist = DistToRecSquared( p, x1, y2, z1, x2, y2, z2 );
-				if( topDist < minDist ) {
-					minDist = topDist; xOffset = 0; zOffset = 0; yOffset = -1;
-				}
-				
-				if( (cx + xOffset) >= 0 && (cy + yOffset) >= 0 && (cz + zOffset) >= 0 &&
-				   (cx + xOffset) < width && (cy + yOffset) < height && (cz + zOffset) < length ) {
-					chunk.Visible = false;
-				}
-			}
-			chunks[0].Visible = true;
-		}
-		
-		static float DistToRecSquared( Vector3 p, int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			float dx = Math.Max( x1 - p.X, Math.Max( 0, p.X - x2 ) );
-			float dy = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y2 ) );
-			float dz = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z2 ) );
-			return dx * dx + dy * dy + dz * dz;
-		}*/
 	}
 }

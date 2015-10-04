@@ -1,4 +1,0 @@
-* Texture animations.
-* Test that Mojang Accounts work properly.
-* Fix issues with framerate limiting not working properly on same cards.
-  (will require 'sleeping'of main thread)

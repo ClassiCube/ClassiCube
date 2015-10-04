@@ -14,6 +14,7 @@ namespace ClassicalSharp {
 			public bool Visible = true;
 			public bool Empty = false;
 			public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
+			public byte OcclusionFlags;
 			
 			public ChunkPartInfo[] NormalParts;
 			public ChunkPartInfo[] TranslucentParts;
@@ -130,6 +131,7 @@ namespace ClassicalSharp {
 		
 		void DeleteChunk( ChunkInfo info ) {
 			info.Empty = false;
+			info.OcclusionFlags = 0;
 			DeleteData( ref info.NormalParts );
 			DeleteData( ref info.TranslucentParts );
 		}
@@ -272,10 +274,10 @@ namespace ClassicalSharp {
 					if( inRange && chunksUpdatedThisFrame < chunksTarget ) {
 						game.ChunkUpdates++;
 						builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-						                    ref info.NormalParts, ref info.TranslucentParts );
-						if( info.NormalParts == null && info.TranslucentParts == null ) {
+						                    ref info.NormalParts, ref info.TranslucentParts, ref info.OcclusionFlags );
+						
+						if( info.NormalParts == null && info.TranslucentParts == null )
 							info.Empty = true;
-						}
 						chunksUpdatedThisFrame++;
 					}
 				}
@@ -328,6 +330,69 @@ namespace ClassicalSharp {
 			api.AlphaTest = false;
 			api.AlphaBlending = false;
 			api.Texturing = false;
+		}
+		
+		void SimpleOcclusionCulling() { // TODO: broken
+			Vector3 p = game.LocalPlayer.EyePosition;
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo chunk = chunks[i];
+				chunk.Visible = true;
+				int cx = chunk.CentreX >> 4;
+				int cy = chunk.CentreY >> 4;
+				int cz = chunk.CentreZ >> 4;
+				
+				int x1 = chunk.CentreX - 8, x2 = chunk.CentreX + 8;
+				int y1 = chunk.CentreY - 8, y2 = chunk.CentreY + 8;
+				int z1 = chunk.CentreZ - 8, z2 = chunk.CentreZ + 8;
+				float minDist = float.PositiveInfinity;
+				int xOffset = -1, yOffset = 0, zOffset = 0;
+				int flags = 0x1;
+				
+				// TODO: two axes with same distance
+				minDist = DistToRecSquared( p, x1, y1, z1, x1, y2, z2 ); // left
+				float rightDist = DistToRecSquared( p, x2, y1, z1, x2, y2, z2 );
+				if( rightDist < minDist ) {
+					minDist = rightDist; xOffset = 1;
+				}
+				
+				float frontDist = DistToRecSquared( p, x1, y1, z1, x2, y2, z1 );
+				if( frontDist < minDist ) {
+					minDist = frontDist; xOffset = 0; zOffset = -1; flags = 2;
+				}
+				
+				float backDist = DistToRecSquared( p, x1, y1, z2, x2, y2, z2 );
+				if( backDist < minDist ) {
+					minDist = backDist; xOffset = 0; zOffset = 1; flags = 2;
+				}
+				
+				float bottomDist = DistToRecSquared( p, x1, y1, z1, x2, y1, z2 );
+				if( bottomDist < minDist ) {
+					minDist = bottomDist; xOffset = 0; zOffset = 0; yOffset = -1; flags = 4;
+				}
+				
+				float topDist = DistToRecSquared( p, x1, y2, z1, x2, y2, z2 );
+				if( topDist < minDist ) {
+					minDist = topDist; xOffset = 0; zOffset = 0; yOffset = -1; flags = 4;
+				}
+				
+				if( (cx + xOffset) >= 0 && (cy + yOffset) >= 0 && (cz + zOffset) >= 0 &&
+				   (cx + xOffset) < chunksX && (cy + yOffset) < chunksY && (cz + zOffset) < chunksZ ) {
+					cx += xOffset; cy += yOffset; cz += zOffset;
+					ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+					if( (neighbour.OcclusionFlags & flags) != 0 ) {
+						Console.WriteLine( "HIDE" );
+						chunks[i].Visible = false;
+					}
+				}
+			}
+			chunks[0].Visible = true;
+		}
+		
+		static float DistToRecSquared( Vector3 p, int x1, int y1, int z1, int x2, int y2, int z2 ) {
+			float dx = Math.Max( x1 - p.X, Math.Max( 0, p.X - x2 ) );
+			float dy = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y2 ) );
+			float dz = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z2 ) );
+			return dx * dx + dy * dy + dz * dz;
 		}
 	}
 }
