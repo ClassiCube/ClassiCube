@@ -129,12 +129,6 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
-		public static Vector3 RotateX( Vector3 v, float angle ) {
-			float cosA = (float)Math.Cos( angle );
-			float sinA = (float)Math.Sin( angle );
-			return new Vector3( v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z );
-		}
-		
 		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
 		}
@@ -226,9 +220,11 @@ namespace ClassicalSharp {
 		}
 		
 		internal static int CountIndices( int axis1Len, int axis2Len, int axisSize ) {
-			int cellsAxis1 = axis1Len / axisSize + ( axis1Len % axisSize != 0 ? 1 : 0 );
-			int cellsAxis2 = axis2Len / axisSize + ( axis2Len % axisSize != 0 ? 1 : 0 );
-			return cellsAxis1 * cellsAxis2 * 6;
+			return CeilDiv( axis1Len, axisSize ) * CeilDiv( axis2Len, axisSize ) * 6;
+		}
+		
+		public static int CeilDiv( int a, int b ) {
+			return a / b + (a % b != 0 ? 1 : 0);
 		}
 		
 		public static float InterpAngle( float leftAngle, float rightAngle, float t ) {

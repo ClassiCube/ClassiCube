@@ -162,9 +162,9 @@ namespace ClassicalSharp {
 				}
 			}
 			
-			rows = blocksCount / blocksPerRow + ( blocksCount % blocksPerRow != 0 ? 1 : 0 );
-			startX = game.Width / 2 - ( blockSize * blocksPerRow ) / 2;
-			startY = game.Height / 2 - ( rows * blockSize ) / 2;
+			rows = Utils.CeilDiv( blocksCount, blocksPerRow );
+			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
+			startY = game.Height / 2 - (rows * blockSize) / 2;
 			int x = startX, y = startY;
 			blocksTable = new BlockDrawInfo[blocksCount];
 			

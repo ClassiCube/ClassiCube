@@ -4,7 +4,7 @@ namespace ClassicalSharp {
 	
 	public partial class BlockInfo {
 		
-		int[] textures = new int[BlocksCount * TileSide.Sides];
+		internal int[] textures = new int[BlocksCount * TileSide.Sides];
 
 		void SetupTextures() {
 			// Row 1

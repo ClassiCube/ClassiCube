@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		
 		Game game;
 		IGraphicsApi api;
-		int _1Dcount = 1;
+		int _1Dcount = 1, _1DUsed = 1;
 		ChunkMeshBuilder builder;
 		BlockInfo info;
 		
@@ -39,6 +39,8 @@ namespace ClassicalSharp {
 		public MapRenderer( Game game ) {
 			this.game = game;
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
+			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			
 			builder = new ChunkMeshBuilder( game );
 			api = game.Graphics;
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
@@ -48,6 +50,7 @@ namespace ClassicalSharp {
 			game.Events.OnNewMap += OnNewMap;
 			game.Events.OnNewMapLoaded += OnNewMapLoaded;
 			game.Events.EnvVariableChanged += EnvVariableChanged;
+			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
 		}
 		
 		public void Dispose() {
@@ -58,6 +61,7 @@ namespace ClassicalSharp {
 			game.Events.OnNewMap -= OnNewMap;
 			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
 			game.Events.EnvVariableChanged -= EnvVariableChanged;
+			game.Events.BlockDefinitionChanged -= BlockDefinitionChanged;
 			builder.Dispose();
 		}
 		
@@ -85,6 +89,11 @@ namespace ClassicalSharp {
 				Refresh();
 			}
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
+			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+		}
+		
+		void BlockDefinitionChanged( object sender, EventArgs e ) {
+			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -148,7 +157,7 @@ namespace ClassicalSharp {
 		}
 		
 		static int NextMultipleOf16( int value ) {
-			return ( value + 0x0F ) & ~0x0F;
+			return (value + 0x0F) & ~0x0F;
 		}
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
@@ -158,7 +167,7 @@ namespace ClassicalSharp {
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
 			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;			
+			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
 			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
 			
 			if( bX == 0 && cx > 0 && NeedsUpdate( x, y, z, x - 1, y, z ) )
@@ -204,6 +213,7 @@ namespace ClassicalSharp {
 			if( chunks == null ) return;
 			UpdateSortOrder();
 			UpdateChunks( deltaTime );
+			//SimpleOcclusionCulling();
 			
 			RenderNormal();
 			game.MapEnvRenderer.Render( deltaTime );
@@ -245,10 +255,11 @@ namespace ClassicalSharp {
 		}
 		
 		int chunksTarget = 4;
+		const double targetTime = (1.0 / 30) + 0.01;
 		void UpdateChunks( double deltaTime ) {
 			int chunksUpdatedThisFrame = 0;
 			int adjViewDistSqr = ( game.ViewDistance + 14 ) * ( game.ViewDistance + 14 );
-			chunksTarget += deltaTime < 0.034 ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
+			chunksTarget += deltaTime < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
 			
 			for( int i = 0; i < chunks.Length; i++ ) {
@@ -281,7 +292,7 @@ namespace ClassicalSharp {
 			api.Texturing = true;
 			api.AlphaTest = true;
 			
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
 				api.BindTexture( texIds[batch] );
 				RenderNormalBatch( batch );
 			}
@@ -299,7 +310,7 @@ namespace ClassicalSharp {
 			api.Texturing = false;
 			api.AlphaBlending = false;
 			api.ColourWrite = false;
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
 				RenderTranslucentBatchDepthPass( batch );
 			}
 			
@@ -309,7 +320,7 @@ namespace ClassicalSharp {
 			api.ColourWrite = true;
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
-			for( int batch = 0; batch < _1Dcount; batch++ ) {
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}

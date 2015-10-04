@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 		public float invElementSize;
 		public int[] TexIds;
 		IGraphicsApi graphics;
-		public const int UsedRows1D = 16; // TODO: This should not be constant.
 		
 		public TerrainAtlas1D( IGraphicsApi graphics ) {
 			this.graphics = graphics;
@@ -33,12 +32,12 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateState( TerrainAtlas2D atlas2D ) {
-			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
+			int maxVerSize = Math.Min( 2048, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
-			int totalElements = UsedRows1D * TerrainAtlas2D.ElementsPerRow;
+			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.ElementsPerRow;
 			int elemSize = atlas2D.elementSize;
 			
-			int atlasesCount = totalElements / verElements + ( totalElements % verElements != 0 ? 1 : 0 );
+			int atlasesCount = Utils.CeilDiv( totalElements, verElements );
 			usedElementsPerAtlas1D = Math.Min( verElements, totalElements );
 			int atlas1DHeight = Utils.NextPowerOf2( usedElementsPerAtlas1D * atlas2D.elementSize );
 			
@@ -63,6 +62,21 @@ namespace ClassicalSharp {
 			}
 			elementsPerBitmap = atlas1DHeight / atlas2D.elementSize;
 			invElementSize = 1f / elementsPerBitmap;
+		}
+		
+		public int CalcMaxUsedRow( TerrainAtlas2D atlas2D, BlockInfo info ) {
+			int maxVerSize = Math.Min( 2048, graphics.MaxTextureDimensions );
+			int verElements = maxVerSize / atlas2D.elementSize;
+			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;	
+			Utils.LogDebug( "Used atlases: " + Utils.CeilDiv( totalElements, verElements ) );
+			return Utils.CeilDiv( totalElements, verElements );		
+		}
+		
+		int GetMaxUsedRow( int[] textures ) {
+			int maxElem = 0;
+			for( int i = 0; i < textures.Length; i++ )
+				maxElem = Math.Max( maxElem, textures[i] );
+			return (maxElem >> 4) + 1;
 		}
 		
 		public void Dispose() {

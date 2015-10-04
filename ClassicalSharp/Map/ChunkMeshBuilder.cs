@@ -159,12 +159,12 @@ namespace ClassicalSharp {
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
 					
-					int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 + 1 );
+					int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1);
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						chunkIndex++;
 						byte tile = chunk[chunkIndex];
 						if( tile == 0 ) continue;
-						int countIndex = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
+						int countIndex = ((yy << 8) + (zz << 4) + xx) * TileSide.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.

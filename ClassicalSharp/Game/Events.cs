@@ -58,9 +58,15 @@ namespace ClassicalSharp {
 		public event EventHandler BlockPermissionsChanged;
 		internal void RaiseBlockPermissionsChanged() { Raise( BlockPermissionsChanged ); }
 		
+		/// <summary> Raised when the a block definition is changed. </summary>
+		public event EventHandler BlockDefinitionChanged;
+		internal void RaiseBlockDefinitionChanged() { Raise( BlockDefinitionChanged ); }
+		
 		/// <summary> Raised when the server or a client-side command sends a message. </summary>
 		public event EventHandler<ChatEventArgs> ChatReceived;	
-		internal void RaiseChatReceived( string text, CpeMessage type ) { chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs );  }
+		internal void RaiseChatReceived( string text, CpeMessage type ) { chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs ); }
+		
+		
 	
 		// Cache event instances so we don't create needless new objects.
 		IdEventArgs idArgs = new IdEventArgs();

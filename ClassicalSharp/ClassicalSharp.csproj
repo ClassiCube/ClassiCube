@@ -125,6 +125,7 @@
     <Compile Include="Ionic.Zlib\InfTree.cs" />
     <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\ChunkMeshBuilder.cs" />
+    <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\IMapFile.cs" />
     <Compile Include="Map\Map.cs" />
