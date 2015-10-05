@@ -80,6 +80,7 @@ namespace ClassicalSharp {
 				UsingPlayerClick = true;
 			} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
 				usingTexturePack = true;
+				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 			}
 			cpeServerExtensionsCount--;
 			
@@ -235,12 +236,13 @@ namespace ClassicalSharp {
 		
 		void HandleCpeEnvSetMapApperance() {
 			string url = reader.ReadAsciiString();
-			byte sideBlock = reader.ReadUInt8();
-			byte edgeBlock = reader.ReadUInt8();
-			short waterLevel = reader.ReadInt16();
-			game.Map.SetWaterLevel( waterLevel );
-			game.Map.SetEdgeBlock( (Block)edgeBlock );
-			game.Map.SetSidesBlock( (Block)sideBlock );
+			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
+			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
+			game.Map.SetWaterLevel( reader.ReadInt16() );
+			if( usingTexturePack ) {
+				game.Map.SetCloudsLevel( reader.ReadInt16() );
+				short maxViewDist = reader.ReadInt16(); // TODO: what to do with this?
+			}
 			
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();

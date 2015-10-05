@@ -74,10 +74,10 @@ namespace ClassicalSharp {
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		}
 		
-		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Var == EnvVariable.SunlightColour || e.Var == EnvVariable.ShadowlightColour ) {
+		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
+			if( e.Var == EnvVar.SunlightColour || e.Var == EnvVar.ShadowlightColour ) {
 				Refresh();
-			} else if( e.Var == EnvVariable.WaterLevel ) {
+			} else if( e.Var == EnvVar.WaterLevel ) {
 				builder.clipLevel = Math.Max( 0, game.Map.GroundHeight );
 				Refresh();
 			}

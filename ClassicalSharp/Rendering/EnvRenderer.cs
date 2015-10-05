@@ -30,20 +30,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public abstract void Render( double deltaTime );
 		
-		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Var == EnvVariable.SkyColour ) {
-				SkyColourChanged();
-			} else if( e.Var == EnvVariable.FogColour ) {
-				FogColourChanged();
-			} else if( e.Var == EnvVariable.CloudsColour ) {
-				CloudsColourChanged();
-			}
-		}
-		
-		protected abstract void SkyColourChanged();
-		
-		protected abstract void FogColourChanged();
-		
-		protected abstract void CloudsColourChanged();
+		protected abstract void EnvVariableChanged( object sender, EnvVarEventArgs e );
 	}
 }

@@ -33,11 +33,8 @@ namespace ClassicalSharp {
 				     		env.CloudsSpeed = Single.Parse( v ); } ),
 				
 				Make( -140, 50, "Clouds offset", Docking.Centre, OnWidgetClick,
-				     g => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	return env == null ? "(not active)" : env.CloudsOffset.ToString(); },
-				     (g, v) => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	if( env != null ) 
-				     		env.SetCloudsOffset( Int32.Parse( v ) ); } ),
+				     g => (g.Map.CloudHeight - g.Map.Height).ToString(),
+				     (g, v) => g.Map.SetCloudsLevel( g.Map.Height + Int32.Parse( v ) ) ),
 				
 				Make( 140, -150, "Sunlight colour", Docking.Centre, OnWidgetClick,
 				     g => g.Map.Sunlight.ToRGBHexString(),

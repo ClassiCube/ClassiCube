@@ -43,8 +43,8 @@ namespace ClassicalSharp {
 		internal void RaiseTerrainAtlasChanged() { Raise( TerrainAtlasChanged );  }
 		
 		/// <summary> Raised when an environment variable is changed by the user, CPE, or WoM config. </summary>
-		public event EventHandler<EnvVariableEventArgs> EnvVariableChanged;
-		internal void RaiseEnvVariableChanged( EnvVariable envVar ) { envArgs.Var = envVar; Raise( EnvVariableChanged, envArgs ); }
+		public event EventHandler<EnvVarEventArgs> EnvVariableChanged;
+		internal void RaiseEnvVariableChanged( EnvVar envVar ) { envArgs.Var = envVar; Raise( EnvVariableChanged, envArgs ); }
 		
 		/// <summary> Raised when the user changed their view/fog distance. </summary>
 		public event EventHandler ViewDistanceChanged;
@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 		// Cache event instances so we don't create needless new objects.
 		IdEventArgs idArgs = new IdEventArgs();
 		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs();	
-		EnvVariableEventArgs envArgs = new EnvVariableEventArgs();
+		EnvVarEventArgs envArgs = new EnvVarEventArgs();
 		ChatEventArgs chatArgs = new ChatEventArgs();
 				
 		void Raise( EventHandler handler ) {
@@ -104,15 +104,16 @@ namespace ClassicalSharp {
 		public int Progress;
 	}
 	
-	public sealed class EnvVariableEventArgs : EventArgs {
+	public sealed class EnvVarEventArgs : EventArgs {
 		
-		public EnvVariable Var;
+		public EnvVar Var;
 	}
 	
-	public enum EnvVariable {
+	public enum EnvVar {
 		SidesBlock,
 		EdgeBlock,
 		WaterLevel,
+		CloudsLevel,
 		Weather,
 
 		SkyColour,

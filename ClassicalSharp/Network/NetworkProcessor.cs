@@ -73,14 +73,22 @@ namespace ClassicalSharp {
 		
 		void CheckForNewTerrainAtlas() {
 			DownloadedItem item;
-			game.AsyncDownloader.TryGetItem( "terrain", out item );
-			if( item != null && item.Data != null ) {
-				game.ChangeTerrainAtlas( (Bitmap)item.Data );
+			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
+				if( item.Data != null ) {
+					game.ChangeTerrainAtlas( (Bitmap)item.Data );
+				} else {
+					TexturePackExtractor extractor = new TexturePackExtractor();
+					extractor.Extract( game.defaultTexPack, game );
+				}
 			}
-			game.AsyncDownloader.TryGetItem( "texturePack", out item );
-			if( item != null && item.Data != null ) {
+			
+			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( (byte[])item.Data, game );
+				if( item.Data != null ) {			
+					extractor.Extract( (byte[])item.Data, game );
+				} else {
+					extractor.Extract( game.defaultTexPack, game );
+				}
 			}
 		}
 		
@@ -444,14 +452,14 @@ namespace ClassicalSharp {
 				HandleLevelDataChunk, HandleLevelFinalise, null, HandleSetBlock,
 				HandleAddEntity, HandleEntityTeleport, HandleRelPosAndOrientationUpdate,
 				HandleRelPositionUpdate, HandleOrientationUpdate, HandleRemoveEntity,
-				HandleMessage, HandleKick, HandleSetPermission,	
+				HandleMessage, HandleKick, HandleSetPermission,
 				
 				HandleCpeExtInfo, HandleCpeExtEntry, HandleCpeSetClickDistance,
 				HandleCpeCustomBlockSupportLevel, HandleCpeHoldThis, null,
 				HandleCpeExtAddPlayerName, HandleCpeExtAddEntity, HandleCpeExtRemovePlayerName,
 				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
 				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,
-				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2, 
+				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2,
 				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition,
 			};
 			maxHandledPacket = handlers.Length;

@@ -14,14 +14,7 @@ namespace ClassicalSharp.Renderers {
 		
 		int cloudsVb = -1, cloudsIndices, skyVb = -1, skyIndices;
 		public float CloudsSpeed = 1;		
-		public int CloudsOffset = 2;
 		bool legacy;
-		
-		public void SetCloudsOffset( int offset ) {
-			CloudsOffset = offset;
-			ResetClouds();
-			ResetSky();
-		}
 		
 		public void SetUseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
@@ -33,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
 			
 			Vector3 pos = game.LocalPlayer.EyePosition;
-			if( pos.Y < map.Height + CloudsOffset + 8 ) {
+			if( pos.Y < map.CloudHeight + 8 ) {
 				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 				graphics.BindVb( skyVb );
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyIndices, 0 );
@@ -42,16 +35,17 @@ namespace ClassicalSharp.Renderers {
 			ResetFog();
 		}
 		
-		protected override void CloudsColourChanged() {
-			ResetClouds();
-		}
-		
-		protected override void FogColourChanged() {
-			ResetFog();
-		}
-		
-		protected override void SkyColourChanged() {
-			ResetSky();
+		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
+			if( e.Var == EnvVar.SkyColour ) {
+				ResetSky();
+			} else if( e.Var == EnvVar.FogColour ) {
+				ResetFog();
+			} else if( e.Var == EnvVar.CloudsColour ) {
+				ResetClouds();
+			} else if( e.Var == EnvVar.CloudsLevel ) {
+				ResetSky();
+				ResetClouds();
+			}
 		}
 		
 		public override void OnNewMap( object sender, EventArgs e ) {
@@ -160,7 +154,7 @@ namespace ClassicalSharp.Renderers {
 			cloudsIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudsIndices / 6 * 4];
-			DrawCloudsY( x1, z1, x2, z2, map.Height + CloudsOffset, axisSize, map.CloudsCol, vertices );
+			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
 			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudsIndices / 6 * 4 );
 		}
 		
@@ -170,7 +164,7 @@ namespace ClassicalSharp.Renderers {
 			skyIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyIndices / 6 * 4];
-			DrawSkyY( x1, z1, x2, z2, map.Height + CloudsOffset + 8, axisSize, map.SkyCol, vertices );
+			DrawSkyY( x1, z1, x2, z2, map.CloudHeight + 8, axisSize, map.SkyCol, vertices );
 			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyIndices / 6 * 4 );
 		}
 		

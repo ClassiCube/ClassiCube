@@ -28,13 +28,10 @@ namespace ClassicalSharp.Renderers {
 			graphics.ClearColour( map.SkyCol );
 		}
 		
-		protected override void CloudsColourChanged() {
-		}
-		
-		protected override void FogColourChanged() {
-		}
-		
-		protected override void SkyColourChanged() {
+		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
+			if( e.Var == EnvVar.SkyColour ) {
+				graphics.ClearColour( map.SkyCol );
+			}
 		}
 	}
 }

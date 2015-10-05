@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	
 	/// <summary> Structure that can be used for quick manipulations of A/R/G/B colours. </summary>
 	/// <remarks> This structure is **not** suitable for interop with OpenGL or Direct3D. </remarks>
-	public struct FastColour {
+	public struct FastColour : IEquatable<FastColour> {
 		
 		public byte A, R, G, B;
 		

@@ -87,14 +87,14 @@ namespace ClassicalSharp {
 			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
 		}
 		
-		void EnvVariableChanged( object sender, EnvVariableEventArgs e ) {
-			if( e.Var == EnvVariable.EdgeBlock ) {
+		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
+			if( e.Var == EnvVar.EdgeBlock ) {
 				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
-			} else if( e.Var == EnvVariable.SidesBlock ) {
+			} else if( e.Var == EnvVar.SidesBlock ) {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
-			} else if( e.Var == EnvVariable.WaterLevel ) {
+			} else if( e.Var == EnvVar.WaterLevel ) {
 				ResetSidesAndEdges( null, null );
-			} else if( e.Var == EnvVariable.SunlightColour ) {
+			} else if( e.Var == EnvVar.SunlightColour ) {
 				ResetSidesAndEdges( null, null );
 			}
 		}

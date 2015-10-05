@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
 		public Weather Weather = Weather.Sunny;
 		public Guid Uuid;
+		public int CloudHeight;
 		
 		public int GroundHeight {
 			get { return WaterHeight - 2; }
@@ -43,17 +44,18 @@ namespace ClassicalSharp {
 		
 		public void Reset() {
 			WaterHeight = -1;
-			SetShadowlight( DefaultShadowlight );
-			SetSunlight( DefaultSunlight );
+			CloudHeight = -1;
 			Width = Height = Length = 0;
+			Uuid = Guid.NewGuid();
 			EdgeBlock = Block.StillWater;
 			SidesBlock = Block.Bedrock;
+			
+			SetShadowlight( DefaultShadowlight );
+			SetSunlight( DefaultSunlight );
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
-			Uuid = Guid.NewGuid();
-			
 			game.Events.RaiseOnNewMap();
 		}
 		
@@ -64,7 +66,7 @@ namespace ClassicalSharp {
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.SidesBlock );
+			game.Events.RaiseEnvVariableChanged( EnvVar.SidesBlock );
 		}
 		
 		public void SetEdgeBlock( Block block ) {
@@ -74,51 +76,39 @@ namespace ClassicalSharp {
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.EdgeBlock );
+			game.Events.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
 		}
 		
-		public void SetWaterLevel( int level ) {
-			if( level == WaterHeight ) return;
-			WaterHeight = level;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.WaterLevel );
-		}
+		public void SetCloudsLevel( int level ) { Set( level, ref CloudHeight, EnvVar.CloudsLevel ); }
 		
-		public void SetWeather( Weather weather ) {
-			if( weather == Weather ) return;
-			Weather = weather;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.Weather );
-		}
+		public void SetWaterLevel( int level ) { Set( level, ref WaterHeight, EnvVar.WaterLevel ); }
 		
-		public void SetSkyColour( FastColour col ) {
-			if( col == SkyCol ) return;
-			SkyCol = col;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.SkyColour );
-		}
+		public void SetSkyColour( FastColour col ) { Set( col, ref SkyCol, EnvVar.SkyColour ); }
 		
-		public void SetFogColour( FastColour col ) {
-			if( col == FogCol ) return;
-			FogCol = col;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.FogColour );
-		}
+		public void SetFogColour( FastColour col ) { Set( col, ref FogCol, EnvVar.FogColour ); }
 		
-		public void SetCloudsColour( FastColour col ) {
-			if( col == CloudsCol ) return;
-			CloudsCol = col;
-			game.Events.RaiseEnvVariableChanged( EnvVariable.CloudsColour );
-		}
+		public void SetCloudsColour( FastColour col ) { Set( col, ref CloudsCol, EnvVar.CloudsColour ); }
 		
-		public void SetSunlight( FastColour col ) {
-			if( col == Sunlight ) return;
-			Sunlight = col;
+		public void SetSunlight( FastColour col ) { 
+			Set( col, ref Sunlight, EnvVar.SunlightColour );
 			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
-			game.Events.RaiseEnvVariableChanged( EnvVariable.SunlightColour );
 		}
 		
 		public void SetShadowlight( FastColour col ) {
-			if( col == Shadowlight ) return;
-			Shadowlight = col;
+			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
 			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
-			game.Events.RaiseEnvVariableChanged( EnvVariable.ShadowlightColour );
+		}
+		
+		public void SetWeather( Weather weather ) { 
+			if( weather == Weather ) return;
+			Weather = weather;
+			game.Events.RaiseEnvVariableChanged( EnvVar.Weather );
+		}
+		
+		void Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
+			if( value.Equals( target ) ) return;
+			target = value;
+			game.Events.RaiseEnvVariableChanged( var );
 		}
 		
 		public int GetLightHeight( int x, int z ) {
@@ -178,6 +168,7 @@ namespace ClassicalSharp {
 			if( WaterHeight == -1 ) WaterHeight = height / 2;
 			maxY = height - 1;
 			oneY = length * width;
+			if( CloudHeight == -1 ) CloudHeight = height + 2;
 			
 			heightmap = new short[width * length];
 			for( int i = 0; i < heightmap.Length; i++ ) {
