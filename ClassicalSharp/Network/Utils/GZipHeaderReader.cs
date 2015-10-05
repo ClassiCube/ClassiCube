@@ -14,6 +14,8 @@ namespace ClassicalSharp {
 			CompressionFlags,
 			OperatingSystem,
 			HeaderChecksum,
+			Filename,
+			Comment,
 			Done,
 		}
 		
@@ -22,7 +24,7 @@ namespace ClassicalSharp {
 		int flags;
 		int partsRead;
 		
-		public bool ReadHeader( Stream s ) {		
+		public bool ReadHeader( Stream s ) {
 			switch( state ) {
 					
 				case State.Header1:
@@ -43,7 +45,7 @@ namespace ClassicalSharp {
 				case State.Flags:
 					if( !ReadHeaderByte( s, out flags ) )
 						return false;
-					if( flags >= 0x04 ) // We don't support extra, comment, or original name fields
+					if( (flags & 0x04) != 0 )
 						throw new NotSupportedException( "Unsupported gzip flags: " + flags );
 					goto case State.LastModifiedTime;
 					
@@ -67,7 +69,29 @@ namespace ClassicalSharp {
 					int os;
 					if( !ReadHeaderByte( s, out os ) )
 						return false;
-					goto case State.HeaderChecksum;
+					goto case State.Filename;
+					
+				case State.Filename:
+					if( (flags & 0x08) != 0 ) {
+						for( ; ; ) {
+							int part = s.ReadByte();
+							if( part == -1 ) return false;
+							if( part == 0 ) break;
+						}
+					}
+					state = State.Comment;
+					goto case State.Comment;
+					
+				case State.Comment:
+					if( (flags & 0x10) != 0 ) {
+						for( ; ; ) {
+							int part = s.ReadByte();
+							if( part == -1 ) return false;
+							if( part == 0 ) break;
+						}
+					}
+					state = State.HeaderChecksum;
+					goto case State.HeaderChecksum;					
 					
 				case State.HeaderChecksum:
 					if( ( flags & 0x02 ) != 0 ) {
