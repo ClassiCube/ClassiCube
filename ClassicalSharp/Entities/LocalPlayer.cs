@@ -295,7 +295,8 @@ namespace ClassicalSharp {
 						if( block == 0 ) continue;
 						
 						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
-						if( info.CollideType[block] == BlockCollideType.SwimThrough )
+						if( block >= BlockInfo.CpeBlocksCount &&
+						   info.CollideType[block] == BlockCollideType.SwimThrough )
 							useLiquidGravity = true;
 					}
 				}
