@@ -376,16 +376,23 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void PrintApiSpecificInfo() {
 			Utils.Log( "--Using OpenGL--" );
 			Utils.Log( "Vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
-			Utils.Log( "Renderer: " + new String( (sbyte*)GL.GetString( StringName.Renderer ) ) );
-			Utils.Log( "Version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
+			string renderer = new String( (sbyte*)GL.GetString( StringName.Renderer ) );
+			Utils.Log( "Renderer: " + renderer );
+			Utils.Log( "GL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
+			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
+			
 			int depthBits = 0;
 			GL.GetIntegerv( GetPName.DepthBits, &depthBits );
 			Utils.Log( "Depth buffer bits: " + depthBits );
-			if( depthBits < 24 ) {
-				Utils.LogWarning( "Depth buffer is less than 24 bits, you may see some issues " +
-				                 "with disappearing and/or 'white' graphics." );
-				Utils.LogWarning( "If this bothers you, type \"/client rendertype legacy\" (without quotes) " +
-				                 "after you have loaded the first map." );
+			
+			if( renderer.Contains( "Intel" ) ) {
+				Utils.LogWarning( "Intel graphics cards are known to have issues with the OpenGL build." );
+				Utils.LogWarning( "VSync may not work, and you may see disappearing clouds and map edges." );
+				Utils.LogWarning( "" );
+				Utils.LogWarning( "If you use Windows, try downloading and using the " +
+				                 "Direct3D9 build as it doesn't have these problems." );
+				Utils.LogWarning( "Alternatively, the disappearing graphics can be partially " +
+				                 "fixed by typing \"/client rendertype legacy\" into chat." );
 			}
 		}
 		

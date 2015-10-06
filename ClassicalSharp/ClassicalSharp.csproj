@@ -65,6 +65,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="2D\IsometricBlockDrawer.cs" />
     <Compile Include="2D\Drawing\DrawTextArgs.cs" />
     <Compile Include="2D\Drawing\GdiPlusDrawer2D.cs" />
     <Compile Include="2D\Drawing\IDrawer2D.cs" />

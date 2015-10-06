@@ -129,6 +129,12 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
+		public static Vector3 RotateX( Vector3 v, float angle ) {
+			float cosA = (float)Math.Cos( angle );
+			float sinA = (float)Math.Sin( angle );
+			return new Vector3( v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z );
+		}
+		
 		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
 		}

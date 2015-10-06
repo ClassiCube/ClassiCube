@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using OpenTK;
 using OpenTK.Input;
+using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp {
 	
@@ -27,7 +30,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			int y = game.Height - blockSize;
 			
-			Size size = new Size( 32, 32 );
+			Size size = new Size( blockSize, blockSize );
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
@@ -59,6 +62,12 @@ namespace ClassicalSharp {
 					selectedX = barTextures[i].X1;
 				}
 			}
+			
+			//bool setFog = game.EnvRenderer is StandardEnvRenderer;
+			//IsometricBlockDrawer.SetupState( graphicsApi, setFog );
+			//IsometricBlockDrawer.Draw( game, (byte)Block.Brick, 200, 100 + 100 * (float)Math.Sin( game.accumulator ), 100 );
+			//IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
+			
 			selectedBlock.X1 = selectedX;
 			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;

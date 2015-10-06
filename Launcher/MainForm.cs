@@ -225,6 +225,12 @@ namespace Launcher {
 		}
 		
 		internal static void UpdateResumeInfo( GameStartData data, bool classiCubeSkins ) {
+			// If the client has changed some settings in the meantime, make sure we keep the changes
+			try {
+				Options.Load();
+			} catch( IOException ) {
+			}
+			
 			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );

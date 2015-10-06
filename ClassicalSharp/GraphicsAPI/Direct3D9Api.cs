@@ -549,11 +549,15 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override void PrintApiSpecificInfo() {
 			Utils.Log( "--Using Direct3D 9--" );
-			Utils.Log( "Tex memory available: " + (uint)device.AvailableTextureMemory );
-			Utils.Log( "Vertex processing mode: " + createFlags );
+			Utils.Log( "Adapter: " + d3d.Adapters[0].Details.Description );
+			Utils.Log( "Mode: " + createFlags );
+			float texMem = (uint)device.AvailableTextureMemory / 1024f / 1024f;
+			Utils.Log( "Texture mem: " + texMem + " MB" );
+			
+			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
 			Utils.Log( "Depth buffer format: " + depthFormat );
 			Utils.Log( "Back buffer format: " + viewFormat );
-			Utils.Log( "Adapter description: " + d3d.Adapters[0].Details.Description );
+			Utils.Log( "" );
 			Utils.Log( "Device caps: " + caps.DeviceCaps );
 		}
 
