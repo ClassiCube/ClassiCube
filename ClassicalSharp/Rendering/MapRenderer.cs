@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 			public bool Visible = true;
 			public bool Empty = false;
 			public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
-			public byte OcclusionFlags;
+			public byte OcclusionFlags, VisibilityFlags;
 			
 			public ChunkPartInfo[] NormalParts;
 			public ChunkPartInfo[] TranslucentParts;
@@ -132,6 +132,7 @@ namespace ClassicalSharp {
 		void DeleteChunk( ChunkInfo info ) {
 			info.Empty = false;
 			info.OcclusionFlags = 0;
+			info.VisibilityFlags = 0;
 			DeleteData( ref info.NormalParts );
 			DeleteData( ref info.TranslucentParts );
 		}
@@ -334,58 +335,131 @@ namespace ClassicalSharp {
 		
 		void SimpleOcclusionCulling() { // TODO: broken
 			Vector3 p = game.LocalPlayer.EyePosition;
+			Vector3I chunkLoc = Vector3I.Floor( p );
+			ChunkInfo chunkIn = null;
+			byte chunkInFlags = 0;
+			// We have to pretend that the chunk the player is in does no occlusion
+			// (because for example, only X15 may be filled while X0 is air)
+			if( game.Map.IsValidPos( chunkLoc ) ) {
+				int cx = chunkLoc.X >> 4;
+				int cy = chunkLoc.Y >> 4;
+				int cz = chunkLoc.Z >> 4;
+				chunkIn = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+				chunkInFlags = chunkIn.OcclusionFlags;
+				chunkIn.OcclusionFlags = 0;
+			}
+			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo chunk = chunks[i];
-				chunk.Visible = true;
-				int cx = chunk.CentreX >> 4;
-				int cy = chunk.CentreY >> 4;
-				int cz = chunk.CentreZ >> 4;
-				
+				chunk.VisibilityFlags = chunk.OcclusionFlags;
 				int x1 = chunk.CentreX - 8, x2 = chunk.CentreX + 8;
 				int y1 = chunk.CentreY - 8, y2 = chunk.CentreY + 8;
 				int z1 = chunk.CentreZ - 8, z2 = chunk.CentreZ + 8;
-				float minDist = float.PositiveInfinity;
-				int xOffset = -1, yOffset = 0, zOffset = 0;
-				int flags = 0x1;
+				int xOffset = 0, yOffset = 0, zOffset = 0;
+				float dx = 0, dy = 0, dz = 0;
+				float distX, distY, distZ;
 				
 				// TODO: two axes with same distance
-				minDist = DistToRecSquared( p, x1, y1, z1, x1, y2, z2 ); // left
-				float rightDist = DistToRecSquared( p, x2, y1, z1, x2, y2, z2 );
-				if( rightDist < minDist ) {
-					minDist = rightDist; xOffset = 1;
+				
+				// X axis collisions
+				dy = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y2 ) );
+				dz = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z2 ) );
+				
+				float dxLeft =  Math.Max( x1 - p.X, Math.Max( 0, p.X - x1 ) );
+				float dxRight = Math.Max( x2 - p.X, Math.Max( 0, p.X - x2 ) );
+				if( dxLeft < dxRight ) {
+					xOffset = -1;
+					distX = dxLeft * dxLeft + dy * dy + dz * dz;
+				} else {
+					xOffset = 1;
+					distX = dxRight * dxRight + dy * dy + dz * dz;
 				}
 				
-				float frontDist = DistToRecSquared( p, x1, y1, z1, x2, y2, z1 );
-				if( frontDist < minDist ) {
-					minDist = frontDist; xOffset = 0; zOffset = -1; flags = 2;
+				// Z axis collisions
+				dx = Math.Max( x1 - p.X, Math.Max( 0, p.X - x2 ) );
+				dy = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y2 ) );
+				
+				float dxFront = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z1 ) );
+				float dxBack =  Math.Max( z2 - p.Z, Math.Max( 0, p.Z - z2 ) );
+				if( dxFront < dxBack ) {
+					zOffset = -1;
+					distZ = dx * dx + dy * dy + dxFront * dxFront;
+				} else {
+					zOffset = 1;
+					distZ = dx * dx + dy * dy + dxBack * dxBack;
 				}
 				
-				float backDist = DistToRecSquared( p, x1, y1, z2, x2, y2, z2 );
-				if( backDist < minDist ) {
-					minDist = backDist; xOffset = 0; zOffset = 1; flags = 2;
+				// Y axis collisions
+				dx = Math.Max( x1 - p.X, Math.Max( 0, p.X - x2 ) );
+				dz = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z2 ) );
+				
+				float dxBottom = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y1 ) );
+				float dxTop =    Math.Max( y2 - p.Y, Math.Max( 0, p.Y - y2 ) );
+				if( dxBottom < dxTop ) {
+					yOffset = -1;
+					distY = dx * dx + dxBottom * dxBottom + dz * dz;
+				} else {
+					yOffset = 1;
+					distY = dx * dx + dxTop * dxTop + dz * dz;
 				}
 				
-				float bottomDist = DistToRecSquared( p, x1, y1, z1, x2, y1, z2 );
-				if( bottomDist < minDist ) {
-					minDist = bottomDist; xOffset = 0; zOffset = 0; yOffset = -1; flags = 4;
-				}
+				int cx = chunk.CentreX >> 4;
+				int cy = chunk.CentreY >> 4;
+				int cz = chunk.CentreZ >> 4;
+				float distMin = Math.Min( distX, Math.Min( distY, distZ ) );
 				
-				float topDist = DistToRecSquared( p, x1, y2, z1, x2, y2, z2 );
-				if( topDist < minDist ) {
-					minDist = topDist; xOffset = 0; zOffset = 0; yOffset = -1; flags = 4;
-				}
-				
-				if( (cx + xOffset) >= 0 && (cy + yOffset) >= 0 && (cz + zOffset) >= 0 &&
-				   (cx + xOffset) < chunksX && (cy + yOffset) < chunksY && (cz + zOffset) < chunksZ ) {
-					cx += xOffset; cy += yOffset; cz += zOffset;
-					ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
-					if( (neighbour.OcclusionFlags & flags) != 0 ) {
-						Console.WriteLine( "HIDE" );
-						chunks[i].Visible = false;
-					}
+				bool occlude = true;
+				byte flags = 0;
+				if( Math.Abs( distMin - distX ) < 0.00001f )
+					OccludeX( cx, cy, cz, xOffset, ref occlude, ref flags );
+				if( Math.Abs( distMin - distZ ) < 0.00001f )
+					OccludeZ( cx, cy, cz, zOffset, ref occlude, ref flags );
+				if( Math.Abs( distMin - distY ) < 0.00001f )
+					OccludeY( cx, cy, cz, yOffset, ref occlude, ref flags );			
+					
+				if( occlude ) {
+					chunk.Visible = false;
+					chunk.VisibilityFlags = flags;
 				}
 			}
-			chunks[0].Visible = true;
+			
+			if( chunkIn != null ) {
+				chunkIn.Visible = true;
+				chunkIn.OcclusionFlags = chunkInFlags;
+			}
+		}
+		
+		void OccludeX( int cx, int cy, int cz, int xOffset, ref bool occlude, ref byte flags ) {
+			cx += xOffset;
+			if( cx >= 0 && cx < chunksX ) {
+				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+				if( (neighbour.VisibilityFlags & 0x1) == 0 )
+					occlude = false;
+				else
+					flags |= 0x1;
+			}
+		}
+		
+		void OccludeZ( int cx, int cy, int cz, int zOffset, ref bool occlude, ref byte flags ) {
+			cz += zOffset;
+			if( cz >= 0 && cz < chunksZ ) {
+				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+				if( (neighbour.VisibilityFlags & 0x2) == 0 )
+					occlude = false;
+				else
+					flags |= 0x2;
+			}
+		}
+		
+		void OccludeY( int cx, int cy, int cz, int yOffset, ref bool occlude, ref byte flags ) {
+			cy += yOffset;
+			if( cy >= 0 && cy< chunksY ) {
+				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+				if( (neighbour.VisibilityFlags & 0x4) == 0 )
+					occlude = false;
+				else
+					flags |= 0x4;
+			}
 		}
 		
 		static float DistToRecSquared( Vector3 p, int x1, int y1, int z1, int x2, int y2, int z2 ) {
