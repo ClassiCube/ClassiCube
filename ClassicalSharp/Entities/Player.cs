@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		
 		protected Game game;
 		public string DisplayName, SkinName;
-		public SkinType SkinType;	
+		public SkinType SkinType;
 		
 		public Player( Game game ) : base( game ) {
 			this.game = game;

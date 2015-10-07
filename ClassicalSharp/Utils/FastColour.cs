@@ -57,7 +57,14 @@ namespace ClassicalSharp {
 			result.G = (byte)( value.G * t );
 			result.B = (byte)( value.B * t );
 			return result;
-		}	
+		}
+		
+		public static void GetShaded( FastColour normal, ref FastColour xSide, 
+		                               ref FastColour zSide, ref FastColour yBottom ) {
+			xSide = FastColour.Scale( normal, 0.6f );
+			zSide = FastColour.Scale( normal, 0.8f );
+			yBottom = FastColour.Scale( normal, 0.5f );
+		}
 		
 		public Color ToColor() {
 			return Color.FromArgb( A, R, G, B );

@@ -14,6 +14,12 @@ namespace ClassicalSharp {
 		static int index;
 		static float scale;
 		
+		static FastColour colNormal, colXSide, colZSide, colYBottom;
+		static IsometricBlockDrawer() {
+			colNormal = FastColour.White;
+			FastColour.GetShaded( colNormal, ref colXSide, ref colZSide, ref colYBottom );
+		}
+		
 		public static void Draw( Game game, byte block, float size, float x, float y ) {
 			info = game.BlockInfo;
 			cache = game.ModelCache;
@@ -26,7 +32,6 @@ namespace ClassicalSharp {
 			pos.X = x; pos.Y = -y; pos.Z = 0;
 			pos = Utils.RotateX( pos, (float)Utils.DegreesToRadians( -35.264f ) );
 			pos = Utils.RotateY( pos, (float)Utils.DegreesToRadians( 45f ) );
-			Console.WriteLine( pos );
 			
 			if( info.IsSprite[block] ) {
 				DrawXFace( block, 0f, TileSide.Right );
@@ -48,6 +53,7 @@ namespace ClassicalSharp {
 			graphics.LoadMatrix( ref m );
 			if( setFog )
 				graphics.Fog = false;
+			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		public static void RestoreState( IGraphicsApi graphics, bool setFog ) {
@@ -56,12 +62,11 @@ namespace ClassicalSharp {
 				graphics.Fog = true;			
 		}
 
-		static Vector3 pos = Vector3.Zero;
-		static FastColour col = FastColour.White;
-		
+		static Vector3 pos = Vector3.Zero;		
 		static void DrawYFace( byte block, float y, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
+			FastColour col = colNormal;
 
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, pos.Z - scale, rec.U2, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, pos.Z + scale, rec.U1, rec.V2, col );
@@ -74,6 +79,7 @@ namespace ClassicalSharp {
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
+			FastColour col = colZSide;
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - scale * blockHeight, pos.Z + z, rec.U1, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + scale * blockHeight, pos.Z + z, rec.U1, rec.V1, col );
@@ -86,11 +92,12 @@ namespace ClassicalSharp {
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
+			FastColour col = colXSide;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, pos.Z - scale, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, pos.Z - scale, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, pos.Z + scale, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, pos.Z + scale, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, pos.Z - scale, rec.U1, rec.V2, colNormal );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, pos.Z - scale, rec.U1, rec.V1, colNormal );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, pos.Z + scale, rec.U2, rec.V1, colNormal );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, pos.Z + scale, rec.U2, rec.V2, colNormal );
 		}
 	}
 }

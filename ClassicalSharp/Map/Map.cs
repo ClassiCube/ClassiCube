@@ -91,12 +91,14 @@ namespace ClassicalSharp {
 		
 		public void SetSunlight( FastColour col ) { 
 			Set( col, ref Sunlight, EnvVar.SunlightColour );
-			AdjustLight( Sunlight, ref SunlightXSide, ref SunlightZSide, ref SunlightYBottom );
+			FastColour.GetShaded( Sunlight, ref SunlightXSide, 
+			                     ref SunlightZSide, ref SunlightYBottom );
 		}
 		
 		public void SetShadowlight( FastColour col ) {
 			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
-			AdjustLight( Shadowlight, ref ShadowlightXSide, ref ShadowlightZSide, ref ShadowlightYBottom );
+			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide, 
+			                     ref ShadowlightZSide, ref ShadowlightYBottom );
 		}
 		
 		public void SetWeather( Weather weather ) { 
@@ -152,12 +154,6 @@ namespace ClassicalSharp {
 					CalcHeightAt( x, y, z, index );
 				}
 			}
-		}
-		
-		void AdjustLight( FastColour normal, ref FastColour xSide, ref FastColour zSide, ref FastColour yBottom ) {
-			xSide = FastColour.Scale( normal, 0.6f );
-			zSide = FastColour.Scale( normal, 0.8f );
-			yBottom = FastColour.Scale( normal, 0.5f );
 		}
 		
 		public void UseRawMap( byte[] map, int width, int height, int length ) {

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Drawing;
-using OpenTK;
-using OpenTK.Input;
-using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -12,12 +10,12 @@ namespace ClassicalSharp {
 		public BlockHotbarWidget( Game game ) : base( game ) {
 			HorizontalDocking = Docking.Centre;
 			VerticalDocking = Docking.BottomOrRight;
-			game.Events.HeldBlockChanged += HeldBlockChanged;
+			hotbarCount = game.Inventory.Hotbar.Length;
 		}
 		
-		Texture[] barTextures = new Texture[9];
-		Texture selectedBlock;
-		const int blockSize = 32;
+		int hotbarCount;
+		Texture selectedBlock, background;
+		const int blockSize = 40;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -27,77 +25,68 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
+		static FastColour backCol = new FastColour( 60, 60, 60, 160 );
+		static FastColour outlineCol = new FastColour( 169, 143, 192 );
+		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
-			int y = game.Height - blockSize;
-			
+			int width = blockSize * hotbarCount;
+			X = game.Width / 2 - width / 2;
+			Y = game.Height - blockSize;
+			Width = width;
+			Height = blockSize;
+			MakeBackgroundTexture( width );
+			MakeSelectionTexture();
+		}
+		
+		void MakeBackgroundTexture( int width ) {
+			Size size = new Size( width, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.Clear( backCol );
+					for( int xx = 0; xx < hotbarCount; xx++ ) {
+						drawer.DrawRectBounds( outlineCol, 3, xx * blockSize, 0, blockSize, blockSize );
+					}
+					background = drawer.Make2DTexture( bmp, size, X, Y );
+				}
+			}
+		}
+		
+		void MakeSelectionTexture() {
 			Size size = new Size( blockSize, blockSize );
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
-					selectedBlock = drawer.Make2DTexture( bmp, size, 0, y );
+					drawer.DrawRectBounds( selCol, 3, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
 				}
-			}
-			
-			int x = game.Width / 2 - ( blockSize * barTextures.Length ) / 2;
-			X = x;
-			Y = y;
-			Width = blockSize * barTextures.Length;
-			Height = blockSize;
-			
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i] = MakeTexture( x, y, game.Inventory.Hotbar[i] );
-				x += blockSize;
 			}
 		}
-		
+				
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
+			background.Render( graphicsApi );
 			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
-			int selectedX = 0;
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				barTextures[i].RenderNoBind( graphicsApi );
-				if( i == game.Inventory.HeldBlockIndex ) {
-					selectedX = barTextures[i].X1;
-				}
-			}
 			
-			//bool setFog = game.EnvRenderer is StandardEnvRenderer;
-			//IsometricBlockDrawer.SetupState( graphicsApi, setFog );
-			//IsometricBlockDrawer.Draw( game, (byte)Block.Brick, 200, 100 + 100 * (float)Math.Sin( game.accumulator ), 100 );
-			//IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
-			
-			selectedBlock.X1 = selectedX;
+			bool setFog = game.EnvRenderer is StandardEnvRenderer;
+			IsometricBlockDrawer.SetupState( graphicsApi, setFog );
+			for( int i = 0; i < hotbarCount; i++ ) {
+				int x = X + i * blockSize;
+				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], 10, 
+				                          x + blockSize / 2, game.Height - 12 );
+				if( i == game.Inventory.HeldBlockIndex )
+					selectedBlock.X1 = x;
+			}		
+		
+			IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
 			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;
 		}
 		
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref selectedBlock );
-			game.Events.HeldBlockChanged -= HeldBlockChanged;
-		}
-		
-		void HeldBlockChanged( object sender, EventArgs e ) {
-			int index = game.Inventory.HeldBlockIndex;
-			Block block = game.Inventory.HeldBlock;
-			int x = barTextures[index].X1;
-			barTextures[index] = MakeTexture( x, Y, block );
-		}
-		
-		Texture MakeTexture( int x, int y, Block block ) {
-			int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
-			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
-			
-			int verSize = blockSize;
-			float height = game.BlockInfo.Height[(byte)block];
-			int blockY = y;
-			if( height != 1 ) {
-				rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
-				verSize = (int)( blockSize * height );
-				blockY = y + blockSize - verSize;
-			}
-			return new Texture( -1, x, blockY, blockSize, verSize, rec );
+			graphicsApi.DeleteTexture( ref background );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
@@ -107,13 +96,8 @@ namespace ClassicalSharp {
 			Y = newY;
 			selectedBlock.X1 += deltaX;
 			selectedBlock.Y1 += deltaY;
-			
-			for( int i = 0; i < barTextures.Length; i++ ) {
-				Texture tex = barTextures[i];
-				tex.X1 += deltaX;
-				tex.Y1 += deltaY;
-				barTextures[i] = tex;
-			}
+			background.X1 += deltaX;
+			background.Y1 += deltaY;
 		}
 	}
 }

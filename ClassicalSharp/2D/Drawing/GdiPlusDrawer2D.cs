@@ -61,8 +61,10 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height ) {
-			using( Pen pen = new Pen( colour, lineWidth ) )
+			using( Pen pen = new Pen( colour, lineWidth ) ) {
+				pen.Alignment = PenAlignment.Inset;
 				g.DrawRectangle( pen, x, y, width, height );
+			}
 		}
 		
 		public override void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height ) {
@@ -83,6 +85,10 @@ namespace ClassicalSharp {
 			using( Brush brush = new SolidBrush( colour ) )
 				g.FillPath( brush, path );
 			path.Dispose();
+		}
+		
+		public override void Clear( Color colour ) {
+			g.Clear( colour );
 		}
 		
 		public override void Dispose() {
