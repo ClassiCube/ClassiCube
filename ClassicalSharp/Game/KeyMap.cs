@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 				string key = "key-" + names[i];
 				string value = Options.Get( key );
 				if( value == null ) {
-					Options.Set( key, Keys[i].ToString() );
+					Options.Set( key, Keys[i] );
 					continue;
 				}
 				
@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 				try {
 					mapping = (Key)Enum.Parse( typeof( Key ), value, true );
 				} catch( ArgumentException ) {
-					Options.Set( key, Keys[i].ToString() );
+					Options.Set( key, Keys[i] );
 					continue;
 				}
 				if( !IsReservedKey( mapping ) )
@@ -85,7 +85,7 @@ namespace ClassicalSharp {
 		void SaveKeyBindings() {
 			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
 			for( int i = 0; i < names.Length; i++ ) {
-				Options.Set( "key-" + names[i], Keys[i].ToString() );
+				Options.Set( "key-" + names[i], Keys[i] );
 			}
 		}
 	}

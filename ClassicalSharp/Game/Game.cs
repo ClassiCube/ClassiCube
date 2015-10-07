@@ -102,12 +102,14 @@ namespace ClassicalSharp {
 			} catch( IOException ) {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
-			ViewDistance = Options.GetInt( "viewdist", 16, 8192, 512 );
+			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 8192, 512 );
 			Keys = new KeyMap();
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
+			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );			
 			defaultIb = Graphics.MakeDefaultIb();
+			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
@@ -170,7 +172,7 @@ namespace ClassicalSharp {
 		public void SetViewDistance( int distance ) {
 			ViewDistance = distance;
 			Utils.LogDebug( "setting view distance to: " + distance );
-			Options.Set( "viewdist", distance.ToString() );
+			Options.Set( OptionsKey.ViewDist, distance );
 			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
 		}

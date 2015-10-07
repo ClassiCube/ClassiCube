@@ -42,6 +42,10 @@ namespace ClassicalSharp {
 			if( key == Key.Escape ) {
 				game.SetNewScreen( new NormalScreen( game ) );
 				return true;
+			} else if( (key == Key.Enter || key == Key.KeypadEnter) 
+			          && inputWidget != null ) {
+				ChangeSetting();
+				return true;
 			}
 			if( inputWidget == null ) return true;
 			return inputWidget.HandlesKeyDown( key );
@@ -87,20 +91,12 @@ namespace ClassicalSharp {
 			string text = widget.Text + ": " + widget.GetValue( game );
 			descWidget = TextWidget.Create( game, 0, 100, text, Docking.Centre, Docking.Centre, regularFont );
 		}
-		
+
 		protected void OnWidgetClick( Game game, ButtonWidget widget ) {
 			if( widget == buttons[okayIndex] ) {
-				string text = inputWidget.GetText();
-				if( inputWidget.Validator.IsValidValue( text ) )
-					targetWidget.SetValue( game, text );
-				inputWidget.Dispose();
-				inputWidget = null;
-				UpdateDescription( targetWidget );
-				targetWidget = null;
-				buttons[okayIndex].Dispose();
-				buttons[okayIndex] = null;
+				ChangeSetting();
 				return;
-			}			
+			}
 			
 			int index = Array.IndexOf<ButtonWidget>( buttons, widget );
 			MenuInputValidator validator = validators[index];
@@ -121,6 +117,18 @@ namespace ClassicalSharp {
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",
 			                                         Docking.Centre, Docking.Centre, titleFont, OnWidgetClick );
 			UpdateDescription( targetWidget );
+		}
+		
+		void ChangeSetting() {
+			string text = inputWidget.GetText();
+			if( inputWidget.Validator.IsValidValue( text ) )
+				targetWidget.SetValue( game, text );
+			inputWidget.Dispose();
+			inputWidget = null;
+			UpdateDescription( targetWidget );
+			targetWidget = null;
+			buttons[okayIndex].Dispose();
+			buttons[okayIndex] = null;
 		}
 	}
 }

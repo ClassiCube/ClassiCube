@@ -27,11 +27,10 @@ namespace ClassicalSharp {
 			blockHeight = info.Height[block];
 			index = 0;
 			scale = size;
-					
-			// screen to isometric coords			
-			pos.X = x; pos.Y = -y; pos.Z = 0;
-			pos = Utils.RotateX( pos, (float)Utils.DegreesToRadians( -35.264f ) );
-			pos = Utils.RotateY( pos, (float)Utils.DegreesToRadians( 45f ) );
+			
+			// screen to isometric coords
+			pos.X = x; pos.Y = y; pos.Z = 0;
+			pos = Utils.RotateY( Utils.RotateX( pos, -angleX ), -angleY );
 			
 			if( info.IsSprite[block] ) {
 				DrawXFace( block, 0f, TileSide.Right );
@@ -41,40 +40,48 @@ namespace ClassicalSharp {
 				DrawZFace( block, -scale, TileSide.Back );
 				DrawYFace( block, scale * blockHeight, TileSide.Top );
 			}
-			game.Graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb, 
+			
+			for( int i = 0; i < index; i++ )
+				TransformVertex( ref cache.vertices[i] );
+			game.Graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb,
 			                                   cache.vertices, index, index * 6 / 4 );
 		}
 		
+		static float angleY = (float)Utils.DegreesToRadians( -45f );
+		static float angleX = (float)Utils.DegreesToRadians( 26.565f );
+		static void TransformVertex( ref VertexPos3fTex2fCol4b vertex ) {
+			Vector3 pos = new Vector3( vertex.X, vertex.Y, vertex.Z );
+			#if USE_DX
+			// See comment in IGraphicsApi.Draw2DTexture()
+			pos.X -= 0.5f;
+			pos.Y -= 0.5f;
+			#endif
+			pos = Utils.RotateX( Utils.RotateY( pos, angleY ), angleX );
+			vertex.X = pos.X; vertex.Y = pos.Y; vertex.Z = pos.Z;
+		}
 		
 		public static void SetupState( IGraphicsApi graphics, bool setFog ) {
-			graphics.PushMatrix();
-			Matrix4 m = Matrix4.RotateY( (float)Utils.DegreesToRadians( 45f ) ) * 
-				Matrix4.RotateX( (float)Utils.RadiansToDegrees( -35.264f ) );
-			graphics.LoadMatrix( ref m );
-			if( setFog )
-				graphics.Fog = false;
+			if( setFog ) graphics.Fog = false;
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 		}
 		
 		public static void RestoreState( IGraphicsApi graphics, bool setFog ) {
-			graphics.PopMatrix();
-			if( setFog )
-				graphics.Fog = true;			
+			if( setFog ) graphics.Fog = true;
 		}
 
-		static Vector3 pos = Vector3.Zero;		
+		static Vector3 pos = Vector3.Zero;
 		static void DrawYFace( byte block, float y, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRectangle rec = atlas.GetTexRec( texId );
 			FastColour col = colNormal;
 
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - y,
 			                                                    pos.Z - scale, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - y,
 			                                                    pos.Z + scale, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + y, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y - y,
 			                                                    pos.Z + scale, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + y, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y - y,
 			                                                    pos.Z - scale, rec.U2, rec.V1, col );
 		}
 
@@ -85,14 +92,14 @@ namespace ClassicalSharp {
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colZSide;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - scale * blockHeight, 
-			                                                    pos.Z + z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + scale * blockHeight, 
-			                                                    pos.Z + z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + scale * blockHeight, 
-			                                                    pos.Z + z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y - scale * blockHeight, 
-			                                                    pos.Z + z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + scale * blockHeight,
+			                                                    pos.Z - z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - scale * blockHeight,
+			                                                    pos.Z - z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y - scale * blockHeight,
+			                                                    pos.Z - z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + scale * blockHeight,
+			                                                    pos.Z - z, rec.U2, rec.V2, col );
 		}
 
 		static void DrawXFace( byte block, float x, int side ) {
@@ -102,13 +109,13 @@ namespace ClassicalSharp {
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colXSide;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
 			                                                    pos.Z - scale, rec.U1, rec.V2, colNormal );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
 			                                                    pos.Z - scale, rec.U1, rec.V1, colNormal );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + scale * blockHeight, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
 			                                                    pos.Z + scale, rec.U2, rec.V1, colNormal );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y - scale * blockHeight, 
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
 			                                                    pos.Z + scale, rec.U2, rec.V2, colNormal );
 		}
 	}

@@ -119,6 +119,20 @@ namespace OpenTK {
 		public static void Divide(ref Vector4 vector, ref Vector4 scale, out Vector4 result) {
 			result = new Vector4(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z, vector.W / scale.W);
 		}
+		
+        public static Vector4 Transform(Vector4 vec, Matrix4 mat) {
+            Vector4 result;
+            Transform(ref vec, ref mat, out result);
+            return result;
+        }
+
+        public static void Transform(ref Vector4 vec, ref Matrix4 mat, out Vector4 result) {
+            result = new Vector4(
+                vec.X * mat.Row0.X + vec.Y * mat.Row1.X + vec.Z * mat.Row2.X + vec.W * mat.Row3.X,
+                vec.X * mat.Row0.Y + vec.Y * mat.Row1.Y + vec.Z * mat.Row2.Y + vec.W * mat.Row3.Y,
+                vec.X * mat.Row0.Z + vec.Y * mat.Row1.Z + vec.Z * mat.Row2.Z + vec.W * mat.Row3.Z,
+                vec.X * mat.Row0.W + vec.Y * mat.Row1.W + vec.Z * mat.Row2.W + vec.W * mat.Row3.W);
+        }
 
 		public static Vector4 operator + (Vector4 left, Vector4 right) {
 			left.X += right.X;

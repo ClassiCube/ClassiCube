@@ -4,6 +4,12 @@ using System.IO;
 
 namespace ClassicalSharp {
 	
+	public static class OptionsKey {
+		public const string ViewDist = "viewdist";
+		public const string FontSize = "chatfontsize";
+		public const string Sensitivity = "mousesensitivity";
+	}
+	
 	public static class Options {
 		
 		static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
@@ -36,6 +42,11 @@ namespace ClassicalSharp {
 		
 		public static void Set( string key, string value ) {
 			OptionsSet[key] = value;
+			HasChanged = true;
+		}
+		
+		public static void Set<T>( string key, T value ) {
+			OptionsSet[key] = value.ToString();
 			HasChanged = true;
 		}
 		

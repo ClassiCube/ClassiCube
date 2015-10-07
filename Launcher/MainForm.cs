@@ -235,7 +235,7 @@ namespace Launcher {
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
 			Options.Set( "launcher-mppass", EncodeMppass( data.Mppass, data.Username ) );
-			Options.Set( "launcher-ccskins", classiCubeSkins.ToString() );
+			Options.Set( "launcher-ccskins", classiCubeSkins );
 			
 			try {
 				Options.Save();

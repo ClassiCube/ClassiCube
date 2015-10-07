@@ -28,11 +28,13 @@ namespace ClassicalSharp {
 				
 				Make( 140, -50, "Mouse sensitivity", Docking.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
-				     (g, v) => g.MouseSensitivity = Int32.Parse( v ) ),
+				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
+				     		Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
 				Make( 140, 0, "Chat font size", Docking.Centre, OnWidgetClick,
 				     g => g.Chat.FontSize.ToString(),
-				     (g, v) => g.Chat.FontSize = Int32.Parse( v ) ),
+				     (g, v) => { g.Chat.FontSize = Int32.Parse( v ); 
+				     	Options.Set( OptionsKey.FontSize, v ); } ),
 				
 				!network.IsSinglePlayer ? null :
 					Make( 140, 50, "Singleplayer physics", Docking.Centre, OnWidgetClick,
