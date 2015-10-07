@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the user changed their view/fog distance. </summary>
 		public event EventHandler ViewDistanceChanged;
-		internal void RaiseViewDistanceChanged() { Raise( ViewDistanceChanged );  }
+		internal void RaiseViewDistanceChanged() { Raise( ViewDistanceChanged ); }
 		
 		/// <summary> Raised when the held block is changed by the user or by CPE. </summary>
 		public event EventHandler HeldBlockChanged;

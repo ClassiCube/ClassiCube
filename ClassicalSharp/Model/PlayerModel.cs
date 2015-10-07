@@ -92,7 +92,7 @@ namespace ClassicalSharp.Model {
 			
 			graphics.AlphaTest = true;
 			if( p.RenderHat ) {				
-				DrawRotate( 0, 23.5f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
+				DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
 			}
 		}
 		

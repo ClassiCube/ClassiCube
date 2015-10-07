@@ -1,7 +1,8 @@
 ClassicalSharp is a custom Minecraft Classic client written in C# that works on both Windows and Linux.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
-You can get the latest binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
+You can grab the latest stable binaries [here](https://github.com/UnknownShadow200/ClassicalSharp/releases).
+You can grab the very latest OpenGL build [here](http://cs.classicube.net/latest.zip) and the latest Direct3D 9 build [here](http://cs.classicube.net/latest.DirectX.zip).
 
 #### What ClassicalSharp is
 * Works with both minecraft.net and classicube.net accounts.
