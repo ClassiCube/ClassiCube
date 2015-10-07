@@ -37,31 +37,6 @@ namespace ClassicalSharp {
 			MakeBackgroundTexture( width );
 			MakeSelectionTexture();
 		}
-		
-		void MakeBackgroundTexture( int width ) {
-			Size size = new Size( width, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.Clear( backCol );
-					for( int xx = 0; xx < hotbarCount; xx++ ) {
-						drawer.DrawRectBounds( outlineCol, 3, xx * blockSize, 0, blockSize, blockSize );
-					}
-					background = drawer.Make2DTexture( bmp, size, X, Y );
-				}
-			}
-		}
-		
-		void MakeSelectionTexture() {
-			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( selCol, 3, 0, 0, blockSize, blockSize );
-					selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
-				}
-			}
-		}
 				
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
@@ -98,6 +73,31 @@ namespace ClassicalSharp {
 			selectedBlock.Y1 += deltaY;
 			background.X1 += deltaX;
 			background.Y1 += deltaY;
+		}
+		
+		void MakeBackgroundTexture( int width ) {
+			Size size = new Size( width, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.Clear( backCol );
+					for( int xx = 0; xx < hotbarCount; xx++ ) {
+						drawer.DrawRectBounds( outlineCol, 3, xx * blockSize, 0, blockSize, blockSize );
+					}
+					background = drawer.Make2DTexture( bmp, size, X, Y );
+				}
+			}
+		}
+		
+		void MakeSelectionTexture() {
+			Size size = new Size( blockSize, blockSize );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
+				using( IDrawer2D drawer = game.Drawer2D ) {
+					drawer.SetBitmap( bmp );
+					drawer.DrawRectBounds( selCol, 3, 0, 0, blockSize, blockSize );
+					selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
+				}
+			}
 		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.Renderers;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -11,78 +11,72 @@ namespace ClassicalSharp {
 			font = new Font( "Arial", 13 );
 		}
 		
-		class BlockDrawInfo {
-			public Texture Texture;
-			public Block BlockId;
-			
-			public BlockDrawInfo( Texture texture, Block block ) {
-				Texture = texture;
-				BlockId = block;
-			}
-		}
-		BlockDrawInfo[] blocksTable;
-		Texture selectedBlock, blockInfoTexture;
-		int blockSize = 48;
+		Block[] blocksTable;
+		Texture blockInfoTexture;
+		const int blockSize = 48, blocksPerRow = 10;
 		int selectedIndex;
-		const int blocksPerRow = 10;
 		int rows;
 		int startX, startY;
 		readonly Font font;
 		StringBuffer buffer = new StringBuffer( 96 );
 		
+		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
+		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Render( double delta ) {
+			graphicsApi.Draw2DQuad( startX - 5, startY - 30 - 5, blocksPerRow * blockSize + 10,
+			                       rows * blockSize + 30 + 10, backCol );
 			graphicsApi.Texturing = true;
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			
+			bool setFog = game.EnvRenderer is StandardEnvRenderer;
+			IsometricBlockDrawer.SetupState( graphicsApi, setFog );
 			for( int i = 0; i < blocksTable.Length; i++ ) {
-				Texture texture = blocksTable[i].Texture;
-				texture.RenderNoBind( graphicsApi );
+				int x, y;
+				GetCoords( i, out x, out y );
+				
+				// We want to always draw the selected block on top of others
+				if( i == selectedIndex ) continue;
+				IsometricBlockDrawer.Draw( game, (byte)blocksTable[i], 12,
+				                          x + blockSize / 2, y + 28 );
 			}
+			
 			if( selectedIndex != -1 ) {
-				int col = selectedIndex % blocksPerRow;
-				int row = selectedIndex / blocksPerRow;
-				selectedBlock.X1 = startX + blockSize * col;
-				selectedBlock.Y1 = startY + blockSize * row;
-				selectedBlock.Render( graphicsApi );
+				int x, y;
+				GetCoords( selectedIndex, out x, out y );
+				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selectedIndex], 20,
+				                          x + blockSize / 2, y + 28 );
 			}
-			if( blockInfoTexture.IsValid ) {
+			IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
+			
+			if( blockInfoTexture.IsValid )
 				blockInfoTexture.Render( graphicsApi );
-			}
 			graphicsApi.Texturing = false;
+		}
+		
+		void GetCoords( int i, out int x, out int y ) {
+			int col = i % blocksPerRow;
+			int row = i / blocksPerRow;
+			x = startX + blockSize * col;
+			y = startY + blockSize * row;
 		}
 		
 		public override void Dispose() {
 			font.Dispose();
-			graphicsApi.DeleteTexture( ref selectedBlock );
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			int yDiff = ( height - oldHeight ) / 2;
-			int xDiff = ( width - oldWidth ) / 2;
+			int yDiff = (height - oldHeight) / 2;
+			int xDiff = (width - oldWidth) / 2;
 			startX += xDiff;
 			startY += yDiff;
 			blockInfoTexture.X1 += xDiff;
 			blockInfoTexture.Y1 += yDiff;
-			for( int i = 0; i < blocksTable.Length; i++ ) {
-				Texture texture = blocksTable[i].Texture;
-				texture.X1 += xDiff;
-				texture.Y1 += yDiff;
-				blocksTable[i].Texture = texture;
-			}
 		}
 		
 		public override void Init() {
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( Color.White, blockSize / 8, 0, 0, blockSize, blockSize );
-					selectedBlock = drawer.Make2DTexture( bmp, size, 0, 0 );
-				}
-			}
 			RecreateBlockTextures();
 		}
 
@@ -94,7 +88,6 @@ namespace ClassicalSharp {
 			RecreateBlockInfoTexture();
 		}
 		
-		static readonly Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		void UpdateBlockInfoString( Block block ) {
 			int index = 0;
 			buffer.Clear();
@@ -134,64 +127,35 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
 			if( selectedIndex == -1 ) return;
 			
-			Block block = blocksTable[selectedIndex].BlockId;
+			Block block = blocksTable[selectedIndex];
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
 			Size size = game.Drawer2D.MeasureSize( value, font, true );
-			int x = startX + ( blockSize * blocksPerRow ) / 2 - size.Width / 2;
-			int y = startY - size.Height;
+			int x = startX + (blockSize * blocksPerRow) / 2 - size.Width / 2;
+			int y = startY - size.Height - 5;
 			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( value, true );
-					args.SkipPartsCheck = true;
-					drawer.DrawText( font, ref args, 0, 0 );
-					blockInfoTexture = drawer.Make2DTexture( bmp, size, x, y );
-				}
-			}
+			DrawTextArgs args = new DrawTextArgs( value, true );
+			args.SkipPartsCheck = true;
+			blockInfoTexture = game.Drawer2D.MakeTextTexture( font, x, y, ref args );
 		}
 		
 		void RecreateBlockTextures() {
 			int blocksCount = 0;
-			for( int i = 0; i < BlockInfo.BlocksCount; i++ ) {
-				if( game.Inventory.CanPlace[i] || game.Inventory.CanDelete[i] ) {
+			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
+				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )
 					blocksCount++;
-				}
 			}
 			
 			rows = Utils.CeilDiv( blocksCount, blocksPerRow );
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
 			startY = game.Height / 2 - (rows * blockSize) / 2;
-			int x = startX, y = startY;
-			blocksTable = new BlockDrawInfo[blocksCount];
+			blocksTable = new Block[blocksCount];
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] ) {
-					Block block = (Block)tile;
-					int texId = game.BlockInfo.GetTextureLoc( (byte)block, TileSide.Left );
-					TextureRectangle rec = game.TerrainAtlas.GetTexRec( texId );
-					int verSize = blockSize;
-					float height = game.BlockInfo.Height[(byte)block];
-					int blockY = y;
-					
-					if( height != 1 ) {
-						rec.V1 = rec.V1 + TerrainAtlas2D.invElementSize * height;
-						verSize = (int)( blockSize * height );
-						blockY = y + blockSize - verSize;
-					}
-					Texture texture = new Texture( -1, x, blockY, blockSize, verSize, rec );
-					
-					blocksTable[tableIndex++] = new BlockDrawInfo( texture, block );
-					x += blockSize;
-					if( tableIndex % blocksPerRow == 0 ) { // end of row, start next one.
-						x = startX;
-						y += blockSize;
-					}
-				}
+				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )
+					blocksTable[tableIndex++] = (Block)tile;
 			}
 		}
 		
@@ -203,10 +167,8 @@ namespace ClassicalSharp {
 			selectedIndex = -1;
 			if( Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
 				for( int i = 0; i < blocksTable.Length; i++ ) {
-					int col = i % blocksPerRow;
-					int row = i / blocksPerRow;
-					int x = startX + blockSize * col;
-					int y = startY + blockSize * row;
+					int x, y;
+					GetCoords( i, out x, out y );
 					
 					if( Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
 						selectedIndex = i;
@@ -220,8 +182,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
-				BlockDrawInfo info = blocksTable[selectedIndex];
-				game.Inventory.HeldBlock = info.BlockId;
+				game.Inventory.HeldBlock = blocksTable[selectedIndex];
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;

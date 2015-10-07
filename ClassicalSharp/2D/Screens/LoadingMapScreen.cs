@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( Color.White, 5f, 0, 0, progWidth, progHeight );
+					drawer.DrawRectBounds( Color.White, 3f, 0, 0, progWidth, progHeight );
 					progressBoxTexture = drawer.Make2DTexture( bmp, size, (int)progX, (int)progY );
 				}			
 			}

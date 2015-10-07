@@ -128,12 +128,12 @@
     <Compile Include="Map\ChunkMeshBuilder.cs" />
     <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
-    <Compile Include="Map\IMapFile.cs" />
+    <Compile Include="Map\Formats\IMapFile.cs" />
+    <Compile Include="Map\Formats\MapCw.Exporter.cs" />
+    <Compile Include="Map\Formats\MapCw.Importer.cs" />
+    <Compile Include="Map\Formats\MapDat.Importer.cs" />
+    <Compile Include="Map\Formats\MapFcm3.Importer.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Map\MapCw.Exporter.cs" />
-    <Compile Include="Map\MapCw.Importer.cs" />
-    <Compile Include="Map\MapDat.Importer.cs" />
-    <Compile Include="Map\MapFcm3.Importer.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />
@@ -214,6 +214,7 @@
     <Folder Include="Ionic.Zlib" />
     <Folder Include="Map" />
     <Folder Include="Game" />
+    <Folder Include="Map\Formats" />
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
     <Folder Include="TexturePack" />
