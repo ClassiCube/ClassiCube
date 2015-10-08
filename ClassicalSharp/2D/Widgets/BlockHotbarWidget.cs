@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using ClassicalSharp.Renderers;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -42,10 +42,9 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = true;
 			background.Render( graphicsApi );
 			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
+			graphicsApi.BindTexture( game.TerrainAtlas.TexId );			
+			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			
-			bool setFog = game.EnvRenderer is StandardEnvRenderer;
-			IsometricBlockDrawer.SetupState( graphicsApi, setFog );
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;
 				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], 10, 
@@ -54,7 +53,6 @@ namespace ClassicalSharp {
 					selectedBlock.X1 = x;
 			}		
 		
-			IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
 			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;
 		}

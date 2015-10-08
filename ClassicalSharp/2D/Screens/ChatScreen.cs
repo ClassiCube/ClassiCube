@@ -36,14 +36,24 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		Font chatFont, chatBoldFont, historyFont, announcementFont;
+		static FastColour backColour = new FastColour( 60, 60, 60, 180 );
+		public void RenderBackground() {
+			int height = normalChat.GetUsedHeight();
+			int y = normalChat.Y + normalChat.Height - height - 5;
+			int x = normalChat.X - 5;
+			int width = normalChat.Width + 10;
+			
+			if( height > 0 )
+				graphicsApi.Draw2DQuad( x, y, width, height + 10, backColour );
+		}
+		
+		Font chatFont, chatInputFont, announcementFont;
 		public override void Init() {
 			chatFont = new Font( "Arial", game.Chat.FontSize );
-			chatBoldFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
+			chatInputFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
 			announcementFont = new Font( "Arial", 14 );
-			historyFont = new Font( "Arial", 12, FontStyle.Italic );
 			
-			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
+			textInput = new TextInputWidget( game, chatFont, chatInputFont );
 			textInput.ChatInputYOffset = ChatInputYOffset;
 			status = new TextGroupWidget( game, 3, chatFont );
 			status.VerticalDocking = Docking.LeftOrTop;
@@ -101,8 +111,7 @@ namespace ClassicalSharp {
 				game.chatInInputBuffer = textInput.chatInputText.ToString();
 			}
 			chatFont.Dispose();
-			chatBoldFont.Dispose();
-			historyFont.Dispose();
+			chatInputFont.Dispose();
 			announcementFont.Dispose();
 			
 			normalChat.Dispose();

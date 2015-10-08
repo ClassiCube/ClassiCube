@@ -1,7 +1,7 @@
 ﻿using System;
 using ClassicalSharp.GraphicsAPI;
-using OpenTK;
 using ClassicalSharp.Model;
+using OpenTK;
 
 namespace ClassicalSharp {
 
@@ -15,9 +15,15 @@ namespace ClassicalSharp {
 		static float scale;
 		
 		static FastColour colNormal, colXSide, colZSide, colYBottom;
+		static float cosX, sinX, cosY, sinY;
 		static IsometricBlockDrawer() {
 			colNormal = FastColour.White;
 			FastColour.GetShaded( colNormal, ref colXSide, ref colZSide, ref colYBottom );
+			
+			cosX = (float)Math.Cos( 26.565f * Utils.Deg2Rad );
+			sinX = (float)Math.Sin( 26.565f * Utils.Deg2Rad );
+			cosY = (float)Math.Cos( -45f * Utils.Deg2Rad );
+			sinY = (float)Math.Sin( -45f * Utils.Deg2Rad );
 		}
 		
 		public static void Draw( Game game, byte block, float size, float x, float y ) {
@@ -28,9 +34,9 @@ namespace ClassicalSharp {
 			index = 0;
 			scale = size;
 			
-			// screen to isometric coords
-			pos.X = x; pos.Y = y; pos.Z = 0;
-			pos = Utils.RotateY( Utils.RotateX( pos, -angleX ), -angleY );
+			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))
+			pos.X = x; pos.Y = y; pos.Z = 0;			
+			pos = Utils.RotateY( Utils.RotateX( pos, cosX, -sinX ), cosY, -sinY );
 			
 			if( info.IsSprite[block] ) {
 				DrawXFace( block, 0f, TileSide.Right );
@@ -47,8 +53,6 @@ namespace ClassicalSharp {
 			                                   cache.vertices, index, index * 6 / 4 );
 		}
 		
-		static float angleY = (float)Utils.DegreesToRadians( -45f );
-		static float angleX = (float)Utils.DegreesToRadians( 26.565f );
 		static void TransformVertex( ref VertexPos3fTex2fCol4b vertex ) {
 			Vector3 pos = new Vector3( vertex.X, vertex.Y, vertex.Z );
 			#if USE_DX
@@ -56,17 +60,8 @@ namespace ClassicalSharp {
 			pos.X -= 0.5f;
 			pos.Y -= 0.5f;
 			#endif
-			pos = Utils.RotateX( Utils.RotateY( pos, angleY ), angleX );
+			pos = Utils.RotateX( Utils.RotateY( pos, cosY, sinY ), cosX, sinX );
 			vertex.X = pos.X; vertex.Y = pos.Y; vertex.Z = pos.Z;
-		}
-		
-		public static void SetupState( IGraphicsApi graphics, bool setFog ) {
-			if( setFog ) graphics.Fog = false;
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-		}
-		
-		public static void RestoreState( IGraphicsApi graphics, bool setFog ) {
-			if( setFog ) graphics.Fog = true;
 		}
 
 		static Vector3 pos = Vector3.Zero;

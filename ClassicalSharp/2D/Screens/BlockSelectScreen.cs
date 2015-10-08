@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using ClassicalSharp.Renderers;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -26,10 +26,9 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( startX - 5, startY - 30 - 5, blocksPerRow * blockSize + 10,
 			                       rows * blockSize + 30 + 10, backCol );
 			graphicsApi.Texturing = true;
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
+			graphicsApi.BindTexture( game.TerrainAtlas.TexId );		
+			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			
-			bool setFog = game.EnvRenderer is StandardEnvRenderer;
-			IsometricBlockDrawer.SetupState( graphicsApi, setFog );
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;
 				GetCoords( i, out x, out y );
@@ -46,7 +45,6 @@ namespace ClassicalSharp {
 				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selectedIndex], 20,
 				                          x + blockSize / 2, y + 28 );
 			}
-			IsometricBlockDrawer.RestoreState( graphicsApi, setFog );
 			
 			if( blockInfoTexture.IsValid )
 				blockInfoTexture.Render( graphicsApi );

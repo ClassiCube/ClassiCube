@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Text;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -101,16 +100,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static double DegreesToRadians( double degrees ) {
-			return degrees * Math.PI / 180.0;
-		}
-		
-		public static double RadiansToDegrees( double radians ) {
-			return radians * 180.0 / Math.PI;
-		}
+		public const float Deg2Rad = (float)(Math.PI / 180);
+		public const float Rad2Deg = (float)(180 / Math.PI);
 		
 		public static int DegreesToPacked( double degrees, int period ) {
-			return (int)( degrees * period / 360.0 ) % period;
+			return (int)(degrees * period / 360.0) % period;
 		}
 		
 		public static double PackedToDegrees( byte packed ) {
@@ -129,10 +123,16 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
-		public static Vector3 RotateX( Vector3 v, float angle ) {
-			float cosA = (float)Math.Cos( angle );
-			float sinA = (float)Math.Sin( angle );
-			return new Vector3( v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z );
+		public static Vector3 RotateX( Vector3 p, float cosA, float sinA ) {
+			return new Vector3( p.X, cosA * p.Y + sinA * p.Z, -sinA * p.Y + cosA * p.Z );
+		}
+		
+		public static Vector3 RotateY( Vector3 p, float cosA, float sinA ) {
+			return new Vector3( cosA * p.X - sinA * p.Z, p.Y, sinA * p.X + cosA * p.Z );
+		}
+		
+		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
+			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
 		}
 		
 		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
@@ -222,7 +222,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static float Lerp( float a, float b, float t ) {
-			return a + ( b - a ) * t;
+			return a + (b - a) * t;
 		}
 		
 		internal static int CountIndices( int axis1Len, int axis2Len, int axisSize ) {

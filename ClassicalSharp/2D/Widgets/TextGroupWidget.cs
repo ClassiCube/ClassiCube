@@ -77,6 +77,15 @@ namespace ClassicalSharp {
 			return y;
 		}
 		
+		public int GetUsedHeight() {
+			int sum = 0;
+			for( int i = 0; i < textures.Length; i++ ) {
+				if( textures[i].IsValid )
+					sum += textures[i].Height;
+			}
+			return sum;
+		}
+		
 		void UpdateDimensions() {
 			Height = 0;
 			for( int i = 0; i < textures.Length; i++ ) {

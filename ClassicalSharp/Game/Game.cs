@@ -229,12 +229,12 @@ namespace ClassicalSharp {
 				SelectedPos.SetAsInvalid();
 			}
 			
-			Graphics.Mode2D( Width, Height );
+			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
-			Graphics.Mode3D();
+			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 			
 			if( screenshotRequested )
 				TakeScreenshot();

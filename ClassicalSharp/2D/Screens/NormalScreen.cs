@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -16,9 +17,16 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
+			
+			chat.RenderBackground();
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			hotbar.Render( delta );
+			
+			//graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			//graphicsApi.BindTexture( game.TerrainAtlas.TexId );
+			//IsometricBlockDrawer.Draw( game, (byte)Block.Brick, 30, game.Width - 50, game.Height - 20 );
+			
 			if( playerList != null ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.

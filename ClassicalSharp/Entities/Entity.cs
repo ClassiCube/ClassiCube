@@ -19,17 +19,15 @@ namespace ClassicalSharp {
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
 		protected float StepSize;
-
-		const float deg2Rad = (float)( Math.PI / 180 );
-		const float rad2Deg = (float)( 180 / Math.PI );
+		
 		public float YawRadians {
-			get { return YawDegrees * deg2Rad; }
-			set { YawDegrees = value * rad2Deg; }
+			get { return YawDegrees * Utils.Deg2Rad; }
+			set { YawDegrees = value * Utils.Rad2Deg; }
 		}
 		
 		public float PitchRadians {
-			get { return PitchDegrees * deg2Rad; }
-			set { PitchDegrees = value * rad2Deg; }
+			get { return PitchDegrees * Utils.Deg2Rad; }
+			set { PitchDegrees = value * Utils.Rad2Deg; }
 		}
 		
 		public virtual Vector3 CollisionSize {

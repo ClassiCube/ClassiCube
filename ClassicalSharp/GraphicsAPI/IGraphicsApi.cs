@@ -225,7 +225,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Draw2DTexture( ref tex, FastColour.White );
 		}
 		
-		public void Mode2D( float width, float height ) {
+		public void Mode2D( float width, float height, bool setFog ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
 			DepthTest = false;
@@ -234,6 +234,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			PushMatrix();
 			LoadIdentityMatrix();
 			AlphaBlending = true;
+			if( setFog ) Fog = false;
 		}
 		
 		protected virtual void LoadOrthoMatrix( float width, float height ) {
@@ -241,7 +242,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			LoadMatrix( ref matrix );
 		}
 		
-		public void Mode3D() {
+		public void Mode3D( bool setFog ) {
 			// Get rid of orthographic 2D matrix.
 			SetMatrixMode( MatrixType.Projection );
 			PopMatrix();
@@ -249,6 +250,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			PopMatrix();
 			DepthTest = true;
 			AlphaBlending = false;
+			if( setFog ) Fog = true;
 		}
 		
 		internal unsafe int MakeDefaultIb() {

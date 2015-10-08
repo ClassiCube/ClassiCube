@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetProjection() {
-			float fovy = (float)Utils.DegreesToRadians( 70 );
+			float fovy = 70 * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
 			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, zNear, game.ViewDistance );
@@ -71,12 +71,13 @@ namespace ClassicalSharp {
 			delta = Point.Empty;
 		}
 		
-		static readonly float sensiFactor = (float)Utils.RadiansToDegrees( 0.0002f );
+		static readonly float sensiFactor = 0.0002f * Utils.Rad2Deg;
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 			float yaw = player.nextYaw + delta.X * sensitivity;
 			float pitch = player.nextPitch + delta.Y * sensitivity;
 			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
+			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
 			if( update.Pitch >= 90 && update.Pitch <= 270 )
 				update.Pitch = player.nextPitch < 180 ? 89.9f : 270.1f;
