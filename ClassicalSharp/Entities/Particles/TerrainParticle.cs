@@ -8,7 +8,7 @@ namespace ClassicalSharp.Particles {
 		const float gravity = 3.4f;
 		static Vector2 terrainSize = new Vector2( 1/8f, 1/8f );
 		
-		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRectangle rec )
+		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRec rec )
 			: base( game, pos, velocity, lifetime, rec ) {
 		}
 		

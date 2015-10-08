@@ -119,6 +119,7 @@ namespace ClassicalSharp {
 			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
 			
 			if( info.IsSprite[tile] ) {
+				fullBright = info.FullBright[tile];
 				int count = counts[index + TileSide.Top];
 				if( count != 0 ) {
 					blockHeight = info.Height[tile];
@@ -133,7 +134,7 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			emitsLight = info.EmitsLight[tile];
+			fullBright = info.FullBright[tile];
 			blockHeight = info.Height[tile];
 			isTranslucent = info.IsTranslucent[tile];
 			
@@ -181,7 +182,7 @@ namespace ClassicalSharp {
 							}
 						} else {
 							X = x; Y = y; Z = z;
-							emitsLight = info.EmitsLight[tile];
+							fullBright = info.FullBright[tile];
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, 0, TileSide.Left, -1 );
 							TestAndStretchZ( zz, countIndex, tile, chunkIndex, x, maxX, TileSide.Right, 1 );
 							TestAndStretchX( xx, countIndex, tile, chunkIndex, z, 0, TileSide.Front, -extChunkSize );

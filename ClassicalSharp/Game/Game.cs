@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 30;
-		public bool HideGui = false;
+		public bool HideGui = false, ShowFPS = true;
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;

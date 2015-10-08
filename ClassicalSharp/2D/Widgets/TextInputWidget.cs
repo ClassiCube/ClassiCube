@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		Color backColour = Color.FromArgb( 120, 60, 60, 60 );
 		int caretPos = -1;
 		int typingLogPos = 0;
-		public int ChatInputYOffset;
+		public int YOffset;
 		internal StringBuffer chatInputText;
 		readonly Font font, boldFont;
 		
@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 		
 		void DrawString( Size size, string value, bool skipCheck ) {
 			size.Height = Math.Max( size.Height, chatCaretTexture.Height );
-			int y = game.Height - ChatInputYOffset - size.Height / 2;
+			int y = game.Height - YOffset - size.Height / 2;
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {

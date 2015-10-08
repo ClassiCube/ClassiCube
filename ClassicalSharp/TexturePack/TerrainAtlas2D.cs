@@ -59,10 +59,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public TextureRectangle GetTexRec( int index ) {
+		public TextureRec GetTexRec( int index ) {
 			int x = index & 0x0F;
 			int y = index >> 4;
-			return new TextureRectangle( x * invElementSize, y * invElementSize,
+			return new TextureRec( x * invElementSize, y * invElementSize,
 			                            invElementSize, invElementSize );
 		}
 		

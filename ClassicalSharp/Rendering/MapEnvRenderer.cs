@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 					y2 = y1 + axisSize;
 					if( y2 > endY ) y2 = endY;
 					
-					TextureRectangle rec = new TextureRectangle( 0, 0, z2 - z1, y2 - y1 );
+					TextureRec rec = new TextureRec( 0, 0, z2 - z1, y2 - y1 );
 					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V1, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V2, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V2, col );
@@ -180,7 +180,7 @@ namespace ClassicalSharp {
 					y2 = y1 + axisSize;
 					if( y2 > endY ) y2 = endY;
 					
-					TextureRectangle rec = new TextureRectangle( 0, 0, x2 - x1, y2 - y1 );
+					TextureRec rec = new TextureRec( 0, 0, x2 - x1, y2 - y1 );
 					*vertices++ = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V1, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V2, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V2, col );
@@ -199,7 +199,7 @@ namespace ClassicalSharp {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					TextureRectangle rec = new TextureRectangle( 0, 0, x2 - x1, z2 - z1 );
+					TextureRec rec = new TextureRec( 0, 0, x2 - x1, z2 - z1 );
 					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, rec.U1, rec.V1, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, rec.U1, rec.V2, col );
 					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, rec.U2, rec.V2, col );

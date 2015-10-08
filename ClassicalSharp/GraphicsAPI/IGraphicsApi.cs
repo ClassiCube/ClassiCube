@@ -208,10 +208,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
 			// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
-			x1 -= 0.5f;
-			x2 -= 0.5f;
-			y1 -= 0.5f;
-			y2 -= 0.5f;
+			x1 -= 0.5f; x2 -= 0.5f;
+			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
 			texVerts[0] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
 			texVerts[1] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
@@ -219,6 +217,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
 			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+		}
+		
+		public static void MakeQuad( TextureRec xy, TextureRec uv, 
+		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
+			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
+			#if USE_DX
+			x1 -= 0.5f; x2 -= 0.5f;
+			y1 -= 0.5f; y2 -= 0.5f;
+			#endif
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, 0, uv.U1, uv.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, 0, uv.U2, uv.V1, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, 0, uv.U2, uv.V2, FastColour.White );
+			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, 0, uv.U1, uv.V2, FastColour.White );
 		}
 		
 		public void Draw2DTexture( ref Texture tex ) {

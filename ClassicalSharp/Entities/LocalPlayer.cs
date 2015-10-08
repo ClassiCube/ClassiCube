@@ -189,7 +189,7 @@ namespace ClassicalSharp {
 			Velocity.Y -= gravity;
 		}
 		
-		bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
+		internal bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
 		public void ParseHackFlags( string name, string motd ) {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {

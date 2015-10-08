@@ -14,9 +14,9 @@ namespace ClassicalSharp {
 			INetworkProcessor network = game.Network;
 			
 			buttons = new ButtonWidget[] {
-				Make( -140, -50, "Use animations", Docking.Centre, OnWidgetClick,
-				     g => g.Animations.Enabled ? "yes" : "no",
-				     (g, v) => g.Animations.Enabled = v == "yes" ),
+				Make( -140, -50, "Show FPS", Docking.Centre, OnWidgetClick,
+				     g => g.ShowFPS ? "yes" : "no",
+				     (g, v) => g.ShowFPS = v == "yes" ),
 				
 				Make( -140, 0, "View distance", Docking.Centre, OnWidgetClick,
 				     g => g.ViewDistance.ToString(),

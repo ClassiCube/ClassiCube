@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 			announcementFont = new Font( "Arial", 14 );
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
-			textInput.ChatInputYOffset = ChatInputYOffset;
+			textInput.YOffset = ChatInputYOffset;
 			status = new TextGroupWidget( game, 3, chatFont );
 			status.VerticalDocking = Docking.LeftOrTop;
 			status.HorizontalDocking = Docking.BottomOrRight;

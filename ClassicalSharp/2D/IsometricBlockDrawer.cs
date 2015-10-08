@@ -57,8 +57,7 @@ namespace ClassicalSharp {
 			Vector3 pos = new Vector3( vertex.X, vertex.Y, vertex.Z );
 			#if USE_DX
 			// See comment in IGraphicsApi.Draw2DTexture()
-			pos.X -= 0.5f;
-			pos.Y -= 0.5f;
+			pos.X -= 0.5f; pos.Y -= 0.5f;
 			#endif
 			pos = Utils.RotateX( Utils.RotateY( pos, cosY, sinY ), cosX, sinX );
 			vertex.X = pos.X; vertex.Y = pos.Y; vertex.Z = pos.Z;
@@ -67,7 +66,7 @@ namespace ClassicalSharp {
 		static Vector3 pos = Vector3.Zero;
 		static void DrawYFace( byte block, float y, int side ) {
 			int texId = info.GetTextureLoc( block, side );
-			TextureRectangle rec = atlas.GetTexRec( texId );
+			TextureRec rec = atlas.GetTexRec( texId );
 			FastColour col = colNormal;
 
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - y,
@@ -82,7 +81,7 @@ namespace ClassicalSharp {
 
 		static void DrawZFace( byte block, float z, int side ) {
 			int texId = info.GetTextureLoc( block, side );
-			TextureRectangle rec = atlas.GetTexRec( texId );
+			TextureRec rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colZSide;
@@ -99,7 +98,7 @@ namespace ClassicalSharp {
 
 		static void DrawXFace( byte block, float x, int side ) {
 			int texId = info.GetTextureLoc( block, side );
-			TextureRectangle rec = atlas.GetTexRec( texId );
+			TextureRec rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colXSide;

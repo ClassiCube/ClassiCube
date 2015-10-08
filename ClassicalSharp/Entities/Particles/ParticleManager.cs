@@ -60,7 +60,7 @@ namespace ClassicalSharp.Particles {
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left );
-			TextureRectangle rec = game.TerrainAtlas.GetTexRec( texLoc );
+			TextureRec rec = game.TerrainAtlas.GetTexRec( texLoc );
 			
 			float invSize = TerrainAtlas2D.invElementSize;
 			int cellsCountX = (int)( 0.25f / invSize );
@@ -78,7 +78,7 @@ namespace ClassicalSharp.Particles {
 				double yOffset = rnd.NextDouble() - 0.125;
 				double zOffset = rnd.NextDouble() - 0.125;
 				Vector3 pos = startPos + new Vector3( (float)xOffset, (float)yOffset, (float)zOffset );
-				TextureRectangle particleRec = rec;
+				TextureRec particleRec = rec;
 				particleRec.U1 = (float)( rec.U1 + rnd.Next( 0, cellsCountX ) * elementXSize );
 				particleRec.V1 = (float)( rec.V1 + rnd.Next( 0, cellsCountY ) * elementYSize );
 				particleRec.U2 = particleRec.U1 + elementXSize;

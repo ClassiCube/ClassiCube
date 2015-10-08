@@ -302,7 +302,7 @@ namespace ClassicalSharp {
 			info.SetBottom( reader.ReadUInt8(), (Block)block );
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
 			reader.ReadUInt8(); // walk sound, but we ignore this.
-			info.EmitsLight[block] = reader.ReadUInt8() != 0;
+			info.FullBright[block] = reader.ReadUInt8() != 0;
 			
 			byte shape = reader.ReadUInt8();
 			if( shape == 2 ) {

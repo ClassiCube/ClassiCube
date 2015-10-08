@@ -3,18 +3,18 @@
 namespace ClassicalSharp {
 	
 	/// <summary> Stores the four texture coordinates that bound a textured quad. </summary>
-	public struct TextureRectangle {
+	public struct TextureRec {
 		public float U1, V1, U2, V2;
 		
-		public TextureRectangle( float u, float v, float uWidth, float vHeight ) {
+		public TextureRec( float u, float v, float uWidth, float vHeight ) {
 			U1 = u;
 			V1 = v;
 			U2 = u + uWidth;
 			V2 = v + vHeight;
 		}
 		
-		public static TextureRectangle FromPoints( float u1, float u2, float v1, float v2 ) {
-			TextureRectangle rec;
+		public static TextureRec FromPoints( float u1, float u2, float v1, float v2 ) {
+			TextureRec rec;
 			rec.U1 = u1;
 			rec.U2 = u2;
 			rec.V1 = v1;

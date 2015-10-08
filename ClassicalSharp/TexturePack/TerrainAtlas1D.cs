@@ -17,10 +17,10 @@ namespace ClassicalSharp {
 			this.graphics = graphics;
 		}
 		
-		public TextureRectangle GetTexRec( int texId, int uCount, out int index ) {
+		public TextureRec GetTexRec( int texId, int uCount, out int index ) {
 			index = texId / usedElementsPerAtlas1D;
 			int y = texId % usedElementsPerAtlas1D;
-			return new TextureRectangle( 0, y * invElementSize, uCount, invElementSize );
+			return new TextureRec( 0, y * invElementSize, uCount, invElementSize );
 		}
 		
 		public int Get1DIndex( int texId ) {

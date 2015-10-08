@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 			: this( id, x, y, width, height, 0, u2, 0, v2 )	{
 		}
 		
-		public Texture( int id, int x, int y, int width, int height, TextureRectangle rec )
+		public Texture( int id, int x, int y, int width, int height, TextureRec rec )
 			: this( id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2 )	{
 		}
 		

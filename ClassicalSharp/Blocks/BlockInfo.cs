@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
 		public bool[] BlocksLight = new bool[BlocksCount];
 		
-		public bool[] EmitsLight = new bool[BlocksCount];
+		public bool[] FullBright = new bool[BlocksCount];
 		
 		public string[] Name = new string[BlocksCount];
 		
@@ -90,8 +90,8 @@ namespace ClassicalSharp {
 			MarkSprite( Block.Fire );
 			SetIsLiquid( Block.StillWater ); SetIsLiquid( Block.Water );
 			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );					
-			SetEmitsLight( Block.Lava, true ); SetEmitsLight( Block.StillLava, true );
-			SetEmitsLight( Block.Magma, true ); SetEmitsLight( Block.Fire, true );
+			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
+			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
 			SetupCullingCache();
 		}
 
@@ -146,8 +146,8 @@ namespace ClassicalSharp {
 			BlocksLight[(int)id] = blocks;
 		}
 		
-		void SetEmitsLight( Block id, bool emits ) {
-			EmitsLight[(int)id] = emits;
+		void SetFullBright( Block id, bool emits ) {
+			FullBright[(int)id] = emits;
 		}
 		
 		public void ResetBlockInfo( byte id ) {
@@ -158,7 +158,7 @@ namespace ClassicalSharp {
 			IsLiquid[id] = false;
 			Height[id] = 1;
 			BlocksLight[id] = true;
-			EmitsLight[id] = false;
+			FullBright[id] = false;
 			CullWithNeighbours[id] = true;
 			
 			Name[id] = "Invalid";
