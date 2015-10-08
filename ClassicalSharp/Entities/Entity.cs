@@ -79,8 +79,8 @@ namespace ClassicalSharp {
 						byte block = map.GetBlock( x, y, z );
 						if( condition( block ) ) {
 							float blockHeight = info.Height[block];
-							Vector3 min = new Vector3( x, y, z );
-							Vector3 max = new Vector3( x + 1, y + blockHeight, z + 1 );
+							Vector3 min = new Vector3( x, y - 1, z );
+							Vector3 max = new Vector3( x + 1, y + blockHeight - 1, z + 1 );
 							BoundingBox blockBB = new BoundingBox( min, max );
 							if( blockBB.Intersects( bounds ) ) return true;
 						}
