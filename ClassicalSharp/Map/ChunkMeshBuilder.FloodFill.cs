@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 						byte block = chunk[chunkIndex];
 						if( info.IsOpaque[block] ) {
 							didFlags[flagIndex] |= (1 << x);
-						} else {
+						} else if( (didFlags[flagIndex] & (1 << x)) == 0 ) {
 							FloodFill( didFlags, stack, i, ref solidX, ref solidY, ref solidZ );
 						}
 						
@@ -36,14 +36,14 @@ namespace ClassicalSharp {
 		                      ref bool solidX, ref bool solidY, ref bool solidZ ) {
 			int index = 0;
 			stack[index++] = startIndex;
-			bool tX0 = false, tX1 = false, tY0 = false, 
+			bool tX0 = false, tX1 = false, tY0 = false,
 			tY1 = false, tZ0 = false, tZ1 = false;
 			
 			while( index > 0 ) {
 				int bIndex = stack[--index];
-				int x = (bIndex & 0x0F);
-				int z = ((bIndex >> 4) & 0x0F );
-				int y = ((bIndex >> 8) & 0x0F);
+				int x = (bIndex & 0xF);
+				int z = ((bIndex >> 4) & 0xF);
+				int y = ((bIndex >> 8) & 0xF);
 				int flagIndex = (y << 4) | z;
 				didFlags[flagIndex] |= (1 << x);
 				
@@ -53,34 +53,39 @@ namespace ClassicalSharp {
 					if( x == 0 )
 						tX0 = true;
 					else if( (didFlags[flagIndex] & (1 << (x - 1))) == 0 )
-						stack[index++] = (y << 8) | (z << 4) | (x - 1);
+						stack[index++] = bIndex - 1;
 					
 					if( x == 15 )
 						tX1 = true;
 					else if( (didFlags[flagIndex] & (1 << (x + 1))) == 0 )
-						stack[index++] = (y << 8) | (z << 4) | (x + 1);
+						stack[index++] = bIndex + 1;
 					
 					if( z == 0 )
 						tZ0 = true;
 					else if( (didFlags[flagIndex - 1] & (1 << x)) == 0 )
-						stack[index++] = (y << 8) | ((z - 1) << 4) | x;
+						stack[index++] = bIndex - 16;
 					
 					if( z == 15 )
 						tZ1 = true;
 					else if( (didFlags[flagIndex + 1] & (1 << x)) == 0 )
-						stack[index++] = (y << 8) | ((z + 1) << 4) | x;
-					
-					if( y == 0 ) 
+						stack[index++] = bIndex + 16;
+				}
+				
+				if( !info.IsOpaqueY[block] ) {					
+					if( y == 0 )
 						tY0 = true;
-					else if( (didFlags[flagIndex - 16] & (1 << x)) == 0 )
-						stack[index++] = ((y - 1) << 8) | (z << 4) | x;
+					else if( (didFlags[flagIndex - 16] & (1 << x)) == 0 
+					        && !info.IsOpaqueY[chunk[chunkIndex - extChunkSize2]] )
+						stack[index++] = bIndex - 256;
 					
-					if( y == 15 ) 
+					if( y == 15 )
 						tY1 = true;
-					else if( (didFlags[flagIndex + 16] & (1 << x)) == 0 )
-						stack[index++] = ((y + 1) << 8) | (z << 4) | x;
+					else if( (didFlags[flagIndex + 16] & (1 << x)) == 0 
+					        && !info.IsOpaqueY[chunk[chunkIndex + extChunkSize2]] )
+						stack[index++] = bIndex + 256;
 				}
 			}
+			
 			if( tX0 && tX1 ) solidX = false;
 			if( tY0 && tY1 ) solidY = false;
 			if( tZ0 && tZ1 ) solidZ = false;

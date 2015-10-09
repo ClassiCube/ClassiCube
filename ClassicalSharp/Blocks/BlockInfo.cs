@@ -16,6 +16,9 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
 		public bool[] IsOpaque = new bool[BlocksCount];
 		
+		/// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
+		public bool[] IsOpaqueY = new bool[BlocksCount];
+		
 		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
 		public bool[] IsSprite = new bool[BlocksCount];
 		
@@ -52,6 +55,7 @@ namespace ClassicalSharp {
 				Height[tile] = 1f;
 				BlocksLight[tile] = true;
 				IsOpaque[tile] = true;
+				IsOpaqueY[tile] = true;
 				CollideType[tile] = BlockCollideType.Solid;
 				SpeedMultiplier[tile] = 1;
 				CullWithNeighbours[tile] = true;
@@ -92,6 +96,10 @@ namespace ClassicalSharp {
 			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );					
 			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
 			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
+			
+			IsOpaqueY[(byte)Block.Slab] = true;
+			IsOpaqueY[(byte)Block.CobblestoneSlab] = true;
+			IsOpaqueY[(byte)Block.Snow] = true;
 			SetupCullingCache();
 		}
 
@@ -117,7 +125,8 @@ namespace ClassicalSharp {
 		void MarkTransparent( Block id, bool blocks ) {
 			IsTransparent[(int)id] = true;
 			BlocksLight[(int)id] = blocks;
-			IsOpaque[(int)id] = false;			
+			IsOpaque[(int)id] = false;
+			IsOpaqueY[(int)id] = false;
 		}
 		
 		void MarkSprite( Block id ) {
@@ -125,12 +134,14 @@ namespace ClassicalSharp {
 			IsTransparent[(int)id] = true;
 			BlocksLight[(int)id] = false;
 			IsOpaque[(int)id] = false;
+			IsOpaqueY[(int)id] = false;
 			CollideType[(int)id] = BlockCollideType.WalkThrough;
 		}
 		
 		void MarkTranslucent( Block id ) {
 			IsTranslucent[(int)id] = true;
 			IsOpaque[(int)id] = false;
+			IsOpaqueY[(int)id] = false;
 		}
 		
 		void SetIsLiquid( Block id ) {

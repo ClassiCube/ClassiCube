@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define DEBUG_OCCLUSION
+using System;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
@@ -160,6 +161,17 @@ namespace ClassicalSharp {
 			int xMax = Math.Min( width, x1 + chunkSize );
 			int yMax = Math.Min( height, y1 + chunkSize );
 			int zMax = Math.Min( length, z1 + chunkSize );
+			#if DEBUG_OCCLUSION
+			int flags = ComputeOcclusion();
+			FastColour col = new FastColour( 60, 60, 60, 255 );
+			if( (flags & 1) != 0 ) col.R = 255; // x
+			if( (flags & 4) != 0 ) col.G = 255; // y
+			if( (flags & 2) != 0 ) col.B = 255; // z
+			map.Sunlight = map.Shadowlight = col;
+			map.SunlightXSide = map.ShadowlightXSide = col;
+			map.SunlightZSide = map.ShadowlightZSide = col;
+			map.SunlightYBottom = map.ShadowlightYBottom = col;
+			#endif
 			
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
