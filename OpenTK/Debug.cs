@@ -1,4 +1,4 @@
-﻿//#define DEBUG_OPENTK
+﻿#define DEBUG_OPENTK
 using System;
 
 namespace OpenTK {

@@ -102,6 +102,7 @@
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
     <Compile Include="Platform\Windows\WinDisplayDevice.cs" />
+    <Compile Include="Platform\Windows\WinDXContext.cs" />
     <Compile Include="Platform\Windows\WinGLContext.cs" />
     <Compile Include="Platform\Windows\WinGLNative.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />

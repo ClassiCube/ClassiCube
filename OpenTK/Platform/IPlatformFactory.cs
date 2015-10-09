@@ -79,6 +79,7 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
+			//return new WinDXContext( mode, (WinWindowInfo)window );
 			return new WinGLContext(mode, (WinWindowInfo)window);
 		}
 	}

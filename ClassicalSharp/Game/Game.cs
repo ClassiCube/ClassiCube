@@ -185,21 +185,20 @@ namespace ClassicalSharp {
 		const int ticksFrequency = 20;
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
-		double ticksAccumulator = 0, imageCheckAccumulator = 0;
+		const double cameraPeriod = 1.0 / 60.0;
+		double ticksAccumulator = 0, imageCheckAccumulator = 0, cameraAccumulator = 0;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
 			Graphics.BeginFrame( this );
 			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
-			imageCheckAccumulator += e.Time;
-			ticksAccumulator += e.Time;
 			Vertices = 0;
 			if( !Focused && (activeScreen == null || !activeScreen.HandlesAllInput) ) {
 				SetNewScreen( new PauseScreen( this ) );
 			}
 			
 			base.OnRenderFrame( e );
-			CheckScheduledTasks();
+			CheckScheduledTasks( e.Time );
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
 			
@@ -241,7 +240,11 @@ namespace ClassicalSharp {
 			Graphics.EndFrame( this );
 		}
 		
-		void CheckScheduledTasks() {
+		void CheckScheduledTasks( double time ) {
+			imageCheckAccumulator += time;
+			ticksAccumulator += time;
+			cameraAccumulator += time;
+			
 			if( imageCheckAccumulator > imageCheckPeriod ) {
 				imageCheckAccumulator -= imageCheckPeriod;
 				AsyncDownloader.PurgeOldEntries( 10 );
@@ -250,12 +253,16 @@ namespace ClassicalSharp {
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
 				Network.Tick( ticksPeriod );
-				Players.Tick( ticksPeriod );
-				Camera.Tick( ticksPeriod );
+				Players.Tick( ticksPeriod );			
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
+			}
+			
+			while( cameraAccumulator >= cameraPeriod ) {
+				Camera.Tick( ticksPeriod );
+				cameraAccumulator -= cameraPeriod;
 			}
 			
 			if( ticksThisFrame > ticksFrequency / 3 ) {

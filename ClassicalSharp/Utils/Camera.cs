@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			delta = Point.Empty;
 		}
 		
-		static readonly float sensiFactor = 0.0002f * Utils.Rad2Deg;
+		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 			float yaw = player.nextYaw + delta.X * sensitivity;
