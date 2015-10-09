@@ -19,7 +19,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <BaseAddress>4194304</BaseAddress>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -108,6 +108,7 @@
     <Compile Include="Entities\Particles\Particle.cs" />
     <Compile Include="Entities\Particles\ParticleManager.cs" />
     <Compile Include="Entities\Particles\TerrainParticle.cs" />
+    <Compile Include="Entities\PhysicsEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Player.Rendering.cs" />
     <Compile Include="Game\ChatLog.cs" />
@@ -159,12 +160,12 @@
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
-    <Compile Include="Physics\Entity.Physics.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />
     <Compile Include="Physics\Picking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
+    <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
     <Compile Include="Rendering\MapRenderer.Rendering.cs" />
     <Compile Include="Rendering\MinimalEnvRenderer.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />

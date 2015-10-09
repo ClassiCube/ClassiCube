@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Drawing;
-using OpenTK;
 using ClassicalSharp.Network;
-using ClassicalSharp.Model;
-using ClassicalSharp.Renderers;
+using OpenTK;
 
 namespace ClassicalSharp {
 
-	public abstract partial class Player : Entity {
+	public abstract partial class Player : PhysicsEntity {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
@@ -36,9 +34,8 @@ namespace ClassicalSharp {
 		}
 		
 		Block GetBlock( Vector3 coords ) {
-			Vector3I blockCoords = Vector3I.Floor( coords );
-			return map.IsValidPos( blockCoords ) ?
-				(Block)map.GetBlock( blockCoords ) : Block.Air;
+			Vector3I p = Vector3I.Floor( coords );
+			return (Block)map.SafeGetBlock( p.X, p.Y, p.Z );
 		}
 		
 		public abstract void Tick( double delta );

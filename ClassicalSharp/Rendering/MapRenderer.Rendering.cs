@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		void RenderNormalBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.NormalParts == null || !info.Visible ) continue;
+				if( info.NormalParts == null || !info.Visible || info.Occluded ) continue;
 
 				ChunkPartInfo part = info.NormalParts[batch];
 				if( part.IndicesCount == 0 ) continue;
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		void RenderTranslucentBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.TranslucentParts == null || !info.Visible ) continue;
+				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				
 				if( part.IndicesCount == 0 ) continue;
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		void RenderTranslucentBatchDepthPass( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
-				if( info.TranslucentParts == null || !info.Visible ) continue;
+				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;

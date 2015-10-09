@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns a pointer to the start of the y'th scanline. </summary>
 		public int* GetRowPtr( int y ) {
-			return (int*)( scan0Byte + ( y * Stride ) );
+			return (int*)(scan0Byte + (y * Stride));
 		}
 		
 		public static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {

@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			float multiply = flying ? ( speeding ? 90 : 15 ) : ( speeding ? 10 : 1 );
+			float multiply = flying ? (speeding ? 90 : 15) : (speeding ? 10 : 1);
 			float modifier = LowestSpeedModifier();
 			multiply *= modifier;
 			
@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float yMul = modifier * Math.Max( 1, multiply / 5f );
+				float yMul = multiply == 1 ? 1 : multiply / 5f;
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				Move( xMoving, zMoving, factor * multiply, normalDrag, gravity, yMul );
 				

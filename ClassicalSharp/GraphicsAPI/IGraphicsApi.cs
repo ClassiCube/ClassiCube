@@ -246,6 +246,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			LoadIdentityMatrix();
 			AlphaBlending = true;
 			if( setFog ) Fog = false;
+			//OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B02 );
 		}
 		
 		protected virtual void LoadOrthoMatrix( float width, float height ) {
@@ -262,6 +263,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthTest = true;
 			AlphaBlending = false;
 			if( setFog ) Fog = true;
+			//OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B01 );
 		}
 		
 		internal unsafe int MakeDefaultIb() {

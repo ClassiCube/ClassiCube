@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
-	public abstract partial class Entity {
+	public abstract class Entity {
 		
 		public Entity( Game game ) {
 			map = game.Map;
@@ -19,6 +19,8 @@ namespace ClassicalSharp {
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
 		protected float StepSize;
+		protected Map map;
+		protected BlockInfo info;
 		
 		public float YawRadians {
 			get { return YawDegrees * Utils.Deg2Rad; }
@@ -87,5 +89,7 @@ namespace ClassicalSharp {
 			}
 			return false;
 		}
+		
+		public const float Adjustment = 0.001f;
 	}
 }
