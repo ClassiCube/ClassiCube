@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public partial class Entity {
 		
-		protected bool onGround;
+		protected bool onGround, collideX, collideY, collideZ;
 		protected Map map;
 		protected BlockInfo info;
 		public const float Adjustment = 0.001f;
@@ -105,6 +105,7 @@ namespace ClassicalSharp {
 			bool wasOn = onGround;
 			onGround = false;
 			Array.Sort( stateCache, 0, count, comparer );
+			collideX = false; collideY = false; collideZ = false;
 
 			for( int i = 0; i < count; i++ ) {
 				State state = stateCache[i];
@@ -185,18 +186,21 @@ namespace ClassicalSharp {
 			Velocity.X = 0;
 			entityBB.Min.X = entityExtentBB.Min.X = Position.X - size.X / 2;
 			entityBB.Max.X = entityExtentBB.Max.X = Position.X + size.X / 2;
+			collideX = true;
 		}
 		
 		void ClipY( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			Velocity.Y = 0;
 			entityBB.Min.Y = entityExtentBB.Min.Y = Position.Y;
 			entityBB.Max.Y = entityExtentBB.Max.Y = Position.Y + size.Y;
+			collideY = true;
 		}
 		
 		void ClipZ( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			Velocity.Z = 0;
 			entityBB.Min.Z = entityExtentBB.Min.Z = Position.Z - size.Z / 2;
 			entityBB.Max.Z = entityExtentBB.Max.Z = Position.Z + size.Z / 2;
+			collideZ = true;
 		}
 		
 		static void CalcTime( ref Vector3 vel, ref BoundingBox entityBB, ref BoundingBox blockBB,
@@ -208,6 +212,7 @@ namespace ClassicalSharp {
 			tx = vel.X == 0 ? float.PositiveInfinity : Math.Abs( dx / vel.X );
 			ty = vel.Y == 0 ? float.PositiveInfinity : Math.Abs( dy / vel.Y );
 			tz = vel.Z == 0 ? float.PositiveInfinity : Math.Abs( dz / vel.Z );
+			
 			if( entityBB.XIntersects( blockBB ) ) tx = 0;
 			if( entityBB.YIntersects( blockBB ) ) ty = 0;
 			if( entityBB.ZIntersects( blockBB ) ) tz = 0;

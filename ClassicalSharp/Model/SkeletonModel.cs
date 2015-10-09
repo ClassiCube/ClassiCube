@@ -65,8 +65,8 @@ namespace ClassicalSharp.Model {
 			DrawPart( Torso );
 			DrawRotate( 0, 12/16f, 0, p.leftLegXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, RightLeg );
-			DrawRotate( -5/16f, 23/16f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
-			DrawRotate( 5/16f, 23/16f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
+			DrawRotate( -5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, p.leftArmZRot, LeftArm );
+			DrawRotate( 5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, p.rightArmZRot, RightArm );
 		}
 		
 		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;

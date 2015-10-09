@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -31,7 +30,7 @@ namespace Launcher {
 				&& ( cbCCHideEmpty.Checked ? e.Players[0] != '0' : true );
 			KeyPreview = true;
 			KeyDown += KeyDownHandler;
-			LoadResumeInfo();
+			LoadSavedInfo();
 		}
 
 		void KeyDownHandler(object sender, KeyEventArgs e) {
@@ -111,7 +110,7 @@ namespace Launcher {
 			StartClient( data, cbDCccskins.Checked );
 		}
 		
-		void LoadResumeInfo() {
+		void LoadSavedInfo() {
 			try {
 				Options.Load();
 			} catch( IOException ) {
@@ -122,6 +121,7 @@ namespace Launcher {
 			txtDCip.Text = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
 			txtDCport.Text = Options.Get( "launcher-port" ) ?? "25565";
 			cbDCccskins.Checked = Options.GetBool( "launcher-ccskins", false );
+			txtCCUser.Text = Options.Get( "launcher-cc-username" ) ?? "";
 
 			IPAddress address;
 			if( !IPAddress.TryParse( txtDCip.Text, out address ) )
@@ -131,11 +131,16 @@ namespace Launcher {
 				txtDCport.Text = "25565";
 			
 			string mppass = Options.Get( "launcher-mppass" ) ?? null;
-			mppass = DecodeMppass( mppass, txtDCuser.Text );
+			mppass = Secure.Decode( mppass, txtDCuser.Text );
 			if( mppass != null )
 				txtDCmppass.Text = mppass;
+				
+			mppass = Options.Get( "launcher-cc-password" ) ?? null;
+			mppass = Secure.Decode( mppass, txtCCUser.Text );
+			if( mppass != null )
+				txtCCPassword.Text = mppass;
 		}
-		#endregion		
+		#endregion
 
 		NameComparer ccNameComparer = new NameComparer( 0 );
 		NumericalComparer ccPlayersComparer = new NumericalComparer( 1 );
@@ -194,36 +199,6 @@ namespace Launcher {
 			}
 		}
 		
-		static string EncodeMppass( string mppass, string user ) {
-			if( String.IsNullOrEmpty( mppass ) || String.IsNullOrEmpty( user ) ) return "";
-			
-			byte[] c = new byte[1 + mppass.Length];
-			for( int i = 0; i < mppass.Length; i++ ) {
-				c[i + 1] = (byte)( mppass[i] ^ user[i % user.Length] ^ 0x43 );
-			}
-			c[0] = 1; // format version
-			// TODO: version 2 using CryptProtectData for Windows
-			return Convert.ToBase64String( c );
-		}
-		
-		static string DecodeMppass( string encoded, string user ) {
-			if( String.IsNullOrEmpty( encoded ) || String.IsNullOrEmpty( user ) ) return null;
-			
-			byte[] data;
-			try {
-				data = Convert.FromBase64String( encoded );
-			} catch( FormatException ) {
-				return null;
-			}
-			if( data.Length == 0 || data[0] != 1 ) return null;
-			
-			char[] c = new char[data.Length - 1];
-			for( int i = 0; i < c.Length; i++ ) {
-				c[i] = (char)( data[i + 1] ^ user[i % user.Length] ^ 0x43 );
-			}
-			return new String( c );
-		}
-		
 		internal static void UpdateResumeInfo( GameStartData data, bool classiCubeSkins ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
 			try {
@@ -234,7 +209,7 @@ namespace Launcher {
 			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
-			Options.Set( "launcher-mppass", EncodeMppass( data.Mppass, data.Username ) );
+			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.Username ) );
 			Options.Set( "launcher-ccskins", classiCubeSkins );
 			
 			try {

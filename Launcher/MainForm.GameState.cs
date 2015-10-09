@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
+using ClassicalSharp;
 
 namespace Launcher {
 	
@@ -40,12 +42,30 @@ namespace Launcher {
 				ServersTable.Items.Clear();
 				Servers.Clear();
 			}
+			
+			UpdateSignInInfo( Username.Text, Password.Text );
 			SignInButton.Enabled = false;
 			Tab.TabPages.Remove( ServersTab );
 			Thread loginThread = new Thread( LoginAsync );
 			loginThread.Name = "Launcher.LoginAsync_" + HostServer;
 			loginThread.IsBackground = true;
 			loginThread.Start();
+		}
+		
+		static void UpdateSignInInfo( string user, string password ) {
+			// If the client has changed some settings in the meantime, make sure we keep the changes
+			try {
+				Options.Load();
+			} catch( IOException ) {
+			}
+			
+			Options.Set( "launcher-cc-username", user );
+			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
+			
+			try {
+				Options.Save();
+			} catch( IOException ) {
+			}
 		}
 		
 		void LoginAsync() {

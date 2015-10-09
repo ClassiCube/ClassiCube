@@ -65,21 +65,21 @@ namespace ClassicalSharp {
 			Utils.Clamp( ref swingN, 0, 1 );
 		}
 		
-		const float armMax = (float)( 90 * Math.PI / 180.0 );
-		const float legMax = (float)( 80 * Math.PI / 180.0 );
-		const float idleMax = (float)( 3 * Math.PI / 180.0 );
-		const float idleXPeriod = (float)( 2 * Math.PI / 5f );
-		const float idleZPeriod = (float)( 2 * Math.PI / 3.5f );
+		const float armMax = 60 * Utils.Deg2Rad;
+		const float legMax = 80 * Utils.Deg2Rad;
+		const float idleMax = 3 * Utils.Deg2Rad;
+		const float idleXPeriod = (float)(2 * Math.PI / 5.0f);
+		const float idleZPeriod = (float)(2 * Math.PI / 3.5f);
 		protected void SetCurrentAnimState( float t ) {
 			float swing = Utils.Lerp( swingO, swingN, t );
 			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
-			float idleTime = (float)( game.accumulator );
-			float idleXRot = (float)( Math.Sin( idleTime * idleXPeriod ) * idleMax );
-			float idleZRot = (float)( idleMax + Math.Cos( idleTime * idleZPeriod ) * idleMax );
+			float idleTime = (float)game.accumulator;
+			float idleXRot = (float)(Math.Sin( idleTime * idleXPeriod ) * idleMax);
+			float idleZRot = (float)(idleMax + Math.Cos(idleTime * idleZPeriod) * idleMax);
 			
-			leftArmXRot = (float)( Math.Cos( walkTime ) * swing * armMax ) - idleXRot;
+			leftArmXRot = (float)(Math.Cos( walkTime ) * swing * armMax) - idleXRot;
 			rightArmXRot = -leftArmXRot;
-			rightLegXRot = (float)( Math.Cos( walkTime ) * swing * legMax );
+			rightLegXRot = (float)(Math.Cos( walkTime ) * swing * legMax);
 			leftLegXRot = -rightLegXRot;
 			rightArmZRot = idleZRot;
 			leftArmZRot = -idleZRot;
