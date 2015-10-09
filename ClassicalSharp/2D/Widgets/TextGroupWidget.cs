@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 			if( !String.IsNullOrEmpty( text ) ) {
 				DrawTextArgs args = new DrawTextArgs( text, true );
 				Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
-				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalDocking );
+				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
 				textures[index] = tex;
 			} else {
@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 			int y = 0;
 			int deltaY = newHeight - textures[index].Height;
 			
-			if( VerticalDocking == Docking.LeftOrTop ) {
+			if( VerticalAnchor == Anchor.LeftOrTop ) {
 				y = Y;
 				for( int i = 0; i < index; i++ ) {
 					y += textures[i].Height;
@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < textures.Length; i++ ) {
 				Height += textures[i].Height;
 			}
-			Y = CalcOffset( game.Height, Height, YOffset, VerticalDocking );
+			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 			
 			Width = 0;
 			for( int i = 0; i < textures.Length; i++ ) {
@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 					Width = width;
 				}
 			}
-			X = CalcOffset( game.Width, Width, XOffset, HorizontalDocking );
+			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
 		}
 		
 		public override void Render( double delta ) {

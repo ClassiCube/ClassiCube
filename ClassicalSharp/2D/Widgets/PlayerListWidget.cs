@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 
 namespace ClassicalSharp {
@@ -8,8 +7,8 @@ namespace ClassicalSharp {
 		
 		protected readonly Font font;
 		public PlayerListWidget( Game game, Font font ) : base( game ) {
-			HorizontalDocking = Docking.Centre;
-			VerticalDocking = Docking.Centre;
+			HorizontalAnchor = Anchor.Centre;
+			VerticalAnchor = Anchor.Centre;
 			this.font = font;
 		}
 		
@@ -19,11 +18,11 @@ namespace ClassicalSharp {
 		protected Texture[] textures = new Texture[256];
 		protected int columns;
 		protected int xMin, xMax, yHeight;
-		protected static FastColour tableCol = new FastColour( 100, 100, 100, 80 );
+		protected static FastColour tableCol = new FastColour( 20, 20, 20, 220 );
 		
 		public override void Init() {
 			CreateInitialPlayerInfo();
-			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
+			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 		
@@ -67,9 +66,8 @@ namespace ClassicalSharp {
 			int maxWidth = 0;
 			int maxIndex = Math.Min( namesCount, i + namesPerColumn );
 			
-			for( ; i < maxIndex; i++ ) {
+			for( ; i < maxIndex; i++ )
 				maxWidth = Math.Max( maxWidth, textures[i].Width );
-			}
 			return maxWidth;
 		}
 		
@@ -78,9 +76,8 @@ namespace ClassicalSharp {
 			int total = 0;
 			int maxIndex = Math.Min( namesCount, i + namesPerColumn );
 			
-			for( ; i < maxIndex; i++ ) {
+			for( ; i < maxIndex; i++ )
 				total += textures[i].Height;
-			}
 			return total;
 		}
 		
@@ -90,24 +87,19 @@ namespace ClassicalSharp {
 			
 			for( ; i < maxIndex; i++ ) {
 				Texture tex = textures[i];
-				tex.X1 = x;
-				tex.Y1 = y;
+				tex.X1 = x; tex.Y1 = y;
 				y += tex.Height;
 				textures[i] = tex;
 			}
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
+			int diffX = newX - X; int diffY = newY - Y;
 			for( int i = 0; i < namesCount; i++ ) {
-				Texture tex = textures[i];
-				tex.X1 += deltaX;
-				tex.Y1 += deltaY;
-				textures[i] = tex;
+				textures[i].X1 += diffX;
+				textures[i].Y1 += diffY;
 			}
-			X = newX;
-			Y = newY;
+			X = newX; Y = newY;
 		}
 		
 		protected abstract void CreateInitialPlayerInfo();
@@ -131,7 +123,7 @@ namespace ClassicalSharp {
 			int offset = 0;
 			if( columns % 2 != 0 ) {
 				// For an odd number of columns, the middle column is centred.
-				offset = ( GetColumnWidth( midCol ) + 1 ) / 2; // ceiling divide by 2
+				offset = Utils.CeilDiv( GetColumnWidth( midCol ), 2 );
 			}
 			
 			int x = centreX - offset;			

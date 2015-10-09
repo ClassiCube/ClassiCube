@@ -56,19 +56,19 @@ namespace ClassicalSharp {
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
 			textInput.YOffset = ChatInputYOffset;
 			status = new TextGroupWidget( game, 3, chatFont );
-			status.VerticalDocking = Docking.LeftOrTop;
-			status.HorizontalDocking = Docking.BottomOrRight;
+			status.VerticalAnchor = Anchor.LeftOrTop;
+			status.HorizontalAnchor = Anchor.BottomOrRight;
 			status.Init();
 			bottomRight = new TextGroupWidget( game, 3, chatFont );
-			bottomRight.VerticalDocking = Docking.BottomOrRight;
-			bottomRight.HorizontalDocking = Docking.BottomOrRight;
+			bottomRight.VerticalAnchor = Anchor.BottomOrRight;
+			bottomRight.HorizontalAnchor = Anchor.BottomOrRight;
 			bottomRight.YOffset = ChatInputYOffset;
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( game, chatLines, chatFont );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = ChatLogYOffset;
-			normalChat.HorizontalDocking = Docking.LeftOrTop;
-			normalChat.VerticalDocking = Docking.BottomOrRight;
+			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
+			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();
 			
 			ChatLog chat = game.Chat;

@@ -8,8 +8,8 @@ namespace ClassicalSharp {
 	public sealed class TextInputWidget : Widget {
 		
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
-			HorizontalDocking = Docking.LeftOrTop;
-			VerticalDocking = Docking.BottomOrRight;
+			HorizontalAnchor = Anchor.LeftOrTop;
+			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;

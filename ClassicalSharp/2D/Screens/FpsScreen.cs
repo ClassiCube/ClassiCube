@@ -73,6 +73,9 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref posTexture );
 		}
 		
+		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		}
+		
 		void DrawPosition() {
 			int index = 0;
 			TextureRec xy = new TextureRec( 0, posTexture.Y1, baseWidth, posTexture.Height );

@@ -35,8 +35,8 @@ namespace ClassicalSharp {
 			
 			MakeKeys( 0, 11, -140 );
 			MakeKeys( 11, 11, 140 );
-			buttons[index] = Make( 0, 5, "Back to menu", Docking.BottomOrRight, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			statusWidget = TextWidget.Create( game, 0, 150, "", Docking.Centre, Docking.Centre, regularFont );
+			buttons[index] = Make( 0, 5, "Back to menu", Anchor.BottomOrRight, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			statusWidget = TextWidget.Create( game, 0, 150, "", Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		int index;
@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 				string text = descriptions[start + i] + ": " + keyNames[(int)game.Keys[mapping]];
 				
 				buttons[index++] = ButtonWidget.Create( game, x, y, 240, 25, text,
-				                                       Docking.Centre, Docking.Centre, keyFont, OnWidgetClick );
+				                                       Anchor.Centre, Anchor.Centre, keyFont, OnWidgetClick );
 				y += 30;
 			}
 		}
@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 			statusWidget.Dispose();
 			
 			string text = "Press new key binding for " + descriptions[index] + ":";
-			statusWidget = TextWidget.Create( game, 0, 150, text, Docking.Centre, Docking.Centre, regularFont );
+			statusWidget = TextWidget.Create( game, 0, 150, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -86,8 +86,8 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Docking vDocking, Action<Game, ButtonWidget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text, Docking.Centre, vDocking, keyFont, onClick );
+		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, ButtonWidget> onClick ) {
+			return ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, keyFont, onClick );
 		}
 		
 		public override void Dispose() {

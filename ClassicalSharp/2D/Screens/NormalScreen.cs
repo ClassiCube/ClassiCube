@@ -67,7 +67,8 @@ namespace ClassicalSharp {
 			chat.OnResize( oldWidth, oldHeight, width, height );
 			hotbar.OnResize( oldWidth, oldHeight, width, height );
 			if( playerList != null ) {
-				playerList.OnResize( oldWidth, oldHeight, width, height );
+				int deltaX = CalcDelta( width, oldWidth, Anchor.Centre );
+				playerList.MoveTo( playerList.X + deltaX, height / 4 );
 			}
 		}
 		
@@ -102,6 +103,7 @@ namespace ClassicalSharp {
 						playerList = new NormalPlayerListWidget( game, playerFont );
 					}
 					playerList.Init();
+					playerList.MoveTo( playerList.X, game.Height / 4 );
 				}
 			}
 			if( chat.HandlesKeyDown( key ) ) {

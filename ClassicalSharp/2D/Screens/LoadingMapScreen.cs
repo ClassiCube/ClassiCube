@@ -31,8 +31,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			graphicsApi.Fog = false;
-			titleWidget = TextWidget.Create( game, 0, 30, serverName, Docking.Centre, Docking.LeftOrTop, font );
-			messageWidget = TextWidget.Create( game, 0, 60, serverMotd, Docking.Centre, Docking.LeftOrTop, font );
+			titleWidget = TextWidget.Create( game, 0, 30, serverName, Anchor.Centre, Anchor.LeftOrTop, font );
+			messageWidget = TextWidget.Create( game, 0, 60, serverMotd, Anchor.Centre, Anchor.LeftOrTop, font );
 			progX = game.Width / 2f - progWidth / 2f;
 			
 			Size size = new Size( progWidth, progHeight );

@@ -25,8 +25,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			graphicsApi.ClearColour( new FastColour( 65, 31, 31 ) );
-			titleWidget = TextWidget.Create( game, 0, -30, title, Docking.Centre, Docking.Centre, titleFont );
-			messageWidget = TextWidget.Create( game, 0, 10, message, Docking.Centre, Docking.Centre, messageFont );
+			titleWidget = TextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont );
+			messageWidget = TextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont );
 		}
 		
 		public override void Dispose() {

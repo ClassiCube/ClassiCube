@@ -8,8 +8,8 @@ namespace ClassicalSharp {
 	public sealed class BlockHotbarWidget : Widget {
 		
 		public BlockHotbarWidget( Game game ) : base( game ) {
-			HorizontalDocking = Docking.Centre;
-			VerticalDocking = Docking.BottomOrRight;
+			HorizontalAnchor = Anchor.Centre;
+			VerticalAnchor = Anchor.BottomOrRight;
 			hotbarCount = game.Inventory.Hotbar.Length;
 		}
 		

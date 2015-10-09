@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 		void PlayerSpawned( object sender, IdEventArgs e ) {
 			Player player = game.Players[e.Id];
 			AddPlayerInfo( player );
-			columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
+			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 
@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 					RemoveItemAt( info, i );
 					RemoveItemAt( textures, i );
 					namesCount--;
-					columns = (int)Math.Ceiling( (double)namesCount / namesPerColumn );
+					columns = Utils.CeilDiv( namesCount, namesPerColumn );
 					SortPlayerInfo();
 					return;
 				}

@@ -52,13 +52,13 @@ namespace ClassicalSharp {
 			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			
 			inputWidget = MenuInputWidget.Create(
-				game, -30, 50, 500, 25, "", Docking.Centre, Docking.Centre,
+				game, -30, 50, 500, 25, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, hintFont, new PathValidator() );
 			
 			buttons = new [] {
-				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Docking.Centre,
-				                    Docking.Centre, titleFont, OkButtonClick ),
-				ButtonWidget.Create( game, 0, 5, 240, 35, "Back to menu", Docking.Centre, Docking.BottomOrRight,
+				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OkButtonClick ),
+				ButtonWidget.Create( game, 0, 5, 240, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
 				                    titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
@@ -110,9 +110,9 @@ namespace ClassicalSharp {
 			game.SetNewScreen( new PauseScreen( game ) );
 		}
 		
-		void MakeDescWidget( string text) {
+		void MakeDescWidget( string text ) {
 			DisposeDescWidget();
-			descWidget = TextWidget.Create( game, 0, 90, text, Docking.Centre, Docking.Centre, regularFont );
+			descWidget = TextWidget.Create( game, 0, 90, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		void DisposeDescWidget() {

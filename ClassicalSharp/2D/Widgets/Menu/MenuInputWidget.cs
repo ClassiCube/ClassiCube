@@ -7,20 +7,20 @@ namespace ClassicalSharp {
 	public sealed class MenuInputWidget : Widget {
 		
 		public MenuInputWidget( Game game, Font font, Font boldFont, Font hintFont ) : base( game ) {
-			HorizontalDocking = Docking.LeftOrTop;
-			VerticalDocking = Docking.BottomOrRight;
+			HorizontalAnchor = Anchor.LeftOrTop;
+			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
 			this.boldFont = boldFont;
 			this.hintFont = hintFont;
 			chatInputText = new StringBuffer( 64 );
 		}
 		
-		public static MenuInputWidget Create( Game game, int x, int y, int width, int height, string text, Docking horizontal,
-		                                     Docking vertical, Font font, Font tildeFont, Font hintFont, MenuInputValidator validator ) {
+		public static MenuInputWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
+		                                     Anchor vertical, Font font, Font tildeFont, Font hintFont, MenuInputValidator validator ) {
 			MenuInputWidget widget = new MenuInputWidget( game, font, tildeFont, hintFont );
 			
-			widget.HorizontalDocking = horizontal;
-			widget.VerticalDocking = vertical;
+			widget.HorizontalAnchor = horizontal;
+			widget.VerticalAnchor = vertical;
 			widget.XOffset = x;
 			widget.YOffset = y;
 			widget.DesiredMaxWidth = width;
@@ -76,8 +76,8 @@ namespace ClassicalSharp {
 				}
 			}
 			
-			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalDocking );
-			Y = CalcOffset( game.Height, size.Height, YOffset, VerticalDocking );
+			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalAnchor );
+			Y = CalcOffset( game.Height, size.Height, YOffset, VerticalAnchor );
 			chatCaretTexture.X1 = chatInputTexture.X1 = X;
 			chatCaretTexture.X1 += textSize.Width;
 			chatCaretTexture.Y1 = chatInputTexture.Y1 = Y;

@@ -10,11 +10,11 @@ namespace ClassicalSharp {
 			this.font = font;
 		}
 		
-		public static TextWidget Create( Game game, int x, int y, string text, Docking horizontal, Docking vertical, Font font ) {
+		public static TextWidget Create( Game game, int x, int y, string text, Anchor horizontal, Anchor vertical, Font font ) {
 			TextWidget widget = new TextWidget( game, font );
 			widget.Init();
-			widget.HorizontalDocking = horizontal;
-			widget.VerticalDocking = vertical;
+			widget.HorizontalAnchor = horizontal;
+			widget.VerticalAnchor = vertical;
 			widget.XOffset = x;
 			widget.YOffset = y;
 			widget.SetText( text );
@@ -39,8 +39,8 @@ namespace ClassicalSharp {
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, true );
 				texture = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
-				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalDocking );
-				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalDocking );
+				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
+				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );
 				Height = texture.Height;
 			}		
 			Width = texture.Width;

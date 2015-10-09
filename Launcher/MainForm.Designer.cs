@@ -53,6 +53,8 @@ namespace Launcher
 			this.txtCCSearch = new System.Windows.Forms.TextBox();
 			this.lblCCSearch = new System.Windows.Forms.Label();
 			this.tabMinecraftNet = new System.Windows.Forms.TabPage();
+			this.lblMCdead2 = new System.Windows.Forms.Label();
+			this.lblMCdead = new System.Windows.Forms.Label();
 			this.tabDC = new System.Windows.Forms.TabPage();
 			this.lblDChint = new System.Windows.Forms.Label();
 			this.txtDCmppass = new System.Windows.Forms.TextBox();
@@ -66,8 +68,6 @@ namespace Launcher
 			this.lblDCaddress = new System.Windows.Forms.Label();
 			this.lblDCuser = new System.Windows.Forms.Label();
 			this.tabs = new System.Windows.Forms.TabControl();
-			this.lblMCdead = new System.Windows.Forms.Label();
-			this.lblMCdead2 = new System.Windows.Forms.Label();
 			this.tabClassicubeNet.SuspendLayout();
 			this.tabCC.SuspendLayout();
 			this.tabCCSignIn.SuspendLayout();
@@ -318,6 +318,24 @@ namespace Launcher
 			this.tabMinecraftNet.Text = "minecraft.net";
 			this.tabMinecraftNet.UseVisualStyleBackColor = true;
 			// 
+			// lblMCdead2
+			// 
+			this.lblMCdead2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblMCdead2.Location = new System.Drawing.Point(20, 62);
+			this.lblMCdead2.Name = "lblMCdead2";
+			this.lblMCdead2.Size = new System.Drawing.Size(300, 41);
+			this.lblMCdead2.TabIndex = 1;
+			this.lblMCdead2.Text = "But don\'t despair! You can sign up for an account at classicube.net.";
+			// 
+			// lblMCdead
+			// 
+			this.lblMCdead.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.lblMCdead.Location = new System.Drawing.Point(20, 20);
+			this.lblMCdead.Name = "lblMCdead";
+			this.lblMCdead.Size = new System.Drawing.Size(380, 23);
+			this.lblMCdead.TabIndex = 0;
+			this.lblMCdead.Text = "Classic has been removed from minecraft.net.";
+			// 
 			// tabDC
 			// 
 			this.tabDC.Controls.Add(this.lblDChint);
@@ -449,24 +467,6 @@ namespace Launcher
 			this.tabs.SelectedIndex = 0;
 			this.tabs.Size = new System.Drawing.Size(482, 466);
 			this.tabs.TabIndex = 0;
-			// 
-			// lblMCdead
-			// 
-			this.lblMCdead.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCdead.Location = new System.Drawing.Point(20, 20);
-			this.lblMCdead.Name = "lblMCdead";
-			this.lblMCdead.Size = new System.Drawing.Size(380, 23);
-			this.lblMCdead.TabIndex = 0;
-			this.lblMCdead.Text = "Classic has been removed from minecraft.net.";
-			// 
-			// lblMCdead2
-			// 
-			this.lblMCdead2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.lblMCdead2.Location = new System.Drawing.Point(20, 62);
-			this.lblMCdead2.Name = "lblMCdead2";
-			this.lblMCdead2.Size = new System.Drawing.Size(300, 41);
-			this.lblMCdead2.TabIndex = 1;
-			this.lblMCdead2.Text = "But don\'t despair! You can sign up for an account at classicube.net.";
 			// 
 			// MainForm
 			// 

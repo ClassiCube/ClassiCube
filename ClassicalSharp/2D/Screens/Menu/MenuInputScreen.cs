@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 				descWidget.Dispose();
 			
 			string text = widget.Text + ": " + widget.GetValue( game );
-			descWidget = TextWidget.Create( game, 0, 100, text, Docking.Centre, Docking.Centre, regularFont );
+			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 
 		protected void OnWidgetClick( Game game, ButtonWidget widget ) {
@@ -112,10 +112,10 @@ namespace ClassicalSharp {
 			
 			targetWidget = selectedWidget;
 			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, widget.GetValue( game ),
-			                                     Docking.Centre, Docking.Centre, regularFont, titleFont,
+			                                     Anchor.Centre, Anchor.Centre, regularFont, titleFont,
 			                                     hintFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",
-			                                         Docking.Centre, Docking.Centre, titleFont, OnWidgetClick );
+			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			UpdateDescription( targetWidget );
 		}
 		

@@ -19,18 +19,18 @@ namespace ClassicalSharp {
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[] {
-				Make( 0, -100, "Options", Docking.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
-				Make( 0, -50, "Environment settings", Docking.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( 0, 0, "Key mappings", Docking.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
-				Make( 0, 50, "Save level", Docking.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				Make( 0, -100, "Options", Anchor.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
+				Make( 0, -50, "Environment settings", Anchor.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
+				Make( 0, 0, "Key mappings", Anchor.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
+				Make( 0, 50, "Save level", Anchor.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				// TODO: singleplayer Make( 0, 50, "Load/Save/Gen level", Docking.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
-				Make( 0, 55, "Back to game", Docking.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
-				Make( 0, 5, "Quit game", Docking.BottomOrRight, (g, w) => g.Exit() ),
+				Make( 0, 55, "Back to game", Anchor.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
+				Make( 0, 5, "Quit game", Anchor.BottomOrRight, (g, w) => g.Exit() ),
 			};
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Docking vDocking, Action<Game, ButtonWidget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text, Docking.Centre, vDocking, titleFont, onClick );
+		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, ButtonWidget> onClick ) {
+			return ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, titleFont, onClick );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
