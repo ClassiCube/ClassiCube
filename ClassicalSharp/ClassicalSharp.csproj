@@ -19,7 +19,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <BaseAddress>4194304</BaseAddress>
     <RegisterForComInterop>False</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
@@ -73,6 +73,7 @@
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />
+    <Compile Include="2D\Screens\FilesScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />

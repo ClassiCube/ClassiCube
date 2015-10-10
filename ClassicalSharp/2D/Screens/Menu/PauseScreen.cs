@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			buttons = new ButtonWidget[] {
 				Make( 0, -100, "Options", Anchor.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( 0, -50, "Environment settings", Anchor.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( 0, 0, "Key mappings", Anchor.Centre, (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ) ),
+				Make( 0, 0, "Select texture pack", Anchor.Centre, (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
 				Make( 0, 50, "Save level", Anchor.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				// TODO: singleplayer Make( 0, 50, "Load/Save/Gen level", Docking.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				Make( 0, 55, "Back to game", Anchor.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),

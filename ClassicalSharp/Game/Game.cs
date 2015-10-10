@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
-		public int MouseSensitivity = 30;
+		public int MouseSensitivity = 40;
 		public bool HideGui = false, ShowFPS = true;
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -89,6 +89,11 @@ namespace ClassicalSharp {
 			Mppass = mppass;
 			this.skinServer = skinServer;
 			this.defaultTexPack = defaultTexPack;
+			
+			if( !File.Exists( defaultTexPack ) ) {
+				Utils.LogWarning( defaultTexPack + " not found" );
+				this.defaultTexPack = "default.zip";
+			}
 		}
 		
 		protected override void OnLoad( EventArgs e ) {
@@ -109,7 +114,7 @@ namespace ClassicalSharp {
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );			
 			defaultIb = Graphics.MakeDefaultIb();
-			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
+			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 40 );
 			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();

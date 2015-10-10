@@ -87,6 +87,7 @@ namespace ClassicalSharp {
 		protected void UpdateDescription( ButtonWidget widget ) {
 			if( descWidget != null )
 				descWidget.Dispose();
+			if( widget.GetValue == null ) return;
 			
 			string text = widget.Text + ": " + widget.GetValue( game );
 			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );

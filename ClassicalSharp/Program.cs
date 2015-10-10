@@ -24,7 +24,8 @@ namespace ClassicalSharp {
 			if( args.Length == 0 || args.Length == 1 ) {
 				Utils.Log( "Starting singleplayer mode." );
 				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
-				using( Game game = new Game( "LocalPlayer", null, skinServer, "default.zip" ) ) {
+				string pack = args.Length >= 1 ? args[0] : "default.zip";
+				using( Game game = new Game( "LocalPlayer", null, skinServer, pack ) ) {
 					game.Run();
 				}
 			} else if( args.Length < 4 ) {
@@ -50,7 +51,8 @@ namespace ClassicalSharp {
 			}
 
 			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
-			using( Game game = new Game( args[0], args[1], skinServer, "default.zip" ) ) {
+			string pack = args.Length >= 6 ? args[5] : "default.zip";
+			using( Game game = new Game( args[0], args[1], skinServer, pack ) ) {
 				game.IPAddress = ip;
 				game.Port = port;
 				game.Run();

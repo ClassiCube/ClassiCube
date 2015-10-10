@@ -36,8 +36,11 @@ namespace ClassicalSharp {
 				     (g, v) => { g.Chat.FontSize = Int32.Parse( v ); 
 				     	Options.Set( OptionsKey.FontSize, v ); } ),
 				
+				Make( 140, 50, "Key mappings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ), null, null ),
+				
 				!network.IsSinglePlayer ? null :
-					Make( 140, 50, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( -140, -100, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),
 				

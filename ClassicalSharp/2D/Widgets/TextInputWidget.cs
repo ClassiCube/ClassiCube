@@ -33,11 +33,9 @@ namespace ClassicalSharp {
 			X = 10;
 			DrawTextArgs caretArgs = new DrawTextArgs( "_", Color.White, false );
 			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
-			string value = chatInputText.GetString();
-			
-			if( chatInputText.Empty ) {
+			string value = chatInputText.GetString();			
+			if( chatInputText.Empty || caretPos >= value.Length )
 				caretPos = -1;
-			}
 			Size size = game.Drawer2D.MeasureSize( value, font, false );
 			
 			if( caretPos == -1 ) {
