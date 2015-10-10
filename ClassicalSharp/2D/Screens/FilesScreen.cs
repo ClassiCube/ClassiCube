@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK.Input;
-using System.IO;
-using ClassicalSharp.TexturePack;
 
 namespace ClassicalSharp {
 	
@@ -64,7 +62,7 @@ namespace ClassicalSharp {
 		
 		protected abstract void TextButtonClick( Game game, ButtonWidget widget );
 		
-		void PageClick( bool forward ) {
+		protected void PageClick( bool forward ) {
 			currentIndex += forward ? 5 : -5;
 			if( currentIndex >= files.Length )
 				currentIndex -= 5;
@@ -74,6 +72,19 @@ namespace ClassicalSharp {
 			for( int i = 0; i < 5; i++ ) {
 				buttons[i].SetText( Get( currentIndex + i ) );
 			}
+		}
+		
+		public override bool HandlesKeyDown( Key key ) {
+			if( key == Key.Escape ) {
+				game.SetNewScreen( new NormalScreen( game ) );				
+			} else if( key == Key.Left ) {
+				PageClick( false );
+			} else if( key == Key.Right ) {
+				PageClick( true );
+			} else {
+				return false;
+			}
+			return true;
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
@@ -119,47 +130,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < buttons.Length; i++ )
 				buttons[i].Render( delta );
 			graphicsApi.Texturing = false;
-		}
-	}
-	
-	public sealed class TexturePackScreen : FilesScreen {
-		
-		public TexturePackScreen( Game game ) : base( game ) {
-			titleText = "Select a texture pack zip";
-			string directory = Environment.CurrentDirectory;
-			files = Directory.GetFiles( directory, "*.zip", SearchOption.AllDirectories );
-			
-			for( int i = 0; i < files.Length; i++ ) {
-				string absolutePath = files[i];
-				files[i] = absolutePath.Substring( directory.Length + 1 );
-			}
-		}
-		
-		public override bool HandlesKeyDown( Key key ) {
-			if( key == Key.Escape ) {
-				game.SetNewScreen( new NormalScreen( game ) );
-				return true;
-			}
-			return false;
-		}
-		
-		public override void Init() {
-			base.Init();
-			buttons[buttons.Length - 1] = 
-				Make( 0, 5, "Back to menu", (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-		}
-		
-		ButtonWidget Make( int x, int y, string text, Action<Game, ButtonWidget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text,
-			                           Anchor.Centre, Anchor.BottomOrRight, titleFont, onClick );
-		}
-		
-		protected override void TextButtonClick( Game game, ButtonWidget widget ) {
-			string path = widget.Text;
-			if( File.Exists( path ) ) {
-				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( path, game );
-			}
 		}
 	}
 }

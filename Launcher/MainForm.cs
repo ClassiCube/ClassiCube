@@ -134,7 +134,7 @@ namespace Launcher {
 			mppass = Secure.Decode( mppass, txtDCuser.Text );
 			if( mppass != null )
 				txtDCmppass.Text = mppass;
-				
+			
 			mppass = Options.Get( "launcher-cc-password" ) ?? null;
 			mppass = Secure.Decode( mppass, txtCCUser.Text );
 			if( mppass != null )

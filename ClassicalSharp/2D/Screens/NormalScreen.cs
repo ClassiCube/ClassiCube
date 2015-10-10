@@ -18,7 +18,8 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
-			chat.RenderBackground();
+			if( chat.HandlesAllInput )
+				chat.RenderBackground();
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			hotbar.Render( delta );
