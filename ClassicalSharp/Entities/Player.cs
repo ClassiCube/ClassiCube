@@ -33,8 +33,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected Block GetBlock( Vector3 coords ) {
-			Vector3I p = Vector3I.Floor( coords );
-			return (Block)game.Map.SafeGetBlock( p.X, p.Y, p.Z );
+			return (Block)game.Map.SafeGetBlock( Vector3I.Floor( coords ) );
 		}
 		
 		public abstract void Tick( double delta );

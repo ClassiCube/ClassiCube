@@ -51,24 +51,11 @@ namespace ClassicalSharp {
 		
 		public abstract void Render( double deltaTime, float t );
 		
-		public bool TouchesAnyLava() {
-			return TouchesAny( b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
-		}
-		
-		public bool TouchesAnyRope() {
-			return TouchesAny( b => b == (byte)Block.Rope );
-		}
-		
-		public bool TouchesAnyWater() {
-			return TouchesAny( b => b == (byte)Block.Water || b == (byte)Block.StillWater );
-		}
-
-		public bool TouchesAnyOf( byte blockType ) {
-			return TouchesAny( b => b == blockType );
-		}
-		
 		public bool TouchesAny( Predicate<byte> condition ) {
-			BoundingBox bounds = CollisionBounds;
+			return TouchesAny( CollisionBounds, condition );
+		}
+		
+		public bool TouchesAny( BoundingBox bounds, Predicate<byte> condition ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			
@@ -90,6 +77,20 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		public const float Adjustment = 0.001f;
+		public const float Adjustment = 0.001f;		
+		protected bool TouchesAnyLava() {
+			return TouchesAny( CollisionBounds, 
+			                  b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
+		}
+		
+		protected bool TouchesAnyRope() {
+			return TouchesAny( CollisionBounds, 
+			                  b => b == (byte)Block.Rope );
+		}
+		
+		protected bool TouchesAnyWater() {
+			return TouchesAny( CollisionBounds, 
+			                  b => b == (byte)Block.Water || b == (byte)Block.StillWater );
+		}
 	}
 }

@@ -123,8 +123,19 @@ namespace ClassicalSharp {
 			}
 
 			if( jumping ) {
+				Vector3I p = Vector3I.Floor( Position );
+				
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
-					Velocity.Y += speeding ? 0.08f : 0.04f;
+					BoundingBox bounds = CollisionBounds;
+					bounds.Min.Y += 1;
+					
+					bool isAir = !TouchesAny( bounds, 
+					                         b => info.CollideType[b] != BlockCollideType.WalkThrough );
+					bool pastJumpPoint = Position.Y % 1 >= 0.4;
+					if( !isAir || !pastJumpPoint )
+						Velocity.Y += speeding ? 0.08f : 0.04f;
+					else if( (collideX || collideZ) && isAir && pastJumpPoint )
+						Velocity.Y += 0.10f;
 				} else if( useLiquidGravity ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
 				} else if( TouchesAnyRope() ) {

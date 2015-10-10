@@ -195,16 +195,21 @@ namespace ClassicalSharp {
 		}
 		
 		public byte GetBlock( int x, int y, int z ) {
-			return mapData[( y * Length + z ) * Width + x];
-		}
-		
-		public byte SafeGetBlock( int x, int y, int z ) {
-			return IsValidPos( x, y, z ) ? mapData[( y * Length + z ) * Width + x] 
-				: (byte)0;
+			return mapData[(y * Length + z) * Width + x];
 		}
 		
 		public byte GetBlock( Vector3I p ) {
-			return mapData[( p.Y * Length + p.Z ) * Width + p.X];
+			return mapData[(p.Y * Length + p.Z) * Width + p.X];
+		}
+		
+		public byte SafeGetBlock( int x, int y, int z ) {
+			return IsValidPos( x, y, z ) ? 
+				mapData[(y * Length + z) * Width + x] : (byte)0;
+		}
+		
+		public byte SafeGetBlock( Vector3I p ) {
+			return IsValidPos( p.X, p.Y, p.Z ) ? 
+				mapData[(p.Y * Length + p.Z) * Width + p.X] : (byte)0;
 		}
 		
 		public bool IsValidPos( int x, int y, int z ) {
