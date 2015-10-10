@@ -4,6 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Entity that performs collision detection. </summary>
 	public abstract class PhysicsEntity : Entity {
 		
 		public PhysicsEntity( Game game ) : base( game ) {
@@ -11,9 +12,11 @@ namespace ClassicalSharp {
 		protected bool onGround, collideX, collideY, collideZ;	
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( x < 0 || x >= map.Width || z < 0 || z >= map.Length || y < 0 ) return (byte)Block.Bedrock;
-			if( y >= map.Height ) return (byte)Block.Air;
-			return map.GetBlock( x, y, z );
+			if( x < 0 || x >= game.Map.Width || z < 0 || 
+			   z >= game.Map.Length || y < 0 ) return (byte)Block.Bedrock;
+			
+			if( y >= game.Map.Height ) return (byte)Block.Air;
+			return game.Map.GetBlock( x, y, z );
 		}
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, out BoundingBox box ) {

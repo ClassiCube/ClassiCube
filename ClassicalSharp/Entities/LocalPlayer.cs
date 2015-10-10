@@ -87,7 +87,7 @@ namespace ClassicalSharp {
 				InitRenderingData();
 				game.AsyncDownloader.DownloadSkin( SkinName );
 			}
-			SetCurrentAnimState( t );
+			GetCurrentAnimState( t );
 			RenderModel( deltaTime );
 		}
 		
@@ -291,7 +291,7 @@ namespace ClassicalSharp {
 			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
 					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
-						byte block = map.SafeGetBlock( x, y, z );
+						byte block = game.Map.SafeGetBlock( x, y, z );
 						if( block == 0 ) continue;
 						
 						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );

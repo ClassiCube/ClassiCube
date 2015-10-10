@@ -13,31 +13,44 @@ namespace ClassicalSharp {
 		/// <summary> Sets the underlying bitmap that drawing operations will be performed on. </summary>
 		public abstract void SetBitmap( Bitmap bmp );
 		
+		/// <summary> Draws a string using the specified arguments and fonts at the 
+		/// specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawText( Font font, ref DrawTextArgs args, float x, float y );
 		
+		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the 
+		/// specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRect( Color colour, int x, int y, int width, int height );
 		
+		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions 
+		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height );
 		
+		/// <summary> Draws a 2D rectangle with rounded borders of the specified dimensions 
+		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height );
 		
+		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
 		public abstract void Clear( Color colour );
 		
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
 		
+		/// <summary> Returns a new bitmap that has 32-bpp pixel format. </summary>
 		public abstract Bitmap ConvertTo32Bpp( Bitmap src );
 		
+		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments. </summary>
 		public abstract Size MeasureSize( string text, Font font, bool shadow );
 		
 		/// <summary> Disposes of all native resources used by this class. </summary>
 		/// <remarks> You will no longer be able to perform measuring or drawing calls after this. </remarks>
 		public abstract void DisposeInstance();
 		
-		public Texture MakeTextTexture( Font font, int screenX, int screenY, ref DrawTextArgs args ) {
+		/// <summary> Draws the specified string from the arguments into a new bitmap, 
+		/// them creates a 2D texture with origin at the specified window coordinates. </summary>
+		public Texture MakeTextTexture( Font font, int windowX, int windowY, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
 			if( parts.Count == 0 )
-				return new Texture( -1, screenX, screenY, 0, 0, 1, 1 );
+				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
 			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				SetBitmap( bmp );
@@ -45,17 +58,18 @@ namespace ClassicalSharp {
 				
 				DrawText( font, ref args, 0, 0 );
 				Dispose();
-				return Make2DTexture( bmp, size, screenX, screenY );
+				return Make2DTexture( bmp, size, windowX, windowY );
 			}
 		}
 		
-		public Texture Make2DTexture( Bitmap bmp, Size used, int screenX, int screenY ) {
+		/// <summary> Creates a 2D texture with origin at the specified window coordinates. </summary>
+		public Texture Make2DTexture( Bitmap bmp, Size used, int windowX, int windowY ) {
 			int texId = graphics.CreateTexture( bmp );
-			return new Texture( texId, screenX, screenY, used.Width, used.Height,
+			return new Texture( texId, windowX, windowY, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
 		}
 		
-		
+		/// <summary> Creates a power-of-2 sized bitmap larger or equal to to the given size. </summary>
 		public static Bitmap CreatePow2Bitmap( Size size ) {
 			return new Bitmap( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
 		}		
@@ -91,9 +105,9 @@ namespace ClassicalSharp {
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
 					Color col = Color.FromArgb(
-						191 * ( ( code >> 2 ) & 0x1 ) + 64 * ( code >> 3 ),
-						191 * ( ( code >> 1 ) & 0x1 ) + 64 * ( code >> 3 ),
-						191 * ( ( code >> 0 ) & 0x1 ) + 64 * ( code >> 3 ) );
+						191 * ((code >> 2) & 1) + 64 * (code >> 3),
+						191 * ((code >> 1) & 1) + 64 * (code >> 3),
+						191 * ((code >> 0) & 1) + 64 * (code >> 3) );
 					parts.Add( new TextPart( part, col ) );
 				}
 				i += partLength + 1;

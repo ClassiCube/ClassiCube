@@ -5,14 +5,13 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public abstract partial class Player : PhysicsEntity {
+	public abstract partial class Player : AnimatedEntity {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
 			get { return new Vector3( Position.X, Position.Y + Model.GetEyeY( this ), Position.Z ); }
 		}
 		
-		protected Game game;
 		public string DisplayName, SkinName;
 		public SkinType SkinType;
 		
@@ -33,54 +32,14 @@ namespace ClassicalSharp {
 			get { return GetBlock( EyePosition ); }
 		}
 		
-		Block GetBlock( Vector3 coords ) {
+		protected Block GetBlock( Vector3 coords ) {
 			Vector3I p = Vector3I.Floor( coords );
-			return (Block)map.SafeGetBlock( p.X, p.Y, p.Z );
+			return (Block)game.Map.SafeGetBlock( p.X, p.Y, p.Z );
 		}
 		
 		public abstract void Tick( double delta );
 		
 		public abstract void SetLocation( LocationUpdate update, bool interpolate );
-		
-		public float leftLegXRot, leftArmXRot, leftArmZRot;
-		public float rightLegXRot, rightArmXRot, rightArmZRot;
-		protected float walkTimeO, walkTimeN, swingO, swingN;
-		
-		protected void UpdateAnimState( Vector3 oldPos, Vector3 newPos, double delta ) {
-			walkTimeO = walkTimeN;
-			swingO = swingN;
-			float dx = newPos.X - oldPos.X;
-			float dz = newPos.Z - oldPos.Z;
-			double distance = Math.Sqrt( dx * dx + dz * dz );
-			
-			if( distance > 0.05 ) {
-				walkTimeN += (float)distance * 2 * (float)( 20 * delta );
-				swingN += (float)delta * 3;
-			} else {
-				swingN -= (float)delta * 3;
-			}
-			Utils.Clamp( ref swingN, 0, 1 );
-		}
-		
-		const float armMax = 60 * Utils.Deg2Rad;
-		const float legMax = 80 * Utils.Deg2Rad;
-		const float idleMax = 3 * Utils.Deg2Rad;
-		const float idleXPeriod = (float)(2 * Math.PI / 5.0f);
-		const float idleZPeriod = (float)(2 * Math.PI / 3.5f);
-		protected void SetCurrentAnimState( float t ) {
-			float swing = Utils.Lerp( swingO, swingN, t );
-			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
-			float idleTime = (float)game.accumulator;
-			float idleXRot = (float)(Math.Sin( idleTime * idleXPeriod ) * idleMax);
-			float idleZRot = (float)(idleMax + Math.Cos(idleTime * idleZPeriod) * idleMax);
-			
-			leftArmXRot = (float)(Math.Cos( walkTime ) * swing * armMax) - idleXRot;
-			rightArmXRot = -leftArmXRot;
-			rightLegXRot = (float)(Math.Cos( walkTime ) * swing * legMax);
-			leftLegXRot = -rightLegXRot;
-			rightArmZRot = idleZRot;
-			leftArmZRot = -idleZRot;
-		}
 		
 		protected void CheckSkin() {
 			DownloadedItem item;
@@ -117,7 +76,15 @@ namespace ClassicalSharp {
 			
 		}
 		
-		unsafe bool HasHat( Bitmap bmp, SkinType skinType ) {
+		DateTime lastModelChange = new DateTime( 1, 1, 1 );
+		public void SetModel( string modelName ) {
+			ModelName = modelName;
+			Model = game.ModelCache.GetModel( ModelName );
+			lastModelChange = DateTime.UtcNow;
+			MobTextureId = -1;
+		}
+		
+		unsafe static bool HasHat( Bitmap bmp, SkinType skinType ) {
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				int sizeX = (bmp.Width / 64) * 32;
 				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
@@ -137,14 +104,6 @@ namespace ClassicalSharp {
 				}
 			}
 			return false;
-		}
-		
-		DateTime lastModelChange = new DateTime( 1, 1, 1 );
-		public void SetModel( string modelName ) {
-			ModelName = modelName;
-			Model = game.ModelCache.GetModel( ModelName );
-			lastModelChange = DateTime.UtcNow;
-			MobTextureId = -1;
 		}
 	}
 }

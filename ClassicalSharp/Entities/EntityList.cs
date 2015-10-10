@@ -5,9 +5,10 @@ namespace ClassicalSharp {
 
 	public class EntityList : IDisposable {
 		
-		public int MaxCount = 256;
-		public Player[] Players = new Player[256];
+		public const int MaxCount = 256;
+		public Player[] Players = new Player[MaxCount];
 		
+		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
 		public void Tick( double delta ) {
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] != null ) {
@@ -16,6 +17,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Renders all player entities contained in this list. </summary>
 		public void Render( double delta, float t ) {
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] != null ) {
@@ -24,6 +26,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] != null ) {
@@ -52,6 +55,7 @@ namespace ClassicalSharp {
 			return targetId;
 		}
 		
+		/// <summary> Gets or sets the player entity for the specified id. </summary>
 		public Player this[int id] {
 			get { return Players[id]; }
 			set { 

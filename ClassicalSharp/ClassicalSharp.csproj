@@ -103,6 +103,7 @@
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
+    <Compile Include="Entities\AnimatedEntity.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />

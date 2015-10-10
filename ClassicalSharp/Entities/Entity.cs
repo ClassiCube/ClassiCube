@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public abstract class Entity {
 		
 		public Entity( Game game ) {
-			map = game.Map;
+			this.game = game;
 			info = game.BlockInfo;
 		}
 		
@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		public Vector3 Velocity;
 		public float YawDegrees, PitchDegrees;
 		protected float StepSize;
-		protected Map map;
+		protected Game game;
 		protected BlockInfo info;
 		
 		public float YawRadians {
@@ -75,8 +75,8 @@ namespace ClassicalSharp {
 			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
 					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
-						if( !map.IsValidPos( x, y, z ) ) continue;
-						byte block = map.GetBlock( x, y, z );
+						if( !game.Map.IsValidPos( x, y, z ) ) continue;
+						byte block = game.Map.GetBlock( x, y, z );
 						if( condition( block ) ) {
 							float blockHeight = info.Height[block];
 							Vector3 min = new Vector3( x, y, z );

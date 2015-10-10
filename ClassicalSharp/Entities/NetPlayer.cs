@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			YawDegrees = Utils.InterpAngle( oldState.yaw, newState.yaw, t );
 			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
 			
-			SetCurrentAnimState( t );
+			GetCurrentAnimState( t );
 			RenderModel( deltaTime );
 		}
 	}

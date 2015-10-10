@@ -1,4 +1,5 @@
 ﻿// This class was partially based on information from http://files.worldofminecraft.com/texturing/
+// NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015
 using System;
 using System.Drawing;
 using System.IO;
@@ -8,7 +9,7 @@ namespace ClassicalSharp {
 
 	public partial class NetworkProcessor {
 		
-		string womEnvIdentifier = "womenv_0", womTerrainIdentifier = "womterrain_0";
+		string womEnvIdentifier = "womenv_0";
 		int womCounter = 0;
 		bool sendWomId = false, sentWomId = false;
 		
@@ -17,11 +18,6 @@ namespace ClassicalSharp {
 			game.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
 			if( item != null && item.Data != null ) {
 				ParseWomConfig( (string)item.Data );
-			}
-			
-			game.AsyncDownloader.TryGetItem( womTerrainIdentifier, out item );
-			if( item != null && item.Data != null ) {
-				game.ChangeTerrainAtlas( (Bitmap)item.Data );
 			}
 		}
 		
@@ -48,24 +44,11 @@ namespace ClassicalSharp {
 						int waterLevel = 0;
 						if( Int32.TryParse( value, out waterLevel ) )
 							game.Map.SetWaterLevel( waterLevel );
-					} else if( key == "environment.terrain" ) {
-						GetWomImageAsync( "terrain", value );
-					} else if( key == "environment.edge" ) { // TODO: custom edges and sides
-						//GetWomImageAsync( "edge", value );
-					} else if( key == "environment.side" ) {
-						//GetWomImageAsync( "side", value );
 					} else if( key == "user.detail" && !useMessageTypes ) {
 						game.Chat.Add( value, CpeMessage.Status2 );
 					}
 				}
 			}
-		}
-		
-		void GetWomImageAsync( string type, string id ) {
-			const string hostFormat = "http://files.worldofminecraft.com/skin.php?type={0}&id={1}";
-			string url = String.Format( hostFormat, type, Uri.EscapeDataString( id ) );
-			string identifier = "wom" + type + "_" + womCounter;
-			game.AsyncDownloader.DownloadImage( url, true, identifier );
 		}
 		
 		void ReadWomConfigurationAsync() {
@@ -77,7 +60,6 @@ namespace ClassicalSharp {
 			// new world if the async 'get request' didn't complete before the new world was loaded.
 			womCounter++;
 			womEnvIdentifier = "womenv_" + womCounter;
-			womTerrainIdentifier = "womterrain_" + womCounter;
 			game.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
 			sendWomId = true;
 		}

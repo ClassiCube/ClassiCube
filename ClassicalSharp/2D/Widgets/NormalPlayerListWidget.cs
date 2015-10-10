@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < game.Players.MaxCount; i++ ) {
+			for( int i = 0; i < EntityList.MaxCount; i++ ) {
 				Player player = game.Players[i];
 				if( player != null ) {
 					AddPlayerInfo( player );
