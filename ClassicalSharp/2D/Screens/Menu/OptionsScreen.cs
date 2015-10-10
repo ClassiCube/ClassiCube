@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 			};
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
-				new IntegerValidator( 16, 8192 ),
+				new IntegerValidator( 16, 4096 ),
 				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),
 				new IntegerValidator( 6, 30 ),

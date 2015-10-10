@@ -225,8 +225,8 @@ namespace ClassicalSharp {
 			return a + (b - a) * t;
 		}
 		
-		internal static int CountIndices( int axis1Len, int axis2Len, int axisSize ) {
-			return CeilDiv( axis1Len, axisSize ) * CeilDiv( axis2Len, axisSize ) * 6;
+		internal static int CountVertices( int axis1Len, int axis2Len, int axisSize ) {
+			return CeilDiv( axis1Len, axisSize ) * CeilDiv( axis2Len, axisSize ) * 4;
 		}
 		
 		public static int CeilDiv( int a, int b ) {

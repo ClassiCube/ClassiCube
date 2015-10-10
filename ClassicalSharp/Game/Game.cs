@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 			} catch( IOException ) {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
-			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 8192, 512 );
+			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			Keys = new KeyMap();
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );

@@ -19,7 +19,8 @@ namespace ClassicalSharp {
 		
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
-		int sidesIndices, edgesIndices;
+		int sidesVertices, edgesVertices, 
+		edgesBaseVertices, edgesVerVertices;
 		bool legacy;
 		
 		public void SetUseLegacyMode( bool legacy ) {
@@ -45,17 +46,19 @@ namespace ClassicalSharp {
 			graphics.BindTexture( sideTexId );
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( sidesVb );
-			graphics.DrawIndexedVb_TrisT2fC4b( sidesIndices, 0 );
+			graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );	
 			
+			graphics.AlphaBlending = true;
+			graphics.BindTexture( edgeTexId );
+			graphics.BindVb( edgesVb );
 			// Do not draw water when we cannot see it.
-			// Fixes 'depth bleeding through' issues with 16 bit depth buffers on large maps.
+			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			if( game.LocalPlayer.EyePosition.Y >= 0 ) {
-				graphics.AlphaBlending = true;
-				graphics.BindTexture( edgeTexId );
-				graphics.BindVb( edgesVb );
-				graphics.DrawIndexedVb_TrisT2fC4b( edgesIndices, 0 );
-				graphics.AlphaBlending = false;
+				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );			
+			} else {
+				graphics.DrawIndexedVb_TrisT2fC4b( edgesVerVertices * 6 / 4, edgesBaseVertices * 6 / 4 );
 			}
+			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 		}
 		
@@ -110,45 +113,54 @@ namespace ClassicalSharp {
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
 			CalculateRects( game.ViewDistance );
-			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );		
+			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
 		}
 		
 		void RebuildSides( int groundLevel, int axisSize ) {
-			sidesIndices = 0;
+			sidesVertices = 0;
 			foreach( Rectangle rec in rects ) {
-				sidesIndices += Utils.CountIndices( rec.Width, rec.Height, axisSize ); // YPlanes outside
+				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			sidesIndices += Utils.CountIndices( map.Width, map.Length, axisSize ); // YPlane beneath map
-			sidesIndices += 2 * Utils.CountIndices( map.Width, groundLevel, axisSize ); // ZPlanes
-			sidesIndices += 2 * Utils.CountIndices( map.Length, groundLevel, axisSize ); // XPlanes
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesIndices / 6 * 4];
+			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YPlane beneath map
+			sidesVertices += 2 * Utils.CountVertices( map.Width, groundLevel, axisSize ); // ZPlanes
+			sidesVertices += 2 * Utils.CountVertices( map.Length, groundLevel, axisSize ); // XPlanes
+			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
 			FastColour col = map.SunlightYBottom;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
-			}			
+			}
 			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, ref vertices );
 			DrawZ( 0, 0, map.Width, 0, groundLevel, axisSize, col, ref vertices );
 			DrawZ( map.Length, 0, map.Width, 0, groundLevel, axisSize, col, ref vertices );
 			DrawX( 0, 0, map.Length, 0, groundLevel, axisSize, col, ref vertices );
 			DrawX( map.Width, 0, map.Length, 0, groundLevel, axisSize, col, ref vertices );
-			sidesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesIndices / 6 * 4 );
+			sidesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesVertices );
 		}
 		
 		void RebuildEdges( int waterLevel, int axisSize ) {
-			edgesIndices = 0;
+			edgesVertices = 0;
 			foreach( Rectangle rec in rects ) {
-				edgesIndices += Utils.CountIndices( rec.Width, rec.Height, axisSize ); // YPlanes outside
+				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesIndices / 6 * 4];
+			edgesBaseVertices = edgesVertices;
+			edgesVertices += 2 * Utils.CountVertices( map.Width, 2, axisSize ); // ZPlanes
+			edgesVertices += 2 * Utils.CountVertices( map.Length, 2, axisSize ); // XPlanes
+			edgesVerVertices = edgesVertices - edgesBaseVertices;
+			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
+			FastColour col = map.SunlightYBottom;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, game.Map.Sunlight, ref vertices );
 			}
-			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesIndices / 6 * 4 );
+			DrawZ( 0, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
+			DrawZ( map.Length, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
+			DrawX( 0, 0, map.Length, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
+			DrawX( map.Width, 0, map.Length, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
+			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
@@ -214,7 +226,7 @@ namespace ClassicalSharp {
 			rects[1] = new Rectangle( -extent, map.Length, extent + map.Width + extent, extent );
 			
 			rects[2] = new Rectangle( -extent, 0, extent, map.Length );
-			rects[3] = new Rectangle( map.Width, 0, extent, map.Length );			
+			rects[3] = new Rectangle( map.Width, 0, extent, map.Length );
 		}
 		
 		int lastEdgeTexLoc, lastSideTexLoc;

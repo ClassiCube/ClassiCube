@@ -12,7 +12,7 @@ namespace ClassicalSharp.Renderers {
 			map = game.Map;
 		}
 		
-		int cloudsVb = -1, cloudsIndices, skyVb = -1, skyIndices;
+		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
 		public float CloudsSpeed = 1;		
 		bool legacy;
 		
@@ -29,7 +29,7 @@ namespace ClassicalSharp.Renderers {
 			if( pos.Y < map.CloudHeight + 8 ) {
 				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 				graphics.BindVb( skyVb );
-				graphics.DrawIndexedVb( DrawMode.Triangles, skyIndices, 0 );
+				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
 			}
 			RenderClouds( deltaTime );
 			ResetFog();
@@ -93,7 +93,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.BindTexture( game.CloudsTextureId );
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( cloudsVb );
-			graphics.DrawIndexedVb_TrisT2fC4b( cloudsIndices, 0 );
+			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
 			
@@ -151,21 +151,21 @@ namespace ClassicalSharp.Renderers {
 		void ResetClouds( int extent, int axisSize ) {
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
-			cloudsIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
+			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudsIndices / 6 * 4];
+			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudVertices];
 			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
-			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudsIndices / 6 * 4 );
+			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudVertices );
 		}
 		
 		void ResetSky( int extent, int axisSize ) {
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
-			skyIndices = Utils.CountIndices( x2 - x1, z2 - z1, axisSize );
+			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
-			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyIndices / 6 * 4];
+			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyVertices];
 			DrawSkyY( x1, z1, x2, z2, map.CloudHeight + 8, axisSize, map.SkyCol, vertices );
-			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyIndices / 6 * 4 );
+			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyVertices );
 		}
 		
 		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fCol4b* vertices ) {
