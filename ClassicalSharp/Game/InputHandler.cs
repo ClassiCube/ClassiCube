@@ -72,6 +72,7 @@ namespace ClassicalSharp {
 			float height = game.BlockInfo.Height[newBlock];
 			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z, 
 			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
+			if( game.BlockInfo.CollideType[newBlock] != BlockCollideType.Solid ) return true;
 			
 			for( int id = 0; id < 255; id++ ) {
 				Player player = game.Players[id];

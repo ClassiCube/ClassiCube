@@ -32,9 +32,9 @@ namespace ClassicalSharp {
 				     	if( env != null ) 
 				     		env.CloudsSpeed = Single.Parse( v ); } ),
 				
-				Make( -140, 50, "Clouds offset", Anchor.Centre, OnWidgetClick,
-				     g => (g.Map.CloudHeight - g.Map.Height).ToString(),
-				     (g, v) => g.Map.SetCloudsLevel( g.Map.Height + Int32.Parse( v ) ) ),
+				Make( -140, 50, "Clouds height", Anchor.Centre, OnWidgetClick,
+				     g => g.Map.CloudHeight.ToString(),
+				     (g, v) => g.Map.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
 				Make( 140, -150, "Sunlight colour", Anchor.Centre, OnWidgetClick,
 				     g => g.Map.Sunlight.ToRGBHexString(),
