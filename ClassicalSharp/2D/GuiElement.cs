@@ -9,6 +9,9 @@ namespace ClassicalSharp {
 		protected Game game;
 		protected IGraphicsApi graphicsApi;
 		
+		/// <summary> Object that represents any form of metadata attached to this widget. </summary>
+		public object Metadata = null;
+		
 		public GuiElement( Game game ) {
 			this.game = game;
 			graphicsApi = game.Graphics;

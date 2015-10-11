@@ -23,10 +23,11 @@ namespace ClassicalSharp {
 			
 			graphicsApi.Texturing = true;
 			fpsTextWidget.Render( delta );
-			UpdateHackState( false );
-			
-			DrawPosition();
-			hackStatesWidget.Render( delta );
+			if( game.activeScreen is NormalScreen ) {
+				UpdateHackState( false );				
+				DrawPosition();
+				hackStatesWidget.Render( delta );
+			}
 			graphicsApi.Texturing = false;
 		}
 		
@@ -63,7 +64,7 @@ namespace ClassicalSharp {
 			hackStatesWidget = new TextWidget( game, posFont );
 			hackStatesWidget.YOffset = fpsTextWidget.Height + posHeight;
 			hackStatesWidget.Init();
-			UpdateHackState( true );		
+			UpdateHackState( true );
 		}
 		
 		public override void Dispose() {

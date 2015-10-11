@@ -11,67 +11,67 @@ namespace ClassicalSharp {
 			this.font = font;
 		}
 		
-		Texture[] textures;
+		public Texture[] Textures;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
 		readonly Font font;
 		
 		public override void Init() {
-			textures = new Texture[ElementsCount];
+			Textures = new Texture[ElementsCount];
 			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
-			for( int i = 0; i < textures.Length; i++ ) {
-				textures[i].Height = defaultHeight;
+			for( int i = 0; i < Textures.Length; i++ ) {
+				Textures[i].Height = defaultHeight;
 			}
 			UpdateDimensions();
 		}
 		
 		public void SetText( int index, string text ) {
-			graphicsApi.DeleteTexture( ref textures[index] );
+			graphicsApi.DeleteTexture( ref Textures[index] );
 			
 			if( !String.IsNullOrEmpty( text ) ) {
 				DrawTextArgs args = new DrawTextArgs( text, true );
 				Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
-				textures[index] = tex;
+				Textures[index] = tex;
 			} else {
-				textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				Textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
 			}
 			UpdateDimensions();
 		}
 		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
-			graphicsApi.DeleteTexture( ref textures[0] );
-			for( int i = 0; i < textures.Length - 1; i++ ) {
-				textures[i] = textures[i + 1];
-				textures[i].Y1 = y;
-				y += textures[i].Height;
+			graphicsApi.DeleteTexture( ref Textures[0] );
+			for( int i = 0; i < Textures.Length - 1; i++ ) {
+				Textures[i] = Textures[i + 1];
+				Textures[i].Y1 = y;
+				y += Textures[i].Height;
 			}
-			textures[textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
-			SetText( textures.Length - 1, text );
+			Textures[Textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
+			SetText( Textures.Length - 1, text );
 		}
 		
 		int CalcY( int index, int newHeight ) {
 			int y = 0;
-			int deltaY = newHeight - textures[index].Height;
+			int deltaY = newHeight - Textures[index].Height;
 			
 			if( VerticalAnchor == Anchor.LeftOrTop ) {
 				y = Y;
 				for( int i = 0; i < index; i++ ) {
-					y += textures[i].Height;
+					y += Textures[i].Height;
 				}
-				for( int i = index + 1; i < textures.Length; i++ ) {
-					textures[i].Y1 += deltaY;
+				for( int i = index + 1; i < Textures.Length; i++ ) {
+					Textures[i].Y1 += deltaY;
 				}
 			} else {
 				y = game.Height - YOffset;
-				for( int i = index + 1; i < textures.Length; i++ ) {
-					y -= textures[i].Height;
+				for( int i = index + 1; i < Textures.Length; i++ ) {
+					y -= Textures[i].Height;
 				}
 				y -= newHeight;
 				for( int i = 0; i < index; i++ ) {
-					textures[i].Y1 -= deltaY;
+					Textures[i].Y1 -= deltaY;
 				}				
 			}
 			return y;
@@ -79,51 +79,45 @@ namespace ClassicalSharp {
 		
 		public int GetUsedHeight() {
 			int sum = 0;
-			for( int i = 0; i < textures.Length; i++ ) {
-				if( textures[i].IsValid )
-					sum += textures[i].Height;
+			for( int i = 0; i < Textures.Length; i++ ) {
+				if( Textures[i].IsValid )
+					sum += Textures[i].Height;
 			}
 			return sum;
 		}
 		
 		void UpdateDimensions() {
+			Width = 0; 
 			Height = 0;
-			for( int i = 0; i < textures.Length; i++ ) {
-				Height += textures[i].Height;
+			for( int i = 0; i < Textures.Length; i++ ) {
+				Width = Math.Max( Width, Textures[i].Width );
+				Height += Textures[i].Height;				
 			}
-			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 			
-			Width = 0;
-			for( int i = 0; i < textures.Length; i++ ) {
-				int width = textures[i].Width;
-				if( width > Width ) {
-					Width = width;
-				}
-			}
 			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
+			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 		}
 		
 		public override void Render( double delta ) {
-			for( int i = 0; i < textures.Length; i++ ) {
-				Texture texture = textures[i];
-				if( texture.IsValid ) {
+			for( int i = 0; i < Textures.Length; i++ ) {
+				Texture texture = Textures[i];
+				if( texture.IsValid )
 					texture.Render( graphicsApi );
-				}
 			}
 		}
 		
 		public override void Dispose() {
-			for( int i = 0; i < textures.Length; i++ ) {
-				graphicsApi.DeleteTexture( ref textures[i] );
+			for( int i = 0; i < Textures.Length; i++ ) {
+				graphicsApi.DeleteTexture( ref Textures[i] );
 			}
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
 			int deltaX = newX - X;
 			int deltaY = newY - Y;
-			for( int i = 0; i < textures.Length; i++ ) {
-				textures[i].X1 += deltaX;
-				textures[i].Y1 += deltaY;
+			for( int i = 0; i < Textures.Length; i++ ) {
+				Textures[i].X1 += deltaX;
+				Textures[i].Y1 += deltaY;
 			}
 			X = newX;
 			Y = newY;

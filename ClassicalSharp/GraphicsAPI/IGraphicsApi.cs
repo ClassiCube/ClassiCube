@@ -15,6 +15,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Maximum supported length of a dimension (width and height) of a 2D texture. </summary>
 		public abstract int MaxTextureDimensions { get; }
 		
+		/// <summary> Sets whether texturing is applied when rasterizing primitives. </summary>
 		public abstract bool Texturing { set; }
 		
 		internal float MinZNear = 0.1f;
@@ -53,41 +54,47 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part );
 		
+		/// <summary> Binds the given texture id so that it can be used for rasterization. </summary>
 		public abstract void BindTexture( int texId );
 		
+		/// <summary> Frees all resources held by the 3D graphics API for the given texture id. </summary>
 		public abstract void DeleteTexture( ref int texId );
 		
-		public virtual void DeleteTexture( ref Texture texture ) {
-			DeleteTexture( ref texture.ID );
-		}
-		
+		/// <summary> Frees all resources held by the 3D graphics API for the given texture. </summary>
+		public void DeleteTexture( ref Texture texture ) { DeleteTexture( ref texture.ID ); }
 		
 		/// <summary> Whether fog is currently enabled. </summary>
 		public abstract bool Fog { set; }
 		
+		/// <summary> Sets the fog colour that is blended with final primitive colours. </summary>
 		public abstract void SetFogColour( FastColour col );
 		
+		/// <summary> Sets the density of exp and exp^2 fog </summary>
 		public abstract void SetFogDensity( float value );
 		
+		/// <summary> Sets the start radius of fog for linear fog. </summary>
 		public abstract void SetFogStart( float value );
 		
+		/// <summary> Sets the end radius of fog for for linear fog. </summary>
 		public abstract void SetFogEnd( float value );
 		
+		/// <summary> Sets the current fog mode. (linear, exp, or exp^2) </summary>
 		public abstract void SetFogMode( Fog fogMode );
 		
+		/// <summary> Whether back facing primitives should be culled by the 3D graphics api. </summary>
 		public abstract bool FaceCulling { set; }
 
-		
-		/// <summary> Sets the alpha test function that is used when alpha testing is enabled. </summary>
-		public abstract void AlphaTestFunc( CompareFunc func, float value );
 		
 		/// <summary> Whether alpha testing is currently enabled. </summary>
 		public abstract bool AlphaTest { set; }
 		
+		/// <summary> Sets the alpha test compare function that is used when alpha testing is enabled. </summary>
+		public abstract void AlphaTestFunc( CompareFunc func, float refValue );
+		
 		/// <summary> Whether alpha blending is currently enabled. </summary>
 		public abstract bool AlphaBlending { set; }
 		
-		/// <summary> Sets the alpha blend function that isused when alpha blending is enabled. </summary>
+		/// <summary> Sets the alpha blend function that is used when alpha blending is enabled. </summary>
 		public abstract void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc );
 		
 		/// <summary> Clears the underlying back and/or front buffer. </summary>
@@ -96,14 +103,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets the colour the screen is cleared to when Clear() is called. </summary>
 		public abstract void ClearColour( FastColour col );
 		
-		public abstract bool ColourWrite { set; }
-		
-		public abstract void DepthTestFunc( CompareFunc func );
-		
 		/// <summary> Whether depth testing is currently enabled. </summary>
 		public abstract bool DepthTest { set; }
 		
-		/// <summary> Whether writing to the depth buffer is enabled. </summary>
+		/// <summary> Sets the depth test compare function that is used when depth testing is enabled. </summary>
+		public abstract void DepthTestFunc( CompareFunc func );
+		
+		/// <summary> Sets whether writing to the colour buffer is enabled. </summary>
+		public abstract bool ColourWrite { set; }
+		
+		/// <summary> Sets whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
 		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
@@ -219,7 +228,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
-		public static void MakeQuad( TextureRec xy, TextureRec uv, 
+		public static void MakeQuad( TextureRec xy, TextureRec uv,
 		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
 			#if USE_DX

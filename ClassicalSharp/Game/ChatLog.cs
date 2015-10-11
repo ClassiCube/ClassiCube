@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 
 	public sealed class ChatLog : IDisposable {
 		
-		public string Status1, Status2, Status3, BottomRight1,
+		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement;
 		
 		Game game;
@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> List of chat messages received from the server and added by client commands. </summary>
 		/// <remarks> index 0 is the oldest chat message, last index is newest. </remarks>
-		public List<string> Log = new List<string>();
+		public List<ChatLine> Log = new List<ChatLine>();
 		
 		/// <summary> List of chat messages sent by the user to the server. </summary>
 		public List<string> InputLog = new List<string>();
@@ -111,6 +111,20 @@ namespace ClassicalSharp {
 				return;
 			}
 			Utils.LogError( "Failed to open or create a chat log file after 20 tries, giving up." );
+		}
+	}
+	
+	public struct ChatLine {
+		public string Text;
+		public DateTime Received;
+		
+		public ChatLine( string text ) {
+			Text = text;
+			Received = DateTime.UtcNow;
+		}
+		
+		public static implicit operator ChatLine( string text ) {
+			return new ChatLine( text );
 		}
 	}
 }

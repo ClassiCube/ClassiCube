@@ -11,28 +11,42 @@ namespace ClassicalSharp {
 		}
 		
 		public int ChatInputYOffset, ChatLogYOffset;
-		public bool HistoryMode;
 		const int chatLines = 12;
 		Texture announcementTex;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat;
 		bool suppressNextPress = true;
-		DateTime announcementDisplayTime;
 		int chatIndex;
 		
 		public override void Render( double delta ) {
-			normalChat.Render( delta );
+			DateTime now = DateTime.UtcNow;
+			if( HandlesAllInput )
+				normalChat.Render( delta );
+			else
+				RenderRecentChat( now, delta );
+			
 			status.Render( delta );
 			bottomRight.Render( delta );
-			if( announcementTex.IsValid ) {
+			if( announcementTex.IsValid )
 				announcementTex.Render( graphicsApi );
-			}
-			if( HandlesAllInput ) {
+			if( HandlesAllInput )
 				textInput.Render( delta );
-			}
-			if( game.Chat.Announcement != null && (DateTime.UtcNow - announcementDisplayTime).TotalSeconds > 5 ) {
-				game.Chat.Announcement = null;
+			
+			if( game.Chat.Announcement.Text != null && announcementTex.IsValid &&
+			   (now - game.Chat.Announcement.Received).TotalSeconds > 5 ) {
 				graphicsApi.DeleteTexture( ref announcementTex );
+			}
+		}
+		
+		void RenderRecentChat( DateTime now, double delta ) {
+			int[] metadata = (int[])Metadata;
+			for( int i = 0; i < normalChat.Textures.Length; i++ ) {
+				Texture texture = normalChat.Textures[i];
+				if( !texture.IsValid ) continue;
+				
+				DateTime received = game.Chat.Log[metadata[i]].Received;
+				if( (now - received).TotalSeconds <= 10 )
+					texture.Render( graphicsApi );
 			}
 		}
 		
@@ -70,17 +84,21 @@ namespace ClassicalSharp {
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
 			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();
+			int[] indices = new int[chatLines];
+			for( int i = 0; i < indices.Length; i++ )
+				indices[i] = -1;
+			Metadata = indices;
 			
 			ChatLog chat = game.Chat;
 			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
-			status.SetText( 0, chat.Status1 );
-			status.SetText( 1, chat.Status2 );
-			status.SetText( 2, chat.Status3 );
-			bottomRight.SetText( 2, chat.BottomRight1 );
-			bottomRight.SetText( 1, chat.BottomRight2 );
-			bottomRight.SetText( 0,chat.BottomRight3 );
-			UpdateAnnouncement( chat.Announcement );
+			status.SetText( 0, chat.Status1.Text );
+			status.SetText( 1, chat.Status2.Text );
+			status.SetText( 2, chat.Status3.Text );
+			bottomRight.SetText( 2, chat.BottomRight1.Text );
+			bottomRight.SetText( 1, chat.BottomRight2.Text );
+			bottomRight.SetText( 0,chat.BottomRight3.Text );
+			UpdateAnnouncement( chat.Announcement.Text );
 			
 			if( !String.IsNullOrEmpty( game.chatInInputBuffer ) ) {
 				OpenTextInputBar( game.chatInInputBuffer );
@@ -93,8 +111,13 @@ namespace ClassicalSharp {
 			CpeMessage type = e.Type;
 			if( type == CpeMessage.Normal ) {
 				chatIndex++;
-				List<string> chat = game.Chat.Log;
-				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1] );
+				List<ChatLine> chat = game.Chat.Log;
+				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1].Text );
+				
+				int[] metadata = (int[])Metadata;
+				for( int i = 0; i < chatLines - 1; i++ )
+					metadata[i] = metadata[i + 1];
+				metadata[chatLines - 1] = chatIndex + chatLines - 1;
 			} else if( type >= CpeMessage.Status1 && type <= CpeMessage.Status3 ) {
 				status.SetText( (int)( type - CpeMessage.Status1 ), e.Text );
 			} else if( type >= CpeMessage.BottomRight1 && type <= CpeMessage.BottomRight3 ) {
@@ -132,7 +155,6 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateAnnouncement( string text ) {
-			announcementDisplayTime = DateTime.UtcNow;
 			DrawTextArgs args = new DrawTextArgs( text, true );
 			announcementTex = game.Drawer2D.MakeTextTexture( announcementFont, 0, 0, ref args );
 			announcementTex.X1 = game.Width / 2 - announcementTex.Width / 2;
@@ -141,10 +163,16 @@ namespace ClassicalSharp {
 		
 		void ResetChat() {
 			normalChat.Dispose();
-			List<string> chat = game.Chat.Log;
+			List<ChatLine> chat = game.Chat.Log;
+			int[] metadata = (int[])Metadata;
+			for( int i = 0; i < chatLines; i++ )
+				metadata[i] = -1;
+			
 			for( int i = chatIndex; i < chatIndex + chatLines; i++ ) {
-				if( i >= 0 && i < chat.Count )
-					normalChat.PushUpAndReplaceLast( chat[i] );
+				if( i >= 0 && i < chat.Count ) {
+					normalChat.PushUpAndReplaceLast( chat[i].Text );
+					metadata[i - chatIndex] = i;
+				}
 			}
 		}
 		

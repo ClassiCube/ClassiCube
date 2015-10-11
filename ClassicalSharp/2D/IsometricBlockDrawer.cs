@@ -54,13 +54,14 @@ namespace ClassicalSharp {
 		}
 		
 		static void TransformVertex( ref VertexPos3fTex2fCol4b vertex ) {
-			Vector3 pos = new Vector3( vertex.X, vertex.Y, vertex.Z );
+			Vector3 p = new Vector3( vertex.X, vertex.Y, vertex.Z );
+			//p = Utils.RotateY( p - pos, time ) + pos;
 			#if USE_DX
 			// See comment in IGraphicsApi.Draw2DTexture()
-			pos.X -= 0.5f; pos.Y -= 0.5f;
+			p.X -= 0.5f; p.Y -= 0.5f;
 			#endif
-			pos = Utils.RotateX( Utils.RotateY( pos, cosY, sinY ), cosX, sinX );
-			vertex.X = pos.X; vertex.Y = pos.Y; vertex.Z = pos.Z;
+			p = Utils.RotateX( Utils.RotateY( p, cosY, sinY ), cosX, sinX );
+			vertex.X = p.X; vertex.Y = p.Y; vertex.Z = p.Z;
 		}
 
 		static Vector3 pos = Vector3.Zero;

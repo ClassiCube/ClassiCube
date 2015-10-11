@@ -46,8 +46,7 @@ namespace Launcher {
 			}
 			e.Handled = true;
 		}
-
-		GameState mc, cc;
+		GameState cc;
 		
 		void DisplayResourcesDialog( object sender, EventArgs e ) {
 			// TODO: async fetching

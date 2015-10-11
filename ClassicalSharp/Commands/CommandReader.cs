@@ -10,6 +10,7 @@ namespace ClassicalSharp.Commands {
 		int firstArgOffset;
 		int curOffset;
 		
+		/// <summary> Returns the next argument, or null if there are no more arguments left. </summary>
 		public string Next() {
 			if( curOffset >= rawInput.Length ) return null;
 			int next = rawInput.IndexOf( ' ', curOffset );
@@ -22,6 +23,8 @@ namespace ClassicalSharp.Commands {
 			return arg;
 		}
 		
+		/// <summary> Returns all remaining arguments (including the space separators), 
+		/// or null if there are no more arguments left. </summary>
 		public string NextAll() {
 			if( curOffset >= rawInput.Length ) return null;
 			string arg = rawInput.Substring( curOffset, rawInput.Length - curOffset );
@@ -29,18 +32,23 @@ namespace ClassicalSharp.Commands {
 			return arg;
 		}
 		
+		/// <summary> Attempts to parse the next argument as a 32-bit integer. </summary>
 		public bool NextInt( out int value ) {
 			return Int32.TryParse( Next(), out value );
 		}
 		
+		/// <summary> Attempts to parse the next argument as a 32-bit floating point number. </summary>
 		public bool NextFloat( out float value ) {
 			return Single.TryParse( Next(), out value );
 		}
 		
+		/// <summary> Attempts to parse the next argument as a 6 digit hex number. </summary>
+		/// <remarks> #xxxxxx or xxxxxx are accepted. </remarks>
 		public bool NextHexColour( out FastColour value ) {
 			return FastColour.TryParse( Next(), out value );
 		}
 		
+		/// <summary> Attempts to parse the next argument using the specified parsing function. </summary>
 		public bool NextOf<T>( out T value, TryParseFunc<T> parser ) {
 			bool success = parser( Next(), out value );
 			if( !success ) value = default( T );
@@ -57,10 +65,12 @@ namespace ClassicalSharp.Commands {
 			return true;
 		}
 		
+		/// <summary> Total number of arguments yet to be processed. </summary>
 		public int RemainingArgs {
 			get { return CountArgsFrom( curOffset ); }
 		}
 		
+		/// <summary> Total number of arguments provided by the user. </summary>
 		public int TotalArgs {
 			get { return CountArgsFrom( firstArgOffset ); }
 		}
@@ -76,6 +86,7 @@ namespace ClassicalSharp.Commands {
 			return count;
 		}
 
+		/// <summary> Rewinds the internal state back to the first argument. </summary>
 		public void Reset() {
 			curOffset = firstArgOffset;
 		}

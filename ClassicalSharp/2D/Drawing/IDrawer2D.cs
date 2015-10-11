@@ -5,6 +5,9 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
+	/// <summary> Class responsibe for performing drawing operations on bitmaps
+	/// and for converting bitmaps into graphics api textures. </summary>
+	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
 	public abstract class IDrawer2D : IDisposable {
 		
 		protected IGraphicsApi graphics;
@@ -13,19 +16,19 @@ namespace ClassicalSharp {
 		/// <summary> Sets the underlying bitmap that drawing operations will be performed on. </summary>
 		public abstract void SetBitmap( Bitmap bmp );
 		
-		/// <summary> Draws a string using the specified arguments and fonts at the 
+		/// <summary> Draws a string using the specified arguments and fonts at the
 		/// specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawText( Font font, ref DrawTextArgs args, float x, float y );
 		
-		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the 
+		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the
 		/// specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRect( Color colour, int x, int y, int width, int height );
 		
-		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions 
+		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height );
 		
-		/// <summary> Draws a 2D rectangle with rounded borders of the specified dimensions 
+		/// <summary> Draws a 2D rectangle with rounded borders of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height );
 		
@@ -45,7 +48,7 @@ namespace ClassicalSharp {
 		/// <remarks> You will no longer be able to perform measuring or drawing calls after this. </remarks>
 		public abstract void DisposeInstance();
 		
-		/// <summary> Draws the specified string from the arguments into a new bitmap, 
+		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// them creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture MakeTextTexture( Font font, int windowX, int windowY, ref DrawTextArgs args ) {
 			Size size = MeasureSize( args.Text, font, args.UseShadow );
@@ -72,7 +75,7 @@ namespace ClassicalSharp {
 		/// <summary> Creates a power-of-2 sized bitmap larger or equal to to the given size. </summary>
 		public static Bitmap CreatePow2Bitmap( Size size ) {
 			return new Bitmap( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
-		}		
+		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );
 		protected static Color white = Color.FromArgb( 255, 255, 255 );
