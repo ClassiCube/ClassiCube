@@ -10,13 +10,13 @@ namespace ClassicalSharp {
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
 			#if !__MonoCS__
 			Hotbar = new Block[] { Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt,
-				Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Glass, Block.Slab };
+				Block.WoodenPlanks, Block.Wood, Block.Leaves, Block.Grass, Block.Slab };
 			#else
 			Hotbar = new Block[9];
 			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
 			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
 			Hotbar[4] = Block.WoodenPlanks; Hotbar[5] = Block.Wood;
-			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Glass;
+			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Grass;
 			Hotbar[8] = Block.Slab;
 			#endif
 		}
@@ -50,7 +50,10 @@ namespace ClassicalSharp {
 				}
 				for( int i = 0; i < Hotbar.Length; i++ ) {
 					if( Hotbar[i] == value ) {
-						hotbarIndex = i;
+						Block held = Hotbar[hotbarIndex];
+						Hotbar[hotbarIndex] = Hotbar[i];
+						Hotbar[i] = held;
+						
 						game.Events.RaiseHeldBlockChanged();
 						return;
 					}

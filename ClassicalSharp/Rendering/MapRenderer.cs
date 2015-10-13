@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 			public bool Visible = true, Occluded = false;
 			public bool Visited = false, Empty = false;
 			public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
-			public byte OcclusionFlags, VisibilityFlags;
+			public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 			
 			public ChunkPartInfo[] NormalParts;
 			public ChunkPartInfo[] TranslucentParts;
@@ -132,7 +132,7 @@ namespace ClassicalSharp {
 		void DeleteChunk( ChunkInfo info ) {
 			info.Empty = false;
 			info.OcclusionFlags = 0;
-			info.VisibilityFlags = 0;
+			info.OccludedFlags = 0;
 			DeleteData( ref info.NormalParts );
 			DeleteData( ref info.TranslucentParts );
 		}
@@ -226,9 +226,9 @@ namespace ClassicalSharp {
 		void UpdateSortOrder() {
 			Player p = game.LocalPlayer;
 			Vector3I newChunkPos = Vector3I.Floor( p.EyePosition );
-			newChunkPos.X = ( newChunkPos.X & ~0x0F ) + 8;
-			newChunkPos.Y = ( newChunkPos.Y & ~0x0F ) + 8;
-			newChunkPos.Z = ( newChunkPos.Z & ~0x0F ) + 8;
+			newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
+			newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;
+			newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;
 			if( newChunkPos == chunkPos ) return;
 			
 			chunkPos = newChunkPos;
@@ -301,6 +301,7 @@ namespace ClassicalSharp {
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
+			//DebugPickedPos();
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.

@@ -234,11 +234,14 @@ namespace ClassicalSharp {
 			}
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
+			//OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B02 );
 			fpsScreen.Render( e.Time );
 			if( activeScreen != null ) {
 				activeScreen.Render( e.Time );
 			}
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
+			//if( Keyboard[Key.F2] )
+			//	OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B01 );
 			
 			if( screenshotRequested )
 				TakeScreenshot();

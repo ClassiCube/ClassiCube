@@ -6,45 +6,53 @@ namespace ClassicalSharp {
 	
 	public partial class MapRenderer : IDisposable {
 		
-		void SimpleOcclusionCulling() { // TODO: broken
+		void SimpleOcclusionCulling() { // TODO: still broken
 			Vector3 p = game.LocalPlayer.EyePosition;
-			Vector3I chunkLoc = Vector3I.Floor( p );
-			Utils.Clamp( ref chunkLoc.X, 0, game.Map.Width - 1 );
-			Utils.Clamp( ref chunkLoc.Y, 0, game.Map.Height - 1 );
-			Utils.Clamp( ref chunkLoc.Z, 0, game.Map.Length- 1 );
+			Vector3I mapLoc = Vector3I.Floor( p );
+			Utils.Clamp( ref mapLoc.X, 0, game.Map.Width - 1 );
+			Utils.Clamp( ref mapLoc.Y, 0, game.Map.Height - 1 );
+			Utils.Clamp( ref mapLoc.Z, 0, game.Map.Length- 1 );
 			
-			int cx = chunkLoc.X >> 4;
-			int cy = chunkLoc.Y >> 4;
-			int cz = chunkLoc.Z >> 4;
+			int cx = mapLoc.X >> 4;
+			int cy = mapLoc.Y >> 4;
+			int cz = mapLoc.Z >> 4;
 			
 			ChunkInfo chunkIn = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
-			byte chunkInFlags = chunkIn.OcclusionFlags;
+			byte chunkInOcclusionFlags = chunkIn.OcclusionFlags;
 			chunkIn.OcclusionFlags = 0;
-			
 			ChunkQueue queue = new ChunkQueue( chunksX * chunksY * chunksZ );
 			for( int i = 0; i < chunks.Length; i++ ) {
-				chunks[i].Visited = false;
-				chunks[i].Occluded = false;
-				chunks[i].VisibilityFlags = 0;
+				ChunkInfo chunk = chunks[i];
+				chunk.Visited = false;
+				chunk.Occluded = false;
+				chunk.OccludedFlags = chunk.OcclusionFlags;
+				chunk.DistanceFlags = 0;
 			}
 			
 			chunkIn.Visited = true;
+			mapLoc = Vector3I.Floor( p );
+			if( game.Map.IsValidPos( mapLoc ) ) {
+				chunkIn.DistanceFlags = flagX | flagY | flagZ;
+			} else {
+				chunkIn.OccludedFlags = chunkIn.OcclusionFlags = chunkInOcclusionFlags;
+				chunkIn.DistanceFlags |= (mapLoc.X < 0 || mapLoc.X >= game.Map.Width) ? flagX : (byte)0;
+				chunkIn.DistanceFlags |= (mapLoc.Y < 0 || mapLoc.Y >= game.Map.Height) ? flagY : (byte)0;
+				chunkIn.DistanceFlags |= (mapLoc.Z < 0 || mapLoc.Z >= game.Map.Length) ? flagZ : (byte)0;
+			}
+			
 			QueueChunk( cx - 1, cy, cz, queue );
 			QueueChunk( cx + 1, cy, cz, queue );
 			QueueChunk( cx, cy - 1, cz, queue );
 			QueueChunk( cx, cy + 1, cz, queue );
 			QueueChunk( cx, cy, cz - 1, queue );
-			QueueChunk( cx, cy, cz + 1, queue );
-			
-			ProcessQueue( chunkIn, queue );
-			chunkIn.OcclusionFlags = chunkInFlags;
+			QueueChunk( cx, cy, cz + 1, queue );			
+			ProcessQueue( chunkPos, queue );
+			chunkIn.OcclusionFlags = chunkInOcclusionFlags;
 		}
 		
-		void ProcessQueue( ChunkInfo src, ChunkQueue queue ) {
-			Vector3I p = new Vector3I( src.CentreX, src.CentreY, src.CentreZ );
+		void ProcessQueue( Vector3I p, ChunkQueue queue ) {
 			while( queue.Size > 0 ) {
-				ChunkInfo chunk = queue.Dequeue();				
-				chunk.VisibilityFlags = chunk.OcclusionFlags;
+				ChunkInfo chunk = queue.Dequeue();
 				int x1 = chunk.CentreX - 8, x2 = chunk.CentreX + 8;
 				int y1 = chunk.CentreY - 8, y2 = chunk.CentreY + 8;
 				int z1 = chunk.CentreZ - 8, z2 = chunk.CentreZ + 8;
@@ -82,19 +90,14 @@ namespace ClassicalSharp {
 					distY = dx * dx + dxTop * dxTop + dz * dz; yOffset = 1;
 				}
 				
-				int distMin = Math.Min( distX, Math.Min( distY, distZ ) );			
-				bool occlude = true;
-				byte flags = 0;
-				if( distMin == distX )
-					OccludeX( cx, cy, cz, xOffset, ref occlude, ref flags );
-				if( distMin == distZ )
-					OccludeZ( cx, cy, cz, zOffset, ref occlude, ref flags );
-				if( distMin == distY )
-					OccludeY( cx, cy, cz, yOffset, ref occlude, ref flags );
+				chunk.Occluded = true;
+				int distMin = Math.Min( distX, Math.Min( distY, distZ ) );
+				if( distMin == distX ) OccludeX( cx, cy, cz, xOffset, chunk );
+				if( distMin == distZ ) OccludeZ( cx, cy, cz, zOffset, chunk );
+				if( distMin == distY ) OccludeY( cx, cy, cz, yOffset, chunk );
 				
-				if( occlude ) 
-					chunk.Occluded = true;
-				chunk.VisibilityFlags = (byte)( flags | chunk.OcclusionFlags );
+				//Console.WriteLine( distMin + " , " + distX + " , " + distY + " , " + distZ );
+				//Console.WriteLine( chunk.DistanceFlags + " : " + chunk.OccludedFlags + " : " + chunk.OcclusionFlags );
 				QueueChunk( cx - 1, cy, cz, queue );
 				QueueChunk( cx + 1, cy, cz, queue );
 				QueueChunk( cx, cy, cz - 1, queue );
@@ -104,45 +107,59 @@ namespace ClassicalSharp {
 			}
 			Console.WriteLine( "======================" );
 		}
+		const byte flagX = 1, flagZ = 2, flagY = 4;
 		
-		void OccludeX( int cx, int cy, int cz, int xOffset, ref bool occlude, ref byte flags ) {
+		public void DebugPickedPos() {
+			if( game.SelectedPos.Valid ) {
+				Vector3I p = game.SelectedPos.BlockPos;
+				int cx = p.X >> 4;
+				int cy = p.Y >> 4;
+				int cz = p.Z >> 4;
+				ChunkInfo chunk = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+				//Console.WriteLine( chunk.DistanceFlags + " : " + chunk.OccludedFlags + " : " + chunk.OcclusionFlags + " , " + chunk.Occluded );
+			}
+		}
+		
+		void OccludeX( int cx, int cy, int cz, int xOffset, ChunkInfo info ) {
 			cx += xOffset;
 			if( cx >= 0 && cx < chunksX ) {
 				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
-				if( (neighbour.VisibilityFlags & 1) == 0 )
-					occlude = false;
+				if( (neighbour.OccludedFlags & neighbour.DistanceFlags) != neighbour.DistanceFlags )
+					info.Occluded = false;
 				else
-					flags |= 1;
+					info.OccludedFlags |= flagX;
+			} else {
+				info.Occluded = false;
 			}
+			info.DistanceFlags |= flagX;
 		}
 		
-		void OccludeZ( int cx, int cy, int cz, int zOffset, ref bool occlude, ref byte flags ) {
+		void OccludeZ( int cx, int cy, int cz, int zOffset, ChunkInfo info ) {
 			cz += zOffset;
 			if( cz >= 0 && cz < chunksZ ) {
 				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
-				if( (neighbour.VisibilityFlags & 2) == 0 )
-					occlude = false;
+				if( (neighbour.OccludedFlags & neighbour.DistanceFlags) != neighbour.DistanceFlags )
+					info.Occluded = false;
 				else
-					flags |= 2;
+					info.OccludedFlags |= flagZ;
+			} else {
+				info.Occluded = false;
 			}
+			info.DistanceFlags |= flagZ;
 		}
 		
-		void OccludeY( int cx, int cy, int cz, int yOffset, ref bool occlude, ref byte flags ) {
+		void OccludeY( int cx, int cy, int cz, int yOffset, ChunkInfo info ) {
 			cy += yOffset;
-			if( cy >= 0 && cy< chunksY ) {
+			if( cy >= 0 && cy < chunksY ) {
 				ChunkInfo neighbour = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
-				if( (neighbour.VisibilityFlags & 4) == 0 )
-					occlude = false;
+				if( (neighbour.OccludedFlags & neighbour.DistanceFlags) != neighbour.DistanceFlags )
+					info.Occluded = false;
 				else
-					flags |= 4;
+					info.OccludedFlags |= flagY;
+			} else {
+				info.Occluded = false;
 			}
-		}
-		
-		static float DistToRecSquared( Vector3 p, int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			float dx = Math.Max( x1 - p.X, Math.Max( 0, p.X - x2 ) );
-			float dy = Math.Max( y1 - p.Y, Math.Max( 0, p.Y - y2 ) );
-			float dz = Math.Max( z1 - p.Z, Math.Max( 0, p.Z - z2 ) );
-			return dx * dx + dy * dy + dz * dz;
+			info.DistanceFlags |= flagY;
 		}
 
 		void QueueChunk( int cx, int cy, int cz, ChunkQueue queue ) {

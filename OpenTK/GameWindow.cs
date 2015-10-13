@@ -74,7 +74,6 @@ namespace OpenTK
 		IGraphicsContext glContext;
 		bool isExiting = false;
 		double render_period;
-		double target_render_period;
 		// TODO: Implement these:
 		double render_time;
 		bool vsync;
