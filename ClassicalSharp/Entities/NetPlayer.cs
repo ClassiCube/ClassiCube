@@ -34,8 +34,8 @@ namespace ClassicalSharp {
 			} else {
 				// Smoother interpolation by also adding midpoint.
 				Vector3 midPos = Vector3.Lerp( lastPos, serverPos, 0.5f );
-				float midYaw = Utils.InterpAngle( lastYaw, serverYaw, 0.5f );
-				float midPitch = Utils.InterpAngle( lastPitch, serverPitch, 0.5f );
+				float midYaw = Utils.LerpAngle( lastYaw, serverYaw, 0.5f );
+				float midPitch = Utils.LerpAngle( lastPitch, serverPitch, 0.5f );
 				AddState( new State( tickCount, midPos, midYaw, midPitch ) );
 				AddState( new State( tickCount, serverPos, serverYaw, serverPitch ) );
 			}
@@ -88,8 +88,8 @@ namespace ClassicalSharp {
 
 		public override void Render( double deltaTime, float t ) {
 			Position = Vector3.Lerp( oldState.pos, newState.pos, t );
-			YawDegrees = Utils.InterpAngle( oldState.yaw, newState.yaw, t );
-			PitchDegrees = Utils.InterpAngle( oldState.pitch, newState.pitch, t );
+			YawDegrees = Utils.LerpAngle( oldState.yaw, newState.yaw, t );
+			PitchDegrees = Utils.LerpAngle( oldState.pitch, newState.pitch, t );
 			
 			GetCurrentAnimState( t );
 			RenderModel( deltaTime );

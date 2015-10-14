@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		protected const int boundsSize = 10;
 		protected const int namesPerColumn = 20;
 		protected int namesCount = 0;
-		protected Texture[] textures = new Texture[256];
+		protected Texture[] textures;
 		protected int columns;
 		protected int xMin, xMax, yHeight;
 		protected static FastColour tableCol = new FastColour( 20, 20, 20, 220 );
@@ -114,32 +114,31 @@ namespace ClassicalSharp {
 		}
 		
 		protected void SortPlayerInfo() {
-			SortInfoList();
-			int centreX = game.Width / 2;
+			SortInfoList();			
 			CalcMaxColumnHeight();
-			int y = game.Height / 2 - yHeight / 2;
-			
+			int y = game.Height / 2 - yHeight / 2;		
 			int midCol = columns / 2;
+			
+			int centreX = game.Width / 2;
 			int offset = 0;
 			if( columns % 2 != 0 ) {
 				// For an odd number of columns, the middle column is centred.
 				offset = Utils.CeilDiv( GetColumnWidth( midCol ), 2 );
-			}
+			}		
 			
-			int x = centreX - offset;			
+			xMin = centreX - offset;			
 			for( int col = midCol - 1; col >= 0; col-- ) {
-				x -= GetColumnWidth( col );
-				SetColumnPos( col, x, y );
-			}
-			xMin = x;
-			
-			x = centreX - offset;
+				xMin -= GetColumnWidth( col );
+				SetColumnPos( col, xMin, y );
+			}			
+			xMax = centreX - offset;
 			for( int col = midCol; col < columns; col++ ) {
-				SetColumnPos( col, x, y );
-				x += GetColumnWidth( col );
+				SetColumnPos( col, xMax, y );
+				xMax += GetColumnWidth( col );
 			}
-			xMax = x;
+			
 			UpdateTableDimensions();
+			MoveTo( X, game.Height / 4 );
 		}
 	}
 }

@@ -136,6 +136,7 @@ namespace ClassicalSharp {
 				CpeListInfo oldInfo = game.CpePlayersList[nameId];
 				CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
 				game.CpePlayersList[nameId] = info;
+				//Console.WriteLine( nameId + ": " + groupRank + " , " + groupName + " : " + listName );
 				
 				if( oldInfo != null ) {
 					game.Events.RaiseCpeListInfoChanged( (byte)nameId );

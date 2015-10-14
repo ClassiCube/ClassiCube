@@ -7,6 +7,7 @@ namespace ClassicalSharp {
 	public sealed class NormalPlayerListWidget : PlayerListWidget {
 		
 		public NormalPlayerListWidget( Game game, Font font ) : base( game, font ) {
+			textures = new Texture[256];
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];		
@@ -16,7 +17,7 @@ namespace ClassicalSharp {
 			public byte PlayerId;
 			
 			public PlayerInfo( Player p ) {
-				Name = p.DisplayName;
+				Name = Utils.StripColours( p.DisplayName );
 				PlayerId = p.ID;
 			}
 		}

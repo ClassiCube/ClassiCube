@@ -7,25 +7,31 @@ namespace ClassicalSharp {
 	public class ExtPlayerListWidget : PlayerListWidget {
 		
 		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {
+			textures = new Texture[512];
+			titleFont = new Font( "Arial", 12, FontStyle.Underline );
 		}
 		
-		PlayerInfo[] info = new PlayerInfo[256];
+		PlayerInfo[] info = new PlayerInfo[512];
 		class PlayerInfo {
 			
-			public string Name;			
-			public string GroupName;		
-			public byte GroupRank;			
+			public string ListName;
+			public string PlayerName;
+			public string GroupName;
+			public byte GroupRank;
 			public byte NameId;
+			public bool IsGroup = false;
 			
 			public PlayerInfo( CpeListInfo p ) {
-				Name = p.ListName;
+				ListName = Utils.StripColours( p.ListName );
+				PlayerName = Utils.StripColours( p.PlayerName );
 				NameId = p.NameId;
 				GroupName = p.GroupName;
 				GroupRank = p.GroupRank;
 			}
 			
-			public override string ToString() {
-				return NameId + ":" + Name + "(" + GroupName + "," + GroupRank + ")";
+			public PlayerInfo( string groupName ) {
+				GroupName = groupName;
+				IsGroup = true;
 			}
 		}
 		
@@ -35,23 +41,21 @@ namespace ClassicalSharp {
 			public bool JustComparingGroups = true;
 			
 			public int Compare( PlayerInfo x, PlayerInfo y ) {
-				if( JustComparingGroups ) {
+				if( JustComparingGroups )
 					return x.GroupName.CompareTo( y.GroupName );
-				}
 				
 				int rankOrder = x.GroupRank.CompareTo( y.GroupRank );
-				if( rankOrder != 0 ) {
-					return rankOrder;
-				}
-				return x.Name.CompareTo( y.Name );
+				return rankOrder != 0 ? rankOrder :
+					x.ListName.CompareTo( y.ListName );
 			}
 		}
 		
+		Font titleFont;
 		public override void Init() {
 			base.Init();
 			game.Events.CpeListInfoAdded += PlayerListInfoAdded;
 			game.Events.CpeListInfoRemoved += PlayerListInfoRemoved;
-			game.Events.CpeListInfoChanged += PlayerListInfoChanged;
+			game.Events.CpeListInfoChanged += PlayerListInfoChanged;			
 		}
 		
 		public override void Dispose() {
@@ -59,12 +63,13 @@ namespace ClassicalSharp {
 			game.Events.CpeListInfoAdded -= PlayerListInfoAdded;
 			game.Events.CpeListInfoChanged -= PlayerListInfoChanged;
 			game.Events.CpeListInfoRemoved -= PlayerListInfoRemoved;
+			titleFont.Dispose();
 		}
 		
 		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.NameId == e.Id ) {
+				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
 					graphicsApi.DeleteTexture( ref tex );
 					AddPlayerInfo( game.CpePlayersList[e.Id], i );
@@ -77,7 +82,7 @@ namespace ClassicalSharp {
 		void PlayerListInfoRemoved( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.NameId == e.Id ) {
+				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
 					graphicsApi.DeleteTexture( ref tex );
 					RemoveItemAt( textures, i );
@@ -119,8 +124,12 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void SortInfoList() {
-			if( namesCount  == 0 ) return;
+			if( namesCount == 0 ) return;
+			
 			// Sort the list into groups
+			for( int i = 0; i < namesCount; i++ ) {
+				if( info[i].IsGroup ) DeleteGroup( ref i );
+			}
 			comparer.JustComparingGroups = true;
 			Array.Sort( info, textures, 0, namesCount, comparer );
 			
@@ -128,10 +137,38 @@ namespace ClassicalSharp {
 			comparer.JustComparingGroups = false;
 			int index = 0;
 			while( index < namesCount ) {
+				AddGroup( info[index].GroupName, ref index );
 				int count = GetGroupCount( index );
 				Array.Sort( info, textures, index, count, comparer );
 				index += count;
 			}
+		}
+		
+		void DeleteGroup( ref int i ) {
+			graphicsApi.DeleteTexture( ref textures[i] );		
+			RemoveItemAt( info, i );
+			RemoveItemAt( textures, i );
+			
+			namesCount--;
+			i--;
+		}
+		
+		void AddGroup( string group, ref int index ) {
+			DrawTextArgs args = new DrawTextArgs( group, true );
+			Texture tex = game.Drawer2D.MakeTextTexture( titleFont, 0, 0, ref args );
+			PlayerInfo pInfo = new PlayerInfo( group );
+			
+			PushDown( info, index, pInfo );
+			PushDown( textures, index, tex );
+			index++;
+			namesCount++;
+		}
+		
+		void PushDown<T>( T[] array, int index, T value ) {
+			for( int i = array.Length - 1; i > index; i-- ) {
+				array[i] = array[i - 1];
+			}
+			array[index] = value;
 		}
 		
 		int GetGroupCount( int startIndex ) {
