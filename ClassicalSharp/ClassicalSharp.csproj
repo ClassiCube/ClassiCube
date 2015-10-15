@@ -46,7 +46,7 @@
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug_DX' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug_D3D' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>..\output\debug\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
@@ -57,6 +57,16 @@
     <StartAction>Project</StartAction>
     <StartArguments>wwwf null 127.0.0.1 25566</StartArguments>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release_D3D' ">
+    <OutputPath>..\output\release\</OutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE;USE_DX</DefineConstants>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
