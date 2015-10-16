@@ -12,6 +12,7 @@ using ClassicalSharp.Selections;
 using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
+using OpenTK.Graphics;
 
 namespace ClassicalSharp {
 
@@ -84,7 +85,12 @@ namespace ClassicalSharp {
 			Events.RaiseTerrainAtlasChanged();
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack ) : base() {
+		public Game( string username, string mppass, string skinServer, string defaultTexPack ) 
+			#if USE_DX
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default ) {
+			#else
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default ) {
+			#endif
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
@@ -161,7 +167,6 @@ namespace ClassicalSharp {
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
-			Title = Utils.AppName;
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
 			Culling = new FrustumCulling();

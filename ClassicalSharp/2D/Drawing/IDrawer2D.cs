@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 	public abstract class IDrawer2D : IDisposable {
 		
 		protected IGraphicsApi graphics;
-		protected const float shadowOffset = 1.3f;
+		public const float Offset = 1.3f;
 		
 		/// <summary> Sets the underlying bitmap that drawing operations will be performed on. </summary>
 		public abstract void SetBitmap( Bitmap bmp );

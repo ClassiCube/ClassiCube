@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 				TextPart part = parts[i];
 				Brush textBrush = GetOrCreateBrush( part.TextColour );
 				if( args.UseShadow )
-					g.DrawString( part.Text, font, shadowBrush, x + shadowOffset, y + shadowOffset, format );
+					g.DrawString( part.Text, font, shadowBrush, x + Offset, y + Offset, format );
 				
 				g.DrawString( part.Text, font, textBrush, x, y, format );
 				x += g.MeasureString( part.Text, font, Int32.MaxValue, format ).Width;
@@ -115,8 +115,8 @@ namespace ClassicalSharp {
 			}
 			
 			if( shadow && parts.Count > 0 ) {
-				total.Width += shadowOffset;
-				total.Height += shadowOffset;
+				total.Width += Offset;
+				total.Height += Offset;
 			}
 			return Size.Ceiling( total );
 		}

@@ -44,25 +44,6 @@
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug_D3D' ">
-    <OutputPath>..\output\debug\</OutputPath>
-    <DebugSymbols>True</DebugSymbols>
-    <DebugType>None</DebugType>
-    <Optimize>True</Optimize>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <DefineConstants>DEBUG;TRACE;USE_DX</DefineConstants>
-    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release_D3D' ">
-    <OutputPath>..\output\release\</OutputPath>
-    <DebugSymbols>False</DebugSymbols>
-    <DebugType>None</DebugType>
-    <Optimize>True</Optimize>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <DefineConstants>TRACE;USE_DX</DefineConstants>
-    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-    <StartAction>Project</StartAction>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
@@ -121,11 +102,11 @@
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
     <Compile Include="Platform\Windows\WinDisplayDevice.cs" />
-    <Compile Include="Platform\Windows\WinDXContext.cs" />
     <Compile Include="Platform\Windows\WinGLContext.cs" />
     <Compile Include="Platform\Windows\WinGLNative.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />
     <Compile Include="Platform\Windows\WinWindowInfo.cs" />
+    <Compile Include="Platform\NullContext.cs" />
     <Compile Include="Platform\X11\API.cs" />
     <Compile Include="Platform\X11\Functions.cs" />
     <Compile Include="Platform\X11\Glx.cs" />

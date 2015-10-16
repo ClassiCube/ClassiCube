@@ -34,6 +34,7 @@ using System.Threading;
 using OpenTK.Graphics;
 using OpenTK.Input;
 using OpenTK.Platform;
+using OpenTK.Graphics;
 
 namespace OpenTK
 {
@@ -82,40 +83,6 @@ namespace OpenTK
 		double next_render = 0.0;
 		FrameEventArgs render_args = new FrameEventArgs();
 		
-		/// <summary>Constructs a new GameWindow with sensible default attributes.</summary>
-		public GameWindow()
-			: this(640, 480, GraphicsMode.Default, "OpenTK Game Window", 0, DisplayDevice.Default) { }
-		
-		/// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-		/// <param name="width">The width of the GameWindow in pixels.</param>
-		/// <param name="height">The height of the GameWindow in pixels.</param>
-		public GameWindow(int width, int height)
-			: this(width, height, GraphicsMode.Default, "OpenTK Game Window", 0, DisplayDevice.Default) { }
-		
-		/// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-		/// <param name="width">The width of the GameWindow in pixels.</param>
-		/// <param name="height">The height of the GameWindow in pixels.</param>
-		/// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GameWindow.</param>
-		public GameWindow(int width, int height, GraphicsMode mode)
-			: this(width, height, mode, "OpenTK Game Window", 0, DisplayDevice.Default) { }
-		
-		/// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-		/// <param name="width">The width of the GameWindow in pixels.</param>
-		/// <param name="height">The height of the GameWindow in pixels.</param>
-		/// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GameWindow.</param>
-		/// <param name="title">The title of the GameWindow.</param>
-		public GameWindow(int width, int height, GraphicsMode mode, string title)
-			: this(width, height, mode, title, 0, DisplayDevice.Default) { }
-		
-		/// <summary>Constructs a new GameWindow with the specified attributes.</summary>
-		/// <param name="width">The width of the GameWindow in pixels.</param>
-		/// <param name="height">The height of the GameWindow in pixels.</param>
-		/// <param name="mode">The OpenTK.Graphics.GraphicsMode of the GameWindow.</param>
-		/// <param name="title">The title of the GameWindow.</param>
-		/// <param name="options">GameWindow options regarding window appearance and behavior.</param>
-		public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options)
-			: this(width, height, mode, title, options, DisplayDevice.Default) { }
-		
 		/// <summary>Constructs a new GameWindow with the specified attributes.</summary>
 		/// <param name="width">The width of the GameWindow in pixels.</param>
 		/// <param name="height">The height of the GameWindow in pixels.</param>
@@ -123,10 +90,12 @@ namespace OpenTK
 		/// <param name="title">The title of the GameWindow.</param>
 		/// <param name="options">GameWindow options regarding window appearance and behavior.</param>
 		/// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the GameWindow in.</param>
-		public GameWindow(int width, int height, GraphicsMode mode, string title, GameWindowFlags options, DisplayDevice device)
-			: base(width, height, title, options, mode == null ? GraphicsMode.Default : mode, device == null ? DisplayDevice.Default : device) {
+		public GameWindow(int width, int height, GraphicsMode mode, string title, bool nullContext,
+		                  GameWindowFlags options, DisplayDevice device)
+			: base(width, height, title, options, mode, device) {
 			try {
-				glContext = Factory.Default.CreateGLContext(mode == null ? GraphicsMode.Default : mode, WindowInfo);
+				glContext = nullContext ? new NullContext() :
+					Factory.Default.CreateGLContext(mode, WindowInfo);
 				glContext.MakeCurrent(WindowInfo);
 				glContext.LoadAll();
 				VSync = true;

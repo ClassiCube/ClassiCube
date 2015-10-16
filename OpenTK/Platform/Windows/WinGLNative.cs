@@ -126,7 +126,6 @@ namespace OpenTK.Platform.Windows
 							API.SetWindowPos(child_window.WindowHandle, IntPtr.Zero, 0, 0, ClientRectangle.Width, ClientRectangle.Height,
 							                       SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                       SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
-
 							if (suppress_resize <= 0 && Resize != null)
 								Resize(this, EventArgs.Empty);
 						}

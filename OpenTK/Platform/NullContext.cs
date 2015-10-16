@@ -1,18 +1,18 @@
 ﻿using System;
 using OpenTK.Graphics;
 
-namespace OpenTK.Platform.Windows {
+namespace OpenTK.Platform {
 
-	internal sealed class WinDXContext : GraphicsContextBase {
+	internal sealed class NullContext : GraphicsContextBase {
 		
-		public WinDXContext(GraphicsMode format, WinWindowInfo window) {
+		public NullContext() {
 			Debug.Print( "doing nothing" );
 		}
 
 		public override void SwapBuffers() {
 		}
 
-		public override void MakeCurrent(IWindowInfo window) {
+		public override void MakeCurrent( IWindowInfo window ) {
 		}
 
 		public override bool IsCurrent {

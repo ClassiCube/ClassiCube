@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 		}
 
 		public override void Init() {
-			DrawTextArgs caretArgs = new DrawTextArgs( "_", Color.White, false );
+			DrawTextArgs caretArgs = new DrawTextArgs( "_", false );
 			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
 			SetText( chatInputText.GetString() );
 		}
@@ -63,13 +63,13 @@ namespace ClassicalSharp {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
 					drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
-					DrawTextArgs args = new DrawTextArgs( value, Color.White, false );
+					DrawTextArgs args = new DrawTextArgs( value, false );
 					args.SkipPartsCheck = true;
 					drawer.DrawText( font, ref args, 0, 0 );
 					
 					string range = Validator.Range;
 					Size hintSize = drawer.MeasureSize( range, hintFont, true );
-					args = new DrawTextArgs( range, Color.White, false );
+					args = new DrawTextArgs( range, false );
 					args.SkipPartsCheck = true;
 					drawer.DrawText( hintFont, ref args, size.Width - hintSize.Width, 0 );
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
