@@ -29,8 +29,8 @@ Run classicalsharp.exe.
 **Multiplayer**
 Run launcher.exe. You can connect to LAN/locally hosted servers, minecraft.net servers, and classicube.net servers through the launcher.
 
-Alternatively, you can use [CSLauncher](https://github.com/umby24/CSLauncher/releases) instead of the default launcher included with ClassicalSharp 
-- this launcher is very similar to ClassiCube's launcher and is simpler to use. (Thanks Umby24 for making this launcher)
+Alternatively, you can use [CSLauncher](https://github.com/umby24/CSLauncher/releases) instead of the default launcher included with ClassicalSharp - 
+this launcher is very similar to ClassiCube's launcher and is simpler to use. (Thanks Umby24 for making this launcher)
 
 ##### Mono specific notes
 *You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
