@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+<Project ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
     <ProjectGuid>{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -7,8 +7,9 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Launcher2</RootNamespace>
     <AssemblyName>Launcher2</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <NoWin32Manifest>False</NoWin32Manifest>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -43,15 +44,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FastButtonWidget.cs" />
+    <Compile Include="GameStartData.cs" />
     <Compile Include="MainScreen.cs" />
+    <Compile Include="Patcher\Animations.cs" />
+    <Compile Include="Patcher\ResourceFetcher.cs" />
+    <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WebService\ClassiCubeSession.cs" />
+    <Compile Include="WebService\GameSession.cs" />
+    <Compile Include="WebService\ServerListEntry.cs" />
+    <Compile Include="WebService\WebUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassicalSharp\ClassicalSharp.csproj">
@@ -62,6 +69,10 @@
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Patcher" />
+    <Folder Include="WebService" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

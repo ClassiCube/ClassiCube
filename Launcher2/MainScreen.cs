@@ -15,11 +15,41 @@ namespace Launcher2 {
 		
 		public void Init() {
 			Window.Resize += HandleResize;
-			Window.Mouse.Move += new EventHandler<MouseMoveEventArgs>(Window_Mouse_Move);
+			Window.Mouse.Move += MouseMove;
+			Window.Mouse.ButtonDown += MouseButtonDown;
+			
+			logoFont = new Font( "Times New Roman", 28, FontStyle.Bold );
+			logoItalicFont = new Font( "Times New Roman", 28, FontStyle.Italic );
+			textFont = new Font( "Arial", 16, FontStyle.Bold );
 		}
 
-		void Window_Mouse_Move(object sender, MouseMoveEventArgs e) {
+		FastButtonWidget selectedWidget;
+		void MouseMove( object sender, MouseMoveEventArgs e ) {
 			//System.Diagnostics.Debug.Print( "moved" );
+			for( int i = 0; i < widgets.Length; i++ ) {
+				FastButtonWidget widget = widgets[i];
+				if( e.X >= widget.X && e.Y >= widget.Y &&
+				   e.X < widget.X + widget.Width && e.Y < widget.Y + widget.Height ) {
+					if( selectedWidget != widget && selectedWidget != null ) {
+						using( IDrawer2D drawer = Drawer ) {
+							drawer.SetBitmap( background );
+							selectedWidget.Redraw( Drawer, selectedWidget.Text, textFont );
+							FilterButton( selectedWidget.X, selectedWidget.Y,
+							             selectedWidget.Width, selectedWidget.Height, 180 );
+							widget.Redraw( Drawer, widget.Text, textFont );
+						}
+					}
+					selectedWidget = widget;
+					break;
+				}
+			}
+		}
+		
+		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
+			if( e.Button != MouseButton.Left ) return;
+			
+			if( selectedWidget != null && selectedWidget.OnClick != null )
+				selectedWidget.OnClick();
 		}
 		
 		public void Display() {
@@ -33,18 +63,18 @@ namespace Launcher2 {
 		}
 		
 		Bitmap background;
+		Font textFont, logoFont, logoItalicFont;
+		static FastColour clearColour = new FastColour( 30, 30, 30 );
+		static uint clearColourBGRA = (uint)(new FastColour( 30, 30, 30 ).ToArgb());
 		public void RecreateBackground() {
 			System.Diagnostics.Debug.Print( "DISPLAY" );
 			if( background != null )
 				background.Dispose();
 			
 			background = new Bitmap( Window.Width, Window.Height );
-			Font logoFont = new Font( "Times New Roman", 28, FontStyle.Bold );
-			Font logoItalicFont = new Font( "Times New Roman", 28, FontStyle.Italic );
-			
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( background );
-				drawer.Clear( Color.FromArgb( 30, 30, 30 ) );
+				drawer.Clear( clearColour );
 				
 				Size size1 = drawer.MeasureSize( "&eClassical", logoItalicFont, true );
 				Size size2 = drawer.MeasureSize( "&eSharp", logoFont, true );
@@ -64,59 +94,42 @@ namespace Launcher2 {
 		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
 		void DrawButtons( IDrawer2D drawer ) {
 			widgetIndex = 0;
-			using( Font font = new Font( "Arial", 16, FontStyle.Bold ) ) {
-				DrawText( drawer, "Direct connect", font, Anchor.Centre, Anchor.Centre,
-				         buttonWidth, buttonHeight, 0, -100 );
-				DrawText( drawer, "ClassiCube.net", font, Anchor.Centre, Anchor.Centre,
-				         buttonWidth, buttonHeight, 0, -50 );
-				DrawText( drawer, "Default texture pack", font, Anchor.Centre, Anchor.Centre,
-				         buttonWidth, buttonHeight, 0, 50 );
-				
-				DrawText( drawer, "Singleplayer", font, Anchor.LeftOrTop, Anchor.BottomOrRight,
-				         sideButtonWidth, buttonHeight, 10, -10 );
-				DrawText( drawer, "Resume", font, Anchor.BottomOrRight, Anchor.BottomOrRight,
-				         sideButtonWidth, buttonHeight, -10, -10 );
-			}
+			MakeButtonAt( drawer, "Direct connect", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, -100 );
+			MakeButtonAt( drawer, "ClassiCube.net", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, -50 );
+			MakeButtonAt( drawer, "Default texture pack", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, 50 );
+			
+			MakeButtonAt( drawer, "Singleplayer", Anchor.LeftOrTop, Anchor.BottomOrRight,
+			             sideButtonWidth, buttonHeight, 10, -10 );
+			widgets[widgetIndex - 1].OnClick
+				= () => Program.StartClient( "default.zip" );
+			MakeButtonAt( drawer, "Resume", Anchor.BottomOrRight, Anchor.BottomOrRight,
+			             sideButtonWidth, buttonHeight, -10, -10 );
 		}
 		
-		Widget[] widgets = new Widget[5];
+		FastButtonWidget[] widgets = new FastButtonWidget[5];
 		int widgetIndex = 0;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
-		void DrawText( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
-		                     Anchor verAnchor, int width, int height, int x, int y ) {
-			Size textSize = drawer.MeasureSize( text, font, true );
-			int xOffset = width - textSize.Width;
-			int yOffset = height - textSize.Height;
-			
-			if( horAnchor == Anchor.Centre ) x = x + Window.Width / 2 - width / 2;
-			else if( horAnchor == Anchor.BottomOrRight ) x = x + Window.Width - width;
-			if( verAnchor == Anchor.Centre ) y = y + Window.Height / 2 - height / 2;
-			else if( verAnchor == Anchor.BottomOrRight ) y = y + Window.Height - height;
-			
-			drawer.DrawRoundedRect( shadowCol, 3, x + IDrawer2D.Offset, y + IDrawer2D.Offset,
-			                       width, height );
-			drawer.DrawRoundedRect( boxCol, 3, x, y, width, height );
-			
-			DrawTextArgs args = new DrawTextArgs( text, true );
-			args.SkipPartsCheck = true;
-			drawer.DrawText( font, ref args,
-			                x + 1 + xOffset / 2, y + 1 + yOffset / 2 );
-			Widget widget = new Widget();
-			// adjust for border size of 2
-			widget.X = x; widget.Y = y;
-			widget.Width = width + 2; widget.Height = height + 2;
-			//FilterButton( widget.X, widget.Y, widget.Width, widget.Height, 150 );
+		void MakeButtonAt( IDrawer2D drawer, string text, Anchor horAnchor,
+		                  Anchor verAnchor, int width, int height, int x, int y ) {
+			FastButtonWidget widget = new FastButtonWidget();
+			widget.Window = Window;
+			widget.Text = text;
+			widget.DrawAt( drawer, text, textFont, horAnchor, verAnchor, width, height, x, y );
+			FilterButton( widget.X, widget.Y, widget.Width, widget.Height, 180 );
 			widgets[widgetIndex++] = widget;
-		}
-		
-		class Widget {
-			public int X, Y;
-			public int Width, Height;
-			public bool Active;
 		}
 		
 		void HandleResize( object sender, EventArgs e ) {
 			RecreateBackground();
+		}
+		
+		public void Dispose() {
+			logoFont.Dispose();
+			logoItalicFont.Dispose();
+			textFont.Dispose();
 		}
 		
 		unsafe void FilterButton( int x, int y, int width, int height, byte scale ) {
@@ -125,6 +138,7 @@ namespace Launcher2 {
 					int* row = bmp.GetRowPtr( yy ) + x;
 					for( int xx = 0; xx < width; xx++ ) {
 						uint pixel = (uint)row[xx];
+						if( pixel == clearColourBGRA ) continue;
 						uint a = pixel & 0xFF000000;
 						uint r = (pixel >> 16) & 0xFF;
 						uint g = (pixel >> 8) & 0xFF;
@@ -138,6 +152,5 @@ namespace Launcher2 {
 				}
 			}
 		}
-		
 	}
 }

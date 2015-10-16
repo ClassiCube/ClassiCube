@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 # SharpDevelop 4.4
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassicalSharp", "ClassicalSharp\ClassicalSharp.csproj", "{BEB1C785-5CAD-48FF-A886-876BF0A318D4}"
 EndProject
@@ -27,7 +27,7 @@ Global
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.Build.0 = Debug|Any CPU
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Debug_DX|Any CPU.ActiveCfg = Debug|Any CPU
 		{23B9BDA8-4330-46AB-9012-08D87430391A}.Release_DX|Any CPU.Build.0 = Release|Any CPU
-		{23B9BDA8-4330-46AB-9012-08D87430391A}.Release_DX|Any CPU.ActiveCfg = Release|Any CPU			
+		{23B9BDA8-4330-46AB-9012-08D87430391A}.Release_DX|Any CPU.ActiveCfg = Release|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release|Any CPU.Build.0 = Release|Any CPU
@@ -35,7 +35,7 @@ Global
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug_DX|Any CPU.Build.0 = Debug_D3D|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Debug_DX|Any CPU.ActiveCfg = Debug_D3D|Any CPU
 		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release_DX|Any CPU.Build.0 = Release|Any CPU
-		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release_DX|Any CPU.ActiveCfg = Release_D3D|Any CPU	
+		{BEB1C785-5CAD-48FF-A886-876BF0A318D4}.Release_DX|Any CPU.ActiveCfg = Release_D3D|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35FEE071-2DE6-48A1-9343-B5C1F202A12B}.Release|Any CPU.Build.0 = Release|Any CPU
@@ -51,7 +51,7 @@ Global
 		{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}.Debug_DX|Any CPU.Build.0 = Debug|Any CPU
 		{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}.Debug_DX|Any CPU.ActiveCfg = Debug|Any CPU
 		{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}.Release_DX|Any CPU.Build.0 = Release|Any CPU
-		{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}.Release_DX|Any CPU.ActiveCfg = Release|Any CPU		
+		{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}.Release_DX|Any CPU.ActiveCfg = Release|Any CPU
 		{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}.Release|Any CPU.Build.0 = Release|Any CPU
