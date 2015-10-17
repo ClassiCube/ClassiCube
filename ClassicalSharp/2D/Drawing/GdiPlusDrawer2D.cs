@@ -91,6 +91,13 @@ namespace ClassicalSharp {
 			g.Clear( colour );
 		}
 		
+		public override void Clear( Color colour, int x, int y, int width, int height ) {
+			g.SmoothingMode = SmoothingMode.None;
+			Brush brush = GetOrCreateBrush( colour );
+			g.FillRectangle( brush, x, y, width, height );
+			g.SmoothingMode = SmoothingMode.HighQuality;
+		}
+		
 		public override void Dispose() {
 			g.Dispose();
 			g = null;

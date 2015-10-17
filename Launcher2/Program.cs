@@ -1,9 +1,7 @@
 ﻿using System;
-using ClassicalSharp;
-using OpenTK;
-using OpenTK.Graphics;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
 
 namespace Launcher2 {
 
@@ -13,42 +11,42 @@ namespace Launcher2 {
 		
 		[STAThread]
 		private static void Main( string[] args ) {
-			NativeWindow window = new NativeWindow( 480, 480, AppName, 0, 
-			                                       GraphicsMode.Default, DisplayDevice.Default );
-			window.Visible = true;
+			if( !Debugger.IsAttached )
+				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 			
-			MainScreen screen = new MainScreen();
-			screen.Drawer = new GdiPlusDrawer2D( null );
-			screen.Window = window;
-			screen.Init();
-			screen.RecreateBackground();			
-			
-			while( true ) {
-				window.ProcessEvents();
-				if( !window.Exists ) break;
-				
-				screen.Display();
-				System.Threading.Thread.Sleep( 10 );
-			}
+			LauncherWindow window = new LauncherWindow();
+			window.Run();
 		}
 		
-		static string missingExeMessage = "Failed to start ClassicalSharp. (classicalsharp.exe was not found)"
-			+ Environment.NewLine + Environment.NewLine +
-			"This application is only the launcher, it is not the actual client. " +
-			"Please place the launcher in the same directory as the client (classicalsharp.exe).";
+		static void UnhandledException( object sender, UnhandledExceptionEventArgs e ) {
+			// So we don't get the normal unhelpful crash dialog on Windows.
+			Exception ex = (Exception)e.ExceptionObject;
+			bool wroteToCrashLog = LogException( ex );
+			string error = wroteToCrashLog ? null :
+				(ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace);
+			
+			string message = wroteToCrashLog ?
+				"The cause of the crash has been logged to \"crash-launcher.log\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" :
+				
+				"Failed to write the cause of the crash to \"crash-launcher.log\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" +
+				Environment.NewLine + Environment.NewLine + error;
+			
+			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + message, "ClassicalSharp has crashed" );
+			Environment.Exit( 1 );
+		}
 		
-		public static bool StartClient( string args ) {
-			Process process = null;
-			
-			if( !File.Exists( "ClassicalSharp.exe" ) ) {
-				// TODO: show message popup
+		internal static bool LogException( Exception ex ) {
+			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			try {
+				using( StreamWriter writer = new StreamWriter( "crash_launcher.log", true ) ) {
+					writer.WriteLine( "Crash time: " + DateTime.Now.ToString() );
+					writer.WriteLine( error );
+					writer.WriteLine();
+				}
+			} catch( Exception ) {
 				return false;
-			}
-			
-			if( Type.GetType( "Mono.Runtime" ) != null ) {
-				process = Process.Start( "mono", "\"ClassicalSharp.exe\" " + args );
-			} else {
-				process = Process.Start( "ClassicalSharp.exe", args );
 			}
 			return true;
 		}

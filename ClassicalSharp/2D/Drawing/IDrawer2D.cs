@@ -35,6 +35,9 @@ namespace ClassicalSharp {
 		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
 		public abstract void Clear( Color colour );
 		
+		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
+		public abstract void Clear( Color colour, int x, int y, int width, int height );
+		
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
 		

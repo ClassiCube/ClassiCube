@@ -45,16 +45,27 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FastButtonWidget.cs" />
+    <Compile Include="Client.cs" />
     <Compile Include="GameStartData.cs" />
-    <Compile Include="MainScreen.cs" />
+    <Compile Include="Gui\ClassiCubeScreen.cs" />
+    <Compile Include="Gui\DirectConnectScreen.cs" />
+    <Compile Include="Gui\LauncherScreen.cs" />
+    <Compile Include="Gui\MainScreen.cs" />
+    <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherTextInputWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherTextWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherWidget.cs" />
+    <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Secure.cs" />
     <Compile Include="WebService\ClassiCubeSession.cs" />
     <Compile Include="WebService\GameSession.cs" />
     <Compile Include="WebService\ServerListEntry.cs" />
@@ -71,6 +82,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Gui" />
+    <Folder Include="Gui\Widgets" />
     <Folder Include="Patcher" />
     <Folder Include="WebService" />
   </ItemGroup>

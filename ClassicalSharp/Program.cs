@@ -11,9 +11,8 @@ namespace ClassicalSharp {
 		
 		[STAThread]
 		public static void Main( string[] args ) {
-			if( !Debugger.IsAttached ) {
+			if( !Debugger.IsAttached )
 				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
-			}
 			
 			Utils.Log( "Starting " + Utils.AppName + ".." );
 			if( !File.Exists( "default.zip" ) ) {
