@@ -9,17 +9,20 @@ using OpenTK.Input;
 
 namespace Launcher2 {
 	
-	public sealed class ClassiCubeScreen : LauncherScreen {
+	public sealed class ClassiCubeServersScreen : LauncherScreen {
 		
-		public ClassiCubeScreen( LauncherWindow game ) : base( game ) {
+		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
 			textFont = new Font( "Arial", 16, FontStyle.Bold );
-			widgets = new LauncherWidget[7];
+			widgets = new LauncherWidget[5];
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
 			game.Window.KeyPress += KeyPress;
 			game.Window.Keyboard.KeyDown += KeyDown;
 			game.Window.Keyboard.KeyRepeat = true;
+		}
+		
+		public override void Tick() {
 		}
 
 		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
@@ -46,33 +49,12 @@ namespace Launcher2 {
 			}
 		}
 
-		public override void Init() {
-			Resize();
-			using( IDrawer2D drawer = game.Drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				LoadSavedInfo( drawer );
-				Dirty = true;
-			}
-		}
-		
-		void LoadSavedInfo( IDrawer2D drawer ) {
-			try {
-				Options.Load();
-			} catch( IOException ) {
-				return;
-			}
-			
-			string user = Options.Get( "launcher-cc-username" ) ?? "";
-			string pass = Options.Get( "launcher-cc-password" ) ?? "";
-			pass = Secure.Decode( pass, user );
-			
-			Set( 2, user );
-			Set( 3, pass );
-		}
+		public override void Init() { Resize(); }
 		
 		public override void Resize() {
 			using( IDrawer2D drawer = game.Drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
+				drawer.Clear( LauncherWindow.clearColour );
 				DrawButtons( drawer );
 			}
 			Dirty = true;
@@ -82,15 +64,13 @@ namespace Launcher2 {
 		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
 		void DrawButtons( IDrawer2D drawer ) {
 			widgetIndex = 0;
-			MakeTextAt( drawer, "Username", -180, -100 );
-			MakeTextAt( drawer, "Password", -180, -50 );
+			MakeTextAt( drawer, "Search", -180, 0 );
+			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, 0 );
 			
-			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, -100 );
-			MakeTextInputAt( drawer, true, Get( widgetIndex ), 30, -50 );
+			MakeTextAt( drawer, "classicube.net/server/play/", -320, 50 );
+			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, 50 );
 			
-			MakeButtonAt( drawer, "Sign in", 110, 35, -65, 0, StartClient );
-			MakeButtonAt( drawer, "Back", 80, 35, 140, 0, () => game.SetScreen( new MainScreen( game ) ) );
-			MakeTextAt( drawer, "", 0, 50 );
+			MakeButtonAt( drawer, "Back", 80, 35, 180, 0, () => game.SetScreen( new MainScreen( game ) ) );
 		}
 		
 		ClassicubeSession session = new ClassicubeSession();
@@ -153,10 +133,8 @@ namespace Launcher2 {
 		}
 
 		void MakeTextAt( IDrawer2D drawer, string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game );
-			widget.Text = text;
-			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, x, y );
+			LauncherTextWidget widget = new LauncherTextWidget( game, text );			
+			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
@@ -165,7 +143,7 @@ namespace Launcher2 {
 			widget.OnClick = InputClick;
 			widget.Password = password;
 			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, 300, 30, x, y );
+			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, 300, 30, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
@@ -175,7 +153,7 @@ namespace Launcher2 {
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
+			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, width, height, x, y );
 			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
 			widgets[widgetIndex++] = widget;
 		}

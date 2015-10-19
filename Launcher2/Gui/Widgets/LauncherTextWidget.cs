@@ -8,21 +8,28 @@ namespace Launcher2 {
 		
 		public string Text;
 		
-		public LauncherTextWidget( LauncherWindow window ) : base( window ) {			
+		public LauncherTextWidget( LauncherWindow window, string text ) : base( window ) {
+			Text = text;
 		}
 
-		public void DrawAt( IDrawer2D drawer, string text, Font font, 
+		public void DrawAt( IDrawer2D drawer, string text, Font font,
 		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			Size size = drawer.MeasureSize( text, font, true );
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = drawer.MeasureSize( ref args );
 			Width = size.Width; Height = size.Height;
 			
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer, text, font );				
+			Redraw( drawer, text, font );
 		}
 		
 		public void Redraw( IDrawer2D drawer, string text, Font font ) {
-			DrawTextArgs args = new DrawTextArgs( text, true );
-			drawer.DrawText( font, ref args, X, Y );
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = drawer.MeasureSize( ref args );
+			Width = size.Width; Height = size.Height;
+			
+			args.SkipPartsCheck = true;
+			drawer.DrawText( ref args, X, Y );
+			Text = text;
 		}
 	}
 }

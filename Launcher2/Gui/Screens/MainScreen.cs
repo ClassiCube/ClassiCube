@@ -29,17 +29,20 @@ namespace Launcher2 {
 
 		public override void Init() { Resize(); }
 		
+		public override void Tick() {
+		}
+		
 		public override void Resize() {
 			using( IDrawer2D drawer = game.Drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				DrawButtons( drawer );
+				Draw( drawer );
 			}
 			Dirty = true;
 		}
 		
 		Font textFont;
 		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		void DrawButtons( IDrawer2D drawer ) {
+		void Draw( IDrawer2D drawer ) {
 			widgetIndex = 0;
 			MakeButtonAt( drawer, "Direct connect", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, -100,

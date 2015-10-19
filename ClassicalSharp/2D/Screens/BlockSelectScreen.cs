@@ -129,13 +129,13 @@ namespace ClassicalSharp {
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
-			Size size = game.Drawer2D.MeasureSize( value, font, true );
+			DrawTextArgs args = new DrawTextArgs( value, font, true );
+			Size size = game.Drawer2D.MeasureSize( ref args );
 			int x = startX + (blockSize * blocksPerRow) / 2 - size.Width / 2;
 			int y = startY - size.Height - 5;
 			
-			DrawTextArgs args = new DrawTextArgs( value, true );
 			args.SkipPartsCheck = true;
-			blockInfoTexture = game.Drawer2D.MakeTextTexture( font, x, y, ref args );
+			blockInfoTexture = game.Drawer2D.MakeTextTexture( ref args, x, y );
 		}
 		
 		void RecreateBlockTextures() {

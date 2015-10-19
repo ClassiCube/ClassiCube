@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Launcher2 {
 	
-	public partial class ResourceFetcher {
+	public partial class ResourcePatcher {
 		
 		const string animationsTxt = @"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.
 # Each line is in the format: <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>

@@ -111,8 +111,8 @@ namespace ClassicalSharp {
 		}
 		
 		void AddPlayerInfo( CpeListInfo player, int index ) {
-			DrawTextArgs args = new DrawTextArgs( player.ListName, true );
-			Texture tex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( player.ListName, font, true );
+			Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			if( index < 0 ) {
 				info[namesCount] = new PlayerInfo( player );
 				textures[namesCount] = tex;
@@ -154,8 +154,8 @@ namespace ClassicalSharp {
 		}
 		
 		void AddGroup( string group, ref int index ) {
-			DrawTextArgs args = new DrawTextArgs( group, true );
-			Texture tex = game.Drawer2D.MakeTextTexture( titleFont, 0, 0, ref args );
+			DrawTextArgs args = new DrawTextArgs( group, titleFont, true );
+			Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			PlayerInfo pInfo = new PlayerInfo( group );
 			
 			PushDown( info, index, pInfo );

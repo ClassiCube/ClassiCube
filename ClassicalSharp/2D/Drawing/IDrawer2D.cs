@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws a string using the specified arguments and fonts at the
 		/// specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawText( Font font, ref DrawTextArgs args, float x, float y );
+		public abstract void DrawText( ref DrawTextArgs args, float x, float y );
 		
 		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the
 		/// specified coordinates in the currently bound bitmap. </summary>
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		public abstract Bitmap ConvertTo32Bpp( Bitmap src );
 		
 		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments. </summary>
-		public abstract Size MeasureSize( string text, Font font, bool shadow );
+		public abstract Size MeasureSize( ref DrawTextArgs args );
 		
 		/// <summary> Disposes of all native resources used by this class. </summary>
 		/// <remarks> You will no longer be able to perform measuring or drawing calls after this. </remarks>
@@ -53,16 +53,16 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// them creates a 2D texture with origin at the specified window coordinates. </summary>
-		public Texture MakeTextTexture( Font font, int windowX, int windowY, ref DrawTextArgs args ) {
-			Size size = MeasureSize( args.Text, font, args.UseShadow );
+		public Texture MakeTextTexture( ref DrawTextArgs args, int windowX, int windowY ) {
+			Size size = MeasureSize( ref args );
 			if( parts.Count == 0 )
 				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
 			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				SetBitmap( bmp );
-				args.SkipPartsCheck = true;
+				args.SkipPartsCheck = true;	
 				
-				DrawText( font, ref args, 0, 0 );
+				DrawText( ref args, 0, 0 );
 				Dispose();
 				return Make2DTexture( bmp, size, windowX, windowY );
 			}

@@ -116,25 +116,26 @@ namespace ClassicalSharp {
 		int baseWidth, curX, posHeight;
 		float texWidth;
 		void MakePosTextWidget() {
-			DrawTextArgs args = new DrawTextArgs( "Feet pos: ", true );
+			DrawTextArgs args = new DrawTextArgs( "", posFont, true );
 			for( int i = 0; i < possibleChars.Length; i++ ) {
-				string text = new String( possibleChars[i], 1 );
-				widths[i] = game.Drawer2D.MeasureSize( text, posFont, true ).Width;
+				args.Text = new String( possibleChars[i], 1 );
+				widths[i] = game.Drawer2D.MeasureSize( ref args ).Width;
 			}
 			
 			using( IDrawer2D drawer = game.Drawer2D ) {
-				Size size = game.Drawer2D.MeasureSize( args.Text, posFont, true );
+				args.Text = "Feet pos: ";
+				Size size = game.Drawer2D.MeasureSize( ref args );
 				baseWidth = size.Width;
 				size.Width += 16 * possibleChars.Length;
 				posHeight = size.Height;
 				
 				using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawText( posFont, ref args, 0, 0 );
+					drawer.DrawText( ref args, 0, 0 );
 					
 					for( int i = 0; i < possibleChars.Length; i++ ) {
 						args.Text = new String( possibleChars[i], 1 );
-						drawer.DrawText( posFont, ref args, baseWidth + 16 * i, 0 );
+						drawer.DrawText( ref args, baseWidth + 16 * i, 0 );
 					}
 					
 					int y = fpsTextWidget.Height;

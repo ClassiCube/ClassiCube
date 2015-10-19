@@ -51,17 +51,22 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="GameStartData.cs" />
-    <Compile Include="Gui\ClassiCubeScreen.cs" />
-    <Compile Include="Gui\DirectConnectScreen.cs" />
-    <Compile Include="Gui\LauncherScreen.cs" />
-    <Compile Include="Gui\MainScreen.cs" />
+    <Compile Include="Gui\Screens\ClassiCubeScreen.cs" />
+    <Compile Include="Gui\Screens\ClassiCubeServersScreen.cs" />
+    <Compile Include="Gui\Screens\DirectConnectScreen.cs" />
+    <Compile Include="Gui\Screens\LauncherInputScreen.cs" />
+    <Compile Include="Gui\Screens\LauncherScreen.cs" />
+    <Compile Include="Gui\Screens\MainScreen.cs" />
+    <Compile Include="Gui\Screens\ResourcesScreen.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherTableWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherTextInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherTextWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
     <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
+    <Compile Include="Patcher\ResourcePatcher.cs" />
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui" />
+    <Folder Include="Gui\Screens" />
     <Folder Include="Gui\Widgets" />
     <Folder Include="Patcher" />
     <Folder Include="WebService" />

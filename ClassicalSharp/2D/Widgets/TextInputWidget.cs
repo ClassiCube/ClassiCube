@@ -31,23 +31,26 @@ namespace ClassicalSharp {
 
 		public override void Init() {
 			X = 10;
-			DrawTextArgs caretArgs = new DrawTextArgs( "_", false );
-			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
-			string value = chatInputText.GetString();			
+			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
+			chatCaretTexture = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+			
+			string value = chatInputText.GetString();
+			args = new DrawTextArgs( value, font, false );
+			Size size = game.Drawer2D.MeasureSize( ref args );
+			
 			if( chatInputText.Empty || caretPos >= value.Length )
 				caretPos = -1;
-			Size size = game.Drawer2D.MeasureSize( value, font, false );
-			
 			if( caretPos == -1 ) {
 				chatCaretTexture.X1 = 10 + size.Width;
 				size.Width += chatCaretTexture.Width;
 				DrawString( size, value, true );
 			} else {
-				string subString = chatInputText.GetSubstring( caretPos );
-				Size trimmedSize = game.Drawer2D.MeasureSize( subString, font, false );
+				args.Text = chatInputText.GetSubstring( caretPos );
+				Size trimmedSize = game.Drawer2D.MeasureSize( ref args );
 				
 				chatCaretTexture.X1 = 10 + trimmedSize.Width;
-				Size charSize = game.Drawer2D.MeasureSize( new String( value[caretPos], 1 ), font, false );
+				args.Text = new String( value[caretPos], 1 );
+				Size charSize = game.Drawer2D.MeasureSize( ref args );
 				chatCaretTexture.Width = charSize.Width;
 				DrawString( size, value, false );
 			}
@@ -61,9 +64,10 @@ namespace ClassicalSharp {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
 					drawer.DrawRect( backColour, 0, 0, bmp.Width, bmp.Height );
-					DrawTextArgs args = new DrawTextArgs( value, false );
+					DrawTextArgs args = new DrawTextArgs( value, font, false );
+					
 					args.SkipPartsCheck = skipCheck;
-					drawer.DrawText(  font, ref args, 0, 0 );
+					drawer.DrawText( ref args, 0, 0 );
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );
 				}
 			}

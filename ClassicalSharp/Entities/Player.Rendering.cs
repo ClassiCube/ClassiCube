@@ -22,8 +22,8 @@ namespace ClassicalSharp {
 			api = game.Graphics;
 			
 			using( Font font = new Font( "Arial", 14 ) ) {
-				DrawTextArgs args = new DrawTextArgs( DisplayName, true );
-				nameTex = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
+				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
+				nameTex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			}
 		}
 		

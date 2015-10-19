@@ -27,7 +27,8 @@ namespace ClassicalSharp {
 		readonly Font font;
 		
 		public override void Init() {
-			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
+			DrawTextArgs args = new DrawTextArgs( "I", font, true );
+			defaultHeight = game.Drawer2D.MeasureSize( ref args ).Height;
 			Height = defaultHeight;
 		}
 		
@@ -37,8 +38,8 @@ namespace ClassicalSharp {
 				texture = new Texture();
 				Height = defaultHeight;
 			} else {
-				DrawTextArgs args = new DrawTextArgs( text, true );
-				texture = game.Drawer2D.MakeTextTexture( font, 0, 0, ref args );
+				DrawTextArgs args = new DrawTextArgs( text, font, true );
+				texture = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
 				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );
 				Height = texture.Height;

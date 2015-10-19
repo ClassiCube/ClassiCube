@@ -32,7 +32,8 @@ namespace ClassicalSharp {
 		readonly Font font;
 		
 		public override void Init() {
-			defaultHeight = game.Drawer2D.MeasureSize( "I", font, true ).Height;
+			DrawTextArgs args = new DrawTextArgs( "I", font, true );
+			defaultHeight = game.Drawer2D.MeasureSize( ref args ).Height;
 			Height = defaultHeight;
 		}
 		
@@ -80,8 +81,10 @@ namespace ClassicalSharp {
 		public Action<Game, string> SetValue;
 		public bool Active;
 		
-		void MakeTexture( string text ) {			
-			Size size = game.Drawer2D.MeasureSize( text, font, true );
+		void MakeTexture( string text ) {
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = game.Drawer2D.MeasureSize( ref args );
+			
 			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;
 			size.Width = Math.Max( size.Width, DesiredMaxWidth );
 			int yOffset = Math.Max( size.Height, DesiredMaxHeight ) - size.Height;
@@ -97,9 +100,8 @@ namespace ClassicalSharp {
 					                       baseSize.Width, baseSize.Height );
 					drawer.DrawRoundedRect( boxCol, 3, 0, 0, baseSize.Width, baseSize.Height );
 					
-					DrawTextArgs args = new DrawTextArgs( text, true );
 					args.SkipPartsCheck = true;
-					drawer.DrawText( font, ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
+					drawer.DrawText( ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
 					texture = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
 			}

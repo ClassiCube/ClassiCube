@@ -48,14 +48,15 @@ namespace ClassicalSharp {
 		}
 
 		public override void Init() {
-			DrawTextArgs caretArgs = new DrawTextArgs( "_", false );
-			chatCaretTexture = game.Drawer2D.MakeTextTexture( boldFont, 0, 0, ref caretArgs );
+			DrawTextArgs caretArgs = new DrawTextArgs( "_", boldFont, false );
+			chatCaretTexture = game.Drawer2D.MakeTextTexture( ref caretArgs, 0, 0 );
 			SetText( chatInputText.GetString() );
 		}
 		
 		public void SetText( string value ) {
 			chatInputText.Append( 0, value );
-			Size textSize = game.Drawer2D.MeasureSize( value, font, false );
+			DrawTextArgs args = new DrawTextArgs( value, font, false );
+			Size textSize = game.Drawer2D.MeasureSize( ref args );
 			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ), 
 			                     Math.Max( textSize.Height, DesiredMaxHeight ) );
 			
@@ -63,15 +64,15 @@ namespace ClassicalSharp {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
 					drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
-					DrawTextArgs args = new DrawTextArgs( value, false );
 					args.SkipPartsCheck = true;
-					drawer.DrawText( font, ref args, 0, 0 );
+					drawer.DrawText( ref args, 0, 0 );
 					
-					string range = Validator.Range;
-					Size hintSize = drawer.MeasureSize( range, hintFont, true );
-					args = new DrawTextArgs( range, false );
+					args.Text = Validator.Range;
+					args.SkipPartsCheck = false;
+					Size hintSize = drawer.MeasureSize( ref args );	
+					
 					args.SkipPartsCheck = true;
-					drawer.DrawText( hintFont, ref args, size.Width - hintSize.Width, 0 );
+					drawer.DrawText( ref args, size.Width - hintSize.Width, 0 );
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
 			}

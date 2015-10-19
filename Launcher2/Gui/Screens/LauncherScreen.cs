@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using ClassicalSharp;
 using OpenTK.Input;
 
@@ -16,18 +17,34 @@ namespace Launcher2 {
 		
 		public abstract void Init();
 		
+		/// <summary> Function that is repeatedly called multiple times every second. </summary>
+		public abstract void Tick();
+		
 		public abstract void Resize();
 		
+		/// <summary> Cleans up all native resources held by this screen. </summary>
 		public abstract void Dispose();
 		
-		static uint clearColourBGRA = (uint)LauncherWindow.clearColour.ToArgb();
+		protected static uint clearColourBGRA = (uint)LauncherWindow.clearColour.ToArgb();
 		protected unsafe void FilterArea( int x, int y, int width, int height, byte scale ) {
-			using( FastBitmap bmp = new FastBitmap( game.Framebuffer, true ) ) {
+			FilterArea( x, y, width, height, scale, clearColourBGRA );
+		}
+		
+		/// <summary> Scales the RGB components of the bitmap in the specified region by the given amount. </summary>
+		/// <remarks> Pixels with same value as clearColour are left untouched. </remarks>
+		protected unsafe void FilterArea( int x, int y, int width, int height, 
+		                                 byte scale, uint clearColour ) {
+			Bitmap buffer = game.Framebuffer;
+			if( x >= buffer.Width || y >= buffer.Height ) return;
+			width = Math.Min( x + width, buffer.Width ) - x;
+			height = Math.Min( y + height, buffer.Height ) - y;
+			
+			using( FastBitmap bmp = new FastBitmap( buffer, true ) ) {
 				for( int yy = y; yy < y + height; yy++ ) {
 					int* row = bmp.GetRowPtr( yy ) + x;
 					for( int xx = 0; xx < width; xx++ ) {
 						uint pixel = (uint)row[xx];
-						if( pixel == clearColourBGRA ) continue;
+						if( pixel == clearColour ) continue;
 						
 						uint a = pixel & 0xFF000000;
 						uint r = (pixel >> 16) & 0xFF;
@@ -48,6 +65,7 @@ namespace Launcher2 {
 		protected void MouseMove( object sender, MouseMoveEventArgs e ) {		
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
+				if( widget == null ) continue;
 				if( e.X >= widget.X && e.Y >= widget.Y &&
 				   e.X < widget.X + widget.Width && e.Y < widget.Y + widget.Height ) {
 					if( selectedWidget == widget ) return;
@@ -71,16 +89,18 @@ namespace Launcher2 {
 			selectedWidget = null;
 		}
 		
+		/// <summary> Called when the user has moved their mouse away from a previously selected widget. </summary>
 		protected virtual void UnselectWidget( LauncherWidget widget ) {
 		}
 		
+		/// <summary> Called when user has moved their mouse over a given widget. </summary>
 		protected virtual void SelectWidget( LauncherWidget widget ) {			
 		}
 		
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
-			if( e.Button != MouseButton.Left ) return;
+			if( e.Button != MouseButton.Left || selectedWidget == null ) return;
 			
-			if( selectedWidget != null && selectedWidget.OnClick != null )
+			if( selectedWidget.OnClick != null )
 				selectedWidget.OnClick();
 		}
 	}

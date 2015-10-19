@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -7,6 +8,7 @@ using ClassicalSharp;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Platform.Windows;
+using ClassicalSharp.Network;
 
 namespace Launcher2 {
 
@@ -16,6 +18,9 @@ namespace Launcher2 {
 		public IDrawer2D Drawer;
 		public LauncherScreen screen;
 		public bool Dirty;
+		public ClassicubeSession Session = new ClassicubeSession();
+		public List<ServerListEntry> Servers = new List<ServerListEntry>();
+		public AsyncDownloader Downloader;
 		
 		public int Width { get { return Window.Width; } }
 		
@@ -53,15 +58,15 @@ namespace Launcher2 {
 			Window = new NativeWindow( 480, 480, Program.AppName, 0,
 			                          GraphicsMode.Default, DisplayDevice.Default );
 			Window.Visible = true;
-			screen = new MainScreen( this );
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
-			SetScreen( new MainScreen( this ) );
+			SetScreen( new ResourcesScreen( this ) );
 			
 			while( true ) {
 				Window.ProcessEvents();
 				if( !Window.Exists ) break;
 				
+				screen.Tick();
 				if( Dirty || (screen != null && screen.Dirty) )
 					Display();
 				Thread.Sleep( 1 );
@@ -90,14 +95,14 @@ namespace Launcher2 {
 				drawer.SetBitmap( Framebuffer );
 				drawer.Clear( clearColour );
 				
-				Size size1 = drawer.MeasureSize( "&eClassical", logoItalicFont, true );
-				Size size2 = drawer.MeasureSize( "&eSharp", logoFont, true );
-				int xStart = Width / 2 - (size1.Width + size2.Width ) / 2;
-				
-				DrawTextArgs args = new DrawTextArgs( "&eClassical", true );
-				drawer.DrawText( logoItalicFont, ref args, xStart, 20 );
-				args.Text = "&eSharp";
-				drawer.DrawText( logoFont, ref args, xStart + size1.Width, 20 );
+				DrawTextArgs args1 = new DrawTextArgs( "&eClassical", logoItalicFont, true );
+				Size size1 = drawer.MeasureSize( ref args1 );
+				DrawTextArgs args2 = new DrawTextArgs( "&eSharp", logoFont, true );
+				Size size2 = drawer.MeasureSize( ref args2 );
+					
+				int xStart = Width / 2 - (size1.Width + size2.Width ) / 2;				
+				drawer.DrawText( ref args1, xStart, 20 );
+				drawer.DrawText( ref args2, xStart + size1.Width, 20 );
 			}
 			Dirty = true;
 		}

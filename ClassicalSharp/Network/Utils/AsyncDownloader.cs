@@ -21,7 +21,7 @@ namespace ClassicalSharp.Network {
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
-			client = new WebClient();
+			client = new GZipWebClient();
 			
 			worker = new Thread( DownloadThreadWorker, 256 * 1024 );
 			worker.Name = "ClassicalSharp.ImageDownloader";
@@ -165,6 +165,15 @@ namespace ClassicalSharp.Network {
 						oldBmp.Dispose();
 				}
 				downloaded[request.Identifier] = newItem;
+			}
+		}
+			
+		class GZipWebClient : WebClient {
+			
+			protected override WebRequest GetWebRequest( Uri address ) {
+				HttpWebRequest request = (HttpWebRequest)base.GetWebRequest( address );
+				request.AutomaticDecompression = DecompressionMethods.GZip;
+				return request;
 			}
 		}
 		

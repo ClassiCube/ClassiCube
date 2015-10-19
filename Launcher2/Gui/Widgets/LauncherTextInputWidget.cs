@@ -26,16 +26,16 @@ namespace Launcher2 {
 			Text = text;
 			if( Password )
 				text = new String( '*', text.Length );
-			Size size = drawer.MeasureSize( text, font, true );
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = drawer.MeasureSize( ref args );
 			Width = Math.Max( ButtonWidth, size.Width + 7 );
 			
 			FastColour col = Active ? FastColour.White : new FastColour( 160, 160, 160 );
 			drawer.DrawRectBounds( col, 2, X, Y, Width, Height );
 			drawer.DrawRect( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
 			
-			DrawTextArgs args = new DrawTextArgs( text, true );
 			args.SkipPartsCheck = true;
-			drawer.DrawText( font, ref args, X + 7, Y + 2 );		
+			drawer.DrawText( ref args, X + 7, Y + 2 );		
 		}
 		
 		public void AddChar( char c, Font font ) {

@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				byte block = game.Map.GetBlock( pos );
 				if( block != 0 && inv.CanDelete[block] ) {
-					game.ParticleManager.BreakBlockEffect( pos, block );					
+					game.ParticleManager.BreakBlockEffect( pos, block );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
 				}
@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 				if( !game.Map.IsValidPos( pos ) ) return;
 				
 				byte block = (byte)inv.HeldBlock;
-				if( !game.CanPick( game.Map.GetBlock( pos ) ) && inv.CanPlace[block] 
+				if( !game.CanPick( game.Map.GetBlock( pos ) ) && inv.CanPlace[block]
 				   && CheckIsFree( pos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 		
 		bool CheckIsFree( Vector3I pos, byte newBlock ) {
 			float height = game.BlockInfo.Height[newBlock];
-			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z, 
+			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z,
 			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
 			if( game.BlockInfo.CollideType[newBlock] != BlockCollideType.Solid ) return true;
 			
@@ -197,14 +197,11 @@ namespace ClassicalSharp {
 				bool useThirdPerson = game.Camera is FirstPersonCamera;
 				game.SetCamera( useThirdPerson );
 			} else if( key == game.Keys[KeyMapping.ViewDistance] ) {
-				for( int i = 0; i < viewDistances.Length; i++ ) {
-					int newDist = viewDistances[i];
-					if( newDist > game.ViewDistance ) {
-						game.SetViewDistance( newDist );
-						return true;
-					}
+				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {
+					CycleDistanceBackwards();
+				} else {
+					CycleDistanceForwards();
 				}
-				game.SetViewDistance( viewDistances[0] );
 			} else if( key == game.Keys[KeyMapping.PauseOrExit] && !game.Map.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == game.Keys[KeyMapping.OpenInventory] ) {
@@ -215,6 +212,25 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
+		void CycleDistanceForwards() {
+			for( int i = 0; i < viewDistances.Length; i++ ) {
+				int dist = viewDistances[i];
+				if( dist > game.ViewDistance ) {
+					game.SetViewDistance( dist ); return;
+				}
+			}
+			game.SetViewDistance( viewDistances[0] );
+		}
+		
+		void CycleDistanceBackwards() {
+			for( int i = viewDistances.Length - 1; i >= 0; i-- ) {
+				int dist = viewDistances[i];
+				if( dist < game.ViewDistance ) {
+					game.SetViewDistance( dist ); return;
+				}
+			}
+			game.SetViewDistance( viewDistances[viewDistances.Length - 1] );
+		}
 		#endregion
 	}
 }

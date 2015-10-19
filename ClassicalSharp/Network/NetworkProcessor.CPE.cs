@@ -12,6 +12,7 @@ namespace ClassicalSharp {
 			Player p = game.LocalPlayer;
 			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
 			                pos.BlockPos, pos.BlockFace );
+			SendPacket();
 		}
 		
 		private static void MakeExtInfo( string appName, int extensionsCount ) {

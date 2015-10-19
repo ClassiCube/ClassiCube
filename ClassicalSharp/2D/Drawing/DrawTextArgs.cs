@@ -3,15 +3,17 @@ using System.Drawing;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Contains arguments for measuring or drawing text. </summary>
 	public struct DrawTextArgs {
 		
 		public string Text;
-		
+		public Font Font;
 		public bool UseShadow;
 		public bool SkipPartsCheck;
 		
-		public DrawTextArgs( string text, bool useShadow ) {
+		public DrawTextArgs( string text, Font font, bool useShadow ) {
 			Text = text;
+			Font = font;
 			UseShadow = useShadow;
 			SkipPartsCheck = false;
 		}		

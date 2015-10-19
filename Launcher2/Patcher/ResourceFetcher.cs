@@ -1,159 +1,66 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Net;
-using ClassicalSharp;
-using ClassicalSharp.TexturePack;
-using OpenTK;
+using ClassicalSharp.Network;
 
 namespace Launcher2 {
 	
-	public partial class ResourceFetcher {
+	public sealed class ResourceFetcher {
 		
-		const string classicJarUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
-		const string modernJarUri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
-		const string terrainPatchUri = "http://static.classicube.net/terrain-patch.png";
-		static int resourcesCount = 3;
+		public bool Done = false;
+		AsyncDownloader downloader;
+		public ResourceFetcher( AsyncDownloader downloader ) {
+			this.downloader = downloader;
+		}
 		
-		public void Run( NativeWindow window ) {
-			using( WebClient client = new GZipWebClient() ) {
-				WebRequest.DefaultWebProxy = null;
-				int i = 0;
-				DownloadData( classicJarUri, client, "classic.jar", window, ref i );
-				DownloadData( modernJarUri, client, "1.6.2.jar", window, ref i );
-				DownloadData( terrainPatchUri, client, "terrain-patch.png", window, ref i );
-			}
+		public void DownloadItems( Action<string> setStatus ) {
+			downloader.DownloadData( "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar", false, "classic_jar" );
+			downloader.DownloadData( "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar", false, "162_jar" );
+			downloader.DownloadData( "http://static.classicube.net/terrain-patch.gpng", false, "terrain_patch" );
+			setStatus( "&eFetching classic jar.. (1/3)" );
+		}
+		
+		internal byte[] jarClassic, jar162, pngTerrainPatch;
+		public bool Check( Action<string> setStatus ) {
+			if( Done ) return true;
 			
-			reader = new ZipReader();
-			reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
-			reader.ProcessZipEntry = ProcessZipEntry_Classic;
-			
-			using( FileStream srcClassic = File.OpenRead( "classic.jar" ),
-			      srcModern = File.OpenRead( "1.6.2.jar" ),
-			      dst = new FileStream( "default.zip", FileMode.Create, FileAccess.Write ) ) {
-				writer = new ZipWriter( dst );
-				reader.Extract( srcClassic );
-				
-				// Grab animations and snow
-				animBitmap = new Bitmap( 1024, 64, PixelFormat.Format32bppArgb );
-				reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Modern;
-				reader.ProcessZipEntry = ProcessZipEntry_Modern;
-				reader.Extract( srcModern );
-				writer.WriteNewImage( animBitmap, "animations.png" );
-				writer.WriteNewString( animationsTxt, "animations.txt" );
-				animBitmap.Dispose();
-				writer.WriteCentralDirectoryRecords();
-			}
-		}
-		ZipReader reader;
-		ZipWriter writer;
-		Bitmap animBitmap;
-		
-		bool ShouldProcessZipEntry_Classic( string filename ) {
-			return filename.StartsWith( "mob" ) || ( filename.IndexOf( '/' ) < 0 );
-		}
-		
-		void ProcessZipEntry_Classic( string filename, byte[] data, ZipEntry entry ) {
-			if( writer.entries == null )
-				writer.entries = new ZipEntry[reader.entries.Length];
-			if( filename != "terrain.png" ) {
-				writer.WriteZipEntry( entry, data );
-				return;
-			}
-			
-			using( Bitmap dstBitmap = new Bitmap( new MemoryStream( data ) ),
-			      maskBitmap = new Bitmap( "terrain-patch.png" ) ) {
-				PatchImage( dstBitmap, maskBitmap );
-				writer.WriteNewImage( dstBitmap, "terrain.png" );
-			}
-		}
-		
-		bool ShouldProcessZipEntry_Modern( string filename ) {
-			return filename.StartsWith( "assets/minecraft/textures" ) &&
-				( filename == "assets/minecraft/textures/environment/snow.png" ||
-				 filename == "assets/minecraft/textures/blocks/water_still.png" ||
-				 filename == "assets/minecraft/textures/blocks/lava_still.png" ||
-				 filename == "assets/minecraft/textures/blocks/fire_layer_1.png" ||
-				 filename == "assets/minecraft/textures/entity/chicken.png" );
-		}
-		
-		void ProcessZipEntry_Modern( string filename, byte[] data, ZipEntry entry ) {
-			switch( filename ) {
-				case "assets/minecraft/textures/environment/snow.png":
-					entry.Filename = "snow.png";
-					writer.WriteZipEntry( entry, data );
-					break;
-				case "assets/minecraft/textures/entity/chicken.png":
-					entry.Filename = "mob/chicken.png";
-					writer.WriteZipEntry( entry, data );
-					break;
-				case "assets/minecraft/textures/blocks/water_still.png":
-					PatchDefault( data, 0 );
-					break;
-				case "assets/minecraft/textures/blocks/lava_still.png":
-					PatchCycle( data, 16 );
-					break;
-				case "assets/minecraft/textures/blocks/fire_layer_1.png":
-					PatchDefault( data, 32 );
-					break;
-			}
-		}
-		
-		unsafe void PatchImage( Bitmap dstBitmap, Bitmap maskBitmap ) {
-			using( FastBitmap dst = new FastBitmap( dstBitmap, true ),
-			      src = new FastBitmap( maskBitmap, true ) ) {
-				int size = src.Width, tileSize = size / 16;
-				
-				for( int y = 0; y < size; y += tileSize ) {
-					int* row = src.GetRowPtr( y );
-					for( int x = 0; x < size; x += tileSize ) {
-						if( row[x] != unchecked((int)0x80000000) ) {
-							FastBitmap.MovePortion( x, y, x, y, src, dst, tileSize );
-						}
-					}
+			DownloadedItem item;
+			if( downloader.TryGetItem( "classic_jar", out item ) ) {
+				if( item.Data == null ) {
+					setStatus( "&cFailed to download classic jar" ); return false;
 				}
+				setStatus( "&eFetching 1.6.2 jar.. (2/3)" );
+				jarClassic = (byte[])item.Data;
 			}
-		}
-		
-		void CopyTile( int src, int dst, int y, Bitmap bmp ) {
-			for( int yy = 0; yy < 16; yy++ ) {
-				for( int xx = 0; xx < 16; xx++ ) {
-					animBitmap.SetPixel( dst + xx, y + yy,
-					                    bmp.GetPixel( xx, src + yy ) );
+			
+			if( downloader.TryGetItem( "162_jar", out item ) ) {
+				if( item.Data == null ) {
+					setStatus( "&cFailed to download 1.6.2 jar" ); return false;
 				}
+				setStatus( "&eFetching terrain patch.. (3/3)" );
+				jar162 = (byte[])item.Data;
 			}
+			
+			if( downloader.TryGetItem( "terrain_patch", out item ) ) {
+				if( item.Data == null ) {
+					setStatus( "&cFailed to download terrain patch" ); return false;
+				}
+				setStatus( "&eCreating default.zip.." );
+				pngTerrainPatch = (byte[])item.Data;
+				Done = true;
+			}
+			return true;
 		}
 		
-		public bool CheckAllResourcesExist() {
+		public static bool CheckAllResourcesExist() {
 			return File.Exists( "default.zip" );
 		}
 		
-		class GZipWebClient : WebClient {
-			
-			protected override WebRequest GetWebRequest( Uri address ) {
-				HttpWebRequest request = (HttpWebRequest)base.GetWebRequest( address );
-				request.AutomaticDecompression = DecompressionMethods.GZip;
-				return request;
-			}
-		}
-		
-		static bool DownloadData( string uri, WebClient client, string output, 
-		                         NativeWindow window, ref int i ) {
-			i++;
-			if( File.Exists( output ) ) return true;
-			window.Title = Program.AppName + " - fetching " + output + "(" + i + "/" + resourcesCount + ")";
-			
-			try {
-				client.DownloadFile( uri, output );
-			} catch( WebException ex ) {
-				//Program.LogException( ex );
-				//MessageBox.Show( "Unable to download or save " + output, "Failed to download or save resource", 
-				//                MessageBoxButtons.OK, MessageBoxIcon.Error );
-				// TODO: show error
-				return false;
-			}
-			return true;
+		public static float EstimateDownloadSize() {
+			float sum = 0;
+			if( !File.Exists( "classic.jar" ) ) sum += 291 / 1024f;
+			if( !File.Exists( "1.6.2.jar" ) ) sum += 4621 / 1024f;
+			if( !File.Exists( "terrain-patch.png" ) ) sum += 7 / 1024f;
+			return sum;
 		}
 	}
 }

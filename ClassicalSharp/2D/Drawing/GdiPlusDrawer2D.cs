@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			g.SmoothingMode = SmoothingMode.HighQuality;
 		}
 		
-		public override void DrawText( Font font, ref DrawTextArgs args, float x, float y ) {
+		public override void DrawText( ref DrawTextArgs args, float x, float y ) {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
@@ -48,10 +48,10 @@ namespace ClassicalSharp {
 				TextPart part = parts[i];
 				Brush textBrush = GetOrCreateBrush( part.TextColour );
 				if( args.UseShadow )
-					g.DrawString( part.Text, font, shadowBrush, x + Offset, y + Offset, format );
+					g.DrawString( part.Text, args.Font, shadowBrush, x + Offset, y + Offset, format );
 				
-				g.DrawString( part.Text, font, textBrush, x, y, format );
-				x += g.MeasureString( part.Text, font, Int32.MaxValue, format ).Width;
+				g.DrawString( part.Text, args.Font, textBrush, x, y, format );
+				x += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
 			}
 		}
 		
@@ -112,18 +112,17 @@ namespace ClassicalSharp {
 			return bmp;
 		}
 		
-		public override Size MeasureSize( string text, Font font, bool shadow ) {
-			GetTextParts( text );
+		public override Size MeasureSize( ref DrawTextArgs args ) {
+			GetTextParts( args.Text );
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
-				SizeF size = measuringGraphics.MeasureString( parts[i].Text, font, Int32.MaxValue, format );
+				SizeF size = measuringGraphics.MeasureString( parts[i].Text, args.Font, Int32.MaxValue, format );
 				total.Height = Math.Max( total.Height, size.Height );
 				total.Width += size.Width;
 			}
 			
-			if( shadow && parts.Count > 0 ) {
-				total.Width += Offset;
-				total.Height += Offset;
+			if( args.UseShadow && parts.Count > 0 ) {
+				total.Width += Offset; total.Height += Offset;
 			}
 			return Size.Ceiling( total );
 		}
