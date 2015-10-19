@@ -77,5 +77,9 @@ namespace OpenTK.Platform.X11 {
 		public override int GetHashCode() {
 			return WindowHandle.GetHashCode() ^ Display.GetHashCode();
 		}
+		
+		public IntPtr WinHandle { 
+			get { return WindowHandle; }
+		}
 	}
 }

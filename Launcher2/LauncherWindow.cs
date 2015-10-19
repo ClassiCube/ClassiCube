@@ -60,7 +60,12 @@ namespace Launcher2 {
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
-			SetScreen( new ResourcesScreen( this ) );
+			
+			if( !ResourceFetcher.CheckAllResourcesExist() ) {
+				SetScreen( new ResourcesScreen( this ) );
+			} else {
+				SetScreen( new MainScreen( this ) );
+			}		
 			
 			while( true ) {
 				Window.ProcessEvents();
@@ -78,10 +83,8 @@ namespace Launcher2 {
 			if( screen != null ) 
 				screen.Dirty = false;
 			
-			WinWindowInfo info = (WinWindowInfo)Window.WindowInfo;
-			IntPtr dc = info.DeviceContext;
-			
-			using( Graphics g = Graphics.FromHdc( dc ) )
+			IntPtr hwnd = Window.WindowInfo.WinHandle;		
+			using( Graphics g = Graphics.FromHwnd( hwnd ) )
 				g.DrawImage( Framebuffer, 0, 0, Framebuffer.Width, Framebuffer.Height );
 		}
 		

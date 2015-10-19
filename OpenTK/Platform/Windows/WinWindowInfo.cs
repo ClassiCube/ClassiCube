@@ -112,5 +112,9 @@ namespace OpenTK.Platform.Windows {
 		~WinWindowInfo() {
 			Dispose(false);
 		}
+		
+		public IntPtr WinHandle { 
+			get { return WindowHandle; }
+		}
 	}
 }

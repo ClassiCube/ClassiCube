@@ -87,6 +87,11 @@ namespace OpenTK.Platform.MacOS
 		}
 
 		#endregion
+		
+		// TODO: I have no idea if this is right.
+		public IntPtr WinHandle { 
+			get { return windowRef; }
+		}
 
 		#region IDisposable Members
 
