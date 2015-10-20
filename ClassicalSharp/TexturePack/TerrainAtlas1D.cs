@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		public TextureRec GetTexRec( int texId, int uCount, out int index ) {
 			index = texId / elementsPerAtlas1D;
 			int y = texId % elementsPerAtlas1D;
-			return new TextureRec( 0, y * invElementSize, uCount, invElementSize );
+			return new TextureRec( 0, y * invElementSize, uCount, (15.99f/16f) * invElementSize );
 		}
 		
 		public int Get1DIndex( int texId ) {
