@@ -12,6 +12,12 @@ namespace ClassicalSharp {
 		
 		public abstract Matrix4 GetView();
 		
+		/// <summary> Calculates the location of the camera's position in the world 
+		/// based on the entity's eye position. </summary>
+		public abstract Vector3 GetCameraPos( Vector3 eyePos );
+		
+		/// <summary> Whether this camera is using a third person perspective. </summary>
+		/// <remarks> This causes the local player to be renderered if true. </remarks>
 		public abstract bool IsThirdPerson { get; }
 		
 		public virtual void Tick( double elapsed ) {
@@ -23,6 +29,7 @@ namespace ClassicalSharp {
 		
 		public abstract void RegrabMouse();
 		
+		/// <summary> Calculates the picked block based on the camera's current position. </summary>
 		public virtual void GetPickedBlock( PickedPos pos ) {
 		}
 	}
@@ -112,6 +119,37 @@ namespace ClassicalSharp {
 		public override bool IsThirdPerson {
 			get { return true; }
 		}
+		
+		public override Vector3 GetCameraPos( Vector3 eyePos ) {
+			return eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+		}
+	}
+	
+	public class ForwardThirdPersonCamera : PerspectiveCamera {
+		
+		public ForwardThirdPersonCamera( Game window ) : base( window ) {
+		}
+		
+		float distance = 3;
+		public override bool MouseZoom( MouseWheelEventArgs e ) {
+			distance -= e.DeltaPrecise;
+			if( distance < 2 ) distance = 2;
+			return true;
+		}
+		
+		public override Matrix4 GetView() {
+			Vector3 eyePos = player.EyePosition;
+			Vector3 cameraPos = eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY );
+		}
+		
+		public override bool IsThirdPerson {
+			get { return true; }
+		}
+		
+		public override Vector3 GetCameraPos( Vector3 eyePos ) {
+			return eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+		}
 	}
 	
 	public class FirstPersonCamera : PerspectiveCamera {
@@ -127,6 +165,10 @@ namespace ClassicalSharp {
 		
 		public override bool IsThirdPerson {
 			get { return false; }
+		}
+		
+		public override Vector3 GetCameraPos( Vector3 eyePos ) {
+			return eyePos;
 		}
 	}
 }

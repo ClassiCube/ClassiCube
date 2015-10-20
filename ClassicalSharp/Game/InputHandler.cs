@@ -194,7 +194,7 @@ namespace ClassicalSharp {
 						WindowState.Normal : WindowState.Fullscreen;
 				}
 			} else if( key == game.Keys[KeyMapping.ThirdPersonCamera] ) {
-				bool useThirdPerson = game.Camera is FirstPersonCamera;
+				bool useThirdPerson = !(game.Camera is ForwardThirdPersonCamera);
 				game.SetCamera( useThirdPerson );
 			} else if( key == game.Keys[KeyMapping.ViewDistance] ) {
 				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {

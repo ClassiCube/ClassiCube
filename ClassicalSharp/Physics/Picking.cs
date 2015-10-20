@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 					float t0, t1;
 					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
 						Vector3 intersect = origin + dir * t0;
-						pickedPos.SetAsValid( min, max, intersect );
+						pickedPos.SetAsValid( min, max, block, intersect );
 						return;
 					}
 				}
@@ -122,12 +122,14 @@ namespace ClassicalSharp {
 		public Vector3I TranslatedPos;
 		public bool Valid = true;
 		public CpeBlockFace BlockFace;
+		public byte BlockType;
 		
-		public void SetAsValid( Vector3 min, Vector3 max, Vector3 intersect ) {
+		public void SetAsValid( Vector3 min, Vector3 max, byte block, Vector3 intersect ) {
 			Min = min;
 			Max = max;
 			BlockPos = Vector3I.Truncate( Min );
 			Valid = true;
+			BlockType = block;
 			
 			Vector3I normal = Vector3I.Zero;
 			float dist = float.PositiveInfinity;
@@ -144,6 +146,7 @@ namespace ClassicalSharp {
 			Valid = false;
 			BlockPos = TranslatedPos = Vector3I.MinusOne;
 			BlockFace = (CpeBlockFace)255;
+			BlockType = 0;
 		}
 		
 		void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal, 

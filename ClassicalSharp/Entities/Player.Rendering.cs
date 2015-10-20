@@ -45,11 +45,16 @@ namespace ClassicalSharp {
 			Vector3 pos = Position;
 			pos.Y += Model.NameYOffset;
 			
+			float u1 = nameTex.U1, u2 = nameTex.U2;
+			if( game.Camera is ForwardThirdPersonCamera ) {
+				u1 = nameTex.U2; u2 = nameTex.U1;
+			}
+			
 			FastColour col = FastColour.White;
-			api.texVerts[0] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y1, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V1, col );
-			api.texVerts[1] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y1, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V1, col );
-			api.texVerts[2] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, nameTex.U2, nameTex.V2, col );	
-			api.texVerts[3] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, nameTex.U1, nameTex.V2, col );
+			api.texVerts[0] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y1, 0, cosA, sinA ) + pos, u1, nameTex.V1, col );
+			api.texVerts[1] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y1, 0, cosA, sinA ) + pos, u2, nameTex.V1, col );
+			api.texVerts[2] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, u2, nameTex.V2, col );	
+			api.texVerts[3] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, u1, nameTex.V2, col );
 			
 			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			api.DrawDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );

@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
-		Camera firstPersonCam, thirdPersonCam;
+		Camera firstPersonCam, thirdPersonCam, forwardThirdPersonCam;
 		public BlockInfo BlockInfo;
 		public double accumulator;
 		public TerrainAtlas2D TerrainAtlas;
@@ -153,6 +153,7 @@ namespace ClassicalSharp {
 			
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
+			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
@@ -332,7 +333,9 @@ namespace ClassicalSharp {
 		
 		public void SetCamera( bool thirdPerson ) {
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
-			Camera = ( thirdPerson && CanUseThirdPersonCamera ) ? thirdPersonCam : firstPersonCam;
+			Camera = (thirdPerson && CanUseThirdPersonCamera) ? 
+				(Camera is FirstPersonCamera ? thirdPersonCam : forwardThirdPersonCam ) :
+				firstPersonCam;
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;
 			newCam.previous = oldCam.previous;

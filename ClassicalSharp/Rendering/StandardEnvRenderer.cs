@@ -25,7 +25,8 @@ namespace ClassicalSharp.Renderers {
 		public override void Render( double deltaTime ) {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
 			
-			Vector3 pos = game.LocalPlayer.EyePosition;
+			Vector3 eyePos = game.LocalPlayer.EyePosition;
+			Vector3 pos = game.Camera.GetCameraPos( eyePos );
 			if( pos.Y < map.CloudHeight + 8 ) {
 				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 				graphics.BindVb( skyVb );

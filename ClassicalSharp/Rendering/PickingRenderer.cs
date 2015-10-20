@@ -7,11 +7,13 @@ namespace ClassicalSharp.Renderers {
 	public class PickingRenderer {
 		
 		IGraphicsApi graphics;
+		BlockInfo info;
 		int vb;
 		
 		public PickingRenderer( Game window ) {
 			graphics = window.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
+			info = window.BlockInfo;
 		}
 		
 		FastColour col = FastColour.Black;
@@ -27,6 +29,10 @@ namespace ClassicalSharp.Renderers {
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 			col.A = 150;
 			graphics.AlphaBlending = true;
+			if( info.IsSprite[pickedPos.BlockType] ) {
+				p1.X += 2.50f/16f; p1.Z += 2.50f/16f;
+				p2.X -= 2.50f/16f; p2.Z -= 2.50f/16f;	
+			}
 			
 			// bottom face
 			DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );

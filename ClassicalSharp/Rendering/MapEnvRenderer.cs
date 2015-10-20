@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -54,7 +55,8 @@ namespace ClassicalSharp {
 			graphics.BindVb( edgesVb );
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			if( game.LocalPlayer.EyePosition.Y >= 0 ) {
+			Vector3 eyePos = game.LocalPlayer.EyePosition;
+			if( game.Camera.GetCameraPos( eyePos ).Y >= 0 ) {
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );			
 			} else {
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVerVertices * 6 / 4, edgesBaseVertices * 6 / 4 );
