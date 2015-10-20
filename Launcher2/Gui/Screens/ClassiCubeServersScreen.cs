@@ -1,230 +1,168 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Net;
 using ClassicalSharp;
-using OpenTK;
 using OpenTK.Input;
 
 namespace Launcher2 {
 	
-	public sealed class ClassiCubeServersScreen : LauncherScreen {
+	public sealed class ClassiCubeServersScreen : LauncherInputScreen {
 		
+		const int tableIndex = 6;
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
-			textFont = new Font( "Arial", 16, FontStyle.Bold );
-			widgets = new LauncherWidget[5];
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
+			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			inputFont = new Font( "Arial", 13, FontStyle.Regular );
+			enterIndex = 4;
 			
-			game.Window.KeyPress += KeyPress;
-			game.Window.Keyboard.KeyDown += KeyDown;
-			game.Window.Keyboard.KeyRepeat = true;
+			widgets = new LauncherWidget[7];
+			game.Window.Mouse.WheelChanged += MouseWheelChanged;
+			game.Window.Mouse.ButtonUp += MouseButtonUp;
 		}
 		
 		public override void Tick() {
 		}
-
-		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( lastInput != null && e.Key == Key.BackSpace ) {
-				using( IDrawer2D drawer = game.Drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					lastInput.RemoveChar( textFont );
-					Dirty = true;
-				}
-			} else if( e.Key == Key.Enter ) { // Click sign in button
-				LauncherWidget widget = widgets[4];
-				if( widget.OnClick != null )
-					widget.OnClick();
+		
+		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
+			base.MouseMove( sender, e );
+			if( selectedWidget != null && selectedWidget == widgets[tableIndex] ) {
+				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				table.MouseMove( e.XDelta, e.YDelta );
 			}
 		}
-
-		void KeyPress( object sender, KeyPressEventArgs e ) {
-			if( lastInput != null ) {
-				using( IDrawer2D drawer = game.Drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					lastInput.AddChar( e.KeyChar, textFont );
-					Dirty = true;
-				}
+		
+		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
+			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			table.DraggingWidth = false;
+		}
+		
+		protected override void OnAddedChar() { FilterList(); }
+		
+		protected override void OnRemovedChar() { FilterList(); }
+		
+		void FilterList() {
+			if( lastInput == widgets[1] ) {
+				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				table.FilterEntries( lastInput.Text );
+				ClampIndex();
+				Resize();
 			}
 		}
 
 		public override void Init() { Resize(); }
 		
 		public override void Resize() {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( LauncherWindow.clearColour );
-				DrawButtons( drawer );
+				Draw();
 			}
 			Dirty = true;
 		}
 		
-		Font textFont;
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		void DrawButtons( IDrawer2D drawer ) {
+		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( drawer, "Search", -180, 0 );
-			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, 0 );
+			int lastIndex = GetLastInputIndex();
 			
-			MakeTextAt( drawer, "classicube.net/server/play/", -320, 50 );
-			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, 50 );
+			MakeTextAt( titleFont, "Search", -200, 10 );
+			MakeTextInputAt( Get( widgetIndex ), 270, -25, 5 );
 			
-			MakeButtonAt( drawer, "Back", 80, 35, 180, 0, () => game.SetScreen( new MainScreen( game ) ) );
+			MakeTextAt( inputFont, "../play/", -210, 55 );
+			MakeTextInputAt( "61f27b1f0a3dcb546b650b87a3e17436"/*Get( 3 )*/, 320, -20, 50 );
+			
+			MakeButtonAt( "Connect", 100, 30, 180, 5, ConnectToServer );
+			MakeButtonAt( "Back", 70, 30, 195, 50,
+			             (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeTableWidget();
+			
+			if( lastIndex >= 0 )
+				lastInput = widgets[lastIndex] as LauncherTextInputWidget;
 		}
 		
-		ClassicubeSession session = new ClassicubeSession();
-		List<ServerListEntry> servers = new List<ServerListEntry>();
-		void StartClient() {
-			if( String.IsNullOrEmpty( Get( 2 ) ) ) {
-				SetStatus( "&ePlease enter a username" ); return;
-			}
-			if( String.IsNullOrEmpty( Get( 3 ) ) ) {
-				SetStatus( "&ePlease enter a username" ); return;
-			}
-			System.Diagnostics.Debug.WriteLine( Get( 2 ) );
-			System.Diagnostics.Debug.WriteLine( Get( 3 ) );
-			
-			SetStatus( "&eSigning in..." );
-			try {
-				session.Login( Get( 2 ), Get( 3 ) );
-			} catch( WebException ex ) {
-				session.Username = null;
-				DisplayWebException( ex, "sign in" );
-				return;
-			} catch( InvalidOperationException ex ) {
-				session.Username = null;
-				string text = "&eFailed to sign in: " +
-					Environment.NewLine + ex.Message;
-				SetStatus( text );
-				return;
-			}
-			
-			SetStatus( "&eRetrieving public servers list.." );
-			try {
-				servers = session.GetPublicServers();
-			} catch( WebException ex ) {
-				servers = new List<ServerListEntry>();
-				DisplayWebException( ex, "retrieve servers list" );
-				return;
-			}
-			SetStatus( "&eSigned in" );
-		}
-		
-		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : ((widget as LauncherTextInputWidget)).Text;
-		}
-		
-		void Set( int index, string text ) {
-			(widgets[index] as LauncherTextInputWidget)
-				.Redraw( game.Drawer, text, textFont );
-		}
-		
-		void SetStatus( string text ) {
-			using( IDrawer2D drawer = game.Drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				LauncherTextWidget widget = (LauncherTextWidget)widgets[6];
-				drawer.Clear( LauncherWindow.clearColour, widget.X, widget.Y,
-				             widget.Width, widget.Height );
-				widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, 0, 50 );
-				Dirty = true;
-			}
+		int GetLastInputIndex() {
+			return lastInput == null ? -1 :
+				Array.IndexOf<LauncherWidget>( widgets, lastInput );
 		}
 
-		void MakeTextAt( IDrawer2D drawer, string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game, text );			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, x, y );
+		void MakeTextAt( Font font, string text, int x, int y ) {
+			LauncherTextWidget widget = new LauncherTextWidget( game, text );
+			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.LeftOrTop, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeTextInputAt( IDrawer2D drawer, bool password, string text, int x, int y ) {
+		void MakeTextInputAt( string text, int width, int x, int y ) {
 			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
 			widget.OnClick = InputClick;
-			widget.Password = password;
 			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, 300, 30, x, y );
+			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.LeftOrTop, width, 30, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeButtonAt( IDrawer2D drawer, string text, int width, int height,
-		                  int x, int y, Action onClick ) {
+		void MakeButtonAt( string text, int width, int height,
+		                  int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.LeftOrTop, width, height, x, y );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
+			widget.Active = false;
+			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.LeftOrTop, width, height, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		protected override void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, textFont );
-				FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
-				Dirty = true;
+		void MakeTableWidget() {
+			if( widgets[tableIndex] != null ) {
+				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				table.Redraw( drawer, inputFont, titleFont );
+				return;
 			}
+			
+			LauncherTableWidget widget = new LauncherTableWidget( game );
+			widget.CurrentIndex = 0;
+			widget.SetEntries( game.Session.Servers );
+			widget.DrawAt( drawer, inputFont, titleFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 100 );
+			
+			widget.NeedRedraw = Resize;
+			widget.SelectedChanged = SelectedChanged;
+			widgets[widgetIndex++] = widget;
 		}
-		
-		protected override void SelectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, textFont );
-				Dirty = true;
-			}
-		}
-		
-		LauncherTextInputWidget lastInput;
-		void InputClick() {
-			LauncherTextInputWidget input = selectedWidget as LauncherTextInputWidget;
-			using( IDrawer2D drawer = game.Drawer ) {
+
+		void SelectedChanged( string hash ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				if( lastInput != null ) {
-					lastInput.Active = false;
-					lastInput.Redraw( game.Drawer, lastInput.Text, textFont );
-				}
-				
-				input.Active = true;
-				input.Redraw( game.Drawer, input.Text, textFont );
+				Set( 3, hash );
 			}
-			lastInput = input;
 			Dirty = true;
 		}
 		
-		public override void Dispose() {
-			textFont.Dispose();
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			
-			game.Window.KeyPress -= KeyPress;
-			game.Window.Keyboard.KeyDown -= KeyDown;
-			game.Window.Keyboard.KeyRepeat = false;
+		void ConnectToServer( int mouseX, int mouseY ) {
+			GameStartData data = null;
+			try {
+				data = game.Session.GetConnectInfo( Get( 3 ) );
+			} catch( WebException ex ) {
+				Program.LogException( ex );
+				return;
+			}
+			Client.Start( data, true );
 		}
 		
-		void DisplayWebException( WebException ex, string action ) {
-			Program.LogException( ex );
-			if( ex.Status == WebExceptionStatus.Timeout ) {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + "Timed out while connecting to classicube.net.";
-				SetStatus( text );
-			} else if( ex.Status == WebExceptionStatus.ProtocolError ) {
-				HttpWebResponse response = (HttpWebResponse)ex.Response;
-				int errorCode = (int)response.StatusCode;
-				string description = response.StatusDescription;
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + " classicube.net returned: (" + errorCode + ") " + description;
-				SetStatus(text );
-			} else if( ex.Status == WebExceptionStatus.NameResolutionFailure ) {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + "Unable to resolve classicube.net" +
-					Environment.NewLine + "you may not be connected to the internet.";
-				SetStatus( text );
-			} else {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + ex.Status;
-				SetStatus( text );
-			}
+		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			table.CurrentIndex -= e.Delta;
+			ClampIndex();
+			Resize();
+		}
+		
+		void ClampIndex() {
+			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			if( table.CurrentIndex >= table.Count )
+				table.CurrentIndex = table.Count - 1;
+			if( table.CurrentIndex < 0 )
+				table.CurrentIndex = 0;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
 		}
 	}
 }

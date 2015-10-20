@@ -16,14 +16,15 @@ namespace Launcher2 {
 		
 		protected override void UnselectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			button.Redraw( game.Drawer, button.Text, textFont );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
+			button.Active = false;
+			button.Redraw( drawer, button.Text, textFont );
 			Dirty = true;
 		}
 		
 		protected override void SelectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			button.Redraw( game.Drawer, button.Text, textFont );
+			button.Active = true;
+			button.Redraw( drawer, button.Text, textFont );
 			Dirty = true;
 		}
 
@@ -33,42 +34,41 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw( drawer );
+				Draw();
 			}
 			Dirty = true;
 		}
 		
 		Font textFont;
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		void Draw( IDrawer2D drawer ) {
+		void Draw() {
 			widgetIndex = 0;
-			MakeButtonAt( drawer, "Direct connect", Anchor.Centre, Anchor.Centre,
+			MakeButtonAt( "Direct connect", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, -100,
-			             () => game.SetScreen( new DirectConnectScreen( game ) ) );
+			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );
 			
-			MakeButtonAt( drawer, "ClassiCube.net", Anchor.Centre, Anchor.Centre,
+			MakeButtonAt( "ClassiCube.net", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, -50,
-			             () => game.SetScreen( new ClassiCubeScreen( game ) ) );
+			             (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
 			
-			MakeButtonAt( drawer, "Singleplayer", Anchor.LeftOrTop, Anchor.BottomOrRight,
+			MakeButtonAt( "Singleplayer", Anchor.LeftOrTop, Anchor.BottomOrRight,
 			             sideButtonWidth, buttonHeight, 10, -10,
-			             () => Client.Start( "default.zip" ) );
+			             (x, y) => Client.Start( "default.zip" ) );
 			
-			MakeButtonAt( drawer, "Resume", Anchor.BottomOrRight, Anchor.BottomOrRight,
+			MakeButtonAt( "Resume", Anchor.BottomOrRight, Anchor.BottomOrRight,
 			             sideButtonWidth, buttonHeight, -10, -10, null );
 		}
 		
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
-		void MakeButtonAt( IDrawer2D drawer, string text, Anchor horAnchor,
-		                  Anchor verAnchor, int width, int height, int x, int y, Action onClick ) {
+		void MakeButtonAt( string text, Anchor horAnchor,
+		                  Anchor verAnchor, int width, int height, int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
+			widget.Active = false;
 			widget.DrawAt( drawer, text, textFont, horAnchor, verAnchor, width, height, x, y );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
 			widgets[widgetIndex++] = widget;
 		}
 		

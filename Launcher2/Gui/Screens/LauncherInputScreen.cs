@@ -24,27 +24,33 @@ namespace Launcher2 {
 
 		protected void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( lastInput != null && e.Key == Key.BackSpace ) {
-				using( IDrawer2D drawer = game.Drawer ) {
+				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					lastInput.RemoveChar( inputFont );
+					lastInput.RemoveChar( inputFont );				
 					Dirty = true;
 				}
+				OnRemovedChar();
 			} else if( e.Key == Key.Enter && enterIndex >= 0 ) {
 				LauncherWidget widget = widgets[enterIndex];
 				if( widget.OnClick != null )
-					widget.OnClick();
+					widget.OnClick( 0, 0 );
 			}
 		}
 
 		protected void KeyPress( object sender, KeyPressEventArgs e ) {
 			if( lastInput != null ) {
-				using( IDrawer2D drawer = game.Drawer ) {
+				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					lastInput.AddChar( e.KeyChar, inputFont );
+					lastInput.AddChar( e.KeyChar, inputFont );			
 					Dirty = true;
 				}
+				OnAddedChar();
 			}
 		}
+		
+		protected virtual void OnAddedChar() { }
+		
+		protected virtual void OnRemovedChar() { }
 		
 		protected string Get( int index ) {
 			LauncherWidget widget = widgets[index];
@@ -53,14 +59,14 @@ namespace Launcher2 {
 		
 		protected void Set( int index, string text ) {
 			(widgets[index] as LauncherTextInputWidget)
-				.Redraw( game.Drawer, text, inputFont );
+				.Redraw( drawer, text, inputFont );
 		}
 		
 		protected override void UnselectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, titleFont );
-				FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
+			if( button != null ) {				
+				button.Active = false;
+				button.Redraw( drawer, button.Text, titleFont );
 				Dirty = true;
 			}
 		}
@@ -68,23 +74,24 @@ namespace Launcher2 {
 		protected override void SelectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, titleFont );
+				button.Active = true;
+				button.Redraw( drawer, button.Text, titleFont );
 				Dirty = true;
 			}
 		}
 		
 		protected LauncherTextInputWidget lastInput;
-		protected void InputClick() {
+		protected void InputClick( int mouseX, int mouseY ) {
 			LauncherTextInputWidget input = selectedWidget as LauncherTextInputWidget;
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput != null ) {
 					lastInput.Active = false;
-					lastInput.Redraw( game.Drawer, lastInput.Text, inputFont );
+					lastInput.Redraw( drawer, lastInput.Text, inputFont );
 				}
 				
 				input.Active = true;
-				input.Redraw( game.Drawer, input.Text, inputFont );
+				input.Redraw( drawer, input.Text, inputFont );
 			}
 			lastInput = input;
 			Dirty = true;

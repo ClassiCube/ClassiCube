@@ -15,18 +15,34 @@ namespace Launcher2 {
 			titleFont = new Font( "Arial", 15, FontStyle.Bold );
 			inputFont = new Font( "Arial", 15, FontStyle.Regular );
 			enterIndex = 4;
-			widgets = new LauncherWidget[7];
+			widgets = new LauncherWidget[8];
 		}
 
 		public override void Init() {
 			Resize();
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				LoadSavedInfo( drawer );
 			}
 		}
 		
 		public override void Tick() {
+			if( !signingIn ) return;
+			
+			ClassicubeSession session = game.Session;
+			string status = session.Status;
+			if( status != lastStatus )
+				SetStatus( status );
+			
+			if( !session.Working ) {
+				if( session.Exception != null ) {
+					DisplayWebException( session.Exception, session.Status );
+				}
+				signingIn = false;
+				game.MakeBackground();
+				Resize();
+			}
+			
 		}
 		
 		void LoadSavedInfo( IDrawer2D drawer ) {
@@ -45,31 +61,36 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw( drawer );
+				Draw();
 			}
 			Dirty = true;
 		}
-		
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		void Draw( IDrawer2D drawer ) {
+
+		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( drawer, "Username", -180, -100 );
-			MakeTextAt( drawer, "Password", -180, -50 );
+			MakeTextAt( "Username", -180, -100 );
+			MakeTextAt( "Password", -180, -50 );
 			
-			MakeTextInputAt( drawer, false, Get( widgetIndex ), 30, -100 );
-			MakeTextInputAt( drawer, true, Get( widgetIndex ), 30, -50 );
+			MakeTextInputAt( false, Get( widgetIndex ), 30, -100 );
+			MakeTextInputAt( true, Get( widgetIndex ), 30, -50 );
 			
-			MakeButtonAt( drawer, "Sign in", 90, 35, -75, 0, StartClient );
-			MakeButtonAt( drawer, "Back", 80, 35, 140, 0, () => game.SetScreen( new MainScreen( game ) ) );
-			MakeTextAt( drawer, "", 0, 50 );
+			MakeButtonAt( "Sign in", 90, 35, -75, 0, StartClient );
+			MakeButtonAt( "Back", 80, 35, 140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeTextAt( "", 0, 50 );
+			
+			if( HasServers && !signingIn )
+				MakeButtonAt( "Servers", 90, 35, 35, 0, ShowServers );
 		}
 
+		string lastStatus;
 		void SetStatus( string text ) {
-			using( IDrawer2D drawer = game.Drawer ) {
+			lastStatus = text;
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				LauncherTextWidget widget = (LauncherTextWidget)widgets[6];
+				
 				drawer.Clear( LauncherWindow.clearColour, widget.X, widget.Y,
 				             widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
@@ -77,13 +98,13 @@ namespace Launcher2 {
 			}
 		}
 
-		void MakeTextAt( IDrawer2D drawer, string text, int x, int y ) {
+		void MakeTextAt( string text, int x, int y ) {
 			LauncherTextWidget widget = new LauncherTextWidget( game, text );
 			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeTextInputAt( IDrawer2D drawer, bool password, string text, int x, int y ) {
+		void MakeTextInputAt( bool password, string text, int x, int y ) {
 			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
 			widget.OnClick = InputClick;
 			widget.Password = password;
@@ -92,52 +113,46 @@ namespace Launcher2 {
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeButtonAt( IDrawer2D drawer, string text, int width, int height,
-		                  int x, int y, Action onClick ) {
+		void MakeButtonAt( string text, int width, int height,
+		                  int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
+			widget.Active = false;
 			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void StartClient() {
+		bool HasServers {
+			get {
+				return !(game.Session.Servers == null || game.Session.Servers.Count == 0 );
+			}
+		}
+		
+		bool signingIn;
+		void StartClient( int mouseX, int mouseY ) {
 			if( String.IsNullOrEmpty( Get( 2 ) ) ) {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
 			if( String.IsNullOrEmpty( Get( 3 ) ) ) {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
-			System.Diagnostics.Debug.WriteLine( Get( 2 ) );
-			System.Diagnostics.Debug.WriteLine( Get( 3 ) );
+			if( signingIn ) return;
 			
-			SetStatus( "&eSigning in..." );
+			game.Session.LoginAsync( Get( 2 ), Get( 3 ) );
+			game.MakeBackground();
+			Resize();
+			SetStatus( "&eSigning in.." );
+			signingIn = true;
+		}
+		
+		void ShowServers( int mouseX, int mouseY ) {
+			if( signingIn ) return;
+			
 			ClassicubeSession session = game.Session;
-			try {
-				session.Login( Get( 2 ), Get( 3 ) );
-			} catch( WebException ex ) {
-				session.Username = null;
-				DisplayWebException( ex, "sign in" );
-				return;
-			} catch( InvalidOperationException ex ) {
-				session.Username = null;
-				string text = "&eFailed to sign in: " +
-					Environment.NewLine + ex.Message;
-				SetStatus( text );
-				return;
-			}
-			
-			SetStatus( "&eRetrieving public servers list.." );
-			try {
-				game.Servers = session.GetPublicServers();
-			} catch( WebException ex ) {
-				game.Servers = new List<ServerListEntry>();
-				DisplayWebException( ex, "retrieve servers list" );
-				return;
-			}
-			SetStatus( "&eSigned in" );
+			if( !HasServers ) return;
+			game.SetScreen( new ClassiCubeServersScreen( game ) );
 		}
 
 		void DisplayWebException( WebException ex, string action ) {

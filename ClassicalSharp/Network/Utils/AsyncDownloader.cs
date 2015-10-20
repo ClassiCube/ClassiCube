@@ -13,7 +13,7 @@ namespace ClassicalSharp.Network {
 		EventWaitHandle handle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		Thread worker;
 		readonly object requestLocker = new object();
-		List<DownloadRequest> requests = new List<DownloadRequest>();
+		List<Request> requests = new List<Request>();
 		readonly object downloadedLocker = new object();
 		Dictionary<string, DownloadedItem> downloaded = new Dictionary<string, DownloadedItem>();
 		string skinServer = null;
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Network {
 		
 		void AddRequest( string url, bool priority, string identifier, byte type ) {
 			lock( requestLocker )  {
-				DownloadRequest request = new DownloadRequest( url, identifier, type );
+				Request request = new Request( url, identifier, type );
 				if( priority ) {
 					requests.Insert( 0, request );
 				} else {
@@ -109,7 +109,7 @@ namespace ClassicalSharp.Network {
 		WebClient client;
 		void DownloadThreadWorker() {
 			while( true ) {
-				DownloadRequest request = null;
+				Request request = null;
 				lock( requestLocker ) {
 					if( requests.Count > 0 ) {
 						request = requests[0];
@@ -126,7 +126,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		void DownloadItem( DownloadRequest request ) {
+		void DownloadItem( Request request ) {
 			string url = request.Url;
 			byte type = request.Type;
 			string dataType = type == 0 ? "image" : (type == 1 ? "string" : "raw");
@@ -177,14 +177,14 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		class DownloadRequest {
+		class Request {
 			
 			public string Url;
 			public string Identifier;
 			public byte Type; // 0 = bitmap, 1 = string, 2 = byte[]
 			public DateTime TimeAdded;
 			
-			public DownloadRequest( string url, string identifier, byte type ) {
+			public Request( string url, string identifier, byte type ) {
 				Url = url;
 				Identifier = identifier;
 				Type = type;

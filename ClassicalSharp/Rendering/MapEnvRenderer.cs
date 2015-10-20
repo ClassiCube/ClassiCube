@@ -43,6 +43,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			if( sidesVb == -1 || edgesVb == -1 ) return;
 			graphics.Texturing = true;
+			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
 			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( sidesVb );
@@ -60,6 +61,7 @@ namespace ClassicalSharp {
 			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
+			graphics.AlphaTest = false;
 		}
 		
 		public void Dispose() {

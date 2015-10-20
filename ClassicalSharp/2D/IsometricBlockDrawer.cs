@@ -105,13 +105,13 @@ namespace ClassicalSharp {
 			FastColour col = colXSide;
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
-			                                                    pos.Z - scale, rec.U1, rec.V2, colNormal );
+			                                                    pos.Z - scale, rec.U1, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
-			                                                    pos.Z - scale, rec.U1, rec.V1, colNormal );
+			                                                    pos.Z - scale, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
-			                                                    pos.Z + scale, rec.U2, rec.V1, colNormal );
+			                                                    pos.Z + scale, rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
-			                                                    pos.Z + scale, rec.U2, rec.V2, colNormal );
+			                                                    pos.Z + scale, rec.U2, rec.V2, col );
 		}
 	}
 }

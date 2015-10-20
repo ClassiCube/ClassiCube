@@ -55,6 +55,26 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public override void DrawClippedText( ref DrawTextArgs args, float x, float y, float maxWidth, float maxHeight ) {
+			if( !args.SkipPartsCheck )
+				GetTextParts( args.Text );
+			
+			Brush shadowBrush = GetOrCreateBrush( Color.Black );
+			format.Trimming = StringTrimming.EllipsisCharacter;
+			for( int i = 0; i < parts.Count; i++ ) {
+				TextPart part = parts[i];
+				Brush textBrush = GetOrCreateBrush( part.TextColour );
+				RectangleF rect = new RectangleF( x + Offset, y + Offset, maxWidth, maxHeight );
+				if( args.UseShadow )
+					g.DrawString( part.Text, args.Font, shadowBrush, rect, format );
+				
+				rect = new RectangleF( x, y, maxWidth, maxHeight );
+				g.DrawString( part.Text, args.Font, textBrush, rect, format );
+				x += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
+			}
+			format.Trimming = StringTrimming.None;
+		}
+		
 		public override void DrawRect( Color colour, int x, int y, int width, int height ) {
 			Brush brush = GetOrCreateBrush( colour );
 			g.FillRectangle( brush, x, y, width, height );

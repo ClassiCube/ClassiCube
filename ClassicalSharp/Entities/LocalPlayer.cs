@@ -123,8 +123,6 @@ namespace ClassicalSharp {
 			}
 
 			if( jumping ) {
-				Vector3I p = Vector3I.Floor( Position );
-				
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
 					BoundingBox bounds = CollisionBounds;
 					bounds.Min.Y += 1;

@@ -15,7 +15,7 @@ namespace Launcher2 {
 		public void DownloadItems( Action<string> setStatus ) {
 			downloader.DownloadData( "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar", false, "classic_jar" );
 			downloader.DownloadData( "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar", false, "162_jar" );
-			downloader.DownloadData( "http://static.classicube.net/terrain-patch.gpng", false, "terrain_patch" );
+			downloader.DownloadData( "http://static.classicube.net/terrain-patch.png", false, "terrain_patch" );
 			setStatus( "&eFetching classic jar.. (1/3)" );
 		}
 		

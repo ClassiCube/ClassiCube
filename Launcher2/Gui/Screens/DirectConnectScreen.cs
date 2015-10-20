@@ -19,7 +19,7 @@ namespace Launcher2 {
 
 		public override void Init() {
 			Resize();
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				LoadSavedInfo( drawer );
 			}
@@ -53,31 +53,30 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw( drawer );
+				Draw();
 			}
 			Dirty = true;
 		}
 		
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		void Draw( IDrawer2D drawer ) {
+		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( drawer, "Username", -180, -100 );
-			MakeTextAt( drawer, "Address", -180, -50 );
-			MakeTextAt( drawer, "Mppass", -180, 0 );
+			MakeTextAt( "Username", -180, -100 );
+			MakeTextAt( "Address", -180, -50 );
+			MakeTextAt( "Mppass", -180, 0 );
 			
-			MakeTextInputAt( drawer, Get( widgetIndex ), 30, -100 );
-			MakeTextInputAt( drawer, Get( widgetIndex ), 30, -50 );
-			MakeTextInputAt( drawer, Get( widgetIndex ), 30, 0 );
+			MakeTextInputAt( Get( widgetIndex ), 30, -100 );
+			MakeTextInputAt( Get( widgetIndex ), 30, -50 );
+			MakeTextInputAt( Get( widgetIndex ), 30, 0 );
 			
-			MakeButtonAt( drawer, "Connect", 110, 35, -65, 50, StartClient );			
-			MakeButtonAt( drawer, "Back", 80, 35, 140, 50, () => game.SetScreen( new MainScreen( game ) ) );
-			MakeTextAt( drawer, "", 0, 100 );
+			MakeButtonAt( "Connect", 110, 35, -65, 50, StartClient );			
+			MakeButtonAt( "Back", 80, 35, 140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeTextAt( "", 0, 100 );
 		}
 		
 		void SetStatus( string text ) {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				LauncherTextWidget widget = (LauncherTextWidget)widgets[8];
 				drawer.Clear( LauncherWindow.clearColour, widget.X, widget.Y,
@@ -87,13 +86,13 @@ namespace Launcher2 {
 			}
 		}
 
-		void MakeTextAt( IDrawer2D drawer, string text, int x, int y ) {
+		void MakeTextAt( string text, int x, int y ) {
 			LauncherTextWidget widget = new LauncherTextWidget( game, text );
 			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeTextInputAt( IDrawer2D drawer, string text, int x, int y ) {
+		void MakeTextInputAt( string text, int x, int y ) {
 			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
 			widget.OnClick = InputClick;
 			
@@ -101,18 +100,18 @@ namespace Launcher2 {
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeButtonAt( IDrawer2D drawer, string text, int width, int height,
-		                  int x, int y, Action onClick ) {
+		void MakeButtonAt( string text, int width, int height,
+		                  int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
+			widget.Active = false;
 			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180 );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void StartClient() {
+		void StartClient( int mouseX, int mouseY ) {
 			SetStatus( "" );
 			
 			if( String.IsNullOrEmpty( Get( 3 ) ) ) {

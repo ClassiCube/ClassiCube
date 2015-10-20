@@ -32,9 +32,9 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw( drawer );
+				Draw();
 			}
 			Dirty = true;
 		}
@@ -42,8 +42,8 @@ namespace Launcher2 {
 		protected override void UnselectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, textFont );
-				FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180, backColBGRA );
+				button.Active = false;
+				button.Redraw( drawer, button.Text, textFont );
 				Dirty = true;
 			}
 		}
@@ -51,13 +51,14 @@ namespace Launcher2 {
 		protected override void SelectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
-				button.Redraw( game.Drawer, button.Text, textFont );
+				button.Active = true;
+				button.Redraw( drawer, button.Text, textFont );
 				Dirty = true;
 			}
 		}
 		
 		ResourceFetcher fetcher;
-		void DownloadResources() {
+		void DownloadResources( int mouseX, int mouseY ) {
 			if( game.Downloader == null )
 				game.Downloader = new AsyncDownloader( "null" );
 			if( fetcher != null ) return;
@@ -66,38 +67,37 @@ namespace Launcher2 {
 			fetcher.DownloadItems( SetStatus );
 			selectedWidget = null;
 			
-			game.MakeBackground();
 			Resize();
 		}
 		
 		Font textFont;
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
 		static FastColour backCol = new FastColour( 120, 85, 151 );
 		static uint backColBGRA = (uint)backCol.ToArgb();
 		static readonly string mainText = "Some required resources weren't found" +
 			Environment.NewLine + "Okay to download them?";
 		static readonly string format = "Estimated size: {0} megabytes";
+		static FastColour clearCol = new FastColour( 12, 12, 12 );
 		
-		void Draw( IDrawer2D drawer ) {
+		void Draw() {
 			widgetIndex = 0;
-			FilterArea( 0, 0, game.Width, game.Height, 100, 0 );
+			drawer.Clear( clearCol );
 			drawer.DrawRect( backCol, game.Width / 2 - 175,
 			                game.Height / 2 - 70, 175 * 2, 70 * 2 );
 			
 			string text = widgets[0] == null ?
 				String.Format( format, ResourceFetcher.EstimateDownloadSize().ToString( "F2" ) )
 				: (widgets[0] as LauncherTextWidget).Text;
-			MakeTextAt( drawer, statusFont, text, 0, 5 );
+			MakeTextAt( statusFont, text, 0, 5 );
 
 			if( fetcher == null ) {
-				MakeTextAt( drawer, infoFont, mainText, 0, -30 );
-				MakeButtonAt( drawer, "Yes", 60, 30, -50, 40, DownloadResources );
+				MakeTextAt( infoFont, mainText, 0, -30 );
+				MakeButtonAt( "Yes", 60, 30, -50, 40, DownloadResources );
 				
-				MakeButtonAt( drawer, "No", 60, 30, 50, 40,
-				             () => game.SetScreen( new MainScreen( game ) ) );
+				MakeButtonAt( "No", 60, 30, 50, 40,
+				             (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			} else {
-				MakeButtonAt( drawer, "Dismiss", 120, 30, 0, 40,
-				             () => game.SetScreen( new MainScreen( game ) ) );
+				MakeButtonAt( "Dismiss", 120, 30, 0, 40,
+				             (x, y) => game.SetScreen( new MainScreen( game ) ) );
 				widgets[2] = null;
 				widgets[3] = null;
 			}
@@ -105,26 +105,26 @@ namespace Launcher2 {
 		
 		void SetStatus( string text ) {
 			LauncherTextWidget widget = widgets[0] as LauncherTextWidget;
-			using( IDrawer2D drawer = game.Drawer ) {
+			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
-				widget.Redraw( game.Drawer, text, statusFont );
+				widget.Redraw( drawer, text, statusFont );
 				Dirty = true;
 			}
 		}
 		
-		void MakeButtonAt( IDrawer2D drawer, string text, int width,
-		                  int height, int x, int y, Action onClick ) {
+		void MakeButtonAt( string text, int width,
+		                  int height, int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
+			widget.Active = false;
 			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
-			FilterArea( widget.X, widget.Y, widget.Width, widget.Height, 180, backColBGRA );
 			widgets[widgetIndex++] = widget;
 		}
 		
-		void MakeTextAt( IDrawer2D drawer, Font font, string text, int x, int y ) {
+		void MakeTextAt( Font font, string text, int x, int y ) {
 			LauncherTextWidget widget = new LauncherTextWidget( game, text );
 			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.Centre, x, y );
 			widgets[widgetIndex++] = widget;

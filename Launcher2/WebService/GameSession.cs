@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace Launcher2 {
 
@@ -15,13 +16,61 @@ namespace Launcher2 {
 			cookies = new CookieContainer();
 		}
 		
+		public bool Working;
+		public WebException Exception;
+		public string Status;
+		public List<ServerListEntry> Servers = new List<ServerListEntry>();
+		
+		public void LoginAsync( string user, string password ) {
+			Username = user;
+			Working = true;
+			Exception = null;
+			Status = "&eSigning in..";
+			Servers = new List<ServerListEntry>();
+			
+			Thread thread = new Thread( LoginWorker, 256 * 1024 );
+			thread.Name = "Launcher.LoginAsync";
+			thread.Start( password );
+		}
+		
+		void LoginWorker( object password ) {
+			// Sign in to classicube.net
+			try {
+				Login( Username, (string)password );
+			} catch( WebException ex ) {
+				Finish( false, ex, "sign in" ); return;
+			} catch( InvalidOperationException ex ) {
+				Finish( false, null, "&eFailed to sign in: " +
+				       Environment.NewLine + ex.Message ); return;
+			}
+			
+			// Retrieve list of public servers
+			Status = "&eRetrieving public servers list..";
+			try {
+				Servers = GetPublicServers();
+			} catch( WebException ex ) {
+				Servers = new List<ServerListEntry>();
+				Finish( false, ex, "retrieving servers list" ); return;
+			}
+			Finish( true, null, "&eSigned in" );
+		}
+		
+		void Finish( bool success, WebException ex, string status ) {
+			if( !success ) 
+				Username = null;
+			Working = false;
+			
+			Exception = ex;
+			Status = status;
+		}
+		
 		public abstract void Login( string user, string password );
 		
 		public abstract GameStartData GetConnectInfo( string hash );
 		
 		public abstract List<ServerListEntry> GetPublicServers();
 		
-		CookieContainer cookies = new CookieContainer();		
+		CookieContainer cookies = new CookieContainer();
 		
 		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
@@ -31,6 +80,7 @@ namespace Launcher2 {
 			request.Referer = referer;
 			request.KeepAlive = true;
 			request.CookieContainer = cookies;
+			
 			// On my machine, these reduce minecraft server list download time from 40 seconds to 4.
 			request.Proxy = null;
 			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -60,7 +110,7 @@ namespace Launcher2 {
 			using( Stream stream = response.GetResponseStream() ) {
 				using( StreamReader reader = new StreamReader( stream ) ) {
 					string line;
-					while( ( line = reader.ReadLine() ) != null	 ) {
+					while( (line = reader.ReadLine()) != null ) {
 						yield return line;
 					}
 				}

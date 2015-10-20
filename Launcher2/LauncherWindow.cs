@@ -19,7 +19,6 @@ namespace Launcher2 {
 		public LauncherScreen screen;
 		public bool Dirty;
 		public ClassicubeSession Session = new ClassicubeSession();
-		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		public AsyncDownloader Downloader;
 		
 		public int Width { get { return Window.Width; } }
@@ -72,7 +71,7 @@ namespace Launcher2 {
 				if( !Window.Exists ) break;
 				
 				screen.Tick();
-				if( Dirty || (screen != null && screen.Dirty) )
+				if( Dirty || screen.Dirty )
 					Display();
 				Thread.Sleep( 1 );
 			}

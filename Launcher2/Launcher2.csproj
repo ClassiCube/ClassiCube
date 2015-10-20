@@ -58,8 +58,9 @@
     <Compile Include="Gui\Screens\LauncherScreen.cs" />
     <Compile Include="Gui\Screens\MainScreen.cs" />
     <Compile Include="Gui\Screens\ResourcesScreen.cs" />
+    <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
+    <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
-    <Compile Include="Gui\Widgets\LauncherTableWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherTextInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherTextWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
@@ -88,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui" />
+    <Folder Include="Gui\TableWidget" />
     <Folder Include="Gui\Screens" />
     <Folder Include="Gui\Widgets" />
     <Folder Include="Patcher" />
