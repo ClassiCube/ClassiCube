@@ -2,6 +2,7 @@
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 
@@ -13,7 +14,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
-		public float CloudsSpeed = 1;		
+		public float CloudsSpeed = 1;
 		bool legacy;
 		
 		public void SetUseLegacyMode( bool legacy ) {
@@ -27,11 +28,21 @@ namespace ClassicalSharp.Renderers {
 			
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			Vector3 pos = game.Camera.GetCameraPos( eyePos );
-			if( pos.Y < map.CloudHeight + 8 ) {
-				graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
-				graphics.BindVb( skyVb );
+			float normalY = map.CloudHeight + 8;
+			float skyY = Math.Max( pos.Y + 8, normalY );
+			
+			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+			graphics.BindVb( skyVb );
+			if( skyY == normalY ) {
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
+			} else {
+				Matrix4 m = Matrix4.Translate( 0, skyY - normalY, 0 );
+				graphics.PushMatrix();
+				graphics.MultiplyMatrix( ref m );
+				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
+				graphics.PopMatrix();
 			}
+			
 			RenderClouds( deltaTime );
 			ResetFog();
 		}
@@ -112,7 +123,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetFog() {
-			if( map.IsNotLoaded ) return;			
+			if( map.IsNotLoaded ) return;
 			FastColour adjFogCol = FastColour.White;
 			Block headBlock = game.LocalPlayer.BlockAtHead;
 			BlockInfo info = game.BlockInfo;
