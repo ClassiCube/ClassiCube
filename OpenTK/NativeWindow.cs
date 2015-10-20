@@ -123,6 +123,11 @@ namespace OpenTK {
 			ProcessEvents(false);
 		}
 		
+		/// <summary> Causes the window to be immediately redrawn. </summary>
+		public void Invalidate() {
+			implementation.Invalidate();
+		}
+		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure that contains the external bounds of this window, in screen coordinates.
 		/// External bounds include the title bar, borders and drawing area of the window. </summary>
 		public Rectangle Bounds {

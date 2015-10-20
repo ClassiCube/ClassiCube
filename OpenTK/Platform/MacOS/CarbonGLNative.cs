@@ -650,6 +650,10 @@ namespace OpenTK.Platform.MacOS
 		{
 			Application.ProcessEvents();
 		}
+		
+		public void Invalidate() {
+			// TODO: what do we need to do here?
+		}
 
 		public Point PointToClient(Point point)
 		{

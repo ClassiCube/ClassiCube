@@ -30,6 +30,7 @@ namespace Launcher2 {
 		public void Init() {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
+			Window.WindowStateChanged += Resize;
 			logoFont = new Font( "Times New Roman", 28, FontStyle.Bold );
 			logoItalicFont = new Font( "Times New Roman", 28, FontStyle.Italic );
 		}
@@ -40,6 +41,10 @@ namespace Launcher2 {
 		}
 
 		void Resize( object sender, EventArgs e ) {
+			if( screenGraphics != null )
+				screenGraphics.Dispose();
+			
+			screenGraphics = Graphics.FromHwnd( Window.WindowInfo.WinHandle );
 			MakeBackground();
 			screen.Resize();
 		}
@@ -59,6 +64,7 @@ namespace Launcher2 {
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
+			screenGraphics = Graphics.FromHwnd( Window.WindowInfo.WinHandle );
 			
 			if( !ResourceFetcher.CheckAllResourcesExist() ) {
 				SetScreen( new ResourcesScreen( this ) );
@@ -77,14 +83,12 @@ namespace Launcher2 {
 			}
 		}
 		
+		Graphics screenGraphics;
 		void Display() {
 			Dirty = false;
-			if( screen != null ) 
-				screen.Dirty = false;
-			
-			IntPtr hwnd = Window.WindowInfo.WinHandle;		
-			using( Graphics g = Graphics.FromHwnd( hwnd ) )
-				g.DrawImage( Framebuffer, 0, 0, Framebuffer.Width, Framebuffer.Height );
+			screen.Dirty = false;
+			screenGraphics.DrawImage( Framebuffer, 0, 0, Framebuffer.Width, Framebuffer.Height );
+			Window.Invalidate();
 		}
 		
 		internal static FastColour clearColour = new FastColour( 30, 30, 30 );

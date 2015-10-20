@@ -432,6 +432,22 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		public void Invalidate() {
+			XEvent xev = new XEvent();
+			xev.ExposeEvent.type = XEventName.Expose;
+			xev.ExposeEvent.display = window.Display;
+			xev.ExposeEvent.window = window.WindowHandle;
+			xev.ExposeEvent.x = 0;
+			xev.ExposeEvent.y = 0;
+			xev.ExposeEvent.width = client_rectangle.Width;
+			xev.ExposeEvent.height = client_rectangle.Height;
+			xev.ExposeEvent.count = 0;
+			
+			API.XSendEvent(window.Display, window.WindowHandle, false,
+			               EventMask.ExposureMask, ref xev);
+			API.XFlush(window.Display);
+		}
+		
 		public Rectangle Bounds {
 			get { return bounds; }
 			set {

@@ -714,6 +714,9 @@ namespace OpenTK.Platform.Windows
 				API.DispatchMessage(ref msg);
 			}
 		}
+		
+		public void Invalidate() {
+		}
 
 		public IWindowInfo WindowInfo {
 			get { return child_window; }

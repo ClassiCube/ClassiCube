@@ -148,10 +148,7 @@ namespace Launcher2 {
 		}
 		
 		void ShowServers( int mouseX, int mouseY ) {
-			if( signingIn ) return;
-			
-			ClassicubeSession session = game.Session;
-			if( !HasServers ) return;
+			if( signingIn || !HasServers ) return;	
 			game.SetScreen( new ClassiCubeServersScreen( game ) );
 		}
 

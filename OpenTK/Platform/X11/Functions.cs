@@ -212,9 +212,8 @@ namespace OpenTK.Platform.X11 {
 			xev.ClientMessageEvent.ptr2 = l1;
 			xev.ClientMessageEvent.ptr3 = l2;
 
-			XSendEvent(window.Display, window.RootWindow, false,
-			           new IntPtr((int)(EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask)),
-			           ref xev);
+			XSendEvent(window.Display, window.RootWindow, false, 
+			           EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask, ref xev);
 		}
 
 		public static IntPtr CreatePixmapFromImage(Display display, System.Drawing.Bitmap image)

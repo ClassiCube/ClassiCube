@@ -72,7 +72,6 @@ namespace Launcher2 {
 		
 		Font textFont;
 		static FastColour backCol = new FastColour( 120, 85, 151 );
-		static uint backColBGRA = (uint)backCol.ToArgb();
 		static readonly string mainText = "Some required resources weren't found" +
 			Environment.NewLine + "Okay to download them?";
 		static readonly string format = "Estimated size: {0} megabytes";
