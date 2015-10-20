@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 			this.message = message;
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			messageFont = new Font( "Arial", 14, FontStyle.Regular );
-		}	
+		}
 		
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;

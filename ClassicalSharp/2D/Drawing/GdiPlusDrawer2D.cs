@@ -75,19 +75,19 @@ namespace ClassicalSharp {
 			format.Trimming = StringTrimming.None;
 		}
 		
-		public override void DrawRect( Color colour, int x, int y, int width, int height ) {
+		public override void DrawRect( FastColour colour, int x, int y, int width, int height ) {
 			Brush brush = GetOrCreateBrush( colour );
 			g.FillRectangle( brush, x, y, width, height );
 		}
 		
-		public override void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height ) {
+		public override void DrawRectBounds( FastColour colour, float lineWidth, int x, int y, int width, int height ) {
 			using( Pen pen = new Pen( colour, lineWidth ) ) {
 				pen.Alignment = PenAlignment.Inset;
 				g.DrawRectangle( pen, x, y, width, height );
 			}
 		}
 		
-		public override void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height ) {
+		public override void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height ) {
 			GraphicsPath path = new GraphicsPath();
 			float x1 = x, y1 = y, x2 = x + width, y2 = y + height;
 			
@@ -107,11 +107,11 @@ namespace ClassicalSharp {
 			path.Dispose();
 		}
 		
-		public override void Clear( Color colour ) {
+		public override void Clear( FastColour colour ) {
 			g.Clear( colour );
 		}
 		
-		public override void Clear( Color colour, int x, int y, int width, int height ) {
+		public override void Clear( FastColour colour, int x, int y, int width, int height ) {
 			g.SmoothingMode = SmoothingMode.None;
 			Brush brush = GetOrCreateBrush( colour );
 			g.FillRectangle( brush, x, y, width, height );

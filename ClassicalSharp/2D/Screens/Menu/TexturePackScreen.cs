@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			buttons[buttons.Length - 1] = 
+			buttons[buttons.Length - 1] =
 				Make( 0, 5, "Back to menu", (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		

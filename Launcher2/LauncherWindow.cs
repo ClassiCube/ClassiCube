@@ -88,7 +88,6 @@ namespace Launcher2 {
 			Dirty = false;
 			screen.Dirty = false;
 			screenGraphics.DrawImage( Framebuffer, 0, 0, Framebuffer.Width, Framebuffer.Height );
-			Window.Invalidate();
 		}
 		
 		internal static FastColour clearColour = new FastColour( 30, 30, 30 );

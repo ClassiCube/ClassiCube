@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public abstract class MenuScreen : Screen {
 		
 		public MenuScreen( Game game ) : base( game ) {
-		}		
+		}
 		protected ButtonWidget[] buttons;
 		protected Font titleFont, regularFont;
 		
@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < buttons.Length; i++ ) {
 				if( buttons[i] == null ) continue;
 				buttons[i].OnResize( oldWidth, oldHeight, width, height );
-			}				
+			}
 		}
 		
 		public override bool HandlesAllInput {
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 				if( buttons[i] == null ) continue;
 				buttons[i].Active = false;
 			}
-				
+			
 			for( int i = 0; i < buttons.Length; i++ ) {
 				ButtonWidget widget = buttons[i];
 				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		protected virtual void WidgetSelected( ButtonWidget widget ) {			
+		protected virtual void WidgetSelected( ButtonWidget widget ) {
 		}
 	}
 }

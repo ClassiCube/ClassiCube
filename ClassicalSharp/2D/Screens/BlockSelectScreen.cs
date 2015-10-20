@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( startX - 5, startY - 30 - 5, blocksPerRow * blockSize + 10,
 			                       rows * blockSize + 30 + 10, backCol );
 			graphicsApi.Texturing = true;
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );		
+			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {

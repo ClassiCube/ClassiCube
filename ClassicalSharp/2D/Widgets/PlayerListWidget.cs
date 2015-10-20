@@ -114,9 +114,9 @@ namespace ClassicalSharp {
 		}
 		
 		protected void SortPlayerInfo() {
-			SortInfoList();			
+			SortInfoList();
 			CalcMaxColumnHeight();
-			int y = game.Height / 2 - yHeight / 2;		
+			int y = game.Height / 2 - yHeight / 2;
 			int midCol = columns / 2;
 			
 			int centreX = game.Width / 2;
@@ -124,13 +124,13 @@ namespace ClassicalSharp {
 			if( columns % 2 != 0 ) {
 				// For an odd number of columns, the middle column is centred.
 				offset = Utils.CeilDiv( GetColumnWidth( midCol ), 2 );
-			}		
+			}
 			
-			xMin = centreX - offset;			
+			xMin = centreX - offset;
 			for( int col = midCol - 1; col >= 0; col-- ) {
 				xMin -= GetColumnWidth( col );
 				SetColumnPos( col, xMin, y );
-			}			
+			}
 			xMax = centreX - offset;
 			for( int col = midCol; col < columns; col++ ) {
 				SetColumnPos( col, xMax, y );

@@ -68,7 +68,7 @@ namespace Launcher2 {
 			MakeTextInputAt( Get( widgetIndex ), 270, -25, 5 );
 			
 			MakeTextAt( inputFont, "../play/", -210, 55 );
-			MakeTextInputAt( "61f27b1f0a3dcb546b650b87a3e17436"/*Get( 3 )*/, 320, -20, 50 );
+			MakeTextInputAt( Get( 3 ), 320, -20, 50 );
 			
 			MakeButtonAt( "Connect", 100, 30, 180, 5, ConnectToServer );
 			MakeButtonAt( "Back", 70, 30, 195, 50,

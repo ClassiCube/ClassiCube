@@ -75,8 +75,8 @@ namespace ClassicalSharp {
 					const string format = "&eFailed to change mapping \"{0}\". &c({1})";
 					statusWidget.SetText( String.Format( format, descriptions[index], reason ) );
 				} else {
-					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";					
-					statusWidget.SetText( String.Format( format, descriptions[index], oldKey, key ) );					
+					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";
+					statusWidget.SetText( String.Format( format, descriptions[index], oldKey, key ) );
 					string text = descriptions[index] + " : " + keyNames[(int)key];
 					widget.SetText( text );
 					game.Keys[mapping] = key;

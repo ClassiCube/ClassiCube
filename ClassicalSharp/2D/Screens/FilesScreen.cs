@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( new NormalScreen( game ) );				
+				game.SetNewScreen( new NormalScreen( game ) );
 			} else if( key == Key.Left ) {
 				PageClick( false );
 			} else if( key == Key.Right ) {

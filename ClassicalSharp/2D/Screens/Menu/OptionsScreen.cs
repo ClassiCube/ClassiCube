@@ -29,11 +29,11 @@ namespace ClassicalSharp {
 				Make( 140, -50, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
-				     		Options.Set( OptionsKey.Sensitivity, v ); } ),
+				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
 				Make( 140, 0, "Chat font size", Anchor.Centre, OnWidgetClick,
 				     g => g.Chat.FontSize.ToString(),
-				     (g, v) => { g.Chat.FontSize = Int32.Parse( v ); 
+				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FontSize, v ); } ),
 				
 				Make( 140, 50, "Key mappings", Anchor.Centre,

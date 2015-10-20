@@ -26,21 +26,21 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the
 		/// specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRect( Color colour, int x, int y, int width, int height );
+		public abstract void DrawRect( FastColour colour, int x, int y, int width, int height );
 		
 		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRectBounds( Color colour, float lineWidth, int x, int y, int width, int height );
+		public abstract void DrawRectBounds( FastColour colour, float lineWidth, int x, int y, int width, int height );
 		
 		/// <summary> Draws a 2D rectangle with rounded borders of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRoundedRect( Color colour, float radius, float x, float y, float width, float height );
+		public abstract void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height );
 		
 		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
-		public abstract void Clear( Color colour );
+		public abstract void Clear( FastColour colour );
 		
 		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
-		public abstract void Clear( Color colour, int x, int y, int width, int height );
+		public abstract void Clear( FastColour colour, int x, int y, int width, int height );
 		
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
@@ -85,12 +85,11 @@ namespace ClassicalSharp {
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );
-		protected static Color white = Color.FromArgb( 255, 255, 255 );
 		protected struct TextPart {
 			public string Text;
-			public Color TextColour;
+			public FastColour TextColour;
 			
-			public TextPart( string text, Color col ) {
+			public TextPart( string text, FastColour col ) {
 				Text = text;
 				TextColour = col;
 			}
@@ -100,7 +99,7 @@ namespace ClassicalSharp {
 			parts.Clear();
 			if( String.IsNullOrEmpty( value ) ) {
 			} else if( value.IndexOf( '&' ) == -1 ) {
-				parts.Add( new TextPart( value, white ) );
+				parts.Add( new TextPart( value, FastColour.White ) );
 			} else {
 				SplitText( value );
 			}
@@ -114,7 +113,7 @@ namespace ClassicalSharp {
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					Color col = Color.FromArgb(
+					FastColour col = new FastColour(
 						191 * ((code >> 2) & 1) + 64 * (code >> 3),
 						191 * ((code >> 1) & 1) + 64 * (code >> 3),
 						191 * ((code >> 0) & 1) + 64 * (code >> 3) );

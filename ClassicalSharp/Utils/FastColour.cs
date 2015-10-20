@@ -38,9 +38,9 @@ namespace ClassicalSharp {
 		}
 		
 		public FastColour( int argb ) {
-			A = (byte)( argb >> 24 );
-			R = (byte)( argb >> 16 );
-			G = (byte)( argb >> 8 );
+			A = (byte)(argb >> 24);
+			R = (byte)(argb >> 16);
+			G = (byte)(argb >> 8);
 			B = (byte)argb;
 		}
 
@@ -53,14 +53,14 @@ namespace ClassicalSharp {
 		
 		public static FastColour Scale( FastColour value, float t ) {
 			FastColour result = value;
-			result.R = (byte)( value.R * t );
-			result.G = (byte)( value.G * t );
-			result.B = (byte)( value.B * t );
+			result.R = (byte)(value.R * t);
+			result.G = (byte)(value.G * t);
+			result.B = (byte)(value.B * t);
 			return result;
 		}
 		
-		public static void GetShaded( FastColour normal, ref FastColour xSide, 
-		                               ref FastColour zSide, ref FastColour yBottom ) {
+		public static void GetShaded( FastColour normal, ref FastColour xSide,
+		                             ref FastColour zSide, ref FastColour yBottom ) {
 			xSide = FastColour.Scale( normal, 0.6f );
 			zSide = FastColour.Scale( normal, 0.8f );
 			yBottom = FastColour.Scale( normal, 0.5f );

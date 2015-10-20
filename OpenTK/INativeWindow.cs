@@ -92,9 +92,6 @@ namespace OpenTK {
 		/// <summary> Processes pending window events. </summary>
 		void ProcessEvents();
 		
-		/// <summary> Causes the window to be immediately redrawn. </summary>
-		void Invalidate();
-		
 		/// <summary> Transforms the specified point from screen to client coordinates.  </summary>
 		/// <param name="point"> A <see cref="System.Drawing.Point"/> to transform. </param>
 		/// <returns> The point transformed to client coordinates. </returns>

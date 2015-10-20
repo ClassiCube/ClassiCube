@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		float progX, progY = 100f;
 		int	progWidth = 200, progHeight = 40;
 		
-		public override void Render( double delta ) {		
+		public override void Render( double delta ) {
 			graphicsApi.ClearColour( FastColour.Black );
 			graphicsApi.Texturing = true;
 			titleWidget.Render( delta );
@@ -39,9 +39,9 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( Color.White, 3f, 0, 0, progWidth, progHeight );
+					drawer.DrawRectBounds( FastColour.White, 3f, 0, 0, progWidth, progHeight );
 					progressBoxTexture = drawer.Make2DTexture( bmp, size, (int)progX, (int)progY );
-				}			
+				}
 			}
 			game.Events.MapLoading += MapLoading;
 		}

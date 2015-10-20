@@ -301,8 +301,8 @@ namespace ClassicalSharp {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
-		protected override void OnResize( EventArgs e ) {
-			base.OnResize( e );
+		protected override void OnResize( object sender, EventArgs e ) {
+			base.OnResize( sender, e );
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
 			if( activeScreen != null ) {

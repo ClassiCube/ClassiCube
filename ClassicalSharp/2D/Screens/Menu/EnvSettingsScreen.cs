@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 				     g => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
 				     	return env == null ? "(not active)" : env.CloudsSpeed.ToString(); },
 				     (g, v) => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	if( env != null ) 
+				     	if( env != null )
 				     		env.CloudsSpeed = Single.Parse( v ); } ),
 				
 				Make( -140, 50, "Clouds height", Anchor.Centre, OnWidgetClick,

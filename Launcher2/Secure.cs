@@ -24,13 +24,13 @@ namespace Launcher2 {
 		}
 		
 		public static string Decode( string encoded, string key ) {
-			if( String.IsNullOrEmpty( encoded ) || String.IsNullOrEmpty( key ) ) return null;
+			if( String.IsNullOrEmpty( encoded ) || String.IsNullOrEmpty( key ) ) return "";
 			
 			byte[] data;
 			try {
 				data = Convert.FromBase64String( encoded );
 			} catch( FormatException ) {
-				return null;
+				return "";
 			}
 			
 			try {
@@ -40,7 +40,7 @@ namespace Launcher2 {
 					c[i] = (char)data[i];
 				return new String( c );
 			} catch {
-				if( encoded.Length > 64 || data.Length > 64 ) return null;
+				if( encoded.Length > 64 || data.Length > 64 ) return "";
 				
 				char[] c = new char[data.Length];
 				for( int i = 0; i < c.Length; i++ )

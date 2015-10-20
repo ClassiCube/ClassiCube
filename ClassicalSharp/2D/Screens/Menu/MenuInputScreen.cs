@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			if( key == Key.Escape ) {
 				game.SetNewScreen( new NormalScreen( game ) );
 				return true;
-			} else if( (key == Key.Enter || key == Key.KeypadEnter) 
+			} else if( (key == Key.Enter || key == Key.KeypadEnter)
 			          && inputWidget != null ) {
 				ChangeSetting();
 				return true;

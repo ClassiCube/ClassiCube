@@ -91,8 +91,8 @@ namespace ClassicalSharp {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
 				// will not be rendered in time because saving is done on the main thread.
 				MakeDescWidget( "Saving.." );
-				textPath = text;		
-			}			
+				textPath = text;
+			}
 		}
 		
 		string textPath;

@@ -123,11 +123,6 @@ namespace OpenTK {
 			ProcessEvents(false);
 		}
 		
-		/// <summary> Causes the window to be immediately redrawn. </summary>
-		public void Invalidate() {
-			implementation.Invalidate();
-		}
-		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure that contains the external bounds of this window, in screen coordinates.
 		/// External bounds include the title bar, borders and drawing area of the window. </summary>
 		public Rectangle Bounds {
@@ -314,80 +309,71 @@ namespace OpenTK {
 		
 		/// <summary> Called when the NativeWindow has closed. </summary>
 		/// <param name="e">Not used.</param>
-		protected virtual void OnClosed(EventArgs e) {
+		protected virtual void OnClosed(object sender, EventArgs e) {
 			if (Closed != null) Closed(this, e);
 		}
 
 		/// <summary> Called when the NativeWindow is about to close. </summary>
 		/// <param name="e"> The <see cref="System.ComponentModel.CancelEventArgs" /> for this event.
 		/// Set e.Cancel to true in order to stop the NativeWindow from closing.</param>
-		protected virtual void OnClosing(CancelEventArgs e) {
+		protected virtual void OnClosing(object sender, CancelEventArgs e) {
 			if (Closing != null) Closing(this, e);
 		}
 		
 		/// <summary> Called when the NativeWindow is disposed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnDisposed(EventArgs e) {
+		protected virtual void OnDisposed(object sender, EventArgs e) {
 			if (Disposed != null) Disposed(this, e);
 		}
 
 		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Focused"/> property of the NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnFocusedChanged(EventArgs e) {
+		protected virtual void OnFocusedChanged(object sender, EventArgs e) {
 			if (FocusedChanged != null) FocusedChanged(this, e);
 		}
 		
 		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Icon"/> property of the NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnIconChanged(EventArgs e) {
+		protected virtual void OnIconChanged(object sender, EventArgs e) {
 			if (IconChanged != null) IconChanged(this, e);
 		}
 		
 		/// <summary> Called when a character is typed. </summary>
 		/// <param name="e">The <see cref="OpenTK.KeyPressEventArgs"/> for this event.</param>
-		protected virtual void OnKeyPress(KeyPressEventArgs e) {
+		protected virtual void OnKeyPress(object sender, KeyPressEventArgs e) {
 			if (KeyPress != null) KeyPress(this, e);
 		}
 		
 		/// <summary> Called when the NativeWindow is moved. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnMove(EventArgs e) {
+		protected virtual void OnMove(object sender, EventArgs e) {
 			if (Move != null) Move(this, e);
 		}
 
 		/// <summary> Called whenever the mouse cursor reenters the window <see cref="Bounds"/>. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnMouseEnter(EventArgs e) {
+		protected virtual void OnMouseEnter(object sender, EventArgs e) {
 			if (MouseEnter != null) MouseEnter(this, e);
 		}
 
 		/// <summary> Called whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnMouseLeave(EventArgs e) {
+		protected virtual void OnMouseLeave(object sender, EventArgs e) {
 			if (MouseLeave != null) MouseLeave(this, e);
 		}
 		
 		/// <summary> Called when the NativeWindow is resized. </summary>
 		/// <param name="e">Not used.</param>
-		protected virtual void OnResize(EventArgs e) {
+		protected virtual void OnResize(object sender, EventArgs e) {
 			if (Resize != null) Resize(this, e);
 		}
 		
 		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Title"/> property of the NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnTitleChanged(EventArgs e) {
+		protected virtual void OnTitleChanged(object sender, EventArgs e) {
 			if (TitleChanged != null) TitleChanged(this, e);
 		}
 
 		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Visible"/> property of the NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnVisibleChanged(EventArgs e) {
+		protected virtual void OnVisibleChanged(object sender, EventArgs e) {
 			if (VisibleChanged != null) VisibleChanged(this, e);
 		}
 		
 		/// <summary> Called when the WindowState of this NativeWindow has changed. </summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnWindowStateChanged(EventArgs e) {
+		protected virtual void OnWindowStateChanged(object sender, EventArgs e) {
 			if (WindowStateChanged != null) WindowStateChanged(this, e);
 		}
 
@@ -400,33 +386,9 @@ namespace OpenTK {
 		}
 		
 		private void OnClosedInternal(object sender, EventArgs e)  {
-			OnClosed(e);
+			OnClosed(null, e);
 			Events = false;
 		}
-		
-		private void OnClosingInternal(object sender, CancelEventArgs e) { OnClosing(e); }
-		
-		private void OnDisposedInternal(object sender, EventArgs e) { OnDisposed(e); }
-		
-		private void OnFocusedChangedInternal(object sender, EventArgs e) { OnFocusedChanged(e); }
-
-		private void OnIconChangedInternal(object sender, EventArgs e) { OnIconChanged(e); }
-
-		private void OnKeyPressInternal(object sender, KeyPressEventArgs e) { OnKeyPress(e); }
-		
-		private void OnMouseEnterInternal(object sender, EventArgs e) { OnMouseEnter(e); }
-		
-		private void OnMouseLeaveInternal(object sender, EventArgs e) { OnMouseLeave(e); }
-		
-		private void OnMoveInternal(object sender, EventArgs e) { OnMove(e); }
-
-		private void OnResizeInternal(object sender, EventArgs e) { OnResize(e); }
-		
-		private void OnTitleChangedInternal(object sender, EventArgs e) { OnTitleChanged(e); }
-
-		private void OnVisibleChangedInternal(object sender, EventArgs e) { OnVisibleChanged(e); }
-		
-		private void OnWindowStateChangedInternal(object sender, EventArgs e) { OnWindowStateChanged(e); }
 		
 		private bool Events {
 			set {
@@ -434,34 +396,34 @@ namespace OpenTK {
 					if (events) {
 						throw new InvalidOperationException("Event propagation is already enabled.");
 					}
-					implementation.Closed += OnClosedInternal;
-					implementation.Closing += OnClosingInternal;
-					implementation.Disposed += OnDisposedInternal;
-					implementation.FocusedChanged += OnFocusedChangedInternal;
-					implementation.IconChanged += OnIconChangedInternal;
-					implementation.KeyPress += OnKeyPressInternal;
-					implementation.MouseEnter += OnMouseEnterInternal;
-					implementation.MouseLeave += OnMouseLeaveInternal;
-					implementation.Move += OnMoveInternal;
-					implementation.Resize += OnResizeInternal;
-					implementation.TitleChanged += OnTitleChangedInternal;
-					implementation.VisibleChanged += OnVisibleChangedInternal;
-					implementation.WindowStateChanged += OnWindowStateChangedInternal;
+					implementation.Closed += OnClosed;
+					implementation.Closing += OnClosing;
+					implementation.Disposed += OnDisposed;
+					implementation.FocusedChanged += OnFocusedChanged;
+					implementation.IconChanged += OnIconChanged;
+					implementation.KeyPress += OnKeyPress;
+					implementation.MouseEnter += OnMouseEnter;
+					implementation.MouseLeave += OnMouseLeave;
+					implementation.Move += OnMove;
+					implementation.Resize += OnResize;
+					implementation.TitleChanged += OnTitleChanged;
+					implementation.VisibleChanged += OnVisibleChanged;
+					implementation.WindowStateChanged += OnWindowStateChanged;
 					events = true;
 				} else if (events) {
-					implementation.Closed -= OnClosedInternal;
-					implementation.Closing -= OnClosingInternal;
-					implementation.Disposed -= OnDisposedInternal;
-					implementation.FocusedChanged -= OnFocusedChangedInternal;
-					implementation.IconChanged -= OnIconChangedInternal;
-					implementation.KeyPress -= OnKeyPressInternal;
-					implementation.MouseEnter -= OnMouseEnterInternal;
-					implementation.MouseLeave -= OnMouseLeaveInternal;
-					implementation.Move -= OnMoveInternal;
-					implementation.Resize -= OnResizeInternal;
-					implementation.TitleChanged -= OnTitleChangedInternal;
-					implementation.VisibleChanged -= OnVisibleChangedInternal;
-					implementation.WindowStateChanged -= OnWindowStateChangedInternal;
+					implementation.Closed -= OnClosed;
+					implementation.Closing -= OnClosing;
+					implementation.Disposed -= OnDisposed;
+					implementation.FocusedChanged -= OnFocusedChanged;
+					implementation.IconChanged -= OnIconChanged;
+					implementation.KeyPress -= OnKeyPress;
+					implementation.MouseEnter -= OnMouseEnter;
+					implementation.MouseLeave -= OnMouseLeave;
+					implementation.Move -= OnMove;
+					implementation.Resize -= OnResize;
+					implementation.TitleChanged -= OnTitleChanged;
+					implementation.VisibleChanged -= OnVisibleChanged;
+					implementation.WindowStateChanged -= OnWindowStateChanged;
 					events = false;
 				} else {
 					throw new InvalidOperationException("Event propagation is already disabled.");

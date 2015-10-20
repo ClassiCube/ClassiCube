@@ -99,7 +99,6 @@ namespace OpenTK
 				glContext.MakeCurrent(WindowInfo);
 				glContext.LoadAll();
 				VSync = true;
-				//glWindow.WindowInfoChanged += delegate(object sender, EventArgs e) { OnWindowInfoChangedInternal(e); };
 			} catch (Exception e) {
 				Debug.Print(e.ToString());
 				base.Dispose();
@@ -141,11 +140,11 @@ namespace OpenTK
 		/// <param name="e">
 		/// The <see cref="System.ComponentModel.CancelEventArgs" /> for this event.
 		/// Set e.Cancel to true in order to stop the GameWindow from closing.</param>
-		protected override void OnClosing(System.ComponentModel.CancelEventArgs e) {
-			base.OnClosing(e);
+		protected override void OnClosing(object sender, System.ComponentModel.CancelEventArgs e) {
+			base.OnClosing(sender, e);
 			if (!e.Cancel) {
 				isExiting = true;
-				OnUnloadInternal(EventArgs.Empty);
+				OnUnload(EventArgs.Empty);
 			}
 		}
 		
@@ -170,8 +169,8 @@ namespace OpenTK
 			EnsureUndisposed();
 			try {
 				Visible = true;   // Make sure the GameWindow is visible.
-				OnLoadInternal(EventArgs.Empty);
-				OnResize(EventArgs.Empty);
+				OnLoad(EventArgs.Empty);
+				OnResize(null, EventArgs.Empty);
 				Debug.Print("Entering main loop.");
 				render_watch.Start();
 				
@@ -297,24 +296,11 @@ namespace OpenTK
 			if (RenderFrame != null) RenderFrame(this, e);
 		}
 		
-		/// <summary> Called when the WindowInfo for this GameWindow has changed.</summary>
-		/// <param name="e">Not used.</param>
-		protected virtual void OnWindowInfoChanged(EventArgs e) { }
-		
-		protected override void OnResize(EventArgs e) {
-			base.OnResize(e);
+		protected override void OnResize(object sender, EventArgs e) {
+			base.OnResize(sender, e);
 			glContext.Update(base.WindowInfo);
 		}
 		
-		private void OnLoadInternal(EventArgs e)  { OnLoad(e); }
-		
 		private void OnRenderFrameInternal(FrameEventArgs e) { if (Exists && !isExiting) OnRenderFrame(e); }
-		
-		private void OnUnloadInternal(EventArgs e) { OnUnload(e); }
-
-		private void OnWindowInfoChangedInternal(EventArgs e) {
-			glContext.MakeCurrent(WindowInfo);
-			OnWindowInfoChanged(e);
-		}
 	}
 }
