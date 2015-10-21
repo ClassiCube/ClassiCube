@@ -57,13 +57,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Binds the given texture id so that it can be used for rasterization. </summary>
 		public abstract void BindTexture( int texId );
 		
-		/// <summary> Frees all resources held by the 3D graphics API for the given texture id. </summary>
+		/// <summary> Frees all native resources held for the given texture id. </summary>
 		public abstract void DeleteTexture( ref int texId );
 		
-		/// <summary> Frees all resources held by the 3D graphics API for the given texture. </summary>
+		/// <summary> Frees all native resources held for the given texture id. </summary>
 		public void DeleteTexture( ref Texture texture ) { DeleteTexture( ref texture.ID ); }
 		
-		/// <summary> Whether fog is currently enabled. </summary>
+		/// <summary> Sets whether fog is currently enabled. </summary>
 		public abstract bool Fog { set; }
 		
 		/// <summary> Sets the fog colour that is blended with final primitive colours. </summary>
@@ -135,8 +135,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void DeleteDynamicVb( int id );
 		
+		/// <summary> Frees all native resources held for the given vertex buffer id. </summary>
 		public abstract void DeleteVb( int vb );
 		
+		/// <summary> Frees all native resources held for the given index buffer id. </summary>
 		public abstract void DeleteIb( int ib );
 		
 		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
@@ -156,26 +158,34 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		protected static int[] strideSizes = { 16, 24 };
 		
+		/// <summary> Sets the matrix type that load/push/pop operations should be applied to. </summary>
 		public abstract void SetMatrixMode( MatrixType mode );
 		
+		/// <summary> Sets the current matrix to the given matrix. </summary>
 		public abstract void LoadMatrix( ref Matrix4 matrix );
 		
+		/// <summary> Sets the current matrix to the identity matrix. </summary>
 		public abstract void LoadIdentityMatrix();
 		
+		/// <summary> Multplies the current matrix by the given matrix, then
+		/// sets the current matrix to the result of the multiplication. </summary>
 		public abstract void MultiplyMatrix( ref Matrix4 matrix );
 		
+		/// <summary> Gets the top matrix the current matrix stack and pushes it to the stack. </summary>
 		public abstract void PushMatrix();
 		
+		/// <summary> Removes the top matrix from the current matrix stack, then
+		/// sets the current matrix to the new top matrix of the stack. </summary>
 		public abstract void PopMatrix();
 		
-		
+		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
 		public abstract void TakeScreenshot( string output, Size size );
 		
-		public abstract void PrintApiSpecificInfo();
+		protected abstract void PrintApiInfo();
 		
 		public void PrintGraphicsInfo() {
 			Console.ForegroundColor = ConsoleColor.Green;
-			PrintApiSpecificInfo();
+			PrintApiInfo();
 			Console.ResetColor();
 		}
 		
@@ -187,6 +197,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public abstract void OnWindowResize( GameWindow game );
 		
+		/// <summary> Delegate that is invoked when the current context is lost, 
+		/// and is repeatedly invoked until the context can be retrieved. </summary>
 		public Action<double> LostContextFunction;
 		
 		protected void InitDynamicBuffers() {
@@ -228,7 +240,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
-		public static void MakeQuad( TextureRec xy, TextureRec uv,
+		public static void Make2DQuad( TextureRec xy, TextureRec uv,
 		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
 			#if USE_DX

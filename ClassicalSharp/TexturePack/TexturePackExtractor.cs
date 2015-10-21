@@ -6,6 +6,7 @@ using ClassicalSharp.Model;
 
 namespace ClassicalSharp.TexturePack {
 	
+	/// <summary> Extracts resources from a .zip texture pack. </summary>
 	public sealed class TexturePackExtractor {
 		
 		Game game;
@@ -23,13 +24,10 @@ namespace ClassicalSharp.TexturePack {
 			this.game = game;
 			game.Animations.Dispose();
 			ZipReader reader = new ZipReader();
-			reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
+			
+			reader.ShouldProcessZipEntry = (f) => true;
 			reader.ProcessZipEntry = ProcessZipEntry;
 			reader.Extract( stream );
-		}
-		
-		bool ShouldProcessZipEntry( string filename ) {
-			return true;
 		}
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {

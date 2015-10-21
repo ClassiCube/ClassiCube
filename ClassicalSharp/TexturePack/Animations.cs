@@ -6,6 +6,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.TexturePack {
 
+	/// <summary> Contains and describes the various animations applied to the terrain atlas. </summary>
 	public class Animations {
 		
 		Game game;
@@ -20,21 +21,14 @@ namespace ClassicalSharp.TexturePack {
 			api = game.Graphics;
 		}
 		
+		/// <summary> Sets the atlas bitmap that animation frames are contained within. </summary>
 		public void SetAtlas( Bitmap bmp ) {
 			Dispose();
 			this.bmp = bmp;
 			fastBmp = new FastBitmap( bmp, true );
 		}
 		
-		public void Dispose() {
-			if( bmp != null ) {
-				fastBmp.Dispose();
-				bmp.Dispose();
-				bmp = null;
-			}
-			animations.Clear();
-		}
-		
+		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick( double delta ) {
 			if( animations.Count == 0 || !Enabled ) return;
 			
@@ -43,24 +37,29 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 		
+		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
+		/// 1) the target tile in the terrain atlas  2) the start location of animation frames<br/>
+		/// 3) the size of each animation frame      4) the number of animation frames<br/>
+		/// 5) the delay between advancing animation frames. </summary>
 		public void ReadAnimationsDescription( StreamReader reader ) {
 			string line;
-			while( ( line = reader.ReadLine() ) != null ) {
+			while( (line = reader.ReadLine()) != null ) {
 				if( line.Length == 0 || line[0] == '#' ) continue;
 				
 				string[] parts = line.Split( ' ' );
 				if( parts.Length < 7 ) {
 					Utils.LogWarning( "Not enough arguments for animation: " + line ); continue;
 				}
+				
 				byte tileX, tileY;
-				if( !Byte.TryParse( parts[0], out tileX ) || !Byte.TryParse( parts[1], out tileY ) 
-				  || tileX >= 16 || tileY >= 16 ) {
+				if( !Byte.TryParse( parts[0], out tileX ) || !Byte.TryParse( parts[1], out tileY )
+				   || tileX >= 16 || tileY >= 16 ) {
 					Utils.LogWarning( "Invalid animation tile coordinates: " + line ); continue;
 				}
 				
 				int frameX, frameY;
-				if( !Int32.TryParse( parts[2], out frameX ) || !Int32.TryParse( parts[3], out frameY ) 
-				  || frameX < 0 || frameY < 0 ) {
+				if( !Int32.TryParse( parts[2], out frameX ) || !Int32.TryParse( parts[3], out frameY )
+				   || frameX < 0 || frameY < 0 ) {
 					Utils.LogWarning( "Invalid animation coordinates: " + line ); continue;
 				}
 				
@@ -74,6 +73,8 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 		
+		/// <summary> Adds an animation described by the arguments to the list of animations
+		/// that are applied to the terrain atlas. </summary>
 		public void DefineAnimation( int tileX, int tileY, int frameX, int frameY, int frameSize,
 		                            int statesNum, int tickDelay ) {
 			AnimationData data = new AnimationData();
@@ -88,7 +89,7 @@ namespace ClassicalSharp.TexturePack {
 			data.Tick--;
 			if( data.Tick >= 0 ) return;
 			data.CurrentState++;
-			data.CurrentState %= data.StatesCount;			
+			data.CurrentState %= data.StatesCount;
 			data.Tick = data.TickDelay;
 			
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;
@@ -101,14 +102,26 @@ namespace ClassicalSharp.TexturePack {
 			FastBitmap part = new FastBitmap( size, size, size * 4, (IntPtr)temp );
 			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, fastBmp, part, size );
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, part );
-		}	
+		}
 		
 		class AnimationData {
-			public int TileX, TileY;
-			public int FrameX, FrameY, FrameSize;
-			public int CurrentState;
-			public int StatesCount;
+			public int TileX, TileY; // Tile (not pixel) coordinates in terrain.png
+			public int FrameX, FrameY; // Top left pixel coordinates of start frame in animatons.png
+			public int FrameSize; // Size of each frame in pixel coordinates
+			public int CurrentState; // Current animation frame index
+			public int StatesCount; // Total number of animation frames
 			public int Tick, TickDelay;
+		}
+		
+		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
+		/// the list of defined animations. </summary>
+		public void Dispose() {
+			animations.Clear();
+			
+			if( bmp == null ) return;
+			fastBmp.Dispose();
+			bmp.Dispose();
+			bmp = null;
 		}
 	}
 }

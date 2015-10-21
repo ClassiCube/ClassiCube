@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenTK;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Contains various methods for intersecting geometry. </summary>
 	public static class Intersection {
 		
+		/// <summary> Calculates the intersection points of a ray and a rotated bounding box.  </summary>
 		internal static bool RayIntersectsRotatedBox( Vector3 origin, Vector3 dir, Player target, out float tMin, out float tMax ) {
-			// This is the rotated AABB of the model
+			// This is the rotated AABB of the model we want to test for intersection
 			//        *
-			//       / \     we then perform a counter       *---*  and we can then do
+			//       / \     we then perform a counter       *---*   and we can then do
 			// ====>* x *    rotation to the rotated AABB    | x |   a standard AABB test  
 			//       \ /     and ray origin and direction    *---*   with the rotated ray
 			//        *                                     /
@@ -21,6 +22,7 @@ namespace ClassicalSharp {
 		}
 		
 		//http://www.cs.utah.edu/~awilliam/box/box.pdf
+		/// <summary> Calculates the intersection points of a ray and a bounding box.  </summary>
 		public static bool RayIntersectsBox( Vector3 origin, Vector3 dir, Vector3 min, Vector3 max,
 		                                    out float t0, out float t1 ) {
 			t0 = t1 = 0;
@@ -69,6 +71,7 @@ namespace ClassicalSharp {
 		}
 		
 		//http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/raytri/raytri.c
+		/// <summary> Calculates the intersection point of a ray and a triangle. </summary>
 		public static bool RayTriangleIntersect( Vector3 orig, Vector3 dir, Vector3 p0, Vector3 p1, Vector3 p2, out Vector3 I ) {
 			Vector3 edge1 = p1 - p0;
 			Vector3 edge2 = p2 - p0;

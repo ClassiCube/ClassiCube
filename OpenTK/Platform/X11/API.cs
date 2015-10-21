@@ -21,7 +21,7 @@ namespace OpenTK.Platform.X11 {
 	using Bool = System.Boolean;
 	
 	[StructLayout(LayoutKind.Sequential)]
-	struct XVisualInfo {
+	public struct XVisualInfo {
 		public IntPtr Visual;
 		public VisualID VisualID;
 		public int Screen;
@@ -35,46 +35,9 @@ namespace OpenTK.Platform.X11 {
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct XRRScreenSize {
+	public struct XRRScreenSize {
 		internal int Width, Height;
 		internal int MWidth, MHeight;
-	}
-	
-	[Flags]
-	internal enum MotifFlags {
-		API    = 1,
-		Decorations  = 2,
-		InputMode    = 4,
-		Status       = 8
-	}
-
-	[Flags]
-	internal enum MotifFunctions {
-		All         = 0x01,
-		Resize      = 0x02,
-		Move        = 0x04,
-		Minimize    = 0x08,
-		Maximize    = 0x10,
-		Close       = 0x20
-	}
-
-	[Flags]
-	internal enum MotifDecorations {
-		All         = 0x01,
-		Border      = 0x02,
-		ResizeH     = 0x04,
-		Title       = 0x08,
-		Menu        = 0x10,
-		Minimize    = 0x20,
-		Maximize    = 0x40,
-	}
-
-	[Flags]
-	internal enum MotifInputMode {
-		Modeless                = 0,
-		ApplicationModal        = 1,
-		SystemModal             = 2,
-		FullApplicationModal    = 3
 	}
 
 	internal enum ErrorCodes : int {

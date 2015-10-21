@@ -175,6 +175,7 @@
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />
+    <Compile Include="Physics\PickedPos.cs" />
     <Compile Include="Physics\Picking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

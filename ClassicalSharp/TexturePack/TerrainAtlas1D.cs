@@ -20,57 +20,69 @@ namespace ClassicalSharp {
 		public TextureRec GetTexRec( int texId, int uCount, out int index ) {
 			index = texId / elementsPerAtlas1D;
 			int y = texId % elementsPerAtlas1D;
+			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
 			return new TextureRec( 0, y * invElementSize, (uCount - 1) + 15.99f/16f, (15.99f/16f) * invElementSize );
 		}
 		
+		/// <summary> Returns the index of the 1D texture within the array of 1D textures
+		/// containing the given texture id. </summary>
 		public int Get1DIndex( int texId ) {
 			return texId / elementsPerAtlas1D;
 		}
 		
+		/// <summary> Returns the index of the given texture id within a 1D texture. </summary>
 		public int Get1DRowId( int texId ) {
 			return texId % elementsPerAtlas1D;
 		}
 		
 		public void UpdateState( TerrainAtlas2D atlas2D ) {
-			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
-			int elemPerFullAtlas = maxVerSize / atlas2D.elementSize;
+			int maxVerticalSize = Math.Min( 4096, graphics.MaxTextureDimensions );
+			int elementsPerFullAtlas = maxVerticalSize / atlas2D.elementSize;
 			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.ElementsPerRow;
-			int elemSize = atlas2D.elementSize;
 			
-			int atlasesCount = Utils.CeilDiv( totalElements, elemPerFullAtlas );
-			elementsPerAtlas1D = Math.Min( elemPerFullAtlas, totalElements );
-			int atlas1DHeight = Utils.NextPowerOf2( elementsPerAtlas1D * elemSize );
+			int atlasesCount = Utils.CeilDiv( totalElements, elementsPerFullAtlas );
+			elementsPerAtlas1D = Math.Min( elementsPerFullAtlas, totalElements );
+			int atlas1DHeight = Utils.NextPowerOf2( elementsPerAtlas1D * atlas2D.elementSize );
 			
-			int index = 0;
-			TexIds = new int[atlasesCount];
-			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D );
-			
-			using( FastBitmap atlas = new FastBitmap( atlas2D.AtlasBitmap, true ) ) {
-				for( int i = 0; i < TexIds.Length; i++ ) {
-					Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight );
-					using( FastBitmap dst = new FastBitmap( atlas1d, true ) ) {
-						for( int y_1D = 0; y_1D < elementsPerAtlas1D; y_1D++ ) {
-							if( index >= 256 ) break;
-							int x = index & 0x0F;
-							int y = index >> 4;
-							FastBitmap.MovePortion( x * elemSize, y * elemSize, 0, y_1D * elemSize, atlas, dst, elemSize );
-							index++;
-						}
-						TexIds[i] = graphics.CreateTexture( dst );
-					}
-					atlas1d.Dispose();
-				}
-			}
+			Convert2DTo1D( atlas2D, atlasesCount, elementsPerAtlas1D );	
 			elementsPerBitmap = atlas1DHeight / atlas2D.elementSize;
 			invElementSize = 1f / elementsPerBitmap;
+		}
+		
+		void Convert2DTo1D( TerrainAtlas2D atlas2D, int atlasesCount, int atlas1DHeight ) {			
+			TexIds = new int[atlasesCount];
+			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D );
+			int index = 0;
+			
+			using( FastBitmap atlas = new FastBitmap( atlas2D.AtlasBitmap, true ) ) {
+				for( int i = 0; i < TexIds.Length; i++ )
+					Make1DTexture( i, atlas, atlas2D, atlas1DHeight, ref index );
+			}
+		}
+		
+		void Make1DTexture( int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index ) {
+			int elemSize = atlas2D.elementSize;
+			using( Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight ) ) {
+				using( FastBitmap dst = new FastBitmap( atlas1d, true ) ) {				
+					for( int index1D = 0; index1D < elementsPerAtlas1D; index1D++ ) {
+						
+						if( index >= 256 ) break;
+						FastBitmap.MovePortion( (index & 0x0F) * elemSize, (index >> 4) * elemSize,
+						                       0, index1D * elemSize, atlas, dst, elemSize );
+						index++;
+					}
+					TexIds[i] = graphics.CreateTexture( dst );
+				}
+			}
 		}
 		
 		public int CalcMaxUsedRow( TerrainAtlas2D atlas2D, BlockInfo info ) {
 			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
-			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;	
+			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;
+			
 			Utils.LogDebug( "Used atlases: " + Utils.CeilDiv( totalElements, verElements ) );
-			return Utils.CeilDiv( totalElements, verElements );		
+			return Utils.CeilDiv( totalElements, verElements );
 		}
 		
 		int GetMaxUsedRow( int[] textures ) {
@@ -81,10 +93,10 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			if( TexIds != null ) {
-				for( int i = 0; i < TexIds.Length; i++ ) {
-					graphics.DeleteTexture( ref TexIds[i] );
-				}
+			if( TexIds == null ) return;
+			
+			for( int i = 0; i < TexIds.Length; i++ ) {
+				graphics.DeleteTexture( ref TexIds[i] );
 			}
 		}
 	}

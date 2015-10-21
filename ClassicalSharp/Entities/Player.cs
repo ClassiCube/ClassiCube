@@ -46,11 +46,8 @@ namespace ClassicalSharp {
 			if( item != null && item.Data != null ) {
 				Bitmap bmp = (Bitmap)item.Data;
 				game.Graphics.DeleteTexture( ref PlayerTextureId );
-				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
-					Bitmap newBmp = game.Drawer2D.ConvertTo32Bpp( bmp );
-					bmp.Dispose();
-					bmp = newBmp;
-				}
+				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
+					game.Drawer2D.ConvertTo32Bpp( ref bmp );
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );

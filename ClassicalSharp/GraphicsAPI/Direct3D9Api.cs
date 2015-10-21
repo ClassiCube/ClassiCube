@@ -547,7 +547,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			d3d.Dispose();
 		}
 
-		public override void PrintApiSpecificInfo() {
+		protected override void PrintApiInfo() {
 			Utils.Log( "--Using Direct3D 9--" );
 			Utils.Log( "Adapter: " + d3d.Adapters[0].Details.Description );
 			Utils.Log( "Mode: " + createFlags );

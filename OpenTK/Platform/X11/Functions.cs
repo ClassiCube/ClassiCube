@@ -22,7 +22,7 @@ using KeyCode = System.Byte;    // Or maybe ushort?
 
 namespace OpenTK.Platform.X11 {
 	
-	internal static class API {
+	public static class API {
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static IntPtr XOpenDisplay(IntPtr display);
@@ -45,6 +45,9 @@ namespace OpenTK.Platform.X11 {
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static Bool XCheckTypedWindowEvent(Display display, Window w, XEventName event_type, ref XEvent event_return);
 
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XDestroyImage(IntPtr image);
+		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XDestroyWindow(IntPtr display, IntPtr window);
 
@@ -179,17 +182,12 @@ namespace OpenTK.Platform.X11 {
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr XCreateImage(Display display, IntPtr visual,
-		                                         uint depth, ImageFormat format, int offset, byte[] data, uint width, uint height,
-		                                         int bitmap_pad, int bytes_per_line);
-
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr XCreateImage(Display display, IntPtr visual,
-		                                         uint depth, ImageFormat format, int offset, IntPtr data, uint width, uint height,
+		                                         uint depth, ImageFormat format, int offset, IntPtr data, int width, int height,
 		                                         int bitmap_pad, int bytes_per_line);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public static extern void XPutImage(Display display, IntPtr drawable,
-		                                    IntPtr gc, IntPtr image, int src_x, int src_y, int dest_x, int dest_y, uint width, uint height);
+		                                    IntPtr gc, IntPtr image, int src_x, int src_y, int dest_x, int dest_y, int width, int height);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public static extern int XLookupString(ref XKeyEvent event_struct, [Out] byte[] buffer_return,
@@ -227,12 +225,12 @@ namespace OpenTK.Platform.X11 {
 			                                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			
 			IntPtr ximage = XCreateImage(display, CopyFromParent, 24, ImageFormat.ZPixmap,
-			                             0, data.Scan0, (uint)width, (uint)height, 32, 0);
+			                             0, data.Scan0, width, height, 32, 0);
 			IntPtr pixmap = XCreatePixmap(display, XDefaultRootWindow(display),
 			                              width, height, 24);
 			IntPtr gc = XCreateGC(display, pixmap, IntPtr.Zero, null);
 			
-			XPutImage(display, pixmap, gc, ximage, 0, 0, 0, 0, (uint)width, (uint)height);
+			XPutImage(display, pixmap, gc, ximage, 0, 0, 0, 0, width, height);
 			
 			XFreeGC(display, gc);
 			image.UnlockBits(data);
@@ -338,7 +336,7 @@ namespace OpenTK.Platform.X11 {
 			return depths;
 		}
 
-		internal static Display DefaultDisplay;
+		public static Display DefaultDisplay;
 		internal static int ScreenCount;
 
 		static API() {

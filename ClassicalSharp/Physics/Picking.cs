@@ -114,49 +114,4 @@ namespace ClassicalSharp {
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 	}
-
-	public class PickedPos {
-		
-		public Vector3 Min, Max;
-		public Vector3I BlockPos;
-		public Vector3I TranslatedPos;
-		public bool Valid = true;
-		public CpeBlockFace BlockFace;
-		public byte BlockType;
-		
-		public void SetAsValid( Vector3 min, Vector3 max, byte block, Vector3 intersect ) {
-			Min = min;
-			Max = max;
-			BlockPos = Vector3I.Truncate( Min );
-			Valid = true;
-			BlockType = block;
-			
-			Vector3I normal = Vector3I.Zero;
-			float dist = float.PositiveInfinity;
-			TestAxis( intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal, CpeBlockFace.XMin );
-			TestAxis( intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal, CpeBlockFace.XMax );
-			TestAxis( intersect.Y - Min.Y, ref dist, -Vector3I.UnitY, ref normal, CpeBlockFace.YMin );
-			TestAxis( intersect.Y - Max.Y, ref dist, Vector3I.UnitY, ref normal, CpeBlockFace.YMax );
-			TestAxis( intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal, CpeBlockFace.ZMin );
-			TestAxis( intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal, CpeBlockFace.ZMax );
-			TranslatedPos = BlockPos + normal;
-		}
-		
-		public void SetAsInvalid() {
-			Valid = false;
-			BlockPos = TranslatedPos = Vector3I.MinusOne;
-			BlockFace = (CpeBlockFace)255;
-			BlockType = 0;
-		}
-		
-		void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal, 
-		                     CpeBlockFace fAxis) {
-			dAxis = Math.Abs( dAxis );
-			if( dAxis < dist ) {
-				dist = dAxis;
-				normal = nAxis;
-				BlockFace = fAxis;
-			}
-		}
-	}
 }

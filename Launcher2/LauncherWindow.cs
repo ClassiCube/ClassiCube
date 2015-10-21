@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Threading;
 using ClassicalSharp;
+using ClassicalSharp.Network;
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Platform.Windows;
-using ClassicalSharp.Network;
 
 namespace Launcher2 {
 
@@ -27,12 +23,20 @@ namespace Launcher2 {
 		
 		public Bitmap Framebuffer;
 		Font logoFont, logoItalicFont;
+		PlatformDrawer platformDrawer;
 		public void Init() {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
 			logoFont = new Font( "Times New Roman", 28, FontStyle.Bold );
 			logoItalicFont = new Font( "Times New Roman", 28, FontStyle.Italic );
+			
+			if( Configuration.RunningOnWindows )
+				platformDrawer = new WinPlatformDrawer();
+			else if( Configuration.RunningOnX11 )
+				platformDrawer = new X11PlatformDrawer();
+			else
+				platformDrawer = new WinPlatformDrawer(); // TODO: mac osx support
 		}
 
 		void FocusedChanged( object sender, EventArgs e ) {
@@ -41,10 +45,7 @@ namespace Launcher2 {
 		}
 
 		void Resize( object sender, EventArgs e ) {
-			if( screenGraphics != null )
-				screenGraphics.Dispose();
-			
-			screenGraphics = Graphics.FromHwnd( Window.WindowInfo.WinHandle );
+			platformDrawer.Resize( Window.WindowInfo );
 			MakeBackground();
 			screen.Resize();
 		}
@@ -64,7 +65,7 @@ namespace Launcher2 {
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
-			screenGraphics = Graphics.FromHwnd( Window.WindowInfo.WinHandle );
+			platformDrawer.Init( Window.WindowInfo );
 			
 			if( !ResourceFetcher.CheckAllResourcesExist() ) {
 				SetScreen( new ResourcesScreen( this ) );
@@ -83,11 +84,10 @@ namespace Launcher2 {
 			}
 		}
 		
-		Graphics screenGraphics;
 		void Display() {
 			Dirty = false;
 			screen.Dirty = false;
-			screenGraphics.DrawImage( Framebuffer, 0, 0, Framebuffer.Width, Framebuffer.Height );
+			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
 		}
 		
 		internal static FastColour clearColour = new FastColour( 30, 30, 30 );

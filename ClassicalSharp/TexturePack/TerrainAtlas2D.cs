@@ -4,6 +4,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Integer constants for the six tile sides of a block. </summary>
 	public static class TileSide {
 		public const int Left = 0;
 		public const int Right = 1;
@@ -30,13 +31,13 @@ namespace ClassicalSharp {
 			this.drawer = drawer;
 		}
 		
+		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
 		public void UpdateState( Bitmap bmp ) {
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
 				Utils.LogWarning( "Converting terrain atlas to 32bpp image" );
-				Bitmap newBmp = drawer.ConvertTo32Bpp( bmp );
-				bmp.Dispose();
-				bmp = newBmp;
+				drawer.ConvertTo32Bpp( ref bmp );
 			}
+			
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
@@ -44,32 +45,32 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
 		public int LoadTextureElement( int index ) {
-			int x = index & 0x0F;
-			int y = index >> 4;
-			int size = elementSize;
-			
+			int size = elementSize;			
 			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
 				using( Bitmap bmp = new Bitmap( size, size ) ) {
+					
 					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
-						FastBitmap.MovePortion( x * size, y * size, 0, 0, atlas, dst, size );
+						FastBitmap.MovePortion( (index & 0x0F) * size, (index >> 4) * 
+						                       size, 0, 0, atlas, dst, size );
 						return graphics.CreateTexture( dst );
 					}
 				}
 			}
 		}
 		
+		/// <summary> Gets a rectangle that describes the UV coordinates for 
+		/// the tile at the specified index. </summary>
 		public TextureRec GetTexRec( int index ) {
-			int x = index & 0x0F;
-			int y = index >> 4;
-			return new TextureRec( x * invElementSize, y * invElementSize,
-			                            invElementSize, invElementSize );
+			return new TextureRec( (index & 0x0F) * invElementSize, (index >> 4) * 
+			                      invElementSize, invElementSize, invElementSize );
 		}
 		
+		/// <summary> Disposes of the underlying atlas bitmap and texture. </summary>
 		public void Dispose() {
-			if( AtlasBitmap != null ) {
+			if( AtlasBitmap != null )
 				AtlasBitmap.Dispose();
-			}
 			graphics.DeleteTexture( ref TexId );
 		}
 	}

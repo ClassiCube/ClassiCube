@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			int index = 0;
 			TextureRec xy = new TextureRec( 0, posTexture.Y1, baseWidth, posTexture.Height );
 			TextureRec uv = new TextureRec( 0, 0, posTexture.U2, posTexture.V2 );
-			IGraphicsApi.MakeQuad( xy, uv, game.ModelCache.vertices, ref index );
+			IGraphicsApi.Make2DQuad( xy, uv, game.ModelCache.vertices, ref index );
 			
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
 			curX = baseWidth;
@@ -154,7 +154,7 @@ namespace ClassicalSharp {
 			TextureRec uv = new TextureRec( (baseWidth + charIndex * 16) / texWidth, 0, width / texWidth, posTexture.V2 );
 			
 			curX += width;
-			IGraphicsApi.MakeQuad( xy, uv, game.ModelCache.vertices, ref index );
+			IGraphicsApi.Make2DQuad( xy, uv, game.ModelCache.vertices, ref index );
 		}
 		
 		void AddInt( int value, ref int index, bool more ) {

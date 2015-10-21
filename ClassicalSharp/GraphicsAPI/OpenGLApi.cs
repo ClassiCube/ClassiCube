@@ -373,7 +373,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			game.VSync = value;
 		}
 		
-		public unsafe override void PrintApiSpecificInfo() {
+		protected unsafe override void PrintApiInfo() {
 			Utils.Log( "--Using OpenGL--" );
 			Utils.Log( "Vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
 			string renderer = new String( (sbyte*)GL.GetString( StringName.Renderer ) );

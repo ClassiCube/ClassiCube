@@ -48,6 +48,13 @@ namespace ClassicalSharp {
 		/// <summary> Returns a new bitmap that has 32-bpp pixel format. </summary>
 		public abstract Bitmap ConvertTo32Bpp( Bitmap src );
 		
+		/// <summary> Returns a new bitmap that has 32-bpp pixel format. </summary>
+		public void ConvertTo32Bpp( ref Bitmap src ) {
+			Bitmap newBmp = ConvertTo32Bpp( src );
+			src.Dispose();
+			src = newBmp;
+		}
+		
 		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments. </summary>
 		public abstract Size MeasureSize( ref DrawTextArgs args );
 		
@@ -64,7 +71,7 @@ namespace ClassicalSharp {
 			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				SetBitmap( bmp );
-				args.SkipPartsCheck = true;	
+				args.SkipPartsCheck = true;
 				
 				DrawText( ref args, 0, 0 );
 				Dispose();
