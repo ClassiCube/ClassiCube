@@ -92,18 +92,18 @@ namespace ClassicalSharp.Model {
 		
 		protected void YPlane( int texX, int texY, int texWidth, int texHeight,
 		                      float x1, float x2, float z1, float z2, float y, bool _64x64 ) {
-			vertices[index++] = new ModelVertex( x1, y, z1, texX, texY );
-			vertices[index++] = new ModelVertex( x2, y, z1, texX + texWidth, texY );
-			vertices[index++] = new ModelVertex( x2, y, z2, texX + texWidth, texY + texHeight );
 			vertices[index++] = new ModelVertex( x1, y, z2, texX, texY + texHeight );
+			vertices[index++] = new ModelVertex( x1, y, z1, texX, texY );
+			vertices[index++] = new ModelVertex( x2, y, z1, texX + texWidth, texY );			
+			vertices[index++] = new ModelVertex( x2, y, z2, texX + texWidth, texY + texHeight );
 		}
 		
 		protected void ZPlane( int texX, int texY, int texWidth, int texHeight,
 		                      float x1, float x2, float y1, float y2, float z, bool _64x64 ) {
 			vertices[index++] = new ModelVertex( x1, y1, z, texX, texY + texHeight );
-			vertices[index++] = new ModelVertex( x2, y1, z, texX + texWidth, texY + texHeight );
-			vertices[index++] = new ModelVertex( x2, y2, z, texX + texWidth, texY );
 			vertices[index++] = new ModelVertex( x1, y2, z, texX, texY );
+			vertices[index++] = new ModelVertex( x2, y2, z, texX + texWidth, texY );
+			vertices[index++] = new ModelVertex( x2, y1, z, texX + texWidth, texY + texHeight );
 		}
 		
 		protected bool _64x64 = false;
@@ -116,7 +116,7 @@ namespace ClassicalSharp.Model {
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				AdjustUV( model.U, model.V, vScale, i, ref vertex );
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -138,9 +138,19 @@ namespace ClassicalSharp.Model {
 				Vector3 newPos = Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				AdjustUV( model.U, model.V, vScale, i, ref vertex );
+				
 				cache.vertices[index++] = vertex;
 			}
+		}
+		
+		void AdjustUV( ushort u, ushort v, float vScale, int i, ref VertexPos3fTex2fCol4b vertex ) {
+			vertex.U = u / 64f; vertex.V = v / vScale;
+			int quadIndex = i % 4;
+			if( quadIndex == 0 || quadIndex == 3 )
+				vertex.V -= 0.01f / vScale;
+			if( quadIndex == 2 || quadIndex == 3 )
+				vertex.U -= 0.01f / 64f;
 		}
 		
 		[StructLayout( LayoutKind.Sequential, Pack = 1 )]
