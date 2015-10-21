@@ -121,29 +121,29 @@ namespace ClassicalSharp {
 					Utils.LogWarning( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
 				
-				if( finalBB.Min.Y >= blockBB.Max.Y ) {
+				if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {
 					Position.Y = blockBB.Max.Y + Adjustment;
 					onGround = true;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );
-				} else if( finalBB.Max.Y <= blockBB.Min.Y ) {
+					ClipY( ref size, ref entityBB, ref entityExtentBB );					
+				} else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y ) {
 					Position.Y = blockBB.Min.Y - size.Y - Adjustment;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );
-				} else if( finalBB.Min.X >= blockBB.Max.X ) {
+					ClipY( ref size, ref entityBB, ref entityExtentBB );					
+				} else if( finalBB.Min.X + Adjustment >= blockBB.Max.X ) {
 					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
 						Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
 						ClipX( ref size, ref entityBB, ref entityExtentBB );
 					}
-				} else if( finalBB.Max.X <= blockBB.Min.X ) {
+				} else if( finalBB.Max.X - Adjustment <= blockBB.Min.X ) {
 					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
 						Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
 						ClipX( ref size, ref entityBB, ref entityExtentBB );
 					}
-				} else if( finalBB.Min.Z >= blockBB.Max.Z ) {
+				} else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z ) {
 					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
 						Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
 						ClipZ( ref size, ref entityBB, ref entityExtentBB );
 					}
-				} else if( finalBB.Max.Z <= blockBB.Min.Z ) {
+				} else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z ) {
 					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
 						Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
 						ClipZ( ref size, ref entityBB, ref entityExtentBB );
