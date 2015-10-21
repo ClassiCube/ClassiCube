@@ -126,7 +126,7 @@ namespace ClassicalSharp {
 					BoundingBox bounds = CollisionBounds;
 					bounds.Min.Y += 1;
 					
-					bool isAir = !TouchesAny( bounds, 
+					bool isAir = !TouchesAny( bounds,
 					                         b => info.CollideType[b] != BlockCollideType.WalkThrough );
 					bool pastJumpPoint = Position.Y % 1 >= 0.4;
 					if( !isAir || !pastJumpPoint )
@@ -166,7 +166,7 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float gravity = useLiquidGravity ? liquidGrav : normalGrav;				
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
@@ -252,7 +252,21 @@ namespace ClassicalSharp {
 		
 		internal void HandleKeyDown( Key key ) {
 			if( key == game.Keys[KeyMapping.Respawn] && canRespawn ) {
-				LocationUpdate update = LocationUpdate.MakePos( SpawnPoint, false );
+				Vector3I p = Vector3I.Floor( SpawnPoint );
+				if( game.Map.IsValidPos( p ) ) {
+					// Spawn player at highest valid position.
+					for( int y = p.Y; y <= game.Map.Height; y++ ) {
+						byte block1 = GetPhysicsBlockId( p.X, y, p.Z );
+						byte block2 = GetPhysicsBlockId( p.X, y + 1, p.Z );
+						if( info.CollideType[block1] != BlockCollideType.Solid &&
+						   info.CollideType[block2] != BlockCollideType.Solid ) {
+							p.Y = y;
+							break;
+						}
+					}
+				}
+				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
+				LocationUpdate update = LocationUpdate.MakePos( spawn, false );
 				SetLocation( update, false );
 			} else if( key == game.Keys[KeyMapping.SetSpawn] && canRespawn ) {
 				SpawnPoint = Position;
