@@ -112,12 +112,10 @@ namespace ClassicalSharp {
 		void UpdateVelocityYState() {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
-				float vel = noClip ? 0.24f : 0.06f;
-				float velSpeeding = noClip ? 0.48f : 0.08f;
 				if( flyingUp || jumping ) {
-					Velocity.Y = speeding ? velSpeeding : vel;
+					Velocity.Y = speeding ? 0.24f : 0.12f;
 				} else if( flyingDown ) {
-					Velocity.Y = speeding ? -velSpeeding : -vel;
+					Velocity.Y = speeding ? -0.24f : -0.12f;
 				}
 			} else if( jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
@@ -153,7 +151,7 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			float multiply = flying ? 
+			float multiply = (flying || noClip) ?
 				(speeding ? SpeedMultiplier * 9 : SpeedMultiplier * 1.5f) :
 				(speeding ? SpeedMultiplier : 1);
 			float modifier = LowestSpeedModifier();
