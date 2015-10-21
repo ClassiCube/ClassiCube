@@ -11,6 +11,7 @@ namespace ClassicalSharp {
 		public Vector3 SpawnPoint;
 		
 		public float ReachDistance = 5f;
+		public int SpeedMultiplier = 10;
 		
 		public byte UserType;
 		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
@@ -152,21 +153,23 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			float multiply = flying ? (speeding ? 90 : 15) : (speeding ? 10 : 1);
+			float multiply = flying ? 
+				(speeding ? SpeedMultiplier * 9 : SpeedMultiplier * 1.5f) :
+				(speeding ? SpeedMultiplier : 1);
 			float modifier = LowestSpeedModifier();
-			multiply *= modifier;
+			float horMul = multiply * modifier;
+			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
-				Move( xMoving, zMoving, 0.02f * multiply, waterDrag, liquidGrav, 1 );
+				Move( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {
-				Move( xMoving, zMoving, 0.02f * multiply, lavaDrag, liquidGrav, 1 );
+				Move( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, 1 );
 			} else if( TouchesAnyRope() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !flying && onGround ? 0.1f : 0.02f;
-				float yMul = multiply == 1 ? 1 : multiply / 5f;
-				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
-				Move( xMoving, zMoving, factor * multiply, normalDrag, gravity, yMul );
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;				
+				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
 					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );

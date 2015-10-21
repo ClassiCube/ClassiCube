@@ -138,6 +138,7 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
+			LocalPlayer.SpeedMultiplier = Options.GetInt( OptionsKey.Speed, 1, 50, 10 );
 			Players[255] = LocalPlayer;
 			width = Width;
 			height = Height;

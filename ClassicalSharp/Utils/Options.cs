@@ -8,6 +8,7 @@ namespace ClassicalSharp {
 		public const string ViewDist = "viewdist";
 		public const string FontSize = "chatfontsize";
 		public const string Sensitivity = "mousesensitivity";
+		public const string Speed = "speedmultiplier";
 	}
 	
 	public static class Options {

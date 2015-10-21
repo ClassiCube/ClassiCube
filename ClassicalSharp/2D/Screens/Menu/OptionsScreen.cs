@@ -36,13 +36,18 @@ namespace ClassicalSharp {
 				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FontSize, v ); } ),
 				
-				Make( 140, 50, "Key mappings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ), null, null ),
-				
 				!network.IsSinglePlayer ? null :
 					Make( -140, -100, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),
+				
+				Make( 140, -100, "Speed multiplier", Anchor.Centre, OnWidgetClick,
+				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
+				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Int32.Parse( v );
+				     	Options.Set( OptionsKey.Speed, v ); } ),
+				
+				Make( 140, 50, "Key mappings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ), null, null ),
 				
 				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
@@ -55,6 +60,7 @@ namespace ClassicalSharp {
 				new IntegerValidator( 1, 100 ),
 				new IntegerValidator( 6, 30 ),
 				network.IsSinglePlayer ? new BooleanValidator() : null,
+				new IntegerValidator( 1, 50 ),
 			};
 			okayIndex = buttons.Length - 1;
 		}
