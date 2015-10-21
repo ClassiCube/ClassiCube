@@ -44,9 +44,6 @@ namespace OpenTK.Platform.X11 {
 		public extern static Bool XCheckWindowEvent(Display display, Window w, EventMask event_mask, ref XEvent event_return);
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static Bool XCheckTypedWindowEvent(Display display, Window w, XEventName event_type, ref XEvent event_return);
-
-		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-		public extern static int XDestroyImage(IntPtr image);
 		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XDestroyWindow(IntPtr display, IntPtr window);

@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 			elementsPerAtlas1D = Math.Min( elementsPerFullAtlas, totalElements );
 			int atlas1DHeight = Utils.NextPowerOf2( elementsPerAtlas1D * atlas2D.elementSize );
 			
-			Convert2DTo1D( atlas2D, atlasesCount, elementsPerAtlas1D );	
+			Convert2DTo1D( atlas2D, atlasesCount, atlas1DHeight );
 			elementsPerBitmap = atlas1DHeight / atlas2D.elementSize;
 			invElementSize = 1f / elementsPerBitmap;
 		}
@@ -63,10 +63,8 @@ namespace ClassicalSharp {
 		void Make1DTexture( int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index ) {
 			int elemSize = atlas2D.elementSize;
 			using( Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight ) ) {
-				using( FastBitmap dst = new FastBitmap( atlas1d, true ) ) {				
+				using( FastBitmap dst = new FastBitmap( atlas1d, true ) ) {
 					for( int index1D = 0; index1D < elementsPerAtlas1D; index1D++ ) {
-						
-						if( index >= 256 ) break;
 						FastBitmap.MovePortion( (index & 0x0F) * elemSize, (index >> 4) * elemSize,
 						                       0, index1D * elemSize, atlas, dst, elemSize );
 						index++;

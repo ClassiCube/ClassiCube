@@ -55,7 +55,7 @@ namespace Launcher2 {
 				                                fastBmp.Width, fastBmp.Height, 32, 0 );
 				API.XPutImage( API.DefaultDisplay, x11Info.WindowHandle, gc, image,
 				              0, 0, 0, 0, fastBmp.Width, fastBmp.Height );
-				API.XDestroyImage( image );
+				API.XFree( image );
 			}
 		}
 	}
