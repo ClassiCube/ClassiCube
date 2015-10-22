@@ -200,14 +200,15 @@ namespace ClassicalSharp {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == game.Keys[KeyMapping.SendChat] || key == game.Keys[KeyMapping.PauseOrExit] ) {
+				if( key == game.Mapping( KeyMapping.SendChat ) 
+				   || key == game.Mapping( KeyMapping.PauseOrExit ) ) {
 					HandlesAllInput = false;
 					if( game.CursorVisible )
 						game.CursorVisible = false;
 					game.Camera.RegrabMouse();
 					game.Keyboard.KeyRepeat = false;
 					
-					if( key == game.Keys[KeyMapping.PauseOrExit] )
+					if( key == game.Mapping( KeyMapping.PauseOrExit ) )
 						textInput.chatInputText.Clear();
 					textInput.SendTextInBufferAndReset();
 				} else if( key == Key.PageUp ) {
@@ -221,7 +222,7 @@ namespace ClassicalSharp {
 					if( chatIndex > game.Chat.Log.Count - chatLines )
 						chatIndex = game.Chat.Log.Count - chatLines;
 					ResetChat();
-				} else if( key == game.Keys[KeyMapping.HideGui] ) {
+				} else if( key == game.Mapping( KeyMapping.HideGui ) ) {
 					game.HideGui = !game.HideGui;
 				} else {
 					textInput.HandlesKeyDown( key );
@@ -229,7 +230,7 @@ namespace ClassicalSharp {
 				return true;
 			}
 
-			if( key == game.Keys[KeyMapping.OpenChat] ) {
+			if( key == game.Mapping( KeyMapping.OpenChat ) ) {
 				OpenTextInputBar( "" );
 			} else if( key == Key.Slash ) {
 				OpenTextInputBar( "/" );

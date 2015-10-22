@@ -27,6 +27,7 @@ namespace Launcher2 {
 			if( fetcher.Done ) {
 				ResourcePatcher patcher = new ResourcePatcher( fetcher );
 				patcher.Run();
+				game.SetScreen( new MainScreen( game ) );
 				fetcher = null;
 			}
 		}

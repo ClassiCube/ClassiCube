@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using OpenTK;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -9,6 +11,10 @@ namespace ClassicalSharp {
 		public const string FontSize = "chatfontsize";
 		public const string Sensitivity = "mousesensitivity";
 		public const string Speed = "speedmultiplier";
+		
+		public const string MouseLeft = "mouseleft";
+		public const string MouseMiddle = "mousemiddle";
+		public const string MouseRight = "mouseright";
 	}
 	
 	public static class Options {
@@ -39,6 +45,23 @@ namespace ClassicalSharp {
 			   || !Boolean.TryParse( value, out valueBool ) )
 				return defValue;
 			return valueBool;
+		}
+		
+		public static Key GetKey( string key, Key defValue ) {
+			string value = Options.Get( key );
+			if( value == null ) {
+				Set( key, defValue );
+				return defValue;
+			}
+			
+			Key mapping;
+			try {
+				mapping = (Key)Enum.Parse( typeof( Key ), value, true );
+			} catch( ArgumentException ) {
+				Options.Set( key, defValue );
+				return defValue;
+			}
+			return mapping;
 		}
 		
 		public static void Set( string key, string value ) {

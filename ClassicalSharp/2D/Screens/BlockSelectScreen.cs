@@ -187,8 +187,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Keys[KeyMapping.PauseOrExit] ||
-			   key == game.Keys[KeyMapping.OpenInventory] ) {
+			if( key == game.Mapping( KeyMapping.PauseOrExit ) ||
+			   key == game.Mapping( KeyMapping.OpenInventory ) ) {
 				game.SetNewScreen( new NormalScreen( game ) );
 			}
 			return true;

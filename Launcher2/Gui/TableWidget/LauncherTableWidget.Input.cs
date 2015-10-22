@@ -12,7 +12,9 @@ namespace Launcher2 {
 		
 		void HandleOnClick( int mouseX, int mouseY ) {
 			if( mouseX >= Window.Width - 10 ) {
-				ScrollbarClick( mouseY ); return;
+				ScrollbarClick( mouseY );
+				lastIndex = -10;
+				return;
 			}
 			
 			if( mouseY >= HeaderStartY && mouseY < HeaderEndY ) {			
@@ -29,17 +31,23 @@ namespace Launcher2 {
 				} else {
 					DraggingWidth = true;
 				}
+				lastIndex = -10;
 			} else {
 				for( int i = 0; i < Count; i++ ) {
 					TableEntry entry = usedEntries[i];
 					if( mouseY >= entry.Y && mouseY < entry.Y + entry.Height ) {
+						if( lastIndex == i ) {
+							Window.ConnectToServer( entry.Hash );
+						}
 						SelectedChanged( entry.Hash );
+						lastIndex = i;
 						break;
 					}
 				}
 			}
 		}
 		
+		int lastIndex = -10;		
 		public void MouseMove( int deltaX, int deltaY ) {
 			if( DraggingWidth ) {
 				ColumnWidths[0] += deltaX;

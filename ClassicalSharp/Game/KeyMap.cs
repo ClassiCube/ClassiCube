@@ -64,19 +64,7 @@ namespace ClassicalSharp {
 			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
-				string value = Options.Get( key );
-				if( value == null ) {
-					Options.Set( key, Keys[i] );
-					continue;
-				}
-				
-				Key mapping;
-				try {
-					mapping = (Key)Enum.Parse( typeof( Key ), value, true );
-				} catch( ArgumentException ) {
-					Options.Set( key, Keys[i] );
-					continue;
-				}
+				Key mapping = Options.GetKey( key, Keys[i] );
 				if( !IsReservedKey( mapping ) )
 					Keys[i] = mapping;
 			}

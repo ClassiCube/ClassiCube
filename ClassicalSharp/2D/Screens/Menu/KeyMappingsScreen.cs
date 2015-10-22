@@ -44,7 +44,8 @@ namespace ClassicalSharp {
 			int y = -180;
 			for( int i = 0; i < len; i++ ) {
 				KeyMapping mapping = (KeyMapping)( (int)start + i );
-				string text = descriptions[start + i] + ": " + keyNames[(int)game.Keys[mapping]];
+				string text = descriptions[start + i] + ": " 
+					+ keyNames[(int)game.Mapping( mapping )];
 				
 				buttons[index++] = ButtonWidget.Create( game, x, y, 240, 25, text,
 				                                       Anchor.Centre, Anchor.Centre, keyFont, OnWidgetClick );
@@ -68,18 +69,20 @@ namespace ClassicalSharp {
 			} else if( widget != null ) {
 				int index = Array.IndexOf<ButtonWidget>( buttons, widget );
 				KeyMapping mapping = (KeyMapping)index;
-				Key oldKey = game.Keys[mapping];
+				KeyMap map = game.InputHandler.Keys;
+				Key oldKey = map[mapping];
 				string reason;
 				
-				if( !game.Keys.IsKeyOkay( oldKey, key, out reason ) ) {
+				if( !map.IsKeyOkay( oldKey, key, out reason ) ) {
 					const string format = "&eFailed to change mapping \"{0}\". &c({1})";
 					statusWidget.SetText( String.Format( format, descriptions[index], reason ) );
 				} else {
 					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";
 					statusWidget.SetText( String.Format( format, descriptions[index], oldKey, key ) );
 					string text = descriptions[index] + " : " + keyNames[(int)key];
+					
 					widget.SetText( text );
-					game.Keys[mapping] = key;
+					map[mapping] = key;
 				}
 				widget = null;
 			}

@@ -5,6 +5,7 @@ using ClassicalSharp;
 using ClassicalSharp.Network;
 using OpenTK;
 using OpenTK.Graphics;
+using System.Net;
 
 namespace Launcher2 {
 
@@ -57,6 +58,18 @@ namespace Launcher2 {
 			MakeBackground();
 			this.screen = screen;
 			screen.Init();
+		}
+		
+		public bool ConnectToServer( string hash ) {
+			GameStartData data = null;
+			try {
+				data = Session.GetConnectInfo( hash );
+			} catch( WebException ex ) {
+				Program.LogException( ex );
+				return false;
+			}
+			Client.Start( data, true );
+			return true;
 		}
 		
 		public void Run() {

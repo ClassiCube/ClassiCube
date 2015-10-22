@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Keys[KeyMapping.PlayerList] ) {
+			if( key == game.Mapping( KeyMapping.PlayerList ) ) {
 				if( playerList == null ) {
 					if( game.Network.UsingExtPlayerList ) {
 						playerList = new ExtPlayerListWidget( game, playerFont );
@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( key == game.Keys[KeyMapping.PlayerList] ) {
+			if( key == game.Mapping( KeyMapping.PlayerList ) ) {
 				if( playerList != null ) {
 					playerList.Dispose();
 					playerList = null;

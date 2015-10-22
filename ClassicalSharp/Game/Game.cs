@@ -85,23 +85,6 @@ namespace ClassicalSharp {
 			Events.RaiseTerrainAtlasChanged();
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack ) 
-			#if USE_DX
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default ) {
-			#else
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default ) {
-			#endif
-			Username = username;
-			Mppass = mppass;
-			this.skinServer = skinServer;
-			this.defaultTexPack = defaultTexPack;
-			
-			if( !File.Exists( defaultTexPack ) ) {
-				Utils.LogWarning( defaultTexPack + " not found" );
-				this.defaultTexPack = "default.zip";
-			}
-		}
-		
 		protected override void OnLoad( EventArgs e ) {
 			#if !USE_DX
 			Graphics = new OpenGLApi();
@@ -114,7 +97,6 @@ namespace ClassicalSharp {
 				Utils.LogWarning( "Unable to load options.txt" );
 			}
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
-			Keys = new KeyMap();
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
@@ -232,10 +214,7 @@ namespace ClassicalSharp {
 					Picking.Render( e.Time, SelectedPos );			
 				SelectionManager.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
-				bool left = IsMousePressed( MouseButton.Left );
-				bool right = IsMousePressed( MouseButton.Right );
-				bool middle = IsMousePressed( MouseButton.Middle );
-				InputHandler.PickBlocks( true, left, right, middle );
+				InputHandler.PickBlocks( true );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
@@ -350,19 +329,13 @@ namespace ClassicalSharp {
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
 		}
 		
-		public KeyMap Keys;
-		public bool IsKeyDown( Key key ) {
-			return Keyboard[key];
-		}
+		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }
 		
-		public bool IsKeyDown( KeyMapping mapping ) {
-			Key key = Keys[mapping];
-			return Keyboard[key];
-		}
+		public bool IsKeyDown( KeyMapping mapping ) { return InputHandler.IsKeyDown( mapping ); }
 		
-		public bool IsMousePressed( MouseButton button ) {
-			return Mouse[button];
-		}
+		public bool IsMousePressed( MouseButton button ) { return InputHandler.IsMousePressed( button ); }
+		
+		public Key Mapping( KeyMapping mapping ) { return InputHandler.Keys[mapping]; }
 		
 		public override void Dispose() {
 			MapRenderer.Dispose();
@@ -404,6 +377,23 @@ namespace ClassicalSharp {
 		internal bool CanPick( byte block ) {
 			return !(block == 0 || (BlockInfo.IsLiquid[block] && 
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
+		}
+		
+		public Game( string username, string mppass, string skinServer, string defaultTexPack ) 
+			#if USE_DX
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default ) {
+			#else
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default ) {
+			#endif
+			Username = username;
+			Mppass = mppass;
+			this.skinServer = skinServer;
+			this.defaultTexPack = defaultTexPack;
+			
+			if( !File.Exists( defaultTexPack ) ) {
+				Utils.LogWarning( defaultTexPack + " not found" );
+				this.defaultTexPack = "default.zip";
+			}
 		}
 	}
 	

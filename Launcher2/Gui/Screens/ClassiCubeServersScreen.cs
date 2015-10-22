@@ -13,11 +13,8 @@ namespace Launcher2 {
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			inputFont = new Font( "Arial", 13, FontStyle.Regular );
-			enterIndex = 4;
-			
-			widgets = new LauncherWidget[7];
-			game.Window.Mouse.WheelChanged += MouseWheelChanged;
-			game.Window.Mouse.ButtonUp += MouseButtonUp;
+			enterIndex = 4;	
+			widgets = new LauncherWidget[7];		
 		}
 		
 		public override void Tick() {
@@ -49,7 +46,12 @@ namespace Launcher2 {
 			}
 		}
 
-		public override void Init() { Resize(); }
+		public override void Init() { 
+			base.Init();
+			game.Window.Mouse.WheelChanged += MouseWheelChanged;
+			game.Window.Mouse.ButtonUp += MouseButtonUp;
+			Resize(); 
+		}
 		
 		public override void Resize() {
 			using( drawer ) {
@@ -135,14 +137,7 @@ namespace Launcher2 {
 		}
 		
 		void ConnectToServer( int mouseX, int mouseY ) {
-			GameStartData data = null;
-			try {
-				data = game.Session.GetConnectInfo( Get( 3 ) );
-			} catch( WebException ex ) {
-				Program.LogException( ex );
-				return;
-			}
-			Client.Start( data, true );
+			game.ConnectToServer( Get( 3 ) );
 		}
 		
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {

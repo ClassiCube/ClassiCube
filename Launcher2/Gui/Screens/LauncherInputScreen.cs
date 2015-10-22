@@ -13,7 +13,10 @@ namespace Launcher2 {
 		
 		protected Font titleFont, inputFont;
 		protected int enterIndex = -1;
-		public LauncherInputScreen( LauncherWindow game ) : base( game ) {
+		public LauncherInputScreen( LauncherWindow game ) : base( game ) {	
+		}
+		
+		public override void Init() {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
@@ -41,7 +44,7 @@ namespace Launcher2 {
 			if( lastInput != null ) {
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					lastInput.AddChar( e.KeyChar, inputFont );			
+					lastInput.AddChar( e.KeyChar, inputFont );
 					Dirty = true;
 				}
 				OnAddedChar();

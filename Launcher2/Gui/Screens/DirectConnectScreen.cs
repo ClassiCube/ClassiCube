@@ -18,6 +18,7 @@ namespace Launcher2 {
 		}
 
 		public override void Init() {
+			base.Init();
 			Resize();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

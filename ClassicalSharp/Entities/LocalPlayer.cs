@@ -251,7 +251,8 @@ namespace ClassicalSharp {
 		}
 		
 		internal void HandleKeyDown( Key key ) {
-			if( key == game.Keys[KeyMapping.Respawn] && canRespawn ) {
+			KeyMap keys = game.InputHandler.Keys;
+			if( key == keys[KeyMapping.Respawn] && canRespawn ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
 				if( game.Map.IsValidPos( p ) ) {
 					// Spawn player at highest valid position.
@@ -268,11 +269,11 @@ namespace ClassicalSharp {
 				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
 				LocationUpdate update = LocationUpdate.MakePos( spawn, false );
 				SetLocation( update, false );
-			} else if( key == game.Keys[KeyMapping.SetSpawn] && canRespawn ) {
+			} else if( key == keys[KeyMapping.SetSpawn] && canRespawn ) {
 				SpawnPoint = Position;
-			} else if( key == game.Keys[KeyMapping.Fly] && canFly ) {
+			} else if( key == keys[KeyMapping.Fly] && canFly ) {
 				flying = !flying;
-			} else if( key == game.Keys[KeyMapping.NoClip] && canNoclip ) {
+			} else if( key == keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
 			}
 		}
