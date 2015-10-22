@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
-			TerrainAtlas.UpdateState( bmp );
+			TerrainAtlas.UpdateState( BlockInfo, bmp );
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
@@ -103,6 +103,8 @@ namespace ClassicalSharp {
 			Drawer2D = new GdiPlusDrawer2D( Graphics );			
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 40 );
+			BlockInfo = new BlockInfo();
+			BlockInfo.Init();
 			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
@@ -114,9 +116,7 @@ namespace ClassicalSharp {
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
 			Inventory = new Inventory( this );
-			
-			BlockInfo = new BlockInfo();
-			BlockInfo.Init();
+					
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );

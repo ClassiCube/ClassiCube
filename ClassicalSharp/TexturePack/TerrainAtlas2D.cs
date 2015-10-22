@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
-		public void UpdateState( Bitmap bmp ) {
+		public void UpdateState( BlockInfo info, Bitmap bmp ) {
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
 				Utils.LogWarning( "Converting terrain atlas to 32bpp image" );
 				drawer.ConvertTo32Bpp( ref bmp );
@@ -41,6 +41,7 @@ namespace ClassicalSharp {
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+				info.RecalculateSpriteBB( fastBmp );
 				TexId = graphics.CreateTexture( fastBmp );
 			}
 		}

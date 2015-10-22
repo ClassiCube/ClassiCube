@@ -79,7 +79,7 @@ namespace Launcher2 {
 			
 			MakeButtonAt( "Sign in", 90, 35, -75, 0, StartClient );
 			MakeButtonAt( "Back", 80, 35, 140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			MakeTextAt( "", 0, 50 );
+			MakeTextAt( Get( 6 ), 0, 50 );
 			
 			if( HasServers && !signingIn )
 				MakeButtonAt( "Servers", 90, 35, 35, 0, ShowServers );

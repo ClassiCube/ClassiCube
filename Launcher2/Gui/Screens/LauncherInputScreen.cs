@@ -13,7 +13,7 @@ namespace Launcher2 {
 		
 		protected Font titleFont, inputFont;
 		protected int enterIndex = -1;
-		public LauncherInputScreen( LauncherWindow game ) : base( game ) {	
+		public LauncherInputScreen( LauncherWindow game ) : base( game ) {
 		}
 		
 		public override void Init() {
@@ -22,14 +22,15 @@ namespace Launcher2 {
 			
 			game.Window.KeyPress += KeyPress;
 			game.Window.Keyboard.KeyDown += KeyDown;
+			game.Window.Keyboard.KeyUp += KeyUp;
 			game.Window.Keyboard.KeyRepeat = true;
 		}
-
+		
 		protected void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( lastInput != null && e.Key == Key.BackSpace ) {
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					lastInput.RemoveChar( inputFont );				
+					lastInput.RemoveChar( inputFont );
 					Dirty = true;
 				}
 				OnRemovedChar();
@@ -37,7 +38,14 @@ namespace Launcher2 {
 				LauncherWidget widget = widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
+			} else if( e.Key == Key.Tab ) {
+				HandleTab();
 			}
+		}
+		
+		protected void KeyUp( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab )
+				tabDown = false;
 		}
 
 		protected void KeyPress( object sender, KeyPressEventArgs e ) {
@@ -67,7 +75,7 @@ namespace Launcher2 {
 		
 		protected override void UnselectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {				
+			if( button != null ) {
 				button.Active = false;
 				button.Redraw( drawer, button.Text, titleFont );
 				Dirty = true;
@@ -106,6 +114,7 @@ namespace Launcher2 {
 			
 			game.Window.KeyPress -= KeyPress;
 			game.Window.Keyboard.KeyDown -= KeyDown;
+			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Keyboard.KeyRepeat = false;
 			
 			titleFont.Dispose();

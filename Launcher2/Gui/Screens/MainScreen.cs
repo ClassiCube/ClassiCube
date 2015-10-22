@@ -8,8 +8,6 @@ namespace Launcher2 {
 	public sealed class MainScreen : LauncherScreen {
 		
 		public MainScreen( LauncherWindow game ) : base( game ) {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			textFont = new Font( "Arial", 16, FontStyle.Bold );
 			widgets = new LauncherWidget[4];
 		}
@@ -27,8 +25,25 @@ namespace Launcher2 {
 			button.Redraw( drawer, button.Text, textFont );
 			Dirty = true;
 		}
+		
+		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab )
+				HandleTab();
+		}
+		
+		void KeyUp( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab )
+				tabDown = false;
+		}
 
-		public override void Init() { Resize(); }
+		public override void Init() {
+			game.Window.Keyboard.KeyDown += KeyDown;
+			game.Window.Keyboard.KeyUp += KeyUp;
+			
+			game.Window.Mouse.Move += MouseMove;
+			game.Window.Mouse.ButtonDown += MouseButtonDown;
+			Resize();
+		}
 		
 		public override void Tick() {
 		}
@@ -75,6 +90,9 @@ namespace Launcher2 {
 		public override void Dispose() {
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			
+			game.Window.Keyboard.KeyDown -= KeyDown;
+			game.Window.Keyboard.KeyUp -= KeyUp;
 			textFont.Dispose();
 		}
 	}

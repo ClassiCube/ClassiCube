@@ -101,6 +101,7 @@ namespace ClassicalSharp {
 			IsOpaqueY[(byte)Block.CobblestoneSlab] = true;
 			IsOpaqueY[(byte)Block.Snow] = true;
 			SetupCullingCache();
+			InitBoundingBoxes();
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {

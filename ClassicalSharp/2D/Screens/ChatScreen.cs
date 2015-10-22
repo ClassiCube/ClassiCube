@@ -19,14 +19,15 @@ namespace ClassicalSharp {
 		int chatIndex;
 		
 		public override void Render( double delta ) {
+			status.Render( delta );
+			bottomRight.Render( delta );
+			
 			DateTime now = DateTime.UtcNow;
 			if( HandlesAllInput )
 				normalChat.Render( delta );
 			else
-				RenderRecentChat( now, delta );
+				RenderRecentChat( now, delta );			
 			
-			status.Render( delta );
-			bottomRight.Render( delta );
 			if( announcementTex.IsValid )
 				announcementTex.Render( graphicsApi );
 			if( HandlesAllInput )

@@ -72,8 +72,8 @@ namespace ClassicalSharp {
 			// which voxel boundary is nearest) and walk that way.
 			while( iterations < 10000 ) {
 				byte block = map.SafeGetBlock( x, y, z );
-				Vector3 min = new Vector3( x, y, z );
-				Vector3 max = min + new Vector3( 1, block == 0 ? 1 : info.Height[block], 1 );
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );

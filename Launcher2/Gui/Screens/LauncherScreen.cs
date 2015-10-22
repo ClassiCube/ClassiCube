@@ -29,7 +29,7 @@ namespace Launcher2 {
 		
 		protected LauncherWidget selectedWidget;
 		protected LauncherWidget[] widgets;
-		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {		
+		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
 				if( widget == null ) continue;
@@ -48,7 +48,7 @@ namespace Launcher2 {
 				}
 			}
 			
-			if( selectedWidget == null ) return;		
+			if( selectedWidget == null ) return;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				UnselectWidget( selectedWidget );
@@ -61,14 +61,51 @@ namespace Launcher2 {
 		}
 		
 		/// <summary> Called when user has moved their mouse over a given widget. </summary>
-		protected virtual void SelectWidget( LauncherWidget widget ) {			
+		protected virtual void SelectWidget( LauncherWidget widget ) {
 		}
 		
+		protected LauncherWidget lastClicked;
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( e.Button != MouseButton.Left || selectedWidget == null ) return;
 			
 			if( selectedWidget.OnClick != null )
 				selectedWidget.OnClick( e.X, e.Y );
+			lastClicked = selectedWidget;
+		}
+		
+		protected bool tabDown = false;
+		MouseMoveEventArgs moveArgs = new MouseMoveEventArgs();
+		MouseButtonEventArgs pressArgs = new MouseButtonEventArgs();
+		protected void HandleTab() {
+			int index = lastClicked == null ? -1 :
+				Array.IndexOf<LauncherWidget>( widgets, lastClicked );
+			if( tabDown ) return;
+			tabDown = true;
+			
+			for( int i = 0; i < widgets.Length * 2; i++ ) {
+				index = (index + 1) % widgets.Length;
+				if( widgets[index] is LauncherTextInputWidget
+				   || widgets[index] is LauncherButtonWidget ) {
+					LauncherWidget widget = widgets[index];
+					moveArgs.X = widget.X + widget.Width / 2;
+					moveArgs.Y = widget.Y + widget.Height / 2;
+					
+					pressArgs.Button = MouseButton.Left;
+					pressArgs.IsPressed = true;
+					pressArgs.X = moveArgs.X;
+					pressArgs.Y = moveArgs.Y;
+					
+					MouseMove( null, moveArgs );
+					Point p = game.Window.PointToScreen( Point.Empty );
+					p.Offset( moveArgs.X, moveArgs.Y );
+					game.Window.DesktopCursorPos = p;
+					lastClicked = widget;
+					
+					if( widgets[index] is LauncherTextInputWidget )
+						MouseButtonDown( null, pressArgs );
+					break;
+				}
+			}
 		}
 	}
 }

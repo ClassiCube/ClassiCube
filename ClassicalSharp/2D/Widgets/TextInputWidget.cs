@@ -7,13 +7,14 @@ namespace ClassicalSharp {
 	
 	public sealed class TextInputWidget : Widget {
 		
+		const int len = 64 * 1;
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			this.font = font;
 			this.boldFont = boldFont;
-			chatInputText = new StringBuffer( 64 );
+			chatInputText = new StringBuffer( len );
 		}
 		
 		Texture chatInputTexture, chatCaretTexture;
@@ -98,7 +99,14 @@ namespace ClassicalSharp {
 		}
 		
 		public void SendTextInBufferAndReset() {
-			game.Chat.Send( chatInputText.ToString() );
+			string text = chatInputText.ToString();
+			/*while( text.Length >= 64 ) {
+				string part = text.Substring( 0, 64 );
+				game.Chat.Send( part );
+				text = text.Substring( 64 );
+			}*/
+			game.Chat.Send( text );
+			
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			chatInputText.Clear();
 			Dispose();
@@ -107,7 +115,7 @@ namespace ClassicalSharp {
 		#region Input handling
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
+			if( chatInputText.Length < len && !IsInvalidChar( key ) ) {
 				if( caretPos == -1 ) {
 					chatInputText.Append( chatInputText.Length, key );
 				} else {
@@ -203,7 +211,7 @@ namespace ClassicalSharp {
 		
 		bool OtherKey( Key key ) {
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
-			if( key == Key.V && controlDown && chatInputText.Length < 64 ) {
+			if( key == Key.V && controlDown && chatInputText.Length < 128 ) {
 				string text = Clipboard.GetText();
 				if( String.IsNullOrEmpty( text ) ) return true;
 				
@@ -214,8 +222,8 @@ namespace ClassicalSharp {
 					}
 				}
 				
-				if( chatInputText.Length + text.Length > 64 ) {
-					text = text.Substring( 0, 64 - chatInputText.Length );
+				if( chatInputText.Length + text.Length > len ) {
+					text = text.Substring( 0, len - chatInputText.Length );
 				}
 				
 				if( caretPos == -1 ) {
