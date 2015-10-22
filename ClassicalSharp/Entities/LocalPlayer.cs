@@ -126,7 +126,7 @@ namespace ClassicalSharp {
 					BoundingBox bounds = CollisionBounds;
 					bounds.Min.Y += 1;
 					
-					bool isSolid = !TouchesAny( bounds,
+					bool isSolid = TouchesAny( bounds,
 					                         b => info.CollideType[b] != BlockCollideType.WalkThrough || b == (byte)Block.Rope );
 					bool pastJumpPoint = Position.Y % 1 >= 0.4;
 					if( isSolid || !pastJumpPoint )

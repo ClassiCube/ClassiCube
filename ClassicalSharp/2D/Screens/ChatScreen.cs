@@ -10,7 +10,6 @@ namespace ClassicalSharp {
 		public ChatScreen( Game game ) : base( game ) {
 		}
 		
-		public int ChatInputYOffset, ChatLogYOffset;
 		const int chatLines = 12;
 		Texture announcementTex;
 		TextInputWidget textInput;
@@ -67,9 +66,10 @@ namespace ClassicalSharp {
 			chatFont = new Font( "Arial", game.Chat.FontSize );
 			chatInputFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
 			announcementFont = new Font( "Arial", 14 );
+			const int blockSize = 40;
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
-			textInput.YOffset = ChatInputYOffset;
+			textInput.YOffset = blockSize * 2 + blockSize / 2;
 			status = new TextGroupWidget( game, 3, chatFont );
 			status.VerticalAnchor = Anchor.LeftOrTop;
 			status.HorizontalAnchor = Anchor.BottomOrRight;
@@ -77,11 +77,11 @@ namespace ClassicalSharp {
 			bottomRight = new TextGroupWidget( game, 3, chatFont );
 			bottomRight.VerticalAnchor = Anchor.BottomOrRight;
 			bottomRight.HorizontalAnchor = Anchor.BottomOrRight;
-			bottomRight.YOffset = ChatInputYOffset;
+			bottomRight.YOffset = blockSize + blockSize / 2;
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( game, chatLines, chatFont );
 			normalChat.XOffset = 10;
-			normalChat.YOffset = ChatLogYOffset;
+			normalChat.YOffset = blockSize * 3;
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
 			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();
