@@ -40,8 +40,9 @@ namespace ClassicalSharp {
 			graphics.Draw2DTexture( ref this );
 		}
 		
-		public void RenderNoBind( IGraphicsApi graphics ) {
-			graphics.Draw2DTexture( ref this );
+		public void Render( IGraphicsApi graphics, FastColour colour ) {
+			graphics.BindTexture( ID );
+			graphics.Draw2DTexture( ref this, colour );
 		}
 		
 		public int X2 {

@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 			status.Render( delta );
 			bottomRight.Render( delta );
 			
+			UpdateChatYOffset();
 			DateTime now = DateTime.UtcNow;
 			if( HandlesAllInput )
 				normalChat.Render( delta );
@@ -61,6 +62,19 @@ namespace ClassicalSharp {
 				graphicsApi.Draw2DQuad( x, y, width, height + 10, backColour );
 		}
 		
+		int inputOldHeight = -1;
+		void UpdateChatYOffset() {
+			int height = textInput.Height;
+			if( height != inputOldHeight ) {
+				const int blockSize = 40;
+				normalChat.YOffset = height + blockSize * 2;
+				int y = game.Height - normalChat.Height - normalChat.YOffset;
+				
+				normalChat.MoveTo( normalChat.X, y );
+				inputOldHeight = height;
+			}
+		}
+		
 		Font chatFont, chatInputFont, announcementFont;
 		public override void Init() {
 			chatFont = new Font( "Arial", game.Chat.FontSize );
@@ -69,7 +83,7 @@ namespace ClassicalSharp {
 			const int blockSize = 40;
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
-			textInput.YOffset = blockSize * 2 + blockSize / 2;
+			textInput.YOffset = blockSize + blockSize / 2;
 			status = new TextGroupWidget( game, 3, chatFont );
 			status.VerticalAnchor = Anchor.LeftOrTop;
 			status.HorizontalAnchor = Anchor.BottomOrRight;
@@ -81,7 +95,7 @@ namespace ClassicalSharp {
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( game, chatLines, chatFont );
 			normalChat.XOffset = 10;
-			normalChat.YOffset = blockSize * 3;
+			normalChat.YOffset = blockSize * 2;
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
 			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();

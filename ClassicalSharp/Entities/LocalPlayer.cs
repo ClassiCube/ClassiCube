@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 					bool pastJumpPoint = Position.Y % 1 >= 0.4;
 					if( isSolid || !pastJumpPoint )
 						Velocity.Y += speeding ? 0.08f : 0.04f;
-					else if( (collideX || collideZ) && isSolid && pastJumpPoint )
+					else if( (collideX || collideZ) && !isSolid && pastJumpPoint )
 						Velocity.Y += 0.10f;
 				} else if( useLiquidGravity ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
