@@ -132,10 +132,7 @@ namespace ClassicalSharp {
 			return bmp;
 		}
 		
-		public override Size MeasureSize( ref DrawTextArgs args ) {
-			if( String.IsNullOrEmpty( args.Text ) )
-				return Size.Empty;
-			
+		public override Size MeasureSize( ref DrawTextArgs args ) {			
 			GetTextParts( args.Text );
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {

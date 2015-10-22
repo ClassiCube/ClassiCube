@@ -8,9 +8,10 @@ namespace ClassicalSharp {
 	public class ChatScreen : Screen {
 		
 		public ChatScreen( Game game ) : base( game ) {
+			chatLines = game.ChatLines;
 		}
 		
-		const int chatLines = 12;
+		int chatLines;
 		Texture announcementTex;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat;

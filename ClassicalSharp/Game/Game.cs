@@ -68,6 +68,7 @@ namespace ClassicalSharp {
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 40;
+		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -105,6 +106,7 @@ namespace ClassicalSharp {
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 40 );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
+			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
 			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
