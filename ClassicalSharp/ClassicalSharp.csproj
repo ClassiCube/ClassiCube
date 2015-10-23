@@ -212,9 +212,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="..\launcher instructions.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\readme.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

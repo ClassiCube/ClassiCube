@@ -61,6 +61,22 @@ namespace Launcher2 {
 			Set( 3, pass );
 		}
 		
+		void UpdateSignInInfo( string user, string password ) {
+			// If the client has changed some settings in the meantime, make sure we keep the changes
+			try {
+				Options.Load();
+			} catch( IOException ) {
+			}
+			
+			Options.Set( "launcher-cc-username", user );
+			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
+			
+			try {
+				Options.Save();
+			} catch( IOException ) {
+			}
+		}
+		
 		public override void Resize() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
@@ -138,9 +154,10 @@ namespace Launcher2 {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
 			if( String.IsNullOrEmpty( Get( 3 ) ) ) {
-				SetStatus( "&ePlease enter a username" ); return;
+				SetStatus( "&ePlease enter a password" ); return;
 			}
 			if( signingIn ) return;
+			UpdateSignInInfo( Get( 2 ), Get( 3 ) );
 			
 			game.Session.LoginAsync( Get( 2 ), Get( 3 ) );
 			game.MakeBackground();

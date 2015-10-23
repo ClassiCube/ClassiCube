@@ -29,6 +29,7 @@ namespace Launcher2 {
 		public override void Tick() {
 		}
 		
+		bool ccSkins;
 		void LoadSavedInfo( IDrawer2D drawer ) {
 			try {
 				Options.Load();
@@ -39,6 +40,7 @@ namespace Launcher2 {
 			string user = Options.Get( "launcher-username" ) ?? "";
 			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
 			string port = Options.Get( "launcher-port" ) ?? "25565";
+			ccSkins = Options.GetBool( "launcher-ccskins", false );
 
 			IPAddress address;
 			if( !IPAddress.TryParse( ip, out address ) ) ip = "127.0.0.1";
@@ -139,7 +141,7 @@ namespace Launcher2 {
 			string mppass = Get( 5 );
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
 			GameStartData data = new GameStartData( Get( 3 ), mppass, ipPart, portPart );
-			Client.Start( data, false );
+			Client.Start( data, ccSkins );
 		}
 	}
 }

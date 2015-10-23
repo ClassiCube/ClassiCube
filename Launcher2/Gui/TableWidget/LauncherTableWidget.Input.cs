@@ -17,7 +17,7 @@ namespace Launcher2 {
 				return;
 			}
 			
-			if( mouseY >= HeaderStartY && mouseY < HeaderEndY ) {			
+			if( mouseY >= HeaderStartY && mouseY < HeaderEndY ) {
 				if( mouseX < ColumnWidths[0] - 10 ) {
 					nameComp.Invert = !nameComp.Invert;
 					Array.Sort( usedEntries, 0, Count, nameComp );
@@ -36,8 +36,9 @@ namespace Launcher2 {
 				for( int i = 0; i < Count; i++ ) {
 					TableEntry entry = usedEntries[i];
 					if( mouseY >= entry.Y && mouseY < entry.Y + entry.Height ) {
-						if( lastIndex == i ) {
+						if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds > 1 ) {
 							Window.ConnectToServer( entry.Hash );
+							lastPress = DateTime.UtcNow;
 						}
 						SelectedChanged( entry.Hash );
 						lastIndex = i;
@@ -47,7 +48,8 @@ namespace Launcher2 {
 			}
 		}
 		
-		int lastIndex = -10;		
+		int lastIndex = -10;
+		DateTime lastPress;
 		public void MouseMove( int deltaX, int deltaY ) {
 			if( DraggingWidth ) {
 				ColumnWidths[0] += deltaX;
