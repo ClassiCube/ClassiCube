@@ -225,7 +225,7 @@ namespace ClassicalSharp {
 					game.Keyboard.KeyRepeat = false;
 					
 					if( key == game.Mapping( KeyMapping.PauseOrExit ) )
-						textInput.chatInputText.Clear();
+						textInput.Clear();
 					textInput.SendTextInBufferAndReset();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;

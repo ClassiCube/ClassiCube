@@ -27,6 +27,7 @@ namespace Launcher2 {
 			Exception = null;
 			Status = "&eSigning in..";
 			Servers = new List<ServerListEntry>();
+			//System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			
 			Thread thread = new Thread( LoginWorker, 256 * 1024 );
 			thread.Name = "Launcher.LoginAsync";

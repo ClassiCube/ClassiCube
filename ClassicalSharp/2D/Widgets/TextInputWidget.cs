@@ -158,6 +158,13 @@ namespace ClassicalSharp {
 			Height = 0;
 		}
 		
+		public void Clear() {
+			chatInputText.Clear();
+			for( int i = 0; i < parts.Length; i++ ) {
+				parts[i] = null;
+			}
+		}
+		
 		#region Input handling
 		
 		public override bool HandlesKeyPress( char key ) {
