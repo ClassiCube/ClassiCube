@@ -35,13 +35,12 @@ Alternatively, you can use [CSLauncher](https://github.com/umby24/CSLauncher/rel
 this launcher is very similar to ClassiCube's launcher and is simpler to use. (Thanks Umby24 for making this launcher)
 
 ###### *Mono specific*
-*You must use either build using Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
+*You must use either build using the Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
 
 *Also when using older mono versions, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.*
 
-#### Important notes
+#### Tips
 * Press escape (after joining a world) to switch to the pause menu.
-
 * Pause menu -> Options -> Key mappings lists all of the key combinations used by the client. 
 * Note that toggling 'vsync' to off will minimise CPU usage, while on will maximimise chunk loading speed.
 * Press F to cycle view distance. A smaller number of visible chunks can improve performance.

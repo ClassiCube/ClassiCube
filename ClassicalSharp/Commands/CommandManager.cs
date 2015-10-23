@@ -17,7 +17,6 @@ namespace ClassicalSharp.Commands {
 			RegisterCommand( new HelpCommand() );
 			RegisterCommand( new InfoCommand() );
 			RegisterCommand( new RenderTypeCommand() );
-			RegisterCommand( new TexturePackCommand() );
 		}
 		
 		public void RegisterCommand( Command command ) {

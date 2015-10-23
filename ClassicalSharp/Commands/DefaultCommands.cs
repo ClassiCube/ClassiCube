@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using ClassicalSharp.TexturePack;
 using ClassicalSharp.Renderers;
 
 namespace ClassicalSharp.Commands {
@@ -111,6 +109,7 @@ namespace ClassicalSharp.Commands {
 				"&bnormal: &eDefault renderer, with all environmental effects enabled.",
 				"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
 				"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+				"&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
 			};
 		}
 		
@@ -119,18 +118,21 @@ namespace ClassicalSharp.Commands {
 			if( property == null ) {
 				game.Chat.Add( "&e/client rendertype: &cYou didn't specify a new render type." );
 			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
-				SetNewRenderType( true, true, true );
+				SetNewRenderType( true, true );
 				game.Chat.Add( "&e/client rendertype: &fRender type is now fast legacy." );
 			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
-				SetNewRenderType( true, false, true );
+				SetNewRenderType( true, false );
 				game.Chat.Add( "&e/client rendertype: &fRender type is now legacy." );
 			} else if( Utils.CaselessEquals( property, "normal" ) ) {
-				SetNewRenderType( false, false, false );
+				SetNewRenderType( false, false );
 				game.Chat.Add( "&e/client rendertype: &fRender type is now normal." );
+			} else if( Utils.CaselessEquals( property, "normalfast" ) ) {
+				SetNewRenderType( false, true );
+				game.Chat.Add( "&e/client rendertype: &fRender type is now normalfast." );
 			}
 		}
 		
-		void SetNewRenderType( bool legacy, bool minimal, bool legacyEnv ) {
+		void SetNewRenderType( bool legacy, bool minimal ) {
 			game.MapEnvRenderer.SetUseLegacyMode( legacy );
 			if( minimal ) {
 				game.EnvRenderer.Dispose();
@@ -142,31 +144,7 @@ namespace ClassicalSharp.Commands {
 					game.EnvRenderer = new StandardEnvRenderer( game );
 					game.EnvRenderer.Init();
 				}
-				((StandardEnvRenderer)game.EnvRenderer).SetUseLegacyMode( legacyEnv );
-			}
-		}
-	}
-	
-	/// <summary> Command that changes the client's texture pack. </summary>
-	public sealed class TexturePackCommand : Command {
-		
-		public TexturePackCommand() {
-			Name = "TexturePack";
-			Help = new [] {
-				"&a/client texturepack [path]",
-				"&bpath: &eLoads a texture pack from the specified path.",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			string path = reader.NextAll();
-			if( String.IsNullOrEmpty( path ) ) return;
-			
-			try {
-				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( path, game );
-			} catch( FileNotFoundException ) {
-				game.Chat.Add( "&e/client texturepack: Couldn't find file \"" + path + "\"" );
+				((StandardEnvRenderer)game.EnvRenderer).SetUseLegacyMode( legacy );
 			}
 		}
 	}
