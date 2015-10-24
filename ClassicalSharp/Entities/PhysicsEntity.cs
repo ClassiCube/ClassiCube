@@ -6,10 +6,12 @@ namespace ClassicalSharp {
 	
 	/// <summary> Entity that performs collision detection. </summary>
 	public abstract class PhysicsEntity : Entity {
-		
+				
 		public PhysicsEntity( Game game ) : base( game ) {
 		}
-		protected bool onGround, collideX, collideY, collideZ;	
+		
+		protected bool onGround, collideX, collideY, collideZ;
+		protected float StepSize;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
 			if( x < 0 || x >= game.Map.Width || z < 0 || 

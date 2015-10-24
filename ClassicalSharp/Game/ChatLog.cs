@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		DateTime last = new DateTime( 1, 1, 1 );
+		DateTime last;
 		StreamWriter writer = null;
 		void LogChatToFile( string text ) {
 			DateTime now = DateTime.Now;

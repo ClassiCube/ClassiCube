@@ -10,17 +10,25 @@ namespace ClassicalSharp {
 		public Vector3 Pos;
 		public float Yaw, Pitch;
 		
+		/// <summary> Whether this update includes an absolute or relative position. </summary>
 		public bool IncludesPosition;
+		
+		/// <summary> Whether the positon is specified as absolute (world coordinates), 
+		/// or relative to the last position that was received from the server. </summary>
 		public bool RelativePosition;
+		
+		/// <summary> Whether this update includes absolute yaw and pitch. </summary>
 		public bool IncludesOrientation;
 		
 		public LocationUpdate( float x, float y, float z, float yaw, float pitch,
 		                      bool incPos, bool relPos, bool incOri ) {
 			Pos = new Vector3( x, y, z );
+			// Make sure yaw and pitch are in [0, 360)
 			Yaw = yaw % 360;
 			if( Yaw < 0 ) Yaw += 360;
 			Pitch = pitch % 360;
 			if( Pitch < 0 ) Pitch += 360;
+			
 			IncludesPosition = incPos;
 			RelativePosition = relPos;
 			IncludesOrientation = incOri;

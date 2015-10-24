@@ -29,6 +29,9 @@ namespace ClassicalSharp.Network {
 			worker.Start();
 		}
 		
+		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
+		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
+		/// <remarks> Identifier is skin_'skinName'.</remarks>
 		public void DownloadSkin( string skinName ) {
 			string strippedSkinName = Utils.StripColours( skinName );
 			string url = Utils.IsUrl( skinName ) ? skinName :
@@ -36,14 +39,17 @@ namespace ClassicalSharp.Network {
 			AddRequest( url, true, "skin_" + strippedSkinName, 0 );
 		}
 		
+		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void DownloadImage( string url, bool priority, string identifier ) {
 			AddRequest( url, priority, identifier, 0 );
 		}
 		
+		/// <summary> Asynchronously downloads a string from the specified url.  </summary>
 		public void DownloadPage( string url, bool priority, string identifier ) {
 			AddRequest( url, priority, identifier, 1 );
 		}
 		
+		/// <summary> Asynchronously downloads a byte array from the specified url.  </summary>
 		public void DownloadData( string url, bool priority, string identifier ) {
 			AddRequest( url, priority, identifier, 2 );
 		}
@@ -60,6 +66,10 @@ namespace ClassicalSharp.Network {
 			handle.Set();
 		}
 		
+		/// <summary> Informs the asynchronous thread that it should stop processing further requests
+		/// and can consequentially exit the for loop.<br/>
+		/// Note that this will *block** the calling thread as the method waits until the asynchronous
+		/// thread has exited the for loop. </summary>
 		public void Dispose() {
 			lock( requestLocker )  {
 				requests.Insert( 0, null );
@@ -71,6 +81,8 @@ namespace ClassicalSharp.Network {
 			client.Dispose();
 		}
 		
+		/// <summary> Removes older entries that were downloaded a certain time ago
+		/// but were never removed from the downloaded queue. </summary>
 		public void PurgeOldEntries( int seconds ) {
 			lock( downloadedLocker ) {
 				DateTime now = DateTime.UtcNow;
@@ -95,6 +107,10 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
+		/// <summary> Returns whether the requested item exists in the downloaded queue.
+		/// If it does, it removes the item from the queue and outputs it. </summary>
+		/// <remarks> If the asynchronous thread failed to download the item, this method
+		/// will return 'true' and 'item' will be set. However, the contents of the 'item' object will be null.</remarks>
 		public bool TryGetItem( string identifier, out DownloadedItem item ) {
 			bool success = false;
 			lock( downloadedLocker ) {
@@ -167,8 +183,8 @@ namespace ClassicalSharp.Network {
 				downloaded[request.Identifier] = newItem;
 			}
 		}
-			
-		class GZipWebClient : WebClient {
+		
+		sealed class GZipWebClient : WebClient {
 			
 			protected override WebRequest GetWebRequest( Uri address ) {
 				HttpWebRequest request = (HttpWebRequest)base.GetWebRequest( address );
@@ -177,7 +193,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		class Request {
+		sealed class Request {
 			
 			public string Url;
 			public string Identifier;
@@ -193,10 +209,21 @@ namespace ClassicalSharp.Network {
 		}
 	}
 	
+	/// <summary> Represents an item that was asynchronously downloaded. </summary>
 	public class DownloadedItem {
 		
+		/// <summary> Contents that were downloaded. Can be a bitmap, string or byte array. </summary>
 		public object Data;
-		public DateTime TimeAdded, TimeDownloaded;
+		
+		/// <summary> Instant in time the item was originally added to the download queue. </summary>
+		public DateTime TimeAdded;
+		
+		/// <summary> Instant in time the item was fully downloaded. </summary>
+		public DateTime TimeDownloaded;
+		
+		/// <summary>
+		/// 
+		/// </summary>
 		public string Url;
 		
 		public DownloadedItem( object data, DateTime timeAdded, string url ) {

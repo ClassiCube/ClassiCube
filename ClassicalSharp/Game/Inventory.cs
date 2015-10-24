@@ -2,6 +2,7 @@
 
 namespace ClassicalSharp {
 	
+	/// <summary> Contains the hotbar of blocks, as well as the permissions for placing and deleting all blocks. </summary>
 	public sealed class Inventory {
 		
 		public Inventory( Game game ) {
@@ -29,6 +30,8 @@ namespace ClassicalSharp {
 		public InventoryPermissions CanPlace = new InventoryPermissions();
 		public InventoryPermissions CanDelete = new InventoryPermissions();			
 		
+		/// <summary> Gets or sets the index of the held block. 
+		/// Fails if the server has forbidden up from changing the held block. </summary>
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
 			set {
@@ -41,6 +44,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Gets or sets the block currently held by the player.
+		/// Fails if the server has forbidden up from changing the held block. </summary>
 		public Block HeldBlock {
 			get { return Hotbar[hotbarIndex]; }
 			set {

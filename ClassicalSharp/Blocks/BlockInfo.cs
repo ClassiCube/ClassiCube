@@ -1,4 +1,5 @@
 ﻿using System;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -180,6 +181,8 @@ namespace ClassicalSharp {
 			SpeedMultiplier[id] = 1;
 			SetAll( 0, (Block)id );
 			SetupCullingCache();
+			MinBB[id] = Vector3.Zero;
+			MaxBB[id] = Vector3.One;
 		}
 	}
 	

@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		public byte UserType;
 		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
 		
+		/// <summary> Whether the player has permission to increase its speed beyond the normal walking speed. </summary>
 		public bool CanSpeed {
 			get { return canSpeed; }
 			set { canSpeed = value; }
@@ -37,6 +38,8 @@ namespace ClassicalSharp {
 		}
 		
 		float jumpVel = 0.42f;
+		/// <summary> Returns the height that the client can currently jump up to.<br/>
+		/// Note that when speeding is enabled the client is able to jump much further. </summary>
 		public float JumpHeight {
 			get { return (float)GetMaxHeight( jumpVel ); }
 		}
@@ -200,6 +203,9 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
+		
+		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
+		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax </remarks>
 		public void ParseHackFlags( string name, string motd ) {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {
@@ -216,9 +222,8 @@ namespace ClassicalSharp {
 			ParseFlag( b => CanSpeed = b, joined, "speed" );
 			ParseFlag( b => CanRespawn = b, joined, "respawn" );
 
-			if( UserType == 0x64 ) {
+			if( UserType == 0x64 )
 				ParseFlag( b => CanFly = CanNoclip = CanRespawn = CanSpeed = b, joined, "ophax" );
-			}
 		}
 		
 		static void ParseFlag( Action<bool> action, string joined, string flag ) {
@@ -229,6 +234,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Sets the user type of this user. This is used to control permissions for grass, 
+		/// bedrock, water and lava blocks on servers that don't support CPE block permissions. </summary>
 		public void SetUserType( byte value ) {
 			UserType = value;
 			Inventory inv = game.Inventory;
@@ -244,6 +251,8 @@ namespace ClassicalSharp {
 		
 		internal Vector3 lastPos, nextPos;
 		internal float lastYaw, nextYaw, lastPitch, nextPitch;
+		
+		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
 		public void SetInterpPosition( float t ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			YawDegrees = Utils.LerpAngle( lastYaw, nextYaw, t );
@@ -278,6 +287,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Calculates the jump velocity required such that when a client presses 
+		/// the jump binding they will be able to jump up to the given height. </summary>
 		internal void CalculateJumpVelocity( float jumpHeight ) {
 			jumpVel = 0;
 			if( jumpHeight >= 256 ) jumpVel = 10.0f;

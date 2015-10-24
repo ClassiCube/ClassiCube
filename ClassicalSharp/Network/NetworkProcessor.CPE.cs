@@ -336,6 +336,14 @@ namespace ClassicalSharp {
 			info.FogColour[block] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 			info.SetupCullingCache();
+			
+			// Update sprite BoundingBox if necessary
+			if( info.IsSprite[block] ) {
+				using( FastBitmap fastBmp =
+				      new FastBitmap( game.TerrainAtlas.AtlasBitmap, true ) ) {
+					info.RecalculateBB( block, fastBmp );
+				}
+			}			
 		}
 		
 		void HandleCpeRemoveBlockDefinition() {
