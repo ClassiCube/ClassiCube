@@ -49,8 +49,8 @@ namespace ClassicalSharp {
 				     (g, v) => g.Map.SetWeather( (Weather)Int32.Parse( v ) ) ),
 				
 				Make( 140, 0, "Water level", Anchor.Centre, OnWidgetClick,
-				     g => g.Map.WaterHeight.ToString(),
-				     (g, v) => g.Map.SetWaterLevel( Int32.Parse( v ) ) ),
+				     g => g.Map.EdgeHeight.ToString(),
+				     (g, v) => g.Map.SetEdgeLevel( Int32.Parse( v ) ) ),
 				
 				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),

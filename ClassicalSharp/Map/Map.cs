@@ -2,15 +2,16 @@
 
 namespace ClassicalSharp {
 
-	public class Map {
+	/// <summary> Represents a fixed size map of blocks. Stores the raw block data, 
+	/// heightmap, dimensions and various environment settings. </summary>
+	public sealed class Map {
 
 		Game game;
 		BlockInfo info;
 		internal byte[] mapData;
 		public int Width, Height, Length;
 		internal short[] heightmap;
-		int maxY;
-		int oneY;
+		int maxY, oneY;
 		
 		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
 		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
@@ -18,17 +19,46 @@ namespace ClassicalSharp {
 		public static readonly FastColour DefaultCloudsColour =  new FastColour( 0xFF, 0xFF, 0xFF );
 		public static readonly FastColour DefaultFogColour = new FastColour( 0xFF, 0xFF, 0xFF );
 		
-		public Block SidesBlock = Block.Bedrock, EdgeBlock = Block.StillWater;
-		public int WaterHeight;
-		public FastColour SkyCol = DefaultSkyColour, FogCol = DefaultFogColour, CloudsCol = DefaultCloudsColour;
-		public FastColour Sunlight, SunlightXSide, SunlightZSide, SunlightYBottom;
-		public FastColour Shadowlight, ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		/// <summary> Block that surrounds the map that is below the map, fills part of the vertical sides, 
+		/// and also perpendicular to the Y plane. (default bedrock) </summary>
+		public Block SidesBlock = Block.Bedrock;
+		
+		/// <summary> Block that surrounds map and is perpendicular to the Y plane. (default water) </summary>
+		public Block EdgeBlock = Block.StillWater;
+		
+		/// <summary> Colour of the sky located behind/above clouds. </summary>
+		public FastColour SkyCol = DefaultSkyColour;
+		
+		/// <summary> Colour applied to the fog/horizon looking out horizontally. 
+		/// Note the true horizon colour is a blend of this and sky colour. </summary>
+		public FastColour FogCol = DefaultFogColour;
+		
+		/// <summary> Colour applied to the clouds. </summary>
+		public FastColour CloudsCol = DefaultCloudsColour;
+		
+		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
+		public FastColour Sunlight;
+		public FastColour SunlightXSide, SunlightZSide, SunlightYBottom;
+		
+		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
+		public FastColour Shadowlight;
+		public FastColour ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		
+		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;
+		
+		/// <summary> Unique uuid/guid of this particular map. </summary>
 		public Guid Uuid;
+		
+		/// <summary> Height of the map edge in world space. </summary>
+		public int EdgeHeight;
+		
+		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;
 		
+		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
 		public int GroundHeight {
-			get { return WaterHeight - 2; }
+			get { return EdgeHeight - 2; }
 		}
 		
 		public Map( Game game ) {
@@ -38,20 +68,27 @@ namespace ClassicalSharp {
 			SetShadowlight( DefaultShadowlight );
 		}
 		
+		/// <summary> Whether this map is empty. </summary>
 		public bool IsNotLoaded {
 			get { return Width == 0 && Height == 0 && Length == 0; }
 		}
 		
+		/// <summary> Resets all of the properties to their defaults and raises the 'OnNewMap' event. </summary>
 		public void Reset() {
-			WaterHeight = -1;
+			EdgeHeight = -1;
 			CloudHeight = -1;
 			Width = Height = Length = 0;
 			Uuid = Guid.NewGuid();
 			EdgeBlock = Block.StillWater;
 			SidesBlock = Block.Bedrock;
 			
-			SetShadowlight( DefaultShadowlight );
-			SetSunlight( DefaultSunlight );
+			Shadowlight = DefaultSunlight;
+			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide, 
+			                     ref ShadowlightZSide, ref ShadowlightYBottom );
+			Sunlight = DefaultSunlight;
+			FastColour.GetShaded( Sunlight, ref SunlightXSide, 
+			                     ref SunlightZSide, ref SunlightYBottom );
+			
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
@@ -59,6 +96,8 @@ namespace ClassicalSharp {
 			game.Events.RaiseOnNewMap();
 		}
 		
+		/// <summary> Sets the sides block to the given block, and raises the 
+		/// EnvVariableChanged event with the variable 'SidesBlock'. </summary>
 		public void SetSidesBlock( Block block ) {
 			if( block == SidesBlock ) return;
 			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
@@ -69,6 +108,8 @@ namespace ClassicalSharp {
 			game.Events.RaiseEnvVariableChanged( EnvVar.SidesBlock );
 		}
 		
+		/// <summary> Sets the edge block to the given block, and raises the 
+		/// EnvVariableChanged event with the variable 'EdgeBlock'. </summary>
 		public void SetEdgeBlock( Block block ) {
 			if( block == EdgeBlock ) return;
 			if( block == (Block)BlockInfo.MaxDefinedBlock ) {
@@ -79,28 +120,44 @@ namespace ClassicalSharp {
 			game.Events.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
 		}
 		
+		/// <summary> Sets the height of the clouds in world space, and raises the 
+		/// EnvVariableChanged event with the variable 'CloudsLevel'. </summary>
 		public void SetCloudsLevel( int level ) { Set( level, ref CloudHeight, EnvVar.CloudsLevel ); }
 		
-		public void SetWaterLevel( int level ) { Set( level, ref WaterHeight, EnvVar.WaterLevel ); }
+		/// <summary> Sets the height of the map edges in world space, and raises the 
+		/// EnvVariableChanged event with the variable 'EdgeLevel'. </summary>
+		public void SetEdgeLevel( int level ) { Set( level, ref EdgeHeight, EnvVar.EdgeLevel ); }
 		
+		/// <summary> Sets the current sky colour, and raises the 
+		/// EnvVariableChanged event with the variable 'SkyColour'. </summary>
 		public void SetSkyColour( FastColour col ) { Set( col, ref SkyCol, EnvVar.SkyColour ); }
 		
+		/// <summary> Sets the current fog colour, and raises the 
+		/// EnvVariableChanged event with the variable 'FogColour'. </summary>
 		public void SetFogColour( FastColour col ) { Set( col, ref FogCol, EnvVar.FogColour ); }
 		
+		/// <summary> Sets the current clouds colour, and raises the 
+		/// EnvVariableChanged event with the variable 'CloudsColour'. </summary>
 		public void SetCloudsColour( FastColour col ) { Set( col, ref CloudsCol, EnvVar.CloudsColour ); }
 		
+		/// <summary> Sets the current sunlight colour, and raises the 
+		/// EnvVariableChanged event with the variable 'SunlightColour'. </summary>
 		public void SetSunlight( FastColour col ) { 
 			Set( col, ref Sunlight, EnvVar.SunlightColour );
 			FastColour.GetShaded( Sunlight, ref SunlightXSide, 
 			                     ref SunlightZSide, ref SunlightYBottom );
 		}
 		
+		/// <summary> Sets the current shadowlight colour, and raises the 
+		/// EnvVariableChanged event with the variable 'ShadowlightColour'. </summary>
 		public void SetShadowlight( FastColour col ) {
 			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
 			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide, 
 			                     ref ShadowlightZSide, ref ShadowlightYBottom );
 		}
 		
+		/// <summary> Sets the current weather, and raises the 
+		/// EnvVariableChanged event with the variable 'Weather'. </summary>
 		public void SetWeather( Weather weather ) { 
 			if( weather == Weather ) return;
 			Weather = weather;
@@ -139,7 +196,7 @@ namespace ClassicalSharp {
 			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
 			
-			int index = ( z * Width ) + x;
+			int index = (z * Width) + x;
 			int height = heightmap[index];
 			if( height == short.MaxValue ) {
 				// We have to calculate the entire column for visibility, because the old/new block info is
@@ -147,7 +204,7 @@ namespace ClassicalSharp {
 				CalcHeightAt( x, maxY, z, index );
 			} else if( y > height ) {
 				if( nowBlocks ) {
-					heightmap[index] = (short)( y - 1 );
+					heightmap[index] = (short)(y - 1);
 				} else {
 					// Part of the column is now visible to light, we don't know how exactly how high it should be though.
 					// However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y
@@ -161,7 +218,7 @@ namespace ClassicalSharp {
 			this.Width = width;
 			this.Height = height;
 			this.Length = length;
-			if( WaterHeight == -1 ) WaterHeight = height / 2;
+			if( EdgeHeight == -1 ) EdgeHeight = height / 2;
 			maxY = height - 1;
 			oneY = length * width;
 			if( CloudHeight == -1 ) CloudHeight = height + 2;
@@ -174,12 +231,12 @@ namespace ClassicalSharp {
 		
 		public bool IsLit( int x, int y, int z ) {
 			if( !IsValidPos( x, y, z ) ) return true;
-			return y > heightmap[z * Width + x];
+			return y > GetLightHeight( x, z );
 		}
 		
 		public bool IsLit( Vector3I p ) {
 			if( !IsValidPos( p.X, p.Y, p.Z ) ) return true;
-			return p.Y > heightmap[p.Z * Width + p.X];
+			return p.Y > GetLightHeight( p.X, p.Z );
 		}
 		
 		public void SetBlock( int x, int y, int z, byte blockId ) {
@@ -194,29 +251,39 @@ namespace ClassicalSharp {
 			SetBlock( p.X, p.Y, p.Z, blockId );
 		}
 		
+		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public byte GetBlock( int x, int y, int z ) {
 			return mapData[(y * Length + z) * Width + x];
 		}
 		
+		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public byte GetBlock( Vector3I p ) {
 			return mapData[(p.Y * Length + p.Z) * Width + p.X];
 		}
 		
+		/// <summary> Returns the block at the given world coordinates withbounds checking, 
+		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( int x, int y, int z ) {
 			return IsValidPos( x, y, z ) ? 
 				mapData[(y * Length + z) * Width + x] : (byte)0;
 		}
 		
+		/// <summary> Returns the block at the given world coordinates withbounds checking, 
+		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( Vector3I p ) {
 			return IsValidPos( p.X, p.Y, p.Z ) ? 
 				mapData[(p.Y * Length + p.Z) * Width + p.X] : (byte)0;
 		}
 		
+		/// <summary> Returns whether the given world coordinates are contained 
+		/// within the dimensions of the map. </summary>
 		public bool IsValidPos( int x, int y, int z ) {
 			return x >= 0 && y >= 0 && z >= 0 &&
 				x < Width && y < Height && z < Length;
 		}
 		
+		/// <summary> Returns whether the given world coordinates are contained 
+		/// within the dimensions of the map. </summary>
 		public bool IsValidPos( Vector3I p ) {
 			return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
 				p.X < Width && p.Y < Height && p.Z < Length;

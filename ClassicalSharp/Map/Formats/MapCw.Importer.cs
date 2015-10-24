@@ -69,7 +69,7 @@ namespace ClassicalSharp {
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
 				map.SetSidesBlock( (Block)sidesBlock );
 				map.SetEdgeBlock( (Block)edgeBlock );
-				map.SetWaterLevel( (short)curCpeExt["SideLevel"].Value );
+				map.SetEdgeLevel( (short)curCpeExt["SideLevel"].Value );
 			}
 			if( CheckKey( "EnvWeatherType", 1, metadata ) ) {
 				byte weather = (byte)curCpeExt["WeatherType"].Value;

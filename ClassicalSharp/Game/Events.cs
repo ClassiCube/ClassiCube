@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 	public enum EnvVar {
 		SidesBlock,
 		EdgeBlock,
-		WaterLevel,
+		EdgeLevel,
 		CloudsLevel,
 		Weather,
 

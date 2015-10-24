@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 		void OnNewMapLoaded( object sender, EventArgs e ) {
 			CalculateRects( game.ViewDistance );
 			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
-			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
+			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
@@ -101,7 +101,7 @@ namespace ClassicalSharp {
 				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
 			} else if( e.Var == EnvVar.SidesBlock ) {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
-			} else if( e.Var == EnvVar.WaterLevel ) {
+			} else if( e.Var == EnvVar.EdgeLevel ) {
 				ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SunlightColour ) {
 				ResetSidesAndEdges( null, null );
@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 			graphics.DeleteVb( edgesVb );
 			CalculateRects( game.ViewDistance );
 			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
-			RebuildEdges( map.WaterHeight, legacy ? 128 : 65536 );
+			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
 		void RebuildSides( int groundLevel, int axisSize ) {

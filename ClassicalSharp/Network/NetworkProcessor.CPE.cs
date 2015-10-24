@@ -240,7 +240,7 @@ namespace ClassicalSharp {
 			string url = reader.ReadAsciiString();
 			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
-			game.Map.SetWaterLevel( reader.ReadInt16() );
+			game.Map.SetEdgeLevel( reader.ReadInt16() );
 			if( usingTexturePack ) {
 				game.Map.SetCloudsLevel( reader.ReadInt16() );
 				short maxViewDist = reader.ReadInt16(); // TODO: what to do with this?

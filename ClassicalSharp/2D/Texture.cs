@@ -3,12 +3,13 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Contains the information necessary to describe a 2D textured quad. </summary>
 	public struct Texture {
+		
 		public int ID;
 		public int X1, Y1;
 		public int Width, Height;
 		public float U1, V1;
-		// Normally just used for graphics cards that don't support non power of two textures.
 		public float U2, V2;
 
 		public Texture( int id, int x, int y, int width, int height, float u2, float v2 )
@@ -16,19 +17,15 @@ namespace ClassicalSharp {
 		}
 		
 		public Texture( int id, int x, int y, int width, int height, TextureRec rec )
-			: this( id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2 )	{
+			: this( id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2 ) {
 		}
 		
 		public Texture( int id, int x, int y, int width, int height, float u1, float u2, float v1, float v2 ) {
 			ID = id;
-			X1 = x;
-			Y1 = y;
-			Width = width;
-			Height = height;
-			U1 = u1;
-			V1 = v1;
-			U2 = u2;
-			V2 = v2;
+			X1 = x; Y1 = y;
+			Width = width; Height = height;
+			U1 = u1; V1 = v1;
+			U2 = u2; V2 = v2;
 		}
 		
 		public bool IsValid {

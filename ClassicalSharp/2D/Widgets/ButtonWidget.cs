@@ -58,8 +58,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			if( texture.IsValid ) {
 				FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
-				graphicsApi.BindTexture( texture.ID );
-				graphicsApi.Draw2DTexture( ref texture, col );
+				texture.Render( graphicsApi, col );
 			}
 		}
 		

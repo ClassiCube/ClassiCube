@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 		}
 		
 		int GetRainHeight( int x, int z ) {
-			if( x < 0 || z < 0 || x >= width || z >= length ) return map.WaterHeight - 1;
+			if( x < 0 || z < 0 || x >= width || z >= length ) return map.EdgeHeight - 1;
 			int index = ( x * length ) + z;
 			int height = heightmap[index];			
 			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
