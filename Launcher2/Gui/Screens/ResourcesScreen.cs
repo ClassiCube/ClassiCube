@@ -89,6 +89,13 @@ namespace Launcher2 {
 				: (widgets[0] as LauncherLabelWidget).Text;
 			MakeTextAt( statusFont, text, 0, 5 );
 
+			// Clear the entire previous widgets state.
+			for( int i = 1; i < widgets.Length; i++ ) {
+				widgets[i] = null;
+				selectedWidget = null;
+				lastClicked = null;
+			}
+			
 			if( fetcher == null ) {
 				MakeTextAt( infoFont, mainText, 0, -30 );
 				MakeButtonAt( "Yes", 60, 30, textFont, Anchor.Centre,
@@ -99,8 +106,6 @@ namespace Launcher2 {
 			} else {
 				MakeButtonAt( "Dismiss", 120, 30, textFont, Anchor.Centre,
 				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-				widgets[2] = null;
-				widgets[3] = null;
 			}
 		}
 		
