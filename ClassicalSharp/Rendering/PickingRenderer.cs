@@ -27,8 +27,7 @@ namespace ClassicalSharp.Renderers {
 			index = 0;
 			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
-			col.A = 150;
-			graphics.AlphaBlending = true;
+			//col.A = 180;
 			
 			// bottom face
 			DrawYPlane( p1.Y, p1.X, p1.Z, p1.X + size, p2.Z );
@@ -63,7 +62,6 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, verticesCount, verticesCount * 6 / 4 );
-			graphics.AlphaBlending = false;
 		}
 		
 		public void Dispose() {

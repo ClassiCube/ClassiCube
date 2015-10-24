@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		/// <summary> Bounding box of the model that collision detection 
+		/// <summary> Bounding box of the model that collision detection
 		/// is performed with, in world coordinates.  </summary>
 		public virtual BoundingBox CollisionBounds {
 			get {
@@ -71,9 +71,10 @@ namespace ClassicalSharp {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			
-			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
-				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
-					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
+			// Order loops so that we minimise cache misses		
+			for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
+				for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
+					for( int x = bbMin.X; x <= bbMax.X; x++ ) {
 						if( !game.Map.IsValidPos( x, y, z ) ) continue;
 						byte block = game.Map.GetBlock( x, y, z );
 						

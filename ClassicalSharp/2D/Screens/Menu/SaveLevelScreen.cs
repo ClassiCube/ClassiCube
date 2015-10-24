@@ -99,7 +99,7 @@ namespace ClassicalSharp {
 		void SaveMap( string path ) {
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-					IMapFile map = new MapCw();
+					IMapFileFormat map = new MapCw();
 					map.Save( fs, game );
 				}
 			} catch( Exception ex ) {

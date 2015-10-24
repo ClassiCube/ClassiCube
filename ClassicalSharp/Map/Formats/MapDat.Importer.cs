@@ -7,7 +7,8 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
-	public sealed class MapDat : IMapFile {
+	/// <summary> Imports a map from a dat map file (original minecraft classic map) </summary>
+	public sealed class MapDat : IMapFileFormat {
 		
 		const byte TC_NULL = 0x70, TC_REFERENCE = 0x71;
 		const byte TC_CLASSDESC = 0x72, TC_OBJECT = 0x73;

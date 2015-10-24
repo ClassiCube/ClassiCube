@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			// For each step, determine which distance to the next voxel boundary is lowest (i.e.
 			// which voxel boundary is nearest) and walk that way.
 			while( iterations < 10000 ) {
-				byte block = map.SafeGetBlock( x, y, z );
+				byte block = GetBlock( map, x, y, z, origin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
@@ -112,6 +112,18 @@ namespace ClassicalSharp {
 			}
 			throw new InvalidOperationException( "did over 10000 iterations in GetPickedBlockPos(). " +
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
+		}
+		
+		static byte GetBlock( Map map, int x, int y, int z, Vector3 origin ) {
+			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
+				if( y >= map.Height ) return 0;
+				if( y >= 0 ) return map.GetBlock( x, y, z );
+				
+				// special case: we want to be able to pick bedrock when we're standing on top of it
+				if( origin.Y >= 0 && y == -1 )
+					return (byte)Block.Bedrock;
+			}
+			return 0;
 		}
 	}
 }

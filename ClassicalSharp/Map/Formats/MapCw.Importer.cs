@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ClassicalSharp {
 
-	public sealed partial class MapCw : IMapFile {
+	public sealed partial class MapCw : IMapFileFormat {
 		
 		public override bool SupportsLoading {
 			get { return true; }

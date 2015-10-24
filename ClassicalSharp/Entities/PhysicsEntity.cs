@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	/// <summary> Entity that performs collision detection. </summary>
 	public abstract class PhysicsEntity : Entity {
-				
+		
 		public PhysicsEntity( Game game ) : base( game ) {
 		}
 		
@@ -14,19 +14,18 @@ namespace ClassicalSharp {
 		protected float StepSize;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( x < 0 || x >= game.Map.Width || z < 0 || 
+			if( x < 0 || x >= game.Map.Width || z < 0 ||
 			   z >= game.Map.Length || y < 0 ) return (byte)Block.Bedrock;
 			
 			if( y >= game.Map.Height ) return (byte)Block.Air;
 			return game.Map.GetBlock( x, y, z );
 		}
 		
-		bool GetBoundingBox( byte block, int x, int y, int z, out BoundingBox box ) {
-			box = new BoundingBox( Vector3.Zero, Vector3.Zero );
+		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {
 			if( info.CollideType[block] != BlockCollideType.Solid ) return false;
-			Vector3 min = new Vector3( x, y, z );
-			Vector3 max = new Vector3( x + 1, y + info.Height[block], z + 1 );
-			box = new BoundingBox( min, max );
+			
+			box.Min = new Vector3( x, y, z );
+			box.Max = new Vector3( x + 1, y + info.Height[block], z + 1 );
 			return true;
 		}
 		
@@ -85,14 +84,16 @@ namespace ClassicalSharp {
 			int elements = (max.X + 1 - min.X) * (max.Y + 1 - min.Y) * (max.Z + 1 - min.Z);
 			if( elements > stateCache.Length ) {
 				stateCache = new State[elements];
-			}
+			}			
 			
-			for( int x = min.X; x <= max.X; x++ ) {
-				for( int y = min.Y; y <= max.Y; y++ ) {
-					for( int z = min.Z; z <= max.Z; z++ ) {
+			BoundingBox blockBB = default( BoundingBox );
+			// Order loops so that we minimise cache misses
+			for( int y = min.Y; y <= max.Y; y++ ) {
+				for( int z = min.Z; z <= max.Z; z++ ) {
+					for( int x = min.X; x <= max.X; x++ ) {
 						byte blockId = GetPhysicsBlockId( x, y, z );
-						BoundingBox blockBB;
-						if( !GetBoundingBox( blockId, x, y, z, out blockBB ) ) continue;
+						
+						if( !GetBoundingBox( blockId, x, y, z, ref blockBB ) ) continue;
 						if( !entityExtentBB.Intersects( blockBB ) ) continue; // necessary for some non whole blocks. (slabs)
 						
 						float tx = 0, ty = 0, tz = 0;
@@ -126,10 +127,10 @@ namespace ClassicalSharp {
 				if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {
 					Position.Y = blockBB.Max.Y + Adjustment;
 					onGround = true;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );					
+					ClipY( ref size, ref entityBB, ref entityExtentBB );
 				} else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y ) {
 					Position.Y = blockBB.Min.Y - size.Y - Adjustment;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );					
+					ClipY( ref size, ref entityBB, ref entityExtentBB );
 				} else if( finalBB.Min.X + Adjustment >= blockBB.Max.X ) {
 					if( !wasOn || !DidSlide( ref blockBB, ref size, ref finalBB, ref entityBB, ref entityExtentBB ) ) {
 						Position.X = blockBB.Max.X + size.X / 2 + Adjustment;

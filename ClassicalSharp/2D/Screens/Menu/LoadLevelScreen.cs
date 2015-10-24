@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadMap( string path ) {
-			IMapFile mapFile = null;
+			IMapFileFormat mapFile = null;
 			if( path.EndsWith( ".dat" ) ) {
 				mapFile = new MapDat();
 			} else if( path.EndsWith( ".fcm" ) ) {

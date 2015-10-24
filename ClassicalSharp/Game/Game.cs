@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
-			Drawer2D = new GdiPlusDrawer2D( Graphics );			
+			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 40 );
 			BlockInfo = new BlockInfo();
@@ -119,7 +119,7 @@ namespace ClassicalSharp {
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
 			Inventory = new Inventory( this );
-					
+			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
@@ -212,9 +212,9 @@ namespace ClassicalSharp {
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				EnvRenderer.Render( e.Time );
-				MapRenderer.Render( e.Time );
 				if( SelectedPos.Valid && !HideGui )
-					Picking.Render( e.Time, SelectedPos );			
+					Picking.Render( e.Time, SelectedPos );
+				MapRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
 				InputHandler.PickBlocks( true );
@@ -250,7 +250,7 @@ namespace ClassicalSharp {
 			int ticksThisFrame = 0;
 			while( ticksAccumulator >= ticksPeriod ) {
 				Network.Tick( ticksPeriod );
-				Players.Tick( ticksPeriod );			
+				Players.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
 				ticksThisFrame++;
@@ -308,7 +308,7 @@ namespace ClassicalSharp {
 			InputHandler.ScreenChanged( activeScreen, screen );
 			
 			if( activeScreen != null )
-				activeScreen.Dispose();			
+				activeScreen.Dispose();
 			activeScreen = screen;
 			if( screen != null )
 				screen.Init();
@@ -316,7 +316,7 @@ namespace ClassicalSharp {
 		
 		public void SetCamera( bool thirdPerson ) {
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
-			Camera = (thirdPerson && CanUseThirdPersonCamera) ? 
+			Camera = (thirdPerson && CanUseThirdPersonCamera) ?
 				(Camera is FirstPersonCamera ? thirdPersonCam : forwardThirdPersonCam ) :
 				firstPersonCam;
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
@@ -378,16 +378,17 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool CanPick( byte block ) {
-			return !(block == 0 || (BlockInfo.IsLiquid[block] && 
+			return !(block == 0 || (BlockInfo.IsLiquid[block] &&
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack ) 
+		public Game( string username, string mppass, string skinServer, string defaultTexPack )
 			#if USE_DX
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default ) {
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default )
 			#else
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default ) {
+			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default )
 			#endif
+		{
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
@@ -399,7 +400,7 @@ namespace ClassicalSharp {
 			}
 		}
 	}
-	
+
 	public sealed class CpeListInfo {
 		
 		public byte NameId;

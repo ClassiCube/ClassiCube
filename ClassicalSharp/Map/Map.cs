@@ -3,7 +3,7 @@
 namespace ClassicalSharp {
 
 	/// <summary> Represents a fixed size map of blocks. Stores the raw block data, 
-	/// heightmap, dimensions and various environment settings. </summary>
+	/// heightmap, dimensions and various metadata such as environment settings. </summary>
 	public sealed class Map {
 
 		Game game;

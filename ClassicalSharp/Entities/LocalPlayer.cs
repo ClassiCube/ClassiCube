@@ -173,8 +173,13 @@ namespace ClassicalSharp {
 				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 				
 				if( BlockUnderFeet == Block.Ice ) {
-					Utils.Clamp( ref Velocity.X, -0.25f, 0.25f );
-					Utils.Clamp( ref Velocity.Z, -0.25f, 0.25f );
+					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
+					if( Math.Abs( Velocity.X ) > 0.25f || Math.Abs( Velocity.Z ) > 0.25f ) {
+						float scale = Math.Min(
+							Math.Abs( 0.25f / Velocity.X ), Math.Abs( 0.25f / Velocity.Z ) );
+						Velocity.X *= scale;
+						Velocity.Z *= scale;
+					}
 				} else if( onGround || flying ) {
 					Velocity *= airDrag; // air drag or ground friction
 				}

@@ -77,14 +77,16 @@ namespace ClassicalSharp {
 			
 			if( middle ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				byte block = game.Map.GetBlock( pos );
-				if( block != 0 && (inv.CanPlace[block] || inv.CanDelete[block]) ) {
+				byte block = 0;
+				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
+				   && (inv.CanPlace[block] || inv.CanDelete[block]) ) {
 					inv.HeldBlock = (Block)block;
 				}
 			} else if( left ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				byte block = game.Map.GetBlock( pos );
-				if( block != 0 && inv.CanDelete[block] ) {
+				byte block = 0;
+				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
+				   && inv.CanDelete[block] ) {
 					game.ParticleManager.BreakBlockEffect( pos, block );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );

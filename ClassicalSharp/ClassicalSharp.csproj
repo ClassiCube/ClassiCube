@@ -145,7 +145,7 @@
     <Compile Include="Map\ChunkMeshBuilder.cs" />
     <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
-    <Compile Include="Map\Formats\IMapFile.cs" />
+    <Compile Include="Map\Formats\IMapFileFormat.cs" />
     <Compile Include="Map\Formats\MapCw.Exporter.cs" />
     <Compile Include="Map\Formats\MapCw.Importer.cs" />
     <Compile Include="Map\Formats\MapDat.Importer.cs" />

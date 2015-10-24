@@ -6,7 +6,8 @@ using System.Text;
 
 namespace ClassicalSharp {
 
-	public sealed class MapFcm3 : IMapFile {
+	/// <summary> Imports a map from a FCMv3 map file (fCraft server map) </summary>
+	public sealed class MapFcm3 : IMapFileFormat {
 		
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;
@@ -43,8 +44,8 @@ namespace ClassicalSharp {
 					string group = ReadString( reader );
 					string key = ReadString( reader );
 					string value = ReadString( reader );
-					Console.WriteLine( group + "," + key + "," + value );
 				}
+				
 				byte[] blocks = new byte[width * height * length];
 				int read = ds.Read( blocks, 0, blocks.Length );
 				return blocks;

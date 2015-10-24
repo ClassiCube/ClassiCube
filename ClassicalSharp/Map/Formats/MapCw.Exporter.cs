@@ -7,7 +7,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public sealed partial class MapCw : IMapFile {
+	public sealed partial class MapCw : IMapFileFormat {
 		
 		public override bool SupportsSaving {
 			get { return true; }
