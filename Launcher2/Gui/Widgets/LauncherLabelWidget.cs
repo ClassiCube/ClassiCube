@@ -4,11 +4,12 @@ using ClassicalSharp;
 
 namespace Launcher2 {
 
-	public sealed class LauncherTextWidget : LauncherWidget {
+	/// <summary> Widget that represents text that cannot be modified by the user. </summary>
+	public sealed class LauncherLabelWidget : LauncherWidget {
 		
 		public string Text;
 		
-		public LauncherTextWidget( LauncherWindow window, string text ) : base( window ) {
+		public LauncherLabelWidget( LauncherWindow window, string text ) : base( window ) {
 			Text = text;
 		}
 

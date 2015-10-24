@@ -86,25 +86,26 @@ namespace Launcher2 {
 			
 			string text = widgets[0] == null ?
 				String.Format( format, ResourceFetcher.EstimateDownloadSize().ToString( "F2" ) )
-				: (widgets[0] as LauncherTextWidget).Text;
+				: (widgets[0] as LauncherLabelWidget).Text;
 			MakeTextAt( statusFont, text, 0, 5 );
 
 			if( fetcher == null ) {
 				MakeTextAt( infoFont, mainText, 0, -30 );
-				MakeButtonAt( "Yes", 60, 30, -50, 40, DownloadResources );
+				MakeButtonAt( "Yes", 60, 30, textFont, Anchor.Centre,
+				             -50, 40, DownloadResources );
 				
-				MakeButtonAt( "No", 60, 30, 50, 40,
-				             (x, y) => game.SetScreen( new MainScreen( game ) ) );
+				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre, 
+				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			} else {
-				MakeButtonAt( "Dismiss", 120, 30, 0, 40,
-				             (x, y) => game.SetScreen( new MainScreen( game ) ) );
+				MakeButtonAt( "Dismiss", 120, 30, textFont, Anchor.Centre,
+				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 				widgets[2] = null;
 				widgets[3] = null;
 			}
 		}
 		
 		void SetStatus( string text ) {
-			LauncherTextWidget widget = widgets[0] as LauncherTextWidget;
+			LauncherLabelWidget widget = widgets[0] as LauncherLabelWidget;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
@@ -113,19 +114,8 @@ namespace Launcher2 {
 			}
 		}
 		
-		void MakeButtonAt( string text, int width,
-		                  int height, int x, int y, Action<int, int> onClick ) {
-			LauncherButtonWidget widget = new LauncherButtonWidget( game );
-			widget.Text = text;
-			widget.OnClick = onClick;
-			
-			widget.Active = false;
-			widget.DrawAt( drawer, text, textFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
 		void MakeTextAt( Font font, string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game, text );
+			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
 			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.Centre, x, y );
 			widgets[widgetIndex++] = widget;
 		}

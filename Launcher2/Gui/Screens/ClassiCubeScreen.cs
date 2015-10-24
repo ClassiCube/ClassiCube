@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp;
-using OpenTK;
-using OpenTK.Input;
 
 namespace Launcher2 {
 	
@@ -87,19 +84,22 @@ namespace Launcher2 {
 
 		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( "Username", -180, -100 );
-			MakeTextAt( "Password", -180, -50 );
+			MakeTextAt( "Username", titleFont, -180, -100 );
+			MakeTextAt( "Password", titleFont, -180, -50 );
 			
-			MakeTextInputAt( false, Get( widgetIndex ), 30, -100 );
-			MakeTextInputAt( true, Get( widgetIndex ), 30, -50 );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
+			MakeInput( Get(), 300, Anchor.Centre, true, 30, -50, 32 );
 			
-			MakeButtonAt( "Sign in", 90, 35, -75, 0, StartClient );
-			MakeButtonAt( "Back", 80, 35, 140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			string text = widgets[6] == null ? "" : ((LauncherTextWidget)widgets[6]).Text;
-			MakeTextAt( text, 0, 50 );
+			MakeButtonAt( "Sign in", 90, 35, titleFont, Anchor.Centre,
+			             -75, 0, StartClient );
+			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 
+			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			string text = widgets[6] == null ? "" : ((LauncherLabelWidget)widgets[6]).Text;
+			MakeTextAt( text, inputFont, 0, 50 );
 			
 			if( HasServers && !signingIn )
-				MakeButtonAt( "Servers", 90, 35, 35, 0, ShowServers );
+				MakeButtonAt( "Servers", 90, 35, titleFont, Anchor.Centre,
+				             35, 0, ShowServers );
 		}
 
 		string lastStatus;
@@ -107,38 +107,18 @@ namespace Launcher2 {
 			lastStatus = text;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherTextWidget widget = (LauncherTextWidget)widgets[6];
+				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[6];
 				
-				drawer.Clear( LauncherWindow.clearColour, widget.X, widget.Y,
+				drawer.Clear( game.clearColour, widget.X, widget.Y,
 				             widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
 				Dirty = true;
 			}
 		}
 
-		void MakeTextAt( string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game, text );
-			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeTextInputAt( bool password, string text, int x, int y ) {
-			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
-			widget.OnClick = InputClick;
-			widget.Password = password;
-			
-			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 300, 30, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeButtonAt( string text, int width, int height,
-		                  int x, int y, Action<int, int> onClick ) {
-			LauncherButtonWidget widget = new LauncherButtonWidget( game );
-			widget.Text = text;
-			widget.OnClick = onClick;
-			
-			widget.Active = false;
-			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
+		void MakeTextAt( string text, Font font, int x, int y ) {
+			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
+			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.Centre, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		

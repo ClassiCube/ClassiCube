@@ -58,7 +58,6 @@ namespace Launcher2 {
 			}
 		}
 		
-		
 		void ScrollbarClick( int mouseY ) {
 			mouseY -= Y;
 			float scale = (Window.Height - 10) / (float)Count;

@@ -165,7 +165,7 @@ namespace ClassicalSharp {
 			} else if( TouchesAnyRope() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
-				float factor = !flying && onGround ? 0.1f : 0.02f;
+				float factor = !(flying || noClip) && onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 				

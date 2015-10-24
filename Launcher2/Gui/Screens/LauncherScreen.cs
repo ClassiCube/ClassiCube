@@ -84,7 +84,7 @@ namespace Launcher2 {
 			
 			for( int i = 0; i < widgets.Length * 2; i++ ) {
 				index = (index + 1) % widgets.Length;
-				if( widgets[index] is LauncherTextInputWidget
+				if( widgets[index] is LauncherInputWidget
 				   || widgets[index] is LauncherButtonWidget ) {
 					LauncherWidget widget = widgets[index];
 					moveArgs.X = widget.X + widget.Width / 2;
@@ -101,11 +101,30 @@ namespace Launcher2 {
 					game.Window.DesktopCursorPos = p;
 					lastClicked = widget;
 					
-					if( widgets[index] is LauncherTextInputWidget )
+					if( widgets[index] is LauncherInputWidget )
 						MouseButtonDown( null, pressArgs );
 					break;
 				}
 			}
+		}
+		
+		protected void MakeButtonAt( string text, int width, int height, Font font,
+		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
+			if( widgets[widgetIndex] != null ) {
+				LauncherButtonWidget input = (LauncherButtonWidget)widgets[widgetIndex];
+				input.Active = false;
+				input.DrawAt( drawer, text, font, Anchor.Centre, verAnchor, width, height, x, y );
+				widgetIndex++;
+				return;
+			}
+			
+			LauncherButtonWidget widget = new LauncherButtonWidget( game );
+			widget.Text = text;
+			widget.OnClick = onClick;
+			
+			widget.Active = false;
+			widget.DrawAt( drawer, text, font, Anchor.Centre, verAnchor, width, height, x, y );
+			widgets[widgetIndex++] = widget;
 		}
 	}
 }

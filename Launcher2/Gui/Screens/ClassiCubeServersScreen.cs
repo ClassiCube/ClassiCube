@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Net;
 using ClassicalSharp;
 using OpenTK.Input;
 
@@ -13,8 +11,8 @@ namespace Launcher2 {
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			inputFont = new Font( "Arial", 13, FontStyle.Regular );
-			enterIndex = 4;	
-			widgets = new LauncherWidget[7];		
+			enterIndex = 4;
+			widgets = new LauncherWidget[7];
 		}
 		
 		public override void Tick() {
@@ -23,13 +21,13 @@ namespace Launcher2 {
 		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
 			base.MouseMove( sender, e );
 			if( selectedWidget != null && selectedWidget == widgets[tableIndex] ) {
-				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.MouseMove( e.XDelta, e.YDelta );
 			}
 		}
 		
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
-			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.DraggingWidth = false;
 		}
 		
@@ -39,24 +37,24 @@ namespace Launcher2 {
 		
 		void FilterList() {
 			if( lastInput == widgets[1] ) {
-				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.FilterEntries( lastInput.Text );
 				ClampIndex();
 				Resize();
 			}
 		}
 
-		public override void Init() { 
+		public override void Init() {
 			base.Init();
 			game.Window.Mouse.WheelChanged += MouseWheelChanged;
 			game.Window.Mouse.ButtonUp += MouseButtonUp;
-			Resize(); 
+			Resize();
 		}
 		
 		public override void Resize() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				drawer.Clear( LauncherWindow.clearColour );
+				drawer.Clear( game.clearColour );
 				Draw();
 			}
 			Dirty = true;
@@ -64,50 +62,24 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			int lastIndex = GetLastInputIndex();
 			
 			MakeTextAt( titleFont, "Search", -200, 10 );
-			MakeTextInputAt( Get( widgetIndex ), 270, -25, 5 );
+			MakeInput( Get(), 270, Anchor.LeftOrTop, false, -25, 5, 32 );
 			
 			MakeTextAt( inputFont, "../play/", -210, 55 );
-			MakeTextInputAt( Get( 3 ), 320, -20, 50 );
+			MakeInput( Get(), 320, Anchor.LeftOrTop, false, -20, 50, 32 );
+			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
-			MakeButtonAt( "Connect", 100, 30, 180, 5, ConnectToServer );
-			MakeButtonAt( "Back", 70, 30, 195, 50,
-			             (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.LeftOrTop,
+			             180, 5, ConnectToServer );
+			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.LeftOrTop,
+			             195, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeTableWidget();
-			
-			if( lastIndex >= 0 )
-				lastInput = widgets[lastIndex] as LauncherTextInputWidget;
-		}
-		
-		int GetLastInputIndex() {
-			return lastInput == null ? -1 :
-				Array.IndexOf<LauncherWidget>( widgets, lastInput );
 		}
 
 		void MakeTextAt( Font font, string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game, text );
+			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
 			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.LeftOrTop, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeTextInputAt( string text, int width, int x, int y ) {
-			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
-			widget.OnClick = InputClick;
-			
-			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.LeftOrTop, width, 30, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeButtonAt( string text, int width, int height,
-		                  int x, int y, Action<int, int> onClick ) {
-			LauncherButtonWidget widget = new LauncherButtonWidget( game );
-			widget.Text = text;
-			widget.OnClick = onClick;
-			
-			widget.Active = false;
-			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.LeftOrTop, width, height, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
@@ -141,18 +113,32 @@ namespace Launcher2 {
 		}
 		
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.CurrentIndex -= e.Delta;
 			ClampIndex();
 			Resize();
 		}
 		
 		void ClampIndex() {
-			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( table.CurrentIndex >= table.Count )
 				table.CurrentIndex = table.Count - 1;
 			if( table.CurrentIndex < 0 )
 				table.CurrentIndex = 0;
+		}
+		
+		string HashFilter( string input ) {
+			// Server url look like http://www.classicube.net/server/play/aaaaa/
+			
+			// Trim off the last / if it exists
+			if( input[input.Length - 1] == '/' )
+				input = input.Substring( 0, input.Length - 1 );
+			
+			// Trim the parts before the hash
+			int lastIndex = input.LastIndexOf( '/' );
+			if( lastIndex >= 0 )
+				input = input.Substring( lastIndex + 1 );
+			return input;
 		}
 		
 		public override void Dispose() {

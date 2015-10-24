@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Net;
-using ClassicalSharp;
 using OpenTK;
 using OpenTK.Input;
+using ClassicalSharp;
 
 namespace Launcher2 {
 	
@@ -28,18 +25,31 @@ namespace Launcher2 {
 		
 		protected void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( lastInput != null && e.Key == Key.BackSpace ) {
-				using( drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					lastInput.RemoveChar( inputFont );
-					Dirty = true;
+				if( lastInput.RemoveChar() ) {
+					RedrawLastInput();
+					OnRemovedChar();
 				}
-				OnRemovedChar();
 			} else if( e.Key == Key.Enter && enterIndex >= 0 ) {
 				LauncherWidget widget = widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
 			} else if( e.Key == Key.Tab ) {
 				HandleTab();
+			} else if( lastInput != null && e.Key == Key.C && ControlDown ) {
+				lastInput.CopyToClipboard();
+			} else if( lastInput != null && e.Key == Key.V && ControlDown ) {
+				if( lastInput.CopyFromClipboard() )
+					RedrawLastInput();
+			} else if( lastInput != null && e.Key == Key.Escape ) {
+				if( lastInput.ClearText() )
+					RedrawLastInput();
+			}
+		}
+		
+		bool ControlDown {
+			get {
+				KeyboardDevice keyboard = game.Window.Keyboard;
+				return keyboard[Key.ControlLeft] || keyboard[Key.ControlRight];
 			}
 		}
 		
@@ -49,13 +59,20 @@ namespace Launcher2 {
 		}
 
 		protected void KeyPress( object sender, KeyPressEventArgs e ) {
-			if( lastInput != null ) {
-				using( drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					lastInput.AddChar( e.KeyChar, inputFont );
-					Dirty = true;
-				}
+			if( lastInput != null && lastInput.AppendChar( e.KeyChar ) ) {
+				RedrawLastInput();
 				OnAddedChar();
+			}
+		}
+		
+		protected void RedrawLastInput() {
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				if( lastInput.Width > lastInput.ButtonWidth )
+					drawer.Clear( game.clearColour, lastInput.X, lastInput.Y,
+					             lastInput.Width + 1, lastInput.Height + 1 );
+				lastInput.Redraw( drawer, lastInput.Text, inputFont );
+				Dirty = true;
 			}
 		}
 		
@@ -63,13 +80,15 @@ namespace Launcher2 {
 		
 		protected virtual void OnRemovedChar() { }
 		
+		protected string Get() { return Get( widgetIndex ); }
+		
 		protected string Get( int index ) {
 			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : ((widget as LauncherTextInputWidget)).Text;
+			return widget == null ? "" : ((widget as LauncherInputWidget)).Text;
 		}
 		
 		protected void Set( int index, string text ) {
-			(widgets[index] as LauncherTextInputWidget)
+			(widgets[index] as LauncherInputWidget)
 				.Redraw( drawer, text, inputFont );
 		}
 		
@@ -91,9 +110,9 @@ namespace Launcher2 {
 			}
 		}
 		
-		protected LauncherTextInputWidget lastInput;
+		protected LauncherInputWidget lastInput;
 		protected void InputClick( int mouseX, int mouseY ) {
-			LauncherTextInputWidget input = selectedWidget as LauncherTextInputWidget;
+			LauncherInputWidget input = (LauncherInputWidget)selectedWidget;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput != null ) {
@@ -106,6 +125,24 @@ namespace Launcher2 {
 			}
 			lastInput = input;
 			Dirty = true;
+		}
+		
+		protected void MakeInput( string text, int width, Anchor verAnchor, bool password,
+		                               int x, int y, int maxChars ) {
+			if( widgets[widgetIndex] != null ) {
+				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
+				input.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );
+				widgetIndex++;
+				return;
+			}
+			
+			LauncherInputWidget widget = new LauncherInputWidget( game );
+			widget.OnClick = InputClick;
+			widget.Password = password;
+			widget.MaximumTextLength = maxChars;
+			
+			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );
+			widgets[widgetIndex++] = widget;
 		}
 		
 		public override void Dispose() {

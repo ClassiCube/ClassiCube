@@ -3,8 +3,6 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp;
-using OpenTK;
-using OpenTK.Input;
 
 namespace Launcher2 {
 	
@@ -12,7 +10,7 @@ namespace Launcher2 {
 		
 		public DirectConnectScreen( LauncherWindow game ) : base( game ) {
 			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			inputFont = new Font( "Arial", 15, FontStyle.Regular );
+			inputFont = new Font( "Arial", 14, FontStyle.Regular );
 			enterIndex = 6;		
 			widgets = new LauncherWidget[9];
 		}
@@ -69,9 +67,9 @@ namespace Launcher2 {
 			MakeTextAt( "Address", -180, -50 );
 			MakeTextAt( "Mppass", -180, 0 );
 			
-			MakeTextInputAt( Get( widgetIndex ), 30, -100 );
-			MakeTextInputAt( Get( widgetIndex ), 30, -50 );
-			MakeTextInputAt( Get( widgetIndex ), 30, 0 );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64 );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32 );
 			
 			MakeButtonAt( "Connect", 110, 35, -65, 50, StartClient );			
 			MakeButtonAt( "Back", 80, 35, 140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
@@ -81,8 +79,8 @@ namespace Launcher2 {
 		void SetStatus( string text ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherTextWidget widget = (LauncherTextWidget)widgets[8];
-				drawer.Clear( LauncherWindow.clearColour, widget.X, widget.Y,
+				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[8];
+				drawer.Clear( game.clearColour, widget.X, widget.Y,
 				             widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 				Dirty = true;
@@ -90,16 +88,8 @@ namespace Launcher2 {
 		}
 
 		void MakeTextAt( string text, int x, int y ) {
-			LauncherTextWidget widget = new LauncherTextWidget( game, text );
+			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
 			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeTextInputAt( string text, int x, int y ) {
-			LauncherTextInputWidget widget = new LauncherTextInputWidget( game );
-			widget.OnClick = InputClick;
-			
-			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 300, 30, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		

@@ -33,6 +33,8 @@ namespace Launcher2 {
 			Count = entries.Length;
 		}
 		
+		/// <summary> Filters the table such that only rows with server names 
+		/// that contain the input (case insensitive) are shown. </summary>
 		public void FilterEntries( string filter ) {
 			Count = 0;
 			int index = 0;
