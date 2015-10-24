@@ -96,12 +96,12 @@ namespace Launcher2 {
 				
 				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre, 
 				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			} else {
+			} /*else { //This is what appeared to cause the problem
 				MakeButtonAt( "Dismiss", 120, 30, textFont, Anchor.Centre,
 				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 				widgets[2] = null;
 				widgets[3] = null;
-			}
+			}*/
 		}
 		
 		void SetStatus( string text ) {
