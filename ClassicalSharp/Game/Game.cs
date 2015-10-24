@@ -16,7 +16,6 @@ using OpenTK.Graphics;
 
 namespace ClassicalSharp {
 
-	// TODO: Rewrite this so it isn't tied to GameWindow. (so we can use DirectX as backend)
 	public partial class Game : GameWindow {
 		
 		public IGraphicsApi Graphics;

@@ -11,7 +11,6 @@ using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	// TODO: Should we use a native form wrapper instead of wrapping over OpenTK?
 	public class Direct3D9Api : IGraphicsApi {
 
 		Device device;

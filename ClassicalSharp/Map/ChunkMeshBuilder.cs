@@ -4,6 +4,8 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Class responsible for converting a 16x16x16 into an optimised mesh of vertices. </summary>
+	/// <remarks> This class is heavily optimised and as such may suffer from slightly unreadable code. </remarks>
 	public partial class ChunkMeshBuilder {
 		
 		int X, Y, Z;

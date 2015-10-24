@@ -117,7 +117,7 @@ namespace ClassicalSharp {
 				int nextLine = index + lineSize;
 				linesCount++;
 				
-				// Do we need word wrapping
+				// Do we need word wrapping?
 				bool needWrap = !IsWrapper( value[lineEnd] ) && nextLine < capacity && !IsWrapper( value[nextLine] );
 				int wrappedLen = needWrap ? WrapLine( index, lineSize ) : lineSize;
 				
