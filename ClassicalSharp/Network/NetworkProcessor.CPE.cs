@@ -154,6 +154,9 @@ namespace ClassicalSharp {
 			string listName = reader.ReadAsciiString();
 			string groupName = reader.ReadAsciiString();
 			byte groupRank = reader.ReadUInt8();
+
+            if( playerName.EndsWith( "+" ) )
+                playerName = playerName.TrimEnd( '+' );
 			
 			if( nameId >= 0 && nameId <= 255 ) {
 				CpeListInfo oldInfo = game.CpePlayersList[nameId];
@@ -173,7 +176,13 @@ namespace ClassicalSharp {
 			byte entityId = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			string skinName = reader.ReadAsciiString();
-			AddEntity( entityId, displayName, skinName, false );
+
+            if( displayName.EndsWith( "+" ) )
+                displayName = displayName.TrimEnd( '+' );
+            if( skinName.EndsWith( "+" ) )
+                skinName = skinName.TrimEnd( '+' );
+
+            AddEntity( entityId, displayName, skinName, false );
 		}
 		
 		void HandleCpeExtRemovePlayerName() {
@@ -305,7 +314,13 @@ namespace ClassicalSharp {
 			byte entityId = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			string skinName = reader.ReadAsciiString();
-			AddEntity( entityId, displayName, skinName, true );
+
+            if( displayName.EndsWith( "+" ) )
+                displayName = displayName.TrimEnd( '+' );
+            if( skinName.EndsWith( "+" ) )
+                skinName = skinName.TrimEnd( '+' );
+
+            AddEntity( entityId, displayName, skinName, true );
 		}
 		
 		void HandleCpeDefineBlock() {
