@@ -75,11 +75,12 @@ namespace ClassicalSharp {
 		}
 		
 		ButtonWidget selectedWidget, targetWidget;
-		protected override void WidgetSelected( ButtonWidget widget ) {
-			if( selectedWidget == widget || widget == null ||
-			   widget == buttons[buttons.Length - 2] ) return;
+		protected override void WidgetSelected( Widget widget ) {
+			ButtonWidget button = (ButtonWidget)widget;
+			if( selectedWidget == button || button == null ||
+			   button == buttons[buttons.Length - 2] ) return;
 			
-			selectedWidget = widget;
+			selectedWidget = button;
 			if( targetWidget != null ) return;
 			UpdateDescription( selectedWidget );
 		}
@@ -93,18 +94,19 @@ namespace ClassicalSharp {
 			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 
-		protected void OnWidgetClick( Game game, ButtonWidget widget ) {
+		protected void OnWidgetClick( Game game, Widget widget ) {
 			if( widget == buttons[okayIndex] ) {
 				ChangeSetting();
 				return;
 			}
+			ButtonWidget button = (ButtonWidget)widget;
 			
-			int index = Array.IndexOf<ButtonWidget>( buttons, widget );
+			int index = Array.IndexOf<ButtonWidget>( buttons, button );
 			MenuInputValidator validator = validators[index];
 			if( validator is BooleanValidator ) {
-				string value = widget.GetValue( game );
-				widget.SetValue( game, value == "yes" ? "no" : "yes" );
-				UpdateDescription( widget );
+				string value = button.GetValue( game );
+				button.SetValue( game, value == "yes" ? "no" : "yes" );
+				UpdateDescription( button );
 				return;
 			}
 			
@@ -112,7 +114,7 @@ namespace ClassicalSharp {
 				inputWidget.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, widget.GetValue( game ),
+			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ),
 			                                     Anchor.Centre, Anchor.Centre, regularFont, titleFont,
 			                                     hintFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",

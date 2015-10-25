@@ -17,6 +17,7 @@ namespace ClassicalSharp.Commands {
 			RegisterCommand( new HelpCommand() );
 			RegisterCommand( new InfoCommand() );
 			RegisterCommand( new RenderTypeCommand() );
+			RegisterCommand( new HotkeyCommand() );
 		}
 		
 		public void RegisterCommand( Command command ) {

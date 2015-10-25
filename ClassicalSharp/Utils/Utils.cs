@@ -65,6 +65,16 @@ namespace ClassicalSharp {
 			return new String( output, 0, usedChars );
 		}
 		
+		/// <summary> Returns a string with a + removed if it is the last character in the string. </summary>
+		public static string RemoveEndPlus( string value ) {
+			// Some servers (e.g. MCDzienny) use a '+' at the end to distinguish classicube.net accounts
+			// from minecraft.net accounts. Unfortunately they also send this ending + to the client.
+			if( String.IsNullOrEmpty( value ) ) return value;
+			
+			return value[value.Length - 1] == '+' ? 
+				value.Substring( 0, value.Length - 1 ) : value;
+		}
+		
 		/// <summary> Returns whether a equals b, ignoring any case differences. </summary>
 		public static bool CaselessEquals( string a, string b ) {
 			return a.Equals( b, StringComparison.OrdinalIgnoreCase );

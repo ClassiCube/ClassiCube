@@ -82,9 +82,11 @@
     <Compile Include="2D\Drawing\IDrawer2D.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
+    <Compile Include="2D\Screens\ClickableScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />
     <Compile Include="2D\Screens\FilesScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
+    <Compile Include="2D\Screens\HotkeyScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\KeyBindingsScreen.cs" />

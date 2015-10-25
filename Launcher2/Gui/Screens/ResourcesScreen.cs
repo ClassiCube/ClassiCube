@@ -104,7 +104,7 @@ namespace Launcher2 {
 				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre, 
 				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			} else {
-				MakeButtonAt( "Dismiss", 120, 30, textFont, Anchor.Centre,
+				MakeButtonAt( "Cancel", 120, 30, textFont, Anchor.Centre,
 				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			}
 		}

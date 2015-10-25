@@ -4,7 +4,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public abstract class FilesScreen : Screen {
+	public abstract class FilesScreen : ClickableScreen {
 		
 		public FilesScreen( Game game ) : base( game ) {
 		}
@@ -55,12 +55,12 @@ namespace ClassicalSharp {
 			                           Anchor.Centre, Anchor.Centre, textFont, TextButtonClick );
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Action<Game, ButtonWidget> onClick ) {
+		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 40, 40, text,
 			                           Anchor.Centre, Anchor.Centre, arrowFont, onClick );
 		}
 		
-		protected abstract void TextButtonClick( Game game, ButtonWidget widget );
+		protected abstract void TextButtonClick( Game game, Widget widget );
 		
 		protected void PageClick( bool forward ) {
 			currentIndex += forward ? 5 : -5;
@@ -88,29 +88,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			for( int i = 0; i < buttons.Length; i++ )
-				buttons[i].Active = false;
-			
-			for( int i = 0; i < buttons.Length; i++ ) {
-				ButtonWidget widget = buttons[i];
-				if( widget.Bounds.Contains( mouseX, mouseY ) ) {
-					widget.Active = true;
-					return true;
-				}
-			}
-			return false;
+			return HandleMouseMove( buttons, mouseX, mouseY );
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button != MouseButton.Left ) return false;
-			for( int i = 0; i < buttons.Length; i++ ) {
-				ButtonWidget widget = buttons[i];
-				if( widget.Bounds.Contains( mouseX, mouseY ) ) {
-					widget.OnClick( game, widget );
-					return true;
-				}
-			}
-			return false;
+			return HandleMouseClick( buttons, mouseX, mouseY, button );
 		}
 		
 		public override bool HandlesAllInput {

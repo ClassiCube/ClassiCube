@@ -27,13 +27,13 @@ namespace ClassicalSharp {
 				Make( 0, 5, "Back to menu", (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Action<Game, ButtonWidget> onClick ) {
+		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 240, 35, text,
 			                           Anchor.Centre, Anchor.BottomOrRight, titleFont, onClick );
 		}
 		
-		protected override void TextButtonClick( Game game, ButtonWidget widget ) {
-			string path = widget.Text;
+		protected override void TextButtonClick( Game game, Widget widget ) {
+			string path = ((ButtonWidget)widget).Text;
 			if( File.Exists( path ) )
 				LoadMap( path );
 		}

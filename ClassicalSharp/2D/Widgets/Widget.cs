@@ -11,6 +11,12 @@ namespace ClassicalSharp {
 			VerticalAnchor = Anchor.LeftOrTop;
 		}
 		
+		/// <summary> Whether this widget is currently being moused over. </summary>
+		public bool Active;
+		
+		/// <summary> Invoked when this widget is clicked on. Can be left null. </summary>
+		public Action<Game, Widget> OnClick;
+		
 		/// <summary> Horizontal coordinate of top left corner in window space. </summary>
 		public int X;
 		

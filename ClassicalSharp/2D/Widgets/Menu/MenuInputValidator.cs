@@ -126,4 +126,21 @@ namespace ClassicalSharp {
 			return s == "yes" || s == "no";
 		}
 	}
+	
+	public sealed class StringValidator : MenuInputValidator {
+		
+		int maxLen;
+		public StringValidator( int len ) {
+			Range = "&7(Enter text)";
+			maxLen = len;
+		}
+		
+		public override bool IsValidChar( char c ) {
+			return !(c < ' ' || c == '&' || c > '~');
+		}
+		
+		public override bool IsValidString( string s ) {
+			return s.Length <= maxLen;
+		}
+	}
 }

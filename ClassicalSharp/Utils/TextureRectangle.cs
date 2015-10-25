@@ -7,18 +7,14 @@ namespace ClassicalSharp {
 		public float U1, V1, U2, V2;
 		
 		public TextureRec( float u, float v, float uWidth, float vHeight ) {
-			U1 = u;
-			V1 = v;
-			U2 = u + uWidth;
-			V2 = v + vHeight;
+			U1 = u; V1 = v;
+			U2 = u + uWidth; V2 = v + vHeight;
 		}
 		
 		public static TextureRec FromPoints( float u1, float u2, float v1, float v2 ) {
 			TextureRec rec;
-			rec.U1 = u1;
-			rec.U2 = u2;
-			rec.V1 = v1;
-			rec.V2 = v2;
+			rec.U1 = u1;rec.U2 = u2;
+			rec.V1 = v1; rec.V2 = v2;
 			return rec;
 		}
 

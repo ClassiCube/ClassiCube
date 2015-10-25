@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ClassicalSharp.Renderers;
+using OpenTK.Input;
 
 namespace ClassicalSharp.Commands {
 	
@@ -96,6 +97,46 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
 				game.Chat.Add( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
+			}
+		}
+	}
+	
+	public sealed class HotkeyCommand : Command {
+		
+		public HotkeyCommand() {
+			Name = "Hotkey";
+			Help = new [] {
+				"&a/client hotkey [key] [modifiers] [more] [action]",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			Key key;
+			byte modifiers;
+			bool more;
+			
+			if( !reader.NextOf( out key, ParseKey ) ||
+			   !reader.NextOf( out modifiers, Byte.TryParse ) ||
+			   !reader.NextOf( out more, Boolean.TryParse ) ) {
+				game.Chat.Add( "NOPE!" );
+				return;
+			}
+			
+			string action = reader.NextAll();
+			if( action != null ) {
+				game.InputHandler.Hotkeys
+					.AddHotkey( key, modifiers, action, more );
+				game.Chat.Add( "Added" );
+			}
+		}
+		
+		bool ParseKey( string value, out Key key ) {
+			try {
+				key = (Key)Enum.Parse( typeof( Key ), value, true );
+				return true;
+			} catch {
+				key = Key.Unknown;
+				return false;
 			}
 		}
 	}

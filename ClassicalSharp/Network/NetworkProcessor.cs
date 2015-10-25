@@ -99,7 +99,7 @@ namespace ClassicalSharp {
 				reader.ReadPendingData();
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "reading packets", ex );
-				game.Disconnect( "&eLost connection to the server", "IO error when reading packets" );
+				game.Disconnect( "&eLost connection to the server", "I/O error when reading packets" );
 				Dispose();
 				return;
 			}
@@ -205,7 +205,7 @@ namespace ClassicalSharp {
 				stream.Write( outBuffer, 0, packetLength );
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "wrting packets", ex );
-				game.Disconnect( "&eLost connection to the server", "IO Error while writing packets" );
+				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
 				Dispose();
 			}
 		}
@@ -334,6 +334,7 @@ namespace ClassicalSharp {
 		void HandleAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
+			name = Utils.RemoveEndPlus( name );
 			AddEntity( entityId, name, name, true );
 		}
 		

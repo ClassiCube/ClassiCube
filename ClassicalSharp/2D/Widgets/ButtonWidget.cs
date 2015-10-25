@@ -11,15 +11,13 @@ namespace ClassicalSharp {
 		}
 		
 		public static ButtonWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
-		                                  Anchor vertical, Font font, Action<Game, ButtonWidget> onClick ) {
+		                                  Anchor vertical, Font font, Action<Game, Widget> onClick ) {
 			ButtonWidget widget = new ButtonWidget( game, font );
 			widget.Init();
 			widget.HorizontalAnchor = horizontal;
 			widget.VerticalAnchor = vertical;
-			widget.XOffset = x;
-			widget.YOffset = y;
-			widget.DesiredMaxWidth = width;
-			widget.DesiredMaxHeight = height;
+			widget.XOffset = x; widget.YOffset = y;
+			widget.DesiredMaxWidth = width; widget.DesiredMaxHeight = height;
 			widget.SetText( text );
 			widget.OnClick = onClick;
 			return widget;
@@ -75,10 +73,8 @@ namespace ClassicalSharp {
 			Y = newY;
 		}
 		
-		public Action<Game, ButtonWidget> OnClick;
 		public Func<Game, string> GetValue;
 		public Action<Game, string> SetValue;
-		public bool Active;
 		
 		void MakeTexture( string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );

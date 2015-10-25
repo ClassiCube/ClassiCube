@@ -4,7 +4,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public abstract class MenuScreen : Screen {
+	public abstract class MenuScreen : ClickableScreen {
 		
 		public MenuScreen( Game game ) : base( game ) {
 		}
@@ -44,34 +44,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button != MouseButton.Left ) return false;
-			for( int i = 0; i < buttons.Length; i++ ) {
-				ButtonWidget widget = buttons[i];
-				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
-					if( widget.OnClick != null )
-						widget.OnClick( game, widget );
-					return true;
-				}
-			}
-			return false;
+			return HandleMouseClick( buttons, mouseX, mouseY, button );
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Active = false;
-			}
-			
-			for( int i = 0; i < buttons.Length; i++ ) {
-				ButtonWidget widget = buttons[i];
-				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
-					widget.Active = true;
-					WidgetSelected( widget );
-					return true;
-				}
-			}
-			WidgetSelected( null );
-			return false;
+			return HandleMouseMove( buttons, mouseX, mouseY );
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
@@ -84,9 +61,6 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyUp( Key key ) {
 			return true;
-		}
-		
-		protected virtual void WidgetSelected( ButtonWidget widget ) {
 		}
 	}
 }

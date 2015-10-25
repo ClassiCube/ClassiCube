@@ -77,7 +77,7 @@ namespace ClassicalSharp {
 			base.Dispose();
 		}
 		
-		void OkButtonClick( Game game, ButtonWidget widget ) {
+		void OkButtonClick( Game game, Widget widget ) {
 			string text = inputWidget.GetText();
 			if( text.Length == 0 ) {
 				MakeDescWidget( "Please enter a filename" );

@@ -53,10 +53,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		ButtonWidget widget;
-		void OnWidgetClick( Game game, ButtonWidget widget ) {
-			this.widget = widget;
-			int index = Array.IndexOf<ButtonWidget>( buttons, widget );
+		ButtonWidget curWidget;
+		void OnWidgetClick( Game game, Widget realWidget ) {
+			this.curWidget = (ButtonWidget)realWidget;
+			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
 			statusWidget.Dispose();
 			
 			string text = "Press new key binding for " + descriptions[index] + ":";
@@ -66,8 +66,8 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
 				game.SetNewScreen( new NormalScreen( game ) );
-			} else if( widget != null ) {
-				int index = Array.IndexOf<ButtonWidget>( buttons, widget );
+			} else if( curWidget != null ) {
+				int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
 				KeyBinding mapping = (KeyBinding)index;
 				KeyMap map = game.InputHandler.Keys;
 				Key oldKey = map[mapping];
@@ -81,15 +81,15 @@ namespace ClassicalSharp {
 					statusWidget.SetText( String.Format( format, descriptions[index], oldKey, key ) );
 					string text = descriptions[index] + " : " + keyNames[(int)key];
 					
-					widget.SetText( text );
+					curWidget.SetText( text );
 					map[mapping] = key;
 				}
-				widget = null;
+				curWidget = null;
 			}
 			return true;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, ButtonWidget> onClick ) {
+		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, keyFont, onClick );
 		}
 		

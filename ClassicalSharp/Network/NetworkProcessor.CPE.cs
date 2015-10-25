@@ -140,18 +140,20 @@ namespace ClassicalSharp {
 			Console.WriteLine( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
 			if( action == "" ) {
 				game.InputHandler.Hotkeys.RemoveHotkey( key, keyMods );
-			} else if( action[action.Length - 1] == '\n' ) { // more input needed by user
+			} else if( action[action.Length - 1] == '\n' ) { 
 				action = action.Substring( 0, action.Length - 1 );
-				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, true );
-			} else {
 				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, false );
+			} else { // more input needed by user
+				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, true );
 			}
 		}
 		
 		void HandleCpeExtAddPlayerName() {
 			short nameId = reader.ReadInt16();
 			string playerName = Utils.StripColours( reader.ReadAsciiString() );
+			playerName = Utils.RemoveEndPlus( playerName );
 			string listName = reader.ReadAsciiString();
+			listName = Utils.RemoveEndPlus( listName );
 			string groupName = reader.ReadAsciiString();
 			byte groupRank = reader.ReadUInt8();
 			
@@ -159,7 +161,6 @@ namespace ClassicalSharp {
 				CpeListInfo oldInfo = game.CpePlayersList[nameId];
 				CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
 				game.CpePlayersList[nameId] = info;
-				//Console.WriteLine( nameId + ": " + groupRank + " , " + groupName + " : " + listName );
 				
 				if( oldInfo != null ) {
 					game.Events.RaiseCpeListInfoChanged( (byte)nameId );
@@ -172,7 +173,9 @@ namespace ClassicalSharp {
 		void HandleCpeExtAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
+			displayName = Utils.RemoveEndPlus( displayName );
 			string skinName = reader.ReadAsciiString();
+			skinName = Utils.RemoveEndPlus( skinName );
 			AddEntity( entityId, displayName, skinName, false );
 		}
 		

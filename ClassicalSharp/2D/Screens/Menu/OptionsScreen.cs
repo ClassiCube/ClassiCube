@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			okayIndex = buttons.Length - 1;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, ButtonWidget> onClick,
+		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
 			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, titleFont, onClick );
 			widget.GetValue = getter;
