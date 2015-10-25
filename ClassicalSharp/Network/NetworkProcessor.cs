@@ -334,6 +334,10 @@ namespace ClassicalSharp {
 		void HandleAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
+
+            if( name.EndsWith( "+" ) )
+                name = name.TrimEnd( '+' );
+
 			AddEntity( entityId, name, name, true );
 		}
 		
