@@ -61,7 +61,7 @@ namespace Launcher2 {
 		}
 		
 		public bool ConnectToServer( string hash ) {
-			GameStartData data = null;
+			ClientStartData data = null;
 			try {
 				data = Session.GetConnectInfo( hash );
 			} catch( WebException ex ) {

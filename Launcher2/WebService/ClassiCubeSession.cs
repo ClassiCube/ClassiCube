@@ -52,10 +52,10 @@ namespace Launcher2 {
 			}
 		}
 		
-		public override GameStartData GetConnectInfo( string hash ) {
+		public override ClientStartData GetConnectInfo( string hash ) {
 			string uri = playUri + hash;
 			var response = GetHtml( uri, classicubeNetUri );
-			GameStartData data = new GameStartData();
+			ClientStartData data = new ClientStartData();
 			data.Username = Username;
 			
 			foreach( string line in response ) {

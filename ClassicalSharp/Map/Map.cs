@@ -13,36 +13,31 @@ namespace ClassicalSharp {
 		internal short[] heightmap;
 		int maxY, oneY;
 		
-		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
-		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
-		public static readonly FastColour DefaultSkyColour = new FastColour( 0x99, 0xCC, 0xFF );
-		public static readonly FastColour DefaultCloudsColour =  new FastColour( 0xFF, 0xFF, 0xFF );
-		public static readonly FastColour DefaultFogColour = new FastColour( 0xFF, 0xFF, 0xFF );
-		
-		/// <summary> Block that surrounds the map that is below the map, fills part of the vertical sides,
-		/// and also perpendicular to the Y plane. (default bedrock) </summary>
-		public Block SidesBlock = Block.Bedrock;
-		
-		/// <summary> Block that surrounds map and is perpendicular to the Y plane. (default water) </summary>
-		public Block EdgeBlock = Block.StillWater;
-		
 		/// <summary> Colour of the sky located behind/above clouds. </summary>
 		public FastColour SkyCol = DefaultSkyColour;
+		public static readonly FastColour DefaultSkyColour = new FastColour( 0x99, 0xCC, 0xFF );
 		
 		/// <summary> Colour applied to the fog/horizon looking out horizontally.
 		/// Note the true horizon colour is a blend of this and sky colour. </summary>
 		public FastColour FogCol = DefaultFogColour;
+		public static readonly FastColour DefaultFogColour = new FastColour( 0xFF, 0xFF, 0xFF );
 		
 		/// <summary> Colour applied to the clouds. </summary>
 		public FastColour CloudsCol = DefaultCloudsColour;
+		public static readonly FastColour DefaultCloudsColour =  new FastColour( 0xFF, 0xFF, 0xFF );
+		
+		/// <summary> Height of the clouds in world space. </summary>
+		public int CloudHeight;
 		
 		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
 		public FastColour SunlightXSide, SunlightZSide, SunlightYBottom;
+		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
 		
 		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
 		public FastColour ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
 		
 		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;
@@ -50,22 +45,19 @@ namespace ClassicalSharp {
 		/// <summary> Unique uuid/guid of this particular map. </summary>
 		public Guid Uuid;
 		
+		/// <summary> Block that surrounds map and is perpendicular to the Y plane. (default water) </summary>
+		public Block EdgeBlock = Block.StillWater;
+		
 		/// <summary> Height of the map edge in world space. </summary>
 		public int EdgeHeight;
 		
-		/// <summary> Height of the clouds in world space. </summary>
-		public int CloudHeight;
+		/// <summary> Block that surrounds the map that is below the map, fills part of the vertical sides,
+		/// and also perpendicular to the Y plane. (default bedrock) </summary>
+		public Block SidesBlock = Block.Bedrock;
 		
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
-		public int GroundHeight {
+		public int SidesHeight {
 			get { return EdgeHeight - 2; }
-		}
-		
-		public Map( Game game ) {
-			this.game = game;
-			info = game.BlockInfo;
-			SetSunlight( DefaultSunlight );
-			SetShadowlight( DefaultShadowlight );
 		}
 		
 		/// <summary> Whether this map is empty. </summary>
@@ -73,6 +65,12 @@ namespace ClassicalSharp {
 			get { return Width == 0 && Height == 0 && Length == 0; }
 		}
 		
+		public Map( Game game ) {
+			this.game = game;
+			info = game.BlockInfo;
+			ResetLight();
+		}
+
 		/// <summary> Resets all of the properties to their defaults and raises the 'OnNewMap' event. </summary>
 		public void Reset() {
 			EdgeHeight = -1;
@@ -82,18 +80,21 @@ namespace ClassicalSharp {
 			EdgeBlock = Block.StillWater;
 			SidesBlock = Block.Bedrock;
 			
-			Shadowlight = DefaultSunlight;
-			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
-			                     ref ShadowlightZSide, ref ShadowlightYBottom );
-			Sunlight = DefaultSunlight;
-			FastColour.GetShaded( Sunlight, ref SunlightXSide,
-			                     ref SunlightZSide, ref SunlightYBottom );
-			
+			ResetLight();
 			SkyCol = DefaultSkyColour;
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
 			game.Events.RaiseOnNewMap();
+		}
+		
+		void ResetLight() {
+			Shadowlight = DefaultShadowlight;
+			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
+			                     ref ShadowlightZSide, ref ShadowlightYBottom );
+			Sunlight = DefaultSunlight;
+			FastColour.GetShaded( Sunlight, ref SunlightXSide,
+			                     ref SunlightZSide, ref SunlightYBottom );
 		}
 		
 		/// <summary> Sets the sides block to the given block, and raises the
@@ -170,8 +171,9 @@ namespace ClassicalSharp {
 			game.Events.RaiseEnvVariableChanged( var );
 		}
 		
-		public void UseRawMap( byte[] map, int width, int height, int length ) {
-			mapData = map;
+		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>
+		public void SetData( byte[] blocks, int width, int height, int length ) {
+			mapData = blocks;
 			this.Width = width;
 			this.Height = height;
 			this.Length = length;
@@ -184,18 +186,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < heightmap.Length; i++ ) {
 				heightmap[i] = short.MaxValue;
 			}
-		}
-		
-		/// <summary> Returns whether the given world coordinates are fully not in sunlight. </summary>
-		public bool IsLit( int x, int y, int z ) {
-			if( !IsValidPos( x, y, z ) ) return true;
-			return y > GetLightHeight( x, z );
-		}
-		
-		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
-		public bool IsLit( Vector3I p ) {
-			if( !IsValidPos( p.X, p.Y, p.Z ) ) return true;
-			return p.Y > GetLightHeight( p.X, p.Z );
 		}
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
@@ -252,6 +242,17 @@ namespace ClassicalSharp {
 				p.X < Width && p.Y < Height && p.Z < Length;
 		}
 		
+		/// <summary> Returns whether the given world coordinates are fully not in sunlight. </summary>
+		public bool IsLit( int x, int y, int z ) {
+			if( !IsValidPos( x, y, z ) ) return true;
+			return y > GetLightHeight( x, z );
+		}
+		
+		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
+		public bool IsLit( Vector3I p ) {
+			if( !IsValidPos( p.X, p.Y, p.Z ) ) return true;
+			return p.Y > GetLightHeight( p.X, p.Z );
+		}
 		
 		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>
 		/// <remarks> e.g. if cobblestone was at y = 5, this method would return 4. </remarks>

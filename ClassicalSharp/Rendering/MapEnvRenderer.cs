@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
-			float yVisible = Math.Min( 0, map.GroundHeight );
+			float yVisible = Math.Min( 0, map.SidesHeight );
 			if( game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			} else {
@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 		
 		void OnNewMapLoaded( object sender, EventArgs e ) {
 			CalculateRects( game.ViewDistance );
-			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
+			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
@@ -119,7 +119,7 @@ namespace ClassicalSharp {
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
 			CalculateRects( game.ViewDistance );
-			RebuildSides( map.GroundHeight, legacy ? 128 : 65536 );
+			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
@@ -190,10 +190,10 @@ namespace ClassicalSharp {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, z2 - z1, y2 - y1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z2, rec.U2, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V2, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z2, rec.U2, rec.V2, col );
 				}
 			}
 		}
@@ -209,10 +209,10 @@ namespace ClassicalSharp {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, y2 - y1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V2, col );
 				}
 			}
 		}

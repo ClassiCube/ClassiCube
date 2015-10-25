@@ -203,6 +203,7 @@
     <Compile Include="TexturePack\TexturePackExtractor.cs" />
     <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />
+    <Compile Include="Utils\ErrorHandler.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Utils\FastColour.cs" />
     <Compile Include="Utils\Options.cs" />

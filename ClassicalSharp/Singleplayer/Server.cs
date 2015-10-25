@@ -71,7 +71,7 @@ namespace ClassicalSharp.Singleplayer {
 				MapSet( width, length, ptr, 0, height / 2 - 2, (byte)Block.Dirt );
 				MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
 			}
-			game.Map.UseRawMap( map, width, height, length );
+			game.Map.SetData( map, width, height, length );
 			game.Events.RaiseOnNewMapLoaded();
 			game.SetNewScreen( new NormalScreen( game ) );
 			ResetPlayerPosition();

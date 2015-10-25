@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 					game.Map.Reset();
 					
 					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
-					game.Map.UseRawMap( blocks, width, height, length );
+					game.Map.SetData( blocks, width, height, length );
 					game.Events.RaiseOnNewMapLoaded();
 					
 					LocalPlayer p = game.LocalPlayer;

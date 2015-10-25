@@ -20,6 +20,7 @@ namespace ClassicalSharp.Model {
 			cache = game.ModelCache;
 		}
 		
+		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
 		public abstract float NameYOffset { get; }
 		
 		public abstract float GetEyeY( Player player );

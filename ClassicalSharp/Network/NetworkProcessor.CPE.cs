@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			cpeServerExtensionsCount--;
 			
 			if( cpeServerExtensionsCount == 0 ) {
-				MakeExtInfo( Utils.AppName, clientExtensions.Length );
+				MakeExtInfo( Program.AppName, clientExtensions.Length );
 				SendPacket();
 				for( int i = 0; i < clientExtensions.Length; i++ ) {
 					string name = clientExtensions[i];

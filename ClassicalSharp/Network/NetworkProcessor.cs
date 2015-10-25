@@ -305,7 +305,7 @@ namespace ClassicalSharp {
 			
 			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 			Utils.LogDebug( "map loading took:" + loadingMs );
-			game.Map.UseRawMap( map, mapWidth, mapHeight, mapLength );
+			game.Map.SetData( map, mapWidth, mapHeight, mapLength );
 			game.Events.RaiseOnNewMapLoaded();
 			
 			map = null;

@@ -304,7 +304,7 @@ namespace ClassicalSharp {
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
-			clipLevel = Math.Max( 0, game.Map.GroundHeight );
+			clipLevel = Math.Max( 0, game.Map.SidesHeight );
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

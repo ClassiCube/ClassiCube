@@ -66,7 +66,7 @@ namespace Launcher2 {
 		
 		public abstract void Login( string user, string password );
 		
-		public abstract GameStartData GetConnectInfo( string hash );
+		public abstract ClientStartData GetConnectInfo( string hash );
 		
 		public abstract List<ServerListEntry> GetPublicServers();
 		

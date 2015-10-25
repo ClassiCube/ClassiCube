@@ -181,7 +181,7 @@ namespace ClassicalSharp {
 		const int ticksFrequency = 20;
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
-		const double cameraPeriod = 1.0 / 60.0;
+		const double cameraPeriod = 1.0 / 120.0;
 		double ticksAccumulator = 0, imageCheckAccumulator = 0, cameraAccumulator = 0;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
@@ -383,9 +383,9 @@ namespace ClassicalSharp {
 		
 		public Game( string username, string mppass, string skinServer, string defaultTexPack )
 			#if USE_DX
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, true, 0, DisplayDevice.Default )
+			: base( 640, 480, GraphicsMode.Default, Program.AppName, true, 0, DisplayDevice.Default )
 			#else
-			: base( 640, 480, GraphicsMode.Default, Utils.AppName, false, 0, DisplayDevice.Default )
+			: base( 640, 480, GraphicsMode.Default, Program.AppName, false, 0, DisplayDevice.Default )
 			#endif
 		{
 			Username = username;

@@ -2,7 +2,7 @@
 
 namespace Launcher2 {
 
-	public class GameStartData {
+	public class ClientStartData {
 		
 		public string Username;
 		
@@ -12,10 +12,10 @@ namespace Launcher2 {
 		
 		public string Port;
 		
-		public GameStartData() {
+		public ClientStartData() {
 		}
 		
-		public GameStartData( string user, string mppass, string ip, string port ) {
+		public ClientStartData( string user, string mppass, string ip, string port ) {
 			Username = user;
 			Mppass = mppass;
 			Ip = ip;

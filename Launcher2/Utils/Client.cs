@@ -7,7 +7,7 @@ namespace Launcher2 {
 
 	public static class Client {
 		
-		public static bool Start( GameStartData data, bool classicubeSkins ) {
+		public static bool Start( ClientStartData data, bool classicubeSkins ) {
 			string skinServer = classicubeSkins ? "http://www.classicube.net/static/skins/" : "http://s3.amazonaws.com/MinecraftSkins/";
 			string args = data.Username + " " + data.Mppass + " " +
 				data.Ip + " " + data.Port + " " + skinServer;
@@ -30,7 +30,7 @@ namespace Launcher2 {
 			return true;
 		}
 		
-		internal static void UpdateResumeInfo( GameStartData data, bool classiCubeSkins ) {
+		internal static void UpdateResumeInfo( ClientStartData data, bool classiCubeSkins ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
 			try {
 				Options.Load();

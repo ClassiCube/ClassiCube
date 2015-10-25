@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Windows.Forms;
-using ClassicalSharp.TexturePack;
 
 namespace ClassicalSharp {
 	
-	static class Program {
+	internal static class Program {
+		
+		public static string AppName = "ClassicalSharp 0.95";
 		
 		[STAThread]
-		public static void Main( string[] args ) {
-			if( !Debugger.IsAttached )
-				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+		static void Main( string[] args ) {
+			ErrorHandler.InstallHandler( "client.log" );
 			
-			Utils.Log( "Starting " + Utils.AppName + ".." );
+			Utils.Log( "Starting " + AppName + ".." );
 			if( !File.Exists( "default.zip" ) ) {
 				Fail( "default.zip not found. Cannot start." );
 				return;
@@ -62,33 +60,6 @@ namespace ClassicalSharp {
 			Utils.LogWarning( text );
 			Utils.Log( "Press any key to exit.." );
 			Console.ReadKey( true );
-		}
-
-		static void UnhandledException( object sender, UnhandledExceptionEventArgs e ) {
-			// So we don't get the normal unhelpful crash dialog on Windows.
-			Exception ex = (Exception)e.ExceptionObject;
-			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
-			bool wroteToCrashLog = true;
-			try {
-				using( StreamWriter writer = new StreamWriter( "crash.log", true ) ) {
-					writer.WriteLine( "Crash time: " + DateTime.Now.ToString() );
-					writer.WriteLine( error );
-					writer.WriteLine();
-				}
-			} catch( Exception ) {
-				wroteToCrashLog = false;
-			}
-			
-			string message = wroteToCrashLog ?
-				"The cause of the crash has been logged to \"crash.log\". Please consider reporting the crash " +
-				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" :
-				
-				"Failed to write the cause of the crash to \"crash.log\". Please consider reporting the crash " +
-				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" +
-				Environment.NewLine + Environment.NewLine + error;
-			
-			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine + Environment.NewLine + message, "ClassicalSharp has crashed" );
-			Environment.Exit( 1 );
 		}
 	}
 }

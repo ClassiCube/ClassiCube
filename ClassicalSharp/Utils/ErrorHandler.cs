@@ -1,0 +1,66 @@
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
+
+namespace ClassicalSharp {
+	
+	/// <summary> Displays a message box when an unhandled exception occurs
+	/// and also logs it to a specified log file. </summary>
+	public static class ErrorHandler {
+
+		static string crashFile = "crash.log";
+		
+		/// <summary> Adds a handler for when a unhandled exception occurs,  unless 
+		/// a debugger is attached to the process in which case this does nothing. </summary>
+		public static void InstallHandler( string logFile ) {
+			crashFile = logFile;
+			if( !Debugger.IsAttached )
+				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+		}
+
+		static void UnhandledException( object sender, UnhandledExceptionEventArgs e ) {
+			// So we don't get the normal unhelpful crash dialog on Windows.
+			Exception ex = (Exception)e.ExceptionObject;
+			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			bool wroteToCrashLog = true;
+			try {
+				using( StreamWriter writer = new StreamWriter( crashFile, true ) ) {
+					writer.WriteLine( "--- crash occurred ---" );
+					writer.WriteLine( "Time: " + DateTime.Now.ToString() );
+					writer.WriteLine( error );
+					writer.WriteLine();
+				}
+			} catch( Exception ) {
+				wroteToCrashLog = false;
+			}
+			
+			string message = wroteToCrashLog ?
+				"The cause of the crash has been logged to \"" + crashFile + "\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" :
+				
+				"Failed to write the cause of the crash to \"" + crashFile + "\". Please consider reporting the crash " +
+				"(and the circumstances that caused it) to github.com/UnknownShadow200/ClassicalSharp/issues" +
+				Environment.NewLine + Environment.NewLine + error;
+			
+			MessageBox.Show( "Oh dear. ClassicalSharp has crashed." + Environment.NewLine +
+			                Environment.NewLine + message, "ClassicalSharp has crashed" );
+			Environment.Exit( 1 );
+		}
+		
+		public static bool LogHandledException( Exception ex ) {
+			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			
+			try {
+				using( StreamWriter writer = new StreamWriter( crashFile, true ) ) {
+					writer.WriteLine( "--- handled error ---" );
+					writer.WriteLine( error );
+					writer.WriteLine();
+				}
+			} catch( Exception ) {
+				return false;
+			}
+			return true;
+		}
+	}
+}

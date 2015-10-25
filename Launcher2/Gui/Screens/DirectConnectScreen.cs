@@ -130,7 +130,7 @@ namespace Launcher2 {
 			
 			string mppass = Get( 5 );
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
-			GameStartData data = new GameStartData( Get( 3 ), mppass, ipPart, portPart );
+			ClientStartData data = new ClientStartData( Get( 3 ), mppass, ipPart, portPart );
 			Client.Start( data, ccSkins );
 		}
 	}
