@@ -121,6 +121,10 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
+		public void OpenTextInputBar( string text ) {
+			chat.OpenTextInputBar( text );
+		}
+		
 		public override bool HandlesMouseScroll( int delta ) {
 			return chat.HandlesMouseScroll( delta );
 		}

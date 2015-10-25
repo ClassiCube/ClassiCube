@@ -264,7 +264,7 @@ namespace ClassicalSharp {
 			PitchDegrees = Utils.LerpAngle( lastPitch, nextPitch, t );
 		}
 		
-		internal void HandleKeyDown( Key key ) {
+		internal bool HandleKeyDown( Key key ) {
 			KeyMap keys = game.InputHandler.Keys;
 			if( key == keys[KeyMapping.Respawn] && canRespawn ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
@@ -289,7 +289,10 @@ namespace ClassicalSharp {
 				flying = !flying;
 			} else if( key == keys[KeyMapping.NoClip] && canNoclip ) {
 				noClip = !noClip;
+			} else {
+				return false;
 			}
+			return true;
 		}
 		
 		/// <summary> Calculates the jump velocity required such that when a client presses 

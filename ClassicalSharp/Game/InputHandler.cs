@@ -1,11 +1,13 @@
 ﻿using System;
 using OpenTK;
 using OpenTK.Input;
+using ClassicalSharp.Hotkeys;
 
 namespace ClassicalSharp {
 
 	public sealed class InputHandler {
 		
+		public HotkeyList Hotkeys = new HotkeyList();
 		Game game;
 		public InputHandler( Game game ) {
 			this.game = game;
@@ -268,9 +270,22 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyMapping.Screenshot] ) {
 				game.screenshotRequested = true;
 			} else if( game.activeScreen == null || !game.activeScreen.HandlesKeyDown( key ) ) {
-				if( !HandleBuiltinKey( key ) ) {
-					game.LocalPlayer.HandleKeyDown( key );
+				
+				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) ) {
+					HandleHotkey( key );
 				}
+			}
+		}
+		
+		void HandleHotkey( Key key ) {			
+			string text;
+			bool more;
+			
+			if( Hotkeys.IsHotkey( key, game.Keyboard, out text, out more ) ) {
+				if( !more )
+					game.Network.SendChat( text );
+				else if( game.activeScreen is NormalScreen )
+					((NormalScreen)game.activeScreen).OpenTextInputBar( text );
 			}
 		}
 		

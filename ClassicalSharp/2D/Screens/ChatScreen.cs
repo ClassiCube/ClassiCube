@@ -201,7 +201,7 @@ namespace ClassicalSharp {
 			return textInput.HandlesKeyPress( key );
 		}
 		
-		void OpenTextInputBar( string initialText ) {
+		public void OpenTextInputBar( string initialText ) {
 			if( !game.CursorVisible )
 				game.CursorVisible = true;
 			suppressNextPress = true;

@@ -138,6 +138,8 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\DefaultCommands.cs" />
     <Compile Include="GraphicsAPI\VertexFormats.cs" />
+    <Compile Include="Hotkeys\HotkeyList.cs" />
+    <Compile Include="Hotkeys\LwjglToKey.cs" />
     <Compile Include="Ionic.Zlib\DeflateStream.cs" />
     <Compile Include="Ionic.Zlib\Inflate.cs" />
     <Compile Include="Ionic.Zlib\InfTree.cs" />
@@ -234,6 +236,7 @@
     <Folder Include="Map\Formats" />
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
+    <Folder Include="Hotkeys" />
     <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />

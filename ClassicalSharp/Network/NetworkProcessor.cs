@@ -455,7 +455,7 @@ namespace ClassicalSharp {
 				HandleMessage, HandleKick, HandleSetPermission,
 				
 				HandleCpeExtInfo, HandleCpeExtEntry, HandleCpeSetClickDistance,
-				HandleCpeCustomBlockSupportLevel, HandleCpeHoldThis, null,
+				HandleCpeCustomBlockSupportLevel, HandleCpeHoldThis, HandleCpeSetTextHotkey,
 				HandleCpeExtAddPlayerName, HandleCpeExtAddEntity, HandleCpeExtRemovePlayerName,
 				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
 				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,

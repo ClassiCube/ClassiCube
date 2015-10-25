@@ -1,6 +1,7 @@
 ﻿using System;
 using ClassicalSharp.TexturePack;
 using OpenTK.Input;
+using ClassicalSharp.Hotkeys;
 
 namespace ClassicalSharp {
 
@@ -57,7 +58,7 @@ namespace ClassicalSharp {
 			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
 			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
 			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
-			"EnvWeatherType", "PlayerClick", // NOTE: There are no plans to support TextHotKey.
+			"EnvWeatherType", "PlayerClick", "TextHotKey",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -124,6 +125,27 @@ namespace ClassicalSharp {
 			game.Inventory.CanChangeHeldBlock = true;
 			game.Inventory.HeldBlock = (Block)blockType;
 			game.Inventory.CanChangeHeldBlock = canChange;
+		}
+		
+		void HandleCpeSetTextHotkey() {
+			string label = reader.ReadAsciiString();
+			string action = reader.ReadAsciiString();
+			int keyCode = reader.ReadInt32();
+			byte keyMods = reader.ReadUInt8();
+			
+			if( keyCode < 0 || keyCode > 255 ) return;		
+			Key key = LwjglToKey.Map[keyCode];
+			if( key == Key.Unknown ) return;
+			
+			Console.WriteLine( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
+			if( action == "" ) {
+				game.InputHandler.Hotkeys.RemoveHotkey( key, keyMods );
+			} else if( action[action.Length - 1] == '\n' ) { // more input needed by user
+				action = action.Substring( 0, action.Length - 1 );
+				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, true );
+			} else {
+				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, false );
+			}
 		}
 		
 		void HandleCpeExtAddPlayerName() {
