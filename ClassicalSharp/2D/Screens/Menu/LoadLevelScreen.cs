@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 					p.SetLocation( update, false );
 				}
 			} catch( Exception ex ) {
-				Utils.LogError( "Error while trying to load map: {0}{1}", Environment.NewLine, ex );
+				ErrorHandler.LogError( "loading map", ex );
 				game.Chat.Add( "&e/client loadmap: Failed to load map \"" + path + "\"" );
 			}
 		}

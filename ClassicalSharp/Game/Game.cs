@@ -261,15 +261,15 @@ namespace ClassicalSharp {
 				cameraAccumulator -= cameraPeriod;
 			}
 			
-			if( ticksThisFrame > ticksFrequency / 3 ) {
+			if( ticksThisFrame > ticksFrequency / 3 )
 				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
-			}
 		}
 		
 		void TakeScreenshot() {
 			if( !Directory.Exists( "screenshots" ) ) {
 				Directory.CreateDirectory( "screenshots" );
 			}
+			
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
 			Graphics.TakeScreenshot( path, ClientSize );
@@ -333,11 +333,11 @@ namespace ClassicalSharp {
 		
 		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }
 		
-		public bool IsKeyDown( KeyMapping mapping ) { return InputHandler.IsKeyDown( mapping ); }
+		public bool IsKeyDown( KeyBinding binding ) { return InputHandler.IsKeyDown( binding ); }
 		
 		public bool IsMousePressed( MouseButton button ) { return InputHandler.IsMousePressed( button ); }
 		
-		public Key Mapping( KeyMapping mapping ) { return InputHandler.Keys[mapping]; }
+		public Key Mapping( KeyBinding mapping ) { return InputHandler.Keys[mapping]; }
 		
 		public override void Dispose() {
 			MapRenderer.Dispose();

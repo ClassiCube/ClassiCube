@@ -41,7 +41,6 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
 			background.Render( graphicsApi );
-			// TODO: Maybe redesign this so we don't have to bind the whole atlas. Not cheap.
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );			
 			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			

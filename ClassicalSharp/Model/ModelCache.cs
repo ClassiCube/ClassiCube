@@ -36,14 +36,8 @@ namespace ClassicalSharp.Model {
 			}
 			
 			if( !cache.TryGetValue( modelName, out model ) ) {
-				try {
-					model = InitModel( modelName );
-				} catch( FileNotFoundException ) {
-					model = null;
-					Utils.LogWarning( modelName + " not found, falling back to human default." );
-				}
-				if( model == null ) 
-					model = cache["humanoid"]; // fallback to default
+				model = InitModel( modelName );
+				if( model == null ) model = cache["humanoid"]; // fallback to default
 				cache[modelName] = model;
 			}
 			return model;

@@ -92,11 +92,12 @@ namespace ClassicalSharp {
 				Directory.CreateDirectory( "logs" );
 
 			string date = now.ToString( "yyyy-MM-dd" );
-			// Cheap way of ensuring multiple instances do not end up overwriting each other's log entries.
+			// Ensure multiple instances do not end up overwriting each other's log entries.
 			for( int i = 0; i < 20; i++ ) {
 				string id = i == 0 ? "" : "  _" + i;
 				string fileName = "chat-" + date + id + ".log";
 				string path = Path.Combine( "logs", fileName );
+				
 				FileStream stream = null;
 				try {
 					stream = File.Open( path, FileMode.Append, FileAccess.Write, FileShare.Read );
@@ -105,12 +106,13 @@ namespace ClassicalSharp {
 						throw;
 					continue;
 				}
-				Utils.LogDebug( "opening chat with id:" + id );
+				
 				writer = new StreamWriter( stream );
 				writer.AutoFlush = true;
 				return;
 			}
-			Utils.LogError( "Failed to open or create a chat log file after 20 tries, giving up." );
+			ErrorHandler.LogError( "creating chat log",
+			               "Failed to open or create a chat log file after 20 tries, giving up." );
 		}
 	}
 	

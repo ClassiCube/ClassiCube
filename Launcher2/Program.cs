@@ -13,9 +13,5 @@ namespace Launcher2 {
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
 		}
-		
-		internal static bool LogException( Exception ex ) {
-			return ErrorHandler.LogHandledException( ex );
-		}
 	}
 }

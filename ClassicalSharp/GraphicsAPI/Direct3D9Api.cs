@@ -11,6 +11,7 @@ using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
 
+	/// <summary> Implemented IGraphicsAPI using Direct3D 9. </summary>
 	public class Direct3D9Api : IGraphicsApi {
 
 		Device device;

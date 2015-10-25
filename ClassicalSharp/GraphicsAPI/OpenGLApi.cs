@@ -9,6 +9,8 @@ using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace ClassicalSharp.GraphicsAPI {
 
+	/// <summary> Implemented IGraphicsAPI using OpenGL 1.5,
+	/// or 1.2 with the GL_ARB_vertex_buffer_object extension. </summary>
 	public class OpenGLApi : IGraphicsApi {
 		
 		BeginMode[] modeMappings;
@@ -29,15 +31,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe void CheckVboSupport() {
 			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
 			string version = new String( (sbyte*)GL.GetString( StringName.Version ) );
-			int major = (int)( version[0] - '0' ); // x.y. (and so forth)
-			int minor = (int)( version[2] - '0' );
+			int major = (int)(version[0] - '0'); // x.y. (and so forth)
+			int minor = (int)(version[2] - '0');
 			if( (major > 1) || (major == 1 && minor >= 5) ) return; // Supported in core since 1.5
 			
 			Utils.LogDebug( "Using ARB vertex buffer objects" );		
 			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
-				Utils.LogError( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
+				Utils.LogWarning( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
 				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
 				Utils.LogWarning( "Alternatively, you can download the Direct3D9 build." );
+				
+				ErrorHandler.LogError( "OpenGL vbo check", 
+				                      "Driver does not support OpenGL VBOs, which are required for the OpenGL build." +
+				                      Environment.NewLine + "you may need to install and/or update video card drivers" );
 				throw new InvalidOperationException( "VBO support required for OpenGL build" );
 			}
 			GL.UseArbVboAddresses();

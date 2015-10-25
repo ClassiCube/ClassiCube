@@ -152,7 +152,7 @@ namespace Launcher2 {
 		}
 
 		void DisplayWebException( WebException ex, string action ) {
-			Program.LogException( ex );
+			ErrorHandler.LogError( action, ex );
 			if( ex.Status == WebExceptionStatus.Timeout ) {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + "Timed out while connecting to classicube.net.";

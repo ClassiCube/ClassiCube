@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 					MobTextureId = -1;
 					
 					// Custom mob textures.
-					if( Utils.IsUrl( item.Url ) && item.TimeAdded > lastModelChange ) {
+					if( Utils.IsUrlPrefix( item.Url ) && item.TimeAdded > lastModelChange ) {
 						MobTextureId = PlayerTextureId;
 					}
 					RenderHat = HasHat( bmp, SkinType );

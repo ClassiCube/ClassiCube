@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 
 		static string crashFile = "crash.log";
 		
-		/// <summary> Adds a handler for when a unhandled exception occurs,  unless 
+		/// <summary> Adds a handler for when a unhandled exception occurs, unless 
 		/// a debugger is attached to the process in which case this does nothing. </summary>
 		public static void InstallHandler( string logFile ) {
 			crashFile = logFile;
@@ -48,13 +48,20 @@ namespace ClassicalSharp {
 			Environment.Exit( 1 );
 		}
 		
-		public static bool LogHandledException( Exception ex ) {
-			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
-			
+		/// <summary> Logs a handled exception that occured at the specified location to the log file. </summary>
+		public static bool LogError( string location, Exception ex ) {
+			string error = ex.GetType().FullName + ": " + ex.Message 
+				+ Environment.NewLine + ex.StackTrace;
+			return LogError( location, error );
+		}
+		
+		/// <summary> Logs an error that occured at the specified location to the log file. </summary>
+		public static bool LogError( string location, string text ) {
 			try {
 				using( StreamWriter writer = new StreamWriter( crashFile, true ) ) {
 					writer.WriteLine( "--- handled error ---" );
-					writer.WriteLine( error );
+					writer.WriteLine( "Occured when: " + location );
+					writer.WriteLine( text );
 					writer.WriteLine();
 				}
 			} catch( Exception ) {

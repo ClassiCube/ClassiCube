@@ -34,7 +34,7 @@ namespace ClassicalSharp.Network {
 		/// <remarks> Identifier is skin_'skinName'.</remarks>
 		public void DownloadSkin( string skinName ) {
 			string strippedSkinName = Utils.StripColours( skinName );
-			string url = Utils.IsUrl( skinName ) ? skinName :
+			string url = Utils.IsUrlPrefix( skinName ) ? skinName :
 				skinServer + strippedSkinName + ".png";
 			AddRequest( url, true, "skin_" + strippedSkinName, 0 );
 		}

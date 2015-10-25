@@ -4,9 +4,9 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class KeyMappingsScreen : MenuScreen {
+	public class KeyBindingsScreen : MenuScreen {
 		
-		public KeyMappingsScreen( Game game ) : base( game ) {
+		public KeyBindingsScreen( Game game ) : base( game ) {
 		}
 		
 		public override void Render( double delta ) {
@@ -43,9 +43,9 @@ namespace ClassicalSharp {
 		void MakeKeys( int start, int len, int x ) {
 			int y = -180;
 			for( int i = 0; i < len; i++ ) {
-				KeyMapping mapping = (KeyMapping)( (int)start + i );
+				KeyBinding binding = (KeyBinding)((int)start + i);
 				string text = descriptions[start + i] + ": " 
-					+ keyNames[(int)game.Mapping( mapping )];
+					+ keyNames[(int)game.Mapping( binding )];
 				
 				buttons[index++] = ButtonWidget.Create( game, x, y, 240, 25, text,
 				                                       Anchor.Centre, Anchor.Centre, keyFont, OnWidgetClick );
@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 				game.SetNewScreen( new NormalScreen( game ) );
 			} else if( widget != null ) {
 				int index = Array.IndexOf<ButtonWidget>( buttons, widget );
-				KeyMapping mapping = (KeyMapping)index;
+				KeyBinding mapping = (KeyBinding)index;
 				KeyMap map = game.InputHandler.Keys;
 				Key oldKey = map[mapping];
 				string reason;

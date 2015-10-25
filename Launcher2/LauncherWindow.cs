@@ -65,7 +65,7 @@ namespace Launcher2 {
 			try {
 				data = Session.GetConnectInfo( hash );
 			} catch( WebException ex ) {
-				Program.LogException( ex );
+				ErrorHandler.LogError( "retrieving server information", ex );
 				return false;
 			}
 			Client.Start( data, true );

@@ -47,8 +47,8 @@ namespace ClassicalSharp {
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
-				Make( 140, 50, "Key mappings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new KeyMappingsScreen( g ) ), null, null ),			
+				Make( 140, 50, "Key bindings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ), null, null ),			
 				// Extra stuff
 				!network.IsSinglePlayer ? null :
 					Make( -140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,

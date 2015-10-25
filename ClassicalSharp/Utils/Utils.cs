@@ -19,8 +19,6 @@ namespace ClassicalSharp {
 	
 	public static class Utils {
 		
-		
-		
 		/// <summary> Clamps that specified value such that min ≤ value ≤ max </summary>
 		public static void Clamp( ref float value, float min, float max ) {
 			if( value < min ) value = min;
@@ -67,14 +65,17 @@ namespace ClassicalSharp {
 			return new String( output, 0, usedChars );
 		}
 		
+		/// <summary> Returns whether a equals b, ignoring any case differences. </summary>
 		public static bool CaselessEquals( string a, string b ) {
 			return a.Equals( b, StringComparison.OrdinalIgnoreCase );
 		}
 		
+		/// <summary> Returns whether a starts with b, ignoring any case differences. </summary>
 		public static bool CaselessStarts( string a, string b ) {
 			return a.StartsWith( b, StringComparison.OrdinalIgnoreCase );
 		}
 		
+		/// <summary> Converts the given byte array of length N to a hex string of length 2N. </summary>
 		public static string ToHexString( byte[] array ) {
 			int len = array.Length;
 			char[] hexadecimal = new char[len * 2];
@@ -117,38 +118,46 @@ namespace ClassicalSharp {
 			return packed * 360.0 / 256.0;
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY( Vector3 v, float angle ) {
 			float cosA = (float)Math.Cos( angle );
 			float sinA = (float)Math.Sin( angle );
 			return new Vector3( cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY( float x, float y, float z, float angle ) {
 			float cosA = (float)Math.Cos( angle );
 			float sinA = (float)Math.Sin( angle );
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		public static Vector3 RotateX( Vector3 p, float cosA, float sinA ) {
 			return new Vector3( p.X, cosA * p.Y + sinA * p.Z, -sinA * p.Y + cosA * p.Z );
 		}
 		
-		public static Vector3 RotateY( Vector3 p, float cosA, float sinA ) {
-			return new Vector3( cosA * p.X - sinA * p.Z, p.Y, sinA * p.X + cosA * p.Z );
-		}
-		
-		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
-			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
-		}
-		
+		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
+		public static Vector3 RotateY( Vector3 p, float cosA, float sinA ) {
+			return new Vector3( cosA * p.X - sinA * p.Z, p.Y, sinA * p.X + cosA * p.Z );
+		}
+		
+		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
+		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
+			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
+		}		
+		
+		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( cosA * x + sinA * y, -sinA * x + cosA * y, z );
 		}
@@ -177,6 +186,8 @@ namespace ClassicalSharp {
 			return dx * dx + dy * dy + dz * dz;
 		}
 		
+		/// <summary> Returns a normalised vector that faces in the direction 
+		/// described by the given yaw and pitch. </summary>
 		public static Vector3 GetDirVector( double yawRad, double pitchRad ) {
 			double x = -Math.Cos( pitchRad ) * -Math.Sin( yawRad );
 			double y = -Math.Sin( pitchRad );
@@ -200,16 +211,6 @@ namespace ClassicalSharp {
 		
 		public static void LogWarning( string text, params object[] args ) {
 			LogWarning( String.Format( text, args ) );
-		}
-		
-		public static void LogError( string text ) {
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine( text );
-			Console.ResetColor();
-		}
-		
-		public static void LogError( string text, params object[] args ) {
-			LogError( String.Format( text, args ) );
 		}
 		
 		public static void LogDebug( string text ) {
@@ -275,7 +276,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static bool IsUrl( string value ) {
+		/// <summary> Returns whether the specified string starts with http:// or https:// </summary>
+		public static bool IsUrlPrefix( string value ) {
 			return value.StartsWith( "http://" ) || value.StartsWith( "https://" );
 		}
 	}

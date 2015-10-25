@@ -9,7 +9,6 @@ using OpenTK.Graphics.OpenGL;
 namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
-	/// <remarks> Only Direct3D9 and OpenGL support are implemented. </remarks>
 	public abstract class IGraphicsApi {
 		
 		/// <summary> Maximum supported length of a dimension (width and height) of a 2D texture. </summary>
@@ -292,13 +291,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			IntPtr ptr = (IntPtr)indices;
 			
 			for( int i = 0; i < maxIndices; i += 6 ) {
-				*indices++ = (ushort)( element + 0 );
-				*indices++ = (ushort)( element + 1 );
-				*indices++ = (ushort)( element + 2 );
+				*indices++ = (ushort)(element + 0);
+				*indices++ = (ushort)(element + 1);
+				*indices++ = (ushort)(element + 2);
 				
-				*indices++ = (ushort)( element + 2 );
-				*indices++ = (ushort)( element + 3 );
-				*indices++ = (ushort)( element + 0 );
+				*indices++ = (ushort)(element + 2);
+				*indices++ = (ushort)(element + 3);
+				*indices++ = (ushort)(element + 0);
 				element += 4;
 			}
 			return CreateIb( ptr, maxIndices );

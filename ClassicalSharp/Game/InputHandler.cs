@@ -38,8 +38,9 @@ namespace ClassicalSharp {
 			return game.Keyboard[key];
 		}
 		
-		public bool IsKeyDown( KeyMapping mapping ) {
-			Key key = Keys[mapping];
+		/// <summary> Returns whether the key associated with the given key binding is currently held down. </summary>
+		public bool IsKeyDown( KeyBinding binding ) {
+			Key key = Keys[binding];
 			return game.Keyboard[key];
 		}
 		
@@ -267,7 +268,7 @@ namespace ClassicalSharp {
 			
 			if( key == Key.F4 && (game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight )) ) {
 				game.Exit();
-			} else if( key == Keys[KeyMapping.Screenshot] ) {
+			} else if( key == Keys[KeyBinding.Screenshot] ) {
 				game.screenshotRequested = true;
 			} else if( game.activeScreen == null || !game.activeScreen.HandlesKeyDown( key ) ) {
 				
@@ -308,26 +309,26 @@ namespace ClassicalSharp {
 		}
 		
 		bool HandleBuiltinKey( Key key ) {
-			if( key == Keys[KeyMapping.HideGui] ) {
+			if( key == Keys[KeyBinding.HideGui] ) {
 				game.HideGui = !game.HideGui;
-			} else if( key == Keys[KeyMapping.Fullscreen] ) {
+			} else if( key == Keys[KeyBinding.Fullscreen] ) {
 				WindowState state = game.WindowState;
 				if( state != WindowState.Minimized ) {
 					game.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
-			} else if( key == Keys[KeyMapping.ThirdPersonCamera] ) {
+			} else if( key == Keys[KeyBinding.ThirdPersonCamera] ) {
 				bool useThirdPerson = !(game.Camera is ForwardThirdPersonCamera);
 				game.SetCamera( useThirdPerson );
-			} else if( key == Keys[KeyMapping.ViewDistance] ) {
+			} else if( key == Keys[KeyBinding.ViewDistance] ) {
 				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {
 					CycleDistanceBackwards();
 				} else {
 					CycleDistanceForwards();
 				}
-			} else if( key == Keys[KeyMapping.PauseOrExit] && !game.Map.IsNotLoaded ) {
+			} else if( key == Keys[KeyBinding.PauseOrExit] && !game.Map.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
-			} else if( key == Keys[KeyMapping.OpenInventory] ) {
+			} else if( key == Keys[KeyBinding.OpenInventory] ) {
 				game.SetNewScreen( new BlockSelectScreen( game ) );
 			} else {
 				return false;

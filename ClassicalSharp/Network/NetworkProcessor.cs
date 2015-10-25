@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 			try {
 				socket.Connect( address, port );
 			} catch( SocketException ex ) {
-				Utils.LogError( "Error while trying to connect: {0}{1}", Environment.NewLine, ex );
+				ErrorHandler.LogError( "connecting to server", ex );
 				game.Disconnect( "&eUnable to reach " + address + ":" + port,
 				                "Unable to establish an underlying connection" );
 				Dispose();
@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 			
 			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
-				if( item.Data != null ) {			
+				if( item.Data != null ) {
 					extractor.Extract( (byte[])item.Data, game );
 				} else {
 					extractor.Extract( game.defaultTexPack, game );
@@ -98,8 +98,8 @@ namespace ClassicalSharp {
 			try {
 				reader.ReadPendingData();
 			} catch( IOException ex ) {
-				Utils.LogError( "Error while reading packets: {0}{1}", Environment.NewLine, ex );
-				game.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
+				ErrorHandler.LogError( "reading packets", ex );
+				game.Disconnect( "&eLost connection to the server", "IO error when reading packets" );
 				Dispose();
 				return;
 			}
@@ -204,8 +204,8 @@ namespace ClassicalSharp {
 			try {
 				stream.Write( outBuffer, 0, packetLength );
 			} catch( IOException ex ) {
-				Utils.LogError( "Error while writing packets: {0}{1}", Environment.NewLine, ex );
-				game.Disconnect( "&eLost connection to the server", "Underlying connection was closed" );
+				ErrorHandler.LogError( "wrting packets", ex );
+				game.Disconnect( "&eLost connection to the server", "IO Error while writing packets" );
 				Dispose();
 			}
 		}
@@ -254,6 +254,7 @@ namespace ClassicalSharp {
 			}
 			receivedFirstPosition = false;
 			gzipHeader = new GZipHeaderReader();
+			
 			// Workaround because built in mono stream assumes that the end of stream
 			// has been reached the first time a read call returns 0. (MS.NET doesn't)
 			#if __MonoCS__
@@ -261,10 +262,8 @@ namespace ClassicalSharp {
 			#else
 			gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
 			if( OpenTK.Configuration.RunningOnMono ) {
-				Utils.LogWarning( "You are running on Mono, but this build does not support the Mono workaround." );
-				Utils.LogWarning( "You should either download the Mono compatible build or define '__MonoCS__' when targeting Mono. " +
-				                 "(The Mono compiler already defines this by default)" );
-				Utils.LogWarning( "You will likely experience an 'Internal error (no progress possible) ReadInternal' exception when decompressing the map." );
+				throw new InvalidOperationException( "You must compile ClassicalSharp with the mono compiler " +
+				                                    "to run on Mono, due to a limitation in Mono." );
 			}
 			#endif
 			

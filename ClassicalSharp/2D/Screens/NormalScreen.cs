@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 			if( playerList != null ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
-				if( !game.IsKeyDown( KeyMapping.PlayerList ) ) {
+				if( !game.IsKeyDown( KeyBinding.PlayerList ) ) {
 					playerList.Dispose();
 					playerList = null;
 				}
@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Mapping( KeyMapping.PlayerList ) ) {
+			if( key == game.Mapping( KeyBinding.PlayerList ) ) {
 				if( playerList == null ) {
 					if( game.Network.UsingExtPlayerList ) {
 						playerList = new ExtPlayerListWidget( game, playerFont );
@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( key == game.Mapping( KeyMapping.PlayerList ) ) {
+			if( key == game.Mapping( KeyBinding.PlayerList ) ) {
 				if( playerList != null ) {
 					playerList.Dispose();
 					playerList = null;

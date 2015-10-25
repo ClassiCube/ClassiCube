@@ -3,7 +3,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public enum KeyMapping {
+	public enum KeyBinding {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
 		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen,
 		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp,
@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 	
 	public class KeyMap {
 		
-		public Key this[KeyMapping key] {
+		public Key this[KeyBinding key] {
 			get { return Keys[(int)key]; }
 			set { Keys[(int)key] = value; SaveKeyBindings(); }
 		}
@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		
 		public bool IsKeyOkay( Key oldKey, Key key, out string reason ) {
 			if( oldKey == Key.Escape || oldKey == Key.F12 ) {
-				reason = "This mapping is locked";
+				reason = "This binding is locked";
 				return false;
 			}
 			
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadKeyBindings() {
-			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
+			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
 				Key mapping = Options.GetKey( key, Keys[i] );
@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 		}
 		
 		void SaveKeyBindings() {
-			string[] names = KeyMapping.GetNames( typeof( KeyMapping ) );
+			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				Options.Set( "key-" + names[i], Keys[i] );
 			}

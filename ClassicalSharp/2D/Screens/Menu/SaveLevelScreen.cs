@@ -103,8 +103,8 @@ namespace ClassicalSharp {
 					map.Save( fs, game );
 				}
 			} catch( Exception ex ) {
-				Utils.LogError( "Error while trying to save map: {0}{1}", Environment.NewLine, ex );
-				MakeDescWidget( "&cFailed to save map" );
+				ErrorHandler.LogError( "saving map", ex );
+				MakeDescWidget( "&cError while trying to save map" );
 				return;
 			}
 			game.SetNewScreen( new PauseScreen( game ) );
