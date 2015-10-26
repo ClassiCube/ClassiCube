@@ -92,6 +92,8 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
+			Graphics.MakeGraphicsInfo();
+			
 			try {
 				Options.Load();
 			} catch( IOException ) {
@@ -106,12 +108,11 @@ namespace ClassicalSharp {
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
-			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
-			
+			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );			
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
-			Graphics.PrintGraphicsInfo();
+			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );

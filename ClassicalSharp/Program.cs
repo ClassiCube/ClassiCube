@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 		
 		static void Fail( string text ) {
 			Utils.LogWarning( text );
-			Utils.Log( "Press any key to exit.." );
+			Utils.LogWarning( "Press any key to exit.." );
 			Console.ReadKey( true );
 		}
 	}

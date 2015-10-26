@@ -180,12 +180,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
 		public abstract void TakeScreenshot( string output, Size size );
 		
-		protected abstract void PrintApiInfo();
+		protected abstract void MakeApiInfo();
 		
-		public void PrintGraphicsInfo() {
-			Console.ForegroundColor = ConsoleColor.Green;
-			PrintApiInfo();
-			Console.ResetColor();
+		public string[] ApiInfo;
+		
+		public void MakeGraphicsInfo() {
+			MakeApiInfo();
+			ErrorHandler.AdditionalInfo = ApiInfo;
 		}
 		
 		/// <summary> Informs the graphic api to update its state in preparation for a new frame. </summary>

@@ -81,6 +81,7 @@ namespace ClassicalSharp.Model {
 			ZQuad( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2, _64x64 ); // back
 			XQuad( x, y + endsH, sidesW, sidesH, y2, y1, z2, z1, x2, _64x64 ); // left
 			XQuad( x + sidesW + bodyW, y + endsH, sidesW, sidesH, y1, y2, z2, z1, x1, _64x64 ); // right
+			
 			// rotate left and right 90 degrees
 			for( int i = index - 8; i < index; i++ ) {
 				ModelVertex vertex = vertices[i];

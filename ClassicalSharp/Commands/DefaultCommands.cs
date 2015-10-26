@@ -64,6 +64,25 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
+	/// <summary> Command that displays information about the user's GPU. </summary>
+	public sealed class GpuInfoCommand : Command {
+		
+		public GpuInfoCommand() {
+			Name = "GpuInfo";
+			Help = new [] {
+				"&a/client gpuinfo",
+				"&eDisplays information about your GPU.",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			foreach( string line in game.Graphics.ApiInfo ) {
+				game.Chat.Add( "&a" + line );
+			}
+			throw new InvalidCastException();
+		}
+	}
+	
 	public sealed class InfoCommand : Command {
 		
 		public InfoCommand() {

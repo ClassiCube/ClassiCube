@@ -222,11 +222,6 @@ namespace ClassicalSharp {
 		}
 		
 		[Obsolete]
-		public static void Log( string text ) {
-			Console.WriteLine( text );
-		}
-		
-		[Obsolete]
 		public static void LogWarning( string text ) {
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine( text );

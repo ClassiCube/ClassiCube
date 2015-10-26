@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ClassicalSharp.Network {
 	
-	/// <summary> Specialised producer and consumer queue for downloading images and pages asynchronously. </summary>
+	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
 	public class AsyncDownloader : IDisposable {
 		
 		EventWaitHandle handle = new EventWaitHandle( false, EventResetMode.AutoReset );
@@ -220,9 +220,7 @@ namespace ClassicalSharp.Network {
 		/// <summary> Instant in time the item was fully downloaded. </summary>
 		public DateTime TimeDownloaded;
 		
-		/// <summary>
-		/// 
-		/// </summary>
+		/// <summary> Full URL this item was downloaded from. </summary>
 		public string Url;
 		
 		public DownloadedItem( object data, DateTime timeAdded, string url ) {

@@ -547,16 +547,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			d3d.Dispose();
 		}
 
-		protected override void PrintApiInfo() {
-			Utils.Log( "--Using Direct3D 9--" );
-			Utils.Log( "Adapter: " + d3d.Adapters[0].Details.Description );
-			Utils.Log( "Mode: " + createFlags );
+		protected override void MakeApiInfo() {
+			string adapter =  d3d.Adapters[0].Details.Description;
 			float texMem = (uint)device.AvailableTextureMemory / 1024f / 1024f;
-			Utils.Log( "Texture mem: " + texMem + " MB" );
 			
-			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
-			Utils.Log( "Depth buffer format: " + depthFormat );
-			Utils.Log( "Back buffer format: " + viewFormat );
+			ApiInfo = new string[] {
+				"-- Using Direct3D9 api --",
+				"Adapter: " + adapter,
+				"Mode: " + createFlags,
+				"Texture memory: " + texMem + " MB",				
+				"Max 2D texture dimensions: " + MaxTextureDimensions,
+				"Depth buffer format: " + depthFormat,
+				"Back buffer format: " + viewFormat,
+			};
 		}
 
 		public unsafe override void TakeScreenshot( string output, Size size ) {

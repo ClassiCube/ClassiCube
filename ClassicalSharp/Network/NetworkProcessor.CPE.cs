@@ -55,15 +55,16 @@ namespace ClassicalSharp {
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes, usingTexturePack;
 		static string[] clientExtensions = {
-			"EmoteFix", "ClickDistance", "HeldBlock", "BlockPermissions",
-			"SelectionCuboid", "MessageTypes", "CustomBlocks", "EnvColors",
-			"HackControl", "EnvMapAppearance", "ExtPlayerList", "ChangeModel",
-			"EnvWeatherType", "PlayerClick", "TextHotKey",
+			"ClickDistance", "CustomBlocks", "HeldBlock",
+			"EmoteFix", "TextHotKey", "ExtPlayerList",
+			"EnvColors", "SelectionCuboid", "BlockPermissions",
+			"ChangeModel", "EnvMapAppearance", "EnvWeatherType", 
+			"HackControl", "MessageTypes", "PlayerClick",
 		};
 		
 		void HandleCpeExtInfo() {
 			string appName = reader.ReadAsciiString();
-			Utils.LogDebug( "Server identified itself as: " + appName );
+			game.Chat.Add( "Server identified itself as: " + appName );
 			cpeServerExtensionsCount = reader.ReadInt16();
 		}
 		
@@ -133,14 +134,14 @@ namespace ClassicalSharp {
 			int keyCode = reader.ReadInt32();
 			byte keyMods = reader.ReadUInt8();
 			
-			if( keyCode < 0 || keyCode > 255 ) return;		
+			if( keyCode < 0 || keyCode > 255 ) return;
 			Key key = LwjglToKey.Map[keyCode];
 			if( key == Key.Unknown ) return;
 			
 			Console.WriteLine( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
 			if( action == "" ) {
 				game.InputHandler.Hotkeys.RemoveHotkey( key, keyMods );
-			} else if( action[action.Length - 1] == '\n' ) { 
+			} else if( action[action.Length - 1] == '\n' ) {
 				action = action.Substring( 0, action.Length - 1 );
 				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, false );
 			} else { // more input needed by user
@@ -368,7 +369,7 @@ namespace ClassicalSharp {
 				      new FastBitmap( game.TerrainAtlas.AtlasBitmap, true ) ) {
 					info.RecalculateBB( block, fastBmp );
 				}
-			}			
+			}
 		}
 		
 		void HandleCpeRemoveBlockDefinition() {

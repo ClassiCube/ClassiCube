@@ -14,6 +14,7 @@ namespace ClassicalSharp.Commands {
 		public void Init( Game game ) {
 			this.game = game;			
 			RegisterCommand( new CommandsCommand() );
+			RegisterCommand( new GpuInfoCommand() );
 			RegisterCommand( new HelpCommand() );
 			RegisterCommand( new InfoCommand() );
 			RegisterCommand( new RenderTypeCommand() );

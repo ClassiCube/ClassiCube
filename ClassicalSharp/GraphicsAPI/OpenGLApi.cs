@@ -35,13 +35,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			int minor = (int)(version[2] - '0');
 			if( (major > 1) || (major == 1 && minor >= 5) ) return; // Supported in core since 1.5
 			
-			Utils.LogDebug( "Using ARB vertex buffer objects" );		
+			Utils.LogDebug( "Using ARB vertex buffer objects" );
 			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
 				Utils.LogWarning( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
 				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
 				Utils.LogWarning( "Alternatively, you can download the Direct3D9 build." );
 				
-				ErrorHandler.LogError( "OpenGL vbo check", 
+				ErrorHandler.LogError( "OpenGL vbo check",
 				                      "Driver does not support OpenGL VBOs, which are required for the OpenGL build." +
 				                      Environment.NewLine + "you may need to install and/or update video card drivers" );
 				throw new InvalidOperationException( "VBO support required for OpenGL build" );
@@ -379,17 +379,21 @@ namespace ClassicalSharp.GraphicsAPI {
 			game.VSync = value;
 		}
 		
-		protected unsafe override void PrintApiInfo() {
-			Utils.Log( "--Using OpenGL--" );
-			Utils.Log( "Vendor: " + new String( (sbyte*)GL.GetString( StringName.Vendor ) ) );
+		protected unsafe override void MakeApiInfo() {
+			string vendor = new String( (sbyte*)GL.GetString( StringName.Vendor ) );
 			string renderer = new String( (sbyte*)GL.GetString( StringName.Renderer ) );
-			Utils.Log( "Renderer: " + renderer );
-			Utils.Log( "GL version: " + new String( (sbyte*)GL.GetString( StringName.Version ) ) );
-			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
-			
+			string version = new String( (sbyte*)GL.GetString( StringName.Version ) );
 			int depthBits = 0;
 			GL.GetIntegerv( GetPName.DepthBits, &depthBits );
-			Utils.Log( "Depth buffer bits: " + depthBits );
+			
+			ApiInfo = new string[] {
+				"--Using OpenGL api--",
+				"Vendor: " + vendor,
+				"Renderer: " + renderer,
+				"GL version: " + version,
+				"Max 2D texture dimensions: " + MaxTextureDimensions,
+				"Depth buffer bits: " + depthBits,
+			};
 			
 			if( renderer.Contains( "Intel" ) ) {
 				Utils.LogWarning( "Intel graphics cards are known to have issues with the OpenGL build." );
@@ -437,7 +441,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 			fogModes = new [] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
 			matrixModes = new [] { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
-			#else			
+			#else
 			modeMappings = new BeginMode[2];
 			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
 			blendFuncs = new BlendingFactor[6];
