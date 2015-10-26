@@ -7,13 +7,15 @@ namespace ClassicalSharp {
 
 	public sealed class InputHandler {
 		
-		public HotkeyList Hotkeys = new HotkeyList();
+		public HotkeyList Hotkeys;
 		Game game;
 		public InputHandler( Game game ) {
 			this.game = game;
 			RegisterInputHandlers();
 			LoadMouseToKeyMappings();
 			Keys = new KeyMap();
+			Hotkeys = new HotkeyList();
+			Hotkeys.LoadSavedHotkeys();
 		}
 		
 		void RegisterInputHandlers() {

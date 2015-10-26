@@ -101,46 +101,6 @@ namespace ClassicalSharp.Commands {
 		}
 	}
 	
-	public sealed class HotkeyCommand : Command {
-		
-		public HotkeyCommand() {
-			Name = "Hotkey";
-			Help = new [] {
-				"&a/client hotkey [key] [modifiers] [more] [action]",
-			};
-		}
-		
-		public override void Execute( CommandReader reader ) {
-			Key key;
-			byte modifiers;
-			bool more;
-			
-			if( !reader.NextOf( out key, ParseKey ) ||
-			   !reader.NextOf( out modifiers, Byte.TryParse ) ||
-			   !reader.NextOf( out more, Boolean.TryParse ) ) {
-				game.Chat.Add( "NOPE!" );
-				return;
-			}
-			
-			string action = reader.NextAll();
-			if( action != null ) {
-				game.InputHandler.Hotkeys
-					.AddHotkey( key, modifiers, action, more );
-				game.Chat.Add( "Added" );
-			}
-		}
-		
-		bool ParseKey( string value, out Key key ) {
-			try {
-				key = (Key)Enum.Parse( typeof( Key ), value, true );
-				return true;
-			} catch {
-				key = Key.Unknown;
-				return false;
-			}
-		}
-	}
-	
 	public sealed class RenderTypeCommand : Command {
 		
 		public RenderTypeCommand() {

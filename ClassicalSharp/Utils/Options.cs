@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 	
 	public static class Options {
 		
-		static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
+		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
 		public static bool HasChanged;
 		
 		public static string Get( string key ) {
@@ -49,24 +49,24 @@ namespace ClassicalSharp {
 		}
 		
 		public static Key GetKey( string key, Key defValue ) {
-			string value = Options.Get( key );
+			string value = Options.Get( key.ToLower() );
 			if( value == null ) {
 				Set( key, defValue );
 				return defValue;
 			}
 			
 			Key mapping;
-			try {
-				mapping = (Key)Enum.Parse( typeof( Key ), value, true );
-			} catch( ArgumentException ) {
+			if( !Utils.TryParseKey( value, defValue, out mapping ) )
 				Options.Set( key, defValue );
-				return defValue;
-			}
 			return mapping;
 		}
 		
 		public static void Set( string key, string value ) {
-			OptionsSet[key] = value;
+			if( value != null ) {
+				OptionsSet[key] = value;
+			} else {
+				OptionsSet.Remove( key );
+			}
 			HasChanged = true;
 		}
 		
@@ -94,6 +94,7 @@ namespace ClassicalSharp {
 				int separatorIndex = line.IndexOf( '=' );
 				if( separatorIndex <= 0 ) continue;
 				string key = line.Substring( 0, separatorIndex );
+				key = key.ToLower();
 				
 				separatorIndex++;
 				if( separatorIndex == line.Length ) continue;

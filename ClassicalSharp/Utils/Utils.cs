@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 
@@ -113,6 +114,21 @@ namespace ClassicalSharp {
 			} else {
 				throw new FormatException( "Invalid hex code given: " + value );
 			}
+		}
+
+		/// <summary> Attempts to caselessly parse the given string as a Key enum member,
+		/// returning defValue if there was an error parsing. </summary>
+		public static bool TryParseKey( string value, Key defValue, out Key key ) {
+			Key mapping;
+			try {
+				mapping = (Key)Enum.Parse( typeof( Key ), value, true );
+			} catch( ArgumentException ) {
+				key = defValue;
+				return false;
+			}
+			
+			key = mapping;
+			return true;
 		}
 		
 		/// <summary> Multiply a value in degrees by this to get its value in radians. </summary>

@@ -75,12 +75,58 @@ namespace ClassicalSharp.Hotkeys {
 			moreInput = false;
 			return false;
 		}
-	}	
+		
+		public void LoadSavedHotkeys() {
+			foreach( var pair in Options.OptionsSet ) {
+				if( Utils.CaselessStarts( pair.Key, "hotkey-" ) ) {
+					// First retrieve the parts from 
+					const int startIndex = 7;
+					int keySplit = pair.Key.IndexOf( '&', startIndex );
+					if( keySplit < 0 ) {
+						Utils.LogWarning( "Hotkey {0} has an invalid key", pair.Key );
+						continue;
+					}
+					string strKey = pair.Key.Substring( startIndex, keySplit - startIndex );
+					string strFlags = pair.Key.Substring( keySplit + 1, pair.Key.Length - keySplit - 1 );
+					
+					int valueSplit = pair.Value.IndexOf( '&', 0 );
+					if( valueSplit < 0 ) {
+						Utils.LogWarning( "Hotkey {0} has an invalid value", pair.Key );
+						continue;
+					}
+					string strMoreInput = pair.Value.Substring( 0, valueSplit - 0 );
+					string strText = pair.Value.Substring( valueSplit + 1, pair.Value.Length - valueSplit - 1 );
+					
+					// Then try to parse the key and value
+					Key key; byte flags; bool moreInput;
+					if( !Utils.TryParseKey( strKey, Key.Unknown, out key ) ||
+					   !Byte.TryParse( strFlags, out flags ) ||
+					   !Boolean.TryParse( strMoreInput, out moreInput ) ||
+					   strText.Length == 0 ) {
+						Utils.LogWarning( "Hotkey {0} has invalid arguments", pair.Key );
+						continue;
+					}
+					AddHotkey( key, flags, strText, moreInput );
+				}
+			}
+		}
+		
+		public void UserRemovedHotkey( Key baseKey, byte flags ) {
+			string key = "hotkey-" + baseKey + "&" + flags;
+			Options.Set( key, null );
+		}
+		
+		public void UserAddedHotkey( Key baseKey, byte flags, bool moreInput, string text ) {
+			string key = "hotkey-" + baseKey + "&" + flags;
+			string value = moreInput + "&" + text;
+			Options.Set( key, value );
+		}
+	}
 	
 	public struct Hotkey {
 		public Key BaseKey;
 		public byte Flags; // ctrl 1, shift 2, alt 4
-		public string Text; // contents to copy directly into the input bar
 		public bool MoreInput; // whether the user is able to enter further input
+		public string Text; // contents to copy directly into the input bar
 	}
 }

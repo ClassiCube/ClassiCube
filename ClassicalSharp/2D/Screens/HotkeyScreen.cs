@@ -6,7 +6,6 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 	
 	// TODO: Hotkey added event for CPE
-	// TODO: save hotkeys
 	public sealed class HotkeyScreen : MenuScreen {
 		
 		HotkeyList hotkeys;
@@ -151,7 +150,7 @@ namespace ClassicalSharp {
 		}
 		
 		void Set( int index ) {
-			string text = Get( index );
+			string text = Get( index + currentIndex );
 			ButtonWidget button = buttons[index];
 			button.SetText( text);
 			button.Metadata = null;
@@ -175,7 +174,7 @@ namespace ClassicalSharp {
 			
 			LostFocus();
 			for( int i = 0; i < 4; i++ )
-				Set( currentIndex + i );
+				Set( i );
 		}
 		
 		void TextButtonClick( Game game, Widget widget ) {
@@ -196,7 +195,7 @@ namespace ClassicalSharp {
 		TextWidget currentMoreInputLabel;
 		ButtonWidget focusWidget;
 		
-		void CreateEditingWidgets() {			
+		void CreateEditingWidgets() {
 			DisposeEditingWidgets();
 			
 			buttons[8] = Make( -140, 60, "Key: " + curHotkey.BaseKey,
@@ -243,24 +242,31 @@ namespace ClassicalSharp {
 		}
 		
 		void SaveChangesClick( Game game, Widget widget ) {
-			if( origHotkey.BaseKey != Key.Unknown )
+			if( origHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.RemoveHotkey( origHotkey.BaseKey, origHotkey.Flags );
+				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
+			}
 			
-			if( curHotkey.BaseKey != Key.Unknown )
+			if( curHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.AddHotkey( curHotkey.BaseKey, curHotkey.Flags,
 				                  currentAction.GetText(), curHotkey.MoreInput );
+				hotkeys.UserAddedHotkey( curHotkey.BaseKey, curHotkey.Flags,
+				                        curHotkey.MoreInput, currentAction.GetText() );
+			}
 			
 			for( int i = 0; i < 4; i++ )
-				Set( currentIndex + i );
+				Set( i );
 			DisposeEditingWidgets();
 		}
 		
 		void RemoveHotkeyClick( Game game, Widget widget ) {
-			if( origHotkey.BaseKey != Key.Unknown )
+			if( origHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.RemoveHotkey( origHotkey.BaseKey, origHotkey.Flags );
+				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
+			}
 			
 			for( int i = 0; i < 4; i++ )
-				Set( currentIndex + i );
+				Set( i );
 			DisposeEditingWidgets();
 		}
 		

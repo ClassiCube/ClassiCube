@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
-		public int MouseSensitivity = 40;
+		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
 		public bool PushbackBlockPlacing;
@@ -103,7 +103,7 @@ namespace ClassicalSharp {
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			defaultIb = Graphics.MakeDefaultIb();
-			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 40 );
+			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
