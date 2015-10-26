@@ -99,7 +99,7 @@ namespace ClassicalSharp {
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
-			Drawer2D = new GdiPlusDrawer2D( Graphics );
+			Drawer2D = new GdiPlusDrawerFont( Graphics );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();

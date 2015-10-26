@@ -7,25 +7,14 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public sealed class GdiPlusDrawer2D : IDrawer2D {
-		
-		StringFormat format;
-		Bitmap measuringBmp;
-		Graphics measuringGraphics;
+	public abstract class GdiPlusDrawer2D : IDrawer2D {
+
 		Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );
 		
-		Graphics g;
-		
+		protected Graphics g;
+		protected Bitmap curBmp;
 		public GdiPlusDrawer2D( IGraphicsApi graphics ) {
 			this.graphics = graphics;
-			format = StringFormat.GenericTypographic;
-			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
-			format.Trimming = StringTrimming.None;
-			//format.FormatFlags |= StringFormatFlags.NoWrap;
-			//format.FormatFlags |= StringFormatFlags.NoClip;
-			measuringBmp = new Bitmap( 1, 1 );
-			measuringGraphics = Graphics.FromImage( measuringBmp );
-			measuringGraphics.TextRenderingHint = TextRenderingHint.AntiAlias;
 		}
 		
 		public override void SetBitmap( Bitmap bmp ) {
@@ -37,42 +26,7 @@ namespace ClassicalSharp {
 			g = Graphics.FromImage( bmp );
 			g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			g.SmoothingMode = SmoothingMode.HighQuality;
-		}
-		
-		public override void DrawText( ref DrawTextArgs args, float x, float y ) {
-			if( !args.SkipPartsCheck )
-				GetTextParts( args.Text );
-			
-			Brush shadowBrush = GetOrCreateBrush( Color.Black );
-			for( int i = 0; i < parts.Count; i++ ) {
-				TextPart part = parts[i];
-				Brush textBrush = GetOrCreateBrush( part.TextColour );
-				if( args.UseShadow )
-					g.DrawString( part.Text, args.Font, shadowBrush, x + Offset, y + Offset, format );
-				
-				g.DrawString( part.Text, args.Font, textBrush, x, y, format );
-				x += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
-			}
-		}
-		
-		public override void DrawClippedText( ref DrawTextArgs args, float x, float y, float maxWidth, float maxHeight ) {
-			if( !args.SkipPartsCheck )
-				GetTextParts( args.Text );
-			
-			Brush shadowBrush = GetOrCreateBrush( Color.Black );
-			format.Trimming = StringTrimming.EllipsisCharacter;
-			for( int i = 0; i < parts.Count; i++ ) {
-				TextPart part = parts[i];
-				Brush textBrush = GetOrCreateBrush( part.TextColour );
-				RectangleF rect = new RectangleF( x + Offset, y + Offset, maxWidth, maxHeight );
-				if( args.UseShadow )
-					g.DrawString( part.Text, args.Font, shadowBrush, rect, format );
-				
-				rect = new RectangleF( x, y, maxWidth, maxHeight );
-				g.DrawString( part.Text, args.Font, textBrush, rect, format );
-				x += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
-			}
-			format.Trimming = StringTrimming.None;
+			curBmp = bmp;
 		}
 		
 		public override void DrawRect( FastColour colour, int x, int y, int width, int height ) {
@@ -132,30 +86,13 @@ namespace ClassicalSharp {
 			return bmp;
 		}
 		
-		public override Size MeasureSize( ref DrawTextArgs args ) {			
-			GetTextParts( args.Text );
-			SizeF total = SizeF.Empty;
-			for( int i = 0; i < parts.Count; i++ ) {
-				SizeF size = measuringGraphics.MeasureString( parts[i].Text, args.Font, Int32.MaxValue, format );
-				total.Height = Math.Max( total.Height, size.Height );
-				total.Width += size.Width;
-			}
-			
-			if( args.UseShadow && parts.Count > 0 ) {
-				total.Width += Offset; total.Height += Offset;
-			}
-			return Size.Ceiling( total );
-		}
-		
 		public override void DisposeInstance() {
-			measuringBmp.Dispose();
-			measuringGraphics.Dispose();
 			foreach( var pair in brushCache ) {
 				pair.Value.Dispose();
 			}
 		}
 		
-		SolidBrush GetOrCreateBrush( Color color ) {
+		protected SolidBrush GetOrCreateBrush( Color color ) {
 			int key = color.ToArgb();
 			SolidBrush brush;
 			if( brushCache.TryGetValue( key, out brush ) ) {

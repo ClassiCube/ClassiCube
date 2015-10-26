@@ -75,6 +75,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="2D\Drawing\GdiPlusDrawerFont.cs" />
+    <Compile Include="2D\Drawing\GdiPlusDrawerMCFont.cs" />
     <Compile Include="2D\GuiElement.cs" />
     <Compile Include="2D\IsometricBlockDrawer.cs" />
     <Compile Include="2D\Drawing\DrawTextArgs.cs" />

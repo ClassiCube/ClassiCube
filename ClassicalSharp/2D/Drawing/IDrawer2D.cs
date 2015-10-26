@@ -18,11 +18,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws a string using the specified arguments and fonts at the
 		/// specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawText( ref DrawTextArgs args, float x, float y );
+		public abstract void DrawText( ref DrawTextArgs args, int x, int y );
 		
 		/// <summary> Draws a string using the specified arguments and fonts at the
 		/// specified coordinates in the currently bound bitmap, clipping if necessary. </summary>
-		public abstract void DrawClippedText( ref DrawTextArgs args, float x, float y, float maxWidth, float maxHeight );
+		public abstract void DrawClippedText( ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight );
 		
 		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the
 		/// specified coordinates in the currently bound bitmap. </summary>
