@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -7,58 +6,42 @@ namespace ClassicalSharp {
 	public static class Picking {
 		
 		// http://www.xnawiki.com/index.php/Voxel_traversal
-		public static void GetPickedBlockPos( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
-			// Implementation is based on:
-			// "A Fast Voxel Traversal Algorithm for Ray Tracing"
+		//https://web.archive.org/web/20120113051728/http://www.xnawiki.com/index.php?title=Voxel_traversal
+		/// <summary> Determines the picked block based on the given origin and direction vector.<br/>
+		/// Marks pickedPos as invalid if a block could not be found due to going outside map boundaries 
+		/// or not being able to find a suitable candiate within the given reach distance. </summary>
+		public static void CalculatePickedBlock( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
+			// Implementation based on: "A Fast Voxel Traversal Algorithm for Ray Tracing"
 			// John Amanatides, Andrew Woo
 			// http://www.cse.yorku.ca/~amana/research/grid.pdf
 			// http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20traversal%20algorithm%20for%20ray%20tracing.pdf
 
-			// NOTES:
-			// * This code assumes that the ray's position and direction are in 'cell coordinates', which means
-			//   that one unit equals one cell in all directions.
-			// * When the ray doesn't start within the voxel grid, calculate the first position at which the
-			//   ray could enter the grid. If it never enters the grid, there is nothing more to do here.
-			// * Also, it is important to test when the ray exits the voxel grid when the grid isn't infinite.
-			// * The Point3D structure is a simple structure having three integer fields (X, Y and Z).
-
 			// The cell in which the ray starts.
 			Vector3I start = Vector3I.Floor( origin ); // Rounds the position's X, Y and Z down to the nearest integer values.
-			int x = start.X;
-			int y = start.Y;
-			int z = start.Z;
-
+			int x = start.X, y = start.Y, z = start.Z;
 			// Determine which way we go.
-			int stepX = Math.Sign( dir.X );
-			int stepY = Math.Sign( dir.Y );
-			int stepZ = Math.Sign( dir.Z );
+			int stepX = Math.Sign( dir.X ), stepY = Math.Sign( dir.Y ), stepZ = Math.Sign( dir.Z );
 
 			// Calculate cell boundaries. When the step (i.e. direction sign) is positive,
 			// the next boundary is AFTER our current position, meaning that we have to add 1.
 			// Otherwise, it is BEFORE our current position, in which case we add nothing.
 			Vector3I cellBoundary = new Vector3I(
-				x + ( stepX > 0 ? 1 : 0 ),
-				y + ( stepY > 0 ? 1 : 0 ),
-				z + ( stepZ > 0 ? 1 : 0 ) );
+				x + (stepX > 0 ? 1 : 0),
+				y + (stepY > 0 ? 1 : 0),
+				z + (stepZ > 0 ? 1 : 0) );
 
-			// NOTE: For the following calculations, the result will be Single.PositiveInfinity
-			// when ray.Direction.X, Y or Z equals zero, which is OK. However, when the left-hand
-			// value of the division also equals zero, the result is Single.NaN, which is not OK.
-
+			// NOTE: we want it so if dir.x = 0, tmax.x = positive infinity
 			// Determine how far we can travel along the ray before we hit a voxel boundary.
 			Vector3 tMax = new Vector3(
-				( cellBoundary.X - origin.X ) / dir.X,    // Boundary is a plane on the YZ axis.
-				( cellBoundary.Y - origin.Y ) / dir.Y,    // Boundary is a plane on the XZ axis.
-				( cellBoundary.Z - origin.Z ) / dir.Z );  // Boundary is a plane on the XY axis.
+				(cellBoundary.X - origin.X) / dir.X,    // Boundary is a plane on the YZ axis.
+				(cellBoundary.Y - origin.Y) / dir.Y,    // Boundary is a plane on the XZ axis.
+				(cellBoundary.Z - origin.Z) / dir.Z );  // Boundary is a plane on the XY axis.
 			if( Single.IsNaN( tMax.X ) || Single.IsInfinity( tMax.X ) ) tMax.X = Single.PositiveInfinity;
 			if( Single.IsNaN( tMax.Y ) || Single.IsInfinity( tMax.Y ) ) tMax.Y = Single.PositiveInfinity;
 			if( Single.IsNaN( tMax.Z ) || Single.IsInfinity( tMax.Z ) ) tMax.Z = Single.PositiveInfinity;
 
 			// Determine how far we must travel along the ray before we have crossed a gridcell.
-			Vector3 tDelta = new Vector3(
-				stepX / dir.X,     // Crossing the width of a cell.
-				stepY / dir.Y,     // Crossing the height of a cell.
-				stepZ / dir.Z );   // Crossing the depth of a cell.
+			Vector3 tDelta = new Vector3( stepX / dir.X, stepY / dir.Y, stepZ / dir.Z );
 			if( Single.IsNaN( tDelta.X ) ) tDelta.X = Single.PositiveInfinity;
 			if( Single.IsNaN( tDelta.Y ) ) tDelta.Y = Single.PositiveInfinity;
 			if( Single.IsNaN( tDelta.Z ) ) tDelta.Z = Single.PositiveInfinity;

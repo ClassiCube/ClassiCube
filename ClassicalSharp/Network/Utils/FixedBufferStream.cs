@@ -3,11 +3,12 @@ using System.IO;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Similar to a memory stream except that its underlying array 
+	/// cannot be resized and this class performs minimal validation checks. </summary>
 	internal class FixedBufferStream : Stream {
 		
 		public byte[] _buffer;
-		private int _position;
-		private int _length;
+		int _position, _length;
 		
 		public override bool CanRead {
 			get { return true; }

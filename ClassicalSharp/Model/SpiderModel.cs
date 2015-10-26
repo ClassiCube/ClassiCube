@@ -6,7 +6,7 @@ namespace ClassicalSharp.Model {
 	public class SpiderModel : IModel {
 		
 		public SpiderModel( Game window ) : base( window ) {
-			vertices = new ModelVertex[partVertices * 5];
+			vertices = new ModelVertex[boxVertices * 5];
 			Head = MakeHead();
 			Link = MakeLink();
 			End = MakeEnd();
@@ -15,19 +15,19 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakePart( 32, 4, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 4/16f, 12/16f, -11/16f, -3/16f, false );
+			return MakeBox( 32, 4, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 4/16f, 12/16f, -11/16f, -3/16f, false );
 		}
 		
 		ModelPart MakeLink() {
-			return MakePart( 0, 0, 6, 6, 6, 6, 6, 6, -3/16f, 3/16f, 5/16f, 11/16f, 3/16f, -3/16f, false );
+			return MakeBox( 0, 0, 6, 6, 6, 6, 6, 6, -3/16f, 3/16f, 5/16f, 11/16f, 3/16f, -3/16f, false );
 		}
 		
 		ModelPart MakeEnd() {
-			return MakePart( 0, 12, 12, 8, 10, 12, 10, 8, -5/16f, 5/16f, 4/16f, 12/16f, 3/16f, 15/16f, false );
+			return MakeBox( 0, 12, 12, 8, 10, 12, 10, 8, -5/16f, 5/16f, 4/16f, 12/16f, 3/16f, 15/16f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2 ) {
-			return MakePart( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 7/16f, 9/16f, -1/16f, 1/16f, false );
+			return MakeBox( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 7/16f, 9/16f, -1/16f, 1/16f, false );
 		}
 		
 		public override float NameYOffset {

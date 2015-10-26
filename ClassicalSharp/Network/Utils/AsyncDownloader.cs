@@ -159,7 +159,6 @@ namespace ClassicalSharp.Network {
 				} else if( type == 2 ) {
 					value = client.DownloadData( url );
 				}
-				Utils.LogDebug( "Downloaded from: " + url );
 			} catch( Exception ex ) {
 				if( !( ex is WebException || ex is ArgumentException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );

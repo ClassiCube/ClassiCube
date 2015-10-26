@@ -53,7 +53,7 @@ namespace ClassicalSharp {
 			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
-			Picking.GetPickedBlockPos( game, eyePos, dir, reach, pos );
+			Picking.CalculatePickedBlock( game, eyePos, dir, reach, pos );
 		}
 		
 		internal Point previous, delta;

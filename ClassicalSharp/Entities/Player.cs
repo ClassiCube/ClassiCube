@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 					RenderHat = HasHat( bmp, SkinType );
 				} catch( NotSupportedException ) {
 					string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
-					Utils.LogWarning( formatString, SkinName, bmp.Width, bmp.Height );
+					Utils.LogDebug( formatString, SkinName, bmp.Width, bmp.Height );
 					MobTextureId = -1;
 					PlayerTextureId = -1;
 					SkinType = game.DefaultPlayerSkinType;

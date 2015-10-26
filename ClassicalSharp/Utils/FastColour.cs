@@ -51,6 +51,8 @@ namespace ClassicalSharp {
 			B = c.B;
 		}
 		
+		/// <summary> Multiplies the RGB components of this instance by the 
+		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Scale( FastColour value, float t ) {
 			FastColour result = value;
 			result.R = (byte)(value.R * t);
@@ -70,6 +72,8 @@ namespace ClassicalSharp {
 			return Color.FromArgb( A, R, G, B );
 		}
 		
+		/// <summary> Packs this instance into a 32 bit integer, where A occupies 
+		/// the highest 8 bits and B occupies the lowest 8 bits. </summary>
 		public int ToArgb() {
 			return A << 24 | R << 16 | G << 8 | B;
 		}
@@ -78,14 +82,17 @@ namespace ClassicalSharp {
 			return R + ", " + G + ", " + B + " : " + A;
 		}
 		
+		/// <summary> Convers this instance into a hex colour code of the form RRGGBB. </summary>
 		public string ToRGBHexString() {
 			return Utils.ToHexString( new byte[] { R, G, B } );
 		}
 		
 		public override bool Equals( object obj ) {
-			return ( obj is FastColour ) && Equals( (FastColour)obj );
+			return (obj is FastColour) && Equals( (FastColour)obj );
 		}
 		
+		/// <summary> Returns whether all of the colour components of this instance 
+		/// equal that of the other instance. </summary>
 		public bool Equals( FastColour other ) {
 			return A == other.A && R == other.R && G == other.G && B == other.B;
 		}

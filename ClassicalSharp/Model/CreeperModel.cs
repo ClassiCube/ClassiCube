@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class CreeperModel : IModel {
 		
 		public CreeperModel( Game window ) : base( window ) {
-			vertices = new ModelVertex[partVertices * 6];
+			vertices = new ModelVertex[boxVertices * 6];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLegFront = MakeLeg( -4/16f, 0, -6/16f, -2/16f );
@@ -17,15 +17,15 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 18/16f, 26/16f, -4/16f, 4/16f, false );
+			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 18/16f, 26/16f, -4/16f, 4/16f, false );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakePart( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 6/16f, 18/16f, -2/16f, 2/16f, false );
+			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 6/16f, 18/16f, -2/16f, 2/16f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakePart( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2, false );
+			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2, false );
 		}
 		
 		public override float NameYOffset {

@@ -9,7 +9,7 @@ namespace ClassicalSharp.Model {
 		
 		ModelSet Set, SetSlim;
 		public PlayerModel( Game window ) : base( window ) {
-			vertices = new ModelVertex[partVertices * ( 7 + 2 )];
+			vertices = new ModelVertex[boxVertices * ( 7 + 2 )];
 			Set = new ModelSet();
 			Set.Head = MakeHead( false );
 			Set.Torso = MakeTorso( false );
@@ -30,31 +30,31 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeftArm( int x, int y, float x1, float x2, int width, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, width, 4, width, 12, -x2, -x1, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
+			return MakeBox( x, y, 4, 12, width, 4, width, 12, -x2, -x1, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeRightArm( int x, int y, float x1, float x2, int width, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, width, 4, width, 12, x1, x2, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
+			return MakeBox( x, y, 4, 12, width, 4, width, 12, x1, x2, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeHead( bool _64x64 ) {
-			return MakePart( 0, 0, 8, 8, 8, 8, 8, 8, -4f/16, 4f/16, 24f/16f, 32f/16f, -4f/16, 4f/16, _64x64 );
+			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4f/16, 4f/16, 24f/16f, 32f/16f, -4f/16, 4f/16, _64x64 );
 		}
 		
 		ModelPart MakeTorso( bool _64x64 ) {
-			return MakePart( 16, 16, 4, 12, 8, 4, 8, 12, -4f/16, 4f/16, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
+			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4f/16, 4f/16, 12f/16, 24f/16f, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeHat( bool _64x64 ) {
-			return MakePart( 32, 0, 8, 8, 8, 8, 8, 8, -4.5f/16, 4.5f/16, 23.5f/16f, 32.5f/16, -4.5f/16, 4.5f/16, _64x64 );
+			return MakeBox( 32, 0, 8, 8, 8, 8, 8, 8, -4.5f/16, 4.5f/16, 23.5f/16f, 32.5f/16, -4.5f/16, 4.5f/16, _64x64 );
 		}
 		
 		ModelPart MakeLeftLeg( int x, int y, float x1, float x2, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
+			return MakeBox( x, y, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
 		}
 		
 		ModelPart MakeRightLeg( int x, int y, float x1, float x2, bool _64x64 ) {
-			return MakePart( x, y, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
+			return MakeBox( x, y, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12f/16, -2f/16, 2f/16, _64x64 );
 		}
 		
 		public override float NameYOffset {
@@ -73,7 +73,6 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -8/16f, 0, -4/16f, 8/16f, 32/16f, 4/16f ); }
 		}
 		
-		ModelSet model;
 		protected override void DrawPlayerModel( Player p ) {
 			graphics.Texturing = true;
 			int texId = p.PlayerTextureId <= 0 ? cache.HumanoidTexId : p.PlayerTextureId;
@@ -81,7 +80,7 @@ namespace ClassicalSharp.Model {
 			
 			SkinType skinType = p.SkinType;
 			_64x64 = skinType != SkinType.Type64x32;
-			model = skinType == SkinType.Type64x64Slim ? SetSlim : Set;
+			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim : Set;
 			
 			DrawRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, model.Head );
 			DrawPart( model.Torso );
@@ -91,9 +90,8 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 6/16f, 22/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
 			
 			graphics.AlphaTest = true;
-			if( p.RenderHat ) {				
+			if( p.RenderHat )			
 				DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
-			}
 		}
 		
 		class ModelSet {		

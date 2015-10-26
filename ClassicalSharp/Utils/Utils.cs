@@ -221,22 +221,16 @@ namespace ClassicalSharp {
 			return new Vector3( (float)x, (float)y, (float)z );
 		}
 		
+		[Obsolete]
 		public static void Log( string text ) {
 			Console.WriteLine( text );
 		}
 		
-		public static void Log( string text, params object[] args ) {
-			Log( String.Format( text, args ) );
-		}
-		
+		[Obsolete]
 		public static void LogWarning( string text ) {
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine( text );
 			Console.ResetColor();
-		}
-		
-		public static void LogWarning( string text, params object[] args ) {
-			LogWarning( String.Format( text, args ) );
 		}
 		
 		public static void LogDebug( string text ) {

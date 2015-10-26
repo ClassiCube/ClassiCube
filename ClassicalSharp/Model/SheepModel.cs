@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		public bool Fur = true;
 		
 		public SheepModel( Game window ) : base( window ) {
-			vertices = new ModelVertex[partVertices * 6 * ( Fur ? 2 : 1 )];
+			vertices = new ModelVertex[boxVertices * 6 * ( Fur ? 2 : 1 )];
 			Head = MakeHead();
 			Torso = MakeTorso();
 			LeftLegFront = MakeLeg( -5/16f, -1/16f, -7/16f, -3/16f );
@@ -28,27 +28,27 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakePart( 0, 0, 8, 6, 6, 8, 6, 6, -3/16f, 3/16f, 16/16f, 22/16f, -14/16f, -6/16f, false );
+			return MakeBox( 0, 0, 8, 6, 6, 8, 6, 6, -3/16f, 3/16f, 16/16f, 22/16f, -14/16f, -6/16f, false );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedPart( 28, 8, 6, 16, 8, 6, 8, 16, -4/16f, 4/16f, 12/16f, 18/16f, -8/16f, 8/16f, false );
+			return MakeRotatedBox( 28, 8, 6, 16, 8, 6, 8, 16, -4/16f, 4/16f, 12/16f, 18/16f, -8/16f, 8/16f, false );
 		}
 		
 		ModelPart MakeFurHead() {
-			return MakePart( 0, 0, 6, 6, 6, 6, 6, 6, -3.5f/16f, 3.5f/16f, 15.5f/16f, 1.40625f, -12.5f/16f, -5.5f/16f, false );
+			return MakeBox( 0, 0, 6, 6, 6, 6, 6, 6, -3.5f/16f, 3.5f/16f, 15.5f/16f, 1.40625f, -12.5f/16f, -5.5f/16f, false );
 		}
 		
 		ModelPart MakeFurTorso() {
-			return MakeRotatedPart( 28, 8, 6, 16, 8, 6, 8, 16, -6/16f, 6/16f, 10.5f/16f, 1.21875f, -10/16f, 10/16f, false );
+			return MakeRotatedBox( 28, 8, 6, 16, 8, 6, 8, 16, -6/16f, 6/16f, 10.5f/16f, 1.21875f, -10/16f, 10/16f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakePart( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, z1, z2, false );
+			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, z1, z2, false );
 		}
 		
 		ModelPart MakeFurLeg( float x1, float x2, float z1, float z2 ) {
-			return MakePart( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 5.5f/16f, 12.5f/16f, z1, z2, false );
+			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 5.5f/16f, 12.5f/16f, z1, z2, false );
 		}
 		
 		public override float NameYOffset {

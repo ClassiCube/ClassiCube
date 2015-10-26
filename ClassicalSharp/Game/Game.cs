@@ -262,7 +262,7 @@ namespace ClassicalSharp {
 			}
 			
 			if( ticksThisFrame > ticksFrequency / 3 )
-				Utils.LogWarning( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
+				Utils.LogDebug( "Falling behind (did {0} ticks this frame)", ticksThisFrame );
 		}
 		
 		void TakeScreenshot() {

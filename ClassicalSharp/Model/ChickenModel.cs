@@ -7,7 +7,7 @@ namespace ClassicalSharp.Model {
 	public class ChickenModel : IModel {
 		
 		public ChickenModel( Game window ) : base( window ) {
-			vertices = new ModelVertex[partVertices * 6 + planeVertices * 2 * 2];
+			vertices = new ModelVertex[boxVertices * 6 + quadVertices * 2 * 2];
 			Head = MakeHead();
 			Head2 = MakeHead2(); // TODO: Find a more appropriate name.
 			Head3 = MakeHead3();
@@ -19,29 +19,29 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakePart( 0, 0, 3, 6, 4, 3, 4, 6, -2/16f, 2/16f, 9/16f, 15/16f, -6/16f, -3/16f, false );
+			return MakeBox( 0, 0, 3, 6, 4, 3, 4, 6, -2/16f, 2/16f, 9/16f, 15/16f, -6/16f, -3/16f, false );
 		}
 		
 		ModelPart MakeHead2() {
-			return MakePart( 14, 4, 2, 2, 2, 2, 2, 2, -1/16f, 1/16f, 9/16f, 11/16f, -7/16f, -5/16f, false );
+			return MakeBox( 14, 4, 2, 2, 2, 2, 2, 2, -1/16f, 1/16f, 9/16f, 11/16f, -7/16f, -5/16f, false );
 		}
 		
 		ModelPart MakeHead3() {
-			return MakePart( 14, 0, 2, 2, 4, 2, 4, 2, -2/16f, 2/16f, 11/16f, 13/16f, -8/16f, -6/16f, false );
+			return MakeBox( 14, 0, 2, 2, 4, 2, 4, 2, -2/16f, 2/16f, 11/16f, 13/16f, -8/16f, -6/16f, false );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedPart( 0, 9, 6, 8, 6, 6, 6, 8, -3/16f, 3/16f, 5/16f, 11/16f, -4/16f, 4/16f, false );
+			return MakeRotatedBox( 0, 9, 6, 8, 6, 6, 6, 8, -3/16f, 3/16f, 5/16f, 11/16f, -4/16f, 4/16f, false );
 		}
 		
 		ModelPart MakeWing( float x1, float x2 ) {
-			return MakePart( 24, 13, 6, 4, 1, 6, 1, 4, x1, x2, 7/16f, 11/16f, -3/16f, 3/16f, false );
+			return MakeBox( 24, 13, 6, 4, 1, 6, 1, 4, x1, x2, 7/16f, 11/16f, -3/16f, 3/16f, false );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float legX1, float legX2 ) {
 			const float y1 = 0f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;		
-			YPlane( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
-			ZPlane( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
+			YQuad( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
+			ZQuad( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
 			return new ModelPart( index - 2 * 4, 2 * 4 );
 		}
 		

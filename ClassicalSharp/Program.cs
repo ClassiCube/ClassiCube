@@ -12,14 +12,13 @@ namespace ClassicalSharp {
 		static void Main( string[] args ) {
 			ErrorHandler.InstallHandler( "client.log" );
 			
-			Utils.Log( "Starting " + AppName + ".." );
+			Utils.LogDebug( "Starting " + AppName + ".." );
 			if( !File.Exists( "default.zip" ) ) {
 				Fail( "default.zip not found. Cannot start." );
 				return;
 			}
 				
 			if( args.Length == 0 || args.Length == 1 ) {
-				Utils.Log( "Starting singleplayer mode." );
 				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 				string pack = args.Length >= 1 ? args[0] : "default.zip";
 				using( Game game = new Game( "LocalPlayer", null, skinServer, pack ) ) {

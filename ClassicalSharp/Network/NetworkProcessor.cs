@@ -262,7 +262,7 @@ namespace ClassicalSharp {
 			#else
 			gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
 			if( OpenTK.Configuration.RunningOnMono ) {
-				throw new InvalidOperationException( "You must compile ClassicalSharp with the mono compiler " +
+				throw new InvalidOperationException( "You must compile ClassicalSharp with __MonoCS__ defined " +
 				                                    "to run on Mono, due to a limitation in Mono." );
 			}
 			#endif
@@ -324,9 +324,9 @@ namespace ClassicalSharp {
 			byte type = reader.ReadUInt8();
 			
 			if( game.Map.IsNotLoaded )
-				Utils.LogWarning( "Server tried to update a block while still sending us the map!" );
+				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
 			else if( !game.Map.IsValidPos( x, y, z ) )
-				Utils.LogWarning( "Server tried to update a block at an invalid position!" );
+				Utils.LogDebug( "Server tried to update a block at an invalid position!" );
 			else
 				game.UpdateBlock( x, y, z, type );
 		}

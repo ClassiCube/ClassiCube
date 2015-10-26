@@ -188,15 +188,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			Console.ResetColor();
 		}
 		
+		/// <summary> Informs the graphic api to update its state in preparation for a new frame. </summary>
 		public abstract void BeginFrame( GameWindow game );
 		
+		/// <summary> Informs the graphic api to update its state in preparation for the end of a frame,
+		/// and to prepare that frame for display on the monitor. </summary>
 		public abstract void EndFrame( GameWindow game );
 		
+		/// <summary> Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. </summary>
 		public abstract void SetVSync( GameWindow game, bool value );
 		
 		public abstract void OnWindowResize( GameWindow game );
 		
-		/// <summary> Delegate that is invoked when the current context is lost, 
+		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>
 		public Action<double> LostContextFunction;
 		
@@ -240,7 +244,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public static void Make2DQuad( TextureRec xy, TextureRec uv,
-		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
+		                              VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
 			#if USE_DX
 			x1 -= 0.5f; x2 -= 0.5f;

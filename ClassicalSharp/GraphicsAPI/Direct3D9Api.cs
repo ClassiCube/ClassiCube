@@ -418,7 +418,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				Thread.Sleep( 50 );
 				uint code = (uint)device.TestCooperativeLevel();
 				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
-					Utils.Log( "Retrieved Direct3D device again." );
+					Utils.LogDebug( "Retrieved Direct3D device again." );
 					return;
 				}
 				LostContextFunction( 1 / 20.0 );
@@ -557,8 +557,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			Utils.Log( "Max 2D texture dimensions: " + MaxTextureDimensions );
 			Utils.Log( "Depth buffer format: " + depthFormat );
 			Utils.Log( "Back buffer format: " + viewFormat );
-			Utils.Log( "" );
-			Utils.Log( "Device caps: " + caps.DeviceCaps );
 		}
 
 		public unsafe override void TakeScreenshot( string output, Size size ) {

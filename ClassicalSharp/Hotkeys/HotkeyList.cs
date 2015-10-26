@@ -83,7 +83,7 @@ namespace ClassicalSharp.Hotkeys {
 					const int startIndex = 7;
 					int keySplit = pair.Key.IndexOf( '&', startIndex );
 					if( keySplit < 0 ) {
-						Utils.LogWarning( "Hotkey {0} has an invalid key", pair.Key );
+						Utils.LogDebug( "Hotkey {0} has an invalid key", pair.Key );
 						continue;
 					}
 					string strKey = pair.Key.Substring( startIndex, keySplit - startIndex );
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Hotkeys {
 					
 					int valueSplit = pair.Value.IndexOf( '&', 0 );
 					if( valueSplit < 0 ) {
-						Utils.LogWarning( "Hotkey {0} has an invalid value", pair.Key );
+						Utils.LogDebug( "Hotkey {0} has an invalid value", pair.Key );
 						continue;
 					}
 					string strMoreInput = pair.Value.Substring( 0, valueSplit - 0 );
@@ -103,7 +103,7 @@ namespace ClassicalSharp.Hotkeys {
 					   !Byte.TryParse( strFlags, out flags ) ||
 					   !Boolean.TryParse( strMoreInput, out moreInput ) ||
 					   strText.Length == 0 ) {
-						Utils.LogWarning( "Hotkey {0} has invalid arguments", pair.Key );
+						Utils.LogDebug( "Hotkey {0} has invalid arguments", pair.Key );
 						continue;
 					}
 					AddHotkey( key, flags, strText, moreInput );

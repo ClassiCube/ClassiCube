@@ -26,7 +26,7 @@ namespace ClassicalSharp.TexturePack {
 			reader.BaseStream.Seek( -22, SeekOrigin.End );
 			uint sig = reader.ReadUInt32();
 			if( sig != 0x06054b50 ) {
-				Utils.LogWarning( "Comment in .zip file must be empty" );
+				Utils.LogDebug( "Comment in .zip file must be empty" );
 				return;
 			}
 			int entriesCount, centralDirectoryOffset;
@@ -77,7 +77,7 @@ namespace ClassicalSharp.TexturePack {
 			
 			reader.ReadBytes( extraFieldLen );
 			if( versionNeeded > 20 )
-				Utils.LogWarning( "May not be able to properly extract a .zip enty with a version later than 2.0" );
+				Utils.LogDebug( "May not be able to properly extract a .zip enty with a version later than 2.0" );
 			
 			byte[] data = DecompressEntry( reader, compressionMethod, compressedSize, uncompressedSize );
 			if( data != null )
@@ -143,7 +143,7 @@ namespace ClassicalSharp.TexturePack {
 				deflater.Dispose();
 				return data;
 			} else {
-				Utils.LogWarning( "Unsupported .zip entry compression method: " + compressionMethod );
+				Utils.LogDebug( "Unsupported .zip entry compression method: " + compressionMethod );
 				reader.ReadBytes( compressedSize );
 				return null;
 			}

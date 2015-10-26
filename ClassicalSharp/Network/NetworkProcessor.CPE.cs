@@ -114,8 +114,8 @@ namespace ClassicalSharp {
 				}
 				game.Events.RaiseBlockPermissionsChanged();
 			} else {
-				Utils.LogWarning( "Server's block support level is {0}, this client only supports level 1.", supportLevel );
-				Utils.LogWarning( "You won't be able to see or use blocks from levels above level 1" );
+				Utils.LogDebug( "Server's block support level is {0}, this client only supports level 1.", supportLevel );
+				Utils.LogDebug( "You won't be able to see or use blocks from levels above level 1" );
 			}
 		}
 		
@@ -221,15 +221,15 @@ namespace ClassicalSharp {
 			bool invalid = red < 0 || red > 255 || green < 0 || green > 255 || blue < 0 || blue > 255;
 			FastColour col = new FastColour( red, green, blue );
 
-			if( variable == 0 ) { // sky colour
+			if( variable == 0 ) {
 				game.Map.SetSkyColour( invalid ? Map.DefaultSkyColour : col );
-			} else if( variable == 1 ) { // clouds colour
+			} else if( variable == 1 ) {
 				game.Map.SetCloudsColour( invalid ? Map.DefaultCloudsColour : col );
-			} else if( variable == 2 ) { // fog colour
+			} else if( variable == 2 ) {
 				game.Map.SetFogColour( invalid ? Map.DefaultFogColour : col );
-			} else if( variable == 3 ) { // ambient light (shadow light)
+			} else if( variable == 3 ) {
 				game.Map.SetShadowlight( invalid ? Map.DefaultShadowlight : col );
-			} else if( variable == 4 ) { // diffuse light (sun light)
+			} else if( variable == 4 ) {
 				game.Map.SetSunlight( invalid ? Map.DefaultSunlight : col );
 			}
 		}
