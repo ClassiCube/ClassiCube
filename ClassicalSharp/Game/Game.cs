@@ -144,7 +144,8 @@ namespace ClassicalSharp {
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
 			
-			Graphics.SetVSync( this, true );
+			bool vsync = Options.GetBool( OptionsKey.VSync, true );
+			Graphics.SetVSync( this, vsync );
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;

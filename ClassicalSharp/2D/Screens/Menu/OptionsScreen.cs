@@ -26,7 +26,8 @@ namespace ClassicalSharp {
 				
 				Make( -140, 0, "VSync active", Anchor.Centre, OnWidgetClick,
 				     g => g.VSync ? "yes" : "no",
-				     (g, v) => g.Graphics.SetVSync( g, v == "yes" ) ),
+				     (g, v) => { g.Graphics.SetVSync( g, v == "yes" );
+				     	Options.Set( OptionsKey.VSync, v == "yes" ); } ),
 
 				Make( -140, 50, "View distance", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewDistance.ToString(),

@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";
 		public const string MouseRight = "mouseright";
+		public const string VSync = "vsync";
 	}
 	
 	public static class Options {
