@@ -37,13 +37,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			Utils.LogDebug( "Using ARB vertex buffer objects" );
 			if( !extensions.Contains( "GL_ARB_vertex_buffer_object" ) ) {
-				Utils.LogWarning( "ClassicalSharp post 0.6 version requires OpenGL VBOs." );
-				Utils.LogWarning( "You may need to install and/or update your video card drivers." );
-				Utils.LogWarning( "Alternatively, you can download the Direct3D9 build." );
-				
-				ErrorHandler.LogError( "OpenGL vbo check",
+				ErrorHandler.LogError( "OpenGL VBO support check",
 				                      "Driver does not support OpenGL VBOs, which are required for the OpenGL build." +
-				                      Environment.NewLine + "you may need to install and/or update video card drivers" );
+				                      Environment.NewLine + "You may need to install and/or update video card drivers." +
+				                      Environment.NewLine + "Alternatively, you can download the Direct3D 9 build." );
 				throw new InvalidOperationException( "VBO support required for OpenGL build" );
 			}
 			GL.UseArbVboAddresses();
@@ -156,7 +153,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public unsafe override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
-				Utils.LogWarning( "Creating a non power of two texture." );
+				Utils.LogDebug( "Creating a non power of two texture." );
 			
 			int texId = 0;
 			GL.GenTextures( 1, &texId );
@@ -379,6 +376,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			game.VSync = value;
 		}
 		
+		bool isIntelRenderer;
 		protected unsafe override void MakeApiInfo() {
 			string vendor = new String( (sbyte*)GL.GetString( StringName.Vendor ) );
 			string renderer = new String( (sbyte*)GL.GetString( StringName.Renderer ) );
@@ -394,16 +392,18 @@ namespace ClassicalSharp.GraphicsAPI {
 				"Max 2D texture dimensions: " + MaxTextureDimensions,
 				"Depth buffer bits: " + depthBits,
 			};
+			isIntelRenderer = renderer.Contains( "Intel" );
+		}
+		
+		public override void WarnIfNecessary( ChatLog chat ) {
+			if( !isIntelRenderer ) return;
 			
-			if( renderer.Contains( "Intel" ) ) {
-				Utils.LogWarning( "Intel graphics cards are known to have issues with the OpenGL build." );
-				Utils.LogWarning( "VSync may not work, and you may see disappearing clouds and map edges." );
-				Utils.LogWarning( "" );
-				Utils.LogWarning( "If you use Windows, try downloading and using the " +
-				                 "Direct3D9 build as it doesn't have these problems." );
-				Utils.LogWarning( "Alternatively, the disappearing graphics can be partially " +
-				                 "fixed by typing \"/client rendertype legacy\" into chat." );
-			}
+			chat.Add( "&cIntel graphics cards are known to have issues with the OpenGL build." );
+			chat.Add( "&cVSync may not work, and you may see disappearing clouds and map edges." );
+			chat.Add( "    " );
+			chat.Add( "&cFor Windows, try downloading the Direct3D 9 build as it doesn't have these problems" );
+			chat.Add( "&cAlternatively, the disappearing graphics can be partially fixed by " );
+			chat.Add( "&ctyping \"/client rendertype legacy\" into chat." );
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk

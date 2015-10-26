@@ -54,18 +54,12 @@ namespace Launcher {
 		
 		static void UpdateSignInInfo( string user, string password ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
-			try {
-				Options.Load();
-			} catch( IOException ) {
-			}
+			if( !Options.Load() )
+				return;
 			
 			Options.Set( "launcher-cc-username", user );
 			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
-			
-			try {
-				Options.Save();
-			} catch( IOException ) {
-			}
+			Options.Save();
 		}
 		
 		void LoginAsync() {

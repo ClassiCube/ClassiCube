@@ -121,7 +121,7 @@ namespace ClassicalSharp {
 				float tx = 0, ty = 0, tz = 0;
 				CalcTime( ref Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz );
 				if( tx > 1 || ty > 1 || tz > 1 )
-					Utils.LogWarning( "t > 1 in physics calculation.. this shouldn't have happened." );
+					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
 				
 				if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {

@@ -32,21 +32,15 @@ namespace Launcher2 {
 		
 		internal static void UpdateResumeInfo( ClientStartData data, bool classiCubeSkins ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
-			try {
-				Options.Load();
-			} catch( IOException ) {
-			}
+			if( !Options.Load() )
+				return;
 			
 			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
 			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.Username ) );
 			Options.Set( "launcher-ccskins", classiCubeSkins );
-			
-			try {
-				Options.Save();
-			} catch( IOException ) {
-			}
+			Options.Save();
 		}
 	}
 }

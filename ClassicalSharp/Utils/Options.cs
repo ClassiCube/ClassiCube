@@ -77,12 +77,17 @@ namespace ClassicalSharp {
 		
 		public const string OptionsFile = "options.txt";
 		
-		public static void Load() {
+		public static bool Load() {
 			try {
 				using( Stream fs = File.OpenRead( OptionsFile ) )
 					using( StreamReader reader = new StreamReader( fs, false ) )
 						LoadFrom( reader );
+				return true;
 			} catch( FileNotFoundException ) {
+				return true;
+			} catch( IOException ex ) {
+				ErrorHandler.LogError( "loading options", ex );
+				return false;
 			}
 		}
 		
@@ -103,10 +108,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static void Save() {
-			using( Stream fs = File.Create( OptionsFile ) )
-				using( StreamWriter writer = new StreamWriter( fs ) )
-					SaveTo( writer );
+		public static bool Save() {
+			try {
+				using( Stream fs = File.Create( OptionsFile ) )
+					using( StreamWriter writer = new StreamWriter( fs ) )
+						SaveTo( writer );
+				return true;
+			} catch( IOException ex ) {
+				ErrorHandler.LogError( "saving options", ex );
+				return false;
+			}
 		}
 		
 		static void SaveTo( StreamWriter writer ) {

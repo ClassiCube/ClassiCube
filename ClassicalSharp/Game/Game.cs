@@ -94,11 +94,7 @@ namespace ClassicalSharp {
 			#endif
 			Graphics.MakeGraphicsInfo();
 			
-			try {
-				Options.Load();
-			} catch( IOException ) {
-				Utils.LogWarning( "Unable to load options.txt" );
-			}
+			Options.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
@@ -108,7 +104,7 @@ namespace ClassicalSharp {
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
-			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );			
+			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
@@ -162,6 +158,7 @@ namespace ClassicalSharp {
 			Picking = new PickingRenderer( this );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
+			Graphics.WarnIfNecessary( Chat );
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect( IPAddress, Port );
 		}
@@ -367,13 +364,8 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref RainTextureId );
 			Graphics.DeleteTexture( ref SnowTextureId );
 			
-			if( Options.HasChanged ) {
-				try {
-					Options.Save();
-				} catch( IOException ) {
-					Utils.LogWarning( "Unable to save options.txt" );
-				}
-			}
+			if( Options.HasChanged )
+				Options.Save();
 			base.Dispose();
 		}
 		
@@ -382,20 +374,15 @@ namespace ClassicalSharp {
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack )
-			#if USE_DX
-			: base( 640, 480, GraphicsMode.Default, Program.AppName, true, 0, DisplayDevice.Default )
-			#else
-			: base( 640, 480, GraphicsMode.Default, Program.AppName, false, 0, DisplayDevice.Default )
-			#endif
-		{
+		public Game( string username, string mppass, string skinServer, string defaultTexPack, bool nullContext )
+			: base( 640, 480, GraphicsMode.Default, Program.AppName, nullContext, 0, DisplayDevice.Default ) {
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
 			this.defaultTexPack = defaultTexPack;
 			
 			if( !File.Exists( defaultTexPack ) ) {
-				Utils.LogWarning( defaultTexPack + " not found" );
+				Utils.LogDebug( defaultTexPack + " not found" );
 				this.defaultTexPack = "default.zip";
 			}
 		}

@@ -48,25 +48,25 @@ namespace ClassicalSharp.TexturePack {
 				
 				string[] parts = line.Split( ' ' );
 				if( parts.Length < 7 ) {
-					Utils.LogDebug( "Not enough arguments for animation: " + line ); continue;
+					Utils.LogDebug( "Not enough arguments for animation: {0}", line ); continue;
 				}
 				
 				byte tileX, tileY;
 				if( !Byte.TryParse( parts[0], out tileX ) || !Byte.TryParse( parts[1], out tileY )
 				   || tileX >= 16 || tileY >= 16 ) {
-					Utils.LogDebug( "Invalid animation tile coordinates: " + line ); continue;
+					Utils.LogDebug( "Invalid animation tile coordinates: {0}", line ); continue;
 				}
 				
 				int frameX, frameY;
 				if( !Int32.TryParse( parts[2], out frameX ) || !Int32.TryParse( parts[3], out frameY )
 				   || frameX < 0 || frameY < 0 ) {
-					Utils.LogDebug( "Invalid animation coordinates: " + line ); continue;
+					Utils.LogDebug( "Invalid animation coordinates: {0}", line ); continue;
 				}
 				
 				int frameSize, statesCount, tickDelay;
 				if( !Int32.TryParse( parts[4], out frameSize ) || !Int32.TryParse( parts[5], out statesCount ) ||
 				   !Int32.TryParse( parts[6], out tickDelay ) || frameSize < 0 || statesCount < 0 || tickDelay < 0 ) {
-					Utils.LogDebug( "Invalid animation: " + line ); continue;
+					Utils.LogDebug( "Invalid animation: {0}", line ); continue;
 				}
 				
 				DefineAnimation( tileX, tileY, frameX, frameY, frameSize, statesCount, tickDelay );

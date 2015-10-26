@@ -110,12 +110,8 @@ namespace Launcher {
 		}
 		
 		void LoadSavedInfo() {
-			try {
-				Options.Load();
-			} catch( IOException ) {
+			if( !Options.Load() ) 
 				return;
-			}
-			
 			txtDCuser.Text = Options.Get( "launcher-username" ) ?? "";
 			txtDCip.Text = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
 			txtDCport.Text = Options.Get( "launcher-port" ) ?? "25565";
@@ -200,21 +196,15 @@ namespace Launcher {
 		
 		internal static void UpdateResumeInfo( GameStartData data, bool classiCubeSkins ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
-			try {
-				Options.Load();
-			} catch( IOException ) {
-			}
+			if( !Options.Load() )
+				return;
 			
 			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
 			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.Username ) );
 			Options.Set( "launcher-ccskins", classiCubeSkins );
-			
-			try {
-				Options.Save();
-			} catch( IOException ) {
-			}
+			Options.Save();
 		}
 	}
 }

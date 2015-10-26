@@ -270,7 +270,7 @@ namespace ClassicalSharp {
 				
 				for( int i = 0; i < text.Length; i++ ) {
 					if( IsInvalidChar( text[i] ) ) {
-						Utils.LogWarning( "Clipboard text contained characters that can't be sent." );
+						game.Chat.Add( "&eClipboard contained characters that can't be sent." );
 						return true;
 					}
 				}

@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 		void HandleCpeExtEntry() {
 			string extName = reader.ReadAsciiString();
 			int extVersion = reader.ReadInt32();
-			Utils.LogDebug( "cpe ext: " + extName + " , " + extVersion );
+			Utils.LogDebug( "cpe ext: {0}, {1}", extName, extVersion );
 			
 			if( extName == "HeldBlock" ) {
 				sendHeldBlock = true;

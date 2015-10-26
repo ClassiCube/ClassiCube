@@ -44,11 +44,8 @@ namespace Launcher2 {
 		}
 		
 		void LoadSavedInfo( IDrawer2D drawer ) {
-			try {
-				Options.Load();
-			} catch( IOException ) {
+			if( !Options.Load() )
 				return;
-			}
 			
 			string user = Options.Get( "launcher-cc-username" ) ?? "";
 			string pass = Options.Get( "launcher-cc-password" ) ?? "";
@@ -60,18 +57,12 @@ namespace Launcher2 {
 		
 		void UpdateSignInInfo( string user, string password ) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
-			try {
-				Options.Load();
-			} catch( IOException ) {
-			}
+			if( !Options.Load() )
+				return;
 			
 			Options.Set( "launcher-cc-username", user );
 			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
-			
-			try {
-				Options.Save();
-			} catch( IOException ) {
-			}
+			Options.Save();
 		}
 		
 		public override void Resize() {
@@ -92,7 +83,7 @@ namespace Launcher2 {
 			
 			MakeButtonAt( "Sign in", 90, 35, titleFont, Anchor.Centre,
 			             -75, 0, StartClient );
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 
+			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			string text = widgets[6] == null ? "" : ((LauncherLabelWidget)widgets[6]).Text;
 			MakeTextAt( text, inputFont, 0, 50 );
@@ -147,7 +138,7 @@ namespace Launcher2 {
 		}
 		
 		void ShowServers( int mouseX, int mouseY ) {
-			if( signingIn || !HasServers ) return;	
+			if( signingIn || !HasServers ) return;
 			game.SetScreen( new ClassiCubeServersScreen( game ) );
 		}
 

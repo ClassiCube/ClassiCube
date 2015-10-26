@@ -29,11 +29,8 @@ namespace Launcher2 {
 		
 		bool ccSkins;
 		void LoadSavedInfo( IDrawer2D drawer ) {
-			try {
-				Options.Load();
-			} catch( IOException ) {
+			if( !Options.Load() )
 				return;
-			}
 			
 			string user = Options.Get( "launcher-username" ) ?? "";
 			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";

@@ -23,16 +23,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
 			// Convert other pixel formats into 32bpp formats.
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
-				Utils.LogDebug( "Converting " + bmp.PixelFormat + " into 32bpp image" );
-				using( Bitmap _32bmp = new Bitmap( bmp.Width, bmp.Height ) ) {
-					using( Graphics g = Graphics.FromImage( _32bmp ) )
-						g.DrawImage( bmp, 0, 0, bmp.Width, bmp.Height );
-					
-					BitmapData data = _32bmp.LockBits( rec, ImageLockMode.ReadOnly, _32bmp.PixelFormat );
-					int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
-					_32bmp.UnlockBits( data );
-					return texId;
-				}
+				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}",
+				                             bmp.PixelFormat );
+				ErrorHandler.LogError( "IGraphicsApi.CreateTexture()",
+				                      Environment.NewLine + line2 +
+				                      Environment.NewLine + Environment.StackTrace );
+				return -1;
 			} else {
 				BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
 				int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
@@ -187,6 +183,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void MakeGraphicsInfo() {
 			MakeApiInfo();
 			ErrorHandler.AdditionalInfo = ApiInfo;
+		}
+		
+		/// <summary> Adds a warning to chat if this graphics API has problems with the current user's GPU. </summary>
+		public virtual void WarnIfNecessary( ChatLog chat ) {
 		}
 		
 		/// <summary> Informs the graphic api to update its state in preparation for a new frame. </summary>

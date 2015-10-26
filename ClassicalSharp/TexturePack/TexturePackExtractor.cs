@@ -86,7 +86,13 @@ namespace ClassicalSharp.TexturePack {
 			using( Bitmap bmp = new Bitmap( stream ) ) {
 				if( setSkinType )
 					game.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
-				texId = game.Graphics.CreateTexture( bmp );
+				
+				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+					using( Bitmap bmp32 = game.Drawer2D.ConvertTo32Bpp( bmp ) )
+						texId = game.Graphics.CreateTexture( bmp32 );
+				} else {
+					texId = game.Graphics.CreateTexture( bmp );
+				}
 			}
 		}
 	}
