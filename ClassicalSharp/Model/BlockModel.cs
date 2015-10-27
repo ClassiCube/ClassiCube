@@ -43,15 +43,15 @@ namespace ClassicalSharp.Model {
 			BlockInfo = game.BlockInfo;
 			
 			if( BlockInfo.IsSprite[block] ) {
-				DrawXFace( 0f, TileSide.Right, false );
-				DrawZFace( 0f, TileSide.Back, false );
+				XQuad( 0f, TileSide.Right, false );
+				ZQuad( 0f, TileSide.Back, false );
 			} else {
-				DrawYFace( blockHeight, TileSide.Top );
-				DrawXFace( -0.5f, TileSide.Right, false );
-				DrawXFace( 0.5f, TileSide.Left, true );
-				DrawZFace( -0.5f, TileSide.Front, true );
-				DrawZFace( 0.5f, TileSide.Back, false );
-				DrawYFace( 0f, TileSide.Bottom );
+				YQuad( blockHeight, TileSide.Top );
+				XQuad( -0.5f, TileSide.Right, false );
+				XQuad( 0.5f, TileSide.Left, true );
+				ZQuad( -0.5f, TileSide.Front, true );
+				ZQuad( 0.5f, TileSide.Back, false );
+				YQuad( 0f, TileSide.Bottom );
 			}
 		}
 		float blockHeight;
@@ -61,9 +61,9 @@ namespace ClassicalSharp.Model {
 		public override void Dispose() {
 		}
 		
-		void DrawYFace( float y, int side ) {
+		void YQuad( float y, int side ) {
 			int texId = BlockInfo.GetTextureLoc( block, side );
-			TextureRec rec = atlas.GetTexRec( texId );
+			TextureRec rec = atlas.GetAdjTexRec( texId );
 
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + -0.5f, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + y, pos.Z + -0.5f, rec.U2, rec.V1, col );			
@@ -71,12 +71,11 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + 0.5f, rec.U1, rec.V2, col );
 		}
 
-		void DrawZFace( float z, int side, bool swapU ) {
+		void ZQuad( float z, int side, bool swapU ) {
 			int texId = BlockInfo.GetTextureLoc( block, side );
-			TextureRec rec = atlas.GetTexRec( texId );
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
-			}
+			TextureRec rec = atlas.GetAdjTexRec( texId );
+			if( blockHeight != 1 )
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize * (15.99f/16f);
 			if( swapU ) rec.SwapU();
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + 0f, pos.Z + z, rec.U1, rec.V2, col );
@@ -85,12 +84,11 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + 0f, pos.Z + z, rec.U2, rec.V2, col );
 		}
 
-		void DrawXFace( float x, int side, bool swapU ) {
+		void XQuad( float x, int side, bool swapU ) {
 			int texId = BlockInfo.GetTextureLoc( block, side );
-			TextureRec rec = atlas.GetTexRec( texId );
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
-			}
+			TextureRec rec = atlas.GetAdjTexRec( texId );
+			if( blockHeight != 1 )
+				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize * (15.99f/16f);
 			if( swapU ) rec.SwapU();
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + -0.5f, rec.U1, rec.V2, col );

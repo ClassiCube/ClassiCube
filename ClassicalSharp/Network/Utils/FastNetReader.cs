@@ -111,19 +111,14 @@ namespace ClassicalSharp {
 				
 				// Treat code as an index in code page 437
 				if( code < 0x20 ) {
-					characters[i] = controlCharReplacements[code];
+					characters[i] = Utils.ControlCharReplacements[code];
 				} else if( code < 0x7F ) {
 					characters[i] = (char)code;
 				} else {
-					characters[i] = extendedCharReplacements[code - 0x7F];
+					characters[i] = Utils.ExtendedCharReplacements[code - 0x7F];
 				}
 			}
 			return length;
 		}
-		
-		const string controlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
-		static string extendedCharReplacements = "⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
-			"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌" +
-			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 	}
 }

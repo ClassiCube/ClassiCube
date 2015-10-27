@@ -9,32 +9,30 @@ namespace ClassicalSharp {
 		// NOTE: This drawer is still a big work in progress and not close to done
 		// TODO: proper shadow colour
 		// TODO: italic and bold
-		Bitmap realBmp;
+		Bitmap fontBmp;
+		FastBitmap fontPixels;
+		int boxSize;
 		public GdiPlusDrawerMCFont( IGraphicsApi graphics ) : base( graphics ) {
-			realBmp = new Bitmap( "default.png" );
+			fontBmp = new Bitmap( "default.png" );
+			boxSize = fontBmp.Width / 16;
+			fontPixels = new FastBitmap( fontBmp, true );
 			CalculateTextWidths();
 		}
 		
 		int[] widths = new int[256];
-		unsafe void CalculateTextWidths() {
-			using( FastBitmap fastBmp = new FastBitmap( realBmp, true ) ) {
-				for( int i = 0; i < 256; i++ ) {
-					int tileX = (i & 0x0F) * 8;
-					int tileY = (i >> 4) * 8;
-					MakeTile( fastBmp, i, tileX, tileY );
-				}
-			}
-			widths[(int)' '] = 4;
+		void CalculateTextWidths() {
+			for( int i = 0; i < 256; i++ )
+				MakeTile( i, (i & 0x0F) * boxSize, (i >> 4) * boxSize );		
+			widths[(int)' '] = boxSize / 2;
 		}
 		
-		unsafe void MakeTile( FastBitmap fastBmp, int i, int tileX, int tileY ) {
-			for( int x = 7; x >= 0; x-- ) {
-				for( int y = 0; y < 8; y++ ) {
-					uint pixel = (uint)fastBmp.GetRowPtr( tileY + y )[tileX + x];
+		unsafe void MakeTile( int i, int tileX, int tileY ) {
+			for( int x = boxSize - 1; x >= 0; x-- ) {
+				for( int y = 0; y < boxSize; y++ ) {
+					uint pixel = (uint)fontPixels.GetRowPtr( tileY + y )[tileX + x];
 					uint a = pixel >> 24;
 					if( a >= 127 ) {
 						widths[i] = x + 1;
-						Console.WriteLine( widths[i] );
 						return;
 					}
 				}
@@ -47,7 +45,7 @@ namespace ClassicalSharp {
 				GetTextParts( args.Text );
 			
 			if( args.UseShadow ) {
-				int shadowX = x + 1, shadowY = y + 1;
+				int shadowX = x + 2, shadowY = y + 2;
 				for( int i = 0; i < parts.Count; i++ ) {
 					TextPart part = parts[i];
 					part.TextColour = FastColour.Black;
@@ -61,45 +59,31 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void DrawPart( ref int x, int y, float point, TextPart part ) {
+		unsafe void DrawPart( ref int x, int y, float point, TextPart part ) {
 			string text = part.Text;
 			foreach( char c in text ) {
-				int coords = (int)c;
-				int srcX = (coords & 0x0F) * 8;
-				int srcY = (coords >> 4) * 8;
+				int coords = ConvertToCP437( c );
+				int srcX = (coords & 0x0F) * boxSize;
+				int srcY = (coords >> 4) * boxSize;
 				
-				for( int yy = 0; yy < 8; yy++ ) {
-					for( int xx = 0; xx < widths[coords]; xx++ ) {
-						FastColour col = realBmp.GetPixel( srcX + xx, srcY + yy );
+				int srcWidth = widths[coords], dstWidth = PtToPx( point, srcWidth );
+				int srcHeight = boxSize, dstHeight = PtToPx( point, srcHeight );
+				for( int yy = 0; yy < dstHeight; yy++ ) {
+					int fontY = srcY + yy * srcHeight / dstHeight;
+					int* fontRow = fontPixels.GetRowPtr( fontY );
+					
+					for( int xx = 0; xx < dstWidth; xx++ ) {
+						int fontX = srcX + xx * srcWidth / dstWidth;					
+						FastColour col = new FastColour( fontRow[fontX] );
 						if( col.A < 127 ) continue;
+						
 						col.R = (byte)(col.R * part.TextColour.R / 255);
 						col.G = (byte)(col.G * part.TextColour.G / 255);
-						col.B = (byte)(col.B * part.TextColour.B / 255);
-						
+						col.B = (byte)(col.B * part.TextColour.B / 255);					
 						curBmp.SetPixel( x + xx, y + yy, col );
 					}
 				}
-				x += widths[coords] + 1;
-				/*int rawWidth = widths[coords] + 1;
-				int rawHeight = 8;
-				g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-				g.DrawImage( realBmp,
-				            new Rectangle( x, y, PtToPx( point, rawWidth ), PtToPx( point, rawHeight ) ),
-				            new Rectangle( srcX, srcY, 8, 8 ),
-				            GraphicsUnit.Pixel );
-				
-				for( int yy = 0; yy < PtToPx( point, rawHeight ); yy++ ) {
-					for( int xx = 0; xx < PtToPx( point, rawWidth ); xx++ ) {
-						FastColour col = curBmp.GetPixel( x + xx, y + yy );
-						if( col.A < 127 ) continue;
-						col.R = (byte)(col.R * part.TextColour.R / 255);
-						col.G = (byte)(col.G * part.TextColour.G / 255);
-						col.B = (byte)(col.B * part.TextColour.B / 255);
-						
-						curBmp.SetPixel( x + xx, y + yy, col );
-					}
-				}
-				x += PtToPx( point, rawWidth );*/
+				x += PtToPx( point, srcWidth + 1 );
 			}
 		}
 		
@@ -110,19 +94,30 @@ namespace ClassicalSharp {
 		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
 			float point = args.Font.Size;
-			//Size total = new Size( 0, PtToPx( point, 8 ) );
-			Size total = new Size( 0, 8 );
+			Size total = new Size( 0, PtToPx( point, boxSize ) );
 			
 			for( int i = 0; i < parts.Count; i++ ) {
 				foreach( char c in parts[i].Text ) {
-					total.Width += widths[(int)c] + 1;//PtToPx( point, widths[(int)c] + 1 );
+					int coords = ConvertToCP437( c );
+					total.Width += PtToPx( point, widths[coords] + 1 );
 				}
 			}
 			
 			if( args.UseShadow && parts.Count > 0 ) {
-				total.Width += 1; total.Height += 1;
+				total.Width += 2; total.Height += 2;
 			}
 			return total;
+		}
+		
+		int ConvertToCP437( char c ) {
+			if( c >= ' ' && c <= '~')
+				return (int)c;
+			
+			int cIndex = Utils.ControlCharReplacements.IndexOf( c );
+			if( cIndex >= 0 ) return cIndex;
+			int eIndex = Utils.ExtendedCharReplacements.IndexOf( c );
+			if( eIndex >= 0 ) return 127 + eIndex;		
+			return (int)'?';
 		}
 		
 		int PtToPx( int point ) {
@@ -130,11 +125,13 @@ namespace ClassicalSharp {
 		}
 		
 		int PtToPx( float point, float value ) {
-			return (int)Math.Ceiling( (value / 8f) * point / 72f * 96f );
+			return (int)Math.Ceiling( (value / boxSize) * point / 72f * 96f );
 		}
 		
 		public override void DisposeInstance() {
 			base.DisposeInstance();
+			fontPixels.Dispose();
+			fontBmp.Dispose();
 		}
 	}
 }

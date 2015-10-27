@@ -286,5 +286,13 @@ namespace ClassicalSharp {
 		public static bool IsUrlPrefix( string value ) {
 			return value.StartsWith( "http://" ) || value.StartsWith( "https://" );
 		}
+		
+		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>
+		public const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
+		
+		/// <summary> Conversion for code page 437 characters from index 127 to 255 to unicode. </summary>
+		public const string ExtendedCharReplacements = "⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
+			"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌" +
+			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 	}
 }

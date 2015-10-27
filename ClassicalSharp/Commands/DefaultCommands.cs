@@ -79,7 +79,6 @@ namespace ClassicalSharp.Commands {
 			foreach( string line in game.Graphics.ApiInfo ) {
 				game.Chat.Add( "&a" + line );
 			}
-			throw new InvalidCastException();
 		}
 	}
 	

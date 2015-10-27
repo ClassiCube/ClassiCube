@@ -68,6 +68,15 @@ namespace ClassicalSharp {
 			                      invElementSize, invElementSize, invElementSize );
 		}
 		
+		/// <summary> Gets a rectangle that describes the UV coordinates for 
+		/// the tile at the specified index, adjusted to work for AMD/ATI cards. </summary>
+		public TextureRec GetAdjTexRec( int index ) {
+			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
+			const float invAdjSize = invElementSize * (15.99f/16f);
+			return new TextureRec( (index & 0x0F) * invElementSize, (index >> 4) * 
+			                      invElementSize, invAdjSize, invAdjSize );
+		}
+		
 		/// <summary> Disposes of the underlying atlas bitmap and texture. </summary>
 		public void Dispose() {
 			if( AtlasBitmap != null )
