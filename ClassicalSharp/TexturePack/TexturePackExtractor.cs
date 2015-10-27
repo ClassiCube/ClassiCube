@@ -78,7 +78,16 @@ namespace ClassicalSharp.TexturePack {
 					StreamReader reader = new StreamReader( stream );
 					game.Animations.ReadAnimationsDescription( reader );
 					break;
+				case "default.png":
+					SetFontBitmap( game, stream );
+					break;
 			}
+		}
+		
+		void SetFontBitmap( Game game, Stream stream ) {
+			game.FontBitmap = new Bitmap( stream );
+			if( game.Drawer2D is GdiPlusDrawerMCFont )
+				((GdiPlusDrawerMCFont)game.Drawer2D).SetFontBitmap( game.FontBitmap );
 		}
 		
 		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {

@@ -4,16 +4,20 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public sealed class GdiPlusDrawerMCFont : GdiPlusDrawer2D {
+	public unsafe sealed class GdiPlusDrawerMCFont : GdiPlusDrawer2D {
 		
 		// NOTE: This drawer is still a big work in progress and not close to done
-		// TODO: proper shadow colour
 		// TODO: italic and bold
 		Bitmap fontBmp;
 		FastBitmap fontPixels;
 		int boxSize;
-		public GdiPlusDrawerMCFont( IGraphicsApi graphics ) : base( graphics ) {
-			fontBmp = new Bitmap( "default.png" );
+		const int italicSize = 8;
+		
+		public GdiPlusDrawerMCFont( IGraphicsApi graphics ) : base( graphics ) {	
+		}
+		
+		public void SetFontBitmap( Bitmap bmp ) {
+			fontBmp = bmp;
 			boxSize = fontBmp.Width / 16;
 			fontPixels = new FastBitmap( fontBmp, true );
 			CalculateTextWidths();
@@ -22,16 +26,17 @@ namespace ClassicalSharp {
 		int[] widths = new int[256];
 		void CalculateTextWidths() {
 			for( int i = 0; i < 256; i++ )
-				MakeTile( i, (i & 0x0F) * boxSize, (i >> 4) * boxSize );		
-			widths[(int)' '] = boxSize / 2;
+				MakeTile( i, (i & 0x0F) * boxSize, (i >> 4) * boxSize );
+			widths[(int)' '] = boxSize / 4;
 		}
 		
-		unsafe void MakeTile( int i, int tileX, int tileY ) {
+		void MakeTile( int i, int tileX, int tileY ) {
+			// find first column (from right) where there is a solid pixel
 			for( int x = boxSize - 1; x >= 0; x-- ) {
 				for( int y = 0; y < boxSize; y++ ) {
-					uint pixel = (uint)fontPixels.GetRowPtr( tileY + y )[tileX + x];
-					uint a = pixel >> 24;
-					if( a >= 127 ) {
+					int pixel = fontPixels.GetRowPtr( tileY + y )[tileX + x];
+					byte a = (byte)(pixel >> 24);
+					if( a >= 127 ) { // found a solid pixel
 						widths[i] = x + 1;
 						return;
 					}
@@ -44,23 +49,33 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
+			using( FastBitmap fastBmp = new FastBitmap( curBmp, true ) )
+				DrawTextImpl( fastBmp, ref args, x, y );
+		}
+		
+		void DrawTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
+			bool italic = args.Font.Style == FontStyle.Italic;
 			if( args.UseShadow ) {
 				int shadowX = x + 2, shadowY = y + 2;
 				for( int i = 0; i < parts.Count; i++ ) {
 					TextPart part = parts[i];
 					part.TextColour = FastColour.Black;
-					DrawPart( ref shadowX, shadowY, args.Font.Size, part );
+					DrawPart( fastBmp, args.Font, ref shadowX, shadowY, part );
 				}
 			}
 			
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
-				DrawPart( ref x, y, args.Font.Size, part );
+				DrawPart( fastBmp, args.Font, ref x, y, part );
 			}
 		}
 		
-		unsafe void DrawPart( ref int x, int y, float point, TextPart part ) {
+		void DrawPart( FastBitmap fastBmp, Font font, ref int x, int y, TextPart part ) {
 			string text = part.Text;
+			FastColour textCol = part.TextColour;
+			float point = font.Size;
+			int xMul = font.Style == FontStyle.Italic ? 1 : 0;
+			
 			foreach( char c in text ) {
 				int coords = ConvertToCP437( c );
 				int srcX = (coords & 0x0F) * boxSize;
@@ -71,16 +86,20 @@ namespace ClassicalSharp {
 				for( int yy = 0; yy < dstHeight; yy++ ) {
 					int fontY = srcY + yy * srcHeight / dstHeight;
 					int* fontRow = fontPixels.GetRowPtr( fontY );
+					int* dstRow = fastBmp.GetRowPtr( y + yy );
+					int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);
 					
 					for( int xx = 0; xx < dstWidth; xx++ ) {
-						int fontX = srcX + xx * srcWidth / dstWidth;					
-						FastColour col = new FastColour( fontRow[fontX] );
-						if( col.A < 127 ) continue;
+						int fontX = srcX + xx * srcWidth / dstWidth;
+						int pixel = fontRow[fontX];
 						
-						col.R = (byte)(col.R * part.TextColour.R / 255);
-						col.G = (byte)(col.G * part.TextColour.G / 255);
-						col.B = (byte)(col.B * part.TextColour.B / 255);					
-						curBmp.SetPixel( x + xx, y + yy, col );
+						if( (byte)(pixel >> 24) < 127 ) continue;
+						
+						int col = pixel & ~0xFFFFFF;
+						col |= ((pixel & 0xFF) * textCol.B / 255);
+						col |= (((pixel >> 8) & 0xFF) * textCol.G / 255) << 8;
+						col |= (((pixel >> 16) & 0xFF) * textCol.R / 255) << 16;
+						dstRow[x + xx + xOffset] = col;
 					}
 				}
 				x += PtToPx( point, srcWidth + 1 );
@@ -88,7 +107,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DrawClippedText( ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight ) {
-			throw new NotImplementedException();
+			throw new NotImplementedException( "Clipped text not implemented yet with minecraft font" );
 		}
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
@@ -103,6 +122,8 @@ namespace ClassicalSharp {
 				}
 			}
 			
+			if( args.Font.Style == FontStyle.Italic )
+				total.Width += Utils.CeilDiv( total.Height, italicSize );
 			if( args.UseShadow && parts.Count > 0 ) {
 				total.Width += 2; total.Height += 2;
 			}
@@ -116,7 +137,7 @@ namespace ClassicalSharp {
 			int cIndex = Utils.ControlCharReplacements.IndexOf( c );
 			if( cIndex >= 0 ) return cIndex;
 			int eIndex = Utils.ExtendedCharReplacements.IndexOf( c );
-			if( eIndex >= 0 ) return 127 + eIndex;		
+			if( eIndex >= 0 ) return 127 + eIndex;
 			return (int)'?';
 		}
 		

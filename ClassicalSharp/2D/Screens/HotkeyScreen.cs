@@ -213,7 +213,7 @@ namespace ClassicalSharp {
 				game, 0, 90, 600, 25, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, hintFont, new StringValidator( 64 ) );
 			currentMoreInputLabel = TextWidget.Create(
-				game, -170, 120, "Leave open for further input:",
+				game, -170, 120, "Keep input bar open:",
 				Anchor.Centre, Anchor.Centre, textFont );
 			
 			if( curHotkey.Text == null ) curHotkey.Text = "";

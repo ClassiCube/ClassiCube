@@ -57,12 +57,15 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			fpsTextWidget = new TextWidget( game, font );
+			fpsTextWidget.XOffset = 2;
+			fpsTextWidget.YOffset = 2;
 			fpsTextWidget.Init();
 			fpsTextWidget.SetText( "FPS: no data yet" );
 			MakePosTextWidget();
 			
 			hackStatesWidget = new TextWidget( game, posFont );
-			hackStatesWidget.YOffset = fpsTextWidget.Height + posHeight;
+			hackStatesWidget.XOffset = 2;
+			hackStatesWidget.YOffset = fpsTextWidget.Height + posHeight + 2;
 			hackStatesWidget.Init();
 			UpdateHackState( true );
 		}
@@ -79,12 +82,12 @@ namespace ClassicalSharp {
 		
 		void DrawPosition() {
 			int index = 0;
-			TextureRec xy = new TextureRec( 0, posTexture.Y1, baseWidth, posTexture.Height );
+			TextureRec xy = new TextureRec( 2, posTexture.Y1, baseWidth, posTexture.Height );
 			TextureRec uv = new TextureRec( 0, 0, posTexture.U2, posTexture.V2 );
 			IGraphicsApi.Make2DQuad( xy, uv, game.ModelCache.vertices, ref index );
 			
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
-			curX = baseWidth;
+			curX = baseWidth + 2;
 			AddChar( 13, ref index );
 			AddInt( pos.X, ref index, true );
 			AddInt( pos.Y, ref index, true );
@@ -138,7 +141,7 @@ namespace ClassicalSharp {
 						drawer.DrawText( ref args, baseWidth + 16 * i, 0 );
 					}
 					
-					int y = fpsTextWidget.Height;
+					int y = fpsTextWidget.Height + 2;
 					posTexture = drawer.Make2DTexture( bmp, size, 0, y );
 					posTexture.U2 = (float)baseWidth / bmp.Width;
 					posTexture.Width = baseWidth;

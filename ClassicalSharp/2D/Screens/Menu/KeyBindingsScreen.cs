@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
 			statusWidget.Dispose();
 			
-			string text = "Press new key binding for " + descriptions[index] + ":";
+			string text = "&ePress new key binding for " + descriptions[index] + ":";
 			statusWidget = TextWidget.Create( game, 0, 150, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		

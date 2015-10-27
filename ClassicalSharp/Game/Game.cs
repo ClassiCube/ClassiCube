@@ -73,6 +73,7 @@ namespace ClassicalSharp {
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;
+		public Bitmap FontBitmap;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -99,7 +100,6 @@ namespace ClassicalSharp {
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
 			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
-			Drawer2D = new GdiPlusDrawerFont( Graphics );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
@@ -108,13 +108,14 @@ namespace ClassicalSharp {
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
+			Drawer2D = new GdiPlusDrawerFont( Graphics );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
-			Inventory = new Inventory( this );
+			Inventory = new Inventory( this );		
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
