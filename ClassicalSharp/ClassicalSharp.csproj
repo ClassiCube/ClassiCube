@@ -75,8 +75,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="2D\Drawing\GdiPlusDrawerFont.cs" />
-    <Compile Include="2D\Drawing\GdiPlusDrawerMCFont.cs" />
+    <Compile Include="2D\Drawing\GdiPlusDrawer2D.Text.cs" />
+    <Compile Include="2D\Drawing\GdiPlusDrawer2D.TextMC.cs" />
     <Compile Include="2D\GuiElement.cs" />
     <Compile Include="2D\IsometricBlockDrawer.cs" />
     <Compile Include="2D\Drawing\DrawTextArgs.cs" />
@@ -103,14 +103,15 @@
     <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
+    <Compile Include="2D\Widgets\Chat\ChatTextWidget.cs" />
+    <Compile Include="2D\Widgets\Chat\TextGroupWidget.cs" />
+    <Compile Include="2D\Widgets\Chat\TextInputWidget.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
-    <Compile Include="2D\Widgets\TextGroupWidget.cs" />
-    <Compile Include="2D\Widgets\TextInputWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Blocks\Block.cs" />
@@ -230,6 +231,7 @@
     <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
     <Folder Include="2D\Widgets\Menu" />
+    <Folder Include="2D\Widgets\Chat" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\Particles" />
     <Folder Include="GraphicsAPI" />

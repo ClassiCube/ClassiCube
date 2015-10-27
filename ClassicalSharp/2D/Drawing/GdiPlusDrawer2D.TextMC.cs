@@ -4,7 +4,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public unsafe sealed class GdiPlusDrawerMCFont : GdiPlusDrawer2D {
+	public unsafe sealed partial class GdiPlusDrawer2D {
 		
 		// NOTE: This drawer is still a big work in progress and not close to done
 		// TODO: italic and bold
@@ -13,10 +13,7 @@ namespace ClassicalSharp {
 		int boxSize;
 		const int italicSize = 8;
 		
-		public GdiPlusDrawerMCFont( IGraphicsApi graphics ) : base( graphics ) {	
-		}
-		
-		public void SetFontBitmap( Bitmap bmp ) {
+		public override void SetFontBitmap( Bitmap bmp ) {
 			fontBmp = bmp;
 			boxSize = fontBmp.Width / 16;
 			fontPixels = new FastBitmap( fontBmp, true );
@@ -45,7 +42,7 @@ namespace ClassicalSharp {
 			widths[i] = 0;
 		}
 		
-		public override void DrawText( ref DrawTextArgs args, int x, int y ) {
+		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
@@ -106,11 +103,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void DrawClippedText( ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight ) {
-			throw new NotImplementedException( "Clipped text not implemented yet with minecraft font" );
-		}
-		
-		public override Size MeasureSize( ref DrawTextArgs args ) {
+		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
 			float point = args.Font.Size;
 			Size total = new Size( 0, PtToPx( point, boxSize ) );
@@ -149,8 +142,7 @@ namespace ClassicalSharp {
 			return (int)Math.Ceiling( (value / boxSize) * point / 72f * 96f );
 		}
 		
-		public override void DisposeInstance() {
-			base.DisposeInstance();
+		void DisposeBitmappedText() {
 			fontPixels.Dispose();
 			fontBmp.Dispose();
 		}

@@ -76,7 +76,7 @@ namespace Launcher2 {
 			Window = new NativeWindow( 480, 480, Program.AppName, 0,
 			                          GraphicsMode.Default, DisplayDevice.Default );
 			Window.Visible = true;
-			Drawer = new GdiPlusDrawerFont( null );
+			Drawer = new GdiPlusDrawer2D( null );
 			Init();
 			platformDrawer.Init( Window.WindowInfo );
 			

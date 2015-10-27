@@ -150,6 +150,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
+      <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
+      <Name>InteropPatcher</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- This actually rewrites the calli and fixed code.-->
   <Target Name="AfterBuild">

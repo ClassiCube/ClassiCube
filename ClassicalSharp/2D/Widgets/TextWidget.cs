@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 
 namespace ClassicalSharp {
 	
-	public sealed class TextWidget : Widget {
+	public class TextWidget : Widget {
 		
 		public TextWidget( Game game, Font font ) : base( game ) {
 			this.font = font;
@@ -21,10 +20,10 @@ namespace ClassicalSharp {
 			return widget;
 		}
 		
-		Texture texture;
+		protected Texture texture;
 		public int XOffset = 0, YOffset = 0;
-		int defaultHeight;
-		readonly Font font;
+		protected int defaultHeight;
+		protected readonly Font font;
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
@@ -32,7 +31,7 @@ namespace ClassicalSharp {
 			Height = defaultHeight;
 		}
 		
-		public void SetText( string text ) {
+		public virtual void SetText( string text ) {
 			graphicsApi.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
@@ -48,9 +47,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			if( texture.IsValid ) {
+			if( texture.IsValid )
 				texture.Render( graphicsApi );
-			}
 		}
 		
 		public override void Dispose() {
@@ -58,12 +56,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
-			texture.X1 += deltaX;
-			texture.Y1 += deltaY;
-			X = newX;
-			Y = newY;
+			int diffX = newX - X, diffY = newY - Y;
+			texture.X1 += diffX; texture.Y1 += diffY;
+			X = newX; Y = newY;
 		}
 	}
 }

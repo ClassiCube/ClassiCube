@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 		public MenuInputValidator Validator;
 		
 		double accumulator;
-		public override void Render( double delta ) {		
+		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			if( (accumulator % 1) >= 0.5 )
 				chatCaretTexture.Render( graphicsApi );
@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 			chatInputText.Append( 0, value );
 			DrawTextArgs args = new DrawTextArgs( value, font, false );
 			Size textSize = game.Drawer2D.MeasureSize( ref args );
-			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ), 
+			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ),
 			                     Math.Max( textSize.Height, DesiredMaxHeight ) );
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
@@ -69,10 +69,12 @@ namespace ClassicalSharp {
 					
 					args.Text = Validator.Range;
 					args.SkipPartsCheck = false;
-					Size hintSize = drawer.MeasureSize( ref args );	
+					Size hintSize = drawer.MeasureSize( ref args );
 					
 					args.SkipPartsCheck = true;
-					drawer.DrawText( ref args, size.Width - hintSize.Width, 0 );
+					int hintX = size.Width - hintSize.Width;
+					if( textSize.Width < hintX )
+						drawer.DrawText( ref args, hintX, 0 );
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 				}
 			}
@@ -114,7 +116,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyPress( char key ) {
 			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
-				if( !Validator.IsValidChar( key ) ) return true;		
+				if( !Validator.IsValidChar( key ) ) return true;
 				chatInputText.Append( chatInputText.Length, key );
 				
 				if( !Validator.IsValidString( chatInputText.GetString() ) ) {

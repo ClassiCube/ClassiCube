@@ -74,6 +74,7 @@ namespace ClassicalSharp {
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;
 		public Bitmap FontBitmap;
+		public bool UseArial = false;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -108,7 +109,7 @@ namespace ClassicalSharp {
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
-			Drawer2D = new GdiPlusDrawerFont( Graphics );
+			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );

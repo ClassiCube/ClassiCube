@@ -2,6 +2,7 @@
 
 namespace ClassicalSharp {
 	
+	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
 		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
@@ -34,6 +35,8 @@ namespace ClassicalSharp {
 			hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide] = value;
 		}
 		
+		/// <summary> Returns whether the face at the given face of the tile 
+		/// should be drawn with the neighbour 'block' present on the other side of the face. </summary>
 		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
 			return hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide];
 		}

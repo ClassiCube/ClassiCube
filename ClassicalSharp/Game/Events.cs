@@ -66,6 +66,11 @@ namespace ClassicalSharp {
 		public event EventHandler<ChatEventArgs> ChatReceived;	
 		internal void RaiseChatReceived( string text, CpeMessage type ) { chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs ); }
 		
+		/// <summary> Raised when the user changes chat font to arial or back to bitmapped font,
+		/// also raised when the bitmapped font changes. </summary>
+		public event EventHandler<EventArgs> ChatFontChanged;
+		internal void RaiseChatFontChanged( bool arial ) { fontArgs.UseArial = arial; Raise( ChatFontChanged, fontArgs ); }
+		
 		
 	
 		// Cache event instances so we don't create needless new objects.
@@ -73,6 +78,7 @@ namespace ClassicalSharp {
 		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs();	
 		EnvVarEventArgs envArgs = new EnvVarEventArgs();
 		ChatEventArgs chatArgs = new ChatEventArgs();
+		ChatFontChangedEventArgs fontArgs = new ChatFontChangedEventArgs();
 				
 		void Raise( EventHandler handler ) {
 			if( handler != null ) {
@@ -94,19 +100,31 @@ namespace ClassicalSharp {
 	
 	public sealed class ChatEventArgs : EventArgs {
 		
+		/// <summary> Where this chat message should appear on the screen. </summary>
 		public CpeMessage Type;
 		
+		/// <summary> Raw text of the message (including colour codes), 
+		/// with code page 437 indices converted to their unicode representations. </summary>
 		public string Text;
 	}
 	
 	public sealed class MapLoadingEventArgs : EventArgs {
 		
+		/// <summary> Percentage of the map that has been fully decompressed by the client. </summary>
 		public int Progress;
 	}
 	
 	public sealed class EnvVarEventArgs : EventArgs {
 		
+		/// <summary> Map environment variable that was changed. </summary>
 		public EnvVar Var;
+	}
+	
+	public sealed class ChatFontChangedEventArgs : EventArgs {
+		
+		/// <summary> true if chat should be drawn using arial,
+		/// false if it should be drawn using the current bitmapped font. </summary>
+		public bool UseArial;
 	}
 	
 	public enum EnvVar {

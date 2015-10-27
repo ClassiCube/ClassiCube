@@ -2,6 +2,7 @@
 
 namespace ClassicalSharp {
 	
+	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
 		internal int[] textures = new int[BlocksCount * TileSide.Sides];

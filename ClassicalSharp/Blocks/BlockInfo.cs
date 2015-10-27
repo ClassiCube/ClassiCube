@@ -32,10 +32,13 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
 		public bool[] BlocksLight = new bool[BlocksCount];
 		
+		/// <summary> Gets whether the given block should draw all it faces with a full white colour component. </summary>
 		public bool[] FullBright = new bool[BlocksCount];
 		
 		public string[] Name = new string[BlocksCount];
 		
+		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block. 
+		/// Note that this is only used for exponential fog mode. </summary>
 		public FastColour[] FogColour = new FastColour[BlocksCount];
 		
 		public float[] FogDensity = new float[BlocksCount];
@@ -83,18 +86,18 @@ namespace ClassicalSharp {
 			
 			SetBlockHeight( Block.Slab, 8/16f );
 			SetBlockHeight( Block.CobblestoneSlab, 8/16f );
-			SetBlockHeight( Block.Snow, 2/16f );			
-			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water ); 
+			SetBlockHeight( Block.Snow, 2/16f );
+			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water );
 			MarkTranslucent( Block.Ice );
-			MarkTransparent( Block.Glass, false ); MarkTransparent( Block.Leaves, false ); 
-			MarkTransparent( Block.Slab, true ); MarkTransparent( Block.Snow, true ); 
+			MarkTransparent( Block.Glass, false ); MarkTransparent( Block.Leaves, false );
+			MarkTransparent( Block.Slab, true ); MarkTransparent( Block.Snow, true );
 			MarkTransparent( Block.CobblestoneSlab, true );
-			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling ); 
-			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom ); 
-			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope ); 
+			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling );
+			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom );
+			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope );
 			MarkSprite( Block.Fire );
 			SetIsLiquid( Block.StillWater ); SetIsLiquid( Block.Water );
-			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );					
+			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );
 			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
 			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
 			

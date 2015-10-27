@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public abstract class GdiPlusDrawer2D : IDrawer2D {
+	public sealed partial class GdiPlusDrawer2D : IDrawer2D {
 
-		Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );
-		
-		protected Graphics g;
-		protected Bitmap curBmp;
-		public GdiPlusDrawer2D( IGraphicsApi graphics ) {
-			this.graphics = graphics;
-		}
+		Dictionary<int, SolidBrush> brushCache = new Dictionary<int, SolidBrush>( 16 );		
+		Graphics g;
+		Bitmap curBmp;
 		
 		public override void SetBitmap( Bitmap bmp ) {
 			if( g != null ) {
@@ -87,17 +82,19 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DisposeInstance() {
-			foreach( var pair in brushCache ) {
+			foreach( var pair in brushCache )
 				pair.Value.Dispose();
-			}
+			
+			DisposeText();
+			DisposeBitmappedText();
 		}
 		
-		protected SolidBrush GetOrCreateBrush( Color color ) {
+		SolidBrush GetOrCreateBrush( Color color ) {
 			int key = color.ToArgb();
 			SolidBrush brush;
-			if( brushCache.TryGetValue( key, out brush ) ) {
+			if( brushCache.TryGetValue( key, out brush ) )
 				return brush;
-			}
+			
 			brush = new SolidBrush( color );
 			brushCache[key] = brush;
 			return brush;

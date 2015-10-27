@@ -268,6 +268,13 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if( SimulateMouse( key, true ) ) return;
 			
+			// TODO: this is a temp debug statement
+			// NOTE: this is a temp debug statement
+			if( key == Key.F8 ) {
+				game.UseArial = !game.UseArial;
+				game.Events.RaiseChatFontChanged( game.UseArial );
+				return;
+			}
 			if( key == Key.F4 && (game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight )) ) {
 				game.Exit();
 			} else if( key == Keys[KeyBinding.Screenshot] ) {

@@ -5,13 +5,14 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public sealed class GdiPlusDrawerFont : GdiPlusDrawer2D {
+	public sealed partial class GdiPlusDrawer2D {
 		
 		StringFormat format;
 		Bitmap measuringBmp;
 		Graphics measuringGraphics;
 		
-		public GdiPlusDrawerFont( IGraphicsApi graphics ) : base( graphics ) {
+		public GdiPlusDrawer2D( IGraphicsApi graphics ) {
+			this.graphics = graphics;
 			format = StringFormat.GenericTypographic;
 			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
 			format.Trimming = StringTrimming.None;
@@ -62,7 +63,7 @@ namespace ClassicalSharp {
 			format.Trimming = StringTrimming.None;
 		}
 		
-		public override Size MeasureSize( ref DrawTextArgs args ) {			
+		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
@@ -77,8 +78,7 @@ namespace ClassicalSharp {
 			return Size.Ceiling( total );
 		}
 		
-		public override void DisposeInstance() {
-			base.DisposeInstance();
+		void DisposeText() {
 			measuringGraphics.Dispose();
 			measuringBmp.Dispose();
 		}

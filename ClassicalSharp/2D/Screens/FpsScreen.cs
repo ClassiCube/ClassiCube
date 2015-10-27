@@ -6,15 +6,13 @@ namespace ClassicalSharp {
 	
 	public class FpsScreen : Screen {
 		
-		readonly Font font, posFont;
+		Font font, posFont;
 		StringBuffer text;
 		
 		public FpsScreen( Game game ) : base( game ) {
-			font = new Font( "Arial", 13 );
-			posFont = new Font( "Arial", 12, FontStyle.Italic );
 			text = new StringBuffer( 96 );
 		}
-		
+
 		TextWidget fpsTextWidget, hackStatesWidget;
 		Texture posTexture;
 		public override void Render( double delta ) {
@@ -56,18 +54,22 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			fpsTextWidget = new TextWidget( game, font );
+			font = new Font( "Arial", 13 );
+			posFont = new Font( "Arial", 12, FontStyle.Italic );
+			game.Events.ChatFontChanged += ChatFontChanged;
+			
+			fpsTextWidget = new ChatTextWidget( game, font );
 			fpsTextWidget.XOffset = 2;
 			fpsTextWidget.YOffset = 2;
 			fpsTextWidget.Init();
 			fpsTextWidget.SetText( "FPS: no data yet" );
 			MakePosTextWidget();
 			
-			hackStatesWidget = new TextWidget( game, posFont );
+			hackStatesWidget = new ChatTextWidget( game, posFont );
 			hackStatesWidget.XOffset = 2;
 			hackStatesWidget.YOffset = fpsTextWidget.Height + posHeight + 2;
 			hackStatesWidget.Init();
-			UpdateHackState( true );
+			UpdateHackState( true );		
 		}
 		
 		public override void Dispose() {
@@ -75,6 +77,12 @@ namespace ClassicalSharp {
 			posFont.Dispose();
 			fpsTextWidget.Dispose();
 			graphicsApi.DeleteTexture( ref posTexture );
+			game.Events.ChatFontChanged -= ChatFontChanged;
+		}
+		
+		void ChatFontChanged( object sender, EventArgs e ) {
+			Dispose();
+			Init();
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -122,23 +130,23 @@ namespace ClassicalSharp {
 			DrawTextArgs args = new DrawTextArgs( "", posFont, true );
 			for( int i = 0; i < possibleChars.Length; i++ ) {
 				args.Text = new String( possibleChars[i], 1 );
-				widths[i] = game.Drawer2D.MeasureSize( ref args ).Width;
+				widths[i] = game.Drawer2D.MeasureChatSize( game.UseArial, ref args ).Width;
 			}
 			
 			using( IDrawer2D drawer = game.Drawer2D ) {
 				args.Text = "Feet pos: ";
-				Size size = game.Drawer2D.MeasureSize( ref args );
+				Size size = game.Drawer2D.MeasureChatSize( game.UseArial, ref args );
 				baseWidth = size.Width;
 				size.Width += 16 * possibleChars.Length;
 				posHeight = size.Height;
 				
 				using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawText( ref args, 0, 0 );
+					drawer.DrawChatText( game.UseArial, ref args, 0, 0 );
 					
 					for( int i = 0; i < possibleChars.Length; i++ ) {
 						args.Text = new String( possibleChars[i], 1 );
-						drawer.DrawText( ref args, baseWidth + 16 * i, 0 );
+						drawer.DrawChatText( game.UseArial, ref args, baseWidth + 16 * i, 0 );
 					}
 					
 					int y = fpsTextWidget.Height + 2;
@@ -149,7 +157,6 @@ namespace ClassicalSharp {
 				}
 			}
 		}
-		
 		
 		void AddChar( int charIndex, ref int index ) {
 			int width = widths[charIndex];
