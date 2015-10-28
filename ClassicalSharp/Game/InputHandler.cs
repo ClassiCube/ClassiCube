@@ -271,8 +271,8 @@ namespace ClassicalSharp {
 			// TODO: this is a temp debug statement
 			// NOTE: this is a temp debug statement
 			if( key == Key.F8 ) {
-				game.UseArial = !game.UseArial;
-				game.Events.RaiseChatFontChanged( game.UseArial );
+				game.Drawer2D.UseBitmappedChat = !game.Drawer2D.UseBitmappedChat;
+				game.Events.RaiseChatFontChanged();
 				return;
 			}
 			if( key == Key.F4 && (game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight )) ) {

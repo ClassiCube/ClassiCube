@@ -47,6 +47,9 @@ namespace ClassicalSharp {
 			src = newBmp;
 		}
 		
+		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
+		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
+		public bool UseBitmappedChat = false;
 		
 		/// <summary> Draws a string using the specified arguments and font at the
 		/// specified coordinates in the currently bound bitmap. </summary>
@@ -63,8 +66,8 @@ namespace ClassicalSharp {
 		/// <summary> Draws a string using the specified arguments, using the specified font or 
 		/// the current bitmapped font depending on the 'useFont' argument, at the
 		/// specified coordinates in the currently bound bitmap. </summary>
-		public void DrawChatText( bool useFont, ref DrawTextArgs args, int windowX, int windowY ) {
-			if( useFont )
+		public void DrawChatText( ref DrawTextArgs args, int windowX, int windowY ) {
+			if( !UseBitmappedChat )
 				DrawText( ref args, windowX, windowY );
 			else
 				DrawBitmappedText( ref args, windowX, windowY );
@@ -79,8 +82,8 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments,
 		/// when drawn with the specified font or the current bitmapped font depending on the 'useFont' argument. </summary>
-		public Size MeasureChatSize( bool useFont, ref DrawTextArgs args ) {
-			return useFont ? MeasureSize( ref args ) : 
+		public Size MeasureChatSize( ref DrawTextArgs args ) {
+			return !UseBitmappedChat ? MeasureSize( ref args ) : 
 				MeasureBitmappedSize( ref args );
 		}
 		

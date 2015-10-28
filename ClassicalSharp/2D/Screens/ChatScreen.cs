@@ -121,6 +121,7 @@ namespace ClassicalSharp {
 				game.chatInInputBuffer = null;
 			}
 			game.Events.ChatReceived += ChatReceived;
+			game.Events.ChatFontChanged += ChatFontChanged;
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
@@ -159,6 +160,12 @@ namespace ClassicalSharp {
 			bottomRight.Dispose();
 			graphicsApi.DeleteTexture( ref announcementTex );
 			game.Events.ChatReceived -= ChatReceived;
+			game.Events.ChatFontChanged -= ChatFontChanged;
+		}
+		
+		void ChatFontChanged( object sender, EventArgs e ) {
+			Dispose();
+			Init();
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

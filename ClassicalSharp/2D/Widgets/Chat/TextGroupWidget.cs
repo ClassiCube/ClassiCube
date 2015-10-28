@@ -19,11 +19,10 @@ namespace ClassicalSharp {
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
-			defaultHeight = game.Drawer2D.MeasureSize( ref args ).Height;
+			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			
-			for( int i = 0; i < Textures.Length; i++ ) {
+			for( int i = 0; i < Textures.Length; i++ )
 				Textures[i].Height = defaultHeight;
-			}
 			UpdateDimensions();
 		}
 		
@@ -31,8 +30,11 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref Textures[index] );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
-			if( !String.IsNullOrEmpty( text ) ) {				
-				Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+			if( !String.IsNullOrEmpty( text ) ) {
+				Texture tex = game.Drawer2D.UseBitmappedChat ?
+					game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
+					game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+				
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
 				Textures[index] = tex;
@@ -109,20 +111,17 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
-			for( int i = 0; i < Textures.Length; i++ ) {
+			for( int i = 0; i < Textures.Length; i++ )
 				graphicsApi.DeleteTexture( ref Textures[i] );
-			}
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
+			int diffX = newX - X, diffY = newY - Y;
 			for( int i = 0; i < Textures.Length; i++ ) {
-				Textures[i].X1 += deltaX;
-				Textures[i].Y1 += deltaY;
+				Textures[i].X1 += diffX;
+				Textures[i].Y1 += diffY;
 			}
-			X = newX;
-			Y = newY;
+			X = newX; Y = newY;
 		}
 	}
 }

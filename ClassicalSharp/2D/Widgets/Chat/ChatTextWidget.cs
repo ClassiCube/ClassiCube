@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
-			defaultHeight = game.Drawer2D.MeasureChatSize( game.UseArial, ref args ).Height;
+			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			Height = defaultHeight;
 		}
 		
@@ -32,10 +32,10 @@ namespace ClassicalSharp {
 				Height = defaultHeight;
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, font, true );
-				if( game.UseArial )
-					texture = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
-				else
-					texture = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
+				texture = game.Drawer2D.UseBitmappedChat ?
+					game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
+					game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+
 				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
 				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );
 				Height = texture.Height;

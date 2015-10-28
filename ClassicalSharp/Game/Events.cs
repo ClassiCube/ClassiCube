@@ -68,8 +68,8 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the user changes chat font to arial or back to bitmapped font,
 		/// also raised when the bitmapped font changes. </summary>
-		public event EventHandler<EventArgs> ChatFontChanged;
-		internal void RaiseChatFontChanged( bool arial ) { fontArgs.UseArial = arial; Raise( ChatFontChanged, fontArgs ); }
+		public event EventHandler ChatFontChanged;
+		internal void RaiseChatFontChanged() { Raise( ChatFontChanged ); }
 		
 		
 	
@@ -78,7 +78,6 @@ namespace ClassicalSharp {
 		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs();	
 		EnvVarEventArgs envArgs = new EnvVarEventArgs();
 		ChatEventArgs chatArgs = new ChatEventArgs();
-		ChatFontChangedEventArgs fontArgs = new ChatFontChangedEventArgs();
 				
 		void Raise( EventHandler handler ) {
 			if( handler != null ) {
@@ -118,13 +117,6 @@ namespace ClassicalSharp {
 		
 		/// <summary> Map environment variable that was changed. </summary>
 		public EnvVar Var;
-	}
-	
-	public sealed class ChatFontChangedEventArgs : EventArgs {
-		
-		/// <summary> true if chat should be drawn using arial,
-		/// false if it should be drawn using the current bitmapped font. </summary>
-		public bool UseArial;
 	}
 	
 	public enum EnvVar {

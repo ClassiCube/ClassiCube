@@ -74,7 +74,6 @@ namespace ClassicalSharp {
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;
 		public Bitmap FontBitmap;
-		public bool UseArial = false;
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();

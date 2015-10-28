@@ -88,8 +88,8 @@ namespace ClassicalSharp.TexturePack {
 			game.FontBitmap = new Bitmap( stream );
 			game.Drawer2D.SetFontBitmap( game.FontBitmap );
 			
-			if( !game.UseArial)
-				game.Events.RaiseChatFontChanged( false );
+			if( game.Drawer2D.UseBitmappedChat )
+				game.Events.RaiseChatFontChanged();
 		}
 		
 		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
