@@ -42,14 +42,16 @@ namespace ClassicalSharp {
 		public override void Init() {
 			X = 10;
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
-			caretTexture = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+			caretTexture = game.Drawer2D.UseBitmappedChat ?
+				game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
+				game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			chatInputText.WordWrap( ref parts, ref partLens, 64 );
 			
 			maxWidth = 0;
 			args = new DrawTextArgs( null, font, false );
 			for( int i = 0; i < lines; i++ ) {
 				args.Text = parts[i];
-				sizes[i] = game.Drawer2D.MeasureSize( ref args );
+				sizes[i] = game.Drawer2D.MeasureChatSize( ref args );
 				maxWidth = Math.Max( maxWidth, sizes[i].Width );
 			}
 			
@@ -80,11 +82,11 @@ namespace ClassicalSharp {
 				caretCol = nextCaretCol;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
-				Size trimmedSize = game.Drawer2D.MeasureSize( ref args );
+				Size trimmedSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTexture.X1 = 10 + trimmedSize.Width;
 				
 				args.Text = new String( parts[indexY][indexX], 1 );
-				Size charSize = game.Drawer2D.MeasureSize( ref args );
+				Size charSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTexture.Width = charSize.Width;
 				
 				caretTexture.Y1 = sizes[0].Height * indexY;
@@ -112,7 +114,7 @@ namespace ClassicalSharp {
 						args.Text = parts[i];
 						
 						drawer.Clear( backColour, 0, yyy, sizes[i].Width, sizes[i].Height );
-						drawer.DrawText( ref args, 0, yyy );
+						drawer.DrawChatText( ref args, 0, yyy );
 						yyy += sizes[i].Height;
 					}
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );

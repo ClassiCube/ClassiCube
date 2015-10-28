@@ -35,7 +35,8 @@ namespace ClassicalSharp {
 			
 			MakeKeys( 0, 11, -140 );
 			MakeKeys( 11, 11, 140 );
-			buttons[index] = Make( 0, 5, "Back to menu", Anchor.BottomOrRight, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) );
+			buttons[index] = Make( 0, 5, "Back to menu", Anchor.BottomOrRight, 
+			                      (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 			statusWidget = TextWidget.Create( game, 0, 150, "", Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		

@@ -109,6 +109,7 @@ namespace ClassicalSharp {
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
+			Drawer2D.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );

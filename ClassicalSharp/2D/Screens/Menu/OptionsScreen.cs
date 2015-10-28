@@ -33,28 +33,33 @@ namespace ClassicalSharp {
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ) ) ),
 				// Column 2
-				Make( 140, -100, "Chat font size", Anchor.Centre, OnWidgetClick,
-				     g => g.Chat.FontSize.ToString(),
-				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
-				     	Options.Set( OptionsKey.FontSize, v ); } ),
-
-				Make( 140, -50, "Chat lines", Anchor.Centre, OnWidgetClick,
-				     g => g.ChatLines.ToString(),
-				     (g, v) => { g.ChatLines = Int32.Parse( v );
-				     	Options.Set( OptionsKey.ChatLines, v ); } ),
-				
-				Make( 140, 0, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
-				Make( 140, 50, "Key bindings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ), null, null ),			
+				Make( 140, -50, "Chat font size", Anchor.Centre, OnWidgetClick,
+				     g => g.Chat.FontSize.ToString(),
+				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
+				     	Options.Set( OptionsKey.FontSize, v ); } ),
+
+				Make( 140, 0, "Chat lines", Anchor.Centre, OnWidgetClick,
+				     g => g.ChatLines.ToString(),
+				     (g, v) => { g.ChatLines = Int32.Parse( v );
+				     	Options.Set( OptionsKey.ChatLines, v ); } ),
+				
+				Make( 140, 50, "Arial chat font", Anchor.Centre, OnWidgetClick,
+				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
+				     (g, v) => {
+				     	g.Drawer2D.UseBitmappedChat = v == "no";
+				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
+				     	game.Events.RaiseChatFontChanged(); } ),
+				
 				// Extra stuff
 				!network.IsSinglePlayer ? null :
 					Make( -140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
-					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),			
+					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),
 				Make( 140, -150, "Pushback block placing", Anchor.Centre, OnWidgetClick,
 				     g => g.PushbackBlockPlacing ? "yes" : "no",
 				     (g, v) => g.PushbackBlockPlacing = (v == "yes" ) ),
@@ -69,10 +74,10 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
+				new IntegerValidator( 1, 100 ),
 				new IntegerValidator( 6, 30 ),
 				new IntegerValidator( 1, 30 ),
-				new IntegerValidator( 1, 100 ),
-				null,
+				new BooleanValidator(),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
 				new BooleanValidator()

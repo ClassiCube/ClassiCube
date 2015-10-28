@@ -19,17 +19,28 @@ namespace ClassicalSharp {
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[] {
-				Make( -140, -100, "Options", Anchor.Centre, (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
-				Make( -140, -50, "Environment settings", Anchor.Centre, (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( -140, 0, "Select texture pack", Anchor.Centre, (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
-				Make( -140, 50, "Hotkeys", Anchor.Centre, (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				// Column 1
+				Make( -140, -100, "Options", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
+				Make( -140, -50, "Environment settings", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
 				
-				Make( 140, -100, "Save level", Anchor.Centre, (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				Make( -140, 0, "Hotkeys", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				Make( -140, 50, "Key bindings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ) ),	
+				// Column 2
+				Make( 140, -100, "Save level", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -50, "Load level", Anchor.Centre, (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
+					Make( 140, -50, "Load level", Anchor.Centre, 
+					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				// TODO: singleplayer Generate level screen
-				
-				Make( 0, 55, "Back to game", Anchor.BottomOrRight, (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
+				Make( 140, 50, "Select texture pack", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
+				// Other
+				Make( 0, 55, "Back to game", Anchor.BottomOrRight, 
+				     (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
 				Make( 0, 5, "Quit game", Anchor.BottomOrRight, (g, w) => g.Exit() ),
 			};
 		}
