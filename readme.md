@@ -41,7 +41,7 @@ this launcher is very similar to ClassiCube's launcher and is simpler to use. (T
 
 #### Tips
 * Press escape (after joining a world) to switch to the pause menu.
-* Pause menu -> Options -> Key mappings lists all of the key combinations used by the client. 
+* Pause menu -> Key bindings lists all of the key combinations used by the client. 
 * Note that toggling 'vsync' to off will minimise CPU usage, while on will maximimise chunk loading speed.
 * Press F to cycle view distance. A smaller number of visible chunks can improve performance.
 
