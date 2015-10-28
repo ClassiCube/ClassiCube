@@ -475,7 +475,7 @@ namespace Launcher
 			this.ClientSize = new System.Drawing.Size(484, 462);
 			this.Controls.Add(this.tabs);
 			this.Name = "MainForm";
-			this.Text = "ClassicalSharp Launcher 0.95";
+			this.Text = "ClassicalSharp Launcher 0.96";
 			this.ResizeEnd += new System.EventHandler(this.MainFormResizeEnd);
 			this.tabClassicubeNet.ResumeLayout(false);
 			this.tabCC.ResumeLayout(false);
