@@ -39,12 +39,12 @@ namespace ClassicalSharp {
 			pos = Utils.RotateY( Utils.RotateX( pos, cosX, -sinX ), cosY, -sinY );
 			
 			if( info.IsSprite[block] ) {
-				DrawXFace( block, 0f, TileSide.Right );
-				DrawZFace( block, 0f, TileSide.Back );
+				XQuad( block, 0f, TileSide.Right );
+				ZQuad( block, 0f, TileSide.Back );
 			} else {
-				DrawXFace( block, scale, TileSide.Left );
-				DrawZFace( block, -scale, TileSide.Back );
-				DrawYFace( block, scale * blockHeight, TileSide.Top );
+				XQuad( block, scale, TileSide.Left );
+				ZQuad( block, -scale, TileSide.Back );
+				YQuad( block, scale * blockHeight, TileSide.Top );
 			}
 			
 			for( int i = 0; i < index; i++ )
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		}
 
 		static Vector3 pos = Vector3.Zero;
-		static void DrawYFace( byte block, float y, int side ) {
+		static void YQuad( byte block, float y, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
 			FastColour col = colNormal;
@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 			                                                    pos.Z - scale, rec.U2, rec.V1, col );
 		}
 
-		static void DrawZFace( byte block, float z, int side ) {
+		static void ZQuad( byte block, float z, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )
@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 			                                                    pos.Z - z, rec.U2, rec.V2, col );
 		}
 
-		static void DrawXFace( byte block, float x, int side ) {
+		static void XQuad( byte block, float x, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
 			if( blockHeight != 1 )

@@ -320,7 +320,7 @@ namespace ClassicalSharp.Singleplayer {
 					if( !map.IsValidPos( blockPos ) ) break;
 					
 					byte block = map.GetBlock( blockPos );
-					intensity -= (hardness[block] / 5 + 0.3f) * stepLen; // TODO: proper block hardness table
+					intensity -= (hardness[block] / 5 + 0.3f) * stepLen;
 					if( intensity > 0 && block != 0 ) {
 						game.UpdateBlock( blockPos.X, blockPos.Y, blockPos.Z, 0 );
 					}
