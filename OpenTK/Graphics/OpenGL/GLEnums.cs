@@ -282,8 +282,8 @@ namespace OpenTK.Graphics.OpenGL
     }
 
     public enum TextureParameterName : int {
-        TextureMagFilter = 0x2800,
-        TextureMinFilter = 0x2801,
+        MagFilter = 0x2800,
+        MinFilter = 0x2801,
     }
 
     public enum TextureTarget : int {

@@ -11,7 +11,7 @@ using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	/// <summary> Implemented IGraphicsAPI using Direct3D 9. </summary>
+	/// <summary> Implements IGraphicsAPI using Direct3D 9. </summary>
 	public class Direct3D9Api : IGraphicsApi {
 
 		Device device;
@@ -562,7 +562,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 		}
 
-		public unsafe override void TakeScreenshot( string output, Size size ) {
+		public override void TakeScreenshot( string output, Size size ) {
 			using( Surface backbuffer = device.GetBackBuffer( 0, 0, BackBufferType.Mono ),
 			      tempSurface = device.CreateOffscreenPlainSurface( size.Width, size.Height, Format.X8R8G8B8, Pool.SystemMemory ) ) {
 				// For DX 8 use IDirect3DDevice8::CreateImageSurface

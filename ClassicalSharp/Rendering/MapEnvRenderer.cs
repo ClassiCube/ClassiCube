@@ -126,11 +126,11 @@ namespace ClassicalSharp {
 		void RebuildSides( int groundLevel, int axisSize ) {
 			sidesVertices = 0;
 			foreach( Rectangle rec in rects ) {
-				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
+				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YQuads outside
 			}
-			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YPlane beneath map
-			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( groundLevel ), axisSize ); // ZPlanes
-			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( groundLevel ), axisSize ); // XPlanes
+			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
+			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( groundLevel ), axisSize ); // ZQuads
+			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( groundLevel ), axisSize ); // XQuads
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			

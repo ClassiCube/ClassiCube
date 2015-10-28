@@ -1,10 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using System.Runtime.InteropServices;
 using OpenTK;
-using OpenTK.Graphics.OpenGL;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
@@ -19,9 +16,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal float MinZNear = 0.1f;
 		
-		public int CreateTexture( Bitmap bmp ) {
-			Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-			// Convert other pixel formats into 32bpp formats.
+		/// <summary> Creates a new native texture with the specified dimensions and using the
+		/// image data encapsulated by the Bitmap instance. </summary>
+		/// <remarks> Note that should make every effort you can to ensure that the dimensions of the bitmap
+		/// are powers of two, because otherwise they will not display properly on certain graphics cards.	<br/>
+		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
+		public int CreateTexture( Bitmap bmp ) {			
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
 				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}",
 				                             bmp.PixelFormat );
@@ -30,6 +30,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				                      Environment.NewLine + Environment.StackTrace );
 				return -1;
 			} else {
+				Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
 				BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
 				int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
 				bmp.UnlockBits( data );
@@ -37,6 +38,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
+		/// <summary> Creates a new native texture with the specified dimensions and FastBitmap instance
+		/// that encapsulates the pointer to the 32bpp image data.</summary>
+		/// <remarks> Note that should make every effort you can to ensure that the dimensions are powers of two,
+		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
 		public int CreateTexture( FastBitmap bmp ) {
 			if( !bmp.IsLocked )
 				bmp.LockBits();
@@ -45,8 +50,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			return texId;
 		}
 		
+		/// <summary> Creates a new native texture with the specified dimensions and pointer to the 32bpp image data. </summary>
+		/// <remarks> Note that should make every effort you can to ensure that the dimensions are powers of two,
+		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
 		public abstract int CreateTexture( int width, int height, IntPtr scan0 );
 		
+		/// <summary> Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
+		/// of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. </summary>
 		public abstract void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part );
 		
 		/// <summary> Binds the given texture id so that it can be used for rasterization. </summary>
@@ -199,6 +209,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. </summary>
 		public abstract void SetVSync( GameWindow game, bool value );
 		
+		/// <summary> Raised when the dimensions of the game's window have changed. </summary>
 		public abstract void OnWindowResize( GameWindow game );
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
@@ -261,14 +272,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			Draw2DTexture( ref tex, FastColour.White );
 		}
 		
+		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
+		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
 		public void Mode2D( float width, float height, bool setFog ) {
 			SetMatrixMode( MatrixType.Projection );
 			PushMatrix();
-			DepthTest = false;
 			LoadOrthoMatrix( width, height );
 			SetMatrixMode( MatrixType.Modelview );
 			PushMatrix();
 			LoadIdentityMatrix();
+			
+			DepthTest = false;
 			AlphaBlending = true;
 			if( setFog ) Fog = false;
 		}
@@ -278,12 +292,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			LoadMatrix( ref matrix );
 		}
 		
+		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
+		/// is suitable for rendering 3D vertices. </summary>
 		public void Mode3D( bool setFog ) {
-			// Get rid of orthographic 2D matrix.
 			SetMatrixMode( MatrixType.Projection );
-			PopMatrix();
+			PopMatrix(); // Get rid of orthographic 2D matrix.
 			SetMatrixMode( MatrixType.Modelview );
 			PopMatrix();
+			
 			DepthTest = true;
 			AlphaBlending = false;
 			if( setFog ) Fog = true;

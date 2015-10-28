@@ -9,12 +9,12 @@ using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
 namespace ClassicalSharp.GraphicsAPI {
 
-	/// <summary> Implemented IGraphicsAPI using OpenGL 1.5,
+	/// <summary> Implements IGraphicsAPI using OpenGL 1.5,
 	/// or 1.2 with the GL_ARB_vertex_buffer_object extension. </summary>
-	public class OpenGLApi : IGraphicsApi {
+	public unsafe class OpenGLApi : IGraphicsApi {
 		
 		BeginMode[] modeMappings;
-		public unsafe OpenGLApi() {
+		public OpenGLApi() {
 			InitFields();
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
@@ -28,7 +28,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.EnableClientState( ArrayCap.ColorArray );
 		}
 		
-		unsafe void CheckVboSupport() {
+		void CheckVboSupport() {
 			string extensions = new String( (sbyte*)GL.GetString( StringName.Extensions ) );
 			string version = new String( (sbyte*)GL.GetString( StringName.Version ) );
 			int major = (int)(version[0] - '0'); // x.y. (and so forth)
@@ -69,7 +69,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		FastColour lastFogCol = FastColour.Black;
-		public unsafe override void SetFogColour( FastColour col ) {
+		public override void SetFogColour( FastColour col ) {
 			if( col != lastFogCol ) {
 				Vector4 colRGBA = new Vector4( col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f );
 				GL.Fogfv( FogParameter.FogColor, &colRGBA.X );
@@ -151,15 +151,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { ToggleCap( EnableCap.Texture2D, value ); }
 		}
 		
-		public unsafe override int CreateTexture( int width, int height, IntPtr scan0 ) {
+		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
 				Utils.LogDebug( "Creating a non power of two texture." );
 			
 			int texId = 0;
 			GL.GenTextures( 1, &texId );
 			GL.BindTexture( TextureTarget.Texture2D, texId );
-			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureFilter.Nearest );
-			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureFilter.Nearest );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest );
+			GL.TexParameteri( TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest );
 
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0 );
@@ -176,7 +176,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0 );
 		}
 		
-		public unsafe override void DeleteTexture( ref int texId ) {
+		public override void DeleteTexture( ref int texId ) {
 			if( texId <= 0 ) return;
 			int id = texId;
 			GL.DeleteTextures( 1, &id );
@@ -222,7 +222,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		unsafe static int GenAndBind( BufferTarget target ) {
+		static int GenAndBind( BufferTarget target ) {
 			int id = 0;
 			GL.GenBuffers( 1, &id );
 			GL.BindBuffer( target, id );
@@ -248,17 +248,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
-		public unsafe override void DeleteDynamicVb( int id ) {
+		public override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffers( 1, &id );
 		}
 		
-		public unsafe override void DeleteVb( int vb ) {
+		public override void DeleteVb( int vb ) {
 			if( vb <= 0 ) return;
 			GL.DeleteBuffers( 1, &vb );
 		}
 		
-		public unsafe override void DeleteIb( int ib ) {
+		public override void DeleteIb( int ib ) {
 			if( ib <= 0 ) return;
 			GL.DeleteBuffers( 1, &ib );
 		}
@@ -341,7 +341,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
+		public override void LoadMatrix( ref Matrix4 matrix ) {
 			fixed( Single* ptr = &matrix.Row0.X )
 				GL.LoadMatrixf( ptr );
 		}
@@ -358,7 +358,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.PopMatrix();
 		}
 		
-		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
+		public override void MultiplyMatrix( ref Matrix4 matrix ) {
 			fixed( Single* ptr = &matrix.Row0.X )
 				GL.MultMatrixf( ptr );
 		}
@@ -377,7 +377,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		bool isIntelRenderer;
-		protected unsafe override void MakeApiInfo() {
+		protected override void MakeApiInfo() {
 			string vendor = new String( (sbyte*)GL.GetString( StringName.Vendor ) );
 			string renderer = new String( (sbyte*)GL.GetString( StringName.Renderer ) );
 			string version = new String( (sbyte*)GL.GetString( StringName.Version ) );
