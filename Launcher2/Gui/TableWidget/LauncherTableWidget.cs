@@ -81,12 +81,12 @@ namespace Launcher2 {
 			DrawTextArgs args = new DrawTextArgs( header, titleFont, true );
 			TableEntry headerEntry = default( TableEntry );
 			DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref headerEntry );
-			MaxIndex = Count;
+			maxIndex = Count;
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
-					MaxIndex = i;
+					maxIndex = i;
 					break;
 				}
 			}
@@ -112,34 +112,44 @@ namespace Launcher2 {
 			return true;
 		}
 		
-		int HeaderStartY, HeaderEndY;
+		int headerStartY, headerEndY;
+		int numEntries = 0;
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
 			drawer.DrawRect( foreCol, 0, Y, Window.Width, 5 );
 			drawer.DrawRect( foreCol, 0, Y + size.Height + 10, Window.Width, 3 );
-			HeaderStartY = Y;
-			HeaderEndY = Y + size.Height + 10;
+			headerStartY = Y;
+			headerEndY = Y + size.Height + 10;
 			
 			args = new DrawTextArgs( "I", font, true );
 			int y = Y + size.Height + 10;
 			size = drawer.MeasureSize( ref args );
 			
-			for( ; ; ) {
+			numEntries = 0;
+			for( ; ; ) {				
 				if( y + size.Height > Window.Height ) break;
+				numEntries++;
 				drawer.DrawRect( foreCol, 0, y, Window.Width, 1 );
 				y += size.Height + 5;
 			}
 		}
 		
-		int MaxIndex;
+		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
 			drawer.DrawRect( backCol, Window.Width - 10, Y, 10, Window.Height - Y );
 			float scale = (Window.Height - 10 - Y) / (float)Count;
 			
 			int y1 = (int)(Y + CurrentIndex * scale);
-			int height = (int)((MaxIndex - CurrentIndex) * scale);
+			int height = (int)((maxIndex - CurrentIndex) * scale);
 			drawer.DrawRect( scrollCol, Window.Width - 10, y1, 10, height );
+		}
+		
+		public void ClampIndex() {
+			if( CurrentIndex >= Count - numEntries )
+				CurrentIndex = Count - numEntries;
+			if( CurrentIndex < 0 )
+				CurrentIndex = 0;
 		}
 		
 		class NameComparer : IComparer<TableEntry> {

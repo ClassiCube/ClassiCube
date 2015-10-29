@@ -86,7 +86,7 @@ namespace Launcher2 {
 			
 			string text = widgets[0] == null ?
 				String.Format( format, ResourceFetcher.EstimateDownloadSize().ToString( "F2" ) )
-				: (widgets[0] as LauncherLabelWidget).Text;
+				: ((LauncherLabelWidget)widgets[0]).Text;
 			MakeTextAt( statusFont, text, 0, 5 );
 
 			// Clear the entire previous widgets state.
@@ -110,7 +110,7 @@ namespace Launcher2 {
 		}
 		
 		void SetStatus( string text ) {
-			LauncherLabelWidget widget = widgets[0] as LauncherLabelWidget;
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[0];
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );

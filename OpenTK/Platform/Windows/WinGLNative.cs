@@ -536,7 +536,8 @@ namespace OpenTK.Platform.Windows
 				icon = value;
 				if (window.WindowHandle != IntPtr.Zero)
 				{
-					API.SendMessage(window.WindowHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
+					Icon small = new Icon( value, 16, 16 );
+					API.SendMessage(window.WindowHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : small.Handle);
 					API.SendMessage(window.WindowHandle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 				}
 			}

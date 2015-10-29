@@ -84,11 +84,11 @@ namespace Launcher2 {
 		
 		protected string Get( int index ) {
 			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : ((widget as LauncherInputWidget)).Text;
+			return widget == null ? "" : ((LauncherInputWidget)widget).Text;
 		}
 		
 		protected void Set( int index, string text ) {
-			(widgets[index] as LauncherInputWidget)
+			((LauncherInputWidget)widgets[index])
 				.Redraw( drawer, text, inputFont );
 		}
 		

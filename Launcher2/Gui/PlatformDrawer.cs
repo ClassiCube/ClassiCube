@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Drawing;
-using OpenTK;
+using ClassicalSharp;
 using OpenTK.Platform;
 using OpenTK.Platform.X11;
-using ClassicalSharp;
 
 namespace Launcher2 {
 	
+	/// <summary> Platform specific class used to transfer a bitmap directly to the screen. </summary>
 	public abstract class PlatformDrawer {
 		
 		public abstract void Init( IWindowInfo info );
@@ -48,7 +48,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
-			X11WindowInfo x11Info = info as X11WindowInfo;
+			X11WindowInfo x11Info = (X11WindowInfo)info;
 			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true ) ) {
 				IntPtr image = API.XCreateImage( API.DefaultDisplay, x11Info.VisualInfo.Visual,
 				                                24, ImageFormat.ZPixmap, 0, fastBmp.Scan0,

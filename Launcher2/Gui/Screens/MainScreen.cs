@@ -13,14 +13,14 @@ namespace Launcher2 {
 		}
 		
 		protected override void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
+			LauncherButtonWidget button = (LauncherButtonWidget)widget;
 			button.Active = false;
 			button.Redraw( drawer, button.Text, textFont );
 			Dirty = true;
 		}
 		
 		protected override void SelectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
+			LauncherButtonWidget button = (LauncherButtonWidget)widget;
 			button.Active = true;
 			button.Redraw( drawer, button.Text, textFont );
 			Dirty = true;
@@ -59,13 +59,13 @@ namespace Launcher2 {
 		Font textFont;
 		void Draw() {
 			widgetIndex = 0;
-			MakeButtonAt( "Direct connect", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, -100,
-			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );
-			
 			MakeButtonAt( "ClassiCube.net", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, -50,
+			             buttonWidth, buttonHeight, 0, -100,
 			             (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
+			
+			MakeButtonAt( "Direct connect", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, -50,
+			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );			
 			
 			MakeButtonAt( "Singleplayer", Anchor.LeftOrTop, Anchor.BottomOrRight,
 			             sideButtonWidth, buttonHeight, 10, -10,

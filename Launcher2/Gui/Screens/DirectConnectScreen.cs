@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -20,7 +21,7 @@ namespace Launcher2 {
 			Resize();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LoadSavedInfo( drawer );
+				LoadSavedInfo();
 			}
 		}
 		
@@ -28,11 +29,23 @@ namespace Launcher2 {
 		}
 		
 		bool ccSkins;
-		void LoadSavedInfo( IDrawer2D drawer ) {
+		void LoadSavedInfo() {
+			Dictionary<string, object> metadata;
+			// restore what user last typed into the various fields
+			if( game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
+				Set( 3, (string)metadata["user"] );
+				Set( 4, (string)metadata["address"] );
+				Set( 5, (string)metadata["mppass"] );
+			} else {
+				LoadFromOptions();
+			}
+		}
+		
+		void LoadFromOptions() {
 			if( !Options.Load() )
 				return;
 			
-			string user = Options.Get( "launcher-username" ) ?? "";
+			string user = Options.Get( "launcher-username" ) ?? "UserXYZ";
 			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
 			string port = Options.Get( "launcher-port" ) ?? "25565";
 			ccSkins = Options.GetBool( "launcher-ccskins", false );
@@ -129,6 +142,23 @@ namespace Launcher2 {
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
 			ClientStartData data = new ClientStartData( Get( 3 ), mppass, ipPart, portPart );
 			Client.Start( data, ccSkins );
+		}
+		
+		public override void Dispose() {
+			StoreFields();
+			base.Dispose();
+		}
+		
+		void StoreFields() {
+			Dictionary<string, object> metadata;
+			if( !game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
+				metadata = new Dictionary<string, object>();
+				game.ScreenMetadata["screen-DC"] = metadata;
+			}
+			
+			metadata["user"] = Get( 3 );
+			metadata["address"] = Get( 4 );
+			metadata["mppass"] = Get( 5 );
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -44,11 +45,22 @@ namespace Launcher2 {
 		}
 		
 		void LoadSavedInfo( IDrawer2D drawer ) {
+			Dictionary<string, object> metadata;
+			// restore what user last typed into the various fields
+			if( game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
+				Set( 2, (string)metadata["user"] );
+				Set( 3, (string)metadata["pass"] );
+			} else {
+				LoadFromOptions();
+			}
+		}
+		
+		void LoadFromOptions() {
 			if( !Options.Load() )
 				return;
 			
-			string user = Options.Get( "launcher-cc-username" ) ?? "";
-			string pass = Options.Get( "launcher-cc-password" ) ?? "";
+			string user = Options.Get( "launcher-cc-username" ) ?? "UserXYZ";
+			string pass = Options.Get( "launcher-cc-password" ) ?? "PassXYZ";
 			pass = Secure.Decode( pass, user );
 			
 			Set( 2, user );
@@ -165,6 +177,22 @@ namespace Launcher2 {
 					Environment.NewLine + ex.Status;
 				SetStatus( text );
 			}
+		}
+		
+		public override void Dispose() {
+			StoreFields();
+			base.Dispose();
+		}
+		
+		void StoreFields() {
+			Dictionary<string, object> metadata;
+			if( !game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
+				metadata = new Dictionary<string, object>();
+				game.ScreenMetadata["screen-CC"] = metadata;
+			}
+			
+			metadata["user"] = Get( 2 );
+			metadata["pass"] = Get( 3 );
 		}
 	}
 }

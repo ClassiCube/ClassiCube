@@ -17,16 +17,16 @@ namespace Launcher2 {
 				return;
 			}
 			
-			if( mouseY >= HeaderStartY && mouseY < HeaderEndY ) {
-				if( mouseX < ColumnWidths[0] - 10 ) {
-					nameComp.Invert = !nameComp.Invert;
+			if( mouseY >= headerStartY && mouseY < headerEndY ) {
+				if( mouseX < ColumnWidths[0] - 10 ) {				
 					Array.Sort( usedEntries, 0, Count, nameComp );
 					Array.Sort( entries, 0, entries.Length, nameComp );
+					nameComp.Invert = !nameComp.Invert;
 					NeedRedraw();
-				} else if( mouseX > ColumnWidths[0] + 10 ) {
-					playerComp.Invert = !playerComp.Invert;
+				} else if( mouseX > ColumnWidths[0] + 10 ) {					
 					Array.Sort( usedEntries, 0, Count, playerComp );
 					Array.Sort( entries, 0, entries.Length, playerComp );
+					playerComp.Invert = !playerComp.Invert;
 					NeedRedraw();
 				} else {
 					DraggingWidth = true;

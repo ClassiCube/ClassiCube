@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;
 				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], 10, 
-				                          x + blockSize / 2, game.Height - 18 );
+				                          x + blockSize / 2, game.Height - 19 );
 				if( i == game.Inventory.HeldBlockIndex )
 					selectedBlock.X1 = x;
 			}		

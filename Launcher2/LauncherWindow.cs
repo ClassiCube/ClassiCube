@@ -1,28 +1,50 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Net;
 using System.Threading;
 using ClassicalSharp;
 using ClassicalSharp.Network;
 using OpenTK;
 using OpenTK.Graphics;
-using System.Net;
 
 namespace Launcher2 {
 
 	public sealed class LauncherWindow {
 		
+		/// <summary> Underlying native window instance. </summary>
 		public NativeWindow Window;
+		
+		/// <summary> Platform specific class used to draw 2D elements, 
+		/// such as text, rounded rectangles and lines. </summary>
 		public IDrawer2D Drawer;
-		public LauncherScreen screen;
+		
+		/// <summary> Currently active screen. </summary>
+		public LauncherScreen Screen;
+		
+		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
 		public bool Dirty;
+		
+		/// <summary> Currently active logged in session with classicube.net. </summary>
 		public ClassicubeSession Session = new ClassicubeSession();
+		
+		/// <summary> Queue used to download resources asynchronously. </summary>
 		public AsyncDownloader Downloader;
 		
+		/// <summary> Returns the width of the client drawing area. </summary>
 		public int Width { get { return Window.Width; } }
 		
+		/// <summary> Returns the height of the client drawing area. </summary>
 		public int Height { get { return Window.Height; } }
 		
+		/// <summary> Bitmap that contains the entire array of pixels that describe the client drawing area. </summary>
 		public Bitmap Framebuffer;
+		
+		/// <summary> Contains metadata attached for different screen instances, 
+		/// typically used to save 'last text entered' text when a screen is disposed. </summary>
+		public Dictionary<string, Dictionary<string, object>> ScreenMetadata = 
+			new Dictionary<string, Dictionary<string, object>>();
+		
 		Font logoFont, logoItalicFont;
 		PlatformDrawer platformDrawer;
 		public void Init() {
@@ -42,21 +64,21 @@ namespace Launcher2 {
 
 		void FocusedChanged( object sender, EventArgs e ) {
 			MakeBackground();
-			screen.Resize();
+			Screen.Resize();
 		}
 
 		void Resize( object sender, EventArgs e ) {
 			platformDrawer.Resize( Window.WindowInfo );
 			MakeBackground();
-			screen.Resize();
+			Screen.Resize();
 		}
 		
 		public void SetScreen( LauncherScreen screen ) {
-			if( this.screen != null )
-				this.screen.Dispose();
+			if( this.Screen != null )
+				this.Screen.Dispose();
 			
 			MakeBackground();
-			this.screen = screen;
+			this.Screen = screen;
 			screen.Init();
 		}
 		
@@ -90,8 +112,8 @@ namespace Launcher2 {
 				Window.ProcessEvents();
 				if( !Window.Exists ) break;
 				
-				screen.Tick();
-				if( Dirty || screen.Dirty )
+				Screen.Tick();
+				if( Dirty || Screen.Dirty )
 					Display();
 				Thread.Sleep( 1 );
 			}
@@ -99,7 +121,7 @@ namespace Launcher2 {
 		
 		void Display() {
 			Dirty = false;
-			screen.Dirty = false;
+			Screen.Dirty = false;
 			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
 		}
 		

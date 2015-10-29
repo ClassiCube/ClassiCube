@@ -8,16 +8,22 @@ namespace ClassicalSharp {
 		
 		/// <summary> Minimum world coordinates of the block's bounding box. </summary>
 		public Vector3 Min;
+		
 		/// <summary> Maximum world coordinates of the block's bounding box. </summary>
-		public Vector3 Max;		
+		public Vector3 Max;
+		
 		/// <summary> Integer world coordinates of the block. </summary>
-		public Vector3I BlockPos;	
+		public Vector3I BlockPos;
+		
 		/// <summary> Integer world coordinates of the neighbouring block that is closest to the client.</summary>
-		public Vector3I TranslatedPos;		
+		public Vector3I TranslatedPos;
+		
 		/// <summary> Whether this instance actually has a selected block currently. </summary>
-		public bool Valid = true;	
+		public bool Valid = true;
+		
 		/// <summary> Face of the picked block that is closet to the client. </summary>
-		public CpeBlockFace BlockFace;	
+		public CpeBlockFace BlockFace;
+		
 		/// <summary> Block type of this selected block. </summary>
 		public byte BlockType;
 		

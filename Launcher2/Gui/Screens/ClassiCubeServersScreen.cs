@@ -39,7 +39,7 @@ namespace Launcher2 {
 			if( lastInput == widgets[1] ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.FilterEntries( lastInput.Text );
-				ClampIndex();
+				table.ClampIndex();
 				Resize();
 			}
 		}
@@ -56,6 +56,9 @@ namespace Launcher2 {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( game.clearColour );
 				Draw();
+				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+				table.ClampIndex();
+				table.Redraw( drawer, inputFont, titleFont );
 			}
 			Dirty = true;
 		}
@@ -85,7 +88,7 @@ namespace Launcher2 {
 		
 		void MakeTableWidget() {
 			if( widgets[tableIndex] != null ) {
-				LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.Redraw( drawer, inputFont, titleFont );
 				return;
 			}
@@ -115,16 +118,8 @@ namespace Launcher2 {
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.CurrentIndex -= e.Delta;
-			ClampIndex();
+			table.ClampIndex();
 			Resize();
-		}
-		
-		void ClampIndex() {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-			if( table.CurrentIndex >= table.Count )
-				table.CurrentIndex = table.Count - 1;
-			if( table.CurrentIndex < 0 )
-				table.CurrentIndex = 0;
 		}
 		
 		string HashFilter( string input ) {
