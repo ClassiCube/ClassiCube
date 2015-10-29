@@ -74,7 +74,7 @@ namespace ClassicalSharp.Singleplayer {
 		public void OnBlockPlaced( int x, int y, int z, byte block ) {
 			if( !Enabled ) return;
 			
-			int index = ( y * length + z ) * width + x;
+			int index = (y * length + z) * width + x;
 			if( block == (byte)Block.Lava ) {
 				Lava.Enqueue( defLavaTick | (uint)index );
 			} else if( block == (byte)Block.Water ) {
@@ -85,6 +85,8 @@ namespace ClassicalSharp.Singleplayer {
 				Explode( 4, x, y, z );
 			} else if( block == (byte)Block.Sapling ) {
 				GrowTree( x, y, z );
+			} else if( block == (byte)Block.Sponge ) {
+				PlaceSponge( x, y, z );
 			}
 		}
 		
@@ -244,6 +246,7 @@ namespace ClassicalSharp.Singleplayer {
 			if( block == (byte)Block.Lava || block == (byte)Block.StillLava ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
 			} else if( info.CollideType[block] == BlockCollideType.WalkThrough ) {
+				if( CheckIfSponge( x, y, z ) ) return;
 				Water.Enqueue( defWaterTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Water );
 			}
@@ -430,6 +433,33 @@ namespace ClassicalSharp.Singleplayer {
 			return true;
 		}
 		
+		#endregion
+		
+		#region Sponge
+		
+		void PlaceSponge( int x, int y, int z ) {
+			for( int yy = y - 2; yy <= y + 2; yy++ ) {
+				for( int zz = z - 2; zz <= z + 2; zz++ ) {
+					for( int xx = x - 2; xx <= x + 2; xx++ ) {
+						byte block = map.SafeGetBlock( xx, yy, zz );
+						if( block == (byte)Block.Water || block == (byte)Block.StillWater )
+							map.SetBlock( xx, yy, zz, (byte)Block.Air );
+					}
+				}
+			}
+		}
+		
+		bool CheckIfSponge( int x, int y, int z ) {
+			for( int yy = y - 2; yy <= y + 2; yy++ ) {
+				for( int zz = z - 2; zz <= z + 2; zz++ ) {
+					for( int xx = x - 2; xx <= x + 2; xx++ ) {
+						byte block = map.SafeGetBlock( xx, yy, zz );
+						if( block == (byte)Block.Sponge ) return true;
+					}
+				}
+			}
+			return false;
+		}
 		#endregion
 	}
 }

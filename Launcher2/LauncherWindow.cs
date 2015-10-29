@@ -125,7 +125,7 @@ namespace Launcher2 {
 			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
 		}
 		
-		internal FastColour clearColour = new FastColour( 30, 30, 30 );
+		internal FastColour clearColour = new FastColour( 101, 79, 119 );
 		public void MakeBackground() {
 			if( Framebuffer != null )
 				Framebuffer.Dispose();
