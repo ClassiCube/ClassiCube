@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		
 		public abstract void Connect( IPAddress address, int port );
 		
-		public abstract void SendChat( string text );
+		public abstract void SendChat( string text, bool partial );
 		
 		public abstract void SendPosition( Vector3 pos, float yaw, float pitch );
 		

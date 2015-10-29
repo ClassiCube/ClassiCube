@@ -29,7 +29,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.CommandManager.RegisterCommand( new GenerateCommand() );
 		}
 		
-		public override void SendChat( string text ) {
+		public override void SendChat( string text, bool partial ) {
 			if( !String.IsNullOrEmpty( text ) ) {
 				game.Chat.Add( text, CpeMessage.Normal );
 			}

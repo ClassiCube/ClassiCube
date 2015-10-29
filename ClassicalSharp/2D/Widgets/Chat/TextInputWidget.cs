@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 				caretPos = -1; realIndex = 500000;
 			}
 			
-			int sum = 0, indexX = -1, indexY = 0;			
+			int sum = 0, indexX = -1, indexY = 0;
 			for( int i = 0; i < lines; i++ ) {
 				if( partLens[i] == 0 ) break;
 				
@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 					break;
 				}
 				sum += partLens[i];
-			}		
+			}
 			if( indexX == -1 ) indexX = partLens[indexY];
 
 			if( indexX == 64 ) {
@@ -148,9 +148,17 @@ namespace ClassicalSharp {
 		
 		static char[] trimChars = { ' ' };
 		public void SendTextInBufferAndReset() {
+			int packetsCount = 0;
 			for( int i = 0; i < parts.Length; i++ ) {
 				if( parts[i] == null ) break;
-				game.Chat.Send( parts[i].TrimEnd( trimChars ) );
+				packetsCount++;
+			}
+			// split up into both partial and final packet.
+			if( packetsCount > 0 ) {
+				for( int i = 0; i < packetsCount - 1; i++ ) {
+					game.Chat.Send( parts[i].TrimEnd( trimChars ), true );
+				}			
+				game.Chat.Send( parts[packetsCount - 1].TrimEnd( trimChars ), false );
 			}
 			
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.

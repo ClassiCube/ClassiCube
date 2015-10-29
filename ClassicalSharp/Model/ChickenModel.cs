@@ -39,7 +39,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float legX1, float legX2 ) {
-			const float y1 = 0f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;		
+			const float y1 = 1/64f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;		
 			YQuad( 32, 0, 3, 3, x2, x1, z1, z2, y1, false ); // bottom feet
 			ZQuad( 36, 3, 1, 5, legX1, legX2, y1, y2, z2, false ); // vertical part of leg
 			return new ModelPart( index - 2 * 4, 2 * 4 );

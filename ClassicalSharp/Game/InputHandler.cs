@@ -59,10 +59,7 @@ namespace ClassicalSharp {
 
 		bool[] buttonsDown = new bool[3];
 		DateTime lastClick = DateTime.MinValue;
-		public void PickBlocks( bool cooldown ) {
-			bool left = game.IsMousePressed( MouseButton.Left );
-			bool right = game.IsMousePressed( MouseButton.Right );
-			bool middle = game.IsMousePressed( MouseButton.Middle );
+		public void PickBlocks( bool cooldown, bool left, bool middle, bool right ) {
 			DateTime now = DateTime.UtcNow;
 			double delta = (now - lastClick).TotalMilliseconds;
 			if( cooldown && delta < 250 ) return; // 4 times per second
@@ -225,7 +222,10 @@ namespace ClassicalSharp {
 
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( game.activeScreen == null || !game.activeScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
-				PickBlocks( false );
+				bool left = e.Button == MouseButton.Left;
+				bool middle = e.Button == MouseButton.Middle;
+				bool right = e.Button == MouseButton.Right;
+				PickBlocks( false, left, middle, right );
 			} else {
 				lastClick = DateTime.UtcNow;
 			}
@@ -286,7 +286,7 @@ namespace ClassicalSharp {
 			
 			if( Hotkeys.IsHotkey( key, game.Keyboard, out text, out more ) ) {
 				if( !more )
-					game.Network.SendChat( text );
+					game.Network.SendChat( text, false );
 				else if( game.activeScreen is NormalScreen )
 					((NormalScreen)game.activeScreen).OpenTextInputBar( text );
 			}

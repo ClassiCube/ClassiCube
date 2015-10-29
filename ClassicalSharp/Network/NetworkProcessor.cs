@@ -48,11 +48,13 @@ namespace ClassicalSharp {
 			SendPacket();
 		}
 		
-		public override void SendChat( string text ) {
-			if( !String.IsNullOrEmpty( text ) ) {
-				MakeMessagePacket( text );
-				SendPacket();
-			}
+		public override void SendChat( string text, bool partial ) {
+			if( String.IsNullOrEmpty( text ) ) return;
+			
+			byte payload = !usePartialMessages ? (byte)0xFF:
+				partial ? (byte)1 : (byte)0;
+			MakeMessagePacket( text, payload );
+			SendPacket();
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
@@ -162,9 +164,9 @@ namespace ClassicalSharp {
 			WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
 		}
 		
-		private static void MakeMessagePacket( string text ) {
+		private static void MakeMessagePacket( string text, byte payload ) {
 			WriteUInt8( (byte)PacketId.Message );
-			WriteUInt8( 0xFF ); // unused
+			WriteUInt8( payload );
 			WriteString( text );
 		}
 		
@@ -310,7 +312,7 @@ namespace ClassicalSharp {
 			map = null;
 			gzipStream.Dispose();
 			if( sendWomId && !sentWomId ) {
-				SendChat( "/womid WoMClient-2.0.7" );
+				SendChat( "/womid WoMClient-2.0.7", false );
 				sentWomId = true;
 			}
 			gzipStream = null;

@@ -54,12 +54,15 @@ namespace ClassicalSharp {
 		
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes, usingTexturePack;
+		bool usePartialMessages;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock",
 			"EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions",
 			"ChangeModel", "EnvMapAppearance", "EnvWeatherType", 
 			"HackControl", "MessageTypes", "PlayerClick",
+			// proposals
+			"FullCP437", "LongerMessages",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -84,6 +87,8 @@ namespace ClassicalSharp {
 			} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
 				usingTexturePack = true;
 				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
+			} else if( extName == "LongerMessages" ) {
+				usePartialMessages = true;
 			}
 			cpeServerExtensionsCount--;
 			
@@ -92,7 +97,7 @@ namespace ClassicalSharp {
 				SendPacket();
 				for( int i = 0; i < clientExtensions.Length; i++ ) {
 					string name = clientExtensions[i];
-					int version = (name == "ExtPlayerList" || name == "EnvMapApperance") ? 2 : 1;
+					int version = (name == "ExtPlayerList") ? 2 : 1;
 					MakeExtEntry( name, version );
 					SendPacket();
 				}
@@ -268,6 +273,7 @@ namespace ClassicalSharp {
 			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeLevel( reader.ReadInt16() );
 			if( usingTexturePack ) {
+				// TODO: proper envmapappearance version 2 support
 				game.Map.SetCloudsLevel( reader.ReadInt16() );
 				short maxViewDist = reader.ReadInt16(); // TODO: what to do with this?
 			}

@@ -24,15 +24,15 @@ namespace ClassicalSharp {
 		
 		public int FontSize = 12;
 		
-		public void Send( string text ) {
+		public void Send( string text, bool partial ) {
 			if( String.IsNullOrEmpty( text ) ) return;
-			
 			InputLog.Add( text );
+			
 			if( CommandManager.IsCommandPrefix( text ) ) {
 				game.CommandManager.Execute( text );
 				return;
 			}
-			game.Network.SendChat( text );
+			game.Network.SendChat( text, partial );
 		}
 		
 		public void Add( string text ) {

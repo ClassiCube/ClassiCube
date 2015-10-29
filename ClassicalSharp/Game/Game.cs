@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( defaultTexPack, this );
-			Inventory = new Inventory( this );		
+			Inventory = new Inventory( this );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
@@ -217,7 +217,11 @@ namespace ClassicalSharp {
 				MapRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
 				WeatherRenderer.Render( e.Time );
-				InputHandler.PickBlocks( true );
+				
+				bool left = IsMousePressed( MouseButton.Left );
+				bool middle = IsMousePressed( MouseButton.Middle );
+				bool right = IsMousePressed( MouseButton.Right );				
+				InputHandler.PickBlocks( true, left, middle, right );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
