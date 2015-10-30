@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 			"ClickDistance", "CustomBlocks", "HeldBlock",
 			"EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions",
-			"ChangeModel", "EnvMapAppearance", "EnvWeatherType", 
+			"ChangeModel", "EnvMapAppearance", "EnvWeatherType",
 			"HackControl", "MessageTypes", "PlayerClick",
 			// proposals
 			"FullCP437", "LongerMessages",
@@ -163,16 +163,19 @@ namespace ClassicalSharp {
 			string groupName = reader.ReadAsciiString();
 			byte groupRank = reader.ReadUInt8();
 			
-			if( nameId >= 0 && nameId <= 255 ) {
-				CpeListInfo oldInfo = game.CpePlayersList[nameId];
-				CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
-				game.CpePlayersList[nameId] = info;
-				
-				if( oldInfo != null ) {
-					game.Events.RaiseCpeListInfoChanged( (byte)nameId );
-				} else {
-					game.Events.RaiseCpeListInfoAdded( (byte)nameId );
-				}
+			if( nameId >= 0 && nameId <= 255 )
+				AddCpeInfo( (byte)nameId, playerName, listName, groupName, groupRank );
+		}
+		
+		void AddCpeInfo( byte nameId, string playerName, string listName, string groupName, byte groupRank ) {
+			CpeListInfo oldInfo = game.CpePlayersList[nameId];
+			CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
+			game.CpePlayersList[nameId] = info;
+			
+			if( oldInfo != null ) {
+				game.Events.RaiseCpeListInfoChanged( (byte)nameId );
+			} else {
+				game.Events.RaiseCpeListInfoAdded( (byte)nameId );
 			}
 		}
 		
