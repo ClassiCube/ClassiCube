@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 			base.Init();
 			game.Events.CpeListInfoAdded += PlayerListInfoAdded;
 			game.Events.CpeListInfoRemoved += PlayerListInfoRemoved;
-			game.Events.CpeListInfoChanged += PlayerListInfoChanged;			
+			game.Events.CpeListInfoChanged += PlayerListInfoChanged;
 		}
 		
 		public override void Dispose() {
@@ -110,6 +110,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public override string GetNameUnder( int mouseX, int mouseY ) {
+			for( int i = 0; i < namesCount; i++ ) {
+				Texture texture = textures[i];
+				if( texture.IsValid && texture.Bounds.Contains( mouseX, mouseY )
+				   && info[i].ListName != null )
+					return Utils.StripColours( info[i].ListName );
+			}
+			return null;
+		}
+		
 		void AddPlayerInfo( CpeListInfo player, int index ) {
 			DrawTextArgs args = new DrawTextArgs( player.ListName, font, true );
 			Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
@@ -145,7 +155,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DeleteGroup( ref int i ) {
-			graphicsApi.DeleteTexture( ref textures[i] );		
+			graphicsApi.DeleteTexture( ref textures[i] );
 			RemoveItemAt( info, i );
 			RemoveItemAt( textures, i );
 			

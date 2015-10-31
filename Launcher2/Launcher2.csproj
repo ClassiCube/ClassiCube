@@ -64,6 +64,7 @@
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
+    <Compile Include="LauncherWindow.Background.cs" />
     <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />

@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 		}
 		
 		public IntPtr Scan0;
-		public int Stride;		
+		public int Stride;
 		public int Width, Height;
 		
 		public static bool CheckFormat( PixelFormat format ) {
@@ -80,6 +80,32 @@ namespace ClassicalSharp {
 				int* dstRow = dst.GetRowPtr( dstY + y );
 				for( int x = 0; x < size; x++ ) {
 					dstRow[dstX + x] = srcRow[srcX + x];
+				}
+			}
+		}
+		
+		public static void CopyScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
+		                                    Rectangle srcRect, Rectangle dstRect, byte rgbScale ) {
+			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
+			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
+			int srcX = srcRect.X, dstX = dstRect.X;
+			int srcY = srcRect.Y, dstY = dstRect.Y;
+			int scaleWidth = scale.Width, scaleHeight = scale.Height;
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int scaledY = yy * srcHeight / scaleHeight;
+				int* srcRow = src.GetRowPtr( srcY + scaledY );
+				int* dstRow = dst.GetRowPtr( dstY + yy );
+				
+				for( int xx = 0; xx < dstWidth; xx++ ) {
+					int scaledX = xx * srcWidth / scaleWidth;
+					int pixel = srcRow[srcX + scaledX];
+					
+					int col = pixel & ~0xFFFFFF; // keep a but clear rgb
+					col |= ((pixel & 0xFF) * rgbScale / 255);
+					col |= (((pixel >> 8) & 0xFF) * rgbScale / 255) << 8;
+					col |= (((pixel >> 16) & 0xFF) * rgbScale / 255) << 16;
+					dstRow[dstX + xx] = col;
 				}
 			}
 		}

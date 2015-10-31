@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
@@ -11,6 +12,10 @@ namespace ClassicalSharp {
 		public int Width, Height;
 		public float U1, V1;
 		public float U2, V2;
+		
+		public Rectangle Bounds {
+			get { return new Rectangle( X1, Y1, Width, Height ); }
+		}
 
 		public Texture( int id, int x, int y, int width, int height, float u2, float v2 )
 			: this( id, x, y, width, height, 0, u2, 0, v2 )	{

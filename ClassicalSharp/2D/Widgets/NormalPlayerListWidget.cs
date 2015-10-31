@@ -50,6 +50,15 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public override string GetNameUnder( int mouseX, int mouseY ) {
+			for( int i = 0; i < namesCount; i++ ) {
+				Texture texture = textures[i];
+				if( texture.IsValid && texture.Bounds.Contains( mouseX, mouseY ) )
+					return Utils.StripColours( info[i].Name );
+			}
+			return null;
+		}
+		
 		void AddPlayerInfo( Player player ) {
 			DrawTextArgs args = new DrawTextArgs( player.DisplayName, font, true );
 			Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );

@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		
 		ChatScreen chat;
 		BlockHotbarWidget hotbar;
-		Widget playerList;
+		PlayerListWidget playerList;
 		Font playerFont;
 		
 		public override void Render( double delta ) {
@@ -127,6 +127,15 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseScroll( int delta ) {
 			return chat.HandlesMouseScroll( delta );
+		}
+		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			if( button != MouseButton.Left || playerList == null || !HandlesAllInput ) return false;
+			
+			string name = playerList.GetNameUnder( mouseX, mouseY );
+			if( name == null ) return false;
+			chat.AppendTextToInput( name + " " );
+			return true;
 		}
 	}
 }

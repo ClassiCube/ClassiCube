@@ -10,12 +10,12 @@ using OpenTK.Graphics;
 
 namespace Launcher2 {
 
-	public sealed class LauncherWindow {
+	public sealed partial class LauncherWindow {
 		
 		/// <summary> Underlying native window instance. </summary>
 		public NativeWindow Window;
 		
-		/// <summary> Platform specific class used to draw 2D elements, 
+		/// <summary> Platform specific class used to draw 2D elements,
 		/// such as text, rounded rectangles and lines. </summary>
 		public IDrawer2D Drawer;
 		
@@ -40,9 +40,9 @@ namespace Launcher2 {
 		/// <summary> Bitmap that contains the entire array of pixels that describe the client drawing area. </summary>
 		public Bitmap Framebuffer;
 		
-		/// <summary> Contains metadata attached for different screen instances, 
+		/// <summary> Contains metadata attached for different screen instances,
 		/// typically used to save 'last text entered' text when a screen is disposed. </summary>
-		public Dictionary<string, Dictionary<string, object>> ScreenMetadata = 
+		public Dictionary<string, Dictionary<string, object>> ScreenMetadata =
 			new Dictionary<string, Dictionary<string, object>>();
 		
 		Font logoFont, logoItalicFont;
@@ -106,7 +106,7 @@ namespace Launcher2 {
 				SetScreen( new ResourcesScreen( this ) );
 			} else {
 				SetScreen( new MainScreen( this ) );
-			}		
+			}
 			
 			while( true ) {
 				Window.ProcessEvents();
@@ -123,28 +123,6 @@ namespace Launcher2 {
 			Dirty = false;
 			Screen.Dirty = false;
 			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
-		}
-		
-		internal FastColour clearColour = new FastColour( 30, 30, 30 );
-		public void MakeBackground() {
-			if( Framebuffer != null )
-				Framebuffer.Dispose();
-			
-			Framebuffer = new Bitmap( Width, Height );
-			using( IDrawer2D drawer = Drawer ) {
-				drawer.SetBitmap( Framebuffer );
-				drawer.Clear( clearColour );
-				
-				DrawTextArgs args1 = new DrawTextArgs( "&eClassical", logoItalicFont, true );
-				Size size1 = drawer.MeasureSize( ref args1 );
-				DrawTextArgs args2 = new DrawTextArgs( "&eSharp", logoFont, true );
-				Size size2 = drawer.MeasureSize( ref args2 );
-					
-				int xStart = Width / 2 - (size1.Width + size2.Width ) / 2;				
-				drawer.DrawText( ref args1, xStart, 20 );
-				drawer.DrawText( ref args2, xStart + size1.Width, 20 );
-			}
-			Dirty = true;
 		}
 		
 		public void Dispose() {

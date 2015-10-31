@@ -214,9 +214,15 @@ namespace ClassicalSharp {
 			suppressNextPress = true;
 			HandlesAllInput = true;
 			game.Keyboard.KeyRepeat = true;
+			
 			textInput.chatInputText.Clear();
 			textInput.chatInputText.Append( 0, initialText );
 			textInput.Init();
+		}
+		
+		public void AppendTextToInput( string text ) {
+			if( !HandlesAllInput ) return;
+			textInput.AppendText( text );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

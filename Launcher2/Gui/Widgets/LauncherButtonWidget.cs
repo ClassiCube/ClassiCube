@@ -14,7 +14,7 @@ namespace Launcher2 {
 		public LauncherButtonWidget( LauncherWindow window ) : base( window ) {
 		}
 		
-		static FastColour boxCol = new FastColour( 119, 100, 135 ), shadowCol = new FastColour( 68, 57, 77 ),
+		static FastColour boxCol = new FastColour( 132, 111, 149 ), shadowCol = new FastColour( 68, 57, 77 ),
 		boxColActive = new FastColour( 169, 143, 192 ), shadowColActive = new FastColour( 97, 81, 110 );
 		public void DrawAt( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
 		                   Anchor verAnchor, int width, int height, int x, int y ) {

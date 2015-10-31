@@ -26,6 +26,8 @@ namespace ClassicalSharp {
 			SortPlayerInfo();
 		}
 		
+		public abstract string GetNameUnder( int mouseX, int mouseY );
+		
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = false;
 			graphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );

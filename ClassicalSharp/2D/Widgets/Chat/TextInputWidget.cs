@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 			if( packetsCount > 0 ) {
 				for( int i = 0; i < packetsCount - 1; i++ ) {
 					game.Chat.Send( parts[i].TrimEnd( trimChars ), true );
-				}			
+				}
 				game.Chat.Send( parts[packetsCount - 1].TrimEnd( trimChars ), false );
 			}
 			
@@ -173,6 +173,22 @@ namespace ClassicalSharp {
 			for( int i = 0; i < parts.Length; i++ ) {
 				parts[i] = null;
 			}
+		}
+		
+		public void AppendText( string text ) {
+			if( chatInputText.Length + text.Length > len ) {
+				text = text.Substring( 0, len - chatInputText.Length );
+			}
+			
+			if( caretPos == -1 ) {
+				chatInputText.Append( chatInputText.Length, text );
+			} else {
+				chatInputText.Append( caretPos, text );
+				caretPos += text.Length;
+				if( caretPos >= chatInputText.Length ) caretPos = -1;
+			}
+			Dispose();
+			Init();
 		}
 		
 		#region Input handling
@@ -284,20 +300,7 @@ namespace ClassicalSharp {
 						return true;
 					}
 				}
-				
-				if( chatInputText.Length + text.Length > len ) {
-					text = text.Substring( 0, len - chatInputText.Length );
-				}
-				
-				if( caretPos == -1 ) {
-					chatInputText.Append( chatInputText.Length, text );
-				} else {
-					chatInputText.Append( caretPos, text );
-					caretPos += text.Length;
-					if( caretPos >= chatInputText.Length ) caretPos = -1;
-				}
-				Dispose();
-				Init();
+				AppendText( text );
 				return true;
 			} else if( key == Key.C && controlDown ) {
 				if( !chatInputText.Empty ) {
