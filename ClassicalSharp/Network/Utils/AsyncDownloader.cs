@@ -163,6 +163,18 @@ namespace ClassicalSharp.Network {
 				if( !( ex is WebException || ex is ArgumentException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );
 			}
+			
+			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
+			// We can detect this as every single property access raises an ArgumentException.
+			try {
+				Bitmap bmp = value as Bitmap;
+				if( bmp != null ) {
+					int height = bmp.Height;
+				}
+			} catch (ArgumentException) {
+				Utils.LogDebug( "Failed to download from: " + url );
+				value = null;
+			}
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
