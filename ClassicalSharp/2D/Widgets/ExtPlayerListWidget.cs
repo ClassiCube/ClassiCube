@@ -114,8 +114,8 @@ namespace ClassicalSharp {
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid && texture.Bounds.Contains( mouseX, mouseY )
-				   && info[i].ListName != null )
-					return Utils.StripColours( info[i].ListName );
+				   && info[i].PlayerName != null )
+					return Utils.StripColours( info[i].PlayerName );
 			}
 			return null;
 		}
