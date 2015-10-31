@@ -333,6 +333,7 @@ namespace ClassicalSharp {
 				game.UpdateBlock( x, y, z, type );
 		}
 		
+		bool[] needRemoveNames;
 		void HandleAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
@@ -342,8 +343,12 @@ namespace ClassicalSharp {
 			// Some servers (such as LegendCraft) declare they support ExtPlayerList but
 			// don't send ExtAddPlayerName packets. So we add a special case here, even
 			// though it is technically against the specification.
-			if( UsingExtPlayerList )
+			if( UsingExtPlayerList ) {
 				AddCpeInfo( entityId, name, name, "Players", 0 );
+				if( needRemoveNames == null )
+					needRemoveNames = new bool[EntityList.MaxCount];
+				needRemoveNames[entityId] = true;
+			}
 		}
 		
 		void HandleEntityTeleport() {
@@ -389,6 +394,14 @@ namespace ClassicalSharp {
 				game.Events.RaiseEntityRemoved( entityId );
 				player.Despawn();
 				game.Players[entityId] = null;
+			}
+			
+			// See comment about LegendCraft in AddEntity
+			if( needRemoveNames != null &&
+			   needRemoveNames[entityId] && player != null ) {
+				game.Events.RaiseCpeListInfoRemoved( entityId );
+				game.CpePlayersList[entityId] = null;
+				needRemoveNames[entityId] = false;
 			}
 		}
 		
