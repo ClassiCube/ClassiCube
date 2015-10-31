@@ -54,7 +54,10 @@ namespace Launcher2 {
 		public override void Resize() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				drawer.Clear( game.clearColour );
+				game.ClearArea( 0, 0, game.Width, 100 );
+				drawer.Clear( game.clearColour, 0, 100, 
+				             game.Width, game.Height - 100 );
+				
 				Draw();
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.ClampIndex();

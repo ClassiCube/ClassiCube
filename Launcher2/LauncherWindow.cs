@@ -100,6 +100,7 @@ namespace Launcher2 {
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
+			TryLoadTexturePack();
 			platformDrawer.Init( Window.WindowInfo );
 			
 			if( !ResourceFetcher.CheckAllResourcesExist() ) {

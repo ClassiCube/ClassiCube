@@ -4,7 +4,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.TexturePack;
-using OpenTK;
 
 namespace Launcher2 {
 	

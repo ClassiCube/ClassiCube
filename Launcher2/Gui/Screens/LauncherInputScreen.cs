@@ -69,8 +69,8 @@ namespace Launcher2 {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput.Width > lastInput.ButtonWidth )
-					drawer.Clear( game.clearColour, lastInput.X, lastInput.Y,
-					             lastInput.Width + 1, lastInput.Height + 1 );
+					game.ClearArea( lastInput.X, lastInput.Y,
+					               lastInput.Width + 1, lastInput.Height + 1 );
 				lastInput.Redraw( drawer, lastInput.Text, inputFont );
 				Dirty = true;
 			}
@@ -128,7 +128,7 @@ namespace Launcher2 {
 		}
 		
 		protected void MakeInput( string text, int width, Anchor verAnchor, bool password,
-		                               int x, int y, int maxChars ) {
+		                         int x, int y, int maxChars ) {
 			if( widgets[widgetIndex] != null ) {
 				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
 				input.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );

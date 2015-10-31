@@ -112,8 +112,7 @@ namespace Launcher2 {
 				drawer.SetBitmap( game.Framebuffer );
 				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[6];
 				
-				drawer.Clear( game.clearColour, widget.X, widget.Y,
-				             widget.Width, widget.Height );
+				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
 				Dirty = true;
 			}

@@ -56,11 +56,8 @@ namespace Launcher2 {
 		}
 		
 		public static float EstimateDownloadSize() {
-			float sum = 0;
-			if( !File.Exists( "classic.jar" ) ) sum += 291 / 1024f;
-			if( !File.Exists( "1.6.2.jar" ) ) sum += 4621 / 1024f;
-			if( !File.Exists( "terrain-patch.png" ) ) sum += 7 / 1024f;
-			return sum;
+			return (291 + 4621 + 7) / 1024f;
+			// clasic.jar + 1.6.2.jar + terrain-patch.png
 		}
 	}
 }
