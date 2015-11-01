@@ -10,19 +10,16 @@ namespace OpenTK.Platform.MacOS.Carbon
 		IntPtr arrayRef;
 		public IntPtr Ref { get { return arrayRef; } set { arrayRef = value; } }
 
-		public CFArray(IntPtr reference)
-		{
+		public CFArray(IntPtr reference) {
 			arrayRef = reference;
 		}
 
-		public int Count
-		{
+		public int Count {
 			get { return CF.CFArrayGetCount(arrayRef); }
 		}
-		public IntPtr this[int index]
-		{
-			get
-			{
+		
+		public IntPtr this[int index] {
+			get {
 				if (index >= Count || index < 0)
 					throw new IndexOutOfRangeException();
 
@@ -30,37 +27,27 @@ namespace OpenTK.Platform.MacOS.Carbon
 			}
 		}
 	}
-	struct CFDictionary
-	{
-		public CFDictionary(IntPtr reference)
-		{
-			dictionaryRef = reference;
+	
+	struct CFDictionary {
+		public CFDictionary(IntPtr reference) {
+			DictRef = reference;
 		}
 
-		IntPtr dictionaryRef;
-		public IntPtr Ref { get { return dictionaryRef; } set { dictionaryRef = value; } }
+		public IntPtr DictRef;
 
-		public int Count
-		{
-			get
-			{
-				return CF.CFDictionaryGetCount(dictionaryRef);
-			}
+		public int Count {
+			get { return CF.CFDictionaryGetCount(DictRef); }
 		}
-		public double GetNumberValue(string key)
-		{
-			unsafe
-			{
-				double retval;
-				IntPtr cfnum = CF.CFDictionaryGetValue(dictionaryRef,
-				                                       CF.CFSTR(key));
+		
+		public unsafe double GetNumberValue(string key) {
+			double retval;
+			IntPtr cfnum = CF.CFDictionaryGetValue(DictRef, CF.CFSTR(key));
 
-				CF.CFNumberGetValue(cfnum, CF.CFNumberType.kCFNumberDoubleType, &retval);
-
-				return retval;
-			}
+			CF.CFNumberGetValue(cfnum, CF.CFNumberType.kCFNumberDoubleType, &retval);
+			return retval;
 		}
 	}
+	
 	class CF
 	{
 		const string appServices = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";

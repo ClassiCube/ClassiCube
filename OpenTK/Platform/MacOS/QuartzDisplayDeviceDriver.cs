@@ -30,25 +30,25 @@ namespace OpenTK.Platform.MacOS
 			Debug.Print("CoreGraphics reported {0} display(s).", displayCount);
 
 			for (int i = 0; i < displayCount; i++) {
-				IntPtr currentDisplay = displays[i];
+				IntPtr curDisplay = displays[i];
 
 				// according to docs, first element in the array is always the main display.
 				bool primary = (i == 0);
 				if (primary)
-					mainDisplay = currentDisplay;
+					mainDisplay = curDisplay;
 
 				// gets current settings
-				int currentWidth = CG.CGDisplayPixelsWide(currentDisplay);
-				int currentHeight = CG.CGDisplayPixelsHigh(currentDisplay);
+				int currentWidth = CG.CGDisplayPixelsWide(curDisplay);
+				int currentHeight = CG.CGDisplayPixelsHigh(curDisplay);
 				Debug.Print("Display {0} is at  {1}x{2}", i, currentWidth, currentHeight);
 
-				IntPtr displayModesPtr = CG.CGDisplayAvailableModes(currentDisplay);
+				IntPtr displayModesPtr = CG.CGDisplayAvailableModes(curDisplay);
 				CFArray displayModes = new CFArray(displayModesPtr);
 				Debug.Print("Supports {0} display modes.", displayModes.Count);
 
 				DisplayResolution opentk_dev_current_res = null;
 				List<DisplayResolution> opentk_dev_available_res = new List<DisplayResolution>();
-				IntPtr currentModePtr = CG.CGDisplayCurrentMode(currentDisplay);
+				IntPtr currentModePtr = CG.CGDisplayCurrentMode(curDisplay);
 				CFDictionary currentMode = new CFDictionary(currentModePtr);
 
 				for (int j = 0; j < displayModes.Count; j++)
@@ -59,7 +59,7 @@ namespace OpenTK.Platform.MacOS
 					int height = (int) dict.GetNumberValue("Height");
 					int bpp = (int) dict.GetNumberValue("BitsPerPixel");
 					double freq = dict.GetNumberValue("RefreshRate");
-					bool current = currentMode.Ref == dict.Ref;
+					bool current = currentMode.DictRef == dict.DictRef;
 
 					//if (current) Debug.Write("  * ");
 					//else Debug.Write("    ");
@@ -73,16 +73,16 @@ namespace OpenTK.Platform.MacOS
 						opentk_dev_current_res = thisRes;
 				}
 
-				HIRect bounds = CG.CGDisplayBounds(currentDisplay);
+				HIRect bounds = CG.CGDisplayBounds(curDisplay);
 				Rectangle newRect = new Rectangle(
-					(int)bounds.Origin.X, (int)bounds.Origin.Y, (int)bounds.Size.Width, (int)bounds.Size.Height);
+					(int)bounds.Origin.X, (int)bounds.Origin.Y, (int)bounds.Size.X, (int)bounds.Size.Y);
 
 				Debug.Print("Display {0} bounds: {1}", i, newRect);
 
 				DisplayDevice opentk_dev =
 					new DisplayDevice(opentk_dev_current_res, primary, opentk_dev_available_res, newRect);
 
-				displayMap.Add(opentk_dev, currentDisplay);
+				displayMap.Add(opentk_dev, curDisplay);
 			}
 		}
 

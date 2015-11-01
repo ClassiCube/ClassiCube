@@ -33,53 +33,35 @@ namespace OpenTK.Platform.MacOS.Carbon
 		short bottom;
 		short right;
 
-		internal Rect(short _left, short _top, short _width, short _height)
-		{
+		internal Rect(short _left, short _top, short _width, short _height) {
 			top = _top;
 			left = _left;
 			bottom = (short)(_top + _height);
 			right = (short)(_left + _width);
 		}
 
-		internal short X
-		{
+		internal short X {
 			get { return left; }
-			set
-			{
-				short width = Width;
-				left = value;
-				right = (short)(left + width);
-			}
 		}
-		internal short Y
-		{
+		
+		internal short Y {
 			get { return top; }
-			set
-			{
-				short height = Height;
-				top = value;
-				bottom = (short)(top + height);
-			}
 		}
-		internal short Width
-		{
+		
+		internal short Width {
 			get { return (short)(right - left); }
-			set { right = (short)(left + value); }
 		}
-		internal short Height
-		{
+		
+		internal short Height {
 			get { return (short)(bottom - top); }
-			set { bottom = (short)(top + value); }
 		}
 
-		public override string ToString()
-		{
+		public override string ToString() {
 			return string.Format(
 				"Rect: [{0}, {1}, {2}, {3}]", X, Y, Width, Height);
 		}
 
-		public Rectangle ToRectangle()
-		{
+		public Rectangle ToRectangle() {
 			return new Rectangle(X, Y, Width, Height);
 		}
 	}
@@ -88,27 +70,51 @@ namespace OpenTK.Platform.MacOS.Carbon
 	#region --- Types defined in HIGeometry.h ---
 
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct HIPoint
-	{
-		public float X;
-		public float Y;
+	internal struct HIPoint {
+		public IntPtr xVal;
+		public IntPtr yVal;
+		
+		public float X {
+			get { return GetFloat( xVal ); }
+			set { SetFloat( ref xVal, value ); }
+		}
+		
+		public float Y {
+			get { return GetFloat( yVal ); }
+			set { SetFloat( ref yVal, value ); }
+		}
+		
+		static unsafe float GetFloat( IntPtr val ) {
+			if( IntPtr.Size == 8 ) {
+				long raw = val.ToInt64();
+				return (float)(*((double*)&raw));
+			} else {
+				int raw = val.ToInt32();
+				return *((float*)&raw);
+			}
+		}
+		
+		static unsafe void SetFloat( ref IntPtr val, float x ) {
+			if( IntPtr.Size == 8 ) {
+				long raw = 0;
+				*((double*)&raw) = x;
+				val = new IntPtr( raw );
+			} else {
+				int raw = 0;
+				*((float*)&raw) = x;
+				val = new IntPtr( raw );
+			}
+		}
 	}
+	
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct HISize
-	{
-		public float Width;
-		public float Height;
-	}
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct HIRect
-	{
+	internal struct HIRect {
 		public HIPoint Origin;
-		public HISize Size;
+		public HIPoint Size;
 
-		public override string ToString()
-		{
+		public override string ToString() {
 			return string.Format(
-				"Rect: [{0}, {1}, {2}, {3}]", Origin.X, Origin.Y, Size.Width, Size.Height);
+				"Rect: [{0}, {1}, {2}, {3}]", Origin.X, Origin.Y, Size.X, Size.Y);
 		}
 	}
 
@@ -786,17 +792,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#endregion
 
 		[DllImport(carbon)]
-		static extern IntPtr GetControlBounds(IntPtr control, out Rect bounds);
-
-		internal static Rect GetControlBounds(IntPtr control)
-		{
-			Rect retval;
-			GetControlBounds(control, out retval);
-
-			return retval;
-		}
-
-		[DllImport(carbon)]
 		internal static extern OSStatus ActivateWindow (IntPtr inWindow, bool inActivate);
 
 		[DllImport(carbon)]
@@ -805,24 +800,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		internal static extern void QuitApplicationEventLoop();
 
-		[DllImport(carbon)]
-		internal static extern IntPtr GetControlOwner(IntPtr control);
-
-		[DllImport(carbon)]
-		internal static extern IntPtr HIViewGetWindow(IntPtr inView);
-
-		[DllImport(carbon)]
-		static extern OSStatus HIViewGetFrame(IntPtr inView, out HIRect outRect);
-		internal static HIRect HIViewGetFrame(IntPtr inView)
-		{
-			HIRect retval;
-			OSStatus result = HIViewGetFrame(inView, out retval);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
-
-			return retval;
-		}
 		#region --- SetWindowTitle ---
 
 		[DllImport(carbon)]
@@ -926,6 +903,9 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		internal unsafe static extern OSStatus DMGetGDeviceByDisplayID(
 			IntPtr displayID, out IntPtr displayDevice, Boolean failToMain);
+		
+		[DllImport(carbon)]
+		internal unsafe static extern IntPtr HIGetMousePosition( HICoordinateSpace space, IntPtr obj, ref HIPoint point );
 
 		#region Nonworking HIPointConvert routines
 

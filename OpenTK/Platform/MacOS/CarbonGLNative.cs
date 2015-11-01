@@ -1025,16 +1025,18 @@ namespace OpenTK.Platform.MacOS
 			get { return mouse; }
 		}
 		
-		// TODO: Implement using native API, rather than through Mono.
-		// http://webnnel.googlecode.com/svn/trunk/lib/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/Headers/CarbonEventsCore.h
-		// GetPos --> GetGlobalMouse (no 64 bit support?), and HIGetMousePosition()
-		// https://developer.apple.com/library/mac/documentation/GraphicsImaging/Reference/Quartz_Services_Ref/index.html#//apple_ref/c/func/CGWarpMouseCursorPosition
-		// SetPos --> CGWarpMouseCursorPosition
-		// Note that: CGPoint uses float on 32 bit systems, double on 64 bit systems
-		// The rest of the MacOS OpenTK API will probably need to be fixed for this too...
 		public Point DesktopCursorPos {
-			get { return System.Windows.Forms.Cursor.Position; }
-			set { System.Windows.Forms.Cursor.Position = value; }
+			get {
+				HIPoint point = default( HIPoint );
+				// NOTE: HIGetMousePosition is only available on OSX 10.5 or later
+				API.HIGetMousePosition( HICoordinateSpace.ScreenPixel, IntPtr.Zero, ref point );
+				return new Point( (int)point.X, (int)point.Y );
+			}
+			set {
+				HIPoint point = default( HIPoint );
+				point.X = value.X; point.Y = value.Y;
+				CG.CGDisplayMoveCursorToPoint( CG.CGMainDisplayID(), point );
+			}
 		}
 		
 		bool visible = true;
