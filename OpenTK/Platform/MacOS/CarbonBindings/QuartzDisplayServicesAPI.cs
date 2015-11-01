@@ -57,5 +57,8 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		[DllImport(appServices)]
 		internal static extern CGDisplayErr CGDisplayMoveCursorToPoint(IntPtr display, HIPoint point);
+		
+		[DllImport(appServices)]
+		internal static extern CGDisplayErr CGAssociateMouseAndMouseCursorPosition(int value);
 	}
 }

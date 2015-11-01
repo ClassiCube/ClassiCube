@@ -40,8 +40,8 @@ namespace OpenTK.Platform.MacOS
 		IntPtr windowRef;
 		bool ownHandle = false;
 		bool disposed = false;
-		bool goFullScreenHack = false;
-		bool goWindowedHack = false;
+		internal bool goFullScreenHack = false;
+		internal bool goWindowedHack = false;
 
 		#region Constructors
 
@@ -68,17 +68,6 @@ namespace OpenTK.Platform.MacOS
 			get { return this.windowRef; }
 		}
 
-		internal bool GoFullScreenHack
-		{
-			get { return goFullScreenHack; }
-			set { goFullScreenHack = value; }
-		}
-		internal bool GoWindowedHack
-		{
-			get { return goWindowedHack; }
-			set { goWindowedHack = value; }
-		}
-
 		/// <summary>Returns a System.String that represents the current window.</summary>
 		/// <returns>A System.String that represents the current window.</returns>
 		public override string ToString()
@@ -95,20 +84,13 @@ namespace OpenTK.Platform.MacOS
 
 		#region IDisposable Members
 
-		public void Dispose()
-		{
+		public void Dispose() {
 			Dispose(true);
 		}
 
-		void Dispose(bool disposing)
-		{
+		void Dispose(bool disposing) {
 			if (disposed)
 				return;
-
-			if (disposing)
-			{
-
-			}
 
 			if (ownHandle)
 			{
@@ -120,8 +102,7 @@ namespace OpenTK.Platform.MacOS
 			disposed = true;
 		}
 
-		~CarbonWindowInfo()
-		{
+		~CarbonWindowInfo() {
 			Dispose(false);
 		}
 

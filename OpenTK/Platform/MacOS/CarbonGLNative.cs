@@ -872,7 +872,7 @@ namespace OpenTK.Platform.MacOS
 
 				if (oldState == WindowState.Fullscreen)
 				{
-					window.GoWindowedHack = true;
+					window.goWindowedHack = true;
 
 					// when returning from full screen, wait until the context is updated
 					// to actually do the work.
@@ -895,8 +895,7 @@ namespace OpenTK.Platform.MacOS
 			switch (windowState)
 			{
 				case WindowState.Fullscreen:
-					window.GoFullScreenHack = true;
-
+					window.goFullScreenHack = true;
 					break;
 
 				case WindowState.Maximized:

@@ -143,9 +143,9 @@ namespace OpenTK.Platform.MacOS {
 		{
 			CarbonWindowInfo carbonWindow = (CarbonWindowInfo)window;
 
-			if (carbonWindow.GoFullScreenHack)
+			if (carbonWindow.goFullScreenHack)
 			{
-				carbonWindow.GoFullScreenHack = false;
+				carbonWindow.goFullScreenHack = false;
 				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
 
 				if (wind != null)
@@ -155,9 +155,9 @@ namespace OpenTK.Platform.MacOS {
 
 				return;
 			}
-			else if (carbonWindow.GoWindowedHack)
+			else if (carbonWindow.goWindowedHack)
 			{
-				carbonWindow.GoWindowedHack = false;
+				carbonWindow.goWindowedHack = false;
 				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
 
 				if (wind != null)
