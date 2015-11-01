@@ -222,15 +222,11 @@ namespace ClassicalSharp {
 		}
 		
 		public static void LogDebug( string text ) {
-			#if DEBUG
 			Console.WriteLine( text );
-			#endif
 		}
 		
 		public static void LogDebug( string text, params object[] args ) {
-			#if DEBUG
 			Console.WriteLine( String.Format( text, args ) );
-			#endif
 		}
 		
 		public static int Floor( float value ) {

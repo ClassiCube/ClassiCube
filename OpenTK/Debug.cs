@@ -1,5 +1,4 @@
-﻿//#define DEBUG_OPENTK
-using System;
+﻿using System;
 
 namespace OpenTK {
 	
@@ -12,21 +11,15 @@ namespace OpenTK {
 		}
 		
 		public static void Print( string text ) {
-			#if DEBUG_OPENTK
 			Console.WriteLine( text );
-			#endif
 		}
 		
 		public static void Print( object arg ) {
-			#if DEBUG_OPENTK
 			Console.WriteLine( arg );
-			#endif
 		}
 		
 		public static void Print( string text, params object[] args ) {
-			#if DEBUG_OPENTK
 			Console.WriteLine( text, args );
-			#endif
 		}
 	}
 }
