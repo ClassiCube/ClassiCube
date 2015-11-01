@@ -189,7 +189,7 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
 			            wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);
 
-			CG.DisplayCapture(GetQuartzDevice(info));
+			CG.CGDisplayCapture(GetQuartzDevice(info));
 			byte code = Agl.aglSetFullScreen(ContextHandle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
 			Agl.CheckReturnValue(code, "aglSetFullScreen");
 			MakeCurrent(info);
@@ -217,7 +217,7 @@ namespace OpenTK.Platform.MacOS {
 			code = Agl.aglUpdateContext(ContextHandle);
 			Agl.CheckReturnValue( code, "aglUpdateContext" );
 			
-			CG.DisplayRelease(GetQuartzDevice(windowInfo));
+			CG.CGDisplayRelease(GetQuartzDevice(windowInfo));
 			Debug.Print("Resetting drawable.");
 			SetDrawable(windowInfo);
 

@@ -223,10 +223,12 @@ namespace ClassicalSharp {
 		
 		public static void LogDebug( string text ) {
 			Console.WriteLine( text );
+			System.IO.File.AppendAllText( "dx.txt", text + Environment.NewLine );
 		}
 		
 		public static void LogDebug( string text, params object[] args ) {
 			Console.WriteLine( String.Format( text, args ) );
+			System.IO.File.AppendAllText( "dx.txt", String.Format( text, args ) + Environment.NewLine );
 		}
 		
 		public static int Floor( float value ) {

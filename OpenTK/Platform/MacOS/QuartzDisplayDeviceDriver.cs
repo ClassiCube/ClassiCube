@@ -24,7 +24,7 @@ namespace OpenTK.Platform.MacOS
 			IntPtr[] displays = new IntPtr[maxDisplayCount];
 			int displayCount;
 			fixed(IntPtr* displayPtr = displays) {
-				CG.GetActiveDisplayList(maxDisplayCount, displayPtr, out displayCount);
+				CG.CGGetActiveDisplayList(maxDisplayCount, displayPtr, out displayCount);
 			}
 
 			Debug.Print("CoreGraphics reported {0} display(s).", displayCount);
@@ -38,17 +38,17 @@ namespace OpenTK.Platform.MacOS
 					mainDisplay = currentDisplay;
 
 				// gets current settings
-				int currentWidth = CG.DisplayPixelsWide(currentDisplay);
-				int currentHeight = CG.DisplayPixelsHigh(currentDisplay);
+				int currentWidth = CG.CGDisplayPixelsWide(currentDisplay);
+				int currentHeight = CG.CGDisplayPixelsHigh(currentDisplay);
 				Debug.Print("Display {0} is at  {1}x{2}", i, currentWidth, currentHeight);
 
-				IntPtr displayModesPtr = CG.DisplayAvailableModes(currentDisplay);
+				IntPtr displayModesPtr = CG.CGDisplayAvailableModes(currentDisplay);
 				CFArray displayModes = new CFArray(displayModesPtr);
 				Debug.Print("Supports {0} display modes.", displayModes.Count);
 
 				DisplayResolution opentk_dev_current_res = null;
 				List<DisplayResolution> opentk_dev_available_res = new List<DisplayResolution>();
-				IntPtr currentModePtr = CG.DisplayCurrentMode(currentDisplay);
+				IntPtr currentModePtr = CG.CGDisplayCurrentMode(currentDisplay);
 				CFDictionary currentMode = new CFDictionary(currentModePtr);
 
 				for (int j = 0; j < displayModes.Count; j++)
@@ -73,7 +73,7 @@ namespace OpenTK.Platform.MacOS
 						opentk_dev_current_res = thisRes;
 				}
 
-				HIRect bounds = CG.DisplayBounds(currentDisplay);
+				HIRect bounds = CG.CGDisplayBounds(currentDisplay);
 				Rectangle newRect = new Rectangle(
 					(int)bounds.Origin.X, (int)bounds.Origin.Y, (int)bounds.Size.Width, (int)bounds.Size.Height);
 
@@ -103,13 +103,13 @@ namespace OpenTK.Platform.MacOS
 		public bool TryChangeResolution(DisplayDevice device, DisplayResolution resolution)
 		{
 			IntPtr display = displayMap[device];
-			IntPtr currentModePtr = CG.DisplayCurrentMode(display);
+			IntPtr currentModePtr = CG.CGDisplayCurrentMode(display);
 
 			if (!storedModes.ContainsKey(display)) {
 				storedModes.Add(display, currentModePtr);
 			}
 
-			IntPtr displayModesPtr = CG.DisplayAvailableModes(display);
+			IntPtr displayModesPtr = CG.CGDisplayAvailableModes(display);
 			CFArray displayModes = new CFArray(displayModesPtr);
 
 			for (int j = 0; j < displayModes.Count; j++) {
@@ -123,12 +123,12 @@ namespace OpenTK.Platform.MacOS
 				if (width == resolution.Width && height == resolution.Height &&
 				    bpp == resolution.BitsPerPixel && Math.Abs(freq - resolution.RefreshRate) < 1e-6) {
 					if (!displaysCaptured.Contains(display)) {
-						CG.DisplayCapture(display);
+						CG.CGDisplayCapture(display);
 					}
 
 					Debug.Print("Changing resolution to {0}x{1}x{2}@{3}.", width, height, bpp, freq);
 
-					CG.DisplaySwitchToMode(display, displayModes[j]);
+					CG.CGDisplaySwitchToMode(display, displayModes[j]);
 
 					return true;
 				}
@@ -145,8 +145,8 @@ namespace OpenTK.Platform.MacOS
 			{
 				Debug.Print("Restoring resolution.");
 
-				CG.DisplaySwitchToMode(display, storedModes[display]);
-				CG.DisplayRelease(display);
+				CG.CGDisplaySwitchToMode(display, storedModes[display]);
+				CG.CGDisplayRelease(display);
 				displaysCaptured.Remove(display);
 
 				return true;

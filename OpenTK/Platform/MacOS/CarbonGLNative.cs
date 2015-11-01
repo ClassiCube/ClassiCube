@@ -1037,20 +1037,16 @@ namespace OpenTK.Platform.MacOS
 			set { System.Windows.Forms.Cursor.Position = value; }
 		}
 		
-		// TODO: Proper hide and show cursor
-		// TODO: appears to be broken on OSX, thanks mono.
-		bool hidden = false;
+		bool visible = true;
 		public bool CursorVisible {
-			get { return true; }
-			set { }
-			/*get { return hidden; }
+			get { return visible; }
 			set {
-				hidden = value;
-				if( hidden )
-					System.Windows.Forms.Cursor.Hide();
+				visible = value;
+				if( visible )
+					CG.CGDisplayShowCursor(CG.CGMainDisplayID());
 				else
-					System.Windows.Forms.Cursor.Show();
-			}*/
+					CG.CGDisplayHideCursor(CG.CGMainDisplayID());
+			}
 		}
 		
 		#endregion
