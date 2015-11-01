@@ -220,31 +220,23 @@ namespace OpenTK.Platform.MacOS
 			Application.WindowEventHandler = this;
 		}
 
-		void Activate()
-		{
+		void Activate() {
 			API.SelectWindow(window.WindowRef);
 		}
 
-		void Show()
-		{
-			IntPtr parent = IntPtr.Zero;
-
+		void Show() {
 			API.ShowWindow(window.WindowRef);
-			API.RepositionWindow(window.WindowRef, parent, WindowPositionMethod);
+			API.RepositionWindow(window.WindowRef, IntPtr.Zero, WindowPositionMethod);
 			API.SelectWindow(window.WindowRef);
 		}
 
-		void Hide()
-		{
+		void Hide() {
 			API.HideWindow(window.WindowRef);
 		}
 
-		internal void SetFullscreen(AglContext context)
-		{
+		internal void SetFullscreen(AglContext context) {
 			windowedBounds = bounds;
-
 			int width, height;
-
 			context.SetFullScreen(window, out width, out height);
 
 			Debug.Print("Prev Size: {0}, {1}", Width, Height);
@@ -253,13 +245,10 @@ namespace OpenTK.Platform.MacOS
 
 			// TODO: if we go full screen we need to make this use the device specified.
 			bounds = mDisplayDevice.Bounds;
-
-			
 			windowState = WindowState.Fullscreen;
 		}
 
-		internal void UnsetFullscreen(AglContext context)
-		{
+		internal void UnsetFullscreen(AglContext context) {
 			context.UnsetFullScreen(window);
 
 			Debug.Print("Telling Carbon to reset window state to " + windowState.ToString());
@@ -1035,7 +1024,9 @@ namespace OpenTK.Platform.MacOS
 			set {
 				HIPoint point = default( HIPoint );
 				point.X = value.X; point.Y = value.Y;
+				CG.CGAssociateMouseAndMouseCursorPosition( 0 );
 				CG.CGDisplayMoveCursorToPoint( CG.CGMainDisplayID(), point );
+				CG.CGAssociateMouseAndMouseCursorPosition( 1 );
 			}
 		}
 		
