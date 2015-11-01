@@ -215,6 +215,8 @@ namespace ClassicalSharp {
 			else if( key == Key.Right ) RightKey();
 			else if( key == Key.BackSpace ) BackspaceKey();
 			else if( key == Key.Delete ) DeleteKey();
+			else if( key == Key.Home ) HomeKey();
+			else if( key == Key.End ) EndKey();
 			else if( !OtherKey( key ) ) return false;
 			
 			return true;
@@ -286,6 +288,20 @@ namespace ClassicalSharp {
 				Dispose();
 				Init();
 			}
+		}
+		
+		void HomeKey() {
+			if( chatInputText.Empty ) return;
+			
+			caretPos = 0;
+			Dispose();
+			Init();
+		}
+		
+		void EndKey() {
+			caretPos = -1;
+			Dispose();
+			Init();
 		}
 		
 		bool OtherKey( Key key ) {
