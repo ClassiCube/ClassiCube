@@ -46,8 +46,11 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
-			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
+			// fixes crashing on nVidia cards in OpenGL builds.
+			if( index > 0 ) {
+				graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
+			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 			graphics.DepthWrite = true;
@@ -55,7 +58,7 @@ namespace ClassicalSharp {
 		
 		float AlphaAt( float x ) {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
-			return (float)( 0.05 * x * x - 8 * x + 178 );
+			return 0.05f * x * x - 8 * x + 178;
 		}
 		
 		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
@@ -63,12 +66,12 @@ namespace ClassicalSharp {
 			float v2 = height / 6f + v1;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );			
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );		
+			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, 0, v2, col );
 		}
@@ -104,7 +107,7 @@ namespace ClassicalSharp {
 		int GetRainHeight( int x, int z ) {
 			if( x < 0 || z < 0 || x >= width || z >= length ) return map.EdgeHeight - 1;
 			int index = ( x * length ) + z;
-			int height = heightmap[index];			
+			int height = heightmap[index];
 			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
 		}
 		
@@ -117,7 +120,7 @@ namespace ClassicalSharp {
 					return y;
 				}
 				mapIndex -= oneY;
-			}		
+			}
 			heightmap[index] = -1;
 			return -1;
 		}

@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 			
 			using( Font font = new Font( "Arial", 14 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
-				nameTex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
 			}
 		}
 		

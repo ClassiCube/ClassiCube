@@ -231,18 +231,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		int batchStride;
 		public override void DrawDynamicVb<T>( DrawMode mode, int id, T[] vertices, int count ) {
-			int sizeInBytes = count * batchStride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
 			
 			setupBatchFunc();
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
 		}
 		
 		public override void DrawDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount, int indicesCount ) {
-			int sizeInBytes = vCount * batchStride;
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( sizeInBytes ), vertices );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( vCount * batchStride ), vertices );
 			
 			setupBatchFunc();
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );

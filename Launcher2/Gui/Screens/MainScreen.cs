@@ -67,12 +67,9 @@ namespace Launcher2 {
 			             buttonWidth, buttonHeight, 0, -50,
 			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );			
 			
-			MakeButtonAt( "Singleplayer", Anchor.LeftOrTop, Anchor.BottomOrRight,
-			             sideButtonWidth, buttonHeight, 10, -10,
+			MakeButtonAt( "Singleplayer", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, 0,
 			             (x, y) => Client.Start( "default.zip" ) );
-			
-			MakeButtonAt( "Resume", Anchor.BottomOrRight, Anchor.BottomOrRight,
-			             sideButtonWidth, buttonHeight, -10, -10, null );
 		}
 		
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
