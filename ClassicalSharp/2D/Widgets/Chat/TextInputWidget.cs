@@ -13,15 +13,14 @@ namespace ClassicalSharp {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
+			
 			this.font = font;
 			this.boldFont = boldFont;
 			chatInputText = new StringBuffer( len );
 		}
 		
 		Texture chatInputTexture, caretTexture;
-		FastColour backColour = new FastColour( 60, 60, 60, 200 );
-		int caretPos = -1;
-		int typingLogPos = 0;
+		int caretPos = -1, typingLogPos = 0;
 		public int YOffset;
 		internal StringBuffer chatInputText;
 		readonly Font font, boldFont;
@@ -29,6 +28,7 @@ namespace ClassicalSharp {
 		static FastColour normalCaretCol = FastColour.White,
 		nextCaretCol = FastColour.Yellow;
 		FastColour caretCol;
+		static FastColour backColour = new FastColour( 60, 60, 60, 200 );
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			caretTexture.Render( graphicsApi, caretCol );
@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 		int maxWidth = 0;
 		
 		public override void Init() {
-			X = 10;
+			X = 5;
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			caretTexture = game.Drawer2D.UseBitmappedChat ?
 				game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
@@ -97,34 +97,33 @@ namespace ClassicalSharp {
 		
 		void DrawString() {
 			int totalHeight = 0;
-			for( int i = 0; i < lines; i++ ) {
+			for( int i = 0; i < lines; i++ )
 				totalHeight += sizes[i].Height;
-			}
-			Size size = new Size( maxWidth, totalHeight );
-			int y = game.Height - size.Height - YOffset;
+			Size size = new Size( maxWidth, totalHeight );	
 			
+			int realHeight = 0, y = 0;
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					DrawTextArgs args = new DrawTextArgs( null, font, false );
+					DrawTextArgs args = new DrawTextArgs( null, font, false );					
 					
-					int yyy = 0;
 					for( int i = 0; i < parts.Length; i++ ) {
 						if( parts[i] == null ) break;
 						args.Text = parts[i];
 						
-						drawer.Clear( backColour, 0, yyy, sizes[i].Width, sizes[i].Height );
-						drawer.DrawChatText( ref args, 0, yyy );
-						yyy += sizes[i].Height;
+						drawer.Clear( backColour, 0, realHeight, sizes[i].Width, sizes[i].Height );
+						drawer.DrawChatText( ref args, 0, realHeight );
+						realHeight += sizes[i].Height;
 					}
+					y = game.Height - realHeight - YOffset;
 					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );
 				}
 			}
 			
-			caretTexture.Y1 = y + caretTexture.Y1;
+			caretTexture.Y1 += y;
 			Y = y;
 			Width = size.Width;
-			Height = size.Height;
+			Height = realHeight;
 		}
 
 		public override void Dispose() {

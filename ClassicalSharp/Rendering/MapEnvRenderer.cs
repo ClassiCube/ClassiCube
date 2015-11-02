@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices,
 		edgesBaseVertices, edgesVerVertices;
-		bool legacy;
+		bool legacy, fullColSides, fullColEdge;
 		
 		public void SetUseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
@@ -86,6 +86,7 @@ namespace ClassicalSharp {
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
+			
 			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
@@ -99,8 +100,12 @@ namespace ClassicalSharp {
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.EdgeBlock ) {
 				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
+				if( game.BlockInfo.BlocksLight[(byte)map.EdgeBlock] != fullColEdge )
+					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SidesBlock ) {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
+				if( game.BlockInfo.BlocksLight[(byte)map.SidesBlock] != fullColSides )
+					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.EdgeLevel ) {
 				ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SunlightColour ) {
@@ -118,6 +123,7 @@ namespace ClassicalSharp {
 			if( game.Map.IsNotLoaded ) return;
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
+			
 			CalculateRects( game.ViewDistance );
 			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
@@ -134,10 +140,11 @@ namespace ClassicalSharp {
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			FastColour col = map.SunlightYBottom;
+			fullColSides = game.BlockInfo.FullBright[(byte)game.Map.SidesBlock];
+			FastColour col = fullColSides ? FastColour.White : map.SunlightYBottom;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
-			}
+			}			
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = groundLevel;
 			if( groundLevel < 0 ) {
@@ -166,10 +173,13 @@ namespace ClassicalSharp {
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			FastColour col = map.SunlightYBottom;
+			fullColEdge = game.BlockInfo.FullBright[(byte)game.Map.EdgeBlock];
+			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, game.Map.Sunlight, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, ref vertices );
 			}
+			
+			col = fullColEdge ? FastColour.White : map.SunlightYBottom;
 			if( waterLevel >= 0 ) {
 				DrawZ( 0, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
 				DrawZ( map.Length, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
@@ -238,6 +248,7 @@ namespace ClassicalSharp {
 		
 		Rectangle[] rects = new Rectangle[4];
 		void CalculateRects( int extent ) {
+			extent = Utils.AdjViewDist( extent );
 			rects[0] = new Rectangle( -extent, -extent, extent + map.Width + extent, extent );
 			rects[1] = new Rectangle( -extent, map.Length, extent + map.Width + extent, extent );
 			

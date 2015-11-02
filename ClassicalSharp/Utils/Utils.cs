@@ -233,6 +233,10 @@ namespace ClassicalSharp {
 			return value >= 0 ? (int)value : (int)value - 1;
 		}
 		
+		public static int AdjViewDist( int value ) {
+			return (int)(1.4142135 * value);
+		}
+		
 		/// <summary> Returns the number of vertices needed to subdivide a quad. </summary>
 		internal static int CountVertices( int axis1Len, int axis2Len, int axisSize ) {
 			return CeilDiv( axis1Len, axisSize ) * CeilDiv( axis2Len, axisSize ) * 4;

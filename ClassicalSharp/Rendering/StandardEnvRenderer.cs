@@ -159,6 +159,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetClouds( int extent, int axisSize ) {
+			extent = Utils.AdjViewDist( extent );
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
 			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
@@ -169,6 +170,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetSky( int extent, int axisSize ) {
+			extent = Utils.AdjViewDist( extent );
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
