@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
 					int rainY = Math.Max( pos.Y, GetRainHeight( pos.X + dx, pos.Z + dz ) + 1 );
-					int height = Math.Min( 6 - ( rainY - pos.Y ), 6 );
+					int height = Math.Min( 20 - (rainY - pos.Y), 20 );
 					if( height <= 0 ) continue;
 					
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		
 		float AlphaAt( float x ) {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
-			return 0.05f * x * x - 8 * x + 178;
+			return 0.05f * x * x - 7 * x + 178;
 		}
 		
 		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {

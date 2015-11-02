@@ -35,19 +35,19 @@ namespace Launcher2 {
 		void CheckUpdates() {
 			var response = GetHtml( UpdatesUri, UpdatesUri );
 			foreach( string line in response ) {
-				Console.WriteLine( line );
-				if( line.StartsWith( "latest.", ordinal ) ) {
+				if( line.StartsWith( @"<a href=""latest.", ordinal ) ) {
 					int index = 0;
-					string buildName = ReadToken( line, ref index );
-					string date = ReadToken( line, ref index );
-					string time = ReadToken( line, ref index );
-					string buildSize = ReadToken( line, ref index );
+					string text = line.Substring( @"<a href=""".Length );
 					
+					string buildName = ReadToken( text, ref index );
+					string date = ReadToken( text, ref index );
+					string time = ReadToken( text, ref index );
+					string buildSize = ReadToken( text, ref index );
 					
-					if( line.StartsWith( "latest.zip", ordinal ) ) {
+					if( buildName.Contains( "latest.zip" ) ) {
 						LatestDevDate = date + " " + time;
 						LatestDevSize = buildSize;
-					} else if( line.StartsWith( "latest.Release.zip", ordinal ) ) {
+					} else if( buildName.Contains( "latest.Release.zip" ) ) {
 						LatestStableDate = date + " " + time;
 						LatestStableSize = buildSize;
 					}
