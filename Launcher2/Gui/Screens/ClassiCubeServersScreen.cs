@@ -69,10 +69,10 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			
-			MakeTextAt( titleFont, "Search", -200, 10 );
+			MakeLabelAt( "Search", titleFont, Anchor.Centre, Anchor.Centre, -200, 10 );
 			MakeInput( Get(), 270, Anchor.LeftOrTop, false, -25, 5, 32 );
 			
-			MakeTextAt( inputFont, "../play/", -210, 55 );
+			MakeLabelAt( "../play/", inputFont, Anchor.Centre, Anchor.Centre, -210, 55 );
 			MakeInput( Get(), 320, Anchor.LeftOrTop, false, -20, 50, 32 );
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
@@ -81,12 +81,6 @@ namespace Launcher2 {
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.LeftOrTop,
 			             195, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeTableWidget();
-		}
-
-		void MakeTextAt( Font font, string text, int x, int y ) {
-			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
-			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.LeftOrTop, x, y );
-			widgets[widgetIndex++] = widget;
 		}
 		
 		void MakeTableWidget() {

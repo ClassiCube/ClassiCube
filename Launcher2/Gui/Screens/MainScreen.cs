@@ -70,6 +70,10 @@ namespace Launcher2 {
 			MakeButtonAt( "Singleplayer", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, 0,
 			             (x, y) => Client.Start( "default.zip" ) );
+			
+			MakeButtonAt( "Check for updates", Anchor.Centre, Anchor.Centre,
+			             buttonWidth, buttonHeight, 0, 100,
+			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
 		}
 		
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;

@@ -15,13 +15,15 @@ namespace ClassicalSharp {
 			map = game.Map;
 			graphics = game.Graphics;
 			info = game.BlockInfo;
-			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 12 * 9 * 9 );
+			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 		}
 		
 		int weatherVb;
 		short[] heightmap;
 		float vOffset;
-		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * 9 * 9];
+		const int extent = 4;
+		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
+		
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
@@ -36,8 +38,8 @@ namespace ClassicalSharp {
 			graphics.AlphaBlending = true;
 			graphics.DepthWrite = false;
 			FastColour col = FastColour.White;
-			for( int dx = -4; dx <= 4; dx++ ) {
-				for( int dz = -4; dz <= 4; dz++ ) {
+			for( int dx = -extent; dx <= extent; dx++ ) {
+				for( int dz = -extent; dz <= extent; dz++ ) {
 					int rainY = Math.Max( pos.Y, GetRainHeight( pos.X + dx, pos.Z + dz ) + 1 );
 					int height = Math.Min( 6 - ( rainY - pos.Y ), 6 );
 					if( height <= 0 ) continue;
@@ -46,6 +48,7 @@ namespace ClassicalSharp {
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
+			
 			// fixes crashing on nVidia cards in OpenGL builds.
 			if( index > 0 ) {
 				graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );

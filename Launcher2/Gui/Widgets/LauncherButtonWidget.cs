@@ -7,7 +7,6 @@ namespace Launcher2 {
 	public sealed class LauncherButtonWidget : LauncherWidget {
 		
 		public int ButtonWidth, ButtonHeight;
-		public string Text;
 		public bool Shadow = true;
 		public bool Active = false;
 		

@@ -87,8 +87,8 @@ namespace Launcher2 {
 
 		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( "Username", titleFont, -180, -100 );
-			MakeTextAt( "Password", titleFont, -180, -50 );
+			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
+			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -180, -50 );
 			
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
 			MakeInput( Get(), 300, Anchor.Centre, true, 30, -50, 32 );
@@ -97,8 +97,8 @@ namespace Launcher2 {
 			             -75, 0, StartClient );
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			string text = widgets[6] == null ? "" : ((LauncherLabelWidget)widgets[6]).Text;
-			MakeTextAt( text, inputFont, 0, 50 );
+			string text = widgets[6] == null ? "" : widgets[6].Text;
+			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
 			
 			if( HasServers && !signingIn )
 				MakeButtonAt( "Servers", 90, 35, titleFont, Anchor.Centre,
@@ -116,12 +116,6 @@ namespace Launcher2 {
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
 				Dirty = true;
 			}
-		}
-
-		void MakeTextAt( string text, Font font, int x, int y ) {
-			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
-			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.Centre, x, y );
-			widgets[widgetIndex++] = widget;
 		}
 		
 		bool HasServers {

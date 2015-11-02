@@ -73,17 +73,18 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeTextAt( "Username", -180, -100 );
-			MakeTextAt( "Address", -180, -50 );
-			MakeTextAt( "Mppass", -180, 0 );
+			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
+			MakeLabelAt( "Address", titleFont, Anchor.Centre, Anchor.Centre, -180, -50 );
+			MakeLabelAt( "Mppass", titleFont, Anchor.Centre, Anchor.Centre, -180, 0 );
 			
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64 );
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32 );
 			
-			MakeButtonAt( "Connect", 110, 35, -65, 50, StartClient );			
-			MakeButtonAt( "Back", 80, 35, 140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			MakeTextAt( "", 0, 100 );
+			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );			
+			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 
+			             140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 		}
 		
 		void SetStatus( string text ) {
@@ -94,23 +95,6 @@ namespace Launcher2 {
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 				Dirty = true;
 			}
-		}
-
-		void MakeTextAt( string text, int x, int y ) {
-			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
-			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, x, y );
-			widgets[widgetIndex++] = widget;
-		}
-		
-		void MakeButtonAt( string text, int width, int height,
-		                  int x, int y, Action<int, int> onClick ) {
-			LauncherButtonWidget widget = new LauncherButtonWidget( game );
-			widget.Text = text;
-			widget.OnClick = onClick;
-			
-			widget.Active = false;
-			widget.DrawAt( drawer, text, titleFont, Anchor.Centre, Anchor.Centre, width, height, x, y );
-			widgets[widgetIndex++] = widget;
 		}
 		
 		void StartClient( int mouseX, int mouseY ) {

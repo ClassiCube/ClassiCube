@@ -56,12 +56,26 @@ namespace Launcher2 {
 			selectedWidget = null;
 		}
 		
+		protected Font buttonFont;
+		
 		/// <summary> Called when the user has moved their mouse away from a previously selected widget. </summary>
 		protected virtual void UnselectWidget( LauncherWidget widget ) {
+			LauncherButtonWidget button = widget as LauncherButtonWidget;
+			if( button != null ) {
+				button.Active = false;
+				button.Redraw( drawer, button.Text, buttonFont );
+				Dirty = true;
+			}
 		}
 		
 		/// <summary> Called when user has moved their mouse over a given widget. </summary>
 		protected virtual void SelectWidget( LauncherWidget widget ) {
+			LauncherButtonWidget button = widget as LauncherButtonWidget;
+			if( button != null ) {
+				button.Active = true;
+				button.Redraw( drawer, button.Text, buttonFont );
+				Dirty = true;
+			}
 		}
 		
 		protected LauncherWidget lastClicked;
@@ -125,6 +139,18 @@ namespace Launcher2 {
 			widget.Active = false;
 			widget.DrawAt( drawer, text, font, Anchor.Centre, verAnchor, width, height, x, y );
 			widgets[widgetIndex++] = widget;
+		}
+		
+		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y) {
+			if( widgets[widgetIndex] != null ) {
+				LauncherLabelWidget input = (LauncherLabelWidget)widgets[widgetIndex];
+				input.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
+			} else {
+				LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
+				widget.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
+				widgets[widgetIndex] = widget;
+			}
+			widgetIndex++;
 		}
 	}
 }

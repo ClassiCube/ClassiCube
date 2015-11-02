@@ -9,7 +9,6 @@ namespace Launcher2 {
 	public sealed class LauncherInputWidget : LauncherWidget {
 		
 		public int ButtonWidth, ButtonHeight;
-		public string Text;
 		
 		/// <summary> Whether the input widget currently is focused through a mouse click or tab. </summary>
 		public bool Active;

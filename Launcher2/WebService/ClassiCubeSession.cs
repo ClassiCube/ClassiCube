@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 
 namespace Launcher2 {
 	
-	public class ClassicubeSession : GameSession {
+	public sealed class ClassicubeSession : IWebTask {
 		
 		const string classicubeNetUri = "https://www.classicube.net/",
 		loginUri = "https://www.classicube.net/acc/login",
@@ -13,7 +15,43 @@ namespace Launcher2 {
 		const string loggedInAs = @"<a href=""/acc"" class=""button"">";
 		StringComparison ordinal = StringComparison.Ordinal;
 		
-		public override void Login( string user, string password ) {
+		public List<ServerListEntry> Servers = new List<ServerListEntry>();
+		
+		public void LoginAsync( string user, string password ) {
+			Username = user;
+			Working = true;
+			Exception = null;
+			Status = "&eSigning in..";
+			Servers = new List<ServerListEntry>();
+			
+			Thread thread = new Thread( LoginWorker, 256 * 1024 );
+			thread.Name = "Launcher.CCLoginAsync";
+			thread.Start( password );
+		}
+		
+		void LoginWorker( object password ) {
+			// Sign in to classicube.net
+			try {
+				Login( Username, (string)password );
+			} catch( WebException ex ) {
+				Finish( false, ex, "sign in" ); return;
+			} catch( InvalidOperationException ex ) {
+				Finish( false, null, "&eFailed to sign in: " +
+				       Environment.NewLine + ex.Message ); return;
+			}
+			
+			// Retrieve list of public servers
+			Status = "&eRetrieving public servers list..";
+			try {
+				Servers = GetPublicServers();
+			} catch( WebException ex ) {
+				Servers = new List<ServerListEntry>();
+				Finish( false, ex, "retrieving servers list" ); return;
+			}
+			Finish( true, null, "&eSigned in" );
+		}
+		
+		void Login( string user, string password ) {
 			Username = user;
 			// Step 1: GET csrf token from login page.
 			var swGet = System.Diagnostics.Stopwatch.StartNew();
@@ -52,7 +90,7 @@ namespace Launcher2 {
 			}
 		}
 		
-		public override ClientStartData GetConnectInfo( string hash ) {
+		public ClientStartData GetConnectInfo( string hash ) {
 			string uri = playUri + hash;
 			var response = GetHtml( uri, classicubeNetUri );
 			ClientStartData data = new ClientStartData();
@@ -61,7 +99,7 @@ namespace Launcher2 {
 			foreach( string line in response ) {
 				int index = 0;
 				// Look for <param name="x" value="x"> tags
-				if( ( index = line.IndexOf( "<param", ordinal ) ) > 0 ) {
+				if( (index = line.IndexOf( "<param", ordinal )) > 0 ) {
 					int nameStart = index + 13;
 					int nameEnd = line.IndexOf( '"', nameStart );
 					string paramName = line.Substring( nameStart, nameEnd - nameStart );
@@ -85,7 +123,7 @@ namespace Launcher2 {
 			return line.Substring( valueStart, valueEnd - valueStart );
 		}
 		
-		public override List<ServerListEntry> GetPublicServers() {
+		public List<ServerListEntry> GetPublicServers() {
 			var sw = System.Diagnostics.Stopwatch.StartNew();
 			var response = GetHtml( publicServersUri, classicubeNetUri );
 			List<ServerListEntry> servers = new List<ServerListEntry>();

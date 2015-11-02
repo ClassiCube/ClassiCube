@@ -14,6 +14,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Init() {
+			buttonFont = titleFont;
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
@@ -82,32 +83,14 @@ namespace Launcher2 {
 		
 		protected string Get() { return Get( widgetIndex ); }
 		
-		protected string Get( int index ) {
+		protected string Get( int index ) { 
 			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : ((LauncherInputWidget)widget).Text;
+			return widget == null ? "" : widget.Text;
 		}
 		
 		protected void Set( int index, string text ) {
 			((LauncherInputWidget)widgets[index])
 				.Redraw( drawer, text, inputFont );
-		}
-		
-		protected override void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = false;
-				button.Redraw( drawer, button.Text, titleFont );
-				Dirty = true;
-			}
-		}
-		
-		protected override void SelectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = true;
-				button.Redraw( drawer, button.Text, titleFont );
-				Dirty = true;
-			}
 		}
 		
 		protected LauncherInputWidget lastInput;

@@ -9,6 +9,8 @@ namespace Launcher2 {
 		public LauncherWindow Window;
 		public Action<int, int> OnClick;
 		
+		public string Text;
+		
 		public LauncherWidget( LauncherWindow window ) {
 			Window = window;
 		}

@@ -7,8 +7,6 @@ namespace Launcher2 {
 	/// <summary> Widget that represents text that cannot be modified by the user. </summary>
 	public sealed class LauncherLabelWidget : LauncherWidget {
 		
-		public string Text;
-		
 		public LauncherLabelWidget( LauncherWindow window, string text ) : base( window ) {
 			Text = text;
 		}

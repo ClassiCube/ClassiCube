@@ -15,6 +15,7 @@ namespace Launcher2 {
 			textFont = new Font( "Arial", 16, FontStyle.Bold );
 			infoFont = new Font( "Arial", 14, FontStyle.Regular );
 			statusFont = new Font( "Arial", 13, FontStyle.Italic );
+			buttonFont = textFont;
 			widgets = new LauncherWidget[4];
 		}
 
@@ -39,24 +40,6 @@ namespace Launcher2 {
 				Draw();
 			}
 			Dirty = true;
-		}
-		
-		protected override void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = false;
-				button.Redraw( drawer, button.Text, textFont );
-				Dirty = true;
-			}
-		}
-		
-		protected override void SelectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = true;
-				button.Redraw( drawer, button.Text, textFont );
-				Dirty = true;
-			}
 		}
 		
 		ResourceFetcher fetcher;
@@ -85,10 +68,9 @@ namespace Launcher2 {
 			drawer.DrawRect( backCol, game.Width / 2 - 175,
 			                game.Height / 2 - 70, 175 * 2, 70 * 2 );
 			
-			string text = widgets[0] == null ?
-				String.Format( format, ResourceFetcher.EstimateDownloadSize().ToString( "F2" ) )
-				: ((LauncherLabelWidget)widgets[0]).Text;
-			MakeTextAt( statusFont, text, 0, 5 );
+			string text = widgets[0] != null ? widgets[0].Text
+				: String.Format( format, ResourceFetcher.EstimateDownloadSize() );
+			MakeLabelAt( text, statusFont, Anchor.Centre, Anchor.Centre, 0, 5 );
 
 			// Clear the entire previous widgets state.
 			for( int i = 1; i < widgets.Length; i++ ) {
@@ -98,11 +80,11 @@ namespace Launcher2 {
 			}
 			
 			if( fetcher == null ) {
-				MakeTextAt( infoFont, mainText, 0, -30 );
+				MakeLabelAt( mainText, infoFont, Anchor.Centre, Anchor.Centre, 0, -30 );
 				MakeButtonAt( "Yes", 60, 30, textFont, Anchor.Centre,
 				             -50, 40, DownloadResources );
 				
-				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre, 
+				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre,
 				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			} else {
 				MakeButtonAt( "Cancel", 120, 30, textFont, Anchor.Centre,
@@ -118,12 +100,6 @@ namespace Launcher2 {
 				widget.Redraw( drawer, text, statusFont );
 				Dirty = true;
 			}
-		}
-		
-		void MakeTextAt( Font font, string text, int x, int y ) {
-			LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
-			widget.DrawAt( drawer, text, font, Anchor.Centre, Anchor.Centre, x, y );
-			widgets[widgetIndex++] = widget;
 		}
 		
 		public override void Dispose() {

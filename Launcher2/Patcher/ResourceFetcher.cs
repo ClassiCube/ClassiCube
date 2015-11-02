@@ -55,9 +55,10 @@ namespace Launcher2 {
 			return File.Exists( "default.zip" );
 		}
 		
-		public static float EstimateDownloadSize() {
-			return (291 + 4621 + 7) / 1024f;
-			// clasic.jar + 1.6.2.jar + terrain-patch.png
+		public static string EstimateDownloadSize() {
+			float size = (291 + 4621 + 7) / 1024f;
+			// classic.jar + 1.6.2.jar + terrain-patch.png
+			return size.ToString( "F2" );
 		}
 	}
 }
