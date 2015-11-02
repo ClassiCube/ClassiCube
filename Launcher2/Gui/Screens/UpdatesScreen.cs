@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using ClassicalSharp;
+using ClassicalSharp.TexturePack;
 
 namespace Launcher2 {
 	
+	// TODO: Download asynchronously
 	public sealed class UpdatesScreen : LauncherScreen {
 		
 		Font titleFont, infoFont;
@@ -24,7 +27,7 @@ namespace Launcher2 {
 		public override void Init() {
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
-			Resize(); 
+			Resize();
 		}
 		
 		public override void Tick() {
@@ -32,13 +35,13 @@ namespace Launcher2 {
 				if( checkTask.Exception != null ) {
 					updateCheckFailed = true;
 				} else {
-					lastStable = DateTime.Parse( checkTask.LatestStableDate, 
+					lastStable = DateTime.Parse( checkTask.LatestStableDate,
 					                            null, DateTimeStyles.AssumeUniversal );
 					lastDev =  DateTime.Parse( checkTask.LatestDevDate,
-					                            null, DateTimeStyles.AssumeUniversal );
+					                          null, DateTimeStyles.AssumeUniversal );
 					
 					validStable = Int32.Parse( checkTask.LatestStableSize ) > 50000;
-					validDev = Int32.Parse( checkTask.LatestDevSize ) > 50000;				
+					validDev = Int32.Parse( checkTask.LatestDevSize ) > 50000;
 				}
 				checkTask = null;
 				game.MakeBackground();
@@ -70,19 +73,16 @@ namespace Launcher2 {
 			string latestStable = GetDateString( lastStable, validStable );
 			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 100, -80 );
 			MakeButtonAt( "Update to stable", 180, 30, titleFont, Anchor.Centre, 0, -40,
-			             (x, y) => UpdateBuild( lastDev, validDev, "latest.Release.zip" ) );
+			             (x, y) => UpdateBuild( lastStable, validStable, "latest.Release.zip" ) );
 			
-			MakeLabelAt( "Latest OpenGL dev:", titleFont, Anchor.Centre, Anchor.Centre, -100, 0 );
+			MakeLabelAt( "Latest dev:", titleFont, Anchor.Centre, Anchor.Centre, -60, 40 );
 			string latestDev = GetDateString( lastDev, validDev );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 0 );
-			MakeButtonAt( "Update to OpenGL dev", 240, 30, titleFont, Anchor.Centre, 0, 40,
+			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 40 );
+			MakeButtonAt( "Update to OpenGL dev", 240, 30, titleFont, Anchor.Centre, 0, 80,
 			             (x, y) => UpdateBuild( lastDev, validDev, "latest.zip" ) );
-			
-			MakeLabelAt( "Latest D3D9 dev:", titleFont, Anchor.Centre, Anchor.Centre, -85, 80 );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 80 );
-			MakeButtonAt( "Update to D3D9 dev", 230, 30, titleFont, Anchor.Centre, 0, 120,
+			MakeButtonAt( "Update to D3D9 dev", 240, 30, titleFont, Anchor.Centre, 0, 120,
 			             (x, y) => UpdateBuild( lastDev, validDev, "latest.DirectX.zip" ) );
-			             
+			
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             0, 200, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 		}
@@ -98,8 +98,36 @@ namespace Launcher2 {
 			if( last == DateTime.MinValue || !valid ) return;
 			
 			using( WebClient client = new WebClient() ) {
-				client.DownloadFile( UpdateCheckTask.UpdatesUri + dir, "update.zip" );
+				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
+				MakeUpdatesFolder( zipData );
 			}
+			
+			if( !OpenTK.Configuration.RunningOnWindows ) 
+				return; // TODO: bash script for OSX and linux
+			if( !File.Exists( "update.bat" ) )
+				File.WriteAllText( "update.bat", batch );
+			
+			ProcessStartInfo info = new ProcessStartInfo( "cmd.exe", "/c update.bat" );
+			info.CreateNoWindow = false;
+			info.UseShellExecute = false;
+			Process p = Process.Start( info );
+			Process.GetCurrentProcess().Kill();
+		}
+		
+		void MakeUpdatesFolder( byte[] zipData ) {
+			using( MemoryStream stream = new MemoryStream( zipData ) ) {
+				ZipReader reader = new ZipReader();
+				Directory.CreateDirectory( "CS_Update" );
+				
+				reader.ShouldProcessZipEntry = (f) => true;
+				reader.ProcessZipEntry = ProcessZipEntry;
+				reader.Extract( stream );
+			}
+		}
+			
+		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
+			string path = Path.Combine( "CS_Update", Path.GetFileName( filename ) );
+			File.WriteAllBytes( path, data );
 		}
 		
 		public override void Dispose() {
@@ -109,5 +137,30 @@ namespace Launcher2 {
 			titleFont.Dispose();
 			infoFont.Dispose();
 		}
+		
+		const string batch =
+			@"
+@echo off
+echo Waiting for launcher to exit..
+echo 5..
+sleep 1
+echo 4..
+sleep 1
+echo 3..
+sleep 1
+echo 2..
+sleep 1
+echo 1..
+sleep 1
+
+set root=%CD%
+echo Extracting files from CS_Update folder
+
+for /f ""tokens=*"" %%f in ('dir /b ""%root%\CS_Update""') do move ""%root%\CS_Update\%%f"" ""%root%\%%f""
+rmdir ""%root%\CS_Update""
+
+echo Starting launcher again
+start Launcher2.exe
+exit";
 	}
 }
