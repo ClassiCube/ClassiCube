@@ -91,7 +91,8 @@ namespace Launcher2 {
 			if( updateCheckFailed ) return "Update check failed";
 			if( !valid ) return "Build corrupted";
 			if( last == DateTime.MinValue ) return "Checking..";
-			return last.ToString( dateFormat );
+			
+			return last.ToUniversalTime().ToString( dateFormat );
 		}
 		
 		void UpdateBuild( DateTime last, bool valid, string dir ) {

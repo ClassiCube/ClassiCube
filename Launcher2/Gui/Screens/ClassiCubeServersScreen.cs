@@ -69,10 +69,10 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			
-			MakeLabelAt( "Search", titleFont, Anchor.Centre, Anchor.Centre, -200, 10 );
+			MakeLabelAt( "Search", titleFont, Anchor.Centre, Anchor.LeftOrTop, -200, 10 );
 			MakeInput( Get(), 270, Anchor.LeftOrTop, false, -25, 5, 32 );
 			
-			MakeLabelAt( "../play/", inputFont, Anchor.Centre, Anchor.Centre, -210, 55 );
+			MakeLabelAt( "../play/", inputFont, Anchor.Centre, Anchor.LeftOrTop, -210, 55 );
 			MakeInput( Get(), 320, Anchor.LeftOrTop, false, -20, 50, 32 );
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
