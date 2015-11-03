@@ -5,7 +5,7 @@ namespace Launcher2 {
 
 	internal sealed class Program {
 		
-		public const string AppName = "ClassicalSharp Launcher 0.96";
+		public const string AppName = "ClassicalSharp Launcher 0.97";
 		
 		[STAThread]
 		static void Main( string[] args ) {
