@@ -36,7 +36,7 @@ namespace ClassicalSharp.Particles {
 			graphics.AlphaTest = true;
 			count = Math.Min( count, 1000 );
 			
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;

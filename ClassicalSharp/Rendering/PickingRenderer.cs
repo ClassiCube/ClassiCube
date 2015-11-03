@@ -59,7 +59,7 @@ namespace ClassicalSharp.Renderers {
 			ZQuad( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 			ZQuad( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 			
-			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, vb, vertices, verticesCount, verticesCount * 6 / 4 );
 		}
 		

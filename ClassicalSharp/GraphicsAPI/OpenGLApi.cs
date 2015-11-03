@@ -262,7 +262,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;
-		public override void BeginVbBatch( VertexFormat format ) {
+		public override void SetBatchFormat( VertexFormat format ) {
 			if( format == batchFormat ) return;
 			
 			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {

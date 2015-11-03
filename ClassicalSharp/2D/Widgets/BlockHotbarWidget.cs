@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = true;
 			background.Render( graphicsApi );
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );			
-			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;

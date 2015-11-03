@@ -21,7 +21,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions of the bitmap
 		/// are powers of two, because otherwise they will not display properly on certain graphics cards.	<br/>
 		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
-		public int CreateTexture( Bitmap bmp ) {			
+		public int CreateTexture( Bitmap bmp ) {
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
 				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}",
 				                             bmp.PixelFormat );
@@ -120,40 +120,57 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
+		/// <summary> Creates a vertex buffer that can have its data dynamically updated. </summary>
 		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
 		
-		public virtual int CreateVb<T>( T[] vertices, VertexFormat format ) where T : struct {
-			return CreateVb( vertices, format, vertices.Length );
-		}
-		
+		/// <summary> Creates a static vertex buffer that has its data set at creation,
+		/// but the vertex buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateVb<T>( T[] vertices, VertexFormat format, int count ) where T : struct;
 		
+		/// <summary> Creates a static vertex buffer that has its data set at creation,
+		/// but the vertex buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateVb( IntPtr vertices, VertexFormat format, int count );
 		
+		/// <summary> Creates a static index buffer that has its data set at creation,
+		/// but the index buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateIb( ushort[] indices, int indicesCount );
 		
+		/// <summary> Creates a static vertex buffer that has its data set at creation,
+		/// but the index buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateIb( IntPtr indices, int indicesCount );
 		
+		/// <summary> Sets the currently active vertex buffer to the given id. </summary>
 		public abstract void BindVb( int vb );
 		
+		/// <summary> Sets the currently active index buffer to the given id. </summary>
 		public abstract void BindIb( int ib );
 		
+		/// <summary> Frees all native resources held for the dynamic vertex buffer associated with the given id. </summary>
 		public abstract void DeleteDynamicVb( int id );
 		
-		/// <summary> Frees all native resources held for the given vertex buffer id. </summary>
+		/// <summary> Frees all native resources held for the vertex buffer associated with the given id. </summary>
 		public abstract void DeleteVb( int vb );
 		
-		/// <summary> Frees all native resources held for the given index buffer id. </summary>
+		/// <summary> Frees all native resources held for the index buffer associated with the given id. </summary>
 		public abstract void DeleteIb( int ib );
 		
+		/// <summary> Informs the graphics API that the format of the vertex data used in subsequent
+		/// draw calls will be in the given format. </summary>
+		public abstract void SetBatchFormat( VertexFormat format );
+		
+		/// <summary> Draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
 		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
 		
-		public abstract void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) where T : struct;
+		/// <summary> Draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public abstract void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices,
+		                                             int vCount, int indicesCount ) where T : struct;
 		
-		public abstract void BeginVbBatch( VertexFormat format );
-		
+		/// <summary> Draws the specified subset of the vertices in the current vertex buffer. </summary>
 		public abstract void DrawVb( DrawMode mode, int startVertex, int verticesCount );
 		
+		/// <summary> Draws the specified subset of the vertices in the current vertex buffer. </summary>
 		public abstract void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex );
 		
 		/// <summary> Optimised version of DrawIndexedVb for VertexFormat.Pos3fTex2fCol4b </summary>
@@ -162,6 +179,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal abstract void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex );
 		
 		protected static int[] strideSizes = { 16, 24 };
+		
 		
 		/// <summary> Sets the matrix type that load/push/pop operations should be applied to. </summary>
 		public abstract void SetMatrixMode( MatrixType mode );
@@ -233,7 +251,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVerts[1] = new VertexPos3fCol4b( x + width, y, 0, col );
 			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
-			BeginVbBatch( VertexFormat.Pos3fCol4b );
+			SetBatchFormat( VertexFormat.Pos3fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
@@ -251,7 +269,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVerts[1] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
 			texVerts[2] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
 			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
-			BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		

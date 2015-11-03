@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 			api.texVerts[2] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, u2, nameTex.V2, col );	
 			api.texVerts[3] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, u1, nameTex.V2, col );
 			
-			api.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			api.DrawDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
 			api.Texturing = false;
 			api.AlphaTest = false;

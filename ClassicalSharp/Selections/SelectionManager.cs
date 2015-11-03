@@ -45,7 +45,7 @@ namespace ClassicalSharp.Selections {
 			comparer.pos = pos;
 			selections.Sort( comparer );
 			
-			Graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+			Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
 			Graphics.AlphaBlending = true;
 			for( int i = 0; i < selections.Count; i++ ) {
 				SelectionBox box = selections[i];

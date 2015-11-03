@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( sidesVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
 			

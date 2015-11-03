@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 			                       rows * blockSize + 30 + 10, backCol );
 			graphicsApi.Texturing = true;
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
-			graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;

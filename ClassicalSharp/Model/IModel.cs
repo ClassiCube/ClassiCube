@@ -48,7 +48,7 @@ namespace ClassicalSharp.Model {
 			Map map = game.Map;
 			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
 			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}

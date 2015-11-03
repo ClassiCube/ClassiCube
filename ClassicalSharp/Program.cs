@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 				width = 800; height = 600;
 			}
 			if( device.Width >= 1920 && device.Height >= 1080 ) {
-				width = 1024; height = 768;
+				width = 1600; height = 900;
 			}
 		}
 		

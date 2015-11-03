@@ -284,7 +284,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		int batchStride;
-		public override void BeginVbBatch( VertexFormat format ) {
+		public override void SetBatchFormat( VertexFormat format ) {
 			device.SetVertexFormat( formatMapping[(int)format] );
 			batchStride = strideSizes[(int)format];
 		}

@@ -29,7 +29,7 @@ namespace ClassicalSharp.Renderers {
 			float normalY = map.CloudHeight + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
 			
-			graphics.BeginVbBatch( VertexFormat.Pos3fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
 			graphics.BindVb( skyVb );
 			if( skyY == normalY ) {
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
@@ -101,7 +101,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
 			graphics.BindTexture( game.CloudsTextureId );
-			graphics.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( cloudsVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
 			graphics.AlphaTest = false;
