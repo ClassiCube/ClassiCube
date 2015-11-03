@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			Vector3 pos = game.Camera.GetCameraPos( eyePos );
-			float normalY = map.CloudHeight + 8;
+			float normalY = map.Height + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
 			
 			graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
@@ -176,7 +176,7 @@ namespace ClassicalSharp.Renderers {
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyVertices];
-			DrawSkyY( x1, z1, x2, z2, map.CloudHeight + 8, axisSize, map.SkyCol, vertices );
+			DrawSkyY( x1, z1, x2, z2, map.Height + 8, axisSize, map.SkyCol, vertices );
 			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyVertices );
 		}
 		

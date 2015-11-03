@@ -13,9 +13,10 @@ namespace Launcher2 {
 			jarClassic = fetcher.jarClassic;
 			jar162 = fetcher.jar162;
 			pngTerrainPatch = fetcher.pngTerrainPatch;
+			pngGuiPatch = fetcher.pngGuiPatch;
 		}
 		
-		byte[] jarClassic, jar162, pngTerrainPatch;		
+		byte[] jarClassic, jar162, pngTerrainPatch, pngGuiPatch;	
 		public void Run() {			
 			reader = new ZipReader();
 			reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
@@ -35,6 +36,9 @@ namespace Launcher2 {
 				
 				writer.WriteNewImage( animBitmap, "animations.png" );
 				writer.WriteNewString( animationsTxt, "animations.txt" );
+				using( Bitmap guiBitmap = new Bitmap( new MemoryStream( pngGuiPatch ) ) ) {
+					writer.WriteNewImage( guiBitmap, "gui.png" );
+				}
 				animBitmap.Dispose();
 				writer.WriteCentralDirectoryRecords();
 			}
@@ -44,7 +48,7 @@ namespace Launcher2 {
 		Bitmap animBitmap;
 		
 		bool ShouldProcessZipEntry_Classic( string filename ) {
-			return filename.StartsWith( "mob" ) || ( filename.IndexOf( '/' ) < 0 );
+			return filename.StartsWith( "mob" ) || (filename.IndexOf( '/' ) < 0);
 		}
 		
 		void ProcessZipEntry_Classic( string filename, byte[] data, ZipEntry entry ) {
