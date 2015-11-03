@@ -37,7 +37,7 @@ namespace Launcher2 {
 					TableEntry entry = usedEntries[i];
 					if( mouseY >= entry.Y && mouseY < entry.Y + entry.Height ) {
 						if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds > 1 ) {
-							Window.ConnectToServer( entry.Hash );
+							Window.ConnectToServer( servers, entry.Hash );
 							lastPress = DateTime.UtcNow;
 						}
 						SelectedChanged( entry.Hash );

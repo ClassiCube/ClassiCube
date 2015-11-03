@@ -17,20 +17,21 @@
 // <website>https://github.com/facebook-csharp-sdk/simple-json</website>
 //-----------------------------------------------------------------------
 // original json parsing code from http://techblog.procurios.nl/k/618/news/view/14605/14863/How-do-I-write-my-own-parser-for-JSON.html
+// This is a significantly cutdown version of the original simple-json repository.
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace SimpleJson {
+namespace Launcher2 {
 	
-	public static class SimpleJson {
+	public static class Json {
 		const int TOKEN_NONE = 0, TOKEN_CURLY_OPEN = 1, TOKEN_CURLY_CLOSE = 2;
 		const int TOKEN_SQUARED_OPEN = 3, TOKEN_SQUARED_CLOSE = 4, TOKEN_COLON = 5;
 		const int TOKEN_COMMA = 6, TOKEN_STRING = 7, TOKEN_NUMBER = 8; 
 		const int TOKEN_TRUE = 9, TOKEN_FALSE = 10, TOKEN_NULL = 11;
 
-		static Dictionary<string, object> ParseObject( char[] json, ref int index, ref bool success ) {
+		static Dictionary<string, object> ParseObject( string json, ref int index, ref bool success ) {
 			Dictionary<string, object> table = new Dictionary<string, object>();
 			NextToken( json, ref index ); // skip {
 			
@@ -61,7 +62,7 @@ namespace SimpleJson {
 			}
 		}
 
-		static List<object> ParseArray( char[] json, ref int index, ref bool success ) {
+		static List<object> ParseArray( string json, ref int index, ref bool success ) {
 			List<object> array = new List<object>();
 			NextToken( json, ref index ); // [
 
@@ -82,7 +83,7 @@ namespace SimpleJson {
 			}
 		}
 
-		static object ParseValue( char[] json, ref int index, ref bool success ) {
+		public static object ParseValue( string json, ref int index, ref bool success ) {
 			switch ( LookAhead( json, index ) ) {
 				case TOKEN_STRING:
 					return ParseString( json, ref index, ref success );
@@ -107,7 +108,7 @@ namespace SimpleJson {
 			success = false; return null;
 		}
 
-		static string ParseString( char[] json, ref int index, ref bool success ) {
+		static string ParseString( string json, ref int index, ref bool success ) {
 			StringBuilder s = new StringBuilder( 400 );
 			EatWhitespace( json, ref index );
 			char c = json[index++]; // "
@@ -129,7 +130,8 @@ namespace SimpleJson {
 						if( remainingLength >= 4 ) {
 							// parse the 32 bit hex into an integer codepoint
 							uint codePoint;
-							if( !( success = UInt32.TryParse( new String( json, index, 4 ), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint ) ) )
+							string str = json.Substring( index, 4 );
+							if( !( success = UInt32.TryParse( str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint ) ) )
 								return "";
 							
 							s.Append( new String( (char)codePoint, 1 ) );					
@@ -148,46 +150,37 @@ namespace SimpleJson {
 		}
 
 		const StringComparison caseless = StringComparison.OrdinalIgnoreCase;
-		static object ParseNumber( char[] json, ref int index, ref bool success ) {
+		static object ParseNumber( string json, ref int index, ref bool success ) {
 			EatWhitespace( json, ref index );
 			int lastIndex = GetLastIndexOfNumber( json, index );
 			int charLength = (lastIndex - index) + 1;
-			string str = new String( json, index, charLength );
+			string str = json.Substring( index, charLength );
 			index = lastIndex + 1;
-			
-			if( str.IndexOf( ".", caseless ) != -1 || str.IndexOf( "e", caseless ) != -1 ) {
-				double number;
-				success = double.TryParse( str, NumberStyles.Any, CultureInfo.InvariantCulture, out number );
-				return number;
-			} else {
-				long number;
-				success = long.TryParse( str, NumberStyles.Any, CultureInfo.InvariantCulture, out number );
-				return number;
-			}
+			return str;
 		}
 
-		static int GetLastIndexOfNumber( char[] json, int index ) {
+		static int GetLastIndexOfNumber( string json, int index ) {
 			int lastIndex = index;
 			for( ; lastIndex < json.Length; lastIndex++ ) {
-				if( "0123456789+-.eE".IndexOf( json[lastIndex] ) == -1 ) 
+				if( "0123456789+-".IndexOf( json[lastIndex] ) == -1 ) 
 					break;
 			}
 			return lastIndex - 1;
 		}
 
-		static void EatWhitespace( char[] json, ref int index ) {
+		static void EatWhitespace( string json, ref int index ) {
 			for( ; index < json.Length; index++ ) {
 				if( " \t\n\r\b\f".IndexOf( json[index] ) == -1 ) 
 					break;
 			}
 		}
 
-		static int LookAhead( char[] json, int index ) {
+		static int LookAhead( string json, int index ) {
 			int saveIndex = index;
 			return NextToken( json, ref saveIndex );
 		}
 
-		static int NextToken( char[] json, ref int index ) {
+		static int NextToken( string json, ref int index ) {
 			EatWhitespace( json, ref index );
 			if( index == json.Length )
 				return TOKEN_NONE;
@@ -215,7 +208,7 @@ namespace SimpleJson {
 			return TOKEN_NONE;
 		}
 		
-		static bool CompareConstant( char[] json, ref int index, string value ) {
+		static bool CompareConstant( string json, ref int index, string value ) {
 			int remaining = json.Length - index;
 			if( remaining < value.Length ) return false;
 			

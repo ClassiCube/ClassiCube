@@ -82,8 +82,20 @@ namespace Launcher2 {
 			screen.Init();
 		}
 		
-		public bool ConnectToServer( string hash ) {
+		public bool ConnectToServer( List<ServerListEntry> publicServers, string hash ) {
+			if( String.IsNullOrEmpty( hash ) ) return false;
+			
 			ClientStartData data = null;
+			foreach( ServerListEntry entry in publicServers ) {
+				if( entry.Hash == hash ) {
+					data = new ClientStartData( Session.Username, entry.Mppass,
+					                           entry.IPAddress, entry.Port );
+					Client.Start( data, true );
+					return true;
+				}
+			}
+			
+			// Fallback to private server handling
 			try {
 				data = Session.GetConnectInfo( hash );
 			} catch( WebException ex ) {

@@ -18,12 +18,25 @@ namespace Launcher2 {
 		/// <summary> How long the server has been 'alive'. </summary>
 		public string Uptime;
 		
-		public ServerListEntry( string hash, string name, string players, string maxPlayers, string uptime ) {
+		/// <summary> IP address the server is hosted on. </summary>
+		public string IPAddress;
+		
+		/// <summary> Port the server is hosted on. </summary>
+		public string Port;
+		
+		/// <summary> Mppass specific for the user and this server. </summary>
+		public string Mppass;
+		
+		public ServerListEntry( string hash, string name, string players, string maxPlayers, 
+                       string uptime, string mppass, string ip, string port ) {
 			Hash = hash;
 			Name = name;
 			Players = players;
 			MaximumPlayers = maxPlayers;
 			Uptime = uptime;
+			Mppass = mppass;
+			IPAddress = ip;
+			Port = port;
 		}
 	}
 }

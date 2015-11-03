@@ -15,9 +15,11 @@ namespace Launcher2 {
 		public Action<string> SelectedChanged;
 		
 		TableEntry[] entries, usedEntries;
+		internal List<ServerListEntry> servers;
 		public void SetEntries( List<ServerListEntry> servers ) {
 			entries = new TableEntry[servers.Count];
 			usedEntries = new TableEntry[servers.Count];
+			this.servers = servers;
 			int index = 0;
 			
 			foreach( ServerListEntry e in servers ) {

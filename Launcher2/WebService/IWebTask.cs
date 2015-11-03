@@ -73,11 +73,12 @@ namespace Launcher2 {
 		
 		protected string GetHtmlAll( string uri, string referer ) {
 			HttpWebResponse response = MakeRequest( uri, referer, null );
-			using( Stream stream = response.GetResponseStream() ) {
-				using( StreamReader reader = new StreamReader( stream ) ) {
-					return reader.ReadToEnd();
-				}
-			}
+			return GetResponseAll( response );
+		}
+		
+		protected string PostHtmlAll( string uri, string referer, string data ) {
+			HttpWebResponse response = MakeRequest( uri, referer, data );
+			return GetResponseAll( response );
 		}
 		
 		protected IEnumerable<string> GetResponseLines( HttpWebResponse response ) {
@@ -91,8 +92,16 @@ namespace Launcher2 {
 			}
 		}
 		
+		protected string GetResponseAll( HttpWebResponse response ) {
+			using( Stream stream = response.GetResponseStream() ) {
+				using( StreamReader reader = new StreamReader( stream ) ) {
+					return reader.ReadToEnd();
+				}
+			}
+		}
+		
 		protected static void Log( string text ) {
-			System.Diagnostics.Debug.WriteLine( text );
+			Console.WriteLine( text );
 		}
 	}
 }

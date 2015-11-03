@@ -109,7 +109,8 @@ namespace Launcher2 {
 		}
 		
 		void ConnectToServer( int mouseX, int mouseY ) {
-			game.ConnectToServer( Get( 3 ) );
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			game.ConnectToServer( table.servers, Get( 3 ) );
 		}
 		
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
