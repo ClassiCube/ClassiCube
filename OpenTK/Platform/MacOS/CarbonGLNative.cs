@@ -223,6 +223,10 @@ namespace OpenTK.Platform.MacOS {
 					GetCharCodes(inEvent, out code, out charCode);
 					keyPressArgs.KeyChar = charCode;
 					break;
+			}			
+			if( !Keymap.ContainsKey( code ) ) {
+				Debug.Print( "{0} is not mapped, ignoring" );
+				return OSStatus.NoError;
 			}
 
 			switch ((KeyboardEventKind)evt.EventKind) {

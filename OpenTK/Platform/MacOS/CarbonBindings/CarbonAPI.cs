@@ -490,11 +490,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		static extern void ReleaseEvent(IntPtr theEvent);
 
-		internal static void SendEvent(IntPtr theEvent) {
-			IntPtr theTarget = GetEventDispatcherTarget();
-			SendEventToEventTarget(theEvent, theTarget);
-		}
-
 		// Processes events in the queue and then returns.
 		internal static void ProcessEvents() {
 			IntPtr theEvent;
@@ -600,7 +595,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.WindowRef, EventParamType.typeWindowRef, IntPtr.Zero,
 			                                        sizeof(IntPtr), IntPtr.Zero, (IntPtr)(void*)&retval);
-			CheckReturn(result);
+			//CheckReturn(result);
 			windowRef = retval;
 			return result;
 		}
