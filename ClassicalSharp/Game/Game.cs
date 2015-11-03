@@ -381,8 +381,9 @@ namespace ClassicalSharp {
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack, bool nullContext )
-			: base( 640, 480, GraphicsMode.Default, Program.AppName, nullContext, 0, DisplayDevice.Default ) {
+		public Game( string username, string mppass, string skinServer, string defaultTexPack, 
+		            bool nullContext, int width, int height )
+			: base( width, height, GraphicsMode.Default, Program.AppName, nullContext, 0, DisplayDevice.Default ) {
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;

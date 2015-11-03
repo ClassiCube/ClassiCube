@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -21,22 +22,37 @@ namespace ClassicalSharp {
 			#if !USE_DX
 			nullContext = false;
 			#endif
+			int width, height;
+			SelectResolution( out width, out height );
 				
 			if( args.Length == 0 || args.Length == 1 ) {
 				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 				string pack = args.Length >= 1 ? args[0] : "default.zip";
-				using( Game game = new Game( "LocalPlayer", null, skinServer, pack, nullContext ) ) {
+				
+				using( Game game = new Game( "LocalPlayer", null, skinServer, 
+				                            pack, nullContext, width, height ) )
 					game.Run();
-				}
 			} else if( args.Length < 4 ) {
 				Utils.LogDebug( "ClassicalSharp.exe is only the raw client. You must either use the launcher or"
 				     + " provide command line arguments to start the client." );
 			} else {
-				RunMultiplayer( args, nullContext );
+				RunMultiplayer( args, nullContext, width, height );
 			}
 		}
 		
-		static void RunMultiplayer( string[] args, bool nullContext ) {
+		static void SelectResolution( out int width, out int height ) {
+			DisplayDevice device = DisplayDevice.Default;
+			width = 640; height = 480;
+			
+			if( device.Width >= 1024 && device.Height >= 768 ) {
+				width = 800; height = 600;
+			}
+			if( device.Width >= 1920 && device.Height >= 1080 ) {
+				width = 1024; height = 768;
+			}
+		}
+		
+		static void RunMultiplayer( string[] args, bool nullContext, int width, int height ) {
 			IPAddress ip = null;
 			if( !IPAddress.TryParse( args[2], out ip ) ) {
 				Utils.LogDebug( "Invalid IP \"" + args[2] + '"' );
@@ -52,7 +68,8 @@ namespace ClassicalSharp {
 
 			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
 			string pack = args.Length >= 6 ? args[5] : "default.zip";
-			using( Game game = new Game( args[0], args[1], skinServer, pack, nullContext ) ) {
+			using( Game game = new Game( args[0], args[1], skinServer, pack, 
+			                            nullContext, width, height ) ) {
 				game.IPAddress = ip;
 				game.Port = port;
 				game.Run();

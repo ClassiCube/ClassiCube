@@ -108,6 +108,7 @@ namespace ClassicalSharp {
 			
 			while( reader.size > 0 ) {
 				byte opcode = reader.buffer[0];
+				Console.WriteLine( (PacketId)opcode );
 				// Fix for older D3 servers which wrote one byte too many for HackControl packets.
 				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
 					reader.Remove( 1 );
