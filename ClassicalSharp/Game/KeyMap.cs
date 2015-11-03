@@ -21,7 +21,6 @@ namespace ClassicalSharp {
 		bool IsReservedKey( Key key ) {
 			return key == Key.Escape || key == Key.F12 || key == Key.Slash || key == Key.BackSpace ||
 				(key >= Key.Insert && key <= Key.End) ||
-				(key >= Key.Up && key <= Key.Right) || // chat screen movement
 				(key >= Key.Number0 && key <= Key.Number9); // block hotbar
 		}
 		
