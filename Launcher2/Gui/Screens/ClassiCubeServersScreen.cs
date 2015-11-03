@@ -79,7 +79,7 @@ namespace Launcher2 {
 			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.LeftOrTop,
 			             180, 5, ConnectToServer );
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.LeftOrTop,
-			             195, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			             195, 50, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
 			MakeTableWidget();
 		}
 		

@@ -36,12 +36,14 @@ namespace Launcher2 {
 			if( !session.Working ) {
 				if( session.Exception != null ) {
 					DisplayWebException( session.Exception, session.Status );
+				} else if( HasServers ) {
+					game.SetScreen( new ClassiCubeServersScreen( game ) );
+					return;
 				}
 				signingIn = false;
 				game.MakeBackground();
 				Resize();
-			}
-			
+			}		
 		}
 		
 		void LoadSavedInfo( IDrawer2D drawer ) {

@@ -203,7 +203,7 @@ namespace OpenTK.Platform.MacOS {
 
 		protected OSStatus EventHandler( IntPtr inCaller, IntPtr inEvent, IntPtr userData ) {
 			// bail out if the window passed in is not actually our window.
-			if( userData != window.WindowRef)
+			if( window == null || userData != window.WindowRef )
 				return OSStatus.EventNotHandled;
 			
 			EventInfo evt = new EventInfo(inEvent);
