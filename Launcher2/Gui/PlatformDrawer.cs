@@ -34,6 +34,25 @@ namespace Launcher2 {
 		}
 	}
 	
+	// TODO: broken
+	public sealed class OSXPlatformDrawer : PlatformDrawer {
+		
+		Graphics g;	
+		public override void Init( IWindowInfo info ) {
+			g = Graphics.FromHwnd( info.WinHandle );
+		}
+		
+		public override void Resize( IWindowInfo info ) {
+			if( g != null )
+				g.Dispose();
+			g = Graphics.FromHwnd( info.WinHandle );
+		}
+		
+		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
+			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
+		}
+	}
+	
 	public sealed class X11PlatformDrawer : PlatformDrawer {
 		
 		IntPtr gc;	

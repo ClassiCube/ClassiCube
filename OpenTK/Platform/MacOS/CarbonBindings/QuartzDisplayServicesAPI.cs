@@ -1,18 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
 
-
-namespace OpenTK.Platform.MacOS.Carbon
-{
+namespace OpenTK.Platform.MacOS.Carbon {
+	
 	// Quartz Display services used here are available in MacOS X 10.3 and later.
-
-	enum CGDisplayErr
-	{
+	enum CGDisplayErr {
 
 	}
 
-	internal static class CG
-	{
+	internal static class CG {
 		const string appServices = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";
 
 		// CGPoint -> HIPoint

@@ -106,32 +106,15 @@ namespace OpenTK.Platform.MacOS {
 			Update(carbonWindow);
 			
 			MakeCurrent(carbonWindow);
-
 			Debug.Print("context: {0}", ContextHandle);
 		}
 
-		private IntPtr GetQuartzDevice(CarbonWindowInfo carbonWindow)
-		{
-			IntPtr windowRef = carbonWindow.WindowRef;
-
-			if (!CarbonGLNative.WindowRefMap.ContainsKey(windowRef))
-				return IntPtr.Zero;
-
-			WeakReference nativeRef = CarbonGLNative.WindowRefMap[windowRef];
-			if (!nativeRef.IsAlive)
-				return IntPtr.Zero;
-
-			CarbonGLNative window = nativeRef.Target as CarbonGLNative;
-
-			if (window == null)
-				return IntPtr.Zero;
-
-			return QuartzDisplayDeviceDriver.HandleTo(window.TargetDisplayDevice);
-
+		private IntPtr GetQuartzDevice( CarbonWindowInfo carbonWindow ) {
+			CarbonGLNative nativeWindow = carbonWindow.nativeWindow;
+			return QuartzDisplayDeviceDriver.HandleTo( nativeWindow.TargetDisplayDevice );
 		}
 		
-		void SetDrawable(CarbonWindowInfo carbonWindow)
-		{
+		void SetDrawable(CarbonWindowInfo carbonWindow) {
 			IntPtr windowPort = API.GetWindowPort(carbonWindow.WindowRef);
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
@@ -139,14 +122,12 @@ namespace OpenTK.Platform.MacOS {
 			Agl.CheckReturnValue( code, "aglSetDrawable" );
 		}
 		
-		public override void Update(IWindowInfo window)
-		{
-			CarbonWindowInfo carbonWindow = (CarbonWindowInfo)window;
+		public override void Update(IWindowInfo window) {
+			CarbonWindowInfo winInfo = (CarbonWindowInfo)window;
 
-			if (carbonWindow.goFullScreenHack)
-			{
-				carbonWindow.goFullScreenHack = false;
-				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
+			if (winInfo.goFullScreenHack) {
+				winInfo.goFullScreenHack = false;
+				CarbonGLNative wind = winInfo.nativeWindow;
 
 				if (wind != null)
 					wind.SetFullscreen(this);
@@ -154,11 +135,9 @@ namespace OpenTK.Platform.MacOS {
 					Debug.Print("Could not find window!");
 
 				return;
-			}
-			else if (carbonWindow.goWindowedHack)
-			{
-				carbonWindow.goWindowedHack = false;
-				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
+			} else if (winInfo.goWindowedHack) {
+				winInfo.goWindowedHack = false;
+				CarbonGLNative wind = winInfo.nativeWindow;
 
 				if (wind != null)
 					wind.UnsetFullscreen(this);
@@ -170,22 +149,13 @@ namespace OpenTK.Platform.MacOS {
 			if (mIsFullscreen)
 				return;
 			
-			SetDrawable(carbonWindow);
-
+			SetDrawable(winInfo);
 			Agl.aglUpdateContext(ContextHandle);
 		}
 
-		private CarbonGLNative GetCarbonWindow(CarbonWindowInfo carbonWindow)
-		{
-			WeakReference r = CarbonGLNative.WindowRefMap[carbonWindow.WindowRef];
-			return r.IsAlive ? (CarbonGLNative)r.Target : null;
-		}
-
 		bool firstFullScreen = false;
-		internal void SetFullScreen(CarbonWindowInfo info, out int width, out int height)
-		{
-			CarbonGLNative wind = GetCarbonWindow(info);
-
+		internal void SetFullScreen(CarbonWindowInfo info, out int width, out int height) {
+			CarbonGLNative wind = info.nativeWindow;
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
 			            wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);
 
@@ -205,12 +175,10 @@ namespace OpenTK.Platform.MacOS {
 				UnsetFullScreen(info);
 				SetFullScreen(info, out width, out height);
 			}
-
 			mIsFullscreen = true;
 		}
 		
-		internal void UnsetFullScreen(CarbonWindowInfo windowInfo)
-		{
+		internal void UnsetFullScreen(CarbonWindowInfo windowInfo) {
 			Debug.Print("Unsetting AGL fullscreen.");
 			byte code = Agl.aglSetDrawable(ContextHandle, IntPtr.Zero);
 			Agl.CheckReturnValue( code, "aglSetDrawable" );
@@ -223,7 +191,6 @@ namespace OpenTK.Platform.MacOS {
 
 			mIsFullscreen = false;
 		}
-
 
 		#region IGraphicsContext Members
 
@@ -238,7 +205,7 @@ namespace OpenTK.Platform.MacOS {
 		}
 
 		public override bool IsCurrent {
-			get {  return ContextHandle == Agl.aglGetCurrentContext(); }
+			get { return ContextHandle == Agl.aglGetCurrentContext(); }
 		}
 
 		public override bool VSync {

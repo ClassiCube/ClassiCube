@@ -86,9 +86,7 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-
-		internal static IntPtr HandleTo(DisplayDevice displayDevice)
-		{
+		internal static IntPtr HandleTo(DisplayDevice displayDevice) {
 			if (displayMap.ContainsKey(displayDevice))
 				return displayMap[displayDevice];
 			else
@@ -127,9 +125,7 @@ namespace OpenTK.Platform.MacOS
 					}
 
 					Debug.Print("Changing resolution to {0}x{1}x{2}@{3}.", width, height, bpp, freq);
-
 					CG.CGDisplaySwitchToMode(display, displayModes[j]);
-
 					return true;
 				}
 
@@ -137,12 +133,10 @@ namespace OpenTK.Platform.MacOS
 			return false;
 		}
 
-		public bool TryRestoreResolution(DisplayDevice device)
-		{
+		public bool TryRestoreResolution(DisplayDevice device) {
 			IntPtr display = displayMap[device];
 
-			if (storedModes.ContainsKey(display))
-			{
+			if (storedModes.ContainsKey(display)) {
 				Debug.Print("Restoring resolution.");
 
 				CG.CGDisplaySwitchToMode(display, storedModes[display]);

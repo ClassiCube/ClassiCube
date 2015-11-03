@@ -354,8 +354,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		StandardFloating     = (CloseBox | CollapseBox)
 	}
 
-	internal enum WindowPositionMethod : uint
-	{
+	internal enum WindowPositionMethod : uint {
 		CenterOnMainScreen = 1,
 		CenterOnParentWindow = 2,
 		CenterOnParentWindowScreen = 3,
@@ -370,8 +369,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 	internal delegate OSStatus MacOSEventHandler(IntPtr inCaller, IntPtr inEvent, IntPtr userData);
 
-	internal enum WindowPartCode : short
-	{
+	internal enum WindowPartCode : short {
 		inDesk = 0,
 		inNoWindow = 0,
 		inMenuBar = 1,
@@ -402,13 +400,11 @@ namespace OpenTK.Platform.MacOS.Carbon
 	#endregion
 	#region --- Process Manager ---
 
-	enum ProcessApplicationTransformState : int
-	{
+	enum ProcessApplicationTransformState : int {
 		kProcessTransformToForegroundApplication = 1,
 	}
 
-	struct ProcessSerialNumber
-	{
+	struct ProcessSerialNumber {
 		public ulong high;
 		public ulong low;
 	}
@@ -437,23 +433,8 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		#region --- Window Construction ---
 
-		[DllImport(carbon,EntryPoint="CreateNewWindow")]
-		private static extern OSStatus _CreateNewWindow(WindowClass @class, WindowAttributes attributes, ref Rect r, out IntPtr window);
-
-		internal static IntPtr CreateNewWindow(WindowClass @class, WindowAttributes attributes, Rect r)
-		{
-			IntPtr retval;
-			OSStatus stat = _CreateNewWindow(@class, attributes, ref r, out retval);
-
-			Debug.Print("Created Window: {0}", retval);
-
-			if (stat != OSStatus.NoError)
-			{
-				throw new MacOSException(stat);
-			}
-
-			return retval;
-		}
+		[DllImport(carbon)]
+		internal static extern OSStatus CreateNewWindow(WindowClass @class, WindowAttributes attributes, ref Rect r, out IntPtr window);
 
 		[DllImport(carbon)]
 		internal static extern void DisposeWindow(IntPtr window);
@@ -482,15 +463,11 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		[DllImport(carbon)]
 		static extern OSStatus GetWindowBounds(IntPtr window, WindowRegionCode regionCode, out Rect globalBounds);
-		internal static Rect GetWindowBounds(IntPtr window, WindowRegionCode regionCode)
-		{
-			Rect retval;
-			OSStatus result = GetWindowBounds(window, regionCode, out retval);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
-
-			return retval;
+		internal static Rect GetWindowBounds(IntPtr window, WindowRegionCode regionCode) {
+			Rect rect;
+			OSStatus result = GetWindowBounds(window, regionCode, out rect);
+			CheckReturn(result);
+			return rect;
 		}
 
 		//[DllImport(carbon)]
@@ -502,11 +479,9 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		static extern IntPtr GetEventDispatcherTarget();
 
-		[DllImport(carbon,EntryPoint="ReceiveNextEvent")]
-		static extern OSStatus ReceiveNextEvent(uint inNumTypes,
-		                                        IntPtr inList,
-		                                        double inTimeout,
-		                                        bool inPullEvent,
+		[DllImport(carbon)]
+		static extern OSStatus ReceiveNextEvent(uint inNumTypes, IntPtr inList,
+		                                        double inTimeout, bool inPullEvent,
 		                                        out IntPtr outEvent);
 
 		[DllImport(carbon)]
@@ -515,56 +490,37 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		static extern void ReleaseEvent(IntPtr theEvent);
 
-		internal static void SendEvent(IntPtr theEvent)
-		{
+		internal static void SendEvent(IntPtr theEvent) {
 			IntPtr theTarget = GetEventDispatcherTarget();
 			SendEventToEventTarget(theEvent, theTarget);
 		}
 
 		// Processes events in the queue and then returns.
-		internal static void ProcessEvents()
-		{
+		internal static void ProcessEvents() {
 			IntPtr theEvent;
 			IntPtr theTarget = GetEventDispatcherTarget();
 			
-			for (;;)
-			{
+			for (;;) {
 				OSStatus status = ReceiveNextEvent(0, IntPtr.Zero, 0.0, true, out theEvent);
 
 				if (status == OSStatus.EventLoopTimedOut)
 					break;
 
-				if (status != OSStatus.NoError)
-				{
+				if (status != OSStatus.NoError) {
 					Debug.Print("Message Loop status: {0}", status);
 					break;
 				}
 				if (theEvent == IntPtr.Zero)
 					break;
 
-				try
-				{
-					SendEventToEventTarget(theEvent, theTarget);
-				}
-				catch (System.ExecutionEngineException e)
-				{
-					Console.Error.WriteLine("ExecutionEngineException caught.");
-					Console.Error.WriteLine("theEvent: " + new EventInfo(theEvent).ToString());
-					Console.Error.WriteLine(e.Message);
-					Console.Error.WriteLine(e.StackTrace);
-				}
-
+				SendEventToEventTarget(theEvent, theTarget);
 				ReleaseEvent(theEvent);
 			}
 
 		}
-
-		#region --- Processing apple event ---
-
+		
 		[StructLayout(LayoutKind.Sequential)]
-
-		struct EventRecord
-		{
+		struct EventRecord {
 			public ushort what;
 			public uint message;
 			public uint when;
@@ -578,33 +534,15 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		static extern OSStatus AEProcessAppleEvent(ref EventRecord theEventRecord);
 
-		static internal void ProcessAppleEvent(IntPtr inEvent)
-		{
+		internal static void ProcessAppleEvent(IntPtr inEvent) {
 			EventRecord record;
-
 			ConvertEventRefToEventRecord(inEvent, out record);
 			AEProcessAppleEvent(ref record);
 		}
-
-		#endregion
-
-		#endregion
-		#region --- Getting Event Parameters ---
-
-		[DllImport(carbon)]
-		static extern OSStatus CreateEvent( IntPtr inAllocator,
-		                                   EventClass inClassID, UInt32 kind, EventTime when,
-		                                   EventAttributes flags, out IntPtr outEvent);
 		
-		internal static IntPtr CreateWindowEvent(WindowEventKind kind) {
-			IntPtr retval;
-			OSStatus stat = CreateEvent(IntPtr.Zero, EventClass.Window, (uint)kind,
-			                            0, EventAttributes.kEventAttributeNone, out retval);
+		#endregion
 
-			if (stat != OSStatus.NoError)
-				throw new MacOSException(stat);
-			return retval;
-		}
+		#region --- Event handlers ---
 
 		[DllImport(carbon)]
 		static extern OSStatus GetEventParameter(
@@ -616,9 +554,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.KeyCode, EventParamType.typeUInt32, IntPtr.Zero,
 			                                        sizeof(uint), IntPtr.Zero, (IntPtr)(void*)&code);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
+			CheckReturn(result);
 			return (MacOSKeyCode)code;
 		}
 
@@ -627,9 +563,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.KeyMacCharCode, EventParamType.typeChar, IntPtr.Zero,
 			                                        Marshal.SizeOf(typeof(char)), IntPtr.Zero, (IntPtr)(void*)&code);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
+			CheckReturn(result);
 			return code;
 		}
 
@@ -660,7 +594,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.WindowMouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
 			                                        Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
-
+			CheckReturn(result);
 			pt = point;
 			return result;
 		}
@@ -670,7 +604,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.WindowRef, EventParamType.typeWindowRef, IntPtr.Zero,
 			                                        sizeof(IntPtr), IntPtr.Zero, (IntPtr)(void*)&retval);
-
+			CheckReturn(result);
 			windowRef = retval;
 			return result;
 		}
@@ -680,7 +614,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.MouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
 			                                        Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
-
+			CheckReturn(result);
 			pt = point;
 			return result;
 		}
@@ -690,74 +624,40 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.KeyModifiers, EventParamType.typeUInt32, IntPtr.Zero,
 			                                        sizeof(uint), IntPtr.Zero, (IntPtr)(void*)&code);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
+			CheckReturn(result);
 			return (MacOSKeyModifiers)code;
 		}
 
-		#endregion
-		#region --- Event Handlers ---
-
-		[DllImport(carbon,EntryPoint="InstallEventHandler")]
-		static extern OSStatus _InstallEventHandler(
+		[DllImport(carbon)]
+		static extern OSStatus InstallEventHandler(
 			IntPtr eventTargetRef, IntPtr handlerProc,
 			int numtypes, EventTypeSpec[] typeList,
 			IntPtr userData, IntPtr handlerRef);
 
-		internal static void InstallWindowEventHandler(IntPtr windowRef, IntPtr uppHandlerProc,
-		                                               EventTypeSpec[] eventTypes, IntPtr userData, IntPtr handlerRef)
-		{
+		internal static void InstallWindowEventHandler(IntPtr windowRef, IntPtr uppHandlerProc, EventTypeSpec[] eventTypes, 
+		                                               IntPtr userData, IntPtr handlerRef) {
 			IntPtr windowTarget = GetWindowEventTarget(windowRef);
-
-			//Debug.Print("Window: {0}", windowRef);
-			//Debug.Print("Window Target: {0}", windowTarget);
-			//Debug.Print("Handler: {0}", uppHandlerProc);
-			//Debug.Print("Num Events: {0}", eventTypes.Length);
-			//Debug.Print("User Data: {0}", userData);
-			//Debug.Print("Handler Ref: {0}", handlerRef);
-
-			OSStatus error = _InstallEventHandler(windowTarget, uppHandlerProc,
-			                                      eventTypes.Length, eventTypes,
-			                                      userData, handlerRef);
-
-			//Debug.Print("Status: {0}", error);
-
-			if (error != OSStatus.NoError)
-			{
-				throw new MacOSException(error);
-			}
+			OSStatus error = InstallEventHandler(windowTarget, uppHandlerProc, eventTypes.Length, 
+			                                     eventTypes, userData, handlerRef);
+			CheckReturn( error );
 		}
 
-		internal static void InstallApplicationEventHandler(IntPtr uppHandlerProc,
-		                                                    EventTypeSpec[] eventTypes, IntPtr userData, IntPtr handlerRef)
-		{
-
-			OSStatus error = _InstallEventHandler(GetApplicationEventTarget(), uppHandlerProc,
+		internal static void InstallApplicationEventHandler(IntPtr uppHandlerProc, EventTypeSpec[] eventTypes, 
+		                                                    IntPtr userData, IntPtr handlerRef) {
+			OSStatus error = InstallEventHandler(GetApplicationEventTarget(), uppHandlerProc,
 			                                      eventTypes.Length, eventTypes,
 			                                      userData, handlerRef);
-
-			if (error != OSStatus.NoError)
-			{
-				throw new MacOSException(error);
-			}
-
+			CheckReturn( error );
 		}
 
 		[DllImport(carbon)]
 		internal static extern OSStatus RemoveEventHandler(IntPtr inHandlerRef);
-
-		#endregion
-		#region --- GetWindowEventTarget ---
 
 		[DllImport(carbon)]
 		internal static extern IntPtr GetWindowEventTarget(IntPtr window);
 
 		[DllImport(carbon)]
 		internal static extern IntPtr GetApplicationEventTarget();
-
-		#endregion
-		#region --- UPP Event Handlers ---
 		
 		[DllImport(carbon)]
 		internal static extern IntPtr NewEventHandlerUPP(MacOSEventHandler handler);
@@ -791,26 +691,14 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		#endregion
 
-		[DllImport(carbon)]
-		internal static extern OSStatus ActivateWindow (IntPtr inWindow, bool inActivate);
-
-		[DllImport(carbon)]
-		internal static extern void RunApplicationEventLoop();
-
-		[DllImport(carbon)]
-		internal static extern void QuitApplicationEventLoop();
-
 		#region --- SetWindowTitle ---
 
 		[DllImport(carbon)]
 		static extern void SetWindowTitleWithCFString(IntPtr windowRef, IntPtr title);
 
-		internal static void SetWindowTitle(IntPtr windowRef, string title)
-		{
+		internal static void SetWindowTitle(IntPtr windowRef, string title) {
 			IntPtr str = __CFStringMakeConstantString(title);
-
 			Debug.Print("Setting window title: {0},   CFstring : {1},  Text : {2}", windowRef, str, title);
-
 			SetWindowTitleWithCFString(windowRef, str);
 
 			// Apparently releasing this reference to the CFConstantString here
@@ -821,18 +709,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 		}
 
 		#endregion
-		
-		[DllImport(carbon,EntryPoint="ChangeWindowAttributes")]
-		static extern OSStatus _ChangeWindowAttributes(IntPtr windowRef, WindowAttributes setTheseAttributes, WindowAttributes clearTheseAttributes);
-		internal static void ChangeWindowAttributes(IntPtr windowRef, WindowAttributes setTheseAttributes, WindowAttributes clearTheseAttributes)
-		{
-			OSStatus error = _ChangeWindowAttributes(windowRef, setTheseAttributes, clearTheseAttributes);
-			
-			if (error != OSStatus.NoError)
-			{
-				throw new MacOSException(error);
-			}
-		}
 		
 		[DllImport(carbon)]
 		static extern IntPtr __CFStringMakeConstantString(string cStr);
@@ -845,59 +721,29 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		[DllImport(carbon)]
 		internal static extern IntPtr GetWindowPort(IntPtr windowRef);
-		
-		#region --- Menus ---
 
 		[DllImport(carbon)]
 		internal static extern IntPtr AcquireRootMenu();
 
-
-		#endregion
-
 		[DllImport(carbon)]
 		internal static extern bool IsWindowCollapsed(IntPtr windowRef);
 
-		[DllImport(carbon, EntryPoint = "CollapseWindow")]
-		static extern OSStatus _CollapseWindow(IntPtr windowRef, bool collapse);
-
-		internal static void CollapseWindow(IntPtr windowRef, bool collapse)
-		{
-			OSStatus error = _CollapseWindow(windowRef, collapse);
-
-			if (error != OSStatus.NoError)
-			{
-				throw new MacOSException(error);
-			}
-		}
+		[DllImport(carbon)]
+		internal static extern OSStatus CollapseWindow(IntPtr windowRef, bool collapse);
 
 		[DllImport(carbon, EntryPoint="IsWindowInStandardState")]
 		static extern bool _IsWindowInStandardState(IntPtr windowRef, IntPtr inIdealSize, IntPtr outIdealStandardState);
 
-		internal static bool IsWindowInStandardState(IntPtr windowRef)
-		{
+		internal static bool IsWindowInStandardState(IntPtr windowRef) {
 			return _IsWindowInStandardState(windowRef, IntPtr.Zero, IntPtr.Zero);
 		}
 
-		[DllImport(carbon, EntryPoint = "ZoomWindowIdeal")]
-		unsafe static extern OSStatus _ZoomWindowIdeal(IntPtr windowRef, short inPartCode, IntPtr toIdealSize);
-
-		internal static void ZoomWindowIdeal(IntPtr windowRef, WindowPartCode inPartCode, ref CarbonPoint toIdealSize)
-		{
-			CarbonPoint pt = toIdealSize;
-			OSStatus error ;
-			IntPtr handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(CarbonPoint)));
-			Marshal.StructureToPtr(toIdealSize, handle, false);
-
-			error = _ZoomWindowIdeal(windowRef, (short)inPartCode, handle);
-
-			toIdealSize = (CarbonPoint)Marshal.PtrToStructure(handle,typeof(CarbonPoint));
-
-			Marshal.FreeHGlobal(handle);
-
-			if (error != OSStatus.NoError)
-			{
-				throw new MacOSException(error);
-			}
+		[DllImport(carbon)]
+		internal unsafe static extern OSStatus ZoomWindowIdeal(IntPtr windowRef, short inPartCode, ref CarbonPoint toIdealSize);
+		
+		internal static void CheckReturn( OSStatus status ) {
+			if( status != OSStatus.NoError )
+				throw new MacOSException( status );
 		}
 
 		[DllImport(carbon)]
@@ -955,14 +801,8 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#endregion
 
 		const string gestaltlib = "/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon";
-
-
 		[DllImport(gestaltlib)]
 		internal static extern OSStatus Gestalt(GestaltSelector selector, out int response);
 	}
-
 	#endregion
-	
 }
-
-

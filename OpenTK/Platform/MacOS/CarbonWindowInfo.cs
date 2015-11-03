@@ -26,63 +26,34 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OpenTK.Platform.MacOS
-{
+namespace OpenTK.Platform.MacOS {
+	
 	/// \internal
-	/// <summary>
-	/// Describes a Carbon window.
-	/// </summary>
-	sealed class CarbonWindowInfo : IWindowInfo
-	{
-		IntPtr windowRef;
+	/// <summary> Describes a Carbon window.</summary>
+	sealed class CarbonWindowInfo : IWindowInfo {
+		
+		public IntPtr WindowRef;
 		bool ownHandle = false;
 		bool disposed = false;
 		internal bool goFullScreenHack = false;
 		internal bool goWindowedHack = false;
+		internal CarbonGLNative nativeWindow;
 
-		#region Constructors
-
-		/// <summary>
-		/// Constructs a new instance with the specified parameters.
-		/// </summary>
-		/// <param name="windowRef">A valid Carbon window reference.</param>
-		/// <param name="ownHandle"></param>
-		public CarbonWindowInfo(IntPtr windowRef, bool ownHandle)
-		{
-			this.windowRef = windowRef;
+		public CarbonWindowInfo( IntPtr windowRef, CarbonGLNative nativeWindow, bool ownHandle ) {
+			this.WindowRef = windowRef;
+			this.nativeWindow = nativeWindow;
 			this.ownHandle = ownHandle;
 		}
 
-		#endregion
-
-		#region Public Members
-
-		/// <summary>
-		/// Gets the window reference for this instance.
-		/// </summary>
-		internal IntPtr WindowRef
-		{
-			get { return this.windowRef; }
+		public override string ToString() {
+			return String.Format("CarbonWindowInfo: Handle {0}", WindowRef);
 		}
-
-		/// <summary>Returns a System.String that represents the current window.</summary>
-		/// <returns>A System.String that represents the current window.</returns>
-		public override string ToString()
-		{
-			return String.Format("MacOS.CarbonWindowInfo: Handle {0}", WindowRef);
-		}
-
-		#endregion
 		
 		// TODO: I have no idea if this is right.
 		public IntPtr WinHandle { 
-			get { return windowRef; }
+			get { return WindowRef; }
 		}
-
-		#region IDisposable Members
 
 		public void Dispose() {
 			Dispose(true);
@@ -92,11 +63,10 @@ namespace OpenTK.Platform.MacOS
 			if (disposed)
 				return;
 
-			if (ownHandle)
-			{
-				Debug.Print("Disposing window {0}.", windowRef);
-				Carbon.API.DisposeWindow(this.windowRef);
-				windowRef = IntPtr.Zero;
+			if (ownHandle) {
+				Debug.Print("Disposing window {0}.", WindowRef);
+				Carbon.API.DisposeWindow(this.WindowRef);
+				WindowRef = IntPtr.Zero;
 			}
 
 			disposed = true;
@@ -105,7 +75,5 @@ namespace OpenTK.Platform.MacOS
 		~CarbonWindowInfo() {
 			Dispose(false);
 		}
-
-		#endregion
 	}
 }

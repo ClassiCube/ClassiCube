@@ -58,8 +58,8 @@ namespace Launcher2 {
 				platformDrawer = new WinPlatformDrawer();
 			else if( Configuration.RunningOnX11 )
 				platformDrawer = new X11PlatformDrawer();
-			else
-				platformDrawer = new WinPlatformDrawer(); // TODO: mac osx support
+			else if( Configuration.RunningOnMacOS )
+				platformDrawer = new OSXPlatformDrawer();
 		}
 
 		void FocusedChanged( object sender, EventArgs e ) {
