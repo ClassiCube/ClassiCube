@@ -34,16 +34,14 @@ namespace OpenTK.Platform.MacOS {
 	sealed class CarbonWindowInfo : IWindowInfo {
 		
 		public IntPtr WindowRef;
-		bool ownHandle = false;
 		bool disposed = false;
 		internal bool goFullScreenHack = false;
 		internal bool goWindowedHack = false;
 		internal CarbonGLNative nativeWindow;
 
-		public CarbonWindowInfo( IntPtr windowRef, CarbonGLNative nativeWindow, bool ownHandle ) {
+		public CarbonWindowInfo( IntPtr windowRef, CarbonGLNative nativeWindow ) {
 			this.WindowRef = windowRef;
 			this.nativeWindow = nativeWindow;
-			this.ownHandle = ownHandle;
 		}
 
 		public override string ToString() {
@@ -56,24 +54,6 @@ namespace OpenTK.Platform.MacOS {
 		}
 
 		public void Dispose() {
-			Dispose(true);
-		}
-
-		void Dispose(bool disposing) {
-			if (disposed)
-				return;
-
-			if (ownHandle) {
-				Debug.Print("Disposing window {0}.", WindowRef);
-				Carbon.API.DisposeWindow(this.WindowRef);
-				WindowRef = IntPtr.Zero;
-			}
-
-			disposed = true;
-		}
-
-		~CarbonWindowInfo() {
-			Dispose(false);
 		}
 	}
 }

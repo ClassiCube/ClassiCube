@@ -110,7 +110,7 @@ namespace OpenTK.Platform.MacOS {
 			API.CheckReturn(err);
 			
 			API.SetWindowTitle(windowRef, title);
-			window = new CarbonWindowInfo(windowRef, this, true);
+			window = new CarbonWindowInfo(windowRef, this);
 			SetLocation(r.X, r.Y);
 			SetSize(r.Width, r.Height);
 
