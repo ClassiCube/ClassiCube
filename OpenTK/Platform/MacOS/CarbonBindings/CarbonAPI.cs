@@ -572,9 +572,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.MouseButton, EventParamType.typeMouseButton, IntPtr.Zero,
 			                                        sizeof(short), IntPtr.Zero, (IntPtr)(void*)&button);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
+			CheckReturn(result);
 			return (MacOSMouseButton)button;
 		}
 		
@@ -583,9 +581,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.MouseWheelDelta, EventParamType.typeSInt32,
 			                                        IntPtr.Zero, sizeof(int), IntPtr.Zero, (IntPtr)(void*)&delta);
-
-			if (result != OSStatus.NoError)
-				throw new MacOSException(result);
+			CheckReturn(result);
 			return delta;
 		}
 
@@ -594,7 +590,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.WindowMouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
 			                                        Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
-			CheckReturn(result);
+			//CheckReturn(result);
 			pt = point;
 			return result;
 		}
@@ -614,7 +610,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus result = API.GetEventParameter(inEvent,
 			                                        EventParamName.MouseLocation, EventParamType.typeHIPoint, IntPtr.Zero,
 			                                        Marshal.SizeOf(typeof(HIPoint)), IntPtr.Zero, (IntPtr)(void*)&point);
-			CheckReturn(result);
+			//CheckReturn(result);
 			pt = point;
 			return result;
 		}
