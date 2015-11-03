@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ClassicalSharp</RootNamespace>
+    <AssemblyName>ClassicalSharp</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <NoStdLib>False</NoStdLib>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <TargetFrameworkProfile />
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <RunCodeAnalysis>False</RunCodeAnalysis>
+    <NoWin32Manifest>False</NoWin32Manifest>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <BaseAddress>4194304</BaseAddress>
+    <FileAlignment>4096</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>output\debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <StartAction>Project</StartAction>
+    <StartArguments>wwwf 127.0.0.1 25565</StartArguments>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>output\release\</OutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <ItemGroup>
+    <Reference Include="Ionic.Zip.Reduced">
+      <HintPath>Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="2D\DrawTextArgs.cs" />
+    <Compile Include="2D\Screens\ChatScreen.cs" />
+    <Compile Include="2D\Screens\ErrorScreen.cs" />
+    <Compile Include="2D\Screens\FpsScreen.cs" />
+    <Compile Include="2D\Screens\InventoryScreen.cs" />
+    <Compile Include="2D\Screens\LoadingMapScreen.cs" />
+    <Compile Include="2D\Screens\NormalScreen.cs" />
+    <Compile Include="2D\Screens\PauseScreen.cs" />
+    <Compile Include="2D\Screens\Screen.cs" />
+    <Compile Include="2D\Utils2D.cs" />
+    <Compile Include="2D\Widgets\HotbarWidget.cs" />
+    <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\SlotWidget.cs" />
+    <Compile Include="2D\Widgets\TextGroupWidget.cs" />
+    <Compile Include="2D\Widgets\TextInputWidget.cs" />
+    <Compile Include="2D\Widgets\TextWidget.cs" />
+    <Compile Include="2D\Widgets\Widget.cs" />
+    <Compile Include="Blocks\BlockId.cs" />
+    <Compile Include="Blocks\BlockInfo.Biomes.cs" />
+    <Compile Include="Blocks\BlockInfo.cs" />
+    <Compile Include="Blocks\BlockInfo.Culling.cs" />
+    <Compile Include="Blocks\BlockInfo.Optimised.cs" />
+    <Compile Include="Blocks\Model\BedModel.cs" />
+    <Compile Include="Blocks\Model\BiomeColouredModel.cs" />
+    <Compile Include="Blocks\Model\CactusModel.cs" />
+    <Compile Include="Blocks\Model\CubeModel.cs" />
+    <Compile Include="Blocks\Model\FenceModel.cs" />
+    <Compile Include="Blocks\Model\FluidModel.cs" />
+    <Compile Include="Blocks\Model\GrassCubeModel.cs" />
+    <Compile Include="Blocks\Model\IBlockModel.cs" />
+    <Compile Include="Blocks\Model\LeverModel.cs" />
+    <Compile Include="Blocks\Model\LogModel.cs" />
+    <Compile Include="Blocks\Model\RailsModel.cs" />
+    <Compile Include="Blocks\Model\SaplingModel.cs" />
+    <Compile Include="Blocks\Model\SeedsModel.cs" />
+    <Compile Include="Blocks\Model\SpriteModel.cs" />
+    <Compile Include="Blocks\Model\TorchModel.cs" />
+    <Compile Include="Blocks\Model\VariableHeightCubeModel.cs" />
+    <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\EntityManager.cs" />
+    <Compile Include="Entities\EntityMetadata.cs" />
+    <Compile Include="Entities\LivingEntity.cs" />
+    <Compile Include="Entities\LocalPlayer.cs" />
+    <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Entities\NullEntity.cs" />
+    <Compile Include="Entities\Objects\FallingBlockEntity.cs" />
+    <Compile Include="Entities\Objects\ObjectEntity.cs" />
+    <Compile Include="Entities\Particle.cs" />
+    <Compile Include="Entities\ParticleManager.cs" />
+    <Compile Include="Entities\Player.cs" />
+    <Compile Include="Game\Game.Chat.cs" />
+    <Compile Include="Game\Game.cs" />
+    <Compile Include="Game\Game.Events.cs" />
+    <Compile Include="Game\Game.InputHandling.cs" />
+    <Compile Include="GraphicsAPI\IGraphicsApi.cs" />
+    <Compile Include="GraphicsAPI\OpenGLApi.cs" />
+    <Compile Include="Camera.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\DefaultCommands.cs" />
+    <Compile Include="GraphicsAPI\VertexFormats.cs" />
+    <Compile Include="Items\ItemId.cs" />
+    <Compile Include="Items\ItemsInfo.cs" />
+    <Compile Include="Items\Items\AxeItem.cs" />
+    <Compile Include="Items\Items\Item.cs" />
+    <Compile Include="Items\Items\PickaxeItem.cs" />
+    <Compile Include="Items\Items\ShearsItem.cs" />
+    <Compile Include="Items\Items\ShovelItem.cs" />
+    <Compile Include="Items\Items\SwordItem.cs" />
+    <Compile Include="Items\Items\ToolItem.cs" />
+    <Compile Include="MeshBuilders\ChunkMeshBuilder.ChunkReading.cs" />
+    <Compile Include="MeshBuilders\ChunkMeshBuilder.cs" />
+    <Compile Include="MeshBuilders\JSON.cs" />
+    <Compile Include="Model\BlockModel.cs" />
+    <Compile Include="Model\ChickenModel.cs" />
+    <Compile Include="Model\CreeperModel.cs" />
+    <Compile Include="Model\IModel.cs" />
+    <Compile Include="Model\ModelCache.cs" />
+    <Compile Include="Model\ModelPart.cs" />
+    <Compile Include="Model\PigModel.cs" />
+    <Compile Include="Model\PlayerModel.cs" />
+    <Compile Include="Model\SheepModel.cs" />
+    <Compile Include="Model\SkeletonModel.cs" />
+    <Compile Include="Model\SpiderModel.cs" />
+    <Compile Include="Model\ZombieModel.cs" />
+    <Compile Include="Network\Enums.cs" />
+    <Compile Include="Network\NetReader.cs" />
+    <Compile Include="Network\NetworkProcessor.cs" />
+    <Compile Include="Network\AsyncDownloader.cs" />
+    <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Commands\CommandReader.cs" />
+    <Compile Include="Network\NetworkProcessor.IO.cs" />
+    <Compile Include="Network\NetWriter.cs" />
+    <Compile Include="Network\Packets\InboundPackets.cs" />
+    <Compile Include="Network\Packets\OutboundPackets.cs" />
+    <Compile Include="Network\Packets\Packet.cs" />
+    <Compile Include="Physics\BoundingBox.cs" />
+    <Compile Include="Physics\Entity.Physics.cs" />
+    <Compile Include="Physics\IntersectionUtils.cs" />
+    <Compile Include="Physics\Picking.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\LegacyEnvRenderer.cs" />
+    <Compile Include="Rendering\EnvRenderer.cs" />
+    <Compile Include="Rendering\LegacyFastEnvRenderer.cs" />
+    <Compile Include="Rendering\FrustumCulling.cs" />
+    <Compile Include="Rendering\MapRenderer.cs" />
+    <Compile Include="Rendering\NormalEnvRenderer.cs" />
+    <Compile Include="Rendering\PickingRenderer.cs" />
+    <Compile Include="Rendering\EntityRenderer.cs" />
+    <Compile Include="Util\ConcurrentQueue.cs" />
+    <Compile Include="Util\FastBitmap.cs" />
+    <Compile Include="Util\FastColour.cs" />
+    <Compile Include="Util\NibbleArray.cs" />
+    <Compile Include="Util\TextureAtlas2D.cs" />
+    <Compile Include="Util\Utils.cs" />
+    <Compile Include="Util\Vector2I.cs" />
+    <Compile Include="Util\Vector3I.cs" />
+    <Compile Include="Window\ChestWindow.cs" />
+    <Compile Include="Window\DispenserWindow.cs" />
+    <Compile Include="Window\FurnaceWindow.cs" />
+    <Compile Include="Window\InventoryWindow.cs" />
+    <Compile Include="Window\Slot.cs" />
+    <Compile Include="Window\Window.cs" />
+    <Compile Include="Window\WindowManager.cs" />
+    <Compile Include="Window\WorkbenchWindow.cs" />
+    <Compile Include="World\Chunk.cs" />
+    <Compile Include="World\ChunkPartialUpdate.cs" />
+    <Compile Include="World\Map.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="2D\Screens" />
+    <Folder Include="2D\Widgets" />
+    <Folder Include="Blocks" />
+    <Folder Include="Blocks\Model" />
+    <Folder Include="Entities\Objects" />
+    <Folder Include="GraphicsAPI" />
+    <Folder Include="Entities" />
+    <Folder Include="Items\Items" />
+    <Folder Include="MeshBuilders" />
+    <Folder Include="Game" />
+    <Folder Include="Model" />
+    <Folder Include="Network\Packets" />
+    <Folder Include="Items" />
+    <Folder Include="World" />
+    <Folder Include="Window" />
+    <Folder Include="Util" />
+    <Folder Include="Physics" />
+  </ItemGroup>
+</Project>

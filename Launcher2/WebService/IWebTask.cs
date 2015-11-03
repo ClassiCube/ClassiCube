@@ -71,6 +71,15 @@ namespace Launcher2 {
 			return GetResponseLines( response );
 		}
 		
+		protected string GetHtmlAll( string uri, string referer ) {
+			HttpWebResponse response = MakeRequest( uri, referer, null );
+			using( Stream stream = response.GetResponseStream() ) {
+				using( StreamReader reader = new StreamReader( stream ) ) {
+					return reader.ReadToEnd();
+				}
+			}
+		}
+		
 		protected IEnumerable<string> GetResponseLines( HttpWebResponse response ) {
 			using( Stream stream = response.GetResponseStream() ) {
 				using( StreamReader reader = new StreamReader( stream ) ) {
