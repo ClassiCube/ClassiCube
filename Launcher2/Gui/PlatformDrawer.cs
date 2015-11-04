@@ -4,6 +4,7 @@ using ClassicalSharp;
 using OpenTK.Platform;
 using OpenTK.Platform.X11;
 using OSX = OpenTK.Platform.MacOS.Carbon;
+using OSStatus = OpenTK.Platform.MacOS.OSStatus;
 
 namespace Launcher2 {
 	
@@ -19,7 +20,7 @@ namespace Launcher2 {
 	
 	public sealed class WinPlatformDrawer : PlatformDrawer {
 		
-		Graphics g;	
+		Graphics g;
 		public override void Init( IWindowInfo info ) {
 			g = Graphics.FromHwnd( info.WinHandle );
 		}
@@ -49,13 +50,38 @@ namespace Launcher2 {
 		}
 		
 		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
-			//g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
+			
+			using( FastBitmap bmp = new FastBitmap( framebuffer, true ) ) {
+				IntPtr scan0 = bmp.Scan0;
+				int size = bmp.Width * bmp.Height * 4;
+				
+				IntPtr colorSpace = OSX.API.CGColorSpaceCreateDeviceRGB();	
+				IntPtr provider = OSX.API.CGDataProviderCreateWithData( IntPtr.Zero, scan0, size, IntPtr.Zero );
+				IntPtr image = OSX.API.CGImageCreate( bmp.Width, bmp.Height, 8, 8 * 4, bmp.Stride,
+				                                     colorSpace, 4, provider, IntPtr.Zero, 0, 0 );
+				IntPtr context = IntPtr.Zero;
+				OSStatus err = OSX.API.QDBeginCGContext( windowPort, ref context );
+				OSX.API.CheckReturn( err );
+						
+				OSX.HIRect rect = new OSX.HIRect();
+				rect.Origin.X = 0; rect.Origin.Y = 0;
+				rect.Size.X = bmp.Width; rect.Size.Y = bmp.Height;
+				
+				OSX.API.CGContextDrawImage( context, rect, image );
+				OSX.API.CGContextSynchronize( context );
+				err = OSX.API.QDEndCGContext( windowPort, ref context );
+				OSX.API.CheckReturn( err );
+				
+				OSX.API.CGImageRelease( image );
+				OSX.API.CGDataProviderRelease( provider );
+				OSX.API.CGColorSpaceRelease( colorSpace );
+			}
 		}
 	}
 	
 	public sealed class X11PlatformDrawer : PlatformDrawer {
 		
-		IntPtr gc;	
+		IntPtr gc;
 		public override void Init( IWindowInfo info ) {
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
 		}
