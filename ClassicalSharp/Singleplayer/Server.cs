@@ -31,6 +31,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void SendChat( string text, bool partial ) {
 			if( !String.IsNullOrEmpty( text ) ) {
+				text = text.TrimEnd();
 				game.Chat.Add( text, CpeMessage.Normal );
 			}
 		}

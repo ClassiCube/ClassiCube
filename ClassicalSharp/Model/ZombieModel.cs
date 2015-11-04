@@ -17,27 +17,27 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeLeftArm( float x1, float x2 ) {
-			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 12/16f, 24/16f, -2/16f, 2/16f, false );
+			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 12/16f, 24/16f, -2/16f, 2/16f );
 		}
 		
 		ModelPart MakeRightArm( float x1, float x2 ) {
-			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, x1, x2, 12/16f, 24/16f, -2/16f, 2/16f, false );
+			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, x1, x2, 12/16f, 24/16f, -2/16f, 2/16f );
 		}
 		
 		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 24/16f, 2f, -4/16f, 4/16f, false );
+			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 24/16f, 2f, -4/16f, 4/16f );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 12/16f, 24/16f, -2/16f, 2/16f, false );
+			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 12/16f, 24/16f, -2/16f, 2/16f );
 		}
 		
 		ModelPart MakeLeftLeg( float x1, float x2 ) {
-			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12/16f, -2/16f, 2/16f, false );
+			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12/16f, -2/16f, 2/16f );
 		}
 		
 		ModelPart MakeRightLeg( float x1, float x2 ) {
-			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, -2/16f, 2/16f, false );
+			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, -2/16f, 2/16f );
 		}
 		
 		public override float NameYOffset {

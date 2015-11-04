@@ -161,6 +161,9 @@ namespace OpenTK.Platform.Windows {
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool ShowCursor( int value );
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		internal static extern ushort GetKeyState( int code );
 	}
 
 	internal struct Constants {

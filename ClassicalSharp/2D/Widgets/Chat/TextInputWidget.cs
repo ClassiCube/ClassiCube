@@ -99,13 +99,13 @@ namespace ClassicalSharp {
 			int totalHeight = 0;
 			for( int i = 0; i < lines; i++ )
 				totalHeight += sizes[i].Height;
-			Size size = new Size( maxWidth, totalHeight );	
+			Size size = new Size( maxWidth, totalHeight );
 			
 			int realHeight = 0, y = 0;
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					DrawTextArgs args = new DrawTextArgs( null, font, false );					
+					DrawTextArgs args = new DrawTextArgs( null, font, false );
 					
 					for( int i = 0; i < parts.Length; i++ ) {
 						if( parts[i] == null ) break;
@@ -147,24 +147,37 @@ namespace ClassicalSharp {
 		
 		static char[] trimChars = { ' ' };
 		public void SendTextInBufferAndReset() {
+			SendInBuffer();
+			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
+			chatInputText.Clear();
+			caretPos = -1;
+			Dispose();
+			Height = 0;
+		}
+		
+		void SendInBuffer() {
+			if( chatInputText.Empty ) return;
+			
+			if( game.Network.ServerSupportsPatialMessages ) {
+				// don't automatically word wrap the message.
+				string allText = chatInputText.GetString();
+				while( allText.Length > 64 ) {
+					game.Chat.Send( allText.Substring( 0, 64 ), true );
+					allText = allText.Substring( 64 );
+				}
+				game.Chat.Send( allText, false );
+			}
+			
 			int packetsCount = 0;
 			for( int i = 0; i < parts.Length; i++ ) {
 				if( parts[i] == null ) break;
 				packetsCount++;
 			}
 			// split up into both partial and final packet.
-			if( packetsCount > 0 ) {
-				for( int i = 0; i < packetsCount - 1; i++ ) {
-					game.Chat.Send( parts[i].TrimEnd( trimChars ), true );
-				}
-				game.Chat.Send( parts[packetsCount - 1].TrimEnd( trimChars ), false );
+			for( int i = 0; i < packetsCount - 1; i++ ) {
+				game.Chat.Send( parts[i], true );
 			}
-			
-			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
-			chatInputText.Clear();
-			caretPos = -1;
-			Dispose();
-			Height = 0;
+			game.Chat.Send( parts[packetsCount - 1], false );
 		}
 		
 		public void Clear() {

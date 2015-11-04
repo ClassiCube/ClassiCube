@@ -62,25 +62,68 @@ namespace ClassicalSharp.Model {
 		protected ModelVertex[] vertices;
 		protected int index;
 		
+		public struct BoxDescription {
+			public int X, Y, SidesW, EndsH, BodyW, BodyH;
+			public float X1, X2, Y1, Y2, Z1, Z2;
+			
+			public BoxDescription SetTexOrigin( int x, int y ) {
+				X = x; Y = y; return this;
+			}
+			
+			public BoxDescription SetModelBounds( float x1, float y1, float z1, float x2, float y2, float z2 ) {
+				X1 = x1 / 16f; X2 = x2 / 16f;
+				Y1 = y1 / 16f; Y2 = y2 / 16f;
+				Z1 = z1 / 16f; Z2 = z2 / 16f;
+				return this;
+			}
+		}
+		
+		protected BoxDescription MakeBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
+			BoxDescription desc = default( BoxDescription );
+			desc.X1 = x1 / 16f; desc.X2 = x2 / 16f;
+			desc.Y1 = y1 / 16f; desc.Y2 = y2 / 16f;
+			desc.Z1 = z1 / 16f; desc.Z2 = z2 / 16f;
+			
+			desc.SidesW = Math.Abs( z2 - z1 );
+			desc.BodyW = Math.Abs( x2 - x1 );
+			desc.BodyH = Math.Abs( y2 - y1 );
+			return desc;
+		}
+		
+		/// <summary>Builds a box model assuming the follow texture layout:<br/>
+		/// let sW = sides width, bW = body width, bH = body height<br/>
+		/// ┏━━━━━sW━━━━━┳━━━━━bW━━━━━┳━━━━━bW━━━━━┳━━━━━sW━━━━━┓ <br/>
+		/// ┃s┈┈┈┈┈┈┈┈┈┈┈s┃w┈┈┈┈top┈┈┈┈s┃s┈┈bottom┈┈┈s┃s┈┈┈┈┈┈┈┈┈┈┈s┃ <br/>
+		/// ┃W┈┈┈┈┈┈┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈┈┈┈┈┈W┃ <br/>
+		/// ┣━━━━━sW━━━━━╋━━━━━bW━━━━━╋━━━━━bW━━━━━╋━━━━━sW━━━━━┃ <br/>
+		/// ┃b┈┈┈left┈┈┈┈┈b┃b┈┈front┈┈┈┈b┃b┈┈right┈┈┈┈b┃b┈┈┈back┈┈┈┈b┃ <br/>
+		/// ┃H┈┈┈tex┈┈┈┈H┃H┈┈tex┈┈┈┈┈┈H┃H┈┈tex┈┈┈┈┈H┃H┈┈┈┈tex┈┈┈┈H┃ <br/>
+		/// ┗━━━━━sW━━━━━┻━━━━━bW━━━━━┻━━━━━bW━━━━━┻━━━━━sW━━━━━┛ </summary>
+		protected ModelPart BuildBox( BoxDescription desc ) {
+			return MakeBox( desc.X, desc.Y, desc.SidesW, 0, 0, desc.SidesW,
+			               desc.BodyW, desc.BodyH, desc.X1, desc.X2, desc.Y1, desc.Y2, desc.Z1, desc.Z2 );
+		}
+		
+		[Obsolete]
 		protected ModelPart MakeBox( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
-		                             float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
-			YQuad( x + sidesW, y, endsW, endsH, x2, x1, z2, z1, y2, _64x64 ); // top
-			YQuad( x + sidesW + bodyW, y, endsW, endsH, x2, x1, z1, z2, y1, _64x64 ); // bottom
-			ZQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, y1, y2, z1, _64x64 ); // front
-			ZQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2, _64x64 ); // back
-			XQuad( x, y + endsH, sidesW, sidesH, z2, z1, y1, y2, x2, _64x64 ); // left
-			XQuad( x + sidesW + bodyW, y + endsH, sidesW, sidesH, z1, z2, y1, y2, x1, _64x64 ); // right
+		                            float x1, float x2, float y1, float y2, float z1, float z2 ) {
+			YQuad( x + sidesW, y, bodyW, endsH, x2, x1, z2, z1, y2 ); // top
+			YQuad( x + sidesW + bodyW, y, bodyW, endsH, x2, x1, z1, z2, y1 ); // bottom
+			ZQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, y1, y2, z1 ); // front
+			ZQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
+			XQuad( x, y + endsH, sidesW, bodyH, z2, z1, y1, y2, x2 ); // left
+			XQuad( x + sidesW + bodyW, y + endsH, sidesW, bodyH, z1, z2, y1, y2, x1 ); // right
 			return new ModelPart( index - 6 * 4, 6 * 4 );
 		}
 		
 		protected ModelPart MakeRotatedBox( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
-		                                    float x1, float x2, float y1, float y2, float z1, float z2, bool _64x64 ) {
-			YQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, z1, z2, y2, _64x64 ); // top
-			YQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, z1, z2, y1, _64x64 ); // bottom
-			ZQuad( x + sidesW, y, endsW, endsH, x2, x1, y1, y2, z1, _64x64 ); // front
-			ZQuad( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2, _64x64 ); // back
-			XQuad( x, y + endsH, sidesW, sidesH, y2, y1, z2, z1, x2, _64x64 ); // left
-			XQuad( x + sidesW + bodyW, y + endsH, sidesW, sidesH, y1, y2, z2, z1, x1, _64x64 ); // right
+		                                   float x1, float x2, float y1, float y2, float z1, float z2 ) {
+			YQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
+			YQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom
+			ZQuad( x + sidesW, y, endsW, endsH, x2, x1, y1, y2, z1 ); // front
+			ZQuad( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2 ); // back
+			XQuad( x, y + endsH, sidesW, sidesH, y2, y1, z2, z1, x2 ); // left
+			XQuad( x + sidesW + bodyW, y + endsH, sidesW, sidesH, y1, y2, z2, z1, x1 ); // right
 			
 			// rotate left and right 90 degrees
 			for( int i = index - 8; i < index; i++ ) {
@@ -94,7 +137,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void XQuad( int texX, int texY, int texWidth, int texHeight,
-		                      float z1, float z2, float y1, float y2, float x, bool _64x64 ) {
+		                     float z1, float z2, float y1, float y2, float x ) {
 			vertices[index++] = new ModelVertex( x, y1, z1, texX, texY + texHeight );
 			vertices[index++] = new ModelVertex( x, y2, z1, texX, texY );
 			vertices[index++] = new ModelVertex( x, y2, z2, texX + texWidth, texY );
@@ -102,7 +145,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void YQuad( int texX, int texY, int texWidth, int texHeight,
-		                      float x1, float x2, float z1, float z2, float y, bool _64x64 ) {
+		                     float x1, float x2, float z1, float z2, float y ) {
 			vertices[index++] = new ModelVertex( x1, y, z2, texX, texY + texHeight );
 			vertices[index++] = new ModelVertex( x1, y, z1, texX, texY );
 			vertices[index++] = new ModelVertex( x2, y, z1, texX + texWidth, texY );
@@ -110,7 +153,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void ZQuad( int texX, int texY, int texWidth, int texHeight,
-		                      float x1, float x2, float y1, float y2, float z, bool _64x64 ) {
+		                     float x1, float x2, float y1, float y2, float z ) {
 			vertices[index++] = new ModelVertex( x1, y1, z, texX, texY + texHeight );
 			vertices[index++] = new ModelVertex( x1, y2, z, texX, texY );
 			vertices[index++] = new ModelVertex( x2, y2, z, texX + texWidth, texY );

@@ -62,7 +62,6 @@ namespace OpenTK.Platform.Windows
 		MouseDevice mouse = new MouseDevice();
 		static readonly WinKeyMap KeyMap = new WinKeyMap();
 		const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
-		static readonly uint ShiftRightScanCode = API.MapVirtualKey(VirtualKeys.RSHIFT, 0);         // Used to distinguish left and right shift keys.
 		KeyPressEventArgs key_press = new KeyPressEventArgs();
 
 		public WinGLNative(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device) {
@@ -124,8 +123,8 @@ namespace OpenTK.Platform.Windows
 							client_rectangle = rect.ToRectangle();
 
 							API.SetWindowPos(child_window.WindowHandle, IntPtr.Zero, 0, 0, ClientRectangle.Width, ClientRectangle.Height,
-							                       SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
-							                       SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
+							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
+							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
 							if (suppress_resize <= 0 && Resize != null)
 								Resize(this, EventArgs.Empty);
 						}
@@ -242,8 +241,7 @@ namespace OpenTK.Platform.Windows
 				case WindowMessage.KEYUP:
 				case WindowMessage.SYSKEYDOWN:
 				case WindowMessage.SYSKEYUP:
-					bool pressed =
-						message == WindowMessage.KEYDOWN ||
+					bool pressed = message == WindowMessage.KEYDOWN ||
 						message == WindowMessage.SYSKEYDOWN;
 
 					// Shift/Control/Alt behave strangely when e.g. ShiftRight is held down and ShiftLeft is pressed
@@ -260,25 +258,11 @@ namespace OpenTK.Platform.Windows
 							// The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
 							// to distinguish between left and right keys. Moreover, pressing both keys and releasing one
 							// may result in both keys being held down (but not always).
-							// The only reliably way to solve this was reported by BlueMonkMN at the forums: we should
-							// check the scancodes. It looks like GLFW does the same thing, so it should be reliable.
-
-							// TODO: Not 100% reliable, when both keys are pressed at once.
-							if (ShiftRightScanCode != 0)
-							{
-								unchecked
-								{
-									if (((lParam.ToInt64() >> 16) & 0xFF) == ShiftRightScanCode)
-										keyboard[Input.Key.ShiftRight] = pressed;
-									else
-										keyboard[Input.Key.ShiftLeft] = pressed;
-								}
-							}
-							else
-							{
-								// Should only fall here on Windows 9x and NT4.0-
-								keyboard[Input.Key.ShiftLeft] = pressed;
-							}
+							ushort lShiftState =  API.GetKeyState( (int)VirtualKeys.LSHIFT );
+							ushort rShiftState = API.GetKeyState( (int)VirtualKeys.RSHIFT );
+							
+							Keyboard[Input.Key.ShiftLeft] = (lShiftState >> 15) == 1;
+							Keyboard[Input.Key.ShiftRight] = (rShiftState >> 15) == 1;
 							return IntPtr.Zero;
 
 						case VirtualKeys.CONTROL:
@@ -667,8 +651,8 @@ namespace OpenTK.Platform.Windows
 
 				API.SetWindowLong_N(window.WindowHandle, GetWindowLongOffsets.STYLE, (IntPtr)(int)style);
 				API.SetWindowPos(window.WindowHandle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
-				                       SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
-				                       SetWindowPosFlags.FRAMECHANGED);
+				                 SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
+				                 SetWindowPosFlags.FRAMECHANGED);
 
 				// Force window to redraw update its borders, but only if it's
 				// already visible (invisible windows will change borders when
@@ -741,9 +725,9 @@ namespace OpenTK.Platform.Windows
 		bool cursorVisible = true;
 		public bool CursorVisible {
 			get { return cursorVisible; }
-			set { 
+			set {
 				cursorVisible = value;
-				API.ShowCursor( value ? 1 : 0 ); 
+				API.ShowCursor( value ? 1 : 0 );
 			}
 		}
 

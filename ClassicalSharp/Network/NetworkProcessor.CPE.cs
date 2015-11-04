@@ -54,7 +54,6 @@ namespace ClassicalSharp {
 		
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes, usingTexturePack;
-		bool usePartialMessages;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock",
 			"EmoteFix", "TextHotKey", "ExtPlayerList",
@@ -88,7 +87,7 @@ namespace ClassicalSharp {
 				usingTexturePack = true;
 				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 			} else if( extName == "LongerMessages" ) {
-				usePartialMessages = true;
+				ServerSupportsPatialMessages = true;
 			}
 			cpeServerExtensionsCount--;
 			

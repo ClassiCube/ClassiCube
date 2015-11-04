@@ -17,15 +17,15 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 8/16f, 16/16f, -14/16f, -6/16f, false );
+			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 8/16f, 16/16f, -14/16f, -6/16f );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedBox( 28, 8, 8, 16, 10, 8, 10, 16, -5/16f, 5/16f, 6/16f, 14/16f, -8/16f, 8/16f, false );
+			return MakeRotatedBox( 28, 8, 8, 16, 10, 8, 10, 16, -5/16f, 5/16f, 6/16f, 14/16f, -8/16f, 8/16f );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2, false );
+			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2 );
 		}
 		
 		public override float NameYOffset {

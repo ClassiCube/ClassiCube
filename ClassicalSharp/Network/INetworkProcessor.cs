@@ -27,5 +27,6 @@ namespace ClassicalSharp {
 		public string ServerName, ServerMotd;
 		public bool Disconnected;
 		public bool UsingExtPlayerList, UsingPlayerClick;
+		public bool ServerSupportsPatialMessages;
 	}
 }

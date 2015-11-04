@@ -41,6 +41,7 @@ namespace ClassicalSharp {
 				Dispose();
 				return;
 			}
+			
 			stream = new NetworkStream( socket, true );
 			reader = new FastNetReader( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
@@ -51,7 +52,7 @@ namespace ClassicalSharp {
 		public override void SendChat( string text, bool partial ) {
 			if( String.IsNullOrEmpty( text ) ) return;
 			
-			byte payload = !usePartialMessages ? (byte)0xFF:
+			byte payload = !ServerSupportsPatialMessages ? (byte)0xFF:
 				partial ? (byte)1 : (byte)0;
 			MakeMessagePacket( text, payload );
 			SendPacket();

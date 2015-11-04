@@ -15,19 +15,19 @@ namespace ClassicalSharp.Model {
 		}
 		
 		ModelPart MakeHead() {
-			return MakeBox( 32, 4, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 4/16f, 12/16f, -11/16f, -3/16f, false );
+			return MakeBox( 32, 4, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 4/16f, 12/16f, -11/16f, -3/16f );
 		}
 		
 		ModelPart MakeLink() {
-			return MakeBox( 0, 0, 6, 6, 6, 6, 6, 6, -3/16f, 3/16f, 5/16f, 11/16f, 3/16f, -3/16f, false );
+			return MakeBox( 0, 0, 6, 6, 6, 6, 6, 6, -3/16f, 3/16f, 5/16f, 11/16f, 3/16f, -3/16f );
 		}
 		
 		ModelPart MakeEnd() {
-			return MakeBox( 0, 12, 12, 8, 10, 12, 10, 8, -5/16f, 5/16f, 4/16f, 12/16f, 3/16f, 15/16f, false );
+			return MakeBox( 0, 12, 12, 8, 10, 12, 10, 8, -5/16f, 5/16f, 4/16f, 12/16f, 3/16f, 15/16f );
 		}
 		
 		ModelPart MakeLeg( float x1, float x2 ) {
-			return MakeBox( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 7/16f, 9/16f, -1/16f, 1/16f, false );
+			return MakeBox( 18, 0, 2, 2, 16, 2, 16, 2, x1, x2, 7/16f, 9/16f, -1/16f, 1/16f );
 		}
 		
 		public override float NameYOffset {
