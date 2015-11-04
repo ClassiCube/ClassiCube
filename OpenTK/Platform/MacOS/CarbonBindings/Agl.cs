@@ -10,7 +10,7 @@ using AGLPixelFormat = System.IntPtr;
 
 namespace OpenTK.Platform.MacOS {
 	
-	unsafe static partial class Agl {
+	public unsafe static class Agl {
 		const string agl = "/System/Library/Frameworks/AGL.framework/Versions/Current/AGL";
 		
 		// Attribute names for aglChoosePixelFormat and aglDescribePixelFormat.

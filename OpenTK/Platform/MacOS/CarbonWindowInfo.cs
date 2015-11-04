@@ -47,8 +47,7 @@ namespace OpenTK.Platform.MacOS {
 		public override string ToString() {
 			return String.Format("CarbonWindowInfo: Handle {0}", WindowRef);
 		}
-		
-		// TODO: I have no idea if this is right.
+
 		public IntPtr WinHandle { 
 			get { return WindowRef; }
 		}

@@ -3,6 +3,7 @@ using System.Drawing;
 using ClassicalSharp;
 using OpenTK.Platform;
 using OpenTK.Platform.X11;
+using OSX = OpenTK.Platform.MacOS.Carbon;
 
 namespace Launcher2 {
 	
@@ -37,19 +38,18 @@ namespace Launcher2 {
 	// TODO: broken
 	public sealed class OSXPlatformDrawer : PlatformDrawer {
 		
-		Graphics g;	
+		IntPtr windowPort;
 		public override void Init( IWindowInfo info ) {
-			g = Graphics.FromHwnd( info.WinHandle );
+			windowPort = OSX.API.GetWindowPort( info.WinHandle );
+			
 		}
 		
 		public override void Resize( IWindowInfo info ) {
-			if( g != null )
-				g.Dispose();
-			g = Graphics.FromHwnd( info.WinHandle );
+			windowPort = OSX.API.GetWindowPort( info.WinHandle );
 		}
 		
 		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
-			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
+			//g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
 		}
 	}
 	

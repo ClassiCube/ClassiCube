@@ -146,8 +146,9 @@ namespace OpenTK.Platform.MacOS {
 				//new EventTypeSpec(EventClass.Keyboard, KeyboardEventKind.RawKeyModifiersChanged),
 			};
 
-			MacOSEventHandler handler = EventHandler;
-			uppHandler = API.NewEventHandlerUPP(handler);
+			uppHandler = API.NewEventHandlerUPP(EventHandler);
+			// TODO: not sure if we need this.
+			GC.KeepAlive( this ); // don't want to dispose the window as we need to keep the event handler open.
 			API.InstallWindowEventHandler(window.WindowRef, uppHandler, eventTypes, window.WindowRef, IntPtr.Zero);
 			Application.WindowEventHandler = this;
 		}

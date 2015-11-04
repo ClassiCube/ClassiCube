@@ -196,9 +196,5 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void Viewport( int x, int y, int width, int height ) {
 			Interop.Calli( x, y, width, height, ViewportAddress );
 		} static IntPtr ViewportAddress;
-		
-		public static void PolygonMode( int face, int mode ) {
-			Interop.Calli( face, mode, PolygonModeAddress );
-		} static IntPtr PolygonModeAddress;
 	}
 }

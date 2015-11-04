@@ -74,7 +74,6 @@ namespace OpenTK.Graphics.OpenGL {
 			TexSubImage2DAddress = GetAddress( "glTexSubImage2D" );
 			VertexPointerAddress = GetAddress( "glVertexPointer" );
 			ViewportAddress = GetAddress( "glViewport" );
-			PolygonModeAddress = GetAddress( "glPolygonMode" );
 		}
 		
 		public static void UseArbVboAddresses() {

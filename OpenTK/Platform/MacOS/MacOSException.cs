@@ -31,7 +31,7 @@ namespace OpenTK.Platform.MacOS
 		}
 	}
 
-	internal enum OSStatus
+	public enum OSStatus
 	{
 		NoError = 0,
 		

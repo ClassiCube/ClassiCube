@@ -2,7 +2,7 @@ using System;
 
 namespace OpenTK.Platform.MacOS.Carbon
 {
-	enum MacOSKeyCode
+	public enum MacOSKeyCode
 	{
 		A = 0,
 		B = 11,
@@ -110,7 +110,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 	}
 	[Flags]
-	enum MacOSKeyModifiers
+	public enum MacOSKeyModifiers
 	{
 		None     = 0,
 		Shift    = 0x0200,
