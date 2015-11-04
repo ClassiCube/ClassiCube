@@ -83,30 +83,23 @@ namespace OpenTK.Platform.MacOS
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Dispose(bool disposing)
-		{
+		protected virtual void Dispose(bool disposing) {
 			if (mIsDisposed)
 				return;
 
 			Debug.Print("Disposing of CarbonGLNative window.");
-
 			API.DisposeWindow(window.WindowRef);
-
 			mIsDisposed = true;
 			mExists = false;
 
-			if (disposing)
-			{
+			if (disposing) {
 				mWindows.Remove(window.WindowRef);
-
-				window.Dispose();
 				window = null;
 			}
 			DisposeUPP();
 		}
 
-		~CarbonGLNative()
-		{
+		~CarbonGLNative() {
 			Dispose(false);
 		}
 
@@ -134,7 +127,7 @@ namespace OpenTK.Platform.MacOS
 			Debug.Print( "Created window " + windowRef );
 			API.SetWindowTitle(windowRef, title);
 
-			window = new CarbonWindowInfo(windowRef, true);
+			window = new CarbonWindowInfo(windowRef);
 			SetLocation(r.X, r.Y);
 			SetSize(r.Width, r.Height);
 			mWindows.Add(windowRef, new WeakReference(this));
@@ -769,7 +762,6 @@ namespace OpenTK.Platform.MacOS
 				return;
 
 			OnClosed();
-
 			Dispose();
 		}
 

@@ -42,7 +42,6 @@ namespace Launcher2 {
 		IntPtr windowPort;
 		public override void Init( IWindowInfo info ) {
 			windowPort = OSX.API.GetWindowPort( info.WinHandle );
-			
 		}
 		
 		public override void Resize( IWindowInfo info ) {
