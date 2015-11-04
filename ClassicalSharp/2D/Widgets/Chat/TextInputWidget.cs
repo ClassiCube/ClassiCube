@@ -16,13 +16,13 @@ namespace ClassicalSharp {
 			
 			this.font = font;
 			this.boldFont = boldFont;
-			chatInputText = new StringBuffer( len );
+			chatInputText = new WrappableStringBuffer( len );
 		}
 		
 		Texture chatInputTexture, caretTexture;
 		int caretPos = -1, typingLogPos = 0;
 		public int YOffset;
-		internal StringBuffer chatInputText;
+		internal WrappableStringBuffer chatInputText;
 		readonly Font font, boldFont;
 		
 		static FastColour normalCaretCol = FastColour.White,

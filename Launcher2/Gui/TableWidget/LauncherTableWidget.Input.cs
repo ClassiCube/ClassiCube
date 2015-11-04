@@ -41,6 +41,9 @@ namespace Launcher2 {
 							lastPress = DateTime.UtcNow;
 						}
 						SelectedChanged( entry.Hash );
+						SelectedHash = entry.Hash;
+						
+						NeedRedraw();
 						lastIndex = i;
 						break;
 					}

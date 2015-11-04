@@ -29,6 +29,9 @@ namespace ClassicalSharp {
 		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;
 		
+		/// <summary> How fast clouds should travel across the map, defaults to 1. </summary>
+		public float CloudsSpeed = 1;
+		
 		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
 		public FastColour SunlightXSide, SunlightZSide, SunlightYBottom;
@@ -45,14 +48,14 @@ namespace ClassicalSharp {
 		/// <summary> Unique uuid/guid of this particular map. </summary>
 		public Guid Uuid;
 		
-		/// <summary> Block that surrounds map and is perpendicular to the Y plane. (default water) </summary>
+		/// <summary> Block that surrounds map the map horizontally (default water) </summary>
 		public Block EdgeBlock = Block.StillWater;
 		
 		/// <summary> Height of the map edge in world space. </summary>
 		public int EdgeHeight;
 		
-		/// <summary> Block that surrounds the map that is below the map, fills part of the vertical sides,
-		/// and also perpendicular to the Y plane. (default bedrock) </summary>
+		/// <summary> Block that surrounds the map that fills the bottom of the map horizontally, 
+		/// fills part of the vertical sides of the map, and also surrounds map the map horizontally. (default bedrock) </summary>
 		public Block SidesBlock = Block.Bedrock;
 		
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
@@ -79,6 +82,7 @@ namespace ClassicalSharp {
 			Uuid = Guid.NewGuid();
 			EdgeBlock = Block.StillWater;
 			SidesBlock = Block.Bedrock;
+			CloudsSpeed = 1;
 			
 			ResetLight();
 			SkyCol = DefaultSkyColour;
@@ -124,6 +128,10 @@ namespace ClassicalSharp {
 		/// <summary> Sets the height of the clouds in world space, and raises the
 		/// EnvVariableChanged event with the variable 'CloudsLevel'. </summary>
 		public void SetCloudsLevel( int level ) { Set( level, ref CloudHeight, EnvVar.CloudsLevel ); }
+		
+		/// <summary> Sets the current clouds speed, and raises the
+		/// EnvVariableChanged event with the variable 'CloudsSpeed'. </summary>
+		public void SetCloudsSpeed( float speed ) { Set( speed, ref CloudsSpeed, EnvVar.CloudsSpeed ); }
 		
 		/// <summary> Sets the height of the map edges in world space, and raises the
 		/// EnvVariableChanged event with the variable 'EdgeLevel'. </summary>
@@ -214,14 +222,14 @@ namespace ClassicalSharp {
 			return mapData[(p.Y * Length + p.Z) * Width + p.X];
 		}
 		
-		/// <summary> Returns the block at the given world coordinates withbounds checking,
+		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( int x, int y, int z ) {
 			return IsValidPos( x, y, z ) ?
 				mapData[(y * Length + z) * Width + x] : (byte)0;
 		}
 		
-		/// <summary> Returns the block at the given world coordinates withbounds checking,
+		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( Vector3I p ) {
 			return IsValidPos( p.X, p.Y, p.Z ) ?

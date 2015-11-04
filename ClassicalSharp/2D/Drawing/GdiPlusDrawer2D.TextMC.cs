@@ -53,7 +53,9 @@ namespace ClassicalSharp {
 		void DrawTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
 			bool italic = args.Font.Style == FontStyle.Italic;
 			if( args.UseShadow ) {
-				int shadowX = x + 2, shadowY = y + 2;
+				int offset = ShaowOffset( args.Font.Size );
+				int shadowX = x + offset, shadowY = y + offset;
+				
 				for( int i = 0; i < parts.Count; i++ ) {
 					TextPart part = parts[i];
 					part.TextColour = FastColour.Black;
@@ -118,7 +120,8 @@ namespace ClassicalSharp {
 			if( args.Font.Style == FontStyle.Italic )
 				total.Width += Utils.CeilDiv( total.Height, italicSize );
 			if( args.UseShadow && parts.Count > 0 ) {
-				total.Width += 2; total.Height += 2;
+				int offset = ShaowOffset( args.Font.Size );
+				total.Width += offset; total.Height += offset;
 			}
 			return total;
 		}
@@ -132,6 +135,12 @@ namespace ClassicalSharp {
 			int eIndex = Utils.ExtendedCharReplacements.IndexOf( c );
 			if( eIndex >= 0 ) return 127 + eIndex;
 			return (int)'?';
+		}
+		
+		int ShaowOffset( float fontSize ) {
+			if( fontSize < 9.9f ) return 1;
+			if( fontSize < 24.9f ) return 2;
+			return 3;
 		}
 		
 		int PtToPx( int point ) {

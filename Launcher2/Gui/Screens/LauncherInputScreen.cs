@@ -66,7 +66,7 @@ namespace Launcher2 {
 			}
 		}
 		
-		protected void RedrawLastInput() {
+		protected virtual void RedrawLastInput() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput.Width > lastInput.ButtonWidth )
@@ -94,7 +94,7 @@ namespace Launcher2 {
 		}
 		
 		protected LauncherInputWidget lastInput;
-		protected void InputClick( int mouseX, int mouseY ) {
+		protected virtual void InputClick( int mouseX, int mouseY ) {
 			LauncherInputWidget input = (LauncherInputWidget)selectedWidget;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

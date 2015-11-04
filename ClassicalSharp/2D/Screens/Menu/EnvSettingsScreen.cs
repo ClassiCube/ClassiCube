@@ -26,11 +26,8 @@ namespace ClassicalSharp {
 				     (g, v) => g.Map.SetFogColour( FastColour.Parse( v ) ) ),
 				
 				Make( -140, 0, "Clouds speed", Anchor.Centre, OnWidgetClick,
-				     g => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	return env == null ? "(not active)" : env.CloudsSpeed.ToString(); },
-				     (g, v) => { StandardEnvRenderer env = game.EnvRenderer as StandardEnvRenderer;
-				     	if( env != null )
-				     		env.CloudsSpeed = Single.Parse( v ); } ),
+				     g => g.Map.CloudsSpeed.ToString(),
+				     (g, v) => g.Map.SetCloudsSpeed( Single.Parse( v ) ) ),
 				
 				Make( -140, 50, "Clouds height", Anchor.Centre, OnWidgetClick,
 				     g => g.Map.CloudHeight.ToString(),

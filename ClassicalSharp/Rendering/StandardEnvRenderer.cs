@@ -12,7 +12,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
-		public float CloudsSpeed = 1;
 		bool legacy;
 		
 		public void SetUseLegacyMode( bool legacy ) {
@@ -92,7 +91,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void RenderClouds( double delta ) {
 			double time = game.accumulator;
-			float offset = (float)( time / 2048f * 0.6f * CloudsSpeed );
+			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );
 			graphics.SetMatrixMode( MatrixType.Texture );
 			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
 			graphics.LoadMatrix( ref matrix );

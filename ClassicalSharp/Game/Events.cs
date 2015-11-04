@@ -124,6 +124,7 @@ namespace ClassicalSharp {
 		EdgeBlock,
 		EdgeLevel,
 		CloudsLevel,
+		CloudsSpeed,
 		Weather,
 
 		SkyColour,

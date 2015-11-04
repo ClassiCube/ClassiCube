@@ -13,6 +13,7 @@ namespace Launcher2 {
 		
 		public Action NeedRedraw;
 		public Action<string> SelectedChanged;
+		public string SelectedHash;
 		
 		TableEntry[] entries, usedEntries;
 		internal List<ServerListEntry> servers;
@@ -58,26 +59,26 @@ namespace Launcher2 {
 			public int Y, Height;
 		}
 		
-		public void DrawAt( IDrawer2D drawer, Font font, Font titleFont,
+		public void DrawAt( IDrawer2D drawer, Font font, Font titleFont, Font boldFont,
 		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer, font, titleFont );
+			Redraw( drawer, font, titleFont, boldFont );
 		}
 		
 		static FastColour backCol = new FastColour( 120, 85, 151 ), foreCol = new FastColour( 160, 133, 186 );
 		static FastColour scrollCol = new FastColour( 200, 184, 216 );
-		public void Redraw( IDrawer2D drawer, Font font, Font titleFont ) {
+		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
 			Utils.Clamp( ref ColumnWidths[0], 20, Window.Width - 20 );
 			int x = X + 5;
 			DrawGrid( drawer, font, titleFont );
-			x += DrawColumn( drawer, true, font, titleFont, "Name", ColumnWidths[0], x, e => e.Name ) + 5;
-			x += DrawColumn( drawer, false, font, titleFont, "Players", ColumnWidths[1], x, e => e.Players ) + 5;
+			x += DrawColumn( drawer, true, font, titleFont, boldFont, "Name", ColumnWidths[0], x, e => e.Name ) + 5;
+			x += DrawColumn( drawer, false, font, titleFont, boldFont, "Players", ColumnWidths[1], x, e => e.Players ) + 5;
 			
 			Width = Window.Width;
 			DrawScrollbar( drawer );
 		}
 		
-		int DrawColumn( IDrawer2D drawer, bool separator, Font font, Font titleFont,
+		int DrawColumn( IDrawer2D drawer, bool separator, Font font, Font titleFont, Font boldFont,
 		               string header, int maxWidth, int x, Func<TableEntry, string> filter ) {
 			int y = Y + 10;
 			DrawTextArgs args = new DrawTextArgs( header, titleFont, true );
@@ -87,6 +88,9 @@ namespace Launcher2 {
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
+				if( usedEntries[i].Hash == SelectedHash ) {
+					args.Font = boldFont;	
+				}
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i;
 					break;

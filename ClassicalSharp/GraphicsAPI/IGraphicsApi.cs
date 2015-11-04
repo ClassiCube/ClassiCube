@@ -114,10 +114,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets the depth test compare function that is used when depth testing is enabled. </summary>
 		public abstract void DepthTestFunc( CompareFunc func );
 		
-		/// <summary> Sets whether writing to the colour buffer is enabled. </summary>
+		/// <summary> Whether writing to the colour buffer is enabled. </summary>
 		public abstract bool ColourWrite { set; }
 		
-		/// <summary> Sets whether writing to the depth buffer is enabled. </summary>
+		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
 		/// <summary> Creates a vertex buffer that can have its data dynamically updated. </summary>
@@ -135,7 +135,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// but the index buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateIb( ushort[] indices, int indicesCount );
 		
-		/// <summary> Creates a static vertex buffer that has its data set at creation,
+		/// <summary> Creates a static index buffer that has its data set at creation,
 		/// but the index buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateIb( IntPtr indices, int indicesCount );
 		

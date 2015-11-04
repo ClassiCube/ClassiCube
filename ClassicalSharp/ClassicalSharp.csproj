@@ -218,6 +218,7 @@
     <Compile Include="Utils\StringBuffer.cs" />
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="Utils\Vector3I.cs" />
+    <Compile Include="Utils\WrappableStringBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

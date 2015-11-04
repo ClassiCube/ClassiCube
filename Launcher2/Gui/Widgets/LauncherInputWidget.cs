@@ -46,7 +46,8 @@ namespace Launcher2 {
 			drawer.DrawRect( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
 			
 			args.SkipPartsCheck = true;
-			drawer.DrawText( ref args, X + 7, Y + 2 );
+			int y = Y + 2 + (Height - size.Height ) / 2;
+			drawer.DrawText( ref args, X + 5, y );
 		}
 		
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
