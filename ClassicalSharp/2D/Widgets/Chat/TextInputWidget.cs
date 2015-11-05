@@ -140,14 +140,16 @@ namespace ClassicalSharp {
 			chatInputTexture.Y1 += deltaY;
 		}
 		
-		static bool IsInvalidChar( char c ) {
+		bool IsValidChar( char c ) {
+			if( c == '&' ) return false;
+			if( c >= ' ' && c <= '~' ) return true; // ascii
+			
 			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
 				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
-			// Make sure we're in the printable text range from 0x20 to 0x7E
-			return c < ' ' || c == '&' || c > '~';
+			bool supportsCP437 = game.Network.ServerSupportsFullCP437;
+			return supportsCP437 && isCP437;
 		}
 		
-		static char[] trimChars = { ' ' };
 		public void SendTextInBufferAndReset() {
 			SendInBuffer();
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
@@ -209,7 +211,7 @@ namespace ClassicalSharp {
 		#region Input handling
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( chatInputText.Length < len && !IsInvalidChar( key ) ) {
+			if( chatInputText.Length < len && IsValidChar( key ) ) {
 				if( caretPos == -1 ) {
 					chatInputText.Append( chatInputText.Length, key );
 				} else {
@@ -326,7 +328,7 @@ namespace ClassicalSharp {
 				if( String.IsNullOrEmpty( text ) ) return true;
 				
 				for( int i = 0; i < text.Length; i++ ) {
-					if( IsInvalidChar( text[i] ) ) {
+					if( !IsValidChar( text[i] ) ) {
 						game.Chat.Add( "&eClipboard contained characters that can't be sent." );
 						return true;
 					}

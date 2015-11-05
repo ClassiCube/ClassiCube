@@ -2,14 +2,14 @@
 using System.Net.Sockets;
 
 namespace ClassicalSharp {
-	
-	// Basically a much faster version of List<byte>( capacity )
-	internal class FastNetReader {
+
+	internal class NetReader {
+		
 		public byte[] buffer = new byte[4096 * 4];
 		public int size = 0;
 		public NetworkStream Stream;
 		
-		public FastNetReader( NetworkStream stream ) {
+		public NetReader( NetworkStream stream ) {
 			Stream = stream;
 		}
 		

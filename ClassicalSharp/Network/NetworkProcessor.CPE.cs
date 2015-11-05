@@ -16,35 +16,35 @@ namespace ClassicalSharp {
 			SendPacket();
 		}
 		
-		private static void MakeExtInfo( string appName, int extensionsCount ) {
-			WriteUInt8( (byte)PacketId.CpeExtInfo );
-			WriteString( appName );
-			WriteInt16( (short)extensionsCount );
+		void MakeExtInfo( string appName, int extensionsCount ) {
+			writer.WriteUInt8( (byte)PacketId.CpeExtInfo );
+			writer.WriteString( appName );
+			writer.WriteInt16( (short)extensionsCount );
 		}
 		
-		private static void MakeExtEntry( string extensionName, int extensionVersion ) {
-			WriteUInt8( (byte)PacketId.CpeExtEntry );
-			WriteString( extensionName );
-			WriteInt32( extensionVersion );
+		void MakeExtEntry( string extensionName, int extensionVersion ) {
+			writer.WriteUInt8( (byte)PacketId.CpeExtEntry );
+			writer.WriteString( extensionName );
+			writer.WriteInt32( extensionVersion );
 		}
 		
-		private static void MakeCustomBlockSupportLevel( byte version ) {
-			WriteUInt8( (byte)PacketId.CpeCustomBlockSupportLevel );
-			WriteUInt8( version );
+		void MakeCustomBlockSupportLevel( byte version ) {
+			writer.WriteUInt8( (byte)PacketId.CpeCustomBlockSupportLevel );
+			writer.WriteUInt8( version );
 		}
 		
-		private static void MakePlayerClick( byte button, bool buttonDown, float yaw, float pitch, byte targetEntity,
-		                                    Vector3I targetPos, CpeBlockFace targetFace ) {
-			WriteUInt8( (byte)PacketId.CpePlayerClick );
-			WriteUInt8( button );
-			WriteUInt8( buttonDown ? (byte)0 : (byte)1 );
-			WriteInt16( (short)Utils.DegreesToPacked( yaw, 65536 ) );
-			WriteInt16( (short)Utils.DegreesToPacked( pitch, 65536 ) );
-			WriteUInt8( targetEntity );
-			WriteInt16( (short)targetPos.X );
-			WriteInt16( (short)targetPos.Y );
-			WriteInt16( (short)targetPos.Z );
-			WriteUInt8( (byte)targetFace );
+		void MakePlayerClick( byte button, bool buttonDown, float yaw, float pitch, byte targetEntity,
+		                     Vector3I targetPos, CpeBlockFace targetFace ) {
+			writer.WriteUInt8( (byte)PacketId.CpePlayerClick );
+			writer.WriteUInt8( button );
+			writer.WriteUInt8( buttonDown ? (byte)0 : (byte)1 );
+			writer.WriteInt16( (short)Utils.DegreesToPacked( yaw, 65536 ) );
+			writer.WriteInt16( (short)Utils.DegreesToPacked( pitch, 65536 ) );
+			writer.WriteUInt8( targetEntity );
+			writer.WriteInt16( (short)targetPos.X );
+			writer.WriteInt16( (short)targetPos.Y );
+			writer.WriteInt16( (short)targetPos.Z );
+			writer.WriteUInt8( (byte)targetFace );
 		}
 		
 		#endregion
@@ -88,6 +88,8 @@ namespace ClassicalSharp {
 				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 			} else if( extName == "LongerMessages" ) {
 				ServerSupportsPatialMessages = true;
+			} else if( extName == "FullCP437" ) {
+				ServerSupportsFullCP437 = true;
 			}
 			cpeServerExtensionsCount--;
 			

@@ -176,12 +176,13 @@
     <Compile Include="Network\NetworkProcessor.CPE.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\Utils\AsyncDownloader.cs" />
-    <Compile Include="Network\Utils\FastNetReader.cs" />
+    <Compile Include="Network\Utils\NetReader.cs" />
     <Compile Include="Network\Utils\FixedBufferStream.cs" />
     <Compile Include="Network\Utils\GZipHeaderReader.cs" />
     <Compile Include="Network\NetworkProcessor.WoM.cs" />
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
+    <Compile Include="Network\Utils\NetWriter.cs" />
     <Compile Include="Physics\BoundingBox.cs" />
     <Compile Include="Physics\IntersectionUtils.cs" />
     <Compile Include="Physics\PickedPos.cs" />

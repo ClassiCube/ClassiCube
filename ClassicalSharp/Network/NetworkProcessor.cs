@@ -26,7 +26,6 @@ namespace ClassicalSharp {
 		}
 		
 		Socket socket;
-		NetworkStream stream;
 		Game game;
 		bool receivedFirstPosition;
 		
@@ -42,32 +41,14 @@ namespace ClassicalSharp {
 				return;
 			}
 			
-			stream = new NetworkStream( socket, true );
-			reader = new FastNetReader( stream );
+			NetworkStream stream = new NetworkStream( socket, true );
+			reader = new NetReader( stream );
+			writer = new NetWriter( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
 		}
 		
-		public override void SendChat( string text, bool partial ) {
-			if( String.IsNullOrEmpty( text ) ) return;
-			
-			byte payload = !ServerSupportsPatialMessages ? (byte)0xFF:
-				partial ? (byte)1 : (byte)0;
-			MakeMessagePacket( text, payload );
-			SendPacket();
-		}
-		
-		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
-			MakePositionPacket( pos, yaw, pitch, payload );
-			SendPacket();
-		}
-		
-		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			MakeSetBlockPacket( (short)x, (short)y, (short)z, place, block );
-			SendPacket();
-		}
 		
 		public override void Dispose() {
 			socket.Close();
@@ -133,79 +114,57 @@ namespace ClassicalSharp {
 			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2,
 		};
 		
-		
 		#region Writing
+		NetWriter writer;
 		
-		static byte[] outBuffer = new byte[131];
-		static int outIndex;
-		private static void MakeLoginPacket( string username, string verKey ) {
-			WriteUInt8( (byte)PacketId.Handshake );
-			WriteUInt8( 7 ); // protocol version
-			WriteString( username );
-			WriteString( verKey );
-			WriteUInt8( 0x42 );
+		public override void SendChat( string text, bool partial ) {
+			if( String.IsNullOrEmpty( text ) ) return;		
+			byte payload = !ServerSupportsPatialMessages ? (byte)0xFF:
+				partial ? (byte)1 : (byte)0;
+			
+			writer.WriteUInt8( (byte)PacketId.Message );
+			writer.WriteUInt8( payload );
+			writer.WriteString( text );
+			SendPacket();
 		}
 		
-		private static void MakeSetBlockPacket( short x, short y, short z, bool place, byte block ) {
-			WriteUInt8( (byte)PacketId.SetBlockClient );
-			WriteInt16( x );
-			WriteInt16( y );
-			WriteInt16( z );
-			WriteUInt8( place ? (byte)1 : (byte)0 );
-			WriteUInt8( block );
+		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
+			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
+			MakePositionPacket( pos, yaw, pitch, payload );
+			SendPacket();
 		}
 		
-		private static void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
-			WriteUInt8( (byte)PacketId.EntityTeleport );
-			WriteUInt8( payload ); // held block when using HeldBlock, otherwise just 255
-			WriteInt16( (short)( pos.X * 32 ) );
-			WriteInt16( (short)( (int)( pos.Y * 32 ) + 51 ) );
-			WriteInt16( (short)( pos.Z * 32 ) );
-			WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
-			WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
+		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+			writer.WriteUInt8( (byte)PacketId.SetBlockClient );
+			writer.WriteInt16( (short)x );
+			writer.WriteInt16( (short)y );
+			writer.WriteInt16( (short)z );
+			writer.WriteUInt8( place ? (byte)1 : (byte)0 );
+			writer.WriteUInt8( block );
+			SendPacket();
 		}
 		
-		private static void MakeMessagePacket( string text, byte payload ) {
-			WriteUInt8( (byte)PacketId.Message );
-			WriteUInt8( payload );
-			WriteString( text );
+		void MakeLoginPacket( string username, string verKey ) {
+			writer.WriteUInt8( (byte)PacketId.Handshake );
+			writer.WriteUInt8( 7 ); // protocol version
+			writer.WriteString( username );
+			writer.WriteString( verKey );
+			writer.WriteUInt8( 0x42 );
 		}
 		
-		static void WriteString( string value ) {
-			int count = Math.Min( value.Length, 64 );
-			for( int i = 0; i < count; i++ ) {
-				char c = value[i];
-				outBuffer[outIndex + i] = (byte)( c >= '\u0080' ? '?' : c );
-			}
-			for( int i = value.Length; i < 64; i++ ) {
-				outBuffer[outIndex + i] = (byte)' ';
-			}
-			outIndex += 64;
-		}
-		
-		static void WriteUInt8( byte value ) {
-			outBuffer[outIndex++] = value;
-		}
-		
-		static void WriteInt16( short value ) {
-			outBuffer[outIndex++] = (byte)( value >> 8 );
-			outBuffer[outIndex++] = (byte)( value );
-		}
-		
-		static void WriteInt32( int value ) {
-			outBuffer[outIndex++] = (byte)( value >> 24 );
-			outBuffer[outIndex++] = (byte)( value >> 16 );
-			outBuffer[outIndex++] = (byte)( value >> 8 );
-			outBuffer[outIndex++] = (byte)( value );
+		void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
+			writer.WriteUInt8( (byte)PacketId.EntityTeleport );
+			writer.WriteUInt8( payload ); // held block when using HeldBlock, otherwise just 255
+			writer.WriteInt16( (short)(pos.X * 32) );
+			writer.WriteInt16( (short)((int)(pos.Y * 32) + 51) );
+			writer.WriteInt16( (short)(pos.Z * 32) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
 		}
 		
 		void SendPacket() {
-			int packetLength = outIndex;
-			outIndex = 0;
-			if( Disconnected ) return;
-			
 			try {
-				stream.Write( outBuffer, 0, packetLength );
+				writer.Send( Disconnected );
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "wrting packets", ex );
 				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
@@ -218,7 +177,7 @@ namespace ClassicalSharp {
 		
 		#region Reading
 		
-		FastNetReader reader;
+		NetReader reader;
 		DateTime receiveStart;
 		DeflateStream gzipStream;
 		GZipHeaderReader gzipHeader;
