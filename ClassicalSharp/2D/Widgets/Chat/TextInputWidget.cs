@@ -141,6 +141,8 @@ namespace ClassicalSharp {
 		}
 		
 		static bool IsInvalidChar( char c ) {
+			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
+				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
 			// Make sure we're in the printable text range from 0x20 to 0x7E
 			return c < ' ' || c == '&' || c > '~';
 		}
@@ -166,6 +168,7 @@ namespace ClassicalSharp {
 					allText = allText.Substring( 64 );
 				}
 				game.Chat.Send( allText, false );
+				return;
 			}
 			
 			int packetsCount = 0;
