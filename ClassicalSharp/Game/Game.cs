@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 		public PickingRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos();
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer, defaultTexPack;
+		internal string skinServer, chatInInputBuffer;
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
@@ -74,6 +74,13 @@ namespace ClassicalSharp {
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;
 		public Bitmap FontBitmap;
+		
+		string defTexturePack = "default.zip";
+		public string DefaultTexturePack {
+			get { return File.Exists( defTexturePack ) 
+					? defTexturePack : "default.zip"; }
+			set { defTexturePack = value; }
+		}
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -115,7 +122,7 @@ namespace ClassicalSharp {
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );
 			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( defaultTexPack, this );
+			extractor.Extract( DefaultTexturePack, this );
 			Inventory = new Inventory( this );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
@@ -387,12 +394,7 @@ namespace ClassicalSharp {
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
-			this.defaultTexPack = defaultTexPack;
-			
-			if( !File.Exists( defaultTexPack ) ) {
-				Utils.LogDebug( defaultTexPack + " not found" );
-				this.defaultTexPack = "default.zip";
-			}
+			this.defTexturePack = defaultTexPack;
 		}
 	}
 

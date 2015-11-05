@@ -8,24 +8,19 @@ namespace ClassicalSharp.Model {
 		
 		public CreeperModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
-			Head = MakeHead();
-			Torso = MakeTorso();
-			LeftLegFront = MakeLeg( -4/16f, 0, -6/16f, -2/16f );
-			RightLegFront = MakeLeg( 0, 4/16f, -6/16f, -2/16f );
-			LeftLegBack = MakeLeg( -4/16f, 0, 2/16f, 6/16f );
-			RightLegBack = MakeLeg( 0, 4/16f, 2/16f, 6/16f );
-		}
-		
-		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 18/16f, 26/16f, -4/16f, 4/16f );
-		}
-		
-		ModelPart MakeTorso() {
-			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 6/16f, 18/16f, -2/16f, 2/16f );
-		}
-		
-		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2 );
+			Head =  BuildBox( MakeBoxBounds( -4, 18, -4, 4, 26, 4 )
+			                 .SetTexOrigin( 0, 0 ) );
+			Torso = BuildBox( MakeBoxBounds( -4, 6, -2, 4, 18, 2 )
+			                 .SetTexOrigin( 16, 16 ) );
+			
+			LeftLegFront = BuildBox( MakeBoxBounds( -4, 0, -6, 0, 6, -2 )
+			         .SetTexOrigin( 0, 16 ) );
+			RightLegFront = BuildBox( MakeBoxBounds( 0, 0, -6, 4, 6, -2 )
+			         .SetTexOrigin( 0, 16 ) );
+			LeftLegBack = BuildBox( MakeBoxBounds( -4, 0, 2, 0, 6, 6 )
+			         .SetTexOrigin( 0, 16 ) );
+			RightLegBack = BuildBox( MakeBoxBounds( 0, 0, 2, 4, 6, 6 )
+			         .SetTexOrigin( 0, 16 ) );
 		}
 		
 		public override float NameYOffset {

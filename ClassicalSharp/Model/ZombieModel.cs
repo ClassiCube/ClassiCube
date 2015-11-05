@@ -1,5 +1,4 @@
 ﻿using System;
-using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -8,38 +7,20 @@ namespace ClassicalSharp.Model {
 		
 		public ZombieModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
-			Head = MakeHead();
-			Torso = MakeTorso();
-			LeftLeg = MakeLeftLeg( 4/16f, 0f );
-			RightLeg = MakeRightLeg( 0, 4/16f );
-			LeftArm = MakeLeftArm( 8/16f, 4/16f );
-			RightArm = MakeRightArm( 4/16f, 8/16f );
+			Head = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
+			                .SetTexOrigin( 0, 0 ) );
+			Torso =  BuildBox( MakeBoxBounds( -4, 12, -2, 4, 24, 2 )
+			                  .SetTexOrigin( 16, 16 ) );
+			LeftLeg =  BuildBox( MakeBoxBounds( 0, 0, -2, -4, 12, 2 )
+			                    .SetTexOrigin( 0, 16 ) );
+			RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 )
+			                    .SetTexOrigin( 0, 16 ) );
+			LeftArm = BuildBox( MakeBoxBounds( -4, 12, -2, -8, 24, 2 )
+			                   .SetTexOrigin( 40, 16 ) );
+			RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )
+			                    .SetTexOrigin( 40, 16 ) );
 		}
-		
-		ModelPart MakeLeftArm( float x1, float x2 ) {
-			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 12/16f, 24/16f, -2/16f, 2/16f );
-		}
-		
-		ModelPart MakeRightArm( float x1, float x2 ) {
-			return MakeBox( 40, 16, 4, 12, 4, 4, 4, 12, x1, x2, 12/16f, 24/16f, -2/16f, 2/16f );
-		}
-		
-		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 24/16f, 2f, -4/16f, 4/16f );
-		}
-		
-		ModelPart MakeTorso() {
-			return MakeBox( 16, 16, 4, 12, 8, 4, 8, 12, -4/16f, 4/16f, 12/16f, 24/16f, -2/16f, 2/16f );
-		}
-		
-		ModelPart MakeLeftLeg( float x1, float x2 ) {
-			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, -x2, -x1, 0f, 12/16f, -2/16f, 2/16f );
-		}
-		
-		ModelPart MakeRightLeg( float x1, float x2 ) {
-			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, -2/16f, 2/16f );
-		}
-		
+
 		public override float NameYOffset {
 			get { return 2.075f; }
 		}

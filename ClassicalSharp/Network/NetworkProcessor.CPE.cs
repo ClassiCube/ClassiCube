@@ -282,7 +282,7 @@ namespace ClassicalSharp {
 			
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( game.defaultTexPack, game );
+				extractor.Extract( game.DefaultTexturePack, game );
 			} else {
 				game.Animations.Dispose();
 				if( usingTexturePack )

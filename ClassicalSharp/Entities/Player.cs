@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			this.game = game;
 			StepSize = 0.5f;
 			SkinType = game.DefaultPlayerSkinType;
-			SetModel( "humanoid" );
+			SetModel( "chicken" );
 		}
 		
 		/// <summary> Gets the block just underneath the player's feet position. </summary>

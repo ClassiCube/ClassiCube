@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 					game.ChangeTerrainAtlas( (Bitmap)item.Data );
 				} else {
 					TexturePackExtractor extractor = new TexturePackExtractor();
-					extractor.Extract( game.defaultTexPack, game );
+					extractor.Extract( game.DefaultTexturePack, game );
 				}
 			}
 			
@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 				if( item.Data != null ) {
 					extractor.Extract( (byte[])item.Data, game );
 				} else {
-					extractor.Extract( game.defaultTexPack, game );
+					extractor.Extract( game.DefaultTexturePack, game );
 				}
 			}
 		}

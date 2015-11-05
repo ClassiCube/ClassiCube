@@ -63,11 +63,11 @@ namespace ClassicalSharp.Model {
 		protected int index;
 		
 		public struct BoxDescription {
-			public int X, Y, SidesW, EndsH, BodyW, BodyH;
+			public int TexX, TexY, SidesW, EndsH, BodyW, BodyH;
 			public float X1, X2, Y1, Y2, Z1, Z2;
 			
 			public BoxDescription SetTexOrigin( int x, int y ) {
-				X = x; Y = y; return this;
+				TexX = x; TexY = y; return this;
 			}
 			
 			public BoxDescription SetModelBounds( float x1, float y1, float z1, float x2, float y2, float z2 ) {
@@ -100,30 +100,34 @@ namespace ClassicalSharp.Model {
 		/// ┃H┈┈┈tex┈┈┈┈H┃H┈┈tex┈┈┈┈┈┈H┃H┈┈tex┈┈┈┈┈H┃H┈┈┈┈tex┈┈┈┈H┃ <br/>
 		/// ┗━━━━━sW━━━━━┻━━━━━bW━━━━━┻━━━━━bW━━━━━┻━━━━━sW━━━━━┛ </summary>
 		protected ModelPart BuildBox( BoxDescription desc ) {
-			return MakeBox( desc.X, desc.Y, desc.SidesW, 0, 0, desc.SidesW,
+			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
+			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
+			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
+			int x = desc.TexX, y = desc.TexY;
+			
+			YQuad( x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2 ); // top
+			YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z1, z2, y1 ); // bottom
+			ZQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1 ); // front
+			ZQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
+			XQuad( x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2 ); // left
+			XQuad( x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1 ); // right
+			return new ModelPart( index - 6 * 4, 6 * 4 );
+		}
+		
+		protected ModelPart BuildRotatedBox( BoxDescription desc ) {
+			return MakeRotatedBox( desc.TexX, desc.TexY, desc.SidesW,
 			               desc.BodyW, desc.BodyH, desc.X1, desc.X2, desc.Y1, desc.Y2, desc.Z1, desc.Z2 );
 		}
 		
 		[Obsolete]
-		protected ModelPart MakeBox( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
-		                            float x1, float x2, float y1, float y2, float z1, float z2 ) {
-			YQuad( x + sidesW, y, bodyW, endsH, x2, x1, z2, z1, y2 ); // top
-			YQuad( x + sidesW + bodyW, y, bodyW, endsH, x2, x1, z1, z2, y1 ); // bottom
-			ZQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, y1, y2, z1 ); // front
-			ZQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
-			XQuad( x, y + endsH, sidesW, bodyH, z2, z1, y1, y2, x2 ); // left
-			XQuad( x + sidesW + bodyW, y + endsH, sidesW, bodyH, z1, z2, y1, y2, x1 ); // right
-			return new ModelPart( index - 6 * 4, 6 * 4 );
-		}
-		
-		protected ModelPart MakeRotatedBox( int x, int y, int sidesW, int sidesH, int endsW, int endsH, int bodyW, int bodyH,
+		protected ModelPart MakeRotatedBox( int x, int y, int sidesW, int bodyW, int bodyH,
 		                                   float x1, float x2, float y1, float y2, float z1, float z2 ) {
-			YQuad( x + sidesW + bodyW + sidesW, y + endsH, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
-			YQuad( x + sidesW, y + endsH, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom
-			ZQuad( x + sidesW, y, endsW, endsH, x2, x1, y1, y2, z1 ); // front
-			ZQuad( x + sidesW + bodyW, y, endsW, endsH, x2, x1, y2, y1, z2 ); // back
-			XQuad( x, y + endsH, sidesW, sidesH, y2, y1, z2, z1, x2 ); // left
-			XQuad( x + sidesW + bodyW, y + endsH, sidesW, sidesH, y1, y2, z2, z1, x1 ); // right
+			YQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
+			YQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom
+			ZQuad( x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1 ); // front
+			ZQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, y2, y1, z2 ); // back
+			XQuad( x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2 ); // left
+			XQuad( x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1 ); // right
 			
 			// rotate left and right 90 degrees
 			for( int i = index - 8; i < index; i++ ) {

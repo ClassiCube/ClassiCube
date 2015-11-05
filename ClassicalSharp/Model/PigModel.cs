@@ -8,24 +8,21 @@ namespace ClassicalSharp.Model {
 		
 		public PigModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
-			Head = MakeHead();
+			Head = BuildBox( MakeBoxBounds( -4, 8, -14, 4, 16, -6 )
+			               .SetTexOrigin( 0, 0 ) );
 			Torso = MakeTorso();
-			LeftLegFront = MakeLeg( -5/16f, -1/16f, -7/16f, -3/16f );
-			RightLegFront = MakeLeg( 1/16f, 5/16f, -7/16f, -3/16f );
-			LeftLegBack = MakeLeg( -5/16f, -1/16f, 5/16f, 9/16f );
-			RightLegBack = MakeLeg( 1/16f, 5/16f, 5/16f, 9/16f );
-		}
-		
-		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 8, 8, 8, 8, 8, -4/16f, 4/16f, 8/16f, 16/16f, -14/16f, -6/16f );
+			LeftLegFront = BuildBox( MakeBoxBounds( -5, 0, -7, -1, 6, -3 )
+			                        .SetTexOrigin( 0, 16 ) );
+			RightLegFront = BuildBox( MakeBoxBounds( 1, 0, -7, 5, 6, -3 )
+			                         .SetTexOrigin( 0, 16 ) );
+			LeftLegBack = BuildBox( MakeBoxBounds( -5, 0, 5, -1, 6, 9 )
+			                       .SetTexOrigin( 0, 16 ) );
+			RightLegBack = BuildBox( MakeBoxBounds( 1, 0, 5, 5, 6, 9 )
+			                        .SetTexOrigin( 0, 16 ) );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedBox( 28, 8, 8, 16, 10, 8, 10, 16, -5/16f, 5/16f, 6/16f, 14/16f, -8/16f, 8/16f );
-		}
-		
-		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 0f, 6/16f, z1, z2 );
+			return MakeRotatedBox( 28, 8, 8, 10, 16, -5/16f, 5/16f, 6/16f, 14/16f, -8/16f, 8/16f );
 		}
 		
 		public override float NameYOffset {

@@ -33,6 +33,7 @@ namespace ClassicalSharp {
 		protected override void TextButtonClick( Game game, Widget widget ) {
 			string path = ((ButtonWidget)widget).Text;
 			if( File.Exists( path ) ) {
+				game.DefaultTexturePack = path;
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( path, game );
 			}

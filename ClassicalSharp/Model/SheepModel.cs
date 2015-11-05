@@ -11,44 +11,43 @@ namespace ClassicalSharp.Model {
 		
 		public SheepModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6 * ( Fur ? 2 : 1 )];
-			Head = MakeHead();
+			Head = BuildBox( MakeBoxBounds( -3, 16, -14, 3, 22, -6 )
+			                .SetTexOrigin( 0, 0 ) );
 			Torso = MakeTorso();
-			LeftLegFront = MakeLeg( -5/16f, -1/16f, -7/16f, -3/16f );
-			RightLegFront = MakeLeg( 1/16f, 5/16f, -7/16f, -3/16f );
-			LeftLegBack = MakeLeg( -5/16f, -1/16f, 5/16f, 9/16f );
-			RightLegBack = MakeLeg( 1/16f, 5/16f, 5/16f, 9/16f );
-			if( Fur ) {
-				FurHead = MakeFurHead();
-				FurTorso = MakeFurTorso();
-				FurLeftLegFront = MakeFurLeg( -5.5f/16f, -0.5f/16f, -7.5f/16f, -2.5f/16f );
-				FurRightLegFront = MakeFurLeg( 0.5f/16f, 5.5f/16f, -7.5f/16f, -2.5f/16f );
-				FurLeftLegBack = MakeFurLeg( -5.5f/16f, -0.5f/16f, 4.5f/16f, 9.5f/16f );
-				FurRightLegBack = MakeFurLeg( 0.5f/16f, 5.5f/16f, 4.5f/16f, 9.5f/16f );
-			}
+			LeftLegFront = BuildBox( MakeBoxBounds( -5, 0, -7, -1, 12, -3 )
+			                        .SetTexOrigin( 0, 16 ) );
+			RightLegFront = BuildBox( MakeBoxBounds( 1, 0, -7, 5, 12, -3 )
+			                         .SetTexOrigin( 0, 16 ) );
+			LeftLegBack = BuildBox( MakeBoxBounds( -5, 0, 5, -1, 12, 9 )
+			                       .SetTexOrigin( 0, 16 ) );
+			RightLegBack = BuildBox( MakeBoxBounds( 1, 0, 5, 5, 12, 9 )
+			                        .SetTexOrigin( 0, 16 ) );
+			
+			if( Fur )
+				MakeFurModel();
 		}
 		
-		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 8, 6, 6, 8, 6, 6, -3/16f, 3/16f, 16/16f, 22/16f, -14/16f, -6/16f );
+		
+		void MakeFurModel() {
+			FurHead = BuildBox( MakeBoxBounds( -3, -3, -3, 3, 3, 3 )
+			                   .SetTexOrigin( 0, 0 )
+			                   .SetModelBounds( -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f ) );
+			FurTorso = MakeFurTorso();
+			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2  )
+				.SetTexOrigin( 0, 16 );
+			
+			FurLeftLegFront = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f ) );
+			FurRightLegFront = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f ) );
+			FurLeftLegBack = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f ) );
+			FurRightLegBack = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f ) );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedBox( 28, 8, 6, 16, 8, 6, 8, 16, -4/16f, 4/16f, 12/16f, 18/16f, -8/16f, 8/16f );
-		}
-		
-		ModelPart MakeFurHead() {
-			return MakeBox( 0, 0, 6, 6, 6, 6, 6, 6, -3.5f/16f, 3.5f/16f, 15.5f/16f, 1.40625f, -12.5f/16f, -5.5f/16f );
+			return MakeRotatedBox( 28, 8, 6, 8, 16, -4/16f, 4/16f, 12/16f, 18/16f, -8/16f, 8/16f );
 		}
 		
 		ModelPart MakeFurTorso() {
-			return MakeRotatedBox( 28, 8, 6, 16, 8, 6, 8, 16, -6/16f, 6/16f, 10.5f/16f, 1.21875f, -10/16f, 10/16f );
-		}
-		
-		ModelPart MakeLeg( float x1, float x2, float z1, float z2 ) {
-			return MakeBox( 0, 16, 4, 12, 4, 4, 4, 12, x1, x2, 0f, 12/16f, z1, z2 );
-		}
-		
-		ModelPart MakeFurLeg( float x1, float x2, float z1, float z2 ) {
-			return MakeBox( 0, 16, 4, 6, 4, 4, 4, 6, x1, x2, 5.5f/16f, 12.5f/16f, z1, z2 );
+			return MakeRotatedBox( 28, 8, 6, 8, 16, -6/16f, 6/16f, 10.5f/16f, 1.21875f, -10/16f, 10/16f );
 		}
 		
 		public override float NameYOffset {

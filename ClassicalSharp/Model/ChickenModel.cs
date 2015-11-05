@@ -8,41 +8,31 @@ namespace ClassicalSharp.Model {
 		
 		public ChickenModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6 + quadVertices * 2 * 2];
-			Head = MakeHead();
-			Head2 = MakeHead2(); // TODO: Find a more appropriate name.
-			Head3 = MakeHead3();
-			Torso = MakeTorso();
-			LeftLeg = MakeLeg( -3/16f, 0f, -2/16f, -1/16f );
-			RightLeg = MakeLeg( 0f, 3/16f, 1/16f, 2/16f );
-			LeftWing = MakeWing( -4/16f, -3/16f );
-			RightWing = MakeWing( 3/16f, 4/16f );
+			Head = BuildBox( MakeBoxBounds( -2, 9, -6, 2, 15, -3 )
+			                .SetTexOrigin( 0, 0 ) );
+			Head2 = BuildBox( MakeBoxBounds( -1, 9, -7, 1, 11, -5 )
+			                 .SetTexOrigin( 14, 4 ) ); // TODO: Find a more appropriate name.
+			Head3 = BuildBox( MakeBoxBounds( -2, 11, -8, 2, 13, -6 )
+			                 .SetTexOrigin( 14, 0 ) );
+			Torso = 
+			
+			LeftLeg = MakeLeg( -3, 0, -2, -1 );
+			RightLeg = MakeLeg( 0, 3, 1, 2 );			
+			LeftWing = BuildBox( MakeBoxBounds( -4, 7, -3, -3, 11, 3 )
+			                           .SetTexOrigin( 24, 13 ) );
+			RightWing = BuildBox( MakeBoxBounds( 3, 7, -3, 4, 11, 3 )
+			                           .SetTexOrigin( 24, 13 ) );
 		}
 		
-		ModelPart MakeHead() {
-			return MakeBox( 0, 0, 3, 6, 4, 3, 4, 6, -2/16f, 2/16f, 9/16f, 15/16f, -6/16f, -3/16f );
-		}
-		
-		ModelPart MakeHead2() {
-			return MakeBox( 14, 4, 2, 2, 2, 2, 2, 2, -1/16f, 1/16f, 9/16f, 11/16f, -7/16f, -5/16f );
-		}
-		
-		ModelPart MakeHead3() {
-			return MakeBox( 14, 0, 2, 2, 4, 2, 4, 2, -2/16f, 2/16f, 11/16f, 13/16f, -8/16f, -6/16f );
+		ModelPart MakeLeg( int x1, int x2, int legX1, int legX2 ) {
+			const float y1 = 1/64f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;
+			YQuad( 32, 0, 3, 3, x2/16f, x1/16f, z1, z2, y1 ); // bottom feet
+			ZQuad( 36, 3, 1, 5, legX1/16f, legX2/16f, y1, y2, z2 ); // vertical part of leg
+			return new ModelPart( index - 2 * 4, 2 * 4 );
 		}
 		
 		ModelPart MakeTorso() {
-			return MakeRotatedBox( 0, 9, 6, 8, 6, 6, 6, 8, -3/16f, 3/16f, 5/16f, 11/16f, -4/16f, 4/16f );
-		}
-		
-		ModelPart MakeWing( float x1, float x2 ) {
-			return MakeBox( 24, 13, 6, 4, 1, 6, 1, 4, x1, x2, 7/16f, 11/16f, -3/16f, 3/16f );
-		}
-		
-		ModelPart MakeLeg( float x1, float x2, float legX1, float legX2 ) {
-			const float y1 = 1/64f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;		
-			YQuad( 32, 0, 3, 3, x2, x1, z1, z2, y1 ); // bottom feet
-			ZQuad( 36, 3, 1, 5, legX1, legX2, y1, y2, z2 ); // vertical part of leg
-			return new ModelPart( index - 2 * 4, 2 * 4 );
+			return MakeRotatedBox( 0, 9, 6, 6, 8, -3/16f, 3/16f, 5/16f, 11/16f, -4/16f, 4/16f );
 		}
 		
 		public override float NameYOffset {
