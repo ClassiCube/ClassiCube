@@ -10,7 +10,8 @@ namespace ClassicalSharp.Model {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox( MakeBoxBounds( -4, 8, -14, 4, 16, -6 )
 			               .SetTexOrigin( 0, 0 ) );
-			Torso = MakeTorso();
+			Torso = BuildRotatedBox( MakeRotatedBoxBounds( -5, 6, -8, 5, 14, 8 )
+			                        .SetTexOrigin( 28, 8 ) );
 			LeftLegFront = BuildBox( MakeBoxBounds( -5, 0, -7, -1, 6, -3 )
 			                        .SetTexOrigin( 0, 16 ) );
 			RightLegFront = BuildBox( MakeBoxBounds( 1, 0, -7, 5, 6, -3 )
@@ -19,10 +20,6 @@ namespace ClassicalSharp.Model {
 			                       .SetTexOrigin( 0, 16 ) );
 			RightLegBack = BuildBox( MakeBoxBounds( 1, 0, 5, 5, 6, 9 )
 			                        .SetTexOrigin( 0, 16 ) );
-		}
-		
-		ModelPart MakeTorso() {
-			return MakeRotatedBox( 28, 8, 8, 10, 16, -5/16f, 5/16f, 6/16f, 14/16f, -8/16f, 8/16f );
 		}
 		
 		public override float NameYOffset {

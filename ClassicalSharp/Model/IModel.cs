@@ -63,7 +63,7 @@ namespace ClassicalSharp.Model {
 		protected int index;
 		
 		public struct BoxDescription {
-			public int TexX, TexY, SidesW, EndsH, BodyW, BodyH;
+			public int TexX, TexY, SidesW, BodyW, BodyH;
 			public float X1, X2, Y1, Y2, Z1, Z2;
 			
 			public BoxDescription SetTexOrigin( int x, int y ) {
@@ -79,26 +79,36 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected BoxDescription MakeBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			BoxDescription desc = default( BoxDescription );
-			desc.X1 = x1 / 16f; desc.X2 = x2 / 16f;
-			desc.Y1 = y1 / 16f; desc.Y2 = y2 / 16f;
-			desc.Z1 = z1 / 16f; desc.Z2 = z2 / 16f;
-			
+			BoxDescription desc = default( BoxDescription )
+				.SetModelBounds( x1, y1, z1, x2, y2, z2 );		
 			desc.SidesW = Math.Abs( z2 - z1 );
 			desc.BodyW = Math.Abs( x2 - x1 );
 			desc.BodyH = Math.Abs( y2 - y1 );
 			return desc;
 		}
 		
+		protected BoxDescription MakeRotatedBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
+			BoxDescription desc = default( BoxDescription )
+				.SetModelBounds( x1, y1, z1, x2, y2, z2 );		
+			desc.SidesW = Math.Abs( y2 - y1 );
+			desc.BodyW = Math.Abs( x2 - x1 );
+			desc.BodyH = Math.Abs( z2 - z1 );
+			return desc;
+		}
+		
 		/// <summary>Builds a box model assuming the follow texture layout:<br/>
-		/// let sW = sides width, bW = body width, bH = body height<br/>
-		/// ┏━━━━━sW━━━━━┳━━━━━bW━━━━━┳━━━━━bW━━━━━┳━━━━━sW━━━━━┓ <br/>
-		/// ┃s┈┈┈┈┈┈┈┈┈┈┈s┃w┈┈┈┈top┈┈┈┈s┃s┈┈bottom┈┈┈s┃s┈┈┈┈┈┈┈┈┈┈┈s┃ <br/>
-		/// ┃W┈┈┈┈┈┈┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈┈┈┈┈┈W┃ <br/>
-		/// ┣━━━━━sW━━━━━╋━━━━━bW━━━━━╋━━━━━bW━━━━━╋━━━━━sW━━━━━┃ <br/>
-		/// ┃b┈┈┈left┈┈┈┈┈b┃b┈┈front┈┈┈┈b┃b┈┈right┈┈┈┈b┃b┈┈┈back┈┈┈┈b┃ <br/>
-		/// ┃H┈┈┈tex┈┈┈┈H┃H┈┈tex┈┈┈┈┈┈H┃H┈┈tex┈┈┈┈┈H┃H┈┈┈┈tex┈┈┈┈H┃ <br/>
-		/// ┗━━━━━sW━━━━━┻━━━━━bW━━━━━┻━━━━━bW━━━━━┻━━━━━sW━━━━━┛ </summary>
+		/// let SW = sides width, BW = body width, BH = body height<br/>
+		/// ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃S┈┈┈┈┈┈┈┈┈┈┈S┃S┈┈┈┈top┈┈┈┈S┃S┈┈bottom┈┈┈S┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃W┈┈┈┈┈┈┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈tex┈┈┈┈W┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┣━━━━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━━━━━━╋━━━━━━━━━━━━┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┃ <br/>
+		/// ┃B┈┈┈left┈┈┈┈┈B┃B┈┈front┈┈┈┈B┃B┈┈┈right┈┈┈┈B┃B┈┈┈back┈┈┈B┃ <br/>
+		/// ┃H┈┈┈tex┈┈┈┈┈H┃H┈┈tex┈┈┈┈┈H┃H┈┈┈tex┈┈┈┈┈H┃H┈┈┈┈tex┈┈┈H┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┃ <br/>
+		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		protected ModelPart BuildBox( BoxDescription desc ) {
 			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
 			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
@@ -114,27 +124,36 @@ namespace ClassicalSharp.Model {
 			return new ModelPart( index - 6 * 4, 6 * 4 );
 		}
 		
+		/// <summary>Builds a box model assuming the follow texture layout:<br/>
+		/// let SW = sides width, BW = body width, BH = body height<br/>
+		/// ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃S┈┈┈┈┈┈┈┈┈┈┈S┃S┈┈┈┈front┈┈┈S┃S┈┈┈back┈┈┈┈S┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃W┈┈┈┈┈┈┈┈┈W┃W┈┈┈┈tex┈┈┈W┃W┈┈┈┈tex┈┈┈┈W┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┈┃┈┈┈┈┈┈┈┈┈┈┈┈┃ <br/>
+		/// ┣━━━━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━━━━━━╋━━━━━━━━━━━━┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┃ <br/>
+		/// ┃B┈┈┈left┈┈┈┈┈B┃B┈┈bottom┈┈B┃B┈┈┈right┈┈┈┈B┃B┈┈┈┈top┈┈┈B┃ <br/>
+		/// ┃H┈┈┈tex┈┈┈┈┈H┃H┈┈tex┈┈┈┈┈H┃H┈┈┈tex┈┈┈┈┈H┃H┈┈┈┈tex┈┈┈H┃ <br/>
+		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┃ <br/>
+		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		protected ModelPart BuildRotatedBox( BoxDescription desc ) {
-			return MakeRotatedBox( desc.TexX, desc.TexY, desc.SidesW,
-			               desc.BodyW, desc.BodyH, desc.X1, desc.X2, desc.Y1, desc.Y2, desc.Z1, desc.Z2 );
-		}
-		
-		[Obsolete]
-		protected ModelPart MakeRotatedBox( int x, int y, int sidesW, int bodyW, int bodyH,
-		                                   float x1, float x2, float y1, float y2, float z1, float z2 ) {
-			YQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
-			YQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom
+			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
+			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
+			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
+			int x = desc.TexX, y = desc.TexY;
+			
 			ZQuad( x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1 ); // front
-			ZQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, y2, y1, z2 ); // back
+			ZQuad( x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2 ); // back	
+			YQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
+			YQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom				
 			XQuad( x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2 ); // left
 			XQuad( x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1 ); // right
 			
 			// rotate left and right 90 degrees
 			for( int i = index - 8; i < index; i++ ) {
 				ModelVertex vertex = vertices[i];
-				float z = vertex.Z;
-				vertex.Z = vertex.Y;
-				vertex.Y = z;
+				float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
 				vertices[i] = vertex;
 			}
 			return new ModelPart( index - 6 * 4, 6 * 4 );

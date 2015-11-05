@@ -14,14 +14,15 @@ namespace ClassicalSharp.Model {
 			                 .SetTexOrigin( 14, 4 ) ); // TODO: Find a more appropriate name.
 			Head3 = BuildBox( MakeBoxBounds( -2, 11, -8, 2, 13, -6 )
 			                 .SetTexOrigin( 14, 0 ) );
-			Torso = 
+			Torso =BuildRotatedBox( MakeRotatedBoxBounds( -3, 5, -4, 3, 11, 3 )
+			                       .SetTexOrigin( 0, 9 ) );
 			
 			LeftLeg = MakeLeg( -3, 0, -2, -1 );
-			RightLeg = MakeLeg( 0, 3, 1, 2 );			
+			RightLeg = MakeLeg( 0, 3, 1, 2 );
 			LeftWing = BuildBox( MakeBoxBounds( -4, 7, -3, -3, 11, 3 )
-			                           .SetTexOrigin( 24, 13 ) );
+			                    .SetTexOrigin( 24, 13 ) );
 			RightWing = BuildBox( MakeBoxBounds( 3, 7, -3, 4, 11, 3 )
-			                           .SetTexOrigin( 24, 13 ) );
+			                     .SetTexOrigin( 24, 13 ) );
 		}
 		
 		ModelPart MakeLeg( int x1, int x2, int legX1, int legX2 ) {
@@ -29,10 +30,6 @@ namespace ClassicalSharp.Model {
 			YQuad( 32, 0, 3, 3, x2/16f, x1/16f, z1, z2, y1 ); // bottom feet
 			ZQuad( 36, 3, 1, 5, legX1/16f, legX2/16f, y1, y2, z2 ); // vertical part of leg
 			return new ModelPart( index - 2 * 4, 2 * 4 );
-		}
-		
-		ModelPart MakeTorso() {
-			return MakeRotatedBox( 0, 9, 6, 6, 8, -3/16f, 3/16f, 5/16f, 11/16f, -4/16f, 4/16f );
 		}
 		
 		public override float NameYOffset {
