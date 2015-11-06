@@ -12,9 +12,15 @@ namespace Launcher2 {
 		
 		bool useTexture = false;
 		internal void TryLoadTexturePack() {
-			if( !File.Exists( "default.zip" ) ) return;
+			Options.Load();
+			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			
-			using( Stream fs = new FileStream( "default.zip", FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
+			if( !File.Exists( texPack ) )
+				texPack = "default.zip";
+			if( !File.Exists( texPack ) )
+				return;		
+			
+			using( Stream fs = new FileStream( texPack, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 				ZipReader reader = new ZipReader();
 				
 				reader.ShouldProcessZipEntry = (f) => f == "terrain.png";

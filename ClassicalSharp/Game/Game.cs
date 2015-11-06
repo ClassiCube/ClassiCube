@@ -77,9 +77,13 @@ namespace ClassicalSharp {
 		
 		string defTexturePack = "default.zip";
 		public string DefaultTexturePack {
-			get { return File.Exists( defTexturePack ) 
+			get { 
+				return File.Exists( defTexturePack )
 					? defTexturePack : "default.zip"; }
-			set { defTexturePack = value; }
+			set { 
+				defTexturePack = value;
+				Options.Set( OptionsKey.DefaultTexturePack, value );
+			}
 		}
 		
 		void LoadAtlas( Bitmap bmp ) {

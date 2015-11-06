@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		public const string Speed = "speedmultiplier";
 		public const string ChatLines = "chatlines";
 		public const string ArialChatFont = "arialchatfont";
+		public const string DefaultTexturePack = "defaulttexpack";
 		
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";
