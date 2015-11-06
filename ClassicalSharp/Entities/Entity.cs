@@ -97,7 +97,11 @@ namespace ClassicalSharp {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
 		protected bool TouchesAnyLava() {
-			return TouchesAny( CollisionBounds,
+			BoundingBox bounds = CollisionBounds;
+			// Even though we collide with lava 3 blocks above our feet, vanilla client thinks
+			// that we do not.. so we have to maintain compatibility here.
+			bounds.Max.Y -= 4/16f;
+			return TouchesAny( bounds,
 			                  b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
 		}
 		
@@ -111,7 +115,9 @@ namespace ClassicalSharp {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		protected bool TouchesAnyWater() {
-			return TouchesAny( CollisionBounds,
+			BoundingBox bounds = CollisionBounds;
+			bounds.Max.Y -= 4/16f;
+			return TouchesAny( bounds,
 			                  b => b == (byte)Block.Water || b == (byte)Block.StillWater );
 		}
 	}
