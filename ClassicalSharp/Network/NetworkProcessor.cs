@@ -5,12 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
-using OpenTK;
-#if __MonoCS__
-using Ionic.Zlib;
-#else
-using System.IO.Compression;
-#endif
 
 namespace ClassicalSharp {
 
@@ -60,21 +54,51 @@ namespace ClassicalSharp {
 			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
 				if( item.Data != null ) {
 					game.ChangeTerrainAtlas( (Bitmap)item.Data );
+					TextureCache.AddToCache( item.Url, (Bitmap)item.Data );
+				} else if( Is304Status( item.WebEx ) ) {
+					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
+					if( bmp == null ) // Should never happen, but handle anyways.
+						ExtractDefault();
+					else
+						game.ChangeTerrainAtlas( bmp );
 				} else {
-					TexturePackExtractor extractor = new TexturePackExtractor();
-					extractor.Extract( game.DefaultTexturePack, game );
+					ExtractDefault();
 				}
 			}
 			
 			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
-				TexturePackExtractor extractor = new TexturePackExtractor();
 				if( item.Data != null ) {
+					TexturePackExtractor extractor = new TexturePackExtractor();
 					extractor.Extract( (byte[])item.Data, game );
+					TextureCache.AddToCache( item.Url, (byte[])item.Data );
+				} else if( Is304Status( item.WebEx ) ) {
+					byte[] data = TextureCache.GetDataFromCache( item.Url );
+					if( data == null ) { // Should never happen, but handle anyways.
+						ExtractDefault();
+					} else {
+						TexturePackExtractor extractor = new TexturePackExtractor();
+						extractor.Extract( data, game );
+					}
 				} else {
-					extractor.Extract( game.DefaultTexturePack, game );
+					ExtractDefault();
 				}
 			}
 		}
+		
+		void ExtractDefault() {
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( game.DefaultTexturePack, game );
+		}
+		
+		bool Is304Status( WebException ex ) {
+			Console.WriteLine( ex );
+			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
+				return false;
+			
+			HttpWebResponse response = (HttpWebResponse)ex.Response;
+			return response.StatusCode == HttpStatusCode.NotModified;
+		}
+		
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
@@ -114,54 +138,7 @@ namespace ClassicalSharp {
 			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2,
 		};
 		
-		#region Writing
-		NetWriter writer;
-		
-		public override void SendChat( string text, bool partial ) {
-			if( String.IsNullOrEmpty( text ) ) return;		
-			byte payload = !ServerSupportsPatialMessages ? (byte)0xFF:
-				partial ? (byte)1 : (byte)0;
-			
-			writer.WriteUInt8( (byte)PacketId.Message );
-			writer.WriteUInt8( payload );
-			writer.WriteString( text );
-			SendPacket();
-		}
-		
-		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
-			MakePositionPacket( pos, yaw, pitch, payload );
-			SendPacket();
-		}
-		
-		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			writer.WriteUInt8( (byte)PacketId.SetBlockClient );
-			writer.WriteInt16( (short)x );
-			writer.WriteInt16( (short)y );
-			writer.WriteInt16( (short)z );
-			writer.WriteUInt8( place ? (byte)1 : (byte)0 );
-			writer.WriteUInt8( block );
-			SendPacket();
-		}
-		
-		void MakeLoginPacket( string username, string verKey ) {
-			writer.WriteUInt8( (byte)PacketId.Handshake );
-			writer.WriteUInt8( 7 ); // protocol version
-			writer.WriteString( username );
-			writer.WriteString( verKey );
-			writer.WriteUInt8( 0x42 );
-		}
-		
-		void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
-			writer.WriteUInt8( (byte)PacketId.EntityTeleport );
-			writer.WriteUInt8( payload ); // held block when using HeldBlock, otherwise just 255
-			writer.WriteInt16( (short)(pos.X * 32) );
-			writer.WriteInt16( (short)((int)(pos.Y * 32) + 51) );
-			writer.WriteInt16( (short)(pos.Z * 32) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
-		}
-		
+		NetWriter writer;		
 		void SendPacket() {
 			try {
 				writer.Send( Disconnected );
@@ -172,18 +149,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		#endregion
-		
-		
-		#region Reading
-		
 		NetReader reader;
-		DateTime receiveStart;
-		DeflateStream gzipStream;
-		GZipHeaderReader gzipHeader;
-		int mapSizeIndex, mapIndex;
-		byte[] mapSize = new byte[4], map;
-		FixedBufferStream gzippedMap;
 		PacketId lastOpcode;
 		
 		void ReadPacket( byte opcode ) {
@@ -195,235 +161,6 @@ namespace ClassicalSharp {
 				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );
 			handler();
 		}
-		
-		void HandleHandshake() {
-			byte protocolVer = reader.ReadUInt8();
-			ServerName = reader.ReadAsciiString();
-			ServerMotd = reader.ReadAsciiString();
-			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
-			receivedFirstPosition = false;
-			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
-		}
-		
-		void HandlePing() {
-		}
-		
-		void HandleLevelInit() {
-			game.Map.Reset();
-			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
-			if( ServerMotd.Contains( "cfg=" ) ) {
-				ReadWomConfigurationAsync();
-			}
-			receivedFirstPosition = false;
-			gzipHeader = new GZipHeaderReader();
-			
-			// Workaround because built in mono stream assumes that the end of stream
-			// has been reached the first time a read call returns 0. (MS.NET doesn't)
-			#if __MonoCS__
-			gzipStream = new DeflateStream( gzippedMap, true );
-			#else
-			gzipStream = new DeflateStream( gzippedMap, CompressionMode.Decompress );
-			if( OpenTK.Configuration.RunningOnMono ) {
-				throw new InvalidOperationException( "You must compile ClassicalSharp with __MonoCS__ defined " +
-				                                    "to run on Mono, due to a limitation in Mono." );
-			}
-			#endif
-			
-			mapSizeIndex = 0;
-			mapIndex = 0;
-			receiveStart = DateTime.UtcNow;
-		}
-		
-		void HandleLevelDataChunk() {
-			int usedLength = reader.ReadInt16();
-			gzippedMap.Position = 0;
-			gzippedMap.SetLength( usedLength );
-			
-			if( gzipHeader.done || gzipHeader.ReadHeader( gzippedMap ) ) {
-				if( mapSizeIndex < 4 ) {
-					mapSizeIndex += gzipStream.Read( mapSize, mapSizeIndex, 4 - mapSizeIndex );
-				}
-
-				if( mapSizeIndex == 4 ) {
-					if( map == null ) {
-						int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
-						map = new byte[size];
-					}
-					mapIndex += gzipStream.Read( map, mapIndex, map.Length - mapIndex );
-				}
-			}
-			
-			reader.Remove( 1024 );
-			byte progress = reader.ReadUInt8();
-			game.Events.RaiseMapLoading( progress );
-		}
-		
-		void HandleLevelFinalise() {
-			game.SetNewScreen( new NormalScreen( game ) );
-			int mapWidth = reader.ReadInt16();
-			int mapHeight = reader.ReadInt16();
-			int mapLength = reader.ReadInt16();
-			
-			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
-			Utils.LogDebug( "map loading took:" + loadingMs );
-			game.Map.SetData( map, mapWidth, mapHeight, mapLength );
-			game.Events.RaiseOnNewMapLoaded();
-			
-			map = null;
-			gzipStream.Dispose();
-			if( sendWomId && !sentWomId ) {
-				SendChat( "/womid WoMClient-2.0.7", false );
-				sentWomId = true;
-			}
-			gzipStream = null;
-			GC.Collect();
-		}
-		
-		void HandleSetBlock() {
-			int x = reader.ReadInt16();
-			int y = reader.ReadInt16();
-			int z = reader.ReadInt16();
-			byte type = reader.ReadUInt8();
-			
-			if( game.Map.IsNotLoaded )
-				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
-			else if( !game.Map.IsValidPos( x, y, z ) )
-				Utils.LogDebug( "Server tried to update a block at an invalid position!" );
-			else
-				game.UpdateBlock( x, y, z, type );
-		}
-		
-		bool[] needRemoveNames;
-		void HandleAddEntity() {
-			byte entityId = reader.ReadUInt8();
-			string name = reader.ReadAsciiString();
-			name = Utils.RemoveEndPlus( name );
-			AddEntity( entityId, name, name, true );
-			
-			// Some servers (such as LegendCraft) declare they support ExtPlayerList but
-			// don't send ExtAddPlayerName packets. So we add a special case here, even
-			// though it is technically against the specification.
-			if( UsingExtPlayerList ) {
-				AddCpeInfo( entityId, name, name, "Players", 0 );
-				if( needRemoveNames == null )
-					needRemoveNames = new bool[EntityList.MaxCount];
-				needRemoveNames[entityId] = true;
-			}
-		}
-		
-		void HandleEntityTeleport() {
-			byte entityId = reader.ReadUInt8();
-			ReadAbsoluteLocation( entityId, true );
-		}
-		
-		void HandleRelPosAndOrientationUpdate() {
-			byte playerId = reader.ReadUInt8();
-			float x = reader.ReadInt8() / 32f;
-			float y = reader.ReadInt8() / 32f;
-			float z = reader.ReadInt8() / 32f;
-			
-			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, true );
-			UpdateLocation( playerId, update, true );
-		}
-		
-		void HandleRelPositionUpdate() {
-			byte playerId = reader.ReadUInt8();
-			float x = reader.ReadInt8() / 32f;
-			float y = reader.ReadInt8() / 32f;
-			float z = reader.ReadInt8() / 32f;
-			
-			LocationUpdate update = LocationUpdate.MakePos( x, y, z, true );
-			UpdateLocation( playerId, update, true );
-		}
-		
-		void HandleOrientationUpdate() {
-			byte playerId = reader.ReadUInt8();
-			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			
-			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
-			UpdateLocation( playerId, update, true );
-		}
-		
-		void HandleRemoveEntity() {
-			byte entityId = reader.ReadUInt8();
-			Player player = game.Players[entityId];
-			if( entityId != 0xFF && player != null ) {
-				game.Events.RaiseEntityRemoved( entityId );
-				player.Despawn();
-				game.Players[entityId] = null;
-			}
-			
-			// See comment about LegendCraft in AddEntity
-			if( needRemoveNames != null &&
-			   needRemoveNames[entityId] && player != null ) {
-				game.Events.RaiseCpeListInfoRemoved( entityId );
-				game.CpePlayersList[entityId] = null;
-				needRemoveNames[entityId] = false;
-			}
-		}
-		
-		void HandleMessage() {
-			byte messageType = reader.ReadUInt8();
-			string text = reader.ReadChatString( ref messageType, useMessageTypes );
-			game.Chat.Add( text, (CpeMessage)messageType );
-		}
-		
-		void HandleKick() {
-			string reason = reader.ReadAsciiString();
-			game.Disconnect( "&eLost connection to the server", reason );
-			Dispose();
-		}
-		
-		void HandleSetPermission() {
-			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
-		}
-		
-		
-		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
-			if( entityId != 0xFF ) {
-				Player oldPlayer = game.Players[entityId];
-				if( oldPlayer != null ) {
-					game.Events.RaiseEntityRemoved( entityId );
-					oldPlayer.Despawn();
-				}
-				game.Players[entityId] = new NetPlayer( displayName, skinName, game );
-				game.Events.RaiseEntityAdded( entityId );
-				game.AsyncDownloader.DownloadSkin( skinName );
-			}
-			if( readPosition ) {
-				ReadAbsoluteLocation( entityId, false );
-				if( entityId == 0xFF ) {
-					game.LocalPlayer.SpawnPoint = game.LocalPlayer.Position;
-				}
-			}
-		}
-
-		void ReadAbsoluteLocation( byte playerId, bool interpolate ) {
-			float x = reader.ReadInt16() / 32f;
-			float y = ( reader.ReadInt16() - 51 ) / 32f; // We have to do this.
-			if( playerId == 255 ) y += 22/32f;
-			
-			float z = reader.ReadInt16() / 32f;
-			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
-			if( playerId == 0xFF ) {
-				receivedFirstPosition = true;
-			}
-			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, false );
-			UpdateLocation( playerId, update, interpolate );
-		}
-		
-		void UpdateLocation( byte playerId, LocationUpdate update, bool interpolate ) {
-			Player player = game.Players[playerId];
-			if( player != null ) {
-				player.SetLocation( update, interpolate );
-			}
-		}
-		
-		#endregion
 		
 		Action[] handlers;
 		int maxHandledPacket;

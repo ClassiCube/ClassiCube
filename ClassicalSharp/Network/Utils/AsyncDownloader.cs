@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 
 namespace ClassicalSharp.Network {
@@ -21,7 +22,6 @@ namespace ClassicalSharp.Network {
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
-			client = new GZipWebClient();
 			
 			worker = new Thread( DownloadThreadWorker, 256 * 1024 );
 			worker.Name = "ClassicalSharp.ImageDownloader";
@@ -36,27 +36,37 @@ namespace ClassicalSharp.Network {
 			string strippedSkinName = Utils.StripColours( skinName );
 			string url = Utils.IsUrlPrefix( skinName ) ? skinName :
 				skinServer + strippedSkinName + ".png";
-			AddRequest( url, true, "skin_" + strippedSkinName, 0 );
+			AddRequest( url, true, "skin_" + strippedSkinName, 0, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void DownloadImage( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 0 );
+			AddRequest( url, priority, identifier, 0, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a string from the specified url.  </summary>
 		public void DownloadPage( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 1 );
+			AddRequest( url, priority, identifier, 1, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a byte array from the specified url.  </summary>
 		public void DownloadData( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 2 );
+			AddRequest( url, priority, identifier, 2, DateTime.MinValue );
 		}
 		
-		void AddRequest( string url, bool priority, string identifier, byte type ) {
+		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
+		public void DownloadImage( string url, bool priority, string identifier, DateTime lastModified ) {
+			AddRequest( url, priority, identifier, 0, lastModified );
+		}
+		
+		/// <summary> Asynchronously downloads a byte array from the specified url.  </summary>
+		public void DownloadData( string url, bool priority, string identifier, DateTime lastModified ) {
+			AddRequest( url, priority, identifier, 2, lastModified );
+		}
+		
+		void AddRequest( string url, bool priority, string identifier, byte type, DateTime lastModified ) {
 			lock( requestLocker )  {
-				Request request = new Request( url, identifier, type );
+				Request request = new Request( url, identifier, type, lastModified );
 				if( priority ) {
 					requests.Insert( 0, request );
 				} else {
@@ -74,11 +84,10 @@ namespace ClassicalSharp.Network {
 			lock( requestLocker )  {
 				requests.Insert( 0, null );
 			}
-			handle.Set();
 			
+			handle.Set();		
 			worker.Join();
 			((IDisposable)handle).Dispose();
-			client.Dispose();
 		}
 		
 		/// <summary> Removes older entries that were downloaded a certain time ago
@@ -122,7 +131,6 @@ namespace ClassicalSharp.Network {
 			return success;
 		}
 
-		WebClient client;
 		void DownloadThreadWorker() {
 			while( true ) {
 				Request request = null;
@@ -148,20 +156,26 @@ namespace ClassicalSharp.Network {
 			string dataType = type == 0 ? "image" : (type == 1 ? "string" : "raw");
 			Utils.LogDebug( "Downloading " + dataType + " from: " + url );
 			object value = null;
+			WebException webEx = null;		
 			
 			try {
+				HttpWebRequest req = MakeRequest( request );
+				HttpWebResponse response = (HttpWebResponse)req.GetResponse();
+				MemoryStream data = DownloadBytes( response );
+				
 				if( type == 0 ) {
-					byte[] data = client.DownloadData( url );
-					using( MemoryStream stream = new MemoryStream( data ) )
-						value = new Bitmap( stream );
+					value = new Bitmap( data );
 				} else if( type == 1 ) {
-					value = client.DownloadString( url );
+					value = Encoding.UTF8.GetString( data.ToArray() );
 				} else if( type == 2 ) {
-					value = client.DownloadData( url );
+					value = data.ToArray();
 				}
 			} catch( Exception ex ) {
-				if( !( ex is WebException || ex is ArgumentException ) ) throw;
+				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );
+				
+				if( ex is WebException )
+					webEx = (WebException)ex;
 			}
 			
 			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
@@ -178,7 +192,7 @@ namespace ClassicalSharp.Network {
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
-				DownloadedItem newItem = new DownloadedItem( value, request.TimeAdded, url );
+				DownloadedItem newItem = new DownloadedItem( value, request.TimeAdded, url, webEx );
 				
 				if( downloaded.TryGetValue( request.Identifier, out oldItem ) ) {
 					if( oldItem.TimeAdded > newItem.TimeAdded ) {
@@ -195,13 +209,31 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		sealed class GZipWebClient : WebClient {
+		HttpWebRequest MakeRequest( Request request ) {
+			HttpWebRequest req = (HttpWebRequest)WebRequest.Create( request.Url );
+			req.AutomaticDecompression = DecompressionMethods.GZip;
+			req.ReadWriteTimeout = 15 * 1000;
+			req.Timeout = 15 * 1000;
+			req.Proxy = null;
 			
-			protected override WebRequest GetWebRequest( Uri address ) {
-				HttpWebRequest request = (HttpWebRequest)base.GetWebRequest( address );
-				request.AutomaticDecompression = DecompressionMethods.GZip;
-				return request;
+			if( request.LastModified != DateTime.MinValue )
+				req.IfModifiedSince = request.LastModified;
+			return req;
+		}
+		
+		static byte[] buffer = new byte[4096 * 8];
+		MemoryStream DownloadBytes( HttpWebResponse response ) {
+			int length = (int)response.ContentLength;
+			MemoryStream dst = length >= 0 ?
+				new MemoryStream( length ) : new MemoryStream();
+			
+			using( Stream src = response.GetResponseStream() ) {
+				int read = 0;
+				while( (read = src.Read( buffer, 0, buffer.Length )) > 0 ) {
+					dst.Write( buffer, 0, read );
+				}
 			}
+			return dst;
 		}
 		
 		sealed class Request {
@@ -210,12 +242,14 @@ namespace ClassicalSharp.Network {
 			public string Identifier;
 			public byte Type; // 0 = bitmap, 1 = string, 2 = byte[]
 			public DateTime TimeAdded;
+			public DateTime LastModified;
 			
-			public Request( string url, string identifier, byte type ) {
+			public Request( string url, string identifier, byte type, DateTime lastModified ) {
 				Url = url;
 				Identifier = identifier;
 				Type = type;
 				TimeAdded = DateTime.UtcNow;
+				LastModified = lastModified;
 			}
 		}
 	}
@@ -235,11 +269,15 @@ namespace ClassicalSharp.Network {
 		/// <summary> Full URL this item was downloaded from. </summary>
 		public string Url;
 		
-		public DownloadedItem( object data, DateTime timeAdded, string url ) {
+		/// <summary> Exception that occurred if this request failed, can be null. </summary>
+		public WebException WebEx;
+		
+		public DownloadedItem( object data, DateTime timeAdded, string url, WebException webEx ) {
 			Data = data;
 			TimeAdded = timeAdded;
 			TimeDownloaded = DateTime.UtcNow;
 			Url = url;
+			WebEx = webEx;
 		}
 	}
 }

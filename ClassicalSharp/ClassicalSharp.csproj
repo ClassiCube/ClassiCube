@@ -175,6 +175,7 @@
     <Compile Include="Network\INetworkProcessor.cs" />
     <Compile Include="Network\NetworkProcessor.CPE.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
+    <Compile Include="Network\NetworkProcessor.Original.cs" />
     <Compile Include="Network\Utils\AsyncDownloader.cs" />
     <Compile Include="Network\Utils\NetReader.cs" />
     <Compile Include="Network\Utils\FixedBufferStream.cs" />
@@ -206,6 +207,7 @@
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="TexturePack\Animations.cs" />
+    <Compile Include="TexturePack\TextureCache.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
     <Compile Include="TexturePack\TexturePackExtractor.cs" />

@@ -285,12 +285,14 @@ namespace ClassicalSharp {
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
-			} else {
+			} else if( Utils.IsUrlPrefix( url ) ) {
 				game.Animations.Dispose();
+				DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
+				
 				if( usingTexturePack )
-					game.AsyncDownloader.DownloadData( url, true, "texturePack" );
+					game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
 				else
-					game.AsyncDownloader.DownloadImage( url, true, "terrain" );
+					game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
 				
 			}
 			Utils.LogDebug( "Image url: " + url );
