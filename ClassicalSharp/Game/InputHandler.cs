@@ -313,6 +313,8 @@ namespace ClassicalSharp {
 		bool HandleBuiltinKey( Key key ) {
 			if( key == Keys[KeyBinding.HideGui] ) {
 				game.HideGui = !game.HideGui;
+			} else if( key == Keys[KeyBinding.HideFps] ) {
+				game.ShowFPS = !game.ShowFPS;
 			} else if( key == Keys[KeyBinding.Fullscreen] ) {
 				WindowState state = game.WindowState;
 				if( state != WindowState.Minimized ) {

@@ -21,9 +21,9 @@ namespace ClassicalSharp {
 		TextWidget statusWidget;
 		static string[] keyNames;
 		static string[] descriptions = new [] { "Forward", "Back", "Left", "Right", "Jump", "Respawn",
-			"Set spawn", "Open chat", "Send chat", "Pause", "Open inventory", "Take screenshot",
-			"Toggle fullscreen", "Toggle 3rd person", "Cycle view distance", "Toggle fly", "Speed",
-			"Toggle noclip", "Fly up", "Fly down", "Display player list", "Hide gui" };
+			"Set spawn", "Open chat", "Send chat", "Pause", "Open inventory", "Cycle view distance",
+			"Show player list", "Speed", "Toggle noclip", "Toggle fly", "Fly up", "Fly Down",
+			"Hide gui", "Hide FPS", "Take screenshot", "Toggle fullscreen", "Toggle 3rd person" };
 		
 		public override void Init() {
 			if( keyNames == null )
@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		
 		int index;
 		void MakeKeys( int start, int len, int x ) {
-			int y = -180;
+			int y = -200;
 			for( int i = 0; i < len; i++ ) {
 				KeyBinding binding = (KeyBinding)((int)start + i);
 				string text = descriptions[start + i] + ": " 

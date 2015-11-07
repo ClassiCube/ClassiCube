@@ -5,9 +5,9 @@ namespace ClassicalSharp {
 	
 	public enum KeyBinding {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-		SendChat, PauseOrExit, OpenInventory, Screenshot, Fullscreen,
-		ThirdPersonCamera, ViewDistance, Fly, Speed, NoClip, FlyUp,
-		FlyDown, PlayerList, HideGui,
+		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
+		Speed, NoClip, Fly, FlyUp, FlyDown, HideGui, HideFps,
+		Screenshot, Fullscreen, ThirdPersonCamera,
 	}
 	
 	public class KeyMap {
@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		
 		Key[] Keys;
 		bool IsReservedKey( Key key ) {
-			return key == Key.Escape || key == Key.F12 || key == Key.Slash || key == Key.BackSpace ||
+			return key == Key.Escape || key == Key.Slash || key == Key.BackSpace ||
 				(key >= Key.Insert && key <= Key.End) ||
 				(key >= Key.Number0 && key <= Key.Number9); // block hotbar
 		}
@@ -40,22 +40,14 @@ namespace ClassicalSharp {
 		
 		public KeyMap() {
 			// See comment in Game() constructor
-			#if !__MonoCS__
-			Keys = new Key[] {
-				Key.W, Key.S, Key.A, Key.D, Key.Space, Key.R, Key.Y, Key.T,
-				Key.Enter, Key.Escape, Key.B, Key.F12, Key.F11, 
-				Key.F5, Key.F, Key.Z, Key.ShiftLeft, Key.X, Key.Q,
-				Key.E, Key.Tab, Key.F1 };
-			#else
-			Keys = new Key[22];
+			Keys = new Key[23];
 			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
 			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Y; Keys[7] = Key.T;
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
-			Keys[11] = Key.F12; Keys[12] = Key.F11; Keys[13] = Key.F5; 
-			Keys[14] = Key.F; Keys[15] = Key.Z; Keys[16] = Key.ShiftLeft; 
-			Keys[17] = Key.X; Keys[18] = Key.Q; Keys[19] = Key.E; 
-			Keys[20] = Key.Tab; Keys[21] = Key.F1;
-			#endif
+			Keys[11] = Key.F; Keys[12] = Key.Tab; Keys[13] = Key.ShiftLeft;
+			Keys[14] = Key.X; Keys[15] = Key.Z; Keys[16] = Key.Q;
+			Keys[17] = Key.E; Keys[18] = Key.F1; Keys[19] = Key.F3;
+			Keys[20] = Key.F12; Keys[21] = Key.F11; Keys[22] = Key.F5;
 			LoadKeyBindings();
 		}
 		
