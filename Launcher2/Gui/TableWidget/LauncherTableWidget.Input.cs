@@ -57,6 +57,7 @@ namespace Launcher2 {
 			if( DraggingWidth ) {
 				ColumnWidths[0] += deltaX;
 				Utils.Clamp( ref ColumnWidths[0], 20, Window.Width - 20 );
+				DesiredColumnWidths[0] = ColumnWidths[0];
 				NeedRedraw();
 			}
 		}

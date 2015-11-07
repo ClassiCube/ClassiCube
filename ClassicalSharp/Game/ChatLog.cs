@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 		public int FontSize = 12;
 		
 		public void Send( string text, bool partial ) {
+			text = text.TrimEnd( trimChars );
 			if( String.IsNullOrEmpty( text ) ) return;
 			InputLog.Add( text );
 			
@@ -35,6 +36,7 @@ namespace ClassicalSharp {
 			game.Network.SendChat( text, partial );
 		}
 		
+		static char[] trimChars = new [] { ' ', '\0' };
 		public void Add( string text ) {
 			Log.Add( text );
 			LogChatToFile( text );

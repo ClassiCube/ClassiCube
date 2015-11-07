@@ -215,6 +215,7 @@ namespace ClassicalSharp.Network {
 			req.ReadWriteTimeout = 15 * 1000;
 			req.Timeout = 15 * 1000;
 			req.Proxy = null;
+			req.UserAgent = Program.AppName;
 			
 			if( request.LastModified != DateTime.MinValue )
 				req.IfModifiedSince = request.LastModified;

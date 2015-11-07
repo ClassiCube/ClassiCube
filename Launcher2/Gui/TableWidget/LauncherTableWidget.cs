@@ -53,6 +53,7 @@ namespace Launcher2 {
 		
 		public int CurrentIndex, Count;
 		public int[] ColumnWidths = { 350, 100 };
+		public int[] DesiredColumnWidths = { 350, 100 };
 		
 		struct TableEntry {
 			public string Hash, Name, Players;
@@ -68,8 +69,10 @@ namespace Launcher2 {
 		static FastColour backCol = new FastColour( 120, 85, 151 ), foreCol = new FastColour( 160, 133, 186 );
 		static FastColour scrollCol = new FastColour( 200, 184, 216 );
 		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
+			ColumnWidths[0] = DesiredColumnWidths[0];
 			Utils.Clamp( ref ColumnWidths[0], 20, Window.Width - 20 );
 			int x = X + 5;
+			
 			DrawGrid( drawer, font, titleFont );
 			x += DrawColumn( drawer, true, font, titleFont, boldFont, "Name", ColumnWidths[0], x, e => e.Name ) + 5;
 			x += DrawColumn( drawer, false, font, titleFont, boldFont, "Players", ColumnWidths[1], x, e => e.Players ) + 5;
