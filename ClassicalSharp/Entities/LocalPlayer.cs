@@ -237,7 +237,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
-			if( !CanFly ) flying = false;
+			if( !CanFly ) { flying = false; flyingDown = false; flyingUp = false; }
 			if( !CanNoclip ) noClip = false;
 			if( !CanSpeed) canSpeed = false;
 			if( !CanPushbackBlocks ) PushbackBlockPlacing = false;
