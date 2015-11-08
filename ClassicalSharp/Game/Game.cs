@@ -317,6 +317,7 @@ namespace ClassicalSharp {
 			if( activeScreen != null ) {
 				activeScreen.OnResize( width, height, Width, Height );
 			}
+			hudScreen.OnResize( width, height, Width, Height );
 			width = Width;
 			height = Height;
 		}

@@ -17,6 +17,8 @@ namespace ClassicalSharp {
 			this.font = font;
 			this.boldFont = boldFont;
 			chatInputText = new WrappableStringBuffer( len );
+			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
+			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 		}
 		
 		Texture chatInputTexture, caretTexture;
@@ -46,8 +48,7 @@ namespace ClassicalSharp {
 				game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
 				game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			chatInputText.WordWrap( ref parts, ref partLens, 64 );
-			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
-
+			
 			maxWidth = 0;
 			args = new DrawTextArgs( null, font, false );
 			for( int i = 0; i < lines; i++ ) {
@@ -158,7 +159,7 @@ namespace ClassicalSharp {
 			chatInputText.Clear();
 			caretPos = -1;
 			Dispose();
-			Height = 0;
+			Height = defaultHeight;
 		}
 		
 		void SendInBuffer() {
