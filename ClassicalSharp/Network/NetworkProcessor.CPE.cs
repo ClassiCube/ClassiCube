@@ -308,10 +308,8 @@ namespace ClassicalSharp {
 			game.LocalPlayer.CanSpeed = reader.ReadUInt8() != 0;
 			game.LocalPlayer.CanRespawn = reader.ReadUInt8() != 0;
 			game.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
+			game.LocalPlayer.CheckHacksConsistency();
 			
-			if( !game.CanUseThirdPersonCamera ) {
-				game.SetCamera( false );
-			}
 			float jumpHeight = reader.ReadInt16() / 32f;
 			if( jumpHeight < 0 ) jumpHeight = 1.4f;
 			game.LocalPlayer.CalculateJumpVelocity( jumpHeight );

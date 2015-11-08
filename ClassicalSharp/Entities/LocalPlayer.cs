@@ -14,28 +14,23 @@ namespace ClassicalSharp {
 		public int SpeedMultiplier = 10;
 		
 		public byte UserType;
+		public bool PushbackBlockPlacing;
 		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
 		
-		/// <summary> Whether the player has permission to increase its speed beyond the normal walking speed. </summary>
-		public bool CanSpeed {
-			get { return canSpeed; }
-			set { canSpeed = value; }
-		}
+		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
+		public bool CanSpeed = true;
 		
-		public bool CanFly {
-			get { return canFly; }
-			set { canFly = value; if( !value ) flying = false; }
-		}
+		/// <summary> Whether the player is allowed to fly in the world. </summary>
+		public bool CanFly = true;
 		
-		public bool CanRespawn {
-			get { return canRespawn; }
-			set { canRespawn = value; }
-		}
+		/// <summary> Whether the player is allowed to teleport to their respawn point. </summary>
+		public bool CanRespawn = true;
 		
-		public bool CanNoclip {
-			get { return canNoclip; }
-			set { canNoclip = value; if( !value ) noClip = false; }
-		}
+		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
+		public bool CanNoclip  = true;
+		
+		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
+		public bool CanPushbackBlocks = true;
 		
 		float jumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
@@ -214,12 +209,11 @@ namespace ClassicalSharp {
 		public void ParseHackFlags( string name, string motd ) {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {
-				CanFly = CanNoclip = CanSpeed = CanRespawn = false;
-				game.CanUseThirdPersonCamera = false;
-				game.SetCamera( false );
+				CanFly = CanNoclip = CanRespawn = CanSpeed =
+					CanPushbackBlocks = game.CanUseThirdPersonCamera = false;			
 			} else { // By default (this is also the case with WoM), we can use hacks.
-				CanFly = CanNoclip = CanSpeed = CanRespawn = true;
-				game.CanUseThirdPersonCamera = true;
+				CanFly = CanNoclip = CanRespawn = CanSpeed = 
+					CanPushbackBlocks = game.CanUseThirdPersonCamera = true;
 			}
 			
 			ParseFlag( b => CanFly = b, joined, "fly" );
@@ -228,7 +222,9 @@ namespace ClassicalSharp {
 			ParseFlag( b => CanRespawn = b, joined, "respawn" );
 
 			if( UserType == 0x64 )
-				ParseFlag( b => CanFly = CanNoclip = CanRespawn = CanSpeed = b, joined, "ophax" );
+				ParseFlag( b => CanFly = CanNoclip = CanRespawn = 
+				          CanSpeed = CanPushbackBlocks = b, joined, "ophax" );
+			CheckHacksConsistency();
 		}
 		
 		static void ParseFlag( Action<bool> action, string joined, string flag ) {
@@ -237,6 +233,17 @@ namespace ClassicalSharp {
 			} else if( joined.Contains( "-" + flag ) ) {
 				action( false );
 			}
+		}
+		
+		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
+		public void CheckHacksConsistency() {
+			if( !CanFly ) flying = false;
+			if( !CanNoclip ) noClip = false;
+			if( !CanSpeed) canSpeed = false;
+			if( !CanPushbackBlocks ) PushbackBlockPlacing = false;
+			
+			if( !game.CanUseThirdPersonCamera )
+				game.SetCamera( false );
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass, 

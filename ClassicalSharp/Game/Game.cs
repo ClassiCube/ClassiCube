@@ -69,7 +69,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
-		public bool PushbackBlockPlacing;
+		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;

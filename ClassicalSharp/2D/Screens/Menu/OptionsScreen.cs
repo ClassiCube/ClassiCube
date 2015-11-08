@@ -61,8 +61,10 @@ namespace ClassicalSharp {
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),
 				Make( 140, -150, "Pushback block placing", Anchor.Centre, OnWidgetClick,
-				     g => g.PushbackBlockPlacing ? "yes" : "no",
-				     (g, v) => g.PushbackBlockPlacing = (v == "yes" ) ),
+				     g => g.LocalPlayer.PushbackBlockPlacing 
+				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
+				     (g, v) => { if( g.LocalPlayer.CanPushbackBlocks) 
+				     		g.LocalPlayer.PushbackBlockPlacing = v == "yes"; }),
 				
 				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),

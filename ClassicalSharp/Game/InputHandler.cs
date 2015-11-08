@@ -116,9 +116,9 @@ namespace ClassicalSharp {
 			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
 			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
 			
-			if( !localBB.Intersects( blockBB ) ) return true;
+			if( game.LocalPlayer.noClip || !localBB.Intersects( blockBB ) ) return true;
 			
-			if( game.PushbackBlockPlacing ) {
+			if( game.LocalPlayer.PushbackBlockPlacing ) {
 				return PushbackPlace( selected, blockBB );
 			} else {
 				localBB.Min.Y += 0.25f + Entity.Adjustment;
@@ -263,7 +263,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		static int[] viewDistances = { 16, 32, 64, 128, 256, 512 };
+		static int[] viewDistances = { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 		void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
 			if( SimulateMouse( key, true ) ) return;
