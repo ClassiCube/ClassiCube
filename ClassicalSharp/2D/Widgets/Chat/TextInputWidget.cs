@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		}
 		
 		Texture chatInputTexture, caretTexture;
-		int caretPos = -1, typingLogPos = 0;
+		int caretPos = -1, typingLogPos = 0, defaultHeight;
 		public int YOffset;
 		internal WrappableStringBuffer chatInputText;
 		readonly Font font, boldFont;
@@ -46,6 +46,7 @@ namespace ClassicalSharp {
 				game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
 				game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
 			chatInputText.WordWrap( ref parts, ref partLens, 64 );
+			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 
 			maxWidth = 0;
 			args = new DrawTextArgs( null, font, false );
@@ -85,7 +86,8 @@ namespace ClassicalSharp {
 				Size trimmedSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTexture.X1 = 10 + trimmedSize.Width;
 				
-				args.Text = new String( parts[indexY][indexX], 1 );
+				string line = parts[indexY];
+				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : " ";
 				Size charSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTexture.Width = charSize.Width;
 				
@@ -101,7 +103,7 @@ namespace ClassicalSharp {
 				totalHeight += sizes[i].Height;
 			Size size = new Size( maxWidth, totalHeight );
 			
-			int realHeight = 0, y = 0;
+			int realHeight = 0;
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
@@ -115,15 +117,15 @@ namespace ClassicalSharp {
 						drawer.DrawChatText( ref args, 0, realHeight );
 						realHeight += sizes[i].Height;
 					}
-					y = game.Height - realHeight - YOffset;
-					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, y );
+					chatInputTexture = drawer.Make2DTexture( bmp, size, 10, 0 );
 				}
 			}
 			
-			caretTexture.Y1 += y;
-			Y = y;
-			Width = size.Width;
-			Height = realHeight;
+			Height = realHeight == 0 ? defaultHeight : realHeight;
+			Y = game.Height - Height - YOffset;
+			chatInputTexture.Y1 = Y;
+			caretTexture.Y1 += Y;
+			Width = size.Width;		
 		}
 
 		public override void Dispose() {

@@ -24,6 +24,7 @@ namespace ClassicalSharp.Singleplayer {
 				game.Inventory.CanPlace[i] = true;
 				game.Inventory.CanDelete[i] = true;
 			}
+			
 			game.Events.RaiseBlockPermissionsChanged();
 			NewMap();
 			MakeMap( 128, 128, 128 );

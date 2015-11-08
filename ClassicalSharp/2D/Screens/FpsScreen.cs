@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 			AddChar( 14, ref index );
 			
 			graphicsApi.BindTexture( posTexture.ID );
-			graphicsApi.DrawDynamicIndexedVb( DrawMode.Triangles,
+			graphicsApi.UpdateDynamicIndexedVb( DrawMode.Triangles,
 			                                 game.ModelCache.vb, game.ModelCache.vertices, index, index * 6 / 4 );
 		}
 		

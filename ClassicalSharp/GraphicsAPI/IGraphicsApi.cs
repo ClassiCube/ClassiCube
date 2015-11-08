@@ -158,13 +158,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// draw calls will be in the given format. </summary>
 		public abstract void SetBatchFormat( VertexFormat format );
 		
-		/// <summary> Draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
+		public abstract void UpdateDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
 		
-		/// <summary> Draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices,
+		public abstract void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices,
 		                                             int vCount, int indicesCount ) where T : struct;
 		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer. </summary>
@@ -252,7 +252,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
 			SetBatchFormat( VertexFormat.Pos3fCol4b );
-			DrawDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
 		internal VertexPos3fTex2fCol4b[] texVerts = new VertexPos3fTex2fCol4b[4];
@@ -270,7 +270,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVerts[2] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
 			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
 			SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			DrawDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
 		public static void Make2DQuad( TextureRec xy, TextureRec uv,

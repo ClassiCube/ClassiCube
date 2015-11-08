@@ -222,7 +222,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref dynamicvBuffers, buffer, iBufferSize );
 		}
 		
-		public override void DrawDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) {
+		public override void UpdateDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int count ) {
 			int size = count * batchStride;
 			DataBuffer buffer = dynamicvBuffers[vb];
 			buffer.SetData( vertices, size, LockFlags.Discard );
@@ -231,7 +231,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawPrimitives( modeMappings[(int)mode], 0, NumPrimitives( count, mode ) );
 		}
 		
-		public override void DrawDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) {
+		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) {
 			int size = vCount * batchStride;
 			DataBuffer buffer = dynamicvBuffers[vb];
 			buffer.SetData( vertices, size, LockFlags.Discard );

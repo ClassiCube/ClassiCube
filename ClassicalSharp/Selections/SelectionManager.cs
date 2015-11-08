@@ -9,6 +9,8 @@ namespace ClassicalSharp.Selections {
 		
 		protected Game game;
 		public IGraphicsApi Graphics;
+		VertexPos3fCol4b[] vertices, lineVertices;
+		int vb, lineVb;
 		
 		public SelectionManager( Game window ) {
 			game = window;
@@ -18,7 +20,8 @@ namespace ClassicalSharp.Selections {
 		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
 		public void AddSelection( byte id, Vector3I p1, Vector3I p2, FastColour col ) {
-			SelectionBox selection = new SelectionBox( p1, p2, col, Graphics );
+			RemoveSelection( id );
+			SelectionBox selection = new SelectionBox( p1, p2, col );
 			selection.ID = id;
 			selections.Add( selection );
 		}
@@ -27,42 +30,59 @@ namespace ClassicalSharp.Selections {
 			for( int i = 0; i < selections.Count; i++ ) {
 				SelectionBox sel = selections[i];
 				if( sel.ID == id ) {
-					sel.Dispose();
 					selections.RemoveAt( i );
 					break;
 				}
 			}
 		}
-				
-		Vector3 pos;
+		
 		SelectionBoxComparer comparer = new SelectionBoxComparer();
 		public void Render( double delta ) {
 			Player player = game.LocalPlayer;
-			pos = player.Position;
-			if( selections.Count == 0 ) return;
+			if( selections.Count == 0 ) return;			
+			
 			// TODO: Proper selection box sorting. But this is very difficult because
 			// we can have boxes within boxes, intersecting boxes, etc. Probably not worth it.
-			comparer.pos = pos;
+			comparer.pos =  player.Position;
 			selections.Sort( comparer );
+			if( vertices == null )
+				InitData(); // lazy init as most servers don't use this.
 			
-			Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
-			Graphics.AlphaBlending = true;
+			int index = 0, lineIndex = 0;
 			for( int i = 0; i < selections.Count; i++ ) {
 				SelectionBox box = selections[i];
-				box.Render( delta );
+				box.Render( delta, vertices, lineVertices, ref index, ref lineIndex );
 			}
+			
+			Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
+			Graphics.UpdateDynamicVb( DrawMode.Lines, lineVb, lineVertices, selections.Count * LineVerticesCount );
+			
+			Graphics.DepthWrite = false;
+			Graphics.AlphaBlending = true;
+			Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices,
+			                                selections.Count * VerticesCount, selections.Count * IndicesCount );
+			Graphics.DepthWrite = true;
 			Graphics.AlphaBlending = false;
 		}
 		
 		public void Dispose() {
 			OnNewMap( null, null );
 			game.Events.OnNewMap -= OnNewMap;
+			if( lineVb > 0 ) {
+				Graphics.DeleteDynamicVb( vb );
+				Graphics.DeleteDynamicVb( lineVb );
+			}
+		}
+		
+		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2, IndicesCount = 6 * 6;
+		void InitData() {
+			vertices = new VertexPos3fCol4b[256 * VerticesCount];
+			lineVertices = new VertexPos3fCol4b[256 * LineVerticesCount];
+			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, vertices.Length );
+			lineVb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, lineVertices.Length );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
-			foreach( SelectionBox sel in selections ) {
-				sel.Dispose();
-			}
 			selections.Clear();
 		}
 	}

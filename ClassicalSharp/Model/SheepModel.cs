@@ -72,7 +72,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 12/16f, 7/16f, p.rightLegXRot, 0, 0, LeftLegBack );
 			DrawRotate( 0, 12/16f, 7/16f, p.leftLegXRot, 0, 0, RightLegBack );
 			// Need to draw the two parts separately.
-			graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			graphics.AlphaTest = true;
 			index = 0;
 			

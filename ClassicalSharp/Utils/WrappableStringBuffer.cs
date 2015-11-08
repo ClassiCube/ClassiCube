@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 			}
 			
 			// Output the used lines
-			OutputLines( ref lines, linesCount, lineSize );
+			OutputLines( ref lines, linesCount, lineSize, lineLens );
 			value = realText;
 		}
 		
@@ -58,13 +58,13 @@ namespace ClassicalSharp {
 			value = wrap;
 		}
 		
-		void OutputLines( ref string[] lines, int linesCount, int lineSize ) {
+		void OutputLines( ref string[] lines, int linesCount, int lineSize, int[] lineLens ) {
 			for( int i = 0; i < capacity; i++ ) {
 				if( value[i] == '\0' ) value[i] = ' ';
 			}
 			
 			for( int i = 0; i < Math.Max( 1, linesCount ); i++ ) {
-				lines[i] = new String( value, i * lineSize, lineSize );
+				lines[i] = new String( value, i * lineSize, lineLens[i] );
 			}
 		}
 		

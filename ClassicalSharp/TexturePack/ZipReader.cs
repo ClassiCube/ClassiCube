@@ -12,6 +12,7 @@ namespace ClassicalSharp.TexturePack {
 		public string Filename;
 	}
 	
+	/// <summary> Extracts files from a stream that represents a .zip file. </summary>
 	public sealed class ZipReader {
 		
 		public Action<string, byte[], ZipEntry> ProcessZipEntry;
@@ -133,14 +134,14 @@ namespace ClassicalSharp.TexturePack {
 				byte[] compressedData = reader.ReadBytes( compressedSize );
 				MemoryStream stream = new MemoryStream( compressedData );
 				int index = 0, read = 0;
-				DeflateStream deflater = new DeflateStream( stream, CompressionMode.Decompress );
+				DeflateStream inflater = new DeflateStream( stream, CompressionMode.Decompress );
 				
 				while( index < uncompressedSize &&
-				      ( read = deflater.Read( data, index, data.Length - index ) ) > 0 ) {
+				      (read = inflater.Read( data, index, data.Length - index)) > 0 ) {
 					index += read;
 				}
 				
-				deflater.Dispose();
+				inflater.Dispose();
 				return data;
 			} else {
 				Utils.LogDebug( "Unsupported .zip entry compression method: " + compressionMethod );

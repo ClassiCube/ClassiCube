@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < index; i++ )
 				TransformVertex( ref cache.vertices[i] );
-			game.Graphics.DrawDynamicIndexedVb( DrawMode.Triangles, cache.vb,
+			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb,
 			                                   cache.vertices, index, index * 6 / 4 );
 		}
 		

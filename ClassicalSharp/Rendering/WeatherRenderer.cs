@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			// fixes crashing on nVidia cards in OpenGL builds.
 			if( index > 0 ) {
 				graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-				graphics.DrawDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
