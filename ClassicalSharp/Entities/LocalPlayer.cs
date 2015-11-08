@@ -15,7 +15,6 @@ namespace ClassicalSharp {
 		
 		public byte UserType;
 		public bool PushbackBlockPlacing;
-		bool canSpeed = true, canFly = true, canRespawn = true, canNoclip = true;
 		
 		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
 		public bool CanSpeed = true;
@@ -100,7 +99,7 @@ namespace ClassicalSharp {
 				if( game.IsKeyDown( KeyBinding.Right ) ) zMoving += 0.98f;
 
 				jumping = game.IsKeyDown( KeyBinding.Jump );
-				speeding = canSpeed && game.IsKeyDown( KeyBinding.Speed );
+				speeding = CanSpeed && game.IsKeyDown( KeyBinding.Speed );
 				flyingUp = game.IsKeyDown( KeyBinding.FlyUp );
 				flyingDown = game.IsKeyDown( KeyBinding.FlyDown );
 			}
@@ -239,7 +238,7 @@ namespace ClassicalSharp {
 		public void CheckHacksConsistency() {
 			if( !CanFly ) { flying = false; flyingDown = false; flyingUp = false; }
 			if( !CanNoclip ) noClip = false;
-			if( !CanSpeed) canSpeed = false;
+			if( !CanSpeed) speeding = false;
 			if( !CanPushbackBlocks ) PushbackBlockPlacing = false;
 			
 			if( !game.CanUseThirdPersonCamera )
@@ -273,7 +272,7 @@ namespace ClassicalSharp {
 		
 		internal bool HandleKeyDown( Key key ) {
 			KeyMap keys = game.InputHandler.Keys;
-			if( key == keys[KeyBinding.Respawn] && canRespawn ) {
+			if( key == keys[KeyBinding.Respawn] && CanRespawn ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
 				if( game.Map.IsValidPos( p ) ) {
 					// Spawn player at highest valid position.
@@ -290,11 +289,11 @@ namespace ClassicalSharp {
 				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
 				LocationUpdate update = LocationUpdate.MakePos( spawn, false );
 				SetLocation( update, false );
-			} else if( key == keys[KeyBinding.SetSpawn] && canRespawn ) {
+			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn ) {
 				SpawnPoint = Position;
-			} else if( key == keys[KeyBinding.Fly] && canFly ) {
+			} else if( key == keys[KeyBinding.Fly] && CanFly ) {
 				flying = !flying;
-			} else if( key == keys[KeyBinding.NoClip] && canNoclip ) {
+			} else if( key == keys[KeyBinding.NoClip] && CanNoclip ) {
 				noClip = !noClip;
 			} else {
 				return false;
