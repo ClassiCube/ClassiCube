@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( new NormalScreen( game ) );
+				game.SetNewScreen( null );
 				return true;
 			} else if( (key == Key.Enter || key == Key.KeypadEnter)
 			          && inputWidget != null ) {

@@ -41,19 +41,25 @@ namespace ClassicalSharp {
 				Make( 140, -50, "Chat font size", Anchor.Centre, OnWidgetClick,
 				     g => g.Chat.FontSize.ToString(),
 				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
-				     	Options.Set( OptionsKey.FontSize, v ); } ),
+				     	Options.Set( OptionsKey.FontSize, v );
+				     	g.RefreshHud();
+				     } ),
 
 				Make( 140, 0, "Chat lines", Anchor.Centre, OnWidgetClick,
 				     g => g.ChatLines.ToString(),
 				     (g, v) => { g.ChatLines = Int32.Parse( v );
-				     	Options.Set( OptionsKey.ChatLines, v ); } ),
+				     	Options.Set( OptionsKey.ChatLines, v ); 
+				     	g.RefreshHud(); 
+				     } ),
 				
 				Make( 140, 50, "Arial chat font", Anchor.Centre, OnWidgetClick,
 				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
 				     (g, v) => {
 				     	g.Drawer2D.UseBitmappedChat = v == "no";
 				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
-				     	game.Events.RaiseChatFontChanged(); } ),
+				     	game.Events.RaiseChatFontChanged();
+				     	g.RefreshHud();
+				     } ),
 				
 				// Extra stuff
 				!network.IsSinglePlayer ? null :

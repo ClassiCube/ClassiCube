@@ -99,7 +99,7 @@
     <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\SaveLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\TexturePackScreen.cs" />
-    <Compile Include="2D\Screens\NormalScreen.cs" />
+    <Compile Include="2D\Screens\HudScreen.cs" />
     <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />

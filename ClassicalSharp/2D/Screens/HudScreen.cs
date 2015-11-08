@@ -5,9 +5,9 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class NormalScreen : Screen {
+	public class HudScreen : Screen {
 		
-		public NormalScreen( Game game ) : base( game ) {
+		public HudScreen( Game game ) : base( game ) {
 		}
 		
 		ChatScreen chat;
@@ -18,11 +18,13 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
+			bool showMinimal = game.GetActiveScreen != this;
 			if( chat.HandlesAllInput )
 				chat.RenderBackground();
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
-			hotbar.Render( delta );
+			if( !showMinimal )
+				hotbar.Render( delta );
 			
 			//graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			//graphicsApi.BindTexture( game.TerrainAtlas.TexId );
@@ -35,11 +37,11 @@ namespace ClassicalSharp {
 					playerList.Dispose();
 					playerList = null;
 				}
-				graphicsApi.Texturing = false;
-			} else {
-				graphicsApi.Texturing = false;
-				DrawCrosshairs();
 			}
+			
+			graphicsApi.Texturing = false;
+			if( playerList == null && !showMinimal )
+				DrawCrosshairs();
 		}
 		
 		const int crosshairExtent = 15, crosshairWeight = 2;
@@ -57,6 +59,17 @@ namespace ClassicalSharp {
 			playerFont.Dispose();
 			chat.Dispose();
 			hotbar.Dispose();
+			if( playerList != null )
+				playerList.Dispose();
+		}
+		
+		public void GainFocus() {
+			if( game.CursorVisible )
+				game.CursorVisible = false;
+			game.Camera.RegrabMouse();
+		}
+		
+		public void LoseFocus() {
 			if( playerList != null ) {
 				playerList.Dispose();
 			}
@@ -79,9 +92,6 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
-			if( game.CursorVisible )
-				game.CursorVisible = false;
-			game.Camera.RegrabMouse();
 		}
 		
 		public override bool HandlesAllInput {

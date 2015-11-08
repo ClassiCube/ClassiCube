@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
 				// Other
 				Make( 0, 55, "Back to game", Anchor.BottomOrRight, 
-				     (g, w) => g.SetNewScreen( new NormalScreen( g ) ) ),
+				     (g, w) => g.SetNewScreen( null ) ),
 				Make( 0, 5, "Quit game", Anchor.BottomOrRight, (g, w) => g.Exit() ),
 			};
 		}
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape )
-				game.SetNewScreen( new NormalScreen( game ) );
+				game.SetNewScreen( null );
 			return true;
 		}
 	}

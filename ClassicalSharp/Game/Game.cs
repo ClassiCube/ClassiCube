@@ -51,6 +51,7 @@ namespace ClassicalSharp {
 		internal int defaultIb;
 		public bool CanUseThirdPersonCamera = true;
 		FpsScreen fpsScreen;
+		internal HudScreen hudScreen;
 		public Events Events = new Events();
 		public InputHandler InputHandler;
 		public ChatLog Chat;
@@ -166,6 +167,8 @@ namespace ClassicalSharp {
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
+			hudScreen = new HudScreen( this );
+			hudScreen.Init();
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
 			MapEnvRenderer.Init();
@@ -185,9 +188,19 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
+		public void RefreshHud() {
+			hudScreen.Dispose();
+			hudScreen.Init();
+		}
+		
 		/// <summary> Gets whether the active screen handles all input. </summary>
 		public bool ScreenLockedInput {
-			get { return activeScreen != null && activeScreen.HandlesAllInput; }
+			get { return activeScreen == null ? hudScreen.HandlesAllInput :
+					activeScreen.HandlesAllInput; } // inlined here.
+		}
+		
+		public Screen GetActiveScreen {
+			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
 		
 		const int ticksFrequency = 20;
@@ -201,9 +214,8 @@ namespace ClassicalSharp {
 			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
 			Vertices = 0;
-			if( !Focused && (activeScreen == null || !activeScreen.HandlesAllInput) ) {
+			if( !Focused && !ScreenLockedInput )
 				SetNewScreen( new PauseScreen( this ) );
-			}
 			
 			base.OnRenderFrame( e );
 			CheckScheduledTasks( e.Time );
@@ -238,14 +250,12 @@ namespace ClassicalSharp {
 			}
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
-			//OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B02 );
 			fpsScreen.Render( e.Time );
-			if( activeScreen != null ) {
+			if( activeScreen == null || !activeScreen.HidesHud )
+				hudScreen.Render( e.Time );
+			if( activeScreen != null )
 				activeScreen.Render( e.Time );
-			}
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
-			//if( Keyboard[Key.F2] )
-			//	OpenTK.Graphics.OpenGL.GL.PolygonMode( 0x0408, 0x1B01 );
 			
 			if( screenshotRequested )
 				TakeScreenshot();
@@ -320,13 +330,19 @@ namespace ClassicalSharp {
 		
 		internal Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
-			InputHandler.ScreenChanged( activeScreen, screen );
-			
+			InputHandler.ScreenChanged( activeScreen, screen );		
 			if( activeScreen != null )
 				activeScreen.Dispose();
-			activeScreen = screen;
+			
+			if( screen == null ) {
+				hudScreen.GainFocus();
+			} else if( activeScreen == null ) {
+				hudScreen.LoseFocus();			
+			}
+			
 			if( screen != null )
 				screen.Init();
+			activeScreen = screen;
 		}
 		
 		public void SetCamera( bool thirdPerson ) {

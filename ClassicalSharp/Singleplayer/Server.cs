@@ -76,7 +76,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			game.Map.SetData( map, width, height, length );
 			game.Events.RaiseOnNewMapLoaded();
-			game.SetNewScreen( new NormalScreen( game ) );
+			game.SetNewScreen( null );
 			ResetPlayerPosition();
 			game.Chat.Add( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();

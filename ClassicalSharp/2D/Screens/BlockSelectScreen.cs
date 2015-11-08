@@ -181,7 +181,7 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left && selectedIndex != -1 ) {
 				game.Inventory.HeldBlock = blocksTable[selectedIndex];
-				game.SetNewScreen( new NormalScreen( game ) );
+				game.SetNewScreen( null );
 			}
 			return true;
 		}
@@ -189,7 +189,7 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == game.Mapping( KeyBinding.PauseOrExit ) ||
 			   key == game.Mapping( KeyBinding.OpenInventory ) ) {
-				game.SetNewScreen( new NormalScreen( game ) );
+				game.SetNewScreen( null );
 			}
 			return true;
 		}

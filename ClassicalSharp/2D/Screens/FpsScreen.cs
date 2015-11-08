@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			
 			graphicsApi.Texturing = true;
 			fpsTextWidget.Render( delta );
-			if( game.activeScreen is NormalScreen ) {
+			if( game.activeScreen == null ) {
 				UpdateHackState( false );
 				DrawPosition();
 				hackStatesWidget.Render( delta );

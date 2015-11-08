@@ -17,5 +17,10 @@ namespace ClassicalSharp {
 		public virtual bool BlocksWorld {
 			get { return false; }
 		}
+		
+		/// <summary> Whether this screen hides the normal in-game hud. </summary>
+		public virtual bool HidesHud {
+			get { return false; }
+		}
 	}
 }

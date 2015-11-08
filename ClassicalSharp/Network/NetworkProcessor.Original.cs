@@ -132,7 +132,7 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleLevelFinalise() {
-			game.SetNewScreen( new NormalScreen( game ) );
+			game.SetNewScreen( null );
 			int mapWidth = reader.ReadInt16();
 			int mapHeight = reader.ReadInt16();
 			int mapLength = reader.ReadInt16();

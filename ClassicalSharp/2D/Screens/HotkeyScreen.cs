@@ -35,6 +35,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool supressNextPress;
+		const int numButtons = 5;
 		public override bool HandlesKeyPress( char key ) {
 			if( supressNextPress ) {
 				supressNextPress = false;
@@ -47,7 +48,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( new NormalScreen( game ) );
+				game.SetNewScreen( null );
 				return true;
 			} else if( focusWidget != null ) {
 				FocusKeyDown( key );
@@ -83,7 +84,7 @@ namespace ClassicalSharp {
 				MakeHotkey( 0, -120, 1 ),
 				MakeHotkey( 0, -80, 2 ),
 				MakeHotkey( 0, -40, 3 ),
-				MakeAddNew( 0, 0 ),
+				MakeHotkey( 0, 0, 4 ),
 				Make( -160, -80, "<", 40, 40, arrowFont, (g, w) => PageClick( false ) ),
 				Make( 160, -80, ">", 40, 40, arrowFont, (g, w) => PageClick( true ) ),
 				
@@ -128,17 +129,9 @@ namespace ClassicalSharp {
 				game, x, y, 240, 30, text, Anchor.Centre, Anchor.Centre,
 				textFont, TextButtonClick );
 			
+			button.Metadata = default( Hotkey );
 			if( text != "-----" )
 				button.Metadata =  hotkeys.Hotkeys[index];
-			return button;
-		}
-		
-		ButtonWidget MakeAddNew( int x, int y ) {
-			ButtonWidget button = ButtonWidget.Create(
-				game, x, y, 240, 30, "Add new", Anchor.Centre, Anchor.Centre,
-				textFont, TextButtonClick );
-			
-			button.Metadata = default( Hotkey );
 			return button;
 		}
 		
@@ -152,8 +145,8 @@ namespace ClassicalSharp {
 		void Set( int index ) {
 			string text = Get( index + currentIndex );
 			ButtonWidget button = buttons[index];
-			button.SetText( text);
-			button.Metadata = null;
+			button.SetText( text );
+			button.Metadata = default( Hotkey );
 			if( text != "-----" )
 				button.Metadata =  hotkeys.Hotkeys[index];
 		}
@@ -168,12 +161,13 @@ namespace ClassicalSharp {
 		
 		int currentIndex;
 		void PageClick( bool forward ) {
-			currentIndex += forward ? 4 : -4;
-			if( currentIndex >= hotkeys.Hotkeys.Count ) currentIndex -= 4;
+			currentIndex += forward ? numButtons : -numButtons;
+			if( currentIndex >= hotkeys.Hotkeys.Count )
+				currentIndex -= numButtons;
 			if( currentIndex < 0 ) currentIndex = 0;
 			
 			LostFocus();
-			for( int i = 0; i < 4; i++ )
+			for( int i = 0; i < numButtons; i++ )
 				Set( i );
 		}
 		
@@ -181,12 +175,9 @@ namespace ClassicalSharp {
 			LostFocus();
 			ButtonWidget button = (ButtonWidget)widget;
 			
-			if( button.Metadata != null ) {
-				curHotkey = (Hotkey)button.Metadata;
-				origHotkey = curHotkey;
-				// do stuff here
-				CreateEditingWidgets();
-			}
+			curHotkey = (Hotkey)button.Metadata;
+			origHotkey = curHotkey;
+			CreateEditingWidgets();
 		}
 		
 		#region Modifying hotkeys
@@ -254,7 +245,7 @@ namespace ClassicalSharp {
 				                        curHotkey.MoreInput, currentAction.GetText() );
 			}
 			
-			for( int i = 0; i < 4; i++ )
+			for( int i = 0; i < numButtons; i++ )
 				Set( i );
 			DisposeEditingWidgets();
 		}
@@ -265,7 +256,7 @@ namespace ClassicalSharp {
 				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
 			}
 			
-			for( int i = 0; i < 4; i++ )
+			for( int i = 0; i < numButtons; i++ )
 				Set( i );
 			DisposeEditingWidgets();
 		}

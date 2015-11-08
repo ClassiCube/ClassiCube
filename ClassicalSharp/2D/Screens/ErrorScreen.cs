@@ -48,5 +48,9 @@ namespace ClassicalSharp {
 		public override bool HandlesAllInput {
 			get { return true; }
 		}
+		
+		public override bool HidesHud {
+			get { return true; }
+		}
 	}
 }
