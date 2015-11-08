@@ -174,7 +174,11 @@ namespace ClassicalSharp {
 			game.CpePlayersList[nameId] = info;
 			
 			if( oldInfo != null ) {
-				game.Events.RaiseCpeListInfoChanged( (byte)nameId );
+				// Only redraw the CPE player list info if something changed.
+				if( info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
+				   info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank ) {
+					game.Events.RaiseCpeListInfoChanged( (byte)nameId );
+				}
 			} else {
 				game.Events.RaiseCpeListInfoAdded( (byte)nameId );
 			}

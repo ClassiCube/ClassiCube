@@ -42,12 +42,13 @@ namespace ClassicalSharp {
 				+ new Vector3( 0.5f, 0, 0.5f );
 		}
 		
-		const int alphaTest = unchecked( (int)0x80000000 );
+		const int alphaTest = unchecked( (int)0xFF000000 );
 		unsafe float GetSpriteBB_TopY( int size, int tileX, int tileY, FastBitmap fastBmp ) {
 			for( int y = 0; y < size; y++ ) {
 				int* row = fastBmp.GetRowPtr( tileY * size + y ) + (tileX * size);
 				for( int x = 0; x < size; x++ ) {
-					if( (row[x] & alphaTest) != 0 )
+					byte alpha = (byte)((row[x] & alphaTest) >> 24);
+					if( alpha != 0 )
 						return 1 - (float)y / size;
 				}
 			}
@@ -58,7 +59,8 @@ namespace ClassicalSharp {
 			for( int y = size - 1; y >= 0; y-- ) {
 				int* row = fastBmp.GetRowPtr( tileY * size + y ) + (tileX * size);
 				for( int x = 0; x < size; x++ ) {
-					if( (row[x] & alphaTest) != 0 )
+					byte alpha = (byte)((row[x] & alphaTest) >> 24);
+					if( alpha != 0 )
 						return 1 - (float)(y + 1) / size;
 				}
 			}
@@ -69,7 +71,8 @@ namespace ClassicalSharp {
 			for( int x = 0; x < size; x++ ) {
 				for( int y = 0; y < size; y++ ) {
 					int* row = fastBmp.GetRowPtr( tileY * size + y ) + (tileX * size);
-					if( (row[x] & alphaTest) != 0 )
+					byte alpha = (byte)((row[x] & alphaTest) >> 24);
+					if( alpha != 0 )
 						return (float)x / size;
 				}
 			}
@@ -80,7 +83,8 @@ namespace ClassicalSharp {
 			for( int x = size - 1; x >= 0; x-- ) {
 				for( int y = 0; y < size; y++ ) {
 					int* row = fastBmp.GetRowPtr( tileY * size + y ) + (tileX * size);
-					if( (row[x] & alphaTest) != 0 )
+					byte alpha = (byte)((row[x] & alphaTest) >> 24);
+					if( alpha != 0 )
 						return (float)(x + 1) / size;
 				}
 			}
