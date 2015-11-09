@@ -17,6 +17,7 @@
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <WarningLevel>4</WarningLevel>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -107,6 +108,7 @@
     <Compile Include="2D\Widgets\Chat\ChatTextWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextInputWidget.cs" />
+    <Compile Include="2D\Widgets\Chat\TextInputWidget.Handlers.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />

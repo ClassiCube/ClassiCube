@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace ClassicalSharp {
 	
-	public sealed class TextInputWidget : Widget {
+	public sealed partial class TextInputWidget : Widget {
 		
 		const int len = 64 * 3;
 		const int lines = 3;
@@ -202,151 +202,14 @@ namespace ClassicalSharp {
 			}
 			
 			if( caretPos == -1 ) {
-				chatInputText.Append( chatInputText.Length, text );
+				chatInputText.InsertAt( chatInputText.Length, text );
 			} else {
-				chatInputText.Append( caretPos, text );
+				chatInputText.InsertAt( caretPos, text );
 				caretPos += text.Length;
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
 			}
 			Dispose();
 			Init();
 		}
-		
-		#region Input handling
-		
-		public override bool HandlesKeyPress( char key ) {
-			if( chatInputText.Length < len && IsValidChar( key ) ) {
-				if( caretPos == -1 ) {
-					chatInputText.Append( chatInputText.Length, key );
-				} else {
-					chatInputText.InsertAt( caretPos, key );
-					caretPos++;
-				}
-				Dispose();
-				Init();
-				return true;
-			}
-			return false;
-		}
-		
-		public override bool HandlesKeyDown( Key key ) {
-			if( key == Key.Down ) DownKey();
-			else if( key == Key.Up ) UpKey();
-			else if( key == Key.Left ) LeftKey();
-			else if( key == Key.Right ) RightKey();
-			else if( key == Key.BackSpace ) BackspaceKey();
-			else if( key == Key.Delete ) DeleteKey();
-			else if( key == Key.Home ) HomeKey();
-			else if( key == Key.End ) EndKey();
-			else if( !OtherKey( key ) ) return false;
-			
-			return true;
-		}
-		
-		void BackspaceKey() {
-			if( !chatInputText.Empty && caretPos != 0 ) {
-				if( caretPos == -1 ) {
-					chatInputText.DeleteAt( chatInputText.Length - 1 );
-				} else {
-					caretPos--;
-					chatInputText.DeleteAt( caretPos );
-				}
-				Dispose();
-				Init();
-			}
-		}
-		
-		void DeleteKey() {
-			if( !chatInputText.Empty && caretPos != -1 ) {
-				chatInputText.DeleteAt( caretPos );
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
-				Dispose();
-				Init();
-			}
-		}
-		
-		void RightKey() {
-			if( !chatInputText.Empty && caretPos != -1 ) {
-				caretPos++;
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
-				Dispose();
-				Init();
-			}
-		}
-		
-		void LeftKey() {
-			if( !chatInputText.Empty ) {
-				if( caretPos == -1 ) caretPos = chatInputText.Length;
-				caretPos--;
-				if( caretPos < 0 ) caretPos = 0;
-				Dispose();
-				Init();
-			}
-		}
-		
-		void UpKey() {
-			if( game.Chat.InputLog.Count > 0 ) {
-				typingLogPos--;
-				if( typingLogPos < 0 ) typingLogPos = 0;
-				chatInputText.Clear();
-				chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
-				caretPos = -1;
-				Dispose();
-				Init();
-			}
-		}
-		
-		void DownKey() {
-			if( game.Chat.InputLog.Count > 0 ) {
-				typingLogPos++;
-				chatInputText.Clear();
-				if( typingLogPos >= game.Chat.InputLog.Count ) {
-					typingLogPos = game.Chat.InputLog.Count;
-				} else {
-					chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
-				}
-				caretPos = -1;
-				Dispose();
-				Init();
-			}
-		}
-		
-		void HomeKey() {
-			if( chatInputText.Empty ) return;
-			
-			caretPos = 0;
-			Dispose();
-			Init();
-		}
-		
-		void EndKey() {
-			caretPos = -1;
-			Dispose();
-			Init();
-		}
-		
-		bool OtherKey( Key key ) {
-			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
-			if( key == Key.V && controlDown && chatInputText.Length < len ) {
-				string text = Clipboard.GetText();
-				if( String.IsNullOrEmpty( text ) ) return true;
-				
-				for( int i = 0; i < text.Length; i++ ) {
-					if( !IsValidChar( text[i] ) ) {
-						game.Chat.Add( "&eClipboard contained characters that can't be sent." );
-						return true;
-					}
-				}
-				AppendText( text );
-				return true;
-			} else if( key == Key.C && controlDown ) {
-				if( !chatInputText.Empty ) {
-					Clipboard.SetText( chatInputText.ToString() );
-				}
-				return true;
-			}
-			return false;
-		}
-		#endregion
 	}
 }

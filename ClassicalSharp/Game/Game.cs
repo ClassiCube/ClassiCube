@@ -128,10 +128,9 @@ namespace ClassicalSharp {
 			Animations = new Animations( this );
 			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( DefaultTexturePack, this );
-			// in case the default texture pack doesn't have default.png in it
-			if( Drawer2D.FontBitmap == null )
-				LoadDefaultBitmapFont();
+			extractor.Extract( "default.zip", this ); // in case the default texture pack doesn't have all required textures
+			if( defTexturePack != "default.zip" )
+				extractor.Extract( DefaultTexturePack, this );
 			Inventory = new Inventory( this );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
@@ -182,24 +181,6 @@ namespace ClassicalSharp {
 			Graphics.WarnIfNecessary( Chat );
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect( IPAddress, Port );
-		}
-		
-		void LoadDefaultBitmapFont() {
-			using( Stream fs = new FileStream( "default.zip", FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
-				ZipReader reader = new ZipReader();
-				reader.ShouldProcessZipEntry = (f) => f == "default.png";
-				reader.ProcessZipEntry = ProcessDefaultZipEntry;
-				reader.Extract( fs );
-			}
-		}
-		
-		void ProcessDefaultZipEntry( string filename, byte[] data, ZipEntry entry ) {
-			MemoryStream stream = new MemoryStream( data );
-			Bitmap bmp = new Bitmap( stream );
-			Drawer2D.SetFontBitmap( bmp );
-			
-			if( Drawer2D.UseBitmappedChat )
-				Events.RaiseChatFontChanged();
 		}
 		
 		public void SetViewDistance( int distance ) {

@@ -19,8 +19,6 @@ namespace Launcher2 {
 		public static bool Start( string args ) {
 			Process process = null;
 			Options.Load();
-			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
-			args = args + " " + texPack;
 			
 			if( !File.Exists( "ClassicalSharp.exe" ) )
 				return false;
