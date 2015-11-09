@@ -74,6 +74,8 @@
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Updater\Scripts.cs" />
+    <Compile Include="Updater\Patcher.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\ClientStartData.cs" />
     <Compile Include="Utils\JSON.cs" />
@@ -99,6 +101,7 @@
     <Folder Include="Gui\TableWidget" />
     <Folder Include="Gui\Screens" />
     <Folder Include="Gui\Widgets" />
+    <Folder Include="Updater" />
     <Folder Include="Utils" />
     <Folder Include="Patcher" />
     <Folder Include="WebService" />

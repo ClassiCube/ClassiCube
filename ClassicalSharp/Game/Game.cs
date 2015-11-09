@@ -314,9 +314,8 @@ namespace ClassicalSharp {
 			base.OnResize( sender, e );
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
-			if( activeScreen != null ) {
+			if( activeScreen != null )
 				activeScreen.OnResize( width, height, Width, Height );
-			}
 			hudScreen.OnResize( width, height, Width, Height );
 			width = Width;
 			height = Height;
@@ -387,10 +386,10 @@ namespace ClassicalSharp {
 			ParticleManager.Dispose();
 			Players.Dispose();
 			AsyncDownloader.Dispose();
+			
 			Chat.Dispose();
-			if( activeScreen != null ) {
+			if( activeScreen != null )
 				activeScreen.Dispose();
-			}
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Drawer2D.DisposeInstance();
