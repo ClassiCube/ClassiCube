@@ -9,11 +9,13 @@ namespace Launcher2 {
 	
 	public sealed class DirectConnectScreen : LauncherInputScreen {
 		
+		Font booleanFont;
 		public DirectConnectScreen( LauncherWindow game ) : base( game ) {
 			titleFont = new Font( "Arial", 15, FontStyle.Bold );
 			inputFont = new Font( "Arial", 14, FontStyle.Regular );
-			enterIndex = 6;		
-			widgets = new LauncherWidget[9];
+			booleanFont = new Font( "Arial", 22, FontStyle.Regular );
+			enterIndex = 6;
+			widgets = new LauncherWidget[11];
 		}
 
 		public override void Init() {
@@ -28,7 +30,6 @@ namespace Launcher2 {
 		public override void Tick() {
 		}
 		
-		bool ccSkins;
 		void LoadSavedInfo() {
 			Dictionary<string, object> metadata;
 			// restore what user last typed into the various fields
@@ -36,6 +37,7 @@ namespace Launcher2 {
 				Set( 3, (string)metadata["user"] );
 				Set( 4, (string)metadata["address"] );
 				Set( 5, (string)metadata["mppass"] );
+				SetBool( (bool)metadata["skins"] );
 			} else {
 				LoadFromOptions();
 			}
@@ -48,7 +50,7 @@ namespace Launcher2 {
 			string user = Options.Get( "launcher-username" ) ?? "UserXYZ";
 			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
 			string port = Options.Get( "launcher-port" ) ?? "25565";
-			ccSkins = Options.GetBool( "launcher-ccskins", false );
+			bool ccSkins = Options.GetBool( "launcher-ccskins", true );
 
 			IPAddress address;
 			if( !IPAddress.TryParse( ip, out address ) ) ip = "127.0.0.1";
@@ -61,6 +63,7 @@ namespace Launcher2 {
 			Set( 3, user );
 			Set( 4, ip + ":" + port );
 			Set( 5, mppass );
+			SetBool( ccSkins );
 		}
 		
 		public override void Resize() {
@@ -68,6 +71,13 @@ namespace Launcher2 {
 				drawer.SetBitmap( game.Framebuffer );
 				Draw();
 			}
+			Dirty = true;
+		}
+		
+		void SetBool( bool value ) {
+			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[10];
+			widget.Value = value;
+			widget.Redraw( game.Drawer );
 			Dirty = true;
 		}
 		
@@ -81,10 +91,13 @@ namespace Launcher2 {
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64 );
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32 );
 			
-			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );			
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 
+			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );
+			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
+			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
+			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont,
+			              30, 30, -110, 130, UseClassicubeSkinsClick );
 		}
 		
 		void SetStatus( string text ) {
@@ -94,6 +107,14 @@ namespace Launcher2 {
 				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 				Dirty = true;
+			}
+		}
+		
+		void UseClassicubeSkinsClick( int mouseX, int mouseY ) {
+			using( drawer ) {
+				game.Drawer.SetBitmap( game.Framebuffer );
+				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[10];
+				SetBool( !widget.Value );
 			}
 		}
 		
@@ -124,12 +145,14 @@ namespace Launcher2 {
 			string mppass = Get( 5 );
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
 			ClientStartData data = new ClientStartData( Get( 3 ), mppass, ipPart, portPart );
+			bool ccSkins = ((LauncherBooleanWidget)widgets[10]).Value;
 			Client.Start( data, ccSkins );
 		}
 		
 		public override void Dispose() {
 			StoreFields();
 			base.Dispose();
+			booleanFont.Dispose();
 		}
 		
 		void StoreFields() {
@@ -142,6 +165,7 @@ namespace Launcher2 {
 			metadata["user"] = Get( 3 );
 			metadata["address"] = Get( 4 );
 			metadata["mppass"] = Get( 5 );
+			metadata["skins"] = ((LauncherBooleanWidget)widgets[10]).Value;
 		}
 	}
 }

@@ -62,6 +62,7 @@
     <Compile Include="Gui\Screens\UpdatesScreen.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
+    <Compile Include="Gui\Widgets\LauncherBooleanWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />

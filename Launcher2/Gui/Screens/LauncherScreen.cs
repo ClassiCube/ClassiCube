@@ -141,13 +141,27 @@ namespace Launcher2 {
 			widgets[widgetIndex++] = widget;
 		}
 		
-		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y) {
+		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
 			if( widgets[widgetIndex] != null ) {
 				LauncherLabelWidget input = (LauncherLabelWidget)widgets[widgetIndex];
 				input.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
 			} else {
 				LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
 				widget.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
+				widgets[widgetIndex] = widget;
+			}
+			widgetIndex++;
+		}
+		
+		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font,
+		                             int width, int height, int x, int y, Action<int, int> onClick ) {
+			if( widgets[widgetIndex] != null ) {
+				LauncherBooleanWidget input = (LauncherBooleanWidget)widgets[widgetIndex];
+				input.DrawAt( drawer, horAnchor, verAnchor, x, y );
+			} else {
+				LauncherBooleanWidget widget = new LauncherBooleanWidget( game, font, width, height );
+				widget.DrawAt( drawer, horAnchor, verAnchor, x, y );
+				widget.OnClick = onClick;
 				widgets[widgetIndex] = widget;
 			}
 			widgetIndex++;
