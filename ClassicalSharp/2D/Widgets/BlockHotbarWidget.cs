@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		
 		int hotbarCount;
 		Texture selectedBlock, background;
-		const int blockSize = 40;
+		int blockSize;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -29,6 +29,7 @@ namespace ClassicalSharp {
 		static FastColour outlineCol = new FastColour( 169, 143, 192 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
+			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
 			int width = blockSize * hotbarCount;
 			X = game.Width / 2 - width / 2;
 			Y = game.Height - blockSize;
@@ -46,8 +47,8 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;
-				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], 10, 
-				                          x + blockSize / 2, game.Height - blockSize / 2 );
+				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - 6, 
+				                          x + 1 + blockSize / 2, game.Height - blockSize / 2 );
 				if( i == game.Inventory.HeldBlockIndex )
 					selectedBlock.X1 = x;
 			}		
@@ -62,14 +63,12 @@ namespace ClassicalSharp {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
-			X = newX;
-			Y = newY;
-			selectedBlock.X1 += deltaX;
-			selectedBlock.Y1 += deltaY;
-			background.X1 += deltaX;
-			background.Y1 += deltaY;
+			int diffX = newX - X, diffY = newY - Y;
+			X = newX; Y = newY;
+			
+			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
+			Dispose();
+			Init();
 		}
 		
 		void MakeBackgroundTexture( int width ) {

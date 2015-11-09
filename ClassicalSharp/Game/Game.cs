@@ -78,10 +78,10 @@ namespace ClassicalSharp {
 		
 		string defTexturePack = "default.zip";
 		public string DefaultTexturePack {
-			get { 
+			get {
 				return File.Exists( defTexturePack )
 					? defTexturePack : "default.zip"; }
-			set { 
+			set {
 				defTexturePack = value;
 				Options.Set( OptionsKey.DefaultTexturePack, value );
 			}
@@ -126,8 +126,12 @@ namespace ClassicalSharp {
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );
+			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( DefaultTexturePack, this );
+			// in case the default texture pack doesn't have default.png in it
+			if( Drawer2D.FontBitmap == null )
+				LoadDefaultBitmapFont();
 			Inventory = new Inventory( this );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
@@ -178,6 +182,24 @@ namespace ClassicalSharp {
 			Graphics.WarnIfNecessary( Chat );
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		void LoadDefaultBitmapFont() {
+			using( Stream fs = new FileStream( "default.zip", FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
+				ZipReader reader = new ZipReader();
+				reader.ShouldProcessZipEntry = (f) => f == "default.png";
+				reader.ProcessZipEntry = ProcessDefaultZipEntry;
+				reader.Extract( fs );
+			}
+		}
+		
+		void ProcessDefaultZipEntry( string filename, byte[] data, ZipEntry entry ) {
+			MemoryStream stream = new MemoryStream( data );
+			Bitmap bmp = new Bitmap( stream );
+			Drawer2D.SetFontBitmap( bmp );
+			
+			if( Drawer2D.UseBitmappedChat )
+				Events.RaiseChatFontChanged();
 		}
 		
 		public void SetViewDistance( int distance ) {
@@ -243,7 +265,7 @@ namespace ClassicalSharp {
 				
 				bool left = IsMousePressed( MouseButton.Left );
 				bool middle = IsMousePressed( MouseButton.Middle );
-				bool right = IsMousePressed( MouseButton.Right );				
+				bool right = IsMousePressed( MouseButton.Right );
 				InputHandler.PickBlocks( true, left, middle, right );
 			} else {
 				SelectedPos.SetAsInvalid();
@@ -330,14 +352,14 @@ namespace ClassicalSharp {
 		
 		internal Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
-			InputHandler.ScreenChanged( activeScreen, screen );		
+			InputHandler.ScreenChanged( activeScreen, screen );
 			if( activeScreen != null )
 				activeScreen.Dispose();
 			
 			if( screen == null ) {
 				hudScreen.GainFocus();
 			} else if( activeScreen == null ) {
-				hudScreen.LoseFocus();			
+				hudScreen.LoseFocus();
 			}
 			
 			if( screen != null )
@@ -408,13 +430,12 @@ namespace ClassicalSharp {
 			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
 		}
 		
-		public Game( string username, string mppass, string skinServer, string defaultTexPack, 
+		public Game( string username, string mppass, string skinServer,
 		            bool nullContext, int width, int height )
 			: base( width, height, GraphicsMode.Default, Program.AppName, nullContext, 0, DisplayDevice.Default ) {
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
-			this.defTexturePack = defaultTexPack;
 		}
 	}
 

@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = true;
 			chat.Render( delta );
 			if( !showMinimal )
-				hotbar.Render( delta );
+				RenderHotbar( delta );
 			
 			//graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			//graphicsApi.BindTexture( game.TerrainAtlas.TexId );
@@ -43,6 +43,8 @@ namespace ClassicalSharp {
 			if( playerList == null && !showMinimal )
 				DrawCrosshairs();
 		}
+		
+		public void RenderHotbar( double delta ) { hotbar.Render( delta ); }
 		
 		const int crosshairExtent = 15, crosshairWeight = 2;
 		void DrawCrosshairs() {

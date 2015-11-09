@@ -6,17 +6,15 @@ namespace ClassicalSharp {
 
 	public unsafe sealed partial class GdiPlusDrawer2D {
 		
-		// NOTE: This drawer is still a big work in progress and not close to done
-		// TODO: italic and bold
-		Bitmap fontBmp;
+		// TODO: underline
 		FastBitmap fontPixels;
 		int boxSize;
 		const int italicSize = 8;
 		
 		public override void SetFontBitmap( Bitmap bmp ) {
-			fontBmp = bmp;
-			boxSize = fontBmp.Width / 16;
-			fontPixels = new FastBitmap( fontBmp, true );
+			FontBitmap = bmp;
+			boxSize = FontBitmap.Width / 16;
+			fontPixels = new FastBitmap( FontBitmap, true );
 			CalculateTextWidths();
 		}
 		
@@ -153,7 +151,7 @@ namespace ClassicalSharp {
 		
 		void DisposeBitmappedText() {
 			fontPixels.Dispose();
-			fontBmp.Dispose();
+			FontBitmap.Dispose();
 		}
 	}
 }

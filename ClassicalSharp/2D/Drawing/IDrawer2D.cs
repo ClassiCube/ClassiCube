@@ -89,6 +89,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Sets the bitmap that contains the bitmapped font characters as an atlas. </summary>
 		public abstract void SetFontBitmap( Bitmap bmp );
+		public Bitmap FontBitmap;
 		
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// then creates a 2D texture with origin at the specified window coordinates. </summary>

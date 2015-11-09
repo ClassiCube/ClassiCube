@@ -13,10 +13,10 @@ namespace ClassicalSharp {
 		
 		Block[] blocksTable;
 		Texture blockInfoTexture;
-		const int blockSize = 50, blocksPerRow = 10;
-		int selectedIndex;
-		int rows;
-		int startX, startY;
+		const int blocksPerRow = 10;
+		int selectedIndex, rows;
+		int startX, startY, blockSize;
+		float selBlockExpand;
 		readonly Font font;
 		StringBuffer buffer = new StringBuffer( 96 );
 		
@@ -35,19 +35,20 @@ namespace ClassicalSharp {
 				
 				// We want to always draw the selected block on top of others
 				if( i == selectedIndex ) continue;
-				IsometricBlockDrawer.Draw( game, (byte)blocksTable[i], 12,
-				                          x + blockSize / 2, y + 28 );
+				IsometricBlockDrawer.Draw( game, (byte)blocksTable[i], blockSize * 0.7f / 2f,
+				                          x + blockSize / 2, y + blockSize / 2 );
 			}
 			
 			if( selectedIndex != -1 ) {
 				int x, y;
 				GetCoords( selectedIndex, out x, out y );
-				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selectedIndex], 20,
-				                          x + blockSize / 2, y + 28 );
+				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selectedIndex], (blockSize + selBlockExpand) * 0.7f / 2,
+				                          x + blockSize / 2, y + blockSize / 2 );
 			}
 			
 			if( blockInfoTexture.IsValid )
 				blockInfoTexture.Render( graphicsApi );
+			game.hudScreen.RenderHotbar( delta );
 			graphicsApi.Texturing = false;
 		}
 		
@@ -55,7 +56,7 @@ namespace ClassicalSharp {
 			int col = i % blocksPerRow;
 			int row = i / blocksPerRow;
 			x = startX + blockSize * col;
-			y = startY + blockSize * row;
+			y = startY + blockSize * row + 3;
 		}
 		
 		public override void Dispose() {
@@ -65,21 +66,24 @@ namespace ClassicalSharp {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			int yDiff = (height - oldHeight) / 2;
-			int xDiff = (width - oldWidth) / 2;
-			startX += xDiff;
-			startY += yDiff;
-			blockInfoTexture.X1 += xDiff;
-			blockInfoTexture.Y1 += yDiff;
+			blockSize = (int)(50 * Utils.GuiScale( game.Width, game.Height ));
+			selBlockExpand = (float)(25 * Utils.GuiScale( game.Width, game.Height ));
+			
+			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
+			startY = game.Height / 2 - (rows * blockSize) / 2;
+			blockInfoTexture.X1 = startX + (blockSize * blocksPerRow) / 2 - blockInfoTexture.Width / 2;
+			blockInfoTexture.Y1 = startY - blockInfoTexture.Height - 5;
 		}
 		
 		public override void Init() {
+			blockSize = (int)(50 * Utils.GuiScale( game.Width, game.Height ));
+			selBlockExpand = (float)(25 * Utils.GuiScale( game.Width, game.Height ));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			RecreateBlockTextures();
+			RecreateBlockTexturess();
 		}
 
 		void BlockPermissionsChanged( object sender, EventArgs e ) {
-			RecreateBlockTextures();
+			RecreateBlockTexturess();
 			if( selectedIndex >= blocksTable.Length ) {
 				selectedIndex = blocksTable.Length - 1;
 			}
@@ -138,7 +142,7 @@ namespace ClassicalSharp {
 			blockInfoTexture = game.Drawer2D.MakeTextTexture( ref args, x, y );
 		}
 		
-		void RecreateBlockTextures() {
+		void RecreateBlockTexturess() {
 			int blocksCount = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
 				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )

@@ -32,7 +32,9 @@ namespace ClassicalSharp {
 			atlas = game.TerrainAtlas;
 			blockHeight = info.Height[block];
 			index = 0;
-			scale = size;
+			// isometric coords size: cosY * -scale - sinY * scale
+			// we need to divide by (2 *cosY), as the calling function expects size to be in pixels.
+			scale = size / (2 * cosY);
 			
 			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))
 			pos.X = x; pos.Y = y; pos.Z = 0;			
@@ -56,10 +58,8 @@ namespace ClassicalSharp {
 		static void TransformVertex( ref VertexPos3fTex2fCol4b vertex ) {
 			Vector3 p = new Vector3( vertex.X, vertex.Y, vertex.Z );
 			//p = Utils.RotateY( p - pos, time ) + pos;
-			#if USE_DX
 			// See comment in IGraphicsApi.Draw2DTexture()
 			p.X -= 0.5f; p.Y -= 0.5f;
-			#endif
 			p = Utils.RotateX( Utils.RotateY( p, cosY, sinY ), cosX, sinX );
 			vertex.X = p.X; vertex.Y = p.Y; vertex.Z = p.Z;
 		}
@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 			FastColour col = colXSide;
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
-			                                                    pos.Z - scale, rec.U1, rec.V2, col );
+			                                                    pos.Z - scale , rec.U1, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
 			                                                    pos.Z - scale, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
