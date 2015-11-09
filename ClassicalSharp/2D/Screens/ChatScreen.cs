@@ -17,12 +17,13 @@ namespace ClassicalSharp {
 		TextGroupWidget status, bottomRight, normalChat;
 		bool suppressNextPress = true;
 		int chatIndex;
+		int blockSize;
 		
 		public override void Render( double delta ) {
 			status.Render( delta );
 			bottomRight.Render( delta );
 			
-			UpdateChatYOffset();
+			UpdateChatYOffset( false );
 			DateTime now = DateTime.UtcNow;
 			if( HandlesAllInput )
 				normalChat.Render( delta );
@@ -64,11 +65,10 @@ namespace ClassicalSharp {
 		}
 		
 		int inputOldHeight = -1;
-		void UpdateChatYOffset() {
+		void UpdateChatYOffset( bool force ) {
 			int height = textInput.Height;
-			if( height != inputOldHeight ) {
-				const int blockSize = 40;
-				normalChat.YOffset = height + blockSize * 2;
+			if( force || height != inputOldHeight ) {
+				normalChat.YOffset = height + blockSize + 15;
 				int y = game.Height - normalChat.Height - normalChat.YOffset;
 				
 				normalChat.MoveTo( normalChat.X, y );
@@ -81,10 +81,10 @@ namespace ClassicalSharp {
 			chatFont = new Font( "Arial", game.Chat.FontSize );
 			chatInputFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
 			announcementFont = new Font( "Arial", 14 );
-			int blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
+			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
-			textInput.YOffset = 3 * blockSize / 2;
+			textInput.YOffset = blockSize + 5;
 			status = new TextGroupWidget( game, 3, chatFont );
 			status.VerticalAnchor = Anchor.LeftOrTop;
 			status.HorizontalAnchor = Anchor.BottomOrRight;
@@ -92,11 +92,11 @@ namespace ClassicalSharp {
 			bottomRight = new TextGroupWidget( game, 3, chatFont );
 			bottomRight.VerticalAnchor = Anchor.BottomOrRight;
 			bottomRight.HorizontalAnchor = Anchor.BottomOrRight;
-			bottomRight.YOffset = textInput.YOffset;
+			bottomRight.YOffset = blockSize * 3 / 2;
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( game, chatLines, chatFont );
 			normalChat.XOffset = 10;
-			normalChat.YOffset = blockSize * 2;
+			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
 			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();
@@ -171,15 +171,15 @@ namespace ClassicalSharp {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			announcementTex.X1 += (width - oldWidth) / 2;
 			announcementTex.Y1 += (height - oldHeight) / 2;
-			int blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
-			textInput.YOffset = 3 * blockSize / 2;
-			bottomRight.YOffset = textInput.YOffset;
-			normalChat.YOffset = blockSize;
-				
-			textInput.OnResize( oldWidth, oldHeight, width, height );
+			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
+			textInput.YOffset = blockSize + 5;
+			bottomRight.YOffset = blockSize * 3 / 2;
+			
+			int inputY = game.Height - textInput.Height - textInput.YOffset;
+			textInput.MoveTo( textInput.X, inputY );
 			status.OnResize( oldWidth, oldHeight, width, height );
 			bottomRight.OnResize( oldWidth, oldHeight, width, height );
-			normalChat.OnResize( oldWidth, oldHeight, width, height );	
+			UpdateChatYOffset( true );
 		}
 		
 		void UpdateAnnouncement( string text ) {

@@ -19,11 +19,12 @@ namespace ClassicalSharp {
 			chatInputText = new WrappableStringBuffer( len );
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
+			Height = defaultHeight;
 		}
 		
 		Texture chatInputTexture, caretTexture;
-		int caretPos = -1, typingLogPos = 0, defaultHeight;
-		public int YOffset;
+		int caretPos = -1, typingLogPos = 0;
+		public int YOffset, defaultHeight;
 		internal WrappableStringBuffer chatInputText;
 		readonly Font font, boldFont;
 		
