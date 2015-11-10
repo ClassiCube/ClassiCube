@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		bool IsHidden( byte tile, byte block ) {
 			return
 				((tile == block || (IsOpaque[block] && !IsLiquid[block])) && !IsSprite[tile]) ||
-				(IsLiquid[tile] && block == (byte)Block.Ice);
+				((tile == (byte)Block.Water || tile == (byte)Block.StillWater) && block == (byte)Block.Ice);
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {

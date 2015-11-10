@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		
 		int hotbarCount;
 		Texture selectedBlock, background;
-		int blockSize;
+		int blockSize, borderSize;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -29,10 +29,12 @@ namespace ClassicalSharp {
 		static FastColour outlineCol = new FastColour( 169, 143, 192 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
-			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
+			blockSize = (int)(38 * Utils.GuiScale( game.Width, game.Height ));
+			borderSize = (int)(3 * Utils.GuiScale( game.Width, game.Height ));
 			int width = blockSize * hotbarCount;
 			X = game.Width / 2 - width / 2;
 			Y = game.Height - blockSize;
+			
 			Width = width;
 			Height = blockSize;
 			MakeBackgroundTexture( width );
@@ -47,7 +49,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;
-				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - 6, 
+				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - borderSize - 2, 
 				                          x + 1 + blockSize / 2, game.Height - blockSize / 2 );
 				if( i == game.Inventory.HeldBlockIndex )
 					selectedBlock.X1 = x;
@@ -65,8 +67,6 @@ namespace ClassicalSharp {
 		public override void MoveTo( int newX, int newY ) {
 			int diffX = newX - X, diffY = newY - Y;
 			X = newX; Y = newY;
-			
-			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
 			Dispose();
 			Init();
 		}
@@ -78,7 +78,8 @@ namespace ClassicalSharp {
 					drawer.SetBitmap( bmp );
 					drawer.Clear( backCol );
 					for( int xx = 0; xx < hotbarCount; xx++ ) {
-						drawer.DrawRectBounds( outlineCol, 3, xx * blockSize, 0, blockSize, blockSize );
+						drawer.DrawRectBounds( outlineCol, borderSize, xx * blockSize, 
+						                      0, blockSize, blockSize );
 					}
 					background = drawer.Make2DTexture( bmp, size, X, Y );
 				}
@@ -90,7 +91,7 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( selCol, 3, 0, 0, blockSize, blockSize );
+					drawer.DrawRectBounds( selCol, borderSize, 0, 0, blockSize, blockSize );
 					selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
 				}
 			}

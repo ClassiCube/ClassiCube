@@ -245,17 +245,15 @@ namespace ClassicalSharp {
 					if( key == game.Mapping( KeyBinding.PauseOrExit ) )
 						textInput.Clear();
 					textInput.SendTextInBufferAndReset();
+					
+					chatIndex = game.Chat.Log.Count - chatLines;
+					ResetIndex();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;
-					int minIndex = Math.Min( 0, game.Chat.Log.Count - chatLines );
-					if( chatIndex < minIndex )
-						chatIndex = minIndex;
-					ResetChat();
+					ResetIndex();
 				} else if( key == Key.PageDown ) {
 					chatIndex += chatLines;
-					if( chatIndex > game.Chat.Log.Count - chatLines )
-						chatIndex = game.Chat.Log.Count - chatLines;
-					ResetChat();
+					ResetIndex();
 				} else if( key == game.Mapping( KeyBinding.HideGui ) ) {
 					game.HideGui = !game.HideGui;
 				} else {
@@ -276,12 +274,16 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseScroll( int delta ) {
 			if( !HandlesAllInput ) return false;
-			chatIndex += -delta;
+			chatIndex -= delta;
+			ResetIndex();
+			return true;
+		}
+		
+		void ResetIndex() {
 			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min( 0, maxIndex );
 			Utils.Clamp( ref chatIndex, minIndex, maxIndex );
 			ResetChat();
-			return true;
 		}
 	}
 }
