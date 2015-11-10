@@ -20,7 +20,6 @@ sleep 1
 
 set root=%CD%
 echo Extracting files from CS_Update folder
-
 for /f ""tokens=*"" %%f in ('dir /b ""%root%\CS_Update""') do move ""%root%\CS_Update\%%f"" ""%root%\%%f""
 rmdir ""%root%\CS_Update""
 
@@ -33,8 +32,8 @@ start Launcher.exe
 exit";
 		
 		public const string BashFile =
-			@"#!/bin/bash          
-echo ""Waiting for launcher to exit..""
+			@"#!/bin/bash
+echo Waiting for launcher to exit..
 echo 5..
 sleep 1
 echo 4..
@@ -46,13 +45,20 @@ sleep 1
 echo 1..
 sleep 1
 
+echo Extracting files from CS_Update folder
+UPDATEDIR=""`pwd`/CS_Update/""
+find ""$UPDATEDIR"" -name '*.*' | xargs cp -t `pwd`
+
 echo Starting launcher again
 if [ -f ""Launcher2.exe"" ];
 then
-   exec mono ""Launcher2.exe""
+mono Launcher2.exe &
 else
-   exec mono ""Launcher.exe""
+mono Launcher.exe &
 fi
+disown
+echo Waiting
+sleep 10
 ";
 	}
 }
