@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 		public int ChunkUpdates;
 		
 		public MapRenderer MapRenderer;
-		public MapEnvRenderer MapEnvRenderer;
+		public MapBordersRenderer MapBordersRenderer;
 		public EnvRenderer EnvRenderer;
 		public WeatherRenderer WeatherRenderer;
 		public Inventory Inventory;
@@ -141,7 +141,7 @@ namespace ClassicalSharp {
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
-			MapEnvRenderer = new MapEnvRenderer( this );
+			MapBordersRenderer = new MapBordersRenderer( this );
 			EnvRenderer = new StandardEnvRenderer( this );
 			if( IPAddress == null ) {
 				Network = new Singleplayer.SinglePlayerServer( this );
@@ -174,7 +174,7 @@ namespace ClassicalSharp {
 			hudScreen.Init();
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
-			MapEnvRenderer.Init();
+			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
@@ -376,7 +376,7 @@ namespace ClassicalSharp {
 		
 		public override void Dispose() {
 			MapRenderer.Dispose();
-			MapEnvRenderer.Dispose();
+			MapBordersRenderer.Dispose();
 			EnvRenderer.Dispose();
 			WeatherRenderer.Dispose();
 			SetNewScreen( null );

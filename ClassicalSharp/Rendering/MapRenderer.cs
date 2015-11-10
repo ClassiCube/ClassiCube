@@ -218,7 +218,7 @@ namespace ClassicalSharp {
 			UpdateChunks( deltaTime );
 			
 			RenderNormal();
-			game.MapEnvRenderer.Render( deltaTime );
+			game.MapBordersRenderer.Render( deltaTime );
 			RenderTranslucent();
 		}
 

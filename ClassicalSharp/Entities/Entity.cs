@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 		public virtual BoundingBox CollisionBounds {
 			get {
 				Vector3 pos = Position;
-				Vector3 size = Model.CollisionSize;
+				Vector3 size = CollisionSize;
 				return new BoundingBox( pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
 				                       pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2 );
 			}

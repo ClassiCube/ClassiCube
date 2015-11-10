@@ -94,6 +94,13 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
+			game.Events.OnNewMap += OnNewMap;
+		}
+
+		void OnNewMap( object sender, EventArgs e ) {
+			if( playerList != null )
+				playerList.Dispose();
+			playerList = null;
 		}
 		
 		public override bool HandlesAllInput {
@@ -142,10 +149,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button != MouseButton.Left || playerList == null || !HandlesAllInput ) return false;
+			if( button != MouseButton.Left || !HandlesAllInput ) return false;
 			
-			string name = playerList.GetNameUnder( mouseX, mouseY );
-			if( name == null ) return false;
+			string name;
+			if( playerList == null || (name = playerList.GetNameUnder( mouseX, mouseY )) == null )
+				return chat.HandlesMouseClick( mouseX, mouseY, button );
 			chat.AppendTextToInput( name + " " );
 			return true;
 		}

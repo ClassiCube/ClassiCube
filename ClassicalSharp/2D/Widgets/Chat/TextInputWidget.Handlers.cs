@@ -36,6 +36,12 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			//if( altText.Bounds.Contains( mouseX, mouseY ) )
+			//	altText.HandlesMouseClick( mouseX, mouseY, button );
+			return true;
+		}
+		
 		void BackspaceKey() {
 			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {

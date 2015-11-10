@@ -9,6 +9,7 @@ namespace ClassicalSharp {
 		
 		const int len = 64 * 3;
 		const int lines = 3;
+		//AltTextInputWidget altText;
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
@@ -35,6 +36,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			caretTexture.Render( graphicsApi, caretCol );
+			//altText.Render( delta );
 		}
 
 		string[] parts = new string[lines];
@@ -43,6 +45,8 @@ namespace ClassicalSharp {
 		int maxWidth = 0;
 		
 		public override void Init() {
+			//altText = new AltTextInputWidget( game, font, boldFont, this );
+			//altText.Init();
 			X = 5;
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			caretTexture = game.Drawer2D.UseBitmappedChat ?
@@ -133,6 +137,7 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref caretTexture );
 			graphicsApi.DeleteTexture( ref chatInputTexture );
+			//altText.Dispose();
 		}
 
 		public override void MoveTo( int newX, int newY ) {

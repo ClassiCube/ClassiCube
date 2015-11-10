@@ -6,13 +6,13 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
-	public unsafe sealed class MapEnvRenderer : IDisposable {
+	public unsafe sealed class MapBordersRenderer : IDisposable {
 		
 		Map map;
 		Game game;
 		IGraphicsApi graphics;
 		
-		public MapEnvRenderer( Game game ) {
+		public MapBordersRenderer( Game game ) {
 			this.game = game;
 			map = game.Map;
 			graphics = game.Graphics;
@@ -47,8 +47,10 @@ namespace ClassicalSharp {
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			graphics.BindVb( sidesVb );
-			graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
+			if( game.Map.SidesBlock != Block.Air ) {
+				graphics.BindVb( sidesVb );
+				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
+			}
 			
 			graphics.AlphaBlending = true;
 			graphics.BindTexture( edgeTexId );
@@ -58,10 +60,12 @@ namespace ClassicalSharp {
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
-				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
-			} else {
-				graphics.DrawIndexedVb_TrisT2fC4b( edgesVerVertices * 6 / 4, edgesBaseVertices * 6 / 4 );
+			if( game.Map.EdgeBlock != Block.Air ) {
+				if( game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
+					graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
+				} else {
+					graphics.DrawIndexedVb_TrisT2fC4b( edgesVerVertices * 6 / 4, edgesBaseVertices * 6 / 4 );
+				}
 			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
@@ -144,7 +148,7 @@ namespace ClassicalSharp {
 			FastColour col = fullColSides ? FastColour.White : map.SunlightYBottom;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
-			}			
+			}
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = groundLevel;
 			if( groundLevel < 0 ) {

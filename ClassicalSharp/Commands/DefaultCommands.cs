@@ -152,7 +152,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		void SetNewRenderType( bool legacy, bool minimal ) {
-			game.MapEnvRenderer.SetUseLegacyMode( legacy );
+			game.MapBordersRenderer.SetUseLegacyMode( legacy );
 			if( minimal ) {
 				game.EnvRenderer.Dispose();
 				game.EnvRenderer = new MinimalEnvRenderer( game );

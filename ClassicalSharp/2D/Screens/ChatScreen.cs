@@ -279,6 +279,11 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			if( !HandlesAllInput ) return false;
+			return textInput.HandlesMouseClick( mouseX, mouseY, button );
+		}
+		
 		void ResetIndex() {
 			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min( 0, maxIndex );
