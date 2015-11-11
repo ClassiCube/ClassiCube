@@ -164,6 +164,7 @@ namespace ClassicalSharp {
 		}
 		
 		void ChatFontChanged( object sender, EventArgs e ) {
+			if( !game.Drawer2D.UseBitmappedChat ) return;
 			Dispose();
 			Init();
 		}

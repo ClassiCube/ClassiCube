@@ -7,27 +7,29 @@ namespace ClassicalSharp {
 
 	partial class Player {
 
-		protected IGraphicsApi api;
 		protected Texture nameTex;
 		protected internal int PlayerTextureId = -1, MobTextureId = -1;
 		internal bool RenderHat = true;
 		
 		public override void Despawn() {
-			if( api == null ) return;
-			api.DeleteTexture( ref PlayerTextureId );
-			api.DeleteTexture( ref nameTex.ID );
+			game.Graphics.DeleteTexture( ref PlayerTextureId );
+			game.Graphics.DeleteTexture( ref nameTex.ID );
 		}
 		
 		protected void InitRenderingData() {
-			api = game.Graphics;
-			
 			using( Font font = new Font( "Arial", 14 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
 				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
 			}
 		}
 		
+		public void UpdateNameFont() {
+			game.Graphics.DeleteTexture( ref nameTex );
+			InitRenderingData();
+		}
+		
 		protected void DrawName() {
+			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
 			
 			float x1 = -nameTex.Width * 0.5f / 50f, y1 = nameTex.Height / 50f;

@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		public Map Map;
 		public INetworkProcessor Network;
 		
-		public EntityList Players = new EntityList();
+		public EntityList Players;
 		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
 		public LocalPlayer LocalPlayer;
 		public Camera Camera;
@@ -106,6 +106,7 @@ namespace ClassicalSharp {
 			Graphics = new Direct3D9Api( this );
 			#endif
 			Graphics.MakeGraphicsInfo();
+			Players = new EntityList( this );
 			
 			Options.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );

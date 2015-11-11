@@ -8,6 +8,12 @@ namespace ClassicalSharp {
 		
 		public const int MaxCount = 256;
 		public Player[] Players = new Player[MaxCount];
+		public Game game;
+		
+		public EntityList( Game game ) {
+			this.game = game;
+			game.Events.ChatFontChanged += ChatFontChanged;
+		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
 		public void Tick( double delta ) {
@@ -42,6 +48,13 @@ namespace ClassicalSharp {
 			api.AlphaTest = false;
 		}
 		
+		void ChatFontChanged( object sender, EventArgs e ) {
+			for( int i = 0; i < Players.Length; i++ ) {
+				if( Players[i] != null )
+					Players[i].UpdateNameFont();
+			}
+		}
+		
 		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for( int i = 0; i < Players.Length; i++ ) {
@@ -49,6 +62,7 @@ namespace ClassicalSharp {
 					Players[i].Despawn();
 				}
 			}
+			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
 		public byte GetClosetPlayer( LocalPlayer localP ) {
