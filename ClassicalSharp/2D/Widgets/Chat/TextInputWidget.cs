@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		
 		const int len = 64 * 3;
 		const int lines = 3;
-		//AltTextInputWidget altText;
+		AltTextInputWidget altText;
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
@@ -21,8 +21,11 @@ namespace ClassicalSharp {
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			Height = defaultHeight;
-			//altText = new AltTextInputWidget( game, font, boldFont, this );
+			altText = new AltTextInputWidget( game, font, boldFont, this );
+			altText.Init();
 		}
+		
+		public int RealHeight { get { return Height + altText.Height; } }
 		
 		Texture chatInputTexture, caretTexture;
 		int caretPos = -1, typingLogPos = 0;
@@ -37,7 +40,8 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 			caretTexture.Render( graphicsApi, caretCol );
-			//altText.Render( delta );
+			if( altText.Active )
+				altText.Render( delta );
 		}
 
 		string[] parts = new string[lines];
@@ -46,7 +50,6 @@ namespace ClassicalSharp {
 		int maxWidth = 0;
 		
 		public override void Init() {
-			//altText.Init();
 			X = 5;
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			caretTexture = game.Drawer2D.UseBitmappedChat ?
@@ -101,6 +104,8 @@ namespace ClassicalSharp {
 				caretCol = normalCaretCol;
 			}
 			DrawString();
+			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
+			altText.Y = altText.texture.Y1;
 		}
 		
 		void DrawString() {
@@ -137,17 +142,16 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref caretTexture );
 			graphicsApi.DeleteTexture( ref chatInputTexture );
-			//if( altText != null )
-			//	altText.Dispose();
 		}
 
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
-			X = newX;
-			Y = newY;
-			caretTexture.Y1 += deltaY;
-			chatInputTexture.Y1 += deltaY;
+			int diffX = newX - X, diffY = newY - Y;
+			X = newX; Y = newY;
+			caretTexture.Y1 += diffY;
+			chatInputTexture.Y1 += diffY;
+			
+			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
+			altText.Y = altText.texture.Y1;
 		}
 		
 		bool IsValidChar( char c ) {
@@ -167,6 +171,7 @@ namespace ClassicalSharp {
 			caretPos = -1;
 			Dispose();
 			Height = defaultHeight;
+			altText.SetActive( false );
 		}
 		
 		void SendInBuffer() {

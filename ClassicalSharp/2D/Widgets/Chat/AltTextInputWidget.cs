@@ -14,32 +14,31 @@ namespace ClassicalSharp {
 			this.parent = parent;
 		}
 		
-		Texture chatInputTexture;
+		public Texture texture;
 		readonly Font font, boldFont;
 		TextInputWidget parent;
 		Size elementSize;
-		public int YOffset;
 		
 		public bool Active;
 		public void SetActive( bool active ) {
 			Active = active;
-			Height = active ? chatInputTexture.Height : 0;
+			Height = active ? texture.Height : 0;
 		}
 		
 		public override void Render( double delta ) {
-			chatInputTexture.Render( graphicsApi );
+			texture.Render( graphicsApi );
 		}
 		
 		public override void Init() {
-			X = 5; Y = YOffset;
+			X = 5; Y = 5;
 			InitData();
 			Redraw();
 		}
 
-		void Redraw() {
+		public void Redraw() {
 			Make( elements[selectedIndex], font );
-			Width = chatInputTexture.Width;
-			Height = chatInputTexture.Height;		
+			Width = texture.Width;
+			Height = texture.Height;		
 		}
 		
 		unsafe void Make( Element e, Font font ) {
@@ -57,7 +56,7 @@ namespace ClassicalSharp {
 					             size.Width, bodySize.Height );
 					
 					DrawContent( drawer, font, e, titleHeight );
-					chatInputTexture = drawer.Make2DTexture( bmp, size, X, Y );
+					texture = drawer.Make2DTexture( bmp, size, X, Y );
 				}
 			}
 		}
@@ -95,8 +94,9 @@ namespace ClassicalSharp {
 			int index = widgetY * e.ItemsPerRow + widgetX;
 			if( index < e.Contents.Length ) {
 				if( selectedIndex == 0 ) {
-					parent.AppendChar( e.Contents[index * e.CharsPerItem] );
-					parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
+					// TODO: need to insert characters that don't affect caret index, adjust caret colour
+					//parent.AppendChar( e.Contents[index * e.CharsPerItem] );
+					//parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
 				} else {
 					parent.AppendChar( e.Contents[index] );
 				}
@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 		}
 
 		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref chatInputTexture );
+			graphicsApi.DeleteTexture( ref texture );
 		}
 	}
 }

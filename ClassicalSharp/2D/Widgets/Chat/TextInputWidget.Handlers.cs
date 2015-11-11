@@ -31,14 +31,20 @@ namespace ClassicalSharp {
 			else if( key == Key.Delete ) DeleteKey();
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
+			else if( game.Network.ServerSupportsFullCP437 &&
+			        (key == Key.AltLeft || key == Key.AltRight) )
+				altText.SetActive( !altText.Active );
 			else if( !OtherKey( key ) ) return false;
 			
 			return true;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			//if( altText.Bounds.Contains( mouseX, mouseY ) )
-			//	altText.HandlesMouseClick( mouseX, mouseY, button );
+			if( altText.Active && altText.Bounds.Contains( mouseX, mouseY ) ) {
+				altText.HandlesMouseClick( mouseX, mouseY, button );
+				altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
+				altText.Y = altText.texture.Y1;
+			}
 			return true;
 		}
 		
