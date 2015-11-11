@@ -37,27 +37,23 @@ namespace OpenTK {
 		public float Z;
 
 		public Vector3(float x, float y, float z) {
-			X = x;
-			Y = y;
-			Z = z;
+			X = x; Y = y; Z = z;
+		}
+		
+		public Vector3(float value) {
+			X = value; Y = value; Z = value;
 		}
 
 		public Vector3(Vector2 v) {
-			X = v.X;
-			Y = v.Y;
-			Z = 0.0f;
+			X = v.X; Y = v.Y; Z = 0.0f;
 		}
 
 		public Vector3(Vector3 v) {
-			X = v.X;
-			Y = v.Y;
-			Z = v.Z;
+			X = v.X; Y = v.Y; Z = v.Z;
 		}
 
 		public Vector3(Vector4 v) {
-			X = v.X;
-			Y = v.Y;
-			Z = v.Z;
+			X = v.X; Y = v.Y; Z = v.Z;
 		}
 
 		public float Length {

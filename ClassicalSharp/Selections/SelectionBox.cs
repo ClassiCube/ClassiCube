@@ -16,10 +16,14 @@ namespace ClassicalSharp.Selections {
 			Colour = col;
 		}
 		
-		public void Render( double delta, VertexPos3fCol4b[] vertices, VertexPos3fCol4b[] lineVertices,
+		public void Render( double delta, Vector3 cameraPos, VertexPos3fCol4b[] vertices, VertexPos3fCol4b[] lineVertices,
 		                  ref int index, ref int lineIndex ) {
-			Vector3 p1 = (Vector3)Min + new Vector3( 1/16f, 1/16f, 1/16f );
-			Vector3 p2 = (Vector3)Max - new Vector3( 1/16f, 1/16f, 1/16f );
+			float dist = Math.Min( Utils.DistanceSquared( (Vector3)Min, cameraPos ), 
+			                      Utils.DistanceSquared( (Vector3)Max, cameraPos ) );
+			float offset = dist < 32 * 32 ? 1/32f : 1/16f;
+			Vector3 p1 = (Vector3)Min + new Vector3( offset );
+			Vector3 p2 = (Vector3)Max - new Vector3( offset );
+			
 			FastColour col = Colour;
 			
 			YQuad( vertices, ref index, p1.X, p1.Z, p2.X, p2.Z, p1.Y, col ); // bottom

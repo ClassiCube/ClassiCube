@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using OpenTK.Input;
-using System.Windows.Forms;
 
 namespace ClassicalSharp {
 	
@@ -9,7 +8,7 @@ namespace ClassicalSharp {
 
 		public AltTextInputWidget( Game game, Font font, Font boldFont, TextInputWidget parent ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
-			VerticalAnchor = Anchor.LeftOrTop;
+			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
 			this.boldFont = boldFont;
 			this.parent = parent;
@@ -18,54 +17,90 @@ namespace ClassicalSharp {
 		Texture chatInputTexture;
 		readonly Font font, boldFont;
 		TextInputWidget parent;
-		Size partSize;
+		Size elementSize;
+		public int YOffset;
+		
+		public bool Active;
+		public void SetActive( bool active ) {
+			Active = active;
+			Height = active ? chatInputTexture.Height : 0;
+		}
 		
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
 		}
 		
 		public override void Init() {
-			X = 5; Y = 45;
-			DrawString();
+			X = 5; Y = YOffset;
+			InitData();
+			Redraw();
+		}
+
+		void Redraw() {
+			Make( elements[selectedIndex], font );
+			Width = chatInputTexture.Width;
+			Height = chatInputTexture.Height;		
 		}
 		
-		static FastColour backColour = new FastColour( 60, 60, 60, 200 );
-		void DrawString() {
-			DrawTextArgs args = new DrawTextArgs( "Text ", font, false );
-			partSize = game.Drawer2D.MeasureChatSize( ref args );
-			Size size = new Size( partSize.Width * 6, partSize.Height * 3 );
+		unsafe void Make( Element e, Font font ) {
+			Size* sizes = stackalloc Size[e.Contents.Length / e.CharsPerItem];
+			MeasureContentSizes( e, font, sizes );
+			Size bodySize = CalculateContentSize( e, sizes, out elementSize );
+			int titleWidth = MeasureTitles( font ), titleHeight = elements[0].TitleSize.Height;
+			Size size = new Size( Math.Max( bodySize.Width, titleWidth ), bodySize.Height + titleHeight );
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
 				using( IDrawer2D drawer = game.Drawer2D ) {
 					drawer.SetBitmap( bmp );
-					drawer.Clear( backColour, 0, 0, size.Width, size.Height );
-					for( int code = 0; code <= 15; code++ ) {
-						int c = code < 10 ? '0' + code : 'a' + (code - 10);
-						args.Text = "&" + (char)c + "Text";
-						
-						int x = (code % 6);
-						int y = (code / 6);
-						drawer.DrawChatText( ref args, x * partSize.Width, y * partSize.Height );
-					}
+					DrawTitles( drawer, font );
+					drawer.Clear( new FastColour( 30, 30, 30, 200 ), 0, titleHeight,
+					             size.Width, bodySize.Height );
+					
+					DrawContent( drawer, font, e, titleHeight );
 					chatInputTexture = drawer.Make2DTexture( bmp, size, X, Y );
 				}
-			}		
-			Height = size.Height;
-			Width = size.Width;		
+			}
 		}
 		
-		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {	
+		int selectedIndex = 0;
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			mouseX -= X; mouseY -= Y;
-			mouseX /= partSize.Width; mouseY /= partSize.Height;
-			game.Chat.Add( "CLICKY CLICK" + mouseX + "," + mouseY );
-			
-			int code = mouseY * 6 + mouseX;
-			if( code <= 15 ) {
-				int c = code < 10 ? '0' + code : 'a' + (code - 10);
-				string text = "&" + (char)c;
-				parent.AppendText( text );
+			if( IntersectsHeader( mouseX, mouseY ) ) {
+				Dispose();
+				Redraw();
+			} else {
+				IntersectsBody( mouseX, mouseY );
 			}
 			return true;
+		}
+		
+		bool IntersectsHeader( int widgetX, int widgetY ) {
+			Rectangle bounds = new Rectangle( 0, 0, 0, 0 );
+			for( int i = 0; i < elements.Length; i++ ) {
+				Size size = elements[i].TitleSize;
+				bounds.Width = size.Width; bounds.Height = size.Height;
+				if( bounds.Contains( widgetX, widgetY ) ) {
+					selectedIndex = i;
+					return true;
+				}
+				bounds.X += size.Width;
+			}
+			return false;
+		}
+		
+		void IntersectsBody( int widgetX, int widgetY ) {
+			widgetY -= elements[0].TitleSize.Height;
+			widgetX /= elementSize.Width; widgetY /= elementSize.Height;
+			Element e = elements[selectedIndex];
+			int index = widgetY * e.ItemsPerRow + widgetX;
+			if( index < e.Contents.Length ) {
+				if( selectedIndex == 0 ) {
+					parent.AppendChar( e.Contents[index * e.CharsPerItem] );
+					parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
+				} else {
+					parent.AppendChar( e.Contents[index] );
+				}
+			}
 		}
 
 		public override void Dispose() {

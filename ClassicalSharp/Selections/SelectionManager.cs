@@ -43,7 +43,7 @@ namespace ClassicalSharp.Selections {
 			
 			// TODO: Proper selection box sorting. But this is very difficult because
 			// we can have boxes within boxes, intersecting boxes, etc. Probably not worth it.
-			comparer.pos =  player.Position;
+			comparer.pos = game.Camera.GetCameraPos( player.EyePosition );
 			selections.Sort( comparer );
 			if( vertices == null )
 				InitData(); // lazy init as most servers don't use this.
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Selections {
 			int index = 0, lineIndex = 0;
 			for( int i = 0; i < selections.Count; i++ ) {
 				SelectionBox box = selections[i];
-				box.Render( delta, vertices, lineVertices, ref index, ref lineIndex );
+				box.Render( delta, comparer.pos, vertices, lineVertices, ref index, ref lineIndex );
 			}
 			
 			Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );

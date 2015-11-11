@@ -40,8 +40,8 @@ namespace ClassicalSharp {
 			FastColour col = FastColour.White;
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
-					int rainY = Math.Max( pos.Y, GetRainHeight( pos.X + dx, pos.Z + dz ) + 1 );
-					int height = Math.Min( 20 - (rainY - pos.Y), 20 );
+					float rainY = GetRainHeight( pos.X + dx, pos.Z + dz );
+					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
@@ -64,9 +64,10 @@ namespace ClassicalSharp {
 			return 0.05f * x * x - 7 * x + 178;
 		}
 		
-		void MakeRainForSquare( int x, int y, int height, int z, FastColour col, ref int index ) {
-			float v1 = vOffset + (z & 0x01) * 0.5f - (x & 0x0F) * 0.0625f;
-			float v2 = height / 6f + v1;
+		void MakeRainForSquare( int x, float y, float height, int z, FastColour col, ref int index ) {
+			float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
+			float v1 = y / 6f + worldV;
+			float v2 = (y + height) / 6f + worldV;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );
@@ -107,11 +108,12 @@ namespace ClassicalSharp {
 			graphics.DeleteDynamicVb( weatherVb );
 		}
 		
-		int GetRainHeight( int x, int z ) {
-			if( x < 0 || z < 0 || x >= width || z >= length ) return map.EdgeHeight - 1;
-			int index = ( x * length ) + z;
+		float GetRainHeight( int x, int z ) {
+			if( x < 0 || z < 0 || x >= width || z >= length ) return map.EdgeHeight;
+			int index = (x * length) + z;
 			int height = heightmap[index];
-			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
+			int y = height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
+			return y + game.BlockInfo.Height[map.GetBlock( x, y, z )];
 		}
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {

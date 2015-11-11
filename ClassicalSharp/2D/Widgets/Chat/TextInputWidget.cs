@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			Height = defaultHeight;
+			//altText = new AltTextInputWidget( game, font, boldFont, this );
 		}
 		
 		Texture chatInputTexture, caretTexture;
@@ -45,7 +46,6 @@ namespace ClassicalSharp {
 		int maxWidth = 0;
 		
 		public override void Init() {
-			//altText = new AltTextInputWidget( game, font, boldFont, this );
 			//altText.Init();
 			X = 5;
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, false );
@@ -131,13 +131,14 @@ namespace ClassicalSharp {
 			Y = game.Height - Height - YOffset;
 			chatInputTexture.Y1 = Y;
 			caretTexture.Y1 += Y;
-			Width = size.Width;		
+			Width = size.Width;
 		}
 
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref caretTexture );
 			graphicsApi.DeleteTexture( ref chatInputTexture );
-			//altText.Dispose();
+			//if( altText != null )
+			//	altText.Dispose();
 		}
 
 		public override void MoveTo( int newX, int newY ) {
@@ -205,12 +206,27 @@ namespace ClassicalSharp {
 			if( chatInputText.Length + text.Length > len ) {
 				text = text.Substring( 0, len - chatInputText.Length );
 			}
+			if( text == "" ) return;
 			
 			if( caretPos == -1 ) {
 				chatInputText.InsertAt( chatInputText.Length, text );
 			} else {
 				chatInputText.InsertAt( caretPos, text );
 				caretPos += text.Length;
+				if( caretPos >= chatInputText.Length ) caretPos = -1;
+			}
+			Dispose();
+			Init();
+		}
+		
+		public void AppendChar( char c ) {
+			if( chatInputText.Length == len ) return;
+			
+			if( caretPos == -1 ) {
+				chatInputText.InsertAt( chatInputText.Length, c );
+			} else {
+				chatInputText.InsertAt( caretPos, c );
+				caretPos++;
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
 			}
 			Dispose();

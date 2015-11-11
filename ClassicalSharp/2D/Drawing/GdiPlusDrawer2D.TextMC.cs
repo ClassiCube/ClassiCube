@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 						int fontX = srcX + xx * srcWidth / dstWidth;
 						int pixel = fontRow[fontX];
 						
-						if( (byte)(pixel >> 24) < 127 ) continue;
+						if( (byte)(pixel >> 24) == 0 ) continue;
 						
 						int col = pixel & ~0xFFFFFF;
 						col |= ((pixel & 0xFF) * textCol.B / 255);

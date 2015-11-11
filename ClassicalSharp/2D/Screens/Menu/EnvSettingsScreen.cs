@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new RealValidator( 0, 1000 ),
-				new IntegerValidator( -1000, 1000 ),
+				new IntegerValidator( -10000, 10000 ),
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new IntegerValidator( 0, 2 ),
