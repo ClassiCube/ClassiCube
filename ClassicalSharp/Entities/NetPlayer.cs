@@ -10,6 +10,7 @@ namespace ClassicalSharp {
 		public NetPlayer( string displayName, string skinName, Game game ) : base( game ) {
 			DisplayName = displayName;
 			SkinName = Utils.StripColours( skinName );
+			SkinIdentifier = "skin_" + SkinName;
 			InitRenderingData();
 		}
 		

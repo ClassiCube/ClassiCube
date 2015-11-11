@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected void InitRenderingData() {
-			using( Font font = new Font( "Arial", 14 ) ) {
+			using( Font font = new Font( "Arial", 20 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
 				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
 			}
@@ -32,8 +32,8 @@ namespace ClassicalSharp {
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
 			
-			float x1 = -nameTex.Width * 0.5f / 50f, y1 = nameTex.Height / 50f;
-			float x2 = nameTex.Width * 0.5f / 50f, y2 = 0;
+			float x1 = -nameTex.Width * 0.5f / 70f, y1 = nameTex.Height / 70f;
+			float x2 = nameTex.Width * 0.5f / 70f, y2 = 0;
 			// NOTE: Do this instead with network player's yaw to have names rotate with them instead.
 			//yaw = Math.Pi - Player.YawRadians;
 			float angle = game.LocalPlayer.YawRadians;

@@ -41,6 +41,7 @@ namespace ClassicalSharp {
 		public LocalPlayer( Game window ) : base( window ) {
 			DisplayName = window.Username;
 			SkinName = window.Username;
+			SkinIdentifier = "skin_" + SkinName;
 			InitRenderingData();
 		}
 		

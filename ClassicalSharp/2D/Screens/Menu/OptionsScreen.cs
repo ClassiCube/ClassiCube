@@ -65,7 +65,10 @@ namespace ClassicalSharp {
 				!network.IsSinglePlayer ? null :
 					Make( -140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
-					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = (v == "yes") ),
+					     (g, v) => {
+					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
+					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
+					     }),
 				Make( 140, -150, "Pushback block placing", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.PushbackBlockPlacing 
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",

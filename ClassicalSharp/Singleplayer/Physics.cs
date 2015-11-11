@@ -27,6 +27,7 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.Map;
 			info = game.BlockInfo;
 			game.Events.OnNewMapLoaded += ResetMap;
+			enabled = Options.GetBool( OptionsKey.SingleplayerPhysics, true );
 		}
 		
 		bool CheckItem( Queue<uint> queue, out int posIndex ) {

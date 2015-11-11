@@ -266,6 +266,7 @@ namespace ClassicalSharp {
 				game.AsyncDownloader.DownloadSkin( skinName );
 			} else {
 				game.LocalPlayer.SkinName = skinName;
+				game.LocalPlayer.SkinIdentifier = "skin_" + game.LocalPlayer.SkinName;
 				game.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {
