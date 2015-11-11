@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
@@ -17,13 +18,28 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		/// <summary> Renders all player entities contained in this list. </summary>
-		public void Render( double delta, float t ) {
+		/// <summary> Renders the models of all player entities contained in this list. </summary>
+		public void RenderModels( IGraphicsApi api, double delta, float t ) {
+			api.Texturing = true;
+			api.AlphaTest = true;
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null ) {
-					Players[i].Render( delta, t );
-				}
+				if( Players[i] != null )
+					Players[i].RenderModel( delta, t );
 			}
+			api.Texturing = false;
+			api.AlphaTest = false;
+		}
+		
+		/// <summary> Renders the names of all player entities contained in this list. </summary>
+		public void RenderNames( IGraphicsApi api, double delta, float t ) {
+			api.Texturing = true;
+			api.AlphaTest = true;
+			for( int i = 0; i < Players.Length; i++ ) {
+				if( Players[i] != null )
+					Players[i].RenderName();
+			}
+			api.Texturing = false;
+			api.AlphaTest = false;
 		}
 		
 		/// <summary> Disposes of all player entities contained in this list. </summary>

@@ -234,7 +234,8 @@ namespace ClassicalSharp {
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
-				Players.Render( e.Time, t );
+				Players.RenderModels( Graphics, e.Time, t );
+				Players.RenderNames( Graphics, e.Time, t );
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				EnvRenderer.Render( e.Time );

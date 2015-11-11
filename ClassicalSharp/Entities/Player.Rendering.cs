@@ -27,13 +27,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected void RenderModel( double deltaTime ) {
-			Model.RenderModel( this );
-			DrawName();
-		}
-		
-		void DrawName() {
-			api.Texturing = true;
+		protected void DrawName() {
 			api.BindTexture( nameTex.ID );
 			
 			float x1 = -nameTex.Width * 0.5f / 50f, y1 = nameTex.Height / 50f;
@@ -58,8 +52,6 @@ namespace ClassicalSharp {
 			
 			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
-			api.Texturing = false;
-			api.AlphaTest = false;
 		}
 	}
 }

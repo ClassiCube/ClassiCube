@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -38,7 +39,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? cache.ZombieTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
@@ -48,7 +48,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, RightLeg );
 			DrawRotate( -6/16f, 22/16f, 0, (float)Math.PI / 2, 0, p.leftArmZRot, LeftArm );
 			DrawRotate( 6/16f, 22/16f, 0, (float)Math.PI / 2, 0, p.rightArmZRot, RightArm );
-			graphics.AlphaTest = true;
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;

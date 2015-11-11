@@ -50,7 +50,6 @@ namespace ClassicalSharp.Model {
 
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		protected abstract void DrawPlayerModel( Player p );

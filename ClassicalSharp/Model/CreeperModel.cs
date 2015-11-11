@@ -40,7 +40,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? cache.CreeperTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
@@ -50,7 +49,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 6/16f, -2/16f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 6/16f, 2/16f, p.rightLegXRot, 0, 0, LeftLegBack );
 			DrawRotate( 0, 6/16f, 2/16f, p.leftLegXRot, 0, 0, RightLegBack );
-			graphics.AlphaTest = true;
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;

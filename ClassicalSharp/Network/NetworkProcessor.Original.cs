@@ -252,8 +252,7 @@ namespace ClassicalSharp {
 		
 		void HandleSetPermission() {
 			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
-		}
-		
+		}	
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			if( entityId != 0xFF ) {
@@ -264,6 +263,9 @@ namespace ClassicalSharp {
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game );
 				game.Events.RaiseEntityAdded( entityId );
+				game.AsyncDownloader.DownloadSkin( skinName );
+			} else {
+				game.LocalPlayer.SkinName = skinName;
 				game.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {

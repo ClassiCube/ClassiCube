@@ -57,9 +57,9 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
 			int texId = p.PlayerTextureId <= 0 ? cache.HumanoidTexId : p.PlayerTextureId;
 			graphics.BindTexture( texId );
+			graphics.AlphaTest = false;
 			
 			SkinType skinType = p.SkinType;
 			_64x64 = skinType != SkinType.Type64x32;
@@ -71,10 +71,14 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 12/16f, 0, p.rightLegXRot, 0, 0, model.RightLeg );
 			DrawRotate( -6/16f, 22/16f, 0, p.leftArmXRot, 0, p.leftArmZRot, model.LeftArm );
 			DrawRotate( 6/16f, 22/16f, 0, p.rightArmXRot, 0, p.rightArmZRot, model.RightArm );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			
 			graphics.AlphaTest = true;
-			if( p.RenderHat )
+			if( p.RenderHat ) {
+				index = 0;
 				DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			}
 		}
 		
 		class ModelSet {

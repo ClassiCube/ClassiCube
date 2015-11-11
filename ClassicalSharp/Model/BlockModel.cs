@@ -29,8 +29,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
-			graphics.AlphaTest = true;
 			block = Byte.Parse( p.ModelName );
 			if( block == 0 ) {
 				blockHeight = 1;
@@ -53,6 +51,7 @@ namespace ClassicalSharp.Model {
 				ZQuad( 0.5f, TileSide.Back, false );
 				YQuad( 0f, TileSide.Bottom );
 			}
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		float blockHeight;
 		TerrainAtlas2D atlas;

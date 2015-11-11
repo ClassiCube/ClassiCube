@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -38,14 +39,13 @@ namespace ClassicalSharp.Model {
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? cache.SpiderTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			graphics.AlphaTest = true;
 			
 			DrawRotate( 0, 8/16f, -3/16f, -p.PitchRadians, 0, 0, Head );
 			DrawPart( Link );
 			DrawPart( End );
+			
 			// TODO: leg animations
 			DrawRotate( -3/16f, 8/16f, 0, 0, quarterPi, eighthPi, LeftLeg );
 			DrawRotate( -3/16f, 8/16f, 0, 0, eighthPi, eighthPi, LeftLeg );
@@ -55,6 +55,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 3/16f, 8/16f, 0, 0, -eighthPi, -eighthPi, RightLeg );
 			DrawRotate( 3/16f, 8/16f, 0, 0, eighthPi, -eighthPi, RightLeg );
 			DrawRotate( 3/16f, 8/16f, 0, 0, quarterPi, -eighthPi, RightLeg );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		ModelPart Head, Link, End, LeftLeg, RightLeg;

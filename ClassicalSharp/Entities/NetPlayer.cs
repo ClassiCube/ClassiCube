@@ -86,13 +86,15 @@ namespace ClassicalSharp {
 			RemoveOldestState();
 		}
 
-		public override void Render( double deltaTime, float t ) {
+		public override void RenderModel( double deltaTime, float t ) {
 			Position = Vector3.Lerp( oldState.pos, newState.pos, t );
 			YawDegrees = Utils.LerpAngle( oldState.yaw, newState.yaw, t );
 			PitchDegrees = Utils.LerpAngle( oldState.pitch, newState.pitch, t );
 			
 			GetCurrentAnimState( t );
-			RenderModel( deltaTime );
+			Model.RenderModel( this );
 		}
+		
+		public override void RenderName() { DrawName(); }
 	}
 }

@@ -57,7 +57,11 @@ namespace ClassicalSharp {
 		public abstract void Despawn();
 		
 		/// <summary> Renders the entity's model, interpolating between the previous and next state. </summary>
-		public abstract void Render( double deltaTime, float t );
+		public abstract void RenderModel( double deltaTime, float t );
+		
+		/// <summary> Renders the entity's name over the top of its model. </summary>
+		/// <remarks> Assumes that RenderModel was previously called this frame. </remarks>
+		public abstract void RenderName();
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity satisfy the given condition. </summary>

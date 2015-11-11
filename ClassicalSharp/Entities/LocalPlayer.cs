@@ -41,6 +41,7 @@ namespace ClassicalSharp {
 		public LocalPlayer( Game window ) : base( window ) {
 			DisplayName = window.Username;
 			SkinName = window.Username;
+			InitRenderingData();
 		}
 		
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {
@@ -74,19 +75,18 @@ namespace ClassicalSharp {
 			nextPos = Position;
 			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos, delta );
-			if( api != null ) {
-				CheckSkin();
-			}
+			CheckSkin();
 		}
 		
-		public override void Render( double deltaTime, float t ) {
+		public override void RenderModel( double deltaTime, float t ) {
 			if( !game.Camera.IsThirdPerson ) return;
-			if( api == null ) {
-				InitRenderingData();
-				game.AsyncDownloader.DownloadSkin( SkinName );
-			}
 			GetCurrentAnimState( t );
-			RenderModel( deltaTime );
+			Model.RenderModel( this );
+		}
+		
+		public override void RenderName() {
+			if( !game.Camera.IsThirdPerson ) return;
+			DrawName(); 
 		}
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {

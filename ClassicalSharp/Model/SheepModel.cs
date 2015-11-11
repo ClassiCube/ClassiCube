@@ -61,7 +61,6 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			graphics.Texturing = true;
 			int texId = p.MobTextureId <= 0 ? cache.SheepTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
@@ -71,9 +70,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 12/16f, -5/16f, p.rightLegXRot, 0, 0, RightLegFront );
 			DrawRotate( 0, 12/16f, 7/16f, p.rightLegXRot, 0, 0, LeftLegBack );
 			DrawRotate( 0, 12/16f, 7/16f, p.leftLegXRot, 0, 0, RightLegBack );
-			// Need to draw the two parts separately.
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			graphics.AlphaTest = true;
 			index = 0;
 			
 			if( Fur ) {
@@ -84,6 +81,7 @@ namespace ClassicalSharp.Model {
 				DrawRotate( 0, 12/16f, -5/16f, p.rightLegXRot, 0, 0, FurRightLegFront );
 				DrawRotate( 0, 12/16f, 7/16f, p.rightLegXRot, 0, 0, FurLeftLegBack );
 				DrawRotate( 0, 12/16f, 7/16f, p.leftLegXRot, 0, 0, FurRightLegBack );
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			}
 		}
 		
