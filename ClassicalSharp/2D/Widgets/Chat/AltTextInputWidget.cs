@@ -12,6 +12,7 @@ namespace ClassicalSharp {
 			this.font = font;
 			this.boldFont = boldFont;
 			this.parent = parent;
+			Active = false;
 		}
 		
 		public Texture texture;
@@ -19,7 +20,6 @@ namespace ClassicalSharp {
 		TextInputWidget parent;
 		Size elementSize;
 		
-		public bool Active;
 		public void SetActive( bool active ) {
 			Active = active;
 			Height = active ? texture.Height : 0;
@@ -33,6 +33,7 @@ namespace ClassicalSharp {
 			X = 5; Y = 5;
 			InitData();
 			Redraw();
+			SetActive( Active );
 		}
 
 		public void Redraw() {
