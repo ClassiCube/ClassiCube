@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 			if( HandlesAllInput )
 				normalChat.Render( delta );
 			else
-				RenderRecentChat( now, delta );			
+				RenderRecentChat( now, delta );
 			
 			if( announcementTex.IsValid )
 				announcementTex.Render( graphicsApi );
@@ -235,7 +235,7 @@ namespace ClassicalSharp {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == game.Mapping( KeyBinding.SendChat ) 
+				if( key == game.Mapping( KeyBinding.SendChat )
 				   || key == game.Mapping( KeyBinding.PauseOrExit ) ) {
 					HandlesAllInput = false;
 					if( game.CursorVisible )
@@ -282,6 +282,18 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( !HandlesAllInput ) return false;
+			if( normalChat.Bounds.Contains( mouseX, mouseY ) ) {
+				int height = normalChat.GetUsedHeight();
+				int y = normalChat.Y + normalChat.Height - height;
+				if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) ) {
+					string text = normalChat.GetSelected( mouseX, mouseY );
+					if( text != null ) {
+						textInput.AppendText(text);
+						return true;
+					}
+				}
+				return false;
+			}
 			return textInput.HandlesMouseClick( mouseX, mouseY, button );
 		}
 		

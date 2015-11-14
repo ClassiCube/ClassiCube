@@ -12,12 +12,14 @@ namespace ClassicalSharp {
 		}
 		
 		public Texture[] Textures;
+		string[] lines;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
 		readonly Font font;
 		
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
+			lines = new string[ElementsCount];
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			
@@ -38,8 +40,10 @@ namespace ClassicalSharp {
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
 				Textures[index] = tex;
+				lines[index] = text;
 			} else {
 				Textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				lines[index] = null;
 			}
 			UpdateDimensions();
 		}
@@ -49,6 +53,7 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref Textures[0] );
 			for( int i = 0; i < Textures.Length - 1; i++ ) {
 				Textures[i] = Textures[i + 1];
+				lines[i] = lines[i + 1];
 				Textures[i].Y1 = y;
 				y += Textures[i].Height;
 			}
@@ -122,6 +127,15 @@ namespace ClassicalSharp {
 				Textures[i].Y1 += diffY;
 			}
 			X = newX; Y = newY;
+		}
+		
+		public string GetSelected( int mouseX, int mouseY ) {
+			for( int i = 0; i < Textures.Length; i++ ) {
+				if( Textures[i].IsValid && 
+				   Textures[i].Bounds.Contains( mouseX, mouseY ) )
+					return lines[i];
+			}
+			return null;
 		}
 	}
 }
