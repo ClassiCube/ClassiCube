@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 		
 		static void LoadFrom( StreamReader reader ) {
 			string line;
-			while( ( line = reader.ReadLine() ) != null ) {
+			while( (line = reader.ReadLine()) != null ) {
 				if( line.Length == 0 && line[0] == '#' ) continue;
 				
 				int separatorIndex = line.IndexOf( '=' );

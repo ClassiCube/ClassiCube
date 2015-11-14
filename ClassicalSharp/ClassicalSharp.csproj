@@ -211,6 +211,7 @@
     <Compile Include="Singleplayer\Commands.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
+    <Compile Include="TexturePack\AcceptedUrls.cs" />
     <Compile Include="TexturePack\Animations.cs" />
     <Compile Include="TexturePack\TextureCache.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />

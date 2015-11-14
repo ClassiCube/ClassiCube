@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -75,6 +76,8 @@ namespace ClassicalSharp {
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
 		internal bool screenshotRequested;
 		public Bitmap FontBitmap;
+		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
+		internal AcceptedUrls AcceptedUrls = new AcceptedUrls();
 		
 		string defTexturePack = "default.zip";
 		public string DefaultTexturePack {
@@ -109,6 +112,7 @@ namespace ClassicalSharp {
 			Players = new EntityList( this );
 			
 			Options.Load();
+			AcceptedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
@@ -190,11 +194,6 @@ namespace ClassicalSharp {
 			Options.Set( OptionsKey.ViewDist, distance );
 			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
-		}
-		
-		public void RefreshHud() {
-			hudScreen.Dispose();
-			hudScreen.Init();
 		}
 		
 		/// <summary> Gets whether the active screen handles all input. </summary>
@@ -335,6 +334,18 @@ namespace ClassicalSharp {
 		
 		internal Screen activeScreen;
 		public void SetNewScreen( Screen screen ) {
+			// don't switch to the new screen immediately if the user
+			// is currently looking at a warning dialog.
+			if( activeScreen is WarningScreen ) {
+				WarningScreen warning = (WarningScreen)activeScreen;
+				if( warning.lastScreen != null ) 
+					warning.lastScreen.Dispose();
+				
+				warning.lastScreen = screen;
+				if( warning.lastScreen != null ) 
+					screen.Init();
+				return;
+			}
 			InputHandler.ScreenChanged( activeScreen, screen );
 			if( activeScreen != null )
 				activeScreen.Dispose();
@@ -348,6 +359,25 @@ namespace ClassicalSharp {
 			if( screen != null )
 				screen.Init();
 			activeScreen = screen;
+		}
+		
+		public void RefreshHud() {
+			hudScreen.Dispose();
+			hudScreen.Init();
+		}
+		
+		public void ShowWarning( WarningScreen screen ) {
+			if( !(activeScreen is WarningScreen) ) {
+				screen.lastScreen = activeScreen;
+				activeScreen = screen;
+				
+				screen.lastCursorVisible = CursorVisible;
+				if( !CursorVisible) CursorVisible = true;
+			} else {
+				screen.lastCursorVisible = WarningScreens[0].lastCursorVisible;				
+			}
+			WarningScreens.Add( screen );
+			screen.Init();
 		}
 		
 		public void SetCamera( bool thirdPerson ) {

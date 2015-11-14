@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -52,5 +53,19 @@ namespace ClassicalSharp {
 		public override bool HidesHud {
 			get { return true; }
 		}
+		
+		public override bool HandlesKeyDown( Key key ) { return true; }
+		
+		public override bool HandlesKeyPress( char key ) { return true; }
+		
+		public override bool HandlesKeyUp( Key key ) { return true; }
+		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) { return true; }
+		
+		public override bool HandlesMouseMove( int mouseX, int mouseY ) { return true; }
+		
+		public override bool HandlesMouseScroll( int delta )  { return true; }
+		
+		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return true; }
 	}
 }

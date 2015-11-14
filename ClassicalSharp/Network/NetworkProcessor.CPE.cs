@@ -290,16 +290,29 @@ namespace ClassicalSharp {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
 			} else if( Utils.IsUrlPrefix( url ) ) {
-				game.Animations.Dispose();
-				DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
-				
-				if( usingTexturePack )
-					game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
-				else
-					game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
-				
+				if( !game.AcceptedUrls.HasAccepted( url ) ) {
+					game.ShowWarning( new WarningScreen(
+						game, url, DownloadTexturePack, null,
+						"Do you want to download the server's texture pack?",
+						"The texture pack is located at:", url ) );
+				} else {
+					DownloadTexturePack( url );
+				}
 			}
 			Utils.LogDebug( "Image url: " + url );
+		}
+		
+		void DownloadTexturePack( object metadata ) {
+			string url = (string)metadata;
+			game.Animations.Dispose();
+			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
+			if( !game.AcceptedUrls.HasAccepted( url ) )
+				game.AcceptedUrls.AddAccepted( url );
+			
+			if( usingTexturePack )
+				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
+			else
+				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
 		}
 		
 		void HandleCpeEnvWeatherType() {
