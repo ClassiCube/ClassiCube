@@ -60,23 +60,23 @@ namespace ClassicalSharp {
 			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ),
 			                     Math.Max( textSize.Height, DesiredMaxHeight ) );
 			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
-					args.SkipPartsCheck = true;
-					drawer.DrawText( ref args, 0, 0 );
-					
-					args.Text = Validator.Range;
-					args.SkipPartsCheck = false;
-					Size hintSize = drawer.MeasureSize( ref args );
-					
-					args.SkipPartsCheck = true;
-					int hintX = size.Width - hintSize.Width;
-					if( textSize.Width < hintX )
-						drawer.DrawText( ref args, hintX, 0 );
-					chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
-				}
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				using( IDrawer2D drawer = game.Drawer2D )
+			{
+				drawer.SetBitmap( bmp );
+				drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
+				args.SkipPartsCheck = true;
+				drawer.DrawText( ref args, 0, 0 );
+				
+				args.Text = Validator.Range;
+				args.SkipPartsCheck = false;
+				Size hintSize = drawer.MeasureSize( ref args );
+				
+				args.SkipPartsCheck = true;
+				int hintX = size.Width - hintSize.Width;
+				if( textSize.Width < hintX )
+					drawer.DrawText( ref args, hintX, 0 );
+				chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 			}
 			
 			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalAnchor );

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using OpenTK.Input;
 
@@ -76,25 +77,27 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		Font chatFont, chatInputFont, announcementFont;
+		Font chatFont, chatInputFont, chatUnderlineFont, announcementFont;
 		public override void Init() {
-			chatFont = new Font( "Arial", game.Chat.FontSize );
-			chatInputFont = new Font( "Arial", game.Chat.FontSize, FontStyle.Bold );
+			int fontSize = game.Chat.FontSize;//(int)(14 * Utils.GuiScale( game.Width, game.Height ));
+			chatFont = new Font( "Arial", fontSize );
+			chatInputFont = new Font( "Arial", fontSize, FontStyle.Bold );
+			chatUnderlineFont = new Font( "Arial", fontSize, FontStyle.Underline );
 			announcementFont = new Font( "Arial", 14 );
 			blockSize = (int)(40 * Utils.GuiScale( game.Width, game.Height ));
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
 			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 3, chatFont );
+			status = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont );
 			status.VerticalAnchor = Anchor.LeftOrTop;
 			status.HorizontalAnchor = Anchor.BottomOrRight;
 			status.Init();
-			bottomRight = new TextGroupWidget( game, 3, chatFont );
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont );
 			bottomRight.VerticalAnchor = Anchor.BottomOrRight;
 			bottomRight.HorizontalAnchor = Anchor.BottomOrRight;
 			bottomRight.YOffset = blockSize * 3 / 2;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont );
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
@@ -152,6 +155,7 @@ namespace ClassicalSharp {
 			}
 			chatFont.Dispose();
 			chatInputFont.Dispose();
+			chatUnderlineFont.Dispose();
 			announcementFont.Dispose();
 			
 			normalChat.Dispose();
@@ -288,13 +292,33 @@ namespace ClassicalSharp {
 				if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) ) {
 					string text = normalChat.GetSelected( mouseX, mouseY );
 					if( text != null ) {
-						textInput.AppendText(text);
+						if( Utils.IsUrlPrefix( text ) ) {
+							game.ShowWarning( new WarningScreen(
+								game, text, OpenUrl, AppendUrl,
+								"Are you sure you want to go to this url?",
+								text,
+								"Be careful - urls from strangers may link to websites that",
+								" may have viruses, or things you may not want to open/see."
+							) );
+						}
 						return true;
 					}
 				}
 				return false;
 			}
 			return textInput.HandlesMouseClick( mouseX, mouseY, button );
+		}
+		
+		void OpenUrl( object metadata ) {
+			try {
+				Process.Start( (string)metadata );
+			} catch( Exception ex ) {
+				ErrorHandler.LogError( "ChatScreen.OpenUrl", ex );
+			}
+		}
+		
+		void AppendUrl( object metadata ) {
+			textInput.AppendText( (string)metadata );
 		}
 		
 		void ResetIndex() {

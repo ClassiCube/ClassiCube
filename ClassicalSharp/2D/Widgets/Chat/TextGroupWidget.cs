@@ -4,47 +4,31 @@ using System.Drawing;
 
 namespace ClassicalSharp {
 	
-	public sealed class TextGroupWidget : Widget {
+	public sealed partial class TextGroupWidget : Widget {
 		
-		public TextGroupWidget( Game game, int elementsCount, Font font ) : base( game ) {
+		public TextGroupWidget( Game game, int elementsCount, 
+		                       Font font, Font underlineFont ) : base( game ) {
 			ElementsCount = elementsCount;
 			this.font = font;
+			this.underlineFont = underlineFont;
 		}
 		
 		public Texture[] Textures;
 		string[] lines;
+		Rectangle[][] urlBounds;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
-		readonly Font font;
+		readonly Font font, underlineFont;
 		
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
 			lines = new string[ElementsCount];
+			urlBounds = new Rectangle[ElementsCount][];
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			
 			for( int i = 0; i < Textures.Length; i++ )
 				Textures[i].Height = defaultHeight;
-			UpdateDimensions();
-		}
-		
-		public void SetText( int index, string text ) {
-			graphicsApi.DeleteTexture( ref Textures[index] );
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			
-			if( !String.IsNullOrEmpty( text ) ) {
-				Texture tex = game.Drawer2D.UseBitmappedChat ?
-					game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
-					game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
-				
-				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
-				tex.Y1 = CalcY( index, tex.Height );
-				Textures[index] = tex;
-				lines[index] = text;
-			} else {
-				Textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
-				lines[index] = null;
-			}
 			UpdateDimensions();
 		}
 		
@@ -81,7 +65,7 @@ namespace ClassicalSharp {
 				y -= newHeight;
 				for( int i = 0; i < index; i++ ) {
 					Textures[i].Y1 -= deltaY;
-				}				
+				}
 			}
 			return y;
 		}
@@ -96,11 +80,11 @@ namespace ClassicalSharp {
 		}
 		
 		void UpdateDimensions() {
-			Width = 0; 
+			Width = 0;
 			Height = 0;
 			for( int i = 0; i < Textures.Length; i++ ) {
 				Width = Math.Max( Width, Textures[i].Width );
-				Height += Textures[i].Height;				
+				Height += Textures[i].Height;
 			}
 			
 			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
@@ -131,9 +115,27 @@ namespace ClassicalSharp {
 		
 		public string GetSelected( int mouseX, int mouseY ) {
 			for( int i = 0; i < Textures.Length; i++ ) {
-				if( Textures[i].IsValid && 
-				   Textures[i].Bounds.Contains( mouseX, mouseY ) )
-					return lines[i];
+				Texture tex = Textures[i];
+				if( tex.IsValid && tex.Bounds.Contains( mouseX, mouseY ) ) {
+					return GetUrl( i, mouseX ) ?? lines[i];
+				}					
+			}
+			return null;
+		}
+		
+		string GetUrl( int index, int mouseX ) {				
+			Rectangle[] partBounds = urlBounds[index];
+			if( partBounds == null ) 
+				return null;
+			Texture tex = Textures[index];	
+			mouseX -= tex.X1;
+			string text = lines[index];	
+			
+			for( int i = 1; i < partBounds.Length; i += 2 ) {
+				if( mouseX >= partBounds[i].Left && mouseX < partBounds[i].Right ) {
+					int packed = partBounds[i].Y;
+					return text.Substring( packed >> 12, packed & 0xFFF );
+				}
 			}
 			return null;
 		}

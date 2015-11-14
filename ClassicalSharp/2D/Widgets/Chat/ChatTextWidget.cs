@@ -32,9 +32,7 @@ namespace ClassicalSharp {
 				Height = defaultHeight;
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, font, true );
-				texture = game.Drawer2D.UseBitmappedChat ?
-					game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 ) :
-					game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+				texture = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 
 				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
 				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );

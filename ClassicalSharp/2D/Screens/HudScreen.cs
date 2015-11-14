@@ -72,20 +72,17 @@ namespace ClassicalSharp {
 		}
 		
 		public void LoseFocus() {
-			if( playerList != null ) {
+			if( playerList != null )
 				playerList.Dispose();
-			}
 			if( !game.CursorVisible )
 				game.CursorVisible = true;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			chat.OnResize( oldWidth, oldHeight, width, height );
-			hotbar.OnResize( oldWidth, oldHeight, width, height );
-			if( playerList != null ) {
-				int deltaX = CalcDelta( width, oldWidth, Anchor.Centre );
-				playerList.MoveTo( playerList.X + deltaX, height / 4 );
-			}
+			PlayerListWidget widget = playerList;		
+			game.RefreshHud();
+			if( widget != null )
+				CreatePlayerListWidget();
 		}
 		
 		public override void Init() {
@@ -113,20 +110,24 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == game.Mapping( KeyBinding.PlayerList ) ) {
-				if( playerList == null ) {
-					if( game.Network.UsingExtPlayerList ) {
-						playerList = new ExtPlayerListWidget( game, playerFont );
-					} else {
-						playerList = new NormalPlayerListWidget( game, playerFont );
-					}
-					playerList.Init();
-					playerList.MoveTo( playerList.X, game.Height / 4 );
-				}
-			}
-			if( chat.HandlesKeyDown( key ) ) {
+				if( playerList == null )
+					CreatePlayerListWidget();
 				return true;
 			}
+			
+			if( chat.HandlesKeyDown( key ) )
+				return true;
 			return hotbar.HandlesKeyDown( key );
+		}
+		
+		void CreatePlayerListWidget() {
+			if( game.Network.UsingExtPlayerList ) {
+				playerList = new ExtPlayerListWidget( game, playerFont );
+			} else {
+				playerList = new NormalPlayerListWidget( game, playerFont );
+			}
+			playerList.Init();
+			playerList.MoveTo( playerList.X, game.Height / 4 );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {

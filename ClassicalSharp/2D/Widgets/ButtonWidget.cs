@@ -88,17 +88,17 @@ namespace ClassicalSharp {
 			const int borderSize = 3; // 1 px for base border, 2 px for shadow, 1 px for offset text
 			size.Width += borderSize; size.Height += borderSize;
 			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );					
-					drawer.DrawRoundedRect( shadowCol, 3, IDrawer2D.Offset, IDrawer2D.Offset, 
-					                       baseSize.Width, baseSize.Height );
-					drawer.DrawRoundedRect( boxCol, 3, 0, 0, baseSize.Width, baseSize.Height );
-					
-					args.SkipPartsCheck = true;
-					drawer.DrawText( ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
-					texture = drawer.Make2DTexture( bmp, size, 0, 0 );
-				}
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				using( IDrawer2D drawer = game.Drawer2D )
+			{
+				drawer.SetBitmap( bmp );
+				drawer.DrawRoundedRect( shadowCol, 3, IDrawer2D.Offset, IDrawer2D.Offset,
+				                       baseSize.Width, baseSize.Height );
+				drawer.DrawRoundedRect( boxCol, 3, 0, 0, baseSize.Width, baseSize.Height );
+				
+				args.SkipPartsCheck = true;
+				drawer.DrawText( ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
+				texture = drawer.Make2DTexture( bmp, size, 0, 0 );
 			}
 		}
 	}

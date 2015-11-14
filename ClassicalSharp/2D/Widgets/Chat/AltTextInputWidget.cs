@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		public void Redraw() {
 			Make( elements[selectedIndex], font );
 			Width = texture.Width;
-			Height = texture.Height;		
+			Height = texture.Height;
 		}
 		
 		unsafe void Make( Element e, Font font ) {
@@ -49,16 +49,16 @@ namespace ClassicalSharp {
 			int titleWidth = MeasureTitles( font ), titleHeight = elements[0].TitleSize.Height;
 			Size size = new Size( Math.Max( bodySize.Width, titleWidth ), bodySize.Height + titleHeight );
 			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					DrawTitles( drawer, font );
-					drawer.Clear( new FastColour( 30, 30, 30, 200 ), 0, titleHeight,
-					             size.Width, bodySize.Height );
-					
-					DrawContent( drawer, font, e, titleHeight );
-					texture = drawer.Make2DTexture( bmp, size, X, Y );
-				}
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				using( IDrawer2D drawer = game.Drawer2D )
+			{
+				drawer.SetBitmap( bmp );
+				DrawTitles( drawer, font );
+				drawer.Clear( new FastColour( 30, 30, 30, 200 ), 0, titleHeight,
+				             size.Width, bodySize.Height );
+				
+				DrawContent( drawer, font, e, titleHeight );
+				texture = drawer.Make2DTexture( bmp, size, X, Y );
 			}
 		}
 		
@@ -96,8 +96,8 @@ namespace ClassicalSharp {
 			if( index < e.Contents.Length ) {
 				if( selectedIndex == 0 ) {
 					// TODO: need to insert characters that don't affect caret index, adjust caret colour
-					//parent.AppendChar( e.Contents[index * e.CharsPerItem] );
-					//parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
+					parent.AppendChar( e.Contents[index * e.CharsPerItem] );
+					parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
 				} else {
 					parent.AppendChar( e.Contents[index] );
 				}

@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 		public abstract void DrawBitmappedText( ref DrawTextArgs args, int x, int y );
 		
 		/// <summary> Draws a string using the specified arguments, using the specified font or 
-		/// the current bitmapped font depending on the 'useFont' argument, at the
+		/// the current bitmapped font depending on 'UseBitmappedChat', at the
 		/// specified coordinates in the currently bound bitmap. </summary>
 		public void DrawChatText( ref DrawTextArgs args, int windowX, int windowY ) {
 			if( !UseBitmappedChat )
@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 		public abstract Size MeasureBitmappedSize( ref DrawTextArgs args );
 		
 		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments,
-		/// when drawn with the specified font or the current bitmapped font depending on the 'useFont' argument. </summary>
+		/// when drawn with the specified font or the current bitmapped font depending on 'UseBitmappedChat'. </summary>
 		public Size MeasureChatSize( ref DrawTextArgs args ) {
 			return !UseBitmappedChat ? MeasureSize( ref args ) : 
 				MeasureBitmappedSize( ref args );
@@ -94,24 +94,28 @@ namespace ClassicalSharp {
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// then creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture MakeTextTexture( ref DrawTextArgs args, int windowX, int windowY ) {
-			Size size = MeasureSize( ref args );
-			if( parts.Count == 0 )
-				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
-			return MakeTextureImpl( size, ref args, windowX, windowY, false );
+			return MakeTextureImpl( ref args, windowX, windowY, false );
 		}
 		
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// using the current bitmap font, then creates a 2D texture with origin at the 
 		/// specified window coordinates. </summary>
 		public Texture MakeBitmappedTextTexture( ref DrawTextArgs args, int windowX, int windowY ) {
-			Size size = MeasureBitmappedSize( ref args );
-			if( parts.Count == 0 )
-				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
-			return MakeTextureImpl( size, ref args, windowX, windowY, true );
+			return MakeTextureImpl( ref args, windowX, windowY, true );
 		}
 		
-		Texture MakeTextureImpl( Size size, ref DrawTextArgs args, 
-		                        int windowX, int windowY, bool bitmapped ) {
+		/// <summary> Draws the specified string from the arguments into a new bitmap,
+		/// using the specified font or the current bitmapped font depending on 'UseBitmappedChat',
+		/// then creates a 2D texture with origin at the specified window coordinates. </summary>
+		public Texture MakeChatTextTexture( ref DrawTextArgs args, int windowX, int windowY ) {
+			return MakeTextureImpl( ref args, windowX, windowY, UseBitmappedChat );
+		}
+		
+		Texture MakeTextureImpl( ref DrawTextArgs args, int windowX, int windowY, bool bitmapped ) {
+			Size size = bitmapped ? MeasureBitmappedSize( ref args ) : MeasureSize( ref args );
+			if( parts.Count == 0 )
+				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
+			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
 				SetBitmap( bmp );
 				args.SkipPartsCheck = true;

@@ -109,6 +109,7 @@
     <Compile Include="2D\Widgets\Chat\ChatTextWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.cs" />
+    <Compile Include="2D\Widgets\Chat\TextGroupWidget.Formatter.cs" />
     <Compile Include="2D\Widgets\Chat\TextInputWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextInputWidget.Handlers.cs" />
     <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />

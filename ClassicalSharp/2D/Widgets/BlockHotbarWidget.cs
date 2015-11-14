@@ -40,21 +40,21 @@ namespace ClassicalSharp {
 			MakeBackgroundTexture( width );
 			MakeSelectionTexture();
 		}
-				
+		
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
 			background.Render( graphicsApi );
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );			
+			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				int x = X + i * blockSize;
-				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - borderSize - 2, 
+				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - borderSize - 2,
 				                          x + 1 + blockSize / 2, game.Height - blockSize / 2 );
 				if( i == game.Inventory.HeldBlockIndex )
 					selectedBlock.X1 = x;
-			}		
-		
+			}
+			
 			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;
 		}
@@ -73,27 +73,27 @@ namespace ClassicalSharp {
 		
 		void MakeBackgroundTexture( int width ) {
 			Size size = new Size( width, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.Clear( backCol );
-					for( int xx = 0; xx < hotbarCount; xx++ ) {
-						drawer.DrawRectBounds( outlineCol, borderSize, xx * blockSize, 
-						                      0, blockSize, blockSize );
-					}
-					background = drawer.Make2DTexture( bmp, size, X, Y );
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				using( IDrawer2D drawer = game.Drawer2D )
+			{
+				drawer.SetBitmap( bmp );
+				drawer.Clear( backCol );
+				for( int xx = 0; xx < hotbarCount; xx++ ) {
+					drawer.DrawRectBounds( outlineCol, borderSize, xx * blockSize,
+					                      0, blockSize, blockSize );
 				}
+				background = drawer.Make2DTexture( bmp, size, X, Y );
 			}
 		}
 		
 		void MakeSelectionTexture() {
 			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( selCol, borderSize, 0, 0, blockSize, blockSize );
-					selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
-				}
+			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				using( IDrawer2D drawer = game.Drawer2D )
+			{
+				drawer.SetBitmap( bmp );
+				drawer.DrawRectBounds( selCol, borderSize, 0, 0, blockSize, blockSize );
+				selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
 			}
 		}
 	}
