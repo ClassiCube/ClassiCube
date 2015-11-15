@@ -56,6 +56,7 @@ namespace ClassicalSharp {
 		public Events Events = new Events();
 		public InputHandler InputHandler;
 		public ChatLog Chat;
+		public BlockHandRenderer BlockHandRenderer;
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -172,6 +173,8 @@ namespace ClassicalSharp {
 			ParticleManager = new ParticleManager( this );
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
+			BlockHandRenderer = new BlockHandRenderer( this );
+			BlockHandRenderer.Init();
 			
 			bool vsync = Options.GetBool( OptionsKey.VSync, true );
 			Graphics.SetVSync( this, vsync );
@@ -257,9 +260,11 @@ namespace ClassicalSharp {
 				bool middle = IsMousePressed( MouseButton.Middle );
 				bool right = IsMousePressed( MouseButton.Right );
 				InputHandler.PickBlocks( true, left, middle, right );
+				BlockHandRenderer.Render( e.Time );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
+			
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
 			fpsScreen.Render( e.Time );

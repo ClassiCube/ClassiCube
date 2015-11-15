@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class PickingRenderer {
+	public class PickingRenderer : IDisposable {
 		
 		IGraphicsApi graphics;
 		BlockInfo info;

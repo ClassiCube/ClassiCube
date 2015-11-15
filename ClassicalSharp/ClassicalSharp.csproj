@@ -196,6 +196,7 @@
     <Compile Include="Physics\Picking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\BlockHandRenderer.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
     <Compile Include="Rendering\MapRenderer.Rendering.cs" />

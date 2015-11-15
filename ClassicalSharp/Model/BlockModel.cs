@@ -1,5 +1,6 @@
 ﻿using System;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Renderers;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -25,11 +26,18 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -0.5f, 0f, -0.5f, 0.5f, blockHeight, 0.5f ); }
+			get { return new BoundingBox( -scale, 0f, -scale, scale, blockHeight, scale ); }
 		}
 		
 		protected override void DrawPlayerModel( Player p ) {
-			block = Byte.Parse( p.ModelName );
+			// TODO: using 'is' is ugly, but means we can avoid creating
+			// a string every single time held block changes.
+			if( p is FakePlayer ) {
+				col = FastColour.Scale( FastColour.White, 0.8f );
+				block = ((FakePlayer)p).Block;
+			} else {
+				block = Byte.Parse( p.ModelName );	
+			}
 			if( block == 0 ) {
 				blockHeight = 1;
 				return;
@@ -41,21 +49,28 @@ namespace ClassicalSharp.Model {
 			BlockInfo = game.BlockInfo;
 			
 			if( BlockInfo.IsSprite[block] ) {
-				XQuad( 0f, TileSide.Right, false );
-				ZQuad( 0f, TileSide.Back, false );
+				float offset = TerrainAtlas2D.invElementSize / 2;
+				XQuad( 0f, TileSide.Right, -scale, 0, 0, -offset, false );
+				ZQuad( 0f, TileSide.Back, 0, scale, offset, 0, false );
+				
+				XQuad( 0f, TileSide.Right, 0, scale, offset, 0, false );
+				ZQuad( 0f, TileSide.Back, -scale, 0, 0, -offset, false );
 			} else {
-				YQuad( blockHeight, TileSide.Top );
-				XQuad( -0.5f, TileSide.Right, false );
-				XQuad( 0.5f, TileSide.Left, true );
-				ZQuad( -0.5f, TileSide.Front, true );
-				ZQuad( 0.5f, TileSide.Back, false );
 				YQuad( 0f, TileSide.Bottom );
+				XQuad( scale, TileSide.Left, -scale, scale, 0, 0, true );
+				ZQuad( -scale, TileSide.Front, -scale, scale, 0, 0, true );
+				
+				ZQuad( scale, TileSide.Back, -scale, scale, 0, 0, true );
+				YQuad( blockHeight, TileSide.Top );
+				XQuad( -scale, TileSide.Right, -scale, scale, 0, 0, true );
+				
 			}
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		float blockHeight;
 		TerrainAtlas2D atlas;
 		BlockInfo BlockInfo;
+		float scale = 0.5f;
 		
 		public override void Dispose() {
 		}
@@ -64,36 +79,45 @@ namespace ClassicalSharp.Model {
 			int texId = BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetAdjTexRec( texId );
 
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + -0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + y, pos.Z + -0.5f, rec.U2, rec.V1, col );			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + y, pos.Z + 0.5f, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + y, pos.Z + 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, pos.Z - scale, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + y, pos.Z - scale, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + y, pos.Z + scale, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + y, pos.Z + scale, rec.U1, rec.V2, col );
 		}
 
-		void ZQuad( float z, int side, bool swapU ) {
+		void ZQuad( float z, int side, float x1, float x2, 
+		           float u1Offset, float u2Offset, bool swapU ) {
 			int texId = BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetAdjTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize * (15.99f/16f);
-			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + 0f, pos.Z + z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + -0.5f, pos.Y + blockHeight, pos.Z + z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + blockHeight, pos.Z + z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + 0.5f, pos.Y + 0f, pos.Z + z, rec.U2, rec.V2, col );
+			// need to break into two quads when drawing a sprite model in hand.
+			if( swapU ) rec.SwapU();
+			rec.U1 += u1Offset;
+			rec.U2 += u2Offset;
+			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x1, pos.Y + 0f, pos.Z + z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x1, pos.Y + blockHeight, pos.Z + z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x2, pos.Y + blockHeight, pos.Z + z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x2, pos.Y + 0f, pos.Z + z, rec.U2, rec.V2, col );
 		}
 
-		void XQuad( float x, int side, bool swapU ) {
+		void XQuad( float x, int side, float z1, float z2, 
+		           float u1Offset, float u2Offset, bool swapU ) {
 			int texId = BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetAdjTexRec( texId );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize * (15.99f/16f);
-			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + -0.5f, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + -0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + 0.5f, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + 0.5f, rec.U2, rec.V2, col );
+			if( swapU ) rec.SwapU();
+			rec.U1 += u1Offset;
+			rec.U2 += u2Offset;
+			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + z1, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + z1, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + blockHeight, pos.Z + z2, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + 0f, pos.Z + z2, rec.U2, rec.V2, col );
 		}
 	}
 }
