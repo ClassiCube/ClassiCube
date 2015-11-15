@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 				
 				// Extra stuff
 				!network.IsSinglePlayer ? null :
-					Make( -140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( -140, -200, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
@@ -72,8 +72,17 @@ namespace ClassicalSharp {
 				Make( 140, -150, "Pushback block placing", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.PushbackBlockPlacing 
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
-				     (g, v) => { if( g.LocalPlayer.CanPushbackBlocks) 
-				     		g.LocalPlayer.PushbackBlockPlacing = v == "yes"; }),
+				     (g, v) => { 
+				     	if( g.LocalPlayer.CanPushbackBlocks)
+				     		g.LocalPlayer.PushbackBlockPlacing = v == "yes"; 
+				     }),
+				
+				Make( -140, -150, "Show hover names", Anchor.Centre, OnWidgetClick,
+				     g => g.Players.ShowHoveredNames ? "yes" : "no",
+				     (g, v) => { 
+				     	g.Players.ShowHoveredNames = v == "yes";
+				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" );
+				     }),
 				
 				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
@@ -91,7 +100,8 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
-				new BooleanValidator()
+				new BooleanValidator(),
+				new BooleanValidator(),
 			};
 			okayIndex = buttons.Length - 1;
 		}

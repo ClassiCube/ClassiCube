@@ -9,18 +9,23 @@ namespace ClassicalSharp {
 		public const int MaxCount = 256;
 		public Player[] Players = new Player[MaxCount];
 		public Game game;
+		uint[] doIntersect;
+		
+		/// <summary> Whether the names of entities that the player is looking at
+		/// should be rendered through everything else without depth testing. </summary>
+		public bool ShowHoveredNames;
 		
 		public EntityList( Game game ) {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
+			doIntersect = new uint[MaxCount / 32];
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
 		public void Tick( double delta ) {
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null ) {
-					Players[i].Tick( delta );
-				}
+				if( Players[i] == null ) continue;
+				Players[i].Tick( delta );
 			}
 		}
 		
@@ -29,23 +34,57 @@ namespace ClassicalSharp {
 			api.Texturing = true;
 			api.AlphaTest = true;
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null )
-					Players[i].RenderModel( delta, t );
+				if( Players[i] == null ) continue;
+				Players[i].RenderModel( delta, t );
 			}
 			api.Texturing = false;
 			api.AlphaTest = false;
 		}
 		
-		/// <summary> Renders the names of all player entities contained in this list. </summary>
+		/// <summary> Renders the names of all player entities contained in this list.<br/>
+		/// If ShowHoveredNames is false, this method only renders names of entities that are
+		/// not currently being looked at by the user. </summary>
 		public void RenderNames( IGraphicsApi api, double delta, float t ) {
 			api.Texturing = true;
 			api.AlphaTest = true;
+			LocalPlayer localP = game.LocalPlayer;
+			Vector3 eyePos = localP.EyePosition;
+			Vector3 dir = Utils.GetDirVector( localP.YawRadians, localP.PitchRadians );
+			for( int i = 0; i < doIntersect.Length; i++ )
+				doIntersect[i] = 0;
+			
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null )
+				if( Players[i] == null ) continue;
+				float t0, t1;
+				Player p = Players[i];
+				
+				if( !ShowHoveredNames || 
+				   !Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
+					Players[i].RenderName();
+				} else {
+					doIntersect[i >> 5] |= (uint)(1 << (i & 0x1F));
+				}
+			}
+			api.Texturing = false;
+			api.AlphaTest = false;
+		}
+		
+		public void RenderHoveredNames( IGraphicsApi api, double delta, float t ) {
+			if( !ShowHoveredNames ) return;
+			api.Texturing = true;
+			api.AlphaTest = true;
+			api.DepthTest = false;
+			
+			for( int i = 0; i < Players.Length; i++ ) {
+				if( Players[i] == null ) continue;
+				
+				bool draw = (doIntersect[i >> 5] & (uint)(1 << (i & 0x1F))) != 0;	
+				if( draw )
 					Players[i].RenderName();
 			}
 			api.Texturing = false;
 			api.AlphaTest = false;
+			api.DepthTest = true;
 		}
 		
 		void ChatFontChanged( object sender, EventArgs e ) {
@@ -74,6 +113,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < Players.Length - 1; i++ ) { // -1 because we don't want to pick against local player
 				Player p = Players[i];
 				if( p == null ) continue;
+				
 				float t0, t1;
 				if( Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
 					if( t0 < closestDist && closestDist < localP.ReachDistance ) {
@@ -88,7 +128,7 @@ namespace ClassicalSharp {
 		/// <summary> Gets or sets the player entity for the specified id. </summary>
 		public Player this[int id] {
 			get { return Players[id]; }
-			set { 
+			set {
 				Players[id] = value;
 				if( value != null )
 					value.ID = (byte)id;
