@@ -67,7 +67,11 @@ namespace ClassicalSharp {
 		void HandleCpeExtInfo() {
 			string appName = reader.ReadAsciiString();
 			game.Chat.Add( "Server identified itself as: " + appName );
-			cpeServerExtensionsCount = reader.ReadInt16();
+			
+			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means 
+			// ExtEntry may sometimes arrive before ExtInfo, and thus we have to use += instead of =
+			cpeServerExtensionsCount += reader.ReadInt16();
+			SendCpeExtInfoReply();
 		}
 		
 		void HandleCpeExtEntry() {
@@ -92,7 +96,10 @@ namespace ClassicalSharp {
 				ServerSupportsFullCP437 = true;
 			}
 			cpeServerExtensionsCount--;
-			
+			SendCpeExtInfoReply();
+		}
+		
+		void SendCpeExtInfoReply() {
 			if( cpeServerExtensionsCount == 0 ) {
 				MakeExtInfo( Program.AppName, clientExtensions.Length );
 				SendPacket();

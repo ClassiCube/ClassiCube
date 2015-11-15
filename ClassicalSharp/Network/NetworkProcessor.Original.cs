@@ -173,8 +173,8 @@ namespace ClassicalSharp {
 			name = Utils.RemoveEndPlus( name );
 			AddEntity( entityId, name, name, true );
 			
-			// Some servers (such as LegendCraft) declare they support ExtPlayerList but
-			// don't send ExtAddPlayerName packets. So we add a special case here, even
+			// Workaround for LegendCraft as it declares it supports ExtPlayerList but
+			// doesn't send ExtAddPlayerName packets. So we add a special case here, even
 			// though it is technically against the specification.
 			if( UsingExtPlayerList ) {
 				AddCpeInfo( entityId, name, name, "Players", 0 );

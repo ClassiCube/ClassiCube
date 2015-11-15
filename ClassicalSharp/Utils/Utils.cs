@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns a string with a + removed if it is the last character in the string. </summary>
 		public static string RemoveEndPlus( string value ) {
-			// Some servers (e.g. MCDzienny) use a '+' at the end to distinguish classicube.net accounts
+			// Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts
 			// from minecraft.net accounts. Unfortunately they also send this ending + to the client.
 			if( String.IsNullOrEmpty( value ) ) return value;
 			
