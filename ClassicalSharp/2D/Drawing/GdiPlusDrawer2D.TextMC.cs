@@ -50,21 +50,29 @@ namespace ClassicalSharp {
 		
 		void DrawTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
 			bool italic = args.Font.Style == FontStyle.Italic;
+			bool underline = args.Font.Style == FontStyle.Underline;
 			if( args.UseShadow ) {
-				int offset = ShaowOffset( args.Font.Size );
+				int offset = ShadowOffset( args.Font.Size );
 				int shadowX = x + offset, shadowY = y + offset;
 				
 				for( int i = 0; i < parts.Count; i++ ) {
 					TextPart part = parts[i];
 					part.TextColour = FastColour.Black;
+					int orignX = shadowX;
 					DrawPart( fastBmp, args.Font, ref shadowX, shadowY, part );
+					if( underline )
+						DrawUnderline( fastBmp, part.TextColour, orignX, shadowX, 0, ref args );
 				}
 			}
 			
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
+				int orignX = x;
 				DrawPart( fastBmp, args.Font, ref x, y, part );
+				if( underline )
+					DrawUnderline( fastBmp, part.TextColour, orignX, x, -2, ref args );
 			}
+			
 		}
 		
 		void DrawPart( FastBitmap fastBmp, Font font, ref int x, int y, TextPart part ) {
@@ -90,7 +98,6 @@ namespace ClassicalSharp {
 					for( int xx = 0; xx < dstWidth; xx++ ) {
 						int fontX = srcX + xx * srcWidth / dstWidth;
 						int pixel = fontRow[fontX];
-						
 						if( (byte)(pixel >> 24) == 0 ) continue;
 						
 						int col = pixel & ~0xFFFFFF;
@@ -102,11 +109,19 @@ namespace ClassicalSharp {
 				}
 				x += PtToPx( point, srcWidth + 1 );
 			}
+		}
+		
+		void DrawUnderline( FastBitmap fastBmp, FastColour textCol, int startX, int endX,
+		                   int yOffset, ref DrawTextArgs args ) {
+			int height = PtToPx( args.Font.Size, boxSize );
+			int offset = ShadowOffset( args.Font.Size );
+			if( args.UseShadow )
+				height += offset;
 			
-			if( font.Style == FontStyle.Underline ) {
-				int* dstRow = fastBmp.GetRowPtr( y );
-				for( int xx = originX; xx < x; xx++ )
-					dstRow[xx] = FastColour.Green.ToArgb();
+			for( int yy = height - offset; yy < height; yy++ ) {
+				int* dstRow = fastBmp.GetRowPtr( yy + yOffset );
+				for( int xx = startX; xx < endX; xx++ )
+					dstRow[xx] = textCol.ToArgb();
 			}
 		}
 		
@@ -125,13 +140,13 @@ namespace ClassicalSharp {
 			if( args.Font.Style == FontStyle.Italic )
 				total.Width += Utils.CeilDiv( total.Height, italicSize );
 			if( args.UseShadow && parts.Count > 0 ) {
-				int offset = ShaowOffset( args.Font.Size );
+				int offset = ShadowOffset( args.Font.Size );
 				total.Width += offset; total.Height += offset;
 			}
 			return total;
 		}
 		
-		int ConvertToCP437( char c ) {
+		static int ConvertToCP437( char c ) {
 			if( c >= ' ' && c <= '~')
 				return (int)c;
 			
@@ -142,7 +157,7 @@ namespace ClassicalSharp {
 			return (int)'?';
 		}
 		
-		int ShaowOffset( float fontSize ) {
+		static int ShadowOffset( float fontSize ) {
 			if( fontSize < 9.9f ) return 1;
 			if( fontSize < 24.9f ) return 2;
 			return 3;

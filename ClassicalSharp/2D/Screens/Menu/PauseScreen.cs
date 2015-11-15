@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 				Make( 140, 50, "Select texture pack", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
 				// Other
-				Make( 0, 55, "Back to game", Anchor.BottomOrRight, 
+				Make( 0, 75, "Back to game", Anchor.BottomOrRight, 
 				     (g, w) => g.SetNewScreen( null ) ),
 				Make( 0, 5, "Quit game", Anchor.BottomOrRight, (g, w) => g.Exit() ),
 			};
