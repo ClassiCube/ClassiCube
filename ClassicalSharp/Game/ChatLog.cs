@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using ClassicalSharp.Commands;
 
 namespace ClassicalSharp {
@@ -102,7 +103,9 @@ namespace ClassicalSharp {
 				try {
 					stream = File.Open( path, FileMode.Append, FileAccess.Write, FileShare.Read );
 				} catch( IOException ex ) {
-					if( !ex.Message.Contains( "because it is being used by another process" ) )
+					int hresult = Marshal.GetHRForException(ex);
+					uint errorCode = (uint)hresult & 0xFFFF;
+					if( errorCode != 32 ) // ERROR_SHARING_VIOLATION
 						throw;
 					continue;
 				}
