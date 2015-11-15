@@ -237,12 +237,6 @@ namespace ClassicalSharp {
 			return (int)(1.4142135 * value);
 		}
 		
-		public static float GuiScale( int width, int height ) {
-			float scaleX = width / 640f;
-			float scaleY = height / 480f;
-			return Math.Min( scaleX, scaleY );
-		}
-		
 		/// <summary> Returns the number of vertices needed to subdivide a quad. </summary>
 		internal static int CountVertices( int axis1Len, int axis2Len, int axisSize ) {
 			return CeilDiv( axis1Len, axisSize ) * CeilDiv( axis2Len, axisSize ) * 4;

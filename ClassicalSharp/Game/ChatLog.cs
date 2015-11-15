@@ -22,8 +22,6 @@ namespace ClassicalSharp {
 		/// <summary> List of chat messages sent by the user to the server. </summary>
 		public List<string> InputLog = new List<string>();
 		
-		public int FontSize = 12;
-		
 		public void Send( string text, bool partial ) {
 			text = text.TrimEnd( trimChars );
 			if( String.IsNullOrEmpty( text ) ) return;

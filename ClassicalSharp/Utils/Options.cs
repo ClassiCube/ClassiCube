@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 	
 	public static class OptionsKey {
 		public const string ViewDist = "viewdist";
-		public const string FontSize = "chatfontsize";
+		public const string HudScale = "chatscale";
 		public const string Sensitivity = "mousesensitivity";
 		public const string Speed = "speedmultiplier";
 		public const string ChatLines = "chatlines";
@@ -51,6 +51,17 @@ namespace ClassicalSharp {
 			   || !Boolean.TryParse( value, out valueBool ) )
 				return defValue;
 			return valueBool;
+		}
+		
+		public static float GetFloat( string key, float min, float max, float defValue ) {
+			string value;
+			float valueFloat = 0;
+			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
+			   || !Single.TryParse( value, out valueFloat ) )
+				return defValue;
+
+			Utils.Clamp( ref valueFloat, min, max );
+			return valueFloat;
 		}
 		
 		public static Key GetKey( string key, Key defValue ) {

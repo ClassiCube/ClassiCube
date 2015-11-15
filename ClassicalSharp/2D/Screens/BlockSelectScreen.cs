@@ -66,8 +66,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			blockSize = (int)(50 * Utils.GuiScale( game.Width, game.Height ));
-			selBlockExpand = (float)(25 * Utils.GuiScale( game.Width, game.Height ));
+			blockSize = (int)(50 * Math.Sqrt(game.GuiScale()));
+			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale()));
 			
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
 			startY = game.Height / 2 - (rows * blockSize) / 2;
@@ -76,14 +76,14 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			blockSize = (int)(50 * Utils.GuiScale( game.Width, game.Height ));
-			selBlockExpand = (float)(25 * Utils.GuiScale( game.Width, game.Height ));
+			blockSize = (int)(50 * Math.Sqrt(game.GuiScale()));
+			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale()));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			RecreateBlockTexturess();
+			RecreateBlockTextures();
 		}
 
 		void BlockPermissionsChanged( object sender, EventArgs e ) {
-			RecreateBlockTexturess();
+			RecreateBlockTextures();
 			if( selectedIndex >= blocksTable.Length ) {
 				selectedIndex = blocksTable.Length - 1;
 			}
@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			blockInfoTexture = game.Drawer2D.MakeTextTexture( ref args, x, y );
 		}
 		
-		void RecreateBlockTexturess() {
+		void RecreateBlockTextures() {
 			int blocksCount = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
 				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )

@@ -71,6 +71,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
+		internal float HudScale = 1f;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -78,6 +79,11 @@ namespace ClassicalSharp {
 		public Bitmap FontBitmap;
 		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
 		internal AcceptedUrls AcceptedUrls = new AcceptedUrls();
+		
+		public float GuiScale() {
+			float scaleX = Width / 640f, scaleY = Height / 480f;
+			return Math.Min( scaleX, scaleY ) * HudScale;
+		}
 		
 		string defTexturePack = "default.zip";
 		public string DefaultTexturePack {
@@ -117,7 +123,7 @@ namespace ClassicalSharp {
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
-			Chat.FontSize = Options.GetInt( OptionsKey.FontSize, 6, 30, 12 );
+			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.5f, 2f, 1 );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
@@ -303,8 +309,10 @@ namespace ClassicalSharp {
 			}
 			
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
-			string path = Path.Combine( "screenshots", "screenshot_" + timestamp + ".png" );
+			string file = "screenshot_" + timestamp + ".png";
+			string path = Path.Combine( "screenshots", file );
 			Graphics.TakeScreenshot( path, ClientSize );
+			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;
 		}
 		

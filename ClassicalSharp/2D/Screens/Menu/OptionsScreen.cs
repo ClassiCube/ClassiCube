@@ -38,10 +38,10 @@ namespace ClassicalSharp {
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
-				Make( 140, -50, "Chat font size", Anchor.Centre, OnWidgetClick,
-				     g => g.Chat.FontSize.ToString(),
-				     (g, v) => { g.Chat.FontSize = Int32.Parse( v );
-				     	Options.Set( OptionsKey.FontSize, v );
+				Make( 140, -50, "Hud scale", Anchor.Centre, OnWidgetClick,
+				     g => g.HudScale.ToString(),
+				     (g, v) => { g.HudScale = Single.Parse( v );
+				     	Options.Set( OptionsKey.HudScale, v );
 				     	g.RefreshHud();
 				     } ),
 
@@ -95,7 +95,7 @@ namespace ClassicalSharp {
 				new IntegerValidator( 16, 4096 ),
 				
 				new IntegerValidator( 1, 100 ),
-				new IntegerValidator( 6, 30 ),
+				new RealValidator( 0.5f, 2f ),
 				new IntegerValidator( 1, 30 ),
 				new BooleanValidator(),
 				
