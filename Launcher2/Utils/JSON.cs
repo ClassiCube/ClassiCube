@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="SimpleJson.cs" company="The Outercurve Foundation">
-//    Copyright ( c ) 2011, The Outercurve Foundation.
+//    Copyright (c) 2011, The Outercurve Foundation.
 //
-//    Licensed under the MIT License ( the "License" );
+//    Licensed under the MIT License (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
 //      http://www.opensource.org/licenses/mit-license.php
@@ -13,7 +13,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 // </copyright>
-// <author>Nathan Totten ( ntotten.com ), Jim Zimmerman ( jimzimmerman.com ) and Prabir Shrestha ( prabir.me )</author>
+// <author>Nathan Totten (ntotten.com), Jim Zimmerman (jimzimmerman.com) and Prabir Shrestha (prabir.me)</author>
 // <website>https://github.com/facebook-csharp-sdk/simple-json</website>
 //-----------------------------------------------------------------------
 // original json parsing code from http://techblog.procurios.nl/k/618/news/view/14605/14863/How-do-I-write-my-own-parser-for-JSON.html

@@ -72,6 +72,7 @@ namespace ClassicalSharp {
 			FastColour textCol = part.TextColour;
 			float point = font.Size;
 			int xMul = font.Style == FontStyle.Italic ? 1 : 0;
+			int originX = x;
 			
 			foreach( char c in text ) {
 				int coords = ConvertToCP437( c );
@@ -100,6 +101,12 @@ namespace ClassicalSharp {
 					}
 				}
 				x += PtToPx( point, srcWidth + 1 );
+			}
+			
+			if( font.Style == FontStyle.Underline ) {
+				int* dstRow = fastBmp.GetRowPtr( y );
+				for( int xx = originX; xx < x; xx++ )
+					dstRow[xx] = FastColour.Green.ToArgb();
 			}
 		}
 		

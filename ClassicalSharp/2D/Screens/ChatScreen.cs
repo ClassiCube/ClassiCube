@@ -291,18 +291,20 @@ namespace ClassicalSharp {
 				int y = normalChat.Y + normalChat.Height - height;
 				if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) ) {
 					string text = normalChat.GetSelected( mouseX, mouseY );
-					if( text != null ) {
-						if( Utils.IsUrlPrefix( text ) ) {
-							game.ShowWarning( new WarningScreen(
-								game, text, OpenUrl, AppendUrl,
-								"Are you sure you want to go to this url?",
-								text,
-								"Be careful - urls from strangers may link to websites that",
-								" may have viruses, or things you may not want to open/see."
-							) );
-						}
-						return true;
+					if( text == null ) return false;
+					
+					if( Utils.IsUrlPrefix( text ) ) {
+						game.ShowWarning( new WarningScreen(
+							game, text, OpenUrl, AppendUrl,
+							"Are you sure you want to go to this url?",
+							text,
+							"Be careful - urls from strangers may link to websites that",
+							" may have viruses, or things you may not want to open/see."
+						) );
+					} else {
+						textInput.AppendText( text );
 					}
+					return true;
 				}
 				return false;
 			}

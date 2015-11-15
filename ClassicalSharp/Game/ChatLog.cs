@@ -7,8 +7,8 @@ namespace ClassicalSharp {
 
 	public sealed class ChatLog : IDisposable {
 		
-		public ChatLine Status1, Status2, Status3, BottomRight1 = "F",
-		BottomRight2 = "G", BottomRight3 = "H", Announcement;
+		public ChatLine Status1, Status2, Status3, BottomRight1,
+		BottomRight2, BottomRight3, Announcement;
 		
 		Game game;
 		public ChatLog( Game game ) {
