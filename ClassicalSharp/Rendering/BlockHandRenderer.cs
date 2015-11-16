@@ -54,9 +54,9 @@ namespace ClassicalSharp.Renderers {
 			if( !leftAnimation ) {
 				fakePlayer.Position.Y = -(float)Math.Sin( animTime * animSpeed );
 			} else {
-				fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
-				fakePlayer.Position.Y = 0.5f * (float)Math.Sin( animTime * animSpeed * 2 );
-				fakePlayer.Position.Z = -0.9f * (float)Math.Sin( animTime * animSpeed );
+				//fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
+				fakePlayer.Position.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
+				fakePlayer.Position.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
 				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
 				SetupMatrices();
 			}
