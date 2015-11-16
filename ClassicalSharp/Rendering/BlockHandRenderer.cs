@@ -4,12 +4,13 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class BlockHandRenderer : IDisposable {
+	public class BlockHandRenderer {
 		
 		Game game;
 		BlockModel block;
 		FakePlayer fakePlayer;
 		bool playAnimation, leftAnimation;
+		float angleX = 0;
 		
 		public BlockHandRenderer( Game window ) {
 			this.game = window;
@@ -53,7 +54,11 @@ namespace ClassicalSharp.Renderers {
 			if( !leftAnimation ) {
 				fakePlayer.Position.Y = -(float)Math.Sin( animTime * animSpeed );
 			} else {
-				
+				fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
+				fakePlayer.Position.Y = 0.5f * (float)Math.Sin( animTime * animSpeed * 2 );
+				fakePlayer.Position.Z = -0.9f * (float)Math.Sin( animTime * animSpeed );
+				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
+				SetupMatrices();
 			}
 			
 			animTime += delta;
@@ -61,6 +66,8 @@ namespace ClassicalSharp.Renderers {
 				animTime = 0;
 				playAnimation = false;
 				fakePlayer.Position = Vector3.Zero;
+				angleX = 0;
+				SetupMatrices();
 			}
 		}
 		
@@ -69,12 +76,10 @@ namespace ClassicalSharp.Renderers {
 			Matrix4 m = Matrix4.Identity;
 			m = m * Matrix4.Scale( 0.6f );
 			m = m * Matrix4.RotateY( 45 * Utils.Deg2Rad );
+			m = m * Matrix4.RotateX( angleX * Utils.Deg2Rad );
 			
 			normalMat = m * Matrix4.Translate( 0.85f, -1.35f, -1.5f );
 			spriteMat = m * Matrix4.Translate( 0.85f, -1.05f, -1.5f );
-		}
-		
-		public void Dispose() {
 		}
 		
 		/// <summary> Sets the current animation state of the held block.<br/>
@@ -83,6 +88,8 @@ namespace ClassicalSharp.Renderers {
 			playAnimation = true;
 			animTime = 0;
 			leftAnimation = left;
+			angleX = 0;
+			SetupMatrices();
 		}
 	}
 	
