@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
-			if( parts.Count == 0 ) 
+			if( parts.Count == 0 )
 				return Size.Empty;
 			
 			SizeF total = SizeF.Empty;

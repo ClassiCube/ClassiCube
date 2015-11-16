@@ -21,6 +21,9 @@ namespace ClassicalSharp {
 			defaultWidth = defSize.Width; defaultHeight = defSize.Height;
 			Width = defaultWidth; Height = defaultHeight;
 			
+			args = new DrawTextArgs( "_", boldFont, true );
+			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+			
 			this.font = font;
 			this.boldFont = boldFont;
 			altText = new AltTextInputWidget( game, font, boldFont, this );
@@ -65,12 +68,10 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			X = 5;
-			DrawTextArgs args = new DrawTextArgs( "_", boldFont, true );
-			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-			chatInputText.WordWrap( ref parts, ref partLens, 64 );
 			
+			chatInputText.WordWrap( ref parts, ref partLens, 64 );			
 			maxWidth = 0;
-			args = new DrawTextArgs( null, font, true );
+			DrawTextArgs args = new DrawTextArgs( null, font, true );
 			for( int i = 0; i < lines; i++ ) {
 				args.Text = parts[i];
 				sizes[i] = game.Drawer2D.MeasureChatSize( ref args );
@@ -150,9 +151,13 @@ namespace ClassicalSharp {
 			Width = size.Width;
 		}
 
-		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref caretTex );
+		public override void Dispose() {		
 			graphicsApi.DeleteTexture( ref inputTex );
+		}
+		
+		public void DisposeFully() {
+			Dispose();
+			graphicsApi.DeleteTexture( ref caretTex );
 		}
 
 		public override void MoveTo( int newX, int newY ) {

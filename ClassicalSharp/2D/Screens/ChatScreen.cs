@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			announcementFont.Dispose();
 			
 			normalChat.Dispose();
-			textInput.Dispose();
+			textInput.DisposeFully();
 			status.Dispose();
 			bottomRight.Dispose();
 			graphicsApi.DeleteTexture( ref announcementTex );

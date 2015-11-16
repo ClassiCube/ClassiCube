@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 		public abstract void DisposeInstance();
 		
 		/// <summary> Creates a 2D texture with origin at the specified window coordinates. </summary>
-		public Texture Make2DTexture( Bitmap bmp, Size used, int windowX, int windowY ) {
+		public Texture Make2DTexture( Bitmap bmp, Size used, int windowX, int windowY ) {			
 			int texId = graphics.CreateTexture( bmp );
 			return new Texture( texId, windowX, windowY, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
@@ -184,11 +184,9 @@ namespace ClassicalSharp {
 				i += partLength + 1;
 				
 				if( nextAnd >= 0 && nextAnd + 1 < value.Length ) {
-					try {
-						code = Utils.ParseHex( value[nextAnd + 1] );
-					} catch( FormatException ) {
+					if( !Utils.TryParseHex( value[nextAnd + 1], out code ) ) {
 						code = 0xF;
-						i--; // include the character that isn't a colour code.
+						i--;// include the character that isn't a colour code.
 					}
 				}
 			}
