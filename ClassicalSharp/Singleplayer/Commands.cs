@@ -36,7 +36,7 @@ namespace ClassicalSharp.Singleplayer {
 				}
 				SinglePlayerServer server = (SinglePlayerServer)game.Network;
 				server.NewMap();
-				game.chatInInputBuffer = "";
+				game.chatInInputBuffer = null;
 				server.MakeMap( width, height, length );
 			}
 		}

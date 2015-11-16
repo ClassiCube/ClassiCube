@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		
 		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
-			int height = textInput.RealHeight;	
+			int height = textInput.RealHeight;
 			if( force || height != inputOldHeight ) {
 				normalChat.YOffset = height + blockSize + 15;
 				int y = game.Height - normalChat.Height - normalChat.YOffset;
@@ -121,7 +121,7 @@ namespace ClassicalSharp {
 			bottomRight.SetText( 0,chat.BottomRight3.Text );
 			UpdateAnnouncement( chat.Announcement.Text );
 			
-			if( !String.IsNullOrEmpty( game.chatInInputBuffer ) ) {
+			if( game.chatInInputBuffer != null ) {
 				OpenTextInputBar( game.chatInInputBuffer );
 				game.chatInInputBuffer = null;
 			}
@@ -149,11 +149,13 @@ namespace ClassicalSharp {
 			}
 		}
 
-		public override void Dispose() {
-			if( !textInput.chatInputText.Empty ) {
+		public override void Dispose() {			
+			if( HandlesAllInput ) {
+				game.chatInInputBuffer = textInput.chatInputText.ToString();
 				if( game.CursorVisible )
 					game.CursorVisible = false;
-				game.chatInInputBuffer = textInput.chatInputText.ToString();
+			} else {
+				game.chatInInputBuffer = null;
 			}
 			chatFont.Dispose();
 			chatInputFont.Dispose();

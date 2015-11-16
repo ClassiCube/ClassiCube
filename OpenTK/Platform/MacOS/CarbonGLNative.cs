@@ -373,7 +373,6 @@ namespace OpenTK.Platform.MacOS
 			IntPtr thisEventWindow;
 			API.GetEventWindowRef(inEvent, out thisEventWindow);
 			CheckEnterLeaveEvents(thisEventWindow, mousePosInClient);
-			Console.WriteLine("EVENT: " + (MouseEventKind)evt.EventKind);
 			
 			switch ((MouseEventKind)evt.EventKind)
 			{

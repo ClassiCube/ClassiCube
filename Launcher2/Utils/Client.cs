@@ -19,14 +19,14 @@ namespace Launcher2 {
 		public static bool Start( string args ) {
 			Process process = null;
 			Options.Load();
-			
-			if( !File.Exists( "ClassicalSharp.exe" ) )
+			string path = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "ClassicalSharp.exe" );
+			if( !File.Exists( path ) )
 				return false;
 			
 			if( Type.GetType( "Mono.Runtime" ) != null ) {
-				process = Process.Start( "mono", "\"ClassicalSharp.exe\" " + args );
+				process = Process.Start( "mono", "\"" + path + "\" " + args );
 			} else {
-				process = Process.Start( "ClassicalSharp.exe", args );
+				process = Process.Start( path, args );
 			}
 			return true;
 		}

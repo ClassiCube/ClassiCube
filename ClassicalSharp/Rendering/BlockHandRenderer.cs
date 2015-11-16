@@ -4,12 +4,12 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class BlockHandRenderer {
+	public class BlockHandRenderer : IDisposable {
 		
 		Game game;
 		BlockModel block;
 		FakePlayer fakePlayer;
-		bool playAnimation, leftAnimation;
+		bool playAnimation, leftAnimation, swingAnimation;
 		float angleX = 0;
 		
 		public BlockHandRenderer( Game window ) {
@@ -20,9 +20,12 @@ namespace ClassicalSharp.Renderers {
 			block = new BlockModel( game );
 			fakePlayer = new FakePlayer( game );
 			SetupMatrices();
+			lastType = (byte)game.Inventory.HeldBlock;
+			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
 		
 		double animTime;
+		byte type, lastType;
 		public void Render( double delta ) {
 			if( game.Camera.IsThirdPerson )
 				return;
@@ -30,11 +33,10 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DepthTest = false;
 			game.Graphics.AlphaTest = true;
 			
-			fakePlayer.Position = Vector3.Zero;
+			type = (byte)game.Inventory.HeldBlock;
 			if( playAnimation )
 				DoAnimation( delta );
 			
-			byte type = (byte)game.Inventory.HeldBlock;
 			if( game.BlockInfo.IsSprite[type] )
 				game.Graphics.LoadMatrix( ref spriteMat );
 			else
@@ -48,11 +50,18 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.AlphaTest = false;
 		}
 		
-		const double animPeriod = 0.25;
-		const double animSpeed = Math.PI / 0.25;
+		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
 		void DoAnimation( double delta ) {
-			if( !leftAnimation ) {
-				fakePlayer.Position.Y = -(float)Math.Sin( animTime * animSpeed );
+			if( swingAnimation || !leftAnimation ) {
+				float oldY = fakePlayer.Position.Y;
+				fakePlayer.Position.Y = -1.2f * (float)Math.Sin( animTime * animSpeed );
+				if( swingAnimation ) {
+					// i.e. the block has gone to bottom of screen and is now returning back up
+					// at this point we switch over to the new held block.
+					if( fakePlayer.Position.Y > oldY )
+						lastType = type;
+					type = lastType;
+				}
 			} else {
 				//fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
 				fakePlayer.Position.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
@@ -62,13 +71,8 @@ namespace ClassicalSharp.Renderers {
 			}
 			
 			animTime += delta;
-			if( animTime > animPeriod ) {
-				animTime = 0;
-				playAnimation = false;
-				fakePlayer.Position = Vector3.Zero;
-				angleX = 0;
-				SetupMatrices();
-			}
+			if( animTime > animPeriod )
+				ResetAnimationState( true, 0.25 );
 		}
 		
 		Matrix4 normalMat, spriteMat;
@@ -82,14 +86,41 @@ namespace ClassicalSharp.Renderers {
 			spriteMat = m * Matrix4.Translate( 0.85f, -1.05f, -1.5f );
 		}
 		
+		void ResetAnimationState( bool updateLastType, double period ) {
+			animTime = 0;
+			playAnimation = false;
+			fakePlayer.Position = Vector3.Zero;
+			angleX = 0;
+			animPeriod = period;
+			animSpeed = Math.PI / period;
+			 
+			SetupMatrices();
+			if( updateLastType )
+				lastType = (byte)game.Inventory.HeldBlock;
+			fakePlayer.Position = Vector3.Zero;
+		}
+		
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
-		public void SetAnimation( bool left ) {
-			playAnimation = true;
-			animTime = 0;
+		public void SetAnimationClick( bool left ) {
+			ResetAnimationState( true, 0.25 );
+			swingAnimation = false;
 			leftAnimation = left;
-			angleX = 0;
-			SetupMatrices();
+			playAnimation = true;
+		}
+		
+		public void SetAnimationSwitchBlock() {
+			ResetAnimationState( false, 0.3 );
+			swingAnimation = true;
+			playAnimation = true;
+		}
+		
+		void HeldBlockChanged( object sender, EventArgs e ) {
+			SetAnimationSwitchBlock();
+		}
+		
+		public void Dispose() {
+			game.Events.HeldBlockChanged -= HeldBlockChanged;
 		}
 	}
 	

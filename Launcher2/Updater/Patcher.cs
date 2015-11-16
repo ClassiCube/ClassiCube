@@ -26,7 +26,7 @@ namespace Launcher2.Updater {
 				info = new ProcessStartInfo( "cmd.exe", "/c update.bat" );
 			} else {
 				File.WriteAllText( "update.sh", Scripts.BashFile.Replace( "\r\n", "\n" ) );
-				string path = Path.Combine( Environment.CurrentDirectory, "update.sh" );
+				string path = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "update.sh" );
 				const int flags = 0x7;// read | write | executable
 				int code = chmod( path, (flags << 6) | (flags << 3) | 4 ); 
 				if( code != 0 )
