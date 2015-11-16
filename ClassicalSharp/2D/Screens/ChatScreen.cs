@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		
 		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
-			int height = textInput.RealHeight;
+			int height = textInput.RealHeight;	
 			if( force || height != inputOldHeight ) {
 				normalChat.YOffset = height + blockSize + 15;
 				int y = game.Height - normalChat.Height - normalChat.YOffset;

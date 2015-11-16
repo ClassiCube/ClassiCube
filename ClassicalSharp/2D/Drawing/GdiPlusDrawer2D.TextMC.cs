@@ -127,6 +127,8 @@ namespace ClassicalSharp {
 		
 		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
+			if( parts.Count == 0 ) 
+				return Size.Empty;
 			float point = args.Font.Size;
 			Size total = new Size( 0, PtToPx( point, boxSize ) );
 			
@@ -139,7 +141,7 @@ namespace ClassicalSharp {
 			
 			if( args.Font.Style == FontStyle.Italic )
 				total.Width += Utils.CeilDiv( total.Height, italicSize );
-			if( args.UseShadow && parts.Count > 0 ) {
+			if( args.UseShadow ) {
 				int offset = ShadowOffset( args.Font.Size );
 				total.Width += offset; total.Height += offset;
 			}

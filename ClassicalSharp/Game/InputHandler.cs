@@ -92,6 +92,7 @@ namespace ClassicalSharp {
 					game.ParticleManager.BreakBlockEffect( pos, block );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
+					game.BlockHandRenderer.SetAnimation( true );
 				}
 			} else if( right ) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
@@ -102,6 +103,7 @@ namespace ClassicalSharp {
 				   && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
+					game.BlockHandRenderer.SetAnimation( false );
 				}
 			}
 		}

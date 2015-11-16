@@ -65,6 +65,9 @@ namespace ClassicalSharp {
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
+			if( parts.Count == 0 ) 
+				return Size.Empty;
+			
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
 				SizeF size = measuringGraphics.MeasureString( parts[i].Text, args.Font, Int32.MaxValue, format );
@@ -72,7 +75,7 @@ namespace ClassicalSharp {
 				total.Width += size.Width;
 			}
 			
-			if( args.UseShadow && parts.Count > 0 ) {
+			if( args.UseShadow ) {
 				total.Width += Offset; total.Height += Offset;
 			}
 			return Size.Ceiling( total );
