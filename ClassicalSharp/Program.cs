@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	
 	internal static class Program {
 		
-		public const string AppName = "ClassicalSharp 0.97";
+		public const string AppName = "ClassicalSharp 0.98";
 		
 		[STAThread]
 		static void Main( string[] args ) {
