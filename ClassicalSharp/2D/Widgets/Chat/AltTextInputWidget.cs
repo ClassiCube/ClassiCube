@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 			widgetX /= elementSize.Width; widgetY /= elementSize.Height;
 			Element e = elements[selectedIndex];
 			int index = widgetY * e.ItemsPerRow + widgetX;
-			if( index < e.Contents.Length ) {
+			if( index * e.CharsPerItem < e.Contents.Length ) {
 				if( selectedIndex == 0 ) {
 					// TODO: need to insert characters that don't affect caret index, adjust caret colour
 					parent.AppendChar( e.Contents[index * e.CharsPerItem] );

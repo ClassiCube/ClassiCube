@@ -40,7 +40,10 @@ namespace ClassicalSharp {
 				lines[i] = lines[i + 1];
 				Textures[i].Y1 = y;
 				y += Textures[i].Height;
+				urlBounds[i] = urlBounds[i + 1];
 			}
+			
+			urlBounds[Textures.Length - 1] = null;
 			Textures[Textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
 			SetText( Textures.Length - 1, text );
 		}

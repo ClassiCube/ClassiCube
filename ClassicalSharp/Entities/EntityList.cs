@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		public const int MaxCount = 256;
 		public Player[] Players = new Player[MaxCount];
 		public Game game;
-		uint[] doIntersect;
+		byte closestId;
 		
 		/// <summary> Whether the names of entities that the player is looking at
 		/// should be rendered through everything else without depth testing. </summary>
@@ -18,7 +18,6 @@ namespace ClassicalSharp {
 		public EntityList( Game game ) {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
-			doIntersect = new uint[MaxCount / 32];
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
@@ -50,20 +49,13 @@ namespace ClassicalSharp {
 			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
 			Vector3 dir = Utils.GetDirVector( localP.YawRadians, localP.PitchRadians );
-			for( int i = 0; i < doIntersect.Length; i++ )
-				doIntersect[i] = 0;
+			if( ShowHoveredNames )
+				closestId = GetClosetPlayer( game.LocalPlayer );
 			
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] == null ) continue;
-				float t0, t1;
-				Player p = Players[i];
-				
-				if( !ShowHoveredNames || 
-				   !Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
+				if( !ShowHoveredNames || i != closestId )
 					Players[i].RenderName();
-				} else {
-					doIntersect[i >> 5] |= (uint)(1 << (i & 0x1F));
-				}
 			}
 			api.Texturing = false;
 			api.AlphaTest = false;
@@ -76,10 +68,7 @@ namespace ClassicalSharp {
 			api.DepthTest = false;
 			
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] == null ) continue;
-				
-				bool draw = (doIntersect[i >> 5] & (uint)(1 << (i & 0x1F))) != 0;	
-				if( draw )
+				if( Players[i] != null && i == closestId )
 					Players[i].RenderName();
 			}
 			api.Texturing = false;
@@ -97,9 +86,8 @@ namespace ClassicalSharp {
 		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null ) {
+				if( Players[i] != null )
 					Players[i].Despawn();
-				}
 			}
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
@@ -115,11 +103,9 @@ namespace ClassicalSharp {
 				if( p == null ) continue;
 				
 				float t0, t1;
-				if( Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) ) {
-					if( t0 < closestDist && closestDist < localP.ReachDistance ) {
-						closestDist = t0;
-						targetId = (byte)i;
-					}
+				if( Intersection.RayIntersectsRotatedBox( eyePos, dir, p, out t0, out t1 ) && t0 < closestDist ) {
+					closestDist = t0;
+					targetId = (byte)i;
 				}
 			}
 			return targetId;

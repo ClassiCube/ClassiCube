@@ -260,7 +260,8 @@ namespace ClassicalSharp {
 				bool middle = IsMousePressed( MouseButton.Middle );
 				bool right = IsMousePressed( MouseButton.Right );
 				InputHandler.PickBlocks( true, left, middle, right );
-				BlockHandRenderer.Render( e.Time );
+				if( !HideGui )
+					BlockHandRenderer.Render( e.Time );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}

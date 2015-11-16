@@ -105,15 +105,25 @@ namespace ClassicalSharp {
 		/// <summary> Returns the hex code represented by the given character.
 		/// Throws FormatException if the input character isn't a hex code. </summary>
 		public static int ParseHex( char value ) {
-			if( value >= '0' && value <= '9' ) {
-				return (int)( value - '0' );
-			} else if( value >= 'a' && value <= 'f' ) {
-				return (int)( value - 'a' ) + 10;
-			} else if( value >= 'A' && value <= 'F' ) {
-				return (int)( value - 'A' ) + 10;
-			} else {
+			int hex;
+			if( !TryParseHex( value, out hex ) )
 				throw new FormatException( "Invalid hex code given: " + value );
+			return hex;
+		}
+		
+		/// <summary> Attempts to return the hex code represented by the given character. </summary>
+		public static bool TryParseHex( char value, out int hex ) {
+			hex = 0;
+			if( value >= '0' && value <= '9') {
+				hex = (int)(value - '0');
+			} else if( value >= 'a' && value <= 'f') {
+				hex = (int)(value - 'a') + 10;
+			} else if( value >= 'A' && value <= 'F') {
+				hex = (int)(value - 'A') + 10;
+			} else {
+				return false;
 			}
+			return true;
 		}
 
 		/// <summary> Attempts to caselessly parse the given string as a Key enum member,

@@ -71,8 +71,8 @@ namespace ClassicalSharp {
 		
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
-			ServerName = reader.ReadAsciiString();
-			ServerMotd = reader.ReadAsciiString();
+			ServerName = reader.ReadCp437String();
+			ServerMotd = reader.ReadCp437String();
 			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
 			receivedFirstPosition = false;
 			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );

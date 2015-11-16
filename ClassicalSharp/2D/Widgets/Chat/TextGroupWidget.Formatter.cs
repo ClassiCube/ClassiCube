@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 					args.Font = (i & 1) == 0 ? font : underlineFont;
 					Size size = partSizes[i];
 					
-					drawer.DrawChatText( ref args, x, 0 );			
+					drawer.DrawChatText( ref args, x, 0 );
 					urlBounds[index][i].X = x;
 					urlBounds[index][i].Width = size.Width;
 					x += size.Width;
@@ -74,19 +74,33 @@ namespace ClassicalSharp {
 					nextEnd = line.Length;
 				
 				parts[count].Y = lastEnd << 12 | (start - lastEnd);
-				items[count++] = line.Substring( lastEnd, start - lastEnd ); // word bit
+				items[count++] = GetPart( line, lastEnd, start ); // word bit
 				parts[count].Y = start << 12 | (nextEnd - start);
-				items[count++] = line.Substring( start, nextEnd - start ); // url bit
+				items[count++] = GetPart( line, start, nextEnd ); // url bit
 				start = nextEnd;
 				lastEnd = nextEnd;
 			}
 			
 			if( lastEnd < line.Length ) {
 				parts[count].Y = lastEnd << 12 | (line.Length - lastEnd);
-				items[count++] = line.Substring( lastEnd, line.Length - lastEnd );
+				items[count++] = GetPart( line, lastEnd, line.Length );
 			}
 			urlBounds[index] = parts;
 			return items;
+		}
+		
+		string GetPart( string line, int start, int end ) {
+			string part = line.Substring( start, end - start );
+			int colIndex = line.LastIndexOf( '&', start, start );
+			// We may split up a line into say %e<word><url>
+			// url and word both need to have %e at the start.
+			
+			if( colIndex >= 0 && colIndex < line.Length - 1 ) {
+				int hex;
+				if( Utils.TryParseHex( line[colIndex + 1], out hex ) )
+					part = "&" + line[colIndex + 1] + part;
+			}
+			return part;
 		}
 		
 		int NextToken( string line, int start ) {

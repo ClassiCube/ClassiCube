@@ -13,7 +13,6 @@ namespace Launcher2 {
 		playUri = "https://www.classicube.net/api/server/";
 		const string wrongCredentialsMessage = "Login failed";
 		const string loggedInAs = @"<a href=""/acc"" class=""button"">";
-		StringComparison ordinal = StringComparison.Ordinal;
 		
 		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		

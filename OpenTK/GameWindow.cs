@@ -34,7 +34,6 @@ using System.Threading;
 using OpenTK.Graphics;
 using OpenTK.Input;
 using OpenTK.Platform;
-using OpenTK.Graphics;
 
 namespace OpenTK
 {
