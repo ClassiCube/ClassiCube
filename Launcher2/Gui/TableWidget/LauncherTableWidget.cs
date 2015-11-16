@@ -28,6 +28,7 @@ namespace Launcher2 {
 				tableEntry.Hash = e.Hash;
 				tableEntry.Name = e.Name;
 				tableEntry.Players = e.Players + "/" + e.MaximumPlayers;
+				tableEntry.Uptime = MakeUptime( e.Uptime );
 				
 				entries[index] = tableEntry;
 				usedEntries[index] = tableEntry;
@@ -36,7 +37,7 @@ namespace Launcher2 {
 			Count = entries.Length;
 		}
 		
-		/// <summary> Filters the table such that only rows with server names 
+		/// <summary> Filters the table such that only rows with server names
 		/// that contain the input (case insensitive) are shown. </summary>
 		public void FilterEntries( string filter ) {
 			Count = 0;
@@ -52,11 +53,11 @@ namespace Launcher2 {
 		}
 		
 		public int CurrentIndex, Count;
-		public int[] ColumnWidths = { 350, 100 };
-		public int[] DesiredColumnWidths = { 350, 100 };
+		public int[] ColumnWidths = { 280, 80, 80 };
+		public int[] DesiredColumnWidths = { 280, 80, 80 };
 		
 		struct TableEntry {
-			public string Hash, Name, Players;
+			public string Hash, Name, Players, Uptime;
 			public int Y, Height;
 		}
 		
@@ -74,8 +75,12 @@ namespace Launcher2 {
 			int x = X + 5;
 			
 			DrawGrid( drawer, font, titleFont );
-			x += DrawColumn( drawer, true, font, titleFont, boldFont, "Name", ColumnWidths[0], x, e => e.Name ) + 5;
-			x += DrawColumn( drawer, false, font, titleFont, boldFont, "Players", ColumnWidths[1], x, e => e.Players ) + 5;
+			x += DrawColumn( drawer, true, font, titleFont, boldFont, 
+			                "Name", ColumnWidths[0], x, e => e.Name ) + 5;
+			x += DrawColumn( drawer, true, font, titleFont, boldFont, 
+			                "Players", ColumnWidths[1], x, e => e.Players ) + 5;
+			x += DrawColumn( drawer, false, font, titleFont, boldFont,
+			                "Uptime", ColumnWidths[2], x, e => e.Uptime ) + 5;
 			
 			Width = Window.Width;
 			DrawScrollbar( drawer );
@@ -92,7 +97,7 @@ namespace Launcher2 {
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( usedEntries[i].Hash == SelectedHash ) {
-					args.Font = boldFont;	
+					args.Font = boldFont;
 				}
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i;
@@ -136,7 +141,7 @@ namespace Launcher2 {
 			size = drawer.MeasureSize( ref args );
 			
 			numEntries = 0;
-			for( ; ; ) {				
+			for( ; ; ) {
 				if( y + size.Height > Window.Height ) break;
 				numEntries++;
 				drawer.DrawRect( foreCol, 0, y, Window.Width, 1 );
@@ -161,26 +166,68 @@ namespace Launcher2 {
 				CurrentIndex = 0;
 		}
 		
-		class NameComparer : IComparer<TableEntry> {
+		string MakeUptime( string rawSeconds ) {
+			TimeSpan t = TimeSpan.FromSeconds( Double.Parse( rawSeconds ) );
+			if( t.TotalHours >= 24 * 7 )
+				return (int)t.TotalDays + "d";
+			if( t.TotalHours >= 1 )
+				return (int)t.TotalHours + "h";
+			if( t.TotalMinutes >= 1 )
+				return (int)t.TotalMinutes + "m";
+			return (int)t.TotalSeconds + "s";
+		}
+		
+		abstract class TableEntryComparer : IComparer<TableEntry> {
 			
 			public bool Invert = false;
 			
-			public int Compare( TableEntry a, TableEntry b ) {
+			public abstract int Compare( TableEntry a, TableEntry b );
+		}
+		
+		sealed class NameComparer : TableEntryComparer {
+			
+			public override int Compare( TableEntry a, TableEntry b ) {
 				StringComparison comparison = StringComparison.CurrentCultureIgnoreCase;
 				int value = String.Compare( a.Name, b.Name, comparison );
 				return Invert ? -value : value;
 			}
 		}
 		
-		class PlayersComparer : IComparer<TableEntry> {
+		sealed class PlayersComparer : TableEntryComparer {
 			
-			public bool Invert = false;
-			
-			public int Compare( TableEntry a, TableEntry b ) {
+			public override int Compare( TableEntry a, TableEntry b ) {
 				long valX = Int64.Parse( a.Players.Substring( 0, a.Players.IndexOf( '/' ) ) );
 				long valY = Int64.Parse( b.Players.Substring( 0, b.Players.IndexOf( '/' ) ) );
 				int value = valX.CompareTo( valY );
 				return Invert ? -value : value;
+			}
+		}
+		
+		sealed  class UptimeComparer : TableEntryComparer {
+			
+			public override int Compare( TableEntry a, TableEntry b ) {
+				TimeSpan valX = ParseUptimeString( a.Uptime );
+				TimeSpan valY = ParseUptimeString( b.Uptime );
+				int value = valX.CompareTo( valY );
+				return Invert ? -value : value;
+			}
+			
+			static TimeSpan ParseUptimeString( string s ) {
+				int sum = 0;
+				for( int i = 0; i < s.Length - 1; i++ ) {
+					sum *= 10;
+					sum += s[i] - '0';
+				}
+				
+				char timeType = s[s.Length - 1];
+				switch( timeType ) {
+						case 'w' : return TimeSpan.FromDays( sum * 7 );
+						case 'd' : return TimeSpan.FromDays( sum );
+						case 'h' : return TimeSpan.FromHours( sum );
+						case 'm' : return TimeSpan.FromMinutes( sum );
+						case 's' : return TimeSpan.FromSeconds( sum );
+						default: throw new NotSupportedException( "unsupported uptime type: " + timeType );
+				}
 			}
 		}
 	}

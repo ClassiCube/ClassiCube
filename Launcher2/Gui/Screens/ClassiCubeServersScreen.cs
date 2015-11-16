@@ -18,6 +18,9 @@ namespace Launcher2 {
 		}
 		
 		public override void Tick() {
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			if( table.DraggingWidth && !game.Window.Mouse[MouseButton.Left] )
+			   table.DraggingWidth = false;
 		}
 		
 		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
