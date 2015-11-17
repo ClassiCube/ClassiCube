@@ -6,18 +6,20 @@ namespace ClassicalSharp {
 	
 	public sealed class WarningScreen : MenuScreen {
 		
-		public WarningScreen( Game game, object metadata, Action<object> yesClick, 
-		                     Action<object> noClick, string title, params string[] body ) : base( game ) {
+		public WarningScreen( Game game, object metadata, string title,
+		                     Action<WarningScreen> yesClick, Action<WarningScreen> noClick,
+		                     Action<WarningScreen> renderFrame, params string[] body ) : base( game ) {
 			this.Metadata = metadata;
 			this.yesClick = yesClick;
 			this.noClick = noClick;
+			this.renderFrame = renderFrame;
 			this.title = title;
 			this.body = body;
 		}
 		internal Screen lastScreen;
 		internal bool lastCursorVisible;
-		readonly string title;
-		readonly string[] body;
+		string title;
+		string[] body;
 		
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
@@ -29,28 +31,39 @@ namespace ClassicalSharp {
 				ButtonWidget.Create( game, 60, 30, 60, 20, "No", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnNoClick ),
 			};
+			SetText( title, body );
+		}
+
+		public void SetText( string title, params string[] body) {
+			if( labels != null ) {
+				for( int i = 0; i < labels.Length; i++ )
+					labels[i].Dispose();
+			}
+			this.title = title;
+			this.body = body;
+			
 			
 			labels = new TextWidget[body.Length + 1];
 			labels[0] = TextWidget.Create( game, 0, -120, title,
-				                  Anchor.Centre, Anchor.Centre, titleFont );
+			                              Anchor.Centre, Anchor.Centre, titleFont );
 			for( int i = 0; i < body.Length; i++ ) {
 				labels[i + 1] = TextWidget.Create( game, 0, -70 + 20 * i, body[i],
-				                  Anchor.Centre, Anchor.Centre, regularFont );
+				                                  Anchor.Centre, Anchor.Centre, regularFont );
 			}
-		}		
+		}
 		TextWidget[] labels;
-		Action<object> yesClick, noClick;
+		Action<WarningScreen> yesClick, noClick, renderFrame;
 		
 		void OnYesClick( Game g, Widget w ) {
 			if( yesClick != null )
-				yesClick( Metadata );
+				yesClick( this );
 			Dispose();
 			CloseScreen();
 		}
 		
 		void OnNoClick( Game g, Widget w ) {
 			if( noClick != null )
-				noClick( Metadata );
+				noClick( this );
 			Dispose();
 			CloseScreen();
 		}
@@ -73,6 +86,9 @@ namespace ClassicalSharp {
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Render( delta );
 			graphicsApi.Texturing = false;
+			
+			if( renderFrame != null )
+				renderFrame( this );
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

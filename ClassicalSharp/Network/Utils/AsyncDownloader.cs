@@ -36,35 +36,40 @@ namespace ClassicalSharp.Network {
 			string strippedSkinName = Utils.StripColours( skinName );
 			string url = Utils.IsUrlPrefix( skinName ) ? skinName :
 				skinServer + strippedSkinName + ".png";
-			AddRequest( url, true, "skin_" + strippedSkinName, 0, DateTime.MinValue );
+			AddRequest( url, true, "skin_" + strippedSkinName, RequestType.Bitmap, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void DownloadImage( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 0, DateTime.MinValue );
+			AddRequest( url, priority, identifier, RequestType.Bitmap, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a string from the specified url.  </summary>
 		public void DownloadPage( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 1, DateTime.MinValue );
+			AddRequest( url, priority, identifier, RequestType.String, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a byte array from the specified url.  </summary>
 		public void DownloadData( string url, bool priority, string identifier ) {
-			AddRequest( url, priority, identifier, 2, DateTime.MinValue );
+			AddRequest( url, priority, identifier, RequestType.ByteArray, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void DownloadImage( string url, bool priority, string identifier, DateTime lastModified ) {
-			AddRequest( url, priority, identifier, 0, lastModified );
+			AddRequest( url, priority, identifier, RequestType.Bitmap, lastModified );
 		}
 		
 		/// <summary> Asynchronously downloads a byte array from the specified url.  </summary>
 		public void DownloadData( string url, bool priority, string identifier, DateTime lastModified ) {
-			AddRequest( url, priority, identifier, 2, lastModified );
+			AddRequest( url, priority, identifier, RequestType.ByteArray, lastModified );
 		}
 		
-		void AddRequest( string url, bool priority, string identifier, byte type, DateTime lastModified ) {
+		/// <summary> Asynchronously retrieves the content length of the body response from specified url.  </summary>
+		public void RetrieveContentLength( string url, bool priority, string identifier ) {
+			AddRequest( url, priority, identifier, RequestType.ContentLength, DateTime.MinValue );
+		}
+		
+		void AddRequest( string url, bool priority, string identifier, RequestType type, DateTime lastModified ) {
 			lock( requestLocker )  {
 				Request request = new Request( url, identifier, type, lastModified );
 				if( priority ) {
@@ -85,7 +90,7 @@ namespace ClassicalSharp.Network {
 				requests.Insert( 0, null );
 			}
 			
-			handle.Set();		
+			handle.Set();
 			worker.Join();
 			((IDisposable)handle).Dispose();
 		}
@@ -143,33 +148,23 @@ namespace ClassicalSharp.Network {
 					}
 				}
 				if( request != null ) {
-					DownloadItem( request );
+					ProcessRequest( request );
 				} else {
 					handle.WaitOne();
 				}
 			}
 		}
 		
-		void DownloadItem( Request request ) {
+		void ProcessRequest( Request request ) {
 			string url = request.Url;
-			byte type = request.Type;
-			string dataType = type == 0 ? "image" : (type == 1 ? "string" : "raw");
-			Utils.LogDebug( "Downloading " + dataType + " from: " + url );
+			Utils.LogDebug( "Downloading {0} from: {1}", request.Type, url );
 			object value = null;
-			WebException webEx = null;		
+			WebException webEx = null;
 			
 			try {
 				HttpWebRequest req = MakeRequest( request );
-				HttpWebResponse response = (HttpWebResponse)req.GetResponse();
-				MemoryStream data = DownloadBytes( response );
-				
-				if( type == 0 ) {
-					value = new Bitmap( data );
-				} else if( type == 1 ) {
-					value = Encoding.UTF8.GetString( data.ToArray() );
-				} else if( type == 2 ) {
-					value = data.ToArray();
-				}
+				using( HttpWebResponse response = (HttpWebResponse)req.GetResponse() )
+					value = DownloadContent( request, response );
 			} catch( Exception ex ) {
 				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );
@@ -177,18 +172,7 @@ namespace ClassicalSharp.Network {
 				if( ex is WebException )
 					webEx = (WebException)ex;
 			}
-			
-			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
-			// We can detect this as every single property access raises an ArgumentException.
-			try {
-				Bitmap bmp = value as Bitmap;
-				if( bmp != null ) {
-					int height = bmp.Height;
-				}
-			} catch (ArgumentException) {
-				Utils.LogDebug( "Failed to download from: " + url );
-				value = null;
-			}
+			value = CheckIsValidImage( value, url );
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
@@ -206,6 +190,38 @@ namespace ClassicalSharp.Network {
 						oldBmp.Dispose();
 				}
 				downloaded[request.Identifier] = newItem;
+			}
+		}
+		
+		object DownloadContent( Request request, HttpWebResponse response ) {
+			if( request.Type == RequestType.Bitmap ) {
+				MemoryStream data = DownloadBytes( response );
+				return new Bitmap( data );
+			} else if( request.Type == RequestType.String ) {
+				MemoryStream data = DownloadBytes( response );
+				byte[] rawBuffer = data.GetBuffer();
+				return Encoding.UTF8.GetString( rawBuffer, 0, (int)data.Length );
+			} else if( request.Type == RequestType.ByteArray ) {
+				MemoryStream data = DownloadBytes( response );
+				return data.ToArray();
+			} else if( request.Type == RequestType.ContentLength ) {
+				return response.ContentLength;
+			}
+			return null;
+		}
+		
+		object CheckIsValidImage( object value, string url ) {
+			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
+			// We can detect this as every single property access raises an ArgumentException.
+			try {
+				Bitmap bmp = value as Bitmap;
+				if( bmp != null ) {
+					int height = bmp.Height;
+				}
+				return value;
+			} catch( ArgumentException ) {
+				Utils.LogDebug( "Failed to download from: " + url );
+				return null;
 			}
 		}
 		
@@ -241,11 +257,11 @@ namespace ClassicalSharp.Network {
 			
 			public string Url;
 			public string Identifier;
-			public byte Type; // 0 = bitmap, 1 = string, 2 = byte[]
+			public RequestType Type;
 			public DateTime TimeAdded;
 			public DateTime LastModified;
 			
-			public Request( string url, string identifier, byte type, DateTime lastModified ) {
+			public Request( string url, string identifier, RequestType type, DateTime lastModified ) {
 				Url = url;
 				Identifier = identifier;
 				Type = type;
@@ -255,10 +271,17 @@ namespace ClassicalSharp.Network {
 		}
 	}
 	
+	public enum RequestType {
+		Bitmap,
+		String,
+		ByteArray,
+		ContentLength,
+	}
+	
 	/// <summary> Represents an item that was asynchronously downloaded. </summary>
 	public class DownloadedItem {
 		
-		/// <summary> Contents that were downloaded. Can be a bitmap, string or byte array. </summary>
+		/// <summary> Contents that were downloaded.. </summary>
 		public object Data;
 		
 		/// <summary> Instant in time the item was originally added to the download queue. </summary>

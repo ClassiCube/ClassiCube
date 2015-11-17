@@ -299,9 +299,8 @@ namespace ClassicalSharp {
 					
 					if( Utils.IsUrlPrefix( text ) ) {
 						game.ShowWarning( new WarningScreen(
-							game, text, OpenUrl, AppendUrl,
-							"Are you sure you want to go to this url?",
-							text,
+							game, text, "Are you sure you want to go to this url?",
+							OpenUrl, AppendUrl, null, text,
 							"Be careful - urls from strangers may link to websites that",
 							" may have viruses, or things you may not want to open/see."
 						) );
@@ -315,16 +314,16 @@ namespace ClassicalSharp {
 			return textInput.HandlesMouseClick( mouseX, mouseY, button );
 		}
 		
-		void OpenUrl( object metadata ) {
+		void OpenUrl( WarningScreen screen ) {
 			try {
-				Process.Start( (string)metadata );
+				Process.Start( (string)screen.Metadata );
 			} catch( Exception ex ) {
 				ErrorHandler.LogError( "ChatScreen.OpenUrl", ex );
 			}
 		}
 		
-		void AppendUrl( object metadata ) {
-			textInput.AppendText( (string)metadata );
+		void AppendUrl( WarningScreen screen ) {
+			textInput.AppendText( (string)screen.Metadata );
 		}
 		
 		void ResetIndex() {

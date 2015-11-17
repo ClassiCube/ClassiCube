@@ -1,7 +1,8 @@
 ﻿using System;
+using ClassicalSharp.Hotkeys;
+using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 using OpenTK.Input;
-using ClassicalSharp.Hotkeys;
 
 namespace ClassicalSharp {
 
@@ -68,7 +69,7 @@ namespace ClassicalSharp {
 			string appName = reader.ReadAsciiString();
 			game.Chat.Add( "Server identified itself as: " + appName );
 			
-			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means 
+			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means
 			// ExtEntry may sometimes arrive before ExtInfo, and thus we have to use += instead of =
 			cpeServerExtensionsCount += reader.ReadInt16();
 			SendCpeExtInfoReply();
@@ -298,10 +299,12 @@ namespace ClassicalSharp {
 				extractor.Extract( game.DefaultTexturePack, game );
 			} else if( Utils.IsUrlPrefix( url ) ) {
 				if( !game.AcceptedUrls.HasAccepted( url ) ) {
+					game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
 					game.ShowWarning( new WarningScreen(
-						game, url, DownloadTexturePack, null,
-						"Do you want to download the server's texture pack?",
-						"The texture pack is located at:", url ) );
+						game, "CL_" + url, "Do you want to download the server's terrain image?",
+						DownloadTexturePack, null, WarningScreenTick,
+						"The terrain image is located at:", url,
+						"Terrain image size: Determining..." ) );
 				} else {
 					DownloadTexturePack( url );
 				}
@@ -309,8 +312,11 @@ namespace ClassicalSharp {
 			Utils.LogDebug( "Image url: " + url );
 		}
 		
-		void DownloadTexturePack( object metadata ) {
-			string url = (string)metadata;
+		void DownloadTexturePack( WarningScreen screen ) { 
+			DownloadTexturePack( ((string)screen.Metadata).Substring( 3 ) );
+		}
+		
+		void DownloadTexturePack( string url ) {
 			game.Animations.Dispose();
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
 			if( !game.AcceptedUrls.HasAccepted( url ) )
@@ -320,6 +326,21 @@ namespace ClassicalSharp {
 				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
 			else
 				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
+		}
+		
+		void WarningScreenTick( WarningScreen screen ) {
+			string identifier = (string)screen.Metadata;
+			DownloadedItem item;
+			if( !game.AsyncDownloader.TryGetItem( identifier, out item ) || item.Data == null ) return;
+			
+			long contentLength = (long)item.Data;
+			if( contentLength <= 0 ) return;
+			string url = identifier.Substring( 3 );
+			
+			float contentLengthMB = (contentLength / 1024f / 1024f );
+			screen.SetText( "Do you want to download the server's terrain image?",
+			               "The terrain image is located at:", url,
+			               "Terrain image size: " + contentLengthMB.ToString( "F3" ) + " MB" );
 		}
 		
 		void HandleCpeEnvWeatherType() {

@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			int index = 0;
 			graphics.AlphaBlending = true;
 			graphics.DepthWrite = false;
-			FastColour col = FastColour.White;
+			FastColour col = game.Map.Sunlight;
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
 					float rainY = GetRainHeight( pos.X + dx, pos.Z + dz );

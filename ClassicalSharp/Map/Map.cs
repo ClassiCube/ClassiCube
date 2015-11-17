@@ -152,17 +152,23 @@ namespace ClassicalSharp {
 		/// <summary> Sets the current sunlight colour, and raises the
 		/// EnvVariableChanged event with the variable 'SunlightColour'. </summary>
 		public void SetSunlight( FastColour col ) {
+			if( col == Sunlight ) return;
+			Sunlight = col;
 			Set( col, ref Sunlight, EnvVar.SunlightColour );
 			FastColour.GetShaded( Sunlight, ref SunlightXSide,
 			                     ref SunlightZSide, ref SunlightYBottom );
+			game.Events.RaiseEnvVariableChanged( EnvVar.SunlightColour );
 		}
 		
 		/// <summary> Sets the current shadowlight colour, and raises the
 		/// EnvVariableChanged event with the variable 'ShadowlightColour'. </summary>
 		public void SetShadowlight( FastColour col ) {
+			if( col == Shadowlight ) return;
+			Shadowlight = col;
 			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
 			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
 			                     ref ShadowlightZSide, ref ShadowlightYBottom );
+			game.Events.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
 		}
 		
 		/// <summary> Sets the current weather, and raises the

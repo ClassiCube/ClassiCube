@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 			try {
 				writer.Send( Disconnected );
 			} catch( IOException ex ) {
-				ErrorHandler.LogError( "wrting packets", ex );
+				ErrorHandler.LogError( "writing packets", ex );
 				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
 				Dispose();
 			}
