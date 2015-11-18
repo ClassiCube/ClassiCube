@@ -18,7 +18,9 @@ namespace ClassicalSharp {
 			for( int i = 0; i < count; i++ ) {
 				char c = value[i];
 				int cpIndex = 0;
-				if( c >= ' ' && c <= '~' ) {
+				if( c == '&' ) {
+					buffer[index + i] = (byte)'%'; // escape colour codes
+				} else if( c >= ' ' && c <= '~' ) {
 					buffer[index + i] = (byte)c;
 				} else if( (cpIndex = Utils.ControlCharReplacements.IndexOf( c ) ) >= 0 ) {
 					buffer[index + i] = (byte)cpIndex;

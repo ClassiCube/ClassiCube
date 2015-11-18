@@ -78,6 +78,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static void Set( string key, string value ) {
+			key = key.ToLower();
 			if( value != null ) {
 				OptionsSet[key] = value;
 			} else {
@@ -87,6 +88,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static void Set<T>( string key, T value ) {
+			key = key.ToLower();
 			OptionsSet[key] = value.ToString();
 			HasChanged = true;
 		}

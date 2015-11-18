@@ -18,7 +18,6 @@ namespace Launcher2 {
 		
 		public static bool Start( string args ) {
 			Process process = null;
-			Options.Load();
 			string path = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "ClassicalSharp.exe" );
 			if( !File.Exists( path ) )
 				return false;
