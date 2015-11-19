@@ -255,6 +255,7 @@ namespace ClassicalSharp {
 		}	
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
+			skinName = Utils.StripColours( skinName );
 			if( entityId != 0xFF ) {
 				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
@@ -266,7 +267,7 @@ namespace ClassicalSharp {
 				game.AsyncDownloader.DownloadSkin( skinName );
 			} else {
 				game.LocalPlayer.SkinName = skinName;
-				game.LocalPlayer.SkinIdentifier = "skin_" + game.LocalPlayer.SkinName;
+				game.LocalPlayer.SkinIdentifier = "skin_" + skinName;
 				game.AsyncDownloader.DownloadSkin( skinName );
 			}
 			if( readPosition ) {

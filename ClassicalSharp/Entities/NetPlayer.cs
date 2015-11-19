@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		int tickCount;		
 		public NetPlayer( string displayName, string skinName, Game game ) : base( game ) {
 			DisplayName = displayName;
-			SkinName = Utils.StripColours( skinName );
+			SkinName = skinName;
 			SkinIdentifier = "skin_" + SkinName;
 			InitRenderingData();
 		}

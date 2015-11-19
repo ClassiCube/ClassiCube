@@ -62,7 +62,10 @@ namespace Launcher2 {
 			base.Init();
 			game.Window.Mouse.WheelChanged += MouseWheelChanged;
 			game.Window.Mouse.ButtonUp += MouseButtonUp;
+			
 			Resize();
+			selectedWidget = widgets[1];
+			InputClick( 0, 0 );		
 		}
 		
 		public override void Resize() {

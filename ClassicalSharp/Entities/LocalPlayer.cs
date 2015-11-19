@@ -38,9 +38,9 @@ namespace ClassicalSharp {
 			get { return (float)GetMaxHeight( jumpVel ); }
 		}
 		
-		public LocalPlayer( Game window ) : base( window ) {
-			DisplayName = window.Username;
-			SkinName = window.Username;
+		public LocalPlayer( Game game ) : base( game ) {
+			DisplayName = game.Username;
+			SkinName = game.Username;
 			SkinIdentifier = "skin_" + SkinName;
 			InitRenderingData();
 		}
@@ -253,7 +253,6 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			inv.CanPlace[(int)Block.Bedrock] = value == 0x64;
 			inv.CanDelete[(int)Block.Bedrock] = value == 0x64;
-			inv.CanPlace[(int)Block.Grass] = value == 0x64;
 
 			inv.CanPlace[(int)Block.Water] = value == 0x64;
 			inv.CanPlace[(int)Block.StillWater] = value == 0x64;

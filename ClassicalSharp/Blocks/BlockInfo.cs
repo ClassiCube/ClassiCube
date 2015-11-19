@@ -113,7 +113,6 @@ namespace ClassicalSharp {
 				canPlace[tile] = true;
 				canDelete[tile] = true;
 			}
-			canPlace[(int)Block.Grass] = false;
 			canPlace[(int)Block.Lava] = false;
 			canPlace[(int)Block.Water] = false;
 			canPlace[(int)Block.StillLava] = false;
