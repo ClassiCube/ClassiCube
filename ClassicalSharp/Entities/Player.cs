@@ -96,11 +96,7 @@ namespace ClassicalSharp {
 					row += sizeX;
 					for( int x = 0; x < sizeX; x++ ) {
 						int pixel = row[x];
-						Console.WriteLine( pixel.ToString( "X8" ) );
-						if( pixel == fullWhite ) row[x] = 0;
-						if( pixel == fullBlack ) row[x] = 0;
-						Console.WriteLine( row[x].ToString( "X8" ) );
-						Console.WriteLine( "====" );
+						if( pixel == fullWhite || pixel == fullBlack ) row[x] = 0;
 					}
 				}
 			}
