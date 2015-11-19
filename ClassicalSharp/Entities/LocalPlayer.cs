@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		public Vector3 SpawnPoint;
 		
 		public float ReachDistance = 5f;
-		public int SpeedMultiplier = 10;
+		public float SpeedMultiplier = 10;
 		
 		public byte UserType;
 		public bool PushbackBlockPlacing;

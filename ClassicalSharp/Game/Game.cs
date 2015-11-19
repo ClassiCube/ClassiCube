@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
-		internal float HudScale = 1f;
+		internal float HudScale = 1.0f;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
-			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.5f, 2f, 1 );
+			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 2f, 1 );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();
@@ -149,7 +149,7 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
-			LocalPlayer.SpeedMultiplier = Options.GetInt( OptionsKey.Speed, 1, 50, 10 );
+			LocalPlayer.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Players[255] = LocalPlayer;
 			width = Width;
 			height = Height;

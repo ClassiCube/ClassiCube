@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using OpenTK;
 
@@ -51,13 +52,14 @@ namespace ClassicalSharp {
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
+					if( Model is PlayerModel )
+						ClearHat( bmp, SkinType );
 					PlayerTextureId = game.Graphics.CreateTexture( bmp );
 					MobTextureId = -1;
 					
 					// Custom mob textures.
 					if( Utils.IsUrlPrefix( SkinName ) && item.TimeAdded > lastModelChange )
-						MobTextureId = PlayerTextureId;
-					RenderHat = HasHat( bmp, SkinType );
+						MobTextureId = PlayerTextureId;					
 				} catch( NotSupportedException ) {
 					ResetSkin( bmp );
 				}
@@ -71,7 +73,6 @@ namespace ClassicalSharp {
 			MobTextureId = -1;
 			PlayerTextureId = -1;
 			SkinType = game.DefaultPlayerSkinType;
-			RenderHat = false;
 		}
 		
 		DateTime lastModelChange = new DateTime( 1, 1, 1 );
@@ -82,7 +83,7 @@ namespace ClassicalSharp {
 			MobTextureId = -1;
 		}
 		
-		unsafe static bool HasHat( Bitmap bmp, SkinType skinType ) {
+		unsafe static void ClearHat( Bitmap bmp, SkinType skinType ) {
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 				int sizeX = (bmp.Width / 64) * 32;
 				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
@@ -95,13 +96,14 @@ namespace ClassicalSharp {
 					row += sizeX;
 					for( int x = 0; x < sizeX; x++ ) {
 						int pixel = row[x];
-						if( !(pixel == fullWhite || pixel == fullBlack) ) {
-							return true;
-						}
+						Console.WriteLine( pixel.ToString( "X8" ) );
+						if( pixel == fullWhite ) row[x] = 0;
+						if( pixel == fullBlack ) row[x] = 0;
+						Console.WriteLine( row[x].ToString( "X8" ) );
+						Console.WriteLine( "====" );
 					}
 				}
 			}
-			return false;
 		}
 	}
 }

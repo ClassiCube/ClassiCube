@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 				// Column 1
 				Make( -140, -100, "Speed multiplier", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
-				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Int32.Parse( v );
+				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				Make( -140, -50, "Show FPS", Anchor.Centre, OnWidgetClick,
@@ -89,13 +89,13 @@ namespace ClassicalSharp {
 				null,
 			};
 			validators = new MenuInputValidator[] {
-				new IntegerValidator( 1, 50 ),
+				new RealValidator( 0.1f, 50 ),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
 				new IntegerValidator( 1, 100 ),
-				new RealValidator( 0.5f, 2f ),
+				new RealValidator( 0.25f, 2f ),
 				new IntegerValidator( 1, 30 ),
 				new BooleanValidator(),
 				

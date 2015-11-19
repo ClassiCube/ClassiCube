@@ -74,11 +74,9 @@ namespace ClassicalSharp.Model {
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			
 			graphics.AlphaTest = true;
-			if( p.RenderHat ) {
-				index = 0;
-				DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			}
+			index = 0;
+			DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		class ModelSet {

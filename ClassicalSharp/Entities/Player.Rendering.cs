@@ -9,7 +9,6 @@ namespace ClassicalSharp {
 
 		protected Texture nameTex;
 		protected internal int PlayerTextureId = -1, MobTextureId = -1;
-		internal bool RenderHat = true;
 		
 		public override void Despawn() {
 			game.Graphics.DeleteTexture( ref PlayerTextureId );
