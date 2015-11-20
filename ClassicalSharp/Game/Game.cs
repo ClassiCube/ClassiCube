@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
-		internal float HudScale = 1.0f;
+		internal float HudScale = 0.8f;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;

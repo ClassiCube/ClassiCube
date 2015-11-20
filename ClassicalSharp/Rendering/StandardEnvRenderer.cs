@@ -175,7 +175,8 @@ namespace ClassicalSharp.Renderers {
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexPos3fCol4b* vertices = stackalloc VertexPos3fCol4b[skyVertices];
-			DrawSkyY( x1, z1, x2, z2, map.Height + 8, axisSize, map.SkyCol, vertices );
+			int height = Math.Max( map.Height + 2 + 6, map.CloudHeight + 6);
+			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.SkyCol, vertices );
 			skyVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fCol4b, skyVertices );
 		}
 		
