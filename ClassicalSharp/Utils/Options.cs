@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		public const string VSync = "vsync";
 	}
 	
+	// TODO: implement this
 	public enum FpsLimit {
 		LimitVSync,
 		Limit30FPS,

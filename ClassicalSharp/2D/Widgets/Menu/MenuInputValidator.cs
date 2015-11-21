@@ -127,6 +127,21 @@ namespace ClassicalSharp {
 		}
 	}
 	
+	public sealed class EnumValidator : MenuInputValidator {
+		
+		public override bool IsValidChar( char c ) {
+			return true;
+		}
+		
+		public override bool IsValidString( string s ) {
+			return true;
+		}
+		
+		public override bool IsValidValue( string s ) {
+			return true;
+		}
+	}
+	
 	public sealed class StringValidator : MenuInputValidator {
 		
 		int maxLen;

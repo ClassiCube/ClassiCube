@@ -154,7 +154,6 @@ namespace ClassicalSharp {
 		
 		void CalculateCaretCol() {
 			int x = indexX;
-			Console.WriteLine( x );
 			for( int y = indexY; y >= 0; y-- ) {
 				if( x == partLens[y] ) x = partLens[y] - 1;
 				int start = parts[y].LastIndexOf( '&', x, x + 1 );

@@ -108,6 +108,18 @@ namespace ClassicalSharp {
 				button.SetValue( game, value == "yes" ? "no" : "yes" );
 				UpdateDescription( button );
 				return;
+			} else if( validator is EnumValidator ) {
+				string value = button.GetValue( game );
+				Type type = (Type)button.Metadata;
+				int enumValue = (int)Enum.Parse( type, value, true );
+				enumValue++;
+				// go back to first value
+				if( !Enum.IsDefined( type, enumValue ) )
+					enumValue = 0;
+				button.SetValue( game, Enum.GetName( type, enumValue ) );
+				
+				UpdateDescription( button );
+				return;
 			}
 			
 			if( inputWidget != null )

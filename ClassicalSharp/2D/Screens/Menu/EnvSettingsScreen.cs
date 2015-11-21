@@ -42,8 +42,8 @@ namespace ClassicalSharp {
 				     (g, v) => g.Map.SetShadowlight( FastColour.Parse( v ) ) ),
 				
 				Make( 140, -50, "Weather", Anchor.Centre, OnWidgetClick,
-				     g => ((int)g.Map.Weather).ToString(),
-				     (g, v) => g.Map.SetWeather( (Weather)Int32.Parse( v ) ) ),
+				     g => g.Map.Weather.ToString(),
+				     (g, v) => g.Map.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
 				
 				Make( 140, 0, "Water level", Anchor.Centre, OnWidgetClick,
 				     g => g.Map.EdgeHeight.ToString(),
@@ -53,6 +53,7 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
+			buttons[7].Metadata = typeof(Weather);
 			
 			validators = new MenuInputValidator[] {
 				new HexColourValidator(),
@@ -62,7 +63,7 @@ namespace ClassicalSharp {
 				new IntegerValidator( -10000, 10000 ),
 				new HexColourValidator(),
 				new HexColourValidator(),
-				new IntegerValidator( 0, 2 ),
+				new EnumValidator(),
 				new IntegerValidator( -2048, 2048 ),
 			};
 			okayIndex = buttons.Length - 1;
