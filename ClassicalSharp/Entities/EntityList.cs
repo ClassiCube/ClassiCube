@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] == null ) continue;
-				if( !ShowHoveredNames || i != closestId )
+				if( !ShowHoveredNames || (i != closestId || i == 255) )
 					Players[i].RenderName();
 			}
 			api.Texturing = false;
@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			api.DepthTest = false;
 			
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null && i == closestId )
+				if( Players[i] != null && i == closestId && i != 255 )
 					Players[i].RenderName();
 			}
 			api.Texturing = false;

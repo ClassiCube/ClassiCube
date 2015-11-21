@@ -6,6 +6,8 @@ namespace ClassicalSharp {
 		
 		char[] wrap;
 		
+		public int CaretHexCol;
+		
 		public WrappableStringBuffer( int capacity ) : base( capacity ) {
 			wrap = new char[capacity];
 		}
@@ -61,6 +63,12 @@ namespace ClassicalSharp {
 		void OutputLines( ref string[] lines, int linesCount, int lineSize, int[] lineLens ) {
 			for( int i = 0; i < capacity; i++ ) {
 				if( value[i] == '\0' ) value[i] = ' ';
+			}
+			// convert %0-f to &0-f for colour preview.
+			for( int i = 0; i < capacity - 1; i++ ) {
+				int hex;
+				if( value[i] == '%' && Utils.TryParseHex( value[i + 1], out hex ) )
+					value[i] = '&';
 			}
 			
 			for( int i = 0; i < Math.Max( 1, linesCount ); i++ ) {

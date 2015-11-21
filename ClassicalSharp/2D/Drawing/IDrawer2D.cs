@@ -175,10 +175,7 @@ namespace ClassicalSharp {
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					FastColour col = new FastColour(
-						191 * ((code >> 2) & 1) + 64 * (code >> 3),
-						191 * ((code >> 1) & 1) + 64 * (code >> 3),
-						191 * ((code >> 0) & 1) + 64 * (code >> 3) );
+					FastColour col = FastColour.GetHexEncodedCol( code );
 					parts.Add( new TextPart( part, col ) );
 				}
 				i += partLength + 1;

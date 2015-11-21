@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 			// from minecraft.net accounts. Unfortunately they also send this ending + to the client.
 			if( String.IsNullOrEmpty( value ) ) return value;
 			
-			return value[value.Length - 1] == '+' ? 
+			return value[value.Length - 1] == '+' ?
 				value.Substring( 0, value.Length - 1 ) : value;
 		}
 		
@@ -191,7 +191,7 @@ namespace ClassicalSharp {
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
 			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
-		}		
+		}
 		
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ( float x, float y, float z, float cosA, float sinA ) {
@@ -222,7 +222,7 @@ namespace ClassicalSharp {
 			return dx * dx + dy * dy + dz * dz;
 		}
 		
-		/// <summary> Returns a normalised vector that faces in the direction 
+		/// <summary> Returns a normalised vector that faces in the direction
 		/// described by the given yaw and pitch. </summary>
 		public static Vector3 GetDirVector( double yawRad, double pitchRad ) {
 			double x = -Math.Cos( pitchRad ) * -Math.Sin( yawRad );
@@ -261,6 +261,25 @@ namespace ClassicalSharp {
 		public static float Lerp( float a, float b, float t ) {
 			return a + (b - a) * t;
 		}
+		
+		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
+		public static void CalcBillboardPoints( Vector2 size, Vector3 position, ref Matrix4 view, out Vector3 p111,
+		                                       out Vector3 p121, out Vector3 p212, out Vector3 p222 ) {
+			Vector3 centre = position; centre.Y += size.Y / 2;
+			Vector3 right = new Vector3( view.Row0.X, view.Row1.X, view.Row2.X );
+			Vector3 up = new Vector3( view.Row0.Y, view.Row1.Y, view.Row2.Y );
+			
+			p111 = Transform( -0.5f, -0.5f, ref size, ref centre, ref up, ref right );
+			p121 = Transform( -0.5f, 0.5f, ref size, ref centre, ref up, ref right );
+			p212 = Transform( 0.5f, -0.5f, ref size, ref centre, ref up, ref right );
+			p222 = Transform( 0.5f, 0.5f, ref size, ref centre, ref up, ref right );
+		}
+		
+		static Vector3 Transform( float x, float y, ref Vector2 size, 
+		                         ref Vector3 centre, ref Vector3 up, ref Vector3 right ) {
+			return centre + right * x * size.X + up * y * size.Y;
+		}
+		
 		
 		/// <summary> Linearly interpolates between a given angle range, adjusting if necessary. </summary>
 		public static float LerpAngle( float leftAngle, float rightAngle, float t ) {

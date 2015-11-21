@@ -131,12 +131,8 @@ namespace ClassicalSharp.Renderers {
 				adjFogCol = info.FogColour[(byte)headBlock];
 			} else {
 				// Blend fog and sky together
-				FastColour fogCol = map.FogCol;
-				FastColour skyCol = map.SkyCol;
 				float blend = (float)BlendFactor( game.ViewDistance );
-				adjFogCol.R = (byte)Utils.Lerp( fogCol.R, skyCol.R, blend );
-				adjFogCol.G = (byte)Utils.Lerp( fogCol.G, skyCol.G, blend );
-				adjFogCol.B = (byte)Utils.Lerp( fogCol.B, skyCol.B, blend );
+				adjFogCol = FastColour.Lerp( map.FogCol, map.SkyCol, blend );
 				graphics.SetFogMode( Fog.Linear );
 				graphics.SetFogStart( 0 );
 				graphics.SetFogEnd( game.ViewDistance );

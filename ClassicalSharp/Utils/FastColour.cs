@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			B = c.B;
 		}
 		
-		/// <summary> Multiplies the RGB components of this instance by the 
+		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Scale( FastColour value, float t ) {
 			FastColour result = value;
@@ -59,6 +59,21 @@ namespace ClassicalSharp {
 			result.G = (byte)(value.G * t);
 			result.B = (byte)(value.B * t);
 			return result;
+		}
+		
+		/// <summary> Linearly interpolates the RGB components of the two colours
+		/// by the specified t parameter, where 0 ≤ t ≤ 1 </summary>
+		public static FastColour Lerp( FastColour a, FastColour b, float t ) {
+			return new FastColour( (byte)Utils.Lerp( a.R, b.R, t ),
+			                      (byte)Utils.Lerp( a.G, b.G, t ),
+			                      (byte)Utils.Lerp( a.B, b.B, t ) );
+		}
+		
+		public static FastColour GetHexEncodedCol( int hex ) {
+			return new FastColour(
+				191 * ((hex >> 2) & 1) + 64 * (hex >> 3),
+				191 * ((hex >> 1) & 1) + 64 * (hex >> 3),
+				191 * ((hex >> 0) & 1) + 64 * (hex >> 3) );
 		}
 		
 		public static void GetShaded( FastColour normal, ref FastColour xSide,
@@ -72,7 +87,7 @@ namespace ClassicalSharp {
 			return Color.FromArgb( A, R, G, B );
 		}
 		
-		/// <summary> Packs this instance into a 32 bit integer, where A occupies 
+		/// <summary> Packs this instance into a 32 bit integer, where A occupies
 		/// the highest 8 bits and B occupies the lowest 8 bits. </summary>
 		public int ToArgb() {
 			return A << 24 | R << 16 | G << 8 | B;
@@ -91,7 +106,7 @@ namespace ClassicalSharp {
 			return (obj is FastColour) && Equals( (FastColour)obj );
 		}
 		
-		/// <summary> Returns whether all of the colour components of this instance 
+		/// <summary> Returns whether all of the colour components of this instance
 		/// equal that of the other instance. </summary>
 		public bool Equals( FastColour other ) {
 			return A == other.A && R == other.R && G == other.G && B == other.B;

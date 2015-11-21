@@ -38,9 +38,7 @@ namespace ClassicalSharp {
 		int defaultWidth, defaultHeight;
 		internal WrappableStringBuffer chatInputText;
 		readonly Font font, boldFont;
-		
-		static FastColour normalCaretCol = FastColour.White,
-		nextCaretCol = FastColour.Yellow;
+
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 60, 60, 60, 200 );
 		public override void Render( double delta ) {
@@ -65,6 +63,7 @@ namespace ClassicalSharp {
 		int[] partLens = new int[lines];
 		Size[] sizes = new Size[lines];
 		int maxWidth = 0;
+		int indexX, indexY;
 		
 		public override void Init() {
 			X = 5;
@@ -83,7 +82,7 @@ namespace ClassicalSharp {
 				caretPos = -1; realIndex = 500000;
 			}
 			
-			int sum = 0, indexX = -1, indexY = 0;
+			int sum = 0; indexX = -1; indexY = 0;
 			for( int i = 0; i < lines; i++ ) {
 				if( partLens[i] == 0 ) break;
 				
@@ -102,7 +101,7 @@ namespace ClassicalSharp {
 				
 				maxWidth = Math.Max( maxWidth, sizes[indexY].Width );
 				caretTex.Y1 = sizes[0].Height * indexY;
-				caretCol = nextCaretCol;
+				caretCol = FastColour.Yellow;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
 				Size trimmedSize = game.Drawer2D.MeasureChatSize( ref args );
@@ -114,11 +113,13 @@ namespace ClassicalSharp {
 				caretTex.Width = charSize.Width;
 				
 				caretTex.Y1 = sizes[0].Height * indexY;
-				caretCol = normalCaretCol;
+				caretCol = FastColour.White;
+				CalculateCaretCol();
 			}
 			DrawString();
 			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
 			altText.Y = altText.texture.Y1;
+			CalculateCaretCol();
 		}
 		
 		void DrawString() {
@@ -149,6 +150,24 @@ namespace ClassicalSharp {
 			inputTex.Y1 = Y;
 			caretTex.Y1 += Y;
 			Width = size.Width;
+		}
+		
+		void CalculateCaretCol() {
+			int x = indexX;
+			Console.WriteLine( x );
+			for( int y = indexY; y >= 0; y-- ) {
+				if( x == partLens[y] ) x = partLens[y] - 1;
+				int start = parts[y].LastIndexOf( '&', x, x + 1 );
+				
+				int hex;
+				bool validIndex = start >= 0 && start < partLens[y] - 1;
+				
+				if( validIndex && Utils.TryParseHex( parts[y][start + 1], out hex ) ) {
+					caretCol = FastColour.GetHexEncodedCol( hex );
+					return;
+				}
+				if( y > 0 ) x = partLens[y - 1] - 1;
+			}
 		}
 
 		public override void Dispose() {		

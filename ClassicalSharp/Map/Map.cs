@@ -35,12 +35,12 @@ namespace ClassicalSharp {
 		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
 		public FastColour SunlightXSide, SunlightZSide, SunlightYBottom;
-		public static readonly FastColour DefaultSunlight = new FastColour( 255, 255, 255 );
+		public static readonly FastColour DefaultSunlight = new FastColour( 0xFF, 0xFF, 0xFF );
 		
 		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
 		public FastColour ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
-		public static readonly FastColour DefaultShadowlight = new FastColour( 162, 162, 162 );
+		public static readonly FastColour DefaultShadowlight = new FastColour( 0x9B, 0x9B, 0x9B );
 		
 		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;

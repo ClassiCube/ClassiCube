@@ -30,26 +30,16 @@ namespace ClassicalSharp {
 		protected void DrawName() {
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
+			Vector3 pos = Position; pos.Y += Model.NameYOffset;
 			
-			float x1 = -nameTex.Width * 0.5f / 70f, y1 = nameTex.Height / 70f;
-			float x2 = nameTex.Width * 0.5f / 70f, y2 = 0;
-			// NOTE: Do this instead with network player's yaw to have names rotate with them instead.
-			//yaw = Math.Pi - Player.YawRadians;
-			float angle = game.LocalPlayer.YawRadians;
-			float cosA = (float)Math.Cos( angle ), sinA = (float)Math.Sin( angle );
-			Vector3 pos = Position;
-			pos.Y += Model.NameYOffset;
-			
-			float u1 = nameTex.U1, u2 = nameTex.U2;
-			if( game.Camera is ForwardThirdPersonCamera ) {
-				u1 = nameTex.U2; u2 = nameTex.U1;
-			}
-			
+			Vector3 p111, p121, p212, p222;
 			FastColour col = FastColour.White;
-			api.texVerts[0] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y1, 0, cosA, sinA ) + pos, u1, nameTex.V1, col );
-			api.texVerts[1] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y1, 0, cosA, sinA ) + pos, u2, nameTex.V1, col );
-			api.texVerts[2] = new VertexPos3fTex2fCol4b( Utils.RotateY( x2, y2, 0, cosA, sinA ) + pos, u2, nameTex.V2, col );	
-			api.texVerts[3] = new VertexPos3fTex2fCol4b( Utils.RotateY( x1, y2, 0, cosA, sinA ) + pos, u1, nameTex.V2, col );
+			Vector2 size = new Vector2( nameTex.Width / 70f, nameTex.Height / 70f );
+			Utils.CalcBillboardPoints( size, pos, ref game.View, out p111, out p121, out p212, out p222 );
+			api.texVerts[0] = new VertexPos3fTex2fCol4b( p111, nameTex.U1, nameTex.V2, col );
+			api.texVerts[1] = new VertexPos3fTex2fCol4b( p121, nameTex.U1, nameTex.V1, col );
+			api.texVerts[2] = new VertexPos3fTex2fCol4b( p222, nameTex.U2, nameTex.V1, col );	
+			api.texVerts[3] = new VertexPos3fTex2fCol4b( p212, nameTex.U2, nameTex.V2, col );
 			
 			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );

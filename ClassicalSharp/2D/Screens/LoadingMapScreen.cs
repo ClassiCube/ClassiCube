@@ -76,14 +76,22 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HidesHud {
-			get { return true; }
+			get { return false; }
 		}
 		
-		public override bool HandlesKeyDown( Key key ) { return true; }
+		public override bool HandlesKeyDown( Key key ) {
+			if( key == Key.Tab ) return true;
+			return game.hudScreen.HandlesKeyDown( key ); 
+		}
 		
-		public override bool HandlesKeyPress( char key ) { return true; }
+		public override bool HandlesKeyPress( char key )  { 
+			return game.hudScreen.HandlesKeyPress( key );
+		}
 		
-		public override bool HandlesKeyUp( Key key ) { return true; }
+		public override bool HandlesKeyUp( Key key ) {
+			if( key == Key.Tab ) return true;
+			return game.hudScreen.HandlesKeyUp( key );
+		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) { return true; }
 		
