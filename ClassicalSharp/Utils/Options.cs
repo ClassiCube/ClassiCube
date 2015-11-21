@@ -23,6 +23,14 @@ namespace ClassicalSharp {
 		public const string VSync = "vsync";
 	}
 	
+	public enum FpsLimit {
+		LimitVSync,
+		Limit30FPS,
+		Limit60FPS,
+		Limit120FPS,		
+		LimitNone,
+	}
+	
 	public static class Options {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
@@ -64,15 +72,15 @@ namespace ClassicalSharp {
 			return valueFloat;
 		}
 		
-		public static Key GetKey( string key, Key defValue ) {
+		public static T GetEnum<T>( string key, T defValue ) {
 			string value = Options.Get( key.ToLower() );
 			if( value == null ) {
 				Set( key, defValue );
 				return defValue;
 			}
 			
-			Key mapping;
-			if( !Utils.TryParseKey( value, defValue, out mapping ) )
+			T mapping;
+			if( !Utils.TryParseEnum( value, defValue, out mapping ) )
 				Options.Set( key, defValue );
 			return mapping;
 		}

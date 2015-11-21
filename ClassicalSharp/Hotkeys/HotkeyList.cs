@@ -99,7 +99,7 @@ namespace ClassicalSharp.Hotkeys {
 					
 					// Then try to parse the key and value
 					Key key; byte flags; bool moreInput;
-					if( !Utils.TryParseKey( strKey, Key.Unknown, out key ) ||
+					if( !Utils.TryParseEnum( strKey, Key.Unknown, out key ) ||
 					   !Byte.TryParse( strFlags, out flags ) ||
 					   !Boolean.TryParse( strMoreInput, out moreInput ) ||
 					   strText.Length == 0 ) {

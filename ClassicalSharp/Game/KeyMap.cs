@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
-				Key mapping = Options.GetKey( key, Keys[i] );
+				Key mapping = Options.GetEnum( key, Keys[i] );
 				if( !IsReservedKey( mapping ) )
 					Keys[i] = mapping;
 			}

@@ -3,19 +3,18 @@ using OpenTK;
 
 namespace ClassicalSharp.Particles {
 
-	public sealed class TerrainParticle : CollidableParticle {
+	public sealed class RainParticle : CollidableParticle {
 		
-		static Vector2 terrainSize = new Vector2( 1/8f, 1/8f );
-		TextureRec rec;
-		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRec rec )
+		static Vector2 rainSize = new Vector2( 1/8f, 1/8f );
+		static TextureRec rec = new TextureRec( 2/128f, 14/128f, 3/128f, 2/128f );
+		public RainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime )
 			: base( game, pos, velocity, lifetime ) {
-			this.rec = rec;
 		}
 		
 		public override void Render( double delta, float t, VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			Vector3 p111, p121, p212, p222;
-			Utils.CalcBillboardPoints( terrainSize, Position, ref game.View,
+			Utils.CalcBillboardPoints( rainSize, Position, ref game.View,
 			                          out p111, out p121, out p212, out p222 );
 			Map map = game.Map;
 			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Sunlight : map.Shadowlight;

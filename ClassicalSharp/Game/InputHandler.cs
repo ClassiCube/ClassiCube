@@ -30,9 +30,9 @@ namespace ClassicalSharp {
 		
 		Key mapLeft, mapMiddle, mapRight;
 		void LoadMouseToKeyMappings() {
-			mapLeft = Options.GetKey( OptionsKey.MouseLeft, Key.Unknown );
-			mapMiddle = Options.GetKey( OptionsKey.MouseMiddle, Key.Unknown );
-			mapRight = Options.GetKey( OptionsKey.MouseRight, Key.Unknown );
+			mapLeft = Options.GetEnum( OptionsKey.MouseLeft, Key.Unknown );
+			mapMiddle = Options.GetEnum( OptionsKey.MouseMiddle, Key.Unknown );
+			mapRight = Options.GetEnum( OptionsKey.MouseRight, Key.Unknown );
 		}
 		
 		public KeyMap Keys;

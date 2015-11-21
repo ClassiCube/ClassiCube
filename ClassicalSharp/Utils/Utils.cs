@@ -128,16 +128,15 @@ namespace ClassicalSharp {
 
 		/// <summary> Attempts to caselessly parse the given string as a Key enum member,
 		/// returning defValue if there was an error parsing. </summary>
-		public static bool TryParseKey( string value, Key defValue, out Key key ) {
-			Key mapping;
+		public static bool TryParseEnum<T>( string value, T defValue, out T result ) {
+			T mapping;
 			try {
-				mapping = (Key)Enum.Parse( typeof( Key ), value, true );
+				mapping = (T)Enum.Parse( typeof( T ), value, true );
 			} catch( ArgumentException ) {
-				key = defValue;
+				result = defValue;
 				return false;
-			}
-			
-			key = mapping;
+			}		
+			result = mapping;
 			return true;
 		}
 		

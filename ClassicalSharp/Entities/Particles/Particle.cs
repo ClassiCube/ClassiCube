@@ -7,7 +7,6 @@ namespace ClassicalSharp.Particles {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
-		public TextureRec Rectangle;
 		public float Lifetime;
 		protected Game game;
 		protected Vector3 lastPos, nextPos;
@@ -16,12 +15,11 @@ namespace ClassicalSharp.Particles {
 		
 		public abstract void Dispose();
 		
-		public Particle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRec rec ) {
+		public Particle( Game game, Vector3 pos, Vector3 velocity, double lifetime ) {
 			this.game = game;
 			Position = lastPos = nextPos = pos;
 			Velocity = velocity;
 			Lifetime = (float)lifetime;
-			Rectangle = rec;
 		}
 		
 		public virtual bool Tick( double delta ) {

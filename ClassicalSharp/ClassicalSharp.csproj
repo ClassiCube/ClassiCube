@@ -130,8 +130,10 @@
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Entities\Particles\CollidableParticle.cs" />
     <Compile Include="Entities\Particles\Particle.cs" />
     <Compile Include="Entities\Particles\ParticleManager.cs" />
+    <Compile Include="Entities\Particles\RainParticle.cs" />
     <Compile Include="Entities\Particles\TerrainParticle.cs" />
     <Compile Include="Entities\PhysicsEntity.cs" />
     <Compile Include="Entities\Player.cs" />
