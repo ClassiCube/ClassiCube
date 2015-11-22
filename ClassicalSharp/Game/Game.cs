@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 		public string Mppass;
 		public int Port;
 		public int ViewDistance = 512;
+		public FpsLimitMethod FpsLimit;
 		
 		public long Vertices;
 		public FrustumCulling Culling;
@@ -177,8 +178,8 @@ namespace ClassicalSharp {
 			BlockHandRenderer = new BlockHandRenderer( this );
 			BlockHandRenderer.Init();
 			
-			bool vsync = Options.GetBool( OptionsKey.VSync, true );
-			Graphics.SetVSync( this, vsync );
+			FpsLimitMethod method = Options.GetEnum( OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync );
+			SetFpsLimitMethod( method );
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
@@ -224,6 +225,7 @@ namespace ClassicalSharp {
 		double ticksAccumulator = 0, imageCheckAccumulator = 0, cameraAccumulator = 0;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
+			PerformFpsLimit( (int)(e.Time * 1000) );
 			Graphics.BeginFrame( this );
 			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
@@ -413,6 +415,29 @@ namespace ClassicalSharp {
 			Map.SetBlock( x, y, z, block );
 			int newHeight = Map.GetLightHeight( x, z ) + 1;
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
+		}
+		
+		int limitMilliseconds;
+		public void SetFpsLimitMethod( FpsLimitMethod method ) {
+			FpsLimit = method;
+			limitMilliseconds = 0;
+			Graphics.SetVSync( this,
+			                  method == FpsLimitMethod.LimitVSync );
+			
+			if( method == FpsLimitMethod.Limit120FPS ) 
+				limitMilliseconds = 1000 / (120 / 2);
+			if( method == FpsLimitMethod.Limit60FPS ) 
+				limitMilliseconds = 1000 / (60 / 2);
+			if( method == FpsLimitMethod.Limit30FPS ) 
+				limitMilliseconds = 1000 / (30 / 2);
+		}
+		
+		void PerformFpsLimit( int msElapsed ) {
+			if( limitMilliseconds == 0 ) return; // vsync or no limit
+			
+			// previous frame was too quick, sleep for a bit.
+			if( msElapsed < limitMilliseconds )
+				System.Threading.Thread.Sleep( limitMilliseconds - msElapsed );
 		}
 		
 		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }

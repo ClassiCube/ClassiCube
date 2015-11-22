@@ -21,12 +21,12 @@ namespace ClassicalSharp {
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";
 		public const string MouseRight = "mouseright";
-		public const string VSync = "vsync";
+		public const string FpsLimit = "fpslimit";
 		public const string AutoCloseLauncher = "autocloselauncher";
 	}
 	
 	// TODO: implement this
-	public enum FpsLimit {
+	public enum FpsLimitMethod {
 		LimitVSync,
 		Limit30FPS,
 		Limit60FPS,

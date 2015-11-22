@@ -27,10 +27,11 @@ namespace ClassicalSharp {
 				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
-				Make( -140, 0, "VSync active", Anchor.Centre, OnWidgetClick,
-				     g => g.VSync ? "yes" : "no",
-				     (g, v) => { g.Graphics.SetVSync( g, v == "yes" );
-				     	Options.Set( OptionsKey.VSync, v == "yes" ); } ),
+				Make( -140, 0, "FPS limit", Anchor.Centre, OnWidgetClick,
+				     g => g.FpsLimit.ToString(),
+				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
+				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
+				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 
 				Make( -140, 50, "View distance", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
@@ -66,10 +67,12 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
+			buttons[2].Metadata = typeof(FpsLimitMethod);
+			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),		
-				new BooleanValidator(),
+				new EnumValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
