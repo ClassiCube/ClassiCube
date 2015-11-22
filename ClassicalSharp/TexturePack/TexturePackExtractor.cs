@@ -78,6 +78,9 @@ namespace ClassicalSharp.TexturePack {
 					StreamReader reader = new StreamReader( stream );
 					game.Animations.ReadAnimationsDescription( reader );
 					break;
+				case "particles.png":
+					UpdateTexture( ref game.ParticleManager.ParticlesTexId, 
+					              stream, false ); break;
 				case "default.png":
 					SetFontBitmap( game, stream );
 					break;

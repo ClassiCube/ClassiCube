@@ -126,6 +126,7 @@ namespace ClassicalSharp {
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
+			ParticleManager = new ParticleManager( this );
 			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
@@ -173,7 +174,6 @@ namespace ClassicalSharp {
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
 			SelectionManager = new SelectionManager( this );
-			ParticleManager = new ParticleManager( this );
 			WeatherRenderer = new WeatherRenderer( this );
 			WeatherRenderer.Init();
 			BlockHandRenderer = new BlockHandRenderer( this );

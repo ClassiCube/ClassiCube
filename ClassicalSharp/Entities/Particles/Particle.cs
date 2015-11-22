@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Particles {
 
-	public abstract class Particle : IDisposable {
+	public abstract class Particle {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
@@ -12,8 +12,6 @@ namespace ClassicalSharp.Particles {
 		protected Vector3 lastPos, nextPos;
 
 		public abstract void Render( double delta, float t, VertexPos3fTex2fCol4b[] vertices, ref int index );
-		
-		public abstract void Dispose();
 		
 		public Particle( Game game, Vector3 pos, Vector3 velocity, double lifetime ) {
 			this.game = game;

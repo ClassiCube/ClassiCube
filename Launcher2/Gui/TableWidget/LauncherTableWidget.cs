@@ -15,7 +15,7 @@ namespace Launcher2 {
 		public Action<string> SelectedChanged;
 		public string SelectedHash;
 		
-		TableEntry[] entries, usedEntries;
+		internal TableEntry[] entries, usedEntries;
 		internal List<ServerListEntry> servers;
 		public void SetEntries( List<ServerListEntry> servers ) {
 			entries = new TableEntry[servers.Count];
@@ -56,7 +56,7 @@ namespace Launcher2 {
 		public int[] ColumnWidths = { 280, 80, 80 };
 		public int[] DesiredColumnWidths = { 280, 80, 80 };
 		
-		struct TableEntry {
+		internal struct TableEntry {
 			public string Hash, Name, Players, Uptime;
 			public int Y, Height;
 		}

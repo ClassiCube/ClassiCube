@@ -7,54 +7,71 @@ namespace ClassicalSharp.Particles {
 	
 	public class ParticleManager : IDisposable {
 		
-		List<Particle> particles = new List<Particle>();
+		public int ParticlesTexId;
+		List<Particle> terrainParticles = new List<Particle>();
+		List<Particle> rainParticles = new List<Particle>();
 		Game game;
-		IGraphicsApi graphics;
+		Random rnd;
 		int vb;
 		
 		public ParticleManager( Game game ) {
 			this.game = game;
-			graphics = game.Graphics;
-			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 1000 );
+			rnd = new Random();
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 1000 );
 		}
 		
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[0];
 		public void Render( double delta, float t ) {
-			if( particles.Count == 0 ) return;
-			
-			int count = particles.Count * 4;
-			if( count > vertices.Length ) {
-				vertices = new VertexPos3fTex2fCol4b[count];
-			}
-			int index = 0;
-			for( int i = 0; i < particles.Count; i++ ) {
-				particles[i].Render( delta, t, vertices, ref index );
-			}
-			
+			if( terrainParticles.Count == 0 && rainParticles.Count == 0 ) return;
+			IGraphicsApi graphics = game.Graphics;
 			graphics.Texturing = true;
-			graphics.BindTexture( game.TerrainAtlas.TexId );
 			graphics.AlphaTest = true;
-			count = Math.Min( count, 1000 );
-			
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
+			
+			int count = RenderParticles( terrainParticles, delta, t );
+			if( count > 0 ) {
+				graphics.BindTexture( game.TerrainAtlas.TexId );
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
+			}
+			count = 0;//RenderParticles( rainParticles, delta, t );
+			if( count > 0 ) {
+				graphics.BindTexture( ParticlesTexId );
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
+			}
+			
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
 		}
 		
+		int RenderParticles( List<Particle> particles, double delta, float t ) {
+			int count = particles.Count * 4;
+			if( count > vertices.Length )
+				vertices = new VertexPos3fTex2fCol4b[count];
+			
+			int index = 0;
+			for( int i = 0; i < particles.Count; i++ )
+				particles[i].Render( delta, t, vertices, ref index );				
+			return Math.Min( count, 1000 );
+		}
+		
 		public void Tick( double delta ) {
+			TickParticles( terrainParticles, delta );
+			//TickParticles( rainParticles, delta );
+		}
+		
+		void TickParticles( List<Particle> particles, double delta ) {
 			for( int i = 0; i < particles.Count; i++ ) {
 				Particle particle = particles[i];
-				if( particle.Tick( delta ) ) {				
+				if( particle.Tick( delta ) ) {
 					particles.RemoveAt( i );
 					i--;
-					particle.Dispose();
 				}
 			}
 		}
 		
 		public void Dispose() {
-			graphics.DeleteDynamicVb( vb );
+			game.Graphics.DeleteDynamicVb( vb );
+			game.Graphics.DeleteTexture( ref ParticlesTexId );
 		}
 		
 		public void BreakBlockEffect( Vector3I position, byte block ) {
@@ -62,30 +79,50 @@ namespace ClassicalSharp.Particles {
 			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left );
 			TextureRec rec = game.TerrainAtlas.GetTexRec( texLoc );
 			
-			float invSize = TerrainAtlas2D.invElementSize;
-			int cellsCountX = (int)( 0.25f / invSize );
-			int cellsCountY = (int)( 0.25f / invSize );
-			float elementXSize = invSize * 0.25f;
-			float elementYSize = invSize * 0.25f;
+			const float invSize = TerrainAtlas2D.invElementSize;
+			const int cellsCount = (int)((1/4f) / invSize);
+			const float elemSize = invSize / 4f;
+			float blockHeight = game.BlockInfo.Height[block];
 			
-			Random rnd = new Random();
 			for( int i = 0; i < 25; i++ ) {
-				double velX = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
-				double velZ = ( rnd.NextDouble() * 0.8/*5*/ ) - 0.4/*0.25*/;
-				double velY = ( rnd.NextDouble() + 0.25 ) * game.BlockInfo.Height[block];
+				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
+				double velZ = rnd.NextDouble() * 0.8 - 0.4;
+				double velY = rnd.NextDouble() + 0.2;
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
-				double xOffset = rnd.NextDouble() - 0.125;
-				double yOffset = rnd.NextDouble() - 0.125;
-				double zOffset = rnd.NextDouble() - 0.125;
-				Vector3 pos = startPos + new Vector3( (float)xOffset, (float)yOffset, (float)zOffset );
+				
+				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
+				double yOffset = (rnd.NextDouble() - 0.125) * blockHeight;
+				double zOffset = rnd.NextDouble() - 0.5;
+				Vector3 pos = startPos + new Vector3( 0.5f + (float)xOffset,
+				                                     (float)yOffset, 0.5f + (float)zOffset );
+				
 				TextureRec particleRec = rec;
-				particleRec.U1 = (float)( rec.U1 + rnd.Next( 0, cellsCountX ) * elementXSize );
-				particleRec.V1 = (float)( rec.V1 + rnd.Next( 0, cellsCountY ) * elementYSize );
-				particleRec.U2 = particleRec.U1 + elementXSize;
-				particleRec.V2 = particleRec.V1 + elementYSize;
+				particleRec.U1 = rec.U1 + rnd.Next( 0, cellsCount ) * elemSize;
+				particleRec.V1 = rec.V1 + rnd.Next( 0, cellsCount ) * elemSize;
+				particleRec.U2 = particleRec.U1 + elemSize;
+				particleRec.V2 = particleRec.V1 + elemSize;
 				double life = 1.5 - rnd.NextDouble();
 				
-				particles.Add( new TerrainParticle( game, pos, velocity, life, particleRec ) );
+				terrainParticles.Add( new TerrainParticle( game, pos, velocity, life, particleRec ) );
+			}
+		}
+		
+		public void AddRainParticle( Vector3 pos ) {
+			Vector3 startPos = pos;
+			
+			for( int i = 0; i < 5; i++ ) {
+				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
+				double velZ = rnd.NextDouble() * 0.8 - 0.4;
+				double velY = rnd.NextDouble() + 0.2;
+				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
+				
+				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
+				double yOffset = rnd.NextDouble() - 0.125;
+				double zOffset = rnd.NextDouble() - 0.5;
+				pos = startPos + new Vector3( 0.5f + (float)xOffset,
+				                                     (float)yOffset, 0.5f + (float)zOffset );
+				double life = 1.5 - rnd.NextDouble();		
+				rainParticles.Add( new RainParticle( game, pos, velocity, life ) );
 			}
 		}
 	}

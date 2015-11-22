@@ -24,7 +24,7 @@ namespace Launcher2 {
 			game.Window.Keyboard.KeyRepeat = true;
 		}
 		
-		protected void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( lastInput != null && e.Key == Key.BackSpace ) {
 				if( lastInput.RemoveChar() ) {
 					RedrawLastInput();

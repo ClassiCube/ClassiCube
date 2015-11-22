@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 			
 			last = now;
 			if( writer != null ) {
-				string data = text;//Utils.StripColours( text );
+				string data = Utils.StripColours( text );
 				string entry = now.ToString( "[yyyy-MM-dd HH:mm:ss] " ) + data;
 				writer.WriteLine( entry );
 			}

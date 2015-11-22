@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		float vOffset;
 		const int extent = 4;
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
+		double rainAcc;
 		
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
@@ -33,6 +34,7 @@ namespace ClassicalSharp {
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)game.accumulator * speed;
+			rainAcc += deltaTime;
 			
 			int index = 0;
 			graphics.AlphaBlending = true;
@@ -44,10 +46,14 @@ namespace ClassicalSharp {
 					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
+					//if( rainAcc >= 3 )
+					//	game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
+			if( rainAcc >= 3 )
+				rainAcc = 0;
 			
 			// fixes crashing on nVidia cards in OpenGL builds.
 			if( index > 0 ) {

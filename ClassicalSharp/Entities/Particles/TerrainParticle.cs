@@ -25,8 +25,5 @@ namespace ClassicalSharp.Particles {
 			vertices[index++] = new VertexPos3fTex2fCol4b( p222, rec.U2, rec.V1, col );
 			vertices[index++] = new VertexPos3fTex2fCol4b( p212, rec.U2, rec.V2, col );
 		}
-		
-		public override void Dispose() {
-		}
 	}
 }
