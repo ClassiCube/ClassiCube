@@ -104,6 +104,8 @@ namespace Launcher2 {
 			} catch( WebException ex ) {
 				ErrorHandler.LogError( "retrieving server information", ex );
 				return false;
+			} catch( ArgumentOutOfRangeException ) {
+				return false;
 			}
 			Client.Start( data, true, ref ShouldExit );
 			return true;

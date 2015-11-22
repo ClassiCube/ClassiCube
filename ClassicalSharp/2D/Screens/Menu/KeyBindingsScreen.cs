@@ -22,8 +22,9 @@ namespace ClassicalSharp {
 		static string[] keyNames;
 		static string[] descriptions = new [] { "Forward", "Back", "Left", "Right", "Jump", "Respawn",
 			"Set spawn", "Open chat", "Send chat", "Pause", "Open inventory", "Cycle view distance",
-			"Show player list", "Speed", "Toggle noclip", "Toggle fly", "Fly up", "Fly Down",
-			"Hide gui", "Hide FPS", "Take screenshot", "Toggle fullscreen", "Toggle 3rd person" };
+			"Show player list", "Speed", "Toggle noclip", "Toggle fly", "Fly up", "Fly down",
+			"Hide gui", "Hide FPS", "Take screenshot", "Toggle fullscreen", "Toggle 3rd person",
+				"Toggle extended input", };
 		
 		public override void Init() {
 			if( keyNames == null )
@@ -33,11 +34,11 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[descriptions.Length + 1];
 			
-			MakeKeys( 0, 11, -140 );
-			MakeKeys( 11, 11, 140 );
+			MakeKeys( 0, 12, -140 );
+			MakeKeys( 12, 12, 140 );
 			buttons[index] = Make( 0, 5, "Back to menu", Anchor.BottomOrRight, 
 			                      (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			statusWidget = TextWidget.Create( game, 0, 150, "", Anchor.Centre, Anchor.Centre, regularFont );
+			statusWidget = TextWidget.Create( game, 0, 160, "", Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		int index;
@@ -58,10 +59,8 @@ namespace ClassicalSharp {
 		void OnWidgetClick( Game game, Widget realWidget ) {
 			this.curWidget = (ButtonWidget)realWidget;
 			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
-			statusWidget.Dispose();
-			
 			string text = "&ePress new key binding for " + descriptions[index] + ":";
-			statusWidget = TextWidget.Create( game, 0, 150, text, Anchor.Centre, Anchor.Centre, regularFont );
+			statusWidget.SetText( text );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

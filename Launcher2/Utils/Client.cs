@@ -12,7 +12,7 @@ namespace Launcher2 {
 				"http://s3.amazonaws.com/MinecraftSkins/";
 			string args = data.Username + " " + data.Mppass + " " +
 				data.Ip + " " + data.Port + " " + skinServer;
-			return Start( args, ref shouldExit );
+			return StartImpl( data, classicubeSkins, args, ref shouldExit );
 		}
 		
 		public static bool Start( string args, ref bool shouldExit ) {

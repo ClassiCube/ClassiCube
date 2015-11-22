@@ -43,7 +43,7 @@ namespace Launcher2 {
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( e.Key == Key.Enter ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				if( table.Count == 1 )
+				if( table.Count == 1 && String.IsNullOrEmpty( Get( 3 ) ) )
 					widgets[3].Text = table.usedEntries[0].Hash;
 				ConnectToServer( 0, 0 );
 			} else {

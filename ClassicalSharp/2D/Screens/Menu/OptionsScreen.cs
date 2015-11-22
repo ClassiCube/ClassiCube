@@ -77,6 +77,7 @@ namespace ClassicalSharp {
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
 				new BooleanValidator(),
+				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),
 			};
 			okayIndex = buttons.Length - 1;

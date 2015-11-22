@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
 			else if( game.Network.ServerSupportsFullCP437 &&
-			        (key == Key.AltLeft || key == Key.AltRight) )
+			        key == game.InputHandler.Keys[KeyBinding.ExtendedInput] )
 				altText.SetActive( !altText.Active );
 			else if( !OtherKey( key ) ) return false;
 			
