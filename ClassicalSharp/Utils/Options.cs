@@ -22,6 +22,7 @@ namespace ClassicalSharp {
 		public const string MouseMiddle = "mousemiddle";
 		public const string MouseRight = "mouseright";
 		public const string VSync = "vsync";
+		public const string AutoCloseLauncher = "autocloselauncher";
 	}
 	
 	// TODO: implement this

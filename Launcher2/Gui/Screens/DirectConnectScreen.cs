@@ -146,7 +146,7 @@ namespace Launcher2 {
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
 			ClientStartData data = new ClientStartData( Get( 3 ), mppass, ipPart, portPart );
 			bool ccSkins = ((LauncherBooleanWidget)widgets[10]).Value;
-			Client.Start( data, ccSkins );
+			Client.Start( data, ccSkins, ref game.ShouldExit );
 		}
 		
 		public override void Dispose() {

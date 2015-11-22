@@ -75,7 +75,7 @@ namespace Launcher2 {
 			data = (Dictionary<string, object>)Json.ParseValue( response, ref index, ref success );
 			
 			List<object> errors = (List<object>)data["errors"];
-			if( errors.Count > 0 )
+			if( errors.Count > 0 || (data.ContainsKey( "username" ) && data["username"] == null) )
 				throw new InvalidOperationException( "Wrong username or password." );
 			
 			Username = (string)data["username"];

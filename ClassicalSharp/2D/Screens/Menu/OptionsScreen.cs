@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 				     	g.Players.ShowHoveredNames = v == "yes";
 				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" );
 				     }),
+				
 				Make( -140, -50, "Speed multiplier", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
 				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
@@ -37,12 +38,17 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -50, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -100, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
+				
+				Make( 140, -50, "Auto close launcher", Anchor.Centre, OnWidgetClick,
+				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
+				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
+				
 				Make( 140, 0, "Pushback block placing", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.PushbackBlockPlacing
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
@@ -50,10 +56,12 @@ namespace ClassicalSharp {
 				     	if( g.LocalPlayer.CanPushbackBlocks)
 				     		g.LocalPlayer.PushbackBlockPlacing = v == "yes";
 				     }),
+				
 				Make( 140, 50, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
+				
 				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,

@@ -40,6 +40,9 @@ namespace Launcher2 {
 		/// <summary> Bitmap that contains the entire array of pixels that describe the client drawing area. </summary>
 		public Bitmap Framebuffer;
 		
+		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
+		public bool ShouldExit;
+		
 		/// <summary> Contains metadata attached for different screen instances,
 		/// typically used to save 'last text entered' text when a screen is disposed. </summary>
 		public Dictionary<string, Dictionary<string, object>> ScreenMetadata =
@@ -90,7 +93,7 @@ namespace Launcher2 {
 				if( entry.Hash == hash ) {
 					data = new ClientStartData( Session.Username, entry.Mppass,
 					                           entry.IPAddress, entry.Port );
-					Client.Start( data, true );
+					Client.Start( data, true, ref ShouldExit );
 					return true;
 				}
 			}
@@ -102,7 +105,7 @@ namespace Launcher2 {
 				ErrorHandler.LogError( "retrieving server information", ex );
 				return false;
 			}
-			Client.Start( data, true );
+			Client.Start( data, true, ref ShouldExit );
 			return true;
 		}
 		
@@ -124,12 +127,18 @@ namespace Launcher2 {
 			while( true ) {
 				Window.ProcessEvents();
 				if( !Window.Exists ) break;
+				if( ShouldExit ) {
+					if( Screen != null ) 
+						Screen.Dispose();
+					break;
+				}
 				
 				Screen.Tick();
 				if( Dirty || Screen.Dirty )
 					Display();
 				Thread.Sleep( 1 );
 			}
+			Window.Close();
 		}
 		
 		void Display() {

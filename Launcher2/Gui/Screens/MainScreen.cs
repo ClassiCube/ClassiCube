@@ -29,6 +29,8 @@ namespace Launcher2 {
 		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( e.Key == Key.Tab )
 				HandleTab();
+			else if( e.Key == Key.Enter )
+				widgets[0].OnClick( 0, 0 );
 		}
 		
 		void KeyUp( object sender, KeyboardKeyEventArgs e ) {
@@ -69,7 +71,7 @@ namespace Launcher2 {
 			
 			MakeButtonAt( "Singleplayer", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, 0,
-			             (x, y) => Client.Start( "" ) );
+			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
 			
 			MakeButtonAt( "Check for updates", Anchor.Centre, Anchor.Centre,
 			             buttonWidth, buttonHeight, 0, 100,
