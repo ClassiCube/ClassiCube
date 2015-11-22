@@ -13,7 +13,7 @@ namespace Launcher2 {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			inputFont = new Font( "Arial", 13, FontStyle.Regular );
 			boldInputFont = new Font( "Arial", 13, FontStyle.Bold );
-			enterIndex = 4;
+			enterIndex = 5;
 			widgets = new LauncherWidget[7];
 		}
 		

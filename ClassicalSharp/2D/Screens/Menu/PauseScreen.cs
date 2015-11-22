@@ -20,20 +20,21 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			buttons = new ButtonWidget[] {
 				// Column 1
-				Make( -140, -100, "Options", Anchor.Centre, 
+				Make( -140, -150, "Options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
+				Make( -140, -100, "Gui options", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
 				Make( -140, -50, "Environment settings", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				
-				Make( -140, 0, "Hotkeys", Anchor.Centre, 
+				Make( -140, 0, "Key bindings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ) ),		
+				Make( -140, 50, "Hotkeys", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
-				Make( -140, 50, "Key bindings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ) ),	
 				// Column 2
-				Make( 140, -100, "Save level", Anchor.Centre, 
+				Make( 140, -150, "Save level", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -50, "Load level", Anchor.Centre, 
+					Make( 140, -100, "Load level", Anchor.Centre, 
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				// TODO: singleplayer Generate level screen
 				Make( 140, 50, "Select texture pack", Anchor.Centre, 

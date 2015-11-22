@@ -77,9 +77,8 @@ namespace ClassicalSharp {
 			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
 			if( buttonsDown > 1 || game.ScreenLockedInput || inv.HeldBlock == Block.Air ) return;
 			
-			// always play animations, even if we aren't picking a block.
+			// always play delete animations, even if we aren't picking a block.
 			if( left ) game.BlockHandRenderer.SetAnimationClick( true );
-			else if( right ) game.BlockHandRenderer.SetAnimationClick( false );
 			if( !game.SelectedPos.Valid ) return;
 			
 			if( middle ) {
@@ -96,7 +95,7 @@ namespace ClassicalSharp {
 				   && inv.CanDelete[block] ) {
 					game.ParticleManager.BreakBlockEffect( pos, block );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
-					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );					
+					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
 				}
 			} else if( right ) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
@@ -106,7 +105,8 @@ namespace ClassicalSharp {
 				if( !game.CanPick( game.Map.GetBlock( pos ) ) && inv.CanPlace[block]
 				   && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
-					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );					
+					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
+					game.BlockHandRenderer.SetAnimationClick( false );
 				}
 			}
 		}
@@ -285,7 +285,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void HandleHotkey( Key key ) {			
+		void HandleHotkey( Key key ) {
 			string text;
 			bool more;
 			

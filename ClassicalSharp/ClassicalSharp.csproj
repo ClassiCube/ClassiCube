@@ -91,6 +91,7 @@
     <Compile Include="2D\Screens\HotkeyScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\KeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\LoadLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />

@@ -8,7 +8,8 @@ namespace ClassicalSharp {
 	
 	public static class OptionsKey {
 		public const string ViewDist = "viewdist";
-		public const string HudScale = "chatscale";
+		public const string HudScale = "hudscale";
+		public const string ChatScale = "chatscale";
 		public const string Sensitivity = "mousesensitivity";
 		public const string Speed = "speedmultiplier";
 		public const string ChatLines = "chatlines";

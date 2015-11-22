@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool HideGui = false, ShowFPS = true;
-		internal float HudScale = 0.8f;
+		internal float HudScale = 1.0f, ChatScale = 1.0f;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -124,7 +124,8 @@ namespace ClassicalSharp {
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
-			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 2f, 1 );
+			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 5f, 1f );
+			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			BlockInfo = new BlockInfo();

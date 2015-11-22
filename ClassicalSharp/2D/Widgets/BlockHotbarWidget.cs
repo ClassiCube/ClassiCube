@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		}
 		
 		static FastColour backCol = new FastColour( 60, 60, 60, 160 );
-		static FastColour outlineCol = new FastColour( 169, 143, 192 );
+		static FastColour outlineCol = new FastColour( 151, 120, 180 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
 			blockSize = (int)(38 * game.GuiScale());
