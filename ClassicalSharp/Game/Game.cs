@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Threading;
 using ClassicalSharp.Commands;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
@@ -12,8 +13,8 @@ using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using ClassicalSharp.TexturePack;
 using OpenTK;
-using OpenTK.Input;
 using OpenTK.Graphics;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 
@@ -222,10 +223,10 @@ namespace ClassicalSharp {
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
 		const double cameraPeriod = 1.0 / 120.0;
-		double ticksAccumulator = 0, imageCheckAccumulator = 0, cameraAccumulator = 0;
+		double ticksAccumulator, imageCheckAccumulator, cameraAccumulator;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
-			PerformFpsLimit( (int)(e.Time * 1000) );
+			PerformFpsElapsed( e.Time * 1000 );
 			Graphics.BeginFrame( this );
 			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
@@ -268,7 +269,6 @@ namespace ClassicalSharp {
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
-			
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
 			fpsScreen.Render( e.Time );
@@ -357,11 +357,11 @@ namespace ClassicalSharp {
 			// is currently looking at a warning dialog.
 			if( activeScreen is WarningScreen ) {
 				WarningScreen warning = (WarningScreen)activeScreen;
-				if( warning.lastScreen != null ) 
+				if( warning.lastScreen != null )
 					warning.lastScreen.Dispose();
 				
 				warning.lastScreen = screen;
-				if( warning.lastScreen != null ) 
+				if( warning.lastScreen != null )
 					screen.Init();
 				return;
 			}
@@ -393,7 +393,7 @@ namespace ClassicalSharp {
 				screen.lastCursorVisible = CursorVisible;
 				if( !CursorVisible) CursorVisible = true;
 			} else {
-				screen.lastCursorVisible = WarningScreens[0].lastCursorVisible;				
+				screen.lastCursorVisible = WarningScreens[0].lastCursorVisible;
 			}
 			WarningScreens.Add( screen );
 			screen.Init();
@@ -417,27 +417,32 @@ namespace ClassicalSharp {
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
 		}
 		
-		int limitMilliseconds;
+		float limitMilliseconds;
+		double limitAcc;
 		public void SetFpsLimitMethod( FpsLimitMethod method ) {
 			FpsLimit = method;
+			limitAcc = 0;
 			limitMilliseconds = 0;
 			Graphics.SetVSync( this,
 			                  method == FpsLimitMethod.LimitVSync );
 			
-			if( method == FpsLimitMethod.Limit120FPS ) 
-				limitMilliseconds = 1000 / (120 / 2);
-			if( method == FpsLimitMethod.Limit60FPS ) 
-				limitMilliseconds = 1000 / (60 / 2);
-			if( method == FpsLimitMethod.Limit30FPS ) 
-				limitMilliseconds = 1000 / (30 / 2);
+			if( method == FpsLimitMethod.Limit120FPS )
+				limitMilliseconds = 1000f / 60;
+			if( method == FpsLimitMethod.Limit60FPS )
+				limitMilliseconds = 1000f / 30;
+			if( method == FpsLimitMethod.Limit30FPS )
+				limitMilliseconds = 1000f / 15;
 		}
 		
-		void PerformFpsLimit( int msElapsed ) {
-			if( limitMilliseconds == 0 ) return; // vsync or no limit
-			
-			// previous frame was too quick, sleep for a bit.
-			if( msElapsed < limitMilliseconds )
-				System.Threading.Thread.Sleep( limitMilliseconds - msElapsed );
+		void PerformFpsElapsed( double elapsedMs ) {
+			limitAcc += elapsedMs;		
+			if( limitAcc >= limitMilliseconds ) { // going slower than limit?
+				limitAcc -= limitMilliseconds;
+			} else { // going faster than limit
+				double sleepTime = limitMilliseconds - limitAcc;
+				sleepTime = Math.Ceiling( sleepTime );
+				Thread.Sleep( (int)sleepTime );
+			}
 		}
 		
 		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }
