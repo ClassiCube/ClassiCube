@@ -39,12 +39,16 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -100, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
+				
+				Make( 140, -100, "View bobbing (WIP)", Anchor.Centre, OnWidgetClick,
+				     g => g.ViewBobbing ? "yes" : "no",
+				     (g, v) => g.ViewBobbing = v == "yes" ),
 				
 				Make( 140, -50, "Auto close launcher", Anchor.Centre, OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
@@ -76,6 +80,7 @@ namespace ClassicalSharp {
 				new IntegerValidator( 16, 4096 ),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),

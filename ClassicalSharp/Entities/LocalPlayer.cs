@@ -70,13 +70,18 @@ namespace ClassicalSharp {
 			lastPos = Position = nextPos;
 			lastYaw = nextYaw;
 			lastPitch = nextPitch;
+			Vector3 prevVel = Velocity;
+			
 			HandleInput( ref xMoving, ref zMoving );
 			UpdateVelocityYState();
 			PhysicsTick( xMoving, zMoving );
+			
 			nextPos = Position;
 			Position = lastPos;
+			
 			UpdateAnimState( lastPos, nextPos, delta );
 			CheckSkin();
+			game.Camera.PlayerTick( delta, prevVel, Velocity, onGround );
 		}
 		
 		public override void RenderModel( double deltaTime, float t ) {

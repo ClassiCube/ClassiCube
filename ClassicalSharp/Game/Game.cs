@@ -73,8 +73,9 @@ namespace ClassicalSharp {
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
-		public bool ClickableChat, HideGui, ShowFPS;
+		public bool ClickableChat, HideGui, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
+		public bool ViewBobbing;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;
@@ -242,7 +243,7 @@ namespace ClassicalSharp {
 			
 			Graphics.Clear();
 			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView();
+			Matrix4 modelView = Camera.GetView( e.Time );
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );

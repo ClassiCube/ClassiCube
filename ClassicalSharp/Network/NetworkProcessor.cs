@@ -91,7 +91,6 @@ namespace ClassicalSharp {
 		}
 		
 		bool Is304Status( WebException ex ) {
-			Console.WriteLine( ex );
 			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
 				return false;
 			
