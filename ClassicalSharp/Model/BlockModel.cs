@@ -64,8 +64,7 @@ namespace ClassicalSharp.Model {
 				
 				ZQuad( scale, TileSide.Back, -scale, scale, 0, 0, true );
 				YQuad( blockHeight, TileSide.Top );
-				XQuad( -scale, TileSide.Right, -scale, scale, 0, 0, true );
-				
+				XQuad( -scale, TileSide.Right, -scale, scale, 0, 0, true );			
 			}
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}

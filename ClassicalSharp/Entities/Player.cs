@@ -88,9 +88,20 @@ namespace ClassicalSharp {
 				int sizeX = (bmp.Width / 64) * 32;
 				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
 				int sizeY = (bmp.Height / yScale) * 16;
+				
+				// determine if we actually need filtering
+				for( int y = 0; y < sizeY; y++ ) {
+					int* row = fastBmp.GetRowPtr( y );
+					row += sizeX;
+					for( int x = 0; x < sizeX; x++ ) {
+						byte alpha = (byte)(row[x] >> 24);
+						if( alpha != 255 ) return;
+					}
+				}
+				
+				// only perform filtering when the entire hat is opaque
 				int fullWhite = FastColour.White.ToArgb();
 				int fullBlack = FastColour.Black.ToArgb();
-				
 				for( int y = 0; y < sizeY; y++ ) {
 					int* row = fastBmp.GetRowPtr( y );
 					row += sizeX;

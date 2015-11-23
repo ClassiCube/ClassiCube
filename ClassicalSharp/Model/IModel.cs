@@ -79,7 +79,7 @@ namespace ClassicalSharp.Model {
 		
 		protected BoxDescription MakeBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
 			BoxDescription desc = default( BoxDescription )
-				.SetModelBounds( x1, y1, z1, x2, y2, z2 );		
+				.SetModelBounds( x1, y1, z1, x2, y2, z2 );
 			desc.SidesW = Math.Abs( z2 - z1 );
 			desc.BodyW = Math.Abs( x2 - x1 );
 			desc.BodyH = Math.Abs( y2 - y1 );
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Model {
 		
 		protected BoxDescription MakeRotatedBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
 			BoxDescription desc = default( BoxDescription )
-				.SetModelBounds( x1, y1, z1, x2, y2, z2 );		
+				.SetModelBounds( x1, y1, z1, x2, y2, z2 );
 			desc.SidesW = Math.Abs( y2 - y1 );
 			desc.BodyW = Math.Abs( x2 - x1 );
 			desc.BodyH = Math.Abs( z2 - z1 );
@@ -142,10 +142,10 @@ namespace ClassicalSharp.Model {
 			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
 			int x = desc.TexX, y = desc.TexY;
 			
-			ZQuad( x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1 ); // front
-			ZQuad( x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2 ); // back	
 			YQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2 ); // top
-			YQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom				
+			YQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1 ); // bottom
+			ZQuad( x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1 ); // front
+			ZQuad( x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2 ); // back
 			XQuad( x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2 ); // left
 			XQuad( x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1 ); // right
 			
@@ -189,6 +189,7 @@ namespace ClassicalSharp.Model {
 				ModelVertex model = vertices[part.Offset + i];
 				Vector3 newPos = Utils.RotateY( model.X, model.Y, model.Z, cosA, sinA ) + pos;
 				
+				FastColour col = GetCol( i, part.Count );
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
@@ -210,14 +211,26 @@ namespace ClassicalSharp.Model {
 				loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
 				loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
 				
+				FastColour col = GetCol( i, part.Count );				
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
 				Vector3 newPos = Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				AdjustUV( model.U, model.V, vScale, i, ref vertex );
-				
+				AdjustUV( model.U, model.V, vScale, i, ref vertex );				
 				cache.vertices[index++] = vertex;
 			}
+		}
+		
+		FastColour GetCol( int i, int count ) {
+			if( count != boxVertices )
+				return FastColour.Scale( col, 0.7f );
+			if( i >= 4 && i < 8 )
+				return FastColour.Scale( col, 0.5f ); // y bottom
+			if( i >= 8 && i < 16 ) 
+				return FastColour.Scale( col, 0.8f ); // z sides
+			if( i >= 16 && i < 24 ) 
+				return FastColour.Scale( col, 0.6f ); // x sides
+			return col;
 		}
 		
 		void AdjustUV( ushort u, ushort v, float vScale, int i, ref VertexPos3fTex2fCol4b vertex ) {
