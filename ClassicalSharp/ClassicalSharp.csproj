@@ -35,6 +35,7 @@
     <DefineConstants>DEBUG;TRACE;</DefineConstants>
     <StartAction>Project</StartAction>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartArguments>wwwf df 127.0.0.1 25564</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>..\output\release\</OutputPath>

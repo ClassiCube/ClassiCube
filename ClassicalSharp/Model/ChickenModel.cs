@@ -32,6 +32,10 @@ namespace ClassicalSharp.Model {
 			return new ModelPart( index - 2 * 4, 2 * 4 );
 		}
 		
+		public override bool Bobbing {
+			get { return true; }
+		}
+		
 		public override float NameYOffset {
 			get { return 1.0125f; }
 		}

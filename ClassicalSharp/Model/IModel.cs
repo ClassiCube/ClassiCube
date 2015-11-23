@@ -22,6 +22,11 @@ namespace ClassicalSharp.Model {
 			cache = game.ModelCache;
 		}
 		
+		/// <summary> Whether the entity should be slightly bobbed up and down when rendering. </summary>
+		/// <remarks> e.g. for players when their legs are at the peak of their swing,
+		/// the whole model will be moved slightly down. </remarks>
+		public abstract bool Bobbing { get; }
+		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
 		public abstract float NameYOffset { get; }
 		
@@ -43,6 +48,8 @@ namespace ClassicalSharp.Model {
 		public void RenderModel( Player p ) {
 			index = 0;
 			pos = p.Position;
+			if( Bobbing )
+				pos.Y += p.bobYOffset;
 			cosA = (float)Math.Cos( p.YawRadians );
 			sinA = (float)Math.Sin( p.YawRadians );
 			Map map = game.Map;
@@ -225,11 +232,11 @@ namespace ClassicalSharp.Model {
 			if( count != boxVertices )
 				return FastColour.Scale( col, 0.7f );
 			if( i >= 4 && i < 8 )
-				return FastColour.Scale( col, 0.5f ); // y bottom
+				return FastColour.Scale( col, FastColour.ShadeYBottom );
 			if( i >= 8 && i < 16 ) 
-				return FastColour.Scale( col, 0.8f ); // z sides
+				return FastColour.Scale( col, FastColour.ShadeZ );
 			if( i >= 16 && i < 24 ) 
-				return FastColour.Scale( col, 0.6f ); // x sides
+				return FastColour.Scale( col, FastColour.ShadeX );
 			return col;
 		}
 		

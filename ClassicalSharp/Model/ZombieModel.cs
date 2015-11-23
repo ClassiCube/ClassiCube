@@ -21,6 +21,10 @@ namespace ClassicalSharp.Model {
 			RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )
 			                    .SetTexOrigin( 40, 16 ) );
 		}
+		
+		public override bool Bobbing {
+			get { return true; }
+		}
 
 		public override float NameYOffset {
 			get { return 2.075f; }

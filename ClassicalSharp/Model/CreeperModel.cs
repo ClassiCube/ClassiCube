@@ -23,6 +23,10 @@ namespace ClassicalSharp.Model {
 			         .SetTexOrigin( 0, 16 ) );
 		}
 		
+		public override bool Bobbing {
+			get { return false; }
+		}
+		
 		public override float NameYOffset {
 			get { return 1.7f; }
 		}
