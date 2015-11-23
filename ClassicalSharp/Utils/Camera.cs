@@ -97,7 +97,6 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SetLocation( update, true );
 		}
 
-		const float angle = 1f * Utils.Deg2Rad;
 		public override void Tick( double elapsed ) {
 			if( game.ScreenLockedInput ) return;
 			CentreMousePosition();
@@ -114,7 +113,7 @@ namespace ClassicalSharp {
 			float dist = HorLength( nextVel ) - HorLength( prevVel );		
 			if( zero( nextVel.X ) && zero( nextVel.Z ) &&
 			   zero( prevVel.X ) && zero( prevVel.Z ) ) {
-				speed -= 0.5f;
+				speed = 0;
 			} else {
 				float sqrDist = (float)Math.Sqrt( Math.Abs( dist ) * 120 );
 				speed += Math.Sign( dist ) * sqrDist;
@@ -131,13 +130,18 @@ namespace ClassicalSharp {
 		}
 		
 		double bobAccumulator;
+		protected float bobYOffset = 0;
+		const float angle = 0.25f * Utils.Deg2Rad;
+		
 		protected void CalcBobMatix( double delta ) {
 			bobAccumulator += delta * speed;
 			if( speed == 0 ) {
 				BobMatrix = Matrix4.Identity;
+				bobYOffset = 0;
 			} else {
 				float time = (float)Math.Sin( bobAccumulator );
 				BobMatrix = Matrix4.RotateZ( time * angle );
+				bobYOffset = (float)Math.Sin( bobAccumulator ) * 0.1f;
 			}
 		}
 	}
@@ -157,6 +161,7 @@ namespace ClassicalSharp {
 		public override Matrix4 GetView( double delta ) {
 			CalcBobMatix( delta );
 			Vector3 eyePos = player.EyePosition;
+			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * BobMatrix;
 		}
@@ -185,6 +190,7 @@ namespace ClassicalSharp {
 		public override Matrix4 GetView( double delta ) {
 			CalcBobMatix( delta );
 			Vector3 eyePos = player.EyePosition;
+			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * BobMatrix;
 		}
@@ -207,6 +213,7 @@ namespace ClassicalSharp {
 		public override Matrix4 GetView( double delta ) {
 			CalcBobMatix( delta );
 			Vector3 eyePos = player.EyePosition;
+			eyePos.Y += bobYOffset;
 			Vector3 cameraDir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
 			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * BobMatrix;
 		}
