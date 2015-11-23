@@ -24,6 +24,12 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
+				Make( -140, 50, "Clickable chat", Anchor.Centre, OnWidgetClick,
+				     g => g.ClickableChat ? "yes" : "no",
+				     (g, v) => { g.ClickableChat = v == "yes";
+				     	Options.Set( OptionsKey.ClickableChat, v == "yes" );
+				     } ),
+				
 				// Column 2				
 				Make( 140, -50, "Chat scale", Anchor.Centre, OnWidgetClick,
 				     g => g.ChatScale.ToString(),
@@ -56,6 +62,7 @@ namespace ClassicalSharp {
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
+				new BooleanValidator(),
 				
 				new RealValidator( 0.25f, 5f ),
 				new IntegerValidator( 1, 30 ),

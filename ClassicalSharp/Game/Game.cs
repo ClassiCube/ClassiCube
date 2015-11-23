@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 		public Matrix4 View, Projection;
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
-		public bool HideGui = false, ShowFPS = true;
+		public bool ClickableChat, HideGui, ShowFPS;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
 		
 		public Animations Animations;
@@ -134,6 +134,7 @@ namespace ClassicalSharp {
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
+			ClickableChat = Options.GetBool( OptionsKey.ClickableChat, true );
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );

@@ -306,7 +306,7 @@ namespace ClassicalSharp {
 							"Be careful - urls from strangers may link to websites that",
 							" may have viruses, or things you may not want to open/see."
 						) );
-					} else {
+					} else if( game.ClickableChat ) {
 						textInput.AppendText( text );
 					}
 					return true;
@@ -325,6 +325,7 @@ namespace ClassicalSharp {
 		}
 		
 		void AppendUrl( WarningScreen screen ) {
+			if( !game.ClickableChat ) return;
 			textInput.AppendText( (string)screen.Metadata );
 		}
 		
