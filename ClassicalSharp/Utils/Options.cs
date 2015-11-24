@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		public const string MouseRight = "mouseright";
 		public const string FpsLimit = "fpslimit";
 		public const string AutoCloseLauncher = "autocloselauncher";
+		public const string ViewBobbing = "viewbobbing";
 	}
 	
 	// TODO: implement this

@@ -17,10 +17,8 @@ namespace ClassicalSharp {
 				// Column 1
 				Make( -140, -100, "Show hover names", Anchor.Centre, OnWidgetClick,
 				     g => g.Players.ShowHoveredNames ? "yes" : "no",
-				     (g, v) => {
-				     	g.Players.ShowHoveredNames = v == "yes";
-				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" );
-				     }),
+				     (g, v) => { g.Players.ShowHoveredNames = v == "yes";
+				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" ); }),
 				
 				Make( -140, -50, "Speed multiplier", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
@@ -46,9 +44,10 @@ namespace ClassicalSharp {
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -100, "View bobbing (WIP)", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
-				     (g, v) => g.ViewBobbing = v == "yes" ),
+				     (g, v) => { g.ViewBobbing = v == "yes";
+				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
 				Make( 140, -50, "Auto close launcher", Anchor.Centre, OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",

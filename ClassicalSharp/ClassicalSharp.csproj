@@ -235,9 +235,13 @@
     <Compile Include="Utils\WrappableStringBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\credits.txt">
+      <Link>credits.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="app.config" />
     <None Include="..\readme.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
