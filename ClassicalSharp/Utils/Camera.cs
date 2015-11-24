@@ -23,8 +23,8 @@ namespace ClassicalSharp {
 		public virtual void Tick( double elapsed ) {
 		}
 		
-		public virtual void PlayerTick( double elapsed, Vector3 prevVel,
-		                               Vector3 nextVel, bool onGround ) {
+		public virtual void PlayerTick( double elapsed, Vector3 prevVel, Vector3 nextVel,
+		                                float moveSpeed, bool onGround ) {
 		}
 		
 		public virtual bool MouseZoom( MouseWheelEventArgs e ) {
@@ -41,11 +41,11 @@ namespace ClassicalSharp {
 	public abstract class PerspectiveCamera : Camera {
 		
 		protected LocalPlayer player;
-		protected Matrix4 BobMatrix;
+		protected Matrix4 titleMatrix;
 		public PerspectiveCamera( Game game ) {
 			this.game = game;
 			player = game.LocalPlayer;
-			BobMatrix = Matrix4.Identity;
+			titleMatrix = Matrix4.Identity;
 		}
 		
 		public override Matrix4 GetProjection() {
@@ -104,8 +104,8 @@ namespace ClassicalSharp {
 		}
 		
 		float speed = 0;
-		public override void PlayerTick( double elapsed, Vector3 prevVel,
-		                                Vector3 nextVel, bool onGround ) {
+		public override void PlayerTick( double elapsed, Vector3 prevVel, Vector3 nextVel,
+		                                float moveSpeed, bool onGround ) {
 			if( !onGround || !game.ViewBobbing ) {
 				speed = 0; return;
 			}
@@ -115,10 +115,9 @@ namespace ClassicalSharp {
 			   zero( prevVel.X ) && zero( prevVel.Z ) ) {
 				speed = 0;
 			} else {
-				float sqrDist = (float)Math.Sqrt( Math.Abs( dist ) * 120 );
-				speed += Math.Sign( dist ) * sqrDist;
+				speed = moveSpeed * 8;
 			}
-			Utils.Clamp( ref speed, 0, 15f );
+			Utils.Clamp( ref speed, 0, 50f );
 		}
 		
 		bool zero( float value ) {
@@ -133,15 +132,17 @@ namespace ClassicalSharp {
 		protected float bobYOffset = 0;
 		const float angle = 0.25f * Utils.Deg2Rad;
 		
-		protected void CalcBobMatix( double delta ) {
+		protected void CalcViewBobbing( double delta ) {
 			bobAccumulator += delta * speed;
 			if( speed == 0 ) {
-				BobMatrix = Matrix4.Identity;
+				titleMatrix = Matrix4.Identity;
 				bobYOffset = 0;
 			} else {
-				float time = (float)Math.Sin( bobAccumulator );
-				BobMatrix = Matrix4.RotateZ( time * angle );
-				bobYOffset = (float)Math.Sin( bobAccumulator ) * 0.1f;
+				float tiltTime = (float)Math.Sin( bobAccumulator );
+				titleMatrix = Matrix4.RotateZ( tiltTime * angle );
+				
+				float bobTime = (float)Math.Sin( bobAccumulator );
+				bobYOffset = bobTime * (1/16f);
 			}
 		}
 	}
@@ -159,11 +160,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView( double delta ) {
-			CalcBobMatix( delta );
+			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
-			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * BobMatrix;
+			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * titleMatrix;
 		}
 		
 		public override bool IsThirdPerson {
@@ -188,11 +189,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView( double delta ) {
-			CalcBobMatix( delta );
+			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
-			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * BobMatrix;
+			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * titleMatrix;
 		}
 		
 		public override bool IsThirdPerson {
@@ -211,11 +212,11 @@ namespace ClassicalSharp {
 		
 		
 		public override Matrix4 GetView( double delta ) {
-			CalcBobMatix( delta );
+			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraDir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
-			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * BobMatrix;
+			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * titleMatrix;
 		}
 		
 		public override bool IsThirdPerson {

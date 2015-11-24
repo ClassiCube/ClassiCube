@@ -24,7 +24,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override bool Bobbing {
-			get { return false; }
+			get { return true; }
 		}
 		
 		public override float NameYOffset {

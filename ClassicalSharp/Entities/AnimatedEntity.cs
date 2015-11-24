@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			rightArmZRot = idleZRot;
 			leftArmZRot = -idleZRot;
 			
-			bobYOffset = -(float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
+			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
 		}
 	}
 }

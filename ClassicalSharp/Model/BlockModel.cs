@@ -67,7 +67,7 @@ namespace ClassicalSharp.Model {
 				XQuad( extent, TileSide.Left, -extent, extent, true, FastColour.ShadeX );
 				ZQuad( -extent, TileSide.Front, -extent, extent, true, FastColour.ShadeZ );
 				
-				ZQuad( extent, TileSide.Back, -extent, extent, true, FastColour.ShadeZ );
+				ZQuad( extent, TileSide.Back, -extent, extent, false, FastColour.ShadeZ );
 				YQuad( blockHeight, TileSide.Top, 1.0f );
 				XQuad( -extent, TileSide.Right, -extent, extent, true, FastColour.ShadeX );
 			}
@@ -181,7 +181,7 @@ namespace ClassicalSharp.Model {
 		void TransformVertices() {
 			for( int i = 0; i < index; i++ ) {
 				VertexPos3fTex2fCol4b vertex = cache.vertices[i];
-				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
+				Vector3 newPos = new Vector3( vertex.X, vertex.Y, vertex.Z ) + pos;//Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				cache.vertices[i] = vertex;
 			}

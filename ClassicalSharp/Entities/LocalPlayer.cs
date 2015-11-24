@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			
 			UpdateAnimState( lastPos, nextPos, delta );
 			CheckSkin();
-			game.Camera.PlayerTick( delta, prevVel, Velocity, onGround );
+			game.Camera.PlayerTick( delta, prevVel, Velocity, curMovementSpeed, onGround );
 		}
 		
 		public override void RenderModel( double deltaTime, float t ) {
@@ -152,6 +152,7 @@ namespace ClassicalSharp {
 		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
 		airDrag = new Vector3( 0.6f, 1f, 0.6f );
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		float curMovementSpeed;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
 			float multiply = (flying || noClip) ?
@@ -160,6 +161,7 @@ namespace ClassicalSharp {
 			float modifier = LowestSpeedModifier();
 			float horMul = multiply * modifier;
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
+			curMovementSpeed = horMul;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
