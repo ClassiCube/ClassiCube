@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		}
 		public float leftLegXRot, leftArmXRot, leftArmZRot;
 		public float rightLegXRot, rightArmXRot, rightArmZRot;
-		public float bobYOffset;
+		public float bobYOffset, tilt;
 		protected float walkTimeO, walkTimeN, swingO, swingN;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			float dx = newPos.X - oldPos.X;
 			float dz = newPos.Z - oldPos.Z;
 			double distance = Math.Sqrt( dx * dx + dz * dz );
-			
+
 			if( distance > 0.05 ) {
 				walkTimeN += (float)distance * 2 * (float)(20 * delta);
 				swingN += (float)delta * 3;
@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 			leftArmZRot = -idleZRot;
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
+			tilt = (float)Math.Cos( walkTime / 2 ) * swing * (0.5f * Utils.Deg2Rad);
 		}
 	}
 }

@@ -33,7 +33,7 @@ namespace ClassicalSharp.Particles {
 				graphics.BindTexture( game.TerrainAtlas.TexId );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
 			}
-			count = 0;//RenderParticles( rainParticles, delta, t );
+			count = RenderParticles( rainParticles, delta, t );
 			if( count > 0 ) {
 				graphics.BindTexture( ParticlesTexId );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Particles {
 		
 		public void Tick( double delta ) {
 			TickParticles( terrainParticles, delta );
-			//TickParticles( rainParticles, delta );
+			TickParticles( rainParticles, delta );
 		}
 		
 		void TickParticles( List<Particle> particles, double delta ) {
@@ -113,15 +113,15 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < 5; i++ ) {
 				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
 				double velZ = rnd.NextDouble() * 0.8 - 0.4;
-				double velY = rnd.NextDouble() + 0.2;
+				double velY = rnd.NextDouble() + 0.5;
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				
 				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
-				double yOffset = rnd.NextDouble() - 0.125;
+				double yOffset = 0.01;
 				double zOffset = rnd.NextDouble() - 0.5;
 				pos = startPos + new Vector3( 0.5f + (float)xOffset,
 				                                     (float)yOffset, 0.5f + (float)zOffset );
-				double life = 1.5 - rnd.NextDouble();		
+				double life = 3.5 - rnd.NextDouble();		
 				rainParticles.Add( new RainParticle( game, pos, velocity, life ) );
 			}
 		}

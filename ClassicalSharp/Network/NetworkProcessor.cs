@@ -119,6 +119,14 @@ namespace ClassicalSharp {
 					game.LocalPlayer.CalculateJumpVelocity( 1.4f ); // assume default jump height
 					continue;
 				}
+				
+				if( opcode >= maxHandledPacket ) {
+					ErrorHandler.LogError( "NetworkProcessor.Tick", 
+					                      "received an invalid opcode of " + opcode );
+					reader.Remove( 1 );
+					continue;
+				}
+				
 				if( reader.size < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}

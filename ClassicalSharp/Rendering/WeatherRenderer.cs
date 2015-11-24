@@ -31,7 +31,10 @@ namespace ClassicalSharp {
 			
 			graphics.Texturing = true;
 			graphics.BindTexture( weather == Weather.Rainy ? game.RainTextureId : game.SnowTextureId );
-			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
+			Vector3 eyePos = game.LocalPlayer.EyePosition;
+			Vector3 camPos = game.Camera.GetCameraPos( eyePos );
+			Vector3I pos = Vector3I.Floor( eyePos ); // TODO: cam pos
+			                              
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
@@ -46,13 +49,13 @@ namespace ClassicalSharp {
 					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
-					//if( rainAcc >= 3 )
+					//if( rainAcc >= 2 )
 					//	game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			if( rainAcc >= 3 )
+			if( rainAcc >= 2 )
 				rainAcc = 0;
 			
 			// fixes crashing on nVidia cards in OpenGL builds.
@@ -67,7 +70,7 @@ namespace ClassicalSharp {
 		
 		float AlphaAt( float x ) {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
-			return 0.05f * x * x - 7 * x + 178;
+			return 0.05f * x * x - 6.5f * x + 178;
 		}
 		
 		void MakeRainForSquare( int x, float y, float height, int z, FastColour col, ref int index ) {
@@ -119,7 +122,8 @@ namespace ClassicalSharp {
 			int index = (x * length) + z;
 			int height = heightmap[index];
 			int y = height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
-			return y + game.BlockInfo.Height[map.GetBlock( x, y, z )];
+			return y == -1 ? 0 :
+				y + game.BlockInfo.Height[map.GetBlock( x, y, z )];
 		}
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {

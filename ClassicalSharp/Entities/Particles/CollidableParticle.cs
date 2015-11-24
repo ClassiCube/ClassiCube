@@ -5,7 +5,8 @@ namespace ClassicalSharp.Particles {
 
 	public abstract class CollidableParticle : Particle {
 		
-		const float gravity = 3.4f;
+		const float gravity = 3.4f; 
+		//const float gravity = 0.7f; // TODO: temp debug
 		
 		public CollidableParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime )
 			: base( game, pos, velocity, lifetime ) {

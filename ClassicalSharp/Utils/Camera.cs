@@ -23,10 +23,6 @@ namespace ClassicalSharp {
 		public virtual void Tick( double elapsed ) {
 		}
 		
-		public virtual void PlayerTick( double elapsed, Vector3 prevVel, Vector3 nextVel,
-		                                float moveSpeed, bool onGround ) {
-		}
-		
 		public virtual bool MouseZoom( MouseWheelEventArgs e ) {
 			return false;
 		}
@@ -41,11 +37,11 @@ namespace ClassicalSharp {
 	public abstract class PerspectiveCamera : Camera {
 		
 		protected LocalPlayer player;
-		protected Matrix4 titleMatrix;
+		protected Matrix4 tiltMatrix;
 		public PerspectiveCamera( Game game ) {
 			this.game = game;
 			player = game.LocalPlayer;
-			titleMatrix = Matrix4.Identity;
+			tiltMatrix = Matrix4.Identity;
 		}
 		
 		public override Matrix4 GetProjection() {
@@ -103,23 +99,6 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 		
-		float speed = 0;
-		public override void PlayerTick( double elapsed, Vector3 prevVel, Vector3 nextVel,
-		                                float moveSpeed, bool onGround ) {
-			if( !onGround || !game.ViewBobbing ) {
-				speed = 0; return;
-			}
-			
-			float dist = HorLength( nextVel ) - HorLength( prevVel );		
-			if( zero( nextVel.X ) && zero( nextVel.Z ) &&
-			   zero( prevVel.X ) && zero( prevVel.Z ) ) {
-				speed = 0;
-			} else {
-				speed = moveSpeed * 8;
-			}
-			Utils.Clamp( ref speed, 0, 50f );
-		}
-		
 		bool zero( float value ) {
 			return Math.Abs( value ) < 0.001f;
 		}
@@ -128,21 +107,16 @@ namespace ClassicalSharp {
 			return (float)Math.Sqrt( v.X * v.X + v.Z * v.Z );
 		}
 		
-		double bobAccumulator;
 		protected float bobYOffset = 0;
 		const float angle = 0.25f * Utils.Deg2Rad;
 		
 		protected void CalcViewBobbing( double delta ) {
-			bobAccumulator += delta * speed;
-			if( speed == 0 ) {
-				titleMatrix = Matrix4.Identity;
+			if( !game.ViewBobbing ) {
+				tiltMatrix = Matrix4.Identity;
 				bobYOffset = 0;
 			} else {
-				float tiltTime = (float)Math.Sin( bobAccumulator );
-				titleMatrix = Matrix4.RotateZ( tiltTime * angle );
-				
-				float bobTime = (float)Math.Sin( bobAccumulator );
-				bobYOffset = bobTime * (1/16f);
+				tiltMatrix = Matrix4.RotateZ( game.LocalPlayer.tilt );
+				bobYOffset = game.LocalPlayer.bobYOffset * 0.5f;
 			}
 		}
 	}
@@ -164,7 +138,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
-			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * titleMatrix;
+			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
 		public override bool IsThirdPerson {
@@ -193,7 +167,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
-			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * titleMatrix;
+			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
 		public override bool IsThirdPerson {
@@ -216,7 +190,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraDir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
-			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * titleMatrix;
+			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * tiltMatrix;
 		}
 		
 		public override bool IsThirdPerson {
