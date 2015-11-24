@@ -111,12 +111,12 @@ namespace ClassicalSharp {
 		const float angle = 0.25f * Utils.Deg2Rad;
 		
 		protected void CalcViewBobbing( double delta ) {
-			if( !game.ViewBobbing ) {
+			if( !game.ViewBobbing || !game.LocalPlayer.onGround ) {
 				tiltMatrix = Matrix4.Identity;
 				bobYOffset = 0;
 			} else {
 				tiltMatrix = Matrix4.RotateZ( game.LocalPlayer.tilt );
-				bobYOffset = game.LocalPlayer.bobYOffset * 0.5f;
+				bobYOffset = game.LocalPlayer.bobYOffset;
 			}
 		}
 	}

@@ -117,11 +117,14 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void PerformViewBobbing() {
-			if( !game.ViewBobbing ) return;
-			float horAngle = 0.25f * (float)Math.Sin( game.accumulator * 5 );
+			if( !game.ViewBobbing || !game.LocalPlayer.onGround ) return;
+			LocalPlayer p = game.LocalPlayer;
+			
+			double horTime = Math.Sin( p.curWalkTime * 0.75f ) * p.curSwing;
 			// (0.5 + 0.5cos(2x)) is smoother than abs(cos(x)) at endpoints
-			float verAngle = (float)(0.5 + 0.5 * Math.Cos( game.accumulator * 10 ) );
-			verAngle = 0.25f * (float)Math.Abs( verAngle );
+			double verTime = Math.Cos( p.curWalkTime * 0.75f * 2f );
+			float horAngle = 0.2f * (float)horTime;			
+			float verAngle = 0.2f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
 			
 			if( horAngle > 0 ) 
 				fakeP.Position.X += horAngle;

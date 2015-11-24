@@ -38,6 +38,8 @@ namespace ClassicalSharp {
 			get { return (float)GetMaxHeight( jumpVel ); }
 		}
 		
+		internal float curWalkTime, curSwing;
+		
 		public LocalPlayer( Game game ) : base( game ) {
 			DisplayName = game.Username;
 			SkinName = game.Username;
@@ -83,6 +85,9 @@ namespace ClassicalSharp {
 		
 		public override void RenderModel( double deltaTime, float t ) {	
 			GetCurrentAnimState( t );
+			curSwing = Utils.Lerp( swingO, swingN, t );
+			curWalkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
+			
 			if( !game.Camera.IsThirdPerson ) return;
 			Model.RenderModel( this );
 		}

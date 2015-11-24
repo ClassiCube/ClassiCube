@@ -10,7 +10,8 @@ namespace ClassicalSharp {
 		public PhysicsEntity( Game game ) : base( game ) {
 		}
 		
-		protected bool onGround, collideX, collideY, collideZ;
+		protected internal bool onGround;
+		protected bool collideX, collideY, collideZ;
 		protected float StepSize;
 		
 		protected byte GetPhysicsBlockId( int x, int y, int z ) {

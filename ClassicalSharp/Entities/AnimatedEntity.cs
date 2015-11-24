@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			leftArmZRot = -idleZRot;
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
-			tilt = (float)Math.Cos( walkTime / 2 ) * swing * (0.5f * Utils.Deg2Rad);
+			tilt = (float)Math.Cos( walkTime ) * swing * (0.2f * Utils.Deg2Rad);
 		}
 	}
 }

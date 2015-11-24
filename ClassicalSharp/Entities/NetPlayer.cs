@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class NetPlayer : Player {
 		
-		int tickCount;		
+		int tickCount;	
 		public NetPlayer( string displayName, string skinName, Game game ) : base( game ) {
 			DisplayName = displayName;
 			SkinName = skinName;
