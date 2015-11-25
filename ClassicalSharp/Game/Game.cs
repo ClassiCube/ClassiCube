@@ -75,7 +75,8 @@ namespace ClassicalSharp {
 		public int ChatLines = 12;
 		public bool ClickableChat, HideGui, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
-		public bool ViewBobbing;
+		public bool ViewBobbing, UseGuiPng;
+		public bool UseSound, UseMusic;
 		
 		public Animations Animations;
 		internal int CloudsTextureId, RainTextureId, SnowTextureId;

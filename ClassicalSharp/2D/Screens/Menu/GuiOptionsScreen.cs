@@ -24,13 +24,17 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -140, 50, "Clickable chat", Anchor.Centre, OnWidgetClick,
+				Make( -140, 50, "Use gui.png (WIP)", Anchor.Centre, OnWidgetClick,
+				     g => g.UseGuiPng ? "yes" : "no",
+				     (g, v) => game.UseGuiPng = v == "yes" ),
+				
+				// Column 2
+				Make( 140, -100, "Clickable chat", Anchor.Centre, OnWidgetClick,
 				     g => g.ClickableChat ? "yes" : "no",
 				     (g, v) => { g.ClickableChat = v == "yes";
 				     	Options.Set( OptionsKey.ClickableChat, v == "yes" );
 				     } ),
 				
-				// Column 2				
 				Make( 140, -50, "Chat scale", Anchor.Centre, OnWidgetClick,
 				     g => g.ChatScale.ToString(),
 				     (g, v) => { g.ChatScale = Single.Parse( v );
@@ -64,9 +68,9 @@ namespace ClassicalSharp {
 				new RealValidator( 0.25f, 5f ),
 				new BooleanValidator(),
 				
+				new BooleanValidator(),		
 				new RealValidator( 0.25f, 5f ),
 				new IntegerValidator( 1, 30 ),
-				new BooleanValidator(),
 				new BooleanValidator(),
 			};
 			okayIndex = buttons.Length - 1;

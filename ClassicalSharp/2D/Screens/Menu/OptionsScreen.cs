@@ -15,6 +15,10 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
+				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
+				     g => g.UseSound ? "yes" : "no",
+				     (g, v) => g.UseSound = v == "yes" ),
+				
 				Make( -140, -100, "Show hover names", Anchor.Centre, OnWidgetClick,
 				     g => g.Players.ShowHoveredNames ? "yes" : "no",
 				     (g, v) => { g.Players.ShowHoveredNames = v == "yes";
@@ -37,12 +41,16 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -150, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -200, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
+				
+				Make( 140, -150, "Use music (WIP)", Anchor.Centre, OnWidgetClick,
+				     g => g.UseMusic ? "yes" : "no",
+				     (g, v) => g.UseMusic = v == "yes" ),
 				
 				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
@@ -74,11 +82,13 @@ namespace ClassicalSharp {
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
+				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),		
 				new EnumValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
