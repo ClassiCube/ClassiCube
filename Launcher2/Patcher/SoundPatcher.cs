@@ -11,14 +11,17 @@ namespace Launcher2 {
 	public sealed class SoundPatcher {
 
 		string[] files, identifiers;
-		string prefix;
+		string prefix, nextAction;
 		FileStream outData;
 		StreamWriter outText;
 		RawOut outDecoder;
+		public bool Done;
 		
-		public SoundPatcher( string[] files, string prefix, string outputPath ) {
+		public SoundPatcher( string[] files, string prefix, 
+		                    string nextAction, string outputPath ) {
 			this.files = files;
 			this.prefix = prefix;
+			this.nextAction = nextAction;
 			InitOutput( outputPath );
 		}
 		
@@ -34,10 +37,11 @@ namespace Launcher2 {
 		}
 		
 		public bool CheckDownloaded( ResourceFetcher fetcher, Action<string> setStatus ) {
+			if( Done ) return true;
 			for( int i = 0; i < identifiers.Length; i++ ) {
 				DownloadedItem item;
 				if( fetcher.downloader.TryGetItem( identifiers[i], out item ) ) {
-					Console.WriteLine( "found sound " + identifiers[i] );
+					Console.WriteLine( "got sound " + identifiers[i] );
 					if( item.Data == null ) {
 						setStatus( "&cFailed to download " + identifiers[i] );
 						return false;
@@ -47,6 +51,10 @@ namespace Launcher2 {
 					// TODO: setStatus( next );
 					if( i == identifiers.Length - 1 ) {
 						Dispose();
+						Done = true;
+						setStatus( fetcher.MakeNext( nextAction ) );
+					} else {
+						setStatus( fetcher.MakeNext( identifiers[i + 1] ) );
 					}
 				}
 			}

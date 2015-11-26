@@ -21,13 +21,18 @@ namespace Launcher2 {
 
 		public override void Init() { Resize(); }
 		
+		bool failed;
 		public override void Tick() {
-			if( fetcher == null ) return;
+			if( fetcher == null || failed ) return;
 			
-			fetcher.Check( SetStatus );
+			if( !fetcher.Check( SetStatus ) )
+				failed = true;
+			
 			if( fetcher.Done ) {
-				ResourcePatcher patcher = new ResourcePatcher( fetcher );
-				patcher.Run();
+				if( !fetcher.defaultZipExists ) {
+					ResourcePatcher patcher = new ResourcePatcher( fetcher );
+					patcher.Run();
+				}
 				game.TryLoadTexturePack();
 				game.SetScreen( new MainScreen( game ) );
 				fetcher = null;
@@ -50,7 +55,7 @@ namespace Launcher2 {
 			
 			fetcher = game.fetcher;
 			fetcher.DownloadItems( game.Downloader, SetStatus );
-			selectedWidget = null;			
+			selectedWidget = null;
 			Resize();
 		}
 		

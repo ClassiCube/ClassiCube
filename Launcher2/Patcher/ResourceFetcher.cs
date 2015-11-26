@@ -8,6 +8,7 @@ namespace Launcher2 {
 		
 		public bool Done = false;
 		internal AsyncDownloader downloader;
+		SoundPatcher digPatcher, stepPatcher;
 		public ResourceFetcher() {
 			digPath = Path.Combine( "audio", "dig" );
 			stepPath = Path.Combine( "audio", "step" );
@@ -20,54 +21,82 @@ namespace Launcher2 {
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
 		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
+		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
 		
 		public void DownloadItems( AsyncDownloader downloader, Action<string> setStatus ) {
 			this.downloader = downloader;
-			downloader.DownloadData( jarClassicUri, false, "classic_jar" );
-			downloader.DownloadData( jar162Uri, false, "162_jar" );
-			downloader.DownloadData( pngTerrainPatchUri, false, "terrain_patch" );
-			downloader.DownloadData( pngGuiPatchUri, false, "gui_patch" );
-			setStatus( "&eFetching classic jar.. (1/4)" );
+			DownloadMusicFiles();
+			digPatcher = new SoundPatcher( digSounds, "dig_",
+			                              "step_cloth1", digPath );
+			digPatcher.FetchFiles( digSoundsUri, this );
+			stepPatcher = new SoundPatcher( stepSounds, "step_",
+			                               "classic jar", stepPath );
+			stepPatcher.FetchFiles( stepSoundsUri, this );			
+			if( !defaultZipExists ) {
+				downloader.DownloadData( jarClassicUri, false, "classic_jar" );
+				downloader.DownloadData( jar162Uri, false, "162_jar" );
+				downloader.DownloadData( pngTerrainPatchUri, false, "terrain_patch" );
+				downloader.DownloadData( pngGuiPatchUri, false, "gui_patch" );
+			}
+			SetFirstStatus( setStatus );
+		}
+		
+		void SetFirstStatus( Action<string> setStatus ) {
+			for( int i = 0; i < musicExists.Length; i++ ) {
+				if( musicExists[i] ) continue;
+				setStatus( MakeNext( musicFiles[i] ) );
+				return;
+			}
+			setStatus( MakeNext( "dig_cloth1" ) );
 		}
 		
 		internal byte[] jarClassic, jar162, pngTerrainPatch, pngGuiPatch;
 		public bool Check( Action<string> setStatus ) {
 			if( Done ) return true;
 			
+			if( !CheckMusicFiles( setStatus ) )
+				return false;
+			if( !digPatcher.CheckDownloaded( this, setStatus ) )
+				return false;
+			if( !stepPatcher.CheckDownloaded( this, setStatus ) )
+				return false;
+			
 			if( !DownloadItem( "classic_jar", "classic jar",
-			                   "&eFetching 1.6.2 jar.. (2/4)", ref jarClassic, setStatus))
+			                  "1.6.2 jar", ref jarClassic, setStatus ) )
 				return false;
-			
 			if( !DownloadItem( "162_jar", "1.6.2 jar",
-			                   "&eFetching terrain patch.. (3/4)", ref jar162, setStatus))
+			                  "terrain patch", ref jar162, setStatus ) )
 				return false;
-			
 			if( !DownloadItem( "terrain_patch", "terrain.png patch",
-			                   "&eFetching gui.. (3/4)", ref pngTerrainPatch, setStatus))
+			                  "gui", ref pngTerrainPatch, setStatus ) )
 				return false;
-			
 			if( !DownloadItem( "gui_patch", "gui.png patch",
-			                   "&eCreating default.zip..", ref pngGuiPatch, setStatus))
+			                  null, ref pngGuiPatch, setStatus ) )
 				return false;
 			
-			if( pngGuiPatch != null ) {
+			bool done = !defaultZipExists ? pngGuiPatch != null :
+				stepPatcher.Done;
+			if( done ) {
 				Done = true;
 				return true;
 			}
-			return false;
+			return true;
 		}
 		
-		bool DownloadItem( string identifier, string name, string next, 
+		bool DownloadItem( string identifier, string name, string next,
 		                  ref byte[] data, Action<string> setStatus ) {
 			DownloadedItem item;
 			if( downloader.TryGetItem( identifier, out item ) ) {
-				Console.WriteLine( "FOUND" + identifier );
+				Console.WriteLine( "got resource " + identifier );
 				if( item.Data == null ) {
-					setStatus( "&cFailed to download " + name ); 
+					setStatus( "&cFailed to download " + name );
 					return false;
 				}
 				
-				setStatus( next );
+				if( next != null )
+					setStatus( MakeNext( next ) );
+				else
+					setStatus( "&eCreating default.zip.." );
 				data = (byte[])item.Data;
 				return true;
 			}
@@ -75,49 +104,86 @@ namespace Launcher2 {
 		}
 		
 		public void CheckResourceExistence() {
-			AllResourcesExist = File.Exists( "default.zip" );
-				//&& Directory.Exists( "audio" ) && File.Exists( digPath + ".bin" )
-				//&& File.Exists( stepPath + ".bin" );
+			if( !Directory.Exists( "audio" ) )
+				Directory.CreateDirectory( "audio" );
+			AllResourcesExist = File.Exists( digPath + ".bin" )
+				&& File.Exists( stepPath + ".bin" );
 			
-			if( !File.Exists( "default.zip" ) ) {
+			defaultZipExists = File.Exists( "default.zip" );
+			if( !defaultZipExists ) {
 				// classic.jar + 1.6.2.jar + terrain-patch.png + gui.png
 				DownloadSize += (291 + 4621 + 7 + 21) / 1024f;
 				ResourcesCount += 4;
+				AllResourcesExist = false;
 			}
 			
 			for( int i = 0; i < musicFiles.Length; i++ ) {
 				string file = Path.Combine( "audio", musicFiles[i] + ".ogg" );
 				musicExists[i] = File.Exists( file );
-				continue;
-				// TODO: download music files
 				if( !musicExists[i] ) {
 					DownloadSize += musicSizes[i] / 1024f;
 					ResourcesCount++;
+					AllResourcesExist = false;
 				}
 			}
 			ResourcesCount += digSounds.Length;
+			DownloadSize += 173 / 1024f;
 			ResourcesCount += stepSounds.Length;
+			DownloadSize += 244 / 1024f;
 		}
 		public bool AllResourcesExist;
 		public float DownloadSize;
-		public int ResourcesCount;
+		public int ResourcesCount, CurrentResource;
+		
+		const string lineFormat = "&eFetching {0}.. ({1}/{2})";
+		public string MakeNext( string next ) {
+			CurrentResource++;
+			return String.Format( lineFormat, next,
+			                     CurrentResource, ResourcesCount );
+		}
+		
+		bool CheckMusicFiles( Action<string> setStatus ) {
+			for( int i = 0; i < musicFiles.Length; i++ ) {
+				string next = i < musicFiles.Length - 1 ?
+					musicFiles[i + 1] : "dig_cloth1";
+				string name = musicFiles[i];
+				byte[] data = null;			
+				if( !DownloadItem( name, name, next,
+				                  ref data, setStatus ) )
+					return false;
+				
+				if( data == null ) continue;
+				string path = Path.Combine( "audio", name + ".ogg" );
+				File.WriteAllBytes( path, data );
+			}
+			return true;
+		}
+		
+		void DownloadMusicFiles() {
+			for( int i = 0; i < musicFiles.Length; i++ ) {
+				if( musicExists[i] ) continue;
+				string baseUri = i < 3 ? musicUri : newMusicUri;
+				string url = baseUri + musicFiles[i] + ".ogg";
+				downloader.DownloadData( url, false, musicFiles[i] );
+			}
+		}
 		
 		string digPath, stepPath;
-		string[] digSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", 
-			"glass1", "glass2", "glass3", "glass4", "grass1", "grass2", "grass3", 
-			"grass4", "gravel1", "gravel2", "gravel3", "gravel4", "sand1", "sand2", 
-			"sand3", "sand4", "snow1", "snow2", "snow3", "snow4", "stone1", "stone2", 
-			"stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
+		string[] digSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
+			"grass2", "grass3", "grass4", "gravel1", "gravel2", "gravel3", "gravel4",
+			"sand1", "sand2", "sand3", "sand4", "snow1", "snow2", "snow3", "snow4",
+			"stone1", "stone2", "stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
 		
-		string[] stepSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1", 
-			"grass2", "grass3", "grass4", "grass5", "grass6", "gravel1", "gravel2", 
-			"gravel3", "gravel4", "sand1", "sand2", "sand3", "sand4", "sand5", "snow1", 
-			"snow2", "snow3", "snow4", "stone1", "stone2", "stone3", "stone4", "stone5", 
+		string[] stepSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
+			"grass2", "grass3", "grass4", "grass5", "grass6", "gravel1", "gravel2",
+			"gravel3", "gravel4", "sand1", "sand2", "sand3", "sand4", "sand5", "snow1",
+			"snow2", "snow3", "snow4", "stone1", "stone2", "stone3", "stone4", "stone5",
 			"stone6", "wood1", "wood2", "wood3", "wood4", "wood5", "wood6" };
 		
-		string[] musicFiles = new [] { "calm1", "calm2", 
-			"calm3", "hal1", "hal2", "hal3" };
+		string[] musicFiles = new [] { "calm1", "calm2",
+			"calm3", "hal1", "hal2", "hal3", "hal4" };
 		int[] musicSizes = new [] { 2472, 1931, 2181, 1926, 1714, 1879, 2499 };
-		bool[] musicExists = new bool[6];
+		bool[] musicExists = new bool[7];
+		internal bool defaultZipExists;
 	}
 }

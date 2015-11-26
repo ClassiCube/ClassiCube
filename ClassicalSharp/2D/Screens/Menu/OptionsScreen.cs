@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
 				null,
 			};
-			buttons[2].Metadata = typeof(FpsLimitMethod);
+			buttons[3].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
