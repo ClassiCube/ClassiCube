@@ -48,10 +48,9 @@ namespace Launcher2 {
 				game.Downloader = new AsyncDownloader( "null" );
 			if( fetcher != null ) return;
 			
-			fetcher = new ResourceFetcher( game.Downloader );
-			fetcher.DownloadItems( SetStatus );
-			selectedWidget = null;
-			
+			fetcher = game.fetcher;
+			fetcher.DownloadItems( game.Downloader, SetStatus );
+			selectedWidget = null;			
 			Resize();
 		}
 		
@@ -59,7 +58,7 @@ namespace Launcher2 {
 		static FastColour backCol = new FastColour( 120, 85, 151 );
 		static readonly string mainText = "Some required resources weren't found" +
 			Environment.NewLine + "Okay to download them?";
-		static readonly string format = "Estimated size: {0} megabytes";
+		static readonly string format = "Download size: {0} megabytes";
 		static FastColour clearCol = new FastColour( 12, 12, 12 );
 		
 		void Draw() {
@@ -68,8 +67,9 @@ namespace Launcher2 {
 			drawer.DrawRect( backCol, game.Width / 2 - 175,
 			                game.Height / 2 - 70, 175 * 2, 70 * 2 );
 			
+			float dataSize = game.fetcher.DownloadSize;
 			string text = widgets[0] != null ? widgets[0].Text
-				: String.Format( format, ResourceFetcher.EstimateDownloadSize() );
+				: String.Format( format, dataSize.ToString( "F2" ) );
 			MakeLabelAt( text, statusFont, Anchor.Centre, Anchor.Centre, 0, 5 );
 
 			// Clear the entire previous widgets state.

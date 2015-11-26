@@ -48,6 +48,8 @@ namespace Launcher2 {
 		public Dictionary<string, Dictionary<string, object>> ScreenMetadata =
 			new Dictionary<string, Dictionary<string, object>>();
 		
+		internal ResourceFetcher fetcher;
+		
 		Font logoFont, logoItalicFont;
 		PlatformDrawer platformDrawer;
 		public void Init() {
@@ -120,7 +122,9 @@ namespace Launcher2 {
 			TryLoadTexturePack();
 			platformDrawer.Init( Window.WindowInfo );
 			
-			if( !ResourceFetcher.CheckAllResourcesExist() ) {
+			fetcher = new ResourceFetcher();
+			fetcher.CheckResourceExistence();
+			if( !fetcher.AllResourcesExist ) {
 				SetScreen( new ResourcesScreen( this ) );
 			} else {
 				SetScreen( new MainScreen( this ) );
