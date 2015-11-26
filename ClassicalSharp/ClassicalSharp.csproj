@@ -124,6 +124,7 @@
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
+    <Compile Include="Audio\AudioManager.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.BoundingBox.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
@@ -135,11 +136,11 @@
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
-    <Compile Include="Entities\Particles\CollidableParticle.cs" />
-    <Compile Include="Entities\Particles\Particle.cs" />
-    <Compile Include="Entities\Particles\ParticleManager.cs" />
-    <Compile Include="Entities\Particles\RainParticle.cs" />
-    <Compile Include="Entities\Particles\TerrainParticle.cs" />
+    <Compile Include="Particles\CollidableParticle.cs" />
+    <Compile Include="Particles\Particle.cs" />
+    <Compile Include="Particles\ParticleManager.cs" />
+    <Compile Include="Particles\RainParticle.cs" />
+    <Compile Include="Particles\TerrainParticle.cs" />
     <Compile Include="Entities\PhysicsEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Player.Rendering.cs" />
@@ -258,7 +259,7 @@
     <Folder Include="2D\Widgets\Menu" />
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="Blocks" />
-    <Folder Include="Entities\Particles" />
+    <Folder Include="Particles" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
     <Folder Include="Ionic.Zlib" />
@@ -268,6 +269,7 @@
     <Folder Include="Model" />
     <Folder Include="Network\Utils" />
     <Folder Include="Hotkeys" />
+    <Folder Include="Audio" />
     <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />
