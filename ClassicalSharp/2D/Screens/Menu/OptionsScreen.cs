@@ -50,7 +50,8 @@ namespace ClassicalSharp {
 				
 				Make( 140, -150, "Use music (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
-				     (g, v) => g.UseMusic = v == "yes" ),
+				     (g, v) => { g.UseMusic = v == "yes";
+				     	g.AudioManager.SetState( g.UseMusic ); } ),
 				
 				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",

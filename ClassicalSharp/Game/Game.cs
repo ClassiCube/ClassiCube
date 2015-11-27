@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading;
+using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
@@ -58,6 +59,7 @@ namespace ClassicalSharp {
 		public InputHandler InputHandler;
 		public ChatLog Chat;
 		public BlockHandRenderer BlockHandRenderer;
+		public AudioManager AudioManager;
 		
 		public IPAddress IPAddress;
 		public string Username;
@@ -201,6 +203,7 @@ namespace ClassicalSharp {
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
+			AudioManager = new AudioManager();
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			Graphics.WarnIfNecessary( Chat );
@@ -475,6 +478,7 @@ namespace ClassicalSharp {
 			ParticleManager.Dispose();
 			Players.Dispose();
 			AsyncDownloader.Dispose();
+			AudioManager.Dispose();
 			
 			Chat.Dispose();
 			if( activeScreen != null )
