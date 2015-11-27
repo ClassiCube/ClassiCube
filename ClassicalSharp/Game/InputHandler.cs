@@ -94,6 +94,7 @@ namespace ClassicalSharp {
 				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
 				   && inv.CanDelete[block] ) {
 					game.ParticleManager.BreakBlockEffect( pos, block );
+					game.AudioManager.PlayDigSound( game.BlockInfo.DigSounds[block] );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
 				}

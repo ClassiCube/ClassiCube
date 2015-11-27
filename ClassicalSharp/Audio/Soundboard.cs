@@ -14,6 +14,8 @@ namespace ClassicalSharp.Audio {
 		static string[] soundNames;	
 		static Soundboard() {
 			soundNames = Enum.GetNames( typeof( SoundType ) );
+			for( int i = 0; i < soundNames.Length; i++ )
+				soundNames[i] = soundNames[i].ToLower();
 		}
 		
 		public void Init( string group ) {
@@ -43,7 +45,7 @@ namespace ClassicalSharp.Audio {
 					if( line.Length == 0 || line[0] == '#' ) continue;
 					string[] parts = line.Split( ',' );
 					if( parts.Length < 6 ) continue;
-					string name = parts[0];
+					string name = parts[0].ToLower();
 					int sampleRate, bitsPerSample, channels;
 					int offset, length;
 					
@@ -63,18 +65,23 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void GetGroups() {
-			string last = rawSounds[0].Name;
+			string last = Group( rawSounds[0].Name );
 			int offset = 0, count = 0;
 			for( int i = 0; i < rawSounds.Count; i++ ) {
-				if( rawSounds[i].Name != last ) {
+				string group = Group( rawSounds[i].Name );
+				if( group != last ) {
 					groupFlags[last] = (count << 12) | offset;
 					offset = i;
-					last = rawSounds[i].Name;
+					last = group;
 					count = 0;
 				}
 				count++;
 			}
 			groupFlags[last] = (count << 12) | offset;
+		}
+		
+		string Group( string name ) {
+			return name.Substring( 0, name.Length - 1 );
 		}
 	}
 	

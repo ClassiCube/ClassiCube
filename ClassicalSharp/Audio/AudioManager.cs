@@ -1,55 +1,32 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using OpenTK;
 using SharpWave;
 using SharpWave.Codecs.Vorbis;
 
 namespace ClassicalSharp.Audio {
 	
-	public sealed class AudioManager {
+	public sealed partial class AudioManager {
 		
 		IAudioOutput musicOut, soundOut;
-		Soundboard digBoard, stepBoard;
 		string[] musicFiles;
+		Thread musicThread, soundThread;
 		
 		public AudioManager() {
-			digBoard = new Soundboard();
-			digBoard.Init( "dig" );
-			stepBoard = new Soundboard();
-			stepBoard.Init( "step" );
 			musicFiles = Directory.GetFiles( "audio", "*.ogg" );
 		}
 		
-		public void SetState( bool state ) {
-			if( state )
-				Init();
+		public void SetMusic( bool enabled ) {
+			if( enabled )
+				InitMusic();
 			else
-				Dispose();
+				DisposeMusic();
 		}
 		
-		public void Init() {
-			// TODO: why is waveOut crashing?
-			if( false/*Configuration.RunningOnWindows*/ ) {
-				musicOut = new WinMmOut();			
-				soundOut = new WinMmOut();				
-			} else {
-				musicOut = new OpenALOut();
-				soundOut = new OpenALOut();
-			}
-			
-			musicOut.Create( 5 );
-			soundOut.Create( 5, musicOut );
-			InitThreads();
-		}
-		
-		Thread musicThread, soundThread;
-		void InitThreads() {
+		void InitMusic() {
 			disposingMusic = false;
-			musicThread = new Thread( DoMusicThread );
-			musicThread.Name = "ClassicalSharp.DoMusicThread";
-			musicThread.IsBackground = true;
-			musicThread.Start();
+			musicThread = MakeThread( DoMusicThread, ref musicOut,
+			                         "ClassicalSharp.DoMusic" );
 		}
 		
 		void DoMusicThread() {
@@ -68,22 +45,37 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		bool disposingMusic;
+		bool disposingMusic, disposingSound;
 		public void Dispose() {
 			DisposeMusic();
 			DisposeSound();
 		}
 		
-		public void DisposeMusic() {
+		void DisposeMusic() {
 			disposingMusic = true;
-			musicOut.Stop();
-			musicThread.Join();
-			musicOut.Dispose();
+			DisposeOf( ref musicOut, ref musicThread );
 		}
 		
-		public void DisposeSound() {
-			// TODO: stop playing current sound and/or music
-			soundOut.Dispose();
+		Thread MakeThread( ThreadStart func, ref IAudioOutput output, string name ) {
+			// TODO: why is waveOut crashing?
+			output = new OpenALOut();
+			output.Create( 5 );
+			
+			Thread thread = new Thread( func );
+			thread.Name = name;
+			thread.IsBackground = true;
+			thread.Start();
+			return thread;
+		}
+		
+		void DisposeOf( ref IAudioOutput output, ref Thread thread ) {
+			if( output == null ) return;
+			output.Stop();
+			thread.Join();
+			
+			output.Dispose();
+			output = null;
+			thread = null;
 		}
 	}
 }

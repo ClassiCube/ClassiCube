@@ -17,7 +17,8 @@ namespace ClassicalSharp {
 				// Column 1
 				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
-				     (g, v) => g.UseSound = v == "yes" ),
+				     (g, v) => { g.UseSound = v == "yes";
+				     	g.AudioManager.SetSound( g.UseSound ); } ),
 				
 				Make( -140, -100, "Show hover names", Anchor.Centre, OnWidgetClick,
 				     g => g.Players.ShowHoveredNames ? "yes" : "no",
@@ -51,7 +52,7 @@ namespace ClassicalSharp {
 				Make( 140, -150, "Use music (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
-				     	g.AudioManager.SetState( g.UseMusic ); } ),
+				     	g.AudioManager.SetMusic( g.UseMusic ); } ),
 				
 				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
