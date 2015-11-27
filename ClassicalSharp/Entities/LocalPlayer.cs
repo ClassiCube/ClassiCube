@@ -65,6 +65,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
 		public override void Tick( double delta ) {
 			if( game.Map.IsNotLoaded ) return;
 			
@@ -81,6 +82,14 @@ namespace ClassicalSharp {
 			Position = lastPos;			
 			UpdateAnimState( lastPos, nextPos, delta );
 			CheckSkin();
+			
+			Vector3 soundPos = Position;
+			float distSq = (lastSoundPos - soundPos).LengthSquared;
+			if( onGround && distSq > 2 * 2 ) {
+				SoundType type = game.BlockInfo.StepSounds[(int)BlockUnderFeet];
+				game.AudioManager.PlayStepSound( type );
+				lastSoundPos = soundPos;
+			}
 		}
 		
 		public override void RenderModel( double deltaTime, float t ) {	
@@ -176,7 +185,7 @@ namespace ClassicalSharp {
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 				
-				if( BlockUnderFeet == Block.Ice && !flying && !noClip ) {
+				if( BlockUnderFeet == Block.Ice && !(flying || noClip) ) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
 					if( Math.Abs( Velocity.X ) > 0.25f || Math.Abs( Velocity.Z ) > 0.25f ) {
 						float scale = Math.Min(

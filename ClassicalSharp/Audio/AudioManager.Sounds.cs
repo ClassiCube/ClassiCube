@@ -21,77 +21,70 @@ namespace ClassicalSharp.Audio {
 		
 		void InitSound() {
 			disposingSound = false;
-			if( digBoard == null ) InitSoundboards();
+			if( digBoard == null ) 
+				InitSoundboards();
+			
+			digChunk.Data = digBoard.Data;
+			stepChunk.Data = stepBoard.Data;			
 			soundThread = MakeThread( DoSoundThread, ref soundOut,
 			                         "ClassicalSharp.DoSound" );
 		}
-		
-		AudioChunk soundChunk = new AudioChunk();
+
 		object soundLock = new object();
-		volatile int soundsCount = 0;
-		const int maxSounds = 5;
-		Sound[] sounds = new Sound[maxSounds];
-		byte[][] soundDatas = new byte[maxSounds][];
+		Sound digSound = null, stepSound = null;
+		AudioChunk digChunk = new AudioChunk(), 
+		stepChunk = new AudioChunk();
 		
 		void DoSoundThread() {
 			while( !disposingSound ) {
-				bool playSound = false;
+				bool playDig = false, playStep = false;
 				lock( soundLock ) {
-					if( soundsCount > 0 ) {
-						soundChunk.Data = soundDatas[0];
-						Sound meta = sounds[0];
-						playSound = true;
-						RemoveOldestSound();
-						
-						soundChunk.Frequency = meta.SampleRate;
-						soundChunk.BitsPerSample = meta.BitsPerSample;
-						soundChunk.Channels = meta.Channels;
-						soundChunk.BytesOffset = meta.Offset;
-						soundChunk.BytesUsed = meta.Length;
-					}
+					MakeSound( ref digSound, ref playDig, digChunk );
+					MakeSound( ref stepSound, ref playStep, stepChunk );
 				}
-				if( playSound )
-					soundOut.PlayRaw( soundChunk );
-				Thread.Sleep( 1 );
+				if( playDig )
+					soundOut.PlayRaw( digChunk );
+				if( playStep )
+					soundOut.PlayRaw( stepChunk );
+				
+				if( !(playDig || playStep) )
+					Thread.Sleep( 1 );
 			}
 		}
 		
 		public void PlayDigSound( SoundType type ) {
-			PlaySound( type, digBoard );
+			PlaySound( type, digBoard, ref digSound );
 		}
 		
 		public void PlayStepSound( SoundType type ) {
-			PlaySound( type, stepBoard );
+			PlaySound( type, stepBoard, ref stepSound );
 		}
 		
-		void PlaySound( SoundType type, Soundboard board ) {
+		void PlaySound( SoundType type, Soundboard board, ref Sound target ) {
 			if( type == SoundType.None || soundOut == null ) 
 				return;
-			Sound sound = board.PlayRandomSound( type );
-			
-			lock( soundLock ) {
-				if( soundsCount == maxSounds )
-					RemoveOldestSound();
-				sounds[soundsCount] = sound;
-				soundDatas[soundsCount] = board.Data;
-				soundsCount++;
-			}
+			lock( soundLock )
+				target = board.PlayRandomSound( type );
 		}
 		
-		void RemoveOldestSound() {
-			for( int i = 0; i < maxSounds - 1; i++ ) {
-				sounds[i] = sounds[i + 1];
-				soundDatas[i] = soundDatas[i + 1];
-			}
+		void MakeSound( ref Sound src, ref bool play, AudioChunk target ) {
+			if( src == null ) return;
+			play = true;
 			
-			sounds[maxSounds - 1] = null;
-			soundDatas[maxSounds - 1] = null;
-			soundsCount--;
+			target.Frequency = src.SampleRate;
+			target.BitsPerSample = src.BitsPerSample;
+			target.Channels = src.Channels;
+			
+			target.BytesOffset = src.Offset;
+			target.BytesUsed = src.Length;
+			src = null;
 		}
 		
 		void DisposeSound() {
 			disposingSound = true;
 			DisposeOf( ref soundOut, ref soundThread );
+			digChunk.Data = null;
+			stepChunk.Data = null;
 		}
 		
 		void InitSoundboards() {
