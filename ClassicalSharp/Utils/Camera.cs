@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 	public abstract class Camera {
 		protected Game game;
 		
-		public abstract Matrix4 GetProjection();
+		public abstract Matrix4 GetProjection( out Matrix4 heldBlockProj );
 		
 		public abstract Matrix4 GetView( double delta );
 		
@@ -44,10 +44,12 @@ namespace ClassicalSharp {
 			tiltMatrix = Matrix4.Identity;
 		}
 		
-		public override Matrix4 GetProjection() {
-			float fovy = 70 * Utils.Deg2Rad;
+		public override Matrix4 GetProjection( out Matrix4 heldBlockProj ) {
+			float fovy = game.FieldOfView * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
+			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView( 70 * Utils.Deg2Rad,
+			                                                     aspectRatio, zNear, game.ViewDistance );
 			return Matrix4.CreatePerspectiveFieldOfView( fovy, aspectRatio, zNear, game.ViewDistance );
 		}
 		

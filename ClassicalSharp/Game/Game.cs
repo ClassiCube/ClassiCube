@@ -64,13 +64,14 @@ namespace ClassicalSharp {
 		public string Mppass;
 		public int Port;
 		public int ViewDistance = 512;
+		public int FieldOfView = 70;
 		public FpsLimitMethod FpsLimit;
 		
 		public long Vertices;
 		public FrustumCulling Culling;
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
-		public Matrix4 View, Projection;
+		public Matrix4 View, Projection, HeldBlockProjection;
 		public int MouseSensitivity = 30;
 		public int ChatLines = 12;
 		public bool ClickableChat, HideGui, ShowFPS = true;
@@ -175,6 +176,8 @@ namespace ClassicalSharp {
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
+			FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			UpdateProjection();
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
 			SelectionManager = new SelectionManager( this );
@@ -330,7 +333,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateProjection() {
-			Matrix4 projection = Camera.GetProjection();
+			Matrix4 projection = Camera.GetProjection( out HeldBlockProjection );
 			Projection = projection;
 			Graphics.SetMatrixMode( MatrixType.Projection );
 			Graphics.LoadMatrix( ref projection );

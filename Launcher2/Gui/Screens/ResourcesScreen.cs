@@ -33,9 +33,10 @@ namespace Launcher2 {
 					ResourcePatcher patcher = new ResourcePatcher( fetcher );
 					patcher.Run();
 				}
+				fetcher = null;
+				GC.Collect();
 				game.TryLoadTexturePack();
 				game.SetScreen( new MainScreen( game ) );
-				fetcher = null;
 			}
 		}
 		

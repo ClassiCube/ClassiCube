@@ -2,9 +2,7 @@
 using System.IO;
 using ClassicalSharp.Network;
 using SharpWave;
-using SharpWave.Codecs;
 using SharpWave.Codecs.Vorbis;
-using SharpWave.Containers;
 
 namespace Launcher2 {
 	
@@ -25,13 +23,16 @@ namespace Launcher2 {
 			InitOutput( outputPath );
 		}
 		
-		public void FetchFiles( string baseUrl, ResourceFetcher fetcher ) {
+		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
+ 		public void FetchFiles( string baseUrl, string altBaseUrl, ResourceFetcher fetcher ) {
 			identifiers = new string[files.Length];
 			for( int i = 0; i < files.Length; i++ )
 				identifiers[i] = prefix + files[i];
 			
 			for( int i = 0; i < files.Length; i++ ) {
-				string url = baseUrl + files[i] + ".ogg";
+				string loc = files[i].StartsWith( "glass", comp ) 
+					? altBaseUrl : baseUrl;
+				string url = loc + files[i] + ".ogg";
 				fetcher.downloader.DownloadData( url, false, identifiers[i] );
 			}
 		}

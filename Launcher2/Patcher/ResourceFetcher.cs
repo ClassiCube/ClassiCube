@@ -19,7 +19,8 @@ namespace Launcher2 {
 		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
-		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
+		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";	
+		const string altSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
 		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
 		
@@ -28,10 +29,10 @@ namespace Launcher2 {
 			DownloadMusicFiles();
 			digPatcher = new SoundPatcher( digSounds, "dig_",
 			                              "step_cloth1", digPath );
-			digPatcher.FetchFiles( digSoundsUri, this );
+			digPatcher.FetchFiles( digSoundsUri, altSoundsUri, this );
 			stepPatcher = new SoundPatcher( stepSounds, "step_",
 			                               "classic jar", stepPath );
-			stepPatcher.FetchFiles( stepSoundsUri, this );			
+			stepPatcher.FetchFiles( stepSoundsUri, null, this );			
 			if( !defaultZipExists ) {
 				downloader.DownloadData( jarClassicUri, false, "classic_jar" );
 				downloader.DownloadData( jar162Uri, false, "162_jar" );
@@ -169,10 +170,10 @@ namespace Launcher2 {
 		}
 		
 		string digPath, stepPath;
-		string[] digSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
-			"grass2", "grass3", "grass4", "gravel1", "gravel2", "gravel3", "gravel4",
-			"sand1", "sand2", "sand3", "sand4", "snow1", "snow2", "snow3", "snow4",
-			"stone1", "stone2", "stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
+		string[] digSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "glass1",
+			"glass2", "glass3", "grass1", "grass2", "grass3", "grass4", "gravel1", "gravel2", 
+			"gravel3", "gravel4", "sand1", "sand2", "sand3", "sand4", "snow1", "snow2", "snow3", 
+			"snow4", "stone1", "stone2", "stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
 		
 		string[] stepSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
 			"grass2", "grass3", "grass4", "grass5", "grass6", "gravel1", "gravel2",

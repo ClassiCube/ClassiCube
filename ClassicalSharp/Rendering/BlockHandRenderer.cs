@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using OpenTK;
 
@@ -43,9 +44,13 @@ namespace ClassicalSharp.Renderers {
 				game.Graphics.LoadMatrix( ref spriteMat );
 			else
 				game.Graphics.LoadMatrix( ref normalMat );
+			game.Graphics.SetMatrixMode( MatrixType.Projection );
+			game.Graphics.LoadMatrix( ref game.HeldBlockProjection );
 			fakeP.Block = type;
 			block.RenderModel( fakeP );
 			
+			game.Graphics.LoadMatrix( ref game.Projection );
+			game.Graphics.SetMatrixMode( MatrixType.Modelview );
 			game.Graphics.LoadMatrix( ref game.View );
 			game.Graphics.Texturing = false;
 			game.Graphics.DepthTest = true;

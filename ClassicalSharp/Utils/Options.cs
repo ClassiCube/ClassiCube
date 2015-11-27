@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 		public const string FpsLimit = "fpslimit";
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";
+		public const string FieldOfView = "fov";
 	}
 	
 	// TODO: implement this
