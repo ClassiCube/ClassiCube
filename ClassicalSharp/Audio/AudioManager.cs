@@ -57,8 +57,10 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		Thread MakeThread( ThreadStart func, ref IAudioOutput output, string name ) {
-			// TODO: why is waveOut crashing?
-			output = new OpenALOut();
+			if( OpenTK.Configuration.RunningOnWindows )
+				output = new WinMmOut();
+			else
+				output = new OpenALOut();
 			output.Create( 5 );
 			
 			Thread thread = new Thread( func );
