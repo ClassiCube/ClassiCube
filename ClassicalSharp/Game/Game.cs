@@ -493,8 +493,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool CanPick( byte block ) {
-			return !(block == 0 || (BlockInfo.IsLiquid[block] &&
-			                        !(Inventory.CanPlace[block] && Inventory.CanDelete[block])));
+			return !(block == 0 || BlockInfo.IsLiquid[block]);
 		}
 		
 		public Game( string username, string mppass, string skinServer,

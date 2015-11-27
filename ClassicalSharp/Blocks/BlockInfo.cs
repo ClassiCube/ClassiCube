@@ -106,6 +106,7 @@ namespace ClassicalSharp {
 			IsOpaqueY[(byte)Block.Snow] = true;
 			SetupCullingCache();
 			InitBoundingBoxes();
+			InitSounds();
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
