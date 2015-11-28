@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 			if( weather == Weather.Sunny ) return;
 			
 			graphics.Texturing = true;
-			graphics.BindTexture( weather == Weather.Rainy ? game.RainTextureId : game.SnowTextureId );
+			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			Vector3 camPos = game.Camera.GetCameraPos( eyePos );
 			Vector3I pos = Vector3I.Floor( eyePos ); // TODO: cam pos

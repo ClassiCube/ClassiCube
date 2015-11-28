@@ -68,7 +68,8 @@ namespace ClassicalSharp {
 			Animations = new Animations( this );
 			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( "default.zip", this ); // in case the default texture pack doesn't have all required textures
+			extractor.Extract( "default.zip", this ); 
+			// in case the user's default texture pack doesn't have all required textures
 			if( defTexturePack != "default.zip" )
 				extractor.Extract( DefaultTexturePack, this );
 			Inventory = new Inventory( this );
@@ -405,9 +406,10 @@ namespace ClassicalSharp {
 			Graphics.Dispose();
 			Drawer2D.DisposeInstance();
 			Animations.Dispose();
-			Graphics.DeleteTexture( ref CloudsTextureId );
-			Graphics.DeleteTexture( ref RainTextureId );
-			Graphics.DeleteTexture( ref SnowTextureId );
+			Graphics.DeleteTexture( ref CloudsTexId );
+			Graphics.DeleteTexture( ref RainTexId );
+			Graphics.DeleteTexture( ref SnowTexId );
+			Graphics.DeleteTexture( ref GuiTexId );
 			
 			if( Options.HasChanged )
 				Options.Save();

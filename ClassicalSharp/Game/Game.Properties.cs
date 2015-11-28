@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 		public bool UseSound, UseMusic;
 		
 		public Animations Animations;
-		internal int CloudsTextureId, RainTextureId, SnowTextureId;
+		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId;
 		internal bool screenshotRequested;
 		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
 		internal AcceptedUrls AcceptedUrls = new AcceptedUrls();
@@ -135,9 +135,7 @@ namespace ClassicalSharp {
 		/// <remarks> If the custom default texture pack specified by the user could not be found,
 		/// this method returns "default.zip". </remarks>
 		public string DefaultTexturePack {
-			get {
-				return File.Exists( defTexturePack )
-					? defTexturePack : "default.zip"; }
+			get { return File.Exists( defTexturePack ) ? defTexturePack : "default.zip"; }
 			set {
 				defTexturePack = value;
 				Options.Set( OptionsKey.DefaultTexturePack, value );

@@ -65,11 +65,13 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref cache.HumanoidTexId, stream, true ); break;
 				case "clouds.png":
 				case "cloud.png":
-					UpdateTexture( ref game.CloudsTextureId, stream, false ); break;
+					UpdateTexture( ref game.CloudsTexId, stream, false ); break;
 				case "rain.png":
-					UpdateTexture( ref game.RainTextureId, stream, false ); break;
+					UpdateTexture( ref game.RainTexId, stream, false ); break;
 				case "snow.png":
-					UpdateTexture( ref game.SnowTextureId, stream, false ); break;
+					UpdateTexture( ref game.SnowTexId, stream, false ); break;
+				case "gui.png":
+					UpdateTexture( ref game.GuiTexId, stream, false ); break;
 				case "animations.png":
 				case "animation.png":
 					game.Animations.SetAtlas( new Bitmap( stream ) ); break;

@@ -99,7 +99,7 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
-			graphics.BindTexture( game.CloudsTextureId );
+			graphics.BindTexture( game.CloudsTexId );
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			graphics.BindVb( cloudsVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
