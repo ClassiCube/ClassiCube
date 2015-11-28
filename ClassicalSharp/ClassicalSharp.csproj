@@ -139,6 +139,7 @@
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />

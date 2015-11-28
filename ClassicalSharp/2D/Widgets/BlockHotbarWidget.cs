@@ -29,8 +29,8 @@ namespace ClassicalSharp {
 		static FastColour outlineCol = new FastColour( 151, 120, 180 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
-			blockSize = (int)(38 * game.GuiScale());
-			borderSize = (int)(3 * game.GuiScale());
+			blockSize = (int)(38 * game.GuiScale);
+			borderSize = (int)(3 * game.GuiScale);
 			int width = blockSize * hotbarCount;
 			X = game.Width / 2 - width / 2;
 			Y = game.Height - blockSize;

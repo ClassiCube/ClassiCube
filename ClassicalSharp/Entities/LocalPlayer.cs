@@ -16,6 +16,9 @@ namespace ClassicalSharp {
 		public byte UserType;
 		public bool PushbackBlockPlacing;
 		
+		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
+		public bool CanUseThirdPersonCamera = true;
+		
 		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
 		public bool CanSpeed = true;
 		
@@ -228,10 +231,10 @@ namespace ClassicalSharp {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {
 				CanFly = CanNoclip = CanRespawn = CanSpeed =
-					CanPushbackBlocks = game.CanUseThirdPersonCamera = false;			
+					CanPushbackBlocks = CanUseThirdPersonCamera = false;			
 			} else { // By default (this is also the case with WoM), we can use hacks.
 				CanFly = CanNoclip = CanRespawn = CanSpeed = 
-					CanPushbackBlocks = game.CanUseThirdPersonCamera = true;
+					CanPushbackBlocks = CanUseThirdPersonCamera = true;
 			}
 			
 			ParseFlag( b => CanFly = b, joined, "fly" );
@@ -260,7 +263,7 @@ namespace ClassicalSharp {
 			if( !CanSpeed) speeding = false;
 			if( !CanPushbackBlocks ) PushbackBlockPlacing = false;
 			
-			if( !game.CanUseThirdPersonCamera )
+			if( !CanUseThirdPersonCamera )
 				game.SetCamera( false );
 		}
 		

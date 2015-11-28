@@ -348,16 +348,17 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleCpeHackControl() {
-			game.LocalPlayer.CanFly = reader.ReadUInt8() != 0;
-			game.LocalPlayer.CanNoclip = reader.ReadUInt8() != 0;
-			game.LocalPlayer.CanSpeed = reader.ReadUInt8() != 0;
-			game.LocalPlayer.CanRespawn = reader.ReadUInt8() != 0;
-			game.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
-			game.LocalPlayer.CheckHacksConsistency();
+			LocalPlayer p = game.LocalPlayer;
+			p.CanFly = reader.ReadUInt8() != 0;
+			p.CanNoclip = reader.ReadUInt8() != 0;
+			p.CanSpeed = reader.ReadUInt8() != 0;
+			p.CanRespawn = reader.ReadUInt8() != 0;
+			p.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
+			p.CheckHacksConsistency();
 			
 			float jumpHeight = reader.ReadInt16() / 32f;
 			if( jumpHeight < 0 ) jumpHeight = 1.4f;
-			game.LocalPlayer.CalculateJumpVelocity( jumpHeight );
+			p.CalculateJumpVelocity( jumpHeight );
 		}
 		
 		void HandleCpeExtAddEntity2() {

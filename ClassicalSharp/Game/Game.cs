@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -20,90 +19,7 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 
 	public partial class Game : GameWindow {
-		
-		public IGraphicsApi Graphics;
-		public Map Map;
-		public INetworkProcessor Network;
-		
-		public EntityList Players;
-		public CpeListInfo[] CpePlayersList = new CpeListInfo[256];
-		public LocalPlayer LocalPlayer;
-		public Camera Camera;
-		Camera firstPersonCam, thirdPersonCam, forwardThirdPersonCam;
-		public BlockInfo BlockInfo;
-		public double accumulator;
-		public TerrainAtlas2D TerrainAtlas;
-		public TerrainAtlas1D TerrainAtlas1D;
-		public SkinType DefaultPlayerSkinType;
-		public int ChunkUpdates;
-		
-		public MapRenderer MapRenderer;
-		public MapBordersRenderer MapBordersRenderer;
-		public EnvRenderer EnvRenderer;
-		public WeatherRenderer WeatherRenderer;
-		public Inventory Inventory;
-		public IDrawer2D Drawer2D;
-		
-		public CommandManager CommandManager;
-		public SelectionManager SelectionManager;
-		public ParticleManager ParticleManager;
-		public PickingRenderer Picking;
-		public PickedPos SelectedPos = new PickedPos();
-		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer = null;
-		internal int defaultIb;
-		public bool CanUseThirdPersonCamera = true;
-		FpsScreen fpsScreen;
-		internal HudScreen hudScreen;
-		public Events Events = new Events();
-		public InputHandler InputHandler;
-		public ChatLog Chat;
-		public BlockHandRenderer BlockHandRenderer;
-		public AudioManager AudioManager;
-		
-		public IPAddress IPAddress;
-		public string Username;
-		public string Mppass;
-		public int Port;
-		public int ViewDistance = 512;
-		public int FieldOfView = 70;
-		public FpsLimitMethod FpsLimit;
-		
-		public long Vertices;
-		public FrustumCulling Culling;
-		int width, height;
-		public AsyncDownloader AsyncDownloader;
-		public Matrix4 View, Projection, HeldBlockProjection;
-		public int MouseSensitivity = 30;
-		public int ChatLines = 12;
-		public bool ClickableChat, HideGui, ShowFPS = true;
-		internal float HudScale = 1.0f, ChatScale = 1.0f;
-		public bool ViewBobbing, UseGuiPng;
-		public bool UseSound, UseMusic;
-		
-		public Animations Animations;
-		internal int CloudsTextureId, RainTextureId, SnowTextureId;
-		internal bool screenshotRequested;
-		public Bitmap FontBitmap;
-		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
-		internal AcceptedUrls AcceptedUrls = new AcceptedUrls();
-		
-		public float GuiScale() {
-			float scaleX = Width / 640f, scaleY = Height / 480f;
-			return Math.Min( scaleX, scaleY ) * HudScale;
-		}
-		
-		string defTexturePack = "default.zip";
-		public string DefaultTexturePack {
-			get {
-				return File.Exists( defTexturePack )
-					? defTexturePack : "default.zip"; }
-			set {
-				defTexturePack = value;
-				Options.Set( OptionsKey.DefaultTexturePack, value );
-			}
-		}
-		
+	
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
@@ -411,9 +327,11 @@ namespace ClassicalSharp {
 		
 		public void SetCamera( bool thirdPerson ) {
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
-			Camera = (thirdPerson && CanUseThirdPersonCamera) ?
+			bool canUseThird = LocalPlayer.CanUseThirdPersonCamera;
+			Camera = (thirdPerson && canUseThird) ?
 				(Camera is FirstPersonCamera ? thirdPersonCam : forwardThirdPersonCam ) :
 				firstPersonCam;
+			
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;
 			newCam.previous = oldCam.previous;
