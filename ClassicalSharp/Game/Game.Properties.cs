@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		public int ChatLines = 12;
 		public bool ClickableChat, HideGui, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
-		public bool ViewBobbing, UseGuiPng;
+		public bool ViewBobbing, UseGuiPng, ShowBlockInHand;
 		public bool UseSound, UseMusic;
 		
 		public Animations Animations;

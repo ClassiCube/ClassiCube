@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 			blockHeight = info.Height[block];
 			index = 0;
 			// isometric coords size: cosY * -scale - sinY * scale
-			// we need to divide by (2 *cosY), as the calling function expects size to be in pixels.
+			// we need to divide by (2 * cosY), as the calling function expects size to be in pixels.
 			scale = size / (2 * cosY);
 			
 			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))

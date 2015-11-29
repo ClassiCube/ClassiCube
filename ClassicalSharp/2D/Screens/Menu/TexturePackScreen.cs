@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text,
+			return ButtonWidget.Create( game, x, y, 160, 35, text,
 			                           Anchor.Centre, Anchor.BottomOrRight, titleFont, onClick );
 		}
 		

@@ -13,6 +13,12 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
+				Make( -140, -150, "Block in hand", Anchor.Centre, OnWidgetClick,
+				     g => g.ShowBlockInHand ? "yes" : "no",
+				     (g, v) => { g.ShowBlockInHand = v == "yes";
+				     	Options.Set( OptionsKey.ShowBlockInHand, v == "yes" );
+				     } ),
+				
 				Make( -140, -100, "Field of view", Anchor.Centre, OnWidgetClick,
 				     g => g.FieldOfView.ToString(),
 				     (g, v) => { g.FieldOfView = Int32.Parse( v );
@@ -36,27 +42,27 @@ namespace ClassicalSharp {
 				     (g, v) => game.UseGuiPng = v == "yes" ),
 				
 				// Column 2
-				Make( 140, -100, "Clickable chat", Anchor.Centre, OnWidgetClick,
+				Make( 140, -150, "Clickable chat", Anchor.Centre, OnWidgetClick,
 				     g => g.ClickableChat ? "yes" : "no",
 				     (g, v) => { g.ClickableChat = v == "yes";
 				     	Options.Set( OptionsKey.ClickableChat, v == "yes" );
 				     } ),
 				
-				Make( 140, -50, "Chat scale", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "Chat scale", Anchor.Centre, OnWidgetClick,
 				     g => g.ChatScale.ToString(),
 				     (g, v) => { g.ChatScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.ChatScale, v );
 				     	g.RefreshHud();
 				     } ),
 
-				Make( 140, 0, "Chat lines", Anchor.Centre, OnWidgetClick,
+				Make( 140, -50, "Chat lines", Anchor.Centre, OnWidgetClick,
 				     g => g.ChatLines.ToString(),
 				     (g, v) => { g.ChatLines = Int32.Parse( v );
 				     	Options.Set( OptionsKey.ChatLines, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( 140, 50, "Arial chat font", Anchor.Centre, OnWidgetClick,
+				Make( 140, 0, "Arial chat font", Anchor.Centre, OnWidgetClick,
 				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
 				     (g, v) => {
 				     	g.Drawer2D.UseBitmappedChat = v == "no";
@@ -66,11 +72,12 @@ namespace ClassicalSharp {
 				     } ),
 				
 				
-				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
+				MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
 			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
 				new IntegerValidator( 1, 179 ),
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
@@ -86,10 +93,16 @@ namespace ClassicalSharp {
 		
 		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, 
+			                                          Anchor.Centre, vDocking, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
+		}
+		
+		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
+			return ButtonWidget.Create( game, x, y, width, 35, text, 
+			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 	}
 }

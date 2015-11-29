@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 			buttons = new [] {
 				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OkButtonClick ),
-				ButtonWidget.Create( game, 0, 5, 240, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
+				ButtonWidget.Create( game, 0, 5, 160, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
 				                    titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}

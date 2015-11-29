@@ -29,6 +29,7 @@ namespace ClassicalSharp.Audio {
 			                         "ClassicalSharp.DoMusic" );
 		}
 		
+		EventWaitHandle waitHandle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		void DoMusicThread() {
 			Random rnd = new Random();
 			while( !disposingMusic ) {
@@ -41,7 +42,7 @@ namespace ClassicalSharp.Audio {
 				if( disposingMusic ) break;
 				
 				int delay = 2000 * 60 + rnd.Next( 0, 5000 * 60 );
-				Thread.Sleep( delay );
+				waitHandle.WaitOne( delay );
 			}
 		}
 		
@@ -49,10 +50,12 @@ namespace ClassicalSharp.Audio {
 		public void Dispose() {
 			DisposeMusic();
 			DisposeSound();
+			waitHandle.Close();
 		}
 		
 		void DisposeMusic() {
 			disposingMusic = true;
+			waitHandle.Set();
 			DisposeOf( ref musicOut, ref musicThread );
 		}
 		

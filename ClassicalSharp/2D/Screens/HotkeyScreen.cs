@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 				Make( -160, -80, "<", 40, 40, arrowFont, (g, w) => PageClick( false ) ),
 				Make( 160, -80, ">", 40, 40, arrowFont, (g, w) => PageClick( true ) ),
 				
-				ButtonWidget.Create( game, 0, 5, 240, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
+				ButtonWidget.Create( game, 0, 5, 160, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
 				                    titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null, // current key
 				null, // current modifiers

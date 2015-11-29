@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 			font.Dispose();
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
+			game.Keyboard.KeyRepeat = false;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -84,6 +85,7 @@ namespace ClassicalSharp {
 			Block held = game.Inventory.HeldBlock;
 			selIndex = Array.IndexOf<Block>( blocksTable, held );
 			MoveCursorToSelected();
+			game.Keyboard.KeyRepeat = true;
 		}
 		
 		void MoveCursorToSelected() {

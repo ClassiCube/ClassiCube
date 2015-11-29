@@ -76,8 +76,8 @@ namespace ClassicalSharp {
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
-				Make( 0, 5, "Back to menu", Anchor.BottomOrRight,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ), null, null ),
+				MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
 			buttons[3].Metadata = typeof(FpsLimitMethod);
@@ -101,10 +101,16 @@ namespace ClassicalSharp {
 		
 		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, 
+			                                          Anchor.Centre, vDocking, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
+		}
+		
+		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
+			return ButtonWidget.Create( game, x, y, width, 35, text, 
+			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 	}
 }

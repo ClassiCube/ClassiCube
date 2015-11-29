@@ -62,6 +62,7 @@ namespace ClassicalSharp {
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			Drawer2D.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
 			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
+			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
@@ -121,6 +122,7 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
 			AudioManager = new AudioManager();
+			AudioManager.SetMusic( Options.GetBool( OptionsKey.UseMusic, false ) );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			Graphics.WarnIfNecessary( Chat );

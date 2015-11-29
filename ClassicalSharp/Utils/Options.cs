@@ -18,6 +18,8 @@ namespace ClassicalSharp {
 		public const string DefaultTexturePack = "defaulttexpack";
 		public const string SingleplayerPhysics = "singleplayerphysics";
 		public const string ShowHoveredNames = "showhoverednames";
+		public const string ShowBlockInHand = "blockinhand";
+		public const string UseMusic = "usemusic";
 		
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";

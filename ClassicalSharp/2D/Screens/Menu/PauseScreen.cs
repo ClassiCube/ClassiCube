@@ -40,14 +40,21 @@ namespace ClassicalSharp {
 				Make( 140, 50, "Select texture pack", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
 				// Other
-				Make( 0, 75, "Back to game", Anchor.BottomOrRight, 
-				     (g, w) => g.SetNewScreen( null ) ),
-				Make( 0, 5, "Quit game", Anchor.BottomOrRight, (g, w) => g.Exit() ),
+				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
+				          (g, w) => g.Exit() ),
+				MakeOther( 0, 5, 160, "Back to game", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( null ) ),				
 			};
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, vDocking, titleFont, onClick );
+			return ButtonWidget.Create( game, x, y, 240, 35, text, 
+			                           Anchor.Centre, vDocking, titleFont, onClick );
+		}
+		
+		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
+			return ButtonWidget.Create( game, x, y, width, 35, text, 
+			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

@@ -145,7 +145,7 @@ namespace ClassicalSharp {
 			IntPtr ptr = (IntPtr)vertices;
 			
 			fullColSides = game.BlockInfo.FullBright[(byte)game.Map.SidesBlock];
-			FastColour col = fullColSides ? FastColour.White : map.SunlightYBottom;
+			FastColour col = fullColSides ? FastColour.White : map.Shadowlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
 			}

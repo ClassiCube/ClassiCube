@@ -28,7 +28,7 @@ namespace ClassicalSharp.Renderers {
 		double animTime;
 		byte type, lastType;
 		public void Render( double delta ) {
-			if( game.Camera.IsThirdPerson )
+			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand )
 				return;
 			game.Graphics.Texturing = true;
 			game.Graphics.DepthTest = false;
@@ -125,9 +125,9 @@ namespace ClassicalSharp.Renderers {
 			if( !game.ViewBobbing || !game.LocalPlayer.onGround ) return;
 			LocalPlayer p = game.LocalPlayer;
 			
-			double horTime = Math.Sin( p.curWalkTime * 0.75f ) * p.curSwing;
+			double horTime = Math.Sin( p.curWalkTime ) * p.curSwing;
 			// (0.5 + 0.5cos(2x)) is smoother than abs(cos(x)) at endpoints
-			double verTime = Math.Cos( p.curWalkTime * 0.75f * 2f );
+			double verTime = Math.Cos( p.curWalkTime * 2f );
 			float horAngle = 0.2f * (float)horTime;			
 			float verAngle = 0.2f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
 			
