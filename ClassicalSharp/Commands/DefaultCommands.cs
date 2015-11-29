@@ -18,22 +18,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			List<string> commandNames = new List<string>();
-			StringBuilder buffer = new StringBuilder( 64 );
-			foreach( Command cmd in game.CommandManager.RegisteredCommands ) {
-				string name = cmd.Name;
-				if( buffer.Length + name.Length > 64 ) {
-					commandNames.Add( buffer.ToString() );
-					buffer.Length = 0;
-				}
-				buffer.Append( name + ", " );
-			}
-			if( buffer.Length > 0 ) {
-				commandNames.Add( buffer.ToString() );
-			}
-			foreach( string part in commandNames ) {
-				game.Chat.Add( part );
-			}
+			game.CommandManager.PrintDefinedCommands( game );
 		}
 	}
 	
@@ -51,7 +36,9 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string cmdName = reader.Next();
 			if( cmdName == null ) {
-				game.Chat.Add( "&e/client help: No command name specified. See /client commands for a list of commands." );
+				game.Chat.Add( "&eList of client commands:" );
+				game.CommandManager.PrintDefinedCommands( game );
+				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 			} else {
 				Command cmd = game.CommandManager.GetMatchingCommand( cmdName );
 				if( cmd != null ) {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ClassicalSharp.Commands {
 	
@@ -53,13 +54,34 @@ namespace ClassicalSharp.Commands {
 		public void Execute( string text ) {
 			CommandReader reader = new CommandReader( text );
 			if( reader.TotalArgs == 0 ) {
-				game.Chat.Add( "&e/client: No command name specified. See /client commands for a list of commands." );
+				game.Chat.Add( "&eList of client commands:" );
+				PrintDefinedCommands( game );
+				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 				return;
 			}
 			string commandName = reader.Next();
 			Command cmd = GetMatchingCommand( commandName );
 			if( cmd != null ) {
 				cmd.Execute( reader );
+			}
+		}
+		
+		public void PrintDefinedCommands( Game game ) {
+			List<string> lines = new List<string>();
+			StringBuilder buffer = new StringBuilder( 64 );
+			foreach( Command cmd in game.CommandManager.RegisteredCommands ) {
+				string name = cmd.Name;
+				if( buffer.Length + name.Length > 64 ) {
+					lines.Add( buffer.ToString() );
+					buffer.Length = 0;
+				}
+				buffer.Append( name );
+				buffer.Append( ", " );
+			}
+			if( buffer.Length > 0 )
+				lines.Add( buffer.ToString() );
+			foreach( string part in lines ) {
+				game.Chat.Add( part );
 			}
 		}
 	}
