@@ -65,18 +65,19 @@ namespace ClassicalSharp {
 			if( !game.Focused ) return;
 			Point current = game.DesktopCursorPos;
 			delta = new Point( current.X - previous.X, current.Y - previous.Y );
-			Rectangle bounds = game.Bounds;
-			int cenX = bounds.Left + bounds.Width / 2;
-			int cenY = bounds.Top + bounds.Height / 2;
+			Point topLeft = game.PointToScreen( Point.Empty );
+			int cenX = topLeft.X + game.Width / 2;
+			int cenY = topLeft.Y + game.Height / 2;
 			game.DesktopCursorPos = new Point( cenX, cenY );
 			// Fixes issues with large DPI displays on Windows >= 8.0.
 			previous = game.DesktopCursorPos;
 		}
 		
 		public override void RegrabMouse() {
-			Rectangle bounds = game.Bounds;
-			int cenX = bounds.Left + bounds.Width / 2;
-			int cenY = bounds.Top + bounds.Height / 2;
+			if( !game.Exists ) return;
+			Point topLeft = game.PointToScreen( Point.Empty );
+			int cenX = topLeft.X + game.Width / 2;
+			int cenY = topLeft.Y + game.Height / 2;
 			game.DesktopCursorPos = new Point( cenX, cenY );
 			previous = new Point( cenX, cenY );
 			delta = Point.Empty;

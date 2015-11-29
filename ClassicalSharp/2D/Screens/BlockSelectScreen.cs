@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		Block[] blocksTable;
 		Texture blockInfoTexture;
 		const int blocksPerRow = 10;
-		int selectedIndex, rows;
+		int selIndex, rows;
 		int startX, startY, blockSize;
 		float selBlockExpand;
 		readonly Font font;
@@ -34,15 +34,15 @@ namespace ClassicalSharp {
 				GetCoords( i, out x, out y );
 				
 				// We want to always draw the selected block on top of others
-				if( i == selectedIndex ) continue;
+				if( i == selIndex ) continue;
 				IsometricBlockDrawer.Draw( game, (byte)blocksTable[i], blockSize * 0.7f / 2f,
 				                          x + blockSize / 2, y + blockSize / 2 );
 			}
 			
-			if( selectedIndex != -1 ) {
+			if( selIndex != -1 ) {
 				int x, y;
-				GetCoords( selectedIndex, out x, out y );
-				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selectedIndex], (blockSize + selBlockExpand) * 0.7f / 2,
+				GetCoords( selIndex, out x, out y );
+				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
 				                          x + blockSize / 2, y + blockSize / 2 );
 			}
 			
@@ -79,14 +79,28 @@ namespace ClassicalSharp {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			RecreateBlockTextures();
+			
+			RecreateBlockTable();
+			Block held = game.Inventory.HeldBlock;
+			selIndex = Array.IndexOf<Block>( blocksTable, held );
+			MoveCursorToSelected();
+		}
+		
+		void MoveCursorToSelected() {
+			if( selIndex == -1 ) return;
+			int x, y;
+			GetCoords( selIndex, out x, out y );
+			x += blockSize / 2; y += blockSize / 2;
+			
+			Point topLeft = game.PointToScreen( Point.Empty );
+			x += topLeft.X; y += topLeft.Y;
+			game.DesktopCursorPos = new Point( x, y );
 		}
 
 		void BlockPermissionsChanged( object sender, EventArgs e ) {
-			RecreateBlockTextures();
-			if( selectedIndex >= blocksTable.Length ) {
-				selectedIndex = blocksTable.Length - 1;
-			}
+			RecreateBlockTable();
+			if( selIndex >= blocksTable.Length )
+				selIndex = blocksTable.Length - 1;
 			RecreateBlockInfoTexture();
 		}
 		
@@ -123,13 +137,13 @@ namespace ClassicalSharp {
 		
 		int lastCreatedIndex = -1000;
 		void RecreateBlockInfoTexture() {
-			if( selectedIndex == lastCreatedIndex ) return;
-			lastCreatedIndex = selectedIndex;
+			if( selIndex == lastCreatedIndex ) return;
+			lastCreatedIndex = selIndex;
 			
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
-			if( selectedIndex == -1 ) return;
+			if( selIndex == -1 ) return;
 			
-			Block block = blocksTable[selectedIndex];
+			Block block = blocksTable[selIndex];
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
@@ -142,7 +156,7 @@ namespace ClassicalSharp {
 			blockInfoTexture = game.Drawer2D.MakeTextTexture( ref args, x, y );
 		}
 		
-		void RecreateBlockTextures() {
+		void RecreateBlockTable() {
 			int blocksCount = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
 				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )
@@ -166,14 +180,14 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			selectedIndex = -1;
+			selIndex = -1;
 			if( Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
 				for( int i = 0; i < blocksTable.Length; i++ ) {
 					int x, y;
 					GetCoords( i, out x, out y );
 					
 					if( Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
-						selectedIndex = i;
+						selIndex = i;
 						break;
 					}
 				}
@@ -183,8 +197,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button == MouseButton.Left && selectedIndex != -1 ) {
-				game.Inventory.HeldBlock = blocksTable[selectedIndex];
+			if( button == MouseButton.Left && selIndex != -1 ) {
+				game.Inventory.HeldBlock = blocksTable[selIndex];
 				game.SetNewScreen( null );
 			}
 			return true;
@@ -194,6 +208,33 @@ namespace ClassicalSharp {
 			if( key == game.Mapping( KeyBinding.PauseOrExit ) ||
 			   key == game.Mapping( KeyBinding.OpenInventory ) ) {
 				game.SetNewScreen( null );
+			} else if( key == Key.Enter && selIndex != -1 ) {
+				game.Inventory.HeldBlock = blocksTable[selIndex];
+				game.SetNewScreen( null );
+			} else if( (key == Key.Left || key == Key.Keypad4) && selIndex != -1 ) {
+				selIndex--;
+				if( selIndex < 0 ) 
+					selIndex = 0;
+				RecreateBlockInfoTexture();
+				MoveCursorToSelected();
+			} else if( (key == Key.Right || key == Key.Keypad6) && selIndex != -1 ) {
+				selIndex++;
+				if( selIndex >= blocksTable.Length ) 
+					selIndex = blocksTable.Length - 1;
+				RecreateBlockInfoTexture();
+				MoveCursorToSelected();
+			} else if( (key == Key.Up || key == Key.Keypad8) && selIndex != -1 ) {
+				selIndex -= blocksPerRow;
+				if( selIndex < 0 )
+					selIndex += blocksPerRow;
+				RecreateBlockInfoTexture();
+				MoveCursorToSelected();
+			} else if( (key == Key.Down || key == Key.Keypad2) && selIndex != -1 ) {
+				selIndex += blocksPerRow;
+				if( selIndex >= blocksTable.Length ) 
+					selIndex -= blocksPerRow;
+				RecreateBlockInfoTexture();
+				MoveCursorToSelected();
 			}
 			return true;
 		}
