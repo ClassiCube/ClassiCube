@@ -44,5 +44,12 @@ namespace ClassicalSharp {
 		
 		protected virtual void WidgetSelected( Widget widget ) {
 		}
+		
+		protected ButtonWidget MakeBack( bool toGame, Font font, Action<Game, Widget> onClick ) {
+			string text = toGame ? "Back to game" : "Back to menu";
+			return ButtonWidget.Create(
+				game, 0, 5, 180, 35, text,
+				Anchor.Centre, Anchor.BottomOrRight, font, onClick );
+		}
 	}
 }

@@ -4,7 +4,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class KeyBindingsScreen : MenuScreen {
+	public abstract class KeyBindingsScreen : MenuScreen {
 		
 		public KeyBindingsScreen( Game game ) : base( game ) {
 		}
@@ -20,43 +20,33 @@ namespace ClassicalSharp {
 		Font keyFont;
 		TextWidget statusWidget;
 		static string[] keyNames;
-		static string[] descriptions = new [] { "Forward", "Back", "Left", "Right", "Jump", "Respawn",
-			"Set spawn", "Open chat", "Send chat", "Pause", "Open inventory", "Cycle view distance",
-			"Show player list", "Speed", "Toggle noclip", "Toggle fly", "Fly up", "Fly down",
-			"Hide gui", "Hide FPS", "Take screenshot", "Toggle fullscreen", "Toggle 3rd person",
-			"Toggle extended input", };
+		protected string[] descriptions;
 		
 		public override void Init() {
+			base.Init();
 			if( keyNames == null )
 				keyNames = Enum.GetNames( typeof( Key ) );
-			keyFont = new Font( "Arial", 14, FontStyle.Bold );
-			regularFont = new Font( "Arial", 14, FontStyle.Italic );
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			buttons = new ButtonWidget[descriptions.Length + 1];
-			
-			MakeKeys( 0, 12, -140 );
-			MakeKeys( 12, 12, 140 );
-			buttons[index] = MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
-			                           (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			statusWidget = TextWidget.Create( game, 0, 160, "", Anchor.Centre, Anchor.Centre, regularFont );
+			keyFont = new Font( "Arial", 15, FontStyle.Bold );
+			regularFont = new Font( "Arial", 15, FontStyle.Italic );
+			statusWidget = TextWidget.Create( game, 0, 130, "", Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
-		int index;
-		void MakeKeys( int start, int len, int x ) {
-			int y = -200;
+		protected int index;
+		protected void MakeKeys( KeyBinding start, int descStart, int len, int x ) {
+			int y = -180;
 			for( int i = 0; i < len; i++ ) {
 				KeyBinding binding = (KeyBinding)((int)start + i);
-				string text = descriptions[start + i] + ": "
+				string text = descriptions[descStart + i] + ": "
 					+ keyNames[(int)game.Mapping( binding )];
 				
-				buttons[index++] = ButtonWidget.Create( game, x, y, 240, 25, text,
-				                                       Anchor.Centre, Anchor.Centre, keyFont, OnWidgetClick );
-				y += 30;
+				buttons[index++] = ButtonWidget.Create( game, x, y, 260, 35, text,
+				                                       Anchor.Centre, Anchor.Centre, keyFont, OnBindingClick );
+				y += 45;
 			}
 		}
 		
 		ButtonWidget curWidget;
-		void OnWidgetClick( Game game, Widget realWidget ) {
+		void OnBindingClick( Game game, Widget realWidget ) {
 			this.curWidget = (ButtonWidget)realWidget;
 			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
 			string text = "&ePress new key binding for " + descriptions[index] + ":";
@@ -87,11 +77,6 @@ namespace ClassicalSharp {
 				curWidget = null;
 			}
 			return true;
-		}
-		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 35, text, 
-			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 		
 		public override void Dispose() {

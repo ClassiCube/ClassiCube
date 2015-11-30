@@ -309,10 +309,7 @@ namespace ClassicalSharp {
 			activeScreen = screen;
 		}
 		
-		public void RefreshHud() {
-			hudScreen.Dispose();
-			hudScreen.Init();
-		}
+		public void RefreshHud() { hudScreen.Recreate(); }
 		
 		public void ShowWarning( WarningScreen screen ) {
 			if( !(activeScreen is WarningScreen) ) {

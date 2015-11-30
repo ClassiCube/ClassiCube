@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
 			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			game.Keyboard.KeyRepeat = true;

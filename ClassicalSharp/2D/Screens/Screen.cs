@@ -22,5 +22,12 @@ namespace ClassicalSharp {
 		public virtual bool HidesHud {
 			get { return false; }
 		}
+		
+		/// <summary> Causes the screen to recreate all of its contained widgets. </summary>
+		/// <remarks> Typically used when bitmap font changes. </remarks>
+		public virtual void Recreate() {
+			Dispose();
+			Init();
+		}
 	}
 }

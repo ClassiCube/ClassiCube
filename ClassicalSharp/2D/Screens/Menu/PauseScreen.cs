@@ -17,17 +17,17 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			base.Init();
 			buttons = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( -140, -100, "Gui options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
-				Make( -140, -50, "Environment settings", Anchor.Centre, 
+				Make( -140, -50, "Env settings", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
 				Make( -140, 0, "Key bindings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new KeyBindingsScreen( g ) ) ),		
+				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),		
 				Make( -140, 50, "Hotkeys", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
 				// Column 2
@@ -42,8 +42,8 @@ namespace ClassicalSharp {
 				// Other
 				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
 				          (g, w) => g.Exit() ),
-				MakeOther( 0, 5, 160, "Back to game", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( null ) ),				
+				MakeBack( true, titleFont,
+				         (g, w) => g.SetNewScreen( null ) ),
 			};
 		}
 		

@@ -23,13 +23,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			buttons[buttons.Length - 1] =
-				Make( 0, 5, "Back to menu", (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-		}
-		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 160, 35, text,
-			                           Anchor.Centre, Anchor.BottomOrRight, titleFont, onClick );
+			buttons[buttons.Length - 1] = 
+				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
 		protected override void TextButtonClick( Game game, Widget widget ) {

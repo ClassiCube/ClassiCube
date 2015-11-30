@@ -82,10 +82,7 @@ namespace ClassicalSharp {
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
-		void ChatFontChanged( object sender, EventArgs e ) {
-			Dispose();
-			Init();
-		}
+		void ChatFontChanged( object sender, EventArgs e ) { Recreate(); }
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 		}

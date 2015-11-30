@@ -22,6 +22,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public override void Init() {
+			int size = game.Drawer2D.UseBitmappedChat ? 13 : 16;
+			titleFont = new Font( "Arial", size, FontStyle.Bold );
+		} 
+		
 		public override void Dispose() {
 			for( int i = 0; i < buttons.Length; i++ ) {
 				if( buttons[i] == null ) continue;

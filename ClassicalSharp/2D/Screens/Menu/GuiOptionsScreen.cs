@@ -37,10 +37,6 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -140, 50, "Use gui.png (WIP)", Anchor.Centre, OnWidgetClick,
-				     g => g.UseGuiPng ? "yes" : "no",
-				     (g, v) => game.UseGuiPng = v == "yes" ),
-				
 				// Column 2
 				Make( 140, -150, "Clickable chat", Anchor.Centre, OnWidgetClick,
 				     g => g.ClickableChat ? "yes" : "no",
@@ -69,10 +65,11 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
 				     	game.Events.RaiseChatFontChanged();
 				     	g.RefreshHud();
+				     	Recreate();
 				     } ),
 				
 				
-				MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
+				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
@@ -81,7 +78,6 @@ namespace ClassicalSharp {
 				new IntegerValidator( 1, 179 ),
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
-				new BooleanValidator(),
 				
 				new BooleanValidator(),		
 				new RealValidator( 0.25f, 5f ),
@@ -98,11 +94,6 @@ namespace ClassicalSharp {
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
-		}
-		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 35, text, 
-			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 	}
 }

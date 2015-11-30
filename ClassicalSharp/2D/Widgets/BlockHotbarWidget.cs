@@ -15,7 +15,8 @@ namespace ClassicalSharp {
 		
 		int hotbarCount;
 		Texture selectedBlock, background;
-		int blockSize, borderSize;
+		int barHeight, selBlockSize, elemSize;
+		int barXOffset, borderSize;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -25,19 +26,20 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		static FastColour backCol = new FastColour( 60, 60, 60, 160 );
-		static FastColour outlineCol = new FastColour( 151, 120, 180 );
-		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Init() {
-			blockSize = (int)(38 * game.GuiScale);
-			borderSize = (int)(3 * game.GuiScale);
-			int width = blockSize * hotbarCount;
-			X = game.Width / 2 - width / 2;
-			Y = game.Height - blockSize;
+			float scale = 2 * game.GuiScale;
+			selBlockSize = (int)(24 * scale);
+			barHeight = (int)(22 * scale);		
+			Width = (int)(182 * scale);
+			Height = barHeight;
 			
-			Width = width;
-			Height = blockSize;
-			MakeBackgroundTexture( width );
+			elemSize = (int)(16 * scale);
+			barXOffset = (int)(3 * scale);
+			borderSize = (int)(4 * scale);
+			X = game.Width / 2 - Width / 2;
+			Y = game.Height - barHeight;		
+			
+			MakeBackgroundTexture();
 			MakeSelectionTexture();
 		}
 		
@@ -48,21 +50,20 @@ namespace ClassicalSharp {
 			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
-				int x = X + i * blockSize;
-				IsometricBlockDrawer.Draw( game, (byte)game.Inventory.Hotbar[i], blockSize / 2 - borderSize - 2,
-				                          x + 1 + blockSize / 2, game.Height - blockSize / 2 );
+				byte block = (byte)game.Inventory.Hotbar[i];
+				int x = X + barXOffset + (elemSize + borderSize) * i + elemSize / 2;
+				int y = game.Height - barHeight / 2;
+				float scale = (elemSize - 4) / 2f;
+				IsometricBlockDrawer.Draw( game, block, scale, x, y );
 				if( i == game.Inventory.HeldBlockIndex )
-					selectedBlock.X1 = x;
+					selectedBlock.X1 = x - selBlockSize / 2;
 			}
 			
 			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;
 		}
 		
-		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref selectedBlock );
-			graphicsApi.DeleteTexture( ref background );
-		}
+		public override void Dispose() { }
 		
 		public override void MoveTo( int newX, int newY ) {
 			int diffX = newX - X, diffY = newY - Y;
@@ -71,30 +72,16 @@ namespace ClassicalSharp {
 			Init();
 		}
 		
-		void MakeBackgroundTexture( int width ) {
-			Size size = new Size( width, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
-				using( IDrawer2D drawer = game.Drawer2D )
-			{
-				drawer.SetBitmap( bmp );
-				drawer.Clear( backCol );
-				for( int xx = 0; xx < hotbarCount; xx++ ) {
-					drawer.DrawRectBounds( outlineCol, borderSize, xx * blockSize,
-					                      0, blockSize, blockSize );
-				}
-				background = drawer.Make2DTexture( bmp, size, X, Y );
-			}
+		void MakeBackgroundTexture() {
+			TextureRec rec = new TextureRec( 0, 0, 182/256f, 22/256f );
+			background = new Texture( game.GuiTexId, X, Y, Width, Height, rec );
 		}
 		
 		void MakeSelectionTexture() {
-			Size size = new Size( blockSize, blockSize );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
-				using( IDrawer2D drawer = game.Drawer2D )
-			{
-				drawer.SetBitmap( bmp );
-				drawer.DrawRectBounds( selCol, borderSize, 0, 0, blockSize, blockSize );
-				selectedBlock = drawer.Make2DTexture( bmp, size, 0, Y );
-			}
+			int y = game.Height - selBlockSize;
+			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
+			selectedBlock = new Texture( game.GuiTexId, 0, y, 
+			                            selBlockSize, selBlockSize, rec );
 		}
 	}
 }

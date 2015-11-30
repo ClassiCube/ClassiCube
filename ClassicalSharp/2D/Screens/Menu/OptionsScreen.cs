@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -200, "Singleplayer physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -200, "Block physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
 				
-				Make( 140, 0, "Pushback block placing", Anchor.Centre, OnWidgetClick,
+				Make( 140, 0, "Pushback placing", Anchor.Centre, OnWidgetClick,
 				     g => g.LocalPlayer.PushbackBlockPlacing
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
 				     (g, v) => {
@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
-				MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
+				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
@@ -106,11 +106,6 @@ namespace ClassicalSharp {
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
-		}
-		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 35, text, 
-			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 	}
 }

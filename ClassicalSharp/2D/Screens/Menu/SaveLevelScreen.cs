@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
+			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
 			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			
@@ -58,8 +58,8 @@ namespace ClassicalSharp {
 			buttons = new [] {
 				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OkButtonClick ),
-				ButtonWidget.Create( game, 0, 5, 160, 35, "Back to menu", Anchor.Centre, Anchor.BottomOrRight,
-				                    titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				MakeBack( false, titleFont,
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
 		

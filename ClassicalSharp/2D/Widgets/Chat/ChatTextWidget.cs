@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public ChatTextWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
-		public static ChatTextWidget Create( Game game, int x, int y, string text, Anchor horizontal, Anchor vertical, Font font ) {
+		public static new ChatTextWidget Create( Game game, int x, int y, string text, Anchor horizontal, Anchor vertical, Font font ) {
 			ChatTextWidget widget = new ChatTextWidget( game, font );
 			widget.Init();
 			widget.HorizontalAnchor = horizontal; widget.VerticalAnchor = vertical;

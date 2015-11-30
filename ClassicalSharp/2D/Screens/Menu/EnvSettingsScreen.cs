@@ -49,8 +49,8 @@ namespace ClassicalSharp {
 				     g => g.Map.EdgeHeight.ToString(),
 				     (g, v) => g.Map.SetEdgeLevel( Int32.Parse( v ) ) ),
 				
-				MakeOther( 0, 5, 160, "Back to menu", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				MakeBack( false, titleFont,
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
 			buttons[7].Metadata = typeof(Weather);
@@ -76,11 +76,6 @@ namespace ClassicalSharp {
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
-		}
-		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 35, text, 
-			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
 		}
 	}
 }

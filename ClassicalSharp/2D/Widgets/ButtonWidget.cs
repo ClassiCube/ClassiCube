@@ -35,8 +35,11 @@ namespace ClassicalSharp {
 			Height = defaultHeight;
 		}
 		
-		static FastColour boxCol = new FastColour( 169, 143, 192 ), shadowCol = new FastColour( 97, 81, 110 );
-		//static FastColour boxCol = new FastColour( 29, 126, 192 ), shadowCol = new FastColour( 16, 72, 109 );
+		static TextureRec shadowRec = new TextureRec( 0, 66/256f, 200/256f, 20/256f );
+		static TextureRec selectedRec = new TextureRec( 0, 86/256f, 200/256f, 20/256f );
+		static Texture shadowTex = new Texture( 0, 0, 0, 0, 0, shadowRec );
+		static Texture selectedTex = new Texture( 0, 0, 0, 0, 0, selectedRec );
+		
 		public string Text;
 		public void SetText( string text ) {
 			graphicsApi.DeleteTexture( ref texture );
@@ -55,6 +58,11 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			if( texture.IsValid ) {
+				Texture backTex = Active ? selectedTex : shadowTex;
+				backTex.ID = game.GuiTexId;
+				backTex.X1 = X; backTex.Y1 = Y;
+				backTex.Width = Width; backTex.Height = Height;
+				backTex.Render( graphicsApi );
 				FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
 				texture.Render( graphicsApi, col );
 			}
@@ -78,26 +86,19 @@ namespace ClassicalSharp {
 		
 		void MakeTexture( string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			Size size = game.Drawer2D.MeasureSize( ref args );
+			Size size = game.Drawer2D.MeasureChatSize( ref args );
 			
 			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;
 			size.Width = Math.Max( size.Width, DesiredMaxWidth );
 			int yOffset = Math.Max( size.Height, DesiredMaxHeight ) - size.Height;
 			size.Height = Math.Max( size.Height, DesiredMaxHeight );
-			Size baseSize = size;
-			const int borderSize = 3; // 1 px for base border, 2 px for shadow, 1 px for offset text
-			size.Width += borderSize; size.Height += borderSize;
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
 				using( IDrawer2D drawer = game.Drawer2D )
 			{
-				drawer.SetBitmap( bmp );
-				drawer.DrawRoundedRect( shadowCol, 3, IDrawer2D.Offset, IDrawer2D.Offset,
-				                       baseSize.Width, baseSize.Height );
-				drawer.DrawRoundedRect( boxCol, 3, 0, 0, baseSize.Width, baseSize.Height );
-				
+				drawer.SetBitmap( bmp );			
 				args.SkipPartsCheck = true;
-				drawer.DrawText( ref args, 1 + xOffset / 2, 1 + yOffset / 2 );
+				drawer.DrawChatText( ref args, xOffset / 2, yOffset / 2 );
 				texture = drawer.Make2DTexture( bmp, size, 0, 0 );
 			}
 		}

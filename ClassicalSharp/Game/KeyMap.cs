@@ -6,8 +6,8 @@ namespace ClassicalSharp {
 	public enum KeyBinding {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
 		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
-		Speed, NoClip, Fly, FlyUp, FlyDown, HideGui, HideFps,
-		Screenshot, Fullscreen, ThirdPersonCamera, ExtendedInput,
+		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
+		Screenshot, Fullscreen, ThirdPersonCamera, HideGui,
 	}
 	
 	public class KeyMap {
@@ -46,9 +46,9 @@ namespace ClassicalSharp {
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
 			Keys[11] = Key.F; Keys[12] = Key.Tab; Keys[13] = Key.ShiftLeft;
 			Keys[14] = Key.X; Keys[15] = Key.Z; Keys[16] = Key.Q;
-			Keys[17] = Key.E; Keys[18] = Key.F1; Keys[19] = Key.F3;
+			Keys[17] = Key.E; Keys[18] = Key.AltLeft; Keys[19] = Key.F3;
 			Keys[20] = Key.F12; Keys[21] = Key.F11; Keys[22] = Key.F5;
-			Keys[23] = Key.AltLeft;
+			Keys[23] = Key.F1;
 			LoadKeyBindings();
 		}
 		
