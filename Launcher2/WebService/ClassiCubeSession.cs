@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Launcher2 {
 	
@@ -56,8 +57,7 @@ namespace Launcher2 {
 			var swGet = System.Diagnostics.Stopwatch.StartNew();
 			string getResponse = GetHtmlAll( loginUri, classicubeNetUri );
 			int index = 0; bool success = true;
-			Dictionary<string, object> data =
-				(Dictionary<string, object>)Json.ParseValue( getResponse, ref index, ref success );
+			JsonObject data = (JsonObject)Json.ParseValue( getResponse, ref index, ref success );
 			string token = (string)data["token"];
 			
 			// Step 2: POST to login page with csrf token.
@@ -72,7 +72,7 @@ namespace Launcher2 {
 			var sw = System.Diagnostics.Stopwatch.StartNew();
 			string response = PostHtmlAll( loginUri, loginUri, loginData );
 			index = 0; success = true;
-			data = (Dictionary<string, object>)Json.ParseValue( response, ref index, ref success );
+			data = (JsonObject)Json.ParseValue( response, ref index, ref success );
 			
 			List<object> errors = (List<object>)data["errors"];
 			if( errors.Count > 0 || (data.ContainsKey( "username" ) && data["username"] == null) )
@@ -88,13 +88,12 @@ namespace Launcher2 {
 			string response = GetHtmlAll( uri, classicubeNetUri );
 			
 			int index = 0; bool success = true;
-			Dictionary<string, object> root =
-				(Dictionary<string, object>)Json.ParseValue( response, ref index, ref success );
+			JsonObject root = (JsonObject)Json.ParseValue( response, ref index, ref success );
 			List<object> list = (List<object>)root["servers"];
 			
-			Dictionary<string, object> pairs = (Dictionary<string, object>)list[0];
-			return new ClientStartData( Username, (string)pairs["mppass"], 
-			                           (string)pairs["ip"], (string)pairs["port"] );
+			JsonObject obj = (JsonObject)list[0];
+			return new ClientStartData( Username, (string)obj["mppass"], 
+			                           (string)obj["ip"], (string)obj["port"] );
 		}
 		
 		public List<ServerListEntry> GetPublicServers() {
@@ -102,17 +101,16 @@ namespace Launcher2 {
 			List<ServerListEntry> servers = new List<ServerListEntry>();
 			string response = GetHtmlAll( publicServersUri, classicubeNetUri );
 			int index = 0; bool success = true;
-			Dictionary<string, object> root =
-				(Dictionary<string, object>)Json.ParseValue( response, ref index, ref success );
+			JsonObject root = (JsonObject)Json.ParseValue( response, ref index, ref success );
 			List<object> list = (List<object>)root["servers"];
 			
 			foreach( object server in list ) {
-				Dictionary<string, object> pairs = (Dictionary<string, object>)server;
+				JsonObject obj = (JsonObject)server;
 				servers.Add( new ServerListEntry(
-					(string)pairs["hash"], (string)pairs["name"],
-					(string)pairs["players"], (string)pairs["maxplayers"],
-					(string)pairs["uptime"], (string)pairs["mppass"],
-					(string)pairs["ip"], (string)pairs["port"] ) );
+					(string)obj["hash"], (string)obj["name"],
+					(string)obj["players"], (string)obj["maxplayers"],
+					(string)obj["uptime"], (string)obj["mppass"],
+					(string)obj["ip"], (string)obj["port"] ) );
 			}
 			Log( "cc servers took " + sw.ElapsedMilliseconds );
 			sw.Stop();

@@ -162,7 +162,7 @@ namespace Launcher2 {
 		static int GetLastIndexOfNumber( string json, int index ) {
 			int lastIndex = index;
 			for( ; lastIndex < json.Length; lastIndex++ ) {
-				if( "0123456789+-".IndexOf( json[lastIndex] ) == -1 ) 
+				if( "0123456789+-.".IndexOf( json[lastIndex] ) == -1 ) 
 					break;
 			}
 			return lastIndex - 1;

@@ -322,7 +322,9 @@ namespace ClassicalSharp {
 			if( !game.AcceptedUrls.HasAccepted( url ) )
 				game.AcceptedUrls.AddAccepted( url );
 			
-			if( usingTexturePack )
+			// NOTE: This is entirely against the original CPE specification, but we
+			// do it here as a convenience until EnvMapAppearance v2 is more widely adopted.
+			if( usingTexturePack || url.EndsWith( ".zip" ) )
 				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
 			else
 				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );

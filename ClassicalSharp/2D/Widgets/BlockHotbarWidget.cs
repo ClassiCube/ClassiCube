@@ -82,10 +82,11 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeSelectionTexture() {
-			int size = (int)selBlockSize;
-			int y = game.Height - size;
+			int hSize = (int)selBlockSize;
+			int vSize = (int)Math.Floor( 23 * 2 * game.GuiScale );
+			int y = game.Height - vSize;
 			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
-			selTex = new Texture( game.GuiTexId, 0, y,  size, size, rec );
+			selTex = new Texture( game.GuiTexId, 0, y, hSize, vSize, rec );
 		}
 	}
 }

@@ -1,22 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Launcher2 {
+	
+	public class Build {
+		public DateTime TimeBuilt;
+		public string DirectXPath, OpenGLPath;
+		public int DirectXSize, OpenGLSize;
+	}
 	
 	public sealed class UpdateCheckTask : IWebTask {
 		
 		public const string UpdatesUri = "http://cs.classicube.net/";
-		StringComparison ordinal = StringComparison.Ordinal;
-		
-		public string LatestStableDate, LatestStableSize;
-		public string LatestDevDate, LatestDevSize;
+		public const string BuildsUri = "http://cs.classicube.net/builds.json";	
+		public Build LatestDev, LatestStable;
 		
 		public void CheckForUpdatesAsync() {
 			Working = true;
 			Exception = null;
-			LatestStableDate = null; LatestStableSize = null;
-			LatestDevDate = null; LatestDevSize = null;
+			LatestDev = null;
+			LatestStable = null;
 			
 			Thread thread = new Thread( UpdateWorker, 256 * 1024 );
 			thread.Name = "Launcher.UpdateCheck";
@@ -33,46 +39,35 @@ namespace Launcher2 {
 		}
 		
 		void CheckUpdates() {
-			var response = GetHtml( UpdatesUri, UpdatesUri );
-			foreach( string line in response ) {
-				if( line.StartsWith( @"<a href=""latest.", ordinal ) ) {
-					int index = 0;
-					string text = line.Substring( @"<a href=""".Length );
-					
-					string buildName = ReadToken( text, ref index );
-					string date = ReadToken( text, ref index );
-					string time = ReadToken( text, ref index );
-					string buildSize = ReadToken( text, ref index );
-					
-					if( buildName.Contains( "latest.zip" ) ) {
-						LatestDevDate = date + " " + time;
-						LatestDevSize = buildSize;
-					} else if( buildName.Contains( "latest.Release.zip" ) ) {
-						LatestStableDate = date + " " + time;
-						LatestStableSize = buildSize;
-					}
-				}
-			}
+			string response = GetHtmlAll( BuildsUri, UpdatesUri );
+			int index = 0; bool success = true;
+			JsonObject data = (JsonObject)Json.ParseValue( response, ref index, ref success );
+			
+			JsonObject devBuild = (JsonObject)data["latest"];
+			JsonObject releaseBuilds = (JsonObject)data["releases"];		
+			LatestDev = MakeBuild( devBuild, false );		
+			Build[] stableBuilds = new Build[releaseBuilds.Count];
+			
+			int i = 0;
+			foreach( KeyValuePair<string, object> pair in releaseBuilds )
+				stableBuilds[i++] = MakeBuild( (JsonObject)pair.Value, true );		
+			Array.Sort<Build>( stableBuilds, 
+			                  (a, b) => b.TimeBuilt.CompareTo( a.TimeBuilt ) );
+			LatestStable = stableBuilds[0];
 		}
 		
-		string ReadToken( string value, ref int index ) {
-			int start = index;
-			int wordEnd = -1;
-			for( ; index < value.Length; index++ ) {
-				if( value[index] == ' ' ) {
-					// found end of this word
-					if( wordEnd == -1 )
-						wordEnd = index;
-				} else {
-					// found start of next word
-					if( wordEnd != -1 )
-						break;
-				}
-			}
+		static readonly DateTime epoch = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc );
+		Build MakeBuild( JsonObject obj, bool release ) {
+			Build build = new Build();
+			string timeKey = release ? "release_ts" : "ts";
+			double rawTime = Double.Parse( (string)obj[timeKey] );
+			build.TimeBuilt = epoch.AddSeconds( rawTime ).ToLocalTime();
 			
-			if( wordEnd == -1 ) 
-				wordEnd = value.Length;
-			return value.Substring( start, wordEnd - start );
-		}
+			build.DirectXSize = Int32.Parse( (string)obj["dx_size"] );
+			build.DirectXPath = (string)obj["dx_file"];
+			build.OpenGLSize = Int32.Parse( (string)obj["ogl_size"] );
+			build.OpenGLPath = (string)obj["ogl_file"];
+			return build;
+		}		
 	}
 }

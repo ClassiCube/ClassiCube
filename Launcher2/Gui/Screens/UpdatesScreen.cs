@@ -18,7 +18,7 @@ namespace Launcher2 {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			infoFont = new Font( "Arial", 14, FontStyle.Regular );
 			buttonFont = titleFont;
-			widgets = new LauncherWidget[16];
+			widgets = new LauncherWidget[17];
 		}
 
 		UpdateCheckTask checkTask;
@@ -28,18 +28,20 @@ namespace Launcher2 {
 			Resize();
 		}
 		
+		
+		Build dev, stable;
 		public override void Tick() {
 			if( checkTask != null && !checkTask.Working ) {
 				if( checkTask.Exception != null ) {
 					updateCheckFailed = true;
 				} else {
-					lastStable = DateTime.Parse( checkTask.LatestStableDate,
-					                            null, DateTimeStyles.AssumeUniversal );
-					lastDev =  DateTime.Parse( checkTask.LatestDevDate,
-					                          null, DateTimeStyles.AssumeUniversal );
+					dev = checkTask.LatestDev;
+					lastDev = dev.TimeBuilt;
+					validDev = dev.DirectXSize > 50000 && dev.OpenGLSize > 50000;
 					
-					validStable = Int32.Parse( checkTask.LatestStableSize ) > 50000;
-					validDev = Int32.Parse( checkTask.LatestDevSize ) > 50000;
+					stable = checkTask.LatestStable;
+					lastStable = stable.TimeBuilt;
+					validStable = stable.DirectXSize > 50000 && stable.OpenGLSize > 50000;
 				}
 				checkTask = null;
 				game.MakeBackground();
@@ -64,22 +66,24 @@ namespace Launcher2 {
 			widgetIndex = 0;
 			
 			MakeLabelAt( "Your build:", titleFont, Anchor.Centre, Anchor.Centre, -55, -120 );
-			string yourBuild = File.GetLastWriteTimeUtc( "ClassicalSharp.exe" ).ToString( dateFormat );
+			string yourBuild = File.GetLastWriteTime( "ClassicalSharp.exe" ).ToString( dateFormat );
 			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 100, -120 );
 			
 			MakeLabelAt( "Latest stable:", titleFont, Anchor.Centre, Anchor.Centre, -70, -80 );
 			string latestStable = GetDateString( lastStable, validStable );
 			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 100, -80 );
-			MakeButtonAt( "Update to stable", 180, 30, titleFont, Anchor.Centre, 0, -40,
-			             (x, y) => UpdateBuild( lastStable, validStable, "latest.Release.zip" ) );
+			MakeButtonAt( "Update to D3D9 stable", 260, 30, titleFont, Anchor.Centre, 0, -40,
+			             (x, y) => UpdateBuild( lastStable, validStable, true, true ) );
+			MakeButtonAt( "Update to OpenGL stable", 260, 30, titleFont, Anchor.Centre, 0, 0,
+			             (x, y) => UpdateBuild( lastStable, validStable, true, false ) );
 			
 			MakeLabelAt( "Latest dev:", titleFont, Anchor.Centre, Anchor.Centre, -60, 40 );
 			string latestDev = GetDateString( lastDev, validDev );
 			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 40 );
-			MakeButtonAt( "Update to OpenGL dev", 240, 30, titleFont, Anchor.Centre, 0, 80,
-			             (x, y) => UpdateBuild( lastDev, validDev, "latest.zip" ) );
-			MakeButtonAt( "Update to D3D9 dev", 240, 30, titleFont, Anchor.Centre, 0, 120,
-			             (x, y) => UpdateBuild( lastDev, validDev, "latest.DirectX.zip" ) );
+			MakeButtonAt( "Update to D3D9 dev", 240, 30, titleFont, Anchor.Centre, 0, 80,
+			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
+			MakeButtonAt( "Update to OpenGL dev", 240, 30, titleFont, Anchor.Centre, 0, 120,
+			             (x, y) => UpdateBuild( lastDev, validDev, false, false ) );
 			
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             0, 200, (x, y) => game.SetScreen( new MainScreen( game ) ) );
@@ -90,11 +94,15 @@ namespace Launcher2 {
 			if( !valid ) return "Build corrupted";
 			if( last == DateTime.MinValue ) return "Checking..";
 			
-			return last.ToUniversalTime().ToString( dateFormat );
+			return last.ToString( dateFormat );
 		}
 		
-		void UpdateBuild( DateTime last, bool valid, string dir ) {
+		void UpdateBuild( DateTime last, bool valid, bool release, bool dx ) {
 			if( last == DateTime.MinValue || !valid ) return;
+			
+			Build build = release ? stable : dev;
+			string dir = dx ? build.DirectXPath : build.OpenGLPath;
+			Console.WriteLine( "FETCH! " + dir );
 			Patcher.Update( dir );
 		}
 		
