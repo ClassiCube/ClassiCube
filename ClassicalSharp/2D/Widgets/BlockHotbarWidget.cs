@@ -14,9 +14,9 @@ namespace ClassicalSharp {
 		}
 		
 		int hotbarCount;
-		Texture selectedBlock, background;
-		int barHeight, selBlockSize, elemSize;
-		int barXOffset, borderSize;
+		Texture selTex, backTex;
+		float barHeight, selBlockSize, elemSize;
+		float barXOffset, borderSize;
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key >= Key.Number1 && key <= Key.Number9 ) {
@@ -28,16 +28,16 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			float scale = 2 * game.GuiScale;
-			selBlockSize = (int)(24 * scale);
+			selBlockSize = (float)Math.Ceiling( 24 * scale );
 			barHeight = (int)(22 * scale);		
 			Width = (int)(182 * scale);
-			Height = barHeight;
+			Height = (int)barHeight;
 			
-			elemSize = (int)(16 * scale);
-			barXOffset = (int)(3 * scale);
-			borderSize = (int)(4 * scale);
+			elemSize = 16 * scale;
+			barXOffset = 3 * scale;
+			borderSize = 4 * scale;
 			X = game.Width / 2 - Width / 2;
-			Y = game.Height - barHeight;		
+			Y = game.Height - Height;
 			
 			MakeBackgroundTexture();
 			MakeSelectionTexture();
@@ -45,22 +45,26 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
-			background.Render( graphicsApi );
+			RenderHotbar();
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
-			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				byte block = (byte)game.Inventory.Hotbar[i];
-				int x = X + barXOffset + (elemSize + borderSize) * i + elemSize / 2;
-				int y = game.Height - barHeight / 2;
-				float scale = (elemSize - 4) / 2f;
+				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
+				int y = (int)(game.Height - barHeight / 2);
+				
+				float scale = (elemSize - 6) / 2f;
 				IsometricBlockDrawer.Draw( game, block, scale, x, y );
-				if( i == game.Inventory.HeldBlockIndex )
-					selectedBlock.X1 = x - selBlockSize / 2;
 			}
-			
-			selectedBlock.Render( graphicsApi );
 			graphicsApi.Texturing = false;
+		}
+		
+		void RenderHotbar() {
+			backTex.Render( graphicsApi );
+			int i = game.Inventory.HeldBlockIndex;
+			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
+			selTex.X1 = (int)(x - selBlockSize / 2);
+			selTex.Render( graphicsApi );
 		}
 		
 		public override void Dispose() { }
@@ -74,14 +78,14 @@ namespace ClassicalSharp {
 		
 		void MakeBackgroundTexture() {
 			TextureRec rec = new TextureRec( 0, 0, 182/256f, 22/256f );
-			background = new Texture( game.GuiTexId, X, Y, Width, Height, rec );
+			backTex = new Texture( game.GuiTexId, X, Y, Width, Height, rec );
 		}
 		
 		void MakeSelectionTexture() {
-			int y = game.Height - selBlockSize;
+			int size = (int)selBlockSize;
+			int y = game.Height - size;
 			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
-			selectedBlock = new Texture( game.GuiTexId, 0, y, 
-			                            selBlockSize, selBlockSize, rec );
+			selTex = new Texture( game.GuiTexId, 0, y,  size, size, rec );
 		}
 	}
 }

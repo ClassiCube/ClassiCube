@@ -32,11 +32,11 @@ namespace ClassicalSharp.Network {
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
 		/// <remarks> Identifier is skin_'skinName'.</remarks>
-		public void DownloadSkin( string skinName ) {
+		public void DownloadSkin( string identifier, string skinName ) {
 			string strippedSkinName = Utils.StripColours( skinName );
 			string url = Utils.IsUrlPrefix( skinName ) ? skinName :
 				skinServer + strippedSkinName + ".png";
-			AddRequest( url, true, "skin_" + strippedSkinName, RequestType.Bitmap, DateTime.MinValue );
+			AddRequest( url, true, identifier, RequestType.Bitmap, DateTime.MinValue );
 		}
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>

@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 		TextWidget statusWidget;
 		static string[] keyNames;
 		protected string[] descriptions;
+		protected KeyBinding originKey;
 		
 		public override void Init() {
 			base.Init();
@@ -58,7 +59,7 @@ namespace ClassicalSharp {
 				game.SetNewScreen( null );
 			} else if( curWidget != null ) {
 				int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
-				KeyBinding mapping = (KeyBinding)index;
+				KeyBinding mapping = (KeyBinding)(index + (int)originKey);
 				KeyMap map = game.InputHandler.Keys;
 				Key oldKey = map[mapping];
 				string reason;

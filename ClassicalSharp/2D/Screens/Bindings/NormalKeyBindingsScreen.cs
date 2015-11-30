@@ -16,9 +16,11 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			descriptions = normDescriptions;
+			originKey = KeyBinding.Forward;
 			buttons = new ButtonWidget[descriptions.Length + 2];
 			MakeKeys( KeyBinding.Forward, 0, 6, -150 );
 			MakeKeys( KeyBinding.SetSpawn, 6, 7, 150 );
+			
 			buttons[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 			buttons[index++] = ButtonWidget.Create(

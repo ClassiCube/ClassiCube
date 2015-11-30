@@ -262,13 +262,13 @@ namespace ClassicalSharp {
 					game.Events.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
-				game.Players[entityId] = new NetPlayer( displayName, skinName, game );
+				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
+				string identifier = game.Players[entityId].SkinIdentifier;
 				game.Events.RaiseEntityAdded( entityId );
-				game.AsyncDownloader.DownloadSkin( skinName );
+				game.AsyncDownloader.DownloadSkin( identifier, skinName );
 			} else {
 				game.LocalPlayer.SkinName = skinName;
-				game.LocalPlayer.SkinIdentifier = "skin_" + skinName;
-				game.AsyncDownloader.DownloadSkin( skinName );
+				game.AsyncDownloader.DownloadSkin( "skin_255", skinName );
 			}
 			if( readPosition ) {
 				ReadAbsoluteLocation( entityId, false );

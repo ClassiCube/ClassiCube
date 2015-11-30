@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			descriptions = normDescriptions;
+			originKey = KeyBinding.Speed;
 			buttons = new ButtonWidget[descriptions.Length + 2];
 			MakeKeys( KeyBinding.Speed, 0, 6, -150 );
 			MakeKeys( KeyBinding.HideFps, 6, 5, 150 );
