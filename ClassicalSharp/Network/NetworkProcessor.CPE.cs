@@ -392,9 +392,9 @@ namespace ClassicalSharp {
 			
 			byte shape = reader.ReadUInt8();
 			if( shape == 2 ) {
-				info.Height[block] = 0.5f;
-			} else if( shape == 3 ) { // TODO: upside down slab not properly supported
-				info.Height[block] = 0.5f;
+				info.Height[block] = 8/16f;
+			} else if( shape == 3 ) {
+				info.Height[block] = 2/16f;
 			} else if( shape == 4 ) {
 				info.IsSprite[block] = true;
 			}

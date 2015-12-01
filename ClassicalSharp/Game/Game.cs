@@ -122,7 +122,9 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
 			AudioManager = new AudioManager();
-			AudioManager.SetMusic( Options.GetBool( OptionsKey.UseMusic, false ) );
+			UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
+			AudioManager.SetMusic( UseMusic );
+			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			Graphics.WarnIfNecessary( Chat );
@@ -416,7 +418,11 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool CanPick( byte block ) {
-			return !(block == 0 || BlockInfo.IsLiquid[block]);
+			if( block == 0 ) return false;
+			if( !BlockInfo.IsLiquid[block] ) return true;
+			
+			return !LiquidsBreakable ? false : 
+				Inventory.CanPlace[block] && Inventory.CanDelete[block];
 		}
 		
 		public Game( string username, string mppass, string skinServer,

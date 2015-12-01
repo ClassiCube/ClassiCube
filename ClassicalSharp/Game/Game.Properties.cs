@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 		public bool ClickableChat, HideGui, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
 		public bool ViewBobbing, ShowBlockInHand;
-		public bool UseSound, UseMusic;
+		public bool UseSound, UseMusic, LiquidsBreakable;
 		
 		public Animations Animations;
 		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId;

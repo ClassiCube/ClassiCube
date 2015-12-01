@@ -28,6 +28,7 @@ namespace ClassicalSharp {
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";
 		public const string FieldOfView = "fov";
+		public const string LiquidsBreakable = "liquidsbreakable";
 	}
 	
 	// TODO: implement this

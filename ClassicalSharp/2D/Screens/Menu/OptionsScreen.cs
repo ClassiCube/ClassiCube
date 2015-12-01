@@ -15,6 +15,11 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
+				Make( -140, -200, "Liquids breakable", Anchor.Centre, OnWidgetClick,
+				     g => g.LiquidsBreakable ? "yes" : "no",
+				     (g, v) => { g.LiquidsBreakable = v == "yes";
+				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
+				
 				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
@@ -49,10 +54,11 @@ namespace ClassicalSharp {
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -150, "Use music (WIP)", Anchor.Centre, OnWidgetClick,
+				Make( 140, -150, "Use music", Anchor.Centre, OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
-				     	g.AudioManager.SetMusic( g.UseMusic ); } ),
+				     	g.AudioManager.SetMusic( g.UseMusic );
+				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
 				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
@@ -83,6 +89,7 @@ namespace ClassicalSharp {
 			buttons[3].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),		
