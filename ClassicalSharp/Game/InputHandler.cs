@@ -242,12 +242,19 @@ namespace ClassicalSharp {
 			}
 		}
 
+		float deltaAcc = 0;
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			if( !game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) {
 				Inventory inv = game.Inventory;
 				if( game.Camera.MouseZoom( e ) || !inv.CanChangeHeldBlock ) return;
 				
-				int diff = -e.Delta % inv.Hotbar.Length;
+				// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
+				// We must use rounding at final step, not at every intermediate step.
+				deltaAcc += e.DeltaPrecise;
+				int delta = (int)deltaAcc;
+				deltaAcc -= delta;
+				
+				int diff = -delta % inv.Hotbar.Length;
 				int newIndex = inv.HeldBlockIndex + diff;
 				if( newIndex < 0 ) newIndex += inv.Hotbar.Length;
 				if( newIndex >= inv.Hotbar.Length ) newIndex -= inv.Hotbar.Length;
