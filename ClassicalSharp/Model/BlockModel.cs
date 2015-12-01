@@ -11,6 +11,7 @@ namespace ClassicalSharp.Model {
 		float blockHeight;
 		TerrainAtlas1D atlas;
 		const float adjust = 0.1f, extent = 0.5f;
+		bool bright;
 		
 		public BlockModel( Game game ) : base( game ) {
 		}
@@ -55,6 +56,7 @@ namespace ClassicalSharp.Model {
 			lastTexId = -1;
 			blockHeight = game.BlockInfo.Height[block];
 			atlas = game.TerrainAtlas1D;
+			bright = game.BlockInfo.FullBright[block];
 			
 			if( game.BlockInfo.IsSprite[block] ) {
 				SpriteXQuad( TileSide.Right, true );
@@ -83,7 +85,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
-			FastColour col = FastColour.Scale( this.col, shade );
+			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( -extent, y, -extent, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( extent, y, -extent, rec.U2, rec.V1, col );
@@ -95,7 +97,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
-			FastColour col = FastColour.Scale( this.col, shade );
+			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * atlas.invElementSize * (15.99f/16f);
@@ -111,7 +113,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
-			FastColour col = FastColour.Scale( this.col, shade );
+			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * atlas.invElementSize * (15.99f/16f);
@@ -129,6 +131,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame( texIndex );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * atlas.invElementSize * (15.99f/16f);
+			FastColour col = bright ? FastColour.White : this.col;
 
 			float p1, p2;
 			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -148,6 +151,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame( texIndex );
 			if( blockHeight != 1 )
 				rec.V2 = rec.V1 + blockHeight * atlas.invElementSize * (15.99f/16f);
+			FastColour col = bright ? FastColour.White : this.col;
 			
 			float x1, x2, z1, z2;
 			if( firstPart ) {

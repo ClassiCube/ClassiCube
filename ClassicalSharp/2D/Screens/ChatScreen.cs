@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 			fontSize = (int)(14 * game.GuiScale);
 			Utils.Clamp( ref fontSize, 8, 60 );
 			announcementFont = new Font( "Arial", fontSize );
-			blockSize = (int)(40 * game.GuiScale);
+			blockSize = (int)(23 * 2 * game.GuiScale);
 			
 			textInput = new TextInputWidget( game, chatFont, chatInputFont );
 			textInput.YOffset = blockSize + 5;
@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			announcementTex.X1 += (width - oldWidth) / 2;
 			announcementTex.Y1 += (height - oldHeight) / 2;
-			blockSize = (int)(40 * game.GuiScale);
+			blockSize = (int)(23 * 2 * game.GuiScale);
 			textInput.YOffset = blockSize + 5;
 			bottomRight.YOffset = blockSize * 3 / 2;
 			
