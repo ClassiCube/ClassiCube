@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 				     (g, v) => { g.LiquidsBreakable = v == "yes";
 				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
-				Make( -140, -150, "Use sound", Anchor.Centre, OnWidgetClick,
+				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
