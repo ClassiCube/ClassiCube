@@ -6,15 +6,11 @@ using SharpWave.Codecs.Vorbis;
 
 namespace ClassicalSharp.Audio {
 	
-	public sealed partial class AudioManager {
+	public sealed partial class AudioPlayer {
 		
 		IAudioOutput musicOut, soundOut;
 		string[] musicFiles;
 		Thread musicThread, soundThread;
-		
-		public AudioManager() {
-			musicFiles = Directory.GetFiles( "audio", "*.ogg" );
-		}
 		
 		public void SetMusic( bool enabled ) {
 			if( enabled )
@@ -24,12 +20,13 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void InitMusic() {
+			musicFiles = Directory.GetFiles( "audio", "*.ogg" );
 			disposingMusic = false;
 			musicThread = MakeThread( DoMusicThread, ref musicOut,
 			                         "ClassicalSharp.DoMusic" );
 		}
 		
-		EventWaitHandle waitHandle = new EventWaitHandle( false, EventResetMode.AutoReset );
+		EventWaitHandle musicHandle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		void DoMusicThread() {
 			Random rnd = new Random();
 			while( !disposingMusic ) {
@@ -42,7 +39,7 @@ namespace ClassicalSharp.Audio {
 				if( disposingMusic ) break;
 				
 				int delay = 2000 * 60 + rnd.Next( 0, 5000 * 60 );
-				waitHandle.WaitOne( delay );
+				musicHandle.WaitOne( delay );
 			}
 		}
 		
@@ -50,12 +47,12 @@ namespace ClassicalSharp.Audio {
 		public void Dispose() {
 			DisposeMusic();
 			DisposeSound();
-			waitHandle.Close();
+			musicHandle.Close();
 		}
 		
 		void DisposeMusic() {
 			disposingMusic = true;
-			waitHandle.Set();
+			musicHandle.Set();
 			DisposeOf( ref musicOut, ref musicThread );
 		}
 		

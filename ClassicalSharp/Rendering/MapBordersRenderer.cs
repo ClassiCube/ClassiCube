@@ -20,8 +20,7 @@ namespace ClassicalSharp {
 		
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
-		int sidesVertices, edgesVertices,
-		edgesBaseVertices, edgesVerVertices;
+		int sidesVertices, edgesVertices;
 		bool legacy, fullColSides, fullColEdge;
 		
 		public void SetUseLegacyMode( bool legacy ) {
@@ -60,12 +59,8 @@ namespace ClassicalSharp {
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.Map.EdgeBlock != Block.Air ) {
-				if( game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
-					graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
-				} else {
-					graphics.DrawIndexedVb_TrisT2fC4b( edgesVerVertices * 6 / 4, edgesBaseVertices * 6 / 4 );
-				}
+			if( game.Map.EdgeBlock != Block.Air && game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
+				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
@@ -168,12 +163,6 @@ namespace ClassicalSharp {
 			foreach( Rectangle rec in rects ) {
 				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			edgesBaseVertices = edgesVertices;
-			if( waterLevel >= 0 ) {
-				edgesVertices += 2 * Utils.CountVertices( map.Width, 2, axisSize ); // ZPlanes
-				edgesVertices += 2 * Utils.CountVertices( map.Length, 2, axisSize ); // XPlanes
-			}
-			edgesVerVertices = edgesVertices - edgesBaseVertices;
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
@@ -181,14 +170,6 @@ namespace ClassicalSharp {
 			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, ref vertices );
-			}
-			
-			col = fullColEdge ? FastColour.White : map.SunlightYBottom;
-			if( waterLevel >= 0 ) {
-				DrawZ( 0, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
-				DrawZ( map.Length, 0, map.Width, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
-				DrawX( 0, 0, map.Length, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
-				DrawX( map.Width, 0, map.Length, waterLevel - 2, waterLevel, axisSize, col, ref vertices );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
 		}

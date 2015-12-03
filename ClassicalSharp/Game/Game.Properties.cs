@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		public InputHandler InputHandler;
 		public ChatLog Chat;
 		public BlockHandRenderer BlockHandRenderer;
-		public AudioManager AudioManager;
+		public AudioPlayer AudioPlayer;
 		
 		/// <summary> Account username of the player. </summary>
 		public string Username;

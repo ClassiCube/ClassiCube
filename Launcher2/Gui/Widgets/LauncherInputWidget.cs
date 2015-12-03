@@ -17,7 +17,7 @@ namespace Launcher2 {
 		public bool Password;
 		
 		/// <summary> Maximum number of characters that the 'Text' field can contain. </summary>
-		public int MaximumTextLength = 32;
+		public int MaxTextLength = 32;
 		
 		/// <summary> Filter applied to text received from the clipboard. Can be null. </summary>
 		public Func<string, string> ClipboardFilter;
@@ -53,7 +53,7 @@ namespace Launcher2 {
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool AppendChar( char c ) {
-			if( c >= ' ' && c <= '~' && Text.Length < MaximumTextLength ) {
+			if( c >= ' ' && c <= '~' && Text.Length < MaxTextLength ) {
 				Text += c;
 				return true;
 			}
@@ -88,13 +88,12 @@ namespace Launcher2 {
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool CopyFromClipboard() {
 			string text = Clipboard.GetText();
-			if( String.IsNullOrEmpty( text ) 
-			   || Text.Length >= MaximumTextLength ) return false;
+			if( String.IsNullOrEmpty( text ) || Text.Length >= MaxTextLength ) return false;
 			
 			if( ClipboardFilter != null )
 				text = ClipboardFilter( text );
-			if( Text.Length + text.Length > MaximumTextLength ) {
-				text = text.Substring( 0, MaximumTextLength - Text.Length );
+			if( Text.Length + text.Length > MaxTextLength ) {
+				text = text.Substring( 0, MaxTextLength - Text.Length );
 			}
 			Text += text;
 			return true;

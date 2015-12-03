@@ -7,7 +7,8 @@ namespace ClassicalSharp.Commands {
 	public class CommandManager {
 		
 		public static bool IsCommandPrefix( string input ) {
-			return Utils.CaselessStarts( input, "/client" );
+			return Utils.CaselessStarts( input, "/client " ) ||
+				Utils.CaselessEquals( input, "/client" );
 		}
 		
 		protected Game game;

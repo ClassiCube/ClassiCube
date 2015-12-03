@@ -179,7 +179,7 @@ namespace Launcher2 {
 		
 		abstract class TableEntryComparer : IComparer<TableEntry> {
 			
-			public bool Invert = false;
+			public bool Invert = true;
 			
 			public abstract int Compare( TableEntry a, TableEntry b );
 		}
@@ -203,7 +203,7 @@ namespace Launcher2 {
 			}
 		}
 		
-		sealed  class UptimeComparer : TableEntryComparer {
+		sealed class UptimeComparer : TableEntryComparer {
 			
 			public override int Compare( TableEntry a, TableEntry b ) {
 				TimeSpan valX = ParseUptimeString( a.Uptime );

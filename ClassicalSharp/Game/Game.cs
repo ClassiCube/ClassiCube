@@ -121,9 +121,9 @@ namespace ClassicalSharp {
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
-			AudioManager = new AudioManager();
+			AudioPlayer = new AudioPlayer();
 			UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
-			AudioManager.SetMusic( UseMusic );
+			AudioPlayer.SetMusic( UseMusic );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
@@ -149,12 +149,6 @@ namespace ClassicalSharp {
 		public Screen GetActiveScreen {
 			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
-		
-		const int ticksFrequency = 20;
-		const double ticksPeriod = 1.0 / ticksFrequency;
-		const double imageCheckPeriod = 30.0;
-		const double cameraPeriod = 1.0 / 120.0;
-		double ticksAccumulator, imageCheckAccumulator, cameraAccumulator;
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
 			PerformFpsElapsed( e.Time * 1000 );
@@ -214,10 +208,18 @@ namespace ClassicalSharp {
 			Graphics.EndFrame( this );
 		}
 		
+		const int ticksFrequency = 20;
+		const double ticksPeriod = 1.0 / ticksFrequency;
+		const double imageCheckPeriod = 30.0;
+		const double cameraPeriod = 1.0 / 120, audioPeriod = 1.0 / 40;
+		double ticksAccumulator, imageCheckAccumulator, 
+		cameraAccumulator, audioAccumulator;
+		
 		void CheckScheduledTasks( double time ) {
 			imageCheckAccumulator += time;
 			ticksAccumulator += time;
 			cameraAccumulator += time;
+			audioAccumulator += time;
 			
 			if( imageCheckAccumulator > imageCheckPeriod ) {
 				imageCheckAccumulator -= imageCheckPeriod;
@@ -230,13 +232,18 @@ namespace ClassicalSharp {
 				Players.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
+				AudioPlayer.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
 			
 			while( cameraAccumulator >= cameraPeriod ) {
-				Camera.Tick( ticksPeriod );
+				Camera.Tick( cameraPeriod );
 				cameraAccumulator -= cameraPeriod;
+			}
+			while( audioAccumulator >= audioPeriod ) {
+				AudioPlayer.Tick( audioPeriod );
+				audioAccumulator -= audioPeriod;
 			}
 			
 			if( ticksThisFrame > ticksFrequency / 3 )
@@ -398,7 +405,7 @@ namespace ClassicalSharp {
 			ParticleManager.Dispose();
 			Players.Dispose();
 			AsyncDownloader.Dispose();
-			AudioManager.Dispose();
+			AudioPlayer.Dispose();
 			
 			Chat.Dispose();
 			if( activeScreen != null )

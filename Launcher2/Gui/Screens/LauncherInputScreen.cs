@@ -122,7 +122,7 @@ namespace Launcher2 {
 			LauncherInputWidget widget = new LauncherInputWidget( game );
 			widget.OnClick = InputClick;
 			widget.Password = password;
-			widget.MaximumTextLength = maxChars;
+			widget.MaxTextLength = maxChars;
 			
 			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );
 			widgets[widgetIndex++] = widget;

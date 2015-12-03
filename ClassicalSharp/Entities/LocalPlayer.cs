@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 			float distSq = (lastSoundPos - soundPos).LengthSquared;
 			if( onGround && distSq > 2 * 2 ) {
 				SoundType type = game.BlockInfo.StepSounds[(int)BlockUnderFeet];
-				game.AudioManager.PlayStepSound( type );
+				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
 		}

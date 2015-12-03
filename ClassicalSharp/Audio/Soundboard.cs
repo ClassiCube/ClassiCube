@@ -89,5 +89,6 @@ namespace ClassicalSharp.Audio {
 		public string Name;
 		public int SampleRate, BitsPerSample, Channels;
 		public int Offset, Length;
+		public byte Metadata;
 	}
 }

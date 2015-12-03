@@ -126,8 +126,8 @@
     <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
-    <Compile Include="Audio\AudioManager.cs" />
-    <Compile Include="Audio\AudioManager.Sounds.cs" />
+    <Compile Include="Audio\AudioPlayer.cs" />
+    <Compile Include="Audio\AudioPlayer.Sounds.cs" />
     <Compile Include="Audio\Soundboard.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.BoundingBox.cs" />
