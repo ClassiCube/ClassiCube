@@ -124,6 +124,8 @@ namespace ClassicalSharp {
 			AudioPlayer = new AudioPlayer();
 			UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
 			AudioPlayer.SetMusic( UseMusic );
+			UseSound = Options.GetBool( OptionsKey.UseSound, false );
+			AudioPlayer.SetSound( UseSound );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
 			
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";

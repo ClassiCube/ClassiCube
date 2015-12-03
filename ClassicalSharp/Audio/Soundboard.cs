@@ -7,7 +7,7 @@ namespace ClassicalSharp.Audio {
 	public class Soundboard {
 		
 		public byte[] Data;
-		List<Sound> rawSounds = new List<Sound>();
+		internal List<Sound> rawSounds = new List<Sound>();
 		Dictionary<string, int> groupFlags = new Dictionary<string, int>();
 		Random rnd = new Random();
 		

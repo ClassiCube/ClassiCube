@@ -20,6 +20,7 @@ namespace ClassicalSharp {
 		public const string ShowHoveredNames = "showhoverednames";
 		public const string ShowBlockInHand = "blockinhand";
 		public const string UseMusic = "usemusic";
+		public const string UseSound = "usesound";
 		
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";

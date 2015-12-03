@@ -20,10 +20,11 @@ namespace ClassicalSharp {
 				     (g, v) => { g.LiquidsBreakable = v == "yes";
 				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
-				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
+				Make( -140, -150, "Use sound", Anchor.Centre, OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
-				     	g.AudioPlayer.SetSound( g.UseSound ); } ),
+				     	g.AudioPlayer.SetSound( g.UseSound );
+				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
 				Make( -140, -100, "Show hover names", Anchor.Centre, OnWidgetClick,
 				     g => g.Players.ShowHoveredNames ? "yes" : "no",
@@ -86,7 +87,7 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[3].Metadata = typeof(FpsLimitMethod);
+			buttons[4].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),

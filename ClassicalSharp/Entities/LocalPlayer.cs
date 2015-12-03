@@ -87,9 +87,12 @@ namespace ClassicalSharp {
 			CheckSkin();
 			
 			Vector3 soundPos = Position;
+			byte blockUnder = (byte)BlockUnderFeet;
+			if( blockUnder == 0 ) soundPos = new Vector3( -100000 );
+			
 			float distSq = (lastSoundPos - soundPos).LengthSquared;
 			if( onGround && distSq > 2 * 2 ) {
-				SoundType type = game.BlockInfo.StepSounds[(int)BlockUnderFeet];
+				SoundType type = game.BlockInfo.StepSounds[blockUnder];
 				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
