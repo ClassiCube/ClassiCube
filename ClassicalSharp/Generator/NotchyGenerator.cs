@@ -11,9 +11,22 @@ namespace ClassicalSharp.Generator {
 		
 		int width, height, length;
 		int waterLevel;
+		byte[] blocks;
+		short[] heightmap;
 		
+		public byte[] GenerateMap( int width, int height, int length ) {
+			this.width = width;
+			this.height = height;
+			this.length = length;
+			waterLevel = height / 2;
+			blocks = new byte[width * height * length];
+			
+			CreateHeightmap();
+			CreateStrata();
+			return null;
+		}
 		
-		short[] CreateHeightmap() {
+		void CreateHeightmap() {
 			Noise n1 = new CombinedNoise(
 				new OctaveNoise( 8 ), new OctaveNoise( 8 ) );
 			Noise n2 = new CombinedNoise(
@@ -32,7 +45,25 @@ namespace ClassicalSharp.Generator {
 					map[index++] = (short)(height + waterLevel);
 				}
 			}
-			return map;
+			heightmap = map;
+		}
+		
+		void CreateStrata() {
+			Noise n = new OctaveNoise( 8 );
+			
+			int mapIndex = 0;
+			for( int z = 0; z < length; z++ ) {
+				for( int x = 0; x < width; x++ ) {
+					int dirtThickness = (int)(n.Compute( x, z ) / 24 - 4);
+					int dirtHeight = heightmap[mapIndex];
+					int stoneHeight = dirtHeight + dirtThickness;
+					
+					for( int y = 0; y < height; y++ ) {
+						
+					}
+					mapIndex++;
+				}
+			}
 		}
 	}
 }

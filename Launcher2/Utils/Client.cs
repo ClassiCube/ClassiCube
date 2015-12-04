@@ -8,7 +8,7 @@ namespace Launcher2 {
 	public static class Client {
 		
 		public static bool Start( ClientStartData data, bool classicubeSkins, ref bool shouldExit ) {
-			string skinServer = classicubeSkins ? "http://www.classicube.net/static/skins/" :
+			string skinServer = classicubeSkins ? "http://static.classicube.net/skins/" :
 				"http://s3.amazonaws.com/MinecraftSkins/";
 			string args = data.Username + " " + data.Mppass + " " +
 				data.Ip + " " + data.Port + " " + skinServer;

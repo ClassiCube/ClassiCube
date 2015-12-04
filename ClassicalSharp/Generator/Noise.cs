@@ -31,10 +31,10 @@ namespace ClassicalSharp.Generator {
 			// and add blended results from 4 corners of rectangle.
 			return Lerp(
 				v,
-				Lerp( u, Grad( p[AA], x, y, 0 ),
-				     Grad( p[BA], x - 1, y, 0 ) ),
-				Lerp( u, Grad( p[AB], x, y - 1, 0 ),
-				     Grad( p[BB], x - 1, y - 1, 0 ) )
+				Lerp( u, Grad( p[AA], x, y ),
+				     Grad( p[BA], x - 1, y ) ),
+				Lerp( u, Grad( p[AB], x, y - 1 ),
+				     Grad( p[BB], x - 1, y - 1 ) )
 			);
 		}
 		
@@ -46,11 +46,11 @@ namespace ClassicalSharp.Generator {
 			return a + t * (b - a);
 		}
 		
-		static double Grad( int hash, double x, double y, double z ) {
+		static double Grad( int hash, double x, double y ) {
 			// convert low 4 bits of hash code into 12 gradient directions.
 			int h = hash & 15;
 			double u = h < 8 ? x : y;
-			double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+			double v = h < 4 ? y : h == 12 || h == 14 ? x : 0;
 			return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 		}
 		
