@@ -79,13 +79,13 @@ namespace ClassicalSharp {
 		
 		Font chatFont, chatInputFont, chatUnderlineFont, announcementFont;
 		public override void Init() {
-			int fontSize = (int)(12 * game.GuiScale * game.ChatScale);
+			int fontSize = (int)(12 * game.GuiChatScale);
 			Utils.Clamp( ref fontSize, 8, 60 );		
 			chatFont = new Font( "Arial", fontSize );
 			chatInputFont = new Font( "Arial", fontSize, FontStyle.Bold );
 			chatUnderlineFont = new Font( "Arial", fontSize, FontStyle.Underline );
 			
-			fontSize = (int)(14 * game.GuiScale);
+			fontSize = (int)(14 * game.GuiChatScale);
 			Utils.Clamp( ref fontSize, 8, 60 );
 			announcementFont = new Font( "Arial", fontSize );
 			blockSize = (int)(23 * 2 * game.GuiScale);

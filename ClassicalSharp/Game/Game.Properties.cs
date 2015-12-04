@@ -130,6 +130,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Calculates the amount that 2D chat widgets should be scaled by when rendered. </summary>
+		/// <remarks> Affected by both the current resolution of the window, as well as the
+		/// scaling specified by the user (field ChatScale). </remarks>
+		public float GuiChatScale {
+			get {
+				float scaleX = Width / 640f, scaleY = Height / 480f;
+				return Math.Min( scaleX, scaleY ) * ChatScale;
+			}
+		}
+		
 		string defTexturePack = "default.zip";
 		/// <summary> Gets or sets the path of the default texture pack that should be used by the client. </summary>
 		/// <remarks> If the custom default texture pack specified by the user could not be found,

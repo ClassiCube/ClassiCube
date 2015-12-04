@@ -141,6 +141,8 @@
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Game\Game.Properties.cs" />
+    <Compile Include="Generator\Noise.cs" />
+    <Compile Include="Generator\NotchGenerator.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
@@ -265,6 +267,7 @@
     <Folder Include="2D\Widgets\Menu" />
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="Blocks" />
+    <Folder Include="Generator" />
     <Folder Include="Particles" />
     <Folder Include="GraphicsAPI" />
     <Folder Include="Entities" />
