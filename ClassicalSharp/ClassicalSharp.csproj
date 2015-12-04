@@ -142,7 +142,7 @@
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Generator\Noise.cs" />
-    <Compile Include="Generator\NotchGenerator.cs" />
+    <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
