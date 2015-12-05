@@ -23,8 +23,8 @@ namespace ClassicalSharp.Generator {
 			oneY = width * length;
 			waterLevel = height / 2;
 			blocks = new byte[width * height * length];
+			rnd = new Random( 0x5553200 ); // 0x5553201 is flatter.
 			
-			rnd = new Random( 0x5553200 );
 			CreateHeightmap();
 			CreateStrata();
 			CarveCaves();
@@ -34,7 +34,12 @@ namespace ClassicalSharp.Generator {
 			
 			FloodFillWaterBorders();
 			FloodFillWater();
-			FloodFillLava();			
+			FloodFillLava();
+
+			CreateSurfaceLayer();
+			PlantFlowers();
+			PlantMushrooms();
+			PlantTrees();
 			return blocks;
 		}
 		
@@ -47,15 +52,15 @@ namespace ClassicalSharp.Generator {
 			int index = 0;
 			short[] hMap = new short[width * length];
 			
-			for( int z = 0; z < length; z++ ) {
-				for( int x = 0; x < width; x++ ) {
-					double hLow = n1.Compute( x * 1.3f, z * 1.3f ) / 6 - 4;
-					double hHigh = n2.Compute( x * 1.3f, z * 1.3f ) / 5 + 6;
-					
-					double height = n3.Compute( x, z ) > 0 ? hLow : Math.Max( hLow, hHigh );
-					if( height < 0 ) height *= 0.8f;
-					hMap[index++] = (short)(height + waterLevel);
-				}
+			for( int z = 0; z < length; z++ )
+				for( int x = 0; x < width; x++ )
+			{
+				double hLow = n1.Compute( x * 1.3f, z * 1.3f ) / 6 - 4;
+				double hHigh = n2.Compute( x * 1.3f, z * 1.3f ) / 5 + 6;
+				
+				double height = n3.Compute( x, z ) > 0 ? hLow : Math.Max( hLow, hHigh );
+				if( height < 0 ) height *= 0.8f;
+				hMap[index++] = (short)(height + waterLevel);
 			}
 			heightmap = hMap;
 		}
@@ -65,23 +70,23 @@ namespace ClassicalSharp.Generator {
 			//Noise n = new ImprovedNoise( rnd );
 			
 			int hMapIndex = 0;
-			for( int z = 0; z < length; z++ ) {
-				for( int x = 0; x < width; x++ ) {
-					int dirtThickness = (int)(n.Compute( x, z ) / 24 - 4);
-					int dirtHeight = heightmap[hMapIndex++];
+			for( int z = 0; z < length; z++ )
+				for( int x = 0; x < width; x++ )
+			{
+				int dirtThickness = (int)(n.Compute( x, z ) / 24 - 4);
+				int dirtHeight = heightmap[hMapIndex++];
 
-					int stoneHeight = dirtHeight + dirtThickness;
-					int mapIndex = z * width + x;
-					
-					blocks[mapIndex] = (byte)Block.Lava;
+				int stoneHeight = dirtHeight + dirtThickness;
+				int mapIndex = z * width + x;
+				
+				blocks[mapIndex] = (byte)Block.Lava;
+				mapIndex += oneY;
+				for( int y = 1; y < height; y++ ) {
+					byte type = 0;
+					if( y <= stoneHeight ) type = (byte)Block.Stone;
+					else if( y <= dirtHeight ) type = (byte)Block.Dirt;
+					blocks[mapIndex] = type;
 					mapIndex += oneY;
-					for( int y = 1; y < height; y++ ) {
-						byte type = 0;
-						if( y <= stoneHeight ) type = (byte)Block.Stone;
-						else if( y <= dirtHeight ) type = (byte)Block.Dirt;
-						blocks[mapIndex] = type;
-						mapIndex += oneY;
-					}
 				}
 			}
 		}
@@ -150,20 +155,20 @@ namespace ClassicalSharp.Generator {
 		void FloodFillWaterBorders() {
 			int waterY = waterLevel - 1;
 			int index1 = (waterY * length + 0) * width + 0;
-			int index2 = (waterY * length + (length - 1)) * width + 0;			
+			int index2 = (waterY * length + (length - 1)) * width + 0;
 			for( int x = 0; x < width; x++ ) {
 				FloodFill( index1, (byte)Block.Water );
 				FloodFill( index2, (byte)Block.Water );
 				index1++; index2++;
-			}	
+			}
 			
 			index1 = (waterY * length + 0) * width + 0;
-			index2 = (waterY * length + 0) * width + (width - 1);		
+			index2 = (waterY * length + 0) * width + (width - 1);
 			for( int z = 0; z < length; z++ ) {
 				FloodFill( index1, (byte)Block.Water );
 				FloodFill( index2, (byte)Block.Water );
 				index1 += width; index2 += width;
-			}		
+			}
 		}
 		
 		void FloodFillWater() {
@@ -186,6 +191,78 @@ namespace ClassicalSharp.Generator {
 		
 		void CreateSurfaceLayer() {
 			Noise n1 = new OctaveNoise( 8, rnd ), n2 = new OctaveNoise( 8, rnd );
+			// TODO: update heightmap
+			
+			int hMapIndex = 0;
+			for( int z = 0; z < length; z++ )
+				for( int x = 0; x < width; x++ )
+			{
+				bool sand = n1.Compute( x, z ) > 8;
+				bool gravel = n2.Compute( x, z ) > 12;
+				int y = heightmap[hMapIndex++];
+				
+				int index = (y * length + z) * width + x;
+				byte blockAbove = y >= (height - 1) ? (byte)0 : blocks[index + oneY];
+				if( blockAbove == (byte)Block.Water && gravel ) {
+					blocks[index] = (byte)Block.Gravel;
+				} else if( blockAbove == 0 ) {
+					blocks[index] = (y <= waterLevel && sand) ?
+						(byte)Block.Sand : (byte)Block.Grass;
+				}
+				
+			}
+		}
+		
+		void PlantFlowers() {
+			int numPatches = width * length / 3000;
+			for( int i = 0; i < numPatches; i++ ) {
+				byte type = (byte)((byte)Block.Dandelion + rnd.Next( 0, 2 ) );
+				int patchX = rnd.Next( width ), patchZ = rnd.Next( length );
+				for( int j = 0; j < 10; j++ ) {
+					int flowerX = patchX, flowerZ = patchZ;
+					for( int k = 0; k < 5; k++ ) {
+						flowerX += rnd.Next( 6 ) - rnd.Next( 6 );
+						flowerZ += rnd.Next( 6 ) - rnd.Next( 6 );
+						if( flowerX < 0 || flowerZ < 0 || flowerX >= width || flowerZ >= length )
+							continue;
+						
+						int flowerY = heightmap[flowerZ * width + flowerX] + 1;
+						int index = (flowerY * length + flowerZ) * width + flowerX;
+						if( blocks[index] == 0 && blocks[index - oneY] == (byte)Block.Grass )
+							blocks[index] = type;
+					}
+				}
+			}
+		}
+		
+		void PlantMushrooms() {
+			int numPatches = width * length / 2000;
+			for( int i = 0; i < numPatches; i++ ) {
+				byte type = (byte)((byte)Block.BrownMushroom + rnd.Next( 0, 2 ) );
+				int patchX = rnd.Next( width );
+				int patchY = rnd.Next( height );
+				int patchZ = rnd.Next( length );
+				
+				for( int j = 0; j < 20; j++ ) {
+					int mushX = patchX, mushY = patchY, mushZ = patchZ;
+					for( int k = 0; k < 5; k++ ) {
+						mushX += rnd.Next( 6 ) - rnd.Next( 6 );
+						mushZ += rnd.Next( 6 ) - rnd.Next( 6 );
+						if( mushX < 0 || mushZ < 0 || mushX >= width || mushZ >= length)
+							continue;
+						int solidHeight = heightmap[mushZ * width + mushX];
+						if( mushY >= (solidHeight - 1) )
+							continue;
+						
+						int index = (mushY * length + mushZ) * width + mushX;
+						if( blocks[index] == 0 && blocks[index - oneY] == (byte)Block.Stone )
+							blocks[index] = type;
+					}
+				}
+			}
+		}
+		
+		void PlantTrees() {
 			
 		}
 	}
