@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using ClassicalSharp;
 using ClassicalSharp.Network;
@@ -58,7 +59,9 @@ namespace Launcher2 {
 			Window.WindowStateChanged += Resize;
 			logoFont = new Font( "Times New Roman", 28, FontStyle.Bold );
 			logoItalicFont = new Font( "Times New Roman", 28, FontStyle.Italic );
-			
+			string path = Assembly.GetExecutingAssembly().Location;
+			Window.Icon = Icon.ExtractAssociatedIcon( path );
+			                                         
 			if( Configuration.RunningOnWindows )
 				platformDrawer = new WinPlatformDrawer();
 			else if( Configuration.RunningOnX11 )

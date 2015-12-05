@@ -62,12 +62,12 @@ namespace ClassicalSharp {
 			"ChangeModel", "EnvMapAppearance", "EnvWeatherType",
 			"HackControl", "MessageTypes", "PlayerClick",
 			// proposals
-			"FullCP437", "LongerMessages",
+			"FullCP437", "LongerMessages", "BlockDefinitions",
 		};
 		
 		void HandleCpeExtInfo() {
 			string appName = reader.ReadAsciiString();
-			game.Chat.Add( "Server identified itself as: " + appName );
+			game.Chat.Add( "Server software: " + appName );
 			
 			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means
 			// ExtEntry may sometimes arrive before ExtInfo, and thus we have to use += instead of =

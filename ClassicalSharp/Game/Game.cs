@@ -128,10 +128,19 @@ namespace ClassicalSharp {
 			AudioPlayer.SetSound( UseSound );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
 			
+			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			Graphics.WarnIfNecessary( Chat );
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		void LoadIcon() {
+			if( File.Exists( "Launcher2.exe" ) ) {
+				Icon = Icon.ExtractAssociatedIcon( "Launcher2.exe" );
+			} else if( File.Exists( "Launcher.exe" ) ) {
+				Icon = Icon.ExtractAssociatedIcon( "Launcher.exe" );
+			}
 		}
 		
 		public void SetViewDistance( int distance ) {
