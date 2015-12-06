@@ -23,7 +23,7 @@ namespace ClassicalSharp.Generator {
 			oneY = width * length;
 			waterLevel = height / 2;
 			blocks = new byte[width * height * length];
-			rnd = new Random( 0x5553201 ); // 0x5553201 is flatter.
+			rnd = new Random( 0x5553200 ); // 0x5553201 is flatter.
 			
 			CreateHeightmap();
 			CreateStrata();
@@ -108,7 +108,7 @@ namespace ClassicalSharp.Generator {
 					caveY += Math.Cos( theta ) * Math.Cos( phi );
 					caveZ += Math.Sin( phi );
 					
-					theta = deltaTheta * 0.2;
+					theta = theta + deltaTheta * 0.2;
 					deltaTheta = deltaTheta * 0.9 + rnd.NextDouble() - rnd.NextDouble();
 					phi = phi / 2 + deltaPhi / 4;
 					deltaPhi = deltaPhi * 0.75 + rnd.NextDouble() - rnd.NextDouble();
@@ -344,7 +344,7 @@ namespace ClassicalSharp.Generator {
 				if( !Check( x, y, z ) ) continue;
 				if( xx == 0 || zz == 0 ) {
 					blocks[index] = (byte)Block.Leaves;
-				} else if( y != bottomY && rnd.NextDouble() >= 0.5 ) {
+				} else if( y == bottomY && rnd.NextDouble() >= 0.5 ) {
 					blocks[index] = (byte)Block.Leaves;
 				}
 			}

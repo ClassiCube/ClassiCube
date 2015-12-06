@@ -14,10 +14,18 @@ namespace ClassicalSharp.Generator {
 	public sealed class ImprovedNoise : Noise {
 		
 		public ImprovedNoise( Random rnd ) {
-			// make a random initial permutation based on seed,
-			// instead of using fixed permutation table in original code.
+			// make a random initial permutation based on rnd's seed,
+			// shuffle using fisher-yates
+			
 			for( int i = 0; i < 256; i++ )
-				p[i + 256] = p[i] = (byte)rnd.Next( 256 );
+				p[i] = (byte)i;
+			
+			for( int i = 0; i < 256; i++ ) {
+				int j = rnd.Next( i, 256 );
+				byte temp = p[i]; p[i] = p[j]; p[j] = temp;
+			}
+			for( int i = 0; i < 256; i++ )
+				p[i + 256] = p[i];
 		}
 		
 		// TODO: need to half this maybe?
