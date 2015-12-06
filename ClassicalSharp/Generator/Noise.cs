@@ -17,52 +17,51 @@ namespace ClassicalSharp.Generator {
 			// make a random initial permutation based on seed,
 			// instead of using fixed permutation table in original code.
 			for( int i = 0; i < 256; i++ )
-				p[i + 256] = p[i] = rnd.Next( 256 );
+				p[i + 256] = p[i] = (byte)rnd.Next( 256 );
 		}
 		
 		// TODO: need to half this maybe?
 		public override double Compute( double x, double y ) {
-			int xFloor = Utils.Floor( x ), yFloor = Utils.Floor( y );
-			// Find unit rectangle that contains point
+			int xFloor = x >= 0 ? (int)x : (int)x - 1;
+			int yFloor = y >= 0 ? (int)y : (int)y - 1;
 			int X = xFloor & 0xFF, Y = yFloor & 0xFF;
-			// Find relative x, y of each point in rectangle.
-			x -= Math.Floor( x ); y -= Math.Floor( y );
+			x -= xFloor; y -= yFloor;
 			
-			// Compute fade curves for each of x, y.
-			double u = Fade( x ), v = Fade( y );
-			// Hash coordinates of the 4 rectangle corners.
-			int A = p[X] + Y, AA = p[A], AB = p[A + 1],
-			B = p[X + 1] + Y, BA = p[B], BB = p[B + 1];
-
-			// and add blended results from 4 corners of rectangle.
-			return Lerp(
-				v,
-				Lerp( u, Grad( p[AA], x, y ),
-				     Grad( p[BA], x - 1, y ) ),
-				Lerp( u, Grad( p[AB], x, y - 1 ),
-				     Grad( p[BB], x - 1, y - 1 ) )
-			);
-		}
-		
-		static double Fade( double t ) {
-			return t * t * t * (t * (t * 6 - 15) + 10);
-		}
-		
-		static double Lerp( double t, double a, double b ) {
-			return a + t * (b - a);
+			double u = x * x * x * (x * (x * 6 - 15) + 10); // Fade(x)
+			double v = y * y * y * (y * (y * 6 - 15) + 10); // Fade(y)
+			int A = p[X] + Y, B = p[X + 1] + Y;
+			
+			double g22 = Grad( p[p[A]], x, y ), g12 = Grad( p[p[B]], x - 1, y );
+			double c1 = g22 + u * (g12 - g22);
+			double g21 = Grad( p[p[A + 1]], x, y - 1 ), g11 = Grad( p[p[B + 1]], x - 1, y - 1 );
+			double c2 = g21 + u * (g11 - g21);
+			return c1 + v * (c2 - c1);
 		}
 		
 		static double Grad( int hash, double x, double y ) {
-			// convert low 4 bits of hash code into 12 gradient directions.
-			int h = hash & 15;
-			double u = h < 8 ? x : y;
-			double v = h < 4 ? y : h == 12 || h == 14 ? x : 0;
-			return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+			switch( hash & 15 ) {
+					case 0: return x + y;
+					case 1: return -x + y;
+					case 2: return x - y;
+					case 3: return -x - y;
+					case 4: return x;
+					case 5: return -x;
+					case 6: return x;
+					case 7: return -x;
+					case 8: return y;
+					case 9: return -y;
+					case 10: return y;
+					case 11: return -y;
+					case 12: return x + y;
+					case 13: return -y;
+					case 14: return -x + y;
+					case 15: return -y;
+					default: return 0;
+			}
 		}
 		
-		int[] p = new int[512];
+		byte[] p = new byte[512];
 	}
-	
 	
 	public sealed class OctaveNoise : Noise {
 		

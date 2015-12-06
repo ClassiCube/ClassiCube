@@ -23,7 +23,7 @@ namespace ClassicalSharp.Generator {
 			oneY = width * length;
 			waterLevel = height / 2;
 			blocks = new byte[width * height * length];
-			rnd = new Random( 0x5553200 ); // 0x5553201 is flatter.
+			rnd = new Random( 0x5553201 ); // 0x5553201 is flatter.
 			
 			CreateHeightmap();
 			CreateStrata();
@@ -263,7 +263,104 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void PlantTrees() {
+			int numPatches = width * length / 4000;
+			for( int i = 0; i < numPatches; i++ ) {
+				int patchX = rnd.Next( width ), patchZ = rnd.Next( length );
+				
+				for( int j = 0; j < 20; j++ ) {
+					int treeX = patchX, treeZ = patchZ;
+					for( int k = 0; k < 20; k++ ) {
+						treeX += rnd.Next( 6 ) - rnd.Next( 6 );
+						treeZ += rnd.Next( 6 ) - rnd.Next( 6 );
+						if( treeX < 0 || treeZ < 0 || treeX >= width ||
+						   treeZ >= length || rnd.NextDouble() >= 0.25 )
+							continue;
+						
+						int treeY = heightmap[treeZ * width + treeX] + 1;
+						int treeHeight = 5 + rnd.Next( 3 );
+						if( CanGrowTree( treeX, treeY, treeZ, treeHeight ) ) {
+							GrowTree( treeX, treeY, treeZ, treeHeight );
+						}
+					}
+				}
+			}
+		}
+		
+		bool CanGrowTree( int treeX, int treeY, int treeZ, int height ) {
+			return true;
+			// check tree base
+			int baseHeight = height - 4;
+			for( int y = treeY; y < treeY + baseHeight; y++ )
+				for( int z = treeZ - 1; z <= treeZ + 1; z++ )
+					for( int x = treeX - 1; x <= treeX + 1; x++ )
+			{
+				if( x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= length )
+					return false;
+				int index = (y * length + z) * width + x;
+				//if( blocks[index] != 0 ) return false;
+			}
 			
+			// and also check canopy
+			for( int y = treeY + baseHeight; y < treeY + height; y++ )
+				for( int z = treeZ - 2; z <= treeZ + 2; z++ )
+					for( int x = treeX - 2; x <= treeX + 2; x++ )
+			{
+				if( x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= length )
+					return false;
+				int index = (y * length + z) * width + x;
+				//if( blocks[index] != 0 ) return false;
+			}
+			return true;
+		}
+		
+		void GrowTree( int treeX, int treeY, int treeZ, int height ) {
+			int baseHeight = height - 4;
+			int index = 0;
+			
+			// leaves bottom layer
+			for( int y = treeY + baseHeight; y < treeY + baseHeight + 2; y++ )
+				for( int zz = -2; zz <= 2; zz++ )
+					for( int xx = -2; xx <= 2; xx++ )
+			{
+				int x = xx + treeX, z = zz + treeZ;
+				index = (y * length + z) * width + x;
+				if( !Check( x, y, z ) ) continue; // TODO: get rid of these once CanGrowTree is fixed.
+				if( Math.Abs( xx ) == 2 && Math.Abs( zz ) == 2 ) {
+					if( rnd.NextDouble() >= 0.5 )
+						blocks[index] = (byte)Block.Leaves;
+				} else {
+					blocks[index] = (byte)Block.Leaves;
+				}
+			}
+			
+			// leaves top layer
+			int bottomY = treeY + baseHeight + 2;
+			for( int y = treeY + baseHeight + 2; y < treeY + height; y++ )
+				for( int zz = -1; zz <= 1; zz++ )
+					for( int xx = -1; xx <= 1; xx++ )
+			{
+				int x = xx + treeX, z = zz + treeZ;
+				index = (y * length + z) * width + x;
+				if( !Check( x, y, z ) ) continue;
+				if( xx == 0 || zz == 0 ) {
+					blocks[index] = (byte)Block.Leaves;
+				} else if( y != bottomY && rnd.NextDouble() >= 0.5 ) {
+					blocks[index] = (byte)Block.Leaves;
+				}
+			}
+			
+			// then place trunk
+			index = (treeY * length + treeZ ) * width + treeX;
+			for( int y = 0; y < height - 1; y++ ) {
+				if( !Check( treeX, treeY + y, treeZ ) ) continue;
+				blocks[index] = (byte)Block.Wood;
+				index += oneY;
+			}
+		}
+		
+		bool Check( int x, int y, int z ) {
+			return x >= 0 && y >= 0 && z >= 0
+				&& x < width && y < height && z < length;
 		}
 	}
 }

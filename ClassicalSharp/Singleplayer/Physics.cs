@@ -388,10 +388,6 @@ namespace ClassicalSharp.Singleplayer {
 				return;
 			}
 			
-			// Base trunk
-			for( int yy = 0; yy < trunkH; yy++ )
-				game.UpdateBlock( x, y + yy, z, (byte)Block.Wood );
-			
 			// Leaves bottom layer
 			y += trunkH;
 			for( int zz = -2; zz <= 2; zz++ ) {
@@ -418,6 +414,11 @@ namespace ClassicalSharp.Singleplayer {
 					}
 				}
 			}
+			
+			// Base trunk
+			y -= 2 + trunkH;
+			for( int yy = 0; yy < trunkH + 3; yy++ )
+				game.UpdateBlock( x, y + yy, z, (byte)Block.Wood );
 		}
 		
 		bool CheckBounds( int x1, int x2, int y1, int y2, int z1, int z2 ) {

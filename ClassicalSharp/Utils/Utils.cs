@@ -242,10 +242,6 @@ namespace ClassicalSharp {
 			return value >= 0 ? (int)value : (int)value - 1;
 		}
 		
-		public static int Floor( double value ) {
-			return value >= 0 ? (int)value : (int)value - 1;
-		}
-		
 		public static int AdjViewDist( int value ) {
 			return (int)(1.4142135 * value);
 		}

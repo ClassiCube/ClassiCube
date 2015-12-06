@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define TEST_VANILLA
+using System;
 using System.Net;
 using OpenTK;
 using OpenTK.Input;
@@ -27,8 +28,11 @@ namespace ClassicalSharp.Singleplayer {
 			
 			game.Events.RaiseBlockPermissionsChanged();
 			NewMap();
-			//MakeMap( 128, 128, 128 );
-			MakeMap( 128, 64, 128 );
+			#if TEST_VANILLA
+			MakeMap( 384, 64, 384 );
+			#else
+			MakeMap( 128, 128, 128 );
+			#endif
 			game.CommandManager.RegisterCommand( new GenerateCommand() );
 		}
 		
@@ -69,14 +73,17 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		internal unsafe void MakeMap( int width, int height, int length ) {
-			//byte[] map = new byte[width * height * length];
-			//var sw = System.Diagnostics.Stopwatch.StartNew();
-			//fixed( byte* ptr = map ) {
-			//	MapSet( width, length, ptr, 0, height / 2 - 2, (byte)Block.Dirt );
-			//	MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
-			//}
+			#if TEST_VANILLA
 			byte[] map = new ClassicalSharp.Generator.NotchyGenerator()
 				.GenerateMap( width, height, length );
+			#else
+			byte[] map = new byte[width * height * length];
+			fixed( byte* ptr = map ) {
+				MapSet( width, length, ptr, 0, height / 2 - 2, (byte)Block.Dirt );
+				MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
+			}
+			#endif
+			
 			game.Map.SetData( map, width, height, length );
 			game.Events.RaiseOnNewMapLoaded();
 			game.SetNewScreen( null );
