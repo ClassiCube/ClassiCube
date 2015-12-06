@@ -59,6 +59,7 @@ namespace ClassicalSharp.Generator {
 				double hHigh = n2.Compute( x * 1.3f, z * 1.3f ) / 5 + 6;
 				
 				double height = n3.Compute( x, z ) > 0 ? hLow : Math.Max( hLow, hHigh );
+				height *= 0.5;
 				if( height < 0 ) height *= 0.8f;
 				hMap[index++] = (short)(height + waterLevel);
 			}
