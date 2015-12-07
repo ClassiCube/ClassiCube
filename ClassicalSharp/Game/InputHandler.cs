@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 			
 			if( game.LocalPlayer.noClip || !localBB.Intersects( blockBB ) ) return true;
 			
-			if( game.LocalPlayer.PushbackBlockPlacing ) {
+			if( game.LocalPlayer.PushbackPlacing ) {
 				return PushbackPlace( selected, blockBB );
 			} else {
 				localBB.Min.Y += 0.25f + Entity.Adjustment;

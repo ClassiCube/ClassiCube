@@ -71,11 +71,13 @@ namespace ClassicalSharp {
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
 				
 				Make( 140, 0, "Pushback placing", Anchor.Centre, OnWidgetClick,
-				     g => g.LocalPlayer.PushbackBlockPlacing
+				     g => g.LocalPlayer.PushbackPlacing
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
 				     (g, v) => {
-				     	if( g.LocalPlayer.CanPushbackBlocks)
-				     		g.LocalPlayer.PushbackBlockPlacing = v == "yes";
+				     	if( g.LocalPlayer.CanPushbackBlocks) {
+				     		g.LocalPlayer.PushbackPlacing = v == "yes";
+				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" );
+				     	}
 				     }),
 				
 				Make( 140, 50, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,

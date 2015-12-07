@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		public float SpeedMultiplier = 10;
 		
 		public byte UserType;
-		public bool PushbackBlockPlacing;
+		public bool PushbackPlacing;
 		
 		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
 		public bool CanUseThirdPersonCamera = true;
@@ -264,7 +264,7 @@ namespace ClassicalSharp {
 			if( !CanFly ) { flying = false; flyingDown = false; flyingUp = false; }
 			if( !CanNoclip ) noClip = false;
 			if( !CanSpeed) speeding = false;
-			if( !CanPushbackBlocks ) PushbackBlockPlacing = false;
+			if( !CanPushbackBlocks ) PushbackPlacing = false;
 			
 			if( !CanUseThirdPersonCamera )
 				game.SetCamera( false );

@@ -127,6 +127,7 @@ namespace ClassicalSharp {
 			UseSound = Options.GetBool( OptionsKey.UseSound, false );
 			AudioPlayer.SetSound( UseSound );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
+			LocalPlayer.PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";

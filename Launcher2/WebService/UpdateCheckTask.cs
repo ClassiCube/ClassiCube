@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Threading;
 using JsonObject = System.Collections.Generic.Dictionary<string, object>;
@@ -60,7 +61,7 @@ namespace Launcher2 {
 		Build MakeBuild( JsonObject obj, bool release ) {
 			Build build = new Build();
 			string timeKey = release ? "release_ts" : "ts";
-			double rawTime = Double.Parse( (string)obj[timeKey] );
+			double rawTime = Double.Parse( (string)obj[timeKey], CultureInfo.InvariantCulture );
 			build.TimeBuilt = epoch.AddSeconds( rawTime ).ToLocalTime();
 			
 			build.DirectXSize = Int32.Parse( (string)obj["dx_size"] );

@@ -30,6 +30,7 @@ namespace ClassicalSharp {
 		public const string ViewBobbing = "viewbobbing";
 		public const string FieldOfView = "fov";
 		public const string LiquidsBreakable = "liquidsbreakable";
+		public const string PushbackPlacing = "pushbackplacing";
 	}
 	
 	// TODO: implement this
