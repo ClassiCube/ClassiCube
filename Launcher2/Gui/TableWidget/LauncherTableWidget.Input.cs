@@ -59,9 +59,8 @@ namespace Launcher2 {
 					Window.ConnectToServer( servers, entry.Hash );
 					lastPress = DateTime.UtcNow;
 				}
-				SelectedChanged( entry.Hash );
-				SelectedHash = entry.Hash;
 				
+				SetSelected( i );			
 				NeedRedraw();
 				lastIndex = i;
 				break;

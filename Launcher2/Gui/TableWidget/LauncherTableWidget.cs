@@ -13,7 +13,7 @@ namespace Launcher2 {
 		
 		public Action NeedRedraw;
 		public Action<string> SelectedChanged;
-		public string SelectedHash;
+		public int SelectedIndex = -1;
 		
 		internal TableEntry[] entries, usedEntries;
 		internal List<ServerListEntry> servers;
@@ -96,9 +96,9 @@ namespace Launcher2 {
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
-				if( usedEntries[i].Hash == SelectedHash ) {
+				if( i == SelectedIndex )
 					args.Font = boldFont;
-				}
+				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i;
 					break;
@@ -115,14 +115,14 @@ namespace Launcher2 {
 		                     int maxWidth, int x, ref int y, ref TableEntry entry ) {
 			Size size = drawer.MeasureSize( ref args );
 			if( y + size.Height > Window.Height ) {
-				y = Window.Height + 5; return false;
+				y = Window.Height + 3; return false;
 			}
 			size.Width = Math.Min( maxWidth, size.Width );
 			entry.Y = y; entry.Height = size.Height;
 			
 			args.SkipPartsCheck = false;
 			drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );
-			y += size.Height + 5;
+			y += size.Height + 3;
 			return true;
 		}
 		
@@ -135,6 +135,10 @@ namespace Launcher2 {
 			drawer.DrawRect( foreCol, 0, Y + size.Height + 10, Window.Width, 3 );
 			headerStartY = Y;
 			headerEndY = Y + size.Height + 10;
+			
+			args = new DrawTextArgs( "I", font, true );		
+			size = drawer.MeasureSize( ref args );
+			numEntries = (Window.Height - headerEndY) / (size.Height + 3);
 		}
 		
 		int maxIndex;
@@ -147,8 +151,30 @@ namespace Launcher2 {
 			drawer.DrawRect( scrollCol, Window.Width - 10, y1, 10, height );
 		}
 		
+		public void SetSelected( int index ) {	
+			if( index >= maxIndex ) CurrentIndex = index  - numEntries;
+			if( index < CurrentIndex ) CurrentIndex = index;
+			if( index >= Count ) index = Count - 1;
+			if( index < 0 ) index = 0;
+			
+			SelectedIndex = index;
+			ClampIndex();		
+			if( Count > 0 )
+				SelectedChanged( entries[index].Hash );
+		}
+		
+		public void SetSelected( string hash ) {
+			SelectedIndex = -1;
+			for( int i = 0; i < Count; i++ ) {
+				if( entries[i].Hash == hash ) {
+					SetSelected( i );
+					return;
+				}
+			}
+		}
+		
 		public void ClampIndex() {
-			if( CurrentIndex >= Count - numEntries )
+			if( CurrentIndex > Count - numEntries )
 				CurrentIndex = Count - numEntries;
 			if( CurrentIndex < 0 )
 				CurrentIndex = 0;

@@ -186,7 +186,9 @@ namespace ClassicalSharp {
 			for( int id = 0; id < 255; id++ ) {
 				Player player = game.Players[id];
 				if( player == null ) continue;
-				if( player.CollisionBounds.Intersects( blockBB ) ) return true;
+				BoundingBox bounds = player.CollisionBounds;
+				bounds.Min.Y += 1/32f; // when player is exactly standing on top of ground
+				if( bounds.Intersects( blockBB ) ) return true;
 			}
 			return false;
 		}

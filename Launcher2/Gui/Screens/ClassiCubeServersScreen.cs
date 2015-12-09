@@ -20,7 +20,7 @@ namespace Launcher2 {
 		public override void Tick() {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( table.DraggingWidth && !game.Window.Mouse[MouseButton.Left] )
-			   table.DraggingWidth = false;
+				table.DraggingWidth = false;
 		}
 		
 		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
@@ -41,11 +41,17 @@ namespace Launcher2 {
 		protected override void OnRemovedChar() { FilterList(); }
 		
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( e.Key == Key.Enter ) {
-				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				if( table.Count == 1 && String.IsNullOrEmpty( Get( 3 ) ) )
 					widgets[3].Text = table.usedEntries[0].Hash;
 				ConnectToServer( 0, 0 );
+			} else if( e.Key == Key.Up ) {
+				table.SetSelected( table.SelectedIndex - 1 );
+				table.NeedRedraw();
+			} else if( e.Key == Key.Down ) {
+				table.SetSelected( table.SelectedIndex + 1 );
+				table.NeedRedraw();
 			} else {
 				base.KeyDown( sender, e );
 			}
@@ -64,7 +70,7 @@ namespace Launcher2 {
 			base.RedrawLastInput();
 			if( lastInput == widgets[3] ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.SelectedHash = widgets[3].Text;
+				table.SetSelected( widgets[3].Text );
 				Resize();
 			}
 		}
@@ -76,7 +82,7 @@ namespace Launcher2 {
 			
 			Resize();
 			selectedWidget = widgets[1];
-			InputClick( 0, 0 );		
+			InputClick( 0, 0 );
 		}
 		
 		public override void Resize() {
@@ -107,7 +113,7 @@ namespace Launcher2 {
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -10, 5, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
 			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
-			             -10, 50, ConnectToServer );			
+			             -10, 50, ConnectToServer );
 			MakeTableWidget();
 		}
 		
