@@ -91,24 +91,22 @@ namespace ClassicalSharp.Renderers {
 		
 		void RenderClouds( double delta ) {
 			double time = game.accumulator;
-			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );
-			graphics.SetMatrixMode( MatrixType.Texture );
-			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
-			graphics.LoadMatrix( ref matrix );
-			graphics.SetMatrixMode( MatrixType.Modelview );
-			
+			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );		
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
 			graphics.BindTexture( game.CloudsTexId );
-			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			graphics.BindVb( cloudsVb );
-			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
+			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );			
+			
+			int extent = Utils.AdjViewDist( game.ViewDistance );
+			int x1 = -extent, x2 = map.Width + extent;
+			int z1 = -extent, z2 = map.Length + extent;		
+			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudVertices];
+			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, legacy ? 128 : 65536, 
+			            map.CloudsCol, offset, vertices );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cloudsVb, (IntPtr)vertices,
+			                                cloudVertices, cloudVertices * 6 / 4);
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
-			
-			graphics.SetMatrixMode( MatrixType.Texture );
-			graphics.LoadIdentityMatrix();
-			graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
 		double BlendFactor( int x ) {
@@ -158,10 +156,7 @@ namespace ClassicalSharp.Renderers {
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
 			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
-			
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[cloudVertices];
-			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
-			cloudsVb = graphics.CreateVb( (IntPtr)vertices, VertexFormat.Pos3fTex2fCol4b, cloudVertices );
+			cloudsVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, cloudVertices );;
 		}
 		
 		void ResetSky( int extent, int axisSize ) {
@@ -195,7 +190,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fTex2fCol4b* vertices ) {
+		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, float offset, VertexPos3fTex2fCol4b* vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			
 			for( ; x1 < endX; x1 += axisSize ) {
@@ -206,10 +201,10 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f + offset, z1 / 2048f, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f + offset, z2 / 2048f, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f + offset, z2 / 2048f, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f + offset, z1 / 2048f, col );
 				}
 			}
 		}

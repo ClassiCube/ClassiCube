@@ -246,6 +246,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
+		public override void UpdateDynamicVb( DrawMode mode, int id, IntPtr vertices, int count ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
+			
+			setupBatchFunc();
+			GL.DrawArrays( modeMappings[(int)mode], 0, count );
+		}
+		
+		public override void UpdateDynamicIndexedVb( DrawMode mode, int id, IntPtr vertices, int vCount, int indicesCount ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( vCount * batchStride ), vertices );
+			
+			setupBatchFunc();
+			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
+		}
+		
 		public override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffers( 1, &id );

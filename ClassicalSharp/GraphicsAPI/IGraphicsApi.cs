@@ -167,6 +167,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices,
 		                                             int vCount, int indicesCount ) where T : struct;
 		
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public abstract void UpdateDynamicVb( DrawMode mode, int vb, IntPtr vertices, int count );
+		
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public abstract void UpdateDynamicIndexedVb( DrawMode mode, int vb, IntPtr vertices,
+		                                             int vCount, int indicesCount );
+		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer. </summary>
 		public abstract void DrawVb( DrawMode mode, int startVertex, int verticesCount );
 		
