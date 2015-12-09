@@ -106,7 +106,11 @@ namespace ClassicalSharp {
 			RecreateBlockInfoTexture();
 		}
 		
+		static string[] normalNames = null;
 		void UpdateBlockInfoString( Block block ) {
+			if( normalNames == null )
+				MakeNormalNames();
+			
 			int index = 0;
 			buffer.Clear();
 			buffer.Append( ref index, "&f" );
@@ -114,8 +118,8 @@ namespace ClassicalSharp {
 				buffer.Append( ref index, "TNT" );
 			} else {
 				string value = game.BlockInfo.Name[(byte)block];
-				if( (byte)block < BlockInfo.CpeBlocksCount ) {
-					SplitUppercase( value, ref index );
+				if( (byte)block < BlockInfo.CpeBlocksCount && value == "Invalid" ) {
+					buffer.Append( ref index, normalNames[(byte)block] );
 				} else {
 					buffer.Append( ref index, value );
 				}
@@ -125,6 +129,19 @@ namespace ClassicalSharp {
 			buffer.Append( ref index, "&f, can delete: " );
 			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f)" );
+		}
+		
+		void MakeNormalNames() {
+			normalNames = new string[BlockInfo.CpeBlocksCount];
+			for( int i = 0; i < normalNames.Length; i++ ) {
+				string origName = Enum.GetName( typeof(Block), (byte)i );
+				buffer.Clear();
+				
+				int index = 0;
+				SplitUppercase( origName, ref index );
+				normalNames[i] = buffer.ToString();
+				Console.WriteLine( buffer.ToString() );
+			}
 		}
 		
 		void SplitUppercase( string value, ref int index ) {

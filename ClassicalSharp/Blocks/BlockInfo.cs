@@ -64,12 +64,8 @@ namespace ClassicalSharp {
 				SpeedMultiplier[tile] = 1;
 				CullWithNeighbours[tile] = true;
 			}
-			for( int i = 0; i < CpeBlocksCount; i++ ) {
-				Name[i] = Enum.GetName( typeof( Block ), (byte)i );
-			}
-			for( int i = CpeBlocksCount; i < BlocksCount; i++ ) {
-				Name[i] = "Invalid";
-			}
+			for( int block = 0; block < BlocksCount; block++ )
+				Name[block] = "Invalid";
 			
 			FogDensity[(byte)Block.StillWater] = 0.1f;
 			FogColour[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );

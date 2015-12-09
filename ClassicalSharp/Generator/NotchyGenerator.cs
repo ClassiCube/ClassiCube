@@ -287,10 +287,9 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		bool CanGrowTree( int treeX, int treeY, int treeZ, int height ) {
-			return true;
+		bool CanGrowTree( int treeX, int treeY, int treeZ, int treeHeight ) {
 			// check tree base
-			int baseHeight = height - 4;
+			int baseHeight = treeHeight - 4;
 			for( int y = treeY; y < treeY + baseHeight; y++ )
 				for( int z = treeZ - 1; z <= treeZ + 1; z++ )
 					for( int x = treeX - 1; x <= treeX + 1; x++ )
@@ -298,18 +297,18 @@ namespace ClassicalSharp.Generator {
 				if( x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= length )
 					return false;
 				int index = (y * length + z) * width + x;
-				//if( blocks[index] != 0 ) return false;
+				if( blocks[index] != 0 ) return false;
 			}
 			
 			// and also check canopy
-			for( int y = treeY + baseHeight; y < treeY + height; y++ )
+			for( int y = treeY + baseHeight; y < treeY + treeHeight; y++ )
 				for( int z = treeZ - 2; z <= treeZ + 2; z++ )
 					for( int x = treeX - 2; x <= treeX + 2; x++ )
 			{
 				if( x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= length )
 					return false;
 				int index = (y * length + z) * width + x;
-				//if( blocks[index] != 0 ) return false;
+				if( blocks[index] != 0 ) return false;
 			}
 			return true;
 		}
@@ -325,7 +324,7 @@ namespace ClassicalSharp.Generator {
 			{
 				int x = xx + treeX, z = zz + treeZ;
 				index = (y * length + z) * width + x;
-				if( !Check( x, y, z ) ) continue; // TODO: get rid of these once CanGrowTree is fixed.
+				
 				if( Math.Abs( xx ) == 2 && Math.Abs( zz ) == 2 ) {
 					if( rnd.NextDouble() >= 0.5 )
 						blocks[index] = (byte)Block.Leaves;
@@ -342,7 +341,7 @@ namespace ClassicalSharp.Generator {
 			{
 				int x = xx + treeX, z = zz + treeZ;
 				index = (y * length + z) * width + x;
-				if( !Check( x, y, z ) ) continue;
+
 				if( xx == 0 || zz == 0 ) {
 					blocks[index] = (byte)Block.Leaves;
 				} else if( y == bottomY && rnd.NextDouble() >= 0.5 ) {
@@ -353,15 +352,9 @@ namespace ClassicalSharp.Generator {
 			// then place trunk
 			index = (treeY * length + treeZ ) * width + treeX;
 			for( int y = 0; y < height - 1; y++ ) {
-				if( !Check( treeX, treeY + y, treeZ ) ) continue;
 				blocks[index] = (byte)Block.Wood;
 				index += oneY;
 			}
-		}
-		
-		bool Check( int x, int y, int z ) {
-			return x >= 0 && y >= 0 && z >= 0
-				&& x < width && y < height && z < length;
 		}
 	}
 }

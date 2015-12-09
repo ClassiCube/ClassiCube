@@ -393,8 +393,10 @@ namespace ClassicalSharp {
 			byte shape = reader.ReadUInt8();
 			if( shape == 2 ) {
 				info.Height[block] = 8/16f;
+				info.MaxBB[block].Y = 8/16f;
 			} else if( shape == 3 ) {
 				info.Height[block] = 2/16f;
+				info.MaxBB[block].Y = 2/16f;
 			} else if( shape == 4 ) {
 				info.IsSprite[block] = true;
 			}
