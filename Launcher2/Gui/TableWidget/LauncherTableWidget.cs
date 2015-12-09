@@ -53,8 +53,8 @@ namespace Launcher2 {
 		}
 		
 		public int CurrentIndex, Count;
-		public int[] ColumnWidths = { 280, 80, 80 };
-		public int[] DesiredColumnWidths = { 280, 80, 80 };
+		public int[] ColumnWidths = { 360, 80, 80 };
+		public int[] DesiredColumnWidths = { 360, 80, 80 };
 		
 		internal struct TableEntry {
 			public string Hash, Name, Players, Uptime;
@@ -107,7 +107,7 @@ namespace Launcher2 {
 			
 			Height = Window.Height - Y;
 			if( separator )
-				drawer.DrawRect( foreCol, x + maxWidth + 2, Y + 2, 3, Height );
+				drawer.DrawRect( foreCol, x + maxWidth + 2, Y + 2, 2, Height );
 			return maxWidth + 5;
 		}
 		
@@ -135,24 +135,12 @@ namespace Launcher2 {
 			drawer.DrawRect( foreCol, 0, Y + size.Height + 10, Window.Width, 3 );
 			headerStartY = Y;
 			headerEndY = Y + size.Height + 10;
-			
-			args = new DrawTextArgs( "I", font, true );
-			int y = Y + size.Height + 10;
-			size = drawer.MeasureSize( ref args );
-			
-			numEntries = 0;
-			for( ; ; ) {
-				if( y + size.Height > Window.Height ) break;
-				numEntries++;
-				drawer.DrawRect( foreCol, 0, y, Window.Width, 1 );
-				y += size.Height + 5;
-			}
 		}
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
 			drawer.DrawRect( backCol, Window.Width - 10, Y, 10, Window.Height - Y );
-			float scale = (Window.Height - 10 - Y) / (float)Count;
+			float scale = (Window.Height - Y) / (float)Count;
 			
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);

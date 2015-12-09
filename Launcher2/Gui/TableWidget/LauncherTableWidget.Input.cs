@@ -85,6 +85,7 @@ namespace Launcher2 {
 			
 			int currentIndex = (int)(mouseY / scale);
 			CurrentIndex = currentIndex;
+			ClampIndex();
 			NeedRedraw();
 		}
 	}

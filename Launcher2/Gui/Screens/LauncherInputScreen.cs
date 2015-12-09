@@ -128,6 +128,24 @@ namespace Launcher2 {
 			widgets[widgetIndex++] = widget;
 		}
 		
+		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor, 
+		                         bool password, int x, int y, int maxChars ) {
+			if( widgets[widgetIndex] != null ) {
+				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
+				input.DrawAt( drawer, text, inputFont, horAnchor, verAnchor, width, 30, x, y );
+				widgetIndex++;
+				return;
+			}
+			
+			LauncherInputWidget widget = new LauncherInputWidget( game );
+			widget.OnClick = InputClick;
+			widget.Password = password;
+			widget.MaxTextLength = maxChars;
+			
+			widget.DrawAt( drawer, text, inputFont, horAnchor, verAnchor, width, 30, x, y );
+			widgets[widgetIndex++] = widget;
+		}
+		
 		public override void Dispose() {
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;

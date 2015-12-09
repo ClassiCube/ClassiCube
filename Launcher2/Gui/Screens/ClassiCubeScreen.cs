@@ -13,7 +13,7 @@ namespace Launcher2 {
 			titleFont = new Font( "Arial", 15, FontStyle.Bold );
 			inputFont = new Font( "Arial", 15, FontStyle.Regular );
 			enterIndex = 4;
-			widgets = new LauncherWidget[8];
+			widgets = new LauncherWidget[7];
 		}
 
 		public override void Init() {
@@ -101,10 +101,6 @@ namespace Launcher2 {
 			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			string text = widgets[6] == null ? "" : widgets[6].Text;
 			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
-			
-			if( HasServers && !signingIn )
-				MakeButtonAt( "Servers", 90, 35, titleFont, Anchor.Centre,
-				             35, 0, ShowServers );
 		}
 
 		string lastStatus;
@@ -142,11 +138,6 @@ namespace Launcher2 {
 			Resize();
 			SetStatus( "&eSigning in.." );
 			signingIn = true;
-		}
-		
-		void ShowServers( int mouseX, int mouseY ) {
-			if( signingIn || !HasServers ) return;
-			game.SetScreen( new ClassiCubeServersScreen( game ) );
 		}
 
 		void DisplayWebException( WebException ex, string action ) {

@@ -22,6 +22,7 @@ namespace ClassicalSharp {
 		Socket socket;
 		Game game;
 		bool receivedFirstPosition;
+		DateTime lastPacket;
 		
 		public override void Connect( IPAddress address, int port ) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
@@ -41,8 +42,8 @@ namespace ClassicalSharp {
 			gzippedMap = new FixedBufferStream( reader.buffer );
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
+			lastPacket = DateTime.UtcNow;
 		}
-		
 		
 		public override void Dispose() {
 			socket.Close();

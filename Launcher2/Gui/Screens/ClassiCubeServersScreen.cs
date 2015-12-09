@@ -97,17 +97,17 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			
-			MakeLabelAt( "Search", titleFont, Anchor.Centre, Anchor.LeftOrTop, -190, 10 );
-			MakeInput( Get(), 270, Anchor.LeftOrTop, false, -5, 5, 32 );
+			MakeLabelAt( "Search servers:", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 10 );
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 135, 5, 32 );
 			
-			MakeLabelAt( "/play/", inputFont, Anchor.Centre, Anchor.LeftOrTop, -215, 55 );
-			MakeInput( Get(), 310, Anchor.LeftOrTop, false, -35, 50, 32 );
+			MakeLabelAt( "../server/play/", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 55 );
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 135, 50, 32 );
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
-			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.LeftOrTop,
-			             195, 5, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
-			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.LeftOrTop,
-			             180, 50, ConnectToServer );			
+			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			             -10, 5, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
+			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			             -10, 50, ConnectToServer );			
 			MakeTableWidget();
 		}
 		
