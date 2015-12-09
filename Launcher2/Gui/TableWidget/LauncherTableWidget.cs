@@ -40,8 +40,10 @@ namespace Launcher2 {
 		/// <summary> Filters the table such that only rows with server names
 		/// that contain the input (case insensitive) are shown. </summary>
 		public void FilterEntries( string filter ) {
+			string selHash = SelectedIndex > 0 ? usedEntries[SelectedIndex].Hash : "";
 			Count = 0;
 			int index = 0;
+			
 			for( int i = 0; i < entries.Length; i++ ) {
 				TableEntry entry = entries[i];
 				if( entry.Name.IndexOf( filter, StringComparison.OrdinalIgnoreCase ) >= 0 ) {
@@ -50,6 +52,8 @@ namespace Launcher2 {
 				}
 				entries[i] = entry;
 			}
+			Console.WriteLine( "SELECTED! " + SelectedIndex + "," + selHash );
+			SetSelected( selHash );
 		}
 		
 		public int CurrentIndex, Count;
@@ -93,6 +97,7 @@ namespace Launcher2 {
 			TableEntry headerEntry = default( TableEntry );
 			DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref headerEntry );
 			maxIndex = Count;
+			y += 3;
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
@@ -136,9 +141,10 @@ namespace Launcher2 {
 			headerStartY = Y;
 			headerEndY = Y + size.Height + 10;
 			
+			int startY = headerEndY + 3;		
 			args = new DrawTextArgs( "I", font, true );		
 			size = drawer.MeasureSize( ref args );
-			numEntries = (Window.Height - headerEndY) / (size.Height + 3);
+			numEntries = (Window.Height - startY) / (size.Height + 3);
 		}
 		
 		int maxIndex;
@@ -151,22 +157,25 @@ namespace Launcher2 {
 			drawer.DrawRect( scrollCol, Window.Width - 10, y1, 10, height );
 		}
 		
-		public void SetSelected( int index ) {	
+		public void SetSelected( int index ) {
+			Console.WriteLine( "SEL ORIG" + index );
 			if( index >= maxIndex ) CurrentIndex = index  - numEntries;
 			if( index < CurrentIndex ) CurrentIndex = index;
 			if( index >= Count ) index = Count - 1;
 			if( index < 0 ) index = 0;
 			
+			Console.WriteLine( "SEL FINAL" + index );
 			SelectedIndex = index;
 			ClampIndex();		
 			if( Count > 0 )
-				SelectedChanged( entries[index].Hash );
+				SelectedChanged( usedEntries[index].Hash );
 		}
 		
 		public void SetSelected( string hash ) {
 			SelectedIndex = -1;
 			for( int i = 0; i < Count; i++ ) {
-				if( entries[i].Hash == hash ) {
+				Console.WriteLine( usedEntries[i].Hash + " : " + hash );
+				if( usedEntries[i].Hash == hash ) {
 					SetSelected( i );
 					return;
 				}

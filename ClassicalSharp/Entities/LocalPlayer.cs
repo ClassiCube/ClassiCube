@@ -47,6 +47,9 @@ namespace ClassicalSharp {
 			DisplayName = game.Username;
 			SkinName = game.Username;
 			SkinIdentifier = "skin_255";
+			
+			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 7 );
+			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			InitRenderingData();
 		}
 		

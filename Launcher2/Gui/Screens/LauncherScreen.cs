@@ -11,6 +11,8 @@ namespace Launcher2 {
 		
 		public bool Dirty;
 		protected int widgetIndex;
+		protected bool mouseMoved = false;
+		static bool supressMove = true;
 		
 		public LauncherScreen( LauncherWindow game ) {
 			this.game = game;
@@ -30,6 +32,11 @@ namespace Launcher2 {
 		protected LauncherWidget selectedWidget;
 		protected LauncherWidget[] widgets;
 		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
+			if( supressMove ) {
+				supressMove = false;
+				return;
+			}
+			mouseMoved = true;
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
 				if( widget == null ) continue;

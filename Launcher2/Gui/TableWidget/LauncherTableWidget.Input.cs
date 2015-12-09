@@ -22,6 +22,7 @@ namespace Launcher2 {
 			} else {
 				GetSelectedServer( mouseX, mouseY );
 			}
+			lastPress = DateTime.UtcNow;
 		}
 		
 		void SelectHeader( int mouseX, int mouseY ) {
@@ -31,7 +32,7 @@ namespace Launcher2 {
 			if( mouseX >= x && mouseX < x + ColumnWidths[0] - 10 ) {
 				SortEntries( nameComp ); return;
 			}
-			x += ColumnWidths[0];		
+			x += ColumnWidths[0];
 			if( mouseX >= x + 15 && mouseX < x + ColumnWidths[1] ) {
 				SortEntries( playerComp ); return;
 			}
@@ -55,12 +56,13 @@ namespace Launcher2 {
 				TableEntry entry = usedEntries[i];
 				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height ) continue;
 				
-				if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds > 1 ) {
+				if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1 ) {
 					Window.ConnectToServer( servers, entry.Hash );
-					lastPress = DateTime.UtcNow;
+					lastPress = DateTime.MinValue;
+					return;
 				}
 				
-				SetSelected( i );			
+				SetSelected( i );
 				NeedRedraw();
 				lastIndex = i;
 				break;

@@ -241,7 +241,8 @@ namespace ClassicalSharp {
 		void HandleMessage() {
 			byte messageType = reader.ReadUInt8();
 			string text = reader.ReadChatString( ref messageType, useMessageTypes );
-			game.Chat.Add( text, (CpeMessage)messageType );
+			if( !text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase ) )
+				game.Chat.Add( text, (CpeMessage)messageType );
 		}
 		
 		void HandleKick() {

@@ -12,6 +12,13 @@ namespace ClassicalSharp.Audio {
 		string[] musicFiles;
 		Thread musicThread, soundThread;
 		
+		public AudioPlayer( Game game ) {
+			game.UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
+			SetMusic( game.UseMusic );
+			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
+			SetSound( game.UseSound );
+		}
+		
 		public void SetMusic( bool enabled ) {
 			if( enabled )
 				InitMusic();

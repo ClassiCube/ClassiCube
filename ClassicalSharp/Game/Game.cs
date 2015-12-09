@@ -78,7 +78,6 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			Map = new Map( this );
 			LocalPlayer = new LocalPlayer( this );
-			LocalPlayer.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Players[255] = LocalPlayer;
 			width = Width;
 			height = Height;
@@ -121,13 +120,8 @@ namespace ClassicalSharp {
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
 			Picking = new PickingRenderer( this );
-			AudioPlayer = new AudioPlayer();
-			UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
-			AudioPlayer.SetMusic( UseMusic );
-			UseSound = Options.GetBool( OptionsKey.UseSound, false );
-			AudioPlayer.SetSound( UseSound );
+			AudioPlayer = new AudioPlayer( this );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
-			LocalPlayer.PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";

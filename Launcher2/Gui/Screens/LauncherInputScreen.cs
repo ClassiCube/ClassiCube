@@ -31,7 +31,7 @@ namespace Launcher2 {
 					OnRemovedChar();
 				}
 			} else if( e.Key == Key.Enter && enterIndex >= 0 ) {
-				LauncherWidget widget = selectedWidget != null ?
+				LauncherWidget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
