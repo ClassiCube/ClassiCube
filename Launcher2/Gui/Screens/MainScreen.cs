@@ -27,10 +27,14 @@ namespace Launcher2 {
 		}
 		
 		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab )
+			if( e.Key == Key.Tab ) {
 				HandleTab();
-			else if( e.Key == Key.Enter )
-				widgets[0].OnClick( 0, 0 );
+			} else if( e.Key == Key.Enter ) {
+				LauncherWidget widget = selectedWidget != null ?
+					selectedWidget : widgets[0];
+				if( widget.OnClick != null )
+					widget.OnClick( 0, 0 );
+			}
 		}
 		
 		void KeyUp( object sender, KeyboardKeyEventArgs e ) {

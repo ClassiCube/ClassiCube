@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp;
 using OpenTK;
 using OpenTK.Input;
-using ClassicalSharp;
 
 namespace Launcher2 {
 	
@@ -31,7 +31,8 @@ namespace Launcher2 {
 					OnRemovedChar();
 				}
 			} else if( e.Key == Key.Enter && enterIndex >= 0 ) {
-				LauncherWidget widget = widgets[enterIndex];
+				LauncherWidget widget = selectedWidget != null ?
+					selectedWidget : widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
 			} else if( e.Key == Key.Tab ) {
@@ -83,7 +84,7 @@ namespace Launcher2 {
 		
 		protected string Get() { return Get( widgetIndex ); }
 		
-		protected string Get( int index ) { 
+		protected string Get( int index ) {
 			LauncherWidget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
@@ -128,7 +129,7 @@ namespace Launcher2 {
 			widgets[widgetIndex++] = widget;
 		}
 		
-		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor, 
+		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
 		                         bool password, int x, int y, int maxChars ) {
 			if( widgets[widgetIndex] != null ) {
 				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];

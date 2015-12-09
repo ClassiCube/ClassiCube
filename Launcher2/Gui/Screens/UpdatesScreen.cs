@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using ClassicalSharp;
 using Launcher2.Updater;
+using OpenTK.Input;
 
 namespace Launcher2 {
 	
@@ -25,10 +25,26 @@ namespace Launcher2 {
 		public override void Init() {
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
+			game.Window.Keyboard.KeyDown += KeyDown;
+			game.Window.Keyboard.KeyUp += KeyUp;
 			Resize();
 		}
+
+		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab ) {
+				HandleTab();
+			} else if( e.Key == Key.Enter ) {
+				LauncherWidget widget = selectedWidget;
+				if( widget != null && widget.OnClick != null )
+					widget.OnClick( 0, 0 );
+			}
+		}
 		
-		
+		void KeyUp( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab )
+				tabDown = false;
+		}
+
 		Build dev, stable;
 		public override void Tick() {
 			if( checkTask != null && !checkTask.Working ) {
@@ -107,6 +123,8 @@ namespace Launcher2 {
 		}
 		
 		public override void Dispose() {
+			game.Window.Keyboard.KeyDown -= KeyDown;
+			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
 			

@@ -43,9 +43,12 @@ namespace Launcher2 {
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( e.Key == Key.Enter ) {
-				if( table.Count == 1 && String.IsNullOrEmpty( Get( 3 ) ) )
+				if( table.Count == 1 && String.IsNullOrEmpty( Get( 3 ) ) ) {
 					widgets[3].Text = table.usedEntries[0].Hash;
-				ConnectToServer( 0, 0 );
+					ConnectToServer( 0, 0 );
+				} else {
+					base.KeyDown( sender, e );
+				}
 			} else if( e.Key == Key.Up ) {
 				table.SetSelected( table.SelectedIndex - 1 );
 				table.NeedRedraw();
