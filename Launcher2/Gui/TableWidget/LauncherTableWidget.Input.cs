@@ -45,9 +45,12 @@ namespace Launcher2 {
 		}
 		
 		void SortEntries( TableEntryComparer comparer ) {
+			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Array.Sort( usedEntries, 0, Count, comparer );
 			Array.Sort( entries, 0, entries.Length, comparer );
+			
 			comparer.Invert = !comparer.Invert;
+			SetSelected( selHash );
 			NeedRedraw();
 		}
 		
@@ -64,7 +67,6 @@ namespace Launcher2 {
 				
 				SetSelected( i );
 				NeedRedraw();
-				lastIndex = i;
 				break;
 			}
 		}

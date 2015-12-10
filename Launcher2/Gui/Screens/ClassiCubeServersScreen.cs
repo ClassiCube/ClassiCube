@@ -8,11 +8,13 @@ namespace Launcher2 {
 	public sealed class ClassiCubeServersScreen : LauncherInputScreen {
 		
 		const int tableIndex = 6;
-		Font boldInputFont;
+		Font boldInputFont, tableFont;
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			inputFont = new Font( "Arial", 13, FontStyle.Regular );
-			boldInputFont = new Font( "Arial", 13, FontStyle.Bold );
+			inputFont = new Font( "Arial", 14, FontStyle.Regular );
+			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );
+			
+			tableFont = new Font( "Arial", 12, FontStyle.Regular );
 			enterIndex = 5;
 			widgets = new LauncherWidget[7];
 		}
@@ -92,13 +94,13 @@ namespace Launcher2 {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				game.ClearArea( 0, 0, game.Width, 100 );
-				drawer.Clear( game.clearColour, 0, 100,
-				             game.Width, game.Height - 100 );
+				FastColour col = LauncherTableWidget.backGridCol;
+				drawer.Clear( col, 0, 100, game.Width, game.Height - 100 );
 				
 				Draw();
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.ClampIndex();
-				table.Redraw( drawer, inputFont, titleFont, boldInputFont );
+				table.Redraw( drawer, tableFont, inputFont, inputFont );
 			}
 			Dirty = true;
 		}
@@ -107,10 +109,10 @@ namespace Launcher2 {
 			widgetIndex = 0;
 			
 			MakeLabelAt( "Search servers:", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 10 );
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 135, 5, 32 );
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 145, 5, 32 );
 			
-			MakeLabelAt( "../server/play/", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 55 );
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 135, 50, 32 );
+			MakeLabelAt( "../server/play/", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 25, 55 );
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 145, 50, 32 );
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
@@ -123,14 +125,14 @@ namespace Launcher2 {
 		void MakeTableWidget() {
 			if( widgets[tableIndex] != null ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.Redraw( drawer, inputFont, titleFont, boldInputFont );
+				table.Redraw( drawer, tableFont, inputFont, inputFont );
 				return;
 			}
 			
 			LauncherTableWidget widget = new LauncherTableWidget( game );
 			widget.CurrentIndex = 0;
 			widget.SetEntries( game.Session.Servers );
-			widget.DrawAt( drawer, inputFont, titleFont, boldInputFont,
+			widget.DrawAt( drawer, tableFont, inputFont, inputFont,
 			              Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 100 );
 			
 			widget.NeedRedraw = Resize;
@@ -175,6 +177,7 @@ namespace Launcher2 {
 		public override void Dispose() {
 			base.Dispose();
 			boldInputFont.Dispose();
+			tableFont.Dispose();
 			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
 		}
 	}

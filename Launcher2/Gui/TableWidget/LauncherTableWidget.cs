@@ -11,6 +11,8 @@ namespace Launcher2 {
 			OnClick = HandleOnClick;
 		}
 		
+	    internal static FastColour backGridCol = new FastColour( 20, 20, 10 ),
+	    foreGridCol = new FastColour( 40, 40, 40 );
 		public Action NeedRedraw;
 		public Action<string> SelectedChanged;
 		public int SelectedIndex = -1;
@@ -40,7 +42,7 @@ namespace Launcher2 {
 		/// <summary> Filters the table such that only rows with server names
 		/// that contain the input (case insensitive) are shown. </summary>
 		public void FilterEntries( string filter ) {
-			string selHash = SelectedIndex > 0 ? usedEntries[SelectedIndex].Hash : "";
+			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Count = 0;
 			int index = 0;
 			
@@ -52,13 +54,13 @@ namespace Launcher2 {
 				}
 				entries[i] = entry;
 			}
-			Console.WriteLine( "SELECTED! " + SelectedIndex + "," + selHash );
 			SetSelected( selHash );
 		}
 		
 		public int CurrentIndex, Count;
 		public int[] ColumnWidths = { 360, 80, 80 };
 		public int[] DesiredColumnWidths = { 360, 80, 80 };
+		int defaultInputHeight;
 		
 		internal struct TableEntry {
 			public string Hash, Name, Players, Uptime;
@@ -67,6 +69,9 @@ namespace Launcher2 {
 		
 		public void DrawAt( IDrawer2D drawer, Font font, Font titleFont, Font boldFont,
 		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+			DrawTextArgs args = new DrawTextArgs( "I", font, true );
+			defaultInputHeight = drawer.MeasureSize( ref args ).Height;
+			
 			CalculateOffset( x, y, horAnchor, verAnchor );
 			Redraw( drawer, font, titleFont, boldFont );
 		}
@@ -79,11 +84,11 @@ namespace Launcher2 {
 			int x = X + 5;
 			
 			DrawGrid( drawer, font, titleFont );
-			x += DrawColumn( drawer, true, font, titleFont, boldFont, 
+			x += DrawColumn( drawer, false, font, titleFont, boldFont, 
 			                "Name", ColumnWidths[0], x, e => e.Name ) + 5;
 			x += DrawColumn( drawer, true, font, titleFont, boldFont, 
 			                "Players", ColumnWidths[1], x, e => e.Players ) + 5;
-			x += DrawColumn( drawer, false, font, titleFont, boldFont,
+			x += DrawColumn( drawer, true, font, titleFont, boldFont,
 			                "Uptime", ColumnWidths[2], x, e => e.Uptime ) + 5;
 			
 			Width = Window.Width;
@@ -92,17 +97,19 @@ namespace Launcher2 {
 		
 		int DrawColumn( IDrawer2D drawer, bool separator, Font font, Font titleFont, Font boldFont,
 		               string header, int maxWidth, int x, Func<TableEntry, string> filter ) {
-			int y = Y + 10;
+			int y = Y + 3;
 			DrawTextArgs args = new DrawTextArgs( header, titleFont, true );
 			TableEntry headerEntry = default( TableEntry );
 			DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref headerEntry );
 			maxIndex = Count;
+			y += 2;
+			int bodyStartY = y;
 			y += 3;
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
-				if( i == SelectedIndex )
-					args.Font = boldFont;
+				if( i == SelectedIndex && !separator )
+					drawer.DrawRect( foreGridCol, 0, y - 3, Width, defaultInputHeight + 4 );
 				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i;
@@ -112,7 +119,7 @@ namespace Launcher2 {
 			
 			Height = Window.Height - Y;
 			if( separator )
-				drawer.DrawRect( foreCol, x + maxWidth + 2, Y + 2, 2, Height );
+				drawer.DrawRect( foreCol, x - 7, bodyStartY, 2, Height );
 			return maxWidth + 5;
 		}
 		
@@ -136,15 +143,12 @@ namespace Launcher2 {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			drawer.DrawRect( foreCol, 0, Y, Window.Width, 5 );
-			drawer.DrawRect( foreCol, 0, Y + size.Height + 10, Window.Width, 3 );
+			drawer.DrawRect( foreCol, 0, Y + size.Height + 5, Window.Width, 2 );
 			headerStartY = Y;
-			headerEndY = Y + size.Height + 10;
 			
+			headerEndY = Y + size.Height + 5;	
 			int startY = headerEndY + 3;		
-			args = new DrawTextArgs( "I", font, true );		
-			size = drawer.MeasureSize( ref args );
-			numEntries = (Window.Height - startY) / (size.Height + 3);
+			numEntries = (Window.Height - startY) / (defaultInputHeight + 3);
 		}
 		
 		int maxIndex;
@@ -158,14 +162,13 @@ namespace Launcher2 {
 		}
 		
 		public void SetSelected( int index ) {
-			Console.WriteLine( "SEL ORIG" + index );
-			if( index >= maxIndex ) CurrentIndex = index  - numEntries;
+			if( index >= maxIndex ) CurrentIndex = index + 1 - numEntries;
 			if( index < CurrentIndex ) CurrentIndex = index;
 			if( index >= Count ) index = Count - 1;
 			if( index < 0 ) index = 0;
 			
-			Console.WriteLine( "SEL FINAL" + index );
 			SelectedIndex = index;
+			lastIndex = index;
 			ClampIndex();		
 			if( Count > 0 )
 				SelectedChanged( usedEntries[index].Hash );
@@ -174,7 +177,6 @@ namespace Launcher2 {
 		public void SetSelected( string hash ) {
 			SelectedIndex = -1;
 			for( int i = 0; i < Count; i++ ) {
-				Console.WriteLine( usedEntries[i].Hash + " : " + hash );
 				if( usedEntries[i].Hash == hash ) {
 					SetSelected( i );
 					return;

@@ -23,7 +23,7 @@ namespace Launcher2 {
 			using( Stream fs = new FileStream( texPack, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 				ZipReader reader = new ZipReader();
 				
-				reader.ShouldProcessZipEntry = (f) => f == "terrain.png";
+				reader.ShouldProcessZipEntry = (f) => f == "terrain.png" || f == "default.png";
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract( fs );
 			}
@@ -35,6 +35,13 @@ namespace Launcher2 {
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
+			if( filename == "default.png" ) {
+				 Bitmap bmp = new Bitmap( stream );
+				 Drawer.SetFontBitmap( bmp );
+				 Drawer.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
+				 return;
+			}
+			
 			using( Bitmap bmp = new Bitmap( stream ) ) {
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
 					elementSize = bmp.Width / 16;
@@ -59,13 +66,14 @@ namespace Launcher2 {
 					Drawer.Clear( clearColour );
 				
 				DrawTextArgs args1 = new DrawTextArgs( "&eClassical", logoItalicFont, true );
-				Size size1 = drawer.MeasureSize( ref args1 );
-				DrawTextArgs args2 = new DrawTextArgs( "&eSharp", logoFont, true );
-				Size size2 = drawer.MeasureSize( ref args2 );
+				Size size1 = drawer.MeasureChatSize( ref args1 );
+				DrawTextArgs args2 = new DrawTextArgs( "&fSharp", logoFont, true );
+				Size size2 = drawer.MeasureChatSize( ref args2 );
 				
-				int xStart = Width / 2 - (size1.Width + size2.Width ) / 2;
-				drawer.DrawText( ref args1, xStart, 20 );
-				drawer.DrawText( ref args2, xStart + size1.Width, 20 );
+				int adjust = Drawer.UseBitmappedChat ? -8 : 2;
+				int xStart = Width / 2 - (size1.Width + size2.Width) / 2;
+				drawer.DrawChatText( ref args1, xStart, 20 + (size2.Height - size1.Height - 1) );
+				drawer.DrawChatText( ref args2, xStart + size1.Width + adjust, 20 );
 			}
 			Dirty = true;
 		}

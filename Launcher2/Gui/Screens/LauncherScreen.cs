@@ -98,16 +98,21 @@ namespace Launcher2 {
 		MouseMoveEventArgs moveArgs = new MouseMoveEventArgs();
 		MouseButtonEventArgs pressArgs = new MouseButtonEventArgs();
 		protected void HandleTab() {
-			int index = lastClicked == null ? -1 :
-				Array.IndexOf<LauncherWidget>( widgets, lastClicked );
 			if( tabDown ) return;
 			tabDown = true;
+			int index = lastClicked == null ? -1 :
+				Array.IndexOf<LauncherWidget>( widgets, lastClicked );
+			int dir = (game.Window.Keyboard[Key.ShiftLeft] 
+			           || game.Window.Keyboard[Key.ShiftRight]) ? -1 : 1;
+			index += dir;
+			Utils.Clamp( ref index, 0, widgets.Length - 1);
 			
-			for( int i = 0; i < widgets.Length * 2; i++ ) {
-				index = (index + 1) % widgets.Length;
-				if( widgets[index] is LauncherInputWidget
-				   || widgets[index] is LauncherButtonWidget ) {
-					LauncherWidget widget = widgets[index];
+			for( int j = 0; j < widgets.Length * 2; j++ ) {
+				int i = (j * dir + index) % widgets.Length;
+				if( i < 0 ) i += widgets.Length;
+				
+				if( widgets[i] is LauncherInputWidget || widgets[i] is LauncherButtonWidget ) {
+					LauncherWidget widget = widgets[i];
 					moveArgs.X = widget.X + widget.Width / 2;
 					moveArgs.Y = widget.Y + widget.Height / 2;
 					
@@ -122,7 +127,7 @@ namespace Launcher2 {
 					game.Window.DesktopCursorPos = p;
 					lastClicked = widget;
 					
-					if( widgets[index] is LauncherInputWidget )
+					if( widgets[i] is LauncherInputWidget )
 						MouseButtonDown( null, pressArgs );
 					break;
 				}
