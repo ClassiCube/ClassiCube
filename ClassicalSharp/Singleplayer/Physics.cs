@@ -113,11 +113,14 @@ namespace ClassicalSharp.Singleplayer {
 		#region General
 		
 		void TickRandomBlocks() {
+			int xMax = width - 1, yMax = height - 1, zMax = length - 1;
 			for( int y = 0; y < height; y += 16 ) {
 				for( int z = 0; z < length; z += 16 ) {
 					for( int x = 0; x < width; x += 16 ) {
 						int lo = (y * length + z) * width + x;
-						int hi = ((y + 15) * length + (z + 15)) * width + (x + 15 );
+						int hi = (Math.Min( yMax, y + 15 ) * length + Math.Min( zMax, z + 15 )) 
+							* width + Math.Min( xMax, x + 15 );
+						
 						HandleBlock( rnd.Next( lo, hi ) );
 						HandleBlock( rnd.Next( lo, hi ) );
 						HandleBlock( rnd.Next( lo, hi ) );

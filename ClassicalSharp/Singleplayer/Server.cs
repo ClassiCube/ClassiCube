@@ -1,6 +1,7 @@
 ﻿//#define TEST_VANILLA
 using System;
 using System.Net;
+using ClassicalSharp.Generator;
 using OpenTK;
 using OpenTK.Input;
 
@@ -47,7 +48,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			if( place ) 
+			if( place )
 				physics.OnBlockPlaced( x, y, z, block );
 		}
 		
@@ -58,11 +59,29 @@ namespace ClassicalSharp.Singleplayer {
 			physics.Dispose();
 		}
 		
+		string lastState;
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
 			physics.Tick();
+			
+			if( generator == null )
+				return;
+			if( generator.Done ) {
+				EndGeneration();
+			} else {
+				string state = generator.CurrentState;
+				float progress = generator.CurrentProgress;
+				LoadingMapScreen screen = ((LoadingMapScreen)game.GetActiveScreen);
+				
+				screen.SetProgress( progress );
+				if( state != lastState ) {
+					lastState = state;			
+					screen.SetMessage( state );				
+				}			
+			}
 		}
 		
+		IMapGenerator generator;
 		internal void NewMap() {
 			ServerName = "Single player";
 			ServerMotd = "Generating a map..";
@@ -72,24 +91,34 @@ namespace ClassicalSharp.Singleplayer {
 			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 		}
 		
-		internal unsafe void MakeMap( int width, int height, int length ) {
-			#if TEST_VANILLA
-			byte[] map = new ClassicalSharp.Generator.NotchyGenerator()
-				.GenerateMap( width, height, length );
-			#else
-			byte[] map = new byte[width * height * length];
-			fixed( byte* ptr = map ) {
-				MapSet( width, length, ptr, 0, height / 2 - 2, (byte)Block.Dirt );
-				MapSet( width, length, ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
-			}
-			#endif
-			
-			game.Map.SetData( map, width, height, length );
-			game.Events.RaiseOnNewMapLoaded();
+		void EndGeneration() {
 			game.SetNewScreen( null );
-			ResetPlayerPosition();
+			if( generatedMap == null ) {
+				game.Chat.Add( "&cFailed to generate the map." );
+			} else {
+				IMapGenerator gen = generator;
+				game.Map.SetData( generatedMap, generator.Width,
+				                 generator.Height, generator.Length );
+				generatedMap = null;
+				
+				game.Events.RaiseOnNewMapLoaded();
+				ResetPlayerPosition();
+			}
+			
+			generator = null;
 			game.Chat.Add( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
+		}
+		
+		public byte[] generatedMap;
+		internal void MakeMap( int width, int height, int length ) {
+			#if TEST_VANILLA
+			generator = new NotchyGenerator();
+			generator.GenerateAsync( game, width, height, length, 0x5553200 );
+			#else
+			generator = new FlatGrassGenerator();
+			generator.GenerateAsync( game, width, height, length, 0 );
+			#endif
 		}
 		
 		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {

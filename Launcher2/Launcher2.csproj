@@ -91,7 +91,6 @@
     <Compile Include="WebService\IWebTask.cs" />
     <Compile Include="WebService\ServerListEntry.cs" />
     <Compile Include="WebService\UpdateCheckTask.cs" />
-    <Compile Include="WebService\WebUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassicalSharp\ClassicalSharp.csproj">

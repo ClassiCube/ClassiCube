@@ -142,6 +142,8 @@
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Game\Game.Properties.cs" />
+    <Compile Include="Generator\FlatGrassGenerator.cs" />
+    <Compile Include="Generator\IMapGenerator.cs" />
     <Compile Include="Generator\Noise.cs" />
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />

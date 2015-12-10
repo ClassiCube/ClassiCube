@@ -32,8 +32,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			graphicsApi.Fog = false;
-			titleWidget = TextWidget.Create( game, 0, 30, serverName, Anchor.Centre, Anchor.LeftOrTop, font );
-			messageWidget = TextWidget.Create( game, 0, 60, serverMotd, Anchor.Centre, Anchor.LeftOrTop, font );
+			SetTitle( serverName );
+			SetMessage( serverMotd );
 			progX = game.Width / 2f - progWidth / 2f;
 			
 			Size size = new Size( progWidth, progHeight );
@@ -45,6 +45,22 @@ namespace ClassicalSharp {
 				}
 			}
 			game.Events.MapLoading += MapLoading;
+		}
+		
+		public void SetTitle( string title ) {
+			if( titleWidget != null )
+				titleWidget.Dispose();
+			titleWidget = TextWidget.Create( game, 0, 30, title, Anchor.Centre, Anchor.LeftOrTop, font );
+		}
+		
+		public void SetMessage( string message ) {
+			if( messageWidget != null )
+				messageWidget.Dispose();
+			messageWidget = TextWidget.Create( game, 0, 60, message, Anchor.Centre, Anchor.LeftOrTop, font );
+		}
+		
+		public void SetProgress( float progress ) {
+			this.progress = (int)(progress * 100);
 		}
 
 		void MapLoading( object sender, MapLoadingEventArgs e ) {
