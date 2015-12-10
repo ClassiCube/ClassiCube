@@ -145,6 +145,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
+			if( game.Map.IsNotLoaded ) return;
 			bool didBlock = BlocksRain( oldBlock );
 			bool nowBlocks = BlocksRain( newBlock );
 			if( didBlock == nowBlocks ) return;

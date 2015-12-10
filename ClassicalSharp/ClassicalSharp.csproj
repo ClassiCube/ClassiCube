@@ -98,6 +98,7 @@
     <Compile Include="2D\Screens\HotkeyScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\LoadLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
@@ -228,7 +229,6 @@
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
-    <Compile Include="Singleplayer\Commands.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="TexturePack\AcceptedUrls.cs" />

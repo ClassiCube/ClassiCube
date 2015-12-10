@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 		protected MenuInputWidget inputWidget;
 		protected MenuInputValidator[] validators;
 		protected TextWidget descWidget;
-		protected Font hintFont;
 		protected int okayIndex;
 		
 		public override void Render( double delta ) {
@@ -29,7 +28,6 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -69,7 +67,6 @@ namespace ClassicalSharp {
 				descWidget.Dispose();
 			if( inputWidget != null )
 				inputWidget.Dispose();
-			hintFont.Dispose();
 			game.Keyboard.KeyRepeat = false;
 			base.Dispose();
 		}
@@ -126,9 +123,8 @@ namespace ClassicalSharp {
 				inputWidget.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ),
-			                                     Anchor.Centre, Anchor.Centre, regularFont, titleFont,
-			                                     hintFont, validator );
+			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre, 
+			                                     Anchor.Centre, regularFont, titleFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			UpdateDescription( targetWidget );

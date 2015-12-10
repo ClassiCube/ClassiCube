@@ -30,15 +30,19 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),		
 				Make( -140, 50, "Hotkeys", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				
 				// Column 2
 				Make( 140, -150, "Save level", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
 					Make( 140, -100, "Load level", Anchor.Centre, 
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				// TODO: singleplayer Generate level screen
+				!game.Network.IsSinglePlayer ? null :
+					Make( 140, -50, "Generate level", Anchor.Centre, 
+					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
 				Make( 140, 50, "Select texture pack", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
+				
 				// Other
 				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
 				          (g, w) => g.Exit() ),

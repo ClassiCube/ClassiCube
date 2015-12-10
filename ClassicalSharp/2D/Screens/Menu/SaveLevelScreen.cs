@@ -11,7 +11,6 @@ namespace ClassicalSharp {
 		}
 		
 		MenuInputWidget inputWidget;
-		Font hintFont;
 		TextWidget descWidget;
 		
 		public override void Render( double delta ) {
@@ -49,11 +48,10 @@ namespace ClassicalSharp {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			
 			inputWidget = MenuInputWidget.Create(
 				game, -30, 50, 500, 25, "", Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, hintFont, new PathValidator() );
+				regularFont, titleFont, new PathValidator() );
 			
 			buttons = new [] {
 				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
@@ -72,7 +70,6 @@ namespace ClassicalSharp {
 		public override void Dispose() {
 			game.Keyboard.KeyRepeat = false;
 			inputWidget.Dispose();
-			hintFont.Dispose();
 			DisposeDescWidget();
 			base.Dispose();
 		}

@@ -226,6 +226,7 @@ namespace ClassicalSharp.Generator {
 					bool sand = n1.Compute( x, z ) > 8;
 					bool gravel = n2.Compute( x, z ) > 12;
 					int y = heightmap[hMapIndex++];
+					if( y >= height ) continue;
 					
 					int index = (y * length + z) * width + x;
 					byte blockAbove = y >= (height - 1) ? (byte)0 : blocks[index + oneY];

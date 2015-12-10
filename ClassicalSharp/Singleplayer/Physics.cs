@@ -61,7 +61,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
-			if( !Enabled ) return;
+			if( !Enabled || game.Map.IsNotLoaded ) return;
 			
 			//if( (tickCount % 5) == 0 ) {
 			TickLava();

@@ -6,18 +6,17 @@ namespace ClassicalSharp {
 	
 	public sealed class MenuInputWidget : Widget {
 		
-		public MenuInputWidget( Game game, Font font, Font boldFont, Font hintFont ) : base( game ) {
+		public MenuInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
 			this.boldFont = boldFont;
-			this.hintFont = hintFont;
 			chatInputText = new StringBuffer( 64 );
 		}
 		
 		public static MenuInputWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
-		                                     Anchor vertical, Font font, Font tildeFont, Font hintFont, MenuInputValidator validator ) {
-			MenuInputWidget widget = new MenuInputWidget( game, font, tildeFont, hintFont );
+		                                     Anchor vertical, Font font, Font tildeFont, MenuInputValidator validator ) {
+			MenuInputWidget widget = new MenuInputWidget( game, font, tildeFont );
 			
 			widget.HorizontalAnchor = horizontal;
 			widget.VerticalAnchor = vertical;
@@ -33,16 +32,17 @@ namespace ClassicalSharp {
 		
 		Texture chatInputTexture, chatCaretTexture;
 		Color backColour = Color.FromArgb( 200, 30, 30, 30 );
-		readonly Font font, boldFont, hintFont;
+		readonly Font font, boldFont;
 		StringBuffer chatInputText;
 		public int XOffset = 0, YOffset = 0;
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		public MenuInputValidator Validator;
+		public bool Active = true;
 		
 		double accumulator;
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
-			if( (accumulator % 1) >= 0.5 )
+			if( (accumulator % 1) >= 0.5 && Active )
 				chatCaretTexture.Render( graphicsApi );
 			accumulator += delta;
 		}

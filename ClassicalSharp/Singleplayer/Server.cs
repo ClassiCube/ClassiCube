@@ -11,6 +11,10 @@ namespace ClassicalSharp.Singleplayer {
 		
 		Game game;
 		internal Physics physics;
+		internal byte[] generatedMap;
+		IMapGenerator generator;
+		string lastState;
+		
 		public SinglePlayerServer( Game window ) {
 			game = window;
 			physics = new Physics( game );
@@ -28,13 +32,8 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			game.Events.RaiseBlockPermissionsChanged();
-			NewMap();
-			#if TEST_VANILLA
-			MakeMap( 384, 64, 384 );
-			#else
-			MakeMap( 128, 128, 128 );
-			#endif
-			game.CommandManager.RegisterCommand( new GenerateCommand() );
+			int seed = new Random().Next();
+			GenMap( 128, 64, 128, seed, new NotchyGenerator() );
 		}
 		
 		public override void SendChat( string text, bool partial ) {
@@ -48,7 +47,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			if( place )
+			if( place ) 
 				physics.OnBlockPlaced( x, y, z, block );
 		}
 		
@@ -59,7 +58,6 @@ namespace ClassicalSharp.Singleplayer {
 			physics.Dispose();
 		}
 		
-		string lastState;
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
 			physics.Tick();
@@ -81,16 +79,6 @@ namespace ClassicalSharp.Singleplayer {
 			}
 		}
 		
-		IMapGenerator generator;
-		internal void NewMap() {
-			ServerName = "Single player";
-			ServerMotd = "Generating a map..";
-			game.LocalPlayer.UserType = 0x64;
-			
-			game.Map.Reset();
-			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
-		}
-		
 		void EndGeneration() {
 			game.SetNewScreen( null );
 			if( generatedMap == null ) {
@@ -109,16 +97,14 @@ namespace ClassicalSharp.Singleplayer {
 			game.Chat.Add( "&ePlaying single player", CpeMessage.Status1 );
 			GC.Collect();
 		}
-		
-		public byte[] generatedMap;
-		internal void MakeMap( int width, int height, int length ) {
-			#if TEST_VANILLA
-			generator = new NotchyGenerator();
-			generator.GenerateAsync( game, width, height, length, 0x5553200 );
-			#else
-			generator = new FlatGrassGenerator();
+				
+		internal void GenMap( int width, int height, int length, int seed, IMapGenerator generator ) {
+			game.Map.Reset();
+			GC.Collect();
+			this.generator = generator;
+			
+			game.SetNewScreen( new LoadingMapScreen( game, "Single player", "Generating.." ) );		
 			generator.GenerateAsync( game, width, height, length, 0 );
-			#endif
 		}
 		
 		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {
@@ -128,7 +114,9 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void ResetPlayerPosition() {
-			float x = game.Map.Width / 2, y = game.Map.Height / 2, z = game.Map.Length / 2;
+			int x = game.Map.Width / 2, z = game.Map.Length / 2;
+			int y = game.Map.GetLightHeight( x, z ) + 2;
+			
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, 0, 0, false );
 			game.LocalPlayer.SetLocation( update, false );
 		}

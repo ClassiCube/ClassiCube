@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 			hotkeys = game.InputHandler.Hotkeys;
 		}
 		
-		Font hintFont, arrowFont, textFont;
+		Font arrowFont, textFont;
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
@@ -75,7 +75,6 @@ namespace ClassicalSharp {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			hintFont = new Font( "Arial", 14, FontStyle.Italic );
 			arrowFont = new Font( "Arial", 18, FontStyle.Bold );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
 			
@@ -111,7 +110,6 @@ namespace ClassicalSharp {
 			game.Keyboard.KeyRepeat = false;
 			DisposeEditingWidgets();
 			
-			hintFont.Dispose();
 			arrowFont.Dispose();
 			textFont.Dispose();
 			base.Dispose();
@@ -202,7 +200,7 @@ namespace ClassicalSharp {
 			
 			currentAction = MenuInputWidget.Create(
 				game, 0, 90, 600, 25, "", Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, hintFont, new StringValidator( 64 ) );
+				regularFont, titleFont, new StringValidator( 64 ) );
 			currentMoreInputLabel = TextWidget.Create(
 				game, -170, 120, "Keep input bar open:",
 				Anchor.Centre, Anchor.Centre, textFont );
