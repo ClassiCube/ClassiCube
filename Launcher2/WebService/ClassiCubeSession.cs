@@ -110,7 +110,8 @@ namespace Launcher2 {
 					(string)obj["hash"], (string)obj["name"],
 					(string)obj["players"], (string)obj["maxplayers"],
 					(string)obj["uptime"], (string)obj["mppass"],
-					(string)obj["ip"], (string)obj["port"] ) );
+					(string)obj["ip"], (string)obj["port"],
+					(string)obj["software"] ) );
 			}
 			Log( "cc servers took " + sw.ElapsedMilliseconds );
 			sw.Stop();

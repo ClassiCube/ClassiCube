@@ -9,11 +9,14 @@ namespace Launcher2 {
 		NameComparer nameComp = new NameComparer();
 		PlayersComparer playerComp = new PlayersComparer();
 		UptimeComparer uptimeComp = new UptimeComparer();
-		public bool DraggingWidth = false;
+		SoftwareComparer softwareComp = new SoftwareComparer();
+		public int DraggingColumn = -1;
+		public bool DraggingScrollbar = true;
 		
-		void HandleOnClick( int mouseX, int mouseY ) {
+		void HandleOnClick( int mouseX, int mouseY ) {			
 			if( mouseX >= Window.Width - 10 ) {
 				ScrollbarClick( mouseY );
+				DraggingScrollbar = true;
 				lastIndex = -10; return;
 			}
 			
@@ -26,28 +29,41 @@ namespace Launcher2 {
 		}
 		
 		void SelectHeader( int mouseX, int mouseY ) {
+			int x = 0;		
+			for( int i = 0; i < ColumnWidths.Length; i++ ) {
+				x += ColumnWidths[i] + 10;
+				if( mouseX >= x - 8 && mouseX < x + 8 ) {
+					DraggingColumn = i;
+					lastIndex = -10; return;
+				}
+			}		
+			TrySortColumns( mouseX );
+		}
+		
+		void TrySortColumns( int mouseX ) {
 			int x = 0;
-			lastIndex = -10;
-			
 			if( mouseX >= x && mouseX < x + ColumnWidths[0] - 10 ) {
 				SortEntries( nameComp ); return;
 			}
 			x += ColumnWidths[0];
-			if( mouseX >= x + 15 && mouseX < x + ColumnWidths[1] ) {
+			if( mouseX >= x && mouseX < x + ColumnWidths[1] ) {
 				SortEntries( playerComp ); return;
 			}
 			x += ColumnWidths[1];
-			if( mouseX >= x ) {
+			if( mouseX >= x && mouseX < x + ColumnWidths[2] ) {
 				SortEntries( uptimeComp ); return;
 			}
-			
-			DraggingWidth = true;
+			x += ColumnWidths[2];
+			if( mouseX >= x ) {
+				SortEntries( softwareComp ); return;
+			}
 		}
 		
 		void SortEntries( TableEntryComparer comparer ) {
 			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Array.Sort( usedEntries, 0, Count, comparer );
 			Array.Sort( entries, 0, entries.Length, comparer );
+			lastIndex = -10;
 			
 			comparer.Invert = !comparer.Invert;
 			SetSelected( selHash );
@@ -57,7 +73,7 @@ namespace Launcher2 {
 		void GetSelectedServer( int mouseX, int mouseY ) {
 			for( int i = 0; i < Count; i++ ) {
 				TableEntry entry = usedEntries[i];
-				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height ) continue;
+				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 3 ) continue;
 				
 				if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1 ) {
 					Window.ConnectToServer( servers, entry.Hash );
@@ -73,11 +89,14 @@ namespace Launcher2 {
 		
 		int lastIndex = -10;
 		DateTime lastPress;
-		public void MouseMove( int deltaX, int deltaY ) {
-			if( DraggingWidth ) {
-				ColumnWidths[0] += deltaX;
-				Utils.Clamp( ref ColumnWidths[0], 20, Window.Width - 20 );
-				DesiredColumnWidths[0] = ColumnWidths[0];
+		public void MouseMove( int x, int y, int deltaX, int deltaY ) {
+			if( DraggingScrollbar ) {
+				ScrollbarClick( y );
+			} else if( DraggingColumn >= 0 ) {
+				int col = DraggingColumn;
+				ColumnWidths[col] += deltaX;
+				Utils.Clamp( ref ColumnWidths[col], 20, Window.Width - 20 );
+				DesiredColumnWidths[col] = ColumnWidths[col];
 				NeedRedraw();
 			}
 		}

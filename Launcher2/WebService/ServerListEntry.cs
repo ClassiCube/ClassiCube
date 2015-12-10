@@ -27,16 +27,15 @@ namespace Launcher2 {
 		/// <summary> Mppass specific for the user and this server. </summary>
 		public string Mppass;
 		
+		/// <summary> Software the server is running on, may be empty. </summary>
+		public string Software;
+		
 		public ServerListEntry( string hash, string name, string players, string maxPlayers, 
-                       string uptime, string mppass, string ip, string port ) {
-			Hash = hash;
-			Name = name;
-			Players = players;
-			MaximumPlayers = maxPlayers;
-			Uptime = uptime;
-			Mppass = mppass;
-			IPAddress = ip;
-			Port = port;
+                       string uptime, string mppass, string ip, string port, string software ) {
+			Hash = hash; Name = name; Players = players;
+			MaximumPlayers = maxPlayers; Uptime = uptime;
+			Mppass = mppass; IPAddress = ip; Port = port;
+			Software = software;
 		}
 	}
 }

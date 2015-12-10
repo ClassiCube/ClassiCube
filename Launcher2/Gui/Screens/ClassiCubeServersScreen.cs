@@ -21,21 +21,24 @@ namespace Launcher2 {
 		
 		public override void Tick() {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-			if( table.DraggingWidth && !game.Window.Mouse[MouseButton.Left] )
-				table.DraggingWidth = false;
+			if( !game.Window.Mouse[MouseButton.Left] ) {
+				table.DraggingColumn = -1;
+				table.DraggingScrollbar = false;
+			}
 		}
 		
 		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
 			base.MouseMove( sender, e );
 			if( selectedWidget != null && selectedWidget == widgets[tableIndex] ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.MouseMove( e.XDelta, e.YDelta );
+				table.MouseMove( e.X, e.Y, e.XDelta, e.YDelta );
 			}
 		}
 		
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-			table.DraggingWidth = false;
+			table.DraggingColumn = -1;
+			table.DraggingScrollbar = false;
 		}
 		
 		protected override void OnAddedChar() { FilterList(); }

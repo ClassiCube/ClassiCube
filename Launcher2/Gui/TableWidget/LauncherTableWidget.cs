@@ -11,8 +11,8 @@ namespace Launcher2 {
 			OnClick = HandleOnClick;
 		}
 		
-	    internal static FastColour backGridCol = new FastColour( 20, 20, 10 ),
-	    foreGridCol = new FastColour( 40, 40, 40 );
+		internal static FastColour backGridCol = new FastColour( 20, 20, 10 ),
+		foreGridCol = new FastColour( 40, 40, 40 );
 		public Action NeedRedraw;
 		public Action<string> SelectedChanged;
 		public int SelectedIndex = -1;
@@ -30,6 +30,7 @@ namespace Launcher2 {
 				tableEntry.Hash = e.Hash;
 				tableEntry.Name = e.Name;
 				tableEntry.Players = e.Players + "/" + e.MaximumPlayers;
+				tableEntry.Software = e.Software;
 				tableEntry.Uptime = MakeUptime( e.Uptime );
 				
 				entries[index] = tableEntry;
@@ -52,26 +53,22 @@ namespace Launcher2 {
 					Count++;
 					usedEntries[index++] = entry;
 				}
-				entries[i] = entry;
 			}
 			SetSelected( selHash );
 		}
 		
 		public int CurrentIndex, Count;
-		public int[] ColumnWidths = { 360, 80, 80 };
-		public int[] DesiredColumnWidths = { 360, 80, 80 };
+		public int[] ColumnWidths = { 340, 80, 80, 140 };
+		public int[] DesiredColumnWidths = { 340, 80, 80, 140 };
 		int defaultInputHeight;
 		
 		internal struct TableEntry {
-			public string Hash, Name, Players, Uptime;
+			public string Hash, Name, Players, Uptime, Software;
 			public int Y, Height;
 		}
 		
 		public void DrawAt( IDrawer2D drawer, Font font, Font titleFont, Font boldFont,
 		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			DrawTextArgs args = new DrawTextArgs( "I", font, true );
-			defaultInputHeight = drawer.MeasureSize( ref args ).Height;
-			
 			CalculateOffset( x, y, horAnchor, verAnchor );
 			Redraw( drawer, font, titleFont, boldFont );
 		}
@@ -79,17 +76,25 @@ namespace Launcher2 {
 		static FastColour backCol = new FastColour( 120, 85, 151 ), foreCol = new FastColour( 160, 133, 186 );
 		static FastColour scrollCol = new FastColour( 200, 184, 216 );
 		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
-			ColumnWidths[0] = DesiredColumnWidths[0];
-			Utils.Clamp( ref ColumnWidths[0], 20, Window.Width - 20 );
-			int x = X + 5;
+			for( int i = 0; i < ColumnWidths.Length; i++ ) {
+				ColumnWidths[i] = DesiredColumnWidths[i];
+				Utils.Clamp( ref ColumnWidths[i], 20, Window.Width - 20 );
+			}
+			DrawTextArgs args = new DrawTextArgs( "IMP", font, true );
+			defaultInputHeight = drawer.MeasureSize( ref args ).Height;
 			
+			int x = X + 5;
 			DrawGrid( drawer, font, titleFont );
-			x += DrawColumn( drawer, false, font, titleFont, boldFont, 
+			ResetEntries();
+			
+			x += DrawColumn( drawer, false, font, titleFont, boldFont,
 			                "Name", ColumnWidths[0], x, e => e.Name ) + 5;
-			x += DrawColumn( drawer, true, font, titleFont, boldFont, 
+			x += DrawColumn( drawer, true, font, titleFont, boldFont,
 			                "Players", ColumnWidths[1], x, e => e.Players ) + 5;
 			x += DrawColumn( drawer, true, font, titleFont, boldFont,
 			                "Uptime", ColumnWidths[2], x, e => e.Uptime ) + 5;
+			x += DrawColumn( drawer, true, font, titleFont, boldFont,
+			                "Software", ColumnWidths[3], x, e => e.Software ) + 5;
 			
 			Width = Window.Width;
 			DrawScrollbar( drawer );
@@ -106,36 +111,48 @@ namespace Launcher2 {
 			int bodyStartY = y;
 			y += 3;
 			
+			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( i == SelectedIndex && !separator )
 					drawer.DrawRect( foreGridCol, 0, y - 3, Width, defaultInputHeight + 4 );
 				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
-					maxIndex = i;
-					break;
+					maxIndex = i; break;
 				}
 			}
 			
 			Height = Window.Height - Y;
 			if( separator )
-				drawer.DrawRect( foreCol, x - 7, bodyStartY, 2, Height );
+				drawer.DrawRect( foreCol, x - 7, Y, 2, Height );
 			return maxWidth + 5;
 		}
 		
 		bool DrawColumnEntry( IDrawer2D drawer, ref DrawTextArgs args,
 		                     int maxWidth, int x, ref int y, ref TableEntry entry ) {
 			Size size = drawer.MeasureSize( ref args );
+			bool empty = args.Text == "";
+			if( empty )
+				size.Height = defaultInputHeight;
 			if( y + size.Height > Window.Height ) {
 				y = Window.Height + 3; return false;
 			}
-			size.Width = Math.Min( maxWidth, size.Width );
-			entry.Y = y; entry.Height = size.Height;
 			
-			args.SkipPartsCheck = false;
-			drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );
+			entry.Y = y; entry.Height = size.Height;
+			if( !empty ) {
+				size.Width = Math.Min( maxWidth, size.Width );
+				args.SkipPartsCheck = false;
+				drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );			
+			}
 			y += size.Height + 3;
 			return true;
+		}
+		
+		void ResetEntries() {
+			for( int i = 0; i < Count; i++ ) {
+				entries[i].Height = 0; usedEntries[i].Height = 0;
+				entries[i].Y = -10; usedEntries[i].Y = -10;
+			}
 		}
 		
 		int headerStartY, headerEndY;
@@ -146,8 +163,8 @@ namespace Launcher2 {
 			drawer.DrawRect( foreCol, 0, Y + size.Height + 5, Window.Width, 2 );
 			headerStartY = Y;
 			
-			headerEndY = Y + size.Height + 5;	
-			int startY = headerEndY + 3;		
+			headerEndY = Y + size.Height + 5;
+			int startY = headerEndY + 3;
 			numEntries = (Window.Height - startY) / (defaultInputHeight + 3);
 		}
 		
@@ -169,7 +186,7 @@ namespace Launcher2 {
 			
 			SelectedIndex = index;
 			lastIndex = index;
-			ClampIndex();		
+			ClampIndex();
 			if( Count > 0 )
 				SelectedChanged( usedEntries[index].Hash );
 		}
@@ -200,60 +217,6 @@ namespace Launcher2 {
 			if( t.TotalMinutes >= 1 )
 				return (int)t.TotalMinutes + "m";
 			return (int)t.TotalSeconds + "s";
-		}
-		
-		abstract class TableEntryComparer : IComparer<TableEntry> {
-			
-			public bool Invert = true;
-			
-			public abstract int Compare( TableEntry a, TableEntry b );
-		}
-		
-		sealed class NameComparer : TableEntryComparer {
-			
-			public override int Compare( TableEntry a, TableEntry b ) {
-				StringComparison comparison = StringComparison.CurrentCultureIgnoreCase;
-				int value = String.Compare( a.Name, b.Name, comparison );
-				return Invert ? -value : value;
-			}
-		}
-		
-		sealed class PlayersComparer : TableEntryComparer {
-			
-			public override int Compare( TableEntry a, TableEntry b ) {
-				long valX = Int64.Parse( a.Players.Substring( 0, a.Players.IndexOf( '/' ) ) );
-				long valY = Int64.Parse( b.Players.Substring( 0, b.Players.IndexOf( '/' ) ) );
-				int value = valX.CompareTo( valY );
-				return Invert ? -value : value;
-			}
-		}
-		
-		sealed class UptimeComparer : TableEntryComparer {
-			
-			public override int Compare( TableEntry a, TableEntry b ) {
-				TimeSpan valX = ParseUptimeString( a.Uptime );
-				TimeSpan valY = ParseUptimeString( b.Uptime );
-				int value = valX.CompareTo( valY );
-				return Invert ? -value : value;
-			}
-			
-			static TimeSpan ParseUptimeString( string s ) {
-				int sum = 0;
-				for( int i = 0; i < s.Length - 1; i++ ) {
-					sum *= 10;
-					sum += s[i] - '0';
-				}
-				
-				char timeType = s[s.Length - 1];
-				switch( timeType ) {
-						case 'w' : return TimeSpan.FromDays( sum * 7 );
-						case 'd' : return TimeSpan.FromDays( sum );
-						case 'h' : return TimeSpan.FromHours( sum );
-						case 'm' : return TimeSpan.FromMinutes( sum );
-						case 's' : return TimeSpan.FromSeconds( sum );
-						default: throw new NotSupportedException( "unsupported uptime type: " + timeType );
-				}
-			}
 		}
 	}
 }
