@@ -43,7 +43,6 @@ namespace ClassicalSharp {
 			
 			Options.Load();
 			AcceptedUrls.Load();
-			Players.ShowHoveredNames = Options.GetBool( OptionsKey.ShowHoveredNames, true );
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );

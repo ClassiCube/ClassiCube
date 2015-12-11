@@ -16,52 +16,53 @@ namespace ClassicalSharp {
 			buttons = new ButtonWidget[] {
 				// Column 1
 				
-				Make( -140, -100, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
+				Make( -140, -100, "Use sound (WIP)", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
-				Make( -140, -50, "Show hover names", Anchor.Centre, OnWidgetClick,
-				     g => g.Players.ShowHoveredNames ? "yes" : "no",
-				     (g, v) => { g.Players.ShowHoveredNames = v == "yes";
-				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" ); }),
+				Make( -140, -50, "Names mode", OnWidgetClick,
+				     g => g.Players.NamesMode.ToString(),
+				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
+				     	g.Players.NamesMode = (NameMode)raw;
+				     	Options.Set( OptionsKey.NamesMode, v ); } ),
 				
-				Make( -140, 0, "FPS limit", Anchor.Centre, OnWidgetClick,
+				Make( -140, 0, "FPS limit", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 
-				Make( -140, 50, "View distance", Anchor.Centre, OnWidgetClick,
+				Make( -140, 50, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ) ) ),
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -150, "Block physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -150, "Block physics", OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -100, "Use music", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "Use music", OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
 				     	g.AudioPlayer.SetMusic( g.UseMusic );
 				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
-				Make( 140, -50, "View bobbing", Anchor.Centre, OnWidgetClick,
+				Make( 140, -50, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
-				Make( 140, 0, "Auto close launcher", Anchor.Centre, OnWidgetClick,
+				Make( 140, 0, "Auto close launcher", OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
 				
-				Make( 140, 50, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
+				Make( 140, 50, "Mouse sensitivity", OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
@@ -70,11 +71,12 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
+			buttons[1].Metadata = typeof(NameMode);
 			buttons[2].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
-				new BooleanValidator(),	
+				new EnumValidator(),
 				new EnumValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
@@ -87,10 +89,10 @@ namespace ClassicalSharp {
 			okayIndex = buttons.Length - 1;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick,
+		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, 
-			                                          Anchor.Centre, vDocking, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, 
+			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;

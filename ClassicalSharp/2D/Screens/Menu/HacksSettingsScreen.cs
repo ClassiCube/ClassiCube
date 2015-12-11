@@ -15,25 +15,25 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
-				Make( -140, -100, "Hacks enabled", Anchor.Centre, OnWidgetClick,
+				Make( -140, -100, "Hacks enabled", OnWidgetClick,
 				     g => g.LocalPlayer.HacksEnabled ? "yes" : "no",
 				     (g, v) => { g.LocalPlayer.HacksEnabled = v == "yes";
 				     	Options.Set( OptionsKey.HacksEnabled, v == "yes" );
 				     	g.LocalPlayer.CheckHacksConsistency();
 				     } ),
 				
-				Make( -140, -50, "Speed multiplier", Anchor.Centre, OnWidgetClick,
+				Make( -140, -50, "Speed multiplier", OnWidgetClick,
 				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
 				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				// Column 2
-				Make( 140, -100, "Liquids breakable", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "Liquids breakable", OnWidgetClick,
 				     g => g.LiquidsBreakable ? "yes" : "no",
 				     (g, v) => { g.LiquidsBreakable = v == "yes";
 				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
-				Make( 140, -50, "Pushback placing", Anchor.Centre, OnWidgetClick,
+				Make( 140, -50, "Pushback placing", OnWidgetClick,
 				     g => g.LocalPlayer.PushbackPlacing
 				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
 				     (g, v) => {
@@ -58,10 +58,10 @@ namespace ClassicalSharp {
 			okayIndex = buttons.Length - 1;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick,
+		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, 
-			                                          Anchor.Centre, vDocking, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
+			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;

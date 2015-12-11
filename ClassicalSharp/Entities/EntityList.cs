@@ -4,6 +4,13 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
+	public enum NameMode {
+		NoNames,
+		HoveredOnly,
+		AllNames,
+		AllNamesAndHovered,
+	}
+	
 	public class EntityList : IDisposable {
 		
 		public const int MaxCount = 256;
@@ -11,13 +18,14 @@ namespace ClassicalSharp {
 		public Game game;
 		byte closestId;
 		
-		/// <summary> Whether the names of entities that the player is looking at
-		/// should be rendered through everything else without depth testing. </summary>
-		public bool ShowHoveredNames;
+		/// <summary> Mode of how names of hovered entities are rendered (with or without depth testing),
+		/// and how other entity names are rendered. </summary>
+		public NameMode NamesMode = NameMode.AllNames;
 		
 		public EntityList( Game game ) {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
+			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllNamesAndHovered );
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
@@ -44,17 +52,23 @@ namespace ClassicalSharp {
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
 		/// not currently being looked at by the user. </summary>
 		public void RenderNames( IGraphicsApi api, double delta, float t ) {
+			if( NamesMode == NameMode.NoNames )
+				return;
 			api.Texturing = true;
 			api.AlphaTest = true;
 			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
 			Vector3 dir = Utils.GetDirVector( localP.YawRadians, localP.PitchRadians );
-			if( ShowHoveredNames )
+			closestId = 255;
+			
+			if( NamesMode != NameMode.AllNames )
 				closestId = GetClosetPlayer( game.LocalPlayer );
+			if( NamesMode == NameMode.HoveredOnly )
+				return;
 			
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] == null ) continue;
-				if( !ShowHoveredNames || (i != closestId || i == 255) )
+				if( i != closestId || i == 255 )
 					Players[i].RenderName();
 			}
 			api.Texturing = false;
@@ -62,7 +76,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void RenderHoveredNames( IGraphicsApi api, double delta, float t ) {
-			if( !ShowHoveredNames ) return;
+			if( NamesMode == NameMode.NoNames || NamesMode == NameMode.AllNames )
+				return;
 			api.Texturing = true;
 			api.AlphaTest = true;
 			api.DepthTest = false;
