@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			base.Dispose();
 		}
 		
-		ButtonWidget selectedWidget, targetWidget;
+		protected ButtonWidget selectedWidget, targetWidget;
 		protected override void WidgetSelected( Widget widget ) {
 			ButtonWidget button = (ButtonWidget)widget;
 			if( selectedWidget == button || button == null ||
@@ -127,6 +127,7 @@ namespace ClassicalSharp {
 			                                     Anchor.Centre, regularFont, titleFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
+			InputOpened();
 			UpdateDescription( targetWidget );
 		}
 		
@@ -138,8 +139,14 @@ namespace ClassicalSharp {
 			inputWidget = null;
 			UpdateDescription( targetWidget );
 			targetWidget = null;
+			
 			buttons[okayIndex].Dispose();
 			buttons[okayIndex] = null;
+			InputClosed();
 		}
+		
+		protected virtual void InputOpened() { }
+		
+		protected virtual void InputClosed() { }
 	}
 }

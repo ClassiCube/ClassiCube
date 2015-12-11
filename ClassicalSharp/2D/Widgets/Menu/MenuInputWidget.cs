@@ -54,6 +54,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetText( string value ) {
+			chatInputText.Clear();
 			chatInputText.Append( 0, value );
 			DrawTextArgs args = new DrawTextArgs( value, font, false );
 			Size textSize = game.Drawer2D.MeasureSize( ref args );
