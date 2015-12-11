@@ -16,6 +16,8 @@ namespace ClassicalSharp {
 		public byte UserType;
 		public bool PushbackPlacing;
 		
+		public bool HacksEnabled = true;
+		
 		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
 		public bool CanUseThirdPersonCamera = true;
 		
@@ -125,7 +127,7 @@ namespace ClassicalSharp {
 				if( game.IsKeyDown( KeyBinding.Right ) ) zMoving += 0.98f;
 
 				jumping = game.IsKeyDown( KeyBinding.Jump );
-				speeding = CanSpeed && game.IsKeyDown( KeyBinding.Speed );
+				speeding = CanSpeed && HacksEnabled && game.IsKeyDown( KeyBinding.Speed );
 				flyingUp = game.IsKeyDown( KeyBinding.FlyUp );
 				flyingDown = game.IsKeyDown( KeyBinding.FlyDown );
 			}
@@ -264,12 +266,12 @@ namespace ClassicalSharp {
 		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
-			if( !CanFly ) { flying = false; flyingDown = false; flyingUp = false; }
-			if( !CanNoclip ) noClip = false;
-			if( !CanSpeed) speeding = false;
-			if( !CanPushbackBlocks ) PushbackPlacing = false;
+			if( !CanFly || !HacksEnabled ) { flying = false; flyingDown = false; flyingUp = false; }
+			if( !CanNoclip || !HacksEnabled ) noClip = false;
+			if( !CanSpeed || !HacksEnabled ) speeding = false;
+			if( !CanPushbackBlocks || !HacksEnabled ) PushbackPlacing = false;
 			
-			if( !CanUseThirdPersonCamera )
+			if( !CanUseThirdPersonCamera || !HacksEnabled )
 				game.SetCamera( false );
 		}
 		
@@ -299,7 +301,7 @@ namespace ClassicalSharp {
 		
 		internal bool HandleKeyDown( Key key ) {
 			KeyMap keys = game.InputHandler.Keys;
-			if( key == keys[KeyBinding.Respawn] && CanRespawn ) {
+			if( key == keys[KeyBinding.Respawn] && CanRespawn && HacksEnabled ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
 				if( game.Map.IsValidPos( p ) ) {
 					// Spawn player at highest valid position.
@@ -316,11 +318,11 @@ namespace ClassicalSharp {
 				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
 				LocationUpdate update = LocationUpdate.MakePos( spawn, false );
 				SetLocation( update, false );
-			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn ) {
+			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn && HacksEnabled ) {
 				SpawnPoint = Position;
-			} else if( key == keys[KeyBinding.Fly] && CanFly ) {
+			} else if( key == keys[KeyBinding.Fly] && CanFly && HacksEnabled ) {
 				flying = !flying;
-			} else if( key == keys[KeyBinding.NoClip] && CanNoclip ) {
+			} else if( key == keys[KeyBinding.NoClip] && CanNoclip && HacksEnabled ) {
 				noClip = !noClip;
 			} else {
 				return false;

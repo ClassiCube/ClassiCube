@@ -100,6 +100,7 @@
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\HacksSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\LoadLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />

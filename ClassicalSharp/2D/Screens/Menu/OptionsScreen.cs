@@ -15,26 +15,17 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
-				Make( -140, -200, "Liquids breakable", Anchor.Centre, OnWidgetClick,
-				     g => g.LiquidsBreakable ? "yes" : "no",
-				     (g, v) => { g.LiquidsBreakable = v == "yes";
-				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
-				Make( -140, -150, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
+				Make( -140, -100, "Use sound (WIP)", Anchor.Centre, OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
-				Make( -140, -100, "Show hover names", Anchor.Centre, OnWidgetClick,
+				Make( -140, -50, "Show hover names", Anchor.Centre, OnWidgetClick,
 				     g => g.Players.ShowHoveredNames ? "yes" : "no",
 				     (g, v) => { g.Players.ShowHoveredNames = v == "yes";
 				     	Options.Set( OptionsKey.ShowHoveredNames, v == "yes" ); }),
-				
-				Make( -140, -50, "Speed multiplier", Anchor.Centre, OnWidgetClick,
-				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
-				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
-				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				Make( -140, 0, "FPS limit", Anchor.Centre, OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
@@ -48,37 +39,27 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -200, "Block physics", Anchor.Centre, OnWidgetClick,
+					Make( 140, -150, "Block physics", Anchor.Centre, OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -150, "Use music", Anchor.Centre, OnWidgetClick,
+				Make( 140, -100, "Use music", Anchor.Centre, OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
 				     	g.AudioPlayer.SetMusic( g.UseMusic );
 				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
-				Make( 140, -100, "View bobbing", Anchor.Centre, OnWidgetClick,
+				Make( 140, -50, "View bobbing", Anchor.Centre, OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
-				Make( 140, -50, "Auto close launcher", Anchor.Centre, OnWidgetClick,
+				Make( 140, 0, "Auto close launcher", Anchor.Centre, OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
-				
-				Make( 140, 0, "Pushback placing", Anchor.Centre, OnWidgetClick,
-				     g => g.LocalPlayer.PushbackPlacing
-				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
-				     (g, v) => {
-				     	if( g.LocalPlayer.CanPushbackBlocks) {
-				     		g.LocalPlayer.PushbackPlacing = v == "yes";
-				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" );
-				     	}
-				     }),
 				
 				Make( 140, 50, "Mouse sensitivity", Anchor.Centre, OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
@@ -89,18 +70,15 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[4].Metadata = typeof(FpsLimitMethod);
+			buttons[2].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new RealValidator( 0.1f, 50 ),		
+				new BooleanValidator(),	
 				new EnumValidator(),
 				new IntegerValidator( 16, 4096 ),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
-				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),

@@ -24,12 +24,12 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( -140, -100, "Gui options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
-				Make( -140, -50, "Env settings", Anchor.Centre, 
+				Make( -140, -50, "Hacks settings", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new HacksSettingsScreen( g ) ) ),
+				Make( -140, 0, "Env settings", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( -140, 0, "Key bindings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),		
-				Make( -140, 50, "Hotkeys", Anchor.Centre, 
-				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				Make( -140, 50, "Key bindings", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),	
 				
 				// Column 2
 				Make( 140, -150, "Save level", Anchor.Centre, 
@@ -40,8 +40,10 @@ namespace ClassicalSharp {
 				!game.Network.IsSinglePlayer ? null :
 					Make( 140, -50, "Generate level", Anchor.Centre, 
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
-				Make( 140, 50, "Select texture pack", Anchor.Centre, 
+				Make( 140, 0, "Select texture pack", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
+				Make( 140, 50, "Hotkeys", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
 				
 				// Other
 				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
