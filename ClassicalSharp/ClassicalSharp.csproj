@@ -45,6 +45,7 @@
     <DefineConstants>TRACE;</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
+    <StartArguments>wwwf 4f34 127.0.0.1 25564</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_D3D' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

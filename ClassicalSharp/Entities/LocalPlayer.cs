@@ -134,6 +134,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
+		bool canLiquidJump = true;
 		void UpdateVelocityYState() {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
@@ -149,23 +150,37 @@ namespace ClassicalSharp {
 			if( jumping ) {
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
 					BoundingBox bounds = CollisionBounds;
-					bounds.Min.Y += 1;
+					bounds.Max.Y = bounds.Min.Y;
+					bool feetInWater = TouchesAny( bounds, StandardLiquid );				
+					bool pastJumpPoint = feetInWater && (Position.Y % 1 >= 0.4);
 					
-					bool isSolid = TouchesAny( bounds,
-					                         b => info.CollideType[b] != BlockCollideType.WalkThrough || b == (byte)Block.Rope );
-					bool pastJumpPoint = Position.Y % 1 >= 0.4;
-					if( isSolid || !pastJumpPoint )
+					if( !pastJumpPoint ) {
+						canLiquidJump = true;
 						Velocity.Y += speeding ? 0.08f : 0.04f;
-					else if( (collideX || collideZ) && !isSolid && pastJumpPoint )
-						Velocity.Y += 0.10f;
+					} else if( pastJumpPoint ) {
+						// either A) jump bob in water B) climb up solid on side
+						if( canLiquidJump || (collideX || collideZ) )
+							Velocity.Y += 0.10f;
+						canLiquidJump = false;
+					}
 				} else if( useLiquidGravity ) {
 					Velocity.Y += speeding ? 0.08f : 0.04f;
+					canLiquidJump = false;
 				} else if( TouchesAnyRope() ) {
 					Velocity.Y += speeding ? 0.15f : 0.10f;
+					canLiquidJump = false;
 				} else if( onGround ) {
 					Velocity.Y = speeding ? jumpVel * 2 : jumpVel;
+					canLiquidJump = false;
 				}
+			} else {
+				canLiquidJump = false;
 			}
+		}
+		
+		bool StandardLiquid( byte block ) {
+			return block == (byte)Block.Water || block == (byte)Block.StillWater ||
+				block == (byte)Block.Lava || block == (byte)Block.StillLava;
 		}
 		
 		static Vector3 waterDrag = new Vector3( 0.8f, 0.8f, 0.8f ),
