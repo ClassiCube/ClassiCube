@@ -150,10 +150,14 @@ namespace ClassicalSharp {
 			if( jumping ) {
 				if( TouchesAnyWater() || TouchesAnyLava() ) {
 					BoundingBox bounds = CollisionBounds;
-					bounds.Max.Y = bounds.Min.Y;
-					bool feetInWater = TouchesAny( bounds, StandardLiquid );				
-					bool pastJumpPoint = feetInWater && (Position.Y % 1 >= 0.4);
+					int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
 					
+					bounds.Max.Y = bounds.Min.Y = feetY;
+					bool liquidFeet = TouchesAny( bounds, StandardLiquid );				
+					bounds.Max.Y = bounds.Min.Y = bodyY;
+					bool liquidHead = TouchesAny( bounds, StandardLiquid );
+					
+					bool pastJumpPoint = liquidFeet && !liquidHead && (Position.Y % 1 >= 0.4);
 					if( !pastJumpPoint ) {
 						canLiquidJump = true;
 						Velocity.Y += speeding ? 0.08f : 0.04f;
