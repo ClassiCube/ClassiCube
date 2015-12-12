@@ -172,6 +172,9 @@ namespace ClassicalSharp {
 			string groupName = reader.ReadAsciiString();
 			byte groupRank = reader.ReadUInt8();
 			
+			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
+			if( nameId < 0 ) 
+				nameId += 256;
 			if( nameId >= 0 && nameId <= 255 )
 				AddCpeInfo( (byte)nameId, playerName, listName, groupName, groupRank );
 		}
