@@ -206,6 +206,10 @@ namespace ClassicalSharp {
 		
 		void HandleCpeExtRemovePlayerName() {
 			short nameId = reader.ReadInt16();
+			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
+			if( nameId < 0 ) 
+				nameId += 256;
+			
 			if( nameId >= 0 && nameId <= 255 ) {
 				game.Events.RaiseCpeListInfoRemoved( (byte)nameId );
 				game.CpePlayersList[nameId] = null;
