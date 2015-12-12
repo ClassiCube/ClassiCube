@@ -398,18 +398,16 @@ namespace ClassicalSharp {
 			info.FullBright[block] = reader.ReadUInt8() != 0;
 			
 			byte shape = reader.ReadUInt8();
-			if( shape == 2 ) {
-				info.Height[block] = 8/16f;
-				info.MaxBB[block].Y = 8/16f;
-			} else if( shape == 3 ) {
-				info.Height[block] = 2/16f;
-				info.MaxBB[block].Y = 2/16f;
-			} else if( shape == 4 ) {
+			if( shape == 0 ) {
 				info.IsSprite[block] = true;
+			} else if( shape <= 16 ) {
+				info.Height[block] = shape/16f;
+				info.MaxBB[block].Y = shape/16f;
 			}
+			
 			if( info.IsOpaque[block] )
-				info.IsOpaque[block] = shape == 0;
-			if( shape != 1 )
+				info.IsOpaque[block] = shape == 16;
+			if( shape != 16 )
 				info.IsTransparent[block] = true;
 			
 			byte blockDraw = reader.ReadUInt8();
