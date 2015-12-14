@@ -64,7 +64,8 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the server or a client-side command sends a message. </summary>
 		public event EventHandler<ChatEventArgs> ChatReceived;	
-		internal void RaiseChatReceived( string text, CpeMessage type ) { chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs ); }
+		internal void RaiseChatReceived( string text, CpeMessage type ) { 
+			chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs ); }
 		
 		/// <summary> Raised when the user changes chat font to arial or back to bitmapped font,
 		/// also raised when the bitmapped font changes. </summary>
@@ -72,6 +73,9 @@ namespace ClassicalSharp {
 		internal void RaiseChatFontChanged() { Raise( ChatFontChanged ); }
 		
 		
+		/// <summary> Raised when the hack permissions of the player changes. </summary>
+		public event EventHandler HackPermissionsChanged;
+		internal void RaiseHackPermissionmsChanged() { Raise( HackPermissionsChanged ); }
 	
 		// Cache event instances so we don't create needless new objects.
 		IdEventArgs idArgs = new IdEventArgs();

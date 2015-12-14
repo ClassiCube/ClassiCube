@@ -35,11 +35,12 @@ namespace ClassicalSharp {
 			Height = defaultHeight;
 		}
 		
-		static TextureRec shadowRec = new TextureRec( 0, 66/256f, 200/256f, 20/256f );
-		static TextureRec selectedRec = new TextureRec( 0, 86/256f, 200/256f, 20/256f );
-		static Texture shadowTex = new Texture( 0, 0, 0, 0, 0, shadowRec );
-		static Texture selectedTex = new Texture( 0, 0, 0, 0, 0, selectedRec );
-		
+		static Texture shadowTex = new Texture( 0, 0, 0, 0, 0, 
+		                                       new TextureRec( 0, 66/256f, 200/256f, 20/256f ) );
+		static Texture selectedTex = new Texture( 0, 0, 0, 0, 0,
+		                                         new TextureRec( 0, 86/256f, 200/256f, 20/256f ) );
+		static Texture disdabledTex = new Texture( 0, 0, 0, 0, 0,
+		                                         new TextureRec( 0, 46/256f, 200/256f, 20/256f ) );		
 		public string Text;
 		public void SetText( string text ) {
 			graphicsApi.DeleteTexture( ref texture );
@@ -57,15 +58,17 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			if( texture.IsValid ) {
-				Texture backTex = Active ? selectedTex : shadowTex;
-				backTex.ID = game.GuiTexId;
-				backTex.X1 = X; backTex.Y1 = Y;
-				backTex.Width = Width; backTex.Height = Height;
-				backTex.Render( graphicsApi );
-				FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
-				texture.Render( graphicsApi, col );
-			}
+			if( !texture.IsValid )
+				return;
+			Texture backTex = Active ? selectedTex : shadowTex;
+			if( Disabled ) backTex = disdabledTex;
+			backTex.ID = game.GuiTexId;
+			backTex.X1 = X; backTex.Y1 = Y;
+			backTex.Width = Width; backTex.Height = Height;
+			backTex.Render( graphicsApi );
+			FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
+			if( Disabled ) col = new FastColour( 150, 150, 150 );
+			texture.Render( graphicsApi, col );
 		}
 		
 		public override void Dispose() {
@@ -73,12 +76,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
-			texture.X1 += deltaX;
-			texture.Y1 += deltaY;
-			X = newX;
-			Y = newY;
+			int deltaX = newX - X, deltaY = newY - Y;
+			texture.X1 += deltaX; texture.Y1 += deltaY;
+			X = newX; Y = newY;
 		}
 		
 		public Func<Game, string> GetValue;

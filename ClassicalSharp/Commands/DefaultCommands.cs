@@ -63,9 +63,8 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			foreach( string line in game.Graphics.ApiInfo ) {
+			foreach( string line in game.Graphics.ApiInfo )
 				game.Chat.Add( "&a" + line );
-			}
 		}
 	}
 	

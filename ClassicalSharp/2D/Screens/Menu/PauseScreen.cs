@@ -18,6 +18,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
+			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			buttons = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Options", Anchor.Centre, 
@@ -51,6 +52,17 @@ namespace ClassicalSharp {
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
 			};
+			CheckHacksAllowed( null, null );
+		}
+
+		void CheckHacksAllowed( object sender, EventArgs e ) { 
+			for( int i = 0; i < buttons.Length; i++ )
+				buttons[i].Disabled = false;
+			if( !game.LocalPlayer.CanAnyHacks ) {
+				buttons[2].Disabled = true; // hack permissions
+				buttons[3].Disabled = true; // env settings
+				buttons[8].Disabled = true; // select texture pack
+			}
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
@@ -67,6 +79,11 @@ namespace ClassicalSharp {
 			if( key == Key.Escape )
 				game.SetNewScreen( null );
 			return true;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
 	}
 }

@@ -8,15 +8,29 @@ namespace ClassicalSharp {
 	
 	public class LocalPlayer : Player {
 		
+		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 SpawnPoint;
 		
+		/// <summary> The distance (in blocks) that players are allowed to 
+		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
+		
+		/// <summary> The speed that the player move at, relative to normal speed, 
+		/// when the 'speeding' key binding is held down. </summary>
 		public float SpeedMultiplier = 10;
 		
 		public byte UserType;
+		
+		/// <summary> Whether blocks that the player places that intersect themselves 
+		/// should cause the player to be pushed back in the opposite direction of the placed block. </summary>
 		public bool PushbackPlacing;
 		
+		/// <summary> Whether the player has allowed hacks usage as an option. 
+		/// Note that all 'can use X' set by the server override this. </summary>
 		public bool HacksEnabled = true;
+		
+		/// <summary> Whether the player is allowed to use any type of hacks. </summary>
+		public bool CanAnyHacks = true;
 		
 		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
 		public bool CanUseThirdPersonCamera = true;
@@ -27,7 +41,7 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player is allowed to fly in the world. </summary>
 		public bool CanFly = true;
 		
-		/// <summary> Whether the player is allowed to teleport to their respawn point. </summary>
+		/// <summary> Whether the player is allowed to teleport to their respawn coordinates. </summary>
 		public bool CanRespawn = true;
 		
 		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
@@ -171,7 +185,6 @@ namespace ClassicalSharp {
 				
 				bool pastJumpPoint = liquidFeet && !(liquidBody || liquidHead)
 					&& (Position.Y % 1 >= 0.4);
-				Console.WriteLine( pastJumpPoint );
 				if( !pastJumpPoint ) {
 					canLiquidJump = true;
 					Velocity.Y += speeding ? 0.08f : 0.04f;
@@ -267,13 +280,10 @@ namespace ClassicalSharp {
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax </remarks>
 		public void ParseHackFlags( string name, string motd ) {
 			string joined = name + motd;
-			if( joined.Contains( "-hax" ) ) {
-				CanFly = CanNoclip = CanRespawn = CanSpeed =
-					CanPushbackBlocks = CanUseThirdPersonCamera = false;
-			} else { // By default (this is also the case with WoM), we can use hacks.
-				CanFly = CanNoclip = CanRespawn = CanSpeed =
-					CanPushbackBlocks = CanUseThirdPersonCamera = true;
-			}
+			SetAllHacks( true );
+			// By default (this is also the case with WoM), we can use hacks.
+			if( joined.Contains( "-hax" ) )
+				SetAllHacks( false );
 			
 			ParseFlag( b => CanFly = b, joined, "fly" );
 			ParseFlag( b => CanNoclip = b, joined, "noclip" );
@@ -281,17 +291,21 @@ namespace ClassicalSharp {
 			ParseFlag( b => CanRespawn = b, joined, "respawn" );
 
 			if( UserType == 0x64 )
-				ParseFlag( b => CanFly = CanNoclip = CanRespawn =
-				          CanSpeed = CanPushbackBlocks = b, joined, "ophax" );
+				ParseFlag( b => SetAllHacks( b ), joined, "ophax" );
 			CheckHacksConsistency();
+			game.Events.RaiseHackPermissionmsChanged();
+		}
+		
+		void SetAllHacks( bool allowed ) {
+			CanAnyHacks = CanFly = CanNoclip = CanRespawn = CanSpeed =
+				CanPushbackBlocks = CanUseThirdPersonCamera = allowed;
 		}
 		
 		static void ParseFlag( Action<bool> action, string joined, string flag ) {
-			if( joined.Contains( "+" + flag ) ) {
+			if( joined.Contains( "+" + flag ) )
 				action( true );
-			} else if( joined.Contains( "-" + flag ) ) {
+			else if( joined.Contains( "-" + flag ) )
 				action( false );
-			}
 		}
 		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>

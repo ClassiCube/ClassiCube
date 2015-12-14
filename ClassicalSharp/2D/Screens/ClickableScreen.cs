@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 			for( int i = widgets.Length - 1; i >= 0; i-- ) {
 				Widget widget = widgets[i];
 				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
-					if( widget.OnClick != null )
+					if( widget.OnClick != null && !widget.Disabled )
 						widget.OnClick( game, widget );
 					return true;
 				}

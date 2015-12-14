@@ -14,6 +14,9 @@ namespace ClassicalSharp {
 		/// <summary> Whether this widget is currently being moused over. </summary>
 		public bool Active;
 		
+		/// <summary> Whether this widget is prevented from being interacted with. </summary>
+		public bool Disabled;
+		
 		/// <summary> Invoked when this widget is clicked on. Can be left null. </summary>
 		public Action<Game, Widget> OnClick;
 		
