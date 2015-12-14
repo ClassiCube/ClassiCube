@@ -87,7 +87,7 @@ namespace ClassicalSharp {
 			PhysicsTick( xMoving, zMoving );
 			
 			nextPos = Position;
-			Position = lastPos;			
+			Position = lastPos;
 			UpdateAnimState( lastPos, nextPos, delta );
 			CheckSkin();
 			
@@ -103,7 +103,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void RenderModel( double deltaTime, float t ) {	
+		public override void RenderModel( double deltaTime, float t ) {
 			GetCurrentAnimState( t );
 			curSwing = Utils.Lerp( swingO, swingN, t );
 			curWalkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 		
 		public override void RenderName() {
 			if( !game.Camera.IsThirdPerson ) return;
-			DrawName(); 
+			DrawName();
 		}
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {
@@ -146,38 +146,46 @@ namespace ClassicalSharp {
 			} else if( jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
 			}
-
-			if( jumping ) {
-				if( TouchesAnyWater() || TouchesAnyLava() ) {
-					BoundingBox bounds = CollisionBounds;
-					int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
-					
-					bounds.Max.Y = bounds.Min.Y = feetY;
-					bool liquidFeet = TouchesAny( bounds, StandardLiquid );				
-					bounds.Max.Y = bounds.Min.Y = bodyY;
-					bool liquidHead = TouchesAny( bounds, StandardLiquid );
-					
-					bool pastJumpPoint = liquidFeet && !liquidHead && (Position.Y % 1 >= 0.4);
-					if( !pastJumpPoint ) {
-						canLiquidJump = true;
-						Velocity.Y += speeding ? 0.08f : 0.04f;
-					} else if( pastJumpPoint ) {
-						// either A) jump bob in water B) climb up solid on side
-						if( canLiquidJump || (collideX || collideZ) )
-							Velocity.Y += 0.10f;
-						canLiquidJump = false;
-					}
-				} else if( useLiquidGravity ) {
+			
+			if( !jumping ) {
+				canLiquidJump = false;
+				return;
+			}
+			
+			bool touchWater = TouchesAnyWater();
+			bool touchLava = TouchesAnyLava();
+			if( touchWater || touchLava ) {
+				BoundingBox bounds = CollisionBounds;
+				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
+				int headY = Utils.Floor( bounds.Max.Y );
+				
+				bounds.Max.Y = bounds.Min.Y = feetY;
+				bool liquidFeet = TouchesAny( bounds, StandardLiquid );
+				bounds.Max.Y = bounds.Min.Y = bodyY;
+				bool liquidBody = TouchesAny( bounds, StandardLiquid );
+				bounds.Max.Y = bounds.Min.Y = headY;
+				bool liquidHead = TouchesAny( bounds, StandardLiquid );
+				
+				bool pastJumpPoint = liquidFeet && !(liquidBody || liquidHead)
+					&& (Position.Y % 1 >= 0.4);
+				Console.WriteLine( pastJumpPoint );
+				if( !pastJumpPoint ) {
+					canLiquidJump = true;
 					Velocity.Y += speeding ? 0.08f : 0.04f;
-					canLiquidJump = false;
-				} else if( TouchesAnyRope() ) {
-					Velocity.Y += speeding ? 0.15f : 0.10f;
-					canLiquidJump = false;
-				} else if( onGround ) {
-					Velocity.Y = speeding ? jumpVel * 2 : jumpVel;
+				} else if( pastJumpPoint ) {
+					// either A) jump bob in water B) climb up solid on side
+					if( canLiquidJump || (collideX || collideZ) )
+						Velocity.Y += touchLava ? 0.40f : 0.10f;
 					canLiquidJump = false;
 				}
-			} else {
+			} else if( useLiquidGravity ) {
+				Velocity.Y += speeding ? 0.08f : 0.04f;
+				canLiquidJump = false;
+			} else if( TouchesAnyRope() ) {
+				Velocity.Y += speeding ? 0.15f : 0.10f;
+				canLiquidJump = false;
+			} else if( onGround ) {
+				Velocity.Y = speeding ? jumpVel * 2 : jumpVel;
 				canLiquidJump = false;
 			}
 		}
@@ -258,9 +266,9 @@ namespace ClassicalSharp {
 			string joined = name + motd;
 			if( joined.Contains( "-hax" ) ) {
 				CanFly = CanNoclip = CanRespawn = CanSpeed =
-					CanPushbackBlocks = CanUseThirdPersonCamera = false;			
+					CanPushbackBlocks = CanUseThirdPersonCamera = false;
 			} else { // By default (this is also the case with WoM), we can use hacks.
-				CanFly = CanNoclip = CanRespawn = CanSpeed = 
+				CanFly = CanNoclip = CanRespawn = CanSpeed =
 					CanPushbackBlocks = CanUseThirdPersonCamera = true;
 			}
 			
@@ -270,7 +278,7 @@ namespace ClassicalSharp {
 			ParseFlag( b => CanRespawn = b, joined, "respawn" );
 
 			if( UserType == 0x64 )
-				ParseFlag( b => CanFly = CanNoclip = CanRespawn = 
+				ParseFlag( b => CanFly = CanNoclip = CanRespawn =
 				          CanSpeed = CanPushbackBlocks = b, joined, "ophax" );
 			CheckHacksConsistency();
 		}
@@ -294,7 +302,7 @@ namespace ClassicalSharp {
 				game.SetCamera( false );
 		}
 		
-		/// <summary> Sets the user type of this user. This is used to control permissions for grass, 
+		/// <summary> Sets the user type of this user. This is used to control permissions for grass,
 		/// bedrock, water and lava blocks on servers that don't support CPE block permissions. </summary>
 		public void SetUserType( byte value ) {
 			UserType = value;
@@ -349,7 +357,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		/// <summary> Calculates the jump velocity required such that when a client presses 
+		/// <summary> Calculates the jump velocity required such that when a client presses
 		/// the jump binding they will be able to jump up to the given height. </summary>
 		internal void CalculateJumpVelocity( float jumpHeight ) {
 			jumpVel = 0;
