@@ -97,11 +97,12 @@ namespace ClassicalSharp {
 		
 		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
 		public const float Adjustment = 0.001f;
+		static readonly Vector3 liqExpand = new Vector3( 0.25f/16f, 0/16f, 0.25f/16f );
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
 		protected bool TouchesAnyLava() {
-			BoundingBox bounds = CollisionBounds;
+			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
 			// Even though we collide with lava 3 blocks above our feet, vanilla client thinks
 			// that we do not.. so we have to maintain compatibility here.
 			bounds.Max.Y -= 4/16f;
@@ -119,7 +120,7 @@ namespace ClassicalSharp {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		protected bool TouchesAnyWater() {
-			BoundingBox bounds = CollisionBounds;
+			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
 			bounds.Max.Y -= 4/16f;
 			return TouchesAny( bounds,
 			                  b => b == (byte)Block.Water || b == (byte)Block.StillWater );

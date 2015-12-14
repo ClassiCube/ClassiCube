@@ -36,6 +36,9 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
 		public bool CanPushbackBlocks = true;
 		
+		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
+		public bool CanSeeAllNames = true;
+		
 		float jumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
@@ -175,7 +178,7 @@ namespace ClassicalSharp {
 				} else if( pastJumpPoint ) {
 					// either A) jump bob in water B) climb up solid on side
 					if( canLiquidJump || (collideX || collideZ) )
-						Velocity.Y += touchLava ? 0.40f : 0.10f;
+						Velocity.Y += touchLava ? 0.20f : 0.10f;
 					canLiquidJump = false;
 				}
 			} else if( useLiquidGravity ) {
@@ -314,6 +317,7 @@ namespace ClassicalSharp {
 			inv.CanPlace[(int)Block.StillWater] = value == 0x64;
 			inv.CanPlace[(int)Block.Lava] = value == 0x64;
 			inv.CanPlace[(int)Block.StillLava] = value == 0x64;
+			CanSeeAllNames = value == 0x64;
 		}
 		
 		internal Vector3 lastPos, nextPos;
