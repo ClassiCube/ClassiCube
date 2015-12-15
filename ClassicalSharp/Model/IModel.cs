@@ -15,6 +15,7 @@ namespace ClassicalSharp.Model {
 		protected IGraphicsApi graphics;
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
+		protected RotateOrder Rotate = RotateOrder.ZYX;
 
 		public IModel( Game game ) {
 			this.game = game;
@@ -214,16 +215,22 @@ namespace ClassicalSharp.Model {
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex model = vertices[part.Offset + i];
 				Vector3 loc = new Vector3( model.X - x, model.Y - y, model.Z - z );
-				loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
-				loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
-				loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
+				if( Rotate == RotateOrder.ZYX ) {
+					loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
+					loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
+					loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
+				} else if( Rotate == RotateOrder.XZY ) {
+					loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
+					loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
+					loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
+				}
 				
-				FastColour col = GetCol( i, part.Count );				
+				FastColour col = GetCol( i, part.Count );
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
 				Vector3 newPos = Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosA, sinA ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				AdjustUV( model.U, model.V, vScale, i, ref vertex );				
+				AdjustUV( model.U, model.V, vScale, i, ref vertex );
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -233,9 +240,9 @@ namespace ClassicalSharp.Model {
 				return FastColour.Scale( col, 0.7f );
 			if( i >= 4 && i < 8 )
 				return FastColour.Scale( col, FastColour.ShadeYBottom );
-			if( i >= 8 && i < 16 ) 
+			if( i >= 8 && i < 16 )
 				return FastColour.Scale( col, FastColour.ShadeZ );
-			if( i >= 16 && i < 24 ) 
+			if( i >= 16 && i < 24 )
 				return FastColour.Scale( col, FastColour.ShadeX );
 			return col;
 		}
@@ -259,5 +266,7 @@ namespace ClassicalSharp.Model {
 				U = (ushort)u; V = (ushort)v;
 			}
 		}
+		
+		protected enum RotateOrder { ZYX, XZY }
 	}
 }

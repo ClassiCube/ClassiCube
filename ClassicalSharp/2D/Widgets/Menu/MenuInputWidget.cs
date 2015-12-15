@@ -37,7 +37,6 @@ namespace ClassicalSharp {
 		public int XOffset = 0, YOffset = 0;
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		public MenuInputValidator Validator;
-		public bool Active = true;
 		
 		double accumulator;
 		public override void Render( double delta ) {

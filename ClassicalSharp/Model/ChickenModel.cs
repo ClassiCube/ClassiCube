@@ -14,7 +14,7 @@ namespace ClassicalSharp.Model {
 			                 .SetTexOrigin( 14, 4 ) ); // TODO: Find a more appropriate name.
 			Head3 = BuildBox( MakeBoxBounds( -2, 11, -8, 2, 13, -6 )
 			                 .SetTexOrigin( 14, 0 ) );
-			Torso =BuildRotatedBox( MakeRotatedBoxBounds( -3, 5, -4, 3, 11, 3 )
+			Torso = BuildRotatedBox( MakeRotatedBoxBounds( -3, 5, -4, 3, 11, 3 )
 			                       .SetTexOrigin( 0, 9 ) );
 			
 			LeftLeg = MakeLeg( -3, 0, -2, -1 );
@@ -60,10 +60,10 @@ namespace ClassicalSharp.Model {
 			DrawRotate( 0, 9/16f, -3/16f, -p.PitchRadians, 0, 0, Head2 );
 			DrawRotate( 0, 9/16f, -3/16f, -p.PitchRadians, 0, 0, Head3 );
 			DrawPart( Torso );
-			DrawRotate( 0, 5/16f, 1/16f, p.leftLegXRot, 0, 0, LeftLeg );
-			DrawRotate( 0, 5/16f, 1/16f, p.rightLegXRot, 0, 0, RightLeg );
-			DrawRotate( -3/16f, 11/16f, 0, 0, 0, -Math.Abs( p.leftArmXRot ), LeftWing );
-			DrawRotate( 3/16f, 11/16f, 0, 0, 0, Math.Abs( p.rightArmXRot ), RightWing );
+			DrawRotate( 0, 5/16f, 1/16f, p.legXRot, 0, 0, LeftLeg );
+			DrawRotate( 0, 5/16f, 1/16f, -p.legXRot, 0, 0, RightLeg );
+			DrawRotate( -3/16f, 11/16f, 0, 0, 0, -Math.Abs( p.armXRot ), LeftWing );
+			DrawRotate( 3/16f, 11/16f, 0, 0, 0, Math.Abs( p.armXRot ), RightWing );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

@@ -11,17 +11,17 @@ namespace ClassicalSharp.Model {
 			Head = BuildBox( MakeBoxBounds( -4, 4, -11, 4, 12, -3 )
 			                .SetTexOrigin( 32, 4 ) );
 			Link = BuildBox( MakeBoxBounds( -3, 5, 3, 3, 11, -3 )
-			               .SetTexOrigin( 0, 0 ) );
+			                .SetTexOrigin( 0, 0 ) );
 			End = BuildBox( MakeBoxBounds( -5, 4, 3, 5, 12, 15 )
 			               .SetTexOrigin( 0, 12 ) );
 			LeftLeg = BuildBox( MakeBoxBounds( -19, 7, -1, -3, 9, 1 )
 			                   .SetTexOrigin( 18, 0 ) );
 			RightLeg = BuildBox( MakeBoxBounds( 3, 7, -1, 19, 9, 1 )
-			                   .SetTexOrigin( 18, 0 ) );
+			                    .SetTexOrigin( 18, 0 ) );
 		}
 		
 		public override bool Bobbing {
-			get { return false; }
+			get { return true; }
 		}
 		
 		public override float NameYOffset {
@@ -51,14 +51,20 @@ namespace ClassicalSharp.Model {
 			DrawPart( End );
 			
 			// TODO: leg animations
-			DrawRotate( -3/16f, 8/16f, 0, 0, quarterPi, eighthPi, LeftLeg );
-			DrawRotate( -3/16f, 8/16f, 0, 0, eighthPi, eighthPi, LeftLeg );
-			DrawRotate( -3/16f, 8/16f, 0, 0, -eighthPi, eighthPi, LeftLeg );
-			DrawRotate( -3/16f, 8/16f, 0, 0, -quarterPi, eighthPi, LeftLeg );
-			DrawRotate( 3/16f, 8/16f, 0, 0, -quarterPi, -eighthPi, RightLeg );
-			DrawRotate( 3/16f, 8/16f, 0, 0, -eighthPi, -eighthPi, RightLeg );
-			DrawRotate( 3/16f, 8/16f, 0, 0, eighthPi, -eighthPi, RightLeg );
-			DrawRotate( 3/16f, 8/16f, 0, 0, quarterPi, -eighthPi, RightLeg );
+			float rotX = (float)(Math.Sin( p.walkTime ) * p.swing * Math.PI);
+			float rotZ = (float)(Math.Cos( p.walkTime * 2 ) * p.swing * Math.PI / 16f);
+			float rotY = (float)(Math.Sin( p.walkTime * 2 ) * p.swing * Math.PI / 32f);
+			Rotate = RotateOrder.XZY;
+			
+			DrawRotate( -3/16f, 8/16f, 0, rotX, quarterPi + rotY,  eighthPi + rotZ, LeftLeg );
+			DrawRotate( -3/16f, 8/16f, 0, -rotX, eighthPi + rotY, eighthPi + rotZ, LeftLeg );
+			DrawRotate( -3/16f, 8/16f, 0, rotX, -eighthPi - rotY, eighthPi - rotZ, LeftLeg );
+			DrawRotate( -3/16f, 8/16f, 0, -rotX, -quarterPi - rotY, eighthPi - rotZ, LeftLeg );
+			DrawRotate( 3/16f, 8/16f, 0, rotX, -quarterPi + rotY, -eighthPi + rotZ, RightLeg );
+			DrawRotate( 3/16f, 8/16f, 0, -rotX, -eighthPi + rotY, -eighthPi + rotZ, RightLeg );
+			DrawRotate( 3/16f, 8/16f, 0, rotX, eighthPi - rotY, -eighthPi - rotZ, RightLeg );
+			DrawRotate( 3/16f, 8/16f, 0, -rotX, quarterPi - rotY, -eighthPi - rotZ, RightLeg );
+			Rotate = RotateOrder.ZYX;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

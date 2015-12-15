@@ -8,9 +8,8 @@ namespace ClassicalSharp {
 		
 		public AnimatedEntity( Game game ) : base( game ) {
 		}
-		public float leftLegXRot, leftArmXRot, leftArmZRot;
-		public float rightLegXRot, rightArmXRot, rightArmZRot;
-		public float bobYOffset, tilt;
+		public float legXRot, armXRot, armZRot;
+		public float bobYOffset, tilt, walkTime, swing;
 		protected float walkTimeO, walkTimeN, swingO, swingN;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
@@ -38,18 +37,15 @@ namespace ClassicalSharp {
 		
 		/// <summary> Calculates the interpolated state between the last and next animation state. </summary>
 		protected void GetCurrentAnimState( float t ) {
-			float swing = Utils.Lerp( swingO, swingN, t );
-			float walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
+			swing = Utils.Lerp( swingO, swingN, t );
+			walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
 			float idleTime = (float)game.accumulator;
 			float idleXRot = (float)(Math.Sin( idleTime * idleXPeriod ) * idleMax);
 			float idleZRot = (float)(idleMax + Math.Cos(idleTime * idleZPeriod) * idleMax);
 			
-			leftArmXRot = (float)(Math.Cos( walkTime ) * swing * armMax) - idleXRot;
-			rightArmXRot = -leftArmXRot;
-			rightLegXRot = (float)(Math.Cos( walkTime ) * swing * legMax);
-			leftLegXRot = -rightLegXRot;
-			rightArmZRot = idleZRot;
-			leftArmZRot = -idleZRot;
+			armXRot = (float)(Math.Cos( walkTime ) * swing * armMax) - idleXRot;
+			legXRot = -(float)(Math.Cos( walkTime ) * swing * legMax);
+			armZRot = -idleZRot;
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
 			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
