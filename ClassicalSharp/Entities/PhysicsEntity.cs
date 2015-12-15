@@ -25,8 +25,8 @@ namespace ClassicalSharp {
 		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {
 			if( info.CollideType[block] != BlockCollideType.Solid ) return false;
 			
-			box.Min = new Vector3( x, y, z );
-			box.Max = new Vector3( x + 1, y + info.Height[block], z + 1 );
+			box.Min = new Vector3( x, y, z ) + info.MinBB[block];
+			box.Max = new Vector3( x, y, z ) + info.MaxBB[block];
 			return true;
 		}
 		

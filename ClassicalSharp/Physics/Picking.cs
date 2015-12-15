@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 					float t0, t1;
 					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
 						Vector3 intersect = origin + dir * t0;
-						pickedPos.SetAsValid( min, max, block, intersect );
+						pickedPos.SetAsValid( x, y, z, min, max, block, intersect );
 						return;
 					}
 				}

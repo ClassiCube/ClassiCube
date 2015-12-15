@@ -28,6 +28,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		const float angle = 45f * Utils.Deg2Rad;
+		static readonly Vector3 centre = new Vector3( 0.5f, 0, 0.5f );
 		internal void RecalculateBB( int block, FastBitmap fastBmp ) {
 			int elemSize = fastBmp.Width / 16;
 			int texId = GetTextureLoc( (byte)block, TileSide.Top );
@@ -36,10 +38,8 @@ namespace ClassicalSharp {
 			float leftX = GetSpriteBB_LeftX( elemSize, texId & 0x0F, texId >> 4, fastBmp );
 			float rightX = GetSpriteBB_RightX( elemSize, texId & 0x0F, texId >> 4, fastBmp );
 			
-			MinBB[block] = Utils.RotateY( leftX - 0.5f, bottomY, 0, 45f * Utils.Deg2Rad )
-				+ new Vector3( 0.5f, 0, 0.5f );
-			MaxBB[block] = Utils.RotateY( rightX - 0.5f, topY, 0, 45f * Utils.Deg2Rad )
-				+ new Vector3( 0.5f, 0, 0.5f );
+			MinBB[block] = Utils.RotateY( leftX - 0.5f, bottomY, 0, angle ) + centre;
+			MaxBB[block] = Utils.RotateY( rightX - 0.5f, topY, 0, angle ) + centre;
 		}
 		
 		unsafe float GetSpriteBB_TopY( int size, int tileX, int tileY, FastBitmap fastBmp ) {

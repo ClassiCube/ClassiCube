@@ -10,20 +10,7 @@ namespace Launcher2 {
 		public MainScreen( LauncherWindow game ) : base( game ) {
 			textFont = new Font( "Arial", 16, FontStyle.Bold );
 			widgets = new LauncherWidget[4];
-		}
-		
-		protected override void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = (LauncherButtonWidget)widget;
-			button.Active = false;
-			button.Redraw( drawer, button.Text, textFont );
-			Dirty = true;
-		}
-		
-		protected override void SelectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = (LauncherButtonWidget)widget;
-			button.Active = true;
-			button.Redraw( drawer, button.Text, textFont );
-			Dirty = true;
+			buttonFont = textFont;
 		}
 		
 		void KeyDown( object sender, KeyboardKeyEventArgs e ) {

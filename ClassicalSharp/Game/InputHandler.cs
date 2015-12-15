@@ -113,13 +113,12 @@ namespace ClassicalSharp {
 		}
 		
 		bool CheckIsFree( PickedPos selected, byte newBlock ) {
+			Vector3 pos = (Vector3)selected.TranslatedPos;
 			if( !CannotPassThrough( newBlock ) ) return true;
-			if( IntersectsOtherPlayers( selected.TranslatedPos, newBlock ) ) return false;
+			if( IntersectsOtherPlayers( pos, newBlock ) ) return false;
 			
-			Vector3I pos = selected.TranslatedPos;
-			float height = game.BlockInfo.Height[newBlock];
-			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z,
-			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
+			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[newBlock],
+			                                      pos + game.BlockInfo.MaxBB[newBlock] );
 			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
 			
 			if( game.LocalPlayer.noClip || !localBB.Intersects( blockBB ) ) return true;
@@ -132,7 +131,7 @@ namespace ClassicalSharp {
 				
 				// Push player up if they are jumping and trying to place a block underneath them.
 				Vector3 p = game.LocalPlayer.Position;
-				p.Y = pos.Y + height + Entity.Adjustment;
+				p.Y = pos.Y + game.BlockInfo.Height[newBlock] + Entity.Adjustment;
 				LocationUpdate update = LocationUpdate.MakePos( p, false );
 				game.LocalPlayer.SetLocation( update, false );
 				return true;
@@ -178,10 +177,9 @@ namespace ClassicalSharp {
 			return game.BlockInfo.CollideType[block] == BlockCollideType.Solid;
 		}
 		
-		bool IntersectsOtherPlayers( Vector3I pos, byte newType ) {
-			float height = game.BlockInfo.Height[newType];
-			BoundingBox blockBB = new BoundingBox( pos.X, pos.Y, pos.Z,
-			                                      pos.X + 1, pos.Y + height, pos.Z + 1 );
+		bool IntersectsOtherPlayers( Vector3 pos, byte newType ) {
+			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[newType],
+			                                      pos + game.BlockInfo.MaxBB[newType] );
 			
 			for( int id = 0; id < 255; id++ ) {
 				Player player = game.Players[id];

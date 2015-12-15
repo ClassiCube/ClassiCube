@@ -29,10 +29,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Mark this as having a selected block, and 
 		/// calculates the closest block face of the selected position. </summary>
-		public void SetAsValid( Vector3 min, Vector3 max, byte block, Vector3 intersect ) {
+		public void SetAsValid( int x, int y, int z, Vector3 min, Vector3 max, 
+		                       byte block, Vector3 intersect ) {
 			Min = min;
 			Max = max;
-			BlockPos = Vector3I.Truncate( Min );
+			BlockPos = new Vector3I( x, y, z );
 			Valid = true;
 			BlockType = block;
 			

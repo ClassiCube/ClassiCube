@@ -399,9 +399,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			chat.Add( "&cIntel graphics cards are known to have issues with the OpenGL build." );
 			chat.Add( "&cVSync may not work, and you may see disappearing clouds and map edges." );
 			chat.Add( "    " );
-			chat.Add( "&cFor Windows, try downloading the Direct3D 9 build as it doesn't have these problems" );
-			chat.Add( "&cAlternatively, the disappearing graphics can be partially fixed by " );
-			chat.Add( "&ctyping \"/client rendertype legacy\" into chat." );
+			chat.Add( "&cFor Windows, try downloading the Direct3D 9 build as it doesn't have" );
+			chat.Add( "&cthese problems. Alternatively, the disappearing graphics can be" );
+			chat.Add( "&cpartially fixed by typing \"/client render legacy\" into chat." );
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
