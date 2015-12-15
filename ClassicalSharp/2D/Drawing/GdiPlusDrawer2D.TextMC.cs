@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 			
 		}
 		
-		void DrawPart( FastBitmap fastBmp, Font font, ref int x, int y, TextPart part ) {
+		void DrawPart( FastBitmap dst, Font font, ref int x, int y, TextPart part ) {
 			string text = part.Text;
 			FastColour textCol = part.TextColour;
 			float point = font.Size;
@@ -92,19 +92,23 @@ namespace ClassicalSharp {
 				for( int yy = 0; yy < dstHeight; yy++ ) {
 					int fontY = srcY + yy * srcHeight / dstHeight;
 					int* fontRow = fontPixels.GetRowPtr( fontY );
-					int* dstRow = fastBmp.GetRowPtr( y + yy );
-					int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);
+					int dstY = y + yy;
+					if( dstY >= dst.Height ) continue;
 					
+					int* dstRow = dst.GetRowPtr( dstY );
+					int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);					
 					for( int xx = 0; xx < dstWidth; xx++ ) {
 						int fontX = srcX + xx * srcWidth / dstWidth;
 						int pixel = fontRow[fontX];
-						if( (byte)(pixel >> 24) == 0 ) continue;
+						if( (byte)(pixel >> 24) == 0 ) continue;						
+						int dstX = x + xx + xOffset;
+						if( dstX >= dst.Width ) continue;
 						
 						int col = pixel & ~0xFFFFFF;
 						col |= ((pixel & 0xFF) * textCol.B / 255);
 						col |= (((pixel >> 8) & 0xFF) * textCol.G / 255) << 8;
-						col |= (((pixel >> 16) & 0xFF) * textCol.R / 255) << 16;
-						dstRow[x + xx + xOffset] = col;
+						col |= (((pixel >> 16) & 0xFF) * textCol.R / 255) << 16;					
+						dstRow[dstX] = col;
 					}
 				}
 				x += PtToPx( point, srcWidth + 1 );
