@@ -140,7 +140,6 @@ namespace ClassicalSharp {
 				int index = 0;
 				SplitUppercase( origName, ref index );
 				normalNames[i] = buffer.ToString();
-				Console.WriteLine( buffer.ToString() );
 			}
 		}
 		

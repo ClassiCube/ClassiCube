@@ -50,7 +50,6 @@ namespace ClassicalSharp.Model {
 			DrawPart( Link );
 			DrawPart( End );
 			
-			// TODO: leg animations
 			float rotX = (float)(Math.Sin( p.walkTime ) * p.swing * Math.PI);
 			float rotZ = (float)(Math.Cos( p.walkTime * 2 ) * p.swing * Math.PI / 16f);
 			float rotY = (float)(Math.Sin( p.walkTime * 2 ) * p.swing * Math.PI / 32f);

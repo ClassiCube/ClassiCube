@@ -85,7 +85,7 @@ namespace ClassicalSharp {
 			int elements = (max.X + 1 - min.X) * (max.Y + 1 - min.Y) * (max.Z + 1 - min.Z);
 			if( elements > stateCache.Length ) {
 				stateCache = new State[elements];
-			}			
+			}
 			
 			BoundingBox blockBB = default( BoundingBox );
 			// Order loops so that we minimise cache misses
@@ -160,33 +160,44 @@ namespace ClassicalSharp {
 		              ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			float yDist = blockBB.Max.Y - entityBB.Min.Y;
 			if( yDist > 0 && yDist <= StepSize + 0.01f ) {
-				
 				// Adjust entity bounding box to include the block being tested
 				BoundingBox adjFinalBB = finalBB;
 				adjFinalBB.Min.X = Math.Min( finalBB.Min.X, blockBB.Min.X + Adjustment );
 				adjFinalBB.Max.X = Math.Max( finalBB.Max.X, blockBB.Max.X - Adjustment );
-				adjFinalBB.Min.Y = (float)Math.Ceiling( blockBB.Max.Y ) + Adjustment;
+				adjFinalBB.Min.Y = blockBB.Max.Y + Adjustment;
 				adjFinalBB.Max.Y = adjFinalBB.Min.Y + size.Y;
 				adjFinalBB.Min.Z = Math.Min( finalBB.Min.Z, blockBB.Min.Z + Adjustment );
 				adjFinalBB.Max.Z = Math.Max( finalBB.Max.Z, blockBB.Max.Z - Adjustment );
 				
-				Vector3I min = Vector3I.Floor( adjFinalBB.Min );
-				Vector3I max = Vector3I.Floor( adjFinalBB.Max );
-				for( int x = min.X; x <= max.X; x++ ) {
-					for( int y = min.Y; y <= max.Y; y++ ) {
-						for( int z = min.Z; z <= max.Z; z++ ) {
-							if( info.CollideType[GetPhysicsBlockId( x, y, z )] == BlockCollideType.Solid )
-								return false;
-						}
-					}
-				}
-				
+				if( !CanSlideThrough( ref adjFinalBB ) )
+					return false;
 				Position.Y = blockBB.Max.Y + Adjustment;
 				onGround = true;
 				ClipY( ref size, ref entityBB, ref entityExtentBB );
 				return true;
 			}
 			return false;
+		}
+		
+		bool CanSlideThrough( ref BoundingBox adjFinalBB ) {
+			Vector3I bbMin = Vector3I.Floor( adjFinalBB.Min );
+			Vector3I bbMax = Vector3I.Floor( adjFinalBB.Max );
+			
+			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
+				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
+					for( int x = bbMin.X; x <= bbMax.X; x++ )
+			{
+				byte block = GetPhysicsBlockId( x, y, z );
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
+				
+				BoundingBox blockBB = new BoundingBox( min, max );			
+				if( !blockBB.Intersects( adjFinalBB ) ) 
+					continue;
+				if( info.CollideType[GetPhysicsBlockId( x, y, z )] == BlockCollideType.Solid )
+					return false;
+			}
+			return true;
 		}
 		
 		void ClipX( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {

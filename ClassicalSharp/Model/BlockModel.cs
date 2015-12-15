@@ -10,8 +10,9 @@ namespace ClassicalSharp.Model {
 		byte block = (byte)Block.Air;
 		float blockHeight;
 		TerrainAtlas1D atlas;
-		const float adjust = 0.1f, extent = 0.5f;
+		const float extent = 0.5f, adjust = 0.5f/16f;
 		bool bright;
+		Vector3 minBB, maxBB;
 		
 		public BlockModel( Game game ) : base( game ) {
 		}
@@ -30,11 +31,25 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 1 - adjust, blockHeight - adjust, 1 - adjust ); }
+			get { return (maxBB - minBB) - new Vector3( adjust ); }
 		}
 		
 		public override BoundingBox PickingBounds {
 			get { return new BoundingBox( -extent, 0f, -extent, extent, blockHeight, extent ); }
+		}
+		
+		public void CalcState( byte block ) {
+			if( block == 0 ) {
+				blockHeight = 1;
+				bright = false;
+				minBB = Vector3.Zero;
+				maxBB = Vector3.One;			
+			} else {
+				blockHeight = game.BlockInfo.Height[block];
+				bright = game.BlockInfo.FullBright[block];
+				minBB = game.BlockInfo.MinBB[block];
+				maxBB = game.BlockInfo.MaxBB[block];
+			}
 		}
 		
 		int lastTexId = -1;
@@ -49,14 +64,12 @@ namespace ClassicalSharp.Model {
 			} else {
 				block = Byte.Parse( p.ModelName );
 			}
-			if( block == 0 ) {
-				blockHeight = 1;
+			
+			CalcState( block );
+			if( block == 0 ) 
 				return;
-			}
 			lastTexId = -1;
-			blockHeight = game.BlockInfo.Height[block];
 			atlas = game.TerrainAtlas1D;
-			bright = game.BlockInfo.FullBright[block];
 			
 			if( game.BlockInfo.IsSprite[block] ) {
 				SpriteXQuad( TileSide.Right, true );
@@ -135,7 +148,7 @@ namespace ClassicalSharp.Model {
 
 			float p1, p2;
 			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.
-				rec.U1 = 0.5f; p1 = -5.5f/16; p2 = 0.0f/16;	
+				rec.U1 = 0.5f; p1 = -5.5f/16; p2 = 0.0f/16;
 			} else {
 				rec.U2 = 0.5f; p1 = 0.0f/16; p2 = 5.5f/16;
 			}
@@ -155,7 +168,7 @@ namespace ClassicalSharp.Model {
 			
 			float x1, x2, z1, z2;
 			if( firstPart ) {
-				rec.U1 = 0; rec.U2 = 0.5f; x1 = -5.5f/16; 
+				rec.U1 = 0; rec.U2 = 0.5f; x1 = -5.5f/16;
 				x2 = 0.0f/16; z1 = 5.5f/16; z2 = 0.0f/16;
 			} else {
 				rec.U1 = 0.5f; rec.U2 = 1f; x1 = 0.0f/16;

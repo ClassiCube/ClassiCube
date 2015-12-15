@@ -165,26 +165,25 @@ namespace ClassicalSharp {
 			}
 			
 			if( !jumping ) {
-				canLiquidJump = false;
-				return;
+				canLiquidJump = false; return;
 			}
 			
 			bool touchWater = TouchesAnyWater();
 			bool touchLava = TouchesAnyLava();
+			Console.WriteLine( touchWater );
 			if( touchWater || touchLava ) {
 				BoundingBox bounds = CollisionBounds;
 				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
 				int headY = Utils.Floor( bounds.Max.Y );
+				if( bodyY > headY ) bodyY = headY;
 				
 				bounds.Max.Y = bounds.Min.Y = feetY;
 				bool liquidFeet = TouchesAny( bounds, StandardLiquid );
-				bounds.Max.Y = bounds.Min.Y = bodyY;
-				bool liquidBody = TouchesAny( bounds, StandardLiquid );
-				bounds.Max.Y = bounds.Min.Y = headY;
-				bool liquidHead = TouchesAny( bounds, StandardLiquid );
+				bounds.Min.Y = Math.Min( bodyY, headY );
+				bounds.Max.Y = Math.Max( bodyY, headY );
+				bool liquidRest = TouchesAny( bounds, StandardLiquid );
 				
-				bool pastJumpPoint = liquidFeet && !(liquidBody || liquidHead)
-					&& (Position.Y % 1 >= 0.4);
+				bool pastJumpPoint = liquidFeet && !liquidRest && (Position.Y % 1 >= 0.4);			
 				if( !pastJumpPoint ) {
 					canLiquidJump = true;
 					Velocity.Y += speeding ? 0.08f : 0.04f;

@@ -14,9 +14,7 @@ namespace ClassicalSharp.Generator {
 	public sealed class ImprovedNoise : Noise {
 		
 		public ImprovedNoise( Random rnd ) {
-			// make a random initial permutation based on rnd's seed,
-			// shuffle using fisher-yates
-			
+			// shuffle randomly using fisher-yates		
 			for( int i = 0; i < 256; i++ )
 				p[i] = (byte)i;
 			
@@ -28,7 +26,6 @@ namespace ClassicalSharp.Generator {
 				p[i + 256] = p[i];
 		}
 		
-		// TODO: need to half this maybe?
 		public override double Compute( double x, double y ) {
 			int xFloor = x >= 0 ? (int)x : (int)x - 1;
 			int yFloor = y >= 0 ? (int)y : (int)y - 1;

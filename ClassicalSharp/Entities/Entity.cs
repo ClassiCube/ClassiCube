@@ -38,9 +38,13 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public virtual Vector3 CollisionSize {
-			get { return new Vector3( 8/16f, 28.5f/16f, 8/16f );
-				//Model.CollisionSize; TODO: for non humanoid models
-			}
+			get { UpdateModel(); return Model.CollisionSize; }
+		}
+		
+		void UpdateModel() {
+			BlockModel model = Model as BlockModel;
+			if( model != null )
+				model.CalcState( byte.Parse( ModelName ) );
 		}
 		
 		/// <summary> Bounding box of the model that collision detection
@@ -103,9 +107,7 @@ namespace ClassicalSharp {
 		/// bounding box of this entity are lava or still lava. </summary>
 		protected bool TouchesAnyLava() {
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
-			// Even though we collide with lava 3 blocks above our feet, vanilla client thinks
-			// that we do not.. so we have to maintain compatibility here.
-			bounds.Max.Y -= 4/16f;
+			AdjustLiquidTestBounds( ref bounds );
 			return TouchesAny( bounds,
 			                  b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
 		}
@@ -121,9 +123,17 @@ namespace ClassicalSharp {
 		/// bounding box of this entity are water or still water. </summary>
 		protected bool TouchesAnyWater() {
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
-			bounds.Max.Y -= 4/16f;
+			AdjustLiquidTestBounds( ref bounds );
 			return TouchesAny( bounds,
 			                  b => b == (byte)Block.Water || b == (byte)Block.StillWater );
+		}
+		
+		void AdjustLiquidTestBounds( ref BoundingBox bounds ) {
+			// Even though we collide with lava 3 blocks above our feet, vanilla client thinks
+			// that we do not.. so we have to maintain compatibility here.
+			float height = bounds.Max.Y - bounds.Min.Y;
+			const float pHeight = (28.5f - 4f)/16f;
+			bounds.Max.Y = bounds.Min.Y + Math.Min( height, pHeight );
 		}
 	}
 }
