@@ -56,8 +56,10 @@ namespace ClassicalSharp {
 		}
 
 		void CheckHacksAllowed( object sender, EventArgs e ) { 
-			for( int i = 0; i < buttons.Length; i++ )
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
 				buttons[i].Disabled = false;
+			}
 			if( !game.LocalPlayer.CanAnyHacks ) {
 				buttons[2].Disabled = true; // hack permissions
 				buttons[3].Disabled = true; // env settings
