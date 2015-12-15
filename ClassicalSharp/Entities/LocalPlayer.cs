@@ -11,21 +11,21 @@ namespace ClassicalSharp {
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 SpawnPoint;
 		
-		/// <summary> The distance (in blocks) that players are allowed to 
+		/// <summary> The distance (in blocks) that players are allowed to
 		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
 		
-		/// <summary> The speed that the player move at, relative to normal speed, 
+		/// <summary> The speed that the player move at, relative to normal speed,
 		/// when the 'speeding' key binding is held down. </summary>
 		public float SpeedMultiplier = 10;
 		
 		public byte UserType;
 		
-		/// <summary> Whether blocks that the player places that intersect themselves 
+		/// <summary> Whether blocks that the player places that intersect themselves
 		/// should cause the player to be pushed back in the opposite direction of the placed block. </summary>
 		public bool PushbackPlacing;
 		
-		/// <summary> Whether the player has allowed hacks usage as an option. 
+		/// <summary> Whether the player has allowed hacks usage as an option.
 		/// Note that all 'can use X' set by the server override this. </summary>
 		public bool HacksEnabled = true;
 		
@@ -406,24 +406,31 @@ namespace ClassicalSharp {
 		
 		float LowestSpeedModifier() {
 			BoundingBox bounds = CollisionBounds;
-			bounds.Min.Y -= 0.1f; // block standing on
+			useLiquidGravity = false;
+			float baseModifier = HighestModifier( bounds, false );
+			bounds.Min.Y -= 0.1f; // also check block standing on
+			float solidModifier = HighestModifier( bounds, true );
+			return Math.Max( baseModifier, solidModifier );
+		}
+		
+		float HighestModifier( BoundingBox bounds, bool checkSolid ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			float modifier = float.PositiveInfinity;
-			useLiquidGravity = false;
 			
-			for( int x = bbMin.X; x <= bbMax.X; x++ ) {
-				for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
-					for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
-						byte block = game.Map.SafeGetBlock( x, y, z );
-						if( block == 0 ) continue;
-						
-						modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
-						if( block >= BlockInfo.CpeBlocksCount &&
-						   info.CollideType[block] == BlockCollideType.SwimThrough )
-							useLiquidGravity = true;
-					}
-				}
+			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
+				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
+					for( int x = bbMin.X; x <= bbMax.X; x++ )
+			{
+				byte block = game.Map.SafeGetBlock( x, y, z );
+				if( block == 0 ) continue;
+				BlockCollideType type = info.CollideType[block];
+				if( type == BlockCollideType.Solid && !checkSolid )
+					continue;
+				
+				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
+				if( block >= BlockInfo.CpeBlocksCount && type == BlockCollideType.SwimThrough )
+					useLiquidGravity = true;
 			}
 			return modifier == float.PositiveInfinity ? 1 : modifier;
 		}
