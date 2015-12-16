@@ -281,7 +281,7 @@ namespace ClassicalSharp.Network {
 	/// <summary> Represents an item that was asynchronously downloaded. </summary>
 	public class DownloadedItem {
 		
-		/// <summary> Contents that were downloaded.. </summary>
+		/// <summary> Contents that were downloaded. </summary>
 		public object Data;
 		
 		/// <summary> Instant in time the item was originally added to the download queue. </summary>

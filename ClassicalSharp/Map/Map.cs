@@ -275,5 +275,15 @@ namespace ClassicalSharp {
 			int height = heightmap[index];
 			return height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
 		}
+		
+		/// <summary> Unpacks the given index into the map's block array into its original world coordinates. </summary>
+		public Vector3I GetCoords( int index ) {
+			if( index < 0 || index >= mapData.Length )
+				return new Vector3I( -1, -1, -1 );
+			int x = index % Width;
+			int y = index / oneY; // index / (width * length)
+			int z = (index / Width) % Length;
+			return new Vector3I( x, y, z );
+		}
 	}
 }

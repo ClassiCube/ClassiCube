@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 
 	internal class NetReader {
 		
-		public byte[] buffer = new byte[4096 * 4];
+		public byte[] buffer = new byte[4096 * 5];
 		public int size = 0;
 		public NetworkStream Stream;
 		
@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 			if( !Stream.DataAvailable ) return;
 			// NOTE: Always using a read call that is a multiple of 4096
 			// (appears to?) improve read performance.
-			int received = Stream.Read( buffer, size, 4096 * 3 );
+			int received = Stream.Read( buffer, size, 4096 * 4 );
 			size += received;
 		}
 		

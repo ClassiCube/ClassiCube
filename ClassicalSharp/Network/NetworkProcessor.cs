@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 		readonly int[] packetSizes = {
 			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
 			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2,
+			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2, 1282,
 		};
 		
 		NetWriter writer;		
@@ -186,7 +186,7 @@ namespace ClassicalSharp {
 				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
 				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,
 				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2,
-				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition,
+				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition, HandleBulkBlockUpdate,
 			};
 			maxHandledPacket = handlers.Length;
 		}

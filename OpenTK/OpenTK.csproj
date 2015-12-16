@@ -95,7 +95,6 @@
     <Compile Include="Platform\MacOS\MacOSException.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />
     <Compile Include="Platform\MacOS\QuartzDisplayDeviceDriver.cs" />
-    <Compile Include="Platform\Minimal.cs" />
     <Compile Include="Platform\PlatformException.cs" />
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
