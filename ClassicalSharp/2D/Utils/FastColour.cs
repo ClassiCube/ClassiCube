@@ -10,31 +10,19 @@ namespace ClassicalSharp {
 		public byte A, R, G, B;
 		
 		public FastColour( byte r, byte g, byte b, byte a ) {
-			A = a;
-			R = r;
-			G = g;
-			B = b;
+			A = a; R = r; G = g; B = b;
 		}
 		
 		public FastColour( int r, int g, int b, int a ) {
-			A = (byte)a;
-			R = (byte)r;
-			G = (byte)g;
-			B = (byte)b;
+			A = (byte)a; R = (byte)r; G = (byte)g; B = (byte)b;
 		}
 		
 		public FastColour( byte r, byte g, byte b ) {
-			A = 255;
-			R = r;
-			G = g;
-			B = b;
+			A = 255; R = r; G = g; B = b;
 		}
 		
 		public FastColour( int r, int g, int b ) {
-			A = 255;
-			R = (byte)r;
-			G = (byte)g;
-			B = (byte)b;
+			A = 255; R = (byte)r; G = (byte)g; B = (byte)b;
 		}
 		
 		public FastColour( int argb ) {
@@ -45,10 +33,7 @@ namespace ClassicalSharp {
 		}
 
 		public FastColour( Color c ) {
-			A = c.A;
-			R = c.R;
-			G = c.G;
-			B = c.B;
+			A = c.A; R = c.R; G = c.G; B = c.B;
 		}
 		
 		/// <summary> Multiplies the RGB components of this instance by the

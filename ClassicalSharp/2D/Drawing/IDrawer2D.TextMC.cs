@@ -4,21 +4,25 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	public unsafe sealed partial class GdiPlusDrawer2D {
+	/// <summary> Class responsible for performing drawing operations on bitmaps
+	/// and for converting bitmaps into graphics api textures. </summary>
+	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
+	unsafe partial class IDrawer2D {
 		
-		// TODO: underline
-		FastBitmap fontPixels;
-		int boxSize;
-		const int italicSize = 8;
+		public Bitmap FontBitmap;
 		
-		public override void SetFontBitmap( Bitmap bmp ) {
+		/// <summary> Sets the bitmap that contains the bitmapped font characters as an atlas. </summary>
+		public void SetFontBitmap( Bitmap bmp ) {
 			FontBitmap = bmp;
 			boxSize = FontBitmap.Width / 16;
 			fontPixels = new FastBitmap( FontBitmap, true );
 			CalculateTextWidths();
 		}
 		
-		int[] widths = new int[256];
+		protected FastBitmap fontPixels;
+		protected int boxSize;
+		protected const int italicSize = 8;
+		protected int[] widths = new int[256];
 		void CalculateTextWidths() {
 			for( int i = 0; i < 256; i++ )
 				MakeTile( i, (i & 0x0F) * boxSize, (i >> 4) * boxSize );
@@ -40,15 +44,7 @@ namespace ClassicalSharp {
 			widths[i] = 0;
 		}
 		
-		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
-			if( !args.SkipPartsCheck )
-				GetTextParts( args.Text );
-			
-			using( FastBitmap fastBmp = new FastBitmap( curBmp, true ) )
-				DrawTextImpl( fastBmp, ref args, x, y );
-		}
-		
-		void DrawTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
+		protected void DrawBitmapTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
 			bool italic = args.Font.Style == FontStyle.Italic;
 			bool underline = args.Font.Style == FontStyle.Underline;
 			if( args.UseShadow ) {
@@ -119,40 +115,18 @@ namespace ClassicalSharp {
 		                   int yOffset, ref DrawTextArgs args ) {
 			int height = PtToPx( args.Font.Size, boxSize );
 			int offset = ShadowOffset( args.Font.Size );
+			int col = textCol.ToArgb();
 			if( args.UseShadow )
 				height += offset;
 			
 			for( int yy = height - offset; yy < height; yy++ ) {
 				int* dstRow = fastBmp.GetRowPtr( yy + yOffset );
 				for( int xx = startX; xx < endX; xx++ )
-					dstRow[xx] = textCol.ToArgb();
+					dstRow[xx] = col;
 			}
 		}
 		
-		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
-			GetTextParts( args.Text );
-			if( parts.Count == 0 ) 
-				return Size.Empty;
-			float point = args.Font.Size;
-			Size total = new Size( 0, PtToPx( point, boxSize ) );
-			
-			for( int i = 0; i < parts.Count; i++ ) {
-				foreach( char c in parts[i].Text ) {
-					int coords = ConvertToCP437( c );
-					total.Width += PtToPx( point, widths[coords] + 1 );
-				}
-			}
-			
-			if( args.Font.Style == FontStyle.Italic )
-				total.Width += Utils.CeilDiv( total.Height, italicSize );
-			if( args.UseShadow ) {
-				int offset = ShadowOffset( args.Font.Size );
-				total.Width += offset; total.Height += offset;
-			}
-			return total;
-		}
-		
-		static int ConvertToCP437( char c ) {
+		protected static int ConvertToCP437( char c ) {
 			if( c >= ' ' && c <= '~')
 				return (int)c;
 			
@@ -163,21 +137,21 @@ namespace ClassicalSharp {
 			return (int)'?';
 		}
 		
-		static int ShadowOffset( float fontSize ) {
+		protected static int ShadowOffset( float fontSize ) {
 			if( fontSize < 9.9f ) return 1;
 			if( fontSize < 24.9f ) return 2;
 			return 3;
 		}
 		
-		int PtToPx( int point ) {
+		protected int PtToPx( int point ) {
 			return (int)Math.Ceiling( (float)point / 72 * 96 ); // TODO: non 96 dpi?
 		}
 		
-		int PtToPx( float point, float value ) {
+		protected int PtToPx( float point, float value ) {
 			return (int)Math.Ceiling( (value / boxSize) * point / 72f * 96f );
 		}
 		
-		void DisposeBitmappedText() {
+		protected void DisposeBitmappedText() {
 			fontPixels.Dispose();
 			FontBitmap.Dispose();
 		}

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 		byte block = (byte)Block.Air;
 		float blockHeight;
 		TerrainAtlas1D atlas;
-		const float extent = 0.5f, adjust = 0.5f/16f;
+		const float extent = 0.5f, adjust = 0.75f/16f;
 		bool bright;
 		Vector3 minBB, maxBB;
 		
@@ -35,7 +35,8 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -extent, 0f, -extent, extent, blockHeight, extent ); }
+			get { return new BoundingBox( minBB, maxBB )
+					.Offset( new Vector3( -0.5f ) ); }
 		}
 		
 		public void CalcState( byte block ) {

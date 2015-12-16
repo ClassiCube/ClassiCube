@@ -5,13 +5,17 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 
-	/// <summary> Class responsibe for performing drawing operations on bitmaps
+	/// <summary> Class responsible for performing drawing operations on bitmaps
 	/// and for converting bitmaps into graphics api textures. </summary>
 	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
-	public abstract class IDrawer2D : IDisposable {
+	public abstract partial class IDrawer2D : IDisposable {
 		
 		protected IGraphicsApi graphics;
 		public const float Offset = 1.3f;
+		
+		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
+		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
+		public bool UseBitmappedChat = false;
 		
 		/// <summary> Sets the underlying bitmap that drawing operations will be performed on. </summary>
 		public abstract void SetBitmap( Bitmap bmp );
@@ -46,10 +50,6 @@ namespace ClassicalSharp {
 			src.Dispose();
 			src = newBmp;
 		}
-		
-		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
-		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
-		public bool UseBitmappedChat = false;
 		
 		/// <summary> Draws a string using the specified arguments and font at the
 		/// specified coordinates in the currently bound bitmap. </summary>
@@ -86,10 +86,6 @@ namespace ClassicalSharp {
 			return !UseBitmappedChat ? MeasureSize( ref args ) : 
 				MeasureBitmappedSize( ref args );
 		}
-		
-		/// <summary> Sets the bitmap that contains the bitmapped font characters as an atlas. </summary>
-		public abstract void SetFontBitmap( Bitmap bmp );
-		public Bitmap FontBitmap;
 		
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// then creates a 2D texture with origin at the specified window coordinates. </summary>

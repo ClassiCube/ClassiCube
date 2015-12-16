@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 			//                                             /
 			Vector3 rotatedOrigin = target.Position + Utils.RotateY( origin - target.Position, -target.YawRadians );
 			Vector3 rotatedDir = Utils.RotateY( dir, -target.YawRadians );
-			BoundingBox bb = target.Model.PickingBounds.Offset( target.Position );
+			BoundingBox bb = target.PickingBounds;
 			return RayIntersectsBox( rotatedOrigin, rotatedDir, bb.Min, bb.Max, out tMin, out tMax );
 		}
 		

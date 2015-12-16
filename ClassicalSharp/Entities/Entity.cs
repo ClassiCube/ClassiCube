@@ -37,8 +37,13 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
-		public virtual Vector3 CollisionSize {
+		public Vector3 CollisionSize {
 			get { UpdateModel(); return Model.CollisionSize; }
+		}
+		
+		/// <summary> Returns the bounding box that contains the model, assuming it is not rotated. </summary>
+		public BoundingBox PickingBounds {
+			get { UpdateModel(); return Model.PickingBounds.Offset( Position ); }
 		}
 		
 		void UpdateModel() {

@@ -63,10 +63,17 @@ namespace ClassicalSharp {
 			format.Trimming = StringTrimming.None;
 		}
 		
+		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
+			if( !args.SkipPartsCheck )
+				GetTextParts( args.Text );
+			
+			using( FastBitmap fastBmp = new FastBitmap( curBmp, true ) )
+				DrawBitmapTextImpl( fastBmp, ref args, x, y );
+		}
+		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
-			if( parts.Count == 0 )
-				return Size.Empty;
+			if( parts.Count == 0 ) return Size.Empty;
 			
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
@@ -79,6 +86,28 @@ namespace ClassicalSharp {
 				total.Width += Offset; total.Height += Offset;
 			}
 			return Size.Ceiling( total );
+		}
+		
+		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
+			GetTextParts( args.Text );
+			if( parts.Count == 0 ) return Size.Empty;
+			float point = args.Font.Size;
+			Size total = new Size( 0, PtToPx( point, boxSize ) );
+			
+			for( int i = 0; i < parts.Count; i++ ) {
+				foreach( char c in parts[i].Text ) {
+					int coords = ConvertToCP437( c );
+					total.Width += PtToPx( point, widths[coords] + 1 );
+				}
+			}
+			
+			if( args.Font.Style == FontStyle.Italic )
+				total.Width += Utils.CeilDiv( total.Height, italicSize );
+			if( args.UseShadow ) {
+				int offset = ShadowOffset( args.Font.Size );
+				total.Width += offset; total.Height += offset;
+			}
+			return total;
 		}
 		
 		void DisposeText() {
