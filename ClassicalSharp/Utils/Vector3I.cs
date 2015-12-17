@@ -28,15 +28,11 @@ namespace ClassicalSharp {
 		}
 		
 		public Vector3I( int x, int y, int z ) {
-			X = x;
-			Y = y;
-			Z = z;
+			X = x; Y = y; Z = z;
 		}
 		
 		public Vector3I( int value ) {
-			X = value;
-			Y = value;
-			Z = value;
+			X = value; Y = value; Z = value;
 		}
 		
 		public static Vector3I operator + ( Vector3I left, Vector3I right ) {

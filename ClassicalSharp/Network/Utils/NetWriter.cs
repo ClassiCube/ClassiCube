@@ -53,10 +53,8 @@ namespace ClassicalSharp {
 		}
 
 		public void Send( bool disconnected ) {
-			int packetLength = index;
+			Stream.Write( buffer, 0, index );
 			index = 0;
-			if( !disconnected )
-				Stream.Write( buffer, 0, packetLength );
 		}
 	}
 }

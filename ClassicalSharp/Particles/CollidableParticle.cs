@@ -5,17 +5,22 @@ namespace ClassicalSharp.Particles {
 
 	public abstract class CollidableParticle : Particle {
 		
-		const float gravity = 3.4f; 
-		//const float gravity = 0.7f; // TODO: temp debug
+		protected bool hitTerrain = false;
+		public CollidableParticle( Game game ) : base( game) { }
 		
-		public CollidableParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime )
-			: base( game, pos, velocity, lifetime ) {
+		public void ResetState( Vector3 pos, Vector3 velocity, double lifetime ) {
+			Position = lastPos = nextPos = pos;
+			Velocity = velocity;
+			Lifetime = (float)lifetime;
+			hitTerrain = false;
 		}
 
-		public override bool Tick( double delta ) {
+		protected bool Tick( float gravity, double delta ) {
+			hitTerrain = false;
 			lastPos = Position = nextPos;
 			byte curBlock = game.Map.SafeGetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
-			if( !CanPassThrough( curBlock ) ) return true;
+			float blockY = (int)Position.Y + game.BlockInfo.Height[curBlock];
+			if( !CanPassThrough( curBlock ) && Position.Y < blockY ) return true;
 			
 			Velocity.Y -= gravity * (float)delta;
 			int startY = (int)Math.Floor( Position.Y );
@@ -25,34 +30,34 @@ namespace ClassicalSharp.Particles {
 			Utils.Clamp( ref Position.Z, 0, game.Map.Length - 0.01f );
 			
 			if( Velocity.Y > 0 ) {
-				for( int y = startY; y <= endY && TestY( y, false ); y++ );
+				// don't test block we are already in
+				for( int y = startY + 1; y <= endY && TestY( y, false ); y++ );
 			} else {
 				for( int y = startY; y >= endY && TestY( y, true ); y-- );
 			}
 			nextPos = Position;
 			Position = lastPos;
 			return base.Tick( delta );
-		}
+		}	
 		
 		bool TestY( int y, bool topFace ) {
 			if( y < 0 ) {
 				Position.Y = nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
 				Velocity = Vector3.Zero;
+				hitTerrain = true;
 				return false;
 			}
 			
 			byte block = game.Map.SafeGetBlock( (int)Position.X, y, (int)Position.Z );
 			if( CanPassThrough( block ) ) return true;
 			
-			float collideY = y;
-			if( topFace )
-				collideY += game.BlockInfo.Height[block];
-			
-			bool collide = topFace ? (Position.Y < collideY) : (Position.Y > collideY );
+			float collideY = y + (topFace ? game.BlockInfo.Height[block] : 0);
+			bool collide = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
 			if( collide ) {
 				float adjust = topFace ? Entity.Adjustment : -Entity.Adjustment;
 				Position.Y = nextPos.Y = lastPos.Y = collideY + adjust;
 				Velocity = Vector3.Zero;
+				hitTerrain = true;
 				return false;
 			}
 			return true;

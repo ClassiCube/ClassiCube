@@ -148,6 +148,10 @@ namespace ClassicalSharp {
 		
 		NetWriter writer;		
 		void SendPacket() {
+			if( Disconnected ) {
+				writer.index = 0;
+				return;
+			}
 			try {
 				writer.Send( Disconnected );
 			} catch( IOException ex ) {
@@ -163,9 +167,9 @@ namespace ClassicalSharp {
 		void ReadPacket( byte opcode ) {
 			reader.Remove( 1 ); // remove opcode
 			lastOpcode = (PacketId)opcode;
-			Action handler;
+			Action handler = handlers[opcode];
 			
-			if( opcode >= maxHandledPacket || (handler = handlers[opcode]) == null)
+			if( handler == null )
 				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );
 			handler();
 		}

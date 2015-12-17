@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		const int extent = 4;
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
 		double rainAcc;
+		Vector3I lastPos = new Vector3I( Int32.MinValue );
 		
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
@@ -33,12 +34,14 @@ namespace ClassicalSharp {
 			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
 			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			Vector3 camPos = game.Camera.GetCameraPos( eyePos );
-			Vector3I pos = Vector3I.Floor( eyePos ); // TODO: cam pos
+			Vector3I pos = Vector3I.Floor( camPos );
+			bool moved = pos != lastPos;
+			lastPos = pos;
 			                              
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
-			
+
 			int index = 0;
 			graphics.AlphaBlending = true;
 			graphics.DepthWrite = false;
@@ -49,16 +52,15 @@ namespace ClassicalSharp {
 					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
-					//if( rainAcc >= 2 )
-					//	game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
+					if( rainAcc >= 0.25 || moved )
+						game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			if( rainAcc >= 2 )
+			if( rainAcc >= 0.25 || moved )
 				rainAcc = 0;
 			
-			// fixes crashing on nVidia cards in OpenGL builds.
 			if( index > 0 ) {
 				graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
@@ -92,6 +94,7 @@ namespace ClassicalSharp {
 		int length, width, maxY, oneY;
 		void OnNewMap( object sender, EventArgs e ) {
 			heightmap = null;
+			lastPos = new Vector3I( Int32.MaxValue );
 		}
 		
 		void OnNewMapLoaded( object sender, EventArgs e ) {

@@ -35,7 +35,7 @@
     <DefineConstants>DEBUG;TRACE;</DefineConstants>
     <StartAction>Project</StartAction>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-    <StartArguments>wwwf mppass 127.0.0.1 25565</StartArguments>
+    <StartArguments>wwwf sdf 127.0.0.1 25565</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>..\output\release\</OutputPath>

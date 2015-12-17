@@ -5,16 +5,25 @@ namespace ClassicalSharp.Particles {
 
 	public sealed class RainParticle : CollidableParticle {
 		
-		static Vector2 rainSize = new Vector2( 1/8f, 1/8f );
+		static Vector2 bigSize = new Vector2( 1/16f, 1/16f );
+		static Vector2 smallSize = new Vector2( 0.75f/16f, 0.75f/16f );
+		static Vector2 tinySize = new Vector2( 0.5f/16f, 0.5f/16f );
 		static TextureRec rec = new TextureRec( 2/128f, 14/128f, 3/128f, 2/128f );
-		public RainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime )
-			: base( game, pos, velocity, lifetime ) {
+		
+		public RainParticle( Game game ) : base( game ) { }
+		
+		public bool Big, Tiny;
+		
+		public override bool Tick( double delta ) {
+			bool dies = Tick( 3.5f, delta );
+			return hitTerrain ? true : dies;
 		}
 		
 		public override void Render( double delta, float t, VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			Vector3 p111, p121, p212, p222;
-			Utils.CalcBillboardPoints( rainSize, Position, ref game.View,
+			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize );
+			Utils.CalcBillboardPoints( size, Position, ref game.View,
 			                          out p111, out p121, out p212, out p222 );
 			Map map = game.Map;
 			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Sunlight : map.Shadowlight;

@@ -104,7 +104,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.generator = generator;
 			
 			game.SetNewScreen( new LoadingMapScreen( game, "Single player", "Generating.." ) );		
-			generator.GenerateAsync( game, width, height, length, 0 );
+			generator.GenerateAsync( game, width, height, length, seed );
 		}
 		
 		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {

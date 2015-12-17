@@ -6,10 +6,12 @@ namespace ClassicalSharp.Particles {
 	public sealed class TerrainParticle : CollidableParticle {
 		
 		static Vector2 terrainSize = new Vector2( 1/8f, 1/8f );
-		TextureRec rec;
-		public TerrainParticle( Game game, Vector3 pos, Vector3 velocity, double lifetime, TextureRec rec )
-			: base( game, pos, velocity, lifetime ) {
-			this.rec = rec;
+		internal TextureRec rec;
+		
+		public TerrainParticle( Game game ) : base( game ) { }
+		
+		public override bool Tick( double delta ) {
+			return Tick( 5.4f, delta );
 		}
 		
 		public override void Render( double delta, float t, VertexPos3fTex2fCol4b[] vertices, ref int index ) {
