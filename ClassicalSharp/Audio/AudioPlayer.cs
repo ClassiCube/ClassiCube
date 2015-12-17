@@ -8,9 +8,10 @@ namespace ClassicalSharp.Audio {
 	
 	public sealed partial class AudioPlayer {
 		
-		IAudioOutput musicOut, soundOut;
+		IAudioOutput musicOut;
+		IAudioOutput[] monoOutputs, stereoOutputs;
 		string[] musicFiles;
-		Thread musicThread, soundThread;
+		Thread musicThread;
 		
 		public AudioPlayer( Game game ) {
 			game.UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
@@ -50,7 +51,7 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		bool disposingMusic, disposingSound;
+		bool disposingMusic;
 		public void Dispose() {
 			DisposeMusic();
 			DisposeSound();
@@ -64,10 +65,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		Thread MakeThread( ThreadStart func, ref IAudioOutput output, string name ) {
-			if( OpenTK.Configuration.RunningOnWindows )
-				output = new WinMmOut();
-			else
-				output = new OpenALOut();
+			output = GetPlatformOut();
 			output.Create( 5 );
 			
 			Thread thread = new Thread( func );
@@ -75,6 +73,12 @@ namespace ClassicalSharp.Audio {
 			thread.IsBackground = true;
 			thread.Start();
 			return thread;
+		}
+		
+		IAudioOutput GetPlatformOut() {
+			if( OpenTK.Configuration.RunningOnWindows )
+				return new WinMmOut();
+			return new OpenALOut();
 		}
 		
 		void DisposeOf( ref IAudioOutput output, ref Thread thread ) {

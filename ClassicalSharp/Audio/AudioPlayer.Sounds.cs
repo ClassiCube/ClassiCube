@@ -11,9 +11,7 @@ namespace ClassicalSharp.Audio {
 	public sealed partial class AudioPlayer {
 		
 		Soundboard digBoard, stepBoard;
-		const int maxSounds = 10;
-		Sound[] pending;
-		int pendingCount;
+		const int maxSounds = 6;
 		
 		public void SetSound( bool enabled ) {
 			if( enabled )
@@ -23,94 +21,11 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void InitSound() {
-			disposingSound = false;
 			if( digBoard == null )
 				InitSoundboards();
 			
-			int freq = digBoard.rawSounds[0].SampleRate;
-			soundContainer = new BinContainer( freq, maxSounds );
-			pending = new Sound[maxSounds];
-			soundCodec = (BinCodec)soundContainer.GetAudioCodec();
-			soundThread = MakeThread( DoSoundThread, ref soundOut,
-			                         "ClassicalSharp.DoSound" );
-		}
-
-		EventWaitHandle soundHandle = new EventWaitHandle( false, EventResetMode.AutoReset );
-		BinContainer soundContainer;
-		BinCodec soundCodec;
-		
-		void DoSoundThread() {
-			while( !disposingSound ) {
-				soundHandle.WaitOne();
-				if( disposingSound ) break;
-				
-				soundOut.PlayStreaming( soundContainer );
-			}
-		}
-		
-		public void Tick( double delta ) {
-			if( pendingCount > 0 ) {
-				Sound snd = pending[0];
-				byte[] data = snd.Metadata == 1 ? digBoard.Data : stepBoard.Data;
-				
-				soundCodec.AddSound( data, snd.Offset, snd.Length, snd.Channels );
-				RemoveFirstPendingSound();
-				soundHandle.Set();
-			}
-		}
-		
-		DateTime lastDig = DateTime.MinValue;
-		public void PlayDigSound( SoundType type ) {
-			bool immediate = (DateTime.UtcNow - lastDig).TotalMilliseconds > 100;
-			PlaySound( type, digBoard, immediate );
-			lastDig = DateTime.UtcNow;
-		}
-		
-		public void PlayStepSound( SoundType type ) {
-			PlaySound( type, stepBoard, true );
-		}
-		
-		void PlaySound( SoundType type, Soundboard board, bool immediate ) {
-			if( type == SoundType.None || soundOut == null )
-				return;
-			Sound snd = board.PlayRandomSound( type );
-			snd.Metadata = board == digBoard ? (byte)1 : (byte)2;
-			
-			if( immediate ) {
-				byte[] data = board == digBoard ? digBoard.Data : stepBoard.Data;
-				soundCodec.AddSound( data, snd.Offset, snd.Length, snd.Channels );
-				soundHandle.Set();
-			} else {
-				if( pendingCount == maxSounds )
-					RemoveFirstPendingSound();
-				pending[pendingCount++] = snd;
-			}
-		}
-		
-		void MakeSound( ref Sound src, ref bool play, AudioChunk target ) {
-			if( src == null ) return;
-			play = true;
-			
-			target.Frequency = src.SampleRate;
-			target.BitsPerSample = src.BitsPerSample;
-			target.Channels = src.Channels;
-			
-			target.BytesOffset = src.Offset;
-			target.BytesUsed = src.Length;
-			src = null;
-		}
-		
-		void RemoveFirstPendingSound() {
-			for( int i = 1; i < maxSounds - 1; i++ )
-				pending[i] = pending[i + 1];
-			pending[maxSounds - 1] = null;
-			pendingCount--;
-		}
-		
-		void DisposeSound() {
-			disposingSound = true;
-			soundHandle.Set();
-			DisposeOf( ref soundOut, ref soundThread );
+			monoOutputs = new IAudioOutput[maxSounds];
+			stereoOutputs = new IAudioOutput[maxSounds];
 		}
 		
 		void InitSoundboards() {
@@ -119,5 +34,73 @@ namespace ClassicalSharp.Audio {
 			stepBoard = new Soundboard();
 			stepBoard.Init( "step" );
 		}
+
+		public void Tick( double delta ) {
+		}
+		
+		public void PlayDigSound( SoundType type ) { PlaySound( type, digBoard ); }
+		
+		public void PlayStepSound( SoundType type ) { PlaySound( type, stepBoard ); }
+		
+		AudioChunk chunk = new AudioChunk();
+		void PlaySound( SoundType type, Soundboard board ) {
+			if( type == SoundType.None || monoOutputs == null )
+				return;
+			Sound snd = board.PlayRandomSound( type );
+			snd.Metadata = board == digBoard ? (byte)1 : (byte)2;
+			chunk.Channels = snd.Channels;
+			chunk.Frequency = snd.SampleRate;
+			chunk.BitsPerSample = snd.BitsPerSample;
+			chunk.BytesOffset = snd.Offset;
+			chunk.BytesUsed = snd.Length;
+			chunk.Data = board.Data;
+			
+			if( snd.Channels == 1 )
+				PlayCurrentSound( monoOutputs );
+			else if( snd.Channels == 2 )
+				PlayCurrentSound( stereoOutputs );
+		}
+		
+		void PlayCurrentSound( IAudioOutput[] outputs ) {
+			for( int i = 0; i < monoOutputs.Length; i++ ) {
+				IAudioOutput output = outputs[i];
+				if( output == null ) {
+					output = GetPlatformOut();
+					output.Create( 1 );
+					outputs[i] = output;
+				}
+				
+				if( output.DoneRawAsync() ) {
+					output.PlayRawAsync( chunk );
+					return;
+				}
+			}
+		}
+		
+		void DisposeSound() {
+			DisposeOutputs( ref monoOutputs );
+			DisposeOutputs( ref stereoOutputs );
+		}
+		
+		void DisposeOutputs( ref IAudioOutput[] outputs ) {
+			if( outputs == null ) return;
+			bool soundPlaying = true;
+			
+			while( soundPlaying ) {
+				soundPlaying = false;
+				for( int i = 0; i < outputs.Length; i++ ) {
+					if( outputs[i] == null ) continue;
+					soundPlaying |= !outputs[i].DoneRawAsync();
+				}
+				if( soundPlaying )
+					Thread.Sleep( 1 );
+			}
+			
+			for( int i = 0; i < outputs.Length; i++ ) {
+				if( outputs[i] == null ) continue;
+				outputs[i].Dispose();
+			}
+			outputs = null;
+		}		
 	}
 }

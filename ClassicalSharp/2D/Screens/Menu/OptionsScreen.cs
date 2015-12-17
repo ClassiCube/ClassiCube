@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 			buttons = new ButtonWidget[] {
 				// Column 1
 				
-				Make( -140, -100, "Use sound (WIP)", OnWidgetClick,
+				Make( -140, -100, "Use sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
