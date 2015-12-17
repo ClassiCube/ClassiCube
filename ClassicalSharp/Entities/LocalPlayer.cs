@@ -217,7 +217,8 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			onGround = false;
+			if( noClip )
+				onGround = false;
 			float multiply = (flying || noClip) ?
 				(speeding ? SpeedMultiplier * 9 : SpeedMultiplier * 1.5f) :
 				(speeding ? SpeedMultiplier : 1);
