@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 				bounds.Max.Y = Math.Max( bodyY, headY );
 				bool liquidRest = TouchesAny( bounds, StandardLiquid );
 				
-				bool pastJumpPoint = liquidFeet && !liquidRest && (Position.Y % 1 >= 0.4);			
+				bool pastJumpPoint = liquidFeet && !liquidRest && (Position.Y % 1 >= 0.4);
 				if( !pastJumpPoint ) {
 					canLiquidJump = true;
 					Velocity.Y += speeding ? 0.08f : 0.04f;
@@ -227,15 +227,18 @@ namespace ClassicalSharp {
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
-				Move( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {
-				Move( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, 1 );
 			} else if( TouchesAnyRope() && !flying && !noClip ) {
-				Move( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
 			} else {
 				float factor = !(flying || noClip) && onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
-				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
+				if( flying || noClip )
+					MoveFlying( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
+				else
+					MoveNormal( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
 
 				if( BlockUnderFeet == Block.Ice && !(flying || noClip) ) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
@@ -260,8 +263,25 @@ namespace ClassicalSharp {
 			Velocity += Utils.RotateY( x * multiply, 0, z * multiply, YawRadians );
 		}
 		
-		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+		void MoveFlying( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			AdjHeadingVelocity( zMoving, xMoving, factor );
+			float yVel = (float)Math.Sqrt( Velocity.X * Velocity.X + Velocity.Z * Velocity.Z );
+			// make vertical speed the same as vertical speed.
+			if( (xMoving != 0 || zMoving != 0) && yVel > 0.001f ) {
+				Velocity.Y = 0;		
+				yMul = 1;
+				if( flyingUp ) Velocity.Y += yVel;
+				if( flyingDown ) Velocity.Y -= yVel;
+			}
+			Move( xMoving, zMoving, factor, drag, gravity, yMul );
+		}
+		
+		void MoveNormal( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			AdjHeadingVelocity( zMoving, xMoving, factor );
+			Move( xMoving, zMoving, factor, drag, gravity, yMul );
+		}
+		
+		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			Velocity.Y *= yMul;
 			if( !noClip )
 				MoveAndWallSlide();
