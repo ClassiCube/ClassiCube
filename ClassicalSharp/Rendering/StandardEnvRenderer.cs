@@ -197,6 +197,8 @@ namespace ClassicalSharp.Renderers {
 		
 		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fTex2fCol4b* vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
+			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
+			float offset = Utils.CeilDiv( -x1, 2048 );
 			
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -206,10 +208,10 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f, z1 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f, z2 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f, z2 / 2048f, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f, z1 / 2048f, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f + offset, z1 / 2048f + offset, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f + offset, z2 / 2048f + offset, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f + offset, z2 / 2048f + offset, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f + offset, z1 / 2048f + offset, col );
 				}
 			}
 		}
