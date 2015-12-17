@@ -170,7 +170,6 @@ namespace ClassicalSharp {
 			
 			bool touchWater = TouchesAnyWater();
 			bool touchLava = TouchesAnyLava();
-			Console.WriteLine( touchWater );
 			if( touchWater || touchLava ) {
 				BoundingBox bounds = CollisionBounds;
 				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
@@ -216,16 +215,15 @@ namespace ClassicalSharp {
 		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
 		airDrag = new Vector3( 0.6f, 1f, 0.6f );
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
-		float curMovementSpeed;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
+			onGround = false;
 			float multiply = (flying || noClip) ?
 				(speeding ? SpeedMultiplier * 9 : SpeedMultiplier * 1.5f) :
 				(speeding ? SpeedMultiplier : 1);
 			float modifier = LowestSpeedModifier();
 			float horMul = multiply * modifier;
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
-			curMovementSpeed = horMul;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				Move( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
@@ -237,7 +235,7 @@ namespace ClassicalSharp {
 				float factor = !(flying || noClip) && onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				Move( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
-				
+
 				if( BlockUnderFeet == Block.Ice && !(flying || noClip) ) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
 					if( Math.Abs( Velocity.X ) > 0.25f || Math.Abs( Velocity.Z ) > 0.25f ) {
