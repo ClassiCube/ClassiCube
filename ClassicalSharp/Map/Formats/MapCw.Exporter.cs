@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 		
 		void WriteSpawnCompoundTag() {
 			WriteTag( NbtTagType.Compound ); WriteString( "Spawn" );
-			Vector3 spawn = game.LocalPlayer.SpawnPoint;
+			Vector3 spawn = game.LocalPlayer.Position; // TODO: Maybe also keep spawn too?
 			
 			WriteTag( NbtTagType.Int16 );
 			WriteString( "X" ); WriteInt16( (short)(spawn.X * 32) );

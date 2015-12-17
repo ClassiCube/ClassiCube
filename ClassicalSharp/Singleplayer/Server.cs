@@ -119,6 +119,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, 0, 0, false );
 			game.LocalPlayer.SetLocation( update, false );
+			game.LocalPlayer.SpawnPoint = new Vector3( x, y, z );
 		}
 	}
 }
