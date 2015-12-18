@@ -270,7 +270,7 @@ namespace ClassicalSharp {
 			if( (xMoving != 0 || zMoving != 0) && yVel > 0.001f ) {
 				Velocity.Y = 0;		
 				yMul = 1;
-				if( flyingUp ) Velocity.Y += yVel;
+				if( flyingUp || jumping ) Velocity.Y += yVel;
 				if( flyingDown ) Velocity.Y -= yVel;
 			}
 			Move( xMoving, zMoving, factor, drag, gravity, yMul );

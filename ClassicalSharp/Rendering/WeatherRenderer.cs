@@ -41,6 +41,7 @@ namespace ClassicalSharp {
 			float speed = weather == Weather.Rainy ? 1f : 0.25f;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
+			bool particles = weather == Weather.Rainy;
 
 			int index = 0;
 			graphics.AlphaBlending = true;
@@ -52,13 +53,13 @@ namespace ClassicalSharp {
 					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
-					if( rainAcc >= 0.25 || moved )
+					if( particles && (rainAcc >= 0.25 || moved) )
 						game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
 					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
-			if( rainAcc >= 0.25 || moved )
+			if( particles && (rainAcc >= 0.25 || moved) )
 				rainAcc = 0;
 			
 			if( index > 0 ) {

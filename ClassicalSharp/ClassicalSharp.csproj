@@ -90,6 +90,7 @@
     <Compile Include="2D\Screens\Bindings\KeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\Bindings\NormalKeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
+    <Compile Include="2D\Screens\BlockSelectScreen.Scrolling.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ClickableScreen.cs" />
     <Compile Include="2D\Screens\ErrorScreen.cs" />

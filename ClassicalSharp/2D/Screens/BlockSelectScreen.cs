@@ -5,7 +5,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class BlockSelectScreen : Screen {
+	public partial class BlockSelectScreen : Screen {
 		
 		public BlockSelectScreen( Game game ) : base( game ) {
 			font = new Font( "Arial", 13 );
@@ -13,25 +13,31 @@ namespace ClassicalSharp {
 		
 		Block[] blocksTable;
 		Texture blockInfoTexture;
-		const int blocksPerRow = 10;
+		const int blocksPerRow = 10, maxRows = 7;
 		int selIndex, rows;
 		int startX, startY, blockSize;
 		float selBlockExpand;
 		readonly Font font;
 		StringBuffer buffer = new StringBuffer( 96 );
 		
+		int TableX { get { return startX - 5 - 10; } }
+		int TableY { get { return startY - 5 - 30; } }
+		int TableWidth { get { return blocksPerRow * blockSize + 10 + 10; } }
+		int TableHeight { get { return maxRows * blockSize + 10 + 30; } }
+		
 		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Render( double delta ) {
-			graphicsApi.Draw2DQuad( startX - 5, startY - 30 - 5, blocksPerRow * blockSize + 10,
-			                       rows * blockSize + 30 + 10, backCol );
+			graphicsApi.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
+			DrawScrollbar();
 			graphicsApi.Texturing = true;
 			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;
-				GetCoords( i, out x, out y );
+				if( !GetCoords( i, out x, out y ) )
+					continue;
 				
 				// We want to always draw the selected block on top of others
 				if( i == selIndex ) continue;
@@ -52,11 +58,14 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = false;
 		}
 		
-		void GetCoords( int i, out int x, out int y ) {
+		bool GetCoords( int i, out int x, out int y ) {
 			int col = i % blocksPerRow;
 			int row = i / blocksPerRow;
 			x = startX + blockSize * col;
 			y = startY + blockSize * row + 3;
+			y -= scrollY * blockSize;
+			row -= scrollY;
+			return row >= 0 && row < maxRows;
 		}
 		
 		public override void Dispose() {
@@ -71,7 +80,7 @@ namespace ClassicalSharp {
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale));
 			
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
-			startY = game.Height / 2 - (rows * blockSize) / 2;
+			startY = game.Height / 2 - (maxRows * blockSize) / 2;
 			blockInfoTexture.X1 = startX + (blockSize * blocksPerRow) / 2 - blockInfoTexture.Width / 2;
 			blockInfoTexture.Y1 = startY - blockInfoTexture.Height - 5;
 		}
@@ -84,6 +93,7 @@ namespace ClassicalSharp {
 			RecreateBlockTable();
 			Block held = game.Inventory.HeldBlock;
 			selIndex = Array.IndexOf<Block>( blocksTable, held );
+			UpdateScrollY();
 			MoveCursorToSelected();
 			game.Keyboard.KeyRepeat = true;
 		}
@@ -103,7 +113,8 @@ namespace ClassicalSharp {
 			RecreateBlockTable();
 			if( selIndex >= blocksTable.Length )
 				selIndex = blocksTable.Length - 1;
-			RecreateBlockInfoTexture();
+			UpdateScrollY();
+			RecreateBlockInfoTexture();			
 		}
 		
 		static string[] normalNames = null;
@@ -183,7 +194,7 @@ namespace ClassicalSharp {
 			
 			rows = Utils.CeilDiv( blocksCount, blocksPerRow );
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
-			startY = game.Height / 2 - (rows * blockSize) / 2;
+			startY = game.Height / 2 - (maxRows * blockSize) / 2;
 			blocksTable = new Block[blocksCount];
 			
 			int tableIndex = 0;
@@ -199,7 +210,8 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
 			selIndex = -1;
-			if( Contains( startX, startY, blocksPerRow * blockSize, rows * blockSize, mouseX, mouseY ) ) {
+			if( Contains( startX, startY, blocksPerRow * blockSize,
+			             maxRows * blockSize, mouseX, mouseY ) ) {
 				for( int i = 0; i < blocksTable.Length; i++ ) {
 					int x, y;
 					GetCoords( i, out x, out y );
@@ -215,7 +227,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( button == MouseButton.Left && selIndex != -1 ) {
+			if( button == MouseButton.Left && mouseX >= TableX && mouseX < TableX + scrollbarWidth ) {
+				ScrollbarClick( mouseY );
+			} else if( button == MouseButton.Left && selIndex != -1 ) {
 				game.Inventory.HeldBlock = blocksTable[selIndex];
 				game.SetNewScreen( null );
 			}
@@ -231,30 +245,32 @@ namespace ClassicalSharp {
 				game.SetNewScreen( null );
 			} else if( (key == Key.Left || key == Key.Keypad4) && selIndex != -1 ) {
 				selIndex--;
-				if( selIndex < 0 ) 
+				if( selIndex < 0 )
 					selIndex = 0;
-				RecreateBlockInfoTexture();
-				MoveCursorToSelected();
+				UpdateSelectedState();
 			} else if( (key == Key.Right || key == Key.Keypad6) && selIndex != -1 ) {
 				selIndex++;
-				if( selIndex >= blocksTable.Length ) 
+				if( selIndex >= blocksTable.Length )
 					selIndex = blocksTable.Length - 1;
-				RecreateBlockInfoTexture();
-				MoveCursorToSelected();
+				UpdateSelectedState();
 			} else if( (key == Key.Up || key == Key.Keypad8) && selIndex != -1 ) {
 				selIndex -= blocksPerRow;
 				if( selIndex < 0 )
 					selIndex += blocksPerRow;
-				RecreateBlockInfoTexture();
-				MoveCursorToSelected();
+				UpdateSelectedState();
 			} else if( (key == Key.Down || key == Key.Keypad2) && selIndex != -1 ) {
 				selIndex += blocksPerRow;
-				if( selIndex >= blocksTable.Length ) 
+				if( selIndex >= blocksTable.Length )
 					selIndex -= blocksPerRow;
-				RecreateBlockInfoTexture();
-				MoveCursorToSelected();
+				UpdateSelectedState();
 			}
 			return true;
+		}
+		
+		void UpdateSelectedState() {
+			UpdateScrollY();
+			RecreateBlockInfoTexture();
+			MoveCursorToSelected();
 		}
 		
 		static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
