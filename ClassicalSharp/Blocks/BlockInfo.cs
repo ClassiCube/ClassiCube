@@ -182,6 +182,8 @@ namespace ClassicalSharp {
 			SetupCullingCache();
 			MinBB[id] = Vector3.Zero;
 			MaxBB[id] = Vector3.One;
+			StepSounds[id] = SoundType.None;
+			DigSounds[id] = SoundType.None;
 		}
 	}
 	

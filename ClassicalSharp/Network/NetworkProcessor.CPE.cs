@@ -396,7 +396,11 @@ namespace ClassicalSharp {
 			info.SetSide( reader.ReadUInt8(), (Block)block );
 			info.SetBottom( reader.ReadUInt8(), (Block)block );
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
-			reader.ReadUInt8(); // walk sound, but we ignore this.
+			byte sound = reader.ReadUInt8();
+			if( sound < breakSnds.Length ) {
+				info.StepSounds[block] = stepSnds[sound];
+				info.DigSounds[block] = breakSnds[sound];
+			}
 			info.FullBright[block] = reader.ReadUInt8() != 0;
 			
 			byte shape = reader.ReadUInt8();
@@ -472,6 +476,23 @@ namespace ClassicalSharp {
 		static int ReadInt32( byte[] buffer, int offset ) {
 			return buffer[offset + 0] << 24 | buffer[offset + 1] << 16 
 				| buffer[offset + 2] << 8 | buffer[offset + 3];
+		}
+		
+		static SoundType[] stepSnds, breakSnds;
+		static NetworkProcessor() {
+			stepSnds = new SoundType[10];
+			breakSnds = new SoundType[10];
+			stepSnds[0] = SoundType.None; breakSnds[0] = SoundType.None;
+			stepSnds[1] = SoundType.Wood; breakSnds[1] = SoundType.Wood;
+			stepSnds[2] = SoundType.Gravel; breakSnds[2] = SoundType.Gravel;
+			stepSnds[3] = SoundType.Grass; breakSnds[3] = SoundType.Grass;
+			stepSnds[4] = SoundType.Stone; breakSnds[4] = SoundType.Stone;
+			// TODO: metal sound type, just use stone for now.
+			stepSnds[5] = SoundType.Stone; breakSnds[5] = SoundType.Stone;
+			stepSnds[6] = SoundType.Stone; breakSnds[6] = SoundType.Glass;
+			stepSnds[7] = SoundType.Cloth; breakSnds[7] = SoundType.Cloth;
+			stepSnds[8] = SoundType.Sand; breakSnds[8] = SoundType.Sand;
+			stepSnds[9] = SoundType.Snow; breakSnds[9] = SoundType.Snow;
 		}
 	}
 	#endregion
