@@ -103,6 +103,9 @@ namespace ClassicalSharp {
 		/// <summary> Whether lines should be rendered for each axis. </summary>
 		public bool ShowAxisLines;
 		
+		/// <summary> Whether players should animate using simple swinging parallel to their bodies. </summary>
+		public bool SimpleArmsAnim = true;
+		
 		public long Vertices;
 		public FrustumCulling Culling;
 		int width, height;

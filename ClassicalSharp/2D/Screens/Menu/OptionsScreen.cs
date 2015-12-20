@@ -14,7 +14,10 @@ namespace ClassicalSharp {
 			INetworkProcessor network = game.Network;
 			
 			buttons = new ButtonWidget[] {
-				// Column 1
+				// Column 1			
+				Make( -140, -150, "Use simple arms", OnWidgetClick,
+				     g => g.SimpleArmsAnim ? "yes" : "no",
+				     (g, v) => g.SimpleArmsAnim = v == "yes"),
 				
 				Make( -140, -100, "Use sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
@@ -71,10 +74,11 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[1].Metadata = typeof(NameMode);
-			buttons[2].Metadata = typeof(FpsLimitMethod);
+			buttons[2].Metadata = typeof(NameMode);
+			buttons[3].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new EnumValidator(),
 				new EnumValidator(),

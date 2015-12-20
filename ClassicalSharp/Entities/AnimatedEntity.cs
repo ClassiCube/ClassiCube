@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicalSharp.Model;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -21,12 +22,14 @@ namespace ClassicalSharp {
 			double distance = Math.Sqrt( dx * dx + dz * dz );
 
 			if( distance > 0.05 ) {
-				walkTimeN += (float)distance * 2 * (float)(20 * delta);
+				float walkDelta = (float)distance * 2 * (float)(20 * delta);
+				walkTimeN += walkDelta;
 				swingN += (float)delta * 3;
 			} else {
 				swingN -= (float)delta * 3;
 			}
 			Utils.Clamp( ref swingN, 0, 1 );
+			UpdateHumanState();
 		}
 		
 		const float armMax = 60 * Utils.Deg2Rad;
@@ -49,6 +52,72 @@ namespace ClassicalSharp {
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
 			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
+			
+			if( Model is PlayerModel )
+				CalcHumanAnim( idleXRot, idleZRot );
+		}
+		
+		internal float leftXRot, leftYRot, leftZRot;
+		internal float rightXRot, rightYRot, rightZRot;
+		ArmsAnim animMode = ArmsAnim.NoPerpendicular;
+		int statesDone;
+		static Random rnd = new Random();
+		
+		void UpdateHumanState() {
+			if( game.SimpleArmsAnim ) {
+				animMode = ArmsAnim.NoPerpendicular;
+				return;
+			}
+			// crosses over body, finished an arm swing
+			int oldState = Math.Sign( Math.Cos( walkTimeO ) );
+			int newState = Math.Sign( Math.Cos( walkTimeN ) );
+			if( oldState != newState )
+				statesDone++;
+			
+			// should we switch animations?
+			if( statesDone == 5 ) {
+				statesDone = 0;
+				animMode = (ArmsAnim)rnd.Next( 0, 4 );
+			}
+		}
+		
+		void CalcHumanAnim( float idleXRot, float idleZRot ) {
+			switch( animMode ) {
+				case ArmsAnim.NoPerpendicular:
+					leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
+					rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
+					return;
+				case ArmsAnim.LeftPerpendicular:
+					PerpendicularAnim( out leftXRot, out leftYRot, out leftZRot );
+					rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
+					return;
+				case ArmsAnim.RightPerpendicular:
+					leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
+					PerpendicularAnim( out rightXRot, out rightYRot, out rightZRot );
+					rightXRot = -rightXRot; rightZRot = -rightZRot;
+					return;
+				case ArmsAnim.BothPerpendicular:
+					PerpendicularAnim( out leftXRot, out leftYRot, out leftZRot );
+					PerpendicularAnim( out rightXRot, out rightYRot, out rightZRot );
+					rightXRot = -rightXRot; rightZRot = -rightZRot;
+					break;
+			}
+		}
+		
+		const float maxAngle = 90 * Utils.Deg2Rad;
+		void PerpendicularAnim( out float xRot, out float yRot, out float zRot ) {
+			xRot = 0;
+			yRot = 0;
+			yRot = (float)(Math.Cos( walkTime ) * swing * armMax * 1.5f);
+			float angle = (float)(1 + 0.3 * Math.Sin( walkTime ) );
+			zRot = -angle * swing * maxAngle;
+		}
+		
+		enum ArmsAnim {
+			NoPerpendicular, // i.e. both parallel
+			LeftPerpendicular,
+			RightPerpendicular,
+			BothPerpendicular,
 		}
 	}
 }
