@@ -1,6 +1,7 @@
 ﻿//#define DEBUG_OCCLUSION
 using System;
 using ClassicalSharp.GraphicsAPI;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -9,6 +10,7 @@ namespace ClassicalSharp {
 	public partial class ChunkMeshBuilder {
 		
 		int X, Y, Z;
+		float x1, y1, z1, x2, y2, z2;
 		byte tile;
 		BlockInfo info;
 		Map map;
@@ -119,7 +121,7 @@ namespace ClassicalSharp {
 
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
-			int index = ( ( yy << 8 ) + ( zz << 4 ) + xx ) * TileSide.Sides;
+			int index = ((yy << 8) | (zz << 4) | xx) * TileSide.Sides;
 			
 			if( info.IsSprite[tile] ) {
 				fullBright = info.FullBright[tile];
@@ -136,6 +138,11 @@ namespace ClassicalSharp {
 			bottomCount = counts[index++], topCount = counts[index++];
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
+			
+			Vector3 min = info.MinBB[tile];
+			Vector3 max = info.MaxBB[tile];
+			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
+			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
 			
 			fullBright = info.FullBright[tile];
 			blockHeight = info.Height[tile];

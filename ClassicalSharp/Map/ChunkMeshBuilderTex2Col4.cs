@@ -174,10 +174,10 @@ namespace ClassicalSharp {
 			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + count, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( X, Y, Z + count, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1 + count, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1 + count, rec.U2, rec.V2, col );
 		}
 
 		void DrawRightFace( int count ) {
@@ -191,10 +191,10 @@ namespace ClassicalSharp {
 			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( X + 1, Y + blockHeight, Z + count, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z + count, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( X + 1, Y, Z, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1 + count, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1 + count, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1, rec.U2, rec.V2, col );
 		}
 		
 		void DrawBackFace( int count ) {
@@ -208,10 +208,10 @@ namespace ClassicalSharp {
 			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z2, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z2, rec.U2, rec.V2, col );
 		}
 
 		void DrawFrontFace( int count ) {
@@ -225,10 +225,10 @@ namespace ClassicalSharp {
 			}
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z1, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z1, rec.U1, rec.V1, col );
 		}
 		
 		void DrawBottomFace( int count ) {
@@ -238,10 +238,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White : ((Y - 1) > map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X + count, Y, Z + 1, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X, Y, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X, Y, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( X + count, Y, Z, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z2, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z2, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z1, rec.U2, rec.V1, col );
 		}
 
 		void DrawTopFace( int count ) {
@@ -251,10 +251,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X, Y + blockHeight, Z + 1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( X + count, Y + blockHeight, Z + 1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z1, rec.U2, rec.V1, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, rec.U1, rec.V2, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z2, rec.U2, rec.V2, col );
 		}
 		
 		void DrawSprite( int count ) {

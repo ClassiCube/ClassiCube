@@ -49,9 +49,8 @@ namespace ClassicalSharp {
 			legXRot = -(float)(Math.Cos( walkTime ) * swing * legMax);
 			armZRot = -idleZRot;
 			
-			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2/16f));
-			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
-			
+			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (3/16f));
+			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);		
 			if( Model is PlayerModel )
 				CalcHumanAnim( idleXRot, idleZRot );
 		}

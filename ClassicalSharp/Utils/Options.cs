@@ -22,6 +22,7 @@ namespace ClassicalSharp {
 		public const string UseSound = "usesound";
 		public const string HacksEnabled = "hacksenabled";
 		public const string NamesMode = "namesmode";
+		public const string SimpleArmsAnim = "simplearmsanim";
 		
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";

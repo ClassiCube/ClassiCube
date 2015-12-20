@@ -15,9 +15,10 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1			
-				Make( -140, -150, "Use simple arms", OnWidgetClick,
-				     g => g.SimpleArmsAnim ? "yes" : "no",
-				     (g, v) => g.SimpleArmsAnim = v == "yes"),
+				Make( -140, -150, "Simple arms anim", OnWidgetClick,
+				     g => g.SimpleArmsAnim? "yes" : "no",
+				     (g, v) => { g.SimpleArmsAnim = v == "yes";
+				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
 				
 				Make( -140, -100, "Use sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
