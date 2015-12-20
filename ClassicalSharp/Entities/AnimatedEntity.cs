@@ -29,7 +29,6 @@ namespace ClassicalSharp {
 				swingN -= (float)delta * 3;
 			}
 			Utils.Clamp( ref swingN, 0, 1 );
-			UpdateHumanState();
 		}
 		
 		const float armMax = 60 * Utils.Deg2Rad;
@@ -59,65 +58,25 @@ namespace ClassicalSharp {
 		
 		internal float leftXRot, leftYRot, leftZRot;
 		internal float rightXRot, rightYRot, rightZRot;
-		ArmsAnim animMode = ArmsAnim.NoPerpendicular;
-		int statesDone;
-		static Random rnd = new Random();
-		
-		void UpdateHumanState() {
-			if( game.SimpleArmsAnim ) {
-				animMode = ArmsAnim.NoPerpendicular;
-				return;
-			}
-			// crosses over body, finished an arm swing
-			int oldState = Math.Sign( Math.Cos( walkTimeO ) );
-			int newState = Math.Sign( Math.Cos( walkTimeN ) );
-			if( oldState != newState )
-				statesDone++;
-			
-			// should we switch animations?
-			if( statesDone == 5 ) {
-				statesDone = 0;
-				animMode = (ArmsAnim)rnd.Next( 0, 4 );
-			}
-		}
+		bool complexArms;
 		
 		void CalcHumanAnim( float idleXRot, float idleZRot ) {
-			switch( animMode ) {
-				case ArmsAnim.NoPerpendicular:
-					leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
-					rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
-					return;
-				case ArmsAnim.LeftPerpendicular:
-					PerpendicularAnim( out leftXRot, out leftYRot, out leftZRot );
-					rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
-					return;
-				case ArmsAnim.RightPerpendicular:
-					leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
-					PerpendicularAnim( out rightXRot, out rightYRot, out rightZRot );
-					rightXRot = -rightXRot; rightZRot = -rightZRot;
-					return;
-				case ArmsAnim.BothPerpendicular:
-					PerpendicularAnim( out leftXRot, out leftYRot, out leftZRot );
-					PerpendicularAnim( out rightXRot, out rightYRot, out rightZRot );
-					rightXRot = -rightXRot; rightZRot = -rightZRot;
-					break;
+			if( game.SimpleArmsAnim ) {
+				leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
+				rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
+			} else {
+				PerpendicularAnim( 0.23f, out leftXRot, out leftYRot, out leftZRot );
+				PerpendicularAnim( 0.28f, out rightXRot, out rightYRot, out rightZRot );
+				rightXRot = -rightXRot; rightZRot = -rightZRot;
 			}
 		}
 		
-		const float maxAngle = 90 * Utils.Deg2Rad;
-		void PerpendicularAnim( out float xRot, out float yRot, out float zRot ) {
-			xRot = 0;
-			yRot = 0;
+		const float maxAngle = 120 * Utils.Deg2Rad;
+		void PerpendicularAnim( float flapSpeed, out float xRot, out float yRot, out float zRot ) {
 			yRot = (float)(Math.Cos( walkTime ) * swing * armMax * 1.5f);
-			float angle = (float)(1 + 0.3 * Math.Sin( walkTime ) );
+			xRot = 0;
+			float angle = (float)(0.5 + 0.5 * Math.Sin( walkTime * flapSpeed ) );
 			zRot = -angle * swing * maxAngle;
-		}
-		
-		enum ArmsAnim {
-			NoPerpendicular, // i.e. both parallel
-			LeftPerpendicular,
-			RightPerpendicular,
-			BothPerpendicular,
 		}
 	}
 }
