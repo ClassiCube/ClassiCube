@@ -334,6 +334,8 @@ namespace ClassicalSharp {
 					game.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
+			} else if( key == Keys[KeyBinding.ShowAxisLines] ) {
+				game.ShowAxisLines = !game.ShowAxisLines;
 			} else if( key == Keys[KeyBinding.ThirdPersonCamera] ) {
 				bool useThirdPerson = !(game.Camera is ForwardThirdPersonCamera);
 				game.SetCamera( useThirdPerson );

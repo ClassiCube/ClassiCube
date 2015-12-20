@@ -236,6 +236,7 @@
     <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\StandardEnvRenderer.cs" />
     <Compile Include="Rendering\WeatherRenderer.cs" />
+    <Compile Include="Selections\AxisLinesRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />

@@ -77,6 +77,7 @@ namespace ClassicalSharp {
 		public ChatLog Chat;
 		public BlockHandRenderer BlockHandRenderer;
 		public AudioPlayer AudioPlayer;
+		public AxisLinesRenderer AxisLinesRenderer;
 		
 		/// <summary> Account username of the player. </summary>
 		public string Username;
@@ -98,6 +99,9 @@ namespace ClassicalSharp {
 		
 		/// <summary> Strategy used to limit how many frames should be displayed at most each second. </summary>
 		public FpsLimitMethod FpsLimit;
+		
+		/// <summary> Whether lines should be rendered for each axis. </summary>
+		public bool ShowAxisLines;
 		
 		public long Vertices;
 		public FrustumCulling Culling;

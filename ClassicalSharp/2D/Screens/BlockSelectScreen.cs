@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		
 		Block[] blocksTable;
 		Texture blockInfoTexture;
-		const int blocksPerRow = 10, maxRows = 7;
+		const int blocksPerRow = 10, maxRows = 8;
 		int selIndex, rows;
 		int startX, startY, blockSize;
 		float selBlockExpand;
@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 		int TableX { get { return startX - 5 - 10; } }
 		int TableY { get { return startY - 5 - 30; } }
 		int TableWidth { get { return blocksPerRow * blockSize + 10 + 10; } }
-		int TableHeight { get { return maxRows * blockSize + 10 + 30; } }
+		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 30; } }
 		
 		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
 		static FastColour selCol = new FastColour( 213, 200, 223 );

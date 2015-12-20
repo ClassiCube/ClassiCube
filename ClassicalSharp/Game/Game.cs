@@ -121,6 +121,7 @@ namespace ClassicalSharp {
 			Picking = new PickingRenderer( this );
 			AudioPlayer = new AudioPlayer( this );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
+			AxisLinesRenderer = new AxisLinesRenderer( this );
 			
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
@@ -178,6 +179,7 @@ namespace ClassicalSharp {
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( visible ) {
+				AxisLinesRenderer.Render( e.Time );
 				Players.RenderModels( Graphics, e.Time, t );
 				Players.RenderNames( Graphics, e.Time, t );
 				ParticleManager.Render( e.Time, t );
@@ -411,6 +413,7 @@ namespace ClassicalSharp {
 			Players.Dispose();
 			AsyncDownloader.Dispose();
 			AudioPlayer.Dispose();
+			AxisLinesRenderer.Dispose();
 			
 			Chat.Dispose();
 			if( activeScreen != null )
