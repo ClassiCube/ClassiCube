@@ -56,27 +56,25 @@ namespace ClassicalSharp {
 				CalcHumanAnim( idleXRot, idleZRot );
 		}
 		
-		internal float leftXRot, leftYRot, leftZRot;
-		internal float rightXRot, rightYRot, rightZRot;
-		bool complexArms;
-		
+		internal float leftXRot, leftZRot, rightXRot, rightZRot;		
 		void CalcHumanAnim( float idleXRot, float idleZRot ) {
 			if( game.SimpleArmsAnim ) {
-				leftXRot = armXRot; leftYRot = 0; leftZRot = armZRot;
-				rightXRot = -armXRot; rightYRot = 0; rightZRot = -armZRot;
+				leftXRot = armXRot; leftZRot = armZRot;
+				rightXRot = -armXRot; rightZRot = -armZRot;
 			} else {
-				PerpendicularAnim( 0.23f, out leftXRot, out leftYRot, out leftZRot );
-				PerpendicularAnim( 0.28f, out rightXRot, out rightYRot, out rightZRot );
+				PerpendicularAnim( 0.23f, idleXRot, idleZRot, out leftXRot, out leftZRot );
+				PerpendicularAnim( 0.28f, idleXRot, idleZRot, out rightXRot, out rightZRot );
 				rightXRot = -rightXRot; rightZRot = -rightZRot;
 			}
 		}
 		
 		const float maxAngle = 120 * Utils.Deg2Rad;
-		void PerpendicularAnim( float flapSpeed, out float xRot, out float yRot, out float zRot ) {
-			yRot = (float)(Math.Cos( walkTime ) * swing * armMax * 1.5f);
-			xRot = 0;
-			float angle = (float)(0.5 + 0.5 * Math.Sin( walkTime * flapSpeed ) );
-			zRot = -angle * swing * maxAngle;
+		void PerpendicularAnim( float flapSpeed, float idleXRot, float idleZRot,
+		                       out float xRot, out float zRot ) {
+			float verAngle = (float)(0.5 + 0.5 * Math.Sin( walkTime * flapSpeed ) );
+			zRot = -idleZRot - verAngle * swing * maxAngle;
+			float horAngle = (float)(Math.Cos( walkTime ) * swing * armMax * 1.5f);
+			xRot = idleXRot + horAngle;
 		}
 	}
 }
