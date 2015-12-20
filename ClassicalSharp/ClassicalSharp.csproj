@@ -150,6 +150,7 @@
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
+    <Compile Include="Entities\LocalPlayer.Physics.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Game\Game.Properties.cs" />

@@ -94,6 +94,7 @@ namespace ClassicalSharp {
 			Block held = game.Inventory.HeldBlock;
 			selIndex = Array.IndexOf<Block>( blocksTable, held );
 			UpdateScrollY();
+			
 			MoveCursorToSelected();
 			game.Keyboard.KeyRepeat = true;
 		}
