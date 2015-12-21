@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
 			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
 			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
+			SimpleArmsAnim = Options.GetBool( OptionsKey.SimpleArmsAnim, false );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );

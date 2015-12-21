@@ -43,6 +43,11 @@ namespace ClassicalSharp {
 				     	}
 				     }),
 				
+				Make( 140, 0, "Noclip slide", OnWidgetClick,
+				     g => g.LocalPlayer.NoclipSlide ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.NoclipSlide = v == "yes";
+				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
+				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
@@ -52,6 +57,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),
 				
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 			};

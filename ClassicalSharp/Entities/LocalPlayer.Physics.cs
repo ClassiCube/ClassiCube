@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		bool useLiquidGravity = false; // used by BlockDefinitions.
 		bool canLiquidJump = true;
 		void UpdateVelocityState( float xMoving, float zMoving ) {
-			if( noClip && xMoving == 0 && zMoving == 0 )
+			if( !NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
 				Velocity = Vector3.Zero;
 			
 			if( flying || noClip ) {

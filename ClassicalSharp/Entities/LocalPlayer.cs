@@ -53,6 +53,9 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
 		public bool CanSeeAllNames = true;
 		
+		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
+		public bool NoclipSlide = true;
+		
 		float jumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
@@ -69,6 +72,7 @@ namespace ClassicalSharp {
 			
 			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 7 );
 			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
+			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, true );
 			InitRenderingData();
 		}
 		

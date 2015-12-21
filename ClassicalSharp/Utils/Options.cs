@@ -34,6 +34,7 @@ namespace ClassicalSharp {
 		public const string LiquidsBreakable = "liquidsbreakable";
 		public const string PushbackPlacing = "pushbackplacing";
 		public const string InvertMouse = "invertmouse";
+		public const string NoclipSlide = "noclipslide";
 	}
 	
 	// TODO: implement this
