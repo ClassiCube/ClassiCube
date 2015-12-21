@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 			lastPitch = nextPitch;
 			
 			HandleInput( ref xMoving, ref zMoving );
-			UpdateVelocityYState();
+			UpdateVelocityState( xMoving, zMoving );
 			PhysicsTick( xMoving, zMoving );
 			
 			nextPos = Position;

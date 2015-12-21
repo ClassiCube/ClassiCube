@@ -35,8 +35,7 @@ namespace ClassicalSharp {
 			}
 			return true;
 		}
-		int scrollY;
-		
+		int scrollY;		
 		
 		void UpdateScrollY() {
 			scrollY = selIndex / blocksPerRow;

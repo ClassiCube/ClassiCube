@@ -93,7 +93,8 @@ namespace ClassicalSharp {
 			RecreateBlockTable();
 			Block held = game.Inventory.HeldBlock;
 			selIndex = Array.IndexOf<Block>( blocksTable, held );
-			UpdateScrollY();
+			scrollY = (selIndex / blocksPerRow) - (maxRows - 1);
+			ClampScrollY();
 			
 			MoveCursorToSelected();
 			game.Keyboard.KeyRepeat = true;
