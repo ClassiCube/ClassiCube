@@ -87,7 +87,8 @@ namespace ClassicalSharp {
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 			float yaw = player.nextYaw + delta.X * sensitivity;
-			float pitch = player.nextPitch + delta.Y * sensitivity;
+			float yAdj = game.InvertMouse ? -delta.Y * sensitivity : delta.Y * sensitivity;
+			float pitch = player.nextPitch + yAdj;
 			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
 			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.

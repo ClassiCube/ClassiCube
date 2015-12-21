@@ -62,6 +62,7 @@ namespace ClassicalSharp {
 			Drawer2D.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
 			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
 			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
+			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );

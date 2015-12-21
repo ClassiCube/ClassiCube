@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		int startX, startY, blockSize;
 		float selBlockExpand;
 		readonly Font font;
-		StringBuffer buffer = new StringBuffer( 96 );
+		StringBuffer buffer = new StringBuffer( 128 );
 		
 		int TableX { get { return startX - 5 - 10; } }
 		int TableY { get { return startY - 5 - 30; } }
@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 			if( selIndex >= blocksTable.Length )
 				selIndex = blocksTable.Length - 1;
 			UpdateScrollY();
-			RecreateBlockInfoTexture();			
+			RecreateBlockInfoTexture();
 		}
 		
 		static string[] normalNames = null;
@@ -127,19 +127,17 @@ namespace ClassicalSharp {
 			int index = 0;
 			buffer.Clear();
 			buffer.Append( ref index, "&f" );
-			if( block == Block.TNT ) {
-				buffer.Append( ref index, "TNT" );
+			string value = game.BlockInfo.Name[(byte)block];
+			if( (byte)block < BlockInfo.CpeBlocksCount && value == "Invalid" ) {
+				buffer.Append( ref index, normalNames[(byte)block] );
 			} else {
-				string value = game.BlockInfo.Name[(byte)block];
-				if( (byte)block < BlockInfo.CpeBlocksCount && value == "Invalid" ) {
-					buffer.Append( ref index, normalNames[(byte)block] );
-				} else {
-					buffer.Append( ref index, value );
-				}
+				buffer.Append( ref index, value );
 			}
-			buffer.Append( ref index, " (can place: " );
+			buffer.Append( ref index, " (ID: " );
+			buffer.AppendNum( ref index, (byte)block );
+			buffer.Append( ref index, ", place: " );
 			buffer.Append( ref index, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
-			buffer.Append( ref index, "&f, can delete: " );
+			buffer.Append( ref index, "&f, delete: " );
 			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f)" );
 		}
@@ -150,6 +148,10 @@ namespace ClassicalSharp {
 				string origName = Enum.GetName( typeof(Block), (byte)i );
 				buffer.Clear();
 				
+				if( origName == "TNT") {
+					normalNames[i] = "TNT";
+					continue;
+				}
 				int index = 0;
 				SplitUppercase( origName, ref index );
 				normalNames[i] = buffer.ToString();

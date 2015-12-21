@@ -104,7 +104,10 @@ namespace ClassicalSharp {
 		public bool ShowAxisLines;
 		
 		/// <summary> Whether players should animate using simple swinging parallel to their bodies. </summary>
-		public bool SimpleArmsAnim = false;
+		public bool SimpleArmsAnim;
+		
+		/// <summary> Whether mouse rotation on the y axis should be inverted. </summary>
+		public bool InvertMouse;
 		
 		public long Vertices;
 		public FrustumCulling Culling;

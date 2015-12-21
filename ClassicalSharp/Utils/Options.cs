@@ -33,6 +33,7 @@ namespace ClassicalSharp {
 		public const string FieldOfView = "fov";
 		public const string LiquidsBreakable = "liquidsbreakable";
 		public const string PushbackPlacing = "pushbackplacing";
+		public const string InvertMouse = "invertmouse";
 	}
 	
 	// TODO: implement this

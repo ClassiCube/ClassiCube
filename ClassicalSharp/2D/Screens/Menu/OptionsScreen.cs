@@ -14,17 +14,17 @@ namespace ClassicalSharp {
 			INetworkProcessor network = game.Network;
 			
 			buttons = new ButtonWidget[] {
-				// Column 1			
-				Make( -140, -150, "Simple arms anim", OnWidgetClick,
-				     g => g.SimpleArmsAnim? "yes" : "no",
-				     (g, v) => { g.SimpleArmsAnim = v == "yes";
-				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
-				
-				Make( -140, -100, "Use sound", OnWidgetClick,
+				// Column 1
+				Make( -140, -150, "Use sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
+				
+				Make( -140, -100, "Simple arms anim", OnWidgetClick,
+				     g => g.SimpleArmsAnim? "yes" : "no",
+				     (g, v) => { g.SimpleArmsAnim = v == "yes";
+				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
 				
 				Make( -140, -50, "Names mode", OnWidgetClick,
 				     g => g.Players.NamesMode.ToString(),
@@ -44,27 +44,32 @@ namespace ClassicalSharp {
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -150, "Block physics", OnWidgetClick,
+					Make( 140, -200, "Block physics", OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -100, "Use music", OnWidgetClick,
+				Make( 140, -150, "Use music", OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
 				     	g.AudioPlayer.SetMusic( g.UseMusic );
 				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
-				Make( 140, -50, "View bobbing", OnWidgetClick,
+				Make( 140, -100, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
-				Make( 140, 0, "Auto close launcher", OnWidgetClick,
+				Make( 140, -50, "Auto close launcher", OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
+				
+				Make( 140, 0, "Invert mouse", OnWidgetClick,
+				     g => g.InvertMouse ? "yes" : "no",
+				     (g, v) => { g.InvertMouse = v == "yes";
+				     	Options.Set( OptionsKey.InvertMouse, v == "yes" ); }),
 				
 				Make( 140, 50, "Mouse sensitivity", OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
@@ -72,7 +77,7 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
 				MakeBack( false, titleFont,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
 			buttons[2].Metadata = typeof(NameMode);
@@ -89,6 +94,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
+				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),
 			};
 			okayIndex = buttons.Length - 1;
@@ -96,7 +102,7 @@ namespace ClassicalSharp {
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, 
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
