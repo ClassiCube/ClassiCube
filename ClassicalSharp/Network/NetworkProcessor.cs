@@ -40,12 +40,18 @@ namespace ClassicalSharp {
 			reader = new NetReader( stream );
 			writer = new NetWriter( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
+			
+			Disconnected = false;
+			receivedFirstPosition = false;
+			lastPacket = DateTime.UtcNow;
+			game.Events.OnNewMap += OnNewMap;
+			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
-			lastPacket = DateTime.UtcNow;
 		}
 		
 		public override void Dispose() {
+			game.Events.OnNewMap -= OnNewMap;
 			socket.Close();
 			Disconnected = true;
 		}
@@ -122,7 +128,7 @@ namespace ClassicalSharp {
 				}
 				
 				if( opcode >= maxHandledPacket ) {
-					ErrorHandler.LogError( "NetworkProcessor.Tick", 
+					ErrorHandler.LogError( "NetworkProcessor.Tick",
 					                      "received an invalid opcode of " + opcode );
 					reader.Remove( 1 );
 					continue;
@@ -146,14 +152,14 @@ namespace ClassicalSharp {
 			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2, 1282,
 		};
 		
-		NetWriter writer;		
+		NetWriter writer;
 		void SendPacket() {
 			if( Disconnected ) {
 				writer.index = 0;
 				return;
 			}
 			try {
-				writer.Send( Disconnected );
+				writer.Send();
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "writing packets", ex );
 				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
@@ -193,6 +199,17 @@ namespace ClassicalSharp {
 				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition, HandleBulkBlockUpdate,
 			};
 			maxHandledPacket = handlers.Length;
+		}
+		
+		void OnNewMap( object sender, EventArgs e ) {
+			// wipe all existing entity states
+			for( int i = 0; i < 256; i++ ) {
+				if( game.CpePlayersList[i] != null ) {
+					game.Events.RaiseCpeListInfoRemoved( (byte)i );
+					game.CpePlayersList[i] = null;
+				}
+				RemoveEntity( (byte)i );
+			}
 		}
 	}
 }

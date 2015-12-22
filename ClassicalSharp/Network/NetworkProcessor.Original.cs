@@ -222,20 +222,7 @@ namespace ClassicalSharp {
 		
 		void HandleRemoveEntity() {
 			byte entityId = reader.ReadUInt8();
-			Player player = game.Players[entityId];
-			if( entityId != 0xFF && player != null ) {
-				game.Events.RaiseEntityRemoved( entityId );
-				player.Despawn();
-				game.Players[entityId] = null;
-			}
-			
-			// See comment about LegendCraft in AddEntity
-			if( needRemoveNames != null &&
-			   needRemoveNames[entityId] && player != null ) {
-				game.Events.RaiseCpeListInfoRemoved( entityId );
-				game.CpePlayersList[entityId] = null;
-				needRemoveNames[entityId] = false;
-			}
+			RemoveEntity( entityId );
 		}
 		
 		void HandleMessage() {
@@ -276,6 +263,23 @@ namespace ClassicalSharp {
 				if( entityId == 0xFF ) {
 					game.LocalPlayer.SpawnPoint = game.LocalPlayer.Position;
 				}
+			}
+		}
+		
+		void RemoveEntity( byte entityId ) {
+			Player player = game.Players[entityId];
+			if( player == null ) return;
+			
+			if( entityId != 0xFF ) {
+				game.Events.RaiseEntityRemoved( entityId );
+				player.Despawn();
+				game.Players[entityId] = null;
+			}		
+			// See comment about LegendCraft in HandleAddEntity
+			if( needRemoveNames != null && needRemoveNames[entityId] ) {
+				game.Events.RaiseCpeListInfoRemoved( entityId );
+				game.CpePlayersList[entityId] = null;
+				needRemoveNames[entityId] = false;
 			}
 		}
 

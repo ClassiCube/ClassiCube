@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			buffer[index++] = (byte)(value);
 		}
 
-		public void Send( bool disconnected ) {
+		public void Send() {
 			Stream.Write( buffer, 0, index );
 			index = 0;
 		}

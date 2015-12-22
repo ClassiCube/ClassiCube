@@ -44,9 +44,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override bool HandlesAllInput {
-			get { return true; }
-		}
+		public override bool HandlesAllInput { get { return true; } }
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			return HandleMouseClick( buttons, mouseX, mouseY, button );
@@ -56,16 +54,10 @@ namespace ClassicalSharp {
 			return HandleMouseMove( buttons, mouseX, mouseY );
 		}
 		
-		public override bool HandlesKeyPress( char key ) {
-			return true;
-		}
+		public override bool HandlesKeyPress( char key ) { return true; }
 		
-		public override bool HandlesKeyDown( Key key ) {
-			return true;
-		}
+		public override bool HandlesKeyDown( Key key ) { return true; }
 		
-		public override bool HandlesKeyUp( Key key ) {
-			return true;
-		}
+		public override bool HandlesKeyUp( Key key ) { return true; }
 	}
 }
