@@ -174,7 +174,7 @@ namespace ClassicalSharp {
 			lastCreatedIndex = selIndex;
 			
 			graphicsApi.DeleteTexture( ref blockInfoTexture );
-			if( selIndex == -1 || selIndex >= blocksTable.Length ) return;
+			if( selIndex == -1 ) return;
 			
 			Block block = blocksTable[selIndex];
 			UpdateBlockInfoString( block );
