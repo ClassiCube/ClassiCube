@@ -29,10 +29,12 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
+			RemoveOverwriteButton();
 			return inputWidget.HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
+			RemoveOverwriteButton();
 			if( key == Key.Escape ) {
 				game.SetNewScreen( null );
 				return true;
@@ -56,6 +58,7 @@ namespace ClassicalSharp {
 			buttons = new [] {
 				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OkButtonClick ),
+				null,
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
@@ -83,18 +86,40 @@ namespace ClassicalSharp {
 			text = Path.ChangeExtension( text, ".cw" );
 			
 			if( File.Exists( text ) ) {
-				MakeDescWidget( "&eFilename already exists" );
+				buttons[1] = ButtonWidget.Create( game, 0, 90, 260, 30, "Overwrite existing?", 
+				                                 Anchor.Centre, Anchor.Centre, titleFont, OverwriteButtonClick );
 			} else {
-				// NOTE: We don't immediately save here, because otherwise the 'saving...'
-				// will not be rendered in time because saving is done on the main thread.
-				MakeDescWidget( "Saving.." );
-				textPath = text;
+				SetPath( text );
+				RemoveOverwriteButton();
 			}
+		}
+		
+		void OverwriteButtonClick( Game game, Widget widget ) {
+			string text = inputWidget.GetText();
+			text = Path.ChangeExtension( text, ".cw" );
+			
+			SetPath( text );
+			RemoveOverwriteButton();
+		}
+		
+		void SetPath( string text ) {
+			// NOTE: We don't immediately save here, because otherwise the 'saving...'
+			// will not be rendered in time because saving is done on the main thread.
+			MakeDescWidget( "Saving.." );
+			textPath = text;
+		}
+		
+		void RemoveOverwriteButton() {
+			if( buttons[1] == null ) return;
+			buttons[1].Dispose();
+			buttons[1] = null;
 		}
 		
 		string textPath;
 		void SaveMap( string path ) {
 			try {
+				if( File.Exists( path ) )
+					File.Delete( path );
 				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
 					IMapFileFormat map = new MapCw();
 					map.Save( fs, game );
@@ -104,6 +129,7 @@ namespace ClassicalSharp {
 				MakeDescWidget( "&cError while trying to save map" );
 				return;
 			}
+			game.Chat.Add( "&eSaved map to: " + path );
 			game.SetNewScreen( new PauseScreen( game ) );
 		}
 		
