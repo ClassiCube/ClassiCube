@@ -6,30 +6,26 @@ namespace ClassicalSharp.Selections {
 	
 	internal class SelectionBoxComparer : IComparer<SelectionBox> {
 		
-		public Vector3 pos;
-		
 		public int Compare( SelectionBox a, SelectionBox b ) {
-			float minDistA = float.PositiveInfinity, minDistB = float.PositiveInfinity;
-			float maxDistA = float.NegativeInfinity, maxDistB = float.NegativeInfinity;
-			Intersect( a, pos, ref minDistA, ref maxDistA );
-			Intersect( b, pos, ref minDistB, ref maxDistB );
 			// Reversed comparison order because we need to render back to front for alpha blending.
-			return minDistA == minDistB ? maxDistB.CompareTo( maxDistA ) : minDistB.CompareTo( minDistA );
+			return a.MinDist == b.MinDist ? b.MaxDist.CompareTo( a.MaxDist ) 
+				: b.MinDist.CompareTo( a.MinDist );
 		}
 		
-		void Intersect( SelectionBox box, Vector3 origin, ref float closest, ref float furthest ) {
-			Vector3I min = box.Min;
-			Vector3I max = box.Max;
+		internal void Intersect( SelectionBox box, Vector3 origin ) {
+			Vector3I min = box.Min, max = box.Max;
+			float closest = float.PositiveInfinity, furthest = float.NegativeInfinity;
 			// Bottom corners
-			UpdateDist( pos, min.X, min.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos, max.X, min.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos, max.X, min.Y, max.Z, ref closest, ref furthest );
-			UpdateDist( pos, min.X, min.Y, max.Z, ref closest, ref furthest );
-			// top corners
-			UpdateDist( pos, min.X, max.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos, max.X, max.Y, min.Z, ref closest, ref furthest );
-			UpdateDist( pos, max.X, max.Y, max.Z, ref closest, ref furthest );
-			UpdateDist( pos, min.X, max.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( origin, min.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( origin, max.X, min.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( origin, max.X, min.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( origin, min.X, min.Y, max.Z, ref closest, ref furthest );
+			// Top corners
+			UpdateDist( origin, min.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( origin, max.X, max.Y, min.Z, ref closest, ref furthest );
+			UpdateDist( origin, max.X, max.Y, max.Z, ref closest, ref furthest );
+			UpdateDist( origin, min.X, max.Y, max.Z, ref closest, ref furthest );
+			box.MinDist = closest; box.MaxDist = furthest;
 		}
 		
 		static void UpdateDist( Vector3 p, float x2, float y2, float z2,
