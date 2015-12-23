@@ -30,8 +30,7 @@ namespace Launcher2 {
 				identifiers[i] = prefix + files[i];
 			
 			for( int i = 0; i < files.Length; i++ ) {
-				string loc = files[i].StartsWith( "glass", comp ) 
-					? altBaseUrl : baseUrl;
+				string loc = files[i].StartsWith( "glass", comp ) ? altBaseUrl : baseUrl;
 				string url = loc + files[i] + ".ogg";
 				fetcher.downloader.DownloadData( url, false, identifiers[i] );
 			}

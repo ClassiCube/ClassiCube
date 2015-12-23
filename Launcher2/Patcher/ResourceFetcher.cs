@@ -19,7 +19,7 @@ namespace Launcher2 {
 		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
-		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";	
+		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";	
 		const string altSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
 		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
@@ -176,10 +176,9 @@ namespace Launcher2 {
 			"snow4", "stone1", "stone2", "stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
 		
 		string[] stepSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
-			"grass2", "grass3", "grass4", "grass5", "grass6", "gravel1", "gravel2",
-			"gravel3", "gravel4", "sand1", "sand2", "sand3", "sand4", "sand5", "snow1",
-			"snow2", "snow3", "snow4", "stone1", "stone2", "stone3", "stone4", "stone5",
-			"stone6", "wood1", "wood2", "wood3", "wood4", "wood5", "wood6" };
+			"grass2", "grass3", "grass4", "gravel1", "gravel2", "gravel3", "gravel4", "sand1", 
+			"sand2", "sand3", "sand4", "snow1", "snow2", "snow3", "snow4", "stone1", "stone2", 
+			"stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
 		
 		string[] musicFiles = new [] { "calm1", "calm2",
 			"calm3", "hal1", "hal2", "hal3", "hal4" };
