@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		static float blockHeight;
 		static int index;
 		static float scale;
+		static Vector3 minBB, maxBB;
 		
 		static FastColour colNormal, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
@@ -30,9 +31,9 @@ namespace ClassicalSharp {
 			info = game.BlockInfo;
 			cache = game.ModelCache;
 			atlas = game.TerrainAtlas;
-			blockHeight = info.MaxBB[block].Y;
-			if( game.BlockInfo.IsSprite[block] )
-				blockHeight = 1;
+			minBB = info.MinBB[block];
+			maxBB = info.MaxBB[block];
+			blockHeight = info.Height[block];
 			index = 0;
 			// isometric coords size: cosY * -scale - sinY * scale
 			// we need to divide by (2 * cosY), as the calling function expects size to be in pixels.
@@ -48,7 +49,7 @@ namespace ClassicalSharp {
 			} else {
 				XQuad( block, scale, TileSide.Left );
 				ZQuad( block, -scale, TileSide.Back );
-				YQuad( block, scale * blockHeight, TileSide.Top );
+				YQuad( block, Y( maxBB.Y ), TileSide.Top );
 			}
 			
 			for( int i = 0; i < index; i++ )
@@ -85,35 +86,43 @@ namespace ClassicalSharp {
 		static void ZQuad( byte block, float z, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
-			if( blockHeight != 1 )
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colZSide;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + scale * blockHeight,
-			                                                    pos.Z - z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y - scale * blockHeight,
+			float vOrigin = rec.V1;
+			rec.V1 = vOrigin + minBB.Y * TerrainAtlas2D.invElementSize;
+			rec.V2 = vOrigin + maxBB.Y * TerrainAtlas2D.invElementSize;	
+			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + Y( minBB.Y ),
 			                                                    pos.Z - z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y - scale * blockHeight,
-			                                                    pos.Z - z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + scale * blockHeight,
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - scale, pos.Y + Y( maxBB.Y ),
+			                                                    pos.Z - z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + Y( maxBB.Y ),
 			                                                    pos.Z - z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + scale, pos.Y + Y( minBB.Y ),
+			                                                    pos.Z - z, rec.U2, rec.V1, col );
+		}
+		
+		static float Y( float value ) {
+			return (scale * value * 2) - scale;
 		}
 
 		static void XQuad( byte block, float x, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
-			if( blockHeight != 1 )
-				rec.V2 = rec.V1 + blockHeight * TerrainAtlas2D.invElementSize;
 			FastColour col = colXSide;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
-			                                                    pos.Z - scale , rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
-			                                                    pos.Z - scale, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y - scale * blockHeight,
-			                                                    pos.Z + scale, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + scale * blockHeight,
+			float vOrigin = rec.V1;
+			rec.V1 = vOrigin + minBB.Y * TerrainAtlas2D.invElementSize;
+			rec.V2 = vOrigin + maxBB.Y * TerrainAtlas2D.invElementSize;			
+			
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + Y( minBB.Y ),
+			                                                    pos.Z - scale , rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + Y( maxBB.Y ),
+			                                                    pos.Z - scale, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + Y( maxBB.Y ),
 			                                                    pos.Z + scale, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X - x, pos.Y + Y( minBB.Y ),
+			                                                    pos.Z + scale, rec.U2, rec.V1, col );
 		}
 	}
 }

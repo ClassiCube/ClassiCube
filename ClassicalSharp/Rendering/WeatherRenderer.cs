@@ -127,7 +127,7 @@ namespace ClassicalSharp {
 			int height = heightmap[index];
 			int y = height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
 			return y == -1 ? 0 :
-				y + game.BlockInfo.Height[map.GetBlock( x, y, z )];
+				y + game.BlockInfo.MaxBB[map.GetBlock( x, y, z )].Y;
 		}
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {

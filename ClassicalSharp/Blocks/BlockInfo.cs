@@ -26,9 +26,6 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block id is a liquid. (e.g. water and lava) </summary>
 		public bool[] IsLiquid = new bool[BlocksCount];
 		
-		/// <summary> Gets the block height of the given block id. </summary>
-		public float[] Height = new float[BlocksCount];
-		
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
 		public bool[] BlocksLight = new bool[BlocksCount];
 		
@@ -56,7 +53,7 @@ namespace ClassicalSharp {
 		
 		public void Init() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
-				Height[tile] = 1f;
+				MaxBB[tile].Y = 1;
 				BlocksLight[tile] = true;
 				IsOpaque[tile] = true;
 				IsOpaqueY[tile] = true;
@@ -152,7 +149,7 @@ namespace ClassicalSharp {
 		}
 		
 		void SetBlockHeight( Block id, float height ) {
-			Height[(int)id] = height;
+			MaxBB[(int)id].Y = height;
 		}
 		
 		void SetBlocksLight( Block id, bool blocks ) {
@@ -169,7 +166,6 @@ namespace ClassicalSharp {
 			IsOpaque[id] = true;
 			IsSprite[id] = false;
 			IsLiquid[id] = false;
-			Height[id] = 1;
 			BlocksLight[id] = true;
 			FullBright[id] = false;
 			CullWithNeighbours[id] = true;

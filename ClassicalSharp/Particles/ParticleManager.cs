@@ -85,7 +85,8 @@ namespace ClassicalSharp.Particles {
 			const float invSize = TerrainAtlas2D.invElementSize;
 			const int cellsCount = (int)((1/4f) / invSize);
 			const float elemSize = invSize / 4f;
-			float blockHeight = game.BlockInfo.Height[block];
+			Vector3 minBB = game.BlockInfo.MinBB[block];
+			Vector3 maxBB = game.BlockInfo.MaxBB[block];
 			
 			for( int i = 0; i < 25; i++ ) {
 				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
@@ -94,7 +95,7 @@ namespace ClassicalSharp.Particles {
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				
 				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
-				double yOffset = (rnd.NextDouble() - 0.125) * blockHeight;
+				double yOffset = (rnd.NextDouble() - 0.125) * maxBB.Y;
 				double zOffset = rnd.NextDouble() - 0.5;
 				Vector3 pos = startPos + new Vector3( 0.5f + (float)xOffset,
 				                                     (float)yOffset, 0.5f + (float)zOffset );

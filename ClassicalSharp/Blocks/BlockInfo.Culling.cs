@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		internal void CheckOpaque() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
 				if( MinBB[tile] != Vector3.Zero || MaxBB[tile] != Vector3.One ) {
-					IsOpaque[tile] = false; 
+					IsOpaque[tile] = false;
 					IsTransparent[tile] = true;
 				}
 			}
@@ -30,17 +30,17 @@ namespace ClassicalSharp {
 					bool hidden = IsHidden( tile, neighbour );
 					if( tile == neighbour && !CullWithNeighbours[tile] )
 						hidden = false;
+					Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
+					Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
 					
 					if( IsSprite[tile] ) {
 						SetHidden( tile, neighbour, TileSide.Left, hidden );
 						SetHidden( tile, neighbour, TileSide.Right, hidden );
 						SetHidden( tile, neighbour, TileSide.Front, hidden );
 						SetHidden( tile, neighbour, TileSide.Back, hidden );
-						SetHidden( tile, neighbour, TileSide.Bottom, hidden && Height[neighbour] == 1 );
-						SetHidden( tile, neighbour, TileSide.Top, hidden && Height[tile] == 1 );
+						SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 );
+						SetHidden( tile, neighbour, TileSide.Top, hidden && tMax.Y == 1 );
 					} else {
-						Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
-						Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
 						SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
 						SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
 						

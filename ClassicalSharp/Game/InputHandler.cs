@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 				
 				// Push player up if they are jumping and trying to place a block underneath them.
 				Vector3 p = game.LocalPlayer.Position;
-				p.Y = pos.Y + game.BlockInfo.Height[newBlock] + Entity.Adjustment;
+				p.Y = pos.Y + game.BlockInfo.MaxBB[newBlock].Y + Entity.Adjustment;
 				LocationUpdate update = LocationUpdate.MakePos( p, false );
 				game.LocalPlayer.SetLocation( update, false );
 				return true;

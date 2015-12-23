@@ -27,7 +27,9 @@ namespace ClassicalSharp.Model {
 		
 		public override float GetEyeY( Player player ) {
 			byte block = Byte.Parse( player.ModelName );
-			return block == 0 ? 1 : game.BlockInfo.Height[block];
+			float minY = game.BlockInfo.MinBB[block].Y;
+			float maxY = game.BlockInfo.MaxBB[block].Y;
+			return block == 0 ? 1 : (minY + maxY) / 2;
 		}
 		
 		public override Vector3 CollisionSize {
@@ -50,6 +52,8 @@ namespace ClassicalSharp.Model {
 				minBB = game.BlockInfo.MinBB[block];
 				maxBB = game.BlockInfo.MaxBB[block];
 				height = maxBB.Y - minBB.Y;
+				if( game.BlockInfo.IsSprite[block] )
+					height = 1;
 			}
 		}
 		
@@ -163,8 +167,8 @@ namespace ClassicalSharp.Model {
 				rec.U2 = 0.5f; p1 = 0.0f/16; p2 = 5.5f/16;
 			}
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p1, 0, p1, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p1, height, p1, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, height, p2, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p1, 1, p1, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, 1, p2, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, 0, p2, rec.U1, rec.V2, col );
 		}
 
@@ -186,8 +190,8 @@ namespace ClassicalSharp.Model {
 			}
 
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x1, 0, z1, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x1, height, z1, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x2, height, z2, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x1, 1, z1, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x2, 1, z2, rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x2, 0, z2, rec.U2, rec.V2, col );
 		}
 		

@@ -407,7 +407,6 @@ namespace ClassicalSharp {
 			if( shape == 0 ) {
 				info.IsSprite[block] = true;
 			} else if( shape <= 16 ) {
-				info.Height[block] = shape/16f;
 				info.MaxBB[block].Y = shape/16f;
 			}
 			

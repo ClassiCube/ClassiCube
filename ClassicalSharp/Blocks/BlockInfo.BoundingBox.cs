@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 					MaxBB[i] = new Vector3( 13.5f/16f, 1, 13.5f/16f );
 				} else {
 					MinBB[i] = Vector3.Zero;
-					MaxBB[i] = new Vector3( 1, Height[i], 1 );
+					MaxBB[i].X = 1; MaxBB[i].Z = 1;
 				}
 			}
 		}
