@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		const float maxAngle = 120 * Utils.Deg2Rad;
+		const float maxAngle = 110 * Utils.Deg2Rad;
 		void PerpendicularAnim( float flapSpeed, float idleXRot, float idleZRot,
 		                       out float xRot, out float zRot ) {
 			float verAngle = (float)(0.5 + 0.5 * Math.Sin( walkTime * flapSpeed ) );
