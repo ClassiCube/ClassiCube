@@ -82,6 +82,8 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleLevelInit() {
+			if( gzipStream != null )
+				return;
 			game.Map.Reset();
 			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
 			if( ServerMotd.Contains( "cfg=" ) ) {
@@ -108,6 +110,10 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleLevelDataChunk() {
+			// Workaround for some servers that send LevelDataChunk before LevelInit
+			// due to their async packet sending behaviour.
+			if( gzipStream == null )
+				HandleLevelInit();
 			int usedLength = reader.ReadInt16();
 			gzippedMap.Position = 0;
 			gzippedMap.SetLength( usedLength );
@@ -149,6 +155,8 @@ namespace ClassicalSharp {
 				sentWomId = true;
 			}
 			gzipStream = null;
+			ServerName = null;
+			ServerMotd = null;
 			GC.Collect();
 		}
 		
