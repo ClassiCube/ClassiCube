@@ -699,6 +699,9 @@ namespace OpenTK.Platform.Windows
 				API.TranslateMessage(ref msg);
 				API.DispatchMessage(ref msg);
 			}
+			IntPtr foreground = API.GetForegroundWindow();
+			if( foreground != IntPtr.Zero )
+				focused = foreground == window.handle;
 		}
 
 		public IWindowInfo WindowInfo {

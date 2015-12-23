@@ -80,13 +80,18 @@ namespace ClassicalSharp.Particles {
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left );
-			TextureRec rec = game.TerrainAtlas.GetTexRec( texLoc );
+			TextureRec baseRec = game.TerrainAtlas.GetTexRec( texLoc );			
+			const float uvScale = (1/16f) * TerrainAtlas2D.invElementSize;
+			const float elemSize = 4 * uvScale;
 			
-			const float invSize = TerrainAtlas2D.invElementSize;
-			const int cellsCount = (int)((1/4f) / invSize);
-			const float elemSize = invSize / 4f;
 			Vector3 minBB = game.BlockInfo.MinBB[block];
 			Vector3 maxBB = game.BlockInfo.MaxBB[block];
+			int minU = Math.Min( (int)(minBB.X * 16), (int)(minBB.Z * 16) );
+			int maxU = Math.Min( (int)(maxBB.X * 16), (int)(maxBB.Z * 16) );
+			int minV = (int)(minBB.Y * 16), maxV = (int)(maxBB.Y * 16);
+			// This way we can avoid creating particles which outside the bounds and need to be clamped
+			if( minU < 13 && maxU > 13 ) maxU = 13;
+			if( minV < 13 && maxV > 13 ) maxV = 13;
 			
 			for( int i = 0; i < 25; i++ ) {
 				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
@@ -100,16 +105,16 @@ namespace ClassicalSharp.Particles {
 				Vector3 pos = startPos + new Vector3( 0.5f + (float)xOffset,
 				                                     (float)yOffset, 0.5f + (float)zOffset );
 				
-				TextureRec particleRec = rec;
-				particleRec.U1 = rec.U1 + rnd.Next( 0, cellsCount ) * elemSize;
-				particleRec.V1 = rec.V1 + rnd.Next( 0, cellsCount ) * elemSize;
-				particleRec.U2 = particleRec.U1 + elemSize;
-				particleRec.V2 = particleRec.V1 + elemSize;
+				TextureRec rec = baseRec;
+				rec.U1 = baseRec.U1 + rnd.Next( minU, maxU ) * uvScale;
+				rec.V1 = baseRec.V1 + rnd.Next( minV, maxV ) * uvScale;
+				rec.U2 = Math.Min( baseRec.U1 + maxU * uvScale, rec.U1 + elemSize );
+				rec.V2 = Math.Min( baseRec.V1 + maxV * uvScale, rec.V1 + elemSize );
 				double life = 1.5 - rnd.NextDouble();
 				
 				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
 				p.ResetState( pos, velocity, life );
-				p.rec = particleRec;
+				p.rec = rec;
 			}
 		}
 		

@@ -58,6 +58,9 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		static extern UIntPtr GetWindowLongPtr(IntPtr hWnd, GetWindowLongOffsets nIndex);
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		internal static extern IntPtr GetForegroundWindow();
 
 		[DllImport("User32.dll"), SuppressUnmanagedCodeSecurity]
 		internal static extern bool PeekMessage(ref MSG msg, IntPtr hWnd, int messageFilterMin, int messageFilterMax, int flags);
