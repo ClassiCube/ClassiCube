@@ -19,8 +19,11 @@ namespace ClassicalSharp.Particles {
 			hitTerrain = false;
 			lastPos = Position = nextPos;
 			byte curBlock = game.Map.SafeGetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
-			float blockY = (int)Position.Y + game.BlockInfo.Height[curBlock];
-			if( !CanPassThrough( curBlock ) && Position.Y < blockY ) return true;
+			float minY = Utils.Floor( Position.Y ) + game.BlockInfo.MinBB[curBlock].Y;
+			float maxY = Utils.Floor( Position.Y ) + game.BlockInfo.MaxBB[curBlock].Y;			
+			if( !CanPassThrough( curBlock ) && Position.Y >= minY && 
+			   Position.Y < maxY && CollideHor( curBlock ) )
+				return true;
 			
 			Velocity.Y -= gravity * (float)delta;
 			int startY = (int)Math.Floor( Position.Y );
@@ -50,10 +53,12 @@ namespace ClassicalSharp.Particles {
 			
 			byte block = game.Map.SafeGetBlock( (int)Position.X, y, (int)Position.Z );
 			if( CanPassThrough( block ) ) return true;
+			Vector3 minBB = game.BlockInfo.MinBB[block];
+			Vector3 maxBB = game.BlockInfo.MaxBB[block];
+			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
+			bool collideVer = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
 			
-			float collideY = y + (topFace ? game.BlockInfo.Height[block] : 0);
-			bool collide = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
-			if( collide ) {
+			if( collideVer && CollideHor( block ) ) {
 				float adjust = topFace ? Entity.Adjustment : -Entity.Adjustment;
 				Position.Y = nextPos.Y = lastPos.Y = collideY + adjust;
 				Velocity = Vector3.Zero;
@@ -65,6 +70,17 @@ namespace ClassicalSharp.Particles {
 		
 		bool CanPassThrough( byte block ) {
 			return block == 0 || game.BlockInfo.IsSprite[block] || game.BlockInfo.IsLiquid[block];
+		}
+		
+		bool CollideHor( byte block ) {
+			Vector3 min = game.BlockInfo.MinBB[block] + Floor( Position );
+			Vector3 max = game.BlockInfo.MaxBB[block] + Floor( Position );
+			return Position.X >= min.X && Position.Z >= min.Z &&
+				Position.X < max.X && Position.Z < max.Z;
+		}
+		
+		static Vector3 Floor( Vector3 v ) {
+			return new Vector3( Utils.Floor( v.X ), 0, Utils.Floor( v.Z ) );
 		}
 	}
 }

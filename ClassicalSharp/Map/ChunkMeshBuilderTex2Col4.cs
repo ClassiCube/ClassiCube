@@ -117,7 +117,6 @@ namespace ClassicalSharp {
 		}
 		
 		bool isTranslucent;
-		float blockHeight;
 		float invVerElementSize;
 		int elementsPerAtlas1D;
 		
@@ -273,23 +272,27 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawSprite( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Right );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, 1, out i );
-			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			float blockHeight = info.Height[tile];
+			
+			float u1 = 0, u2 = 1 * 15.99f/16f;
+			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
 			DrawInfo part = drawInfoNormal[i];
+			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 			
 			// Draw Z axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, rec.U2, rec.V2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, rec.U2, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, rec.U1, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, rec.U1, rec.V2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
 			
 			// Draw X axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, rec.U1, rec.V2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, rec.U1, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, rec.U2, rec.V1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 2.5f/16, rec.U2, rec.V2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col );
 		}
 	}
 }

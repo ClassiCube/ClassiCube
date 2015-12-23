@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		
 		public string[] Name = new string[BlocksCount];
 		
-		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block. 
+		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block.
 		/// Note that this is only used for exponential fog mode. </summary>
 		public FastColour[] FogColour = new FastColour[BlocksCount];
 		

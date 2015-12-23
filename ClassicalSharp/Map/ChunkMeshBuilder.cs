@@ -126,10 +126,8 @@ namespace ClassicalSharp {
 			if( info.IsSprite[tile] ) {
 				fullBright = info.FullBright[tile];
 				int count = counts[index + TileSide.Top];
-				if( count != 0 ) {
-					blockHeight = info.Height[tile];
+				if( count != 0 )
 					DrawSprite( count );
-				}
 				return;
 			}
 			
@@ -145,7 +143,6 @@ namespace ClassicalSharp {
 			this.minBB = min; this.maxBB = max;
 			
 			fullBright = info.FullBright[tile];
-			blockHeight = info.Height[tile];
 			isTranslucent = info.IsTranslucent[tile];
 			
 			if( leftCount != 0 )

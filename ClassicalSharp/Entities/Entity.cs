@@ -84,21 +84,19 @@ namespace ClassicalSharp {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			
-			// Order loops so that we minimise cache misses		
-			for( int y = bbMin.Y; y <= bbMax.Y; y++ ) {
-				for( int z = bbMin.Z; z <= bbMax.Z; z++ ) {
-					for( int x = bbMin.X; x <= bbMax.X; x++ ) {
-						if( !game.Map.IsValidPos( x, y, z ) ) continue;
-						byte block = game.Map.GetBlock( x, y, z );
-						
-						if( condition( block ) ) {
-							float blockHeight = info.Height[block];
-							Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
-							Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-							BoundingBox blockBB = new BoundingBox( min, max );
-							if( blockBB.Intersects( bounds ) ) return true;
-						}
-					}
+			// Order loops so that we minimise cache misses
+			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
+				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
+					for( int x = bbMin.X; x <= bbMax.X; x++ )
+			{
+				if( !game.Map.IsValidPos( x, y, z ) ) continue;
+				byte block = game.Map.GetBlock( x, y, z );
+				
+				if( condition( block ) ) {
+					Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+					Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
+					BoundingBox blockBB = new BoundingBox( min, max );
+					if( blockBB.Intersects( bounds ) ) return true;
 				}
 			}
 			return false;
