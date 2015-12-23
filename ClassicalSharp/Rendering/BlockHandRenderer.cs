@@ -13,6 +13,13 @@ namespace ClassicalSharp.Renderers {
 		bool playAnimation, leftAnimation, swingAnimation;
 		float angleX = 0;
 		
+		double animTime;
+		byte type, lastType;
+		
+		Matrix4 normalMat, spriteMat;
+		byte lastMatrixType;
+		float lastMatrixAngleX;
+		
 		public BlockHandRenderer( Game window ) {
 			this.game = window;
 		}
@@ -20,13 +27,10 @@ namespace ClassicalSharp.Renderers {
 		public void Init() {
 			block = new BlockModel( game );
 			fakeP = new FakePlayer( game );
-			SetupMatrices();
 			lastType = (byte)game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
 		
-		double animTime;
-		byte type, lastType;
 		public void Render( double delta ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand )
 				return;
@@ -39,6 +43,7 @@ namespace ClassicalSharp.Renderers {
 			if( playAnimation )
 				DoAnimation( delta );
 			PerformViewBobbing();
+			SetupMatrices();
 			
 			if( game.BlockInfo.IsSprite[type] )
 				game.Graphics.LoadMatrix( ref spriteMat );
@@ -74,22 +79,31 @@ namespace ClassicalSharp.Renderers {
 				fakeP.Position.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
 				fakeP.Position.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
 				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
-				SetupMatrices();
 			}
 			animTime += delta;
 			if( animTime > animPeriod )
 				ResetAnimationState( true, 0.25 );
 		}
 		
-		Matrix4 normalMat, spriteMat;
 		void SetupMatrices() {
+			if( type == lastMatrixType && lastMatrixAngleX == angleX )
+				return;
 			Matrix4 m = Matrix4.Identity;
 			m = m * Matrix4.Scale( 0.6f );
 			m = m * Matrix4.RotateY( 45 * Utils.Deg2Rad );
 			m = m * Matrix4.RotateX( angleX * Utils.Deg2Rad );
 			
-			normalMat = m * Matrix4.Translate( 0.85f, -1.35f, -1.5f );
-			spriteMat = m * Matrix4.Translate( 0.85f, -1.05f, -1.5f );
+			Vector3 minBB = game.BlockInfo.MinBB[type];
+			Vector3 maxBB = game.BlockInfo.MaxBB[type];
+			float height = (maxBB.Y - minBB.Y);
+			if( game.BlockInfo.IsSprite[type] )
+				height = 1;
+			
+			float offset = (1 - height) * 0.4f;
+			normalMat = m * Matrix4.Translate( 0.85f, -1.35f + offset, -1.5f );
+			spriteMat = m * Matrix4.Translate( 0.85f, -1.05f + offset, -1.5f );
+			lastMatrixType = type;
+			lastMatrixAngleX = angleX;
 		}
 		
 		void ResetAnimationState( bool updateLastType, double period ) {
@@ -100,7 +114,6 @@ namespace ClassicalSharp.Renderers {
 			animPeriod = period;
 			animSpeed = Math.PI / period;
 			 
-			SetupMatrices();
 			if( updateLastType )
 				lastType = (byte)game.Inventory.HeldBlock;
 			fakeP.Position = Vector3.Zero;
