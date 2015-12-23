@@ -64,7 +64,8 @@ namespace ClassicalSharp {
 		
 		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !info.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
+			return tile == initialTile && info.CanStretch[tile * TileSide.Sides + face] &&
+				!info.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
 				( IsLit( X, Y, Z, face ) == IsLit( x, y, z, face ) );
 		}
 		
@@ -118,9 +119,11 @@ namespace ClassicalSharp {
 		bool isTranslucent;
 		float blockHeight;
 		float invVerElementSize;
+		int elementsPerAtlas1D;
 		
 		void PreStretchTiles( int x1, int y1, int z1 ) {
 			invVerElementSize = game.TerrainAtlas1D.invElementSize;
+			elementsPerAtlas1D = game.TerrainAtlas1D.elementsPerAtlas1D;
 			arraysCount = game.TerrainAtlas1D.TexIds.Length;
 			atlas = game.TerrainAtlas1D;
 			
@@ -164,97 +167,109 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawLeftFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Left );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Left];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			
+			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Y * invVerElementSize;
+			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				X > 0 ? (Y > map.heightmap[(Z * width) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
-			}
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1 + count, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1 + count, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z2 + (count - 1), u2, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z2 + (count - 1), u2, v2, col );
 		}
 
 		void DrawRightFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Right );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			
+			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Y * invVerElementSize;
+			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				X < maxX ? (Y > map.heightmap[(Z * width) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
-			}
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1 + count, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1 + count, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z2 + (count - 1), u1, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z2 + (count - 1), u1, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1, u2, v2, col );
 		}
 		
 		void DrawBackFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Back );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Back];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			
+			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Y * invVerElementSize;
+			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z < maxZ ? (Y > map.heightmap[((Z + 1) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
-			}
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z2, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z2, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
 		}
 
 		void DrawFrontFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Front );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Front];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			
+			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Y * invVerElementSize;
+			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z > 0 ? (Y > map.heightmap[((Z - 1) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
-			if( blockHeight != 1 ) {
-				rec.V2 = rec.V1 + blockHeight * invVerElementSize;
-			}
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z1, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z1, rec.U1, rec.V1, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u1, v1, col );
 		}
 		
 		void DrawBottomFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Bottom );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = fullBright ? FastColour.White : ((Y - 1) > map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Bottom];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z2, rec.U2, rec.V2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z2, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z1, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1 + count, y1, z1, rec.U2, rec.V1, col );
+			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * invVerElementSize;
+			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			FastColour col = fullBright ? FastColour.White : ((Y - 1) > map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
+			
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u1, v1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z1, u2, v1, col );
 		}
 
 		void DrawTopFace( int count ) {
-			int texId = info.GetTextureLoc( tile, TileSide.Top );
-			int i;
-			TextureRec rec = atlas.GetTexRec( texId, count, out i );
-			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Top];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			
+			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * invVerElementSize;
+			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z1, rec.U2, rec.V1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, rec.U1, rec.V1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, rec.U1, rec.V2, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1 + count, y2, z2, rec.U2, rec.V2, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col );
 		}
 		
 		void DrawSprite( int count ) {

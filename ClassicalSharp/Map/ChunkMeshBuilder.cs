@@ -45,13 +45,12 @@ namespace ClassicalSharp {
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
 					
-					int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( 0 + 1 ) - 1;
-					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
-						chunkIndex++;
+					int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (0 + 1);
+					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {						
 						tile = chunk[chunkIndex];
-						if( tile != 0 ) {
+						if( tile != 0 )
 							RenderTile( chunkIndex, xx, yy, zz, x, y, z );
-						}
+						chunkIndex++;
 					}
 				}
 			}
@@ -119,6 +118,7 @@ namespace ClassicalSharp {
 				occlusionFlags = 0;//(byte)ComputeOcclusion();
 		}
 
+		Vector3 minBB, maxBB;
 		public void RenderTile( int chunkIndex, int xx, int yy, int zz, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
 			int index = ((yy << 8) | (zz << 4) | xx) * TileSide.Sides;
@@ -139,10 +139,10 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			Vector3 min = info.MinBB[tile];
-			Vector3 max = info.MaxBB[tile];
+			Vector3 min = info.MinBB[tile], max = info.MaxBB[tile];
 			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
 			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
+			this.minBB = min; this.maxBB = max;
 			
 			fullBright = info.FullBright[tile];
 			blockHeight = info.Height[tile];

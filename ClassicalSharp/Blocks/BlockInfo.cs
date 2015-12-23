@@ -100,9 +100,14 @@ namespace ClassicalSharp {
 			IsOpaqueY[(byte)Block.Slab] = true;
 			IsOpaqueY[(byte)Block.CobblestoneSlab] = true;
 			IsOpaqueY[(byte)Block.Snow] = true;
-			SetupCullingCache();
+			
 			InitBoundingBoxes();
+			MinBB[(byte)Block.Grass] = new Vector3( 0.25f, 7/16f, 7/16f );
+			MaxBB[(byte)Block.Grass] = new Vector3( 0.5f, 9/16f, 11/16f );
+			MinBB[(byte)Block.Dirt] = new Vector3( 7/16f, 7/16f, 0 );
+			MaxBB[(byte)Block.Dirt] = new Vector3( 11/16f, 9/16f, 1 );
 			InitSounds();
+			SetupCullingCache();
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {

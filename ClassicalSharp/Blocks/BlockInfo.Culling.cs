@@ -1,4 +1,5 @@
 ﻿using System;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -6,8 +7,23 @@ namespace ClassicalSharp {
 	public partial class BlockInfo {
 		
 		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
+		
+		public bool[] CanStretch = new bool[BlocksCount * TileSide.Sides];
 
+		internal void CheckOpaque() {
+			for( int tile = 1; tile < BlocksCount; tile++ ) {
+				if( MinBB[tile] != Vector3.Zero || MaxBB[tile] != Vector3.One ) {
+					IsOpaque[tile] = false; 
+					IsTransparent[tile] = true;
+				}
+			}
+		}
+		
 		internal void SetupCullingCache() {
+			CheckOpaque();
+			for( int i = 0; i < CanStretch.Length; i++ )
+				CanStretch[i] = true;
+			
 			for( int tileI = 1; tileI < BlocksCount; tileI++ ) {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
 					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
@@ -15,12 +31,26 @@ namespace ClassicalSharp {
 					if( tile == neighbour && !CullWithNeighbours[tile] )
 						hidden = false;
 					
-					SetHidden( tile, neighbour, TileSide.Left, hidden );
-					SetHidden( tile, neighbour, TileSide.Right, hidden );
-					SetHidden( tile, neighbour, TileSide.Front, hidden );
-					SetHidden( tile, neighbour, TileSide.Back, hidden );
-					SetHidden( tile, neighbour, TileSide.Top, hidden && Height[tile] == 1 );
-					SetHidden( tile, neighbour, TileSide.Bottom, hidden && Height[neighbour] == 1 );
+					if( IsSprite[tile] ) {
+						SetHidden( tile, neighbour, TileSide.Left, hidden );
+						SetHidden( tile, neighbour, TileSide.Right, hidden );
+						SetHidden( tile, neighbour, TileSide.Front, hidden );
+						SetHidden( tile, neighbour, TileSide.Back, hidden );
+						SetHidden( tile, neighbour, TileSide.Bottom, hidden && Height[neighbour] == 1 );
+						SetHidden( tile, neighbour, TileSide.Top, hidden && Height[tile] == 1 );
+					} else {
+						Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
+						Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
+						SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
+						SetZStretch( tile, tMin.Z == 0 && tMax.Z == 0 );
+						
+						SetHidden( tile, neighbour, TileSide.Left, hidden && nMax.X == 1 && tMin.X == 0 );
+						SetHidden( tile, neighbour, TileSide.Right, hidden && nMin.X == 0 && tMax.X == 1 );
+						SetHidden( tile, neighbour, TileSide.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
+						SetHidden( tile, neighbour, TileSide.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
+						SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
+						SetHidden( tile, neighbour, TileSide.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
+					}
 				}
 			}
 		}
@@ -35,10 +65,22 @@ namespace ClassicalSharp {
 			hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide] = value;
 		}
 		
-		/// <summary> Returns whether the face at the given face of the tile 
+		/// <summary> Returns whether the face at the given face of the tile
 		/// should be drawn with the neighbour 'block' present on the other side of the face. </summary>
 		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
 			return hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide];
+		}
+		
+		void SetXStretch( byte tile, bool stretch ) {
+			CanStretch[tile * TileSide.Sides + TileSide.Front] = stretch;
+			CanStretch[tile * TileSide.Sides + TileSide.Back] = stretch;
+			CanStretch[tile * TileSide.Sides + TileSide.Top] = stretch;
+			CanStretch[tile * TileSide.Sides + TileSide.Bottom] = stretch;
+		}
+		
+		void SetZStretch( byte tile, bool stretch ) {
+			CanStretch[tile * TileSide.Sides + TileSide.Left] = stretch;
+			CanStretch[tile * TileSide.Sides + TileSide.Right] = stretch;
 		}
 	}
 }
