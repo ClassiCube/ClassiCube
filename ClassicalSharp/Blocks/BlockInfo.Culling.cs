@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 						Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
 						Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
 						SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
-						SetZStretch( tile, tMin.Z == 0 && tMax.Z == 0 );
+						SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
 						
 						SetHidden( tile, neighbour, TileSide.Left, hidden && nMax.X == 1 && tMin.X == 0 );
 						SetHidden( tile, neighbour, TileSide.Right, hidden && nMin.X == 0 && tMax.X == 1 );
