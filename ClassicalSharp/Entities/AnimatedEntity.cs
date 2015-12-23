@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 				CalcHumanAnim( idleXRot, idleZRot );
 		}
 		
-		internal float leftXRot, leftZRot, rightXRot, rightZRot;		
+		internal float leftXRot, leftZRot, rightXRot, rightZRot;
 		void CalcHumanAnim( float idleXRot, float idleZRot ) {
 			if( game.SimpleArmsAnim ) {
 				leftXRot = armXRot; leftZRot = armZRot;
