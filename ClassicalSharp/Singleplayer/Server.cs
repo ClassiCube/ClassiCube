@@ -33,9 +33,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			game.Events.RaiseBlockPermissionsChanged();
 			int seed = new Random().Next();
-			//GenMap( 128, 64, 128, seed, new NotchyGenerator() );
-			// TODO: temp debug statement
-			GenMap( 16, 16, 16, 0, new FlatGrassGenerator() );
+			GenMap( 128, 64, 128, seed, new NotchyGenerator() );
 		}
 		
 		public override void SendChat( string text, bool partial ) {
