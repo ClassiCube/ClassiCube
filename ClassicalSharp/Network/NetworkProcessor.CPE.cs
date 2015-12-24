@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 			"HackControl", "MessageTypes", "PlayerClick",
 			"FullCP437", "LongerMessages",
 			// proposals
-			"BlockDefinitions", "BulkBlockUpdate",
+			"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -380,6 +380,46 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleCpeDefineBlock() {
+			byte block = HandleCpeDefineBlockCommonStart();
+			BlockInfo info = game.BlockInfo;			
+			byte shape = reader.ReadUInt8();
+			if( shape == 0 ) {
+				info.IsSprite[block] = true;
+				info.IsOpaque[block] = false;
+				info.IsTransparent[block] = true;
+			} else if( shape <= 16 ) {
+				info.MaxBB[block].Y = shape / 16f;
+			}
+			
+			HandleCpeDefineBlockCommonEnd( block );
+			// Update sprite BoundingBox if necessary
+			if( info.IsSprite[block] ) {
+				using( FastBitmap fastBmp =
+				      new FastBitmap( game.TerrainAtlas.AtlasBitmap, true ) ) {
+					info.RecalculateBB( block, fastBmp );
+				}
+			}
+		}
+		
+		void HandleCpeRemoveBlockDefinition() {
+			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8() );
+			game.BlockInfo.InitLightOffsets();
+		}
+		
+		void HandleCpeDefineBlockExt() {
+			byte block = HandleCpeDefineBlockCommonStart();
+			BlockInfo info = game.BlockInfo;
+			
+			info.MinBB[block].X = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
+			info.MinBB[block].Y = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
+			info.MinBB[block].Z = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
+			info.MaxBB[block].X = Math.Min( 1, reader.ReadUInt8() / 32f );
+			info.MaxBB[block].Y = Math.Min( 1, reader.ReadUInt8() / 32f );
+			info.MaxBB[block].Z = Math.Min( 1, reader.ReadUInt8() / 32f );
+			HandleCpeDefineBlockCommonEnd( block );
+		}
+		
+		byte HandleCpeDefineBlockCommonStart() {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockInfo( block );
@@ -402,19 +442,11 @@ namespace ClassicalSharp {
 				info.DigSounds[block] = breakSnds[sound];
 			}
 			info.FullBright[block] = reader.ReadUInt8() != 0;
-			
-			byte shape = reader.ReadUInt8();
-			if( shape == 0 ) {
-				info.IsSprite[block] = true;
-			} else if( shape <= 16 ) {
-				info.MaxBB[block].Y = shape/16f;
-			}
-			
-			if( info.IsOpaque[block] )
-				info.IsOpaque[block] = shape == 16;
-			if( shape != 16 )
-				info.IsTransparent[block] = true;
-			
+			return block;
+		}
+		
+		void HandleCpeDefineBlockCommonEnd( byte block ) {
+			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			if( blockDraw == 1 ) {
 				info.IsTransparent[block] = true;
@@ -432,18 +464,7 @@ namespace ClassicalSharp {
 			info.FogColour[block] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 			info.SetupCullingCache();
-			
-			// Update sprite BoundingBox if necessary
-			if( info.IsSprite[block] ) {
-				using( FastBitmap fastBmp =
-				      new FastBitmap( game.TerrainAtlas.AtlasBitmap, true ) ) {
-					info.RecalculateBB( block, fastBmp );
-				}
-			}
-		}
-		
-		void HandleCpeRemoveBlockDefinition() {
-			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8() );
+			info.InitLightOffsets();
 		}
 		
 		const int bulkCount = 256;

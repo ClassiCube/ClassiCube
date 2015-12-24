@@ -160,7 +160,7 @@ namespace ClassicalSharp {
 		int currentIndex;
 		void PageClick( bool forward ) {
 			currentIndex += forward ? numButtons : -numButtons;
-			if( currentIndex >= hotkeys.Hotkeys.Count )
+			if( currentIndex >= hotkeys.Hotkeys.Count + numButtons )
 				currentIndex -= numButtons;
 			if( currentIndex < 0 ) currentIndex = 0;
 			

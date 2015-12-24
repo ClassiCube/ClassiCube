@@ -196,7 +196,8 @@ namespace ClassicalSharp {
 				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
 				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,
 				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2,
-				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition, HandleBulkBlockUpdate,
+				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition, HandleCpeDefineBlockExt,
+				HandleBulkBlockUpdate,
 			};
 			maxHandledPacket = handlers.Length;
 		}
