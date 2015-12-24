@@ -2,6 +2,7 @@
 using ClassicalSharp.Hotkeys;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
+using OpenTK;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -63,7 +64,7 @@ namespace ClassicalSharp {
 			"HackControl", "MessageTypes", "PlayerClick",
 			"FullCP437", "LongerMessages",
 			// proposals
-			"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate",
+			"BlockDefinitions", "BlockDefinitionsExt",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -409,13 +410,17 @@ namespace ClassicalSharp {
 		void HandleCpeDefineBlockExt() {
 			byte block = HandleCpeDefineBlockCommonStart();
 			BlockInfo info = game.BlockInfo;
+			Vector3 min, max;
 			
-			info.MinBB[block].X = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
-			info.MinBB[block].Y = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
-			info.MinBB[block].Z = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
-			info.MaxBB[block].X = Math.Min( 1, reader.ReadUInt8() / 16f );
-			info.MaxBB[block].Y = Math.Min( 1, reader.ReadUInt8() / 16f );
-			info.MaxBB[block].Z = Math.Min( 1, reader.ReadUInt8() / 16f );
+			min.X = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.X, 0, 15/16f );
+			min.Y = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.Y, 0, 15/16f );
+			min.Z = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.Z, 0, 15/16f );
+			max.X = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.X, 1/16f, 1 );
+			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Y, 1/16f, 1 );
+			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Z, 1/16f, 1 );
+			
+			info.MinBB[block] = min;
+			info.MaxBB[block] = max;
 			HandleCpeDefineBlockCommonEnd( block );
 		}
 		

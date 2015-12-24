@@ -41,6 +41,8 @@ namespace ClassicalSharp {
 		CpePlayerClick = 34,
 		CpeDefineBlock = 35,
 		CpeRemoveBlockDefinition = 36,
+		CpeDefineBlockExt = 37,
+		CpeBulkBlockUpdate = 38,
 	}
 	
 	public enum CpeMessage {
