@@ -140,7 +140,7 @@
     <Compile Include="Audio\AudioPlayer.Sounds.cs" />
     <Compile Include="Audio\Soundboard.cs" />
     <Compile Include="Blocks\Block.cs" />
-    <Compile Include="Blocks\BlockInfo.BoundingBox.cs" />
+    <Compile Include="Blocks\BlockInfo.BoundsBox.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />

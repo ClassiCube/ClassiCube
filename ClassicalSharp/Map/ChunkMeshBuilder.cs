@@ -144,6 +144,7 @@ namespace ClassicalSharp {
 			
 			fullBright = info.FullBright[tile];
 			isTranslucent = info.IsTranslucent[tile];
+			lightFlags = info.LightOffset[tile];
 			
 			if( leftCount != 0 )
 				DrawLeftFace( leftCount );
@@ -274,7 +275,9 @@ namespace ClassicalSharp {
 			chunkIndex++;
 			countIndex += TileSide.Sides;
 			int max = chunkSize - xx;
-			while( count < max && x < width && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
+			bool stretchTile = info.CanStretch[tile * TileSide.Sides + face];
+			
+			while( count < max && x < width && stretchTile && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -290,7 +293,9 @@ namespace ClassicalSharp {
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * TileSide.Sides;
 			int max = chunkSize - zz;
-			while( count < max && z < length && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
+			bool stretchTile = info.CanStretch[tile * TileSide.Sides + face];
+			
+			while( count < max && z < length && stretchTile && CanStretch( tile, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
 				count++;
 				z++;

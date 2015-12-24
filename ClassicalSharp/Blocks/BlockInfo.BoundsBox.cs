@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		public Vector3[] MaxBB = new Vector3[BlocksCount];
 		
 		void InitBoundingBoxes() {
-			for( int i = 0; i < 256; i++ ) {
+			for( int i = 0; i < BlocksCount; i++ ) {
 				if( IsSprite[i] ) {
 					MinBB[i] = new Vector3( 2.50f/16f, 0, 2.50f/16f );
 					MaxBB[i] = new Vector3( 13.5f/16f, 1, 13.5f/16f );
@@ -22,8 +22,20 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		internal void InitLightOffsets() {
+			for( int tile = 0; tile < BlocksCount; tile++ ) {
+				int flags = 0xFF;
+				Vector3 min = MinBB[tile], max = MaxBB[tile];
+				if( min.X != 0 ) flags &= ~(1 << TileSide.Left);
+				if( max.X != 1 ) flags &= ~(1 << TileSide.Right);
+				if( min.Z != 0 ) flags &= ~(1 << TileSide.Front);
+				if( max.Z != 1 ) flags &= ~(1 << TileSide.Back);
+				LightOffset[tile] = (byte)flags;
+			}
+		}
+		
 		public void RecalculateSpriteBB( FastBitmap fastBmp ) {
-			for( int i = 0; i < 256; i++ ) {
+			for( int i = 0; i < BlocksCount; i++ ) {
 				if( IsSprite[i] ) RecalculateBB( i, fastBmp );
 			}
 		}

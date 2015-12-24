@@ -46,6 +46,8 @@ namespace ClassicalSharp {
 		
 		public bool[] CullWithNeighbours = new bool[BlocksCount];
 		
+		public byte[] LightOffset = new byte[BlocksCount];
+		
 		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
 		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
 		public const byte MaxDefinedBlock = byte.MaxValue;
@@ -97,9 +99,10 @@ namespace ClassicalSharp {
 			IsOpaqueY[(byte)Block.Slab] = true;
 			IsOpaqueY[(byte)Block.CobblestoneSlab] = true;
 			IsOpaqueY[(byte)Block.Snow] = true;
-			
+
 			InitBoundingBoxes();
 			InitSounds();
+			InitLightOffsets();
 			SetupCullingCache();
 		}
 

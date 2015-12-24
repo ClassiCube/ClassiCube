@@ -10,6 +10,7 @@ namespace ClassicalSharp {
 		TerrainAtlas1D atlas;
 		int arraysCount = 0;
 		bool fullBright;
+		int lightFlags;
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			int newArraysCount = game.TerrainAtlas1D.TexIds.Length;
@@ -64,30 +65,25 @@ namespace ClassicalSharp {
 		
 		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			return tile == initialTile && info.CanStretch[tile * TileSide.Sides + face] &&
-				!info.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) &&
-				( IsLit( X, Y, Z, face ) == IsLit( x, y, z, face ) );
+			return tile == initialTile && !info.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) 
+				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, tile ) );
 		}
 		
-		bool IsLit( int x, int y, int z, int face ) {
+		bool IsLit( int x, int y, int z, int face, byte type ) {
+			int offset = (info.LightOffset[type] >> face) & 1;
 			switch( face ) {
 				case TileSide.Left:
-					return fullBright || x <= 0 || y > map.heightmap[(z * width) + (x - 1)];
-					
+					return x < offset || y > map.heightmap[(z * width) + (x - offset)];			
 				case TileSide.Right:
-					return fullBright || x >= maxX || y > map.heightmap[(z * width) + (x + 1)];
-					
+					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
 				case TileSide.Front:
-					return fullBright || z <= 0 || y > map.heightmap[((z - 1) * width) + x];
-					
+					return z < offset || y > map.heightmap[((z - offset) * width) + x];					
 				case TileSide.Back:
-					return fullBright || z >= maxZ || y > map.heightmap[((z + 1) * width) + x];
-					
+					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
 				case TileSide.Bottom:
-					return fullBright || y <= 0 || (y - 1) > map.heightmap[(z * width) + x];
-					
+					return y <= 0 || (y - 1) > map.heightmap[(z * width) + x];					
 				case TileSide.Top:
-					return fullBright || y >= maxY || y > map.heightmap[(z * width) + x];
+					return y >= maxY || y > map.heightmap[(z * width) + x];
 			}
 			return true;
 		}
@@ -169,13 +165,14 @@ namespace ClassicalSharp {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Left];
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Left) & 1;
 			
 			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
-				X > 0 ? (Y > map.heightmap[(Z * width) + (X - 1)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
+				X >= offset ? (Y > map.heightmap[(Z * width) + (X - offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
 			
 			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z2 + (count - 1), u2, v1, col );
 			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
@@ -187,54 +184,57 @@ namespace ClassicalSharp {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Right) & 1;
 			
 			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
-				X < maxX ? (Y > map.heightmap[(Z * width) + (X + 1)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
+				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
 			
 			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1, u2, v1, col );
 			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z2 + (count - 1), u1, v1, col );
 			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z2 + (count - 1), u1, v2, col );
 			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1, u2, v2, col );
 		}
-		
-		void DrawBackFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Back];
-			int i = texId / elementsPerAtlas1D;			
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			
-			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
-			float v1 = vOrigin + minBB.Y * invVerElementSize;
-			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
-			FastColour col = fullBright ? FastColour.White :
-				Z < maxZ ? (Y > map.heightmap[((Z + 1) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
-			
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
-		}
 
 		void DrawFrontFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Front];
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Front) & 1;
 			
 			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
-				Z > 0 ? (Y > map.heightmap[((Z - 1) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
+				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
 			
 			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z1, u1, v2, col );
 			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u2, v2, col );
 			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u2, v1, col );
 			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u1, v1, col );
+		}
+		
+		void DrawBackFace( int count ) {
+			int texId = info.textures[tile * TileSide.Sides + TileSide.Back];
+			int i = texId / elementsPerAtlas1D;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Back) & 1;
+			
+			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float v1 = vOrigin + minBB.Y * invVerElementSize;
+			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
+			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			FastColour col = fullBright ? FastColour.White :
+				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
+			
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
 		}
 		
 		void DrawBottomFace( int count ) {
