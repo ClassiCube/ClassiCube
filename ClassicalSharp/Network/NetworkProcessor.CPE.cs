@@ -410,12 +410,12 @@ namespace ClassicalSharp {
 			byte block = HandleCpeDefineBlockCommonStart();
 			BlockInfo info = game.BlockInfo;
 			
-			info.MinBB[block].X = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
-			info.MinBB[block].Y = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
-			info.MinBB[block].Z = Math.Min( 15.5f/16f, reader.ReadUInt8() / 32f );
-			info.MaxBB[block].X = Math.Min( 1, reader.ReadUInt8() / 32f );
-			info.MaxBB[block].Y = Math.Min( 1, reader.ReadUInt8() / 32f );
-			info.MaxBB[block].Z = Math.Min( 1, reader.ReadUInt8() / 32f );
+			info.MinBB[block].X = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
+			info.MinBB[block].Y = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
+			info.MinBB[block].Z = Math.Min( 15/16f, reader.ReadUInt8() / 16f );
+			info.MaxBB[block].X = Math.Min( 1, reader.ReadUInt8() / 16f );
+			info.MaxBB[block].Y = Math.Min( 1, reader.ReadUInt8() / 16f );
+			info.MaxBB[block].Z = Math.Min( 1, reader.ReadUInt8() / 16f );
 			HandleCpeDefineBlockCommonEnd( block );
 		}
 		
