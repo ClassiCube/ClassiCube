@@ -122,13 +122,21 @@ namespace ClassicalSharp.Renderers {
 		void ResetFog() {
 			if( map.IsNotLoaded ) return;
 			FastColour adjFogCol = FastColour.White;
-			Block headBlock = game.LocalPlayer.BlockAtHead;
 			BlockInfo info = game.BlockInfo;
+			BoundingBox pBounds = game.LocalPlayer.CollisionBounds;
 			
-			if( info.FogDensity[(byte)headBlock] != 0 ) {
+			Vector3I headCoords = Vector3I.Floor( game.LocalPlayer.EyePosition );
+			Vector3 pos = (Vector3)headCoords;
+			byte headBlock = game.Map.SafeGetBlock( headCoords );
+			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[headBlock],
+			                                      pos + game.BlockInfo.MaxBB[headBlock] );
+			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
+			bool intersecting = blockBB.Intersects( localBB );
+			
+			if( intersecting && info.FogDensity[headBlock] != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( info.FogDensity[(byte)headBlock] );
-				adjFogCol = info.FogColour[(byte)headBlock];
+				graphics.SetFogDensity( info.FogDensity[headBlock] );
+				adjFogCol = info.FogColour[headBlock];
 			} else {
 				// Blend fog and sky together
 				float blend = (float)BlendFactor( game.ViewDistance );
