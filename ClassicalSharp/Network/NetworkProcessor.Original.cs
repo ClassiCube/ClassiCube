@@ -85,7 +85,12 @@ namespace ClassicalSharp {
 			if( gzipStream != null )
 				return;
 			game.Map.Reset();
-			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ) );
+			prevScreen = game.activeScreen;
+			if( prevScreen is LoadingMapScreen )
+				prevScreen = null;
+			prevCursorVisible = game.CursorVisible;
+			
+			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ), false );
 			if( ServerMotd.Contains( "cfg=" ) ) {
 				ReadWomConfigurationAsync();
 			}
@@ -139,6 +144,11 @@ namespace ClassicalSharp {
 		
 		void HandleLevelFinalise() {
 			game.SetNewScreen( null );
+			game.activeScreen = prevScreen;		
+			if( prevScreen != null )
+				game.CursorVisible = prevCursorVisible;
+			prevScreen = null;
+			
 			int mapWidth = reader.ReadInt16();
 			int mapHeight = reader.ReadInt16();
 			int mapLength = reader.ReadInt16();
@@ -248,7 +258,7 @@ namespace ClassicalSharp {
 		
 		void HandleSetPermission() {
 			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
-		}	
+		}
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
 			skinName = Utils.StripColours( skinName );
@@ -282,7 +292,7 @@ namespace ClassicalSharp {
 				game.Events.RaiseEntityRemoved( entityId );
 				player.Despawn();
 				game.Players[entityId] = null;
-			}		
+			}
 			// See comment about LegendCraft in HandleAddEntity
 			if( needRemoveNames != null && needRemoveNames[entityId] ) {
 				game.Events.RaiseCpeListInfoRemoved( entityId );

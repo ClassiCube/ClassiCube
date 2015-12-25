@@ -300,7 +300,10 @@ namespace ClassicalSharp {
 		}
 		
 		internal Screen activeScreen;
-		public void SetNewScreen( Screen screen ) {
+		
+		public void SetNewScreen( Screen screen ) { SetNewScreen( screen, true ); }
+		
+		public void SetNewScreen( Screen screen, bool disposeOld ) {
 			// don't switch to the new screen immediately if the user
 			// is currently looking at a warning dialog.
 			if( activeScreen is WarningScreen ) {
@@ -314,7 +317,7 @@ namespace ClassicalSharp {
 				return;
 			}
 			InputHandler.ScreenChanged( activeScreen, screen );
-			if( activeScreen != null )
+			if( activeScreen != null && disposeOld )
 				activeScreen.Dispose();
 			
 			if( screen == null ) {
