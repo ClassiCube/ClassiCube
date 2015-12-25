@@ -23,25 +23,22 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseScroll( int delta ) {
 			bool bounds = Contains( TableX, TableY, TableWidth, TableHeight,
 			                       game.Mouse.X, game.Mouse.Y );
-			if( !bounds || selIndex == -1 ) return false;
-			delta = -delta;
-			int startScrollY = scrollY;
-			selIndex += delta * blocksPerRow;
+			if( !bounds ) return false;
+			int rowY = (selIndex / blocksPerRow) - scrollY;
+			scrollY -= delta;
+			ClampScrollY();
+			if( selIndex == - 1 ) return true;
 			
-			if( selIndex >= blocksTable.Length || selIndex < 0 ) 
-				selIndex -= delta * blocksPerRow;
-			Utils.Clamp( ref selIndex, 0, blocksTable.Length - 1 );
-			int endScrollY = selIndex / blocksPerRow;
-			
-			UpdateSelectedState();
+			selIndex = scrollY * blocksPerRow + (selIndex % blocksPerRow);
+			for( int row = 0; row < rowY; row++ ) {
+				if( selIndex + blocksPerRow >= blocksTable.Length ) break;
+				selIndex += blocksPerRow;
+			}
+			MoveCursorToSelected();
+			RecreateBlockInfoTexture();
 			return true;
 		}
 		int scrollY;
-		
-		void UpdateScrollY() {
-			scrollY = selIndex / blocksPerRow;
-			ClampScrollY();
-		}
 		
 		void ClampScrollY() {
 			if( scrollY >= rows - maxRows )

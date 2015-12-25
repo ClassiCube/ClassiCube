@@ -100,6 +100,7 @@ namespace ClassicalSharp {
 			scrollY = (selIndex / blocksPerRow) - (maxRows - 1);
 			ClampScrollY();
 			MoveCursorToSelected();
+			RecreateBlockInfoTexture();
 		}
 		
 		void MoveCursorToSelected() {
@@ -117,7 +118,9 @@ namespace ClassicalSharp {
 			RecreateBlockTable();
 			if( selIndex >= blocksTable.Length )
 				selIndex = blocksTable.Length - 1;
-			UpdateScrollY();
+			
+			scrollY = selIndex / blocksPerRow;
+			ClampScrollY();
 			RecreateBlockInfoTexture();
 		}
 		
@@ -252,35 +255,34 @@ namespace ClassicalSharp {
 				game.Inventory.HeldBlock = blocksTable[selIndex];
 				game.SetNewScreen( null );
 			} else if( (key == Key.Left || key == Key.Keypad4) && selIndex != -1 ) {
-				selIndex--;
-				if( selIndex < 0 )
-					selIndex = 0;
-				UpdateSelectedState();
+				ArrowKeyMove( -1 );
 			} else if( (key == Key.Right || key == Key.Keypad6) && selIndex != -1 ) {
-				selIndex++;
-				if( selIndex >= blocksTable.Length )
-					selIndex = blocksTable.Length - 1;
-				UpdateSelectedState();
+				ArrowKeyMove( 1 );
 			} else if( (key == Key.Up || key == Key.Keypad8) && selIndex != -1 ) {
-				selIndex -= blocksPerRow;
-				if( selIndex < 0 )
-					selIndex += blocksPerRow;
-				UpdateSelectedState();
+				ArrowKeyMove( -blocksPerRow );
 			} else if( (key == Key.Down || key == Key.Keypad2) && selIndex != -1 ) {
-				selIndex += blocksPerRow;
-				if( selIndex >= blocksTable.Length )
-					selIndex -= blocksPerRow;
-				UpdateSelectedState();
+				ArrowKeyMove( blocksPerRow );
+			} else if( key >= Key.Number1 && key <= Key.Number9 ) {
+				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
 			}
 			return true;
 		}
 		
-		void UpdateSelectedState() {
-			UpdateScrollY();
+		void ArrowKeyMove( int delta ) {
+			int startIndex = selIndex;
+			selIndex += delta;
+			if( selIndex < 0 )
+				selIndex -= delta;
+			if( selIndex >= blocksTable.Length )
+				selIndex -= delta;
+			
+			int scrollDelta = (selIndex / blocksPerRow) - (startIndex / blocksPerRow);
+			scrollY += scrollDelta;
+			ClampScrollY();
 			RecreateBlockInfoTexture();
 			MoveCursorToSelected();
 		}
-		
+
 		static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
 			return x >= recX && y >= recY && x < recX + width && y < recY + height;
 		}
