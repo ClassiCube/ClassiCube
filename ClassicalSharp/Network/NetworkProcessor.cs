@@ -175,6 +175,7 @@ namespace ClassicalSharp {
 			reader.Remove( 1 ); // remove opcode
 			lastOpcode = (PacketId)opcode;
 			Action handler = handlers[opcode];
+			Console.WriteLine( lastOpcode );
 			
 			if( handler == null )
 				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );

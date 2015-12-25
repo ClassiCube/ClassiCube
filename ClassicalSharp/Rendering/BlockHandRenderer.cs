@@ -31,7 +31,7 @@ namespace ClassicalSharp.Renderers {
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
 		
-		public void Render( double delta ) {
+		public void Render( double delta, float t ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand )
 				return;
 			game.Graphics.Texturing = true;
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Renderers {
 			type = (byte)game.Inventory.HeldBlock;
 			if( playAnimation )
 				DoAnimation( delta );
-			PerformViewBobbing();
+			PerformViewBobbing( t );
 			SetupMatrices();
 			
 			if( game.BlockInfo.IsSprite[type] )
@@ -113,7 +113,7 @@ namespace ClassicalSharp.Renderers {
 			angleX = 0;
 			animPeriod = period;
 			animSpeed = Math.PI / period;
-			 
+			
 			if( updateLastType )
 				lastType = (byte)game.Inventory.HeldBlock;
 			fakeP.Position = Vector3.Zero;
@@ -134,25 +134,47 @@ namespace ClassicalSharp.Renderers {
 			playAnimation = true;
 		}
 		
-		void PerformViewBobbing() {
-			if( !game.ViewBobbing || !game.LocalPlayer.onGround ) return;
+		float bobTimeO, bobTimeN;
+		void PerformViewBobbing( float t ) {
+			if( !game.ViewBobbing ) return;
 			LocalPlayer p = game.LocalPlayer;
+			float bobTime = Utils.Lerp( bobTimeO, bobTimeN, t );
 			
-			double horTime = Math.Sin( p.curWalkTime ) * p.curSwing;
+			double horTime = Math.Sin( bobTime ) * p.curSwing;
 			// (0.5 + 0.5cos(2x)) is smoother than abs(cos(x)) at endpoints
-			double verTime = Math.Cos( p.curWalkTime * 2f );
-			float horAngle = 0.2f * (float)horTime;			
+			double verTime = Math.Cos( bobTime * 2 );
+			float horAngle = 0.2f * (float)horTime;
 			float verAngle = 0.2f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
 			
-			if( horAngle > 0 ) 
+			if( horAngle > 0 )
 				fakeP.Position.X += horAngle;
-			else 
+			else
 				fakeP.Position.Z += horAngle;
 			fakeP.Position.Y -= verAngle;
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
 			SetAnimationSwitchBlock();
+		}
+		
+		bool stop = false;
+		public void Tick( double delta ) {
+			Player p = game.LocalPlayer;
+			float bobTimeDelta = p.walkTimeN - p.walkTimeO;
+			bobTimeO = bobTimeN;
+
+			if( game.LocalPlayer.onGround ) stop = false;
+			if( stop ) return;
+			bobTimeN += bobTimeDelta;
+			if( game.LocalPlayer.onGround ) return;
+
+			// Keep returning the held block back to centre position.
+			if( Math.Sign( Math.Sin( bobTimeO ) ) == Math.Sign( Math.Sin( bobTimeN ) ) )
+				return;
+			// Stop bob time at next periodic '0' angle.
+			double left = Math.PI - (bobTimeO % Math.PI);
+			bobTimeN = (float)(bobTimeO + left);
+			stop = true;
 		}
 		
 		public void Dispose() {

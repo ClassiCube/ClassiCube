@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		}
 		public float legXRot, armXRot, armZRot;
 		public float bobYOffset, tilt, walkTime, swing;
-		protected float walkTimeO, walkTimeN, swingO, swingN;
+		protected internal float walkTimeO, walkTimeN, swingO, swingN;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
 		protected void UpdateAnimState( Vector3 oldPos, Vector3 newPos, double delta ) {

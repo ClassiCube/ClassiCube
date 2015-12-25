@@ -199,7 +199,7 @@ namespace ClassicalSharp {
 				bool right = IsMousePressed( MouseButton.Right );
 				InputHandler.PickBlocks( true, left, middle, right );
 				if( !HideGui )
-					BlockHandRenderer.Render( e.Time );
+					BlockHandRenderer.Render( e.Time, t );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
@@ -242,6 +242,7 @@ namespace ClassicalSharp {
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
 				AudioPlayer.Tick( ticksPeriod );
+				BlockHandRenderer.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
