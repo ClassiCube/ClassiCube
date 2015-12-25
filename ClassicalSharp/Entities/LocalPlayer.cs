@@ -102,6 +102,7 @@ namespace ClassicalSharp {
 			lastPos = Position = nextPos;
 			lastYaw = nextYaw;
 			lastPitch = nextPitch;
+			bool wasOnGround = onGround;
 			
 			HandleInput( ref xMoving, ref zMoving );
 			UpdateVelocityState( xMoving, zMoving );
@@ -112,16 +113,34 @@ namespace ClassicalSharp {
 			UpdateAnimState( lastPos, nextPos, delta );
 			CheckSkin();
 			
-			Vector3 soundPos = Position;
-			byte blockUnder = (byte)BlockUnderFeet;
-			if( blockUnder == 0 ) soundPos = new Vector3( -100000 );
+			Vector3 soundPos = nextPos;
+			bool anyNonAir = false;
+			SoundType type = GetSoundUnder( ref anyNonAir );
+			if( !anyNonAir ) soundPos = new Vector3( -100000 );
 			
 			float distSq = (lastSoundPos - soundPos).LengthSquared;
-			if( onGround && distSq > 2 * 2 ) {
-				SoundType type = game.BlockInfo.StepSounds[blockUnder];
+			if( onGround && (distSq > 1.75f * 1.75f || !wasOnGround) ) {
 				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
+		}
+		
+		SoundType GetSoundUnder( ref bool anyNonAir ) {
+			Vector3 pos = new Vector3( nextPos.X, nextPos.Y - 0.01f, nextPos.Z );
+			Vector3 size = CollisionSize;
+			BoundingBox bounds = new BoundingBox( pos - size / 2, pos + size / 2);
+			bounds.Max.Y = bounds.Min.Y = pos.Y;
+			
+			SoundType type = SoundType.None;
+			bool nonAir = false;
+			TouchesAny( bounds, b => {
+			           	SoundType newType = game.BlockInfo.StepSounds[b];
+			           	if( newType != SoundType.None ) type = newType;
+			           	if( b != 0 ) nonAir = true;
+			           	return false;
+			           });
+			anyNonAir = nonAir;
+			return type;
 		}
 		
 		public override void RenderModel( double deltaTime, float t ) {
