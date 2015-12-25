@@ -46,7 +46,7 @@ namespace Launcher2 {
 			Framebuffer = new Bitmap( Width, Height );
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
-				Drawer.Clear( clearColour );
+				ClearArea( 0, 0, Width, Height );
 				
 				DrawTextArgs args1 = new DrawTextArgs( "&eClassical", logoItalicFont, true );
 				Size size1 = drawer.MeasureChatSize( ref args1 );
@@ -62,7 +62,11 @@ namespace Launcher2 {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
-			Drawer.Clear( clearColour, x, y, width, height );
+			FastColour a = new FastColour( 0x39, 0x43, 0x51 );
+			FastColour b = FastColour.Black;
+			//FastColour a = FastColour.White, b = FastColour.Black;
+			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
+				Drawer2DExt.DrawGradient( dst, new Rectangle( x, y, width, height ), a, b );
 		}
 	}
 }

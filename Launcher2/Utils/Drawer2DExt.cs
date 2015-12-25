@@ -39,5 +39,24 @@ namespace Launcher2 {
 				}
 			}
 		}
+		
+		
+		public unsafe static void DrawGradient( FastBitmap dst, Rectangle dstRect, FastColour a, FastColour b ) {
+			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
+			int dstX = dstRect.X, dstY = dstRect.Y;
+			
+			if( dstX >= dst.Width || dstY >= dst.Height ) return;
+			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
+			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				float t = (dstY + yy) / (float)dst.Height;
+				int col = FastColour.Lerp( a, b, t ).ToArgb();
+				
+				int* dstRow = dst.GetRowPtr( dstY + yy );						
+				for( int xx = 0; xx < dstWidth; xx++ )
+					dstRow[dstX + xx] = col;
+			}
+		}
 	}
 }

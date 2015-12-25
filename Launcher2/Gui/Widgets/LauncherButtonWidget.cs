@@ -39,14 +39,15 @@ namespace Launcher2 {
 		}
 		
 		void DrawRaw( FastBitmap src, FastBitmap dst ) {
+			int y = Active ? 0 : 42;
 			Drawer2DExt.CopyScaledPixels( src, dst,
-			                             new Rectangle( 0, 0, 16, 42 ),
+			                             new Rectangle( 0, y, 16, 42 ),
 			                             new Rectangle( X, Y, 16, Height ) );
 			Drawer2DExt.CopyScaledPixels( src, dst,
-			                             new Rectangle( 16, 0, 32, 42 ),
+			                             new Rectangle( 16, y, 32, 42 ),
 			                             new Rectangle( X + 16, Y, Width - 32, Height ) );
 			Drawer2DExt.CopyScaledPixels( src, dst,
-			                             new Rectangle( 48, 0, 16, 42 ),
+			                             new Rectangle( 48, y, 16, 42 ),
 			                             new Rectangle( X + Width - 16, Y, 16, Height ) );
 		}
 	}
