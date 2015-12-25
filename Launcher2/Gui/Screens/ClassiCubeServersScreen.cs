@@ -118,9 +118,9 @@ namespace Launcher2 {
 			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 145, 50, 32 );
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
-			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			MakeButtonAt( "Back", 70, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -10, 5, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
-			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			MakeButtonAt( "Connect", 100, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -10, 50, ConnectToServer );
 			MakeTableWidget();
 		}

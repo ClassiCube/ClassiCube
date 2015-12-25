@@ -134,17 +134,17 @@ namespace Launcher2 {
 			}
 		}
 		
-		protected void MakeButtonAt( string text, int width, int height, Font font,
+		protected void MakeButtonAt( string text, int width, Font font,
 		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
-			MakeButtonAt( text, width, height, font, Anchor.Centre, verAnchor, x, y, onClick );
+			MakeButtonAt( text, width, font, Anchor.Centre, verAnchor, x, y, onClick );
 		}
 		
-		protected void MakeButtonAt( string text, int width, int height, Font font, Anchor horAnchor,
+		protected void MakeButtonAt( string text, int width, Font font, Anchor horAnchor,
 		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
 			if( widgets[widgetIndex] != null ) {
 				LauncherButtonWidget button = (LauncherButtonWidget)widgets[widgetIndex];
 				button.Active = false;
-				button.DrawAt( drawer, text, font, horAnchor, verAnchor, width, height, x, y );
+				button.DrawAt( drawer, text, font, horAnchor, verAnchor, width, x, y );
 				widgetIndex++;
 				return;
 			}
@@ -154,7 +154,7 @@ namespace Launcher2 {
 			widget.OnClick = onClick;
 			
 			widget.Active = false;
-			widget.DrawAt( drawer, text, font, horAnchor, verAnchor, width, height, x, y );
+			widget.DrawAt( drawer, text, font, horAnchor, verAnchor, width, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		

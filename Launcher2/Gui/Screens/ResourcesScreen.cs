@@ -87,13 +87,13 @@ namespace Launcher2 {
 			
 			if( fetcher == null ) {
 				MakeLabelAt( mainText, infoFont, Anchor.Centre, Anchor.Centre, 0, -30 );
-				MakeButtonAt( "Yes", 60, 30, textFont, Anchor.Centre,
+				MakeButtonAt( "Yes", 60, textFont, Anchor.Centre,
 				             -50, 40, DownloadResources );
 				
-				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre,
+				MakeButtonAt( "No", 60, textFont, Anchor.Centre,
 				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			} else {
-				MakeButtonAt( "Cancel", 120, 30, textFont, Anchor.Centre,
+				MakeButtonAt( "Cancel", 120, textFont, Anchor.Centre,
 				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			}
 		}

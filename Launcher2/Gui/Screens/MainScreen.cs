@@ -53,31 +53,31 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			MakeButtonAt( "ClassiCube.net", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, -100,
+			             buttonWidth, 0, -100,
 			             (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
 			
 			MakeButtonAt( "Direct connect", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, -50,
+			             buttonWidth, 0, -50,
 			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );			
 			
 			MakeButtonAt( "Singleplayer", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, 0,
+			             buttonWidth, 0, 0,
 			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
 			
 			MakeButtonAt( "Check for updates", Anchor.Centre, Anchor.Centre,
-			             buttonWidth, buttonHeight, 0, 100,
+			             buttonWidth, 0, 100,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
 		}
 		
-		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
-		void MakeButtonAt( string text, Anchor horAnchor,
-		                  Anchor verAnchor, int width, int height, int x, int y, Action<int, int> onClick ) {
+		const int buttonWidth = 220, sideButtonWidth = 150;
+		void MakeButtonAt( string text, Anchor horAnchor, Anchor verAnchor, 
+		                  int width, int x, int y, Action<int, int> onClick ) {
 			LauncherButtonWidget widget = new LauncherButtonWidget( game );
 			widget.Text = text;
 			widget.OnClick = onClick;
 			
 			widget.Active = false;
-			widget.DrawAt( drawer, text, textFont, horAnchor, verAnchor, width, height, x, y );
+			widget.DrawAt( drawer, text, textFont, horAnchor, verAnchor, width, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		

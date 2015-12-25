@@ -95,9 +95,9 @@ namespace Launcher2 {
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
 			MakeInput( Get(), 300, Anchor.Centre, true, 30, -50, 32 );
 			
-			MakeButtonAt( "Sign in", 90, 35, titleFont, Anchor.Centre,
+			MakeButtonAt( "Sign in", 90, titleFont, Anchor.Centre,
 			             -75, 0, StartClient );
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
+			MakeButtonAt( "Back", 80, titleFont, Anchor.Centre,
 			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			string text = widgets[6] == null ? "" : widgets[6].Text;
 			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );

@@ -91,8 +91,8 @@ namespace Launcher2 {
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64 );
 			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32 );
 			
-			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
+			MakeButtonAt( "Connect", 110, titleFont, Anchor.Centre, -65, 50, StartClient );
+			MakeButtonAt( "Back", 80, titleFont, Anchor.Centre,
 			             140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );

@@ -88,20 +88,20 @@ namespace Launcher2 {
 			MakeLabelAt( "Latest stable:", titleFont, Anchor.Centre, Anchor.Centre, -70, -80 );
 			string latestStable = GetDateString( lastStable, validStable );
 			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 100, -80 );
-			MakeButtonAt( "Update to D3D9 stable", 260, 30, titleFont, Anchor.Centre, 0, -40,
+			MakeButtonAt( "Update to D3D9 stable", 260, titleFont, Anchor.Centre, 0, -40,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, true ) );
-			MakeButtonAt( "Update to OpenGL stable", 260, 30, titleFont, Anchor.Centre, 0, 0,
+			MakeButtonAt( "Update to OpenGL stable", 260, titleFont, Anchor.Centre, 0, 0,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, false ) );
 			
 			MakeLabelAt( "Latest dev:", titleFont, Anchor.Centre, Anchor.Centre, -60, 40 );
 			string latestDev = GetDateString( lastDev, validDev );
 			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 40 );
-			MakeButtonAt( "Update to D3D9 dev", 240, 30, titleFont, Anchor.Centre, 0, 80,
+			MakeButtonAt( "Update to D3D9 dev", 240, titleFont, Anchor.Centre, 0, 80,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
-			MakeButtonAt( "Update to OpenGL dev", 240, 30, titleFont, Anchor.Centre, 0, 120,
+			MakeButtonAt( "Update to OpenGL dev", 240, titleFont, Anchor.Centre, 0, 120,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, false ) );
 			
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
+			MakeButtonAt( "Back", 80, titleFont, Anchor.Centre,
 			             0, 200, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 		}
 		
