@@ -86,6 +86,12 @@ namespace ClassicalSharp {
 				byte block = 0;
 				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
 				   && (inv.CanPlace[block] || inv.CanDelete[block]) ) {
+					
+					for( int i = 0; i < inv.Hotbar.Length; i++ ) {
+						if( inv.Hotbar[i] == (Block)block ) {
+							inv.HeldBlockIndex = i; return;
+						}
+					}
 					inv.HeldBlock = (Block)block;
 				}
 			} else if( left ) {

@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		}
 		
 		ChatScreen chat;
-		BlockHotbarWidget hotbar;
+		internal BlockHotbarWidget hotbar;
 		PlayerListWidget playerList;
 		Font playerFont;
 		

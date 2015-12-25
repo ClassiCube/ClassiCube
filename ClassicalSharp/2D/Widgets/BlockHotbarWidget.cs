@@ -18,14 +18,6 @@ namespace ClassicalSharp {
 		float barHeight, selBlockSize, elemSize;
 		float barXOffset, borderSize;
 		
-		public override bool HandlesKeyDown( Key key ) {
-			if( key >= Key.Number1 && key <= Key.Number9 ) {
-				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
-				return true;
-			}
-			return false;
-		}
-		
 		public override void Init() {
 			float scale = 2 * game.GuiScale;
 			selBlockSize = (float)Math.Ceiling( 24 * scale );
@@ -87,6 +79,33 @@ namespace ClassicalSharp {
 			int y = game.Height - vSize;
 			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
 			selTex = new Texture( game.GuiTexId, 0, y, hSize, vSize, rec );
+		}
+		
+		public override bool HandlesKeyDown( Key key ) {
+			if( key >= Key.Number1 && key <= Key.Number9 ) {
+				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
+				return true;
+			}
+			return false;
+		}
+		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			if( button != MouseButton.Left || !Bounds.Contains( mouseX, mouseY ) )
+			   return false;
+			BlockSelectScreen screen = game.GetActiveScreen as BlockSelectScreen;
+			if( screen == null ) return false;
+			
+			for( int i = 0; i < hotbarCount; i++ ) {
+				int x = (int)(X + barXOffset + (elemSize + borderSize) * i);
+				int y = (int)(game.Height - barHeight);
+				Rectangle bounds = new Rectangle( x, y, (int)elemSize, (int)barHeight );
+					
+				if( bounds.Contains( mouseX, mouseY ) ) {
+					screen.SetBlockTo( game.Inventory.Hotbar[i] );
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

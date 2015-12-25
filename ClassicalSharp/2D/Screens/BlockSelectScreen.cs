@@ -89,15 +89,17 @@ namespace ClassicalSharp {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			
+						
 			RecreateBlockTable();
-			Block held = game.Inventory.HeldBlock;
-			selIndex = Array.IndexOf<Block>( blocksTable, held );
+			SetBlockTo( game.Inventory.HeldBlock );
+			game.Keyboard.KeyRepeat = true;
+		}
+		
+		public void SetBlockTo( Block block ) {
+			selIndex = Array.IndexOf<Block>( blocksTable, block );
 			scrollY = (selIndex / blocksPerRow) - (maxRows - 1);
 			ClampScrollY();
-			
 			MoveCursorToSelected();
-			game.Keyboard.KeyRepeat = true;
 		}
 		
 		void MoveCursorToSelected() {
@@ -231,6 +233,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			if( game.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
+				return true;
 			if( button == MouseButton.Left && mouseX >= TableX && mouseX < TableX + scrollbarWidth ) {
 				ScrollbarClick( mouseY );
 			} else if( button == MouseButton.Left && selIndex != -1 ) {
