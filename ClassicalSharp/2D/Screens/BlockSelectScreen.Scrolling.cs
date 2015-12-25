@@ -1,4 +1,5 @@
 ﻿using System;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -11,8 +12,8 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( TableX, TableY, scrollbarWidth,
 			                       TableHeight, scrollCol );
 			float scale = TableHeight / (float)rows;
-			int yOffset = (int)Math.Ceiling(scrollY * scale);
-			int height = (int)Math.Ceiling(maxRows * scale);
+			int yOffset = (int)Math.Ceiling( scrollY * scale );
+			int height = (int)Math.Ceiling( maxRows * scale );
 			
 			if( yOffset + height > TableHeight )
 				height = TableHeight - yOffset;
@@ -52,6 +53,13 @@ namespace ClassicalSharp {
 			float scale = TableHeight / (float)rows;
 			scrollY = (int)(mouseY / scale);
 			ClampScrollY();
+		}
+		
+		bool draggingMouse = false;
+		
+		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) {
+			draggingMouse = false;
+			return true;
 		}
 	}
 }

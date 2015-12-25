@@ -218,6 +218,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
+			if( draggingMouse ) {
+				ScrollbarClick( mouseY );
+				return true;
+			}
+			
 			selIndex = -1;
 			if( Contains( startX, startY, blocksPerRow * blockSize,
 			             maxRows * blockSize, mouseX, mouseY ) ) {
@@ -236,10 +241,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( game.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
+			if( draggingMouse || game.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
 				return true;
 			if( button == MouseButton.Left && mouseX >= TableX && mouseX < TableX + scrollbarWidth ) {
 				ScrollbarClick( mouseY );
+				draggingMouse = true;
 			} else if( button == MouseButton.Left && selIndex != -1 ) {
 				game.Inventory.HeldBlock = blocksTable[selIndex];
 				game.SetNewScreen( null );
