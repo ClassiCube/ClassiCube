@@ -57,11 +57,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Gui\PlatformDrawer.cs" />
-    <Compile Include="Gui\Screens\ClassiCubeScreen.cs" />
     <Compile Include="Gui\Screens\ClassiCubeServersScreen.cs" />
     <Compile Include="Gui\Screens\DirectConnectScreen.cs" />
     <Compile Include="Gui\Screens\LauncherInputScreen.cs" />
     <Compile Include="Gui\Screens\LauncherScreen.cs" />
+    <Compile Include="Gui\Screens\MainScreen.Classicube.cs" />
     <Compile Include="Gui\Screens\MainScreen.cs" />
     <Compile Include="Gui\Screens\ResourcesScreen.cs" />
     <Compile Include="Gui\Screens\UpdatesScreen.cs" />

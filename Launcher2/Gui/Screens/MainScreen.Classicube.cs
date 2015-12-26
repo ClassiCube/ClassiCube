@@ -7,14 +7,7 @@ using ClassicalSharp;
 
 namespace Launcher2 {
 	
-	public sealed class ClassiCubeScreen : LauncherInputScreen {
-		
-		public ClassiCubeScreen( LauncherWindow game ) : base( game ) {
-			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			inputFont = new Font( "Arial", 15, FontStyle.Regular );
-			enterIndex = 4;
-			widgets = new LauncherWidget[7];
-		}
+	public sealed partial class MainScreen : LauncherInputScreen {
 
 		public override void Init() {
 			base.Init();
@@ -78,29 +71,18 @@ namespace Launcher2 {
 			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
 			Options.Save();
 		}
-		
-		public override void Resize() {
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				Draw();
-			}
-			Dirty = true;
-		}
 
-		void Draw() {
-			widgetIndex = 0;
-			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
-			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -180, -50 );
+		void DrawClassicube() {
+			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -150 );
+			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
 			
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
-			MakeInput( Get(), 300, Anchor.Centre, true, 30, -50, 32 );
+			MakeInput( Get(), 280, Anchor.Centre, false, 30, -150, 32 );
+			MakeInput( Get(), 280, Anchor.Centre, true, 30, -100, 32 );
 			
-			MakeButtonAt( "Sign in", 90, 35, titleFont, Anchor.Centre,
-			             -75, 0, StartClient );
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
-			             140, 0, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			string text = widgets[6] == null ? "" : widgets[6].Text;
-			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
+			MakeButtonAt( "Sign in", buttonWidth / 2, buttonHeight, buttonFont,
+			             Anchor.Centre, Anchor.Centre, 0, -50, LoginAsync );
+			string text = widgets[5] == null ? "" : widgets[5].Text;
+			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
 		}
 
 		string lastStatus;
@@ -108,10 +90,10 @@ namespace Launcher2 {
 			lastStatus = text;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[6];
+				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
 				
 				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
-				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 50 );
+				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
 				Dirty = true;
 			}
 		}
@@ -123,7 +105,7 @@ namespace Launcher2 {
 		}
 		
 		bool signingIn;
-		void StartClient( int mouseX, int mouseY ) {
+		void LoginAsync( int mouseX, int mouseY ) {
 			if( String.IsNullOrEmpty( Get( 2 ) ) ) {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
@@ -165,18 +147,12 @@ namespace Launcher2 {
 			}
 		}
 		
-		public override void Dispose() {
-			StoreFields();
-			base.Dispose();
-		}
-		
 		void StoreFields() {
 			Dictionary<string, object> metadata;
 			if( !game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
 				metadata = new Dictionary<string, object>();
 				game.ScreenMetadata["screen-CC"] = metadata;
-			}
-			
+			}			
 			metadata["user"] = Get( 2 );
 			metadata["pass"] = Get( 3 );
 		}

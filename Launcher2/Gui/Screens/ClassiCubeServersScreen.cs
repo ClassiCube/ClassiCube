@@ -119,7 +119,7 @@ namespace Launcher2 {
 			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
 			
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
-			             -10, 5, (x, y) => game.SetScreen( new ClassiCubeScreen( game ) ) );
+			             -10, 5, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -10, 50, ConnectToServer );
 			MakeTableWidget();

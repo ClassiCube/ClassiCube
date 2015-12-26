@@ -90,6 +90,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RenderClouds( double delta ) {
+			if( game.Map.CloudHeight < -2000 ) return;
 			double time = game.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );
 			graphics.SetMatrixMode( MatrixType.Texture );
