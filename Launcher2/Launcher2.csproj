@@ -86,6 +86,7 @@
     <Compile Include="Updater\Patcher.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\ClientStartData.cs" />
+    <Compile Include="Utils\Drawer2DExt.cs" />
     <Compile Include="Utils\JSON.cs" />
     <Compile Include="Utils\Secure.cs" />
     <Compile Include="WebService\ClassiCubeSession.cs" />

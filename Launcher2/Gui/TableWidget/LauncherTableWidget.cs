@@ -115,7 +115,7 @@ namespace Launcher2 {
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( i == SelectedIndex && !separator )
-					drawer.DrawRect( foreGridCol, 0, y - 3, Width, defaultInputHeight + 4 );
+					drawer.Clear( foreGridCol, 0, y - 3, Width, defaultInputHeight + 4 );
 				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i; break;
@@ -124,7 +124,7 @@ namespace Launcher2 {
 			
 			Height = Window.Height - Y;
 			if( separator )
-				drawer.DrawRect( foreCol, x - 7, Y, 2, Height );
+				drawer.Clear( foreCol, x - 7, Y, 2, Height );
 			return maxWidth + 5;
 		}
 		
@@ -160,7 +160,7 @@ namespace Launcher2 {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			drawer.DrawRect( foreCol, 0, Y + size.Height + 5, Window.Width, 2 );
+			drawer.Clear( foreCol, 0, Y + size.Height + 5, Window.Width, 2 );
 			headerStartY = Y;
 			
 			headerEndY = Y + size.Height + 5;
@@ -170,12 +170,12 @@ namespace Launcher2 {
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
-			drawer.DrawRect( backCol, Window.Width - 10, Y, 10, Window.Height - Y );
+			drawer.Clear( backCol, Window.Width - 10, Y, 10, Window.Height - Y + 1 );
 			float scale = (Window.Height - Y) / (float)Count;
 			
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);
-			drawer.DrawRect( scrollCol, Window.Width - 10, y1, 10, height );
+			drawer.Clear( scrollCol, Window.Width - 10, y1, 10, height + 1 );
 		}
 		
 		public void SetSelected( int index ) {

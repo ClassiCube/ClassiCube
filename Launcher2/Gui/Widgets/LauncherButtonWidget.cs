@@ -13,8 +13,8 @@ namespace Launcher2 {
 		public LauncherButtonWidget( LauncherWindow window ) : base( window ) {
 		}
 		
-		static FastColour boxCol = new FastColour( 132, 111, 149 ), shadowCol = new FastColour( 68, 57, 77 ),
-		boxColActive = new FastColour( 169, 143, 192 ), shadowColActive = new FastColour( 97, 81, 110 );
+		static FastColour backCol = new FastColour( 97, 81, 110 ), lineCol = new FastColour( 182, 158, 201 );
+		static FastColour colActive = new FastColour( 185, 162, 204 ), col = new FastColour( 164, 138, 186 );
 		public void DrawAt( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
 		                   Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
@@ -23,6 +23,7 @@ namespace Launcher2 {
 			Redraw( drawer, text, font );
 		}
 		
+		const int border = 2;
 		public void Redraw( IDrawer2D drawer, string text, Font font ) {
 			if( !Active )
 				text = "&7" + Text;
@@ -31,14 +32,18 @@ namespace Launcher2 {
 			int width = ButtonWidth, height = ButtonHeight;
 			int xOffset = width - size.Width, yOffset = height - size.Height;
 			
-			if( Shadow )
-				drawer.DrawRoundedRect( Active ? shadowColActive : shadowCol,
-				                       3, X + IDrawer2D.Offset, Y + IDrawer2D.Offset, width, height );
-			drawer.DrawRoundedRect( Active ? boxColActive : boxCol, 
-			                       3, X, Y, width, height );
-			
+			// draw box bounds first
+			drawer.Clear( backCol, X + 1, Y, width - 2, border );
+			drawer.Clear( backCol, X + 1, Y + height - border, width - 2, border );
+			drawer.Clear( backCol, X, Y + 1, border, height - 2 );
+			drawer.Clear( backCol, X + width - border, Y + 1, border, height - 2 );
+				
+			FastColour foreCol = Active ? colActive : col;
+			drawer.Clear( foreCol, X + border, Y + border, width - border * 2, height - border * 2 );			
 			args.SkipPartsCheck = true;
-			drawer.DrawText( ref args, X + 1 + xOffset / 2, Y + 1 + yOffset / 2 );
+			drawer.DrawText( ref args, X + xOffset / 2, Y + yOffset / 2 );
+			
+			drawer.Clear( lineCol, X + border + 1, Y + border, width - (border * 2 + 1), border );
 		}
 	}
 }
