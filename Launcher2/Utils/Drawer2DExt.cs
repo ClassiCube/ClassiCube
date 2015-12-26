@@ -38,8 +38,7 @@ namespace Launcher2 {
 					dstRow[dstX + xx] = col;
 				}
 			}
-		}
-		
+		}	
 		
 		public unsafe static void DrawGradient( FastBitmap dst, Rectangle dstRect, FastColour a, FastColour b ) {
 			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
@@ -53,10 +52,44 @@ namespace Launcher2 {
 				float t = (dstY + yy) / (float)dst.Height;
 				int col = FastColour.Lerp( a, b, t ).ToArgb();
 				
-				int* dstRow = dst.GetRowPtr( dstY + yy );						
+				int* dstRow = dst.GetRowPtr( dstY + yy );
 				for( int xx = 0; xx < dstWidth; xx++ )
 					dstRow[dstX + xx] = col;
 			}
+		}
+		
+		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col ) {
+			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
+			int dstX = dstRect.X, dstY = dstRect.Y;
+			
+			if( dstX >= dst.Width || dstY >= dst.Height ) return;
+			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
+			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			const int alpha = 255 << 24;
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int* row = dst.GetRowPtr( dstY + yy );
+				for( int xx = 0; xx < dstWidth; xx++ ) {
+					float n = Noise( dstX + xx, dstY + yy );
+					int r = col.R + (int)(5 * n);
+					int g = col.G + (int)(5 * n);
+					int b = col.B + (int)(5 * n);
+					row[dstX + xx] = alpha | (r << 16) | (g << 8) | b;
+				}
+			}
+		}
+		
+		static float Noise( int x, int y ) {
+			int n = x + y * 57;
+			n = (n << 13) ^ n;
+			return 1f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824f;
+		}
+		
+		static float SmoothNoise2D( int x, int y ) {
+			float corners = (Noise( x - 1, y - 1 ) + Noise( x + 1, y -  1) +
+			                 Noise( x - 1, y + 1 ) + Noise( x + 1, y + 1 )) / 16;
+			float sides = (Noise( x - 1, y ) + Noise( x + 1, y ) + Noise( x, y - 1 ) + Noise( x, y + 1 )) / 8;
+			return corners + sides + Noise(x, y) / 4;
 		}
 	}
 }

@@ -62,11 +62,16 @@ namespace Launcher2 {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
-			FastColour a = new FastColour( 0x39, 0x43, 0x51 );
-			FastColour b = FastColour.Black;
+			//FastColour a = new FastColour( 0x39, 0x43, 0x51 );
+			//FastColour b = FastColour.Black;
 			//FastColour a = FastColour.White, b = FastColour.Black;
+			//using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
+			//	Drawer2DExt.DrawGradient( dst, new Rectangle( x, y, width, height ), a, b );
+			
+			//FastColour col = new FastColour( 169, 143, 192 );
+			FastColour col = new FastColour( 132, 111, 140 );
 			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
-				Drawer2DExt.DrawGradient( dst, new Rectangle( x, y, width, height ), a, b );
+				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col );
 		}
 	}
 }
