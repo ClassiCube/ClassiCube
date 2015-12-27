@@ -56,6 +56,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Gui\Drawer2DExt.cs" />
     <Compile Include="Gui\PlatformDrawer.cs" />
     <Compile Include="Gui\Screens\ClassiCubeServersScreen.cs" />
     <Compile Include="Gui\Screens\DirectConnectScreen.cs" />
@@ -86,8 +87,8 @@
     <Compile Include="Updater\Patcher.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\ClientStartData.cs" />
-    <Compile Include="Utils\Drawer2DExt.cs" />
     <Compile Include="Utils\JSON.cs" />
+    <Compile Include="Utils\LauncherSkin.cs" />
     <Compile Include="Utils\Secure.cs" />
     <Compile Include="WebService\ClassiCubeSession.cs" />
     <Compile Include="WebService\IWebTask.cs" />

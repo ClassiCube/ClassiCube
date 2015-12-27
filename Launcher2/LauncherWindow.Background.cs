@@ -7,11 +7,10 @@ using ClassicalSharp.TexturePack;
 namespace Launcher2 {
 
 	public sealed partial class LauncherWindow {
-		
-		internal static FastColour clearColour = new FastColour( 127, 107, 140 ); //new FastColour( 104, 87, 119 );
 
 		internal void TryLoadTexturePack() {
 			Options.Load();
+			LauncherSkin.LoadFromOptions();
 			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			
 			if( !File.Exists( texPack ) )
@@ -58,8 +57,9 @@ namespace Launcher2 {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
+			FastColour col = LauncherSkin.BackgroundCol;
 			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
-				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), clearColour );
+				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col );
 		}
 	}
 }

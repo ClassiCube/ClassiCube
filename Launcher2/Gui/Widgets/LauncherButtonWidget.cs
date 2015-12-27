@@ -37,13 +37,13 @@ namespace Launcher2 {
 			drawer.Clear( backCol, X + 1, Y + height - border, width - 2, border );
 			drawer.Clear( backCol, X, Y + 1, border, height - 2 );
 			drawer.Clear( backCol, X + width - border, Y + 1, border, height - 2 );
-				
+			
 			FastColour foreCol = Active ? colActive : col;
-			drawer.Clear( foreCol, X + border, Y + border, width - border * 2, height - border * 2 );			
+			drawer.Clear( foreCol, X + border, Y + border, width - border * 2, height - border * 2 );
 			args.SkipPartsCheck = true;
 			drawer.DrawText( ref args, X + xOffset / 2, Y + yOffset / 2 );
-			
-			drawer.Clear( lineCol, X + border + 1, Y + border, width - (border * 2 + 1), border );
+			if( !Active )
+				drawer.Clear( lineCol, X + border + 1, Y + border, width - (border * 2 + 1), border );
 		}
 	}
 }

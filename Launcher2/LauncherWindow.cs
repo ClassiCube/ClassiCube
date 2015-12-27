@@ -147,6 +147,11 @@ namespace Launcher2 {
 					Display();
 				Thread.Sleep( 1 );
 			}
+			
+			if( Options.Load() ) {
+				LauncherSkin.SaveToOptions();
+				Options.Save();
+			}
 			Window.Close();
 		}
 		
