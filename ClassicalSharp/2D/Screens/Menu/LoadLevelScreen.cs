@@ -7,16 +7,16 @@ namespace ClassicalSharp {
 		
 		public LoadLevelScreen( Game game ) : base( game ) {
 			titleText = "Select a level";
-			string directory = Environment.CurrentDirectory;
-			string[] cwFiles = Directory.GetFiles( directory, "*.cw", SearchOption.AllDirectories );
-			string[] datFiles = Directory.GetFiles( directory, "*.dat", SearchOption.AllDirectories );
+			string dir = Program.AppDirectory;
+			string[] cwFiles = Directory.GetFiles( dir, "*.cw", SearchOption.AllDirectories );
+			string[] datFiles = Directory.GetFiles( dir, "*.dat", SearchOption.AllDirectories );
 			files = new string[cwFiles.Length + datFiles.Length];
 			Array.Copy( cwFiles, 0, files, 0, cwFiles.Length );
 			Array.Copy( datFiles, 0, files, cwFiles.Length, datFiles.Length );
 			
 			for( int i = 0; i < files.Length; i++ ) {
 				string absolutePath = files[i];
-				files[i] = absolutePath.Substring( directory.Length + 1 );
+				files[i] = absolutePath.Substring( dir.Length );
 			}
 			Array.Sort( files );
 		}
@@ -29,6 +29,7 @@ namespace ClassicalSharp {
 		
 		protected override void TextButtonClick( Game game, Widget widget ) {
 			string path = ((ButtonWidget)widget).Text;
+			path = Path.Combine( Program.AppDirectory, path );
 			if( File.Exists( path ) )
 				LoadMap( path );
 		}
@@ -41,7 +42,7 @@ namespace ClassicalSharp {
 				mapFile = new MapFcm3();
 			} else if( path.EndsWith( ".cw" ) ) {
 				mapFile = new MapCw();
-			}
+			}		
 			
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {

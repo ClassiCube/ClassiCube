@@ -59,8 +59,9 @@ namespace ClassicalSharp.TexturePack {
 		public static void AddToCache( string url, Bitmap bmp ) {
 			string path = MakePath( url );
 			try {
-				if( !Directory.Exists( Folder ) )
-					Directory.CreateDirectory( Folder );
+				string basePath = Path.Combine( Program.AppDirectory, Folder );
+				if( !Directory.Exists( basePath ) )
+					Directory.CreateDirectory( basePath );
 				
 				bmp.Save( path, ImageFormat.Png );
 			} catch( IOException ex ) {
@@ -72,8 +73,9 @@ namespace ClassicalSharp.TexturePack {
 		public static void AddToCache( string url, byte[] data ) {
 			string path = MakePath( url );
 			try {
-				if( !Directory.Exists( Folder ) )
-					Directory.CreateDirectory( Folder );
+				string basePath = Path.Combine( Program.AppDirectory, Folder );
+				if( !Directory.Exists( basePath ) )
+					Directory.CreateDirectory( basePath );
 				
 				File.WriteAllBytes( path, data );
 			} catch( IOException ex ) {
@@ -86,7 +88,8 @@ namespace ClassicalSharp.TexturePack {
 		static string MakePath( string url ) {
 			byte[] utf8 = Encoding.UTF8.GetBytes( url );
 			uint crc32 = CRC32( utf8 );
-			return Path.Combine( Folder, crc32.ToString() );
+			string basePath = Path.Combine( Program.AppDirectory, Folder );
+			return Path.Combine( basePath, crc32.ToString() );
 		}
 		
 		static uint CRC32( byte[] data ) {

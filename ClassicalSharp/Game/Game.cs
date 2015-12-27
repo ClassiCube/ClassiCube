@@ -133,10 +133,14 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadIcon() {
-			if( File.Exists( "Launcher2.exe" ) ) {
-				Icon = Icon.ExtractAssociatedIcon( "Launcher2.exe" );
-			} else if( File.Exists( "Launcher.exe" ) ) {
-				Icon = Icon.ExtractAssociatedIcon( "Launcher.exe" );
+			string launcherPath = Path.Combine( Program.AppDirectory, "Launcher2.exe" );
+			if( File.Exists( launcherPath ) ) {
+				Icon = Icon.ExtractAssociatedIcon( launcherPath );
+				return;
+			}			
+			launcherPath = Path.Combine( Program.AppDirectory, "Launcher.exe" );
+			if( File.Exists( launcherPath ) ) {
+				Icon = Icon.ExtractAssociatedIcon( launcherPath );
 			}
 		}
 		
@@ -261,13 +265,13 @@ namespace ClassicalSharp {
 		}
 		
 		void TakeScreenshot() {
-			if( !Directory.Exists( "screenshots" ) ) {
-				Directory.CreateDirectory( "screenshots" );
-			}
+			string path = Path.Combine( Program.AppDirectory, "screenshots" );
+			if( !Directory.Exists( path ) )
+				Directory.CreateDirectory( path );
 			
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string file = "screenshot_" + timestamp + ".png";
-			string path = Path.Combine( "screenshots", file );
+			path = Path.Combine( "screenshots", file );
 			Graphics.TakeScreenshot( path, ClientSize );
 			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;

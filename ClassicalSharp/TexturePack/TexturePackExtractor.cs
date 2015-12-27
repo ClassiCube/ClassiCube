@@ -11,6 +11,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		Game game;
 		public void Extract( string path, Game game ) {
+			path = Path.Combine( Program.AppDirectory, path );
 			using( Stream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) )
 				Extract( fs, game );
 		}

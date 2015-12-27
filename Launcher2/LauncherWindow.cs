@@ -116,7 +116,7 @@ namespace Launcher2 {
 			return true;
 		}
 		
-		public void Run() {
+		public void Run() {			
 			Window = new NativeWindow( 640, 480, Program.AppName, 0,
 			                          GraphicsMode.Default, DisplayDevice.Default );
 			Window.Visible = true;

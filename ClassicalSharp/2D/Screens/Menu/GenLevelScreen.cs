@@ -150,6 +150,7 @@ namespace ClassicalSharp {
 		
 		string textPath;
 		void SaveMap( string path ) {
+			path = Path.Combine( Program.AppDirectory, path );
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
 					IMapFileFormat map = new MapCw();

@@ -20,7 +20,8 @@ namespace ClassicalSharp {
 		
 		public bool Load() {
 			try {
-				using( Stream fs = File.OpenRead( Path.Combine( folder, file ) ) )
+				string path = Path.Combine( Program.AppDirectory, folder );
+				using( Stream fs = File.OpenRead( Path.Combine( path, file ) ) )
 					using( StreamReader reader = new StreamReader( fs, false ) )
 				{
 					string line;
@@ -40,10 +41,11 @@ namespace ClassicalSharp {
 		
 		public bool Save() {
 			try {
-				if( !Directory.Exists( folder ) )
-				   Directory.CreateDirectory( folder );
+				string path = Path.Combine( Program.AppDirectory, folder );
+				if( !Directory.Exists( path ) )
+				   Directory.CreateDirectory( path );
 				
-				using( Stream fs = File.Create( Path.Combine( folder, file ) ) )
+				using( Stream fs = File.Create( Path.Combine( path, file ) ) )
 					using( StreamWriter writer = new StreamWriter( fs ) )
 				{
 					foreach( string value in acceptedUrls )

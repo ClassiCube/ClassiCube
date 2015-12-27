@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ClassicalSharp;
 
 namespace Launcher2 {
@@ -7,9 +8,13 @@ namespace Launcher2 {
 		
 		public const string AppName = "ClassicalSharp Launcher 0.98.2";
 		
+		public static string AppDirectory;
+		
 		[STAThread]
 		static void Main( string[] args ) {
-			ErrorHandler.InstallHandler( "launcher.log" );		
+			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;			
+			string logPath = Path.Combine( AppDirectory, "launcher.log" );
+			ErrorHandler.InstallHandler( logPath );
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
 		}

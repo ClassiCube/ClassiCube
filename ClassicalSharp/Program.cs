@@ -9,12 +9,16 @@ namespace ClassicalSharp {
 		
 		public const string AppName = "ClassicalSharp 0.98.2";
 		
+		public static string AppDirectory;
+		
 		[STAThread]
 		static void Main( string[] args ) {
-			ErrorHandler.InstallHandler( "client.log" );
+			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			string logPath = Path.Combine( AppDirectory, "client.log" );
+			ErrorHandler.InstallHandler( logPath );
 			
 			Utils.LogDebug( "Starting " + AppName + ".." );
-			if( !File.Exists( "default.zip" ) ) {
+			if( !File.Exists( Path.Combine( AppDirectory, "default.zip" ) ) ) {
 				Utils.LogDebug( "default.zip not found. Cannot start." );
 				return;
 			}

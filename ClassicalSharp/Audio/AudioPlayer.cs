@@ -28,7 +28,8 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void InitMusic() {
-			musicFiles = Directory.GetFiles( "audio", "*.ogg" );
+			string path = Path.Combine( Program.AppDirectory, "audio" );
+			musicFiles = Directory.GetFiles( path, "*.ogg" );
 			disposingMusic = false;
 			musicThread = MakeThread( DoMusicThread, ref musicOut,
 			                         "ClassicalSharp.DoMusic" );
@@ -39,8 +40,10 @@ namespace ClassicalSharp.Audio {
 			Random rnd = new Random();
 			while( !disposingMusic ) {
 				string file = musicFiles[rnd.Next( 0, musicFiles.Length )];
-				Console.WriteLine( "playing music file: " + file );
-				using( FileStream fs = File.OpenRead( file ) ) {
+				string path = Path.Combine( Program.AppDirectory, file );
+				Utils.LogDebug( "playing music file: " + file );
+				
+				using( FileStream fs = File.OpenRead( path ) ) {
 					OggContainer container = new OggContainer( fs );
 					musicOut.PlayStreaming( container );
 				}

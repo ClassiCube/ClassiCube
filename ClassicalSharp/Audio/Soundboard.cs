@@ -19,8 +19,9 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		public void Init( string group ) {
-			string binPath = Path.Combine( "audio", group + ".bin" );
-			string txtPath = Path.Combine( "audio", group + ".txt" );
+			string basePath = Path.Combine( Program.AppDirectory, "audio" );
+			string binPath = Path.Combine( basePath, group + ".bin" );
+			string txtPath = Path.Combine( basePath, group + ".txt" );
 			
 			Data = File.ReadAllBytes( binPath );
 			ReadMetadata( txtPath );

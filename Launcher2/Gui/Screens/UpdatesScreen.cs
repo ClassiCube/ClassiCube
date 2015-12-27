@@ -80,9 +80,10 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
+			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			
 			MakeLabelAt( "Your build:", titleFont, Anchor.Centre, Anchor.Centre, -55, -120 );
-			string yourBuild = File.GetLastWriteTime( "ClassicalSharp.exe" ).ToString( dateFormat );
+			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
 			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 100, -120 );
 			
 			MakeLabelAt( "Latest stable:", titleFont, Anchor.Centre, Anchor.Centre, -70, -80 );

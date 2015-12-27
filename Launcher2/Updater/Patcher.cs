@@ -22,11 +22,12 @@ namespace Launcher2.Updater {
 		static void LaunchUpdateScript() {
 			ProcessStartInfo info;
 			if( OpenTK.Configuration.RunningOnWindows ) {
-				File.WriteAllText( "update.bat", Scripts.BatchFile );
+				string path = Path.Combine( Program.AppDirectory, "update.bat" );
+				File.WriteAllText( path, Scripts.BatchFile );
 				info = new ProcessStartInfo( "cmd.exe", "/c update.bat" );
 			} else {
-				File.WriteAllText( "update.sh", Scripts.BashFile.Replace( "\r\n", "\n" ) );
-				string path = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "update.sh" );
+				string path = Path.Combine( Program.AppDirectory, "update.sh" );
+				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );			
 				const int flags = 0x7;// read | write | executable
 				int code = chmod( path, (flags << 6) | (flags << 3) | 4 ); 
 				if( code != 0 )
@@ -55,7 +56,8 @@ namespace Launcher2.Updater {
 		}
 			
 		static void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
-			string path = Path.Combine( "CS_Update", Path.GetFileName( filename ) );
+			string path = Path.Combine( Program.AppDirectory, "CS_Update" );
+			path = Path.Combine( path, Path.GetFileName( filename ) );
 			File.WriteAllBytes( path, data );
 		}
 	}

@@ -83,6 +83,7 @@ namespace ClassicalSharp {
 				MakeDescWidget( "Please enter a filename" );
 				return;
 			}
+			text = Path.Combine( Program.AppDirectory, text );
 			text = Path.ChangeExtension( text, ".cw" );
 			
 			if( File.Exists( text ) ) {
@@ -117,6 +118,7 @@ namespace ClassicalSharp {
 		
 		string textPath;
 		void SaveMap( string path ) {
+			path = Path.Combine( Program.AppDirectory, path );
 			try {
 				if( File.Exists( path ) )
 					File.Delete( path );

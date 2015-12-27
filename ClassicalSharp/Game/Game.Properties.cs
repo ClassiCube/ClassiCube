@@ -155,7 +155,10 @@ namespace ClassicalSharp {
 		/// <remarks> If the custom default texture pack specified by the user could not be found,
 		/// this method returns "default.zip". </remarks>
 		public string DefaultTexturePack {
-			get { return File.Exists( defTexturePack ) ? defTexturePack : "default.zip"; }
+			get {
+				string path = Path.Combine( Program.AppDirectory, defTexturePack );
+				return File.Exists( path ) ? defTexturePack : "default.zip"; 
+			}
 			set {
 				defTexturePack = value;
 				Options.Set( OptionsKey.DefaultTexturePack, value );

@@ -10,8 +10,9 @@ namespace Launcher2 {
 		internal AsyncDownloader downloader;
 		SoundPatcher digPatcher, stepPatcher;
 		public ResourceFetcher() {
-			digPath = Path.Combine( "audio", "dig" );
-			stepPath = Path.Combine( "audio", "step" );
+			string basePath = Path.Combine( Program.AppDirectory, "audio" );
+			digPath = Path.Combine( basePath, "dig" );
+			stepPath = Path.Combine( basePath, "step" );
 		}
 		
 		const string jarClassicUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
@@ -105,12 +106,14 @@ namespace Launcher2 {
 		}
 		
 		public void CheckResourceExistence() {
-			if( !Directory.Exists( "audio" ) )
-				Directory.CreateDirectory( "audio" );
+			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
+			if( !Directory.Exists( audioPath ) )
+				Directory.CreateDirectory( audioPath );
 			AllResourcesExist = File.Exists( digPath + ".bin" )
 				&& File.Exists( stepPath + ".bin" );
 			
-			defaultZipExists = File.Exists( "default.zip" );
+			string zipPath = Path.Combine( Program.AppDirectory, "default.zip" );
+			defaultZipExists = File.Exists( zipPath );
 			if( !defaultZipExists ) {
 				// classic.jar + 1.6.2.jar + terrain-patch.png + gui.png
 				DownloadSize += (291 + 4621 + 7 + 21) / 1024f;
@@ -119,7 +122,7 @@ namespace Launcher2 {
 			}
 			
 			for( int i = 0; i < musicFiles.Length; i++ ) {
-				string file = Path.Combine( "audio", musicFiles[i] + ".ogg" );
+				string file = Path.Combine( audioPath, musicFiles[i] + ".ogg" );
 				musicExists[i] = File.Exists( file );
 				if( !musicExists[i] ) {
 					DownloadSize += musicSizes[i] / 1024f;
@@ -154,7 +157,8 @@ namespace Launcher2 {
 					return false;
 				
 				if( data == null ) continue;
-				string path = Path.Combine( "audio", name + ".ogg" );
+				string path = Path.Combine( Program.AppDirectory, "audio" );
+				path = Path.Combine( path, name + ".ogg" );
 				File.WriteAllBytes( path, data );
 			}
 			return true;

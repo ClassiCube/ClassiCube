@@ -22,7 +22,7 @@ namespace Launcher2 {
 		static bool StartImpl( ClientStartData data, bool classicubeSkins,
 		                      string args, ref bool shouldExit ) {
 			Process process = null;
-			string path = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "ClassicalSharp.exe" );
+			string path = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			if( !File.Exists( path ) )
 				return false;
 			

@@ -50,6 +50,7 @@ namespace ClassicalSharp {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
 		public static bool HasChanged;
+		const string OptionsFile = "options.txt";
 		
 		public static string Get( string key ) {
 			string value;
@@ -116,11 +117,14 @@ namespace ClassicalSharp {
 			HasChanged = true;
 		}
 		
-		public const string OptionsFile = "options.txt";
-		
 		public static bool Load() {
+			// i.e. when running from the launcher
+			if( Program.AppDirectory == null )
+				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			
 			try {
-				using( Stream fs = File.OpenRead( OptionsFile ) )
+				string path = Path.Combine( Program.AppDirectory, OptionsFile );
+				using( Stream fs = File.OpenRead( path ) )
 					using( StreamReader reader = new StreamReader( fs, false ) )
 						LoadFrom( reader );
 				return true;
@@ -151,7 +155,8 @@ namespace ClassicalSharp {
 		
 		public static bool Save() {
 			try {
-				using( Stream fs = File.Create( OptionsFile ) )
+				string path = Path.Combine( Program.AppDirectory, OptionsFile );
+				using( Stream fs = File.Create( path ) )
 					using( StreamWriter writer = new StreamWriter( fs ) )
 						SaveTo( writer );
 				return true;

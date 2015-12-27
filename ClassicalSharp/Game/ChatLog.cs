@@ -89,15 +89,16 @@ namespace ClassicalSharp {
 		}
 		
 		void OpenChatFile( DateTime now ) {
-			if( !Directory.Exists( "logs" ) )
-				Directory.CreateDirectory( "logs" );
+			string basePath = Path.Combine( Program.AppDirectory, "logs" );
+			if( !Directory.Exists( basePath ) )
+				Directory.CreateDirectory( basePath );
 
 			string date = now.ToString( "yyyy-MM-dd" );
 			// Ensure multiple instances do not end up overwriting each other's log entries.
 			for( int i = 0; i < 20; i++ ) {
 				string id = i == 0 ? "" : "  _" + i;
 				string fileName = "chat-" + date + id + ".log";
-				string path = Path.Combine( "logs", fileName );
+				string path = Path.Combine( basePath, fileName );
 				
 				FileStream stream = null;
 				try {

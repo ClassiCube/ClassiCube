@@ -21,10 +21,11 @@ namespace Launcher2 {
 			reader = new ZipReader();
 			reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
 			reader.ProcessZipEntry = ProcessZipEntry_Classic;
+			string path = Path.Combine( Program.AppDirectory, "default.zip" );
 			
 			using( Stream srcClassic = new MemoryStream( jarClassic ),
 			      srcModern = new MemoryStream( jar162 ),
-			      dst = new FileStream( "default.zip", FileMode.Create, FileAccess.Write ) ) {
+			      dst = new FileStream( path, FileMode.Create, FileAccess.Write ) ) {
 				writer = new ZipWriter( dst );
 				reader.Extract( srcClassic );
 				
