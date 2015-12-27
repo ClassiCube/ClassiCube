@@ -117,12 +117,23 @@ namespace ClassicalSharp {
 			bool anyNonAir = false;
 			SoundType type = GetSoundUnder( ref anyNonAir );
 			if( !anyNonAir ) soundPos = new Vector3( -100000 );
-			
-			float distSq = (lastSoundPos - soundPos).LengthSquared;
-			if( onGround && (distSq > 1.75f * 1.75f || !wasOnGround) ) {
+				
+				if( onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
 				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
+		}
+		
+		bool DoPlaySound( Vector3 soundPos ) {
+			float distSq = (lastSoundPos - soundPos).LengthSquared;
+			// just play every certain block interval when not animating
+			if( curSwing < 0.999f )
+				return distSq > 1.75f * 1.75f;
+			
+			// have our legs just crossed over the '0' point?
+			float oldLegRot = (float)Math.Sin( walkTimeO );
+			float newLegRot = (float)Math.Sin( walkTimeN );
+			return Math.Sign( oldLegRot ) != Math.Sign( newLegRot );
 		}
 		
 		SoundType GetSoundUnder( ref bool anyNonAir ) {

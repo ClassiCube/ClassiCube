@@ -73,8 +73,8 @@ namespace Launcher2 {
 		}
 
 		void DrawClassicube() {
-			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -150 );
-			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
+			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -170, -150 );
+			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -170, -100 );
 			
 			MakeInput( Get(), 280, Anchor.Centre, false, 30, -150, 32 );
 			MakeInput( Get(), 280, Anchor.Centre, true, 30, -100, 32 );

@@ -10,7 +10,7 @@ namespace Launcher2 {
 		//new FastColour( 104, 87, 119 );
 		
 		public static FastColour ButtonBackCol = new FastColour( 97, 81, 110 );
-		public static FastColour ButtonForeActiveCol = new FastColour( 185, 162, 204 );
+		public static FastColour ButtonForeActiveCol = new FastColour( 189, 168, 206 );
 		public static FastColour ButtonForeCol = new FastColour( 164, 138, 186 );
 		public static FastColour ButtonHighlightCol = new FastColour( 182, 158, 201 );
 		
