@@ -95,19 +95,21 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
 			FastColour col = colZSide;
+			float uOrigin = rec.U1, vOrigin = rec.V1;
 			
-			float vOrigin = rec.V1;
+			rec.U1 = uOrigin + minBB.X * invElemSize;
+			rec.U2 = uOrigin + maxBB.X * invElemSize * 15.99f/16f;
 			rec.V1 = vOrigin + minBB.Y * invElemSize;
 			rec.V2 = vOrigin + maxBB.Y * invElemSize;
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( minBB.Y ),
-			                                                    pos.Z + z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( minBB.Y ),
 			                                                    pos.Z + z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( maxBB.Y ),
+			                                                    pos.Z + z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( maxBB.Y ),
+			                                                    pos.Z + z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( minBB.Y ),
+			                                                    pos.Z + z, rec.U1, rec.V2, col );
 		}
 		
 		static float Make( float value ) {
@@ -118,19 +120,21 @@ namespace ClassicalSharp {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
 			FastColour col = colXSide;
+			float uOrigin = rec.U1, vOrigin = rec.V1;
 			
-			float vOrigin = rec.V1;
-			rec.V1 = vOrigin + minBB.Y * TerrainAtlas2D.invElementSize;
-			rec.V2 = vOrigin + maxBB.Y * TerrainAtlas2D.invElementSize;			
+			rec.U1 = uOrigin + minBB.Z * invElemSize;
+			rec.U2 = uOrigin + maxBB.Z * invElemSize * 15.99f/16f;
+			rec.V1 = vOrigin + minBB.Y * invElemSize;
+			rec.V2 = vOrigin + maxBB.Y * invElemSize;		
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
-			                                                    pos.Z + Make( minBB.Z ), rec.U1, rec.V2, col );
+			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + Make( minBB.Z ), rec.U1, rec.V1, col );
+			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + Make( maxBB.Z ), rec.U2, rec.V1, col );
+			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
-			                                                    pos.Z + Make( maxBB.Z ), rec.U2, rec.V2, col );
+			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V2, col );
 		}
 	}
 }
