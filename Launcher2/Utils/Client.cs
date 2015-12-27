@@ -7,7 +7,12 @@ namespace Launcher2 {
 
 	public static class Client {
 		
+		static DateTime lastJoin;
 		public static bool Start( ClientStartData data, bool classicubeSkins, ref bool shouldExit ) {
+			if( (DateTime.UtcNow - lastJoin).TotalSeconds < 1 )
+				return false;
+			lastJoin = DateTime.UtcNow;
+			
 			string skinServer = classicubeSkins ? "http://static.classicube.net/skins/" :
 				"http://s3.amazonaws.com/MinecraftSkins/";
 			string args = data.Username + " " + data.Mppass + " " +

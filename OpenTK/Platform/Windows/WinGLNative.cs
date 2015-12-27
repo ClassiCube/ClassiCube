@@ -196,6 +196,9 @@ namespace OpenTK.Platform.Windows
 
 					if (MouseLeave != null)
 						MouseLeave(this, EventArgs.Empty);
+					// Set all mouse buttons to off when user leaves window, prevents them being stuck down.
+					for( MouseButton btn = 0; btn < MouseButton.LastButton; btn++ )
+						mouse[btn] = false;
 					break;
 
 				case WindowMessage.MOUSEWHEEL:
