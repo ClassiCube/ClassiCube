@@ -43,15 +43,10 @@ namespace Launcher2 {
 				drawer.SetBitmap( Framebuffer );
 				ClearArea( 0, 0, Width, Height );
 				
-				DrawTextArgs args1 = new DrawTextArgs( "&eClassical", logoItalicFont, true );
-				Size size1 = drawer.MeasureChatSize( ref args1 );
-				DrawTextArgs args2 = new DrawTextArgs( "&fSharp", logoFont, true );
-				Size size2 = drawer.MeasureChatSize( ref args2 );
-				
-				int adjust = Drawer.UseBitmappedChat ? -8 : 2;
-				int xStart = Width / 2 - (size1.Width + size2.Width) / 2;
-				drawer.DrawChatText( ref args1, xStart, 20 + (size2.Height - size1.Height - 1) );
-				drawer.DrawChatText( ref args2, xStart + size1.Width + adjust, 20 );
+				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, true );
+				Size size = drawer.MeasureChatSize( ref args );
+				int xStart = Width / 2 - size.Width / 2;
+				drawer.DrawChatText( ref args, xStart, 20 );
 			}
 			Dirty = true;
 		}

@@ -53,9 +53,9 @@ namespace Launcher2 {
 				int* row = dst.GetRowPtr( dstY + yy );
 				for( int xx = 0; xx < dstWidth; xx++ ) {
 					float n = Noise( dstX + xx, dstY + yy );
-					int r = col.R + (int)(5 * n); Utils.Clamp( ref r, 0, 255 );
-					int g = col.G + (int)(5 * n); Utils.Clamp( ref g, 0, 255 );
-					int b = col.B + (int)(5 * n); Utils.Clamp( ref b, 0, 255 );
+					int r = col.R + (int)(n * 6); Utils.Clamp( ref r, 0, 255 );
+					int g = col.G + (int)(n * 6); Utils.Clamp( ref g, 0, 255 );
+					int b = col.B + (int)(n * 6); Utils.Clamp( ref b, 0, 255 );
 					row[dstX + xx] = alpha | (r << 16) | (g << 8) | b;
 				}
 			}

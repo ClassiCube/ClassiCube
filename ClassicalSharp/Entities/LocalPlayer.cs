@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 			
 			Vector3 soundPos = nextPos;
 			bool anyNonAir = false;
-			SoundType type = GetSoundUnder( ref anyNonAir );
+			SoundType type = GetSound( ref anyNonAir );
 			if( !anyNonAir ) soundPos = new Vector3( -100000 );
 				
 				if( onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
@@ -126,24 +126,37 @@ namespace ClassicalSharp {
 		
 		bool DoPlaySound( Vector3 soundPos ) {
 			float distSq = (lastSoundPos - soundPos).LengthSquared;
+			bool enoughDist = distSq > 1.75f * 1.75f;
 			// just play every certain block interval when not animating
-			if( curSwing < 0.999f )
-				return distSq > 1.75f * 1.75f;
+			if( curSwing < 0.999f ) return enoughDist;
 			
 			// have our legs just crossed over the '0' point?
 			float oldLegRot = (float)Math.Sin( walkTimeO );
 			float newLegRot = (float)Math.Sin( walkTimeN );
-			return Math.Sign( oldLegRot ) != Math.Sign( newLegRot );
+			return (Math.Sign( oldLegRot ) != Math.Sign( newLegRot ));
 		}
 		
-		SoundType GetSoundUnder( ref bool anyNonAir ) {
-			Vector3 pos = new Vector3( nextPos.X, nextPos.Y - 0.01f, nextPos.Z );
-			Vector3 size = CollisionSize;
+		SoundType GetSound( ref bool anyNonAir ) {
+			Vector3 pos = nextPos, size = CollisionSize;
 			BoundingBox bounds = new BoundingBox( pos - size / 2, pos + size / 2);
-			bounds.Max.Y = bounds.Min.Y = pos.Y;
-			
 			SoundType type = SoundType.None;
 			bool nonAir = false;
+			
+			// first check surrounding liquids/gas for sounds
+			TouchesAny( bounds, b => {
+			           	SoundType newType = game.BlockInfo.StepSounds[b];
+			           	BlockCollideType collide = game.BlockInfo.CollideType[b];
+			           	if( newType != SoundType.None && collide != BlockCollideType.Solid)
+			           		type = newType;
+			           	if( b != 0 ) nonAir = true;
+			           	return false;
+			           });
+			if( type != SoundType.None )
+				return type;
+			
+			// then check soliod blocks below
+			pos.Y -= 0.01f;
+			bounds.Max.Y = bounds.Min.Y = pos.Y;
 			TouchesAny( bounds, b => {
 			           	SoundType newType = game.BlockInfo.StepSounds[b];
 			           	if( newType != SoundType.None ) type = newType;
