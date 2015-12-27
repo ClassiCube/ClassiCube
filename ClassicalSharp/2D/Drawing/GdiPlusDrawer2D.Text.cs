@@ -46,6 +46,8 @@ namespace ClassicalSharp {
 				GetTextParts( args.Text );
 			
 			Brush shadowBrush = GetOrCreateBrush( Color.Black );
+			StringFormatFlags flags = format.FormatFlags;
+ 			format.FormatFlags |= StringFormatFlags.NoWrap;
 			format.Trimming = StringTrimming.EllipsisCharacter;
 			float textX = x;
 			
@@ -61,6 +63,7 @@ namespace ClassicalSharp {
 				textX += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
 			}
 			format.Trimming = StringTrimming.None;
+			format.FormatFlags = flags;
 		}
 		
 		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
