@@ -22,6 +22,9 @@ namespace Launcher2 {
 		/// <summary> Filter applied to text received from the clipboard. Can be null. </summary>
 		public Func<string, string> ClipboardFilter;
 		
+		/// <summary> Delegate invoked when the text changes. </summary>
+		public Action<LauncherInputWidget> TextChanged;
+		
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 		}
 
@@ -55,8 +58,9 @@ namespace Launcher2 {
 		public bool AppendChar( char c ) {
 			if( c >= ' ' && c <= '~' && Text.Length < MaxTextLength ) {
 				Text += c;
+				if( TextChanged != null ) TextChanged( this );
 				return true;
-			}
+			}		
 			return false;
 		}
 		
@@ -66,6 +70,7 @@ namespace Launcher2 {
 			if( Text.Length == 0 ) return false;
 			
 			Text = Text.Substring( 0, Text.Length - 1 );
+			if( TextChanged != null ) TextChanged( this );
 			return true;
 		}
 		
@@ -75,6 +80,7 @@ namespace Launcher2 {
 			if( Text.Length == 0 ) return false;
 			
 			Text = "";
+			if( TextChanged != null ) TextChanged( this );
 			return true;
 		}
 		
@@ -96,6 +102,7 @@ namespace Launcher2 {
 				text = text.Substring( 0, MaxTextLength - Text.Length );
 			}
 			Text += text;
+			if( TextChanged != null ) TextChanged( this );
 			return true;
 		}
 	}

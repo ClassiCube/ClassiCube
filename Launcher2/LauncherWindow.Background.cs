@@ -36,10 +36,11 @@ namespace Launcher2 {
 		}
 		
 		public void MakeBackground() {
-			if( Framebuffer != null )
-				Framebuffer.Dispose();
-			
-			Framebuffer = new Bitmap( Width, Height );
+			if( Framebuffer == null || (Framebuffer.Width != Width || Framebuffer.Height != Height) ) {
+				if( Framebuffer != null ) 
+					Framebuffer.Dispose();
+				Framebuffer = new Bitmap( Width, Height );
+			}			
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
 				ClearArea( 0, 0, Width, Height );

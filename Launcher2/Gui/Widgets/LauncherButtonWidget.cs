@@ -27,7 +27,7 @@ namespace Launcher2 {
 			Size size = drawer.MeasureSize( ref args );
 			int xOffset = Width - size.Width, yOffset = Height - size.Height;
 			
-			FastColour backCol = LauncherSkin.ButtonBackCol;
+			FastColour backCol = LauncherSkin.ButtonBorderCol;
 			drawer.Clear( backCol, X + 1, Y, Width - 2, border );
 			drawer.Clear( backCol, X + 1, Y + Height - border, Width - 2, border );
 			drawer.Clear( backCol, X, Y + 1, border, Height - 2 );

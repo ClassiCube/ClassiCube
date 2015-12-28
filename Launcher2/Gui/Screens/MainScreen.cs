@@ -12,7 +12,7 @@ namespace Launcher2 {
 			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
 			inputFont = new Font( "Arial", 15, FontStyle.Regular );
 			enterIndex = 4;
-			widgets = new LauncherWidget[10];
+			widgets = new LauncherWidget[11];
 		}
 		
 		public override void Resize() {
@@ -34,6 +34,10 @@ namespace Launcher2 {
 			MakeButtonAt( "Singleplayer", buttonWidth, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.Centre, 0, 100,
 			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
+			
+			MakeButtonAt( "Colour scheme", buttonWidth - 40, buttonHeight, buttonFont,
+			             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
+			             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );
 			
 			MakeButtonAt( "Update check", buttonWidth - 40, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
