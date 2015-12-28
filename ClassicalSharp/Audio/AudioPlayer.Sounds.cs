@@ -61,12 +61,15 @@ namespace ClassicalSharp.Audio {
 				PlayCurrentSound( stereoOutputs );
 		}
 		
+		IAudioOutput firstSoundOut;
 		void PlayCurrentSound( IAudioOutput[] outputs ) {
 			for( int i = 0; i < monoOutputs.Length; i++ ) {
 				IAudioOutput output = outputs[i];
 				if( output == null ) {
 					output = GetPlatformOut();
-					output.Create( 1 );
+					output.Create( 1, firstSoundOut );
+					if( firstSoundOut == null )
+						firstSoundOut = output;
 					outputs[i] = output;
 				}
 				
@@ -80,6 +83,8 @@ namespace ClassicalSharp.Audio {
 		void DisposeSound() {
 			DisposeOutputs( ref monoOutputs );
 			DisposeOutputs( ref stereoOutputs );
+			if( firstSoundOut != null )
+				firstSoundOut.Dispose();
 		}
 		
 		void DisposeOutputs( ref IAudioOutput[] outputs ) {
@@ -97,7 +102,7 @@ namespace ClassicalSharp.Audio {
 			}
 			
 			for( int i = 0; i < outputs.Length; i++ ) {
-				if( outputs[i] == null ) continue;
+				if( outputs[i] == null || outputs[i] == firstSoundOut ) continue;
 				outputs[i].Dispose();
 			}
 			outputs = null;
