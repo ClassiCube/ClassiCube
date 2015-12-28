@@ -50,6 +50,7 @@ namespace ClassicalSharp {
 			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
+			lastPing = DateTime.UtcNow;
 		}
 		
 		public override void Dispose() {
@@ -101,8 +102,7 @@ namespace ClassicalSharp {
 		
 		bool Is304Status( WebException ex ) {
 			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
-				return false;
-			
+				return false;			
 			HttpWebResponse response = (HttpWebResponse)ex.Response;
 			return response.StatusCode == HttpStatusCode.NotModified;
 		}
@@ -110,6 +110,12 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
+			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 15 ) {
+				game.Disconnect( "&eDisconnected from the server",
+				                "No ping packet received for over 15 seconds." );
+				Dispose();
+				return;
+			}
 			
 			try {
 				reader.ReadPendingData();
@@ -164,9 +170,10 @@ namespace ClassicalSharp {
 			try {
 				writer.Send();
 			} catch( IOException ex ) {
-				ErrorHandler.LogError( "writing packets", ex );
-				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
-				Dispose();
+				// NOTE: Not immediately disconnecting, because it means we miss out on kick messages sometimes.
+				//ErrorHandler.LogError( "writing packets", ex );
+				//game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
+				//Dispose();
 				writer.index = 0;
 			}
 		}

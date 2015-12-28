@@ -68,6 +68,7 @@ namespace ClassicalSharp {
 		int mapSizeIndex, mapIndex;
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
+		DateTime lastPing;
 		
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
@@ -77,8 +78,9 @@ namespace ClassicalSharp {
 			receivedFirstPosition = false;
 			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 		}
-		
+			
 		void HandlePing() {
+			lastPing = DateTime.UtcNow;
 		}
 		
 		void HandleLevelInit() {
