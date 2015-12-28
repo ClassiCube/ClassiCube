@@ -14,6 +14,7 @@ namespace ClassicalSharp {
 		static float scale;
 		static Vector3 minBB, maxBB;
 		const float invElemSize = TerrainAtlas2D.invElementSize;
+		static bool fullBright;
 		
 		static FastColour colNormal, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
@@ -33,6 +34,7 @@ namespace ClassicalSharp {
 			atlas = game.TerrainAtlas;
 			minBB = info.MinBB[block];
 			maxBB = info.MaxBB[block];
+			fullBright = info.FullBright[block];
 			if( info.IsSprite[block] ) {
 				minBB = Vector3.Zero; maxBB = Vector3.One;
 			}
@@ -94,7 +96,7 @@ namespace ClassicalSharp {
 		static void ZQuad( byte block, float z, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
-			FastColour col = colZSide;
+			FastColour col = fullBright ? colNormal : colZSide;
 			float uOrigin = rec.U1, vOrigin = rec.V1;
 			
 			rec.U1 = uOrigin + minBB.X * invElemSize;
@@ -119,7 +121,7 @@ namespace ClassicalSharp {
 		static void XQuad( byte block, float x, int side ) {
 			int texId = info.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texId );
-			FastColour col = colXSide;
+			FastColour col = fullBright ? colNormal : colXSide;
 			float uOrigin = rec.U1, vOrigin = rec.V1;
 			
 			rec.U1 = uOrigin + minBB.Z * invElemSize;
