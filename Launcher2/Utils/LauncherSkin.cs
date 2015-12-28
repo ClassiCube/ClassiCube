@@ -6,16 +6,14 @@ namespace Launcher2 {
 
 	public static class LauncherSkin {
 		
-		public static FastColour BackgroundCol = new FastColour( 127, 107, 140 );
-		//new FastColour( 104, 87, 119 );
-		
+		public static FastColour BackgroundCol = new FastColour( 151, 122, 172 );
 		public static FastColour ButtonBorderCol = new FastColour( 97, 81, 110 );
 		public static FastColour ButtonForeActiveCol = new FastColour( 189, 168, 206 );
 		public static FastColour ButtonForeCol = new FastColour( 164, 138, 186 );
 		public static FastColour ButtonHighlightCol = new FastColour( 182, 158, 201 );
 		
 		public static void ResetToDefault() {
-			BackgroundCol = new FastColour( 127, 107, 140 );
+			BackgroundCol = new FastColour( 151, 122, 172 );
 			ButtonBorderCol = new FastColour( 97, 81, 110 );
 			ButtonForeActiveCol = new FastColour( 189, 168, 206 );
 			ButtonForeCol = new FastColour( 164, 138, 186 );
@@ -23,19 +21,19 @@ namespace Launcher2 {
 		}
 		
 		public static void LoadFromOptions() {
-			Get( "launcher-backcol", ref BackgroundCol );
-			Get( "launcher-button-backcol", ref ButtonBorderCol );
-			Get( "launcher-button-foreactivecol", ref ButtonForeActiveCol );
-			Get( "launcher-button-forecol", ref ButtonForeCol );
-			Get( "launcher-button-highlightcol", ref ButtonHighlightCol );
+			Get( "launcher-back-col", ref BackgroundCol );
+			Get( "launcher-button-border-col", ref ButtonBorderCol );
+			Get( "launcher-button-fore-active-col", ref ButtonForeActiveCol );
+			Get( "launcher-button-fore-col", ref ButtonForeCol );
+			Get( "launcher-button-highlight-col", ref ButtonHighlightCol );
 		}
 		
 		public static void SaveToOptions() {
-			Options.Set( "launcher-backcol", BackgroundCol.ToRGBHexString() );
-			Options.Set( "launcher-button-backcol", ButtonBorderCol.ToRGBHexString() );
-			Options.Set( "launcher-button-foreactivecol", ButtonForeActiveCol.ToRGBHexString() );
-			Options.Set( "launcher-button-forecol", ButtonForeCol.ToRGBHexString() );
-			Options.Set( "launcher-button-highlightcol", ButtonHighlightCol.ToRGBHexString() );
+			Options.Set( "launcher-back-col", BackgroundCol.ToRGBHexString() );
+			Options.Set( "launcher-button-border-col", ButtonBorderCol.ToRGBHexString() );
+			Options.Set( "launcher-button-fore-active-col", ButtonForeActiveCol.ToRGBHexString() );
+			Options.Set( "launcher-button-fore-col", ButtonForeCol.ToRGBHexString() );
+			Options.Set( "launcher-button-highlight-col", ButtonHighlightCol.ToRGBHexString() );
 		}
 		
 		static void Get( string key, ref FastColour col ) {
