@@ -167,7 +167,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Left) & 1;
 			
-			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
@@ -186,7 +186,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Right) & 1;
 			
-			float u1 = minBB.Z, u2 = (maxBB.Z + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
@@ -205,7 +205,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Front) & 1;
 			
-			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
@@ -224,7 +224,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Back) & 1;
 			
-			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Y * invVerElementSize;
 			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
@@ -242,7 +242,7 @@ namespace ClassicalSharp {
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			
-			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
@@ -259,7 +259,7 @@ namespace ClassicalSharp {
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			
-			float u1 = minBB.X, u2 = (maxBB.X + (count - 1)) * 15.99f/16f;
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];

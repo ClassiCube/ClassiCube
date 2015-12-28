@@ -167,6 +167,7 @@ namespace ClassicalSharp {
 				ErrorHandler.LogError( "writing packets", ex );
 				game.Disconnect( "&eLost connection to the server", "I/O Error while writing packets" );
 				Dispose();
+				writer.index = 0;
 			}
 		}
 		
