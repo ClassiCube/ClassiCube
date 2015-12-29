@@ -38,51 +38,18 @@ namespace Launcher2 {
 				Resize();
 			}		
 		}
-		
-		void LoadSavedInfo( IDrawer2D drawer ) {
-			Dictionary<string, object> metadata;
-			// restore what user last typed into the various fields
-			if( game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
-				Set( 2, (string)metadata["user"] );
-				Set( 3, (string)metadata["pass"] );
-			} else {
-				LoadFromOptions();
-			}
-		}
-		
-		void LoadFromOptions() {
-			if( !Options.Load() )
-				return;
-			
-			string user = Options.Get( "launcher-cc-username" ) ?? "UserXYZ";
-			string pass = Options.Get( "launcher-cc-password" ) ?? "PassXYZ";
-			pass = Secure.Decode( pass, user );
-			
-			Set( 2, user );
-			Set( 3, pass );
-		}
-		
-		void UpdateSignInInfo( string user, string password ) {
-			// If the client has changed some settings in the meantime, make sure we keep the changes
-			if( !Options.Load() )
-				return;
-			
-			Options.Set( "launcher-cc-username", user );
-			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
-			Options.Save();
-		}
 
 		void DrawClassicube() {
-			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -170, -150 );
-			MakeLabelAt( "Password", titleFont, Anchor.Centre, Anchor.Centre, -170, -100 );
+			MakeInput( Get(), 280, Anchor.Centre, false, 0, -150, 32, "&7Username.." );
+			MakeInput( Get(), 280, Anchor.Centre, true, 0, -100, 32, "&7Password.." );
 			
-			MakeInput( Get(), 280, Anchor.Centre, false, 30, -150, 32 );
-			MakeInput( Get(), 280, Anchor.Centre, true, 30, -100, 32 );
-			
-			MakeButtonAt( "Sign in", buttonWidth / 2, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, -50, LoginAsync );
-			string text = widgets[5] == null ? "" : widgets[5].Text;
+			MakeButtonAt( "Sign in", 100, buttonHeight, buttonFont,
+			             Anchor.Centre, Anchor.Centre, 90, -50, LoginAsync );
+			string text = widgets[3] == null ? "" : widgets[3].Text;
 			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
+			
+			MakeButtonAt( "Resume", 100, buttonHeight, buttonFont,
+			             Anchor.Centre, Anchor.Centre, -90, -50, (x, y) => {} );
 		}
 
 		string lastStatus;
@@ -90,7 +57,7 @@ namespace Launcher2 {
 			lastStatus = text;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
+				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
 				
 				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
@@ -106,16 +73,16 @@ namespace Launcher2 {
 		
 		bool signingIn;
 		void LoginAsync( int mouseX, int mouseY ) {
-			if( String.IsNullOrEmpty( Get( 2 ) ) ) {
+			if( String.IsNullOrEmpty( Get( 0 ) ) ) {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
-			if( String.IsNullOrEmpty( Get( 3 ) ) ) {
+			if( String.IsNullOrEmpty( Get( 1 ) ) ) {
 				SetStatus( "&ePlease enter a password" ); return;
 			}
 			if( signingIn ) return;
-			UpdateSignInInfo( Get( 2 ), Get( 3 ) );
+			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
 			
-			game.Session.LoginAsync( Get( 2 ), Get( 3 ) );
+			game.Session.LoginAsync( Get( 0 ), Get( 1 ) );
 			game.MakeBackground();
 			Resize();
 			SetStatus( "&eSigning in.." );
@@ -153,8 +120,41 @@ namespace Launcher2 {
 				metadata = new Dictionary<string, object>();
 				game.ScreenMetadata["screen-CC"] = metadata;
 			}			
-			metadata["user"] = Get( 2 );
-			metadata["pass"] = Get( 3 );
+			metadata["user"] = Get( 0 );
+			metadata["pass"] = Get( 1 );
+		}
+		
+		void LoadSavedInfo( IDrawer2D drawer ) {
+			Dictionary<string, object> metadata;
+			// restore what user last typed into the various fields
+			if( game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
+				Set( 0, (string)metadata["user"] );
+				Set( 1, (string)metadata["pass"] );
+			} else {
+				LoadFromOptions();
+			}
+		}
+		
+		void LoadFromOptions() {
+			if( !Options.Load() )
+				return;
+			
+			string user = Options.Get( "launcher-cc-username" ) ?? "";
+			string pass = Options.Get( "launcher-cc-password" ) ?? "";
+			pass = Secure.Decode( pass, user );
+			
+			Set( 0, user );
+			Set( 1, pass );
+		}
+		
+		void UpdateSignInInfo( string user, string password ) {
+			// If the client has changed some settings in the meantime, make sure we keep the changes
+			if( !Options.Load() )
+				return;
+			
+			Options.Set( "launcher-cc-username", user );
+			Options.Set( "launcher-cc-password", Secure.Encode( password, user ) );
+			Options.Save();
 		}
 	}
 }

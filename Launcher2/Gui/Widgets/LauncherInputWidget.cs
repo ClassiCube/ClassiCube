@@ -10,6 +10,9 @@ namespace Launcher2 {
 		
 		public int ButtonWidth, ButtonHeight;
 		
+		/// <summary> Text displayed when the user has not entered anything in the text field. </summary>
+		public string HintText;
+		
 		/// <summary> Whether the input widget currently is focused through a mouse click or tab. </summary>
 		public bool Active;
 		
@@ -31,15 +34,15 @@ namespace Launcher2 {
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 		}
 
-		public void DrawAt( IDrawer2D drawer, string text, Font font,
+		public void DrawAt( IDrawer2D drawer, string text, Font font, Font hintFont, 
 		                   Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
 			Width = width; Height = height;
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer, text, font );
+			Redraw( drawer, text, font, hintFont );
 		}
 		
-		public void Redraw( IDrawer2D drawer, string text, Font font ) {
+		public void Redraw( IDrawer2D drawer, string text, Font font, Font hintFont ) {
 			Text = text;
 			if( Password )
 				text = new String( '*', text.Length );
@@ -47,13 +50,27 @@ namespace Launcher2 {
 			Size size = drawer.MeasureSize( ref args );
 			Width = Math.Max( ButtonWidth, size.Width + 7 );
 			
-			FastColour col = Active ? FastColour.White : new FastColour( 160, 160, 160 );
-			drawer.DrawRectBounds( col, 2, X, Y, Width, Height );
-			drawer.DrawRect( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
+			FastColour col = Active ? new FastColour( 240, 240, 240 ) : new FastColour( 180, 180, 180 );
+			drawer.Clear( col, X + 1, Y, Width - 2, 2 );
+			drawer.Clear( col, X + 1, Y + Height - 2, Width - 2, 2 );
+			drawer.Clear( col, X, Y + 1, 2, Height - 2 );
+			drawer.Clear( col, X + Width - 2, Y + 1, 2, Height - 2 );
+			drawer.Clear( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
 			
-			args.SkipPartsCheck = true;
-			int y = Y + 2 + (Height - size.Height ) / 2;
-			drawer.DrawText( ref args, X + 5, y );
+			args.SkipPartsCheck = true;			
+			if( Text.Length != 0 || HintText == null ) {
+				int y = Y + 2 + (Height - size.Height) / 2;
+				drawer.DrawText( ref args, X + 5, y );
+			} else {
+				args.SkipPartsCheck = false;
+				args.Text = HintText;
+				args.Font = hintFont;
+				
+				Size hintSize = drawer.MeasureSize( ref args );
+				int y = Y + (Height - hintSize.Height) / 2;
+				args.SkipPartsCheck = true;
+				drawer.DrawText( ref args, X + 5, y );
+			}
 		}
 		
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
@@ -65,7 +82,7 @@ namespace Launcher2 {
 				Text += c;
 				if( TextChanged != null ) TextChanged( this );
 				return true;
-			}		
+			}
 			return false;
 		}
 		

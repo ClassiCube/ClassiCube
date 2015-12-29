@@ -6,9 +6,7 @@ namespace Launcher2 {
 	
 	public sealed class ColoursScreen : LauncherInputScreen {
 		
-		public ColoursScreen( LauncherWindow game ) : base( game ) {
-			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			inputFont = new Font( "Arial", 14, FontStyle.Regular );
+		public ColoursScreen( LauncherWindow game ) : base( game, true ) {
 			enterIndex = 6;
 			widgets = new LauncherWidget[12];
 		}
@@ -37,19 +35,19 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			MakeLabelAt( "Background", titleFont, Anchor.Centre, Anchor.Centre, -70, -150 );
-			MakeInput( GetCol( LauncherSkin.BackgroundCol ), 90, Anchor.Centre, false, 45, -150, 6 );
+			MakeInput( GetCol( LauncherSkin.BackgroundCol ), 90, Anchor.Centre, false, 45, -150, 6, null );
 			
 			MakeLabelAt( "Button border", titleFont, Anchor.Centre, Anchor.Centre, -80, -110 );
-			MakeInput( GetCol( LauncherSkin.ButtonBorderCol ), 90, Anchor.Centre, false, 45, -110, 6 );
+			MakeInput( GetCol( LauncherSkin.ButtonBorderCol ), 90, Anchor.Centre, false, 45, -110, 6, null );
 			
 			MakeLabelAt( "Button highlight", titleFont, Anchor.Centre, Anchor.Centre, -90, -70 );
-			MakeInput( GetCol( LauncherSkin.ButtonHighlightCol ), 90, Anchor.Centre, false, 45, -70, 6 );
+			MakeInput( GetCol( LauncherSkin.ButtonHighlightCol ), 90, Anchor.Centre, false, 45, -70, 6, null );
 			
 			MakeLabelAt( "Button foreground", titleFont, Anchor.Centre, Anchor.Centre, -100, -30 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeCol ), 90, Anchor.Centre, false, 45, -30, 6 );
+			MakeInput( GetCol( LauncherSkin.ButtonForeCol ), 90, Anchor.Centre, false, 45, -30, 6, null );
 			
 			MakeLabelAt( "Active button foreground", titleFont, Anchor.Centre, Anchor.Centre, -130, 10 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeActiveCol ), 90, Anchor.Centre, false, 45, 10, 6 );
+			MakeInput( GetCol( LauncherSkin.ButtonForeActiveCol ), 90, Anchor.Centre, false, 45, 10, 6, null );
 			
 			MakeButtonAt( "Default colours", 160, 35, titleFont, Anchor.Centre,
 			             0, 70, (x, y) => ResetColours() );

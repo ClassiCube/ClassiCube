@@ -8,9 +8,13 @@ namespace Launcher2 {
 	
 	public abstract class LauncherInputScreen : LauncherScreen {
 		
-		protected Font titleFont, inputFont;
+		protected Font titleFont, inputFont, inputHintFont;
 		protected int enterIndex = -1;
-		public LauncherInputScreen( LauncherWindow game ) : base( game ) {
+		public LauncherInputScreen( LauncherWindow game, bool makeFonts ) : base( game ) {
+			if( !makeFonts ) return;
+			titleFont = new Font( "Arial", 15, FontStyle.Bold );
+			inputFont = new Font( "Arial", 14, FontStyle.Regular );
+			inputHintFont = new Font( "Arial", 12, FontStyle.Italic );
 		}
 		
 		public override void Init() {
@@ -73,7 +77,7 @@ namespace Launcher2 {
 				if( lastInput.Width > lastInput.ButtonWidth )
 					game.ClearArea( lastInput.X, lastInput.Y,
 					               lastInput.Width + 1, lastInput.Height + 1 );
-				lastInput.Redraw( drawer, lastInput.Text, inputFont );
+				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
 				Dirty = true;
 			}
 		}
@@ -91,7 +95,7 @@ namespace Launcher2 {
 		
 		protected void Set( int index, string text ) {
 			((LauncherInputWidget)widgets[index])
-				.Redraw( drawer, text, inputFont );
+				.Redraw( drawer, text, inputFont, inputHintFont );
 		}
 		
 		protected LauncherInputWidget lastInput;
@@ -101,39 +105,26 @@ namespace Launcher2 {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput != null ) {
 					lastInput.Active = false;
-					lastInput.Redraw( drawer, lastInput.Text, inputFont );
+					lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
 				}
 				
 				input.Active = true;
-				input.Redraw( drawer, input.Text, inputFont );
+				input.Redraw( drawer, input.Text, inputFont, inputHintFont );
 			}
 			lastInput = input;
 			Dirty = true;
 		}
 		
 		protected void MakeInput( string text, int width, Anchor verAnchor, bool password,
-		                         int x, int y, int maxChars ) {
-			if( widgets[widgetIndex] != null ) {
-				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
-				input.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );
-				widgetIndex++;
-				return;
-			}
-			
-			LauncherInputWidget widget = new LauncherInputWidget( game );
-			widget.OnClick = InputClick;
-			widget.Password = password;
-			widget.MaxTextLength = maxChars;
-			
-			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, verAnchor, width, 30, x, y );
-			widgets[widgetIndex++] = widget;
+		                         int x, int y, int maxChars, string hint ) {
+			MakeInput( text, width, Anchor.Centre, verAnchor, password, x, y, maxChars, hint );
 		}
 		
 		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
-		                         bool password, int x, int y, int maxChars ) {
+		                         bool password, int x, int y, int maxChars, string hint ) {
 			if( widgets[widgetIndex] != null ) {
 				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
-				input.DrawAt( drawer, text, inputFont, horAnchor, verAnchor, width, 30, x, y );
+				input.DrawAt( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
 				widgetIndex++;
 				return;
 			}
@@ -142,8 +133,9 @@ namespace Launcher2 {
 			widget.OnClick = InputClick;
 			widget.Password = password;
 			widget.MaxTextLength = maxChars;
+			widget.HintText = hint;
 			
-			widget.DrawAt( drawer, text, inputFont, horAnchor, verAnchor, width, 30, x, y );
+			widget.DrawAt( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
 			widgets[widgetIndex++] = widget;
 		}
 		
@@ -158,6 +150,7 @@ namespace Launcher2 {
 			
 			titleFont.Dispose();
 			inputFont.Dispose();
+			inputHintFont.Dispose();
 		}
 	}
 }

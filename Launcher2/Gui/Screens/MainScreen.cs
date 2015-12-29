@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp;
-using OpenTK.Input;
 
 namespace Launcher2 {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
-		public MainScreen( LauncherWindow game ) : base( game ) {
-			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
-			inputFont = new Font( "Arial", 15, FontStyle.Regular );
+		public MainScreen( LauncherWindow game ) : base( game, true ) {
+			buttonFont = new Font( "Arial", 16, FontStyle.Bold );			
 			enterIndex = 4;
 			widgets = new LauncherWidget[11];
 		}
@@ -28,11 +25,11 @@ namespace Launcher2 {
 			DrawClassicube();
 			
 			MakeButtonAt( "Direct connect", buttonWidth, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 50,
+			             Anchor.Centre, Anchor.Centre, 0, 60,
 			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );			
 			
 			MakeButtonAt( "Singleplayer", buttonWidth, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 100,
+			             Anchor.Centre, Anchor.Centre, 0, 110,
 			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
 			
 			MakeButtonAt( "Colour scheme", buttonWidth - 40, buttonHeight, buttonFont,

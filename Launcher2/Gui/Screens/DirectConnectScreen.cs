@@ -10,9 +10,7 @@ namespace Launcher2 {
 	public sealed class DirectConnectScreen : LauncherInputScreen {
 		
 		Font booleanFont;
-		public DirectConnectScreen( LauncherWindow game ) : base( game ) {
-			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			inputFont = new Font( "Arial", 14, FontStyle.Regular );
+		public DirectConnectScreen( LauncherWindow game ) : base( game, true ) {
 			booleanFont = new Font( "Arial", 22, FontStyle.Regular );
 			enterIndex = 6;
 			widgets = new LauncherWidget[11];
@@ -27,43 +25,7 @@ namespace Launcher2 {
 			}
 		}
 		
-		public override void Tick() {
-		}
-		
-		void LoadSavedInfo() {
-			Dictionary<string, object> metadata;
-			// restore what user last typed into the various fields
-			if( game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
-				Set( 3, (string)metadata["user"] );
-				Set( 4, (string)metadata["address"] );
-				Set( 5, (string)metadata["mppass"] );
-				SetBool( (bool)metadata["skins"] );
-			} else {
-				LoadFromOptions();
-			}
-		}
-		
-		void LoadFromOptions() {
-			if( !Options.Load() )
-				return;
-			
-			string user = Options.Get( "launcher-username" ) ?? "UserXYZ";
-			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
-			string port = Options.Get( "launcher-port" ) ?? "25565";
-			bool ccSkins = Options.GetBool( "launcher-ccskins", true );
-
-			IPAddress address;
-			if( !IPAddress.TryParse( ip, out address ) ) ip = "127.0.0.1";
-			ushort portNum;
-			if( !UInt16.TryParse( port, out portNum ) ) port = "25565";
-			
-			string mppass = Options.Get( "launcher-mppass" ) ?? null;
-			mppass = Secure.Decode( mppass, user );
-			
-			Set( 3, user );
-			Set( 4, ip + ":" + port );
-			Set( 5, mppass );
-			SetBool( ccSkins );
+		public override void Tick() { 
 		}
 		
 		public override void Resize() {
@@ -75,7 +37,7 @@ namespace Launcher2 {
 		}
 		
 		void SetBool( bool value ) {
-			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[10];
+			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[7];
 			widget.Value = value;
 			widget.Redraw( game.Drawer );
 			Dirty = true;
@@ -83,13 +45,10 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeLabelAt( "Username", titleFont, Anchor.Centre, Anchor.Centre, -180, -100 );
-			MakeLabelAt( "Address", titleFont, Anchor.Centre, Anchor.Centre, -180, -50 );
-			MakeLabelAt( "Mppass", titleFont, Anchor.Centre, Anchor.Centre, -180, 0 );
 			
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32 );
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64 );
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32 );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32, "&7Username.." );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64, "&7IP address:Port number.." );
+			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32, "&7Mppass.." );
 			
 			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
@@ -121,11 +80,11 @@ namespace Launcher2 {
 		void StartClient( int mouseX, int mouseY ) {
 			SetStatus( "" );
 			
-			if( String.IsNullOrEmpty( Get( 3 ) ) ) {
+			if( String.IsNullOrEmpty( Get( 0 ) ) ) {
 				SetStatus( "&ePlease enter a username" ); return;
 			}
 			
-			string address = Get( 4 );
+			string address = Get( 1 );
 			int index = address.LastIndexOf( ':' );
 			if( index <= 0 || index == address.Length - 1 ) {
 				SetStatus( "&eInvalid address" ); return;
@@ -142,10 +101,10 @@ namespace Launcher2 {
 				SetStatus( "&eInvalid port" ); return;
 			}
 			
-			string mppass = Get( 5 );
+			string mppass = Get( 2 );
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
-			ClientStartData data = new ClientStartData( Get( 3 ), mppass, ipPart, portPart );
-			bool ccSkins = ((LauncherBooleanWidget)widgets[10]).Value;
+			ClientStartData data = new ClientStartData( Get( 0 ), mppass, ipPart, portPart );
+			bool ccSkins = ((LauncherBooleanWidget)widgets[7]).Value;
 			Client.Start( data, ccSkins, ref game.ShouldExit );
 		}
 		
@@ -155,6 +114,19 @@ namespace Launcher2 {
 			booleanFont.Dispose();
 		}
 		
+		void LoadSavedInfo() {
+			Dictionary<string, object> metadata;
+			// restore what user last typed into the various fields
+			if( game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
+				Set( 3, (string)metadata["user"] );
+				Set( 4, (string)metadata["address"] );
+				Set( 5, (string)metadata["mppass"] );
+				SetBool( (bool)metadata["skins"] );
+			} else {
+				LoadFromOptions();
+			}
+		}
+		
 		void StoreFields() {
 			Dictionary<string, object> metadata;
 			if( !game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
@@ -162,10 +134,33 @@ namespace Launcher2 {
 				game.ScreenMetadata["screen-DC"] = metadata;
 			}
 			
-			metadata["user"] = Get( 3 );
-			metadata["address"] = Get( 4 );
-			metadata["mppass"] = Get( 5 );
-			metadata["skins"] = ((LauncherBooleanWidget)widgets[10]).Value;
+			metadata["user"] = Get( 0 );
+			metadata["address"] = Get( 1 );
+			metadata["mppass"] = Get( 2 );
+			metadata["skins"] = ((LauncherBooleanWidget)widgets[7]).Value;
+		}
+		
+		void LoadFromOptions() {
+			if( !Options.Load() )
+				return;
+			
+			string user = Options.Get( "launcher-username" ) ?? "";
+			string ip = Options.Get( "launcher-ip" ) ?? "127.0.0.1";
+			string port = Options.Get( "launcher-port" ) ?? "25565";
+			bool ccSkins = Options.GetBool( "launcher-ccskins", true );
+
+			IPAddress address;
+			if( !IPAddress.TryParse( ip, out address ) ) ip = "127.0.0.1";
+			ushort portNum;
+			if( !UInt16.TryParse( port, out portNum ) ) port = "25565";
+			
+			string mppass = Options.Get( "launcher-mppass" ) ?? null;
+			mppass = Secure.Decode( mppass, user );
+			
+			Set( 0, user );
+			Set( 1, ip + ":" + port );
+			Set( 2, mppass );
+			SetBool( ccSkins );
 		}
 	}
 }

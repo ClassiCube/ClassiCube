@@ -7,15 +7,12 @@ namespace Launcher2 {
 	
 	public sealed class ClassiCubeServersScreen : LauncherInputScreen {
 		
-		const int tableIndex = 6;
+		const int tableIndex = 4, searchIndex = 0, hashIndex = 1;
 		Font boldInputFont, tableFont;
-		public ClassiCubeServersScreen( LauncherWindow game ) : base( game ) {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			inputFont = new Font( "Arial", 14, FontStyle.Regular );
-			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );
-			
+		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
+			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );		
 			tableFont = new Font( "Arial", 12, FontStyle.Regular );
-			enterIndex = 5;
+			enterIndex = 3;
 			widgets = new LauncherWidget[7];
 		}
 		
@@ -48,8 +45,8 @@ namespace Launcher2 {
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( e.Key == Key.Enter ) {
-				if( table.Count == 1 && String.IsNullOrEmpty( Get( 3 ) ) ) {
-					widgets[3].Text = table.usedEntries[0].Hash;
+				if( table.Count == 1 && String.IsNullOrEmpty( Get( hashIndex ) ) ) {
+					widgets[hashIndex].Text = table.usedEntries[0].Hash;
 					ConnectToServer( 0, 0 );
 				} else {
 					base.KeyDown( sender, e );
@@ -65,22 +62,13 @@ namespace Launcher2 {
 			}
 		}
 		
-		void FilterList() {
-			if( lastInput == widgets[1] ) {
-				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.FilterEntries( lastInput.Text );
-				table.ClampIndex();
-				Resize();
-			}
-		}
-		
 		protected override void RedrawLastInput() {
 			base.RedrawLastInput();
-			if( lastInput == widgets[3] ) {
-				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.SetSelected( widgets[3].Text );
-				Resize();
-			}
+			if( lastInput != widgets[hashIndex] )
+				return;
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			table.SetSelected( widgets[hashIndex].Text );
+			Resize();
 		}
 
 		public override void Init() {
@@ -89,7 +77,7 @@ namespace Launcher2 {
 			game.Window.Mouse.ButtonUp += MouseButtonUp;
 			
 			Resize();
-			selectedWidget = widgets[1];
+			selectedWidget = widgets[searchIndex];
 			InputClick( 0, 0 );
 		}
 		
@@ -110,13 +98,11 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			
-			MakeLabelAt( "Search servers:", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 10 );
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 145, 5, 32 );
-			
-			MakeLabelAt( "../server/play/", inputFont, Anchor.LeftOrTop, Anchor.LeftOrTop, 25, 55 );
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, false, 145, 50, 32 );
-			((LauncherInputWidget)widgets[3]).ClipboardFilter = HashFilter;
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, 
+			          false, 145, 5, 32, "&7Search servers.." );
+			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, 
+			          false, 145, 50, 32, "&7classicube.net/server/play/..." );
+			((LauncherInputWidget)widgets[hashIndex]).ClipboardFilter = HashFilter;
 			
 			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -10, 5, (x, y) => game.SetScreen( new MainScreen( game ) ) );
@@ -142,18 +128,27 @@ namespace Launcher2 {
 			widget.SelectedChanged = SelectedChanged;
 			widgets[widgetIndex++] = widget;
 		}
+		
+		void FilterList() {
+			if( lastInput != widgets[searchIndex] )
+				return;
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			table.FilterEntries( lastInput.Text );
+			table.ClampIndex();
+			Resize();
+		}
 
 		void SelectedChanged( string hash ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Set( 3, hash );
+				Set( hashIndex, hash );
 			}
 			Dirty = true;
 		}
 		
 		void ConnectToServer( int mouseX, int mouseY ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-			game.ConnectToServer( table.servers, Get( 3 ) );
+			game.ConnectToServer( table.servers, Get( hashIndex ) );
 		}
 		
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {

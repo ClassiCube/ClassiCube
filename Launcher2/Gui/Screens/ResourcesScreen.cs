@@ -70,7 +70,7 @@ namespace Launcher2 {
 		void Draw() {
 			widgetIndex = 0;
 			drawer.Clear( clearCol );
-			drawer.DrawRect( backCol, game.Width / 2 - 175,
+			drawer.Clear( backCol, game.Width / 2 - 175,
 			                game.Height / 2 - 70, 175 * 2, 70 * 2 );
 			
 			float dataSize = game.fetcher.DownloadSize;
