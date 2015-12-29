@@ -10,10 +10,11 @@ namespace Launcher2 {
 	public sealed class DirectConnectScreen : LauncherInputScreen {
 		
 		Font booleanFont;
+		const int skinsIndex = 7;
 		public DirectConnectScreen( LauncherWindow game ) : base( game, true ) {
 			booleanFont = new Font( "Arial", 22, FontStyle.Regular );
-			enterIndex = 6;
-			widgets = new LauncherWidget[11];
+			enterIndex = 3;
+			widgets = new LauncherWidget[8];
 		}
 
 		public override void Init() {
@@ -36,23 +37,16 @@ namespace Launcher2 {
 			Dirty = true;
 		}
 		
-		void SetBool( bool value ) {
-			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[7];
-			widget.Value = value;
-			widget.Redraw( game.Drawer );
-			Dirty = true;
-		}
-		
 		void Draw() {
 			widgetIndex = 0;
 			
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, -100, 32, "&7Username.." );
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, -50, 64, "&7IP address:Port number.." );
-			MakeInput( Get(), 300, Anchor.Centre, false, 30, 0, 32, "&7Mppass.." );
+			MakeInput( Get(), 330, Anchor.Centre, false, 0, -100, 32, "&7Username.." );
+			MakeInput( Get(), 330, Anchor.Centre, false, 0, -50, 64, "&7IP address:Port number.." );
+			MakeInput( Get(), 330, Anchor.Centre, false, 0, 0, 32, "&7Mppass.." );
 			
-			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -65, 50, StartClient );
+			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -110, 50, StartClient );
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
-			             140, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			             125, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
 			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont,
@@ -62,7 +56,7 @@ namespace Launcher2 {
 		void SetStatus( string text ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[8];
+				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
 				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 				Dirty = true;
@@ -72,9 +66,16 @@ namespace Launcher2 {
 		void UseClassicubeSkinsClick( int mouseX, int mouseY ) {
 			using( drawer ) {
 				game.Drawer.SetBitmap( game.Framebuffer );
-				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[10];
+				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skinsIndex];
 				SetBool( !widget.Value );
 			}
+		}
+		
+		void SetBool( bool value ) {
+			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skinsIndex];
+			widget.Value = value;
+			widget.Redraw( game.Drawer );
+			Dirty = true;
 		}
 		
 		void StartClient( int mouseX, int mouseY ) {
@@ -104,7 +105,7 @@ namespace Launcher2 {
 			string mppass = Get( 2 );
 			if( String.IsNullOrEmpty( mppass ) ) mppass = "(none)";
 			ClientStartData data = new ClientStartData( Get( 0 ), mppass, ipPart, portPart );
-			bool ccSkins = ((LauncherBooleanWidget)widgets[7]).Value;
+			bool ccSkins = ((LauncherBooleanWidget)widgets[skinsIndex]).Value;
 			Client.Start( data, ccSkins, ref game.ShouldExit );
 		}
 		
@@ -118,9 +119,9 @@ namespace Launcher2 {
 			Dictionary<string, object> metadata;
 			// restore what user last typed into the various fields
 			if( game.ScreenMetadata.TryGetValue( "screen-DC", out metadata ) ) {
-				Set( 3, (string)metadata["user"] );
-				Set( 4, (string)metadata["address"] );
-				Set( 5, (string)metadata["mppass"] );
+				Set( 0, (string)metadata["user"] );
+				Set( 1, (string)metadata["address"] );
+				Set( 2, (string)metadata["mppass"] );
 				SetBool( (bool)metadata["skins"] );
 			} else {
 				LoadFromOptions();
@@ -137,7 +138,7 @@ namespace Launcher2 {
 			metadata["user"] = Get( 0 );
 			metadata["address"] = Get( 1 );
 			metadata["mppass"] = Get( 2 );
-			metadata["skins"] = ((LauncherBooleanWidget)widgets[7]).Value;
+			metadata["skins"] = ((LauncherBooleanWidget)widgets[skinsIndex]).Value;
 		}
 		
 		void LoadFromOptions() {

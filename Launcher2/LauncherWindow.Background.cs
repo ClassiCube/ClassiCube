@@ -45,9 +45,13 @@ namespace Launcher2 {
 				drawer.SetBitmap( Framebuffer );
 				ClearArea( 0, 0, Width, Height );
 				
-				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, true );
+				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
+				
+				args.Text = "&0Classical&0Sharp";
+				drawer.DrawChatText( ref args, xStart + 4, 20 + 4 );
+				args.Text = "&eClassical&fSharp";
 				drawer.DrawChatText( ref args, xStart, 20 );
 			}
 			Dirty = true;
