@@ -89,7 +89,7 @@ namespace ClassicalSharp.Singleplayer {
 				                 generator.Height, generator.Length );
 				generatedMap = null;
 				
-				game.Events.RaiseOnNewMapLoaded();
+				game.MapEvents.RaiseOnNewMapLoaded();
 				ResetPlayerPosition();
 			}
 			

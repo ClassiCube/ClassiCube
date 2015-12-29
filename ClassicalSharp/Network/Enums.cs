@@ -57,11 +57,13 @@ namespace ClassicalSharp {
 	}
 	
 	public enum CpeBlockFace {
-		XMax,
-		XMin,
-		YMax,
-		YMin,
-		ZMax,
-		ZMin,
+		XMax, XMin, YMax,
+		YMin, ZMax, ZMin,
+	}
+	
+	public enum Weather {
+		Sunny,
+		Rainy,
+		Snowy,
 	}
 }

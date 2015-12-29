@@ -48,9 +48,9 @@ namespace ClassicalSharp {
 			info = game.BlockInfo;
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
-			game.Events.OnNewMap += OnNewMap;
-			game.Events.OnNewMapLoaded += OnNewMapLoaded;
-			game.Events.EnvVariableChanged += EnvVariableChanged;
+			game.MapEvents.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
 		}
 		
@@ -59,10 +59,10 @@ namespace ClassicalSharp {
 			chunks = null;
 			unsortedChunks = null;
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
-			game.Events.OnNewMap -= OnNewMap;
-			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
-			game.Events.EnvVariableChanged -= EnvVariableChanged;
-			game.Events.BlockDefinitionChanged -= BlockDefinitionChanged;
+			game.MapEvents.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
+			game.MapEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
 			builder.Dispose();
 		}
 		

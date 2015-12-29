@@ -25,11 +25,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Render( delta );
 			graphicsApi.Texturing = false;
-			
-			if( textPath != null ) {
-				SaveMap( textPath );
-				textPath = null;
-			}
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
@@ -146,21 +141,6 @@ namespace ClassicalSharp {
 			if( !inputs[index].Validator.IsValidValue( text ) )
 				return 0;
 			return text == "" ? 0 : Int32.Parse( text );
-		}
-		
-		string textPath;
-		void SaveMap( string path ) {
-			path = Path.Combine( Program.AppDirectory, path );
-			try {
-				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-					IMapFileFormat map = new MapCw();
-					map.Save( fs, game );
-				}
-			} catch( Exception ex ) {
-				ErrorHandler.LogError( "saving map", ex );
-				return;
-			}
-			game.SetNewScreen( new PauseScreen( game ) );
 		}
 	}
 }

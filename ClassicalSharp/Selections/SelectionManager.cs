@@ -15,7 +15,7 @@ namespace ClassicalSharp.Selections {
 		public SelectionManager( Game window ) {
 			game = window;
 			Graphics = window.Graphics;
-			window.Events.OnNewMap += OnNewMap;
+			window.MapEvents.OnNewMap += OnNewMap;
 		}
 		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Selections {
 		
 		public void Dispose() {
 			OnNewMap( null, null );
-			game.Events.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMap -= OnNewMap;
 			if( lineVb > 0 ) {
 				Graphics.DeleteDynamicVb( vb );
 				Graphics.DeleteDynamicVb( lineVb );

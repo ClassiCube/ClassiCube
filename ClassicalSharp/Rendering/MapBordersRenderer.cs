@@ -29,9 +29,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.Events.OnNewMap += OnNewMap;
-			game.Events.OnNewMapLoaded += OnNewMapLoaded;
-			game.Events.EnvVariableChanged += EnvVariableChanged;
+			game.MapEvents.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged += ResetTextures;
 			
@@ -68,9 +68,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			game.Events.OnNewMap -= OnNewMap;
-			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
-			game.Events.EnvVariableChanged -= EnvVariableChanged;
+			game.MapEvents.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged -= ResetTextures;
 			

@@ -216,7 +216,7 @@ namespace ClassicalSharp {
 			if( UserType == 0x64 )
 				ParseFlag( b => SetAllHacks( b ), joined, "ophax" );
 			CheckHacksConsistency();
-			game.Events.RaiseHackPermissionmsChanged();
+			game.Events.RaiseHackPermissionsChanged();
 		}
 		
 		void SetAllHacks( bool allowed ) {

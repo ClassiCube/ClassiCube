@@ -111,13 +111,13 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.Events.OnNewMap += OnNewMap;
-			game.Events.OnNewMapLoaded += OnNewMapLoaded;
+			game.MapEvents.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		public void Dispose() {
-			game.Events.OnNewMap -= OnNewMap;
-			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
+			game.MapEvents.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			graphics.DeleteDynamicVb( weatherVb );
 		}
 		

@@ -73,6 +73,8 @@ namespace ClassicalSharp {
 		FpsScreen fpsScreen;
 		internal HudScreen hudScreen;
 		public Events Events = new Events();
+		public EntityEvents EntityEvents = new EntityEvents();
+		public MapEvents MapEvents = new MapEvents();
 		public InputHandler InputHandler;
 		public ChatLog Chat;
 		public BlockHandRenderer BlockHandRenderer;

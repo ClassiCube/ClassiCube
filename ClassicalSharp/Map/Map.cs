@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
-			game.Events.RaiseOnNewMap();
+			game.MapEvents.RaiseOnNewMap();
 		}
 		
 		void ResetLight() {
@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			game.Events.RaiseEnvVariableChanged( EnvVar.SidesBlock );
+			game.MapEvents.RaiseEnvVariableChanged( EnvVar.SidesBlock );
 		}
 		
 		/// <summary> Sets the edge block to the given block, and raises the
@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			game.Events.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
+			game.MapEvents.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
 		}
 		
 		/// <summary> Sets the height of the clouds in world space, and raises the
@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 			Set( col, ref Sunlight, EnvVar.SunlightColour );
 			FastColour.GetShaded( Sunlight, ref SunlightXSide,
 			                     ref SunlightZSide, ref SunlightYBottom );
-			game.Events.RaiseEnvVariableChanged( EnvVar.SunlightColour );
+			game.MapEvents.RaiseEnvVariableChanged( EnvVar.SunlightColour );
 		}
 		
 		/// <summary> Sets the current shadowlight colour, and raises the
@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
 			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
 			                     ref ShadowlightZSide, ref ShadowlightYBottom );
-			game.Events.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
+			game.MapEvents.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
 		}
 		
 		/// <summary> Sets the current weather, and raises the
@@ -176,13 +176,13 @@ namespace ClassicalSharp {
 		public void SetWeather( Weather weather ) {
 			if( weather == Weather ) return;
 			Weather = weather;
-			game.Events.RaiseEnvVariableChanged( EnvVar.Weather );
+			game.MapEvents.RaiseEnvVariableChanged( EnvVar.Weather );
 		}
 		
 		void Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
 			if( value.Equals( target ) ) return;
 			target = value;
-			game.Events.RaiseEnvVariableChanged( var );
+			game.MapEvents.RaiseEnvVariableChanged( var );
 		}
 		
 		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>

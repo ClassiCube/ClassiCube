@@ -53,16 +53,16 @@ namespace ClassicalSharp {
 		Font titleFont;
 		public override void Init() {
 			base.Init();
-			game.Events.CpeListInfoAdded += PlayerListInfoAdded;
-			game.Events.CpeListInfoRemoved += PlayerListInfoRemoved;
-			game.Events.CpeListInfoChanged += PlayerListInfoChanged;
+			game.EntityEvents.CpeListInfoAdded += PlayerListInfoAdded;
+			game.EntityEvents.CpeListInfoRemoved += PlayerListInfoRemoved;
+			game.EntityEvents.CpeListInfoChanged += PlayerListInfoChanged;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.Events.CpeListInfoAdded -= PlayerListInfoAdded;
-			game.Events.CpeListInfoChanged -= PlayerListInfoChanged;
-			game.Events.CpeListInfoRemoved -= PlayerListInfoRemoved;
+			game.EntityEvents.CpeListInfoAdded -= PlayerListInfoAdded;
+			game.EntityEvents.CpeListInfoChanged -= PlayerListInfoChanged;
+			game.EntityEvents.CpeListInfoRemoved -= PlayerListInfoRemoved;
 			titleFont.Dispose();
 		}
 		

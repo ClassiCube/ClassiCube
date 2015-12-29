@@ -141,7 +141,7 @@ namespace ClassicalSharp {
 			
 			reader.Remove( 1024 );
 			byte progress = reader.ReadUInt8();
-			game.Events.RaiseMapLoading( progress );
+			game.MapEvents.RaiseMapLoading( progress );
 		}
 		
 		void HandleLevelFinalise() {
@@ -158,7 +158,7 @@ namespace ClassicalSharp {
 			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 			Utils.LogDebug( "map loading took:" + loadingMs );
 			game.Map.SetData( map, mapWidth, mapHeight, mapLength );
-			game.Events.RaiseOnNewMapLoaded();
+			game.MapEvents.RaiseOnNewMapLoaded();
 			
 			map = null;
 			gzipStream.Dispose();
@@ -267,12 +267,12 @@ namespace ClassicalSharp {
 			if( entityId != 0xFF ) {
 				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
-					game.Events.RaiseEntityRemoved( entityId );
+					game.EntityEvents.RaiseEntityRemoved( entityId );
 					oldPlayer.Despawn();
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
 				string identifier = game.Players[entityId].SkinIdentifier;
-				game.Events.RaiseEntityAdded( entityId );
+				game.EntityEvents.RaiseEntityAdded( entityId );
 				game.AsyncDownloader.DownloadSkin( identifier, skinName );
 			} else {
 				game.LocalPlayer.SkinName = skinName;
@@ -291,13 +291,13 @@ namespace ClassicalSharp {
 			if( player == null ) return;
 			
 			if( entityId != 0xFF ) {
-				game.Events.RaiseEntityRemoved( entityId );
+				game.EntityEvents.RaiseEntityRemoved( entityId );
 				player.Despawn();
 				game.Players[entityId] = null;
 			}
 			// See comment about LegendCraft in HandleAddEntity
 			if( needRemoveNames != null && needRemoveNames[entityId] ) {
-				game.Events.RaiseCpeListInfoRemoved( entityId );
+				game.EntityEvents.RaiseCpeListInfoRemoved( entityId );
 				game.CpePlayersList[entityId] = null;
 				needRemoveNames[entityId] = false;
 			}

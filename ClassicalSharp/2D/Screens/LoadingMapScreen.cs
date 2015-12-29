@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 					progressBoxTexture = drawer.Make2DTexture( bmp, size, (int)progX, (int)progY );
 				}
 			}
-			game.Events.MapLoading += MapLoading;
+			game.MapEvents.MapLoading += MapLoading;
 		}
 		
 		public void SetTitle( string title ) {
@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 			messageWidget.Dispose();
 			titleWidget.Dispose();
 			graphicsApi.DeleteTexture( ref progressBoxTexture );
-			game.Events.MapLoading -= MapLoading;
+			game.MapEvents.MapLoading -= MapLoading;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

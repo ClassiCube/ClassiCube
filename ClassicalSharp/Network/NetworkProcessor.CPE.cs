@@ -190,10 +190,10 @@ namespace ClassicalSharp {
 				// Only redraw the CPE player list info if something changed.
 				if( info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
 				   info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank ) {
-					game.Events.RaiseCpeListInfoChanged( (byte)nameId );
+					game.EntityEvents.RaiseCpeListInfoChanged( (byte)nameId );
 				}
 			} else {
-				game.Events.RaiseCpeListInfoAdded( (byte)nameId );
+				game.EntityEvents.RaiseCpeListInfoAdded( (byte)nameId );
 			}
 		}
 		
@@ -213,7 +213,7 @@ namespace ClassicalSharp {
 				nameId += 256;
 			
 			if( nameId >= 0 && nameId <= 255 ) {
-				game.Events.RaiseCpeListInfoRemoved( (byte)nameId );
+				game.EntityEvents.RaiseCpeListInfoRemoved( (byte)nameId );
 				game.CpePlayersList[nameId] = null;
 			}
 		}
@@ -370,7 +370,7 @@ namespace ClassicalSharp {
 			float jumpHeight = reader.ReadInt16() / 32f;
 			if( jumpHeight < 0 ) jumpHeight = 1.4f;
 			p.CalculateJumpVelocity( jumpHeight );
-			game.Events.RaiseHackPermissionmsChanged();
+			game.Events.RaiseHackPermissionsChanged();
 		}
 		
 		void HandleCpeExtAddEntity2() {

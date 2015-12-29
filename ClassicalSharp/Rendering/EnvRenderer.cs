@@ -11,9 +11,9 @@ namespace ClassicalSharp.Renderers {
 		
 		public virtual void Init() {
 			graphics = game.Graphics;
-			game.Events.OnNewMap += OnNewMap;
-			game.Events.OnNewMapLoaded += OnNewMapLoaded;
-			game.Events.EnvVariableChanged += EnvVariableChanged;
+			game.MapEvents.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
 		}		
 		
 		public virtual void OnNewMap( object sender, EventArgs e ) {
@@ -23,9 +23,9 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public virtual void Dispose() {
-			game.Events.OnNewMap -= OnNewMap;
-			game.Events.OnNewMapLoaded -= OnNewMapLoaded;
-			game.Events.EnvVariableChanged -= EnvVariableChanged;
+			game.MapEvents.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
 		}
 		
 		public abstract void Render( double deltaTime );

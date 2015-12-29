@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 			Disconnected = false;
 			receivedFirstPosition = false;
 			lastPacket = DateTime.UtcNow;
-			game.Events.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMap += OnNewMap;
 			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
-			game.Events.OnNewMap -= OnNewMap;
+			game.MapEvents.OnNewMap -= OnNewMap;
 			socket.Close();
 			Disconnected = true;
 		}
@@ -217,7 +217,7 @@ namespace ClassicalSharp {
 			// wipe all existing entity states
 			for( int i = 0; i < 256; i++ ) {
 				if( game.CpePlayersList[i] != null ) {
-					game.Events.RaiseCpeListInfoRemoved( (byte)i );
+					game.EntityEvents.RaiseCpeListInfoRemoved( (byte)i );
 					game.CpePlayersList[i] = null;
 				}
 				RemoveEntity( (byte)i );

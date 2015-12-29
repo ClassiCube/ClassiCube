@@ -224,15 +224,14 @@ namespace ClassicalSharp {
 		const int ticksFrequency = 20;
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
-		const double cameraPeriod = 1.0 / 120, audioPeriod = 1.0 / 40;
+		const double cameraPeriod = 1.0 / 120;
 		double ticksAccumulator, imageCheckAccumulator, 
-		cameraAccumulator, audioAccumulator;
+		cameraAccumulator;
 		
 		void CheckScheduledTasks( double time ) {
 			imageCheckAccumulator += time;
 			ticksAccumulator += time;
 			cameraAccumulator += time;
-			audioAccumulator += time;
 			
 			if( imageCheckAccumulator > imageCheckPeriod ) {
 				imageCheckAccumulator -= imageCheckPeriod;
@@ -254,10 +253,6 @@ namespace ClassicalSharp {
 			while( cameraAccumulator >= cameraPeriod ) {
 				Camera.Tick( cameraPeriod );
 				cameraAccumulator -= cameraPeriod;
-			}
-			while( audioAccumulator >= audioPeriod ) {
-				AudioPlayer.Tick( audioPeriod );
-				audioAccumulator -= audioPeriod;
 			}
 			
 			if( ticksThisFrame > ticksFrequency / 3 )

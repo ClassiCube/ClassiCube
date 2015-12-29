@@ -26,7 +26,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.Map;
 			info = game.BlockInfo;
-			game.Events.OnNewMapLoaded += ResetMap;
+			game.MapEvents.OnNewMapLoaded += ResetMap;
 			enabled = Options.GetBool( OptionsKey.SingleplayerPhysics, true );
 		}
 		
@@ -107,7 +107,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public void Dispose() {
-			game.Events.OnNewMapLoaded -= ResetMap;
+			game.MapEvents.OnNewMapLoaded -= ResetMap;
 		}
 		
 		#region General

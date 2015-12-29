@@ -152,6 +152,9 @@
     <Compile Include="Entities\LocalPlayer.Physics.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Events\EntityEvents.cs" />
+    <Compile Include="Events\Events.cs" />
+    <Compile Include="Events\MapEvents.cs" />
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Generator\FlatGrassGenerator.cs" />
     <Compile Include="Generator\IMapGenerator.cs" />
@@ -168,7 +171,6 @@
     <Compile Include="Entities\Player.Rendering.cs" />
     <Compile Include="Game\ChatLog.cs" />
     <Compile Include="Game\Game.cs" />
-    <Compile Include="Game\Events.cs" />
     <Compile Include="Game\InputHandler.cs" />
     <Compile Include="Game\Inventory.cs" />
     <Compile Include="Game\KeyMap.cs" />
@@ -281,6 +283,7 @@
     <Folder Include="2D\Widgets\Menu" />
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="Blocks" />
+    <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Android" />
     <Folder Include="Particles" />

@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
-			game.Events.OnNewMap += OnNewMap;
+			game.MapEvents.OnNewMap += OnNewMap;
 		}
 
 		void OnNewMap( object sender, EventArgs e ) {
