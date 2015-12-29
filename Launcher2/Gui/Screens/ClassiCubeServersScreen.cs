@@ -98,16 +98,16 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, 
-			          false, 145, 5, 32, "&7Search servers.." );
-			MakeInput( Get(), 330, Anchor.LeftOrTop, Anchor.LeftOrTop, 
-			          false, 145, 50, 32, "&7classicube.net/server/play/..." );
+			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop, 
+			          false, 10, 10, 32, "&7Search servers.." );
+			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop, 
+			          false, 10, 55, 32, "&7classicube.net/server/play/..." );
 			((LauncherInputWidget)widgets[hashIndex]).ClipboardFilter = HashFilter;
 			
-			MakeButtonAt( "Back", 70, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
-			             -10, 5, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			MakeButtonAt( "Connect", 100, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
-			             -10, 50, ConnectToServer );
+			MakeButtonAt( "Back", 110, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			             -20, 10, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
+			             -20, 55, ConnectToServer );
 			MakeTableWidget();
 		}
 		
