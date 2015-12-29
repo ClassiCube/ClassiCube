@@ -17,6 +17,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Tick() {
+			base.Tick();
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( !game.Window.Mouse[MouseButton.Left] ) {
 				table.DraggingColumn = -1;

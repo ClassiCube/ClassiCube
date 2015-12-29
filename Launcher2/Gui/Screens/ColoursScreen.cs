@@ -15,10 +15,7 @@ namespace Launcher2 {
 			base.Init();
 			Resize();
 		}
-		
-		public override void Tick() {
-		}
-		
+
 		public override void Resize() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

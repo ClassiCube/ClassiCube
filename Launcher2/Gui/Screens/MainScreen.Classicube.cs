@@ -19,6 +19,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Tick() {
+			base.Tick();
 			if( !signingIn ) return;
 			
 			ClassicubeSession session = game.Session;

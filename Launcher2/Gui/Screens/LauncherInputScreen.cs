@@ -28,6 +28,24 @@ namespace Launcher2 {
 			game.Window.Keyboard.KeyRepeat = true;
 		}
 		
+		DateTime widgetOpenTime;
+		bool lastCaretFlash = false;
+		public override void Tick() {
+			double elapsed = (DateTime.UtcNow - widgetOpenTime).TotalSeconds;
+			bool caretShow = (elapsed % 1) < 0.5;
+			if( caretShow == lastCaretFlash || lastInput == null )
+				return;
+			
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+				if( caretShow )
+					lastInput.DrawCaret( drawer, inputFont );
+				Dirty = true;
+			}
+			lastCaretFlash = caretShow;
+		}
+		
 		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( e.Key == Key.Enter && enterIndex >= 0 ) {
 				LauncherWidget widget = (selectedWidget != null && mouseMoved) ?
@@ -38,7 +56,6 @@ namespace Launcher2 {
 				HandleTab();
 			}
 			if( lastInput == null ) return;
-			
 			
 			if( e.Key == Key.BackSpace && lastInput.BackspaceChar() ) {
 				RedrawLastInput();
@@ -55,10 +72,10 @@ namespace Launcher2 {
 				if( lastInput.ClearText() )
 					RedrawLastInput();
 			} else if( e.Key == Key.Left ) {
-				lastInput.ChangeCursorPos( -1 );
+				lastInput.AdvanceCursorPos( -1 );
 				RedrawLastInput();
 			} else if( e.Key == Key.Right ) {
-				lastInput.ChangeCursorPos( +1 );
+				lastInput.AdvanceCursorPos( +1 );
 				RedrawLastInput();
 			}
 		}
@@ -82,6 +99,14 @@ namespace Launcher2 {
 			}
 		}
 		
+		protected override void SelectWidget( LauncherWidget widget ) {
+			base.SelectWidget( widget );
+			if( widget is LauncherInputWidget ) {
+				widgetOpenTime = DateTime.UtcNow;
+				lastCaretFlash = false;
+			}
+		}
+		
 		protected virtual void RedrawLastInput() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
@@ -89,7 +114,6 @@ namespace Launcher2 {
 					game.ClearArea( lastInput.X, lastInput.Y,
 					               lastInput.Width + 1, lastInput.Height + 1 );
 				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
-				lastInput.DrawCursor( inputFont, drawer );
 				Dirty = true;
 			}
 		}
@@ -121,6 +145,9 @@ namespace Launcher2 {
 				}
 				
 				input.Active = true;
+				widgetOpenTime = DateTime.UtcNow;
+				lastCaretFlash = false;
+				input.SetCaretToCursor( mouseX, mouseY, drawer, inputFont );
 				input.Redraw( drawer, input.Text, inputFont, inputHintFont );
 			}
 			lastInput = input;

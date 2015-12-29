@@ -63,7 +63,6 @@ namespace Launcher2 {
 			if( Text.Length != 0 || HintText == null ) {
 				int y = Y + 2 + (Height - size.Height) / 2;
 				drawer.DrawText( ref args, X + 5, y );
-				DrawCursor( font, drawer );
 			} else {
 				args.SkipPartsCheck = false;
 				args.Text = HintText;
@@ -74,38 +73,6 @@ namespace Launcher2 {
 				args.SkipPartsCheck = true;
 				drawer.DrawText( ref args, X + 5, y );
 			}
-		}
-		
-		public void DrawCursor( Font font, IDrawer2D drawer ) {
-			string text = Text;
-			if( Password )
-				text = new String( '*', text.Length );
-			
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			if( CaretPos == -1 ) {
-				Size size = drawer.MeasureSize( ref args );
-				drawer.Clear( FastColour.White, X + 5 + size.Width,
-				             Y + Height - 5, 10, 2 );
-			} else {
-				args.Text = text.Substring( 0, CaretPos );
-				Size trimmedSize = drawer.MeasureChatSize( ref args );
-				args.Text = new String( text[CaretPos], 1 );
-				Size charSize = drawer.MeasureChatSize( ref args );
-				
-				drawer.Clear( FastColour.White, X + 5 + trimmedSize.Width,
-				             Y + Height - 5, charSize.Width, 2 );
-			}
-		}
-		
-		public void ChangeCursorPos( int dir ) {
-			if( CaretPos == 0 && dir == -1 )
-				return;
-			if( CaretPos == -1 && dir == -1 )
-				CaretPos = Text.Length;
-			
-			CaretPos += dir;
-			if( CaretPos < 0 || CaretPos >= Text.Length )
-				CaretPos = -1;
 		}
 		
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
@@ -191,6 +158,61 @@ namespace Launcher2 {
 			Text += text;
 			if( TextChanged != null ) TextChanged( this );
 			return true;
+		}
+		
+		public void DrawCaret( IDrawer2D drawer, Font font ) {
+			string text = Text;
+			if( Password )
+				text = new String( '*', text.Length );
+			
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			if( CaretPos == -1 ) {
+				Size size = drawer.MeasureSize( ref args );
+				drawer.Clear( FastColour.White, X + 5 + size.Width,
+				             Y + Height - 5, 10, 2 );
+			} else {
+				args.Text = text.Substring( 0, CaretPos );
+				Size trimmedSize = drawer.MeasureChatSize( ref args );
+				args.Text = new String( text[CaretPos], 1 );
+				Size charSize = drawer.MeasureChatSize( ref args );
+				
+				drawer.Clear( FastColour.White, X + 5 + trimmedSize.Width,
+				             Y + Height - 5, charSize.Width, 2 );
+			}
+		}
+		
+		public void AdvanceCursorPos( int dir ) {
+			if( (CaretPos == 0 && dir == -1) || (CaretPos == -1 && dir == 1) )
+				return;
+			if( CaretPos == -1 && dir == -1 )
+				CaretPos = Text.Length;
+			
+			CaretPos += dir;
+			if( CaretPos < 0 || CaretPos >= Text.Length )
+				CaretPos = -1;
+		}
+		
+		public void SetCaretToCursor( int mouseX, int mouseY, IDrawer2D drawer, Font font ) {
+			string text = Text;
+			if( Password )
+				text = new String( '*', text.Length );
+			mouseX -= X; mouseY -= Y;
+			
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = drawer.MeasureSize( ref args );
+			if( mouseX >= size.Width ) {
+				CaretPos = -1; return;
+			}
+			
+			for( int i = 0; i < Text.Length; i++ ) {
+				args.Text = text.Substring( 0, i );
+				int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
+				args.Text = new String( text[i], 1 );
+				int charWidth = drawer.MeasureChatSize( ref args ).Width;
+				if( mouseX >= trimmedWidth && mouseX < trimmedWidth + charWidth ) {
+					CaretPos = i; return;
+				}
+			}
 		}
 	}
 }
