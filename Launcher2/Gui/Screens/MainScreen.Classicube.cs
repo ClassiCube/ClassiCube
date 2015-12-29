@@ -45,7 +45,7 @@ namespace Launcher2 {
 			MakeInput( Get(), 280, Anchor.Centre, true, 0, -100, 32, "&7Password.." );
 			
 			MakeButtonAt( "Sign in", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 90, -50, LoginAsync );
+			             Anchor.Centre, Anchor.Centre, -90, -50, LoginAsync );
 			MakeLabelAt( Get(), inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
 		}
 

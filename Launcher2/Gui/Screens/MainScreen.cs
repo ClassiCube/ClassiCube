@@ -9,7 +9,7 @@ namespace Launcher2 {
 		
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
 			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
-			enterIndex = 4;
+			enterIndex = 2;
 			widgets = new LauncherWidget[11];
 			LoadResumeInfo();
 		}
@@ -27,7 +27,7 @@ namespace Launcher2 {
 			DrawClassicube();
 			
 			MakeButtonAt( "Resume", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, -90, -50, ResumeClick );
+			             Anchor.Centre, Anchor.Centre, 90, -50, ResumeClick );
 			
 			MakeButtonAt( "Direct connect", 200, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.Centre, 0, 80,
