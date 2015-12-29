@@ -36,7 +36,7 @@ namespace Launcher2 {
 				signingIn = false;
 				game.MakeBackground();
 				Resize();
-			}		
+			}
 		}
 
 		void DrawClassicube() {
@@ -45,24 +45,24 @@ namespace Launcher2 {
 			
 			MakeButtonAt( "Sign in", 100, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.Centre, 90, -50, LoginAsync );
-			string text = widgets[3] == null ? "" : widgets[3].Text;
-			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
-			
-			MakeButtonAt( "Resume", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, -90, -50, (x, y) => {} );
+			MakeLabelAt( Get(), inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
 		}
 
 		string lastStatus;
 		void SetStatus( string text ) {
-			lastStatus = text;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
-				
-				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
-				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
-				Dirty = true;
+				SetStatusNoLock( text );
 			}
+		}
+		
+		void SetStatusNoLock( string text ) {
+			lastStatus = text;
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
+			
+			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 0 );
+			Dirty = true;
 		}
 		
 		bool HasServers {
@@ -101,7 +101,7 @@ namespace Launcher2 {
 				string description = response.StatusDescription;
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + " classicube.net returned: (" + errorCode + ") " + description;
-				SetStatus(text );
+				SetStatus( text );
 			} else if( ex.Status == WebExceptionStatus.NameResolutionFailure ) {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + "Unable to resolve classicube.net" +
@@ -119,7 +119,7 @@ namespace Launcher2 {
 			if( !game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {
 				metadata = new Dictionary<string, object>();
 				game.ScreenMetadata["screen-CC"] = metadata;
-			}			
+			}
 			metadata["user"] = Get( 0 );
 			metadata["pass"] = Get( 1 );
 		}

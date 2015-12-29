@@ -51,14 +51,13 @@ namespace Launcher2 {
 		
 		internal ResourceFetcher fetcher;
 		
-		Font logoFont, logoItalicFont;
+		Font logoFont;
 		PlatformDrawer platformDrawer;
 		public void Init() {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
 			logoFont = new Font( "Arial", 30, FontStyle.Regular );
-			logoItalicFont = new Font( "Arial", 25, FontStyle.Italic );
 			string path = Assembly.GetExecutingAssembly().Location;
 			Window.Icon = Icon.ExtractAssociatedIcon( path );
 			                                         
@@ -163,7 +162,6 @@ namespace Launcher2 {
 		
 		public void Dispose() {
 			logoFont.Dispose();
-			logoItalicFont.Dispose();
 		}
 	}
 }
