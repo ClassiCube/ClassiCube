@@ -6,14 +6,14 @@ namespace Launcher2 {
 
 	public static class LauncherSkin {
 		
-		public static FastColour BackgroundCol = new FastColour( 151, 122, 172 );
+		public static FastColour BackgroundCol = new FastColour( 153, 127, 172 );
 		public static FastColour ButtonBorderCol = new FastColour( 97, 81, 110 );
 		public static FastColour ButtonForeActiveCol = new FastColour( 189, 168, 206 );
 		public static FastColour ButtonForeCol = new FastColour( 164, 138, 186 );
 		public static FastColour ButtonHighlightCol = new FastColour( 182, 158, 201 );
 		
 		public static void ResetToDefault() {
-			BackgroundCol = new FastColour( 151, 122, 172 );
+			BackgroundCol = new FastColour( 153, 127, 172 );
 			ButtonBorderCol = new FastColour( 97, 81, 110 );
 			ButtonForeActiveCol = new FastColour( 189, 168, 206 );
 			ButtonForeCol = new FastColour( 164, 138, 186 );

@@ -254,7 +254,7 @@ namespace OpenTK.Platform.MacOS
 			MacOSKeyCode code = (MacOSKeyCode)0;
 			char charCode = '\0';
 
-			//Debug.Print("Processing keyboard event {0}", evt.KeyboardEventKind);
+			//Debug.Print("Processing Keyboard event {0}", (KeyboardEventKind)evt.EventKind);
 
 			switch ((KeyboardEventKind)evt.EventKind)
 			{
@@ -277,9 +277,9 @@ namespace OpenTK.Platform.MacOS
 					keyboard.KeyRepeat = true;
 					goto case KeyboardEventKind.RawKeyDown;
 
-				case KeyboardEventKind.RawKeyDown:
-					OnKeyPress(mKeyPressArgs);
+				case KeyboardEventKind.RawKeyDown:				
 					keyboard[Keymap[code]] = true;
+					OnKeyPress(mKeyPressArgs);
 					return OSStatus.NoError;
 
 				case KeyboardEventKind.RawKeyUp:
@@ -564,19 +564,14 @@ namespace OpenTK.Platform.MacOS
 		public Point PointToClient(Point point)
 		{
 			IntPtr handle = window.WindowRef;
-
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
-			Debug.Print("Rect: {0}", r);
-
 			return new Point(point.X - r.X, point.Y - r.Y);
 		}
+		
 		public Point PointToScreen(Point point)
 		{
 			IntPtr handle = window.WindowRef;
-
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
-			Debug.Print("Rect: {0}", r);
-
 			return new Point(point.X + r.X, point.Y + r.Y);
 		}
 

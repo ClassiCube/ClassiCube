@@ -25,6 +25,9 @@ namespace Launcher2 {
 		/// <summary> Delegate invoked when the text changes. </summary>
 		public Action<LauncherInputWidget> TextChanged;
 		
+		/// <summary> Delegate that only lets certain characters be entered. </summary>
+		public Func<char, bool> TextFilter;
+		
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 		}
 
@@ -56,6 +59,8 @@ namespace Launcher2 {
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool AppendChar( char c ) {
+			if( TextFilter != null && !TextFilter( c ) )
+				return false;
 			if( c >= ' ' && c <= '~' && Text.Length < MaxTextLength ) {
 				Text += c;
 				if( TextChanged != null ) TextChanged( this );
