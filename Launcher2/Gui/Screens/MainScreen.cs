@@ -76,7 +76,7 @@ namespace Launcher2 {
 		protected override void SelectWidget( LauncherWidget widget ) {
 			base.SelectWidget( widget );
 			if( signingIn || !resumeValid || widget != widgets[4] ) return;
-			const string format = "&eResume to {0}:{1}, with the name {2}";
+			const string format = "&eResume to {0}:{1}, as {2}";
 			SetStatusNoLock( String.Format( format, resumeIp, resumePort, resumeUser ) );
 		}
 		

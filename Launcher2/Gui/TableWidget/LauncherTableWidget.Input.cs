@@ -11,7 +11,7 @@ namespace Launcher2 {
 		UptimeComparer uptimeComp = new UptimeComparer();
 		SoftwareComparer softwareComp = new SoftwareComparer();
 		public int DraggingColumn = -1;
-		public bool DraggingScrollbar = true;
+		public bool DraggingScrollbar = false;
 		
 		void HandleOnClick( int mouseX, int mouseY ) {			
 			if( mouseX >= Window.Width - 10 ) {

@@ -29,26 +29,37 @@ namespace Launcher2 {
 		}
 		
 		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( lastInput != null && e.Key == Key.BackSpace ) {
-				if( lastInput.RemoveChar() ) {
-					RedrawLastInput();
-					OnRemovedChar();
-				}
-			} else if( e.Key == Key.Enter && enterIndex >= 0 ) {
+			if( e.Key == Key.Enter && enterIndex >= 0 ) {
 				LauncherWidget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
 			} else if( e.Key == Key.Tab ) {
 				HandleTab();
-			} else if( lastInput != null && e.Key == Key.C && ControlDown ) {
+			}
+			if( lastInput == null ) return;
+			
+			
+			if( e.Key == Key.BackSpace && lastInput.BackspaceChar() ) {
+				RedrawLastInput();
+				OnRemovedChar();
+			} else if( e.Key == Key.Delete && lastInput.DeleteChar() ) {
+				RedrawLastInput();
+				OnRemovedChar();
+			} else if( e.Key == Key.C && ControlDown ) {
 				lastInput.CopyToClipboard();
-			} else if( lastInput != null && e.Key == Key.V && ControlDown ) {
+			} else if( e.Key == Key.V && ControlDown ) {
 				if( lastInput.CopyFromClipboard() )
 					RedrawLastInput();
-			} else if( lastInput != null && e.Key == Key.Escape ) {
+			} else if( e.Key == Key.Escape ) {
 				if( lastInput.ClearText() )
 					RedrawLastInput();
+			} else if( e.Key == Key.Left ) {
+				lastInput.ChangeCursorPos( -1 );
+				RedrawLastInput();
+			} else if( e.Key == Key.Right ) {
+				lastInput.ChangeCursorPos( +1 );
+				RedrawLastInput();
 			}
 		}
 		
@@ -78,6 +89,7 @@ namespace Launcher2 {
 					game.ClearArea( lastInput.X, lastInput.Y,
 					               lastInput.Width + 1, lastInput.Height + 1 );
 				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+				lastInput.DrawCursor( inputFont, drawer );
 				Dirty = true;
 			}
 		}

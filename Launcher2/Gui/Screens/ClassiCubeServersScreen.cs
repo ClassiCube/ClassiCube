@@ -177,6 +177,12 @@ namespace Launcher2 {
 			boldInputFont.Dispose();
 			tableFont.Dispose();
 			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
+			
+			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
+			if( table != null ) {
+				table.DraggingColumn = -1;
+				table.DraggingScrollbar = false;
+			}
 		}
 	}
 }

@@ -31,10 +31,12 @@ namespace Launcher2 {
 		/// <summary> Delegate that only lets certain characters be entered. </summary>
 		public Func<char, bool> TextFilter;
 		
+		public int CaretPos = -1;
+		
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 		}
 
-		public void DrawAt( IDrawer2D drawer, string text, Font font, Font hintFont, 
+		public void DrawAt( IDrawer2D drawer, string text, Font font, Font hintFont,
 		                   Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
 			Width = width; Height = height;
@@ -57,10 +59,11 @@ namespace Launcher2 {
 			drawer.Clear( col, X + Width - 2, Y + 1, 2, Height - 2 );
 			drawer.Clear( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
 			
-			args.SkipPartsCheck = true;			
+			args.SkipPartsCheck = true;
 			if( Text.Length != 0 || HintText == null ) {
 				int y = Y + 2 + (Height - size.Height) / 2;
 				drawer.DrawText( ref args, X + 5, y );
+				DrawCursor( font, drawer );
 			} else {
 				args.SkipPartsCheck = false;
 				args.Text = HintText;
@@ -73,26 +76,87 @@ namespace Launcher2 {
 			}
 		}
 		
+		public void DrawCursor( Font font, IDrawer2D drawer ) {
+			string text = Text;
+			if( Password )
+				text = new String( '*', text.Length );
+			
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			if( CaretPos == -1 ) {
+				Size size = drawer.MeasureSize( ref args );
+				drawer.Clear( FastColour.White, X + 5 + size.Width,
+				             Y + Height - 5, 10, 2 );
+			} else {
+				args.Text = text.Substring( 0, CaretPos );
+				Size trimmedSize = drawer.MeasureChatSize( ref args );
+				args.Text = new String( text[CaretPos], 1 );
+				Size charSize = drawer.MeasureChatSize( ref args );
+				
+				drawer.Clear( FastColour.White, X + 5 + trimmedSize.Width,
+				             Y + Height - 5, charSize.Width, 2 );
+			}
+		}
+		
+		public void ChangeCursorPos( int dir ) {
+			if( CaretPos == 0 && dir == -1 )
+				return;
+			if( CaretPos == -1 && dir == -1 )
+				CaretPos = Text.Length;
+			
+			CaretPos += dir;
+			if( CaretPos < 0 || CaretPos >= Text.Length )
+				CaretPos = -1;
+		}
+		
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool AppendChar( char c ) {
 			if( TextFilter != null && !TextFilter( c ) )
 				return false;
-			if( c >= ' ' && c <= '~' && Text.Length < MaxTextLength ) {
-				Text += c;
+			if( c >= ' ' && c <= '~' && c != '&' && Text.Length < MaxTextLength ) {
+				if( CaretPos == -1 ) {
+					Text += c;
+				} else {
+					Text = Text.Insert( CaretPos, new String( c, 1 ) );
+					CaretPos++;
+				}
 				if( TextChanged != null ) TextChanged( this );
 				return true;
 			}
 			return false;
 		}
 		
-		/// <summary> Removes the last character in the currently entered text. </summary>
+		/// <summary> Removes the character preceding the caret in the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool RemoveChar() {
+		public bool BackspaceChar() {
 			if( Text.Length == 0 ) return false;
 			
-			Text = Text.Substring( 0, Text.Length - 1 );
+			if( CaretPos == -1 ) {
+				Text = Text.Substring( 0, Text.Length - 1 );
+			} else {
+				if( CaretPos == 0 ) return false;
+				Text = Text.Remove( CaretPos - 1, 1 );
+				CaretPos--;
+				if( CaretPos == -1 ) CaretPos = 0;
+			}
+			
 			if( TextChanged != null ) TextChanged( this );
+			if( CaretPos >= Text.Length )
+				CaretPos = -1;
+			return true;
+		}
+		
+		/// <summary> Removes the haracter at the caret in the currently entered text. </summary>
+		/// <returns> true if a redraw is necessary, false otherwise. </returns>
+		public bool DeleteChar() {
+			if( Text.Length == 0 || CaretPos == -1 ) return false;
+			
+			Text = Text.Remove( CaretPos, 1 );
+			if( CaretPos == -1 ) CaretPos = 0;
+			
+			if( TextChanged != null ) TextChanged( this );
+			if( CaretPos >= Text.Length )
+				CaretPos = -1;
 			return true;
 		}
 		
@@ -103,6 +167,7 @@ namespace Launcher2 {
 			
 			Text = "";
 			if( TextChanged != null ) TextChanged( this );
+			CaretPos = -1;
 			return true;
 		}
 		
