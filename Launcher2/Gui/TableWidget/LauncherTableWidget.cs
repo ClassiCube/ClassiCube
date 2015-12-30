@@ -73,8 +73,7 @@ namespace Launcher2 {
 			Redraw( drawer, font, titleFont, boldFont );
 		}
 		
-		static FastColour backCol = new FastColour( 120, 85, 151 ), foreCol = new FastColour( 160, 133, 186 );
-		static FastColour scrollCol = new FastColour( 200, 184, 216 );
+		static FastColour scrollBackCol = new FastColour( 120, 85, 151 ), scrollCol = new FastColour( 200, 184, 216 );
 		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
 			for( int i = 0; i < ColumnWidths.Length; i++ ) {
 				ColumnWidths[i] = DesiredColumnWidths[i];
@@ -109,8 +108,7 @@ namespace Launcher2 {
 			maxIndex = Count;
 			y += 2;
 			int bodyStartY = y;
-			y += 3;
-			
+			y += 3;			
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
@@ -122,9 +120,8 @@ namespace Launcher2 {
 				}
 			}
 			
-			Height = Window.Height - Y;
 			if( separator )
-				drawer.Clear( foreCol, x - 7, Y, 2, Height );
+				drawer.Clear( LauncherSkin.BackgroundCol, x - 7, Y, 2, Height );
 			return maxWidth + 5;
 		}
 		
@@ -134,8 +131,8 @@ namespace Launcher2 {
 			bool empty = args.Text == "";
 			if( empty )
 				size.Height = defaultInputHeight;
-			if( y + size.Height > Window.Height ) {
-				y = Window.Height + 3; return false;
+			if( y + size.Height > Y + Height ) {
+				y = Y + Height + 3; return false;
 			}
 			
 			entry.Y = y; entry.Height = size.Height;
@@ -160,18 +157,18 @@ namespace Launcher2 {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			drawer.Clear( foreCol, 0, Y + size.Height + 5, Window.Width, 2 );
+			drawer.Clear( LauncherSkin.BackgroundCol, 0, Y + size.Height + 5, Window.Width, 2 );
 			headerStartY = Y;
 			
 			headerEndY = Y + size.Height + 5;
 			int startY = headerEndY + 3;
-			numEntries = (Window.Height - startY) / (defaultInputHeight + 3);
+			numEntries = (Y + Height - startY) / (defaultInputHeight + 3);
 		}
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
-			drawer.Clear( backCol, Window.Width - 10, Y, 10, Window.Height - Y + 1 );
-			float scale = (Window.Height - Y) / (float)Count;
+			drawer.Clear( scrollBackCol, Window.Width - 10, Y, 10, Height );
+			float scale = Height / (float)Count;
 			
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);

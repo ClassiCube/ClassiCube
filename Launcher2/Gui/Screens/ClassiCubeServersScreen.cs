@@ -9,9 +9,11 @@ namespace Launcher2 {
 		
 		const int tableIndex = 4, searchIndex = 0, hashIndex = 1;
 		Font boldInputFont, tableFont;
+		const int tableY = 50;
+		
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
 			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );		
-			tableFont = new Font( "Arial", 12, FontStyle.Regular );
+			tableFont = new Font( "Arial", 11, FontStyle.Regular );
 			enterIndex = 3;
 			widgets = new LauncherWidget[7];
 		}
@@ -85,14 +87,12 @@ namespace Launcher2 {
 		public override void Resize() {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				game.ClearArea( 0, 0, game.Width, 100 );
-				FastColour col = LauncherTableWidget.backGridCol;
-				drawer.Clear( col, 0, 100, game.Width, game.Height - 100 );
+				game.ClearArea( 0, 0, game.Width, tableY );
 				
-				Draw();
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.ClampIndex();
-				table.Redraw( drawer, tableFont, inputFont, inputFont );
+				if( table != null )
+					table.ClampIndex();
+				Draw();
 			}
 			Dirty = true;
 		}
@@ -101,20 +101,25 @@ namespace Launcher2 {
 			widgetIndex = 0;
 			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop, 
 			          false, 10, 10, 32, "&7Search servers.." );
-			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop, 
-			          false, 10, 55, 32, "&7classicube.net/server/play/..." );
+			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.BottomOrRight,
+			          false, 10, -10, 32, "&7classicube.net/server/play/..." );
 			((LauncherInputWidget)widgets[hashIndex]).ClipboardFilter = HashFilter;
 			
 			MakeButtonAt( "Back", 110, 30, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
 			             -20, 10, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.BottomOrRight, Anchor.LeftOrTop,
-			             -20, 55, ConnectToServer );
+			MakeButtonAt( "Connect", 110, 30, titleFont, Anchor.BottomOrRight, Anchor.BottomOrRight,
+			             -20, -10, ConnectToServer );
 			MakeTableWidget();
 		}
 		
 		void MakeTableWidget() {
+			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			FastColour col = LauncherTableWidget.backGridCol;
+			drawer.Clear( col, 0, tableY, game.Width, tableHeight );
+			
 			if( widgets[tableIndex] != null ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+				table.Height = tableHeight;
 				table.Redraw( drawer, tableFont, inputFont, inputFont );
 				return;
 			}
@@ -122,8 +127,9 @@ namespace Launcher2 {
 			LauncherTableWidget widget = new LauncherTableWidget( game );
 			widget.CurrentIndex = 0;
 			widget.SetEntries( game.Session.Servers );
+			widget.Height = tableHeight;
 			widget.DrawAt( drawer, tableFont, inputFont, inputFont,
-			              Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 100 );
+			              Anchor.LeftOrTop, Anchor.LeftOrTop, 0, tableY );
 			
 			widget.NeedRedraw = Resize;
 			widget.SelectedChanged = SelectedChanged;
