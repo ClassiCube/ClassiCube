@@ -112,7 +112,8 @@ namespace Launcher2 {
 			AllResourcesExist = File.Exists( digPath + ".bin" )
 				&& File.Exists( stepPath + ".bin" );
 			
-			string zipPath = Path.Combine( Program.AppDirectory, "default.zip" );
+			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
+			string zipPath = Path.Combine( texDir, "default.zip" );
 			defaultZipExists = File.Exists( zipPath );
 			if( !defaultZipExists ) {
 				// classic.jar + 1.6.2.jar + terrain-patch.png + gui.png

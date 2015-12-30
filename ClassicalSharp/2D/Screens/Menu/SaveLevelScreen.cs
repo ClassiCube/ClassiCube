@@ -118,6 +118,7 @@ namespace ClassicalSharp {
 		
 		string textPath;
 		void SaveMap( string path ) {
+			path = Path.Combine( "maps", path );
 			path = Path.Combine( Program.AppDirectory, path );
 			try {
 				if( File.Exists( path ) )

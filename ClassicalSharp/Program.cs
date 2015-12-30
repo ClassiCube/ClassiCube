@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -16,9 +17,11 @@ namespace ClassicalSharp {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			string logPath = Path.Combine( AppDirectory, "client.log" );
 			ErrorHandler.InstallHandler( logPath );
+			CleanupMainDirectory();
 			
 			Utils.LogDebug( "Starting " + AppName + ".." );
-			if( !File.Exists( Path.Combine( AppDirectory, "default.zip" ) ) ) {
+			string path = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			if( !File.Exists( Path.Combine( path, "default.zip" ) ) ) {
 				Utils.LogDebug( "default.zip not found. Cannot start." );
 				return;
 			}
@@ -74,6 +77,34 @@ namespace ClassicalSharp {
 				game.IPAddress = ip;
 				game.Port = port;
 				game.Run();
+			}
+		}
+		
+		internal static void CleanupMainDirectory() {
+			string mapPath = Path.Combine( Program.AppDirectory, "maps" );
+			if( !Directory.Exists( mapPath ) )
+				Directory.CreateDirectory( mapPath );
+			string texPath = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			if( !Directory.Exists( texPath ) )
+				Directory.CreateDirectory( texPath );
+			CopyFiles( "*.cw", mapPath );
+			CopyFiles( "*.dat", mapPath );
+			CopyFiles( "*.zip", texPath );
+		}
+		
+		static void CopyFiles( string filter, string folder ) {
+			string[] files = Directory.GetFiles( AppDirectory, filter );
+			for( int i = 0; i < files.Length; i++ ) {
+				string name = Path.GetFileName( files[i] );
+				string dst = Path.Combine( folder, name );
+				if( File.Exists( dst ) ) 
+					continue;
+				
+				try {
+					File.Copy( files[i], dst );
+					File.Delete( files[i] );
+				} catch( IOException ex ) {
+				}
 			}
 		}
 	}

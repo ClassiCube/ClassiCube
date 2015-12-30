@@ -21,7 +21,8 @@ namespace Launcher2 {
 			reader = new ZipReader();
 			reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
 			reader.ProcessZipEntry = ProcessZipEntry_Classic;
-			string path = Path.Combine( Program.AppDirectory, "default.zip" );
+			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
+			string path = Path.Combine( texDir, "default.zip" );
 			
 			using( Stream srcClassic = new MemoryStream( jarClassic ),
 			      srcModern = new MemoryStream( jar162 ),

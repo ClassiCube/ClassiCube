@@ -19,7 +19,7 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 
 	public partial class Game : GameWindow {
-	
+		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 			Animations = new Animations( this );
 			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( "default.zip", this ); 
+			extractor.Extract( "default.zip", this );
 			// in case the user's default texture pack doesn't have all required textures
 			if( defTexturePack != "default.zip" )
 				extractor.Extract( DefaultTexturePack, this );
@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 			if( File.Exists( launcherPath ) ) {
 				Icon = Icon.ExtractAssociatedIcon( launcherPath );
 				return;
-			}			
+			}
 			launcherPath = Path.Combine( Program.AppDirectory, "Launcher.exe" );
 			if( File.Exists( launcherPath ) ) {
 				Icon = Icon.ExtractAssociatedIcon( launcherPath );
@@ -225,7 +225,7 @@ namespace ClassicalSharp {
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
 		const double cameraPeriod = 1.0 / 120;
-		double ticksAccumulator, imageCheckAccumulator, 
+		double ticksAccumulator, imageCheckAccumulator,
 		cameraAccumulator;
 		
 		void CheckScheduledTasks( double time ) {
@@ -384,7 +384,7 @@ namespace ClassicalSharp {
 		}
 		
 		void PerformFpsElapsed( double elapsedMs ) {
-			limitAcc += elapsedMs;		
+			limitAcc += elapsedMs;
 			if( limitAcc >= limitMilliseconds ) { // going slower than limit?
 				limitAcc -= limitMilliseconds;
 			} else { // going faster than limit
@@ -441,7 +441,7 @@ namespace ClassicalSharp {
 			if( block == 0 ) return false;
 			if( !BlockInfo.IsLiquid[block] ) return true;
 			
-			return !LiquidsBreakable ? false : 
+			return !LiquidsBreakable ? false :
 				Inventory.CanPlace[block] && Inventory.CanDelete[block];
 		}
 		

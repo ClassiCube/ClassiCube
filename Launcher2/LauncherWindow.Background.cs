@@ -11,11 +11,12 @@ namespace Launcher2 {
 		internal void TryLoadTexturePack() {
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
+			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
-			texPack = Path.Combine( Program.AppDirectory, texPack );
+			texPack = Path.Combine( texDir, texPack );
 			
 			if( !File.Exists( texPack ) )
-				texPack = Path.Combine( Program.AppDirectory, "default.zip" );
+				texPack = Path.Combine( texDir, "default.zip" );
 			if( !File.Exists( texPack ) )
 				return;
 			

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
@@ -118,9 +119,13 @@ namespace ClassicalSharp {
 		}
 		
 		public static bool Load() {
-			// i.e. when running from the launcher
+			// Both of these are from when running from the launcher
 			if( Program.AppDirectory == null )
 				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			string defZip = Path.Combine( Program.AppDirectory, "default.zip" );
+			string texDir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			if( File.Exists( defZip ) || !Directory.Exists( texDir ) )
+				Program.CleanupMainDirectory();			   
 			
 			try {
 				string path = Path.Combine( Program.AppDirectory, OptionsFile );

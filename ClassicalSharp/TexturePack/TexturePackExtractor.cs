@@ -9,8 +9,10 @@ namespace ClassicalSharp.TexturePack {
 	/// <summary> Extracts resources from a .zip texture pack. </summary>
 	public sealed class TexturePackExtractor {
 		
+		public const string Dir = "texpacks";
 		Game game;
 		public void Extract( string path, Game game ) {
+			path = Path.Combine( Dir, path );
 			path = Path.Combine( Program.AppDirectory, path );
 			using( Stream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) )
 				Extract( fs, game );

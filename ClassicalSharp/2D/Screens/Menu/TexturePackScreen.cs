@@ -9,8 +9,8 @@ namespace ClassicalSharp {
 		
 		public TexturePackScreen( Game game ) : base( game ) {
 			titleText = "Select a texture pack zip";
-			string dir = Program.AppDirectory;
-			files = Directory.GetFiles( dir, "*.zip", SearchOption.AllDirectories );
+			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			files = Directory.GetFiles( dir, "*.zip" );
 			
 			for( int i = 0; i < files.Length; i++ ) {
 				string absolutePath = files[i];

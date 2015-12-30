@@ -7,9 +7,9 @@ namespace ClassicalSharp {
 		
 		public LoadLevelScreen( Game game ) : base( game ) {
 			titleText = "Select a level";
-			string dir = Program.AppDirectory;
-			string[] cwFiles = Directory.GetFiles( dir, "*.cw", SearchOption.AllDirectories );
-			string[] datFiles = Directory.GetFiles( dir, "*.dat", SearchOption.AllDirectories );
+			string dir = Path.Combine( Program.AppDirectory, "maps" );
+			string[] cwFiles = Directory.GetFiles( dir, "*.cw" );
+			string[] datFiles = Directory.GetFiles( dir, "*.dat" );
 			files = new string[cwFiles.Length + datFiles.Length];
 			Array.Copy( cwFiles, 0, files, 0, cwFiles.Length );
 			Array.Copy( datFiles, 0, files, cwFiles.Length, datFiles.Length );
