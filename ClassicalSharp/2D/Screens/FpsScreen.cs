@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		StringBuffer text;
 		
 		public FpsScreen( Game game ) : base( game ) {
-			text = new StringBuffer( 96 );
+			text = new StringBuffer( 128 );
 		}
 
 		TextWidget fpsTextWidget, hackStatesWidget;
@@ -107,13 +107,16 @@ namespace ClassicalSharp {
 		}
 		
 		bool speeding, noclip, fly;
+		Camera lastCam;
 		void UpdateHackState( bool force ) {
 			LocalPlayer p = game.LocalPlayer;
-			if( force || p.speeding != speeding || p.noClip != noclip || p.flying != fly ) {
+			if( force || p.speeding != speeding || p.noClip != noclip || p.flying != fly || game.Camera != lastCam ) {
 				speeding = p.speeding; noclip = p.noClip; fly = p.flying;
+				lastCam = game.Camera;
 				int index = 0;
 				text.Clear();
 				
+				if( lastCam.IsZoomCamera ) text.Append( ref index, "Zoom camera  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				if( speeding ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );

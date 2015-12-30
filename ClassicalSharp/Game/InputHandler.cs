@@ -343,8 +343,7 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyBinding.ShowAxisLines] ) {
 				game.ShowAxisLines = !game.ShowAxisLines;
 			} else if( key == Keys[KeyBinding.ThirdPersonCamera] ) {
-				bool useThirdPerson = !(game.Camera is ForwardThirdPersonCamera);
-				game.SetCamera( useThirdPerson );
+				game.CycleCamera();
 			} else if( key == Keys[KeyBinding.ViewDistance] ) {
 				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {
 					CycleDistanceBackwards();

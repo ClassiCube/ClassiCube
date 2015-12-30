@@ -117,8 +117,8 @@ namespace ClassicalSharp {
 			bool anyNonAir = false;
 			SoundType type = GetSound( ref anyNonAir );
 			if( !anyNonAir ) soundPos = new Vector3( -100000 );
-				
-				if( onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
+			
+			if( onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
 				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
@@ -142,7 +142,16 @@ namespace ClassicalSharp {
 			SoundType type = SoundType.None;
 			bool nonAir = false;
 			
-			// first check surrounding liquids/gas for sounds
+			// first check block standing on
+			byte blockUnder = (byte)BlockUnderFeet;
+			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
+			BlockCollideType collideType = game.BlockInfo.CollideType[blockUnder];
+			if( collideType == BlockCollideType.Solid && typeUnder != SoundType.None ) {
+				nonAir = true;
+				return typeUnder;
+			}
+			
+			// then check surrounding liquids/gas for sounds
 			TouchesAny( bounds, b => {
 			           	SoundType newType = game.BlockInfo.StepSounds[b];
 			           	BlockCollideType collide = game.BlockInfo.CollideType[b];
@@ -154,7 +163,7 @@ namespace ClassicalSharp {
 			if( type != SoundType.None )
 				return type;
 			
-			// then check soliod blocks below
+			// then check all solid blocks at feet
 			pos.Y -= 0.01f;
 			bounds.Max.Y = bounds.Min.Y = pos.Y;
 			TouchesAny( bounds, b => {
@@ -239,7 +248,7 @@ namespace ClassicalSharp {
 			if( !CanPushbackBlocks || !HacksEnabled ) PushbackPlacing = false;
 			
 			if( !CanUseThirdPersonCamera || !HacksEnabled )
-				game.SetCamera( false );
+				game.CycleCamera();
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,

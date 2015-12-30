@@ -93,6 +93,7 @@ namespace ClassicalSharp {
 			Graphics.LostContextFunction = Network.Tick;
 			
 			firstPersonCam = new FirstPersonCamera( this );
+			firstPersonZoomCam = new FirstPersonZoomCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
@@ -346,13 +347,15 @@ namespace ClassicalSharp {
 			screen.Init();
 		}
 		
-		public void SetCamera( bool thirdPerson ) {
+		public void CycleCamera() {
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
-			bool canUseThird = LocalPlayer.CanUseThirdPersonCamera;
-			Camera = (thirdPerson && canUseThird) ?
-				(Camera is FirstPersonCamera ? thirdPersonCam : forwardThirdPersonCam ) :
-				firstPersonCam;
-			
+			if( Camera == firstPersonCam ) Camera = thirdPersonCam;
+			else if( Camera == thirdPersonCam ) Camera = forwardThirdPersonCam;
+			else if( Camera == forwardThirdPersonCam ) Camera = firstPersonZoomCam;
+			else Camera = firstPersonCam;
+
+			if( !LocalPlayer.CanUseThirdPersonCamera ) 
+				Camera = firstPersonCam;		
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;
 			newCam.previous = oldCam.previous;
