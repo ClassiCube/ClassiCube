@@ -19,9 +19,13 @@ namespace ClassicalSharp {
 		}
 		
 		public bool Load() {
+			string path = Path.Combine( Program.AppDirectory, folder );
+			path = Path.Combine( path, file );
+			if( !File.Exists( file ) )
+				return true;
+			
 			try {
-				string path = Path.Combine( Program.AppDirectory, folder );
-				using( Stream fs = File.OpenRead( Path.Combine( path, file ) ) )
+				using( Stream fs = File.OpenRead( path ) )
 					using( StreamReader reader = new StreamReader( fs, false ) )
 				{
 					string line;
@@ -30,8 +34,6 @@ namespace ClassicalSharp {
 						acceptedUrls.Add( line );
 					}
 				}
-				return true;
-			} catch( FileNotFoundException ) {
 				return true;
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "loading accepted urls", ex );

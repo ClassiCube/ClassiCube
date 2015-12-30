@@ -25,7 +25,8 @@ namespace ClassicalSharp {
 		
 		protected override void TextButtonClick( Game game, Widget widget ) {
 			string file = ((ButtonWidget)widget).Text;
-			string path = Path.Combine( Program.AppDirectory, file );
+			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			string path = Path.Combine( dir, file );
 			if( !File.Exists( path ) )
 				return;
 			

@@ -55,7 +55,11 @@ namespace Launcher2 {
 			} else if( e.Key == Key.Tab ) {
 				HandleTab();
 			}
-			if( lastInput == null ) return;
+			if( lastInput == null ) {
+				 if( e.Key == Key.Escape )
+				 	game.SetScreen( new MainScreen( game ) );
+				return;
+			}
 			
 			if( e.Key == Key.BackSpace && lastInput.BackspaceChar() ) {
 				RedrawLastInput();
@@ -151,6 +155,18 @@ namespace Launcher2 {
 				input.Redraw( drawer, input.Text, inputFont, inputHintFont );
 			}
 			lastInput = input;
+			Dirty = true;
+		}
+		
+		protected override void WidgetUnclicked( LauncherWidget widget ) {
+			LauncherInputWidget input = widget as LauncherInputWidget;
+			if( input == null ) return;
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				input.Active = false;
+				input.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+			}
+			lastInput = null;
 			Dirty = true;
 		}
 		

@@ -87,11 +87,16 @@ namespace Launcher2 {
 		
 		protected LauncherWidget lastClicked;
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
-			if( e.Button != MouseButton.Left || selectedWidget == null ) return;
+			if( e.Button != MouseButton.Left ) return;
 			
-			if( selectedWidget.OnClick != null )
-				selectedWidget.OnClick( e.X, e.Y );
+			if( lastClicked != null && lastClicked != selectedWidget )
+				WidgetUnclicked( lastClicked );
+			if( selectedWidget != null && selectedWidget.OnClick != null )
+				selectedWidget.OnClick( e.X, e.Y );			
 			lastClicked = selectedWidget;
+		}
+		
+		protected virtual void WidgetUnclicked( LauncherWidget widget ) {
 		}
 		
 		protected bool tabDown = false;
