@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 		
 		bool Is304Status( WebException ex ) {
 			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
-				return false;			
+				return false;
 			HttpWebResponse response = (HttpWebResponse)ex.Response;
 			return response.StatusCode == HttpStatusCode.NotModified;
 		}
@@ -110,12 +110,9 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
-			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 15 ) {
-				game.Disconnect( "&eDisconnected from the server",
-				                "No ping packet received for over 15 seconds." );
-				Dispose();
-				return;
-			}
+			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 5 )
+				CheckDisconnection( delta );
+			if( Disconnected ) return;
 			
 			try {
 				reader.ReadPendingData();
@@ -124,6 +121,8 @@ namespace ClassicalSharp {
 				game.Disconnect( "&eLost connection to the server", "I/O error when reading packets" );
 				Dispose();
 				return;
+			} catch {
+				throw;
 			}
 			
 			while( reader.size > 0 ) {
@@ -221,6 +220,19 @@ namespace ClassicalSharp {
 					game.CpePlayersList[i] = null;
 				}
 				RemoveEntity( (byte)i );
+			}
+		}
+		
+		double testAcc = 0;
+		void CheckDisconnection( double delta ) {
+			testAcc += delta;
+			if( testAcc < 1 ) return;
+			testAcc = 0;
+			
+			if( !socket.Connected || (socket.Poll( 1000, SelectMode.SelectRead ) && socket.Available == 0 ) ) {
+				game.Disconnect( "&eDisconnected from the server",
+				                "I/O connection timed out." );
+				Dispose();
 			}
 		}
 	}
