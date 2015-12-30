@@ -12,10 +12,8 @@ namespace ClassicalSharp {
 			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
 			files = Directory.GetFiles( dir, "*.zip" );
 			
-			for( int i = 0; i < files.Length; i++ ) {
-				string absolutePath = files[i];
-				files[i] = absolutePath.Substring( dir.Length );
-			}
+			for( int i = 0; i < files.Length; i++ )
+				files[i] = Path.GetFileName( files[i] );
 			Array.Sort( files );
 		}
 		

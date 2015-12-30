@@ -14,10 +14,8 @@ namespace ClassicalSharp {
 			Array.Copy( cwFiles, 0, files, 0, cwFiles.Length );
 			Array.Copy( datFiles, 0, files, cwFiles.Length, datFiles.Length );
 			
-			for( int i = 0; i < files.Length; i++ ) {
-				string absolutePath = files[i];
-				files[i] = absolutePath.Substring( dir.Length );
-			}
+			for( int i = 0; i < files.Length; i++ ) 
+				files[i] = Path.GetFileName( files[i] );
 			Array.Sort( files );
 		}
 		

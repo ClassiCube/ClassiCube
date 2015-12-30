@@ -83,31 +83,31 @@ namespace ClassicalSharp {
 				MakeDescWidget( "Please enter a filename" );
 				return;
 			}
-			text = Path.Combine( Program.AppDirectory, text );
-			text = Path.ChangeExtension( text, ".cw" );
+			string file = Path.ChangeExtension( text, ".cw" );
+			text = Path.Combine( Program.AppDirectory, "maps" );
+			text = Path.Combine( text, file );
 			
 			if( File.Exists( text ) ) {
-				buttons[1] = ButtonWidget.Create( game, 0, 90, 260, 30, "Overwrite existing?", 
+				buttons[1] = ButtonWidget.Create( game, 0, 90, 260, 30, "Overwrite existing?",
 				                                 Anchor.Centre, Anchor.Centre, titleFont, OverwriteButtonClick );
 			} else {
-				SetPath( text );
+				// NOTE: We don't immediately save here, because otherwise the 'saving...'
+				// will not be rendered in time because saving is done on the main thread.
+				MakeDescWidget( "Saving.." );
+				textPath = text;
 				RemoveOverwriteButton();
 			}
 		}
 		
 		void OverwriteButtonClick( Game game, Widget widget ) {
 			string text = inputWidget.GetText();
-			text = Path.ChangeExtension( text, ".cw" );
+			string file = Path.ChangeExtension( text, ".cw" );
+			text = Path.Combine( Program.AppDirectory, "maps" );
+			text = Path.Combine( text, file );
 			
-			SetPath( text );
-			RemoveOverwriteButton();
-		}
-		
-		void SetPath( string text ) {
-			// NOTE: We don't immediately save here, because otherwise the 'saving...'
-			// will not be rendered in time because saving is done on the main thread.
 			MakeDescWidget( "Saving.." );
 			textPath = text;
+			RemoveOverwriteButton();
 		}
 		
 		void RemoveOverwriteButton() {
@@ -118,8 +118,6 @@ namespace ClassicalSharp {
 		
 		string textPath;
 		void SaveMap( string path ) {
-			path = Path.Combine( "maps", path );
-			path = Path.Combine( Program.AppDirectory, path );
 			try {
 				if( File.Exists( path ) )
 					File.Delete( path );
@@ -132,7 +130,7 @@ namespace ClassicalSharp {
 				MakeDescWidget( "&cError while trying to save map" );
 				return;
 			}
-			game.Chat.Add( "&eSaved map to: " + path );
+			game.Chat.Add( "&eSaved map to: " + Path.GetFileName( path ) );
 			game.SetNewScreen( new PauseScreen( game ) );
 		}
 		
