@@ -144,6 +144,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+			//Vector3 cameraPos = Picking.ClipCameraPos( game, eyePos, -Utils.GetDirVector( player.YawRadians, player.PitchRadians ), distance );
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
