@@ -270,7 +270,7 @@ namespace ClassicalSharp {
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
-				return true;
+				return key < Key.F1 || key > Key.F35;
 			}
 
 			if( key == game.Mapping( KeyBinding.OpenChat ) ) {

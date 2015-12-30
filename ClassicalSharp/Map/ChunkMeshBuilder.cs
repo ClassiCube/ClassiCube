@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 					int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (0 + 1);
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {						
 						tile = chunk[chunkIndex];
-						if( tile != 0 )
+						if( !info.IsAir[tile] )
 							RenderTile( chunkIndex, xx, yy, zz, x, y, z );
 						chunkIndex++;
 					}
@@ -59,12 +59,8 @@ namespace ClassicalSharp {
 		
 		unsafe bool ReadChunkData( int x1, int y1, int z1 ) {
 			bool allAir = true, allSolid = true;
-			fixed( byte* chunkPtr = chunk, mapPtr = map.mapData ) {
-				
-				int* chunkIntPtr = (int*)chunkPtr;
-				for( int i = 0; i < extChunkSize3 / sizeof( int ); i++ ) {
-					*chunkIntPtr++ = 0;
-				}
+			fixed( byte* chunkPtr = chunk, mapPtr = map.mapData ) {				
+				MemUtils.memset( (IntPtr)chunkPtr, 0, 0, extChunkSize3 );
 				
 				for( int yy = -1; yy < 17; yy++ ) {
 					int y = yy + y1;
@@ -75,8 +71,8 @@ namespace ClassicalSharp {
 						if( z < 0 ) continue;
 						if( z > maxZ ) break;
 						
-						int index = ( y * length + z ) * width + ( x1 - 1 - 1 );
-						int chunkIndex = ( yy + 1 ) * extChunkSize2 + ( zz + 1 ) * extChunkSize + ( -1 + 1 ) - 1;
+						int index = (y * length + z) * width + (x1 - 1 - 1);
+						int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1) - 1;
 						
 						for( int xx = -1; xx < 17; xx++ ) {
 							int x = xx + x1;
@@ -160,10 +156,9 @@ namespace ClassicalSharp {
 				DrawTopFace( topCount );
 		}
 		
-		void Stretch( int x1, int y1, int z1 ) {
-			for( int i = 0; i < counts.Length; i++ ) {
-				counts[i] = 1;
-			}
+		unsafe void Stretch( int x1, int y1, int z1 ) {
+			fixed( byte* ptr = counts )
+				MemUtils.memset( (IntPtr)ptr, 1, 0, chunkSize3 * TileSide.Sides );
 			
 			int xMax = Math.Min( width, x1 + chunkSize );
 			int yMax = Math.Min( height, y1 + chunkSize );
@@ -187,7 +182,7 @@ namespace ClassicalSharp {
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						chunkIndex++;
 						byte tile = chunk[chunkIndex];
-						if( tile == 0 ) continue;
+						if( info.IsAir[tile] ) continue;
 						int countIndex = ((yy << 8) + (zz << 4) + xx) * TileSide.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.

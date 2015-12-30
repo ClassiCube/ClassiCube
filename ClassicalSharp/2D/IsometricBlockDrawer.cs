@@ -38,11 +38,12 @@ namespace ClassicalSharp {
 			if( info.IsSprite[block] ) {
 				minBB = Vector3.Zero; maxBB = Vector3.One;
 			}
+			if( info.IsAir[block] ) return;
 			index = 0;
+			
 			// isometric coords size: cosY * -scale - sinY * scale
 			// we need to divide by (2 * cosY), as the calling function expects size to be in pixels.
-			scale = size / (2 * cosY);
-			
+			scale = size / (2 * cosY);		
 			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))
 			pos.X = x; pos.Y = y; pos.Z = 0;			
 			pos = Utils.RotateY( Utils.RotateX( pos, cosX, -sinX ), cosY, -sinY );

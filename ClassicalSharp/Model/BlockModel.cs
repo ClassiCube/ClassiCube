@@ -42,7 +42,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public void CalcState( byte block ) {
-			if( block == 0 ) {
+			if( game.BlockInfo.IsAir[block] ) {
 				bright = false;
 				minBB = Vector3.Zero;
 				maxBB = Vector3.One;
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Model {
 			}
 			
 			CalcState( block );
-			if( block == 0 )
+			if( game.BlockInfo.IsAir[block] )
 				return;
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;

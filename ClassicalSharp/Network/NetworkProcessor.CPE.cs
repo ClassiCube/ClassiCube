@@ -460,6 +460,9 @@ namespace ClassicalSharp {
 				info.CullWithNeighbours[block] = false;
 			} else if( blockDraw == 3 ) {
 				info.IsTranslucent[block] = true;
+			} else if( blockDraw == 4 ) {
+				info.IsTransparent[block] = true;
+				info.IsAir[block] = true;
 			}
 			if( info.IsOpaque[block] )
 				info.IsOpaque[block] = blockDraw == 0;

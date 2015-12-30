@@ -172,6 +172,7 @@ namespace ClassicalSharp {
 			BlocksLight[id] = true;
 			FullBright[id] = false;
 			CullWithNeighbours[id] = true;
+			IsAir[id] = false;
 			
 			Name[id] = "Invalid";
 			FogColour[id] = default( FastColour );

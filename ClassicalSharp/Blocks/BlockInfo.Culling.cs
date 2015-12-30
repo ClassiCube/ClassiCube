@@ -9,6 +9,8 @@ namespace ClassicalSharp {
 		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
 		
 		public bool[] CanStretch = new bool[BlocksCount * TileSide.Sides];
+		
+		public bool[] IsAir = new bool[BlocksCount];
 
 		internal void CheckOpaque() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
@@ -20,6 +22,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal void SetupCullingCache() {
+			IsAir[0] = true;
 			CheckOpaque();
 			for( int i = 0; i < CanStretch.Length; i++ )
 				CanStretch[i] = true;
