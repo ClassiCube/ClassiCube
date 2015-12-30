@@ -7,24 +7,29 @@ namespace ClassicalSharp.Renderers {
 	public class PickingRenderer : IDisposable {
 		
 		IGraphicsApi graphics;
-		BlockInfo info;
+		Game game;
 		int vb;
 		
-		public PickingRenderer( Game window ) {
-			graphics = window.Graphics;
+		public PickingRenderer( Game game ) {
+			graphics = game.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
-			info = window.BlockInfo;
+			this.game = game;
 		}
 		
 		FastColour col = FastColour.Black;
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
-		const float size = 1/32f;
 		const float offset = 0.01f;
 		
 		public void Render( double delta, PickedPos pickedPos ) {
 			index = 0;
+			Player player = game.LocalPlayer;
+			Vector3 camPos = game.Camera.GetCameraPos( player.EyePosition );
+			float dist = (camPos - pickedPos.Min).LengthSquared;
+			
+			float size = dist < 12 * 12 ? 1/64f : 1/32f;
+			if( dist > 32 * 32 ) size = 1/16f;
 			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 			

@@ -111,17 +111,17 @@ namespace Launcher2 {
 			if( !Options.Load() )
 				return;
 			
-			string user = Options.Get( "launcher-DC-username" ) ?? "";
-			string ip = Options.Get( "launcher-DC-ip" ) ?? "127.0.0.1";
-			string port = Options.Get( "launcher-DC-port" ) ?? "25565";
-			bool ccSkins = Options.GetBool( "launcher-DC-ccskins", true );
+			string user = Options.Get( "launcher-dc-username" ) ?? "";
+			string ip = Options.Get( "launcher-dc-ip" ) ?? "127.0.0.1";
+			string port = Options.Get( "launcher-dc-port" ) ?? "25565";
+			bool ccSkins = Options.GetBool( "launcher-dc-ccskins", true );
 
 			IPAddress address;
 			if( !IPAddress.TryParse( ip, out address ) ) ip = "127.0.0.1";
 			ushort portNum;
 			if( !UInt16.TryParse( port, out portNum ) ) port = "25565";
 			
-			string mppass = Options.Get( "launcher-DC-mppass" ) ?? null;
+			string mppass = Options.Get( "launcher-dc-mppass" );
 			mppass = Secure.Decode( mppass, user );
 			
 			Set( 0, user );
@@ -134,11 +134,11 @@ namespace Launcher2 {
 			if( !Options.Load() )
 				return;
 			
-			Options.Set( "launcher-DC-username", data.Username );
-			Options.Set( "launcher-DC-ip", data.Ip );
-			Options.Set( "launcher-DC-port", data.Port );
-			Options.Set( "launcher-DC-mppass", Secure.Encode( data.Mppass, data.Username ) );
-			Options.Set( "launcher-DC-ccskins", ccSkins );
+			Options.Set( "launcher-dc-username", data.Username );
+			Options.Set( "launcher-dc-ip", data.Ip );
+			Options.Set( "launcher-dc-port", data.Port );
+			Options.Set( "launcher-dc-mppass", Secure.Encode( data.Mppass, data.Username ) );
+			Options.Set( "launcher-dc-ccskins", ccSkins );
 			Options.Save();
 		}
 		
