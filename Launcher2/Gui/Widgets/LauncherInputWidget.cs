@@ -172,12 +172,11 @@ namespace Launcher2 {
 				             Y + Height - 5, 10, 2 );
 			} else {
 				args.Text = text.Substring( 0, CaretPos );
-				Size trimmedSize = drawer.MeasureChatSize( ref args );
+				int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
 				args.Text = new String( text[CaretPos], 1 );
-				Size charSize = drawer.MeasureChatSize( ref args );
+				int charWidth = drawer.MeasureChatSize( ref args ).Width;
 				
-				drawer.Clear( FastColour.White, X + 5 + trimmedSize.Width,
-				             Y + Height - 5, charSize.Width, 2 );
+				drawer.Clear( FastColour.White, X + 5 + trimmedWidth, Y + Height - 5, charWidth, 2 );
 			}
 		}
 		

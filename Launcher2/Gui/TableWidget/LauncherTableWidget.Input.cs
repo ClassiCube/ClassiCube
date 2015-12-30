@@ -29,7 +29,7 @@ namespace Launcher2 {
 		}
 		
 		void SelectHeader( int mouseX, int mouseY ) {
-			int x = 0;		
+			int x = X;		
 			for( int i = 0; i < ColumnWidths.Length; i++ ) {
 				x += ColumnWidths[i] + 10;
 				if( mouseX >= x - 8 && mouseX < x + 8 ) {
@@ -41,7 +41,7 @@ namespace Launcher2 {
 		}
 		
 		void TrySortColumns( int mouseX ) {
-			int x = 0;
+			int x = X;
 			if( mouseX >= x && mouseX < x + ColumnWidths[0] - 10 ) {
 				SortEntries( nameComp ); return;
 			}
@@ -93,6 +93,7 @@ namespace Launcher2 {
 			if( DraggingScrollbar ) {
 				ScrollbarClick( y );
 			} else if( DraggingColumn >= 0 ) {
+				if( x >= Window.Width - 20 ) return;
 				int col = DraggingColumn;
 				ColumnWidths[col] += deltaX;
 				Utils.Clamp( ref ColumnWidths[col], 20, Window.Width - 20 );

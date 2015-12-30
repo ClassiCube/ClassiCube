@@ -29,11 +29,12 @@ namespace Launcher2 {
 			}
 		}
 		
+		bool useBitmappedFont;
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
 			Bitmap bmp = new Bitmap( stream );
 			Drawer.SetFontBitmap( bmp );
-			Drawer.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
+			useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
 		}
 		
 		public void MakeBackground() {
@@ -46,6 +47,7 @@ namespace Launcher2 {
 				drawer.SetBitmap( Framebuffer );
 				ClearArea( 0, 0, Width, Height );
 				
+				drawer.UseBitmappedChat = useBitmappedFont;
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
@@ -54,6 +56,7 @@ namespace Launcher2 {
 				drawer.DrawChatText( ref args, xStart + 5, 20 + 5 );
 				args.Text = "&eClassical&fSharp";
 				drawer.DrawChatText( ref args, xStart, 20 );
+				drawer.UseBitmappedChat = false;
 			}
 			Dirty = true;
 		}

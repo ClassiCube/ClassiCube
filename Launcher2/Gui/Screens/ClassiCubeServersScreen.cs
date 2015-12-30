@@ -9,7 +9,7 @@ namespace Launcher2 {
 		
 		const int tableIndex = 4, searchIndex = 0, hashIndex = 1;
 		Font boldInputFont, tableFont;
-		const int tableY = 50;
+		const int tableX = 10, tableY = 50;
 		
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
 			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );		
@@ -82,6 +82,7 @@ namespace Launcher2 {
 			Resize();
 			selectedWidget = widgets[searchIndex];
 			InputClick( 0, 0 );
+			lastClicked = lastInput;
 		}
 		
 		public override void Resize() {
@@ -115,7 +116,7 @@ namespace Launcher2 {
 		void MakeTableWidget() {
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
 			FastColour col = LauncherTableWidget.backGridCol;
-			drawer.Clear( col, 0, tableY, game.Width, tableHeight );
+			drawer.Clear( col, tableX, tableY, game.Width - tableX, tableHeight );
 			
 			if( widgets[tableIndex] != null ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
@@ -127,10 +128,11 @@ namespace Launcher2 {
 			LauncherTableWidget widget = new LauncherTableWidget( game );
 			widget.CurrentIndex = 0;
 			widget.SetEntries( game.Session.Servers );
-			widget.Height = tableHeight;
-			widget.DrawAt( drawer, tableFont, inputFont, inputFont,
-			              Anchor.LeftOrTop, Anchor.LeftOrTop, 0, tableY );
 			
+			widget.Height = tableHeight;
+			
+			widget.DrawAt( drawer, tableFont, inputFont, inputFont,
+			              Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
 			widget.NeedRedraw = Resize;
 			widget.SelectedChanged = SelectedChanged;
 			widgets[widgetIndex++] = widget;

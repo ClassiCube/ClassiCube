@@ -58,8 +58,8 @@ namespace Launcher2 {
 		}
 		
 		public int CurrentIndex, Count;
-		public int[] ColumnWidths = { 340, 80, 80, 140 };
-		public int[] DesiredColumnWidths = { 340, 80, 80, 140 };
+		public int[] ColumnWidths = { 350, 65, 65, 140 };
+		public int[] DesiredColumnWidths = { 350, 65, 65, 140 };
 		int defaultInputHeight;
 		
 		internal struct TableEntry {
@@ -82,6 +82,7 @@ namespace Launcher2 {
 			DrawTextArgs args = new DrawTextArgs( "IMP", font, true );
 			defaultInputHeight = drawer.MeasureSize( ref args ).Height;
 			
+			Width = Window.Width - X;
 			int x = X + 5;
 			DrawGrid( drawer, font, titleFont );
 			ResetEntries();
@@ -93,9 +94,7 @@ namespace Launcher2 {
 			x += DrawColumn( drawer, true, font, titleFont, boldFont,
 			                "Uptime", ColumnWidths[2], x, e => e.Uptime ) + 5;
 			x += DrawColumn( drawer, true, font, titleFont, boldFont,
-			                "Software", ColumnWidths[3], x, e => e.Software ) + 5;
-			
-			Width = Window.Width;
+			                "Software", ColumnWidths[3], x, e => e.Software ) + 5;	
 			DrawScrollbar( drawer );
 		}
 		
@@ -113,7 +112,7 @@ namespace Launcher2 {
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( i == SelectedIndex && !separator )
-					drawer.Clear( foreGridCol, 0, y - 3, Width, defaultInputHeight + 4 );
+					drawer.Clear( foreGridCol, X, y - 3, Width, defaultInputHeight + 4 );
 				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i; break;
@@ -157,7 +156,7 @@ namespace Launcher2 {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			drawer.Clear( LauncherSkin.BackgroundCol, 0, Y + size.Height + 5, Window.Width, 2 );
+			drawer.Clear( LauncherSkin.BackgroundCol, X, Y + size.Height + 5, Width, 2 );
 			headerStartY = Y;
 			
 			headerEndY = Y + size.Height + 5;
