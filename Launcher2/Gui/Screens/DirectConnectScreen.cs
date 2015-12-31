@@ -46,7 +46,7 @@ namespace Launcher2 {
 			             125, 50, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
-			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont,
+			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont, true,
 			              30, 30, -110, 130, UseClassicubeSkinsClick );
 		}
 		

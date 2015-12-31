@@ -9,6 +9,7 @@ namespace Launcher2 {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 
+		const int skipSSLIndex = 9;
 		public override void Init() {
 			base.Init();
 			Resize();
@@ -82,6 +83,13 @@ namespace Launcher2 {
 			}
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
+		
+			LauncherBooleanWidget booleanWidget = widgets[skipSSLIndex] as LauncherBooleanWidget;
+			if( booleanWidget != null && booleanWidget.Value ) {
+				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+			} else {
+				ServicePointManager.ServerCertificateValidationCallback = null;
+			}
 			
 			game.Session.LoginAsync( Get( 0 ), Get( 1 ) );
 			game.MakeBackground();
@@ -108,11 +116,43 @@ namespace Launcher2 {
 					Environment.NewLine + "Unable to resolve classicube.net" +
 					Environment.NewLine + "you may not be connected to the internet.";
 				SetStatus( text );
+			} else if( ex.Status == WebExceptionStatus.TrustFailure ) {
+				string text = "&eFailed to validate SSL certificate";
+				SetStatus( text );
+				using( drawer ) {
+					drawer.SetBitmap( game.Framebuffer );
+					widgetIndex = 9;		
+					MakeSSLSkipValidationBoolean();
+					MakeSSLSkipValidationLabel();
+				}
 			} else {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + ex.Status;
 				SetStatus( text );
 			}
+		}
+		
+		void MakeSSLSkipValidationBoolean() {
+			MakeBooleanAt( Anchor.Centre, Anchor.Centre, inputFont, true, 30, 30, 160, -40, SSLSkipValidationClick );
+		}
+		
+		void MakeSSLSkipValidationLabel() {
+			MakeLabelAt( "Skip SSL check", inputFont, Anchor.Centre, Anchor.Centre, 250, -40 );
+		}
+		
+		void SSLSkipValidationClick( int mouseX, int mouseY ) {
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skipSSLIndex];
+				SetBool( !widget.Value );
+			}
+		}
+		
+		void SetBool( bool value ) {
+			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skipSSLIndex];
+			widget.Value = value;
+			widget.Redraw( game.Drawer );
+			Dirty = true;
 		}
 		
 		void StoreFields() {

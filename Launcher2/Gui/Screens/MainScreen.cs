@@ -10,7 +10,7 @@ namespace Launcher2 {
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
 			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
 			enterIndex = 2;
-			widgets = new LauncherWidget[11];
+			widgets = new LauncherWidget[13];
 			LoadResumeInfo();
 		}
 		
@@ -44,8 +44,12 @@ namespace Launcher2 {
 			MakeButtonAt( "Update check", 160, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
+			if( widgets[widgetIndex] != null ) {
+				MakeSSLSkipValidationBoolean();
+				MakeSSLSkipValidationLabel();
+			}
 		}
-		
+
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		string resumeUser, resumeIp, resumePort, resumeMppass;
 		bool resumeCCSkins, resumeValid;

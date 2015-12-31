@@ -28,7 +28,7 @@ namespace Launcher2 {
 				DrawTextArgs args = new DrawTextArgs( "X", font, false );
 				Size size = drawer.MeasureSize( ref args );
 				args.SkipPartsCheck = true;
-				drawer.DrawText( ref args, X + (Width - size.Width) / 2,
+				drawer.DrawText( ref args, X + (Width + 2 - size.Width) / 2, // account for border
 				                Y + (Height - size.Height) / 2 );
 			}
 			drawer.DrawRectBounds( FastColour.White, 2, X, Y, Width, Height );

@@ -165,8 +165,8 @@ namespace Launcher2 {
 		
 		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
 			if( widgets[widgetIndex] != null ) {
-				LauncherLabelWidget input = (LauncherLabelWidget)widgets[widgetIndex];
-				input.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
+				LauncherLabelWidget label = (LauncherLabelWidget)widgets[widgetIndex];
+				label.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
 			} else {
 				LauncherLabelWidget widget = new LauncherLabelWidget( game, text );
 				widget.DrawAt( drawer, text, font, horAnchor, verAnchor, x, y );
@@ -175,13 +175,14 @@ namespace Launcher2 {
 			widgetIndex++;
 		}
 		
-		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font,
+		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font, bool initValue,
 		                             int width, int height, int x, int y, Action<int, int> onClick ) {
 			if( widgets[widgetIndex] != null ) {
-				LauncherBooleanWidget input = (LauncherBooleanWidget)widgets[widgetIndex];
-				input.DrawAt( drawer, horAnchor, verAnchor, x, y );
+				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[widgetIndex];
+				widget.DrawAt( drawer, horAnchor, verAnchor, x, y );
 			} else {
 				LauncherBooleanWidget widget = new LauncherBooleanWidget( game, font, width, height );
+				widget.Value = initValue;
 				widget.DrawAt( drawer, horAnchor, verAnchor, x, y );
 				widget.OnClick = onClick;
 				widgets[widgetIndex] = widget;
