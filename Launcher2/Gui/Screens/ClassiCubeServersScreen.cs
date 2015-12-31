@@ -75,7 +75,6 @@ namespace Launcher2 {
 
 		public override void Init() {
 			base.Init();
-			game.Window.Mouse.WheelChanged += MouseWheelChanged;
 			game.Window.Mouse.ButtonUp += MouseButtonUp;
 			
 			Resize();
@@ -159,7 +158,7 @@ namespace Launcher2 {
 			game.ConnectToServer( table.servers, Get( hashIndex ) );
 		}
 		
-		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.CurrentIndex -= e.Delta;
 			table.ClampIndex();
@@ -183,7 +182,6 @@ namespace Launcher2 {
 		public override void Dispose() {
 			base.Dispose();
 			tableFont.Dispose();
-			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
 			
 			LauncherTableWidget table = widgets[tableIndex] as LauncherTableWidget;
 			if( table != null ) {

@@ -187,16 +187,16 @@ namespace ClassicalSharp {
 		void CreateEditingWidgets() {
 			DisposeEditingWidgets();
 			
-			buttons[8] = Make( -140, 60, "Key: " + curHotkey.BaseKey,
-			                  250, 30, textFont, BaseKeyClick );
-			buttons[9] = Make( 140, 60, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
-			                  250, 30, textFont, ModifiersClick );
+			buttons[8] = Make( -140, 55, "Key: " + curHotkey.BaseKey,
+			                  250, 35, textFont, BaseKeyClick );
+			buttons[9] = Make( 140, 55, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
+			                  250, 35, textFont, ModifiersClick );
 			buttons[10] = Make( -10, 120, curHotkey.MoreInput ? "yes" : "no",
 			                   50, 25, textFont, LeaveOpenClick );
-			buttons[11] = Make( -100, 160, "Save changes",
-			                   160, 30, textFont, SaveChangesClick );
-			buttons[12] = Make( 100, 160, "Remove hotkey",
-			                   160, 30, textFont, RemoveHotkeyClick );
+			buttons[11] = Make( -120, 160, "Save changes",
+			                   180, 35, textFont, SaveChangesClick );
+			buttons[12] = Make( 120, 160, "Remove hotkey",
+			                   180, 35, textFont, RemoveHotkeyClick );
 			
 			currentAction = MenuInputWidget.Create(
 				game, 0, 90, 600, 25, "", Anchor.Centre, Anchor.Centre,

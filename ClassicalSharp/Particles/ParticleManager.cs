@@ -88,12 +88,12 @@ namespace ClassicalSharp.Particles {
 			Vector3 maxBB = game.BlockInfo.MaxBB[block];
 			int minU = Math.Min( (int)(minBB.X * 16), (int)(minBB.Z * 16) );
 			int maxU = Math.Min( (int)(maxBB.X * 16), (int)(maxBB.Z * 16) );
-			int minV = (int)(minBB.Y * 16), maxV = (int)(maxBB.Y * 16);
+			int minV = (int)(16 - maxBB.Y * 16), maxV = (int)(16 - minBB.Y * 16);
 			// This way we can avoid creating particles which outside the bounds and need to be clamped
 			if( minU < 13 && maxU > 13 ) maxU = 13;
 			if( minV < 13 && maxV > 13 ) maxV = 13;
 			
-			for( int i = 0; i < 25; i++ ) {
+			for( int i = 0; i < 30; i++ ) {
 				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
 				double velZ = rnd.NextDouble() * 0.8 - 0.4;
 				double velY = rnd.NextDouble() + 0.2;
@@ -110,7 +110,7 @@ namespace ClassicalSharp.Particles {
 				rec.V1 = baseRec.V1 + rnd.Next( minV, maxV ) * uvScale;
 				rec.U2 = Math.Min( baseRec.U1 + maxU * uvScale, rec.U1 + elemSize );
 				rec.V2 = Math.Min( baseRec.V1 + maxV * uvScale, rec.V1 + elemSize );
-				double life = 1.5 - rnd.NextDouble();
+				double life = 0.3 + rnd.NextDouble() * 0.7;
 				
 				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
 				p.ResetState( pos, velocity, life );

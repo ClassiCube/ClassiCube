@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 		
 		void ReconnectClick( Game g, Widget w ) {
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
-			game.SetNewScreen( new LoadingMapScreen( game, connectString, "Reticulating splines" ) );
+			game.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );
 			game.Network.Connect( game.IPAddress, game.Port );
 		}
 		

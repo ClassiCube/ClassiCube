@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			Graphics.WarnIfNecessary( Chat );
-			SetNewScreen( new LoadingMapScreen( this, connectString, "Reticulating splines" ) );
+			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
 		}
 		

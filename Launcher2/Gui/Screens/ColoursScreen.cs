@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp;
+using OpenTK.Input;
 
 namespace Launcher2 {
 	
@@ -51,6 +52,23 @@ namespace Launcher2 {
 				LauncherInputWidget input = widgets[i] as LauncherInputWidget;
 				if( input != null ) input.TextChanged = TextChanged;
 			}
+		}
+		
+		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+			if( lastInput == null ) return;
+			int index = Array.IndexOf<LauncherWidget>( widgets, lastInput );
+			if( index >= 15 ) return;
+			
+			byte col;
+			if( !Byte.TryParse( lastInput.Text, out col ) ) 
+				return;
+			int newCol = col + e.Delta;
+			
+			Utils.Clamp( ref newCol, 0, 255 );
+			lastInput.Text = newCol.ToString();
+			if( lastInput.CaretPos >= lastInput.Text.Length )
+				lastInput.CaretPos = -1;
+			TextChanged( lastInput );
 		}
 		
 		void MakeAllRGBTriplets( bool force ) {

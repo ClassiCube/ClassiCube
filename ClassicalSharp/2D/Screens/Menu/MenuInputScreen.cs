@@ -125,7 +125,7 @@ namespace ClassicalSharp {
 			targetWidget = selectedWidget;
 			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre, 
 			                                     Anchor.Centre, regularFont, titleFont, validator );
-			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 30, 30, "OK",
+			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			InputOpened();
 			UpdateDescription( targetWidget );

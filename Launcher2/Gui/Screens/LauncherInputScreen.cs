@@ -21,6 +21,7 @@ namespace Launcher2 {
 			buttonFont = titleFont;
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
+			game.Window.Mouse.WheelChanged += MouseWheelChanged;
 			
 			game.Window.KeyPress += KeyPress;
 			game.Window.Keyboard.KeyDown += KeyDown;
@@ -138,6 +139,9 @@ namespace Launcher2 {
 				.Redraw( drawer, text, inputFont, inputHintFont );
 		}
 		
+		protected virtual void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+		}
+		
 		protected LauncherInputWidget lastInput;
 		protected virtual void InputClick( int mouseX, int mouseY ) {
 			LauncherInputWidget input = (LauncherInputWidget)selectedWidget;
@@ -197,6 +201,7 @@ namespace Launcher2 {
 		public override void Dispose() {
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
 			
 			game.Window.KeyPress -= KeyPress;
 			game.Window.Keyboard.KeyDown -= KeyDown;
