@@ -94,7 +94,6 @@ namespace ClassicalSharp {
 			Graphics.LostContextFunction = Network.Tick;
 			
 			firstPersonCam = new FirstPersonCamera( this );
-			firstPersonZoomCam = new FirstPersonZoomCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;

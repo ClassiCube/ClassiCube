@@ -53,6 +53,13 @@ namespace ClassicalSharp {
 				     (g, v) => { g.LocalPlayer.NoclipSlide = v == "yes";
 				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
 				
+				Make( -140, 50, "Field of view", OnWidgetClick,
+				     g => g.FieldOfView.ToString(),
+				     (g, v) => { g.FieldOfView = Int32.Parse( v );
+				     	Options.Set( OptionsKey.FieldOfView, v );
+				     	g.UpdateProjection();
+				     } ),
+				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
@@ -61,11 +68,12 @@ namespace ClassicalSharp {
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),
-				new BooleanValidator(),
+				new BooleanValidator(),			
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
+				new IntegerValidator( 1, 179 ),
 			};
 			okayIndex = buttons.Length - 1;
 		}

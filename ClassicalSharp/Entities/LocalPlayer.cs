@@ -249,6 +249,11 @@ namespace ClassicalSharp {
 			
 			if( !CanUseThirdPersonCamera || !HacksEnabled )
 				game.CycleCamera();
+			if( !HacksEnabled || !CanAnyHacks || !CanUseThirdPersonCamera ) {
+				game.FieldOfView = 70;
+				game.ZoomFieldOfView = -1;
+				game.UpdateProjection();
+			}
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,

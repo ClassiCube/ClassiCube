@@ -292,10 +292,8 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyBinding.Screenshot] ) {
 				game.screenshotRequested = true;
 			} else if( !game.GetActiveScreen.HandlesKeyDown( key ) ) {
-				
-				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) ) {
+				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) )
 					HandleHotkey( key );
-				}
 			}
 		}
 		
@@ -354,6 +352,8 @@ namespace ClassicalSharp {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBinding.OpenInventory] ) {
 				game.SetNewScreen( new BlockSelectScreen( game ) );
+			} else if( key == Keys[KeyBinding.CycleZoom] ) {
+				CycleZoom();
 			} else {
 				return false;
 			}
@@ -378,6 +378,22 @@ namespace ClassicalSharp {
 				}
 			}
 			game.SetViewDistance( viewDistances[viewDistances.Length - 1] );
+		}
+		
+		static int[] zoomFov = { 10, 20, 30, 40, 50, 60, -1 };
+		int fovIndex = 100;
+		void CycleZoom() {
+			LocalPlayer p = game.LocalPlayer;
+			if( !p.HacksEnabled || !p.CanAnyHacks || !p.CanUseThirdPersonCamera )
+				return;
+			fovIndex++;
+			if( fovIndex >= zoomFov.Length ) fovIndex = 0;
+			
+			game.FieldOfView = zoomFov[fovIndex];
+			game.ZoomFieldOfView = game.FieldOfView;
+			if( game.FieldOfView == -1 )
+				game.FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			game.UpdateProjection();
 		}
 		#endregion
 	}

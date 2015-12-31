@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		
 		static string[] normDescriptions = new [] { "Speed", "Toggle noclip", "Toggle fly", 
 			"Fly up", "Fly down", "Toggle extended input", "Hide FPS", "Take screenshot", 
-			"Toggle fullscreen", "Toggle 3rd person", "Hide gui", "Show axis lines" };
+			"Toggle fullscreen", "Toggle 3rd person", "Hide gui", "Show axis lines", "Cycle zoom" };
 		
 		public override void Init() {
 			base.Init();
@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			originKey = KeyBinding.Speed;
 			buttons = new ButtonWidget[descriptions.Length + 2];
 			MakeKeys( KeyBinding.Speed, 0, 6, -150 );
-			MakeKeys( KeyBinding.HideFps, 6, 6, 150 );
+			MakeKeys( KeyBinding.HideFps, 6, 7, 150 );
 			buttons[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 			buttons[index++] = ButtonWidget.Create(

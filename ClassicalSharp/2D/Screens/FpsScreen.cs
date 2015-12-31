@@ -107,16 +107,17 @@ namespace ClassicalSharp {
 		}
 		
 		bool speeding, noclip, fly;
-		Camera lastCam;
+		int lastZoomFov;
 		void UpdateHackState( bool force ) {
 			LocalPlayer p = game.LocalPlayer;
-			if( force || p.speeding != speeding || p.noClip != noclip || p.flying != fly || game.Camera != lastCam ) {
+			if( force || p.speeding != speeding || p.noClip != noclip || p.flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
 				speeding = p.speeding; noclip = p.noClip; fly = p.flying;
-				lastCam = game.Camera;
+				lastZoomFov = game.ZoomFieldOfView;
 				int index = 0;
 				text.Clear();
 				
-				if( lastCam.IsZoomCamera ) text.Append( ref index, "Zoom camera  " );
+				if( lastZoomFov != -1 ) text.Append( ref index, "Zoom fov " )
+					.AppendNum( ref index, lastZoomFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				if( speeding ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );

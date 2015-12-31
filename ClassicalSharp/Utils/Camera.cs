@@ -20,8 +20,6 @@ namespace ClassicalSharp {
 		/// <remarks> This causes the local player to be renderered if true. </remarks>
 		public abstract bool IsThirdPerson { get; }
 		
-		public virtual bool IsZoomCamera { get { return false; } }
-		
 		public virtual void Tick( double elapsed ) {
 		}
 		
@@ -214,38 +212,6 @@ namespace ClassicalSharp {
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			return eyePos;
-		}
-	}
-	
-	public class FirstPersonZoomCamera : PerspectiveCamera {
-		
-		public FirstPersonZoomCamera( Game window ) : base( window ) {
-		}
-		
-		public override bool IsZoomCamera { get { return true; } }
-		
-		float distance = 3;
-		public override bool MouseZoom( MouseWheelEventArgs e ) {
-			distance += e.DeltaPrecise;
-			if( distance < 2 ) distance = 2;
-			return true;
-		}
-		
-		public override Matrix4 GetView( double delta ) {
-			CalcViewBobbing( delta );
-			Vector3 eyePos = player.EyePosition;
-			eyePos.Y += bobYOffset;
-			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
-			Vector3 cameraPos = eyePos + dir * distance;
-			return Matrix4.LookAt( cameraPos, cameraPos + dir, Vector3.UnitY ) * tiltMatrix;
-		}
-		
-		public override bool IsThirdPerson {
-			get { return true; }
-		}
-		
-		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			return eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
 		}
 	}
 }

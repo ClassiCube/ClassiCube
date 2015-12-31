@@ -19,18 +19,11 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.ShowBlockInHand, v == "yes" );
 				     } ),
 				
-				Make( -140, -100, "Field of view", OnWidgetClick,
-				     g => g.FieldOfView.ToString(),
-				     (g, v) => { g.FieldOfView = Int32.Parse( v );
-				     	Options.Set( OptionsKey.FieldOfView, v );
-				     	g.UpdateProjection();
-				     } ),
-				
-				Make( -140, -50, "Show FPS", OnWidgetClick,
+				Make( -140, -100, "Show FPS", OnWidgetClick,
 				     g => g.ShowFPS ? "yes" : "no",
 				     (g, v) => g.ShowFPS = v == "yes" ),
 				
-				Make( -140, 0, "Hud scale", OnWidgetClick,
+				Make( -140, -50, "Hud scale", OnWidgetClick,
 				     g => g.HudScale.ToString(),
 				     (g, v) => { g.HudScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.HudScale, v );
@@ -75,7 +68,6 @@ namespace ClassicalSharp {
 			};
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
-				new IntegerValidator( 1, 179 ),
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
 				

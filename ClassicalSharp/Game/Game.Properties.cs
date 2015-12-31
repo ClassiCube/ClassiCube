@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 		/// <summary> Current camera the player is using to view the world with. </summary>
 		/// <remarks> e.g. first person, thid person, forward third person, etc. </remarks>
 		public Camera Camera;
-		Camera firstPersonCam, firstPersonZoomCam, thirdPersonCam, forwardThirdPersonCam;
+		Camera firstPersonCam, thirdPersonCam, forwardThirdPersonCam;
 		
 		/// <summary> Contains the metadata about each currently defined block. </summary>
 		/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>
@@ -101,6 +101,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Field of view for the current camera in degrees. </summary>
 		public int FieldOfView = 70;
+		internal int ZoomFieldOfView = -1;
 		
 		/// <summary> Strategy used to limit how many frames should be displayed at most each second. </summary>
 		public FpsLimitMethod FpsLimit;
