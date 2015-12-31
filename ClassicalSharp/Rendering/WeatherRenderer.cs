@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			bool moved = pos != lastPos;
 			lastPos = pos;
 			                              
-			float speed = weather == Weather.Rainy ? 1f : 0.25f;
+			float speed = weather == Weather.Rainy ? 1f : 0.20f;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;
@@ -144,7 +144,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool BlocksRain( byte block ) {
-			return !(block == 0 || info.IsSprite[block] || info.IsLiquid[block]);
+			return !(info.IsAir[block] || info.IsSprite[block] || info.IsLiquid[block]);
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
@@ -153,7 +153,7 @@ namespace ClassicalSharp {
 			bool nowBlocks = BlocksRain( newBlock );
 			if( didBlock == nowBlocks ) return;
 			
-			int index = ( x * length ) + z;
+			int index = (x * length) + z;
 			int height = heightmap[index];
 			if( height == short.MaxValue ) {
 				if( map.Weather == Weather.Sunny ) return;

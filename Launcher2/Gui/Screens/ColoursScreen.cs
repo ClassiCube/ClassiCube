@@ -8,7 +8,7 @@ namespace Launcher2 {
 		
 		public ColoursScreen( LauncherWindow game ) : base( game, true ) {
 			enterIndex = 6;
-			widgets = new LauncherWidget[12];
+			widgets = new LauncherWidget[25];
 		}
 
 		public override void Init() {
@@ -24,30 +24,27 @@ namespace Launcher2 {
 			Dirty = true;
 		}
 		
-		string GetCol( FastColour defCol ) {
+		string GetCol( byte col, bool force ) {
+			if( force )
+				return col.ToString();
 			LauncherWidget widget = widgets[widgetIndex];
-			return widget == null ? defCol.ToRGBHexString() : widget.Text;
+			return widget == null ? col.ToString() : widget.Text;
 		}
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeLabelAt( "Background", titleFont, Anchor.Centre, Anchor.Centre, -70, -120 );
-			MakeInput( GetCol( LauncherSkin.BackgroundCol ), 90, Anchor.Centre, false, 45, -120, 6, null );
-			
-			MakeLabelAt( "Button border", titleFont, Anchor.Centre, Anchor.Centre, -80, -80 );
-			MakeInput( GetCol( LauncherSkin.ButtonBorderCol ), 90, Anchor.Centre, false, 45, -80, 6, null );
-			
-			MakeLabelAt( "Button highlight", titleFont, Anchor.Centre, Anchor.Centre, -90, -40 );
-			MakeInput( GetCol( LauncherSkin.ButtonHighlightCol ), 90, Anchor.Centre, false, 45, -40, 6, null );
-			
-			MakeLabelAt( "Button foreground", titleFont, Anchor.Centre, Anchor.Centre, -100, 0 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeCol ), 90, Anchor.Centre, false, 45, 2, 6, null );
-			
-			MakeLabelAt( "Active button foreground", titleFont, Anchor.Centre, Anchor.Centre, -130, 40 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeActiveCol ), 90, Anchor.Centre, false, 45, 40, 6, null );
+			MakeAllRGBTriplets( false );
+			MakeLabelAt( "Background", inputFont, Anchor.Centre, Anchor.Centre, -60, -100 );
+			MakeLabelAt( "Button border", inputFont, Anchor.Centre, Anchor.Centre, -65, -60 );
+			MakeLabelAt( "Button highlight", inputFont, Anchor.Centre, Anchor.Centre, -75, -20 );
+			MakeLabelAt( "Button foreground", inputFont, Anchor.Centre, Anchor.Centre, -85, 20 );
+			MakeLabelAt( "Active button foreground", inputFont, Anchor.Centre, Anchor.Centre, -110, 60 );
+			MakeLabelAt( "Red", titleFont, Anchor.Centre, Anchor.Centre, 30, -130 );
+			MakeLabelAt( "Green", titleFont, Anchor.Centre, Anchor.Centre, 95, -130 );
+			MakeLabelAt( "Blue", titleFont, Anchor.Centre, Anchor.Centre, 160, -130 );
 			
 			MakeButtonAt( "Default colours", 160, 35, titleFont, Anchor.Centre,
-			             0, 100, (x, y) => ResetColours() );
+			             0, 120, (x, y) => ResetColours() );
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             0, 170, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			for( int i = 0; i < widgets.Length; i++ ) {
@@ -56,25 +53,40 @@ namespace Launcher2 {
 			}
 		}
 		
+		void MakeAllRGBTriplets( bool force ) {
+			MakeRGBTriplet( LauncherSkin.BackgroundCol, force, -100 );
+			MakeRGBTriplet( LauncherSkin.ButtonBorderCol, force, -60 );
+			MakeRGBTriplet( LauncherSkin.ButtonHighlightCol, force, -20 );
+			MakeRGBTriplet( LauncherSkin.ButtonForeCol, force, 20 );
+			MakeRGBTriplet( LauncherSkin.ButtonForeActiveCol, force, 60 );
+		}
+		
+		void MakeRGBTriplet( FastColour defCol, bool force, int y ) {
+			MakeInput( GetCol( defCol.R, force ), 55, Anchor.Centre, false, 30, y, 3, null );
+			MakeInput( GetCol( defCol.G, force ), 55, Anchor.Centre, false, 95, y, 3, null );
+			MakeInput( GetCol( defCol.B, force ), 55, Anchor.Centre, false, 160, y, 3, null );
+		}
+		
 		void ResetColours() {
 			LauncherSkin.ResetToDefault();
-			widgets[1].Text = LauncherSkin.BackgroundCol.ToRGBHexString();
-			widgets[3].Text = LauncherSkin.ButtonBorderCol.ToRGBHexString();
-			widgets[5].Text =  LauncherSkin.ButtonHighlightCol.ToRGBHexString();
-			widgets[7].Text = LauncherSkin.ButtonForeCol.ToRGBHexString();
-			widgets[9].Text = LauncherSkin.ButtonForeActiveCol.ToRGBHexString();
-			
+			widgetIndex = 0;
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				MakeAllRGBTriplets( true );
+			}
+			widgetIndex = widgets.Length;
 			game.MakeBackground();
 			Resize();
 		}
 		
 		void TextChanged( LauncherInputWidget widget ) {
 			bool changed = false;
-			if( widget == widgets[1] ) changed |= Parse( widget, ref LauncherSkin.BackgroundCol );
-			else if( widget == widgets[3] ) changed |= Parse( widget, ref LauncherSkin.ButtonBorderCol );
-			else if( widget == widgets[5] ) changed |= Parse( widget, ref LauncherSkin.ButtonHighlightCol );
-			else if( widget == widgets[7] ) changed |= Parse( widget, ref LauncherSkin.ButtonForeCol );
-			else if( widget == widgets[9] ) changed |= Parse( widget, ref LauncherSkin.ButtonForeActiveCol );
+			int index = Array.IndexOf<LauncherWidget>( widgets, widget );
+			if( index < 3 ) changed |= Parse( 0, ref LauncherSkin.BackgroundCol );
+			else if( index < 6 ) changed |= Parse( 3, ref LauncherSkin.ButtonBorderCol );
+			else if( index < 9 ) changed |= Parse( 6, ref LauncherSkin.ButtonHighlightCol );
+			else if( index < 12 ) changed |= Parse( 9, ref LauncherSkin.ButtonForeCol );
+			else if( index < 15 ) changed |= Parse( 12, ref LauncherSkin.ButtonForeActiveCol );
 			
 			if( changed ) {
 				game.MakeBackground();
@@ -82,11 +94,13 @@ namespace Launcher2 {
 			}
 		}
 		
-		bool Parse( LauncherInputWidget widget, ref FastColour dst ) {
-			FastColour col;
-			if( !FastColour.TryParse( widget.Text, out col ) )
+		bool Parse( int index, ref FastColour dst ) {
+			byte r, g, b;
+			if( !Byte.TryParse( widgets[index + 0].Text, out r )
+			   || !Byte.TryParse( widgets[index + 1].Text, out g )
+			   || !Byte.TryParse( widgets[index + 2].Text, out b ) )
 				return false;
-			dst = col;
+			dst.R = r; dst.G = g; dst.B = b;
 			return true;
 		}
 	}

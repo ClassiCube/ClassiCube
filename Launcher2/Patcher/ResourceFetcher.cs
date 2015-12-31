@@ -20,8 +20,9 @@ namespace Launcher2 {
 		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
+		const string altDigSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
 		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";	
-		const string altSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
+		const string altStepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
 		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
 		
@@ -30,10 +31,10 @@ namespace Launcher2 {
 			DownloadMusicFiles();
 			digPatcher = new SoundPatcher( digSounds, "dig_",
 			                              "step_cloth1", digPath );
-			digPatcher.FetchFiles( digSoundsUri, altSoundsUri, this );
+			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this );
 			stepPatcher = new SoundPatcher( stepSounds, "step_",
 			                               "classic jar", stepPath );
-			stepPatcher.FetchFiles( stepSoundsUri, null, this );			
+			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this );			
 			if( !defaultZipExists ) {
 				downloader.DownloadData( jarClassicUri, false, "classic_jar" );
 				downloader.DownloadData( jar162Uri, false, "162_jar" );
@@ -175,18 +176,17 @@ namespace Launcher2 {
 		}
 		
 		string digPath, stepPath;
-		string[] digSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "glass1",
-			"glass2", "glass3", "grass1", "grass2", "grass3", "grass4", "gravel1", "gravel2", 
-			"gravel3", "gravel4", "sand1", "sand2", "sand3", "sand4", "snow1", "snow2", "snow3", 
-			"snow4", "stone1", "stone2", "stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
+		string[] digSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
+			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2", 
+			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", 
+			"Asnow4", "Astone1", "Astone2", "Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
-		string[] stepSounds = new [] { "cloth1", "cloth2", "cloth3", "cloth4", "grass1",
-			"grass2", "grass3", "grass4", "gravel1", "gravel2", "gravel3", "gravel4", "sand1", 
-			"sand2", "sand3", "sand4", "snow1", "snow2", "snow3", "snow4", "stone1", "stone2", 
-			"stone3", "stone4", "wood1", "wood2", "wood3", "wood4" };
+		string[] stepSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
+			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1", 
+			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2", 
+			"Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
-		string[] musicFiles = new [] { "calm1", "calm2",
-			"calm3", "hal1", "hal2", "hal3", "hal4" };
+		string[] musicFiles = new [] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };
 		int[] musicSizes = new [] { 2472, 1931, 2181, 1926, 1714, 1879, 2499 };
 		bool[] musicExists = new bool[7];
 		internal bool defaultZipExists;

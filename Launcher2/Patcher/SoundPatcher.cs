@@ -27,11 +27,11 @@ namespace Launcher2 {
  		public void FetchFiles( string baseUrl, string altBaseUrl, ResourceFetcher fetcher ) {
 			identifiers = new string[files.Length];
 			for( int i = 0; i < files.Length; i++ )
-				identifiers[i] = prefix + files[i];
+				identifiers[i] = prefix + files[i].Substring( 1 );
 			
 			for( int i = 0; i < files.Length; i++ ) {
-				string loc = files[i].StartsWith( "glass", comp ) ? altBaseUrl : baseUrl;
-				string url = loc + files[i] + ".ogg";
+				string loc = files[i][0] == 'A' ? baseUrl : altBaseUrl;
+				string url = loc + files[i].Substring( 1 ) + ".ogg";
 				fetcher.downloader.DownloadData( url, false, identifiers[i] );
 			}
 		}
@@ -46,7 +46,7 @@ namespace Launcher2 {
 						setStatus( "&cFailed to download " + identifiers[i] );
 						return false;
 					}
-					DecodeSound( files[i], (byte[])item.Data );
+					DecodeSound( files[i].Substring( 1 ), (byte[])item.Data );
 					
 					// TODO: setStatus( next );
 					if( i == identifiers.Length - 1 ) {

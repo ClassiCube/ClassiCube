@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			// See comment in Game() constructor
 			Keys = new Key[26];
 			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
-			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Y; Keys[7] = Key.T;
+			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Enter; Keys[7] = Key.T;
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
 			Keys[11] = Key.F; Keys[12] = Key.Tab; Keys[13] = Key.ShiftLeft;
 			Keys[14] = Key.X; Keys[15] = Key.Z; Keys[16] = Key.Q;
