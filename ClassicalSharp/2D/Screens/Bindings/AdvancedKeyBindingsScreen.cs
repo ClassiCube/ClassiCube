@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		
 		static string[] normDescriptions = new [] { "Speed", "Toggle noclip", "Toggle fly", 
 			"Fly up", "Fly down", "Toggle extended input", "Hide FPS", "Take screenshot", 
-			"Toggle fullscreen", "Toggle 3rd person", "Hide gui", "Show axis lines", "Cycle zoom" };
+			"Toggle fullscreen", "Toggle 3rd person", "Hide gui", "Show axis lines", "Zoom scrolling" };
 		
 		public override void Init() {
 			base.Init();

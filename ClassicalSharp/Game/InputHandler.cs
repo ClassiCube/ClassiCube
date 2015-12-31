@@ -252,7 +252,7 @@ namespace ClassicalSharp {
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			if( !game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) {
 				Inventory inv = game.Inventory;
-				if( game.Camera.MouseZoom( e ) || !inv.CanChangeHeldBlock ) return;
+				if( game.Camera.MouseZoom( e ) || CycleZoom( e ) || !inv.CanChangeHeldBlock ) return;
 				
 				// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
 				// We must use rounding at final step, not at every intermediate step.
@@ -352,8 +352,6 @@ namespace ClassicalSharp {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBinding.OpenInventory] ) {
 				game.SetNewScreen( new BlockSelectScreen( game ) );
-			} else if( key == Keys[KeyBinding.CycleZoom] ) {
-				CycleZoom();
 			} else {
 				return false;
 			}
@@ -380,20 +378,23 @@ namespace ClassicalSharp {
 			game.SetViewDistance( viewDistances[viewDistances.Length - 1] );
 		}
 		
-		static int[] zoomFov = { 10, 20, 30, 40, 50, 60, -1 };
-		int fovIndex = 100;
-		void CycleZoom() {
+		float fovIndex = -1;
+		bool CycleZoom( MouseWheelEventArgs e ) {
+			if( !game.IsKeyDown( KeyBinding.ZoomScrolling ) )
+				return false;
 			LocalPlayer p = game.LocalPlayer;
 			if( !p.HacksEnabled || !p.CanAnyHacks || !p.CanUseThirdPersonCamera )
-				return;
-			fovIndex++;
-			if( fovIndex >= zoomFov.Length ) fovIndex = 0;
+				return false;
 			
-			game.FieldOfView = zoomFov[fovIndex];
-			game.ZoomFieldOfView = game.FieldOfView;
-			if( game.FieldOfView == -1 )
-				game.FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			if( fovIndex == -1 ) fovIndex = game.ZoomFieldOfView;
+			fovIndex -= e.DeltaPrecise * 5;
+			int max = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			Utils.Clamp( ref fovIndex, 1, max );
+			
+			game.FieldOfView = (int)fovIndex;
+			game.ZoomFieldOfView = (int)fovIndex;
 			game.UpdateProjection();
+			return true;
 		}
 		#endregion
 	}

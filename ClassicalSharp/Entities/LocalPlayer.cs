@@ -251,7 +251,8 @@ namespace ClassicalSharp {
 				game.CycleCamera();
 			if( !HacksEnabled || !CanAnyHacks || !CanUseThirdPersonCamera ) {
 				game.FieldOfView = 70;
-				game.ZoomFieldOfView = -1;
+				int max = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+				game.ZoomFieldOfView = max;
 				game.UpdateProjection();
 			}
 		}

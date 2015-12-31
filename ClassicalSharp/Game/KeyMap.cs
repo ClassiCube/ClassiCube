@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
 		Screenshot, Fullscreen, ThirdPersonCamera, HideGui, ShowAxisLines,
-		CycleZoom,
+		ZoomScrolling,
 	}
 	
 	public class KeyMap {

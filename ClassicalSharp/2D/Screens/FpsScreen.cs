@@ -115,8 +115,9 @@ namespace ClassicalSharp {
 				lastZoomFov = game.ZoomFieldOfView;
 				int index = 0;
 				text.Clear();
+				int defFov = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
 				
-				if( lastZoomFov != -1 ) text.Append( ref index, "Zoom fov " )
+				if( lastZoomFov != defFov ) text.Append( ref index, "Zoom fov " )
 					.AppendNum( ref index, lastZoomFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				if( speeding ) text.Append( ref index, "Speed ON   " );
