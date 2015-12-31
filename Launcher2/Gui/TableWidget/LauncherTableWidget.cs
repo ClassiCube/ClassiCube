@@ -58,8 +58,8 @@ namespace Launcher2 {
 		}
 		
 		public int CurrentIndex, Count;
-		public int[] ColumnWidths = { 350, 65, 65, 140 };
-		public int[] DesiredColumnWidths = { 350, 65, 65, 140 };
+		public int[] ColumnWidths = { 340, 65, 65, 140 };
+		public int[] DesiredColumnWidths = { 340, 65, 65, 140 };
 		int defaultInputHeight;
 		
 		internal struct TableEntry {
@@ -131,7 +131,7 @@ namespace Launcher2 {
 			if( empty )
 				size.Height = defaultInputHeight;
 			if( y + size.Height > Y + Height ) {
-				y = Y + Height + 3; return false;
+				y = Y + Height + 2; return false;
 			}
 			
 			entry.Y = y; entry.Height = size.Height;
@@ -140,7 +140,7 @@ namespace Launcher2 {
 				args.SkipPartsCheck = false;
 				drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );			
 			}
-			y += size.Height + 3;
+			y += size.Height + 2;
 			return true;
 		}
 		

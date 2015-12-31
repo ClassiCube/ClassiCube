@@ -31,25 +31,25 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeLabelAt( "Background", titleFont, Anchor.Centre, Anchor.Centre, -70, -150 );
-			MakeInput( GetCol( LauncherSkin.BackgroundCol ), 90, Anchor.Centre, false, 45, -150, 6, null );
+			MakeLabelAt( "Background", titleFont, Anchor.Centre, Anchor.Centre, -70, -120 );
+			MakeInput( GetCol( LauncherSkin.BackgroundCol ), 90, Anchor.Centre, false, 45, -120, 6, null );
 			
-			MakeLabelAt( "Button border", titleFont, Anchor.Centre, Anchor.Centre, -80, -110 );
-			MakeInput( GetCol( LauncherSkin.ButtonBorderCol ), 90, Anchor.Centre, false, 45, -110, 6, null );
+			MakeLabelAt( "Button border", titleFont, Anchor.Centre, Anchor.Centre, -80, -80 );
+			MakeInput( GetCol( LauncherSkin.ButtonBorderCol ), 90, Anchor.Centre, false, 45, -80, 6, null );
 			
-			MakeLabelAt( "Button highlight", titleFont, Anchor.Centre, Anchor.Centre, -90, -70 );
-			MakeInput( GetCol( LauncherSkin.ButtonHighlightCol ), 90, Anchor.Centre, false, 45, -70, 6, null );
+			MakeLabelAt( "Button highlight", titleFont, Anchor.Centre, Anchor.Centre, -90, -40 );
+			MakeInput( GetCol( LauncherSkin.ButtonHighlightCol ), 90, Anchor.Centre, false, 45, -40, 6, null );
 			
-			MakeLabelAt( "Button foreground", titleFont, Anchor.Centre, Anchor.Centre, -100, -30 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeCol ), 90, Anchor.Centre, false, 45, -30, 6, null );
+			MakeLabelAt( "Button foreground", titleFont, Anchor.Centre, Anchor.Centre, -100, 0 );
+			MakeInput( GetCol( LauncherSkin.ButtonForeCol ), 90, Anchor.Centre, false, 45, 2, 6, null );
 			
-			MakeLabelAt( "Active button foreground", titleFont, Anchor.Centre, Anchor.Centre, -130, 10 );
-			MakeInput( GetCol( LauncherSkin.ButtonForeActiveCol ), 90, Anchor.Centre, false, 45, 10, 6, null );
+			MakeLabelAt( "Active button foreground", titleFont, Anchor.Centre, Anchor.Centre, -130, 40 );
+			MakeInput( GetCol( LauncherSkin.ButtonForeActiveCol ), 90, Anchor.Centre, false, 45, 40, 6, null );
 			
 			MakeButtonAt( "Default colours", 160, 35, titleFont, Anchor.Centre,
-			             0, 70, (x, y) => ResetColours() );
+			             0, 100, (x, y) => ResetColours() );
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
-			             0, 120, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			             0, 170, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherInputWidget input = widgets[i] as LauncherInputWidget;
 				if( input != null ) input.TextChanged = TextChanged;

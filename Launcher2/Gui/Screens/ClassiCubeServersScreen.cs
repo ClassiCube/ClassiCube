@@ -8,11 +8,10 @@ namespace Launcher2 {
 	public sealed class ClassiCubeServersScreen : LauncherInputScreen {
 		
 		const int tableIndex = 4, searchIndex = 0, hashIndex = 1;
-		Font boldInputFont, tableFont;
+		Font tableFont;
 		const int tableX = 10, tableY = 50;
 		
-		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
-			boldInputFont = new Font( "Arial", 14, FontStyle.Bold );		
+		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {		
 			tableFont = new Font( "Arial", 11, FontStyle.Regular );
 			enterIndex = 3;
 			widgets = new LauncherWidget[7];
@@ -183,7 +182,6 @@ namespace Launcher2 {
 		
 		public override void Dispose() {
 			base.Dispose();
-			boldInputFont.Dispose();
 			tableFont.Dispose();
 			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
 			

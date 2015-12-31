@@ -83,8 +83,10 @@ namespace ClassicalSharp.Audio {
 		void DisposeSound() {
 			DisposeOutputs( ref monoOutputs );
 			DisposeOutputs( ref stereoOutputs );
-			if( firstSoundOut != null )
+			if( firstSoundOut != null ) {
 				firstSoundOut.Dispose();
+				firstSoundOut = null;
+			}
 		}
 		
 		void DisposeOutputs( ref IAudioOutput[] outputs ) {

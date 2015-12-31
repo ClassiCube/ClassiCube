@@ -27,7 +27,7 @@ namespace Launcher2 {
 			DrawClassicube();
 			
 			MakeButtonAt( "Resume", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 90, -50, ResumeClick );
+			             Anchor.Centre, Anchor.Centre, 90, -20, ResumeClick );
 			
 			MakeButtonAt( "Direct connect", 200, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.Centre, 0, 80,

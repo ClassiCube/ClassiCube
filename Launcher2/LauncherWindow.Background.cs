@@ -53,9 +53,9 @@ namespace Launcher2 {
 				int xStart = Width / 2 - size.Width / 2;
 				
 				args.Text = "&0Classical&0Sharp";
-				drawer.DrawChatText( ref args, xStart + 5, 20 + 5 );
+				drawer.DrawChatText( ref args, xStart + 5, 10 + 5 );
 				args.Text = "&eClassical&fSharp";
-				drawer.DrawChatText( ref args, xStart, 20 );
+				drawer.DrawChatText( ref args, xStart, 10 );
 				drawer.UseBitmappedChat = false;
 			}
 			Dirty = true;

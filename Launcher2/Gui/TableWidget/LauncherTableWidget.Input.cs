@@ -73,7 +73,7 @@ namespace Launcher2 {
 		void GetSelectedServer( int mouseX, int mouseY ) {
 			for( int i = 0; i < Count; i++ ) {
 				TableEntry entry = usedEntries[i];
-				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 3 ) continue;
+				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2 ) continue;
 				
 				if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1 ) {
 					Window.ConnectToServer( servers, entry.Hash );

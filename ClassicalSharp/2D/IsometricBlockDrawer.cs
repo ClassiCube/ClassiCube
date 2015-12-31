@@ -128,7 +128,7 @@ namespace ClassicalSharp {
 			rec.U1 = uOrigin + minBB.Z * invElemSize;
 			rec.U2 = uOrigin + maxBB.Z * invElemSize * 15.99f/16f;
 			rec.V1 = vOrigin + minBB.Y * invElemSize;
-			rec.V2 = vOrigin + maxBB.Y * invElemSize;		
+			rec.V2 = vOrigin + maxBB.Y * invElemSize * 15.99f/16f;		
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
 			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V2, col );
