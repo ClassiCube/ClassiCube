@@ -142,16 +142,7 @@ namespace ClassicalSharp {
 			SoundType type = SoundType.None;
 			bool nonAir = false;
 			
-			// first check block standing on
-			byte blockUnder = (byte)BlockUnderFeet;
-			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
-			BlockCollideType collideType = game.BlockInfo.CollideType[blockUnder];
-			if( collideType == BlockCollideType.Solid && typeUnder != SoundType.None ) {
-				nonAir = true;
-				return typeUnder;
-			}
-			
-			// then check surrounding liquids/gas for sounds
+			// first check surrounding liquids/gas for sounds
 			TouchesAny( bounds, b => {
 			           	SoundType newType = game.BlockInfo.StepSounds[b];
 			           	BlockCollideType collide = game.BlockInfo.CollideType[b];
@@ -162,6 +153,15 @@ namespace ClassicalSharp {
 			           });
 			if( type != SoundType.None )
 				return type;
+			
+			// then check block standing on
+			byte blockUnder = (byte)BlockUnderFeet;
+			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
+			BlockCollideType collideType = game.BlockInfo.CollideType[blockUnder];
+			if( collideType == BlockCollideType.Solid && typeUnder != SoundType.None ) {
+				nonAir = true;
+				return typeUnder;
+			}
 			
 			// then check all solid blocks at feet
 			pos.Y -= 0.01f;

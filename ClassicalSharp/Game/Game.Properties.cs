@@ -55,6 +55,9 @@ namespace ClassicalSharp {
 		/// <summary> Accumulator for the number of chunk updates performed. Reset every second. </summary>
 		public int ChunkUpdates;
 		
+		/// <summary> Whether the third person camera should have their camera position clipped so as to not intersect blocks. </summary>
+		public bool CameraClipping = true;
+		
 		public MapRenderer MapRenderer;
 		public MapBordersRenderer MapBordersRenderer;
 		public EnvRenderer EnvRenderer;
@@ -66,7 +69,7 @@ namespace ClassicalSharp {
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickingRenderer Picking;
-		public PickedPos SelectedPos = new PickedPos();
+		public PickedPos SelectedPos = new PickedPos(), CameraClipPos = new PickedPos();
 		public ModelCache ModelCache;
 		internal string skinServer, chatInInputBuffer = null;
 		internal int defaultIb;
@@ -125,6 +128,8 @@ namespace ClassicalSharp {
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
 		public bool ViewBobbing, ShowBlockInHand;
 		public bool UseSound, UseMusic, LiquidsBreakable;
+		
+		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
 		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId;

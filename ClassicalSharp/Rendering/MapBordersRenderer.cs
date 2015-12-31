@@ -57,9 +57,8 @@ namespace ClassicalSharp {
 			
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			Vector3 eyePos = game.LocalPlayer.EyePosition;
 			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.Map.EdgeBlock != Block.Air && game.Camera.GetCameraPos( eyePos ).Y >= yVisible ) {
+			if( game.Map.EdgeBlock != Block.Air && game.CurrentCameraPos.Y >= yVisible ) {
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			}
 			graphics.AlphaBlending = false;

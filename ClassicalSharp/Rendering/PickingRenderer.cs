@@ -24,8 +24,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Render( double delta, PickedPos pickedPos ) {
 			index = 0;
-			Player player = game.LocalPlayer;
-			Vector3 camPos = game.Camera.GetCameraPos( player.EyePosition );
+			Vector3 camPos = game.CurrentCameraPos;
 			float dist = (camPos - pickedPos.Min).LengthSquared;
 			
 			float size = dist < 12 * 12 ? 1/64f : 1/32f;

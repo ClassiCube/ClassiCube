@@ -44,6 +44,7 @@ namespace ClassicalSharp {
 			Options.Load();
 			AcceptedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
+			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
 			ParticleManager = new ParticleManager( this );
@@ -185,10 +186,12 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {
+			if( visible ) {				
 				AxisLinesRenderer.Render( e.Time );
 				Players.RenderModels( Graphics, e.Time, t );
 				Players.RenderNames( Graphics, e.Time, t );
+				CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
+				                                       
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				EnvRenderer.Render( e.Time );
@@ -351,7 +354,7 @@ namespace ClassicalSharp {
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
 			if( Camera == firstPersonCam ) Camera = thirdPersonCam;
 			else if( Camera == thirdPersonCam ) Camera = forwardThirdPersonCam;
-			else if( Camera == forwardThirdPersonCam ) Camera = firstPersonZoomCam;
+			//else if( Camera == forwardThirdPersonCam ) Camera = firstPersonZoomCam;
 			else Camera = firstPersonCam;
 
 			if( !LocalPlayer.CanUseThirdPersonCamera ) 

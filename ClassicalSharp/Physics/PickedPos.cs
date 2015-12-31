@@ -12,6 +12,9 @@ namespace ClassicalSharp {
 		/// <summary> Maximum world coordinates of the block's bounding box. </summary>
 		public Vector3 Max;
 		
+		/// <summary> Exact world coordinates at which the ray intersected this block. </summary>
+		public Vector3 IntersectPoint;
+		
 		/// <summary> Integer world coordinates of the block. </summary>
 		public Vector3I BlockPos;
 		
@@ -36,6 +39,7 @@ namespace ClassicalSharp {
 			BlockPos = new Vector3I( x, y, z );
 			Valid = true;
 			BlockType = block;
+			IntersectPoint = intersect;
 			
 			Vector3I normal = Vector3I.Zero;
 			float dist = float.PositiveInfinity;

@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		/// <summary> Determines the picked block based on the given origin and direction vector.<br/>
 		/// Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
 		/// or not being able to find a suitable candiate within the given reach distance. </summary>
-		public static void CalculatePickedBlock( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
+		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
 			// Implementation based on: "A Fast Voxel Traversal Algorithm for Ray Tracing"
 			// John Amanatides, Andrew Woo
 			// http://www.cse.yorku.ca/~amana/research/grid.pdf
@@ -21,10 +21,10 @@ namespace ClassicalSharp {
 			int x = start.X, y = start.Y, z = start.Z;
 			Vector3I step, cellBoundary;
 			Vector3 tMax, tDelta;
-			CalculateTimes( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
+			CalcVectors( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
 			
-			Map map = window.Map;
-			BlockInfo info = window.BlockInfo;
+			Map map = game.Map;
+			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
 
@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 					return;
 				}
 				
-				if( window.CanPick( block ) ) {
+				if( game.CanPick( block ) ) {
 					// This cell falls on the path of the ray. Now perform an additional bounding box test,
 					// since some blocks do not occupy a whole cell.
 					float t0, t1;
@@ -61,15 +61,20 @@ namespace ClassicalSharp {
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 		
-		public static void ClipCameraPos( Game window, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
+		public static void ClipCameraPos( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
+			if( !game.CameraClipping ) {
+				pickedPos.SetAsInvalid();
+				pickedPos.IntersectPoint = origin + dir * reach;
+				return;
+			}
 			Vector3I start = Vector3I.Floor( origin );
 			int x = start.X, y = start.Y, z = start.Z;
 			Vector3I step, cellBoundary;
 			Vector3 tMax, tDelta;
-			CalculateTimes( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
+			CalcVectors( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
 			
-			Map map = window.Map;
-			BlockInfo info = window.BlockInfo;
+			Map map = game.Map;
+			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
 
@@ -84,25 +89,42 @@ namespace ClassicalSharp {
 				
 				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
 					pickedPos.SetAsInvalid();
+					pickedPos.IntersectPoint = origin + dir * reach;
 					return;
 				}
 				
 				if( info.CollideType[block] == BlockCollideType.Solid && !info.IsAir[block] ) {
 					float t0, t1;
+					const float adjust = 0.1f;
 					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
 						Vector3 intersect = origin + dir * t0;
 						pickedPos.SetAsValid( x, y, z, min, max, block, intersect );
+						
+						switch( pickedPos.BlockFace) {
+							case CpeBlockFace.XMin:
+								pickedPos.IntersectPoint.X -= adjust; break;
+							case CpeBlockFace.XMax:
+								pickedPos.IntersectPoint.X += adjust; break;
+							case CpeBlockFace.YMin:
+								pickedPos.IntersectPoint.Y -= adjust; break;
+							case CpeBlockFace.YMax:
+								pickedPos.IntersectPoint.Y += adjust; break;
+							case CpeBlockFace.ZMin:
+								pickedPos.IntersectPoint.Z -= adjust; break;
+							case CpeBlockFace.ZMax:
+								pickedPos.IntersectPoint.Z += adjust; break;	
+						}
 						return;
 					}
 				}
 				Step( ref tMax, ref tDelta, ref step, ref x, ref y, ref z );
 				iterations++;
 			}
-			throw new InvalidOperationException( "did over 10000 iterations in GetPickedBlockPos(). " +
+			throw new InvalidOperationException( "did over 10000 iterations in ClipCameraPos(). " +
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 		
-		static void CalculateTimes( Vector3 origin, Vector3 dir, out Vector3I step,
+		static void CalcVectors( Vector3 origin, Vector3 dir, out Vector3I step,
 		                           out Vector3I cellBoundary, out Vector3 tMax, out Vector3 tDelta ) {
 			Vector3I start = Vector3I.Floor( origin );
 			// Determine which way we go.

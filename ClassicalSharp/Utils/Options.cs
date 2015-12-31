@@ -36,6 +36,7 @@ namespace ClassicalSharp {
 		public const string PushbackPlacing = "pushbackplacing";
 		public const string InvertMouse = "invertmouse";
 		public const string NoclipSlide = "noclipslide";
+		public const string CameraClipping = "cameraclipping";
 	}
 	
 	// TODO: implement this

@@ -224,8 +224,7 @@ namespace ClassicalSharp {
 
 		int[] distances;
 		void UpdateSortOrder() {
-			Player p = game.LocalPlayer;
-			Vector3 cameraPos = game.Camera.GetCameraPos( p.EyePosition );
+			Vector3 cameraPos = game.CurrentCameraPos;
 			Vector3I newChunkPos = Vector3I.Floor( cameraPos );
 			newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
 			newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;

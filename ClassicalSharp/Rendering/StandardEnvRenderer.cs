@@ -23,8 +23,7 @@ namespace ClassicalSharp.Renderers {
 		public override void Render( double deltaTime ) {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
 			
-			Vector3 eyePos = game.LocalPlayer.EyePosition;
-			Vector3 pos = game.Camera.GetCameraPos( eyePos );
+			Vector3 pos = game.CurrentCameraPos;
 			float normalY = map.Height + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
 			

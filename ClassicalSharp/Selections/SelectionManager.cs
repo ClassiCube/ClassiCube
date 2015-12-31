@@ -38,12 +38,11 @@ namespace ClassicalSharp.Selections {
 		
 		SelectionBoxComparer comparer = new SelectionBoxComparer();
 		public void Render( double delta ) {
-			Player player = game.LocalPlayer;
 			if( selections.Count == 0 ) return;			
 			
 			// TODO: Proper selection box sorting. But this is very difficult because
 			// we can have boxes within boxes, intersecting boxes, etc. Probably not worth it.
-			Vector3 camPos = game.Camera.GetCameraPos( player.EyePosition );
+			Vector3 camPos = game.CurrentCameraPos;
 			for( int i = 0; i < selections.Count; i++ )
 				comparer.Intersect( selections[i], camPos );				
 			selections.Sort( comparer );

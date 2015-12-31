@@ -143,8 +143,10 @@ namespace ClassicalSharp {
 			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
-			Vector3 cameraPos = eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
-			//Vector3 cameraPos = Picking.ClipCameraPos( game, eyePos, -Utils.GetDirVector( player.YawRadians, player.PitchRadians ), distance );
+			
+			Vector3 dir = -Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
@@ -153,7 +155,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			return eyePos - Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+			Vector3 dir = -Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			return game.CameraClipPos.IntersectPoint;
 		}
 	}
 	
@@ -173,7 +177,10 @@ namespace ClassicalSharp {
 			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
-			Vector3 cameraPos = eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+			
+			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
@@ -182,7 +189,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			return eyePos + Utils.GetDirVector( player.YawRadians, player.PitchRadians ) * distance;
+			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			return game.CameraClipPos.IntersectPoint;
 		}
 	}
 	

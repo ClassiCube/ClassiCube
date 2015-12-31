@@ -27,6 +27,11 @@ namespace ClassicalSharp {
 				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
+				Make( -140, 0, "Camera clipping", OnWidgetClick,
+				     g => g.CameraClipping ? "yes" : "no",
+				     (g, v) => { g.CameraClipping = v == "yes";
+				     	Options.Set( OptionsKey.CameraClipping, v == "yes" ); } ),
+				
 				// Column 2
 				Make( 140, -100, "Liquids breakable", OnWidgetClick,
 				     g => g.LiquidsBreakable ? "yes" : "no",
@@ -56,6 +61,7 @@ namespace ClassicalSharp {
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),
+				new BooleanValidator(),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
