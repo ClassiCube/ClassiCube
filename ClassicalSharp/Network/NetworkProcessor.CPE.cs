@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 		#region Reading
 		
 		int cpeServerExtensionsCount;
-		bool sendHeldBlock, useMessageTypes, usingTexturePack;
+		bool sendHeldBlock, useMessageTypes;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock",
 			"EmoteFix", "TextHotKey", "ExtPlayerList",
@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			} else if( extName == "PlayerClick" ) {
 				UsingPlayerClick = true;
 			} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
-				usingTexturePack = true;
+				handlers[(int)PacketId.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
 				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 			} else if( extName == "LongerMessages" ) {
 				ServerSupportsPatialMessages = true;
@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 				SendPacket();
 				for( int i = 0; i < clientExtensions.Length; i++ ) {
 					string name = clientExtensions[i];
-					int version = (name == "ExtPlayerList") ? 2 : 1;
+					int version = (name == "ExtPlayerList" || name == "EnvMapAppearance") ? 2 : 1;
 					MakeExtEntry( name, version );
 					SendPacket();
 				}
@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 			byte groupRank = reader.ReadUInt8();
 			
 			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if( nameId < 0 ) 
+			if( nameId < 0 )
 				nameId += 256;
 			if( nameId >= 0 && nameId <= 255 )
 				AddCpeInfo( (byte)nameId, playerName, listName, groupName, groupRank );
@@ -209,7 +209,7 @@ namespace ClassicalSharp {
 		void HandleCpeExtRemovePlayerName() {
 			short nameId = reader.ReadInt16();
 			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if( nameId < 0 ) 
+			if( nameId < 0 )
 				nameId += 256;
 			
 			if( nameId >= 0 && nameId <= 255 ) {
@@ -297,11 +297,6 @@ namespace ClassicalSharp {
 			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeLevel( reader.ReadInt16() );
-			if( usingTexturePack ) {
-				// TODO: proper envmapappearance version 2 support
-				game.Map.SetCloudsLevel( reader.ReadInt16() );
-				short maxViewDist = reader.ReadInt16(); // TODO: what to do with this?
-			}
 			
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
@@ -321,7 +316,15 @@ namespace ClassicalSharp {
 			Utils.LogDebug( "Image url: " + url );
 		}
 		
-		void DownloadTexturePack( WarningScreen screen ) { 
+		void HandleCpeEnvSetMapAppearance2() {
+			HandleCpeEnvSetMapApperance();
+			game.Map.SetCloudsLevel( reader.ReadInt16() );
+			short maxViewDist = reader.ReadInt16();
+			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
+			game.SetViewDistance( game.UserViewDistance, false );
+		}
+		
+		void DownloadTexturePack( WarningScreen screen ) {
 			DownloadTexturePack( ((string)screen.Metadata).Substring( 3 ) );
 		}
 		
@@ -330,10 +333,8 @@ namespace ClassicalSharp {
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
 			if( !game.AcceptedUrls.HasAccepted( url ) )
 				game.AcceptedUrls.AddAccepted( url );
-			
-			// NOTE: This is entirely against the original CPE specification, but we
-			// do it here as a convenience until EnvMapAppearance v2 is more widely adopted.
-			if( usingTexturePack || url.EndsWith( ".zip" ) )
+
+			if( url.EndsWith( ".zip" ) )
 				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
 			else
 				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
@@ -382,7 +383,7 @@ namespace ClassicalSharp {
 		
 		void HandleCpeDefineBlock() {
 			byte block = HandleCpeDefineBlockCommonStart();
-			BlockInfo info = game.BlockInfo;			
+			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
 			if( shape == 0 ) {
 				info.IsSprite[block] = true;
@@ -502,7 +503,7 @@ namespace ClassicalSharp {
 		}
 		
 		static int ReadInt32( byte[] buffer, int offset ) {
-			return buffer[offset + 0] << 24 | buffer[offset + 1] << 16 
+			return buffer[offset + 0] << 24 | buffer[offset + 1] << 16
 				| buffer[offset + 2] << 8 | buffer[offset + 3];
 		}
 		

@@ -44,6 +44,7 @@ namespace ClassicalSharp {
 			Options.Load();
 			AcceptedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
+			UserViewDistance = ViewDistance;
 			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
 			InputHandler = new InputHandler( this );
 			Chat = new ChatLog( this );
@@ -146,10 +147,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void SetViewDistance( int distance ) {
+		public void SetViewDistance( int distance, bool save ) {
 			ViewDistance = distance;
-			Utils.LogDebug( "setting view distance to: " + distance );
-			Options.Set( OptionsKey.ViewDist, distance );
+			if( ViewDistance > MaxViewDistance )
+				ViewDistance = MaxViewDistance;
+			Utils.LogDebug( "setting view distance to: {0} ({1})", distance, ViewDistance );
+			
+			if( save ) {
+				UserViewDistance = distance;
+				Options.Set( OptionsKey.ViewDist, distance );
+			}
 			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
 		}
@@ -186,12 +193,12 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( visible ) {				
+			if( visible ) {
 				AxisLinesRenderer.Render( e.Time );
 				Players.RenderModels( Graphics, e.Time, t );
 				Players.RenderNames( Graphics, e.Time, t );
 				CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
-				                                       
+				
 				ParticleManager.Render( e.Time, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 				EnvRenderer.Render( e.Time );
@@ -357,8 +364,8 @@ namespace ClassicalSharp {
 			//else if( Camera == forwardThirdPersonCam ) Camera = firstPersonZoomCam;
 			else Camera = firstPersonCam;
 
-			if( !LocalPlayer.CanUseThirdPersonCamera ) 
-				Camera = firstPersonCam;		
+			if( !LocalPlayer.CanUseThirdPersonCamera )
+				Camera = firstPersonCam;
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;
 			newCam.previous = oldCam.previous;

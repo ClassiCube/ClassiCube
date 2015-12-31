@@ -98,6 +98,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Radius of the sphere the player can see around the position of the current camera. </summary>
 		public int ViewDistance = 512;
+		internal int MaxViewDistance = 32768, UserViewDistance = 512;
 		
 		/// <summary> Field of view for the current camera in degrees. </summary>
 		public int FieldOfView = 70;

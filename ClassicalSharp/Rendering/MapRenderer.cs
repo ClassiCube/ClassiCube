@@ -261,7 +261,8 @@ namespace ClassicalSharp {
 		const double targetTime = (1.0 / 30) + 0.01;
 		void UpdateChunks( double deltaTime ) {
 			int chunksUpdatedThisFrame = 0;
-			int adjViewDistSqr = ( game.ViewDistance + 14 ) * ( game.ViewDistance + 14 );
+			int viewDist = game.ViewDistance < 16 ? 16 : game.ViewDistance;
+			int adjViewDistSqr = (viewDist + 24) * (viewDist + 24);
 			chunksTarget += deltaTime < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
 			

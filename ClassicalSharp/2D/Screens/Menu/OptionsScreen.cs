@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 
 				Make( -140, 50, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
-				     (g, v) => g.SetViewDistance( Int32.Parse( v ) ) ),
+				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :

@@ -219,10 +219,10 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y, z1, x1 / 2048f + offset, z1 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y, z2, x1 / 2048f + offset, z2 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y, z2, x2 / 2048f + offset, z2 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y, z1, x2 / 2048f + offset, z1 / 2048f + offset, col );
+					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y + 0.1f, z1, x1 / 2048f + offset, z1 / 2048f + offset, col );
+					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y + 0.1f, z2, x1 / 2048f + offset, z2 / 2048f + offset, col );
+					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y + 0.1f, z2, x2 / 2048f + offset, z2 / 2048f + offset, col );
+					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y + 0.1f, z1, x2 / 2048f + offset, z1 / 2048f + offset, col );
 				}
 			}
 		}

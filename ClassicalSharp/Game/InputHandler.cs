@@ -362,20 +362,20 @@ namespace ClassicalSharp {
 			for( int i = 0; i < viewDistances.Length; i++ ) {
 				int dist = viewDistances[i];
 				if( dist > game.ViewDistance ) {
-					game.SetViewDistance( dist ); return;
+					game.SetViewDistance( dist, true ); return;
 				}
 			}
-			game.SetViewDistance( viewDistances[0] );
+			game.SetViewDistance( viewDistances[0], true );
 		}
 		
 		void CycleDistanceBackwards() {
 			for( int i = viewDistances.Length - 1; i >= 0; i-- ) {
 				int dist = viewDistances[i];
 				if( dist < game.ViewDistance ) {
-					game.SetViewDistance( dist ); return;
+					game.SetViewDistance( dist, true ); return;
 				}
 			}
-			game.SetViewDistance( viewDistances[viewDistances.Length - 1] );
+			game.SetViewDistance( viewDistances[viewDistances.Length - 1], true );
 		}
 		
 		float fovIndex = -1;
