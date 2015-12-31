@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			buttons = new ButtonWidget[] {
 				// Column 1
-				Make( -140, -150, "Options", Anchor.Centre, 
+				Make( -140, -150, "Misc options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
 				Make( -140, -100, "Gui options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),

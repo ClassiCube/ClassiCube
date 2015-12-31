@@ -26,9 +26,9 @@ namespace ClassicalSharp {
 			regularFont = new Font( "Arial", 14, FontStyle.Regular );
 			
 			buttons = new ButtonWidget[] {
-				ButtonWidget.Create( game, -60, 30, 60, 20, "Yes", Anchor.Centre,
+				ButtonWidget.Create( game, -60, 30, 60, 25, "Yes", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnYesClick ),
-				ButtonWidget.Create( game, 60, 30, 60, 20, "No", Anchor.Centre,
+				ButtonWidget.Create( game, 60, 30, 60, 25, "No", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnNoClick ),
 			};
 			SetText( title, body );
