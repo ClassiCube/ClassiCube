@@ -26,8 +26,8 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void TextButtonClick( Game game, Widget widget ) {
-			string path = ((ButtonWidget)widget).Text;
-			path = Path.Combine( Program.AppDirectory, path );
+			string path = Path.Combine( Program.AppDirectory, "maps" );
+			path = Path.Combine( path, ((ButtonWidget)widget).Text );
 			if( File.Exists( path ) )
 				LoadMap( path );
 		}

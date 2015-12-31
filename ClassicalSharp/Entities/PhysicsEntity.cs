@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void CollideWithReachableBlocks( int count,  ref Vector3 size,
+		void CollideWithReachableBlocks( int count, ref Vector3 size,
 		                                ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			bool wasOn = onGround;
 			onGround = false;
@@ -123,35 +123,82 @@ namespace ClassicalSharp {
 					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
 				
-				if( finalBB.Min.X + Adjustment >= blockBB.Max.X ) {
-					if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-						Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
-						ClipX( ref size, ref entityBB, ref entityExtentBB );
-					}
-				} else if( finalBB.Max.X - Adjustment <= blockBB.Min.X ) {
-					if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-						Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
-						ClipX( ref size, ref entityBB, ref entityExtentBB );
-					}
-				} else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z ) {
-					if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-						Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
-						ClipZ( ref size, ref entityBB, ref entityExtentBB );
-					}
-				} else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z ) {
-					if( !wasOn || !DidSlide( blockBB, ref size,finalBB, ref entityBB, ref entityExtentBB ) ) {
-						Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
-						ClipZ( ref size, ref entityBB, ref entityExtentBB );
-					}
-				} else if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {
-					Position.Y = blockBB.Max.Y + Adjustment;
-					onGround = true;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );
-				} else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y ) {
-					Position.Y = blockBB.Min.Y - size.Y - Adjustment;
-					ClipY( ref size, ref entityBB, ref entityExtentBB );
+				// if we were on the ground, we need to change the axis we test first.
+				if( wasOn ) {
+					if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
+						ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
+					else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
+						ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
+					else if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
+						ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+					else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
+						ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+					else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
+						ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+					else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
+						ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+					continue;
 				}
+				
+				// if flying or falling, test the horizontal axes first.
+				if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
+					ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+				else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
+					ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+				else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
+					ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+				else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
+					ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+				else if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
+					ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
+				else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
+					ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
 			}
+		}
+		
+		void ClipXMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
+		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
+			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
+				Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
+				ClipX( ref size, ref entityBB, ref entityExtentBB );
+			}
+		}
+		
+		void ClipXMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
+		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
+			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
+				Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
+				ClipX( ref size, ref entityBB, ref entityExtentBB );
+			}
+		}
+		
+		void ClipZMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
+		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
+			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
+				Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
+				ClipZ( ref size, ref entityBB, ref entityExtentBB );
+			}
+		}
+		
+		void ClipZMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
+		              BoundingBox finalBB, ref BoundingBox extentBB, ref Vector3 size ) {
+			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref extentBB ) ) {
+				Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
+				ClipZ( ref size, ref entityBB, ref extentBB );
+			}
+		}
+		
+		void ClipYMin( ref BoundingBox blockBB, ref BoundingBox entityBB,
+		              ref BoundingBox extentBB, ref Vector3 size ) {
+			Position.Y = blockBB.Min.Y - size.Y - Adjustment;
+			ClipY( ref size, ref entityBB, ref extentBB );
+		}
+		
+		void ClipYMax( ref BoundingBox blockBB, ref BoundingBox entityBB,
+		              ref BoundingBox extentBB, ref Vector3 size ) {
+			Position.Y = blockBB.Max.Y + Adjustment;
+			onGround = true;
+			ClipY( ref size, ref entityBB, ref extentBB );
 		}
 		
 		bool DidSlide( BoundingBox blockBB, ref Vector3 size, BoundingBox finalBB,
