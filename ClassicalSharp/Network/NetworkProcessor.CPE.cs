@@ -56,6 +56,7 @@ namespace ClassicalSharp {
 		
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes;
+		int envMapApperanceVer = 2;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock",
 			"EmoteFix", "TextHotKey", "ExtPlayerList",
@@ -90,9 +91,12 @@ namespace ClassicalSharp {
 				UsingExtPlayerList = true;
 			} else if( extName == "PlayerClick" ) {
 				UsingPlayerClick = true;
-			} else if( extName == "EnvMapAppearance" && extVersion == 2 ) {
-				handlers[(int)PacketId.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
-				packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
+			} else if( extName == "EnvMapAppearance" ) {
+				envMapApperanceVer = extVersion;
+				if( extVersion == 2 ) {
+					handlers[(int)PacketId.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
+					packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
+				}
 			} else if( extName == "LongerMessages" ) {
 				ServerSupportsPatialMessages = true;
 			} else if( extName == "FullCP437" ) {
@@ -103,15 +107,17 @@ namespace ClassicalSharp {
 		}
 		
 		void SendCpeExtInfoReply() {
-			if( cpeServerExtensionsCount == 0 ) {
-				MakeExtInfo( Program.AppName, clientExtensions.Length );
+			if( cpeServerExtensionsCount != 0)
+				return;
+			MakeExtInfo( Program.AppName, clientExtensions.Length );
+			SendPacket();
+			for( int i = 0; i < clientExtensions.Length; i++ ) {
+				string name = clientExtensions[i];
+				int ver = name == "ExtPlayerList" ? 2 : 1;
+				if( name == "EnvMapAppearance" ) ver = envMapApperanceVer;
+				
+				MakeExtEntry( name, ver );
 				SendPacket();
-				for( int i = 0; i < clientExtensions.Length; i++ ) {
-					string name = clientExtensions[i];
-					int version = (name == "ExtPlayerList" || name == "EnvMapAppearance") ? 2 : 1;
-					MakeExtEntry( name, version );
-					SendPacket();
-				}
 			}
 		}
 		
