@@ -125,6 +125,8 @@ namespace ClassicalSharp {
 		/// <summary> How sensitive the client is to changes in the player's mouse position. </summary>
 		public int MouseSensitivity = 30;
 		
+		public bool UseClassicGui = false;
+		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;
@@ -134,7 +136,7 @@ namespace ClassicalSharp {
 		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
-		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId;
+		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId, GuiClassicTexId;
 		internal bool screenshotRequested;
 		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
 		internal UrlsList AcceptedUrls = new UrlsList( "acceptedurls.txt" ), DeniedUrls = new UrlsList( "deniedurls.txt" );

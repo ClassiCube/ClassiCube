@@ -75,6 +75,8 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref game.SnowTexId, stream, false ); break;
 				case "gui.png":
 					UpdateTexture( ref game.GuiTexId, stream, false ); break;
+				case "gui_classic.png":
+					UpdateTexture( ref game.GuiClassicTexId, stream, false ); break;
 				case "animations.png":
 				case "animation.png":
 					game.Animations.SetAtlas( new Bitmap( stream ) ); break;

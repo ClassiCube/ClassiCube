@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using ClassicalSharp.Network;
+using ClassicalSharp.TexturePack;
 
 namespace Launcher2 {
 	
@@ -21,7 +22,7 @@ namespace Launcher2 {
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
 		const string altDigSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
-		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";	
+		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";
 		const string altStepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
 		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
@@ -34,7 +35,7 @@ namespace Launcher2 {
 			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this );
 			stepPatcher = new SoundPatcher( stepSounds, "step_",
 			                               "classic jar", stepPath );
-			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this );			
+			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this );
 			if( !defaultZipExists ) {
 				downloader.DownloadData( jarClassicUri, false, "classic_jar" );
 				downloader.DownloadData( jar162Uri, false, "162_jar" );
@@ -116,6 +117,8 @@ namespace Launcher2 {
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string zipPath = Path.Combine( texDir, "default.zip" );
 			defaultZipExists = File.Exists( zipPath );
+			if( defaultZipExists )
+				CheckClassicGuiPng( zipPath );
 			if( !defaultZipExists ) {
 				// classic.jar + 1.6.2.jar + terrain-patch.png + gui.png
 				DownloadSize += (291 + 4621 + 7 + 21) / 1024f;
@@ -148,12 +151,32 @@ namespace Launcher2 {
 			                     CurrentResource, ResourcesCount );
 		}
 		
+		bool classicGuiPngExists = false;
+		void CheckClassicGuiPng( string path ) {
+			ZipReader reader = new ZipReader();
+			reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
+			reader.ProcessZipEntry = ProcessZipEntry;
+			
+			using( Stream src = new FileStream( path, FileMode.Open, FileAccess.Read ) )
+				reader.Extract( src );
+			if( !classicGuiPngExists )
+				defaultZipExists = false;
+		}
+		
+		bool ShouldProcessZipEntry( string filename ) {
+			if( filename == "gui_classic.png" )
+				classicGuiPngExists = true;
+			return false;
+		}
+		
+		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) { }
+		
 		bool CheckMusicFiles( Action<string> setStatus ) {
 			for( int i = 0; i < musicFiles.Length; i++ ) {
 				string next = i < musicFiles.Length - 1 ?
 					musicFiles[i + 1] : "dig_cloth1";
 				string name = musicFiles[i];
-				byte[] data = null;			
+				byte[] data = null;
 				if( !DownloadItem( name, name, next,
 				                  ref data, setStatus ) )
 					return false;
@@ -177,13 +200,13 @@ namespace Launcher2 {
 		
 		string digPath, stepPath;
 		string[] digSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
-			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2", 
-			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", 
+			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2",
+			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3",
 			"Asnow4", "Astone1", "Astone2", "Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
 		string[] stepSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
-			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1", 
-			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2", 
+			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1",
+			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2",
 			"Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
 		string[] musicFiles = new [] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };

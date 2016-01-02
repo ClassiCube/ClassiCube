@@ -53,6 +53,7 @@ namespace ClassicalSharp {
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
+			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, false );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
@@ -444,6 +445,7 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref RainTexId );
 			Graphics.DeleteTexture( ref SnowTexId );
 			Graphics.DeleteTexture( ref GuiTexId );
+			Graphics.DeleteTexture( ref GuiClassicTexId );
 			
 			if( Options.HasChanged )
 				Options.Save();

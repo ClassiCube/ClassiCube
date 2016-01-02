@@ -52,9 +52,13 @@ namespace ClassicalSharp {
 		}
 		
 		void RenderHotbar() {
+			int texId = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
+			backTex.ID = texId;
 			backTex.Render( graphicsApi );
+			
 			int i = game.Inventory.HeldBlockIndex;
 			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
+			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
 			selTex.Render( graphicsApi );
 		}
@@ -70,7 +74,7 @@ namespace ClassicalSharp {
 		
 		void MakeBackgroundTexture() {
 			TextureRec rec = new TextureRec( 0, 0, 182/256f, 22/256f );
-			backTex = new Texture( game.GuiTexId, X, Y, Width, Height, rec );
+			backTex = new Texture( 0, X, Y, Width, Height, rec );
 		}
 		
 		void MakeSelectionTexture() {
@@ -78,7 +82,7 @@ namespace ClassicalSharp {
 			int vSize = (int)Math.Floor( 23 * 2 * game.GuiScale );
 			int y = game.Height - vSize;
 			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
-			selTex = new Texture( game.GuiTexId, 0, y, hSize, vSize, rec );
+			selTex = new Texture( 0, 0, y, hSize, vSize, rec );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

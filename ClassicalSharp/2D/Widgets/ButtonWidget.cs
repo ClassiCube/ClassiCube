@@ -62,9 +62,11 @@ namespace ClassicalSharp {
 				return;
 			Texture backTex = Active ? selectedTex : shadowTex;
 			if( Disabled ) backTex = disdabledTex;
-			backTex.ID = game.GuiTexId;
+			
+			backTex.ID = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
 			backTex.X1 = X; backTex.Y1 = Y;
 			backTex.Width = Width; backTex.Height = Height;
+			
 			backTex.Render( graphicsApi );
 			FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
 			if( Disabled ) col = new FastColour( 150, 150, 150 );

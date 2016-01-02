@@ -30,6 +30,12 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
+				Make( -140, 0, "Use classic gui", OnWidgetClick,
+				     g => g.UseClassicGui ? "yes" : "no",
+				     (g, v) => { g.UseClassicGui = v == "yes";
+				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
+				     } ),
+				
 				// Column 2
 				Make( 140, -150, "Clickable chat", OnWidgetClick,
 				     g => g.ClickableChat ? "yes" : "no",
@@ -70,6 +76,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
+				new BooleanValidator(),
 				
 				new BooleanValidator(),		
 				new RealValidator( 0.25f, 5f ),

@@ -50,13 +50,18 @@ namespace Launcher2 {
 		Bitmap animBitmap;
 		
 		bool ShouldProcessZipEntry_Classic( string filename ) {
-			return filename.StartsWith( "mob" ) || (filename.IndexOf( '/' ) < 0);
+			return filename == "gui/gui.png" || filename.StartsWith( "mob" ) || filename.IndexOf( '/' ) < 0;
 		}
 		
 		void ProcessZipEntry_Classic( string filename, byte[] data, ZipEntry entry ) {
 			if( writer.entries == null )
 				writer.entries = new ZipEntry[reader.entries.Length];
 			if( filename != "terrain.png" ) {
+				int lastSlash = filename.LastIndexOf( '/' );
+				if( lastSlash >= 0 )
+					entry.Filename = filename.Substring( lastSlash + 1 );
+				if( entry.Filename == "gui.png" ) 
+					entry.Filename = "gui_classic.png";
 				writer.WriteZipEntry( entry, data );
 				return;
 			}
