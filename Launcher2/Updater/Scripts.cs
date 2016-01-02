@@ -24,10 +24,10 @@ for /f ""tokens=*"" %%f in ('dir /b ""%root%\CS_Update""') do move ""%root%\CS_U
 rmdir ""%root%\CS_Update""
 
 echo Starting launcher again
-if exist Launcher2.exe (
-start Launcher2.exe
-) else (
+if exist Launcher.exe (
 start Launcher.exe
+) else (
+start Launcher2.exe
 )
 exit";
 		
@@ -50,11 +50,11 @@ UPDATEDIR=""`pwd`/CS_Update/""
 find ""$UPDATEDIR"" -name '*.*' | xargs cp -t `pwd`
 
 echo Starting launcher again
-if [ -f ""Launcher2.exe"" ];
+if [ -f ""Launcher.exe"" ];
 then
-mono Launcher2.exe &
-else
 mono Launcher.exe &
+else
+mono Launcher2.exe &
 fi
 disown
 echo Waiting

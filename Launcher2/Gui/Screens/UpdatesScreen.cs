@@ -18,7 +18,7 @@ namespace Launcher2 {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			infoFont = new Font( "Arial", 14, FontStyle.Regular );
 			buttonFont = titleFont;
-			widgets = new LauncherWidget[17];
+			widgets = new LauncherWidget[20];
 		}
 
 		UpdateCheckTask checkTask;
@@ -82,25 +82,30 @@ namespace Launcher2 {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			
-			MakeLabelAt( "Your build:", titleFont, Anchor.Centre, Anchor.Centre, -55, -120 );
+			MakeLabelAt( "Your build:", infoFont, Anchor.Centre, Anchor.Centre, -100, -120 );
 			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
-			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 100, -120 );
+			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 30, -120 );
 			
-			MakeLabelAt( "Latest stable:", titleFont, Anchor.Centre, Anchor.Centre, -70, -80 );
+			MakeLabelAt( "Update to stable build", titleFont, Anchor.Centre, Anchor.Centre, -130, -80 );
+			MakeLabelAt( "Latest stable:", infoFont, Anchor.Centre, Anchor.Centre, -90, -50 );
 			string latestStable = GetDateString( lastStable, validStable );
-			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 100, -80 );
-			MakeButtonAt( "Update to D3D9 stable", 270, 30, titleFont, Anchor.Centre, 0, -40,
+			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 50, -50 );
+			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -15,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, true ) );
-			MakeButtonAt( "Update to OpenGL stable", 270, 30, titleFont, Anchor.Centre, 0, 0,
+			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -15,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, false ) );
 			
-			MakeLabelAt( "Latest dev:", titleFont, Anchor.Centre, Anchor.Centre, -60, 40 );
+			MakeLabelAt( "Update to dev build", titleFont, Anchor.Centre, Anchor.Centre, -120, 30 );
+			MakeLabelAt( "Latest dev:", infoFont, Anchor.Centre, Anchor.Centre, -100, 60 );
 			string latestDev = GetDateString( lastDev, validDev );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 100, 40 );
-			MakeButtonAt( "Update to D3D9 dev", 250, 30, titleFont, Anchor.Centre, 0, 80,
+			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 30, 60 );
+			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 95,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
-			MakeButtonAt( "Update to OpenGL dev", 250, 30, titleFont, Anchor.Centre, 0, 120,
+			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 95,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, false ) );
+			
+			MakeLabelAt( "&eThe Direct3D 9 builds are the recommended builds for Windows.", 
+			            infoFont, Anchor.Centre, Anchor.Centre, 0, 130 );
 			
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             0, 170, (x, y) => game.SetScreen( new MainScreen( game ) ) );
