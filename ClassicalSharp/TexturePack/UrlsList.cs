@@ -4,18 +4,23 @@ using System.IO;
 
 namespace ClassicalSharp {
 	
-	public sealed class AcceptedUrls {
+	public sealed class UrlsList {
 		
-		List<string> acceptedUrls = new List<string>();	
-		const string folder = "texturecache", file = "acceptedurls.txt";
+		List<string> urls = new List<string>();			
+		const string folder = "texturecache";
+		string file;
 		
-		public void AddAccepted( string url ) {
-			acceptedUrls.Add( url );
+		public UrlsList( string file ) {
+			this.file = file;
+		}
+		
+		public void AddUrl( string url ) {
+			urls.Add( url );
 			Save();
 		}
 		
-		public bool HasAccepted( string url ) {
-			return acceptedUrls.Contains( url );
+		public bool HasUrl( string url ) {
+			return urls.Contains( url );
 		}
 		
 		public bool Load() {
@@ -31,12 +36,12 @@ namespace ClassicalSharp {
 					string line;
 					while( (line = reader.ReadLine()) != null ) {
 						if( line.Length == 0 && line[0] == '#' ) continue;
-						acceptedUrls.Add( line );
+						urls.Add( line );
 					}
 				}
 				return true;
 			} catch( IOException ex ) {
-				ErrorHandler.LogError( "loading accepted urls", ex );
+				ErrorHandler.LogError( "loading urls list", ex );
 				return false;
 			}
 		}
@@ -50,7 +55,7 @@ namespace ClassicalSharp {
 				using( Stream fs = File.Create( Path.Combine( path, file ) ) )
 					using( StreamWriter writer = new StreamWriter( fs ) )
 				{
-					foreach( string value in acceptedUrls )
+					foreach( string value in urls )
 						writer.WriteLine( value );
 				}
 				return true;

@@ -308,7 +308,7 @@ namespace ClassicalSharp {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
 			} else if( Utils.IsUrlPrefix( url ) ) {
-				if( !game.AcceptedUrls.HasAccepted( url ) ) {
+				if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
 					game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
 					game.ShowWarning( new WarningScreen(
 						game, "CL_" + url, "Do you want to download the server's terrain image?",
@@ -335,10 +335,9 @@ namespace ClassicalSharp {
 		}
 		
 		void DownloadTexturePack( string url ) {
+			if( game.DeniedUrls.HasUrl( url ) ) return;			
 			game.Animations.Dispose();
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
-			if( !game.AcceptedUrls.HasAccepted( url ) )
-				game.AcceptedUrls.AddAccepted( url );
 
 			if( url.EndsWith( ".zip" ) )
 				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );

@@ -26,10 +26,14 @@ namespace ClassicalSharp {
 			regularFont = new Font( "Arial", 14, FontStyle.Regular );
 			
 			buttons = new ButtonWidget[] {
-				ButtonWidget.Create( game, -60, 30, 60, 25, "Yes", Anchor.Centre,
+				ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnYesClick ),
-				ButtonWidget.Create( game, 60, 30, 60, 25, "No", Anchor.Centre,
+				ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnNoClick ),
+				ButtonWidget.Create( game, -110, 80, 160, 35, "Always yes", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnYesAlwaysClick ),
+				ButtonWidget.Create( game, 110, 80, 160, 35, "Always no", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnNoAlwaysClick ),
 			};
 			SetText( title, body );
 		}
@@ -66,6 +70,20 @@ namespace ClassicalSharp {
 				noClick( this );
 			Dispose();
 			CloseScreen();
+		}
+		
+		void OnYesAlwaysClick( Game g, Widget w ) {
+			OnYesClick( g, w );
+			string url = ((string)Metadata).Substring( 3 );
+			if( !game.AcceptedUrls.HasUrl( url ) )
+				game.AcceptedUrls.AddUrl( url );
+		}
+		
+		void OnNoAlwaysClick( Game g, Widget w ) {
+			OnNoClick( g, w );
+			string url = ((string)Metadata).Substring( 3 );
+			if( !game.DeniedUrls.HasUrl( url ) )
+				game.DeniedUrls.AddUrl( url );
 		}
 		
 		void CloseScreen() {

@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			Players = new EntityList( this );
 			
 			Options.Load();
-			AcceptedUrls.Load();
+			AcceptedUrls.Load(); DeniedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			UserViewDistance = ViewDistance;
 			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );

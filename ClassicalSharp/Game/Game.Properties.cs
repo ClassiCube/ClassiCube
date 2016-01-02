@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId;
 		internal bool screenshotRequested;
 		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
-		internal AcceptedUrls AcceptedUrls = new AcceptedUrls();
+		internal UrlsList AcceptedUrls = new UrlsList( "acceptedurls.txt" ), DeniedUrls = new UrlsList( "deniedurls.txt" );
 		
 		/// <summary> Calculates the amount that 2D widgets should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
