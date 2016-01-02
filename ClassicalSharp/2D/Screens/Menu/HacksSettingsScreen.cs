@@ -77,6 +77,7 @@ namespace ClassicalSharp {
 			};
 			okayIndex = buttons.Length - 1;
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+			CheckHacksAllowed( null, null );
 		}
 		
 		void CheckHacksAllowed( object sender, EventArgs e ) { 
@@ -85,9 +86,9 @@ namespace ClassicalSharp {
 				buttons[i].Disabled = false;
 			}
 			LocalPlayer p = game.LocalPlayer;
-			bool globalHacks = p.CanAnyHacks && p.HacksEnabled;
-			buttons[3].Disabled = !globalHacks || !p.CanSpeed;
-			buttons[5].Disabled = !globalHacks || !p.CanPushbackBlocks;
+			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
+			buttons[3].Disabled = noGlobalHacks || !p.CanSpeed;
+			buttons[5].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
