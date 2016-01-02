@@ -91,14 +91,12 @@ namespace ClassicalSharp.Commands {
 					game.Chat.Add( "Currently not targeting a block" );
 				} else {
 					game.Chat.Add( "Currently targeting at: " + pos.BlockPos );
+					game.Chat.Add( "ID of block targeted: " + game.Map.SafeGetBlock( pos.BlockPos ) );
 				}
 			} else if( Utils.CaselessEquals( property, "dimensions" ) ) {
 				game.Chat.Add( "map width: " + game.Map.Width );
 				game.Chat.Add( "map height: " + game.Map.Height );
 				game.Chat.Add( "map length: " + game.Map.Length );
-			} else if( Utils.CaselessEquals( property, "jumpheight" ) ) {
-				float jumpHeight = game.LocalPlayer.JumpHeight;
-				game.Chat.Add( jumpHeight.ToString( "F2" ) + " blocks" );
 			} else {
 				game.Chat.Add( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}

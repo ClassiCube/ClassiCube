@@ -15,6 +15,11 @@ namespace ClassicalSharp {
 			
 			buttons = new ButtonWidget[] {
 				// Column 1
+				!network.IsSinglePlayer ? null :
+					Make( -140, -200, "Click distance", OnWidgetClick,
+					     g => g.LocalPlayer.ReachDistance.ToString(),
+					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
+				
 				Make( -140, -150, "Use sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
@@ -80,10 +85,11 @@ namespace ClassicalSharp {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[2].Metadata = typeof(NameMode);
-			buttons[3].Metadata = typeof(FpsLimitMethod);
+			buttons[3].Metadata = typeof(NameMode);
+			buttons[4].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
+				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new EnumValidator(),

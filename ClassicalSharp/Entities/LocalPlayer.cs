@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
 		public bool NoclipSlide = true;
 		
-		float jumpVel = 0.42f;
+		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
 		public float JumpHeight {
@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 			
 			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 7 );
 			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
-			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, true );
+			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
 			InitRenderingData();
 		}
 		
@@ -249,12 +249,8 @@ namespace ClassicalSharp {
 			
 			if( !CanUseThirdPersonCamera || !HacksEnabled )
 				game.CycleCamera();
-			if( !HacksEnabled || !CanAnyHacks || !CanUseThirdPersonCamera ) {
-				game.FieldOfView = 70;
-				int max = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
-				game.ZoomFieldOfView = max;
-				game.UpdateProjection();
-			}
+			if( !HacksEnabled || !CanAnyHacks || !CanSpeed )
+				jumpVel = serverJumpVel;
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,

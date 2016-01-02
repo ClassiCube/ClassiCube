@@ -98,7 +98,7 @@ namespace ClassicalSharp {
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
-			FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 			ZoomFieldOfView = FieldOfView;
 			UpdateProjection();
 			CommandManager = new CommandManager();

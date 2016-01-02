@@ -132,6 +132,7 @@ namespace ClassicalSharp {
 				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
 					reader.Remove( 1 );
 					game.LocalPlayer.CalculateJumpVelocity( 1.4f ); // assume default jump height
+					game.LocalPlayer.serverJumpVel = game.LocalPlayer.jumpVel;
 					continue;
 				}
 				

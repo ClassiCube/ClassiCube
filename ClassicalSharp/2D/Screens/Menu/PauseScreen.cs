@@ -61,7 +61,6 @@ namespace ClassicalSharp {
 				buttons[i].Disabled = false;
 			}
 			if( !game.LocalPlayer.CanAnyHacks ) {
-				buttons[2].Disabled = true; // hack permissions
 				buttons[3].Disabled = true; // env settings
 				buttons[8].Disabled = true; // select texture pack
 			}

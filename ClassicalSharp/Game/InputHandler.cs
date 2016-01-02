@@ -388,7 +388,7 @@ namespace ClassicalSharp {
 			
 			if( fovIndex == -1 ) fovIndex = game.ZoomFieldOfView;
 			fovIndex -= e.DeltaPrecise * 5;
-			int max = Options.GetInt( OptionsKey.FieldOfView, 1, 179, 70 );
+			int max = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 			Utils.Clamp( ref fovIndex, 1, max );
 			
 			game.FieldOfView = (int)fovIndex;

@@ -32,6 +32,10 @@ namespace ClassicalSharp {
 				     (g, v) => { g.CameraClipping = v == "yes";
 				     	Options.Set( OptionsKey.CameraClipping, v == "yes" ); } ),
 				
+				Make( -140, 50, "Jump height", OnWidgetClick,
+				     g => g.LocalPlayer.JumpHeight.ToString(),
+				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
+				
 				// Column 2
 				Make( 140, -100, "Liquids breakable", OnWidgetClick,
 				     g => g.LiquidsBreakable ? "yes" : "no",
@@ -39,21 +43,16 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
 				Make( 140, -50, "Pushback placing", OnWidgetClick,
-				     g => g.LocalPlayer.PushbackPlacing
-				     && g.LocalPlayer.CanPushbackBlocks ? "yes" : "no",
-				     (g, v) => {
-				     	if( g.LocalPlayer.CanPushbackBlocks) {
-				     		g.LocalPlayer.PushbackPlacing = v == "yes";
-				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" );
-				     	}
-				     }),
+				     g => g.LocalPlayer.PushbackPlacing ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.PushbackPlacing = v == "yes";
+				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" ); }),
 				
 				Make( 140, 0, "Noclip slide", OnWidgetClick,
 				     g => g.LocalPlayer.NoclipSlide ? "yes" : "no",
 				     (g, v) => { g.LocalPlayer.NoclipSlide = v == "yes";
 				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
 				
-				Make( -140, 50, "Field of view", OnWidgetClick,
+				Make( 140, 50, "Field of view", OnWidgetClick,
 				     g => g.FieldOfView.ToString(),
 				     (g, v) => { g.FieldOfView = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FieldOfView, v );
@@ -69,13 +68,26 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),
 				new BooleanValidator(),			
+				new RealValidator( 0.1f, 1024f ),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
-				new IntegerValidator( 1, 179 ),
+				new IntegerValidator( 1, 150 ),				
 			};
 			okayIndex = buttons.Length - 1;
+			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+		}
+		
+		void CheckHacksAllowed( object sender, EventArgs e ) { 
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
+				buttons[i].Disabled = false;
+			}
+			LocalPlayer p = game.LocalPlayer;
+			bool globalHacks = p.CanAnyHacks && p.HacksEnabled;
+			buttons[3].Disabled = !globalHacks || !p.CanSpeed;
+			buttons[5].Disabled = !globalHacks || !p.CanPushbackBlocks;
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
@@ -85,6 +97,11 @@ namespace ClassicalSharp {
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
 	}
 }
