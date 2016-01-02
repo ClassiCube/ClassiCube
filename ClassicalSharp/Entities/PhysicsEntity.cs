@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public PhysicsEntity( Game game ) : base( game ) {
 		}
 		
-		protected internal bool onGround;
+		protected internal bool onGround, hitYMax;
 		protected bool collideX, collideY, collideZ;
 		protected float StepSize;
 		
@@ -123,8 +123,8 @@ namespace ClassicalSharp {
 					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
 				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
 				
-				// if we were on the ground, we need to change the axis we test first.
-				if( wasOn ) {
+				// if we have hit the bottom of a block, we need to change the axis we test first.
+				if( hitYMax ) {
 					if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
 						ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
 					else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
@@ -192,6 +192,7 @@ namespace ClassicalSharp {
 		              ref BoundingBox extentBB, ref Vector3 size ) {
 			Position.Y = blockBB.Min.Y - size.Y - Adjustment;
 			ClipY( ref size, ref entityBB, ref extentBB );
+			hitYMax = false;
 		}
 		
 		void ClipYMax( ref BoundingBox blockBB, ref BoundingBox entityBB,
@@ -199,6 +200,7 @@ namespace ClassicalSharp {
 			Position.Y = blockBB.Max.Y + Adjustment;
 			onGround = true;
 			ClipY( ref size, ref entityBB, ref extentBB );
+			hitYMax = true;
 		}
 		
 		bool DidSlide( BoundingBox blockBB, ref Vector3 size, BoundingBox finalBB,
