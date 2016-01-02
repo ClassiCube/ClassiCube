@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 	
 	internal static class Program {
 		
-		public const string AppName = "ClassicalSharp 0.98.4";
+		public const string AppName = "ClassicalSharp 0.98.5";
 		
 		public static string AppDirectory;
 		
