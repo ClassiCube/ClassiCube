@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 				graphicsApi.DeleteTexture( ref chatInputTexture );
 				SetText( chatInputText.ToString() );
 			}
-			return true;
+			return key < Key.F1 || key > Key.F35;
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {

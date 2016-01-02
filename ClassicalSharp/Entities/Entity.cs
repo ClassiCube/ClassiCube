@@ -91,13 +91,12 @@ namespace ClassicalSharp {
 			{
 				if( !game.Map.IsValidPos( x, y, z ) ) continue;
 				byte block = game.Map.GetBlock( x, y, z );
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
-				if( condition( block ) ) {
-					Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
-					Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-					BoundingBox blockBB = new BoundingBox( min, max );
-					if( blockBB.Intersects( bounds ) ) return true;
-				}
+				BoundingBox blockBB = new BoundingBox( min, max );
+				if( !blockBB.Intersects( bounds ) ) continue;		
+				if( condition( block ) ) return true;
 			}
 			return false;
 		}

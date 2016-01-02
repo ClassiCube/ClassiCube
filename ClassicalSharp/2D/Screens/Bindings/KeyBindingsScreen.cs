@@ -77,7 +77,7 @@ namespace ClassicalSharp {
 				}
 				curWidget = null;
 			}
-			return true;
+			return key < Key.F1 || key > Key.F35;
 		}
 		
 		public override void Dispose() {

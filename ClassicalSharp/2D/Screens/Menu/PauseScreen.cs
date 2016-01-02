@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape )
 				game.SetNewScreen( null );
-			return true;
+			return key < Key.F1 || key > Key.F35;
 		}
 		
 		public override void Dispose() {

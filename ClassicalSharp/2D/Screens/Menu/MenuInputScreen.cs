@@ -45,7 +45,8 @@ namespace ClassicalSharp {
 				ChangeSetting();
 				return true;
 			}
-			if( inputWidget == null ) return true;
+			if( inputWidget == null ) 
+				return key < Key.F1 || key > Key.F35;
 			return inputWidget.HandlesKeyDown( key );
 		}
 		

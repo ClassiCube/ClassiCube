@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 				game.SetNewScreen( null );
 				return true;
 			}
-			return selectedWidget == null ? true :
+			return selectedWidget == null ? (key < Key.F1 || key > Key.F35) :
 				selectedWidget.HandlesKeyDown( key );
 		}
 		

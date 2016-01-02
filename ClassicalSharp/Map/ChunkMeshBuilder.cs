@@ -137,6 +137,7 @@ namespace ClassicalSharp {
 			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
 			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
 			this.minBB = min; this.maxBB = max;
+			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
 			fullBright = info.FullBright[tile];
 			isTranslucent = info.IsTranslucent[tile];

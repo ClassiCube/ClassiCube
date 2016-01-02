@@ -168,8 +168,8 @@ namespace ClassicalSharp {
 			int offset = (lightFlags >> TileSide.Left) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
-			float v1 = vOrigin + minBB.Y * invVerElementSize;
-			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				X >= offset ? (Y > map.heightmap[(Z * width) + (X - offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
@@ -187,8 +187,8 @@ namespace ClassicalSharp {
 			int offset = (lightFlags >> TileSide.Right) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
-			float v1 = vOrigin + minBB.Y * invVerElementSize;
-			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;	
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
@@ -206,8 +206,8 @@ namespace ClassicalSharp {
 			int offset = (lightFlags >> TileSide.Front) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Y * invVerElementSize;
-			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
@@ -225,8 +225,8 @@ namespace ClassicalSharp {
 			int offset = (lightFlags >> TileSide.Back) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Y * invVerElementSize;
-			float v2 = vOrigin + maxBB.Y * invVerElementSize * 15.99f/16f;	
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;	
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
