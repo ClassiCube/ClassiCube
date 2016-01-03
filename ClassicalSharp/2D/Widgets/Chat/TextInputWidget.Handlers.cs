@@ -89,7 +89,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		string originalText;
 		void UpKey() {
+			if( typingLogPos == game.Chat.InputLog.Count )
+				originalText = chatInputText.ToString();
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos--;
 				if( typingLogPos < 0 ) typingLogPos = 0;
@@ -107,6 +110,7 @@ namespace ClassicalSharp {
 				chatInputText.Clear();
 				if( typingLogPos >= game.Chat.InputLog.Count ) {
 					typingLogPos = game.Chat.InputLog.Count;
+					chatInputText.Append( 0, originalText );
 				} else {
 					chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}

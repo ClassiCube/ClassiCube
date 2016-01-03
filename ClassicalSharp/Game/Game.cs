@@ -365,7 +365,7 @@ namespace ClassicalSharp {
 			//else if( Camera == forwardThirdPersonCam ) Camera = firstPersonZoomCam;
 			else Camera = firstPersonCam;
 
-			if( !LocalPlayer.CanUseThirdPersonCamera )
+			if( !LocalPlayer.CanUseThirdPersonCamera || !LocalPlayer.HacksEnabled )
 				Camera = firstPersonCam;
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;

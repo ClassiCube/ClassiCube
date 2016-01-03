@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		                                       new TextureRec( 0, 66/256f, 200/256f, 20/256f ) );
 		static Texture selectedTex = new Texture( 0, 0, 0, 0, 0,
 		                                         new TextureRec( 0, 86/256f, 200/256f, 20/256f ) );
-		static Texture disdabledTex = new Texture( 0, 0, 0, 0, 0,
+		static Texture disabledTex = new Texture( 0, 0, 0, 0, 0,
 		                                         new TextureRec( 0, 46/256f, 200/256f, 20/256f ) );		
 		public string Text;
 		public void SetText( string text ) {
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 			if( !texture.IsValid )
 				return;
 			Texture backTex = Active ? selectedTex : shadowTex;
-			if( Disabled ) backTex = disdabledTex;
+			if( Disabled ) backTex = disabledTex;
 			
 			backTex.ID = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
 			backTex.X1 = X; backTex.Y1 = Y;
