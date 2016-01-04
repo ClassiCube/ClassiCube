@@ -48,10 +48,10 @@ namespace Launcher2 {
 			shouldExit = Options.GetBool( OptionsKey.AutoCloseLauncher, false );
 			if( data == null ) return;
 			
-			Options.Set( "launcher-username", data.Username );
+			Options.Set( "launcher-username", data.RealUsername );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
-			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.Username ) );
+			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.RealUsername ) );
 			Options.Set( "launcher-ccskins", classiCubeSkins );		
 			Options.Save();
 		}

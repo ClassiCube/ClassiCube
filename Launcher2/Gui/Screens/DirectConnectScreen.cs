@@ -134,10 +134,10 @@ namespace Launcher2 {
 			if( !Options.Load() )
 				return;
 			
-			Options.Set( "launcher-dc-username", data.Username );
+			Options.Set( "launcher-dc-username", data.RealUsername );
 			Options.Set( "launcher-dc-ip", data.Ip );
 			Options.Set( "launcher-dc-port", data.Port );
-			Options.Set( "launcher-dc-mppass", Secure.Encode( data.Mppass, data.Username ) );
+			Options.Set( "launcher-dc-mppass", Secure.Encode( data.Mppass, data.RealUsername ) );
 			Options.Set( "launcher-dc-ccskins", ccSkins );
 			Options.Save();
 		}
@@ -159,6 +159,8 @@ namespace Launcher2 {
 			Client.Start( data, ccSkins, ref game.ShouldExit );
 		}
 		
+		static Random rnd = new Random();
+		static byte[] rndBytes = new byte[8];
 		ClientStartData GetStartData( string user, string mppass, string ip, string port ) {
 			SetStatus( "" );
 			
@@ -179,7 +181,13 @@ namespace Launcher2 {
 			
 			if( String.IsNullOrEmpty( mppass ) )
 				mppass = "(none)";
-			return new ClientStartData( user, mppass, ip, port );
+			
+			ClientStartData data = new ClientStartData( user, mppass, ip, port );
+			if( user.ToLowerInvariant() == "rand()" || user.ToLowerInvariant() == "random()") {
+				rnd.NextBytes( rndBytes );
+				data.Username = Convert.ToBase64String( rndBytes ).TrimEnd( '=' );
+			}
+			return data;
 		}
 	}
 }

@@ -6,6 +6,8 @@ namespace Launcher2 {
 		
 		public string Username;
 		
+		public string RealUsername;
+		
 		public string Mppass;
 		
 		public string Ip;
@@ -17,6 +19,7 @@ namespace Launcher2 {
 		
 		public ClientStartData( string user, string mppass, string ip, string port ) {
 			Username = user;
+			RealUsername = user;
 			Mppass = mppass;
 			Ip = ip;
 			Port = port;

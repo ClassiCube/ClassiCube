@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 			if( args.Length == 0 || args.Length == 1 ) {
 				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
 				
-				using( Game game = new Game( "LocalPlayer", null, skinServer, nullContext, width, height ) )
+				using( Game game = new Game( "Singleplayer", null, skinServer, nullContext, width, height ) )
 					game.Run();
 			} else if( args.Length < 4 ) {
 				Utils.LogDebug( "ClassicalSharp.exe is only the raw client. You must either use the launcher or"

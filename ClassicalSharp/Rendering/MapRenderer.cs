@@ -36,11 +36,13 @@ namespace ClassicalSharp {
 		ChunkInfo[] chunks, unsortedChunks;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
+		bool[] usedTranslucent;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			usedTranslucent = new bool[_1DUsed];
 			
 			builder = new ChunkMeshBuilder( game );
 			api = game.Graphics;
@@ -91,10 +93,12 @@ namespace ClassicalSharp {
 			}
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			usedTranslucent = new bool[_1DUsed];
 		}
 		
 		void BlockDefinitionChanged( object sender, EventArgs e ) {
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			usedTranslucent = new bool[_1DUsed];
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -316,6 +320,7 @@ namespace ClassicalSharp {
 			api.AlphaBlending = false;
 			api.ColourWrite = false;
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				usedTranslucent[batch] = false;
 				RenderTranslucentBatchDepthPass( batch );
 			}
 			
@@ -326,6 +331,7 @@ namespace ClassicalSharp {
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( !usedTranslucent[batch] ) continue;
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}

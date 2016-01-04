@@ -463,7 +463,7 @@ namespace ClassicalSharp {
 		
 		public Game( string username, string mppass, string skinServer,
 		            bool nullContext, int width, int height )
-			: base( width, height, GraphicsMode.Default, Program.AppName, nullContext, 0, DisplayDevice.Default ) {
+			: base( width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default ) {
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
