@@ -231,6 +231,7 @@
     <Compile Include="Rendering\EnvRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
     <Compile Include="Rendering\MapRenderer.Rendering.cs" />
+    <Compile Include="Rendering\MapRenderer.Sorting.cs" />
     <Compile Include="Rendering\MinimalEnvRenderer.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />
     <Compile Include="Rendering\MapBordersRenderer.cs" />

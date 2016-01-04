@@ -18,6 +18,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.NormalParts[batch];
 				if( part.IndicesCount == 0 ) continue;
+				usedNormal[batch] = true;
 				if( part.IndicesCount > maxIndices ) {
 					DrawBigPart( info, ref part );
 				} else {
@@ -49,7 +50,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
-				usedTranslucent[batch] = true;
+				usedTransluent[batch] = true;
 				DrawTranslucentPart( info, ref part );
 			}
 		}

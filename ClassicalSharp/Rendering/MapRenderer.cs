@@ -34,15 +34,16 @@ namespace ClassicalSharp {
 		
 		int width, height, length;
 		ChunkInfo[] chunks, unsortedChunks;
+		int[] distances;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
-		bool[] usedTranslucent;
+		bool[] usedTransluent, usedNormal, pendingTranslucent, pendingNormal;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
-			usedTranslucent = new bool[_1DUsed];
+			RecalcBooleans( true );
 			
 			builder = new ChunkMeshBuilder( game );
 			api = game.Graphics;
@@ -93,12 +94,12 @@ namespace ClassicalSharp {
 			}
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
-			usedTranslucent = new bool[_1DUsed];
+			RecalcBooleans( true );
 		}
 		
 		void BlockDefinitionChanged( object sender, EventArgs e ) {
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
-			usedTranslucent = new bool[_1DUsed];
+			RecalcBooleans( true );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -108,6 +109,20 @@ namespace ClassicalSharp {
 			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			builder.OnNewMap();
+		}
+		
+		void RecalcBooleans( bool sizeChanged ) {
+			if( sizeChanged ) {
+				usedTransluent = new bool[_1DUsed];
+				usedNormal = new bool[_1DUsed];
+				pendingTranslucent = new bool[_1DUsed];
+				pendingNormal = new bool[_1DUsed];
+			}
+			
+			for( int i = 0; i < _1DUsed; i++ ) {
+				pendingTranslucent[i] = true; usedTransluent[i] = false;
+				pendingNormal[i] = true; usedNormal[i] = false;
+			}
 		}
 		
 		int chunksX, chunksY, chunksZ;
@@ -124,13 +139,15 @@ namespace ClassicalSharp {
 			distances = new int[chunks.Length];
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
+			lastCamPos = new Vector3( float.MaxValue );
+			lastYaw = float.MaxValue;
+			lastPitch = float.MaxValue;
 		}
 		
 		void ClearChunkCache() {
 			if( chunks == null ) return;
-			for( int i = 0; i < chunks.Length; i++ ) {
+			for( int i = 0; i < chunks.Length; i++ )
 				DeleteChunk( chunks[i] );
-			}
 		}
 		
 		void DeleteChunk( ChunkInfo info ) {
@@ -226,41 +243,6 @@ namespace ClassicalSharp {
 			RenderTranslucent();
 		}
 
-		int[] distances;
-		void UpdateSortOrder() {
-			Vector3 cameraPos = game.CurrentCameraPos;
-			Vector3I newChunkPos = Vector3I.Floor( cameraPos );
-			newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
-			newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;
-			newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;
-			if( newChunkPos == chunkPos ) return;
-			
-			chunkPos = newChunkPos;
-			for( int i = 0; i < distances.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ, chunkPos.X, chunkPos.Y, chunkPos.Z );
-			}
-			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
-			Array.Sort( distances, chunks );
-			
-			Vector3I pPos = newChunkPos;
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				int dX1 = (info.CentreX - 8) - pPos.X, dX2 = (info.CentreX + 8) - pPos.X;
-				int dY1 = (info.CentreY - 8) - pPos.Y, dY2 = (info.CentreY + 8) - pPos.Y;
-				int dZ1 = (info.CentreZ - 8) - pPos.Z, dZ2 = (info.CentreZ + 8) - pPos.Z;
-				
-				// Back face culling: make sure that the chunk is definitely entirely back facing.
-				info.DrawLeft = !(dX1 <= 0 && dX2 <= 0);
-				info.DrawRight = !(dX1 >= 0 && dX2 >= 0);
-				info.DrawFront = !(dZ1 <= 0 && dZ2 <= 0);
-				info.DrawBack = !(dZ1 >= 0 && dZ2 >= 0);
-				info.DrawBottom = !(dY1 <= 0 && dY2 <= 0);
-				info.DrawTop = !(dY1 >= 0 && dY2 >= 0);
-			}
-			//SimpleOcclusionCulling();
-		}
-		
 		int chunksTarget = 4;
 		const double targetTime = (1.0 / 30) + 0.01;
 		void UpdateChunks( double deltaTime ) {
@@ -290,7 +272,18 @@ namespace ClassicalSharp {
 				info.Visible = inRange &&
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
+			
+			LocalPlayer p = game.LocalPlayer;
+			Vector3 cameraPos = game.CurrentCameraPos;
+			if( chunksUpdatedThisFrame == 0 && cameraPos == lastCamPos 
+			   && p.YawDegrees == lastYaw && p.PitchDegrees == lastPitch ) return;
+			
+			lastCamPos = cameraPos;
+			lastYaw = p.YawDegrees; lastPitch = p.PitchDegrees;
+			RecalcBooleans( false );
 		}
+		Vector3 lastCamPos;
+		float lastYaw, lastPitch;
 		
 		// Render solid and fully transparent to fill depth buffer.
 		// These blocks are treated as having an alpha value of either none or full.
@@ -301,8 +294,11 @@ namespace ClassicalSharp {
 			api.AlphaTest = true;
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				api.BindTexture( texIds[batch] );
-				RenderNormalBatch( batch );
+				if( pendingNormal[batch] || usedNormal[batch] ) {
+					api.BindTexture( texIds[batch] );
+					RenderNormalBatch( batch );
+					pendingNormal[batch] = false;
+				}
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
@@ -320,8 +316,10 @@ namespace ClassicalSharp {
 			api.AlphaBlending = false;
 			api.ColourWrite = false;
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				usedTranslucent[batch] = false;
-				RenderTranslucentBatchDepthPass( batch );
+				if( pendingTranslucent[batch] || usedTransluent[batch] ) {
+					RenderTranslucentBatchDepthPass( batch );
+					pendingTranslucent[batch] = false;
+				}
 			}
 			
 			// Then actually draw the transluscent blocks
@@ -331,7 +329,7 @@ namespace ClassicalSharp {
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( !usedTranslucent[batch] ) continue;
+				if( !usedTransluent[batch] ) continue;
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
