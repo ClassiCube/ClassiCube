@@ -26,7 +26,6 @@ namespace ClassicalSharp {
 		public void Send( string text, bool partial ) {
 			text = text.TrimEnd( trimChars );
 			if( String.IsNullOrEmpty( text ) ) return;
-			InputLog.Add( text );
 			
 			if( CommandManager.IsCommandPrefix( text ) ) {
 				game.CommandManager.Execute( text );

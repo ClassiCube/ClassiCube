@@ -210,10 +210,11 @@ namespace ClassicalSharp {
 		
 		void SendInBuffer() {
 			if( chatInputText.Empty ) return;
+			string allText = chatInputText.GetString();
+			game.Chat.InputLog.Add( allText );
 			
 			if( game.Network.ServerSupportsPatialMessages ) {
-				// don't automatically word wrap the message.
-				string allText = chatInputText.GetString();
+				// don't automatically word wrap the message.				
 				while( allText.Length > 64 ) {
 					game.Chat.Send( allText.Substring( 0, 64 ), true );
 					allText = allText.Substring( 64 );
