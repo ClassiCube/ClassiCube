@@ -100,6 +100,8 @@ namespace Launcher2 {
 
 		void DisplayWebException( WebException ex, string action ) {
 			ErrorHandler.LogError( action, ex );
+			bool sslCertError = ex.Status == WebExceptionStatus.TrustFailure ||
+				(ex.Status == WebExceptionStatus.SendFailure && OpenTK.Configuration.RunningOnMono);
 			if( ex.Status == WebExceptionStatus.Timeout ) {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + "Timed out while connecting to classicube.net.";
@@ -116,7 +118,7 @@ namespace Launcher2 {
 					Environment.NewLine + "Unable to resolve classicube.net" +
 					Environment.NewLine + "you may not be connected to the internet.";
 				SetStatus( text );
-			} else if( ex.Status == WebExceptionStatus.TrustFailure ) {
+			} else if( sslCertError ) {
 				string text = "&eFailed to validate SSL certificate";
 				SetStatus( text );
 				using( drawer ) {
