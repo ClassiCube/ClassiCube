@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 		Font chatFont, chatInputFont, chatUnderlineFont, announcementFont;
 		public override void Init() {
 			int fontSize = (int)(12 * game.GuiChatScale);
-			Utils.Clamp( ref fontSize, 8, 60 );		
+			Utils.Clamp( ref fontSize, 8, 60 );
 			chatFont = new Font( "Arial", fontSize );
 			chatInputFont = new Font( "Arial", fontSize, FontStyle.Bold );
 			chatUnderlineFont = new Font( "Arial", fontSize, FontStyle.Underline );
@@ -151,7 +151,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		public override void Dispose() {			
+		public override void Dispose() {
 			if( HandlesAllInput ) {
 				game.chatInInputBuffer = textInput.chatInputText.ToString();
 				if( game.CursorVisible )
@@ -307,6 +307,13 @@ namespace ClassicalSharp {
 							" may have viruses, or things you may not want to open/see."
 						) );
 					} else if( game.ClickableChat ) {
+						for( int i = 0; i < text.Length; i++ ) {
+							if( !IsValidInputChar( text[i] ) ) {
+								Console.WriteLine( i + "," + text[i] );
+								game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
+								return true;
+							}
+						}
 						textInput.AppendText( text );
 					}
 					return true;

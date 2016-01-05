@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 	public sealed partial class TextInputWidget : Widget {
 
 		public override bool HandlesKeyPress( char key ) {
-			if( chatInputText.Length < len && IsValidChar( key ) ) {
+			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
 				if( caretPos == -1 ) {
 					chatInputText.Append( chatInputText.Length, key );
 				} else {
@@ -141,8 +141,8 @@ namespace ClassicalSharp {
 				if( String.IsNullOrEmpty( text ) ) return true;
 				
 				for( int i = 0; i < text.Length; i++ ) {
-					if( !IsValidChar( text[i] ) ) {
-						game.Chat.Add( "&eClipboard contained characters that can't be sent." );
+					if( !IsValidInputChar( text[i] ) ) {
+						game.Chat.Add( "&eClipboard contained characters that can't be sent on this server." );
 						return true;
 					}
 				}

@@ -63,6 +63,15 @@ namespace ClassicalSharp {
 			if( mode == Anchor.BottomOrRight) return axisSize - elemSize - offset;
 			return (axisSize - elemSize) / 2 + offset;
 		}
+		
+		protected bool IsValidInputChar( char c ) {
+			if( c >= ' ' && c <= '~' ) return true; // ascii
+			
+			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
+				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
+			bool supportsCP437 = game.Network.ServerSupportsFullCP437;
+			return supportsCP437 && isCP437;
+		}
 	}
 	
 	public enum Anchor {

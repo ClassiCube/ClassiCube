@@ -188,16 +188,6 @@ namespace ClassicalSharp {
 			altText.Y = altText.texture.Y1;
 		}
 		
-		bool IsValidChar( char c ) {
-			if( c == '&' ) return false;
-			if( c >= ' ' && c <= '~' ) return true; // ascii
-			
-			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
-				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
-			bool supportsCP437 = game.Network.ServerSupportsFullCP437;
-			return supportsCP437 && isCP437;
-		}
-		
 		public void SendTextInBufferAndReset() {
 			SendInBuffer();
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
