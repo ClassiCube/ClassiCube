@@ -195,6 +195,7 @@ namespace ClassicalSharp {
 			caretPos = -1;
 			Dispose();
 			Height = defaultHeight;
+			originalText = null;
 			altText.SetActive( false );
 		}
 		

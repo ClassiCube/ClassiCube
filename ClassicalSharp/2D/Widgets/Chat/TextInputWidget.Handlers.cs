@@ -110,7 +110,8 @@ namespace ClassicalSharp {
 				chatInputText.Clear();
 				if( typingLogPos >= game.Chat.InputLog.Count ) {
 					typingLogPos = game.Chat.InputLog.Count;
-					chatInputText.Append( 0, originalText );
+					if( originalText != null )
+						chatInputText.Append( 0, originalText );
 				} else {
 					chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
