@@ -410,7 +410,7 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleCpeRemoveBlockDefinition() {
-			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8() );
+			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
 		}
 		
@@ -434,7 +434,7 @@ namespace ClassicalSharp {
 		byte HandleCpeDefineBlockCommonStart() {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
-			info.ResetBlockInfo( block );
+			info.ResetBlockInfo( block, false );
 			
 			info.Name[block] = reader.ReadAsciiString();
 			info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
@@ -478,7 +478,7 @@ namespace ClassicalSharp {
 			info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
 			info.FogColour[block] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
-			info.SetupCullingCache();
+			info.SetupCullingCache( block );
 			info.InitLightOffsets();
 		}
 		

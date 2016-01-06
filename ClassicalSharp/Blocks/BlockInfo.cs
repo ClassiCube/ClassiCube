@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			FullBright[(int)id] = emits;
 		}
 		
-		public void ResetBlockInfo( byte id ) {
+		public void ResetBlockInfo( byte id, bool updateCulling ) {
 			IsTransparent[id] = false;
 			IsTranslucent[id] = false;
 			IsOpaque[id] = true;
@@ -180,7 +180,8 @@ namespace ClassicalSharp {
 			CollideType[id] = BlockCollideType.Solid;
 			SpeedMultiplier[id] = 1;
 			SetAll( 0, (Block)id );
-			SetupCullingCache();
+			if( updateCulling )
+				SetupCullingCache( id );
 			MinBB[id] = Vector3.Zero;
 			MaxBB[id] = Vector3.One;
 			StepSounds[id] = SoundType.None;

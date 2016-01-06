@@ -12,49 +12,63 @@ namespace ClassicalSharp {
 		
 		public bool[] IsAir = new bool[BlocksCount];
 
-		internal void CheckOpaque() {
-			for( int tile = 1; tile < BlocksCount; tile++ ) {
-				if( MinBB[tile] != Vector3.Zero || MaxBB[tile] != Vector3.One ) {
-					IsOpaque[tile] = false;
-					IsTransparent[tile] = true;
-				}
-			}
-		}
-		
 		internal void SetupCullingCache() {
 			IsAir[0] = true;
-			CheckOpaque();
-			for( int i = 0; i < CanStretch.Length; i++ )
-				CanStretch[i] = true;
+			for( int tile = 1; tile < BlocksCount; tile++ )
+				CheckOpaque( tile );
+			for( int tile = 0; tile < CanStretch.Length; tile++ )
+				CanStretch[tile] = true;
 			
 			for( int tileI = 1; tileI < BlocksCount; tileI++ ) {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
 					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
-					bool hidden = IsHidden( tile, neighbour );
-					if( tile == neighbour && !CullWithNeighbours[tile] )
-						hidden = false;
-					Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
-					Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
-					
-					if( IsSprite[tile] ) {
-						SetHidden( tile, neighbour, TileSide.Left, hidden );
-						SetHidden( tile, neighbour, TileSide.Right, hidden );
-						SetHidden( tile, neighbour, TileSide.Front, hidden );
-						SetHidden( tile, neighbour, TileSide.Back, hidden );
-						SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 );
-						SetHidden( tile, neighbour, TileSide.Top, hidden && tMax.Y == 1 );
-					} else {
-						SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
-						SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
-						
-						SetHidden( tile, neighbour, TileSide.Left, hidden && nMax.X == 1 && tMin.X == 0 );
-						SetHidden( tile, neighbour, TileSide.Right, hidden && nMin.X == 0 && tMax.X == 1 );
-						SetHidden( tile, neighbour, TileSide.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
-						SetHidden( tile, neighbour, TileSide.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
-						SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
-						SetHidden( tile, neighbour, TileSide.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
-					}
+					UpdateCulling( tile, neighbour );
 				}
+			}
+		}
+		
+		internal void SetupCullingCache( byte tile ) {
+			IsAir[0] = true;
+			CheckOpaque( tile );
+			CanStretch[tile] = true;
+			
+			for( int other = 1; other < BlocksCount; other++ ) {
+				UpdateCulling( tile, (byte)other );
+				UpdateCulling( (byte)other, tile );
+			}
+		}
+		
+		void CheckOpaque( int tile ) {
+			if( MinBB[tile] != Vector3.Zero || MaxBB[tile] != Vector3.One ) {
+				IsOpaque[tile] = false;
+				IsTransparent[tile] = true;
+			}
+		}
+		
+		void UpdateCulling( byte tile, byte neighbour ) {
+			bool hidden = IsHidden( tile, neighbour );
+			if( tile == neighbour && !CullWithNeighbours[tile] )
+				hidden = false;
+			Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
+			Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
+			
+			if( IsSprite[tile] ) {
+				SetHidden( tile, neighbour, TileSide.Left, hidden );
+				SetHidden( tile, neighbour, TileSide.Right, hidden );
+				SetHidden( tile, neighbour, TileSide.Front, hidden );
+				SetHidden( tile, neighbour, TileSide.Back, hidden );
+				SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 );
+				SetHidden( tile, neighbour, TileSide.Top, hidden && tMax.Y == 1 );
+			} else {
+				SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
+				SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
+				
+				SetHidden( tile, neighbour, TileSide.Left, hidden && nMax.X == 1 && tMin.X == 0 );
+				SetHidden( tile, neighbour, TileSide.Right, hidden && nMin.X == 0 && tMax.X == 1 );
+				SetHidden( tile, neighbour, TileSide.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
+				SetHidden( tile, neighbour, TileSide.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
+				SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
+				SetHidden( tile, neighbour, TileSide.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
 			}
 		}
 		
