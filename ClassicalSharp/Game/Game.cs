@@ -53,11 +53,11 @@ namespace ClassicalSharp {
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
-			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, false );
+			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
-			ClickableChat = Options.GetBool( OptionsKey.ClickableChat, true );
+			ClickableChat = Options.GetBool( OptionsKey.ClickableChat, false );
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );

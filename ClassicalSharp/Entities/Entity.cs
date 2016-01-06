@@ -117,8 +117,9 @@ namespace ClassicalSharp {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are rope. </summary>
 		protected bool TouchesAnyRope() {
-			return TouchesAny( CollisionBounds,
-			                  b => b == (byte)Block.Rope );
+			BoundingBox bounds = CollisionBounds;
+			bounds.Max.Y += 0.5f/16f;
+			return TouchesAny( bounds, b => b == (byte)Block.Rope );
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the

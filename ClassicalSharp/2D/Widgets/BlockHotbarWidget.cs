@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			Height = (int)barHeight;
 			
 			elemSize = 16 * scale;
-			barXOffset = 3 * scale;
+			barXOffset = 3.1f * scale;
 			borderSize = 4 * scale;
 			X = game.Width / 2 - Width / 2;
 			Y = game.Height - Height;
@@ -45,9 +45,10 @@ namespace ClassicalSharp {
 				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 				int y = (int)(game.Height - barHeight / 2);
 				
-				float scale = (elemSize - 6) / 2f;
+				float scale = (elemSize - 8) / 2f;
 				IsometricBlockDrawer.Draw( game, block, scale, x, y );
 			}
+			RenderSelected();
 			graphicsApi.Texturing = false;
 		}
 		
@@ -55,9 +56,13 @@ namespace ClassicalSharp {
 			int texId = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
 			backTex.ID = texId;
 			backTex.Render( graphicsApi );
-			
+		}
+		
+		void RenderSelected() {
+			int texId = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;		
 			int i = game.Inventory.HeldBlockIndex;
 			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
+			
 			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
 			selTex.Render( graphicsApi );

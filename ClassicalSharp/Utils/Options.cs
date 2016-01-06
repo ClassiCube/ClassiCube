@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		public const string Sensitivity = "mousesensitivity";
 		public const string Speed = "speedmultiplier";
 		public const string ChatLines = "chatlines";
-		public const string ClickableChat = "clickablechat";
+		public const string ClickableChat = "chatclickable";
 		public const string ArialChatFont = "arialchatfont";
 		public const string DefaultTexturePack = "defaulttexpack";
 		public const string SingleplayerPhysics = "singleplayerphysics";
@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		public const string InvertMouse = "invertmouse";
 		public const string NoclipSlide = "noclipslide";
 		public const string CameraClipping = "cameraclipping";
-		public const string UseClassicGui = "useclassicgui";
+		public const string UseClassicGui = "useclassictex";
 	}
 	
 	// TODO: implement this

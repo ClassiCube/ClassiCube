@@ -53,7 +53,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 8/16f + 0.6f/16f, 28.5f/16f - 0.2f/16f, 8/16f + 0.6f/16f ); }
+			get { return new Vector3( 8/16f + 0.6f/16f, 28.5f/16f - 0.4f/16f, 8/16f + 0.6f/16f ); }
 		}
 		
 		public override BoundingBox PickingBounds {
