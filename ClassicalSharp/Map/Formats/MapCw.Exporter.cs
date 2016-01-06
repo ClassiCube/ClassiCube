@@ -55,13 +55,13 @@ namespace ClassicalSharp {
 			Vector3 spawn = game.LocalPlayer.Position; // TODO: Maybe also keep spawn too?
 			
 			WriteTag( NbtTagType.Int16 );
-			WriteString( "X" ); WriteInt16( (short)(spawn.X * 32) );
+			WriteString( "X" ); WriteInt16( (short)spawn.X );
 			
 			WriteTag( NbtTagType.Int16 );
-			WriteString( "Y" ); WriteInt16( (short)(spawn.Y * 32) );
+			WriteString( "Y" ); WriteInt16( (short)spawn.Y );
 			
 			WriteTag( NbtTagType.Int16 );
-			WriteString( "Z" ); WriteInt16( (short)(spawn.Z * 32) );
+			WriteString( "Z" ); WriteInt16( (short)spawn.Z );
 			
 			WriteTag( NbtTagType.Int8 );
 			WriteString( "H" ); WriteInt8( 0 );

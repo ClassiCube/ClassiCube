@@ -34,14 +34,20 @@ namespace ClassicalSharp {
 				
 				Dictionary<string, NbtTag> spawn = (Dictionary<string, NbtTag>)children["Spawn"].Value;
 				LocalPlayer p = game.LocalPlayer;
-				p.SpawnPoint.X = (short)spawn["X"].Value / 32f;
-				p.SpawnPoint.Y = (short)spawn["Y"].Value / 32f;
-				p.SpawnPoint.Z = (short)spawn["Z"].Value / 32f;
+				p.SpawnPoint.X = (short)spawn["X"].Value;
+				p.SpawnPoint.Y = (short)spawn["Y"].Value;
+				p.SpawnPoint.Z = (short)spawn["Z"].Value;
 				
 				map.Uuid = new Guid( (byte[])children["UUID"].Value );
 				width = (short)children["X"].Value;
 				height = (short)children["Y"].Value;
 				length = (short)children["Z"].Value;
+				
+				// Older versions incorrectly multiplied spawn coords by * 32, so we check for that.
+				if (p.SpawnPoint.X < 0 || p.SpawnPoint.X >= width || p.SpawnPoint.Y < 0 ||
+				    p.SpawnPoint.Y >= height || p.SpawnPoint.Z < 0 || p.SpawnPoint.Z >= length) {
+					p.SpawnPoint.X /= 32; p.SpawnPoint.Y /= 32; p.SpawnPoint.Z /= 32;
+				}
 				return (byte[])children["BlockArray"].Value;
 			}
 		}
