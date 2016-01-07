@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 	

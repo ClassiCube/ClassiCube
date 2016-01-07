@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+#if ANDROID
+using Android.Graphics;
+using Java.Nio;
+#endif
 
 namespace ClassicalSharp {
 
@@ -38,6 +42,24 @@ namespace ClassicalSharp {
 			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb;
 		}
 		
+		/// <summary> Returns a pointer to the start of the y'th scanline. </summary>
+		public int* GetRowPtr( int y ) {
+			return (int*)(scan0Byte + (y * Stride));
+		}
+		
+		public static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
+			for( int y = 0; y < size; y++ ) {
+				int* srcRow = src.GetRowPtr( srcY + y );
+				int* dstRow = dst.GetRowPtr( dstY + y );
+				for( int x = 0; x < size; x++ ) {
+					dstRow[dstX + x] = srcRow[srcX + x];
+				}
+			}
+		}
+		
+		public void Dispose() { UnlockBits(); }
+		
+		#if !ANDROID
 		public void LockBits() {
 			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
 			if( data != null ) return;
@@ -55,33 +77,43 @@ namespace ClassicalSharp {
 			Height = data.Height;
 		}
 		
-		public void Dispose() {
-			UnlockBits();
+		public void UnlockBits() {
+			if( Bitmap == null || data == null )
+				return;
+			Bitmap.UnlockBits( data );
+			data = null;
+			scan0Byte = (byte*)IntPtr.Zero;
+			Scan0 = IntPtr.Zero;
+			Width = Height = Stride = 0;
+		}
+		
+		#else
+		
+		public void LockBits() {
+			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
+			if( data != null ) return;
+
+			data = ByteBuffer.AllocateDirect( Bitmap.Width * Bitmap.Height * 4 );
+			Bitmap.CopyPixelsToBuffer( data );
+			scan0Byte = (byte*)data.GetDirectBufferAddress();
+			Scan0 = data.GetDirectBufferAddress();
+			Stride = Bitmap.Width * 4;
+			Width = Bitmap.Width;
+			Height = Bitmap.Height;
 		}
 		
 		public void UnlockBits() {
-			if( Bitmap != null && data != null ) {
-				Bitmap.UnlockBits( data );
-				data = null;
-				scan0Byte = (byte*)IntPtr.Zero;
-				Scan0 = IntPtr.Zero;
-				Width = Height = Stride = 0;
-			}
+			if( Bitmap == null || data == null )
+				return;
+			data.Rewind();
+			Bitmap.CopyPixelsFromBuffer( data ); // TODO: Only if not readonly
+			data.Dispose();
+
+			data = null;
+			scan0Byte = (byte*)IntPtr.Zero;
+			Scan0 = IntPtr.Zero;
+			Width = Height = Stride = 0;
 		}
-		
-		/// <summary> Returns a pointer to the start of the y'th scanline. </summary>
-		public int* GetRowPtr( int y ) {
-			return (int*)(scan0Byte + (y * Stride));
-		}
-		
-		public static void MovePortion( int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size ) {
-			for( int y = 0; y < size; y++ ) {
-				int* srcRow = src.GetRowPtr( srcY + y );
-				int* dstRow = dst.GetRowPtr( dstY + y );
-				for( int x = 0; x < size; x++ ) {
-					dstRow[dstX + x] = srcRow[srcX + x];
-				}
-			}
-		}
+		#endif
 	}
 }

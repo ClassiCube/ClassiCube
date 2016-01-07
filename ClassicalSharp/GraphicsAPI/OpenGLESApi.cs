@@ -12,7 +12,7 @@ namespace ClassicalSharp.GraphicsAPI {
 	public unsafe class OpenGLESApi : IGraphicsApi {
 		
 		All[] modeMappings;
-		public OpenGLApi() {
+		public OpenGLESApi() {
 			InitFields();
 			int texDims;
 			GL.GetInteger( All.MaxTextureSize, &texDims );

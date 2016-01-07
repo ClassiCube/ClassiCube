@@ -15,6 +15,9 @@ using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 
@@ -279,7 +282,7 @@ namespace ClassicalSharp {
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string file = "screenshot_" + timestamp + ".png";
 			path = Path.Combine( "screenshots", file );
-			Graphics.TakeScreenshot( path, ClientSize );
+			Graphics.TakeScreenshot( path, ClientSize.Width, ClientSize.Height );
 			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;
 		}

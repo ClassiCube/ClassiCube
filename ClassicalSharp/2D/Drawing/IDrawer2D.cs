@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 
@@ -140,7 +143,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Creates a power-of-2 sized bitmap larger or equal to to the given size. </summary>
 		public static Bitmap CreatePow2Bitmap( Size size ) {
-			return new Bitmap( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
+			return Platform.CreateBmp( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );

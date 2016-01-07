@@ -21,6 +21,8 @@ namespace ClassicalSharp {
 			c = new Canvas( bmp );
 			curBmp = bmp;
 		}
+		
+		public override Bitmap ConvertTo32Bpp( Bitmap src ) { return src; }
 
 		public override void DrawRect( FastColour colour, int x, int y, int width, int height ) {
 			RectF rec = new RectF( x, y, x + width, y + height );

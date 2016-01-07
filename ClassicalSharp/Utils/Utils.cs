@@ -2,6 +2,9 @@
 using System.Drawing;
 using OpenTK;
 using OpenTK.Input;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 

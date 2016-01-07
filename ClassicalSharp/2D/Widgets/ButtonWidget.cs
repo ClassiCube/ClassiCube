@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 	

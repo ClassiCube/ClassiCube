@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !ANDROID
+using System;
 using System.Drawing;
 using System.Drawing.Text;
 using ClassicalSharp.GraphicsAPI;
@@ -119,3 +120,4 @@ namespace ClassicalSharp {
 		}
 	}
 }
+#endif

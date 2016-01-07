@@ -39,7 +39,7 @@ namespace ClassicalSharp.TexturePack {
 			IGraphicsApi api = game.Graphics;
 			switch( filename ) {
 				case "terrain.png":
-					game.ChangeTerrainAtlas( new Bitmap( stream ) ); break;
+					game.ChangeTerrainAtlas( Platform.ReadBmp( stream ) ); break;
 				case "mob/chicken.png":
 				case "chicken.png":
 					UpdateTexture( ref cache.ChickenTexId, stream, false ); break;
@@ -79,7 +79,7 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref game.GuiClassicTexId, stream, false ); break;
 				case "animations.png":
 				case "animation.png":
-					game.Animations.SetAtlas( new Bitmap( stream ) ); break;
+					game.Animations.SetAtlas( Platform.ReadBmp( stream ) ); break;
 				case "animations.txt":
 				case "animation.txt":
 					StreamReader reader = new StreamReader( stream );
@@ -95,14 +95,14 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		void SetFontBitmap( Game game, Stream stream ) {
-			Bitmap bmp = new Bitmap( stream );
+			Bitmap bmp = Platform.ReadBmp( stream );
 			game.Drawer2D.SetFontBitmap( bmp );
 			game.Events.RaiseChatFontChanged();
 		}
 		
 		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
 			game.Graphics.DeleteTexture( ref texId );
-			using( Bitmap bmp = new Bitmap( stream ) ) {
+			using( Bitmap bmp = Platform.ReadBmp( stream ) ) {
 				if( setSkinType )
 					game.DefaultPlayerSkinType = Utils.GetSkinType( bmp );
 				

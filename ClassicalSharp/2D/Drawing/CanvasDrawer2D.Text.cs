@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using System.Drawing;
 
 namespace ClassicalSharp {
 
@@ -11,7 +12,7 @@ namespace ClassicalSharp {
 		Bitmap measuringBmp;
 		Canvas measuringC;
 		
-		public GdiPlusDrawer2D( IGraphicsApi graphics ) {
+		public CanvasDrawer2D( IGraphicsApi graphics ) {
 			this.graphics = graphics;		
 			measuringBmp = Bitmap.CreateBitmap( 1, 1, Bitmap.Config.Argb8888 );
 			measuringC = new Canvas( measuringBmp );

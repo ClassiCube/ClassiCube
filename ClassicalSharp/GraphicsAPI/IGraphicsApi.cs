@@ -202,7 +202,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void PopMatrix();
 		
 		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
-		public abstract void TakeScreenshot( string output, Size size );
+		public abstract void TakeScreenshot( string output, int width, int height );
 		
 		protected abstract void MakeApiInfo();
 		

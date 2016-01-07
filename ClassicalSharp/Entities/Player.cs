@@ -3,6 +3,9 @@ using System.Drawing;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using OpenTK;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 

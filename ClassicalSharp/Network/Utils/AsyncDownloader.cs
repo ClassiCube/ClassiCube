@@ -196,7 +196,7 @@ namespace ClassicalSharp.Network {
 		object DownloadContent( Request request, HttpWebResponse response ) {
 			if( request.Type == RequestType.Bitmap ) {
 				MemoryStream data = DownloadBytes( response );
-				return new Bitmap( data );
+				return Platform.ReadBmp( data );
 			} else if( request.Type == RequestType.String ) {
 				MemoryStream data = DownloadBytes( response );
 				byte[] rawBuffer = data.GetBuffer();

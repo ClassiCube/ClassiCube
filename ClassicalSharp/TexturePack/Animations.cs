@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using ClassicalSharp.GraphicsAPI;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.TexturePack {
 

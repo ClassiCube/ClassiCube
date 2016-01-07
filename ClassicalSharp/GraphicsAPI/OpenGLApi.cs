@@ -1,4 +1,4 @@
-﻿#if !USE_DX
+﻿#if !USE_DX && !ANDROID
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -405,11 +405,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
-		public override void TakeScreenshot( string output, Size size ) {
-			using( Bitmap bmp = new Bitmap( size.Width, size.Height, BmpPixelFormat.Format32bppRgb ) ) { // ignore alpha component
-				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
-					GL.ReadPixels( 0, 0, size.Width, size.Height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
-				}
+		public override void TakeScreenshot( string output, int width, int height ) {
+			using( Bitmap bmp = new Bitmap( width, height, BmpPixelFormat.Format32bppRgb ) ) { // ignore alpha component
+				using( FastBitmap fastBmp = new FastBitmap( bmp, true ) )
+					GL.ReadPixels( 0, 0, width, height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0 );
 				bmp.RotateFlip( RotateFlipType.RotateNoneFlipY );
 				bmp.Save( output, ImageFormat.Png );
 			}
