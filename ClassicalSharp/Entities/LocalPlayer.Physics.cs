@@ -87,11 +87,11 @@ namespace ClassicalSharp {
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
-				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, yMul );
 			} else if( TouchesAnyLava() && !flying && !noClip ) {
-				MoveNormal( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, yMul );
 			} else if( TouchesAnyRope() && !flying && !noClip ) {
-				MoveNormal( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, 1 );
+				MoveNormal( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, yMul );
 			} else {
 				float factor = !(flying || noClip) && onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : normalGrav;

@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		int[] distances;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
-		bool[] usedTransluent, usedNormal, pendingTranslucent, pendingNormal;
+		bool[] usedTranslucent, usedNormal, pendingTranslucent, pendingNormal;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
@@ -113,14 +113,14 @@ namespace ClassicalSharp {
 		
 		void RecalcBooleans( bool sizeChanged ) {
 			if( sizeChanged ) {
-				usedTransluent = new bool[_1DUsed];
+				usedTranslucent = new bool[_1DUsed];
 				usedNormal = new bool[_1DUsed];
 				pendingTranslucent = new bool[_1DUsed];
 				pendingNormal = new bool[_1DUsed];
 			}
 			
 			for( int i = 0; i < _1DUsed; i++ ) {
-				pendingTranslucent[i] = true; usedTransluent[i] = false;
+				pendingTranslucent[i] = true; usedTranslucent[i] = false;
 				pendingNormal[i] = true; usedNormal[i] = false;
 			}
 		}
@@ -316,7 +316,7 @@ namespace ClassicalSharp {
 			api.AlphaBlending = false;
 			api.ColourWrite = false;
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( pendingTranslucent[batch] || usedTransluent[batch] ) {
+				if( pendingTranslucent[batch] || usedTranslucent[batch] ) {
 					RenderTranslucentBatchDepthPass( batch );
 					pendingTranslucent[batch] = false;
 				}
@@ -329,7 +329,7 @@ namespace ClassicalSharp {
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( !usedTransluent[batch] ) continue;
+				if( !usedTranslucent[batch] ) continue;
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}

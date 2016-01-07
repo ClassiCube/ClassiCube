@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
-				usedTransluent[batch] = true;
+				usedTranslucent[batch] = true;
 				DrawTranslucentPart( info, ref part );
 			}
 		}

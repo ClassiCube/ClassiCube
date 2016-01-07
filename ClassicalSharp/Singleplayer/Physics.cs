@@ -249,7 +249,7 @@ namespace ClassicalSharp.Singleplayer {
 			byte block = map.mapData[posIndex];
 			if( block == (byte)Block.Lava || block == (byte)Block.StillLava ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
-			} else if( info.CollideType[block] == BlockCollideType.WalkThrough ) {
+			} else if( info.CollideType[block] == BlockCollideType.WalkThrough && block != (byte)Block.Rope ) {
 				if( CheckIfSponge( x, y, z ) ) return;
 				Water.Enqueue( defWaterTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Water );
@@ -291,7 +291,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		static byte[] oldBlock = new byte[] { (byte)Block.Air, (byte)Block.StillWater,
-			(byte)Block.Water, (byte)Block.StillLava, (Byte)Block.Lava };
+			(byte)Block.Water, (byte)Block.StillLava, (byte)Block.Lava };
 		static uint MakeFallingFlags( byte above ) {
 			byte flags = 2;
 			if( above == (byte)Block.StillWater ) flags |= 0x04; // 1
