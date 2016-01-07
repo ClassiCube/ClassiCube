@@ -265,8 +265,6 @@ namespace ClassicalSharp {
 				} else if( key == Key.PageDown ) {
 					chatIndex += chatLines;
 					ResetIndex();
-				} else if( key == game.Mapping( KeyBinding.HideGui ) ) {
-					game.HideGui = !game.HideGui;
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
@@ -291,7 +289,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( !HandlesAllInput ) return false;
+			if( !HandlesAllInput || game.HideGui ) return false;
 			if( normalChat.Bounds.Contains( mouseX, mouseY ) ) {
 				int height = normalChat.GetUsedHeight();
 				int y = normalChat.Y + normalChat.Height - height;

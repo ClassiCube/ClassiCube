@@ -55,6 +55,23 @@ namespace Launcher2 {
 		}
 		
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+			AdjustSelectedColour( e.Delta );
+		}
+		
+		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Left )
+				AdjustSelectedColour( -1 );
+			else if( e.Key == Key.Right)
+				AdjustSelectedColour( +1 );
+			else if( e.Key == Key.Up )
+				AdjustSelectedColour( +10 );
+			else if( e.Key == Key.Down )
+				AdjustSelectedColour( -10 );
+			else
+				base.KeyDown( sender, e );
+		}
+		
+		void AdjustSelectedColour( int delta ) {
 			if( lastInput == null ) return;
 			int index = Array.IndexOf<LauncherWidget>( widgets, lastInput );
 			if( index >= 15 ) return;
@@ -62,7 +79,7 @@ namespace Launcher2 {
 			byte col;
 			if( !Byte.TryParse( lastInput.Text, out col ) ) 
 				return;
-			int newCol = col + e.Delta;
+			int newCol = col + delta;
 			
 			Utils.Clamp( ref newCol, 0, 255 );
 			lastInput.Text = newCol.ToString();

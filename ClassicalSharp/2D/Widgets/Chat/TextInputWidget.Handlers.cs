@@ -8,6 +8,8 @@ namespace ClassicalSharp {
 	public sealed partial class TextInputWidget : Widget {
 
 		public override bool HandlesKeyPress( char key ) {
+			if( game.HideGui )
+				return true;
 			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
 				if( caretPos == -1 ) {
 					chatInputText.Append( chatInputText.Length, key );
@@ -23,6 +25,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
+			if( game.HideGui )
+				return key < Key.F1 || key > Key.F35;
 			if( key == Key.Down ) DownKey();
 			else if( key == Key.Up ) UpKey();
 			else if( key == Key.Left ) LeftKey();

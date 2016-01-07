@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 				} else {
 					const string format = "&eChanged mapping \"{0}\" from &7{1} &eto &7{2}&e.";
 					statusWidget.SetText( String.Format( format, descriptions[index], oldKey, key ) );
-					string text = descriptions[index] + " : " + keyNames[(int)key];
+					string text = descriptions[index] + ": " + keyNames[(int)key];
 					
 					curWidget.SetText( text );
 					map[mapping] = key;
