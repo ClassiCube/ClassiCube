@@ -339,7 +339,7 @@ namespace ClassicalSharp {
 			game.Animations.Dispose();
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
 
-			if( url.EndsWith( ".zip" ) )
+			if( url.Contains( ".zip" ) )
 				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
 			else
 				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );

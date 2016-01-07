@@ -79,19 +79,19 @@ namespace ClassicalSharp {
 			FastColour col = colNormal;		
 			float uOrigin = rec.U1, vOrigin = rec.V1;
 			
-			rec.U1 = uOrigin + minBB.Z * invElemSize;
-			rec.U2 = uOrigin + maxBB.Z * invElemSize * 15.99f/16f;
-			rec.V1 = vOrigin + minBB.X * invElemSize;
-			rec.V2 = vOrigin + maxBB.X * invElemSize * 15.99f/16f;
+			rec.U1 = uOrigin + minBB.X * invElemSize;
+			rec.U2 = uOrigin + maxBB.X * invElemSize * 15.99f/16f;
+			rec.V1 = vOrigin + minBB.Z * invElemSize;
+			rec.V2 = vOrigin + maxBB.Z * invElemSize * 15.99f/16f;
 
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + y,
-			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + y,
-			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + y,
-			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V1, col );
+			                                                    pos.Z + Make( minBB.Z ), rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + y,
 			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + y,
+			                                                    pos.Z + Make( maxBB.Z ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + y,
+			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V2, col );
 		}
 
 		static void ZQuad( byte block, float z, int side ) {
