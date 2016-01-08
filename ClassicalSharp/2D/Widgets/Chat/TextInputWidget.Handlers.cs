@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 			else if( game.Network.ServerSupportsFullCP437 &&
 			        key == game.InputHandler.Keys[KeyBinding.ExtendedInput] )
 				altText.SetActive( !altText.Active );
-			else if( !OtherKey( key ) && controlDown ) return false;
+			else if( controlDown && !OtherKey( key ) ) return false;
 			
 			return true;
 		}
