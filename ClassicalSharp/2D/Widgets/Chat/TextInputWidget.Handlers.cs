@@ -27,23 +27,40 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyDown( Key key ) {
 			if( game.HideGui )
 				return key < Key.F1 || key > Key.F35;
-			if( key == Key.Down ) DownKey();
-			else if( key == Key.Up ) UpKey();
-			else if( key == Key.Left ) LeftKey();
-			else if( key == Key.Right ) RightKey();
-			else if( key == Key.BackSpace ) BackspaceKey();
+			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
+			
+			if( key == Key.Down ) DownKey( controlDown );
+			else if( key == Key.Up ) UpKey( controlDown );
+			else if( key == Key.Left ) LeftKey( controlDown );
+			else if( key == Key.Right ) RightKey( controlDown );
+			else if( key == Key.BackSpace ) BackspaceKey( controlDown );
 			else if( key == Key.Delete ) DeleteKey();
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
 			else if( game.Network.ServerSupportsFullCP437 &&
 			        key == game.InputHandler.Keys[KeyBinding.ExtendedInput] )
 				altText.SetActive( !altText.Active );
-			else if( !OtherKey( key ) ) return false;
+			else if( !OtherKey( key ) && controlDown ) return false;
 			
 			return true;
 		}
 		
-		void BackspaceKey() {
+		void BackspaceKey( bool controlDown ) {
+			if( controlDown ) {
+				if( caretPos == -1 ) 
+					caretPos = chatInputText.Length - 1;
+				int len = chatInputText.GetBackLength( caretPos );
+				caretPos -= len;
+				
+				if( caretPos < 0 ) caretPos = 0;
+				for( int i = 0; i <= len; i++ )
+					chatInputText.DeleteAt( caretPos );
+				
+				Dispose();
+				Init();
+				return;
+			}
+			
 			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {
 					chatInputText.DeleteAt( chatInputText.Length - 1 );
@@ -65,15 +82,15 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void RightKey() {
-			if( !chatInputText.Empty && caretPos != -1 ) {
-				caretPos++;
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+		void LeftKey( bool controlDown ) {
+			if( controlDown ) {
+				if( caretPos == -1 ) 
+					caretPos = chatInputText.Length - 1;
+				caretPos -= chatInputText.GetBackLength( caretPos );
 				CalculateCaretData();
+				return;
 			}
-		}
-		
-		void LeftKey() {
+			
 			if( !chatInputText.Empty ) {
 				if( caretPos == -1 ) caretPos = chatInputText.Length;
 				caretPos--;
@@ -82,8 +99,38 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		void RightKey( bool controlDown ) {
+			if( controlDown ) {
+				caretPos += chatInputText.GetForwardLength( caretPos );			
+				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				CalculateCaretData();
+				return;
+			}
+			
+			if( controlDown ) {
+				caretPos += chatInputText.GetForwardLength( caretPos );
+				CalculateCaretData();
+				return;
+			}
+			
+			if( !chatInputText.Empty && caretPos != -1 ) {
+				caretPos++;
+				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				CalculateCaretData();
+			}
+		}
+		
 		string originalText;
-		void UpKey() {
+		void UpKey( bool controlDown ) {
+			if( controlDown ) {
+				int pos = caretPos == -1 ? chatInputText.Length : caretPos;
+				if( pos < 64 ) return;
+				
+				caretPos = pos - 64;
+				CalculateCaretData();
+				return;
+			}
+			
 			if( typingLogPos == game.Chat.InputLog.Count )
 				originalText = chatInputText.ToString();
 			if( game.Chat.InputLog.Count > 0 ) {
@@ -97,7 +144,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void DownKey() {
+		void DownKey( bool controlDown ) {
+			if( controlDown ) {
+				if( caretPos == -1 || caretPos >= (lines - 1) * 64 ) return;
+				caretPos += 64;
+				CalculateCaretData();
+				return;
+			}
+			
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos++;
 				chatInputText.Clear();
@@ -116,7 +170,6 @@ namespace ClassicalSharp {
 		
 		void HomeKey() {
 			if( chatInputText.Empty ) return;
-			
 			caretPos = 0;
 			CalculateCaretData();
 		}
@@ -127,8 +180,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool OtherKey( Key key ) {
-			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
-			if( key == Key.V && controlDown && chatInputText.Length < len ) {
+			if( key == Key.V && chatInputText.Length < len ) {
 				string text = Clipboard.GetText();
 				if( String.IsNullOrEmpty( text ) ) return true;
 				
@@ -140,7 +192,7 @@ namespace ClassicalSharp {
 				}
 				AppendText( text );
 				return true;
-			} else if( key == Key.C && controlDown ) {
+			} else if( key == Key.C ) {
 				if( !chatInputText.Empty ) {
 					Clipboard.SetText( chatInputText.ToString() );
 				}
@@ -183,7 +235,7 @@ namespace ClassicalSharp {
 					if( Contains( trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY ) ) {
 						caretPos = offset + x;
 						CalculateCaretData(); return;
-					}					
+					}
 				}
 				offset += partLens[y];
 			}

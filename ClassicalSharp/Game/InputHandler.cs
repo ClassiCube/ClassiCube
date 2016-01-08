@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 				if( !game.CanPick( game.Map.GetBlock( pos ) ) && inv.CanPlace[block]
 				   && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
-					game.AudioPlayer.PlayDigSound( game.BlockInfo.DigSounds[block] );
+					game.AudioPlayer.PlayDigSound( game.BlockInfo.StepSounds[block] );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
 					game.BlockHandRenderer.SetAnimationClick( false );
 				}

@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : " ";
 				Size charSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTex.Width = charSize.Width;
-				caretCol = FastColour.Scale( FastColour.White, 0.9f );
+				caretCol = FastColour.Scale( FastColour.White, 0.8f );
 			}
 			caretTex.Y1 = sizes[0].Height * indexY + Y;
 			CalculateCaretCol();

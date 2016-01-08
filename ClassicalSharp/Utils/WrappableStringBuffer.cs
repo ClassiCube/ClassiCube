@@ -6,8 +6,6 @@ namespace ClassicalSharp {
 		
 		char[] wrap;
 		
-		public int CaretHexCol;
-		
 		public WrappableStringBuffer( int capacity ) : base( capacity ) {
 			wrap = new char[capacity];
 		}
@@ -110,6 +108,40 @@ namespace ClassicalSharp {
 				total += partLens[yy];
 			}
 			if( x == -1 ) x = partLens[y];
+		}
+		
+		public int GetBackLength( int index ) {
+			if( index <= 0 ) return 0;
+			int start = index;
+			
+			bool lookingSpace = !Char.IsLetter( value[index] );
+			// go back to the end of the previous word
+			if( lookingSpace ) {
+				while( index > 0 && !Char.IsLetter( value[index] ) )
+					index--;
+			}
+			
+			// go back to the start of the current word
+			while( index > 0 && Char.IsLetter( value[index] ) )
+				index--;
+			return (start - index);
+		}
+		
+		public int GetForwardLength( int index ) {
+			if( index == -1 ) return 0;
+			int start = index;
+			
+			bool lookingLetter = Char.IsLetter( value[index] );
+			// go forward to the end of the current word
+			if( lookingLetter ) {
+				while( index < Length && Char.IsLetter( value[index] ) )
+					index++;
+			}
+			
+			// go forward to the start of the next word
+			while( index < Length && !Char.IsLetter( value[index] ) )
+				index++;
+			return index - start;
 		}
 	}
 }
