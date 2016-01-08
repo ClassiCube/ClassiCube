@@ -17,9 +17,13 @@ namespace ClassicalSharp {
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
 				if( flyingUp || jumping ) {
-					Velocity.Y = speeding ? 0.24f : 0.12f;
+					Velocity.Y = 0.12f;
+					if( speeding ) Velocity.Y += 0.12f;
+					if( halfSpeeding ) Velocity.Y += 0.06f;
 				} else if( flyingDown ) {
-					Velocity.Y = speeding ? -0.24f : -0.12f;
+					Velocity.Y -= 0.12f;
+					if( speeding ) Velocity.Y -= 0.12f;
+					if( halfSpeeding ) Velocity.Y -= 0.06f;
 				}
 			} else if( jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
@@ -46,7 +50,9 @@ namespace ClassicalSharp {
 				bool pastJumpPoint = liquidFeet && !liquidRest && (Position.Y % 1 >= 0.4);
 				if( !pastJumpPoint ) {
 					canLiquidJump = true;
-					Velocity.Y += speeding ? 0.08f : 0.04f;
+					Velocity.Y += 0.04f;
+					if( speeding ) Velocity.Y += 0.04f;
+					if( halfSpeeding ) Velocity.Y += 0.02f;					
 				} else if( pastJumpPoint ) {
 					// either A) jump bob in water B) climb up solid on side
 					if( canLiquidJump || (collideX || collideZ) )
@@ -54,13 +60,17 @@ namespace ClassicalSharp {
 					canLiquidJump = false;
 				}
 			} else if( useLiquidGravity ) {
-				Velocity.Y += speeding ? 0.08f : 0.04f;
+				Velocity.Y += 0.04f;
+				if( speeding ) Velocity.Y += 0.04f;
+				if( halfSpeeding ) Velocity.Y += 0.02f;	
 				canLiquidJump = false;
 			} else if( TouchesAnyRope() ) {
 				Velocity.Y += speeding ? 0.15f : 0.10f;
 				canLiquidJump = false;
 			} else if( onGround ) {
-				Velocity.Y = speeding ? jumpVel * 2 : jumpVel;
+				Velocity.Y = jumpVel;
+				if( speeding ) Velocity.Y += jumpVel;
+				if( halfSpeeding ) Velocity.Y += jumpVel / 2;
 				canLiquidJump = false;
 			}
 		}
@@ -79,9 +89,7 @@ namespace ClassicalSharp {
 		void PhysicsTick( float xMoving, float zMoving ) {
 			if( noClip )
 				onGround = false;
-			float multiply = (flying || noClip) ?
-				(speeding ? SpeedMultiplier * 9 : SpeedMultiplier * 1.5f) :
-				(speeding ? SpeedMultiplier : 1);
+			float multiply = GetBaseMultiply();			
 			float modifier = LowestSpeedModifier();
 			float horMul = multiply * modifier;
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
@@ -151,34 +159,19 @@ namespace ClassicalSharp {
 			Velocity *= drag;
 			Velocity.Y -= gravity;
 		}
-		
-		/// <summary> Calculates the jump velocity required such that when a client presses
-		/// the jump binding they will be able to jump up to the given height. </summary>
-		internal void CalculateJumpVelocity( float jumpHeight ) {
-			jumpVel = 0;
-			if( jumpHeight >= 256 ) jumpVel = 10.0f;
-			if( jumpHeight >= 512 ) jumpVel = 16.5f;
-			if( jumpHeight >= 768 ) jumpVel = 22.5f;
-			
-			while( GetMaxHeight( jumpVel ) <= jumpHeight ) {
-				jumpVel += 0.01f;
+
+		float GetBaseMultiply() {
+			float multiply = 0;
+			if( flying || noClip ) {
+				if( speeding ) multiply += SpeedMultiplier * 9;
+				if( halfSpeeding ) multiply += SpeedMultiplier * 9 / 2;
+				if( multiply == 0 ) multiply = SpeedMultiplier * 1.5f;
+			} else {
+				if( speeding ) multiply += SpeedMultiplier;
+				if( halfSpeeding ) multiply += SpeedMultiplier / 2;
+				if( multiply == 0 ) multiply = 1;
 			}
-		}
-		
-		static double GetMaxHeight( float u ) {
-			// equation below comes from solving diff(x(t, u))= 0
-			// We only work in discrete timesteps, so test both rounded up and down.
-			double t = 49.49831645 * Math.Log( 0.247483075 * u + 0.9899323 );
-			return Math.Max( YPosAt( (int)t, u ), YPosAt( (int)t + 1, u ) );
-		}
-		
-		static double YPosAt( int t, float u ) {
-			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
-			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
-			// plugging into Wolfram Alpha gives 1 equation as
-			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
-			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
-			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
+			return multiply;
 		}
 		
 		float LowestSpeedModifier() {
@@ -210,6 +203,35 @@ namespace ClassicalSharp {
 					useLiquidGravity = true;
 			}
 			return modifier == float.PositiveInfinity ? 1 : modifier;
+		}
+		
+		/// <summary> Calculates the jump velocity required such that when a client presses
+		/// the jump binding they will be able to jump up to the given height. </summary>
+		internal void CalculateJumpVelocity( float jumpHeight ) {
+			jumpVel = 0;
+			if( jumpHeight >= 256 ) jumpVel = 10.0f;
+			if( jumpHeight >= 512 ) jumpVel = 16.5f;
+			if( jumpHeight >= 768 ) jumpVel = 22.5f;
+			
+			while( GetMaxHeight( jumpVel ) <= jumpHeight ) {
+				jumpVel += 0.01f;
+			}
+		}
+		
+		static double GetMaxHeight( float u ) {
+			// equation below comes from solving diff(x(t, u))= 0
+			// We only work in discrete timesteps, so test both rounded up and down.
+			double t = 49.49831645 * Math.Log( 0.247483075 * u + 0.9899323 );
+			return Math.Max( YPosAt( (int)t, u ), YPosAt( (int)t + 1, u ) );
+		}
+		
+		static double YPosAt( int t, float u ) {
+			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
+			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
+			// plugging into Wolfram Alpha gives 1 equation as
+			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
+			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
+			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
 		}
 	}
 }

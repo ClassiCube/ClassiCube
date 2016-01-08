@@ -106,12 +106,13 @@ namespace ClassicalSharp {
 			                                 game.ModelCache.vb, game.ModelCache.vertices, index, index * 6 / 4 );
 		}
 		
-		bool speeding, noclip, fly;
+		bool speeding, halfSpeeding, noclip, fly;
 		int lastZoomFov;
 		void UpdateHackState( bool force ) {
 			LocalPlayer p = game.LocalPlayer;
-			if( force || p.speeding != speeding || p.noClip != noclip || p.flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
-				speeding = p.speeding; noclip = p.noClip; fly = p.flying;
+			if( force || p.speeding != speeding || p.halfSpeeding != halfSpeeding || p.noClip != noclip || 
+			   p.flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
+				speeding = p.speeding; halfSpeeding = p.halfSpeeding; noclip = p.noClip; fly = p.flying;
 				lastZoomFov = game.ZoomFieldOfView;
 				int index = 0;
 				text.Clear();
@@ -120,7 +121,7 @@ namespace ClassicalSharp {
 				if( lastZoomFov != defFov ) text.Append( ref index, "Zoom fov " )
 					.AppendNum( ref index, lastZoomFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
-				if( speeding ) text.Append( ref index, "Speed ON   " );
+				if( speeding || halfSpeeding ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
 				hackStatesWidget.SetText( text.GetString() );
 			}

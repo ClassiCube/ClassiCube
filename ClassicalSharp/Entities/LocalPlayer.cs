@@ -11,6 +11,8 @@ namespace ClassicalSharp {
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 SpawnPoint;
 		
+		public float SpawnYaw, SpawnPitch;
+		
 		/// <summary> The distance (in blocks) that players are allowed to
 		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
@@ -201,12 +203,13 @@ namespace ClassicalSharp {
 
 				jumping = game.IsKeyDown( KeyBinding.Jump );
 				speeding = CanSpeed && HacksEnabled && game.IsKeyDown( KeyBinding.Speed );
+				halfSpeeding = CanSpeed && HacksEnabled && game.IsKeyDown( KeyBinding.HalfSpeed );
 				flyingUp = game.IsKeyDown( KeyBinding.FlyUp );
 				flyingDown = game.IsKeyDown( KeyBinding.FlyDown );
 			}
 		}
 		
-		internal bool jumping, speeding, flying, noClip, flyingDown, flyingUp;
+		internal bool jumping, speeding, halfSpeeding, flying, noClip, flyingDown, flyingUp;
 		
 		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax </remarks>
@@ -244,7 +247,7 @@ namespace ClassicalSharp {
 		public void CheckHacksConsistency() {
 			if( !CanFly || !HacksEnabled ) { flying = false; flyingDown = false; flyingUp = false; }
 			if( !CanNoclip || !HacksEnabled ) noClip = false;
-			if( !CanSpeed || !HacksEnabled ) speeding = false;
+			if( !CanSpeed || !HacksEnabled ) { speeding = false; halfSpeeding = false; }
 			if( !CanPushbackBlocks || !HacksEnabled ) PushbackPlacing = false;
 			
 			if( !CanUseThirdPersonCamera || !HacksEnabled )
@@ -295,10 +298,12 @@ namespace ClassicalSharp {
 					}
 				}
 				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
-				LocationUpdate update = LocationUpdate.MakePos( spawn, false );
+				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, SpawnYaw, SpawnPitch, false );
 				SetLocation( update, false );
 			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn && HacksEnabled ) {
 				SpawnPoint = Position;
+				SpawnYaw = YawDegrees;
+				SpawnPitch = PitchDegrees;
 			} else if( key == keys[KeyBinding.Fly] && CanFly && HacksEnabled ) {
 				flying = !flying;
 			} else if( key == keys[KeyBinding.NoClip] && CanNoclip && HacksEnabled ) {

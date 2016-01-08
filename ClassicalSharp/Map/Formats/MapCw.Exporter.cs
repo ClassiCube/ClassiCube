@@ -52,7 +52,8 @@ namespace ClassicalSharp {
 		
 		void WriteSpawnCompoundTag() {
 			WriteTag( NbtTagType.Compound ); WriteString( "Spawn" );
-			Vector3 spawn = game.LocalPlayer.Position; // TODO: Maybe also keep spawn too?
+			LocalPlayer p = game.LocalPlayer;
+			Vector3 spawn = p.Position; // TODO: Maybe also keep real spawn too?
 			
 			WriteTag( NbtTagType.Int16 );
 			WriteString( "X" ); WriteInt16( (short)spawn.X );
@@ -64,10 +65,12 @@ namespace ClassicalSharp {
 			WriteString( "Z" ); WriteInt16( (short)spawn.Z );
 			
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "H" ); WriteInt8( 0 );
+			WriteString( "H" ); 
+			WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnYaw, 256 ) );
 			
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "P" ); WriteInt8( 0 );
+			WriteString( "P" );
+			WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnPitch, 256 ) );
 			
 			WriteTag( NbtTagType.End );
 		}
@@ -124,6 +127,7 @@ namespace ClassicalSharp {
 		void WriteInt32( int v ) { writer.Write( IPAddress.HostToNetworkOrder( v ) ); }
 		void WriteInt16( short v ) { writer.Write( IPAddress.HostToNetworkOrder( v ) ); }
 		void WriteInt8( sbyte v ) { writer.Write( (byte)v ); }
+		void WriteUInt8( byte v ) { writer.Write( v ); }
 		void WriteBytes( byte[] v ) { writer.Write( v ); }
 		
 		void WriteString( string value ) {

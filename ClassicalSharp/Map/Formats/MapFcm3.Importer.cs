@@ -29,8 +29,8 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SpawnPoint.X = reader.ReadInt32() / 32f;
 			game.LocalPlayer.SpawnPoint.Y = reader.ReadInt32() / 32f;
 			game.LocalPlayer.SpawnPoint.Z = reader.ReadInt32() / 32f;
-			byte yaw = reader.ReadByte();
-			byte pitch = reader.ReadByte();
+			game.LocalPlayer.SpawnYaw = (float)Utils.PackedToDegrees( reader.ReadByte() );
+			game.LocalPlayer.SpawnPitch = (float)Utils.PackedToDegrees( reader.ReadByte() );
 
 			reader.ReadUInt32(); // date modified
 			reader.ReadUInt32(); // date created

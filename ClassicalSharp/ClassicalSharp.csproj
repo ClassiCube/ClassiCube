@@ -87,9 +87,6 @@
     <Compile Include="2D\Drawing\DrawTextArgs.cs" />
     <Compile Include="2D\Drawing\GdiPlusDrawer2D.cs" />
     <Compile Include="2D\Drawing\IDrawer2D.cs" />
-    <Compile Include="2D\Screens\Bindings\AdvancedKeyBindingsScreen.cs" />
-    <Compile Include="2D\Screens\Bindings\KeyBindingsScreen.cs" />
-    <Compile Include="2D\Screens\Bindings\NormalKeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.cs" />
     <Compile Include="2D\Screens\BlockSelectScreen.Scrolling.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
@@ -103,6 +100,7 @@
     <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\HacksSettingsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\KeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\LoadLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
@@ -277,7 +275,6 @@
     <Folder Include="2D\Drawing" />
     <Folder Include="2D\Utils" />
     <Folder Include="2D\Screens" />
-    <Folder Include="2D\Screens\Bindings" />
     <Folder Include="2D\Screens\Menu" />
     <Folder Include="2D\Widgets" />
     <Folder Include="2D\Widgets\Menu" />

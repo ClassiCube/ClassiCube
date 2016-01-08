@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 					game.MapEvents.RaiseOnNewMapLoaded();
 					
 					LocalPlayer p = game.LocalPlayer;
-					LocationUpdate update = LocationUpdate.MakePos( p.SpawnPoint, false );
+					LocationUpdate update = LocationUpdate.MakePosAndOri( p.SpawnPoint, p.SpawnYaw, p.SpawnPitch, false );
 					p.SetLocation( update, false );
 				}
 			} catch( Exception ex ) {

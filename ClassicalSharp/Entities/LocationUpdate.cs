@@ -46,6 +46,10 @@ namespace ClassicalSharp {
 			return new LocationUpdate( pos.X, pos.Y, pos.Z, 0, 0, true, rel, false );
 		}
 		
+		public static LocationUpdate MakePosAndOri( Vector3 v, float yaw, float pitch, bool rel ) {
+			return new LocationUpdate( v.X, v.Y, v.Z, yaw, pitch, true, rel, true );
+		}
+		
 		public static LocationUpdate MakePosAndOri( float x, float y, float z, float yaw, float pitch, bool rel ) {
 			return new LocationUpdate( x, y, z, yaw, pitch, true, rel, true );
 		}

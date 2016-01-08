@@ -105,12 +105,12 @@ namespace ClassicalSharp {
 			if( screen == null ) return false;
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
-				int x = (int)(X + barXOffset + (elemSize + borderSize) * i);
+				int x = (int)(X + (elemSize + borderSize) * i);
 				int y = (int)(game.Height - barHeight);
-				Rectangle bounds = new Rectangle( x, y, (int)elemSize, (int)barHeight );
+				Rectangle bounds = new Rectangle( x, y, (int)(elemSize + borderSize), (int)barHeight );
 					
 				if( bounds.Contains( mouseX, mouseY ) ) {
-					screen.SetBlockTo( game.Inventory.Hotbar[i] );
+					game.Inventory.HeldBlockIndex = i;
 					return true;
 				}
 			}

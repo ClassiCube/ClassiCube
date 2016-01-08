@@ -281,7 +281,10 @@ namespace ClassicalSharp {
 			if( readPosition ) {
 				ReadAbsoluteLocation( entityId, false );
 				if( entityId == 0xFF ) {
-					game.LocalPlayer.SpawnPoint = game.LocalPlayer.Position;
+					LocalPlayer p = game.LocalPlayer;
+					p.SpawnPoint = p.Position;
+					p.SpawnYaw = p.YawDegrees;
+					p.SpawnPitch = p.PitchDegrees;
 				}
 			}
 		}

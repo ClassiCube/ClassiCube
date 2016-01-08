@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
 		Screenshot, Fullscreen, ThirdPersonCamera, HideGui, ShowAxisLines,
-		ZoomScrolling,
+		ZoomScrolling, HalfSpeed,
 	}
 	
 	public class KeyMap {
@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		
 		public KeyMap() {
 			// See comment in Game() constructor
-			Keys = new Key[26];
+			Keys = new Key[27];
 			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
 			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Enter; Keys[7] = Key.T;
 			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
@@ -50,6 +50,7 @@ namespace ClassicalSharp {
 			Keys[17] = Key.E; Keys[18] = Key.AltLeft; Keys[19] = Key.F3;
 			Keys[20] = Key.F12; Keys[21] = Key.F11; Keys[22] = Key.F5;
 			Keys[23] = Key.F1; Keys[24] = Key.F7; Keys[25] = Key.C;
+			Keys[26] = Key.ControlLeft;
 			LoadKeyBindings();
 		}
 		

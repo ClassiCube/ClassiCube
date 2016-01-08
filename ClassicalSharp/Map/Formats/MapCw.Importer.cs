@@ -37,6 +37,10 @@ namespace ClassicalSharp {
 				p.SpawnPoint.X = (short)spawn["X"].Value;
 				p.SpawnPoint.Y = (short)spawn["Y"].Value;
 				p.SpawnPoint.Z = (short)spawn["Z"].Value;
+				if( spawn.ContainsKey( "H" ) )
+					p.SpawnYaw = (float)Utils.PackedToDegrees( (byte)spawn["H"].Value );
+				if( spawn.ContainsKey( "P" ) )
+					p.SpawnPitch = (float)Utils.PackedToDegrees( (byte)spawn["P"].Value );				
 				
 				map.Uuid = new Guid( (byte[])children["UUID"].Value );
 				width = (short)children["X"].Value;
