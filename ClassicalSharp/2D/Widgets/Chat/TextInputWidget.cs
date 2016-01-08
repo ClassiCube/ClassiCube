@@ -45,7 +45,8 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = false;
 			int y = Y, x = X;
 			for( int i = 0; i < sizes.Length; i++ ) {
-				int offset = (caretTex.Y1 == y) ? defaultWidth : 0;
+				bool caretAtEnd = caretTex.Y1 == y && (indexX == 64 || caretPos == -1);
+				int offset = caretAtEnd ? defaultWidth : 0;
 				graphicsApi.Draw2DQuad( x + 5, y, sizes[i].Width + offset, sizes[i].Height, backColour );
 				y += sizes[i].Height;
 			}
@@ -67,8 +68,8 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			X = 5;
-			
-			chatInputText.WordWrap( ref parts, ref partLens, 64 );			
+			chatInputText.WordWrap( ref parts, ref partLens, 64 );
+
 			maxWidth = 0;
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
 			for( int i = 0; i < lines; i++ ) {
@@ -77,30 +78,22 @@ namespace ClassicalSharp {
 				maxWidth = Math.Max( maxWidth, sizes[i].Width );
 			}
 			
-			int realIndex = caretPos;
-			if( chatInputText.Empty || caretPos == -1 || caretPos >= chatInputText.Length ) {
-				caretPos = -1; realIndex = 500000;
-			}
-			
-			int sum = 0; indexX = -1; indexY = 0;
-			for( int i = 0; i < lines; i++ ) {
-				if( partLens[i] == 0 ) break;
-				
-				indexY = i;
-				if( realIndex < sum + partLens[i] ) {
-					indexX = realIndex - sum;
-					break;
-				}
-				sum += partLens[i];
-			}
-			if( indexX == -1 ) indexX = partLens[indexY];
+			DrawString();
+			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
+			altText.Y = altText.texture.Y1;
+			CalculateCaretData();
+		}	
+		
+		void CalculateCaretData() {
+			if( caretPos >= chatInputText.Length ) caretPos = -1;
+			chatInputText.MakeCoords( caretPos, partLens, out indexX, out indexY );
+			DrawTextArgs args = new DrawTextArgs( null, font, true );
 
 			if( indexX == 64 ) {
 				caretTex.X1 = 10 + sizes[indexY].Width;
 				sizes[indexY].Width += caretTex.Width;
 				
 				maxWidth = Math.Max( maxWidth, sizes[indexY].Width );
-				caretTex.Y1 = sizes[0].Height * indexY;
 				caretCol = FastColour.Yellow;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
@@ -111,14 +104,9 @@ namespace ClassicalSharp {
 				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : " ";
 				Size charSize = game.Drawer2D.MeasureChatSize( ref args );
 				caretTex.Width = charSize.Width;
-				
-				caretTex.Y1 = sizes[0].Height * indexY;
-				caretCol = FastColour.White;
-				CalculateCaretCol();
+				caretCol = FastColour.Scale( FastColour.White, 0.9f );
 			}
-			DrawString();
-			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
-			altText.Y = altText.texture.Y1;
+			caretTex.Y1 = sizes[0].Height * indexY + Y;
 			CalculateCaretCol();
 		}
 		
@@ -148,7 +136,6 @@ namespace ClassicalSharp {
 			Height = realHeight == 0 ? defaultHeight : realHeight;
 			Y = game.Height - Height - YOffset;
 			inputTex.Y1 = Y;
-			caretTex.Y1 += Y;
 			Width = size.Width;
 		}
 		
@@ -169,7 +156,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		public override void Dispose() {		
+		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref inputTex );
 		}
 		
@@ -179,10 +166,10 @@ namespace ClassicalSharp {
 		}
 
 		public override void MoveTo( int newX, int newY ) {
-			int diffX = newX - X, diffY = newY - Y;
+			int dx = newX - X, dy = newY - Y;
 			X = newX; Y = newY;
-			caretTex.Y1 += diffY;
-			inputTex.Y1 += diffY;
+			caretTex.Y1 += dy;
+			inputTex.Y1 += dy;
 			
 			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
 			altText.Y = altText.texture.Y1;
@@ -205,7 +192,7 @@ namespace ClassicalSharp {
 			game.Chat.InputLog.Add( allText );
 			
 			if( game.Network.ServerSupportsPatialMessages ) {
-				// don't automatically word wrap the message.				
+				// don't automatically word wrap the message.
 				while( allText.Length > 64 ) {
 					game.Chat.Send( allText.Substring( 0, 64 ), true );
 					allText = allText.Substring( 64 );

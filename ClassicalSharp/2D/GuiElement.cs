@@ -72,6 +72,10 @@ namespace ClassicalSharp {
 			bool supportsCP437 = game.Network.ServerSupportsFullCP437;
 			return supportsCP437 && isCP437;
 		}
+		
+		protected static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
+			return x >= recX && y >= recY && x < recX + width && y < recY + height;
+		}
 	}
 	
 	public enum Anchor {

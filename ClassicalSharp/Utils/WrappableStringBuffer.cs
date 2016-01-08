@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 				wrap[i] = value[i];
 			
 			for( int i = len; i < capacity; i++ )
-				wrap[i] = '\0';		
+				wrap[i] = '\0';
 			value = wrap;
 		}
 		
@@ -94,6 +94,22 @@ namespace ClassicalSharp {
 		bool IsWrapper( char c ) {
 			return c == '\0' || c == ' ' || c == '-' || c == '>'
 				|| c == '<' || c == '/' || c == '\\';
+		}
+		
+		public void MakeCoords( int index, int[] partLens, out int x, out int y ) {
+			if( index == -1 ) index = Int32.MaxValue;		
+			int total = 0; x = -1; y = 0;
+			
+			for( int yy = 0; yy < partLens.Length; yy++ ) {
+				if( partLens[yy] == 0 ) break;
+				
+				y = yy;
+				if( index < total + partLens[yy] ) {
+					x = index - total; break;
+				}
+				total += partLens[yy];
+			}
+			if( x == -1 ) x = partLens[y];
 		}
 	}
 }

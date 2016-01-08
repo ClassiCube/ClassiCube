@@ -288,9 +288,5 @@ namespace ClassicalSharp {
 			RecreateBlockInfoTexture();
 			MoveCursorToSelected();
 		}
-
-		static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
-			return x >= recX && y >= recY && x < recX + width && y < recY + height;
-		}
 	}
 }

@@ -43,15 +43,6 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( altText.Active && altText.Bounds.Contains( mouseX, mouseY ) ) {
-				altText.HandlesMouseClick( mouseX, mouseY, button );
-				altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
-				altText.Y = altText.texture.Y1;
-			}
-			return true;
-		}
-		
 		void BackspaceKey() {
 			if( !chatInputText.Empty && caretPos != 0 ) {
 				if( caretPos == -1 ) {
@@ -78,8 +69,7 @@ namespace ClassicalSharp {
 			if( !chatInputText.Empty && caretPos != -1 ) {
 				caretPos++;
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
-				Dispose();
-				Init();
+				CalculateCaretData();
 			}
 		}
 		
@@ -88,8 +78,7 @@ namespace ClassicalSharp {
 				if( caretPos == -1 ) caretPos = chatInputText.Length;
 				caretPos--;
 				if( caretPos < 0 ) caretPos = 0;
-				Dispose();
-				Init();
+				CalculateCaretData();
 			}
 		}
 		
@@ -129,14 +118,12 @@ namespace ClassicalSharp {
 			if( chatInputText.Empty ) return;
 			
 			caretPos = 0;
-			Dispose();
-			Init();
+			CalculateCaretData();
 		}
 		
 		void EndKey() {
 			caretPos = -1;
-			Dispose();
-			Init();
+			CalculateCaretData();
 		}
 		
 		bool OtherKey( Key key ) {
@@ -160,6 +147,48 @@ namespace ClassicalSharp {
 				return true;
 			}
 			return false;
+		}
+		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			if( altText.Active && altText.Bounds.Contains( mouseX, mouseY ) ) {
+				altText.HandlesMouseClick( mouseX, mouseY, button );
+				altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
+				altText.Y = altText.texture.Y1;
+			} else if( button == MouseButton.Left ) {
+				SetCaretToCursor( mouseX, mouseY );
+			}
+			return true;
+		}
+		
+		unsafe void SetCaretToCursor( int mouseX, int mouseY ) {
+			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
+			DrawTextArgs args = new DrawTextArgs( null, font, true );
+			IDrawer2D drawer = game.Drawer2D;
+			int offset = 0, elemHeight = defaultHeight;
+			string oneChar = new String( 'A', 1 );
+			
+			for( int y = 0; y < lines; y++ ) {
+				string line = parts[y];
+				if( line == null ) continue;
+				
+				for( int x = 0; x < line.Length; x++ ) {
+					args.Text = line.Substring( 0, x );
+					int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
+					// avoid allocating an unnecessary string
+					fixed( char* ptr = oneChar )
+						ptr[0] = line[x];
+					
+					args.Text = oneChar;
+					int elemWidth = drawer.MeasureChatSize( ref args ).Width;
+					if( Contains( trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY ) ) {
+						caretPos = offset + x;
+						CalculateCaretData(); return;
+					}					
+				}
+				offset += partLens[y];
+			}
+			caretPos = -1;
+			CalculateCaretData();
 		}
 	}
 }
