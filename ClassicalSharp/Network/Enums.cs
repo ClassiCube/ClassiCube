@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		CpeBulkBlockUpdate = 38,
 	}
 	
-	public enum CpeMessage {
+	public enum MessageType {
 		Normal = 0,
 		Status1 = 1,
 		Status2 = 2,
@@ -54,6 +54,14 @@ namespace ClassicalSharp {
 		BottomRight2 = 12,
 		BottomRight3 = 13,
 		Announcement = 100,
+		
+		// client defined message ids
+		ClientStatus1 = 256,
+		ClientStatus2 = 257,
+		ClientStatus3 = 258,
+		ClientStatus4 = 259,
+		ClientStatus5 = 260,
+		ClientStatus6 = 261, // no LongerMessages warning
 	}
 	
 	public enum CpeBlockFace {

@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		public bool UsingPlayerClick;
 		
 		/// <summary> Whether the server can handle partial message packets or not. </summary>
-		public bool ServerSupportsPatialMessages;
+		public bool ServerSupportsPartialMessages;
 		
 		/// <summary> Whether the server supports receiving all code page 437 characters from this client. </summary>
 		public bool ServerSupportsFullCP437;

@@ -10,6 +10,7 @@ namespace ClassicalSharp {
 		
 		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement;
+		public ChatLine[] ClientStatus = new ChatLine[6];
 		
 		Game game;
 		public ChatLog( Game game ) {
@@ -38,27 +39,29 @@ namespace ClassicalSharp {
 		public void Add( string text ) {
 			Log.Add( text );
 			LogChatToFile( text );
-			game.Events.RaiseChatReceived( text, CpeMessage.Normal );
+			game.Events.RaiseChatReceived( text, MessageType.Normal );
 		}
 		
-		public void Add( string text, CpeMessage type ) {
-			if( type == CpeMessage.Normal ) {
+		public void Add( string text, MessageType type ) {
+			if( type == MessageType.Normal ) {
 				Log.Add( text );
 				LogChatToFile( text );
-			} else if( type == CpeMessage.Status1 ) {
+			} else if( type == MessageType.Status1 ) {
 				Status1 = text;
-			} else if( type == CpeMessage.Status2 ) {
+			} else if( type == MessageType.Status2 ) {
 				Status2 = text;
-			} else if( type == CpeMessage.Status3 ) {
+			} else if( type == MessageType.Status3 ) {
 				Status3 = text;
-			} else if( type == CpeMessage.BottomRight1 ) {
+			} else if( type == MessageType.BottomRight1 ) {
 				BottomRight1 = text;
-			} else if( type == CpeMessage.BottomRight2 ) {
+			} else if( type == MessageType.BottomRight2 ) {
 				BottomRight2 = text;
-			} else if( type == CpeMessage.BottomRight3 ) {
+			} else if( type == MessageType.BottomRight3 ) {
 				BottomRight3 = text;
-			} else if( type == CpeMessage.Announcement ) {
+			} else if( type == MessageType.Announcement ) {
 				Announcement = text;
+			} else if( type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6 ) {
+				ClientStatus[(int)(type - MessageType.ClientStatus1)] = text;
 			}
 			game.Events.RaiseChatReceived( text, type );
 		}

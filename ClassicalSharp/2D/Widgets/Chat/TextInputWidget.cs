@@ -65,6 +65,7 @@ namespace ClassicalSharp {
 		Size[] sizes = new Size[lines];
 		int maxWidth = 0;
 		int indexX, indexY;
+		bool shownWarning;
 		
 		public override void Init() {
 			X = 5;
@@ -76,6 +77,15 @@ namespace ClassicalSharp {
 				args.Text = parts[i];
 				sizes[i] = game.Drawer2D.MeasureChatSize( ref args );
 				maxWidth = Math.Max( maxWidth, sizes[i].Width );
+			}
+			
+			bool supports = game.Network.ServerSupportsPartialMessages;
+			if( chatInputText.Length > 64 && !shownWarning && !supports ) {
+				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
+				shownWarning = true;
+			} else if( chatInputText.Length <= 64 && shownWarning ) {
+				game.Chat.Add( null, MessageType.ClientStatus6 );
+				shownWarning = false;
 			}
 			
 			DrawString();
@@ -91,9 +101,6 @@ namespace ClassicalSharp {
 
 			if( indexX == 64 ) {
 				caretTex.X1 = 10 + sizes[indexY].Width;
-				sizes[indexY].Width += caretTex.Width;
-				
-				maxWidth = Math.Max( maxWidth, sizes[indexY].Width );
 				caretCol = FastColour.Yellow;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
@@ -184,6 +191,7 @@ namespace ClassicalSharp {
 			Height = defaultHeight;
 			originalText = null;
 			altText.SetActive( false );
+			game.Chat.Add( null, MessageType.ClientStatus6 );
 		}
 		
 		void SendInBuffer() {
@@ -191,7 +199,7 @@ namespace ClassicalSharp {
 			string allText = chatInputText.GetString();
 			game.Chat.InputLog.Add( allText );
 			
-			if( game.Network.ServerSupportsPatialMessages ) {
+			if( game.Network.ServerSupportsPartialMessages ) {
 				// don't automatically word wrap the message.
 				while( allText.Length > 64 ) {
 					game.Chat.Send( allText.Substring( 0, 64 ), true );

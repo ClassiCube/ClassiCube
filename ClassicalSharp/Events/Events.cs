@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Raised when the server or a client-side command sends a message. </summary>
 		public event EventHandler<ChatEventArgs> ChatReceived;	
-		internal void RaiseChatReceived( string text, CpeMessage type ) { 
+		internal void RaiseChatReceived( string text, MessageType type ) { 
 			chatArgs.Type = type; chatArgs.Text = text; Raise( ChatReceived, chatArgs ); }
 		
 		/// <summary> Raised when the user changes chat font to arial or back to bitmapped font,
@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 	public sealed class ChatEventArgs : EventArgs {
 		
 		/// <summary> Where this chat message should appear on the screen. </summary>
-		public CpeMessage Type;
+		public MessageType Type;
 		
 		/// <summary> Raw text of the message (including colour codes), 
 		/// with code page 437 indices converted to their unicode representations. </summary>

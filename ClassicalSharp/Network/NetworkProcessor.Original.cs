@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 
 		public override void SendChat( string text, bool partial ) {
 			if( String.IsNullOrEmpty( text ) ) return;
-			byte payload = !ServerSupportsPatialMessages ? (byte)0xFF:
+			byte payload = !ServerSupportsPartialMessages ? (byte)0xFF:
 				partial ? (byte)1 : (byte)0;
 			
 			writer.WriteUInt8( (byte)PacketId.Message );
@@ -249,7 +249,7 @@ namespace ClassicalSharp {
 			byte messageType = reader.ReadUInt8();
 			string text = reader.ReadChatString( ref messageType, useMessageTypes );
 			if( !text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase ) )
-				game.Chat.Add( text, (CpeMessage)messageType );
+				game.Chat.Add( text, (MessageType)messageType );
 		}
 		
 		void HandleKick() {

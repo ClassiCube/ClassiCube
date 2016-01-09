@@ -98,7 +98,7 @@ namespace ClassicalSharp {
 					packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 				}
 			} else if( extName == "LongerMessages" ) {
-				ServerSupportsPatialMessages = true;
+				ServerSupportsPartialMessages = true;
 			} else if( extName == "FullCP437" ) {
 				ServerSupportsFullCP437 = true;
 			}

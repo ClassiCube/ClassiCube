@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 						if( Int32.TryParse( value, out waterLevel ) )
 							game.Map.SetEdgeLevel( waterLevel );
 					} else if( key == "user.detail" && !useMessageTypes ) {
-						game.Chat.Add( value, CpeMessage.Status2 );
+						game.Chat.Add( value, MessageType.Status2 );
 					}
 				}
 			}

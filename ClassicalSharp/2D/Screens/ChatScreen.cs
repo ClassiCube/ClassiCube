@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		int chatLines;
 		Texture announcementTex;
 		TextInputWidget textInput;
-		TextGroupWidget status, bottomRight, normalChat;
+		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
 		int chatIndex;
 		int blockSize;
@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 			bottomRight.Render( delta );
 			
 			UpdateChatYOffset( false );
+			RenderClientStatus();
 			DateTime now = DateTime.UtcNow;
 			if( HandlesAllInput )
 				normalChat.Render( delta );
@@ -54,24 +55,40 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		void RenderClientStatus() {
+			int y = clientStatus.Y + clientStatus.Height;
+			for( int i = 0; i < clientStatus.Textures.Length; i++ ) {
+				Texture texture = clientStatus.Textures[i];
+				if( !texture.IsValid ) continue;
+				
+				y -= texture.Height;
+				texture.Y1 = y;
+				texture.Render( graphicsApi );
+			}
+		}
+		
 		static FastColour backColour = new FastColour( 60, 60, 60, 180 );
 		public void RenderBackground() {
 			int height = normalChat.GetUsedHeight();
 			int y = normalChat.Y + normalChat.Height - height - 5;
 			int x = normalChat.X - 5;
-			int width = normalChat.Width + 10;
+			int width = Math.Max( clientStatus.Width, normalChat.Width ) + 10;
 			
-			if( height > 0 )
-				graphicsApi.Draw2DQuad( x, y, width, height + 10, backColour );
+			int boxHeight = height + clientStatus.GetUsedHeight();
+			if( boxHeight > 0 )
+				graphicsApi.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
 		}
 		
 		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
 			int height = textInput.RealHeight;
 			if( force || height != inputOldHeight ) {
-				normalChat.YOffset = height + blockSize + 15;
-				int y = game.Height - normalChat.Height - normalChat.YOffset;
+				clientStatus.YOffset = height + blockSize + 15;
+				int y = game.Height - clientStatus.Height - clientStatus.YOffset;
+				clientStatus.MoveTo( clientStatus.X, y );
 				
+				normalChat.YOffset = height + blockSize + 15;
+				y = game.Height - normalChat.Height - clientStatus.GetUsedHeight() - normalChat.YOffset;
 				normalChat.MoveTo( normalChat.X, y );
 				inputOldHeight = height;
 			}
@@ -107,6 +124,13 @@ namespace ClassicalSharp {
 			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
 			normalChat.VerticalAnchor = Anchor.BottomOrRight;
 			normalChat.Init();
+			clientStatus = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont );
+			clientStatus.XOffset = 10;
+			clientStatus.YOffset = blockSize * 2 + 15;
+			clientStatus.HorizontalAnchor = Anchor.LeftOrTop;
+			clientStatus.VerticalAnchor = Anchor.BottomOrRight;
+			clientStatus.Init();
+			
 			int[] indices = new int[chatLines];
 			for( int i = 0; i < indices.Length; i++ )
 				indices[i] = -1;
@@ -120,8 +144,10 @@ namespace ClassicalSharp {
 			status.SetText( 2, chat.Status3.Text );
 			bottomRight.SetText( 2, chat.BottomRight1.Text );
 			bottomRight.SetText( 1, chat.BottomRight2.Text );
-			bottomRight.SetText( 0,chat.BottomRight3.Text );
+			bottomRight.SetText( 0, chat.BottomRight3.Text );
 			UpdateAnnouncement( chat.Announcement.Text );
+			for( int i = 0; i < chat.ClientStatus.Length; i++ )
+				clientStatus.SetText( i, chat.ClientStatus[i].Text );
 			
 			if( game.chatInInputBuffer != null ) {
 				OpenTextInputBar( game.chatInInputBuffer );
@@ -132,8 +158,8 @@ namespace ClassicalSharp {
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
-			CpeMessage type = e.Type;
-			if( type == CpeMessage.Normal ) {
+			MessageType type = e.Type;
+			if( type == MessageType.Normal ) {
 				chatIndex++;
 				List<ChatLine> chat = game.Chat.Log;
 				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1].Text );
@@ -142,12 +168,15 @@ namespace ClassicalSharp {
 				for( int i = 0; i < chatLines - 1; i++ )
 					metadata[i] = metadata[i + 1];
 				metadata[chatLines - 1] = chatIndex + chatLines - 1;
-			} else if( type >= CpeMessage.Status1 && type <= CpeMessage.Status3 ) {
-				status.SetText( (int)( type - CpeMessage.Status1 ), e.Text );
-			} else if( type >= CpeMessage.BottomRight1 && type <= CpeMessage.BottomRight3 ) {
-				bottomRight.SetText( 2 - (int)( type - CpeMessage.BottomRight1 ), e.Text );
-			} else if( type == CpeMessage.Announcement ) {
+			} else if( type >= MessageType.Status1 && type <= MessageType.Status3 ) {
+				status.SetText( (int)(type - MessageType.Status1), e.Text );
+			} else if( type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3 ) {
+				bottomRight.SetText( 2 - (int)(type - MessageType.BottomRight1), e.Text );
+			} else if( type == MessageType.Announcement ) {
 				UpdateAnnouncement( e.Text );
+			} else if( type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6 ) {
+				clientStatus.SetText( (int)(type - MessageType.ClientStatus1), e.Text );
+				UpdateChatYOffset( true );
 			}
 		}
 
@@ -168,6 +197,8 @@ namespace ClassicalSharp {
 			textInput.DisposeFully();
 			status.Dispose();
 			bottomRight.Dispose();
+			clientStatus.Dispose();
+			
 			graphicsApi.DeleteTexture( ref announcementTex );
 			game.Events.ChatReceived -= ChatReceived;
 			game.Events.ChatFontChanged -= ChatFontChanged;
@@ -195,7 +226,7 @@ namespace ClassicalSharp {
 		
 		void UpdateAnnouncement( string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, announcementFont, true );
-			announcementTex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+			announcementTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			announcementTex.X1 = game.Width / 2 - announcementTex.Width / 2;
 			announcementTex.Y1 = game.Height / 4 - announcementTex.Height / 2;
 		}
@@ -307,7 +338,6 @@ namespace ClassicalSharp {
 					} else if( game.ClickableChat ) {
 						for( int i = 0; i < text.Length; i++ ) {
 							if( !IsValidInputChar( text[i] ) ) {
-								Console.WriteLine( i + "," + text[i] );
 								game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
 								return true;
 							}

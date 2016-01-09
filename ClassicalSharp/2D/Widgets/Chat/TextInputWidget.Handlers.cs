@@ -107,12 +107,6 @@ namespace ClassicalSharp {
 				return;
 			}
 			
-			if( controlDown ) {
-				caretPos += chatInputText.GetForwardLength( caretPos );
-				CalculateCaretData();
-				return;
-			}
-			
 			if( !chatInputText.Empty && caretPos != -1 ) {
 				caretPos++;
 				if( caretPos >= chatInputText.Length ) caretPos = -1;

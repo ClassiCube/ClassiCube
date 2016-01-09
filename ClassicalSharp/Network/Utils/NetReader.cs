@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 			if( useMessageTypes ) 
 				return ReadCp437String();
 					
-			messageType = (byte)CpeMessage.Normal;
+			messageType = (byte)MessageType.Normal;
 			int length = GetString( buffer, false );		
 			Remove( 64 );
 			
@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 			if( length >= womDetail.Length && IsWomDetailString() ) {
 				length -= womDetail.Length;
 				offset = womDetail.Length;
-				messageType = (byte)CpeMessage.Status3;
+				messageType = (byte)MessageType.Status3;
 			}
 			return new String( characters, offset, length );
 		}

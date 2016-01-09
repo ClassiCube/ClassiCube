@@ -39,7 +39,7 @@ namespace ClassicalSharp.Singleplayer {
 		public override void SendChat( string text, bool partial ) {
 			if( !String.IsNullOrEmpty( text ) ) {
 				text = text.TrimEnd();
-				game.Chat.Add( text, CpeMessage.Normal );
+				game.Chat.Add( text, MessageType.Normal );
 			}
 		}
 		
@@ -94,7 +94,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			generator = null;
-			game.Chat.Add( "&ePlaying single player", CpeMessage.Status1 );
+			game.Chat.Add( "&ePlaying single player", MessageType.Status1 );
 			GC.Collect();
 		}
 				
