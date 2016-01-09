@@ -11,6 +11,7 @@ namespace ClassicalSharp.Singleplayer {
 		Random rnd = new Random();
 		BlockInfo info;
 		int width, length, height, oneY, volume;
+		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;
 		
 		const uint tickMask = 0xF8000000;
 		const uint posMask =  0x07FFFFFF;
@@ -93,9 +94,10 @@ namespace ClassicalSharp.Singleplayer {
 		
 		void ResetMap( object sender, EventArgs e ) {
 			ClearQueuedEvents();
-			width = map.Width;
-			length = map.Length;
-			height = map.Height;
+			width = map.Width; maxX = width - 1; maxWaterX = maxX - 2;
+			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
+			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;
+			
 			oneY = width * length;
 			volume = height * width * length;
 		}
@@ -114,18 +116,17 @@ namespace ClassicalSharp.Singleplayer {
 		
 		void TickRandomBlocks() {
 			int xMax = width - 1, yMax = height - 1, zMax = length - 1;
-			for( int y = 0; y < height; y += 16 ) {
-				for( int z = 0; z < length; z += 16 ) {
-					for( int x = 0; x < width; x += 16 ) {
-						int lo = (y * length + z) * width + x;
-						int hi = (Math.Min( yMax, y + 15 ) * length + Math.Min( zMax, z + 15 )) 
-							* width + Math.Min( xMax, x + 15 );
-						
-						HandleBlock( rnd.Next( lo, hi ) );
-						HandleBlock( rnd.Next( lo, hi ) );
-						HandleBlock( rnd.Next( lo, hi ) );
-					}
-				}
+			for( int y = 0; y < height; y += 16 )
+				for( int z = 0; z < length; z += 16 )
+					for( int x = 0; x < width; x += 16 )
+			{
+				int lo = (y * length + z) * width + x;
+				int hi = (Math.Min( yMax, y + 15 ) * length + Math.Min( zMax, z + 15 ))
+					* width + Math.Min( xMax, x + 15 );
+				
+				HandleBlock( rnd.Next( lo, hi ) );
+				HandleBlock( rnd.Next( lo, hi ) );
+				HandleBlock( rnd.Next( lo, hi ) );
 			}
 		}
 		
@@ -443,26 +444,25 @@ namespace ClassicalSharp.Singleplayer {
 		#region Sponge
 		
 		void PlaceSponge( int x, int y, int z ) {
-			for( int yy = y - 2; yy <= y + 2; yy++ ) {
-				for( int zz = z - 2; zz <= z + 2; zz++ ) {
-					for( int xx = x - 2; xx <= x + 2; xx++ ) {
-						byte block = map.SafeGetBlock( xx, yy, zz );
-						if( block == (byte)Block.Water || block == (byte)Block.StillWater )
-							map.SetBlock( xx, yy, zz, (byte)Block.Air );
-					}
-				}
+			for( int yy = y - 2; yy <= y + 2; yy++ )
+				for( int zz = z - 2; zz <= z + 2; zz++ )
+					for( int xx = x - 2; xx <= x + 2; xx++ )
+			{
+				byte block = map.SafeGetBlock( xx, yy, zz );
+				if( block == (byte)Block.Water || block == (byte)Block.StillWater )
+					map.SetBlock( xx, yy, zz, (byte)Block.Air );
 			}
 		}
 		
 		bool CheckIfSponge( int x, int y, int z ) {
-			for( int yy = y - 2; yy <= y + 2; yy++ ) {
-				for( int zz = z - 2; zz <= z + 2; zz++ ) {
-					for( int xx = x - 2; xx <= x + 2; xx++ ) {
-						byte block = map.SafeGetBlock( xx, yy, zz );
-						if( block == (byte)Block.Sponge ) return true;
-					}
-				}
+			for( int yy = (y < 2 ? 0 : y - 2); yy <= (y > maxWaterY ? maxY : y + 2); yy++ )
+				for( int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++ )
+					for( int xx = (x < 2 ? 0 : x - 2); xx <= (x > maxWaterX ? maxX : x + 2); xx++ )
+			{
+				byte block = map.mapData[(yy * length + zz) * width + xx];
+				if( block == (byte)Block.Sponge ) return true;
 			}
+			
 			return false;
 		}
 		#endregion
