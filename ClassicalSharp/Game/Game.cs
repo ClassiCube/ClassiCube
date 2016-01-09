@@ -240,7 +240,7 @@ namespace ClassicalSharp {
 		const int ticksFrequency = 20;
 		const double ticksPeriod = 1.0 / ticksFrequency;
 		const double imageCheckPeriod = 30.0;
-		const double cameraPeriod = 1.0 / 120;
+		const double cameraPeriod = 1.0 / 60;
 		double ticksAccumulator, imageCheckAccumulator,
 		cameraAccumulator;
 		
@@ -408,6 +408,7 @@ namespace ClassicalSharp {
 				double sleepTime = limitMilliseconds - limitAcc;
 				sleepTime = Math.Ceiling( sleepTime );
 				Thread.Sleep( (int)sleepTime );
+				limitAcc = 0;
 			}
 		}
 		
