@@ -7,14 +7,12 @@ using System.Windows.Forms;
 namespace ClassicalSharp {
 	
 	public sealed partial class TextInputWidget : Widget {
-
-		bool supressNextPress = false;
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( game.HideGui || supressNextPress ) {
-				supressNextPress = false;
-				return true;
+			if( key == '`' ) {
+				TildeKey(); return true; // TODO: use tab instead of tilde
 			}
+			if( game.HideGui ) return true;
 			
 			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
 				if( caretPos == -1 ) {
@@ -35,8 +33,7 @@ namespace ClassicalSharp {
 				return key < Key.F1 || key > Key.F35;
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			
-			/*if( key == Key.Tilde ) TildeKey(); TODO: Support properly on non-standard keyboard layouts.
-			else*/ if( key == Key.Down ) DownKey( controlDown );
+			if( key == Key.Down ) DownKey( controlDown );
 			else if( key == Key.Up ) UpKey( controlDown );
 			else if( key == Key.Left ) LeftKey( controlDown );
 			else if( key == Key.Right ) RightKey( controlDown );
@@ -56,7 +53,6 @@ namespace ClassicalSharp {
 			int pos = caretPos == -1 ? chatInputText.Length - 1 : caretPos;
 			int start = pos;
 			char[] value = chatInputText.value;
-			supressNextPress = true;
 			
 			while( start >= 0 && Char.IsLetterOrDigit( value[start] ) )
 				start--;

@@ -93,9 +93,9 @@ namespace ClassicalSharp {
 			LocalPlayer p = game.LocalPlayer;
 			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
 			buttons[3].Disabled = noGlobalHacks || !p.CanSpeed;
-			buttons[5].Disabled = noGlobalHacks || !p.CanSpeed;
+			buttons[4].Disabled = noGlobalHacks || !p.CanSpeed;
 			buttons[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
-			buttons[6].Disabled = true; // TODO: get this working
+			buttons[4].Disabled = true; // TODO: get this working
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
