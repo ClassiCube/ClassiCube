@@ -197,6 +197,7 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
+			if( Map.IsNotLoaded ) visible = false;
 			if( visible ) {
 				AxisLinesRenderer.Render( e.Time );
 				Players.RenderModels( Graphics, e.Time, t );
@@ -352,10 +353,10 @@ namespace ClassicalSharp {
 				screen.lastScreen = activeScreen;
 				activeScreen = screen;
 				
-				screen.lastCursorVisible = CursorVisible;
-				if( !CursorVisible) CursorVisible = true;
+				screen.wasCursorVisible = CursorVisible;
+				if( !CursorVisible ) CursorVisible = true;
 			} else {
-				screen.lastCursorVisible = WarningScreens[0].lastCursorVisible;
+				screen.wasCursorVisible = WarningScreens[0].wasCursorVisible;
 			}
 			WarningScreens.Add( screen );
 			screen.Init();

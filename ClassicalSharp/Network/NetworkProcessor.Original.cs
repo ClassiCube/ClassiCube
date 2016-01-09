@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 		void HandleLevelFinalise() {
 			game.SetNewScreen( null );
 			game.activeScreen = prevScreen;		
-			if( prevScreen != null )
+			if( prevScreen != null && prevCursorVisible != game.CursorVisible )
 				game.CursorVisible = prevCursorVisible;
 			prevScreen = null;
 			

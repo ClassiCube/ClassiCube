@@ -29,6 +29,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
+			if( heightmap == null ) InitHeightmap();
 			
 			graphics.Texturing = true;
 			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
@@ -102,7 +103,9 @@ namespace ClassicalSharp {
 			width = map.Width;
 			maxY = map.Height - 1;
 			oneY = length * width;
-			
+		}
+		
+		void InitHeightmap() {
 			heightmap = new short[map.Width * map.Length];
 			for( int i = 0; i < heightmap.Length; i++ ) {
 				heightmap[i] = short.MaxValue;
@@ -148,7 +151,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			if( game.Map.IsNotLoaded ) return;
+			if( game.Map.IsNotLoaded || heightmap == null ) return;
 			bool didBlock = BlocksRain( oldBlock );
 			bool nowBlocks = BlocksRain( newBlock );
 			if( didBlock == nowBlocks ) return;

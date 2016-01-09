@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 			this.body = body;
 		}
 		internal Screen lastScreen;
-		internal bool lastCursorVisible;
+		internal bool wasCursorVisible;
 		string title;
 		string[] body;
 		
@@ -92,8 +92,10 @@ namespace ClassicalSharp {
 				game.activeScreen = game.WarningScreens[0];
 			} else {
 				game.activeScreen = lastScreen;
-				if( game.CursorVisible != lastCursorVisible )
-					game.CursorVisible = lastCursorVisible;
+				if( game.CursorVisible != wasCursorVisible )
+					game.CursorVisible = wasCursorVisible;
+				if( game.activeScreen == null && game.CursorVisible )
+					game.CursorVisible = false;
 			}
 		}
 		
