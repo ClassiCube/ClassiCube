@@ -63,6 +63,14 @@ namespace ClassicalSharp {
 				     	g.Drawer2D.UseBitmappedChat = v == "no";
 				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
 				     	game.Events.RaiseChatFontChanged();
+				     	
+				     	if( inputWidget != null ) { 
+				     		inputWidget.Dispose(); inputWidget = null; 
+				     	}
+				     	if( descWidget != null ) { 
+				     		descWidget.Dispose(); descWidget = null; 
+				     	}
+				     	
 				     	g.RefreshHud();
 				     	Recreate();
 				     } ),
