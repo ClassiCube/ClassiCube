@@ -35,8 +35,8 @@ namespace ClassicalSharp {
 				return key < Key.F1 || key > Key.F35;
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			
-			if( key == Key.Tilde ) TildeKey();
-			else if( key == Key.Down ) DownKey( controlDown );
+			/*if( key == Key.Tilde ) TildeKey(); TODO: Support properly on non-standard keyboard layouts.
+			else*/ if( key == Key.Down ) DownKey( controlDown );
 			else if( key == Key.Up ) UpKey( controlDown );
 			else if( key == Key.Left ) LeftKey( controlDown );
 			else if( key == Key.Right ) RightKey( controlDown );
