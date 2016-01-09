@@ -74,6 +74,7 @@ namespace ClassicalSharp {
 				new RealValidator( 0.1f, 50 ),
 				new BooleanValidator(),			
 				new RealValidator( 0.1f, 1024f ),
+				new BooleanValidator(),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
