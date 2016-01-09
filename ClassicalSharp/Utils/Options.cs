@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		public const string NoclipSlide = "noclipslide";
 		public const string CameraClipping = "cameraclipping";
 		public const string UseClassicGui = "useclassictex";
+		public const string DoubleJump = "doublejump";
 	}
 	
 	// TODO: implement this

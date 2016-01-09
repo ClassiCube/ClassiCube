@@ -7,9 +7,11 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 	
 	public partial class LocalPlayer : Player {
-			
+		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
 		bool canLiquidJump = true;
+		bool firstJump = true, secondJump = true;
+		
 		void UpdateVelocityState( float xMoving, float zMoving ) {
 			if( !NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
 				Velocity = Vector3.Zero;
@@ -52,7 +54,7 @@ namespace ClassicalSharp {
 					canLiquidJump = true;
 					Velocity.Y += 0.04f;
 					if( speeding ) Velocity.Y += 0.04f;
-					if( halfSpeeding ) Velocity.Y += 0.02f;					
+					if( halfSpeeding ) Velocity.Y += 0.02f;
 				} else if( pastJumpPoint ) {
 					// either A) jump bob in water B) climb up solid on side
 					if( canLiquidJump || (collideX || collideZ) )
@@ -62,17 +64,22 @@ namespace ClassicalSharp {
 			} else if( useLiquidGravity ) {
 				Velocity.Y += 0.04f;
 				if( speeding ) Velocity.Y += 0.04f;
-				if( halfSpeeding ) Velocity.Y += 0.02f;	
+				if( halfSpeeding ) Velocity.Y += 0.02f;
 				canLiquidJump = false;
 			} else if( TouchesAnyRope() ) {
 				Velocity.Y += speeding ? 0.15f : 0.10f;
 				canLiquidJump = false;
 			} else if( onGround ) {
-				Velocity.Y = jumpVel;
-				if( speeding ) Velocity.Y += jumpVel;
-				if( halfSpeeding ) Velocity.Y += jumpVel / 2;
-				canLiquidJump = false;
+				Velocity.Y = 0;
+				DoNormalJump();
 			}
+		}
+		
+		void DoNormalJump() {
+			Velocity.Y += jumpVel;
+			if( speeding ) Velocity.Y += jumpVel;
+			if( halfSpeeding ) Velocity.Y += jumpVel / 2;
+			canLiquidJump = false;
 		}
 		
 		bool StandardLiquid( byte block ) {
@@ -89,7 +96,7 @@ namespace ClassicalSharp {
 		void PhysicsTick( float xMoving, float zMoving ) {
 			if( noClip )
 				onGround = false;
-			float multiply = GetBaseMultiply();			
+			float multiply = GetBaseMultiply();
 			float modifier = LowestSpeedModifier();
 			float horMul = multiply * modifier;
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
@@ -136,7 +143,7 @@ namespace ClassicalSharp {
 			float yVel = (float)Math.Sqrt( Velocity.X * Velocity.X + Velocity.Z * Velocity.Z );
 			// make vertical speed the same as vertical speed.
 			if( (xMoving != 0 || zMoving != 0) && yVel > 0.001f ) {
-				Velocity.Y = 0;		
+				Velocity.Y = 0;
 				yMul = 1;
 				if( flyingUp || jumping ) Velocity.Y += yVel;
 				if( flyingDown ) Velocity.Y -= yVel;

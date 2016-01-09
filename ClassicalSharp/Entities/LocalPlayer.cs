@@ -58,6 +58,12 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
 		public bool NoclipSlide = true;
 		
+		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
+		public bool DoubleJump = true;
+		
+		/// <summary> Whether the player is allowed to double jump. </summary>
+		public bool CanDoubleJump = true;
+		
 		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
@@ -109,6 +115,7 @@ namespace ClassicalSharp {
 			HandleInput( ref xMoving, ref zMoving );
 			UpdateVelocityState( xMoving, zMoving );
 			PhysicsTick( xMoving, zMoving );
+			if( onGround ) { firstJump = true; secondJump = true; }
 			
 			nextPos = Position;
 			Position = lastPos;
@@ -249,6 +256,7 @@ namespace ClassicalSharp {
 			if( !CanNoclip || !HacksEnabled ) noClip = false;
 			if( !CanSpeed || !HacksEnabled ) { speeding = false; halfSpeeding = false; }
 			if( !CanPushbackBlocks || !HacksEnabled ) PushbackPlacing = false;
+			CanDoubleJump = CanAnyHacks && HacksEnabled && CanSpeed;
 			
 			if( !CanUseThirdPersonCamera || !HacksEnabled )
 				game.CycleCamera();
@@ -308,6 +316,14 @@ namespace ClassicalSharp {
 				flying = !flying;
 			} else if( key == keys[KeyBinding.NoClip] && CanNoclip && HacksEnabled ) {
 				noClip = !noClip;
+			} else if( key == keys[KeyBinding.Jump] && !onGround ) {
+				if( firstJump && CanDoubleJump && DoubleJump ) {
+					//DoNormalJump(); TODO: get this working
+					firstJump = false;
+				} else if( secondJump && CanDoubleJump && DoubleJump ) {
+					//DoNormalJump(); TODO: get this working
+					secondJump = false;
+				}
 			} else {
 				return false;
 			}
