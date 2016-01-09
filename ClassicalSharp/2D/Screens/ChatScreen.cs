@@ -87,8 +87,8 @@ namespace ClassicalSharp {
 				int y = game.Height - clientStatus.Height - clientStatus.YOffset;
 				clientStatus.MoveTo( clientStatus.X, y );
 				
-				normalChat.YOffset = height + blockSize + 15;
-				y = game.Height - normalChat.Height - clientStatus.GetUsedHeight() - normalChat.YOffset;
+				normalChat.YOffset = clientStatus.YOffset + clientStatus.GetUsedHeight();
+				y = game.Height - normalChat.Height - normalChat.YOffset;
 				normalChat.MoveTo( normalChat.X, y );
 				inputOldHeight = height;
 			}
@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 			MessageType type = e.Type;
 			if( type == MessageType.Normal ) {
 				chatIndex++;
-				List<ChatLine> chat = game.Chat.Log;
+				List<ChatLine> chat = game.Chat.Log;				
 				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1].Text );
 				
 				int[] metadata = (int[])Metadata;

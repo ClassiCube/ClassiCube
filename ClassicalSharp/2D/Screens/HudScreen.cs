@@ -112,7 +112,6 @@ namespace ClassicalSharp {
 			if( key == game.Mapping( KeyBinding.PlayerList ) ) {
 				if( playerList == null )
 					CreatePlayerListWidget();
-				return true;
 			}
 			
 			if( chat.HandlesKeyDown( key ) )

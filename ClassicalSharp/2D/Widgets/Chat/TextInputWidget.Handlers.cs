@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using OpenTK.Input;
 using System.Windows.Forms;
@@ -7,9 +8,14 @@ namespace ClassicalSharp {
 	
 	public sealed partial class TextInputWidget : Widget {
 
+		bool supressNextPress = false;
+		
 		public override bool HandlesKeyPress( char key ) {
-			if( game.HideGui )
+			if( game.HideGui || supressNextPress ) {
+				supressNextPress = false;
 				return true;
+			}
+			
 			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
 				if( caretPos == -1 ) {
 					chatInputText.Append( chatInputText.Length, key );
@@ -29,7 +35,8 @@ namespace ClassicalSharp {
 				return key < Key.F1 || key > Key.F35;
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			
-			if( key == Key.Down ) DownKey( controlDown );
+			if( key == Key.Tilde ) TildeKey();
+			else if( key == Key.Down ) DownKey( controlDown );
 			else if( key == Key.Up ) UpKey( controlDown );
 			else if( key == Key.Left ) LeftKey( controlDown );
 			else if( key == Key.Right ) RightKey( controlDown );
@@ -45,9 +52,60 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
+		void TildeKey() {
+			int pos = caretPos == -1 ? chatInputText.Length - 1 : caretPos;
+			int start = pos;
+			char[] value = chatInputText.value;
+			supressNextPress = true;
+			
+			while( start >= 0 && Char.IsLetterOrDigit( value[start] ) )
+				start--;
+			start++;
+			if( pos < 0 || start > pos ) return;
+			
+			string part = new String( value, start, pos + 1 - start );
+			List<string> matches = new List<string>();
+			game.Chat.Add( null, MessageType.ClientStatus5 );			
+			
+			bool extList = game.Network.UsingExtPlayerList;
+			CpeListInfo[] info = game.CpePlayersList;
+			Player[] players = game.Players.Players;
+			for( int i = 0; i < EntityList.MaxCount; i++ ) {
+				if( extList && info[i] == null ) continue;
+				if( !extList && players[i] == null ) continue;
+				
+				string rawName = extList ? info[i].PlayerName : players[i].DisplayName;
+				string name = Utils.StripColours( rawName );
+				if( name.StartsWith( part, StringComparison.OrdinalIgnoreCase ) )
+					matches.Add( name );
+			}
+			
+			if( matches.Count == 1 ) {
+				if( caretPos == -1 ) pos++;
+				int len = pos - start;
+				for( int i = 0; i < len; i++ )
+					chatInputText.DeleteAt( start );
+				if( caretPos != -1 ) caretPos -= len;
+				AppendText( matches[0] );
+			} else if( matches.Count > 1 ) {
+				StringBuffer buffer = new StringBuffer( 64 );
+				int index = 0;
+				buffer.Append( ref index, "&e" );
+				buffer.AppendNum( ref index, matches.Count );
+				buffer.Append( ref index, " matching names: " );
+				
+				foreach( string match in matches ) {
+					if( (match.Length + 1 + buffer.Length) > 64 ) break;
+					buffer.Append( ref index, match );
+					buffer.Append( ref index, ' ' );
+				}
+				game.Chat.Add( buffer.ToString(), MessageType.ClientStatus5 );
+			}
+		}
+		
 		void BackspaceKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 ) 
+				if( caretPos == -1 )
 					caretPos = chatInputText.Length - 1;
 				int len = chatInputText.GetBackLength( caretPos );
 				caretPos -= len;
@@ -84,7 +142,7 @@ namespace ClassicalSharp {
 		
 		void LeftKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 ) 
+				if( caretPos == -1 )
 					caretPos = chatInputText.Length - 1;
 				caretPos -= chatInputText.GetBackLength( caretPos );
 				CalculateCaretData();
@@ -101,7 +159,7 @@ namespace ClassicalSharp {
 		
 		void RightKey( bool controlDown ) {
 			if( controlDown ) {
-				caretPos += chatInputText.GetForwardLength( caretPos );			
+				caretPos += chatInputText.GetForwardLength( caretPos );
 				if( caretPos >= chatInputText.Length ) caretPos = -1;
 				CalculateCaretData();
 				return;

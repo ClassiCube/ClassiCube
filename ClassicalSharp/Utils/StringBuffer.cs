@@ -4,8 +4,8 @@ namespace ClassicalSharp {
 	
 	public class StringBuffer {
 		
-		protected char[] value;
-		protected int capacity;
+		public char[] value;
+		public int capacity;
 		
 		public StringBuffer( int capacity ) {
 			this.capacity = capacity;

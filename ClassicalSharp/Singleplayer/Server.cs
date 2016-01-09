@@ -19,6 +19,7 @@ namespace ClassicalSharp.Singleplayer {
 			game = window;
 			physics = new Physics( game );
 			ServerSupportsFullCP437 = true;
+			ServerSupportsPartialMessages = true;
 		}
 		
 		public override bool IsSinglePlayer {
