@@ -75,6 +75,11 @@ namespace ClassicalSharp {
 				     	Recreate();
 				     } ),
 				
+				Make( 140, 50, "Tab auto-complete", OnWidgetClick,
+				     g => g.TabAutocomplete ? "yes" : "no",
+				     (g, v) => { g.TabAutocomplete = v == "yes";
+				     	Options.Set( OptionsKey.TabAutocomplete, v == "yes" );
+				     } ),			
 				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
@@ -89,6 +94,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),		
 				new RealValidator( 0.25f, 5f ),
 				new IntegerValidator( 1, 30 ),
+				new BooleanValidator(),
 				new BooleanValidator(),
 			};
 			okayIndex = buttons.Length - 1;

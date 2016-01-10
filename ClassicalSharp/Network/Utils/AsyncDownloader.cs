@@ -166,7 +166,7 @@ namespace ClassicalSharp.Network {
 				using( HttpWebResponse response = (HttpWebResponse)req.GetResponse() )
 					value = DownloadContent( request, response );
 			} catch( Exception ex ) {
-				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException ) ) throw;
+				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException || ex is IOException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );
 				
 				if( ex is WebException )

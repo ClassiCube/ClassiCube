@@ -9,9 +9,6 @@ namespace ClassicalSharp {
 	public sealed partial class TextInputWidget : Widget {
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( key == '`' ) {
-				TildeKey(); return true; // TODO: use tab instead of tilde
-			}
 			if( game.HideGui ) return true;
 			
 			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
@@ -33,7 +30,8 @@ namespace ClassicalSharp {
 				return key < Key.F1 || key > Key.F35;
 			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
 			
-			if( key == Key.Down ) DownKey( controlDown );
+			if( key == Key.Tab ) TabKey();
+			else if( key == Key.Down ) DownKey( controlDown );
 			else if( key == Key.Up ) UpKey( controlDown );
 			else if( key == Key.Left ) LeftKey( controlDown );
 			else if( key == Key.Right ) RightKey( controlDown );
@@ -49,7 +47,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		void TildeKey() {
+		void TabKey() {
 			int pos = caretPos == -1 ? chatInputText.Length - 1 : caretPos;
 			int start = pos;
 			char[] value = chatInputText.value;

@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 		public const string CameraClipping = "cameraclipping";
 		public const string UseClassicGui = "useclassictex";
 		public const string DoubleJump = "doublejump";
+		public const string TabAutocomplete = "tab-autocomplete";
 	}
 	
 	// TODO: implement this

@@ -57,6 +57,8 @@ namespace ClassicalSharp {
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
+			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
+			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
