@@ -214,7 +214,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		/// <summary> Adds a warning to chat if this graphics API has problems with the current user's GPU. </summary>
-		public virtual void WarnIfNecessary( ChatLog chat ) {
+		public virtual void WarnIfNecessary( Chat chat ) {
 		}
 		
 		/// <summary> Informs the graphic api to update its state in preparation for a new frame. </summary>

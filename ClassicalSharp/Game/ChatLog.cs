@@ -6,14 +6,14 @@ using ClassicalSharp.Commands;
 
 namespace ClassicalSharp {
 
-	public sealed class ChatLog : IDisposable {
+	public sealed class Chat : IDisposable {
 		
 		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement;
 		public ChatLine[] ClientStatus = new ChatLine[6];
 		
 		Game game;
-		public ChatLog( Game game ) {
+		public Chat( Game game ) {
 			this.game = game;
 		}
 		

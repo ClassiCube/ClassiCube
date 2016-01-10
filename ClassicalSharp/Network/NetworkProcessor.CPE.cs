@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 			"HackControl", "MessageTypes", "PlayerClick",
 			"FullCP437", "LongerMessages",
 			// proposals
-			"BlockDefinitions", "BlockDefinitionsExt",
+			"BlockDefinitions", "BlockDefinitionsExt", "TextColors",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -511,6 +511,17 @@ namespace ClassicalSharp {
 		static int ReadInt32( byte[] buffer, int offset ) {
 			return buffer[offset + 0] << 24 | buffer[offset + 1] << 16
 				| buffer[offset + 2] << 8 | buffer[offset + 3];
+		}
+		
+		void HandleSetTextColor() {
+			FastColour col = new FastColour( reader.ReadUInt8(), reader.ReadUInt8(), 
+			                                reader.ReadUInt8(), reader.ReadUInt8() );
+			byte code = reader.ReadUInt8();
+			
+			if( code <= ' ' || code > '~' ) return; // Control chars, space, extended chars cannot be used
+			if( (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f') 
+			   || (code >= 'A' && code <= 'F') ) return; // Standard chars cannot be used.
+			game.Drawer2D.Colours[code] = col;
 		}
 		
 		static SoundType[] stepSnds, breakSnds;

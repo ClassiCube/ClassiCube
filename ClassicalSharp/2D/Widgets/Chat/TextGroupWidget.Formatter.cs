@@ -96,8 +96,7 @@ namespace ClassicalSharp {
 			// url and word both need to have %e at the start.
 			
 			if( colIndex >= 0 && colIndex < line.Length - 1 ) {
-				int hex;
-				if( Utils.TryParseHex( line[colIndex + 1], out hex ) )
+				if( game.Drawer2D.ValidColour( line[colIndex + 1] ) )
 					part = "&" + line[colIndex + 1] + part;
 			}
 			return part;

@@ -136,7 +136,7 @@ namespace ClassicalSharp {
 				indices[i] = -1;
 			Metadata = indices;
 			
-			ChatLog chat = game.Chat;
+			Chat chat = game.Chat;
 			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
 			status.SetText( 0, chat.Status1.Text );

@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 			wrap = new char[capacity];
 		}
 		
-		public void WordWrap( ref string[] lines, ref int[] lineLens, int lineSize ) {
+		public void WordWrap( IDrawer2D drawer, ref string[] lines, ref int[] lineLens, int lineSize ) {
 			int len = Length;
 			for( int i = 0; i < lines.Length; i++ ) {
 				lines[i] = null;
@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 			}
 			
 			// Output the used lines
-			OutputLines( ref lines, linesCount, lineSize, lineLens );
+			OutputLines( drawer, ref lines, linesCount, lineSize, lineLens );
 			value = realText;
 		}
 		
@@ -58,14 +58,13 @@ namespace ClassicalSharp {
 			value = wrap;
 		}
 		
-		void OutputLines( ref string[] lines, int linesCount, int lineSize, int[] lineLens ) {
+		void OutputLines( IDrawer2D drawer, ref string[] lines, int linesCount, int lineSize, int[] lineLens ) {
 			for( int i = 0; i < capacity; i++ ) {
 				if( value[i] == '\0' ) value[i] = ' ';
 			}
 			// convert %0-f to &0-f for colour preview.
 			for( int i = 0; i < capacity - 1; i++ ) {
-				int hex;
-				if( value[i] == '%' && Utils.TryParseHex( value[i + 1], out hex ) )
+				if( value[i] == '%' && drawer.ValidColour( value[i + 1] ) )
 					value[i] = '&';
 			}
 			

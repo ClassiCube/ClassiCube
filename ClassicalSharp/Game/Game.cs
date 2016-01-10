@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 			UserViewDistance = ViewDistance;
 			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
 			InputHandler = new InputHandler( this );
-			Chat = new ChatLog( this );
+			Chat = new Chat( this );
 			ParticleManager = new ParticleManager( this );
 			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );

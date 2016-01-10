@@ -393,7 +393,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			isIntelRenderer = renderer.Contains( "Intel" );
 		}
 		
-		public override void WarnIfNecessary( ChatLog chat ) {
+		public override void WarnIfNecessary( Chat chat ) {
 			if( !isIntelRenderer ) return;
 			
 			chat.Add( "&cIntel graphics cards are known to have issues with the OpenGL build." );

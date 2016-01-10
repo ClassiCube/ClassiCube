@@ -146,6 +146,18 @@ namespace ClassicalSharp {
 			return Platform.CreateBmp( Utils.NextPowerOf2( size.Width ), Utils.NextPowerOf2( size.Height ) );
 		}
 		
+		public FastColour[] Colours = new FastColour[256];
+		
+		public IDrawer2D() {
+			for( int i = 0; i <= 9; i++ )
+				Colours['0' + i] = FastColour.GetHexEncodedCol( i );
+			
+			for( int i = 10; i <= 15; i++) {
+				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i );
+				Colours['A' + i - 10] = FastColour.GetHexEncodedCol( i );
+			}
+		}
+		
 		protected List<TextPart> parts = new List<TextPart>( 64 );
 		protected struct TextPart {
 			public string Text;
@@ -168,25 +180,31 @@ namespace ClassicalSharp {
 		}
 		
 		protected void SplitText( string value ) {
-			int code = 0xF;
+			char code = 'F';
 			for( int i = 0; i < value.Length; i++ ) {
 				int nextAnd = value.IndexOf( '&', i );
 				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					FastColour col = FastColour.GetHexEncodedCol( code );
+					FastColour col = Colours[code];
 					parts.Add( new TextPart( part, col ) );
 				}
 				i += partLength + 1;
 				
 				if( nextAnd >= 0 && nextAnd + 1 < value.Length ) {
-					if( !Utils.TryParseHex( value[nextAnd + 1], out code ) ) {
-						code = 0xF;
-						i--;// include the character that isn't a colour code.
+					if( !ValidColour( value[nextAnd + 1] ) ) {
+						code = 'F';
+						i--; // include the character that isn't a colour code.
+					} else {
+						code = value[nextAnd + 1];
 					}
 				}
 			}
+		}
+		
+		internal bool ValidColour( char c ) {
+			return Colours[c].A > 0;
 		}
 	}
 }

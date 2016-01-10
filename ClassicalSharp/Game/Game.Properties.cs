@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 		public EntityEvents EntityEvents = new EntityEvents();
 		public MapEvents MapEvents = new MapEvents();
 		public InputHandler InputHandler;
-		public ChatLog Chat;
+		public Chat Chat;
 		public BlockHandRenderer BlockHandRenderer;
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;

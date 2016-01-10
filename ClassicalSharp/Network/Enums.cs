@@ -43,6 +43,7 @@ namespace ClassicalSharp {
 		CpeRemoveBlockDefinition = 36,
 		CpeDefineBlockExt = 37,
 		CpeBulkBlockUpdate = 38,
+		CpeSetTextColor = 39,
 	}
 	
 	public enum MessageType {

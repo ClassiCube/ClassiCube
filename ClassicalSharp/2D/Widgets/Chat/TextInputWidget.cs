@@ -69,7 +69,7 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			X = 5;
-			chatInputText.WordWrap( ref parts, ref partLens, 64 );
+			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, 64 );
 
 			maxWidth = 0;
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
@@ -148,16 +148,15 @@ namespace ClassicalSharp {
 		
 		void CalculateCaretCol() {
 			int x = indexX;
+			IDrawer2D drawer = game.Drawer2D;
 			for( int y = indexY; y >= 0; y-- ) {
+				string part = parts[y];
 				if( x == partLens[y] ) x = partLens[y] - 1;
-				int start = parts[y].LastIndexOf( '&', x, x + 1 );
-				
-				int hex;
+				int start = part.LastIndexOf( '&', x, x + 1 );
 				bool validIndex = start >= 0 && start < partLens[y] - 1;
 				
-				if( validIndex && Utils.TryParseHex( parts[y][start + 1], out hex ) ) {
-					caretCol = FastColour.GetHexEncodedCol( hex );
-					return;
+				if( validIndex && drawer.ValidColour( part[start + 1] ) ) {
+					caretCol = drawer.Colours[part[start + 1]]; return;
 				}
 				if( y > 0 ) x = partLens[y - 1] - 1;
 			}
