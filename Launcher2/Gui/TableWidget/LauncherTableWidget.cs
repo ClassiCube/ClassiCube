@@ -73,7 +73,6 @@ namespace Launcher2 {
 			Redraw( drawer, font, titleFont, boldFont );
 		}
 		
-		static FastColour scrollBackCol = new FastColour( 120, 85, 151 ), scrollCol = new FastColour( 200, 184, 216 );
 		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
 			for( int i = 0; i < ColumnWidths.Length; i++ ) {
 				ColumnWidths[i] = DesiredColumnWidths[i];
@@ -166,12 +165,12 @@ namespace Launcher2 {
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
-			drawer.Clear( scrollBackCol, Window.Width - 10, Y, 10, Height );
+			drawer.Clear( LauncherSkin.ButtonBorderCol, Window.Width - 10, Y, 10, Height );
 			float scale = Height / (float)Count;
 			
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);
-			drawer.Clear( scrollCol, Window.Width - 10, y1, 10, height + 1 );
+			drawer.Clear( LauncherSkin.ButtonForeActiveCol, Window.Width - 10, y1, 10, height + 1 );
 		}
 		
 		public void SetSelected( int index ) {

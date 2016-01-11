@@ -42,7 +42,7 @@ namespace Launcher2 {
 		}
 
 		void DrawClassicube() {
-			MakeInput( Get(), 280, Anchor.Centre, false, 0, -115, 32, "&7Username.." );
+			MakeInput( Get(), 280, Anchor.Centre, false, 0, -120, 32, "&7Username.." );
 			MakeInput( Get(), 280, Anchor.Centre, true, 0, -70, 32, "&7Password.." );
 			
 			MakeButtonAt( "Sign in", 100, buttonHeight, buttonFont,

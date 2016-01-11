@@ -6,17 +6,15 @@ namespace Launcher2 {
 
 	public static class Drawer2DExt {
 		
-		public unsafe static void CopyScaledPixels( FastBitmap src, FastBitmap dst,
-		                                           Rectangle srcRect, Rectangle dstRect ) {
-			CopyScaledPixels( src, dst, new Size( dstRect.Width, dstRect.Height ), srcRect, dstRect, 255 );
-		}
-		public unsafe static void CopyScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
-		                                           Rectangle srcRect, Rectangle dstRect, byte rgbScale ) {
+		public unsafe static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
+		                                           Rectangle srcRect, Rectangle dstRect, byte scaleA, byte scaleB ) {
 			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
 			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
 			int srcX = srcRect.X, dstX = dstRect.X;
 			int srcY = srcRect.Y, dstY = dstRect.Y;
 			int scaleWidth = scale.Width, scaleHeight = scale.Height;
+			int offsetX = dstRect.X * srcRect.Width / scaleWidth;
+			int offsetY = dstRect.Y * srcRect.Height / scaleHeight;
 			
 			if( dstX >= dst.Width || dstY >= dst.Height ) return;
 			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
@@ -24,12 +22,13 @@ namespace Launcher2 {
 			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
 				int scaledY = yy * srcHeight / scaleHeight;
-				int* srcRow = src.GetRowPtr( srcY + scaledY );
+				int* srcRow = src.GetRowPtr( srcY + (scaledY + offsetY) % srcHeight );
 				int* dstRow = dst.GetRowPtr( dstY + yy );
+				byte rgbScale = (byte)Utils.Lerp( scaleA, scaleB, (float)yy / dstHeight );
 				
 				for( int xx = 0; xx < dstWidth; xx++ ) {
 					int scaledX = xx * srcWidth / scaleWidth;
-					int pixel = srcRow[srcX + scaledX];
+					int pixel = srcRow[srcX + (scaledX + offsetX) % srcWidth];
 					
 					int col = pixel & ~0xFFFFFF; // keep a, but clear rgb
 					col |= ((pixel & 0xFF) * rgbScale / 255);

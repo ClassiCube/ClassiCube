@@ -57,7 +57,7 @@ namespace Launcher2 {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
-			logoFont = new Font( "Arial", 30, FontStyle.Regular );
+			logoFont = new Font( "Arial", 24, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
 			Window.Icon = Icon.ExtractAssociatedIcon( path );
 			                                         

@@ -23,40 +23,56 @@ namespace Launcher2 {
 			using( Stream fs = new FileStream( texPack, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 				ZipReader reader = new ZipReader();
 				
-				reader.ShouldProcessZipEntry = (f) => f == "default.png";
+				reader.ShouldProcessZipEntry = (f) => f == "default.png" || f == "terrain.png";
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract( fs );
 			}
 		}
 		
 		bool useBitmappedFont;
+		Bitmap terrainBmp;
+		FastBitmap terrainPixels;
+		int elemSize;
+		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
 			Bitmap bmp = new Bitmap( stream );
-			Drawer.SetFontBitmap( bmp );
-			useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
+			if( filename == "default.png" ) {
+				Drawer.SetFontBitmap( bmp );
+				useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
+			} else if( filename == "terrain.png" ) {
+				FastBitmap src = new FastBitmap( bmp, true );
+				elemSize = src.Width / 16;
+				
+				terrainBmp = new Bitmap( elemSize * 2, elemSize );
+				terrainPixels = new FastBitmap( terrainBmp, true );
+				FastBitmap.MovePortion( elemSize * 1, 0, elemSize * 0, 0, src, terrainPixels, elemSize );
+				FastBitmap.MovePortion( elemSize * 2, 0, elemSize * 1, 0, src, terrainPixels, elemSize );
+			}
 		}
 		
 		public void MakeBackground() {
 			if( Framebuffer == null || (Framebuffer.Width != Width || Framebuffer.Height != Height) ) {
-				if( Framebuffer != null ) 
+				if( Framebuffer != null )
 					Framebuffer.Dispose();
 				Framebuffer = new Bitmap( Width, Height );
-			}			
+			}
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
-				ClearArea( 0, 0, Width, Height );
-				
+
 				drawer.UseBitmappedChat = useBitmappedFont;
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
+				ClearArea( 0, 0, Width, Height );
+				//ClearTile( 0, 0, Width, 48, elemSize, 128, 64 );
 				
 				args.Text = "&0Classical&0Sharp";
-				drawer.DrawChatText( ref args, xStart + 5, 10 + 5 );
+				drawer.DrawChatText( ref args, xStart + 4, 10 + 4 );
 				args.Text = "&eClassical&fSharp";
 				drawer.DrawChatText( ref args, xStart, 10 );
 				drawer.UseBitmappedChat = false;
+				//ClearTile( 0, 48, Width, Height - 48, 0, 64, 64 );
 			}
 			Dirty = true;
 		}
@@ -65,6 +81,27 @@ namespace Launcher2 {
 			FastColour col = LauncherSkin.BackgroundCol;
 			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
 				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col );
+			//ClearTile( x, y, width, height, 0, 64, 64 );
+		}
+		
+		void ClearTile( int x, int y, int width, int height, int srcX, byte scaleA, byte scaleB ) {
+			if( x >= Width || y >= Height ) return;
+			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
+				Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
+				const int tileSize = 48;
+				Size size = new Size( tileSize, tileSize );
+				int xMax = x + width, xOrig = x, yMax = y + height;
+				
+				for( ; y < yMax; y += tileSize )
+					for( x = xOrig; x < xMax; x += tileSize )
+				{
+					int x2 = Math.Min( x + tileSize, Math.Min( x + width, Width ) );
+					int y2 = Math.Min( y + tileSize, Math.Min( y + height, Height ) );
+					
+					Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
+					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
+				}
+			}
 		}
 	}
 }
