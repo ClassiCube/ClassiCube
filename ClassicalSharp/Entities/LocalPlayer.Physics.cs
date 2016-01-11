@@ -69,13 +69,13 @@ namespace ClassicalSharp {
 			} else if( TouchesAnyRope() ) {
 				Velocity.Y += speeding ? 0.15f : 0.10f;
 				canLiquidJump = false;
-			} else if( onGround ) {
-				Velocity.Y = 0;
+			} else if( onGround ) {				
 				DoNormalJump();
 			}
 		}
 		
 		void DoNormalJump() {
+			Velocity.Y = 0;
 			Velocity.Y += jumpVel;
 			if( speeding ) Velocity.Y += jumpVel;
 			if( halfSpeeding ) Velocity.Y += jumpVel / 2;
@@ -96,10 +96,13 @@ namespace ClassicalSharp {
 		void PhysicsTick( float xMoving, float zMoving ) {
 			if( noClip )
 				onGround = false;
-			float multiply = GetBaseMultiply();
+			float multiply = GetBaseMultiply();			
 			float modifier = LowestSpeedModifier();
-			float horMul = multiply * modifier;
+			
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
+			float horMul = multiply * modifier;
+			if( !secondJump ) { horMul *= 93f; yMul *= 10f; }
+			else if( !firstJump ) { horMul *= 46.5f; yMul *= 7.5f; }
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, yMul );

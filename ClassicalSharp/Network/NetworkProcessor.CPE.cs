@@ -58,14 +58,12 @@ namespace ClassicalSharp {
 		bool sendHeldBlock, useMessageTypes;
 		int envMapApperanceVer = 2;
 		static string[] clientExtensions = {
-			"ClickDistance", "CustomBlocks", "HeldBlock",
-			"EmoteFix", "TextHotKey", "ExtPlayerList",
-			"EnvColors", "SelectionCuboid", "BlockPermissions",
-			"ChangeModel", "EnvMapAppearance", "EnvWeatherType",
-			"HackControl", "MessageTypes", "PlayerClick",
-			"FullCP437", "LongerMessages",
+			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
+			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance", 
+			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437", 
+			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt",
 			// proposals
-			"BlockDefinitions", "BlockDefinitionsExt", "TextColors",
+			"BulkBlockUpdate", "TextColors",
 		};
 		
 		void HandleCpeExtInfo() {
@@ -499,7 +497,7 @@ namespace ClassicalSharp {
 				byte block = reader.buffer[i + bulkCount * sizeof(int)];
 				Vector3I coords = game.Map.GetCoords( indices[i] );
 				
-				if( !game.Map.IsValidPos( coords ) ) {
+				if( coords.X < 0 ) {
 					Utils.LogDebug( "Server tried to update a block at an invalid position!" );
 					continue;
 				}

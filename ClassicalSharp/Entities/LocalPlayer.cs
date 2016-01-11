@@ -318,10 +318,10 @@ namespace ClassicalSharp {
 				noClip = !noClip;
 			} else if( key == keys[KeyBinding.Jump] && !onGround ) {
 				if( firstJump && CanDoubleJump && DoubleJump ) {
-					//DoNormalJump(); TODO: get this working
+					DoNormalJump();
 					firstJump = false;
 				} else if( secondJump && CanDoubleJump && DoubleJump ) {
-					//DoNormalJump(); TODO: get this working
+					DoNormalJump();
 					secondJump = false;
 				}
 			} else {

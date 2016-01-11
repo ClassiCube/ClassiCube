@@ -66,6 +66,7 @@
     <DefineConstants>TRACE;USE_DX</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
+    <StartArguments>wwwf ver 127.0.0.1 25565</StartArguments>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>

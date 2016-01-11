@@ -40,8 +40,8 @@ namespace Launcher2 {
 		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
 			request.UserAgent = Program.AppName;
-			request.ReadWriteTimeout = 15 * 1000;
-			request.Timeout = 15 * 1000;
+			request.ReadWriteTimeout = 90 * 1000;
+			request.Timeout = 90 * 1000;
 			request.Referer = referer;
 			request.KeepAlive = true;
 			request.CookieContainer = cookies;

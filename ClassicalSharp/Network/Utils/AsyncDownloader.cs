@@ -228,8 +228,8 @@ namespace ClassicalSharp.Network {
 		HttpWebRequest MakeRequest( Request request ) {
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create( request.Url );
 			req.AutomaticDecompression = DecompressionMethods.GZip;
-			req.ReadWriteTimeout = 15 * 1000;
-			req.Timeout = 15 * 1000;
+			req.ReadWriteTimeout = 90 * 1000;
+			req.Timeout = 90 * 1000;
 			req.Proxy = null;
 			req.UserAgent = Program.AppName;
 			
