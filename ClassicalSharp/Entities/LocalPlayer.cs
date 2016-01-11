@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 		public bool NoclipSlide = true;
 		
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
-		public bool DoubleJump = true;
+		public bool DoubleJump = false;
 		
 		/// <summary> Whether the player is allowed to double jump. </summary>
 		public bool CanDoubleJump = true;
@@ -81,6 +81,7 @@ namespace ClassicalSharp {
 			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 7 );
 			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
+			DoubleJump = Options.GetBool( OptionsKey.DoubleJump, false );
 			InitRenderingData();
 		}
 		
@@ -316,7 +317,7 @@ namespace ClassicalSharp {
 				flying = !flying;
 			} else if( key == keys[KeyBinding.NoClip] && CanNoclip && HacksEnabled ) {
 				noClip = !noClip;
-			} else if( key == keys[KeyBinding.Jump] && !onGround ) {
+			} else if( key == keys[KeyBinding.Jump] && !onGround && !(flying || noClip) ) {
 				if( firstJump && CanDoubleJump && DoubleJump ) {
 					DoNormalJump();
 					firstJump = false;

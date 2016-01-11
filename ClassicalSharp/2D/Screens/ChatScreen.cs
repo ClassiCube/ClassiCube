@@ -276,7 +276,7 @@ namespace ClassicalSharp {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == game.Mapping( KeyBinding.SendChat )
+				if( key == game.Mapping( KeyBinding.SendChat ) || key == Key.KeypadEnter
 				   || key == game.Mapping( KeyBinding.PauseOrExit ) ) {
 					HandlesAllInput = false;
 					if( game.CursorVisible )

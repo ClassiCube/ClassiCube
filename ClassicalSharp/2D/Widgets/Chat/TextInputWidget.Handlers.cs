@@ -105,6 +105,7 @@ namespace ClassicalSharp {
 				caretPos -= len;
 				
 				if( caretPos < 0 ) caretPos = 0;
+				if( caretPos != 0 ) caretPos++; // Don't remove space.
 				for( int i = 0; i <= len; i++ )
 					chatInputText.DeleteAt( caretPos );
 				

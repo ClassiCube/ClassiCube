@@ -173,9 +173,9 @@ namespace ClassicalSharp {
 		float GetBaseMultiply() {
 			float multiply = 0;
 			if( flying || noClip ) {
-				if( speeding ) multiply += SpeedMultiplier * 9;
-				if( halfSpeeding ) multiply += SpeedMultiplier * 9 / 2;
-				if( multiply == 0 ) multiply = SpeedMultiplier * 1.5f;
+				if( speeding ) multiply += SpeedMultiplier * 8;
+				if( halfSpeeding ) multiply += SpeedMultiplier * 8 / 2;
+				if( multiply == 0 ) multiply = 8f;
 			} else {
 				if( speeding ) multiply += SpeedMultiplier;
 				if( halfSpeeding ) multiply += SpeedMultiplier / 2;
