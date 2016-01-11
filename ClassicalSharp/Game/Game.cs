@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
@@ -177,8 +178,11 @@ namespace ClassicalSharp {
 			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
 		
+		Stopwatch frameTimer = new Stopwatch();
 		protected override void OnRenderFrame( FrameEventArgs e ) {
-			PerformFpsElapsed( e.Time * 1000 );
+			frameTimer.Reset();
+			frameTimer.Start();
+			
 			Graphics.BeginFrame( this );
 			Graphics.BindIb( defaultIb );
 			accumulator += e.Time;
@@ -237,6 +241,7 @@ namespace ClassicalSharp {
 			if( screenshotRequested )
 				TakeScreenshot();
 			Graphics.EndFrame( this );
+			LimitFPS();
 		}
 		
 		const int ticksFrequency = 20;
@@ -386,32 +391,26 @@ namespace ClassicalSharp {
 		}
 		
 		float limitMilliseconds;
-		double limitAcc;
 		public void SetFpsLimitMethod( FpsLimitMethod method ) {
 			FpsLimit = method;
-			limitAcc = 0;
 			limitMilliseconds = 0;
-			Graphics.SetVSync( this,
-			                  method == FpsLimitMethod.LimitVSync );
+			Graphics.SetVSync( this, method == FpsLimitMethod.LimitVSync );
 			
 			if( method == FpsLimitMethod.Limit120FPS )
-				limitMilliseconds = 1000f / 60;
+				limitMilliseconds = 1000f / 120;
 			if( method == FpsLimitMethod.Limit60FPS )
-				limitMilliseconds = 1000f / 30;
+				limitMilliseconds = 1000f / 60;
 			if( method == FpsLimitMethod.Limit30FPS )
-				limitMilliseconds = 1000f / 15;
+				limitMilliseconds = 1000f / 30;
 		}
 		
-		void PerformFpsElapsed( double elapsedMs ) {
-			limitAcc += elapsedMs;
-			if( limitAcc >= limitMilliseconds ) { // going slower than limit?
-				limitAcc -= limitMilliseconds;
-			} else { // going faster than limit
-				double sleepTime = limitMilliseconds - limitAcc;
-				sleepTime = Math.Ceiling( sleepTime );
-				Thread.Sleep( (int)sleepTime );
-				limitAcc = 0;
-			}
+		void LimitFPS() {
+			if( FpsLimit == FpsLimitMethod.LimitVSync ) return;
+			
+			double elapsed = frameTimer.Elapsed.TotalMilliseconds;
+			double leftOver = limitMilliseconds - elapsed;
+			if( leftOver > 0.001 ) // going faster than limit
+				Thread.Sleep( (int)Math.Round( leftOver, MidpointRounding.AwayFromZero ) );
 		}
 		
 		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }
