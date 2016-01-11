@@ -46,6 +46,9 @@ namespace ClassicalSharp {
 				Make( 140, 50, "Hotkeys", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
 				
+				Make( 0, 100, "Nostalgia options", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+				
 				// Other
 				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
 				          (g, w) => g.Exit() ),

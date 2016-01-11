@@ -129,6 +129,8 @@ namespace ClassicalSharp {
 		
 		public bool TabAutocomplete = false;
 		
+		public bool AllowCustomBlocks, AllowCPEBlocks, AllowServerTextures;
+		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
 		internal float HudScale = 1.0f, ChatScale = 1.0f;

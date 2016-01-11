@@ -192,6 +192,10 @@ namespace ClassicalSharp {
 			handler();
 		}
 		
+		void SkipPacketData( PacketId opcode ) {
+			reader.Remove( packetSizes[(byte)opcode] - 1 );
+		}
+		
 		Action[] handlers;
 		int maxHandledPacket;
 		

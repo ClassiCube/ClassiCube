@@ -30,10 +30,10 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -140, 0, "Use classic gui", OnWidgetClick,
-				     g => g.UseClassicGui ? "yes" : "no",
-				     (g, v) => { g.UseClassicGui = v == "yes";
-				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
+				Make( -140, 0, "Tab auto-complete", OnWidgetClick,
+				     g => g.TabAutocomplete ? "yes" : "no",
+				     (g, v) => { g.TabAutocomplete = v == "yes";
+				     	Options.Set( OptionsKey.TabAutocomplete, v == "yes" );
 				     } ),
 				
 				// Column 2
@@ -73,13 +73,7 @@ namespace ClassicalSharp {
 				     	
 				     	g.RefreshHud();
 				     	Recreate();
-				     } ),
-				
-				Make( 140, 50, "Tab auto-complete", OnWidgetClick,
-				     g => g.TabAutocomplete ? "yes" : "no",
-				     (g, v) => { g.TabAutocomplete = v == "yes";
-				     	Options.Set( OptionsKey.TabAutocomplete, v == "yes" );
-				     } ),			
+				     } ),		
 				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
@@ -93,8 +87,7 @@ namespace ClassicalSharp {
 				
 				new BooleanValidator(),		
 				new RealValidator( 0.25f, 5f ),
-				new IntegerValidator( 1, 30 ),
-				new BooleanValidator(),
+				new IntegerValidator( 1, 30 ),				
 				new BooleanValidator(),
 			};
 			okayIndex = buttons.Length - 1;

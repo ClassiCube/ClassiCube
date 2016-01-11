@@ -59,6 +59,9 @@ namespace ClassicalSharp {
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
+			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
+			AllowCPEBlocks = Options.GetBool( OptionsKey.AllowCPEBlocks, true );
+			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );
 			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();

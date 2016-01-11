@@ -105,15 +105,19 @@ namespace ClassicalSharp {
 		}
 		
 		void SendCpeExtInfoReply() {
-			if( cpeServerExtensionsCount != 0)
-				return;
-			MakeExtInfo( Program.AppName, clientExtensions.Length );
+			if( cpeServerExtensionsCount != 0 ) return;
+			int count = clientExtensions.Length;
+			if( !game.AllowCustomBlocks ) count -= 2;
+			MakeExtInfo( Program.AppName, count );
 			SendPacket();
+			
 			for( int i = 0; i < clientExtensions.Length; i++ ) {
 				string name = clientExtensions[i];
 				int ver = name == "ExtPlayerList" ? 2 : 1;
 				if( name == "EnvMapAppearance" ) ver = envMapApperanceVer;
 				
+				if( !game.AllowCustomBlocks && name.StartsWith( "BlockDefinitions" ) )
+					continue;				
 				MakeExtEntry( name, ver );
 				SendPacket();
 			}
@@ -300,7 +304,9 @@ namespace ClassicalSharp {
 			string url = reader.ReadAsciiString();
 			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
-			game.Map.SetEdgeLevel( reader.ReadInt16() );
+			game.Map.SetEdgeLevel( reader.ReadInt16() );			
+			if( !game.AllowServerTextures )
+				return;
 			
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
@@ -386,6 +392,9 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleCpeDefineBlock() {
+			if( !game.AllowCustomBlocks ) {
+				SkipPacketData( PacketId.CpeDefineBlock ); return;
+			}
 			byte block = HandleCpeDefineBlockCommonStart();
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
@@ -408,11 +417,17 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleCpeRemoveBlockDefinition() {
+			if( !game.AllowCustomBlocks ) {
+				SkipPacketData( PacketId.CpeRemoveBlockDefinition ); return;
+			}
 			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
 		}
 		
 		void HandleCpeDefineBlockExt() {
+			if( !game.AllowCustomBlocks ) {
+				SkipPacketData( PacketId.CpeDefineBlockExt ); return;
+			}
 			byte block = HandleCpeDefineBlockCommonStart();
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;

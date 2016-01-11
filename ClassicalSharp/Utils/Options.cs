@@ -8,6 +8,7 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 	
 	public static class OptionsKey {
+		
 		public const string ViewDist = "viewdist";
 		public const string HudScale = "hudscale";
 		public const string ChatScale = "chatscale";
@@ -23,7 +24,6 @@ namespace ClassicalSharp {
 		public const string UseSound = "usesound";
 		public const string HacksEnabled = "hacksenabled";
 		public const string NamesMode = "namesmode";
-		public const string SimpleArmsAnim = "simplearmsanim";
 		
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";
@@ -37,9 +37,14 @@ namespace ClassicalSharp {
 		public const string InvertMouse = "invertmouse";
 		public const string NoclipSlide = "noclipslide";
 		public const string CameraClipping = "cameraclipping";
-		public const string UseClassicGui = "useclassictex";
 		public const string DoubleJump = "doublejump";
 		public const string TabAutocomplete = "tab-autocomplete";
+		
+		public const string AllowCustomBlocks = "nostalgia-customblocks";
+		public const string AllowCPEBlocks = "nostalgia-cpeblocks";
+		public const string AllowServerTextures = "nostalgia-servertextures";
+		public const string UseClassicGui = "nostalgia-classicgui";
+		public const string SimpleArmsAnim = "nostalgia-simplearms";
 	}
 	
 	// TODO: implement this

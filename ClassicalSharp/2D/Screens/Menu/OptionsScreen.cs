@@ -26,24 +26,19 @@ namespace ClassicalSharp {
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
-				Make( -140, -100, "Simple arms anim", OnWidgetClick,
-				     g => g.SimpleArmsAnim? "yes" : "no",
-				     (g, v) => { g.SimpleArmsAnim = v == "yes";
-				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
-				
-				Make( -140, -50, "Names mode", OnWidgetClick,
+				Make( -140, -100, "Names mode", OnWidgetClick,
 				     g => g.Players.NamesMode.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
 				     	g.Players.NamesMode = (NameMode)raw;
 				     	Options.Set( OptionsKey.NamesMode, v ); } ),
 				
-				Make( -140, 0, "FPS limit", OnWidgetClick,
+				Make( -140, -50, "FPS limit", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 
-				Make( -140, 50, "View distance", OnWidgetClick,
+				Make( -140, 0, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
@@ -85,12 +80,11 @@ namespace ClassicalSharp {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[3].Metadata = typeof(NameMode);
-			buttons[4].Metadata = typeof(FpsLimitMethod);
+			buttons[2].Metadata = typeof(NameMode);
+			buttons[3].Metadata = typeof(FpsLimitMethod);
 			
 			validators = new MenuInputValidator[] {
 				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
-				new BooleanValidator(),
 				new BooleanValidator(),
 				new EnumValidator(),
 				new EnumValidator(),
