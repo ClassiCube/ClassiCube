@@ -83,13 +83,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
-					Texture tex = textures[i];
-					graphicsApi.DeleteTexture( ref tex );
-					RemoveItemAt( textures, i );
-					RemoveItemAt( info, i );
-					namesCount--;
-					columns = Utils.CeilDiv( namesCount, namesPerColumn );
-					SortPlayerInfo();
+					RemoveInfoAt( info, i );
 					return;
 				}
 			}

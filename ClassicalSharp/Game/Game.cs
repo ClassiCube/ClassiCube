@@ -57,8 +57,10 @@ namespace ClassicalSharp {
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
-			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
+			
+			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
+			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
 			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
 			AllowCPEBlocks = Options.GetBool( OptionsKey.AllowCPEBlocks, true );
 			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );

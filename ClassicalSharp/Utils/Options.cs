@@ -45,6 +45,7 @@ namespace ClassicalSharp {
 		public const string AllowServerTextures = "nostalgia-servertextures";
 		public const string UseClassicGui = "nostalgia-classicgui";
 		public const string SimpleArmsAnim = "nostalgia-simplearms";
+		public const string UseClassicTabList = "nostalgia-classictablist";
 	}
 	
 	// TODO: implement this

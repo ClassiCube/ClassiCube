@@ -27,6 +27,12 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
 				     } ),
 				
+				Make( -140, -50, "Classic player list", OnWidgetClick,
+				     g => g.UseClassicTabList ? "yes" : "no",
+				     (g, v) => { g.UseClassicTabList = v == "yes";
+				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );
+				     } ),
+				
 				// Column 2
 				Make( 140, -100, "Allow custom blocks", OnWidgetClick,
 				     g => g.AllowCustomBlocks ? "yes" : "no",
@@ -50,9 +56,10 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[3].Disabled = true;
+			buttons[4].Disabled = true;
 			
 			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				

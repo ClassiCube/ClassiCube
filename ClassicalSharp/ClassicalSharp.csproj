@@ -122,12 +122,13 @@
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.Formatter.cs" />
     <Compile Include="2D\Widgets\Chat\TextInputWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextInputWidget.Handlers.cs" />
-    <Compile Include="2D\Widgets\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
-    <Compile Include="2D\Widgets\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
-    <Compile Include="2D\Widgets\PlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\PlayerList\ClassicPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\PlayerList\ExtPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\PlayerList\NormalPlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\PlayerList\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Audio\AudioPlayer.cs" />
@@ -279,6 +280,7 @@
     <Folder Include="2D\Widgets" />
     <Folder Include="2D\Widgets\Menu" />
     <Folder Include="2D\Widgets\Chat" />
+    <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
     <Folder Include="Events" />
     <Folder Include="Generator" />

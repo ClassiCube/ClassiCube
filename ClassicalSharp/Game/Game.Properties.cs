@@ -125,9 +125,9 @@ namespace ClassicalSharp {
 		/// <summary> How sensitive the client is to changes in the player's mouse position. </summary>
 		public int MouseSensitivity = 30;
 		
-		public bool UseClassicGui = false;
+		public bool TabAutocomplete;
 		
-		public bool TabAutocomplete = false;
+		public bool UseClassicGui, UseClassicTabList;
 		
 		public bool AllowCustomBlocks, AllowCPEBlocks, AllowServerTextures;
 		

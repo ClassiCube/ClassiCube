@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 			
 			for( ; i < maxIndex; i++ )
 				maxWidth = Math.Max( maxWidth, textures[i].Width );
-			return maxWidth;
+			return maxWidth + 5;
 		}
 		
 		protected int GetColumnHeight( int column ) {
@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			int maxIndex = Math.Min( namesCount, i + namesPerColumn );
 			
 			for( ; i < maxIndex; i++ )
-				total += textures[i].Height;
+				total += textures[i].Height + 1;
 			return total;
 		}
 		
@@ -90,7 +90,7 @@ namespace ClassicalSharp {
 			for( ; i < maxIndex; i++ ) {
 				Texture tex = textures[i];
 				tex.X1 = x; tex.Y1 = y;
-				y += tex.Height;
+				y += tex.Height + 1;
 				textures[i] = tex;
 			}
 		}
@@ -107,6 +107,16 @@ namespace ClassicalSharp {
 		protected abstract void CreateInitialPlayerInfo();
 		
 		protected abstract void SortInfoList();
+		
+		protected void RemoveInfoAt<T>( T[] info, int i ) {
+			Texture tex = textures[i];
+			graphicsApi.DeleteTexture( ref tex );
+			RemoveItemAt( info, i );
+			RemoveItemAt( textures, i );
+			namesCount--;
+			columns = Utils.CeilDiv( namesCount, namesPerColumn );
+			SortPlayerInfo();
+		}
 		
 		protected void RemoveItemAt<T>( T[] array, int index ) {
 			for( int i = index; i < namesCount - 1; i++ ) {
@@ -139,8 +149,12 @@ namespace ClassicalSharp {
 				xMax += GetColumnWidth( col );
 			}
 			
+			OnSort();
 			UpdateTableDimensions();
 			MoveTo( X, game.Height / 4 );
+		}
+		
+		protected virtual void OnSort() {
 		}
 	}
 }

@@ -123,7 +123,9 @@ namespace ClassicalSharp {
 		}
 		
 		void CreatePlayerListWidget() {
-			if( game.Network.UsingExtPlayerList ) {
+			if( game.UseClassicTabList ) {
+				playerList = new ClassicPlayerListWidget( game, playerFont );
+			} else if( game.Network.UsingExtPlayerList ) {
 				playerList = new ExtPlayerListWidget( game, playerFont );
 			} else {
 				playerList = new NormalPlayerListWidget( game, playerFont );
