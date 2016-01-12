@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 		bool receivedFirstPosition;
 		DateTime lastPacket;
 		Screen prevScreen;
-		bool prevCursorVisible;
+		bool prevCursorVisible, supportsCustomBlocks;
 		
 		public override void Connect( IPAddress address, int port ) {
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );

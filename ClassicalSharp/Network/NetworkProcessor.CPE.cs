@@ -108,14 +108,14 @@ namespace ClassicalSharp {
 			if( cpeServerExtensionsCount != 0 ) return;
 			int count = clientExtensions.Length;
 			if( !game.AllowCustomBlocks ) count -= 2;
-			MakeExtInfo( Program.AppName, count );
-			SendPacket();
 			
+			MakeExtInfo( Program.AppName, count );
+			SendPacket();			
 			for( int i = 0; i < clientExtensions.Length; i++ ) {
 				string name = clientExtensions[i];
 				int ver = name == "ExtPlayerList" ? 2 : 1;
 				if( name == "EnvMapAppearance" ) ver = envMapApperanceVer;
-				
+							
 				if( !game.AllowCustomBlocks && name.StartsWith( "BlockDefinitions" ) )
 					continue;				
 				MakeExtEntry( name, ver );
@@ -131,6 +131,7 @@ namespace ClassicalSharp {
 			byte supportLevel = reader.ReadUInt8();
 			MakeCustomBlockSupportLevel( 1 );
 			SendPacket();
+			supportsCustomBlocks = true;
 
 			if( supportLevel == 1 ) {
 				for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
@@ -280,7 +281,9 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			
 			if( blockId == 0 ) {
-				for( int i = 1; i < BlockInfo.CpeBlocksCount; i++ ) {
+				int count = supportsCustomBlocks ? BlockInfo.CpeBlocksCount 
+					: BlockInfo.OriginalBlocksCount;
+				for( int i = 1; i < count; i++ ) {
 					inv.CanPlace.SetNotOverridable( canPlace, i );
 					inv.CanDelete.SetNotOverridable( canDelete, i );
 				}

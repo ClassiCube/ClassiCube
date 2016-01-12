@@ -27,7 +27,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void Connect( IPAddress address, int port ) {
-			for( int i = (int)Block.Stone; i <= (int)Block.StoneBrick; i++ ) {
+			int max = game.UseCPE ? BlockInfo.MaxDefinedCpeBlock : BlockInfo.MaxDefinedOriginalBlock;
+			for( int i = 1; i <= max; i++ ) {
 				game.Inventory.CanPlace[i] = true;
 				game.Inventory.CanDelete[i] = true;
 			}

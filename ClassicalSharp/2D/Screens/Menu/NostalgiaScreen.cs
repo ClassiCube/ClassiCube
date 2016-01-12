@@ -40,10 +40,10 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.AllowCustomBlocks, v == "yes" );
 				     } ),
 				
-				Make( 140, -50, "Allow CPE blocks", OnWidgetClick,
-				     g => g.AllowCPEBlocks ? "yes" : "no",
-				     (g, v) => { g.AllowCPEBlocks = v == "yes";
-				     	Options.Set( OptionsKey.AllowCPEBlocks, v == "yes" );
+				Make( 140, -50, "Use CPE", OnWidgetClick,
+				     g => g.UseCPE ? "yes" : "no",
+				     (g, v) => { g.UseCPE = v == "yes";
+				     	Options.Set( OptionsKey.UseCPE, v == "yes" );
 				     } ),
 				
 				Make( 140, 0, "Allow server textures", OnWidgetClick,
@@ -56,7 +56,6 @@ namespace ClassicalSharp {
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[4].Disabled = true;
 			
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),

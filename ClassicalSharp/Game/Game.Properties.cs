@@ -129,7 +129,7 @@ namespace ClassicalSharp {
 		
 		public bool UseClassicGui, UseClassicTabList;
 		
-		public bool AllowCustomBlocks, AllowCPEBlocks, AllowServerTextures;
+		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;

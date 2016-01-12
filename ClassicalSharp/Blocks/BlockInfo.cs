@@ -48,6 +48,8 @@ namespace ClassicalSharp {
 		
 		public byte[] LightOffset = new byte[BlocksCount];
 		
+		public const byte MaxDefinedOriginalBlock = (byte)Block.Obsidian;
+		public const int OriginalBlocksCount = MaxDefinedOriginalBlock + 1;
 		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
 		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
 		public const byte MaxDefinedBlock = byte.MaxValue;

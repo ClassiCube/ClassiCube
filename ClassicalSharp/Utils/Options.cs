@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		public const string TabAutocomplete = "tab-autocomplete";
 		
 		public const string AllowCustomBlocks = "nostalgia-customblocks";
-		public const string AllowCPEBlocks = "nostalgia-cpeblocks";
+		public const string UseCPE = "nostalgia-usecpe";
 		public const string AllowServerTextures = "nostalgia-servertextures";
 		public const string UseClassicGui = "nostalgia-classicgui";
 		public const string SimpleArmsAnim = "nostalgia-simplearms";

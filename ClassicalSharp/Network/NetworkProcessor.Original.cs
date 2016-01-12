@@ -44,7 +44,8 @@ namespace ClassicalSharp {
 			writer.WriteUInt8( 7 ); // protocol version
 			writer.WriteString( username );
 			writer.WriteString( verKey );
-			writer.WriteUInt8( 0x42 );
+			byte payload = game.UseCPE ? (byte)0x42 : (byte)0x00;
+			writer.WriteUInt8( payload );
 		}
 		
 		void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
