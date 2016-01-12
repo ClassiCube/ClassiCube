@@ -33,8 +33,8 @@ namespace ClassicalSharp.Model {
 			                   .SetTexOrigin( 0, 0 )
 			                   .SetModelBounds( -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f ) );
 			FurTorso = BuildRotatedBox( MakeRotatedBoxBounds( -4, 12, -8, 4, 18, 8 )
-			                        .SetTexOrigin( 28, 8 )
-			                        .SetModelBounds( -6f, 10.5f, -10f, 6f, 19.5f, 10f ) );
+			                           .SetTexOrigin( 28, 8 )
+			                           .SetModelBounds( -6f, 10.5f, -10f, 6f, 19.5f, 10f ) );
 			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2  )
 				.SetTexOrigin( 0, 16 );
 			
@@ -67,8 +67,12 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.SheepTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			
+			cosA = (float)Math.Cos( p.HeadYawRadians );
+			sinA = (float)Math.Sin( p.HeadYawRadians );
 			DrawRotate( 0, 18/16f, -8/16f, -p.PitchRadians, 0, 0, Head );
+			
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
 			DrawPart( Torso );
 			DrawRotate( 0, 12/16f, -5/16f, p.legXRot, 0, 0, LeftLegFront );
 			DrawRotate( 0, 12/16f, -5/16f, -p.legXRot, 0, 0, RightLegFront );
@@ -78,9 +82,14 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			
 			if( Fur ) {
-				graphics.BindTexture( cache.SheepFurTexId );
-				DrawPart( FurTorso );
+				graphics.BindTexture( cache.SheepFurTexId );				
+				cosA = (float)Math.Cos( p.HeadYawRadians );
+				sinA = (float)Math.Sin( p.HeadYawRadians );
 				DrawRotate( 0, 18/16f, -8/16f, -p.PitchRadians, 0, 0, FurHead );
+				
+				cosA = (float)Math.Cos( p.YawRadians );
+				sinA = (float)Math.Sin( p.YawRadians );
+				DrawPart( FurTorso );
 				DrawRotate( 0, 12/16f, -5/16f, p.legXRot, 0, 0, FurLeftLegFront );
 				DrawRotate( 0, 12/16f, -5/16f, -p.legXRot, 0, 0, FurRightLegFront );
 				DrawRotate( 0, 12/16f, 7/16f, -p.legXRot, 0, 0, FurLeftLegBack );

@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 			if( dist < 1 ) dist = 1;
 
 			float multiply = factor / dist;
-			Velocity += Utils.RotateY( x * multiply, 0, z * multiply, YawRadians );
+			Velocity += Utils.RotateY( x * multiply, 0, z * multiply, HeadYawRadians );
 		}
 		
 		void MoveFlying( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {

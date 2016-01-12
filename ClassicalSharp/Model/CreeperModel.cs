@@ -46,8 +46,12 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.CreeperTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			
+			cosA = (float)Math.Cos( p.HeadYawRadians );
+			sinA = (float)Math.Sin( p.HeadYawRadians );
 			DrawRotate( 0, 18/16f, 0, -p.PitchRadians, 0, 0, Head );
+			
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
 			DrawPart( Torso );
 			DrawRotate( 0, 6/16f, -2/16f, p.legXRot, 0, 0, LeftLegFront );
 			DrawRotate( 0, 6/16f, -2/16f, -p.legXRot, 0, 0, RightLegFront );

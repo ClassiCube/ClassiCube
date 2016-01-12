@@ -85,24 +85,6 @@ namespace ClassicalSharp {
 			InitRenderingData();
 		}
 		
-		public override void SetLocation( LocationUpdate update, bool interpolate ) {
-			if( update.IncludesPosition ) {
-				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
-				nextPos.Y += Entity.Adjustment;
-				if( !interpolate ) {
-					lastPos = Position = nextPos;
-				}
-			}
-			if( update.IncludesOrientation ) {
-				nextYaw = update.Yaw;
-				nextPitch = update.Pitch;
-				if( !interpolate ) {
-					lastYaw = YawDegrees = nextYaw;
-					lastPitch = PitchDegrees = nextPitch;
-				}
-			}
-		}
-		
 		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
 		public override void Tick( double delta ) {
 			if( game.Map.IsNotLoaded ) return;
@@ -132,6 +114,7 @@ namespace ClassicalSharp {
 				game.AudioPlayer.PlayStepSound( type );
 				lastSoundPos = soundPos;
 			}
+			UpdateCurrentBodyYaw();
 		}
 		
 		bool DoPlaySound( Vector3 soundPos ) {
@@ -282,12 +265,53 @@ namespace ClassicalSharp {
 		
 		internal Vector3 lastPos, nextPos;
 		internal float lastYaw, nextYaw, lastPitch, nextPitch;
+		float newYaw, oldYaw;
+		int yawStateCount;
+		float[] yawStates = new float[15];
+		
+		public override void SetLocation( LocationUpdate update, bool interpolate ) {
+			if( update.IncludesPosition ) {
+				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
+				nextPos.Y += Entity.Adjustment;
+				if( !interpolate ) {
+					lastPos = Position = nextPos;
+				}
+			}
+			if( update.IncludesOrientation ) {
+				nextYaw = update.Yaw;
+				nextPitch = update.Pitch;
+				if( !interpolate ) {
+					lastYaw = YawDegrees = nextYaw;
+					lastPitch = PitchDegrees = nextPitch;
+					HeadYawDegrees = YawDegrees;
+					yawStateCount = 0;
+				} else {
+					for( int i = 0; i < 3; i++ )
+						AddYaw( Utils.LerpAngle( lastYaw, nextYaw, (i + 1) / 3f ) );
+				}
+			}
+		}
 		
 		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
 		public void SetInterpPosition( float t ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
-			YawDegrees = Utils.LerpAngle( lastYaw, nextYaw, t );
+			HeadYawDegrees = Utils.LerpAngle( lastYaw, nextYaw, t );
+			YawDegrees = Utils.LerpAngle( oldYaw, newYaw, t );
 			PitchDegrees = Utils.LerpAngle( lastPitch, nextPitch, t );
+		}
+		
+		void AddYaw( float state ) {
+			if( yawStateCount == yawStates.Length )
+				RemoveOldest( yawStates, ref yawStateCount );
+			yawStates[yawStateCount++] = state;
+		}
+		
+		void UpdateCurrentBodyYaw() {
+			oldYaw = newYaw;
+			if( yawStateCount > 0 ) {
+				newYaw = yawStates[0];
+				RemoveOldest( yawStates, ref yawStateCount );
+			}
 		}
 		
 		internal bool HandleKeyDown( Key key ) {
@@ -311,7 +335,7 @@ namespace ClassicalSharp {
 				SetLocation( update, false );
 			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn && HacksEnabled ) {
 				SpawnPoint = Position;
-				SpawnYaw = YawDegrees;
+				SpawnYaw = HeadYawDegrees;
 				SpawnPitch = PitchDegrees;
 			} else if( key == keys[KeyBinding.Fly] && CanFly && HacksEnabled ) {
 				flying = !flying;

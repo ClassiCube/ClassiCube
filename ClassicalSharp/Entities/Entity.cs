@@ -19,12 +19,18 @@ namespace ClassicalSharp {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
-		public float YawDegrees, PitchDegrees;
+		public float HeadYawDegrees, YawDegrees, PitchDegrees;
 		
 		protected Game game;
 		protected BlockInfo info;
 		
-		/// <summary> Rotation of the entity horizontally (i.e. looking north or east) </summary>
+		/// <summary> Rotation of the entity's head horizontally (i.e. looking north or east) </summary>
+		public float HeadYawRadians {
+			get { return HeadYawDegrees * Utils.Deg2Rad; }
+			set { HeadYawDegrees = value * Utils.Rad2Deg; }
+		}
+		
+		/// <summary> Rotation of the entity's body horizontally (i.e. looking north or east) </summary>
 		public float YawRadians {
 			get { return YawDegrees * Utils.Deg2Rad; }
 			set { YawDegrees = value * Utils.Rad2Deg; }

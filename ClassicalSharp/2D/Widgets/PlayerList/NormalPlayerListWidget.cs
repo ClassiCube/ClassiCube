@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		
 		void AddPlayerInfo( Player player ) {
 			DrawTextArgs args = new DrawTextArgs( player.DisplayName, font, true );
-			Texture tex = game.Drawer2D.MakeTextTexture( ref args, 0, 0 );
+			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			info[namesCount] = new PlayerInfo( player );
 			textures[namesCount] = tex;
 			namesCount++;

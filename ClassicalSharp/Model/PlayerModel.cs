@@ -68,8 +68,12 @@ namespace ClassicalSharp.Model {
 			SkinType skinType = p.SkinType;
 			_64x64 = skinType != SkinType.Type64x32;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim : Set;
-			
+			cosA = (float)Math.Cos( p.HeadYawRadians );
+			sinA = (float)Math.Sin( p.HeadYawRadians );
 			DrawRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, model.Head );
+			
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
 			DrawPart( model.Torso );
 			DrawRotate( 0, 12/16f, 0, p.legXRot, 0, 0, model.LeftLeg );
 			DrawRotate( 0, 12/16f, 0, -p.legXRot, 0, 0, model.RightLeg );
@@ -81,6 +85,8 @@ namespace ClassicalSharp.Model {
 			
 			graphics.AlphaTest = true;
 			index = 0;
+			cosA = (float)Math.Cos( p.HeadYawRadians );
+			sinA = (float)Math.Sin( p.HeadYawRadians );
 			DrawRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}

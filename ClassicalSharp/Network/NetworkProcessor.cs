@@ -149,7 +149,7 @@ namespace ClassicalSharp {
 			
 			Player player = game.LocalPlayer;
 			if( receivedFirstPosition ) {
-				SendPosition( player.Position, player.YawDegrees, player.PitchDegrees );
+				SendPosition( player.Position, player.HeadYawDegrees, player.PitchDegrees );
 			}
 			CheckForNewTerrainAtlas();
 			CheckForWomEnvironment();

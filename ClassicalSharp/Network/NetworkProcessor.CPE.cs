@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		
 		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 			Player p = game.LocalPlayer;
-			MakePlayerClick( (byte)button, buttonDown, p.YawDegrees, p.PitchDegrees, targetId,
+			MakePlayerClick( (byte)button, buttonDown, p.HeadYawDegrees, p.PitchDegrees, targetId,
 			                pos.BlockPos, pos.BlockFace );
 			SendPacket();
 		}

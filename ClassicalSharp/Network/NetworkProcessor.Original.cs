@@ -283,7 +283,7 @@ namespace ClassicalSharp {
 				if( entityId == 0xFF ) {
 					LocalPlayer p = game.LocalPlayer;
 					p.SpawnPoint = p.Position;
-					p.SpawnYaw = p.YawDegrees;
+					p.SpawnYaw = p.HeadYawDegrees;
 					p.SpawnPitch = p.PitchDegrees;
 				}
 			}

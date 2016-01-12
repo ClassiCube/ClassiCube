@@ -70,6 +70,8 @@ namespace ClassicalSharp.Model {
 				block = Byte.Parse( p.ModelName );
 			}
 			
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
 			CalcState( block );
 			if( game.BlockInfo.IsAir[block] )
 				return;

@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock( PickedPos pos ) {
-			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
 			Picking.CalculatePickedBlock( game, eyePos, dir, reach, pos );
@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			
-			Vector3 dir = -Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
 			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
@@ -153,7 +153,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			Vector3 dir = -Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
 			return game.CameraClipPos.IntersectPoint;
 		}
@@ -176,7 +176,7 @@ namespace ClassicalSharp {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
 			
-			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
 			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
@@ -187,7 +187,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			Vector3 dir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
 			return game.CameraClipPos.IntersectPoint;
 		}
@@ -202,7 +202,7 @@ namespace ClassicalSharp {
 			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobYOffset;
-			Vector3 cameraDir = Utils.GetDirVector( player.YawRadians, player.PitchRadians );
+			Vector3 cameraDir = Utils.GetDirVector( player.HeadYawRadians, player.PitchRadians );
 			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * tiltMatrix;
 		}
 		

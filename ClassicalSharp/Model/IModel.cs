@@ -51,8 +51,6 @@ namespace ClassicalSharp.Model {
 			pos = p.Position;
 			if( Bobbing )
 				pos.Y += p.bobYOffset;
-			cosA = (float)Math.Cos( p.YawRadians );
-			sinA = (float)Math.Sin( p.YawRadians );
 			Map map = game.Map;
 			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 

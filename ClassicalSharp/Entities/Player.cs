@@ -115,5 +115,11 @@ namespace ClassicalSharp {
 				}
 			}
 		}
+		
+		protected void RemoveOldest<T>(T[] array, ref int count) {
+			for( int i = 0; i < array.Length - 1; i++ )
+				array[i] = array[i + 1];
+			count--;
+		}
 	}
 }

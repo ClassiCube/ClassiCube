@@ -276,10 +276,10 @@ namespace ClassicalSharp {
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
 			if( chunksUpdatedThisFrame == 0 && cameraPos == lastCamPos 
-			   && p.YawDegrees == lastYaw && p.PitchDegrees == lastPitch ) return;
+			   && p.HeadYawDegrees == lastYaw && p.PitchDegrees == lastPitch ) return;
 			
 			lastCamPos = cameraPos;
-			lastYaw = p.YawDegrees; lastPitch = p.PitchDegrees;
+			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
 			RecalcBooleans( false );
 		}
 		Vector3 lastCamPos;

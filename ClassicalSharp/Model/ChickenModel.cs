@@ -56,9 +56,14 @@ namespace ClassicalSharp.Model {
 			int texId = p.MobTextureId <= 0 ? cache.ChickenTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			
+			cosA = (float)Math.Cos( p.HeadYawRadians );
+			sinA = (float)Math.Sin( p.HeadYawRadians );
 			DrawRotate( 0, 9/16f, -3/16f, -p.PitchRadians, 0, 0, Head );
 			DrawRotate( 0, 9/16f, -3/16f, -p.PitchRadians, 0, 0, Head2 );
 			DrawRotate( 0, 9/16f, -3/16f, -p.PitchRadians, 0, 0, Head3 );
+			
+			cosA = (float)Math.Cos( p.YawRadians );
+			sinA = (float)Math.Sin( p.YawRadians );
 			DrawPart( Torso );
 			DrawRotate( 0, 5/16f, 1/16f, p.legXRot, 0, 0, LeftLeg );
 			DrawRotate( 0, 5/16f, 1/16f, -p.legXRot, 0, 0, RightLeg );

@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public class NetPlayer : Player {
 		
-		int tickCount;	
+		int tickCount;
 		public NetPlayer( string displayName, string skinName, Game game, byte id ) : base( game ) {
 			DisplayName = displayName;
 			SkinName = skinName;
@@ -22,16 +22,17 @@ namespace ClassicalSharp {
 			Vector3 lastPos = serverPos;
 			float lastYaw = serverYaw, lastPitch = serverPitch;
 			if( update.IncludesPosition ) {
-				serverPos = update.RelativePosition ? serverPos + update.Pos : update.Pos;			
+				serverPos = update.RelativePosition ? serverPos + update.Pos : update.Pos;
 			}
 			if( update.IncludesOrientation ) {
-				serverYaw = update.Yaw;
-				serverPitch = update.Pitch;
+				serverYaw = update.Yaw; serverPitch = update.Pitch;
 			}
 			
 			if( !interpolate ) {
 				stateCount = 0;
 				newState = oldState = new State( tickCount, serverPos, serverYaw, serverPitch );
+				yawStateCount = 0;
+				newYaw = oldYaw = serverYaw;
 			} else {
 				// Smoother interpolation by also adding midpoint.
 				Vector3 midPos = Vector3.Lerp( lastPos, serverPos, 0.5f );
@@ -39,25 +40,30 @@ namespace ClassicalSharp {
 				float midPitch = Utils.LerpAngle( lastPitch, serverPitch, 0.5f );
 				AddState( new State( tickCount, midPos, midYaw, midPitch ) );
 				AddState( new State( tickCount, serverPos, serverYaw, serverPitch ) );
+				for( int i = 0; i < 3; i++ )
+					AddYaw( Utils.LerpAngle( lastYaw, serverYaw, (i + 1) / 3f ) );
 			}
 		}
 		
 		struct State {
 			public int tick;
 			public Vector3 pos;
-			public float yaw, pitch;
+			public float headYaw, pitch;
 			
-			public State( int tick, Vector3 pos, float yaw, float pitch ) {
+			public State( int tick, Vector3 pos, float headYaw, float pitch ) {
 				this.tick = tick;
 				this.pos = pos;
-				this.yaw = yaw;
+				this.headYaw = headYaw;
 				this.pitch = pitch;
 			}
 		}
 		
 		State[] states = new State[10];
+		float[] yawStates = new float[15];
 		State newState, oldState;
-		int stateCount;
+		float newYaw, oldYaw;
+		int stateCount, yawStateCount;
+		
 		public override void Tick( double delta ) {
 			CheckSkin();
 			tickCount++;
@@ -66,30 +72,35 @@ namespace ClassicalSharp {
 		}
 		
 		void AddState( State state ) {
-		   if( stateCount == states.Length )
-		     RemoveOldestState();
-		   states[stateCount++] = state;
+			if( stateCount == states.Length )
+				RemoveOldest( states, ref stateCount );
+			states[stateCount++] = state;
 		}
 		
-		void RemoveOldestState() {
-		   for( int i = 0; i < states.Length - 1; i++ ) {
-		      states[i] = states[i + 1];
-		   }
-		   stateCount--;
+		void AddYaw( float state ) {
+			if( yawStateCount == yawStates.Length )
+				RemoveOldest( yawStates, ref yawStateCount );
+			yawStates[yawStateCount++] = state;
 		}
 		
-		void UpdateCurrentState() {		
+		void UpdateCurrentState() {
 			oldState = newState;
-			if( stateCount == 0 ) return;
-			
-			//if( states[0].tick > tickCount - 2 ) return; // 100 ms delay
-			newState = states[0];
-			RemoveOldestState();
+			oldYaw = newYaw;
+			if( stateCount > 0 ) {
+				//if( states[0].tick > tickCount - 2 ) return; // 100 ms delay
+				newState = states[0];
+				RemoveOldest( states, ref stateCount );
+			}
+			if( yawStateCount > 0 ) {
+				newYaw = yawStates[0];
+				RemoveOldest( yawStates, ref yawStateCount );
+			}
 		}
 
 		public override void RenderModel( double deltaTime, float t ) {
 			Position = Vector3.Lerp( oldState.pos, newState.pos, t );
-			YawDegrees = Utils.LerpAngle( oldState.yaw, newState.yaw, t );
+			HeadYawDegrees = Utils.LerpAngle( oldState.headYaw, newState.headYaw, t );
+			YawDegrees = Utils.LerpAngle( oldYaw, newYaw, t );
 			PitchDegrees = Utils.LerpAngle( oldState.pitch, newState.pitch, t );
 			
 			GetCurrentAnimState( t );
