@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 			HandleInput( ref xMoving, ref zMoving );
 			UpdateVelocityState( xMoving, zMoving );
 			PhysicsTick( xMoving, zMoving );
-			if( onGround ) { firstJump = true; secondJump = true; }
+			if( onGround ) { firstJump = false; secondJump = false; }
 			
 			nextPos = Position;
 			Position = lastPos;
@@ -318,12 +318,12 @@ namespace ClassicalSharp {
 			} else if( key == keys[KeyBinding.NoClip] && CanNoclip && HacksEnabled ) {
 				noClip = !noClip;
 			} else if( key == keys[KeyBinding.Jump] && !onGround && !(flying || noClip) ) {
-				if( firstJump && CanDoubleJump && DoubleJump ) {
+				if( !firstJump && CanDoubleJump && DoubleJump ) {
 					DoNormalJump();
-					firstJump = false;
-				} else if( secondJump && CanDoubleJump && DoubleJump ) {
+					firstJump = true;
+				} else if( !secondJump && CanDoubleJump && DoubleJump ) {
 					DoNormalJump();
-					secondJump = false;
+					secondJump = true;
 				}
 			} else {
 				return false;

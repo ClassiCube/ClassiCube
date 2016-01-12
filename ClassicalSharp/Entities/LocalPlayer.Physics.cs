@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
 		bool canLiquidJump = true;
-		bool firstJump = true, secondJump = true;
+		bool firstJump = false, secondJump = false;
 		
 		void UpdateVelocityState( float xMoving, float zMoving ) {
 			if( !NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
@@ -101,8 +101,10 @@ namespace ClassicalSharp {
 			
 			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
 			float horMul = multiply * modifier;
-			if( !secondJump ) { horMul *= 93f; yMul *= 10f; }
-			else if( !firstJump ) { horMul *= 46.5f; yMul *= 7.5f; }
+			if( !(flying || noClip) ) {
+				if( secondJump ) { horMul *= 93f; yMul *= 10f; }
+				else if( firstJump ) { horMul *= 46.5f; yMul *= 7.5f; }
+			}
 			
 			if( TouchesAnyWater() && !flying && !noClip ) {
 				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, yMul );
