@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
 				     } ),
 				
-				Make( -140, -50, "Classic player list", OnWidgetClick,
+				Make( -140, 0, "Classic player list", OnWidgetClick,
 				     g => g.UseClassicTabList ? "yes" : "no",
 				     (g, v) => { g.UseClassicTabList = v == "yes";
 				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );

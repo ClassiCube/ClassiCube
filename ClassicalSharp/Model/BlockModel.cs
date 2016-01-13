@@ -79,11 +79,11 @@ namespace ClassicalSharp.Model {
 			atlas = game.TerrainAtlas1D;
 			
 			if( game.BlockInfo.IsSprite[block] ) {
-				SpriteXQuad( TileSide.Right, true );
+				SpriteXQuad( TileSide.Right, false );
 				SpriteZQuad( TileSide.Back, false );
 				
-				SpriteXQuad( TileSide.Right, false );
 				SpriteZQuad( TileSide.Back, true );
+				SpriteXQuad( TileSide.Right, true );
 			} else {
 				YQuad( 0, TileSide.Bottom, FastColour.ShadeYBottom );
 				XQuad( maxBB.X - 0.5f, TileSide.Right, true, FastColour.ShadeX );
@@ -174,7 +174,7 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, 0, p2, rec.U1, rec.V2, col );
 		}
 
-		void SpriteXQuad( int side, bool firstPart ) { // dis is broken
+		void SpriteXQuad( int side, bool firstPart ) {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
