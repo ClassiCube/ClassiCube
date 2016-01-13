@@ -126,7 +126,7 @@ namespace ClassicalSharp {
 			// have our legs just crossed over the '0' point?
 			float oldLegRot = (float)Math.Sin( walkTimeO );
 			float newLegRot = (float)Math.Sin( walkTimeN );
-			return (Math.Sign( oldLegRot ) != Math.Sign( newLegRot ));
+			return Math.Sign( oldLegRot ) != Math.Sign( newLegRot );
 		}
 		
 		SoundType GetSound( ref bool anyNonAir ) {

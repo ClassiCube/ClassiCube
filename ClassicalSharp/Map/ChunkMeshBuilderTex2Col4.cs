@@ -42,10 +42,10 @@ namespace ClassicalSharp {
 			public int spriteIndex, spriteCount;
 			
 			public void ExpandToCapacity() {
-				vCount = ( iCount / 6 ) * 4;
+				vCount = iCount / 6 * 4;
 
-				if( vertices == null || vCount > vertices.Length ) {
-					vertices = new VertexPos3fTex2fCol4b[vCount];
+				if( vertices == null || (vCount + 1) > vertices.Length ) {
+					vertices = new VertexPos3fTex2fCol4b[vCount + 1];
 				}
 				vIndex.left = spriteCount / 6 * 4;
 				vIndex.right = vIndex.left + Count.left / 6 * 4;
@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 			if( part.iCount == 0 ) return;
 			
 			ChunkPartInfo info;
-			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount );
+			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount + 1 );
 			info.IndicesCount = part.iCount;
 			info.leftCount = (ushort)part.Count.left; info.rightCount = (ushort)part.Count.right;
 			info.frontCount = (ushort)part.Count.front; info.backCount = (ushort)part.Count.back;
