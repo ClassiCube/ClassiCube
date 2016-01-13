@@ -26,7 +26,6 @@ namespace ClassicalSharp {
 		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 30; } }
 		
 		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
-		static FastColour selCol = new FastColour( 213, 200, 223 );
 		public override void Render( double delta ) {
 			graphicsApi.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
 			DrawScrollbar();

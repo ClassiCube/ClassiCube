@@ -71,7 +71,6 @@ namespace ClassicalSharp {
 		public override void Dispose() { }
 		
 		public override void MoveTo( int newX, int newY ) {
-			int diffX = newX - X, diffY = newY - Y;
 			X = newX; Y = newY;
 			Dispose();
 			Init();

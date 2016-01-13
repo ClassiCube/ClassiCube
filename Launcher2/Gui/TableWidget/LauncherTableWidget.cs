@@ -104,9 +104,7 @@ namespace Launcher2 {
 			TableEntry headerEntry = default( TableEntry );
 			DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref headerEntry );
 			maxIndex = Count;
-			y += 2;
-			int bodyStartY = y;
-			y += 3;			
+			y += 5;			
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );

@@ -9,7 +9,6 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			INetworkProcessor network = game.Network;
 			
 			buttons = new ButtonWidget[] {
 				// Column 1

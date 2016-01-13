@@ -70,10 +70,8 @@ namespace ClassicalSharp.Generator {
 	
 	public sealed class OctaveNoise : Noise {
 		
-		readonly int octaves;
 		readonly ImprovedNoise[] baseNoise;
 		public OctaveNoise( int octaves, Random rnd ) {
-			this.octaves = octaves;
 			baseNoise = new ImprovedNoise[octaves];
 			for( int i = 0; i < octaves; i++ )
 				baseNoise[i] = new ImprovedNoise( rnd );

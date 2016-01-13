@@ -132,8 +132,10 @@ namespace Launcher2 {
 					game.Window.DesktopCursorPos = p;
 					lastClicked = widget;
 					
-					if( widgets[i] is LauncherInputWidget )
+					if( widgets[i] is LauncherInputWidget ) {
 						MouseButtonDown( null, pressArgs );
+						((LauncherInputWidget)widgets[i]).CaretPos = -1;
+					}
 					break;
 				}
 			}

@@ -48,7 +48,6 @@ namespace ClassicalSharp {
 		}
 		
 		protected void DrawBitmapTextImpl( FastBitmap fastBmp, ref DrawTextArgs args, int x, int y ) {
-			bool italic = args.Font.Style == FontStyle.Italic;
 			bool underline = args.Font.Style == FontStyle.Underline;
 			if( args.UseShadow ) {
 				int offset = ShadowOffset( args.Font.Size );
@@ -79,7 +78,6 @@ namespace ClassicalSharp {
 			FastColour textCol = part.TextColour;
 			float point = font.Size;
 			int xMul = font.Style == FontStyle.Italic ? 1 : 0;
-			int originX = x;
 			
 			foreach( char c in text ) {
 				int coords = ConvertToCP437( c );

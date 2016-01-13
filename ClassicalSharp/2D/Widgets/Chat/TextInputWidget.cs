@@ -25,8 +25,7 @@ namespace ClassicalSharp {
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			
 			this.font = font;
-			this.boldFont = boldFont;
-			altText = new AltTextInputWidget( game, font, boldFont, this );
+			altText = new AltTextInputWidget( game, font, this );
 			altText.Init();
 		}
 		
@@ -37,7 +36,7 @@ namespace ClassicalSharp {
 		public int YOffset;
 		int defaultWidth, defaultHeight;
 		internal WrappableStringBuffer chatInputText;
-		readonly Font font, boldFont;
+		readonly Font font;
 
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 60, 60, 60, 200 );

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Singleplayer {
 		Map map;
 		Random rnd = new Random();
 		BlockInfo info;
-		int width, length, height, oneY, volume;
+		int width, length, height, oneY;
 		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;
 		
 		const uint tickMask = 0xF8000000;
@@ -96,10 +96,8 @@ namespace ClassicalSharp.Singleplayer {
 			ClearQueuedEvents();
 			width = map.Width; maxX = width - 1; maxWaterX = maxX - 2;
 			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
-			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;
-			
+			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;			
 			oneY = width * length;
-			volume = height * width * length;
 		}
 		
 		void ClearQueuedEvents() {

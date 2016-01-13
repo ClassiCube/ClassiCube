@@ -6,17 +6,16 @@ namespace ClassicalSharp {
 	
 	public sealed partial class AltTextInputWidget : Widget {
 
-		public AltTextInputWidget( Game game, Font font, Font boldFont, TextInputWidget parent ) : base( game ) {
+		public AltTextInputWidget( Game game, Font font, TextInputWidget parent ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
-			this.boldFont = boldFont;
 			this.parent = parent;
 			Active = false;
 		}
 		
 		public Texture texture;
-		readonly Font font, boldFont;
+		readonly Font font;
 		TextInputWidget parent;
 		Size elementSize;
 		
