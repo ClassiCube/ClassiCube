@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			graphicsApi.Texturing = true;
 			RenderHotbar();
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
+			IsometricBlockDrawer.lastTexId = -1;
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				byte block = (byte)game.Inventory.Hotbar[i];

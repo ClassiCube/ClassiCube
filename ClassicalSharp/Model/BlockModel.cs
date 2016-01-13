@@ -90,15 +90,14 @@ namespace ClassicalSharp.Model {
 				ZQuad( minBB.Z - 0.5f, TileSide.Front, true, FastColour.ShadeZ );
 				
 				ZQuad( maxBB.Z - 0.5f, TileSide.Back, false, FastColour.ShadeZ );
-				YQuad( height, TileSide.Top, 1.0f );				
+				YQuad( height, TileSide.Top, 1.0f );
 				XQuad( minBB.X - 0.5f, TileSide.Left, false, FastColour.ShadeX );
 			}
 			
-			if( index > 0 ) {
-				graphics.BindTexture( lastTexId );
-				TransformVertices();
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			}
+			if( index == 0 ) return;
+			graphics.BindTexture( lastTexId );
+			TransformVertices();
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		
 		void YQuad( float y, int side, float shade ) {

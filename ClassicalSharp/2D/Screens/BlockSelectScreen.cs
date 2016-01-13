@@ -31,9 +31,9 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
 			DrawScrollbar();
 			graphicsApi.Texturing = true;
-			graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
+			IsometricBlockDrawer.lastTexId = -1;
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;
 				if( !GetCoords( i, out x, out y ) )
@@ -48,6 +48,7 @@ namespace ClassicalSharp {
 			if( selIndex != -1 ) {
 				int x, y;
 				GetCoords( selIndex, out x, out y );
+				IsometricBlockDrawer.lastTexId = -1;
 				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
 				                          x + blockSize / 2, y + blockSize / 2 );
 			}
