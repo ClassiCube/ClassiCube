@@ -133,7 +133,7 @@ namespace ClassicalSharp {
 		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
-		internal float HudScale = 1.0f, ChatScale = 1.0f;
+		internal float HotbarScale = 1.0f, ChatScale = 1.0f, InventoryScale = 1.0f;
 		public bool ViewBobbing, ShowBlockInHand;
 		public bool UseSound, UseMusic, LiquidsBreakable;
 		
@@ -145,13 +145,23 @@ namespace ClassicalSharp {
 		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
 		internal UrlsList AcceptedUrls = new UrlsList( "acceptedurls.txt" ), DeniedUrls = new UrlsList( "deniedurls.txt" );
 		
-		/// <summary> Calculates the amount that 2D widgets should be scaled by when rendered. </summary>
+		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
-		/// scaling specified by the user (field HudScale). </remarks>
-		public float GuiScale {
+		/// scaling specified by the user (field HotbarScale). </remarks>
+		public float GuiHotbarScale {
 			get {
 				float scaleX = Width / 640f, scaleY = Height / 480f;
-				return Math.Min( scaleX, scaleY ) * HudScale;
+				return Math.Min( scaleX, scaleY ) * HotbarScale;
+			}
+		}
+		
+		/// <summary> Calculates the amount that the block inventory menu should be scaled by when rendered. </summary>
+		/// <remarks> Affected by both the current resolution of the window, as well as the
+		/// scaling specified by the user (field InventoryScale). </remarks>
+		public float GuiInventoryScale {
+			get {
+				float scaleX = Width / 640f, scaleY = Height / 480f;
+				return Math.Min( scaleX, scaleY ) * InventoryScale;
 			}
 		}
 		

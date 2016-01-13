@@ -10,35 +10,37 @@ namespace ClassicalSharp {
 	public static class OptionsKey {
 		
 		public const string ViewDist = "viewdist";
-		public const string HudScale = "hudscale";
-		public const string ChatScale = "chatscale";
-		public const string Sensitivity = "mousesensitivity";
-		public const string Speed = "speedmultiplier";
-		public const string ChatLines = "chatlines";
-		public const string ClickableChat = "chatclickable";
-		public const string ArialChatFont = "arialchatfont";
 		public const string DefaultTexturePack = "defaulttexpack";
-		public const string SingleplayerPhysics = "singleplayerphysics";
-		public const string ShowBlockInHand = "blockinhand";
+		public const string SingleplayerPhysics = "singleplayerphysics";		
 		public const string UseMusic = "usemusic";
-		public const string UseSound = "usesound";
-		public const string HacksEnabled = "hacksenabled";
+		public const string UseSound = "usesound";		
 		public const string NamesMode = "namesmode";
-		
+		public const string InvertMouse = "invertmouse";
+		public const string Sensitivity = "mousesensitivity";
 		public const string MouseLeft = "mouseleft";
 		public const string MouseMiddle = "mousemiddle";
 		public const string MouseRight = "mouseright";
 		public const string FpsLimit = "fpslimit";
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";
-		public const string FieldOfView = "fov";
+		
+		public const string HacksEnabled = "hacksenabled";
+		public const string FieldOfView = "fov";		
+		public const string Speed = "speedmultiplier";
 		public const string LiquidsBreakable = "liquidsbreakable";
-		public const string PushbackPlacing = "pushbackplacing";
-		public const string InvertMouse = "invertmouse";
+		public const string PushbackPlacing = "pushbackplacing";	
 		public const string NoclipSlide = "noclipslide";
 		public const string CameraClipping = "cameraclipping";
 		public const string DoubleJump = "doublejump";
+		
 		public const string TabAutocomplete = "tab-autocomplete";
+		public const string ShowBlockInHand = "blockinhand";
+		public const string ChatLines = "chatlines";
+		public const string ClickableChat = "chatclickable";
+		public const string ArialChatFont = "arialchatfont";
+		public const string HotbarScale = "gui-hotbarscale";
+		public const string InventoryScale = "gui-inventoryscale";
+		public const string ChatScale = "chatscale";
 		
 		public const string AllowCustomBlocks = "nostalgia-customblocks";
 		public const string UseCPE = "nostalgia-usecpe";

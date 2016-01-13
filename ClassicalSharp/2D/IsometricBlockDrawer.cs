@@ -62,7 +62,6 @@ namespace ClassicalSharp {
 			if( index == 0 ) return;
 			if( atlas.TexIds[texIndex] != lastTexId ) {
 				lastTexId = atlas.TexIds[texIndex];
-				Console.WriteLine( "BIND: " + texIndex );
 				api.BindTexture( lastTexId );
 			}
 			for( int i = 0; i < index; i++ )
@@ -149,7 +148,6 @@ namespace ClassicalSharp {
 				index = 0;
 			}
 			lastTexId = texId;
-			Console.WriteLine( "BIND" + texIndex );
 			api.BindTexture( texId );		
 		}
 		

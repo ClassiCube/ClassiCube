@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 				     (g, v) => { g.SimpleArmsAnim = v == "yes";
 				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
 				
-				Make( -140, -50, "Use classic gui", OnWidgetClick,
+				Make( -140, -50, "Classic gui textures", OnWidgetClick,
 				     g => g.UseClassicGui ? "yes" : "no",
 				     (g, v) => { g.UseClassicGui = v == "yes";
 				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
@@ -31,6 +31,24 @@ namespace ClassicalSharp {
 				     g => g.UseClassicTabList ? "yes" : "no",
 				     (g, v) => { g.UseClassicTabList = v == "yes";
 				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );
+				     } ),
+				
+				Make( -140, 50, "Arial chat font", OnWidgetClick,
+				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
+				     (g, v) => {
+				     	g.Drawer2D.UseBitmappedChat = v == "no";
+				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
+				     	game.Events.RaiseChatFontChanged();
+				     	
+				     	if( inputWidget != null ) { 
+				     		inputWidget.Dispose(); inputWidget = null; 
+				     	}
+				     	if( descWidget != null ) { 
+				     		descWidget.Dispose(); descWidget = null; 
+				     	}
+				     	
+				     	g.RefreshHud();
+				     	Recreate();
 				     } ),
 				
 				// Column 2
@@ -58,6 +76,7 @@ namespace ClassicalSharp {
 			};
 			
 			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),

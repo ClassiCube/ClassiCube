@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		float barXOffset, borderSize;
 		
 		public override void Init() {
-			float scale = 2 * game.GuiScale;
+			float scale = 2 * game.GuiHotbarScale;
 			selBlockSize = (float)Math.Ceiling( 24 * scale );
 			barHeight = (int)(22 * scale);		
 			Width = (int)(182 * scale);
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 				int y = (int)(game.Height - barHeight / 2);
 				
-				float scale = (elemSize - 8) / 2f;
+				float scale = (elemSize * 14/16f) / 2f;
 				IsometricBlockDrawer.Draw( game, block, scale, x, y );
 			}
 			RenderSelected();
@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 		
 		void MakeSelectionTexture() {
 			int hSize = (int)selBlockSize;
-			int vSize = (int)Math.Floor( 23 * 2 * game.GuiScale );
+			int vSize = (int)Math.Floor( 23 * 2 * game.GuiHotbarScale );
 			int y = game.Height - vSize;
 			TextureRec rec = new TextureRec( 0, 22/256f, 24/256f, 24/256f );
 			selTex = new Texture( 0, 0, y, hSize, vSize, rec );

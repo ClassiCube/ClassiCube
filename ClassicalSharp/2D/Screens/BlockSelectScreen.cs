@@ -77,8 +77,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			blockSize = (int)(50 * Math.Sqrt(game.GuiScale));
-			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale));
+			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
+			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
 			startY = game.Height / 2 - (maxRows * blockSize) / 2;
@@ -87,8 +87,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			blockSize = (int)(50 * Math.Sqrt(game.GuiScale));
-			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiScale));
+			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
+			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
 						
 			RecreateBlockTable();

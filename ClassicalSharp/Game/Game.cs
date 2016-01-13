@@ -53,7 +53,8 @@ namespace ClassicalSharp {
 			InputHandler = new InputHandler( this );
 			Chat = new Chat( this );
 			ParticleManager = new ParticleManager( this );
-			HudScale = Options.GetFloat( OptionsKey.HudScale, 0.25f, 5f, 1f );
+			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
+			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
