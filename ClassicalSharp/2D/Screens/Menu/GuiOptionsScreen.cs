@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 				     (g, v) => { g.InventoryScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.InventoryScale, v );
 				     	g.RefreshHud();
-				     } ),			
+				     } ),
 				
 				// Column 2
 				Make( 140, -150, "Tab auto-complete", OnWidgetClick,
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 				     } ),
 				
 				MakeBack( false, titleFont,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
 			validators = new MenuInputValidator[] {
@@ -74,17 +74,17 @@ namespace ClassicalSharp {
 				new RealValidator( 0.25f, 5f ),
 				new RealValidator( 0.25f, 5f ),
 				
-				new BooleanValidator(),		
-				new RealValidator( 0.25f, 5f ),
-				new IntegerValidator( 1, 30 ),				
 				new BooleanValidator(),
+				new BooleanValidator(),
+				new RealValidator( 0.25f, 5f ),
+				new IntegerValidator( 1, 30 ),
 			};
 			okayIndex = buttons.Length - 1;
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
 		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre, 
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter;
 			widget.SetValue = setter;
