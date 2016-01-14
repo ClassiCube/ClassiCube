@@ -197,7 +197,7 @@ namespace ClassicalSharp {
 		void RecreateBlockTable() {
 			int blocksCount = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )
+				if( tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid" )
 					blocksCount++;
 			}
 			
@@ -208,7 +208,7 @@ namespace ClassicalSharp {
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < BlockInfo.BlocksCount; tile++ ) {
-				if( game.Inventory.CanPlace[tile] || game.Inventory.CanDelete[tile] )
+				if( tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid" )
 					blocksTable[tableIndex++] = (Block)tile;
 			}
 		}
