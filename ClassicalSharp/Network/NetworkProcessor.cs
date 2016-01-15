@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
-			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 5 )
+			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 10 )
 				CheckDisconnection( delta );
 			if( Disconnected ) return;
 			

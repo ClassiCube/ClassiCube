@@ -318,10 +318,10 @@ namespace ClassicalSharp {
 				if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
 					game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
 					game.ShowWarning( new WarningScreen(
-						game, "CL_" + url, "Do you want to download the server's terrain image?",
+						game, "CL_" + url, true, "Do you want to download the server's texture pack?",
 						DownloadTexturePack, null, WarningScreenTick,
-						"The terrain image is located at:", url,
-						"Terrain image size: Determining..." ) );
+						"Texture pack url:", url,
+						"Download size: Determining..." ) );
 				} else {
 					DownloadTexturePack( url );
 				}
@@ -362,9 +362,9 @@ namespace ClassicalSharp {
 			string url = identifier.Substring( 3 );
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f );
-			screen.SetText( "Do you want to download the server's terrain image?",
-			               "The terrain image is located at:", url,
-			               "Terrain image size: " + contentLengthMB.ToString( "F3" ) + " MB" );
+			screen.SetText( "Do you want to download the server's texture pack?",
+			               "Texture pack url:", url,
+			               "Download size: " + contentLengthMB.ToString( "F3" ) + " MB" );
 		}
 		
 		void HandleCpeEnvWeatherType() {

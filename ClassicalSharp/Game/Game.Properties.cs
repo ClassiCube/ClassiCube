@@ -133,7 +133,7 @@ namespace ClassicalSharp {
 		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
-		internal float HotbarScale = 1.0f, ChatScale = 1.0f, InventoryScale = 1.0f;
+		internal float HotbarScale = 1, ChatScale = 1, InventoryScale = 1;
 		public bool ViewBobbing, ShowBlockInHand;
 		public bool UseSound, UseMusic, LiquidsBreakable;
 		

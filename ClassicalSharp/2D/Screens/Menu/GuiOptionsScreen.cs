@@ -63,6 +63,10 @@ namespace ClassicalSharp {
 				     	g.RefreshHud();
 				     } ),
 				
+				Make( 140, 50, "Arial chat font", OnWidgetClick,
+				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
+				     HandleArialChatFont ),
+				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
@@ -77,6 +81,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
 				new IntegerValidator( 1, 30 ),
+				new BooleanValidator(),
 			};
 			okayIndex = buttons.Length - 1;
 		}
@@ -88,6 +93,22 @@ namespace ClassicalSharp {
 			widget.GetValue = getter;
 			widget.SetValue = setter;
 			return widget;
+		}
+		
+		void HandleArialChatFont( Game g, string v ) {
+			g.Drawer2D.UseBitmappedChat = v == "no";
+			Options.Set( OptionsKey.ArialChatFont, v == "yes" );
+			game.Events.RaiseChatFontChanged();
+			
+			if( inputWidget != null ) {
+				inputWidget.Dispose(); inputWidget = null;
+			}
+			if( descWidget != null ) {
+				descWidget.Dispose(); descWidget = null;
+			}
+			
+			g.RefreshHud();
+			Recreate();
 		}
 	}
 }

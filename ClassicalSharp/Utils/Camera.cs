@@ -112,10 +112,6 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 		
-		bool zero( float value ) {
-			return Math.Abs( value ) < 0.001f;
-		}
-		
 		float HorLength( Vector3 v ) {
 			return (float)Math.Sqrt( v.X * v.X + v.Z * v.Z );
 		}
@@ -129,7 +125,7 @@ namespace ClassicalSharp {
 				bobYOffset = 0;
 			} else {
 				tiltMatrix = Matrix4.RotateZ( game.LocalPlayer.tilt );
-				bobYOffset = game.LocalPlayer.bobYOffset;
+				bobYOffset = game.LocalPlayer.bobYOffset * (2.0f/2.5f);
 			}
 		}
 	}

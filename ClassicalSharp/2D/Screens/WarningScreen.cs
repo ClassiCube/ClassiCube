@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public sealed class WarningScreen : MenuScreen {
 		
-		public WarningScreen( Game game, object metadata, string title,
+		public WarningScreen( Game game, object metadata, bool confirmNo, string title,
 		                     Action<WarningScreen> yesClick, Action<WarningScreen> noClick,
 		                     Action<WarningScreen> renderFrame, params string[] body ) : base( game ) {
 			this.Metadata = metadata;
@@ -15,37 +15,42 @@ namespace ClassicalSharp {
 			this.renderFrame = renderFrame;
 			this.title = title;
 			this.body = body;
+			this.confirmNo = confirmNo;
 		}
+		
 		internal Screen lastScreen;
 		internal bool wasCursorVisible;
-		string title;
-		string[] body;
+		string title, lastTitle;
+		string[] body, lastBody;
+		bool confirmNo, confirmMode;
 		
 		public override void Init() {
 			titleFont = new Font( "Arial", 16, FontStyle.Bold );
 			regularFont = new Font( "Arial", 14, FontStyle.Regular );
-			
-			buttons = new ButtonWidget[] {
-				ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnYesClick ),
-				ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnNoClick ),
-				ButtonWidget.Create( game, -110, 80, 160, 35, "Always yes", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnYesAlwaysClick ),
-				ButtonWidget.Create( game, 110, 80, 160, 35, "Always no", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnNoAlwaysClick ),
-			};
+			InitStandardButtons();
 			SetText( title, body );
 		}
 
-		public void SetText( string title, params string[] body) {
+		public void SetText( string title, params string[] body ) {
+			lastTitle = title;
+			lastBody = body;
+			
+			if( confirmMode ) {
+				SetTextImpl( "&eYou might be missing out.",
+				            "Texture packs can play a vital role in the look and feel of maps.",
+				            "", "Sure you don't want to download the texture pack?" );
+			} else {
+				SetTextImpl( title, body );
+			}
+		}
+		
+		void SetTextImpl( string title, params string[] body) {
 			if( labels != null ) {
 				for( int i = 0; i < labels.Length; i++ )
 					labels[i].Dispose();
 			}
 			this.title = title;
-			this.body = body;
-			
+			this.body = body;			
 			
 			labels = new TextWidget[body.Length + 1];
 			labels[0] = TextWidget.Create( game, 0, -120, title,
@@ -56,35 +61,6 @@ namespace ClassicalSharp {
 			}
 		}
 		TextWidget[] labels;
-		Action<WarningScreen> yesClick, noClick, renderFrame;
-		
-		void OnYesClick( Game g, Widget w ) {
-			if( yesClick != null )
-				yesClick( this );
-			Dispose();
-			CloseScreen();
-		}
-		
-		void OnNoClick( Game g, Widget w ) {
-			if( noClick != null )
-				noClick( this );
-			Dispose();
-			CloseScreen();
-		}
-		
-		void OnYesAlwaysClick( Game g, Widget w ) {
-			OnYesClick( g, w );
-			string url = ((string)Metadata).Substring( 3 );
-			if( !game.AcceptedUrls.HasUrl( url ) )
-				game.AcceptedUrls.AddUrl( url );
-		}
-		
-		void OnNoAlwaysClick( Game g, Widget w ) {
-			OnNoClick( g, w );
-			string url = ((string)Metadata).Substring( 3 );
-			if( !game.DeniedUrls.HasUrl( url ) )
-				game.DeniedUrls.AddUrl( url );
-		}
 		
 		void CloseScreen() {
 			game.WarningScreens.RemoveAt( 0 );
@@ -121,6 +97,76 @@ namespace ClassicalSharp {
 			base.Dispose();
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Dispose();
+		}
+		
+		void InitStandardButtons() {
+			buttons = new ButtonWidget[] {
+				ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnYesClick ),
+				ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnNoClick ),
+				ButtonWidget.Create( game, -110, 80, 160, 35, "Always yes", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnYesAlwaysClick ),
+				ButtonWidget.Create( game, 110, 80, 160, 35, "Always no", Anchor.Centre,
+				                    Anchor.Centre, titleFont, OnNoAlwaysClick ),
+			};
+		}
+		
+		Action<WarningScreen> yesClick, noClick, renderFrame;
+		void OnYesClick( Game g, Widget w ) {
+			if( yesClick != null )
+				yesClick( this );
+			Dispose();
+			CloseScreen();
+		}
+		
+		void OnNoClick( Game g, Widget w ) {
+			if( confirmNo && !confirmMode ) {
+				InitConfirmButtons( false ); return;
+			}
+			
+			if( noClick != null )
+				noClick( this );
+			Dispose();
+			CloseScreen();
+		}
+		
+		void OnYesAlwaysClick( Game g, Widget w ) {
+			OnYesClick( g, w );
+			string url = ((string)Metadata).Substring( 3 );
+			if( !game.AcceptedUrls.HasUrl( url ) )
+				game.AcceptedUrls.AddUrl( url );
+		}
+		
+		void OnNoAlwaysClick( Game g, Widget w ) {
+			if( confirmNo && !confirmMode ) {
+				InitConfirmButtons( true ); return;
+			}
+			
+			OnNoClick( g, w );
+			string url = ((string)Metadata).Substring( 3 );
+			if( !game.DeniedUrls.HasUrl( url ) )
+				game.DeniedUrls.AddUrl( url );
+		}
+
+		
+		void InitConfirmButtons( bool always ) {
+			Action<Game, Widget> noHandler = always ? (Action<Game, Widget>)OnNoAlwaysClick
+				: (Action<Game, Widget>)OnNoClick;
+			buttons = new ButtonWidget[] {
+				ButtonWidget.Create( game, -110, 30, 160, 35, "I'm sure", Anchor.Centre,
+				                    Anchor.Centre, titleFont, noHandler ),
+				ButtonWidget.Create( game, 110, 30, 160, 35, "Go back", Anchor.Centre,
+				                    Anchor.Centre, titleFont, GoBackClick ),
+			};
+			confirmMode = true;
+			SetText( lastTitle, lastBody );
+		}
+		
+		void GoBackClick( Game g, Widget w ) {
+			InitStandardButtons();
+			confirmMode = false;
+			SetText( lastTitle, lastBody );
 		}
 	}
 }

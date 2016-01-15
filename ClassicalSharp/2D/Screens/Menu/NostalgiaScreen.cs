@@ -32,24 +32,6 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );
 				     } ),
 				
-				Make( -140, 50, "Arial chat font", OnWidgetClick,
-				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
-				     (g, v) => {
-				     	g.Drawer2D.UseBitmappedChat = v == "no";
-				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
-				     	game.Events.RaiseChatFontChanged();
-				     	
-				     	if( inputWidget != null ) { 
-				     		inputWidget.Dispose(); inputWidget = null; 
-				     	}
-				     	if( descWidget != null ) { 
-				     		descWidget.Dispose(); descWidget = null; 
-				     	}
-				     	
-				     	g.RefreshHud();
-				     	Recreate();
-				     } ),
-				
 				// Column 2
 				Make( 140, -100, "Allow custom blocks", OnWidgetClick,
 				     g => g.AllowCustomBlocks ? "yes" : "no",
@@ -75,7 +57,6 @@ namespace ClassicalSharp {
 			};
 			
 			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),

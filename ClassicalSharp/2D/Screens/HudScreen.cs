@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			Key playerListKey = game.Mapping( KeyBinding.PlayerList );
-			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete;
+			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
 			if( key == playerListKey && handles ) {
 				if( playerList == null )
 					CreatePlayerListWidget();
