@@ -106,7 +106,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame( texIndex );
 			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * 15.99f/16f;
@@ -123,16 +123,16 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame( texIndex );
 			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
-			rec.V1 = vOrigin + minBB.Y * atlas.invElementSize;
-			rec.V2 = vOrigin + maxBB.Y * atlas.invElementSize * 15.99f/16f;
+			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
+			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, 0, z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, height, z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, height, z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, 0, z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, 0, z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, height, z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, height, z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, 0, z, rec.U2, rec.V1, col );
 		}
 
 		void XQuad( float x, int side, bool swapU, float shade ) {
@@ -141,16 +141,16 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame( texIndex );
 			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.Z; rec.U2 = maxBB.Z;
-			rec.V1 = vOrigin + minBB.Y * atlas.invElementSize;
-			rec.V2 = vOrigin + maxBB.Y * atlas.invElementSize * 15.99f/16f;
+			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
+			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, minBB.Z - 0.5f, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, minBB.Z - 0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, minBB.Z - 0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, minBB.Z - 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
 		}
 		
 		void SpriteZQuad( int side, bool firstPart ) {

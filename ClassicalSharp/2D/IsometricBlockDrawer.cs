@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 			FlushIfNotSame();
 			FastColour col = colNormal;
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * 15.99f/16f;
@@ -97,18 +97,18 @@ namespace ClassicalSharp {
 			FlushIfNotSame();
 			FastColour col = fullBright ? colNormal : colZSide;
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
-			rec.V1 = vOrigin + minBB.Y * atlas.invElementSize;
-			rec.V2 = vOrigin + maxBB.Y * atlas.invElementSize * 15.99f/16f;
+			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
+			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( minBB.Y ),
-			                                                    pos.Z + z, rec.U2, rec.V2, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( maxBB.Y ),
+			                                                    pos.Z + z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( minBB.X ), pos.Y + Make( minBB.Y ),
 			                                                    pos.Z + z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + z, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( minBB.Y ),
+			                                                    pos.Z + z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + Make( maxBB.X ), pos.Y + Make( maxBB.Y ),
 			                                                    pos.Z + z, rec.U1, rec.V2, col );
 		}
 
@@ -118,18 +118,18 @@ namespace ClassicalSharp {
 			FlushIfNotSame();
 			FastColour col = fullBright ? colNormal : colXSide;
 			
-			float vOrigin = rec.V1;
+			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.Z; rec.U2 = maxBB.Z;
-			rec.V1 = vOrigin + minBB.Y * atlas.invElementSize;
-			rec.V2 = vOrigin + maxBB.Y * atlas.invElementSize * 15.99f/16f;
+			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
+			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
 			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
-			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
+			                                                    pos.Z + Make( minBB.Z ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( minBB.Y ),
+			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( pos.X + x, pos.Y + Make( maxBB.Y ),
 			                                                    pos.Z + Make( maxBB.Z ), rec.U1, rec.V2, col );
 		}
 		
