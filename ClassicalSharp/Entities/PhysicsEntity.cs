@@ -5,7 +5,7 @@ using OpenTK;
 namespace ClassicalSharp {
 	
 	/// <summary> Entity that performs collision detection. </summary>
-	public abstract class PhysicsEntity : Entity {
+	public abstract partial class PhysicsEntity : Entity {
 		
 		public PhysicsEntity( Game game ) : base( game ) {
 		}
@@ -24,33 +24,19 @@ namespace ClassicalSharp {
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {
 			if( info.CollideType[block] != BlockCollideType.Solid ) return false;
-			
-			box.Min = new Vector3( x, y, z ) + info.MinBB[block];
-			box.Max = new Vector3( x, y, z ) + info.MaxBB[block];
+			Add( x, y, z, ref info.MinBB[block], ref box.Min );
+			Add( x, y, z, ref info.MaxBB[block], ref box.Max );
 			return true;
 		}
 		
-		struct State {
-			public BoundingBox BlockBB;
-			public byte Block;
-			public float tSquared;
-			
-			public State( BoundingBox bb, byte block, float tSquared ) {
-				BlockBB = bb;
-				Block = block;
-				this.tSquared = tSquared;
-			}
+		static void Add( int x, int y, int z, ref Vector3 offset, ref Vector3 target ) {
+			target.X = x + offset.X;
+			target.Y = y + offset.Y;
+			target.Z = z + offset.Z;
 		}
 		
-		// TODO: test for corner cases, and refactor this.
-		static State[] stateCache = new State[0];
-		class StateComparer : IComparer<State> {
-			public int Compare( State x, State y ) {
-				return x.tSquared.CompareTo( y.tSquared );
-			}
-		}
 		
-		static StateComparer comparer = new StateComparer();
+		// TODO: test for corner cases, and refactor this.	
 		protected void MoveAndWallSlide() {
 			if( Velocity == Vector3.Zero )
 				return;
@@ -101,7 +87,7 @@ namespace ClassicalSharp {
 				CalcTime( ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz );
 				if( tx > 1 || ty > 1 || tz > 1 ) continue;
 				float tSquared = tx * tx + ty * ty + tz * tz;
-				stateCache[count++] = new State( blockBB, blockId, tSquared );
+				stateCache[count++] = new State( x, y, z, blockId, tSquared );
 			}
 		}
 		
@@ -109,12 +95,17 @@ namespace ClassicalSharp {
 		                                ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			bool wasOn = onGround;
 			onGround = false;
-			Array.Sort( stateCache, 0, count, comparer );
+			if( count > 0 )
+				QuickSort( stateCache, 0, count - 1 );
 			collideX = false; collideY = false; collideZ = false;
+			BoundingBox blockBB = default(BoundingBox);
 
 			for( int i = 0; i < count; i++ ) {
 				State state = stateCache[i];
-				BoundingBox blockBB = state.BlockBB;
+				Vector3 blockPos = new Vector3( state.X >> 3, state.Y >> 3, state.Z >> 3 );
+				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
+				blockBB.Min = blockPos + info.MinBB[block];
+				blockBB.Max = blockPos + info.MaxBB[block];
 				if( !entityExtentBB.Intersects( blockBB ) ) continue;
 				
 				float tx = 0, ty = 0, tz = 0;
@@ -286,6 +277,49 @@ namespace ClassicalSharp {
 			if( entityBB.XIntersects( blockBB ) ) tx = 0;
 			if( entityBB.YIntersects( blockBB ) ) ty = 0;
 			if( entityBB.ZIntersects( blockBB ) ) tz = 0;
+		}
+		
+		
+		struct State {
+			public int X, Y, Z;
+			public float tSquared;
+			
+			public State( int x, int y, int z, byte block, float tSquared ) {
+				X = x << 3; Y = y << 3; Z = z << 3;
+				X |= (block & 0x07);
+				Y |= (block & 0x38) >> 3;
+				Z |= (block & 0xC0) >> 6;
+				this.tSquared = tSquared;
+			}
+		}
+		static State[] stateCache = new State[0];
+		
+		static void QuickSort( State[] keys, int left, int right ) {
+			while( left < right ) {
+				int i = left, j = right;		
+				float pivot = keys[(i + j) / 2].tSquared;
+				// partition the list
+				while( i <= j ) {
+					while( pivot > keys[i].tSquared ) i++;
+					while( pivot < keys[j].tSquared ) j--;
+					
+					if( i <= j ) {
+						State key = keys[i]; keys[i] = keys[j]; keys[j] = key;
+						i++; j--;
+					}					
+				}
+				
+				// recurse into the smaller subset
+				if( j - left <= right - i ) {
+					if( left < j )
+						QuickSort( keys, left, j );
+					left = i;
+				} else {
+					if( i < right )
+						QuickSort( keys, i, right );
+					right = j;
+				}
+			}
 		}
 	}
 }

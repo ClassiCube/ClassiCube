@@ -21,8 +21,7 @@ namespace ClassicalSharp {
 			}
 			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
 			if( distances.Length > 1 )
-				//FastSorter<ChunkInfo>.QuickSort( distances, chunks, 0, chunks.Length - 1 );
-				Array.Sort( distances, chunks, 0, chunks.Length - 1 );
+				QuickSort( distances, chunks, 0, chunks.Length - 1 );
 			
 			Vector3I pPos = newChunkPos;
 			for( int i = 0; i < chunks.Length; i++ ) {
@@ -41,19 +40,11 @@ namespace ClassicalSharp {
 			}
 			RecalcBooleans( false );
 			//SimpleOcclusionCulling();
-		}		
-	}
-
-	static class FastSorter<T> {
-		
-		static void Swap( int[] keys, T[] values, int a, int b ) {
-			int key = keys[a]; keys[a] = keys[b]; keys[b] = key;		
-			T value = values[a]; values[a] = values[b]; values[b] = value;
 		}
 		
-		public static void QuickSort( int[] keys, T[] values, int left, int right ) {
+		static void QuickSort( int[] keys, ChunkInfo[] values, int left, int right ) {
 			while( left < right ) {
-				int i = left, j = right;		
+				int i = left, j = right;
 				int pivot = keys[(i + j) / 2];
 				// partition the list
 				while( i <= j ) {
@@ -61,9 +52,10 @@ namespace ClassicalSharp {
 					while( pivot < keys[j] ) j--;
 					
 					if( i <= j ) {
-						Swap( keys, values, i, j );
+						int key = keys[i]; keys[i] = keys[j]; keys[j] = key;
+						ChunkInfo value = values[i]; values[i] = values[j]; values[j] = value;
 						i++; j--;
-					}					
+					}
 				}
 				
 				// recurse into the smaller subset

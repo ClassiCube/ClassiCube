@@ -4,9 +4,61 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
-	// TODO: optimise chunk rendering
-	//  --> reduce iterations: liquid and sprite pass only need 1 row
 	public partial class MapRenderer : IDisposable {
+		
+		// Render solid and fully transparent to fill depth buffer.
+		// These blocks are treated as having an alpha value of either none or full.
+		void RenderNormal() {
+			int[] texIds = game.TerrainAtlas1D.TexIds;
+			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.Texturing = true;
+			api.AlphaTest = true;
+			
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( pendingNormal[batch] || usedNormal[batch] ) {
+					api.BindTexture( texIds[batch] );
+					RenderNormalBatch( batch );
+					pendingNormal[batch] = false;
+				}
+			}
+			api.AlphaTest = false;
+			api.Texturing = false;
+			DebugPickedPos();
+		}
+		
+		// Render translucent(liquid) blocks. These 'blend' into other blocks.
+		void RenderTranslucent() {
+			Block block = game.LocalPlayer.BlockAtHead;
+			drawAllFaces = block == Block.Water || block == Block.StillWater;
+			// First fill depth buffer
+			int[] texIds = game.TerrainAtlas1D.TexIds;
+			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.Texturing = false;
+			api.AlphaBlending = false;
+			api.ColourWrite = false;
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( pendingTranslucent[batch] || usedTranslucent[batch] ) {
+					RenderTranslucentBatchDepthPass( batch );
+					pendingTranslucent[batch] = false;
+				}
+			}
+			
+			// Then actually draw the transluscent blocks
+			api.AlphaBlending = true;
+			api.Texturing = true;
+			api.ColourWrite = true;
+			api.DepthWrite = false; // we already calculated depth values in depth pass
+			
+			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( !usedTranslucent[batch] ) continue;
+				api.BindTexture( texIds[batch] );
+				RenderTranslucentBatch( batch );
+			}
+			api.DepthWrite = true;
+			api.AlphaTest = false;
+			api.AlphaBlending = false;
+			api.Texturing = false;
+		}
 		
 		const DrawMode mode = DrawMode.Triangles;
 		const int maxVertex = 65536;

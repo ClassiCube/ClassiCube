@@ -55,6 +55,7 @@ namespace ClassicalSharp {
 			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
 			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
+			game.Events.ViewDistanceChanged += ViewDistanceChanged;
 		}
 		
 		public void Dispose() {
@@ -66,6 +67,7 @@ namespace ClassicalSharp {
 			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.MapEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
+			game.Events.ViewDistanceChanged -= ViewDistanceChanged;
 			builder.Dispose();
 		}
 		
@@ -109,6 +111,12 @@ namespace ClassicalSharp {
 			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			builder.OnNewMap();
+		}
+		
+		void ViewDistanceChanged( object sender, EventArgs e ) {
+			lastCamPos = new Vector3( float.MaxValue );
+			lastYaw = float.MaxValue;
+			lastPitch = float.MaxValue;
 		}
 		
 		void RecalcBooleans( bool sizeChanged ) {
@@ -246,12 +254,30 @@ namespace ClassicalSharp {
 		int chunksTarget = 4;
 		const double targetTime = (1.0 / 30) + 0.01;
 		void UpdateChunks( double deltaTime ) {
-			int chunksUpdatedThisFrame = 0;
+			int chunkUpdates = 0;
 			int viewDist = game.ViewDistance < 16 ? 16 : game.ViewDistance;
 			int adjViewDistSqr = (viewDist + 24) * (viewDist + 24);
 			chunksTarget += deltaTime < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
 			
+			LocalPlayer p = game.LocalPlayer;
+			Vector3 cameraPos = game.CurrentCameraPos;
+			bool samePos = cameraPos == lastCamPos && p.HeadYawDegrees == lastYaw
+				&& p.PitchDegrees == lastPitch;
+			if( samePos )
+				UpdateChunksStill( deltaTime, ref chunkUpdates, adjViewDistSqr );
+			else
+				UpdateChunksAndVisibility( deltaTime, ref chunkUpdates, adjViewDistSqr );
+			
+			lastCamPos = cameraPos;
+			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
+			if( !samePos || chunkUpdates != 0 )
+				RecalcBooleans( false );
+		}
+		Vector3 lastCamPos;
+		float lastYaw, lastPitch;
+		
+		void UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdats, int adjViewDistSqr ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
@@ -259,84 +285,40 @@ namespace ClassicalSharp {
 				bool inRange = distSqr <= adjViewDistSqr;
 				
 				if( info.NormalParts == null && info.TranslucentParts == null ) {
-					if( inRange && chunksUpdatedThisFrame < chunksTarget ) {
-						game.ChunkUpdates++;
-						builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-						                    ref info.NormalParts, ref info.TranslucentParts, ref info.OcclusionFlags );
-						
-						if( info.NormalParts == null && info.TranslucentParts == null )
-							info.Empty = true;
-						chunksUpdatedThisFrame++;
-					}
+					if( inRange && chunkUpdats < chunksTarget )
+						BuildChunk( info, ref chunkUpdats );
 				}
 				info.Visible = inRange &&
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
-			
-			LocalPlayer p = game.LocalPlayer;
-			Vector3 cameraPos = game.CurrentCameraPos;
-			if( chunksUpdatedThisFrame == 0 && cameraPos == lastCamPos 
-			   && p.HeadYawDegrees == lastYaw && p.PitchDegrees == lastPitch ) return;
-			
-			lastCamPos = cameraPos;
-			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
-			RecalcBooleans( false );
-		}
-		Vector3 lastCamPos;
-		float lastYaw, lastPitch;
-		
-		// Render solid and fully transparent to fill depth buffer.
-		// These blocks are treated as having an alpha value of either none or full.
-		void RenderNormal() {
-			int[] texIds = game.TerrainAtlas1D.TexIds;
-			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			api.Texturing = true;
-			api.AlphaTest = true;
-			
-			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( pendingNormal[batch] || usedNormal[batch] ) {
-					api.BindTexture( texIds[batch] );
-					RenderNormalBatch( batch );
-					pendingNormal[batch] = false;
-				}
-			}
-			api.AlphaTest = false;
-			api.Texturing = false;
-			DebugPickedPos();
 		}
 		
-		// Render translucent(liquid) blocks. These 'blend' into other blocks.
-		void RenderTranslucent() {
-			Block block = game.LocalPlayer.BlockAtHead;
-			drawAllFaces = block == Block.Water || block == Block.StillWater;
-			// First fill depth buffer
-			int[] texIds = game.TerrainAtlas1D.TexIds;
-			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			api.Texturing = false;
-			api.AlphaBlending = false;
-			api.ColourWrite = false;
-			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( pendingTranslucent[batch] || usedTranslucent[batch] ) {
-					RenderTranslucentBatchDepthPass( batch );
-					pendingTranslucent[batch] = false;
-				}
+		void UpdateChunksStill( double deltaTime, ref int chunkUpdates, int adjViewDistSqr ) {
+			for( int i = 0; i < chunks.Length; i++ ) {
+				ChunkInfo info = chunks[i];
+				if( info.Empty ) continue;
+				int distSqr = distances[i];
+				bool inRange = distSqr <= adjViewDistSqr;
+				
+				if( info.NormalParts == null && info.TranslucentParts == null ) {
+					if( inRange && chunkUpdates < chunksTarget ) {
+						BuildChunk( info, ref chunkUpdates );
+						// only need to update the visibility of chunks in range.
+						info.Visible = inRange &&
+							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
+					}
+				}		
 			}
+		}
+		
+		void BuildChunk( ChunkInfo info, ref int chunkUpdates ) {
+			game.ChunkUpdates++;
+			builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
+			                    ref info.NormalParts, ref info.TranslucentParts, ref info.OcclusionFlags );
 			
-			// Then actually draw the transluscent blocks
-			api.AlphaBlending = true;
-			api.Texturing = true;
-			api.ColourWrite = true;
-			api.DepthWrite = false; // we already calculated depth values in depth pass
-			
-			for( int batch = 0; batch < _1DUsed; batch++ ) {
-				if( !usedTranslucent[batch] ) continue;
-				api.BindTexture( texIds[batch] );
-				RenderTranslucentBatch( batch );
-			}
-			api.DepthWrite = true;
-			api.AlphaTest = false;
-			api.AlphaBlending = false;
-			api.Texturing = false;
+			if( info.NormalParts == null && info.TranslucentParts == null )
+				info.Empty = true;
+			chunkUpdates++;
 		}
 	}
 }
