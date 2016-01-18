@@ -362,7 +362,7 @@ namespace ClassicalSharp {
 		void CycleDistanceForwards() {
 			for( int i = 0; i < viewDistances.Length; i++ ) {
 				int dist = viewDistances[i];
-				if( dist > game.ViewDistance ) {
+				if( dist > game.UserViewDistance ) {
 					game.SetViewDistance( dist, true ); return;
 				}
 			}
@@ -372,7 +372,7 @@ namespace ClassicalSharp {
 		void CycleDistanceBackwards() {
 			for( int i = viewDistances.Length - 1; i >= 0; i-- ) {
 				int dist = viewDistances[i];
-				if( dist < game.ViewDistance ) {
+				if( dist < game.UserViewDistance ) {
 					game.SetViewDistance( dist, true ); return;
 				}
 			}

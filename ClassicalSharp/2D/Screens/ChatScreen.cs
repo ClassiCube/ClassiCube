@@ -208,6 +208,7 @@ namespace ClassicalSharp {
 			if( !game.Drawer2D.UseBitmappedChat ) return;
 			Dispose();
 			Init();
+			UpdateChatYOffset( true );
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
