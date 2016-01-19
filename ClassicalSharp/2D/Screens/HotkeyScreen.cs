@@ -122,14 +122,14 @@ namespace ClassicalSharp {
 		}
 		
 		ButtonWidget MakeHotkey( int x, int y, int index ) {
-			string text = Get( index );
+			string text = Get( index + currentIndex );
 			ButtonWidget button = ButtonWidget.Create(
 				game, x, y, 240, 30, text, Anchor.Centre, Anchor.Centre,
 				textFont, TextButtonClick );
 			
 			button.Metadata = default( Hotkey );
 			if( text != "-----" )
-				button.Metadata =  hotkeys.Hotkeys[index];
+				button.Metadata =  hotkeys.Hotkeys[index + currentIndex];
 			return button;
 		}
 		
@@ -146,7 +146,7 @@ namespace ClassicalSharp {
 			button.SetText( text );
 			button.Metadata = default( Hotkey );
 			if( text != "-----" )
-				button.Metadata =  hotkeys.Hotkeys[index];
+				button.Metadata = hotkeys.Hotkeys[index + currentIndex];
 		}
 		
 		string MakeFlagsString( byte flags ) {
@@ -179,6 +179,7 @@ namespace ClassicalSharp {
 		}
 		
 		#region Modifying hotkeys
+		
 		Hotkey curHotkey, origHotkey;
 		MenuInputWidget currentAction;
 		TextWidget currentMoreInputLabel;
@@ -231,11 +232,6 @@ namespace ClassicalSharp {
 		}
 		
 		void SaveChangesClick( Game game, Widget widget ) {
-			if( origHotkey.BaseKey != Key.Unknown ) {
-				hotkeys.RemoveHotkey( origHotkey.BaseKey, origHotkey.Flags );
-				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
-			}
-			
 			if( curHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.AddHotkey( curHotkey.BaseKey, curHotkey.Flags,
 				                  currentAction.GetText(), curHotkey.MoreInput );

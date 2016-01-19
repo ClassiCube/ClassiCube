@@ -210,6 +210,11 @@ namespace ClassicalSharp {
 				if( type == BlockCollideType.Solid && !checkSolid )
 					continue;
 				
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];				
+				BoundingBox blockBB = new BoundingBox( min, max );
+				if( !blockBB.Intersects( bounds ) ) continue;	
+				
 				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
 				if( block >= BlockInfo.CpeBlocksCount && type == BlockCollideType.SwimThrough )
 					useLiquidGravity = true;
