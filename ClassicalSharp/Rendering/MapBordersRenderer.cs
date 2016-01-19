@@ -51,16 +51,22 @@ namespace ClassicalSharp {
 				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
 			}
 			
+			Vector3 camPos = game.CurrentCameraPos;
+			bool underWater = camPos.Y < game.Map.EdgeHeight;
 			graphics.AlphaBlending = true;
-			graphics.BindTexture( edgeTexId );
-			graphics.BindVb( edgesVb );
+			if( underWater )
+				game.WeatherRenderer.Render( deltaTime );
 			
+			graphics.BindTexture( edgeTexId );
+			graphics.BindVb( edgesVb );			
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.Map.EdgeBlock != Block.Air && game.CurrentCameraPos.Y >= yVisible ) {
+			if( game.Map.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
-			}
+			
+			if( !underWater )
+				game.WeatherRenderer.Render( deltaTime );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 			graphics.AlphaTest = false;

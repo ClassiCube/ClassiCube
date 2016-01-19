@@ -5,7 +5,7 @@ namespace ClassicalSharp.Particles {
 
 	public abstract class CollidableParticle : Particle {
 		
-		protected bool hitTerrain = false;
+		protected bool hitTerrain = false, throughLiquids = true;
 		public CollidableParticle( Game game ) : base( game) { }
 		
 		public void ResetState( Vector3 pos, Vector3 velocity, double lifetime ) {
@@ -18,7 +18,7 @@ namespace ClassicalSharp.Particles {
 		protected bool Tick( float gravity, double delta ) {
 			hitTerrain = false;
 			lastPos = Position = nextPos;
-			byte curBlock = game.Map.SafeGetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
+			byte curBlock = GetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
 			float minY = Utils.Floor( Position.Y ) + game.BlockInfo.MinBB[curBlock].Y;
 			float maxY = Utils.Floor( Position.Y ) + game.BlockInfo.MaxBB[curBlock].Y;			
 			if( !CanPassThrough( curBlock ) && Position.Y >= minY && 
@@ -29,8 +29,6 @@ namespace ClassicalSharp.Particles {
 			int startY = (int)Math.Floor( Position.Y );
 			Position += Velocity * (float)delta * 3;
 			int endY = (int)Math.Floor( Position.Y );
-			Utils.Clamp( ref Position.X, 0, game.Map.Width - 0.01f );
-			Utils.Clamp( ref Position.Z, 0, game.Map.Length - 0.01f );
 			
 			if( Velocity.Y > 0 ) {
 				// don't test block we are already in
@@ -51,7 +49,7 @@ namespace ClassicalSharp.Particles {
 				return false;
 			}
 			
-			byte block = game.Map.SafeGetBlock( (int)Position.X, y, (int)Position.Z );
+			byte block = GetBlock( (int)Position.X, y, (int)Position.Z );
 			if( CanPassThrough( block ) ) return true;
 			Vector3 minBB = game.BlockInfo.MinBB[block];
 			Vector3 maxBB = game.BlockInfo.MaxBB[block];
@@ -69,7 +67,8 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		bool CanPassThrough( byte block ) {
-			return block == 0 || game.BlockInfo.IsSprite[block] || game.BlockInfo.IsLiquid[block];
+			return game.BlockInfo.IsAir[block] || game.BlockInfo.IsSprite[block] 
+				|| (throughLiquids && game.BlockInfo.IsLiquid[block]);
 		}
 		
 		bool CollideHor( byte block ) {
@@ -81,6 +80,15 @@ namespace ClassicalSharp.Particles {
 		
 		static Vector3 Floor( Vector3 v ) {
 			return new Vector3( Utils.Floor( v.X ), 0, Utils.Floor( v.Z ) );
+		}
+		
+		byte GetBlock( int x, int y, int z ) {
+			if( game.Map.IsValidPos( x, y, z ) )
+				return game.Map.GetBlock( x, y, z );
+			
+			if( y >= game.Map.EdgeHeight ) return (byte)Block.Air;
+			if( y >= game.Map.SidesHeight ) return (byte)game.Map.EdgeBlock;
+			return (byte)game.Map.SidesBlock;
 		}
 	}
 }

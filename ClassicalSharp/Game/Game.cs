@@ -223,7 +223,6 @@ namespace ClassicalSharp {
 					Picking.Render( e.Time, SelectedPos );
 				MapRenderer.Render( e.Time );
 				SelectionManager.Render( e.Time );
-				WeatherRenderer.Render( e.Time );
 				Players.RenderHoveredNames( Graphics, e.Time, t );
 				
 				bool left = IsMousePressed( MouseButton.Left );

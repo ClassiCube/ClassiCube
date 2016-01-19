@@ -31,7 +31,6 @@ namespace ClassicalSharp {
 			if( weather == Weather.Sunny ) return;
 			if( heightmap == null ) InitHeightmap();
 			
-			graphics.Texturing = true;
 			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
 			Vector3 camPos = game.CurrentCameraPos;
 			Vector3I pos = Vector3I.Floor( camPos );
@@ -44,7 +43,7 @@ namespace ClassicalSharp {
 			bool particles = weather == Weather.Rainy;
 
 			int index = 0;
-			graphics.AlphaBlending = true;
+			graphics.AlphaTest = false;
 			graphics.DepthWrite = false;
 			FastColour col = game.Map.Sunlight;
 			for( int dx = -extent; dx <= extent; dx++ ) {
@@ -66,14 +65,13 @@ namespace ClassicalSharp {
 				graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 			}
-			graphics.AlphaBlending = false;
-			graphics.Texturing = false;
+			graphics.AlphaTest = true;
 			graphics.DepthWrite = true;
 		}
 		
 		float AlphaAt( float x ) {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
-			return 0.05f * x * x - 6.5f * x + 178;
+			return 0.05f * x * x - 7 * x + 178;
 		}
 		
 		void MakeRainForSquare( int x, float y, float height, int z, FastColour col, ref int index ) {
@@ -147,7 +145,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool BlocksRain( byte block ) {
-			return !(info.IsAir[block] || info.IsSprite[block] || info.IsLiquid[block]);
+			return !(info.IsAir[block] || info.IsSprite[block]);
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {

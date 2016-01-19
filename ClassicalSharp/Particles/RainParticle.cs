@@ -10,7 +10,9 @@ namespace ClassicalSharp.Particles {
 		static Vector2 tinySize = new Vector2( 0.5f/16f, 0.5f/16f );
 		static TextureRec rec = new TextureRec( 2/128f, 14/128f, 3/128f, 2/128f );
 		
-		public RainParticle( Game game ) : base( game ) { }
+		public RainParticle( Game game ) : base( game ) {
+			throughLiquids = false;
+		}
 		
 		public bool Big, Tiny;
 		
