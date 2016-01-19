@@ -105,7 +105,7 @@
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\NostalgiaScreen.cs" />
     <Compile Include="2D\Screens\Menu\PauseScreen.cs" />
-    <Compile Include="2D\Screens\Menu\OptionsScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MiscOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\SaveLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\TexturePackScreen.cs" />
     <Compile Include="2D\Screens\HudScreen.cs" />

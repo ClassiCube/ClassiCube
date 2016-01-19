@@ -71,28 +71,9 @@ namespace ClassicalSharp {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new RealValidator( 0.25f, 5f ),
-				new RealValidator( 0.25f, 5f ),
-				
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new RealValidator( 0.25f, 5f ),
-				new IntegerValidator( 1, 30 ),
-				new BooleanValidator(),
-			};
+			
+			MakeValidators();
 			okayIndex = buttons.Length - 1;
-		}
-		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
-		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
-			return widget;
 		}
 		
 		void HandleArialChatFont( Game g, string v ) {
@@ -109,6 +90,21 @@ namespace ClassicalSharp {
 			
 			g.RefreshHud();
 			Recreate();
+		}
+		
+		void MakeValidators() {
+			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
+				new BooleanValidator(),
+				new RealValidator( 0.25f, 5f ),
+				new RealValidator( 0.25f, 5f ),
+				
+				new BooleanValidator(),
+				new BooleanValidator(),
+				new RealValidator( 0.25f, 5f ),
+				new IntegerValidator( 1, 30 ),
+				new BooleanValidator(),
+			};
 		}
 	}
 }

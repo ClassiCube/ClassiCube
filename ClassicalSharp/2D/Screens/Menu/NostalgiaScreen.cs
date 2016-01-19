@@ -81,14 +81,5 @@ namespace ClassicalSharp {
 			base.Dispose();
 			infoWidget.Dispose();
 		}
-		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
-		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
-			return widget;
-		}
 	}
 }

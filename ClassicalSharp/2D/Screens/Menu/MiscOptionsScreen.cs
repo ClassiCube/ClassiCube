@@ -4,9 +4,9 @@ using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp {
 	
-	public class OptionsScreen : MenuInputScreen {
+	public class MiscOptionsScreen : MenuInputScreen {
 		
-		public OptionsScreen( Game game ) : base( game ) {
+		public MiscOptionsScreen( Game game ) : base( game ) {
 		}
 		
 		public override void Init() {
@@ -82,9 +82,15 @@ namespace ClassicalSharp {
 			};
 			buttons[2].Metadata = typeof(NameMode);
 			buttons[3].Metadata = typeof(FpsLimitMethod);
-			
+			MakeValidators();
+			MakeDescriptions();
+			okayIndex = buttons.Length - 1;
+		}
+		
+		void MakeValidators() {
+			INetworkProcessor network = game.Network;
 			validators = new MenuInputValidator[] {
-				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
+				network.IsSinglePlayer ? new RealValidator( 1, 1024 ) : null,
 				new BooleanValidator(),
 				new EnumValidator(),
 				new EnumValidator(),
@@ -97,16 +103,29 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),
 			};
-			okayIndex = buttons.Length - 1;
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
-		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
-			return widget;
+		void MakeDescriptions() {
+			descriptions = new string[buttons.Length][];
+			descriptions[0] = new[] {
+				"&aControls how far away you can place/delete blocks.",
+				"&eThe default click distance is 5 blocks.",
+			};
+			descriptions[2] = new[] {
+				"&aDetermines how the names of other players/entities are drawn.",
+				"&eNoNames: &fNo player names are drawn.",
+				"&eHoveredOnly: &fThe name of the player you are looking at is drawn without depth testing.",
+				"&eAllNames: &fAll names are drawn without depth testing.",
+				"&eAllNamesAndHovered: &fThe name of the player you are looking at is drawn without depth testing,",
+				"&f   all other player names are drawn with depth testing.",
+			};
+			descriptions[3] = new[] {
+				"&aDetermines the method used to limit the number of frames rendered each second.",
+				"&eVSync: &fNumber of frames rendered is equal to the refresh rate of the monitor.",
+				"&e30/60/120 FPS: &f30/60/120 frames are rendered at most each second.",
+				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",
+				"&cUsing NoLimit mode is strongly discouraged for general usage.",
+			};
 		}
 	}
 }

@@ -68,6 +68,32 @@ namespace ClassicalSharp {
 				null,
 			};
 			
+			MakeValidators();
+			MakeDescriptions();
+			okayIndex = buttons.Length - 1;
+			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+			CheckHacksAllowed( null, null );
+		}
+		
+		void CheckHacksAllowed( object sender, EventArgs e ) { 
+			for( int i = 0; i < buttons.Length; i++ ) {
+				if( buttons[i] == null ) continue;
+				buttons[i].Disabled = false;
+			}
+			
+			LocalPlayer p = game.LocalPlayer;
+			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
+			buttons[3].Disabled = noGlobalHacks || !p.CanSpeed;
+			buttons[4].Disabled = noGlobalHacks || !p.CanSpeed;
+			buttons[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+		}
+		
+		void MakeValidators() {
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new RealValidator( 0.1f, 50 ),
@@ -80,35 +106,20 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new IntegerValidator( 1, 150 ),				
 			};
-			okayIndex = buttons.Length - 1;
-			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			CheckHacksAllowed( null, null );
 		}
 		
-		void CheckHacksAllowed( object sender, EventArgs e ) { 
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Disabled = false;
-			}
-			LocalPlayer p = game.LocalPlayer;
-			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
-			buttons[3].Disabled = noGlobalHacks || !p.CanSpeed;
-			buttons[4].Disabled = noGlobalHacks || !p.CanSpeed;
-			buttons[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
-		}
-		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
-		                  Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
-			return widget;
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+		void MakeDescriptions() {
+			descriptions = new string[buttons.Length][];
+			descriptions[5] = new [] {
+				"&fIf breaking liquids is set to true, then water/lava",
+				"&fcan be deleted the same way as any regular block.",
+			};
+			descriptions[6] = new [] {
+				"&aDetermines whether pushback placing mode is active or not.",
+				"&fWhen this is active, placing blocks that intersect your own position",
+				"&f  cause the block to be placed, and you to be moved out of the way.",
+				"&fThis is mainly useful for quick pillaring/towering.",
+			};
 		}
 	}
 }

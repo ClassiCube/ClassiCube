@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			buttons = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Misc options", Anchor.Centre, 
-				     (g, w) => g.SetNewScreen( new OptionsScreen( g ) ) ),
+				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
 				Make( -140, -100, "Gui options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
 				Make( -140, -50, "Hacks settings", Anchor.Centre, 

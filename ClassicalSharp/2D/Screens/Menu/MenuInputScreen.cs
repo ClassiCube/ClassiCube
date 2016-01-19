@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		protected MenuInputValidator[] validators;
 		protected TextWidget descWidget;
 		protected int okayIndex;
+		protected string[][] descriptions;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
@@ -45,7 +46,7 @@ namespace ClassicalSharp {
 				ChangeSetting();
 				return true;
 			}
-			if( inputWidget == null ) 
+			if( inputWidget == null )
 				return key < Key.F1 || key > Key.F35;
 			return inputWidget.HandlesKeyDown( key );
 		}
@@ -124,7 +125,7 @@ namespace ClassicalSharp {
 				inputWidget.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre, 
+			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre,
 			                                     Anchor.Centre, regularFont, titleFont, validator );
 			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
@@ -149,5 +150,14 @@ namespace ClassicalSharp {
 		protected virtual void InputOpened() { }
 		
 		protected virtual void InputClosed() { }
+		
+		protected virtual ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
+		                                    Func<Game, string> getter, Action<Game, string> setter ) {
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
+			                                          Anchor.Centre, titleFont, onClick );
+			widget.GetValue = getter;
+			widget.SetValue = setter;
+			return widget;
+		}
 	}
 }
