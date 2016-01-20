@@ -8,9 +8,12 @@ namespace Launcher2 {
 
 	public sealed partial class LauncherWindow {
 
+		internal bool ClassicMode = false;
+		
 		internal void TryLoadTexturePack() {
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
+			ClassicMode = Options.GetBool( "mode-classic", false );
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			texPack = Path.Combine( texDir, texPack );
@@ -64,24 +67,30 @@ namespace Launcher2 {
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
-				ClearArea( 0, 0, Width, Height );
-				//ClearTile( 0, 0, Width, 48, elemSize, 128, 64 );
+				if( ClassicMode )
+					ClearTile( 0, 0, Width, 48, elemSize, 128, 64 );
+				else
+					ClearArea( 0, 0, Width, Height );
 				
 				args.Text = "&0Classical&0Sharp";
-				drawer.DrawChatText( ref args, xStart + 4, 10 + 4 );
+				drawer.DrawChatText( ref args, xStart + 4, 8 + 4 );
 				args.Text = "&eClassical&fSharp";
-				drawer.DrawChatText( ref args, xStart, 10 );
+				drawer.DrawChatText( ref args, xStart, 8 );
 				drawer.UseBitmappedChat = false;
-				//ClearTile( 0, 48, Width, Height - 48, 0, 64, 64 );
+				if( ClassicMode )
+					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96 );
 			}
 			Dirty = true;
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
-			FastColour col = LauncherSkin.BackgroundCol;
-			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
-				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col );
-			//ClearTile( x, y, width, height, 0, 64, 64 );
+			if( ClassicMode ) {
+				ClearTile( x, y, width, height, 0, 96, 96 );
+			} else {
+				FastColour col = LauncherSkin.BackgroundCol;
+				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
+					Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
+			}
 		}
 		
 		void ClearTile( int x, int y, int width, int height, int srcX, byte scaleA, byte scaleB ) {
@@ -90,13 +99,13 @@ namespace Launcher2 {
 				Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
 				const int tileSize = 48;
 				Size size = new Size( tileSize, tileSize );
-				int xMax = x + width, xOrig = x, yMax = y + height;
+				int xOrig = x, xMax = x + width, yMax = y + height;
 				
 				for( ; y < yMax; y += tileSize )
 					for( x = xOrig; x < xMax; x += tileSize )
 				{
-					int x2 = Math.Min( x + tileSize, Math.Min( x + width, Width ) );
-					int y2 = Math.Min( y + tileSize, Math.Min( y + height, Height ) );
+					int x2 = Math.Min( x + tileSize, Math.Min( xMax, Width ) );
+					int y2 = Math.Min( y + tileSize, Math.Min( yMax, Height ) );
 					
 					Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
 					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );

@@ -11,7 +11,7 @@ namespace Launcher2 {
 		Font tableFont;
 		const int tableX = 10, tableY = 50;
 		
-		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {		
+		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
 			tableFont = new Font( "Arial", 11, FontStyle.Regular );
 			enterIndex = 3;
 			widgets = new LauncherWidget[7];
@@ -98,7 +98,7 @@ namespace Launcher2 {
 		
 		void Draw() {
 			widgetIndex = 0;
-			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop, 
+			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop,
 			          false, 10, 10, 32, "&7Search servers.." );
 			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.BottomOrRight,
 			          false, 10, -10, 32, "&7classicube.net/server/play/..." );
@@ -114,7 +114,10 @@ namespace Launcher2 {
 		void MakeTableWidget() {
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
 			FastColour col = LauncherTableWidget.backGridCol;
-			drawer.Clear( col, tableX, tableY, game.Width - tableX, tableHeight );
+			if( !game.ClassicMode )
+				drawer.Clear( col, tableX, tableY, game.Width - tableX, tableHeight );
+			else
+				game.ClearArea( tableX, tableY, game.Width - tableX, tableHeight );
 			
 			if( widgets[tableIndex] != null ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];

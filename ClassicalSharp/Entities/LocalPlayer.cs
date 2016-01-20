@@ -82,6 +82,7 @@ namespace ClassicalSharp {
 			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
 			DoubleJump = Options.GetBool( OptionsKey.DoubleJump, false );
+			HacksEnabled = Options.GetBool( OptionsKey.HacksEnabled, true );
 			InitRenderingData();
 		}
 		

@@ -93,7 +93,7 @@ namespace Launcher2 {
 			x += DrawColumn( drawer, true, font, titleFont, boldFont,
 			                "Uptime", ColumnWidths[2], x, e => e.Uptime ) + 5;
 			x += DrawColumn( drawer, true, font, titleFont, boldFont,
-			                "Software", ColumnWidths[3], x, e => e.Software ) + 5;	
+			                "Software", ColumnWidths[3], x, e => e.Software ) + 5;
 			DrawScrollbar( drawer );
 		}
 		
@@ -104,7 +104,7 @@ namespace Launcher2 {
 			TableEntry headerEntry = default( TableEntry );
 			DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref headerEntry );
 			maxIndex = Count;
-			y += 5;			
+			y += 5;
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
@@ -116,7 +116,7 @@ namespace Launcher2 {
 				}
 			}
 			
-			if( separator )
+			if( separator && !Window.ClassicMode )
 				drawer.Clear( LauncherSkin.BackgroundCol, x - 7, Y, 2, Height );
 			return maxWidth + 5;
 		}
@@ -135,7 +135,7 @@ namespace Launcher2 {
 			if( !empty ) {
 				size.Width = Math.Min( maxWidth, size.Width );
 				args.SkipPartsCheck = false;
-				drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );			
+				drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );
 			}
 			y += size.Height + 2;
 			return true;
@@ -153,7 +153,8 @@ namespace Launcher2 {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			drawer.Clear( LauncherSkin.BackgroundCol, X, Y + size.Height + 5, Width, 2 );
+			if( !Window.ClassicMode )
+				drawer.Clear( LauncherSkin.BackgroundCol, X, Y + size.Height + 5, Width, 2 );
 			headerStartY = Y;
 			
 			headerEndY = Y + size.Height + 5;
@@ -163,12 +164,14 @@ namespace Launcher2 {
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
-			drawer.Clear( LauncherSkin.ButtonBorderCol, Window.Width - 10, Y, 10, Height );
+			FastColour col = Window.ClassicMode ? new FastColour( 80, 80, 80 ) : LauncherSkin.ButtonBorderCol;
+			drawer.Clear( col, Window.Width - 10, Y, 10, Height );
 			float scale = Height / (float)Count;
 			
+			col =  Window.ClassicMode ? new FastColour( 160, 160, 160 ) : LauncherSkin.ButtonForeActiveCol;
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);
-			drawer.Clear( LauncherSkin.ButtonForeActiveCol, Window.Width - 10, y1, 10, height + 1 );
+			drawer.Clear( col, Window.Width - 10, y1, 10, height + 1 );
 		}
 		
 		public void SetSelected( int index ) {

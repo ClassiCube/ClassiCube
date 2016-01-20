@@ -10,7 +10,7 @@ namespace Launcher2 {
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
 			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
 			enterIndex = 2;
-			widgets = new LauncherWidget[13];
+			widgets = new LauncherWidget[14];
 			LoadResumeInfo();
 		}
 		
@@ -30,20 +30,28 @@ namespace Launcher2 {
 			             Anchor.Centre, Anchor.Centre, 90, -20, ResumeClick );
 			
 			MakeButtonAt( "Direct connect", 200, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 80,
+			             Anchor.Centre, Anchor.Centre, 0, 60,
 			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );
 			
 			MakeButtonAt( "Singleplayer", 200, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 135,
+			             Anchor.Centre, Anchor.Centre, 0, 110,
 			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
 			
-			MakeButtonAt( "Colour scheme", 160, buttonHeight, buttonFont,
-			             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
-			             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );
+			if( !game.ClassicMode ) {
+				MakeButtonAt( "Colour scheme", 160, buttonHeight, buttonFont,
+				             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
+				             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );
+			} else {
+				widgets[widgetIndex++] = null;
+			}
 			
 			MakeButtonAt( "Update check", 160, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
+			string mode = game.ClassicMode ? "Normal mode" : "Classic mode";
+			MakeButtonAt( mode, 160, buttonHeight, buttonFont,
+			             Anchor.Centre, Anchor.BottomOrRight, 0, -10, ModeClick );
+			
 			if( widgets[widgetIndex] != null ) {
 				MakeSSLSkipValidationBoolean();
 				MakeSSLSkipValidationLabel();
@@ -75,6 +83,25 @@ namespace Launcher2 {
 			if( !resumeValid ) return;
 			ClientStartData data = new ClientStartData( resumeUser, resumeMppass, resumeIp, resumePort );
 			Client.Start( data, resumeCCSkins, ref game.ShouldExit );
+		}
+		
+		void ModeClick( int mouseX, int mouseY ) {
+			game.ClassicMode = !game.ClassicMode;
+			Options.Load();
+			Options.Set( "mode-classic", game.ClassicMode );
+			
+			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
+			Options.Set( "nostalgia-usecpe", !game.ClassicMode );
+			Options.Set( "nostalgia-servertextures", !game.ClassicMode );
+			Options.Set( "nostalgia-classictablist", game.ClassicMode );
+			Options.Set( "mode-classic", !game.ClassicMode );
+			Options.Set( "mode-classic", !game.ClassicMode );
+			Options.Set( "hacksenabled", !game.ClassicMode );
+			Options.Set( "doublejump", false );
+			Options.Save();
+			
+			game.MakeBackground();
+			Resize();
 		}
 		
 		protected override void SelectWidget( LauncherWidget widget ) {
