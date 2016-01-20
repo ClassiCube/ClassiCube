@@ -40,26 +40,38 @@ namespace ClassicalSharp {
 				string text = descriptions[descStart + i] + ": "
 					+ keyNames[(int)game.Mapping( binding )];
 				
-				buttons[index++] = ButtonWidget.Create( game, x, y, 260, 35, text,
+				widgets[index++] = ButtonWidget.Create( game, x, y, 260, 35, text,
 				                                       Anchor.Centre, Anchor.Centre, keyFont, OnBindingClick );
 				y += 45;
 			}
 		}
 		
 		ButtonWidget curWidget;
-		void OnBindingClick( Game game, Widget realWidget, MouseButton mouseBtn ) {
+		void OnBindingClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn == MouseButton.Right && (curWidget == null || curWidget == widget) ) {
+				curWidget = (ButtonWidget)widget;
+				int index = Array.IndexOf<Widget>( widgets, curWidget );
+				KeyBinding mapping = (KeyBinding)(index + (int)originKey);
+				HandlesKeyDown( game.InputHandler.Keys.GetDefault( mapping ) );
+			}
 			if( mouseBtn != MouseButton.Left ) return;
-			this.curWidget = (ButtonWidget)realWidget;
-			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
-			string text = "&ePress new key binding for " + descriptions[index] + ":";
-			statusWidget.SetText( text );
+			
+			if( curWidget == widget ) {
+				curWidget = null;
+				statusWidget.SetText( "" );				
+			} else {
+				curWidget = (ButtonWidget)widget;
+				int index = Array.IndexOf<Widget>( widgets, curWidget );
+				string text = "&ePress new key binding for " + descriptions[index] + ":";
+				statusWidget.SetText( text );				
+			}
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
 				game.SetNewScreen( null );
 			} else if( curWidget != null ) {
-				int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
+				int index = Array.IndexOf<Widget>( widgets, curWidget );
 				KeyBinding mapping = (KeyBinding)(index + (int)originKey);
 				KeyMap map = game.InputHandler.Keys;
 				Key oldKey = map[mapping];
@@ -101,14 +113,14 @@ namespace ClassicalSharp {
 			base.Init();
 			descriptions = normDescriptions;
 			originKey = KeyBinding.Forward;
-			buttons = new ButtonWidget[descriptions.Length + 2];
+			widgets = new Widget[descriptions.Length + 2];
 			MakeKeys( KeyBinding.Forward, 0, 6, -150 );
 			MakeKeys( KeyBinding.SetSpawn, 6, 7, 150 );
 			
-			buttons[index++] = MakeBack( false, titleFont,
+			widgets[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			buttons[index++] = ButtonWidget.Create(
-				game, 0, 170, 300, 35, "Advanced key bindings", 
+			widgets[index++] = ButtonWidget.Create(
+				game, 0, 170, 300, 35, "Advanced key bindings",
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
 		}
 		
@@ -123,22 +135,51 @@ namespace ClassicalSharp {
 		public AdvancedKeyBindingsScreen( Game game ) : base( game ) {
 		}
 		
-		static string[] normDescriptions = new [] { "Speed", "Toggle noclip", "Toggle fly", 
-			"Fly up", "Fly down", "Toggle ext input", "Hide FPS", "Take screenshot", "Toggle fullscreen", 
+		static string[] normDescriptions = new [] { "Speed", "Toggle noclip", "Toggle fly",
+			"Fly up", "Fly down", "Toggle ext input", "Hide FPS", "Take screenshot", "Toggle fullscreen",
 			"Toggle 3rd person", "Hide gui", "Show axis lines", "Zoom scrolling", "Half speed" };
 		
 		public override void Init() {
 			base.Init();
 			descriptions = normDescriptions;
 			originKey = KeyBinding.Speed;
-			buttons = new ButtonWidget[descriptions.Length + 2];
+			widgets = new Widget[descriptions.Length + 2];
 			MakeKeys( KeyBinding.Speed, 0, 7, -150 );
 			MakeKeys( KeyBinding.Screenshot, 7, 7, 150 );
-			buttons[index++] = MakeBack( false, titleFont,
+			widgets[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			buttons[index++] = ButtonWidget.Create(
-				game, 0, 170, 300, 35, "Normal key bindings", 
+			widgets[index++] = ButtonWidget.Create(
+				game, 0, 170, 300, 35, "Mouse key bindings",
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
+		}
+		
+		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
+			game.SetNewScreen( new MouseKeyBindingsScreen( game ) );
+		}
+	}
+	
+	public sealed class MouseKeyBindingsScreen : KeyBindingsScreen {
+		
+		public MouseKeyBindingsScreen( Game game ) : base( game ) {
+		}
+		
+		static string[] normDescriptions = new [] { "Left mouse", "Middle mouse", "Right mouse" };
+		
+		public override void Init() {
+			base.Init();
+			descriptions = normDescriptions;
+			originKey = KeyBinding.MouseLeft;
+			widgets = new Widget[descriptions.Length + 3];
+			MakeKeys( KeyBinding.MouseLeft, 0, 3, 0 );
+			widgets[index++] = MakeBack( false, titleFont,
+			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			widgets[index++] = ButtonWidget.Create(
+				game, 0, 170, 300, 35, "Normal key bindings",
+				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
+			widgets[index++] = ChatTextWidget.Create(
+				game, 0, -40, "&eRight click to remove the key binding", 
+				Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {

@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Block in hand", OnWidgetClick,
 				     g => g.ShowBlockInHand ? "yes" : "no",
@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 			};
 			
 			MakeValidators();
-			okayIndex = buttons.Length - 1;
+			okayIndex = widgets.Length - 1;
 		}
 		
 		void HandleArialChatFont( Game g, string v ) {

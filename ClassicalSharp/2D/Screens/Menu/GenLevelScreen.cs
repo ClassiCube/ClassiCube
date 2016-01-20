@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			return HandleMouseClick( buttons, mouseX, mouseY, button ) ||
+			return HandleMouseClick( widgets, mouseX, mouseY, button ) ||
 				HandleMouseClick( inputs, mouseX, mouseY, button );
 		}
 		
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 			labels = new [] { MakeLabel( -80, "Width:" ), MakeLabel( -40, "Height:" ), 
 				MakeLabel( 0, "Length:" ), MakeLabel( 40, "Seed:" ),
 			};
-			buttons = new [] {
+			widgets = new [] {
 				ButtonWidget.Create( game, 0, 90, 250, 30, "Generate flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
 				ButtonWidget.Create( game, 0, 140, 250, 30, "Generate notchy", Anchor.Centre,

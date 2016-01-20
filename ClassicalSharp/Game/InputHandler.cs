@@ -1,7 +1,7 @@
 ﻿using System;
+using ClassicalSharp.Hotkeys;
 using OpenTK;
 using OpenTK.Input;
-using ClassicalSharp.Hotkeys;
 
 namespace ClassicalSharp {
 
@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 		public InputHandler( Game game ) {
 			this.game = game;
 			RegisterInputHandlers();
-			LoadMouseToKeyMappings();
 			Keys = new KeyMap();
 			Hotkeys = new HotkeyList();
 			Hotkeys.LoadSavedHotkeys();
@@ -26,13 +25,6 @@ namespace ClassicalSharp {
 			game.Mouse.Move += MouseMove;
 			game.Mouse.ButtonDown += MouseButtonDown;
 			game.Mouse.ButtonUp += MouseButtonUp;
-		}
-		
-		Key mapLeft, mapMiddle, mapRight;
-		void LoadMouseToKeyMappings() {
-			mapLeft = Options.GetEnum( OptionsKey.MouseLeft, Key.Unknown );
-			mapMiddle = Options.GetEnum( OptionsKey.MouseMiddle, Key.Unknown );
-			mapRight = Options.GetEnum( OptionsKey.MouseRight, Key.Unknown );
 		}
 		
 		public KeyMap Keys;
@@ -51,9 +43,9 @@ namespace ClassicalSharp {
 			if( down ) return true;
 			
 			// Key --> mouse mappings
-			if( button == MouseButton.Left && IsKeyDown( mapLeft ) ) return true;
-			if( button == MouseButton.Middle && IsKeyDown( mapMiddle ) ) return true;
-			if( button == MouseButton.Right && IsKeyDown( mapRight ) ) return true;
+			if( button == MouseButton.Left && IsKeyDown( KeyBinding.MouseLeft ) ) return true;
+			if( button == MouseButton.Middle && IsKeyDown( KeyBinding.MouseMiddle ) ) return true;
+			if( button == MouseButton.Right && IsKeyDown( KeyBinding.MouseRight ) ) return true;
 			return false;
 		}
 
@@ -312,19 +304,21 @@ namespace ClassicalSharp {
 		
 		MouseButtonEventArgs simArgs = new MouseButtonEventArgs();
 		bool SimulateMouse( Key key, bool pressed ) {
-			if( !(key == mapLeft || key == mapMiddle || key == mapRight ) )
+			Key left = Keys[KeyBinding.MouseLeft], middle = Keys[KeyBinding.MouseMiddle],
+			right = Keys[KeyBinding.MouseRight];
+			
+			if( !(key == left || key == middle || key == right ) )
 				return false;
-			simArgs.Button = key == mapLeft ? MouseButton.Left :
-				key == mapMiddle ? MouseButton.Middle : MouseButton.Right;
+			simArgs.Button = key == left ? MouseButton.Left :
+				key == middle ? MouseButton.Middle : MouseButton.Right;
 			simArgs.X = game.Mouse.X;
 			simArgs.Y = game.Mouse.Y;
 			simArgs.IsPressed = pressed;
 			
-			if( pressed ) {
+			if( pressed )
 				MouseButtonDown( null, simArgs );
-			} else {
+			else
 				MouseButtonUp( null, simArgs );
-			}
 			return true;
 		}
 		

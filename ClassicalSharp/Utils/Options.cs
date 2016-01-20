@@ -17,9 +17,6 @@ namespace ClassicalSharp {
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
-		public const string MouseLeft = "mouseleft";
-		public const string MouseMiddle = "mousemiddle";
-		public const string MouseRight = "mouseright";
 		public const string FpsLimit = "fpslimit";
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";

@@ -27,11 +27,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			return HandleMouseMove( buttons, mouseX, mouseY );
+			return HandleMouseMove( widgets, mouseX, mouseY );
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			return HandleMouseClick( buttons, mouseX, mouseY, button );
+			return HandleMouseClick( widgets, mouseX, mouseY, button );
 		}
 		
 		bool supressNextPress;
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 			arrowFont = new Font( "Arial", 18, FontStyle.Bold );
 			textFont = new Font( "Arial", 14, FontStyle.Bold );
 			
-			buttons = new [] {
+			widgets = new [] {
 				MakeHotkey( 0, -160, 0 ),
 				MakeHotkey( 0, -120, 1 ),
 				MakeHotkey( 0, -80, 2 ),
@@ -142,11 +142,12 @@ namespace ClassicalSharp {
 		
 		void Set( int index ) {
 			string text = Get( index + currentIndex );
-			ButtonWidget button = buttons[index];
-			button.SetText( text );
-			button.Metadata = default( Hotkey );
+			Widget widget = widgets[index];
+			SetButton( widget, text );
+			
+			widget.Metadata = default( Hotkey );
 			if( text != "-----" )
-				button.Metadata = hotkeys.Hotkeys[index + currentIndex];
+				widget.Metadata = hotkeys.Hotkeys[index + currentIndex];
 		}
 		
 		string MakeFlagsString( byte flags ) {
@@ -184,20 +185,20 @@ namespace ClassicalSharp {
 		Hotkey curHotkey, origHotkey;
 		MenuInputWidget currentAction;
 		TextWidget currentMoreInputLabel;
-		ButtonWidget focusWidget;
+		Widget focusWidget;
 		
 		void CreateEditingWidgets() {
 			DisposeEditingWidgets();
 			
-			buttons[8] = Make( -140, 55, "Key: " + curHotkey.BaseKey,
+			widgets[8] = Make( -140, 55, "Key: " + curHotkey.BaseKey,
 			                  250, 35, textFont, BaseKeyClick );
-			buttons[9] = Make( 140, 55, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
+			widgets[9] = Make( 140, 55, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
 			                  250, 35, textFont, ModifiersClick );
-			buttons[10] = Make( -10, 120, curHotkey.MoreInput ? "yes" : "no",
+			widgets[10] = Make( -10, 120, curHotkey.MoreInput ? "yes" : "no",
 			                   50, 25, textFont, LeaveOpenClick );
-			buttons[11] = Make( -120, 160, "Save changes",
+			widgets[11] = Make( -120, 160, "Save changes",
 			                   180, 35, textFont, SaveChangesClick );
-			buttons[12] = Make( 120, 160, "Remove hotkey",
+			widgets[12] = Make( 120, 160, "Remove hotkey",
 			                   180, 35, textFont, RemoveHotkeyClick );
 			
 			currentAction = MenuInputWidget.Create(
@@ -217,10 +218,10 @@ namespace ClassicalSharp {
 				currentAction = null;
 			}
 			
-			for( int i = 8; i < buttons.Length - 1; i++ ) {
-				if( buttons[i] != null ) {
-					buttons[i].Dispose();
-					buttons[i] = null;
+			for( int i = 8; i < widgets.Length - 1; i++ ) {
+				if( widgets[i] != null ) {
+					widgets[i].Dispose();
+					widgets[i] = null;
 				}
 			}
 			focusWidget = null;
@@ -229,7 +230,7 @@ namespace ClassicalSharp {
 		void LeaveOpenClick( Game game, Widget widget ) {
 			LostFocus();
 			curHotkey.MoreInput = !curHotkey.MoreInput;
-			buttons[10].SetText( curHotkey.MoreInput ? "yes" : "no" );
+			SetButton( widgets[10], curHotkey.MoreInput ? "yes" : "no" );
 		}
 		
 		void SaveChangesClick( Game game, Widget widget ) {
@@ -257,29 +258,29 @@ namespace ClassicalSharp {
 		}
 		
 		void BaseKeyClick( Game game, Widget widget ) {
-			focusWidget = buttons[8];
-			focusWidget.SetText( "Key: press a key.." );
+			focusWidget = widgets[8];
+			SetButton( widgets[8], "Key: press a key.." );
 			supressNextPress = true;
 		}
 		
 		void ModifiersClick( Game game, Widget widget ) {
-			focusWidget = buttons[9];
-			focusWidget.SetText( "Modifiers: press a key.." );
+			focusWidget = widgets[9];
+			SetButton( widgets[9], "Modifiers: press a key.." );
 			supressNextPress = true;
 		}
 		
 		void FocusKeyDown( Key key ) {
-			if( focusWidget == buttons[8] ) {
+			if( focusWidget == widgets[8] ) {
 				curHotkey.BaseKey = key;
-				buttons[8].SetText( "Key: " + curHotkey.BaseKey );
+				SetButton( widgets[8], "Key: " + curHotkey.BaseKey );
 				supressNextPress = true;
-			} else if( focusWidget == buttons[9] ) {
+			} else if( focusWidget == widgets[9] ) {
 				if( key == Key.ControlLeft || key == Key.ControlRight ) curHotkey.Flags |= 1;
 				else if( key == Key.ShiftLeft || key == Key.ShiftRight ) curHotkey.Flags |= 2;
 				else if( key == Key.AltLeft || key == Key.AltRight ) curHotkey.Flags |= 4;
 				else curHotkey.Flags = 0;
 				
-				buttons[9].SetText( "Modifiers: " + MakeFlagsString( curHotkey.Flags ) );
+				SetButton( widgets[9], "Modifiers: " + MakeFlagsString( curHotkey.Flags ) );
 				supressNextPress = true;
 			}
 			focusWidget = null;
@@ -288,13 +289,17 @@ namespace ClassicalSharp {
 		void LostFocus() {
 			if( focusWidget == null ) return;
 			
-			if( focusWidget == buttons[8] ) {
-				buttons[8].SetText( "Key: " + curHotkey.BaseKey );
-			} else if( focusWidget == buttons[9] ) {
-				buttons[9].SetText( "Modifiers: " + MakeFlagsString( curHotkey.Flags ) );
+			if( focusWidget == widgets[8] ) {
+				SetButton( widgets[8], "Key: " + curHotkey.BaseKey );
+			} else if( focusWidget == widgets[9] ) {
+				SetButton( widgets[9], "Modifiers: " + MakeFlagsString( curHotkey.Flags ) );
 			}
 			focusWidget = null;
 			supressNextPress = false;
+		}
+		
+		void SetButton( Widget widget, string text ) {
+			((ButtonWidget)widget).SetText( text );
 		}
 		
 		#endregion

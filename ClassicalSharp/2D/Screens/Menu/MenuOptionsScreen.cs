@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 			DisposeExtendedHelp();
 			ButtonWidget button = (ButtonWidget)widget;
 			if( selectedWidget == button || button == null ||
-			   button == buttons[buttons.Length - 2] ) return;
+			   button == widgets[widgets.Length - 2] ) return;
 			
 			selectedWidget = button;
 			if( targetWidget != null ) return;
@@ -133,7 +133,7 @@ namespace ClassicalSharp {
 			bool canShow = inputWidget == null && selectedWidget != null && descriptions != null;
 			if( !canShow ) return;
 			
-			int index = Array.IndexOf<Widget>( buttons, selectedWidget );
+			int index = Array.IndexOf<Widget>( widgets, selectedWidget );
 			string[] desc = descriptions[index];
 			if( desc == null ) return;
 			MakeExtendedHelp( desc );
@@ -183,14 +183,14 @@ namespace ClassicalSharp {
 		protected void OnWidgetClick( Game game, Widget widget, MouseButton mouseBtn ) {
 			if( mouseBtn == MouseButton.Right ) { ShowExtendedHelp(); return; }
 			if( mouseBtn != MouseButton.Left ) return;
-			if( widget == buttons[okayIndex] ) {
+			if( widget == widgets[okayIndex] ) {
 				ChangeSetting();
 				return;
 			}
 			ButtonWidget button = (ButtonWidget)widget;
 			DisposeExtendedHelp();
 			
-			int index = Array.IndexOf<ButtonWidget>( buttons, button );
+			int index = Array.IndexOf<Widget>( widgets, button );
 			MenuInputValidator validator = validators[index];
 			if( validator is BooleanValidator ) {
 				string value = button.GetValue( game );
@@ -208,7 +208,7 @@ namespace ClassicalSharp {
 			targetWidget = selectedWidget;
 			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre,
 			                                     Anchor.Centre, regularFont, titleFont, validator );
-			buttons[okayIndex] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
+			widgets[okayIndex] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			InputOpened();
 			UpdateDescription( targetWidget );
@@ -235,8 +235,8 @@ namespace ClassicalSharp {
 			UpdateDescription( targetWidget );
 			targetWidget = null;
 			
-			buttons[okayIndex].Dispose();
-			buttons[okayIndex] = null;
+			widgets[okayIndex].Dispose();
+			widgets[okayIndex] = null;
 			InputClosed();
 		}
 	}

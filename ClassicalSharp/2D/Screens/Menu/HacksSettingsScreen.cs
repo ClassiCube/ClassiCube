@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Hacks enabled", OnWidgetClick,
 				     g => g.LocalPlayer.HacksEnabled ? "yes" : "no",
@@ -70,22 +70,22 @@ namespace ClassicalSharp {
 			
 			MakeValidators();
 			MakeDescriptions();
-			okayIndex = buttons.Length - 1;
+			okayIndex = widgets.Length - 1;
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			CheckHacksAllowed( null, null );
 		}
 		
 		void CheckHacksAllowed( object sender, EventArgs e ) { 
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Disabled = false;
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].Disabled = false;
 			}
 			
 			LocalPlayer p = game.LocalPlayer;
 			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
-			buttons[3].Disabled = noGlobalHacks || !p.CanSpeed;
-			buttons[4].Disabled = noGlobalHacks || !p.CanSpeed;
-			buttons[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
+			widgets[3].Disabled = noGlobalHacks || !p.CanSpeed;
+			widgets[4].Disabled = noGlobalHacks || !p.CanSpeed;
+			widgets[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
 		}
 		
 		public override void Dispose() {
@@ -109,7 +109,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeDescriptions() {
-			descriptions = new string[buttons.Length][];
+			descriptions = new string[widgets.Length][];
 			descriptions[5] = new [] {
 				"&aLiquids breakable",
 				"&eIf breaking liquids is set to true, then water/lava",

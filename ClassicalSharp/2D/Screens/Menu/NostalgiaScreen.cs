@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -100, "Simple arms anim", OnWidgetClick,
 				     g => g.SimpleArmsAnim? "yes" : "no",
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 			};
-			okayIndex = buttons.Length - 1;
+			okayIndex = widgets.Length - 1;
 			infoWidget = TextWidget.Create( game, 0, 150, "&eButtons on the right require a client restart.", 
 			                               Anchor.Centre, Anchor.Centre, regularFont );
 		}

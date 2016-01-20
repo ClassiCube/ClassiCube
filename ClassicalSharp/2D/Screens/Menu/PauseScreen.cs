@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				// Column 1
 				Make( -140, -150, "Misc options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
@@ -59,13 +59,13 @@ namespace ClassicalSharp {
 		}
 
 		void CheckHacksAllowed( object sender, EventArgs e ) { 
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Disabled = false;
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].Disabled = false;
 			}
 			if( !game.LocalPlayer.CanAnyHacks ) {
-				buttons[3].Disabled = true; // env settings
-				buttons[8].Disabled = true; // select texture pack
+				widgets[3].Disabled = true; // env settings
+				widgets[8].Disabled = true; // select texture pack
 			}
 		}
 		

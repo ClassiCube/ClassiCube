@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 		
 		public MenuScreen( Game game ) : base( game ) {
 		}
-		protected ButtonWidget[] buttons;
+		protected Widget[] widgets;
 		protected Font titleFont, regularFont;
 		
 		protected void RenderMenuBounds() {
@@ -16,9 +16,9 @@ namespace ClassicalSharp {
 		}
 		
 		protected void RenderMenuButtons( double delta ) {
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Render( delta );
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].Render( delta );
 			}
 		}
 		
@@ -28,9 +28,9 @@ namespace ClassicalSharp {
 		} 
 		
 		public override void Dispose() {
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].Dispose();
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].Dispose();
 			}
 			titleFont.Dispose();
 			if( regularFont != null )
@@ -38,20 +38,20 @@ namespace ClassicalSharp {
 		}
 
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			for( int i = 0; i < buttons.Length; i++ ) {
-				if( buttons[i] == null ) continue;
-				buttons[i].OnResize( oldWidth, oldHeight, width, height );
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].OnResize( oldWidth, oldHeight, width, height );
 			}
 		}
 		
 		public override bool HandlesAllInput { get { return true; } }
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			return HandleMouseClick( buttons, mouseX, mouseY, button );
+			return HandleMouseClick( widgets, mouseX, mouseY, button );
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			return HandleMouseMove( buttons, mouseX, mouseY );
+			return HandleMouseMove( widgets, mouseX, mouseY );
 		}
 		
 		public override bool HandlesKeyPress( char key ) { return true; }

@@ -8,17 +8,21 @@ namespace ClassicalSharp {
 		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
 		Screenshot, Fullscreen, ThirdPersonCamera, HideGui, ShowAxisLines,
-		ZoomScrolling, HalfSpeed,
+		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight,
 	}
 	
 	public class KeyMap {
 		
 		public Key this[KeyBinding key] {
-			get { return Keys[(int)key]; }
-			set { Keys[(int)key] = value; SaveKeyBindings(); }
+			get { return keys[(int)key]; }
+			set { keys[(int)key] = value; SaveKeyBindings(); }
 		}
 		
-		Key[] Keys;
+		public Key GetDefault( KeyBinding key ) {
+			return defaultKeys[(int)key];
+		}
+		
+		Key[] keys, defaultKeys;
 		bool IsReservedKey( Key key ) {
 			return key == Key.Escape || key == Key.Slash || key == Key.BackSpace ||
 				(key >= Key.Insert && key <= Key.End) ||
@@ -41,16 +45,21 @@ namespace ClassicalSharp {
 		
 		public KeyMap() {
 			// See comment in Game() constructor
-			Keys = new Key[27];
-			Keys[0] = Key.W; Keys[1] = Key.S; Keys[2] = Key.A; Keys[3] = Key.D;
-			Keys[4] = Key.Space; Keys[5] = Key.R; Keys[6] = Key.Enter; Keys[7] = Key.T;
-			Keys[8] = Key.Enter; Keys[9] = Key.Escape; Keys[10] = Key.B;
-			Keys[11] = Key.F; Keys[12] = Key.Tab; Keys[13] = Key.ShiftLeft;
-			Keys[14] = Key.X; Keys[15] = Key.Z; Keys[16] = Key.Q;
-			Keys[17] = Key.E; Keys[18] = Key.AltLeft; Keys[19] = Key.F3;
-			Keys[20] = Key.F12; Keys[21] = Key.F11; Keys[22] = Key.F5;
-			Keys[23] = Key.F1; Keys[24] = Key.F7; Keys[25] = Key.C;
-			Keys[26] = Key.ControlLeft;
+			keys = new Key[30];
+			keys[0] = Key.W; keys[1] = Key.S; keys[2] = Key.A; keys[3] = Key.D;
+			keys[4] = Key.Space; keys[5] = Key.R; keys[6] = Key.Enter; keys[7] = Key.T;
+			keys[8] = Key.Enter; keys[9] = Key.Escape; keys[10] = Key.B;
+			keys[11] = Key.F; keys[12] = Key.Tab; keys[13] = Key.ShiftLeft;
+			keys[14] = Key.X; keys[15] = Key.Z; keys[16] = Key.Q;
+			keys[17] = Key.E; keys[18] = Key.AltLeft; keys[19] = Key.F3;
+			keys[20] = Key.F12; keys[21] = Key.F11; keys[22] = Key.F5;
+			keys[23] = Key.F1; keys[24] = Key.F7; keys[25] = Key.C;
+			keys[26] = Key.ControlLeft;
+			keys[27] = Key.Unknown; keys[28] = Key.Unknown; keys[29] = Key.Unknown;
+			
+			defaultKeys = new Key[keys.Length];
+			for( int i = 0; i < defaultKeys.Length; i++ )
+				defaultKeys[i] = keys[i];
 			LoadKeyBindings();
 		}
 		
@@ -58,16 +67,16 @@ namespace ClassicalSharp {
 			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
-				Key mapping = Options.GetEnum( key, Keys[i] );
+				Key mapping = Options.GetEnum( key, keys[i] );
 				if( !IsReservedKey( mapping ) )
-					Keys[i] = mapping;
+					keys[i] = mapping;
 			}
 		}
 		
 		void SaveKeyBindings() {
 			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
 			for( int i = 0; i < names.Length; i++ ) {
-				Options.Set( "key-" + names[i], Keys[i] );
+				Options.Set( "key-" + names[i], keys[i] );
 			}
 		}
 	}

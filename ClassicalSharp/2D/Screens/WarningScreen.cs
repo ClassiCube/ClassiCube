@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 		}
 		
 		void InitStandardButtons() {
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OnYesClick ),
 				ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
@@ -156,7 +156,7 @@ namespace ClassicalSharp {
 		
 		void InitConfirmButtons( bool always ) {
 			ClickHandler noHandler = always ? (ClickHandler)OnNoAlwaysClick: (ClickHandler)OnNoClick;
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				ButtonWidget.Create( game, -110, 30, 160, 35, "I'm sure", Anchor.Centre,
 				                    Anchor.Centre, titleFont, noHandler ),
 				ButtonWidget.Create( game, 110, 30, 160, 35, "Go back", Anchor.Centre,

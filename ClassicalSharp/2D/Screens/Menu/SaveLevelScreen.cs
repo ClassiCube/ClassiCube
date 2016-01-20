@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 				game, -30, 50, 500, 25, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new PathValidator() );
 			
-			buttons = new [] {
+			widgets = new [] {
 				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OkButtonClick ),
 				null,
@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			text = Path.Combine( text, file );
 			
 			if( File.Exists( text ) ) {
-				buttons[1] = ButtonWidget.Create( game, 0, 90, 260, 30, "Overwrite existing?",
+				widgets[1] = ButtonWidget.Create( game, 0, 90, 260, 30, "Overwrite existing?",
 				                                 Anchor.Centre, Anchor.Centre, titleFont, OverwriteButtonClick );
 			} else {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
@@ -113,9 +113,9 @@ namespace ClassicalSharp {
 		}
 		
 		void RemoveOverwriteButton() {
-			if( buttons[1] == null ) return;
-			buttons[1].Dispose();
-			buttons[1] = null;
+			if( widgets[1] == null ) return;
+			widgets[1].Dispose();
+			widgets[1] = null;
 		}
 		
 		string textPath;

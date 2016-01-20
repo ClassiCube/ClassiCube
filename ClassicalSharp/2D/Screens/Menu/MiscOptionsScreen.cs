@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 			base.Init();
 			INetworkProcessor network = game.Network;
 			
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
 					Make( -140, -200, "Click distance", OnWidgetClick,
@@ -80,11 +80,11 @@ namespace ClassicalSharp {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			buttons[2].Metadata = typeof(NameMode);
-			buttons[3].Metadata = typeof(FpsLimitMethod);
+			widgets[2].Metadata = typeof(NameMode);
+			widgets[3].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
 			MakeDescriptions();
-			okayIndex = buttons.Length - 1;
+			okayIndex = widgets.Length - 1;
 		}
 		
 		void MakeValidators() {
@@ -106,7 +106,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeDescriptions() {
-			descriptions = new string[buttons.Length][];
+			descriptions = new string[widgets.Length][];
 			descriptions[0] = new[] {
 				"&aControls how far away you can place/delete blocks",
 				"&eThe default click distance is 5 blocks.",

@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			buttons = new ButtonWidget[] {
+			widgets = new ButtonWidget[] {
 				Make( -140, -150, "Clouds colour", OnWidgetClick,
 				     g => g.Map.CloudsCol.ToRGBHexString(),
 				     (g, v) => g.Map.SetCloudsColour( FastColour.Parse( v ) ) ),
@@ -57,9 +57,9 @@ namespace ClassicalSharp {
 				null,
 				null,
 			};
-			buttons[7].Metadata = typeof(Weather);
-			defaultIndex = buttons.Length - 2;
-			okayIndex = buttons.Length - 1;
+			widgets[7].Metadata = typeof(Weather);
+			defaultIndex = widgets.Length - 2;
+			okayIndex = widgets.Length - 1;
 			
 			defaultValues = new [] {
 				Map.DefaultCloudsColour.ToRGBHexString(),
@@ -89,20 +89,20 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void InputClosed() {
-			if( buttons[defaultIndex] != null )
-				buttons[defaultIndex].Dispose();
-			buttons[defaultIndex] = null;
+			if( widgets[defaultIndex] != null )
+				widgets[defaultIndex].Dispose();
+			widgets[defaultIndex] = null;
 		}
 		
 		protected override void InputOpened() {
-			buttons[defaultIndex] = ButtonWidget.Create(
+			widgets[defaultIndex] = ButtonWidget.Create(
 				game, 0, 200, 180, 35, "Default value", Anchor.Centre, 
 				Anchor.Centre, titleFont, DefaultButtonClick );
 		}
 		
 		void DefaultButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
 			if( mouseBtn != MouseButton.Left ) return;
-			int index = Array.IndexOf<ButtonWidget>( buttons, targetWidget );
+			int index = Array.IndexOf<Widget>( widgets, targetWidget );
 			string defValue = defaultValues[index];
 			inputWidget.SetText( defValue );
 		}
