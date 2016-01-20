@@ -13,22 +13,20 @@ namespace Launcher2 {
 			int srcX = srcRect.X, dstX = dstRect.X;
 			int srcY = srcRect.Y, dstY = dstRect.Y;
 			int scaleWidth = scale.Width, scaleHeight = scale.Height;
-			int offsetX = dstRect.X * srcRect.Width / scaleWidth;
-			int offsetY = dstRect.Y * srcRect.Height / scaleHeight;
 			
 			if( dstX >= dst.Width || dstY >= dst.Height ) return;
 			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
 			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
 			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
-				int scaledY = yy * srcHeight / scaleHeight;
-				int* srcRow = src.GetRowPtr( srcY + (scaledY + offsetY) % srcHeight );
+				int scaledY = (yy + dstRect.Y) * srcHeight / scaleHeight;
+				int* srcRow = src.GetRowPtr( srcY + (scaledY % srcHeight) );
 				int* dstRow = dst.GetRowPtr( dstY + yy );
 				byte rgbScale = (byte)Utils.Lerp( scaleA, scaleB, (float)yy / dstHeight );
 				
 				for( int xx = 0; xx < dstWidth; xx++ ) {
-					int scaledX = xx * srcWidth / scaleWidth;
-					int pixel = srcRow[srcX + (scaledX + offsetX) % srcWidth];
+					int scaledX = (xx + dstRect.X) * srcWidth / scaleWidth;
+					int pixel = srcRow[srcX + (scaledX % srcWidth)];
 					
 					int col = pixel & ~0xFFFFFF; // keep a, but clear rgb
 					col |= ((pixel & 0xFF) * rgbScale / 255);

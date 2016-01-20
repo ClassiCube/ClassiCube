@@ -128,7 +128,7 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
-			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.1f );
+			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
 			hudScreen = new HudScreen( this );
