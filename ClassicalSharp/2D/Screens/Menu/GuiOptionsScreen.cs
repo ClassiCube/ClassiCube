@@ -2,7 +2,7 @@
 
 namespace ClassicalSharp {
 	
-	public class GuiOptionsScreen : MenuInputScreen {
+	public class GuiOptionsScreen : MenuOptionsScreen {
 		
 		public GuiOptionsScreen( Game game ) : base( game ) {
 		}

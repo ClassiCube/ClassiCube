@@ -113,14 +113,16 @@ namespace ClassicalSharp {
 		}
 		
 		Action<WarningScreen> yesClick, noClick, renderFrame;
-		void OnYesClick( Game g, Widget w ) {
+		void OnYesClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			if( yesClick != null )
 				yesClick( this );
 			Dispose();
 			CloseScreen();
 		}
 		
-		void OnNoClick( Game g, Widget w ) {
+		void OnNoClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			if( confirmNo && !confirmMode ) {
 				InitConfirmButtons( false ); return;
 			}
@@ -131,19 +133,21 @@ namespace ClassicalSharp {
 			CloseScreen();
 		}
 		
-		void OnYesAlwaysClick( Game g, Widget w ) {
-			OnYesClick( g, w );
+		void OnYesAlwaysClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
+			OnYesClick( g, w, mouseBtn );
 			string url = ((string)Metadata).Substring( 3 );
 			if( !game.AcceptedUrls.HasUrl( url ) )
 				game.AcceptedUrls.AddUrl( url );
 		}
 		
-		void OnNoAlwaysClick( Game g, Widget w ) {
+		void OnNoAlwaysClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			if( confirmNo && !confirmMode ) {
 				InitConfirmButtons( true ); return;
 			}
 			
-			OnNoClick( g, w );
+			OnNoClick( g, w, mouseBtn );
 			string url = ((string)Metadata).Substring( 3 );
 			if( !game.DeniedUrls.HasUrl( url ) )
 				game.DeniedUrls.AddUrl( url );
@@ -151,8 +155,7 @@ namespace ClassicalSharp {
 
 		
 		void InitConfirmButtons( bool always ) {
-			Action<Game, Widget> noHandler = always ? (Action<Game, Widget>)OnNoAlwaysClick
-				: (Action<Game, Widget>)OnNoClick;
+			ClickHandler noHandler = always ? (ClickHandler)OnNoAlwaysClick: (ClickHandler)OnNoClick;
 			buttons = new ButtonWidget[] {
 				ButtonWidget.Create( game, -110, 30, 160, 35, "I'm sure", Anchor.Centre,
 				                    Anchor.Centre, titleFont, noHandler ),
@@ -163,7 +166,8 @@ namespace ClassicalSharp {
 			SetText( lastTitle, lastBody );
 		}
 		
-		void GoBackClick( Game g, Widget w ) {
+		void GoBackClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			InitStandardButtons();
 			confirmMode = false;
 			SetText( lastTitle, lastBody );

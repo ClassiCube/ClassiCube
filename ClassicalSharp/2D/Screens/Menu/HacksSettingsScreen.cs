@@ -4,7 +4,7 @@ using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp {
 	
-	public class HacksSettingsScreen : MenuInputScreen {
+	public class HacksSettingsScreen : MenuOptionsScreen {
 		
 		public HacksSettingsScreen( Game game ) : base( game ) {
 		}
@@ -111,14 +111,20 @@ namespace ClassicalSharp {
 		void MakeDescriptions() {
 			descriptions = new string[buttons.Length][];
 			descriptions[5] = new [] {
-				"&fIf breaking liquids is set to true, then water/lava",
-				"&fcan be deleted the same way as any regular block.",
+				"&aLiquids breakable",
+				"&eIf breaking liquids is set to true, then water/lava",
+				"&ecan be deleted the same way as any regular block.",
 			};
 			descriptions[6] = new [] {
-				"&aDetermines whether pushback placing mode is active or not.",
-				"&fWhen this is active, placing blocks that intersect your own position",
-				"&f  cause the block to be placed, and you to be moved out of the way.",
+				"&aDetermines whether pushback placing mode is active or not",
+				"&eWhen this is active, placing blocks that intersect your own position",
+				"&ecause the block to be placed, and you to be moved out of the way.",
 				"&fThis is mainly useful for quick pillaring/towering.",
+			};
+			descriptions[7] = new [] {
+				"&aDetermines whether noclip sliding is used or not.",
+				"&eIf sliding isn't used, you will immediately stop when",
+				"&eyou are in noclip mode and no movement keys are held down.",
 			};
 		}
 	}

@@ -4,7 +4,7 @@ using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp {
 	
-	public sealed class NostalgiaScreen : MenuInputScreen {
+	public sealed class NostalgiaScreen : MenuOptionsScreen {
 		
 		TextWidget infoWidget;
 		public NostalgiaScreen( Game game ) : base( game ) {

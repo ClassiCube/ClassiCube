@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -25,7 +26,8 @@ namespace ClassicalSharp {
 				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
-		protected override void TextButtonClick( Game game, Widget widget ) {
+		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			string path = Path.Combine( Program.AppDirectory, "maps" );
 			path = Path.Combine( path, ((ButtonWidget)widget).Text );
 			if( File.Exists( path ) )

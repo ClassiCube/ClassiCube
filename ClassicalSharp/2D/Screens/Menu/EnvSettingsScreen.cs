@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using ClassicalSharp.Renderers;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public class EnvSettingsScreen : MenuInputScreen {
+	public class EnvSettingsScreen : MenuOptionsScreen {
 		
 		string[] defaultValues;
 		int defaultIndex;
@@ -99,7 +100,8 @@ namespace ClassicalSharp {
 				Anchor.Centre, titleFont, DefaultButtonClick );
 		}
 		
-		void DefaultButtonClick( Game game, Widget widget ) {
+		void DefaultButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			int index = Array.IndexOf<ButtonWidget>( buttons, targetWidget );
 			string defValue = defaultValues[index];
 			inputWidget.SetText( defValue );

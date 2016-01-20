@@ -101,7 +101,7 @@
     <Compile Include="2D\Screens\Menu\HacksSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\KeyBindingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\LoadLevelScreen.cs" />
-    <Compile Include="2D\Screens\Menu\MenuInputScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\NostalgiaScreen.cs" />
     <Compile Include="2D\Screens\Menu\PauseScreen.cs" />

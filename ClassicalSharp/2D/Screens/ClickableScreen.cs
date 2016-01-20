@@ -10,21 +10,22 @@ namespace ClassicalSharp {
 		}
 		
 		protected bool HandleMouseClick( Widget[] widgets, int mouseX, int mouseY, MouseButton button ) {
-			if( button != MouseButton.Left ) return false;
-			
 			// iterate backwards (because last elements rendered are shown over others)
 			for( int i = widgets.Length - 1; i >= 0; i-- ) {
 				Widget widget = widgets[i];
 				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
 					if( widget.OnClick != null && !widget.Disabled )
-						widget.OnClick( game, widget );
+						widget.OnClick( game, widget, button );
 					return true;
 				}
 			}
 			return false;
 		}
 		
+		int lastX = -1, lastY = -1;
 		protected bool HandleMouseMove( Widget[] widgets, int mouseX, int mouseY ) {
+			if( lastX == mouseX && lastY == mouseY )
+				return true;
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;
 				widgets[i].Active = false;
@@ -34,10 +35,12 @@ namespace ClassicalSharp {
 				Widget widget = widgets[i];
 				if( widget != null && widget.Bounds.Contains( mouseX, mouseY ) ) {
 					widget.Active = true;
+					lastX = mouseX; lastY = mouseY;
 					WidgetSelected( widget );
 					return true;
 				}
 			}
+			lastX = mouseX; lastY = mouseY;
 			WidgetSelected( null );
 			return false;
 		}
@@ -49,7 +52,7 @@ namespace ClassicalSharp {
 			string text = toGame ? "Back to game" : "Back to menu";
 			return ButtonWidget.Create(
 				game, 0, 5, 180, 35, text,
-				Anchor.Centre, Anchor.BottomOrRight, font, onClick );
+				Anchor.Centre, Anchor.BottomOrRight, font, LeftOnly( onClick ) );
 		}
 	}
 }

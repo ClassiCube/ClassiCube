@@ -58,10 +58,10 @@ namespace ClassicalSharp {
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 40, 40, text,
-			                           Anchor.Centre, Anchor.Centre, arrowFont, onClick );
+			                           Anchor.Centre, Anchor.Centre, arrowFont, LeftOnly( onClick ) );
 		}
 		
-		protected abstract void TextButtonClick( Game game, Widget widget );
+		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn );
 		
 		protected void PageClick( bool forward ) {
 			currentIndex += forward ? 5 : -5;

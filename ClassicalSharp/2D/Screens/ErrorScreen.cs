@@ -52,7 +52,8 @@ namespace ClassicalSharp {
 			lastSecsLeft = delay;
 		}
 		
-		void ReconnectClick( Game g, Widget w ) {
+		void ReconnectClick( Game g, Widget w, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
 			game.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );
 			game.Network.Connect( game.IPAddress, game.Port );

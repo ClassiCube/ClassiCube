@@ -4,7 +4,7 @@ using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp {
 	
-	public class MiscOptionsScreen : MenuInputScreen {
+	public class MiscOptionsScreen : MenuOptionsScreen {
 		
 		public MiscOptionsScreen( Game game ) : base( game ) {
 		}
@@ -108,23 +108,23 @@ namespace ClassicalSharp {
 		void MakeDescriptions() {
 			descriptions = new string[buttons.Length][];
 			descriptions[0] = new[] {
-				"&aControls how far away you can place/delete blocks.",
+				"&aControls how far away you can place/delete blocks",
 				"&eThe default click distance is 5 blocks.",
 			};
 			descriptions[2] = new[] {
-				"&aDetermines how the names of other players/entities are drawn.",
+				"&aDetermines how the names of other players are drawn",
 				"&eNoNames: &fNo player names are drawn.",
-				"&eHoveredOnly: &fThe name of the player you are looking at is drawn without depth testing.",
-				"&eAllNames: &fAll names are drawn without depth testing.",
-				"&eAllNamesAndHovered: &fThe name of the player you are looking at is drawn without depth testing,",
-				"&f   all other player names are drawn with depth testing.",
+				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
+				"&eAllNames: &fAll player names are drawn normally.",
+				"&eAllNamesAndHovered: &fName of the targeted player is drawn see-through.",
+				"&f               All other player names are drawn normally.",
 			};
 			descriptions[3] = new[] {
-				"&aDetermines the method used to limit the number of frames rendered each second.",
-				"&eVSync: &fNumber of frames rendered is equal to the refresh rate of the monitor.",
-				"&e30/60/120 FPS: &f30/60/120 frames are rendered at most each second.",
+				"&aDetermines the method used to limit the number of FPS",
+				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
+				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
 				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",
-				"&cUsing NoLimit mode is strongly discouraged for general usage.",
+				"&cUsing NoLimit mode is discouraged for general usage.",
 			};
 		}
 	}

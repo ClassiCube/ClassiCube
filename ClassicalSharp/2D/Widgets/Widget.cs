@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -17,8 +18,8 @@ namespace ClassicalSharp {
 		/// <summary> Whether this widget is prevented from being interacted with. </summary>
 		public bool Disabled;
 		
-		/// <summary> Invoked when this widget is clicked on. Can be left null. </summary>
-		public Action<Game, Widget> OnClick;
+		/// <summary> Invoked when this widget is clicked on. Can be null. </summary>
+		public ClickHandler OnClick;
 		
 		/// <summary> Horizontal coordinate of top left corner in window space. </summary>
 		public int X;

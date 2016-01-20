@@ -4,6 +4,8 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
+	public delegate void ClickHandler( Game g, Widget w, MouseButton btn );
+	                                  
 	public abstract class GuiElement : IDisposable {
 		
 		protected Game game;
@@ -75,6 +77,13 @@ namespace ClassicalSharp {
 		
 		protected static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
 			return x >= recX && y >= recY && x < recX + width && y < recY + height;
+		}
+		
+		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
+			return (g, w, btn) => {
+				if( btn != MouseButton.Left ) return;
+				action( g, w );
+			};
 		}
 	}
 	

@@ -71,12 +71,12 @@ namespace ClassicalSharp {
 		
 		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 240, 35, text, 
-			                           Anchor.Centre, vDocking, titleFont, onClick );
+			                           Anchor.Centre, vDocking, titleFont, LeftOnly( onClick ) );
 		}
 		
 		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, width, 35, text, 
-			                           hAnchor, Anchor.BottomOrRight, titleFont, onClick );
+			                           hAnchor, Anchor.BottomOrRight, titleFont, LeftOnly( onClick ) );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

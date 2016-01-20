@@ -4,9 +4,9 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public abstract class MenuInputScreen : MenuScreen {
+	public abstract class MenuOptionsScreen : MenuScreen {
 		
-		public MenuInputScreen( Game game ) : base( game ) {
+		public MenuOptionsScreen( Game game ) : base( game ) {
 		}
 		
 		protected MenuInputWidget inputWidget;
@@ -14,21 +14,37 @@ namespace ClassicalSharp {
 		protected TextWidget descWidget;
 		protected int okayIndex;
 		protected string[][] descriptions;
+		protected ChatTextWidget[] extendedHelp;
+		Font extendedHelpFont;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
+			if( extendedHelp != null ) {
+				int x = game.Width / 2 - tableWidth / 2 - 5;
+				int y = game.Height / 2 + extHelpY - 5;
+				graphicsApi.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
+			}
+			
 			graphicsApi.Texturing = true;
 			RenderMenuButtons( delta );
 			if( inputWidget != null )
 				inputWidget.Render( delta );
-			if( descWidget != null )
+			
+			if( extendedHelp != null ) {
+				for( int i = 0; i < extendedHelp.Length; i++ )
+					extendedHelp[i].Render( delta );
+			} else if( descWidget != null ) {
 				descWidget.Render( delta );
+			}
+			
 			graphicsApi.Texturing = false;
 		}
 		
 		public override void Init() {
 			base.Init();
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
+			int size = game.Drawer2D.UseBitmappedChat ? 11 : 12;
+			extendedHelpFont = new Font( "Arial", size, FontStyle.Regular );
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -61,7 +77,11 @@ namespace ClassicalSharp {
 				descWidget.OnResize( oldWidth, oldHeight, width, height );
 			if( inputWidget != null )
 				inputWidget.OnResize( oldWidth, oldHeight, width, height );
+			
 			base.OnResize( oldWidth, oldHeight, width, height );
+			if( extendedHelp == null ) return;
+			for( int i = 0; i < extendedHelp.Length; i++ )
+				extendedHelp[i].OnResize( oldWidth, oldHeight, width, height );
 		}
 		
 		public override void Dispose() {
@@ -70,11 +90,14 @@ namespace ClassicalSharp {
 			if( inputWidget != null )
 				inputWidget.Dispose();
 			game.Keyboard.KeyRepeat = false;
+			extendedHelpFont.Dispose();
+			DisposeExtendedHelp();
 			base.Dispose();
 		}
 		
 		protected ButtonWidget selectedWidget, targetWidget;
 		protected override void WidgetSelected( Widget widget ) {
+			DisposeExtendedHelp();
 			ButtonWidget button = (ButtonWidget)widget;
 			if( selectedWidget == button || button == null ||
 			   button == buttons[buttons.Length - 2] ) return;
@@ -92,13 +115,80 @@ namespace ClassicalSharp {
 			string text = widget.Text + ": " + widget.GetValue( game );
 			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
-
-		protected void OnWidgetClick( Game game, Widget widget ) {
+		
+		protected virtual void InputOpened() { }
+		
+		protected virtual void InputClosed() { }
+		
+		protected virtual ButtonWidget Make( int x, int y, string text, ClickHandler onClick,
+		                                    Func<Game, string> getter, Action<Game, string> setter ) {
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
+			                                          Anchor.Centre, titleFont, onClick );
+			widget.GetValue = getter;
+			widget.SetValue = setter;
+			return widget;
+		}
+		
+		void ShowExtendedHelp() {
+			bool canShow = inputWidget == null && selectedWidget != null && descriptions != null;
+			if( !canShow ) return;
+			
+			int index = Array.IndexOf<Widget>( buttons, selectedWidget );
+			string[] desc = descriptions[index];
+			if( desc == null ) return;
+			MakeExtendedHelp( desc );
+		}
+		
+		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
+		int tableWidth, tableHeight;
+		const int extHelpY = 90;
+		void MakeExtendedHelp( string[] desc ) {
+			extendedHelp = new ChatTextWidget[desc.Length];
+			int x = 0, y = extHelpY;
+			tableWidth = 0;
+			
+			for( int i = 0; i < desc.Length; i++ ) {
+				extendedHelp[i] = ChatTextWidget.Create( game, 0, y,
+				                                        desc[i], Anchor.Centre, Anchor.Centre, extendedHelpFont );
+				tableWidth = Math.Max( extendedHelp[i].Width, tableWidth );
+				y += extendedHelp[i].Height + 5;
+			}
+			tableHeight = y - extHelpY;
+			
+			// Left align all body text.
+			int yOffset = 0;
+			for( int i = 0; i < desc.Length; i++ ) {
+				ChatTextWidget widget = extendedHelp[i];
+				if( i == 0 ) {
+					x = widget.X;
+				} else {
+					widget.XOffset = (widget.Width - tableWidth) / 2;
+					x = CalcOffset( game.Width, widget.Width, widget.XOffset, Anchor.Centre );
+				}
+				
+				widget.YOffset = yOffset + extHelpY + extendedHelp[0].Height / 2;
+				y = CalcOffset( game.Height, widget.Height, widget.YOffset, Anchor.Centre );
+				yOffset += extendedHelp[i].Height + 5;
+				widget.MoveTo( x, y );
+			}
+		}
+		
+		void DisposeExtendedHelp() {
+			if( extendedHelp == null ) return;
+			for( int i = 0; i < extendedHelp.Length; i++ )
+				extendedHelp[i].Dispose();
+			extendedHelp = null;
+		}
+		
+		protected void OnWidgetClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn == MouseButton.Right ) { ShowExtendedHelp(); return; }
+			if( mouseBtn != MouseButton.Left ) return;
 			if( widget == buttons[okayIndex] ) {
 				ChangeSetting();
 				return;
 			}
 			ButtonWidget button = (ButtonWidget)widget;
+			DisposeExtendedHelp();
 			
 			int index = Array.IndexOf<ButtonWidget>( buttons, button );
 			MenuInputValidator validator = validators[index];
@@ -108,16 +198,7 @@ namespace ClassicalSharp {
 				UpdateDescription( button );
 				return;
 			} else if( validator is EnumValidator ) {
-				string value = button.GetValue( game );
-				Type type = (Type)button.Metadata;
-				int enumValue = (int)Enum.Parse( type, value, true );
-				enumValue++;
-				// go back to first value
-				if( !Enum.IsDefined( type, enumValue ) )
-					enumValue = 0;
-				button.SetValue( game, Enum.GetName( type, enumValue ) );
-				
-				UpdateDescription( button );
+				HandleEnumOption( button );
 				return;
 			}
 			
@@ -133,6 +214,18 @@ namespace ClassicalSharp {
 			UpdateDescription( targetWidget );
 		}
 		
+		void HandleEnumOption( ButtonWidget button ) {
+			string value = button.GetValue( game );
+			Type type = (Type)button.Metadata;
+			int enumValue = (int)Enum.Parse( type, value, true );
+			enumValue++;
+			// go back to first value
+			if( !Enum.IsDefined( type, enumValue ) )
+				enumValue = 0;
+			button.SetValue( game, Enum.GetName( type, enumValue ) );
+			UpdateDescription( button );
+		}
+		
 		void ChangeSetting() {
 			string text = inputWidget.GetText();
 			if( inputWidget.Validator.IsValidValue( text ) )
@@ -145,19 +238,6 @@ namespace ClassicalSharp {
 			buttons[okayIndex].Dispose();
 			buttons[okayIndex] = null;
 			InputClosed();
-		}
-		
-		protected virtual void InputOpened() { }
-		
-		protected virtual void InputClosed() { }
-		
-		protected virtual ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick,
-		                                    Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
-			return widget;
 		}
 	}
 }

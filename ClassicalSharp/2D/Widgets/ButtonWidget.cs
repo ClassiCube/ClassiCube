@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using OpenTK.Input;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -13,7 +14,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static ButtonWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
-		                                  Anchor vertical, Font font, Action<Game, Widget> onClick ) {
+		                                  Anchor vertical, Font font, ClickHandler onClick ) {
 			ButtonWidget widget = new ButtonWidget( game, font );
 			widget.Init();
 			widget.HorizontalAnchor = horizontal;

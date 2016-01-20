@@ -118,7 +118,7 @@ namespace ClassicalSharp {
 		ButtonWidget Make( int x, int y, string text, int width, int height,
 		                  Font font, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, width, height, text,
-			                           Anchor.Centre, Anchor.Centre, font, onClick );
+			                           Anchor.Centre, Anchor.Centre, font, LeftOnly( onClick ) );
 		}
 		
 		ButtonWidget MakeHotkey( int x, int y, int index ) {
@@ -169,7 +169,8 @@ namespace ClassicalSharp {
 				Set( i );
 		}
 		
-		void TextButtonClick( Game game, Widget widget ) {
+		void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			LostFocus();
 			ButtonWidget button = (ButtonWidget)widget;
 			

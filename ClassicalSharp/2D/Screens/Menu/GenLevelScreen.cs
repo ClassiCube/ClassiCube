@@ -105,7 +105,8 @@ namespace ClassicalSharp {
 			base.Dispose();
 		}
 		
-		void InputClick( Game game, Widget widget ) {
+		void InputClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			if( selectedWidget != null )
 				selectedWidget.Active = false;
 			
@@ -113,11 +114,13 @@ namespace ClassicalSharp {
 			selectedWidget.Active = true;
 		}
 		
-		void GenFlatgrassClick( Game game, Widget widget ) { 
+		void GenFlatgrassClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return; 
 			GenerateMap( new FlatGrassGenerator() );
 		}
 		
-		void GenNotchyClick( Game game, Widget widget ) { 
+		void GenNotchyClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			GenerateMap( new NotchyGenerator() );
 		}
 		

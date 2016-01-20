@@ -77,7 +77,8 @@ namespace ClassicalSharp {
 			base.Dispose();
 		}
 		
-		void OkButtonClick( Game game, Widget widget ) {
+		void OkButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			string text = inputWidget.GetText();
 			if( text.Length == 0 ) {
 				MakeDescWidget( "Please enter a filename" );
@@ -99,7 +100,8 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void OverwriteButtonClick( Game game, Widget widget ) {
+		void OverwriteButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			string text = inputWidget.GetText();
 			string file = Path.ChangeExtension( text, ".cw" );
 			text = Path.Combine( Program.AppDirectory, "maps" );

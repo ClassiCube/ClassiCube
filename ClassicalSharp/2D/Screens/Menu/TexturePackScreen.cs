@@ -23,7 +23,8 @@ namespace ClassicalSharp {
 				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
-		protected override void TextButtonClick( Game game, Widget widget ) {
+		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			string file = ((ButtonWidget)widget).Text;
 			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
 			string path = Path.Combine( dir, file );

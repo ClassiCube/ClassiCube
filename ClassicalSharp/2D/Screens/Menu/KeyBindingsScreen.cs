@@ -47,7 +47,8 @@ namespace ClassicalSharp {
 		}
 		
 		ButtonWidget curWidget;
-		void OnBindingClick( Game game, Widget realWidget ) {
+		void OnBindingClick( Game game, Widget realWidget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			this.curWidget = (ButtonWidget)realWidget;
 			int index = Array.IndexOf<ButtonWidget>( buttons, curWidget );
 			string text = "&ePress new key binding for " + descriptions[index] + ":";
@@ -111,7 +112,8 @@ namespace ClassicalSharp {
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
 		}
 		
-		void NextClick( Game game, Widget widget ) {
+		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			game.SetNewScreen( new AdvancedKeyBindingsScreen( game ) );
 		}
 	}
@@ -139,7 +141,8 @@ namespace ClassicalSharp {
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
 		}
 		
-		void NextClick( Game game, Widget widget ) {
+		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			if( mouseBtn != MouseButton.Left ) return;
 			game.SetNewScreen( new NormalKeyBindingsScreen( game ) );
 		}
 	}
