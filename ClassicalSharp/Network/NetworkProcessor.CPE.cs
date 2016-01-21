@@ -536,6 +536,7 @@ namespace ClassicalSharp {
 			if( (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f') 
 			   || (code >= 'A' && code <= 'F') ) return; // Standard chars cannot be used.
 			game.Drawer2D.Colours[code] = col;
+			game.Events.RaiseColourCodesChanged();
 		}
 		
 		static SoundType[] stepSnds, breakSnds;

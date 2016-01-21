@@ -39,17 +39,16 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public override void SendChat( string text, bool partial ) {
-			if( !String.IsNullOrEmpty( text ) ) {
-				text = text.TrimEnd();
-				game.Chat.Add( text, MessageType.Normal );
-			}
+			if( String.IsNullOrEmpty( text ) ) return;
+			text = text.TrimEnd().Replace( '%', '&' );
+			game.Chat.Add( text, MessageType.Normal );
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			if( place ) 
+			if( place )
 				physics.OnBlockPlaced( x, y, z, block );
 		}
 		
@@ -75,9 +74,9 @@ namespace ClassicalSharp.Singleplayer {
 				
 				screen.SetProgress( progress );
 				if( state != lastState ) {
-					lastState = state;			
-					screen.SetMessage( state );				
-				}			
+					lastState = state;
+					screen.SetMessage( state );
+				}
 			}
 		}
 		
@@ -99,12 +98,12 @@ namespace ClassicalSharp.Singleplayer {
 			game.Chat.Add( "&ePlaying single player", MessageType.Status1 );
 			GC.Collect();
 		}
-				
+		
 		internal void GenMap( int width, int height, int length, int seed, IMapGenerator generator ) {
 			game.Map.Reset();
 			GC.Collect();
 			this.generator = generator;
-			game.SetNewScreen( new LoadingMapScreen( game, "Single player", "Generating.." ) );		
+			game.SetNewScreen( new LoadingMapScreen( game, "Single player", "Generating.." ) );
 			generator.GenerateAsync( game, width, height, length, seed );
 		}
 		

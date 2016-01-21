@@ -12,7 +12,10 @@ namespace ClassicalSharp {
 			this.font = font;
 			this.parent = parent;
 			Active = false;
+			game.Events.ColourCodesChanged += ColourCodesChanged;
 		}
+
+		void ColourCodesChanged( object sender, EventArgs e ) { Redraw(); }
 		
 		public Texture texture;
 		readonly Font font;
@@ -66,6 +69,7 @@ namespace ClassicalSharp {
 			mouseX -= X; mouseY -= Y;
 			if( IntersectsHeader( mouseX, mouseY ) ) {
 				Dispose();
+				game.Events.ColourCodesChanged += ColourCodesChanged;
 				Redraw();
 			} else {
 				IntersectsBody( mouseX, mouseY );
@@ -105,6 +109,7 @@ namespace ClassicalSharp {
 
 		public override void Dispose() {
 			graphicsApi.DeleteTexture( ref texture );
+			game.Events.ColourCodesChanged -= ColourCodesChanged;
 		}
 	}
 }

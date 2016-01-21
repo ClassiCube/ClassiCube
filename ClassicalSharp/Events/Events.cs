@@ -38,6 +38,10 @@ namespace ClassicalSharp {
 		/// <summary> Raised when the hack permissions of the player changes. </summary>
 		public event EventHandler HackPermissionsChanged;
 		internal void RaiseHackPermissionsChanged() { Raise( HackPermissionsChanged ); }
+		
+		/// <summary> Raised when the colour codes usable by the player changes. </summary>
+		public event EventHandler ColourCodesChanged;
+		internal void RaiseColourCodesChanged() { Raise( ColourCodesChanged ); }
 	
 		ChatEventArgs chatArgs = new ChatEventArgs();		
 		protected void Raise( EventHandler handler ) {

@@ -9,12 +9,31 @@ namespace ClassicalSharp {
 		
 		void InitData() {
 			elements = new Element[] {
-				new Element( "Colours", 8 * 3, 3, "&0█&1█&2█&3█&4█&5█&6█&7█&8█&9█&a█&b█&c█&d█&e█&f█" ),
+				new Element( "Colours", 10, 4, GetColourString() ),
 				new Element( "Math", 16, 1, "ƒ½¼αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°√ⁿ²" ),
 				new Element( "Line/Box", 17, 1, "░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀■" ),
 				new Element( "Letters", 17, 1, "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜáíóúñÑ" ),
 				new Element( "Other", 16, 1, "☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼⌂¢£¥₧ªº¿⌐¬¡«»∙·" ),
 			};
+		}
+		
+		string GetColourString() {
+			int count = 0;
+			for( int i = 0; i < game.Drawer2D.Colours.Length; i++ ) {
+				if( i >= 'A' && i <= 'F' ) continue;
+				if( game.Drawer2D.Colours[i].A > 0 ) count++;
+			}
+			
+			StringBuffer buffer = new StringBuffer( count * 4 );
+			int index = 0;
+			for( int i = 0; i < game.Drawer2D.Colours.Length; i++ ) {
+				if( i >= 'A' && i <= 'F' ) continue;
+				if( game.Drawer2D.Colours[i].A == 0 ) continue;
+				
+				buffer.Append( ref index, '&' ).Append( ref index, (char)i )
+					.Append( ref index, '%' ).Append( ref index, (char)i );
+			}
+			return buffer.ToString();
 		}
 		
 		struct Element {
@@ -47,15 +66,14 @@ namespace ClassicalSharp {
 		}
 		
 		unsafe Size CalculateContentSize( Element e, Size* sizes, out Size elemSize ) {
-			int wrap = e.ItemsPerRow / e.CharsPerItem;
 			elemSize = Size.Empty;
 			for( int i = 0; i < e.Contents.Length; i += e.CharsPerItem )
 				elemSize.Width = Math.Max( elemSize.Width, sizes[i / e.CharsPerItem].Width );
 			
 			elemSize.Width += contentSpacing;
 			elemSize.Height = sizes[0].Height + contentSpacing;
-			int rows = Utils.CeilDiv( e.Contents.Length / e.CharsPerItem, wrap );
-			return new Size( elemSize.Width * wrap, elemSize.Height * rows );
+			int rows = Utils.CeilDiv( e.Contents.Length / e.CharsPerItem, e.ItemsPerRow );
+			return new Size( elemSize.Width * e.ItemsPerRow, elemSize.Height * rows );
 		}
 		
 		const int titleSpacing = 10, contentSpacing = 5;
