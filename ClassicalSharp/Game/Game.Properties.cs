@@ -164,7 +164,7 @@ namespace ClassicalSharp {
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field ChatScale). </remarks>
 		public float GuiChatScale {
-			get { return MinWindowScale * ChatScale; }
+			get { return (Height / 480f) * ChatScale; }
 		}
 		
 		float MinWindowScale { get { return Math.Min( Width / 640f, Height / 480f ); } }
