@@ -150,31 +150,24 @@ namespace ClassicalSharp {
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field HotbarScale). </remarks>
 		public float GuiHotbarScale {
-			get {
-				float scaleX = Width / 640f, scaleY = Height / 480f;
-				return Math.Min( scaleX, scaleY ) * HotbarScale;
-			}
+			get { return MinWindowScale  * HotbarScale; }
 		}
 		
 		/// <summary> Calculates the amount that the block inventory menu should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field InventoryScale). </remarks>
 		public float GuiInventoryScale {
-			get {
-				float scaleX = Width / 640f, scaleY = Height / 480f;
-				return Math.Min( scaleX, scaleY ) * InventoryScale;
-			}
+			get { return MinWindowScale  * InventoryScale; }
 		}
 		
 		/// <summary> Calculates the amount that 2D chat widgets should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field ChatScale). </remarks>
 		public float GuiChatScale {
-			get {
-				float scaleX = Width / 640f, scaleY = Height / 480f;
-				return Math.Min( scaleX, scaleY ) * ChatScale;
-			}
+			get { return MinWindowScale * ChatScale; }
 		}
+		
+		float MinWindowScale { get { return Math.Min( Width / 640f, Height / 480f ); } }
 		
 		string defTexturePack = "default.zip";
 		/// <summary> Gets or sets the path of the default texture pack that should be used by the client. </summary>

@@ -67,8 +67,13 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void OnRenderFrame( FrameEventArgs e ) {
-			game.RenderFrame( e );
+			game.RenderFrame( e.Time );
 			base.OnRenderFrame( e );
+		}
+		
+		protected override void OnResize( object sender, EventArgs e ) {
+			game.OnResize();
+			base.OnResize( sender, e );
 		}
 	}
 }

@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		public event EventHandler ColourCodesChanged;
 		internal void RaiseColourCodesChanged() { Raise( ColourCodesChanged ); }
 	
-		ChatEventArgs chatArgs = new ChatEventArgs();		
+		ChatEventArgs chatArgs = new ChatEventArgs();
 		protected void Raise( EventHandler handler ) {
 			if( handler != null )
 				handler( this, EventArgs.Empty );

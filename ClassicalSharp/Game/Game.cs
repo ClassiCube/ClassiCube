@@ -190,24 +190,24 @@ namespace ClassicalSharp {
 		}
 		
 		Stopwatch frameTimer = new Stopwatch();
-		internal void RenderFrame( FrameEventArgs e ) {
+		internal void RenderFrame( double delta ) {
 			frameTimer.Reset();
 			frameTimer.Start();
 			
 			Graphics.BeginFrame( this );
 			Graphics.BindIb( defaultIb );
-			accumulator += e.Time;
+			accumulator += delta;
 			Vertices = 0;
 			if( !Focused && !ScreenLockedInput )
 				SetNewScreen( new PauseScreen( this ) );
 			
-			CheckScheduledTasks( e.Time );
+			CheckScheduledTasks( delta );
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
 			
 			Graphics.Clear();
 			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView( e.Time );
+			Matrix4 modelView = Camera.GetView( delta );
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
@@ -215,36 +215,36 @@ namespace ClassicalSharp {
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( Map.IsNotLoaded ) visible = false;
 			if( visible ) {
-				AxisLinesRenderer.Render( e.Time );
-				Players.RenderModels( Graphics, e.Time, t );
-				Players.RenderNames( Graphics, e.Time, t );
+				AxisLinesRenderer.Render( delta );
+				Players.RenderModels( Graphics, delta, t );
+				Players.RenderNames( Graphics, delta, t );
 				CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
 				
-				ParticleManager.Render( e.Time, t );
+				ParticleManager.Render( delta, t );
 				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				EnvRenderer.Render( e.Time );
+				EnvRenderer.Render( delta );
 				if( SelectedPos.Valid && !HideGui )
-					Picking.Render( e.Time, SelectedPos );
-				MapRenderer.Render( e.Time );
-				SelectionManager.Render( e.Time );
-				Players.RenderHoveredNames( Graphics, e.Time, t );
+					Picking.Render( delta, SelectedPos );
+				MapRenderer.Render( delta );
+				SelectionManager.Render( delta );
+				Players.RenderHoveredNames( Graphics, delta, t );
 				
 				bool left = IsMousePressed( MouseButton.Left );
 				bool middle = IsMousePressed( MouseButton.Middle );
 				bool right = IsMousePressed( MouseButton.Right );
 				InputHandler.PickBlocks( true, left, middle, right );
 				if( !HideGui )
-					BlockHandRenderer.Render( e.Time, t );
+					BlockHandRenderer.Render( delta, t );
 			} else {
 				SelectedPos.SetAsInvalid();
 			}
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
-			fpsScreen.Render( e.Time );
+			fpsScreen.Render( delta );
 			if( activeScreen == null || !activeScreen.HidesHud )
-				hudScreen.Render( e.Time );
+				hudScreen.Render( delta );
 			if( activeScreen != null )
-				activeScreen.Render( e.Time );
+				activeScreen.Render( delta );
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 			
 			if( screenshotRequested )
