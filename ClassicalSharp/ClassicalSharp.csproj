@@ -222,6 +222,7 @@
     <Compile Include="Physics\PickedPos.cs" />
     <Compile Include="Physics\Picking.cs" />
     <Compile Include="Platform\Font.cs" />
+    <Compile Include="Platform\IPlatformWindow.cs" />
     <Compile Include="Platform\Platform.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

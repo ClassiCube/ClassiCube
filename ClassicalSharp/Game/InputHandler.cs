@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		void RegisterInputHandlers() {
 			game.Keyboard.KeyDown += KeyDownHandler;
 			game.Keyboard.KeyUp += KeyUpHandler;
-			game.KeyPress += KeyPressHandler;
+			game.window.KeyPress += KeyPressHandler;
 			game.Mouse.WheelChanged += MouseWheelChanged;
 			game.Mouse.Move += MouseMove;
 			game.Mouse.ButtonDown += MouseButtonDown;
@@ -328,9 +328,9 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyBinding.HideFps] ) {
 				game.ShowFPS = !game.ShowFPS;
 			} else if( key == Keys[KeyBinding.Fullscreen] ) {
-				WindowState state = game.WindowState;
+				WindowState state = game.window.WindowState;
 				if( state != WindowState.Minimized ) {
-					game.WindowState = state == WindowState.Fullscreen ?
+					game.window.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
 			} else if( key == Keys[KeyBinding.ShowAxisLines] ) {

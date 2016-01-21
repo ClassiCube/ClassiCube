@@ -14,7 +14,6 @@ using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using ClassicalSharp.TexturePack;
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Input;
 #if ANDROID
 using Android.Graphics;
@@ -22,7 +21,7 @@ using Android.Graphics;
 
 namespace ClassicalSharp {
 
-	public partial class Game : GameWindow {
+	public partial class Game : IDisposable {
 		
 		void LoadAtlas( Bitmap bmp ) {
 			TerrainAtlas1D.Dispose();
@@ -36,7 +35,14 @@ namespace ClassicalSharp {
 			Events.RaiseTerrainAtlasChanged();
 		}
 		
-		protected override void OnLoad( EventArgs e ) {
+		public void Run() { window.Run(); }
+		
+		public void Exit() { window.Exit(); }		
+		
+		
+		internal void OnLoad() {
+			Mouse = window.Mouse;
+			Keyboard = window.Keyboard;
 			#if !USE_DX
 			Graphics = new OpenGLApi();
 			#else
@@ -151,12 +157,11 @@ namespace ClassicalSharp {
 		void LoadIcon() {
 			string launcherPath = Path.Combine( Program.AppDirectory, "Launcher2.exe" );
 			if( File.Exists( launcherPath ) ) {
-				Icon = Icon.ExtractAssociatedIcon( launcherPath );
-				return;
+				window.Icon = Icon.ExtractAssociatedIcon( launcherPath ); return;
 			}
 			launcherPath = Path.Combine( Program.AppDirectory, "Launcher.exe" );
 			if( File.Exists( launcherPath ) ) {
-				Icon = Icon.ExtractAssociatedIcon( launcherPath );
+				window.Icon = Icon.ExtractAssociatedIcon( launcherPath );
 			}
 		}
 		
@@ -185,7 +190,7 @@ namespace ClassicalSharp {
 		}
 		
 		Stopwatch frameTimer = new Stopwatch();
-		protected override void OnRenderFrame( FrameEventArgs e ) {
+		internal void RenderFrame( FrameEventArgs e ) {
 			frameTimer.Reset();
 			frameTimer.Start();
 			
@@ -196,7 +201,6 @@ namespace ClassicalSharp {
 			if( !Focused && !ScreenLockedInput )
 				SetNewScreen( new PauseScreen( this ) );
 			
-			base.OnRenderFrame( e );
 			CheckScheduledTasks( e.Time );
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
@@ -308,8 +312,7 @@ namespace ClassicalSharp {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
-		protected override void OnResize( object sender, EventArgs e ) {
-			base.OnResize( sender, e );
+		internal void OnResize() {
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
 			if( activeScreen != null )
@@ -426,7 +429,7 @@ namespace ClassicalSharp {
 		
 		public Key Mapping( KeyBinding mapping ) { return InputHandler.Keys[mapping]; }
 		
-		public override void Dispose() {
+		public void Dispose() {
 			MapRenderer.Dispose();
 			MapBordersRenderer.Dispose();
 			EnvRenderer.Dispose();
@@ -459,7 +462,6 @@ namespace ClassicalSharp {
 			
 			if( Options.HasChanged )
 				Options.Save();
-			base.Dispose();
 		}
 		
 		internal bool CanPick( byte block ) {
@@ -472,8 +474,8 @@ namespace ClassicalSharp {
 		}
 		
 		public Game( string username, string mppass, string skinServer,
-		            bool nullContext, int width, int height )
-			: base( width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default ) {
+		            bool nullContext, int width, int height ) {
+			window = new DesktopWindow( this, username, nullContext, width, height );
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;

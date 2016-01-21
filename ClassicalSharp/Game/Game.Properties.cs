@@ -13,10 +13,11 @@ using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using ClassicalSharp.TexturePack;
 using OpenTK;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 
-	public partial class Game : GameWindow {
+	public partial class Game {
 		
 		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
 		public IGraphicsApi Graphics;
@@ -189,6 +190,39 @@ namespace ClassicalSharp {
 				defTexturePack = value;
 				Options.Set( OptionsKey.DefaultTexturePack, value );
 			}
+		}
+		
+		internal IPlatformWindow window;
+		public MouseDevice Mouse;
+		public KeyboardDevice Keyboard;
+		
+		public int Width { get { return window.Width; } }
+		
+		public int Height { get { return window.Height; } }
+		
+		public Size ClientSize { get { return window.ClientSize; } }
+		
+		public bool Focused { get { return window.Focused; } }
+		
+		public bool Exists { get { return window.Exists; } }
+		
+		public Point PointToScreen( Point coords ) {
+			return window.PointToScreen( coords );
+		}
+		
+		public bool VSync {
+			get { return window.VSync; }
+			set { window.VSync = value; }
+		}
+		
+		public bool CursorVisible { 
+			get { return window.CursorVisible; }
+			set { window.CursorVisible = value; }
+		}
+		
+		public Point DesktopCursorPos {
+			get { return window.DesktopCursorPos; }
+			set { window.DesktopCursorPos = value; }
 		}
 	}
 }

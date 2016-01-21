@@ -218,17 +218,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		/// <summary> Informs the graphic api to update its state in preparation for a new frame. </summary>
-		public abstract void BeginFrame( GameWindow game );
+		public abstract void BeginFrame( Game game );
 		
 		/// <summary> Informs the graphic api to update its state in preparation for the end of a frame,
 		/// and to prepare that frame for display on the monitor. </summary>
-		public abstract void EndFrame( GameWindow game );
+		public abstract void EndFrame( Game game );
 		
 		/// <summary> Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. </summary>
-		public abstract void SetVSync( GameWindow game, bool value );
+		public abstract void SetVSync( Game game, bool value );
 		
 		/// <summary> Raised when the dimensions of the game's window have changed. </summary>
-		public abstract void OnWindowResize( GameWindow game );
+		public abstract void OnWindowResize( Game game );
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>

@@ -32,7 +32,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public Direct3D9Api( Game game ) {
 			MinZNear = 0.05f;
-			IntPtr windowHandle = ((WinWindowInfo)game.WindowInfo).WindowHandle;
+			IntPtr windowHandle = ((WinWindowInfo)game.window.WindowInfo).WindowHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;
 			InitFields();
@@ -395,11 +395,11 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		#endregion
 		
-		public override void BeginFrame( GameWindow game ) {
+		public override void BeginFrame( Game game ) {
 			device.BeginScene();
 		}
 		
-		public override void EndFrame( GameWindow game ) {
+		public override void EndFrame( Game game ) {
 			device.EndScene();
 			int code = device.Present();
 			if( code >= 0 ) return;
@@ -426,17 +426,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		bool vsync = false;
-		public override void SetVSync( GameWindow game, bool value ) {
+		public override void SetVSync( Game game, bool value ) {
 			vsync = value;
 			game.VSync = value;
 			RecreateDevice( game );
 		}
 		
-		public override void OnWindowResize( GameWindow game ) {
+		public override void OnWindowResize( Game game ) {
 			RecreateDevice( game );
 		}
 		
-		void RecreateDevice( GameWindow game ) {
+		void RecreateDevice( Game game ) {
 			PresentParameters args = GetPresentArgs( game.Width, game.Height );
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
