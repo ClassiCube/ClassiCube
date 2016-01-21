@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width >> 4;
-			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+			using( FastBitmap fastBmp = new FastBitmap( bmp, true, true ) ) {
 				info.RecalculateSpriteBB( fastBmp );
 				TexId = graphics.CreateTexture( fastBmp );
 			}
@@ -51,27 +51,25 @@ namespace ClassicalSharp {
 		
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
 		public int LoadTextureElement( int index ) {
-			int size = elementSize;			
-			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true ) ) {
-				using( Bitmap bmp = new Bitmap( size, size ) ) {
-					
-					using( FastBitmap dst = new FastBitmap( bmp, true ) ) {
-						FastBitmap.MovePortion( (index & 0x0F) * size, (index >> 4) * 
-						                       size, 0, 0, atlas, dst, size );
-						return graphics.CreateTexture( dst );
-					}
-				}
+			int size = elementSize;
+			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true, true ) )
+				using( Bitmap bmp = new Bitmap( size, size ) )
+					using( FastBitmap dst = new FastBitmap( bmp, true, false ) )
+			{
+				FastBitmap.MovePortion( (index & 0x0F) * size, (index >> 4) * 
+				                       size, 0, 0, atlas, dst, size );
+				return graphics.CreateTexture( dst );
 			}
 		}
 		
-		/// <summary> Gets a rectangle that describes the UV coordinates for 
+		/// <summary> Gets a rectangle that describes the UV coordinates for
 		/// the tile at the specified index. </summary>
 		public TextureRec GetTexRec( int index ) {
 			return new TextureRec( (index & 0x0F) * invElementSize, (index >> 4) * 
 			                      invElementSize, invElementSize, invElementSize );
 		}
 		
-		/// <summary> Gets a rectangle that describes the UV coordinates for 
+		/// <summary> Gets a rectangle that describes the UV coordinates for
 		/// the tile at the specified index, adjusted to work for AMD/ATI cards. </summary>
 		public TextureRec GetAdjTexRec( int index ) {
 			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.

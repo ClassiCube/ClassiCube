@@ -412,10 +412,8 @@ namespace ClassicalSharp {
 			HandleCpeDefineBlockCommonEnd( block );
 			// Update sprite BoundingBox if necessary
 			if( info.IsSprite[block] ) {
-				using( FastBitmap fastBmp =
-				      new FastBitmap( game.TerrainAtlas.AtlasBitmap, true ) ) {
-					info.RecalculateBB( block, fastBmp );
-				}
+				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
+					info.RecalculateBB( block, dst );
 			}
 		}
 		

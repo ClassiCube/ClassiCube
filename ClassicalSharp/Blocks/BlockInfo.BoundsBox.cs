@@ -45,10 +45,12 @@ namespace ClassicalSharp {
 		internal void RecalculateBB( int block, FastBitmap fastBmp ) {
 			int elemSize = fastBmp.Width / 16;
 			int texId = GetTextureLoc( (byte)block, TileSide.Top );
-			float topY = GetSpriteBB_TopY( elemSize, texId & 0x0F, texId >> 4, fastBmp );
-			float bottomY = GetSpriteBB_BottomY( elemSize, texId & 0x0F, texId >> 4, fastBmp );
-			float leftX = GetSpriteBB_LeftX( elemSize, texId & 0x0F, texId >> 4, fastBmp );
-			float rightX = GetSpriteBB_RightX( elemSize, texId & 0x0F, texId >> 4, fastBmp );
+			int texX = texId & 0x0F, texY = texId >> 4;
+			
+			float topY = GetSpriteBB_TopY( elemSize, texX, texY, fastBmp );
+			float bottomY = GetSpriteBB_BottomY( elemSize, texX, texY, fastBmp );
+			float leftX = GetSpriteBB_LeftX( elemSize, texX, texY, fastBmp );
+			float rightX = GetSpriteBB_RightX( elemSize, texX, texY, fastBmp );
 			
 			MinBB[block] = Utils.RotateY( leftX - 0.5f, bottomY, 0, angle ) + centre;
 			MaxBB[block] = Utils.RotateY( rightX - 0.5f, topY, 0, angle ) + centre;

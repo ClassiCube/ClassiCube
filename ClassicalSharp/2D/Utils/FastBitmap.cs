@@ -11,22 +11,28 @@ namespace ClassicalSharp {
 	/// <summary> Wrapper around a bitmap that allows extremely fast manipulation of 32bpp images. </summary>
 	public unsafe class FastBitmap : IDisposable {
 		
-		public FastBitmap( Bitmap bmp, bool lockBits ) {
-			Bitmap = bmp;
-			if( lockBits ) {
-				LockBits();
-			}
+		[Obsolete( "You should always specify whether the bitmap is readonly or not." )]
+		public FastBitmap( Bitmap bmp, bool lockBits ) : this( bmp, lockBits, false ) {
 		}
 		
-		public FastBitmap( int width, int height, int stride, IntPtr scan0 ) {
+		public FastBitmap( Bitmap bmp, bool lockBits, bool readOnly ) {
+			Bitmap = bmp;
+			if( lockBits )
+				LockBits();
+			ReadOnly = readOnly;
+		}
+		
+		public FastBitmap( int width, int height, int stride, IntPtr scan0, bool readOnly ) {
 			Width = width;
 			Height = height;
 			Stride = stride;
 			Scan0 = scan0;
 			scan0Byte = (byte*)scan0;
+			ReadOnly = readOnly;
 		}
 		
 		public Bitmap Bitmap;
+		public bool ReadOnly;
 		BitmapData data;
 		byte* scan0Byte;
 		
@@ -51,15 +57,15 @@ namespace ClassicalSharp {
 			for( int y = 0; y < size; y++ ) {
 				int* srcRow = src.GetRowPtr( srcY + y );
 				int* dstRow = dst.GetRowPtr( dstY + y );
-				for( int x = 0; x < size; x++ ) {
+				for( int x = 0; x < size; x++ )
 					dstRow[dstX + x] = srcRow[srcX + x];
-				}
 			}
 		}
 		
 		public void Dispose() { UnlockBits(); }
 		
 		#if !ANDROID
+		
 		public void LockBits() {
 			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
 			if( data != null ) return;
@@ -70,8 +76,8 @@ namespace ClassicalSharp {
 			
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
 			data = Bitmap.LockBits( rec, ImageLockMode.ReadWrite, format );
-			scan0Byte = (byte*)data.Scan0;
 			Scan0 = data.Scan0;
+			scan0Byte = (byte*)Scan0;			
 			Stride = data.Stride;
 			Width = data.Width;
 			Height = data.Height;
@@ -95,8 +101,8 @@ namespace ClassicalSharp {
 
 			data = ByteBuffer.AllocateDirect( Bitmap.Width * Bitmap.Height * 4 );
 			Bitmap.CopyPixelsToBuffer( data );
-			scan0Byte = (byte*)data.GetDirectBufferAddress();
 			Scan0 = data.GetDirectBufferAddress();
+			scan0Byte = (byte*)Scan0;			
 			Stride = Bitmap.Width * 4;
 			Width = Bitmap.Width;
 			Height = Bitmap.Height;
@@ -106,7 +112,8 @@ namespace ClassicalSharp {
 			if( Bitmap == null || data == null )
 				return;
 			data.Rewind();
-			Bitmap.CopyPixelsFromBuffer( data ); // TODO: Only if not readonly
+			if( !ReadOnly )
+				Bitmap.CopyPixelsFromBuffer( data );
 			data.Dispose();
 
 			data = null;

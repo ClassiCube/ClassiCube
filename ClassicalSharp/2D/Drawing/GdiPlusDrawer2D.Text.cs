@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			using( FastBitmap fastBmp = new FastBitmap( curBmp, true ) )
+			using( FastBitmap fastBmp = new FastBitmap( curBmp, true, false ) )
 				DrawBitmapTextImpl( fastBmp, ref args, x, y );
 		}
 		

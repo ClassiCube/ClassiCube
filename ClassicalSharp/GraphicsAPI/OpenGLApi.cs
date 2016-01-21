@@ -363,14 +363,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		public override void BeginFrame( GameWindow game ) {
+		public override void BeginFrame( Game game ) {
 		}
 		
-		public override void EndFrame( GameWindow game ) {
-			game.SwapBuffers();
+		public override void EndFrame( Game game ) {
+			game.window.SwapBuffers();
 		}
 		
-		public override void SetVSync( GameWindow game, bool value ) {
+		public override void SetVSync( Game game, bool value ) {
 			game.VSync = value;
 		}
 		
@@ -414,7 +414,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void OnWindowResize( GameWindow game ) {
+		public override void OnWindowResize( Game game ) {
 			GL.Viewport( 0, 0, game.Width, game.Height );
 		}
 		

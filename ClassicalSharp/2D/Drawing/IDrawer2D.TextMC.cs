@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		public void SetFontBitmap( Bitmap bmp ) {
 			FontBitmap = bmp;
 			boxSize = FontBitmap.Width / 16;
-			fontPixels = new FastBitmap( FontBitmap, true );
+			fontPixels = new FastBitmap( FontBitmap, true, true );
 			CalculateTextWidths();
 		}
 		

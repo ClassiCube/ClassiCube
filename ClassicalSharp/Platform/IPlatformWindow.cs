@@ -40,7 +40,9 @@ namespace ClassicalSharp {
 		
 		void Run();
 		
-		void Exit();		
+		void SwapBuffers();
+		
+		void Exit();
 		
 		event EventHandler<KeyPressEventArgs> KeyPress;
 	}

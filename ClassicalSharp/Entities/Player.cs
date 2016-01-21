@@ -87,7 +87,7 @@ namespace ClassicalSharp {
 		}
 		
 		unsafe static void ClearHat( Bitmap bmp, SkinType skinType ) {
-			using( FastBitmap fastBmp = new FastBitmap( bmp, true ) ) {
+			using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) ) {
 				int sizeX = (bmp.Width / 64) * 32;
 				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
 				int sizeY = (bmp.Height / yScale) * 16;

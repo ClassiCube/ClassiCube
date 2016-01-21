@@ -49,12 +49,12 @@ namespace ClassicalSharp {
 			invElementSize = 1f / elementsPerBitmap;
 		}
 		
-		void Convert2DTo1D( TerrainAtlas2D atlas2D, int atlasesCount, int atlas1DHeight ) {			
+		void Convert2DTo1D( TerrainAtlas2D atlas2D, int atlasesCount, int atlas1DHeight ) {
 			TexIds = new int[atlasesCount];
 			Utils.LogDebug( "Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D );
 			int index = 0;
 			
-			using( FastBitmap atlas = new FastBitmap( atlas2D.AtlasBitmap, true ) ) {
+			using( FastBitmap atlas = new FastBitmap( atlas2D.AtlasBitmap, true, true ) ) {
 				for( int i = 0; i < TexIds.Length; i++ )
 					Make1DTexture( i, atlas, atlas2D, atlas1DHeight, ref index );
 			}
@@ -62,15 +62,15 @@ namespace ClassicalSharp {
 		
 		void Make1DTexture( int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index ) {
 			int elemSize = atlas2D.elementSize;
-			using( Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight ) ) {
-				using( FastBitmap dst = new FastBitmap( atlas1d, true ) ) {
-					for( int index1D = 0; index1D < elementsPerAtlas1D; index1D++ ) {
-						FastBitmap.MovePortion( (index & 0x0F) * elemSize, (index >> 4) * elemSize,
-						                       0, index1D * elemSize, atlas, dst, elemSize );
-						index++;
-					}
-					TexIds[i] = graphics.CreateTexture( dst );
+			using( Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight ) )
+				using( FastBitmap dst = new FastBitmap( atlas1d, true, false ) )
+			{
+				for( int index1D = 0; index1D < elementsPerAtlas1D; index1D++ ) {
+					FastBitmap.MovePortion( (index & 0x0F) * elemSize, (index >> 4) * elemSize,
+					                       0, index1D * elemSize, atlas, dst, elemSize );
+					index++;
 				}
+				TexIds[i] = graphics.CreateTexture( dst );
 			}
 		}
 		

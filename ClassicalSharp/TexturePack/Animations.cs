@@ -28,7 +28,7 @@ namespace ClassicalSharp.TexturePack {
 		public void SetAtlas( Bitmap bmp ) {
 			Dispose();
 			this.bmp = bmp;
-			fastBmp = new FastBitmap( bmp, true );
+			fastBmp = new FastBitmap( bmp, true, true );
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
@@ -102,7 +102,7 @@ namespace ClassicalSharp.TexturePack {
 			
 			int size = data.FrameSize;
 			byte* temp = stackalloc byte[size * size * 4];
-			FastBitmap part = new FastBitmap( size, size, size * 4, (IntPtr)temp );
+			FastBitmap part = new FastBitmap( size, size, size * 4, (IntPtr)temp, false );
 			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, fastBmp, part, size );
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, part );
 		}
