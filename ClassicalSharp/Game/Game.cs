@@ -326,6 +326,7 @@ namespace ClassicalSharp {
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
 			Map.Reset();
 			Map.mapData = null;
+			Drawer2D.InitColours();
 			GC.Collect();
 		}
 		

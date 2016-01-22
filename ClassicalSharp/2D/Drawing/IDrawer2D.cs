@@ -148,7 +148,12 @@ namespace ClassicalSharp {
 		
 		public FastColour[] Colours = new FastColour[256];
 		
-		public IDrawer2D() {
+		public IDrawer2D() { InitColours(); }
+		
+		public void InitColours() {
+			for( int i = 0; i < Colours.Length; i++ )
+				Colours[i] = default(FastColour);
+			
 			for( int i = 0; i <= 9; i++ )
 				Colours['0' + i] = FastColour.GetHexEncodedCol( i );
 			

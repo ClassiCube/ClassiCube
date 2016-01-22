@@ -15,7 +15,10 @@ namespace ClassicalSharp {
 			game.Events.ColourCodesChanged += ColourCodesChanged;
 		}
 
-		void ColourCodesChanged( object sender, EventArgs e ) { Redraw(); }
+		void ColourCodesChanged( object sender, EventArgs e ) {
+			elements[0] = new Element( "Colours", 10, 4, GetColourString() );
+			Redraw(); 
+		}
 		
 		public Texture texture;
 		readonly Font font;
