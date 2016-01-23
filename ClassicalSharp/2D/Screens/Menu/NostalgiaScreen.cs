@@ -32,6 +32,12 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );
 				     } ),
 				
+				Make( -140, 50, "Classic options menu", OnWidgetClick,
+				     g => g.UseClassicOptions ? "yes" : "no",
+				     (g, v) => { g.UseClassicOptions = v == "yes";
+				     	Options.Set( OptionsKey.UseClassicOptions, v == "yes" );
+				     } ),
+				
 				// Column 2
 				Make( 140, -100, "Allow custom blocks", OnWidgetClick,
 				     g => g.AllowCustomBlocks ? "yes" : "no",

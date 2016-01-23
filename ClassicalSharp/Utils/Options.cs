@@ -45,9 +45,9 @@ namespace ClassicalSharp {
 		public const string UseClassicGui = "nostalgia-classicgui";
 		public const string SimpleArmsAnim = "nostalgia-simplearms";
 		public const string UseClassicTabList = "nostalgia-classictablist";
+		public const string UseClassicOptions = "nostalgia-classicoptions";
 	}
 	
-	// TODO: implement this
 	public enum FpsLimitMethod {
 		LimitVSync,
 		Limit30FPS,

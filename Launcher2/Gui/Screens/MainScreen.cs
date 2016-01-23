@@ -94,6 +94,7 @@ namespace Launcher2 {
 			Options.Set( "nostalgia-usecpe", !game.ClassicMode );
 			Options.Set( "nostalgia-servertextures", !game.ClassicMode );
 			Options.Set( "nostalgia-classictablist", game.ClassicMode );
+			Options.Set( "nostalgia-classicoptions", game.ClassicMode );
 			Options.Set( "hacksenabled", !game.ClassicMode );
 			Options.Set( "doublejump", false );
 			Options.Save();
