@@ -7,16 +7,16 @@ namespace ClassicalSharp {
 	public sealed partial class Map {
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
-			int mapIndex = ( maxY * Length + z ) * Width + x;
+			int mapIndex = (maxY * Length + z) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
 				if( info.BlocksLight[block] ) {
-					heightmap[index] = (short)(y - 1);
-					return y - 1;
+					int offset = (info.LightOffset[block] >> TileSide.Top) & 1;
+					heightmap[index] = (short)(y - offset);
+					return y - offset;
 				}
 				mapIndex -= oneY;
-			}
-			
+			}			
 			heightmap[index] = -10;
 			return -10;
 		}
@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
+			int offset = (info.LightOffset[newBlock] >> TileSide.Top) & 1;
 			
 			int index = (z * Width) + x;
 			int height = heightmap[index];
@@ -32,14 +33,16 @@ namespace ClassicalSharp {
 				// We have to calculate the entire column for visibility, because the old/new block info is
 				// useless if there is another block higher than block.y that blocks sunlight.
 				CalcHeightAt( x, maxY, z, index );
-			} else if( y > height ) {
+			} else if( (y - offset >= height) ) {
 				if( nowBlocks ) {
-					heightmap[index] = (short)(y - 1);
+					heightmap[index] = (short)(y - offset);
 				} else {
 					// Part of the column is now visible to light, we don't know how exactly how high it should be though.
 					// However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y
 					CalcHeightAt( x, y, z, index );
 				}
+			} else {
+				CalcHeightAt( x, maxY, z, index );
 			}
 		}
 		
@@ -96,7 +99,8 @@ namespace ClassicalSharp {
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
 						if( x < xCount && info.BlocksLight[mapPtr[mapIndex]] ) {
-							heightmap[heightmapIndex + x] = (short)( y - 1 );
+							int lightOffset = (info.LightOffset[mapPtr[mapIndex]] >> TileSide.Top) & 1;
+							heightmap[heightmapIndex + x] = (short)(y - lightOffset);
 							elemsLeft--;
 							skip[index] = 0;
 							int offset = prevRunCount + curRunCount;

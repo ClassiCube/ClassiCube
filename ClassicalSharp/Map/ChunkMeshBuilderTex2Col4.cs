@@ -81,9 +81,9 @@ namespace ClassicalSharp {
 				case TileSide.Back:
 					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
 				case TileSide.Bottom:
-					return y <= 0 || (y - 1) > map.heightmap[(z * width) + x];					
+					return y <= 0 || (y - 1 - offset) >= (map.heightmap[(z * width) + x]);
 				case TileSide.Top:
-					return y >= maxY || y > map.heightmap[(z * width) + x];
+					return y >= maxY || (y - offset) >= (map.heightmap[(z * width) + x]);
 			}
 			return true;
 		}
@@ -241,12 +241,13 @@ namespace ClassicalSharp {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Bottom];
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Bottom) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
-			FastColour col = fullBright ? FastColour.White : ((Y - 1) > map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
+			FastColour col = fullBright ? FastColour.White : ((Y - 1 - offset) >= map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
 			
 			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
 			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
@@ -258,12 +259,13 @@ namespace ClassicalSharp {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Top];
 			int i = texId / elementsPerAtlas1D;			
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> TileSide.Top) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
-			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
+			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col );
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );

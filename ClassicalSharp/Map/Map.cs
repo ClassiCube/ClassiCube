@@ -197,9 +197,8 @@ namespace ClassicalSharp {
 			if( CloudHeight == -1 ) CloudHeight = height + 2;
 			
 			heightmap = new short[width * length];
-			for( int i = 0; i < heightmap.Length; i++ ) {
+			for( int i = 0; i < heightmap.Length; i++ )
 				heightmap[i] = short.MaxValue;
-			}
 		}
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
