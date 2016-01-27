@@ -52,25 +52,19 @@ namespace Launcher2 {
 
 		string lastStatus;
 		void SetStatus( string text ) {
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				SetStatusNoLock( text );
-			}
-		}
-		
-		void SetStatusNoLock( string text ) {
 			lastStatus = text;
 			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
 			
 			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
-			widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+			}
 			Dirty = true;
 		}
 		
 		bool HasServers {
-			get {
-				return !(game.Session.Servers == null || game.Session.Servers.Count == 0 );
-			}
+			get { return game.Session.Servers != null && game.Session.Servers.Count != 0; }
 		}
 		
 		bool signingIn;
@@ -83,7 +77,7 @@ namespace Launcher2 {
 			}
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
-		
+			
 			LauncherBooleanWidget booleanWidget = widgets[skipSSLIndex] as LauncherBooleanWidget;
 			if( booleanWidget != null && booleanWidget.Value ) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
@@ -123,7 +117,7 @@ namespace Launcher2 {
 				SetStatus( text );
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					widgetIndex = 9;		
+					widgetIndex = 9;
 					MakeSSLSkipValidationBoolean();
 					MakeSSLSkipValidationLabel();
 				}

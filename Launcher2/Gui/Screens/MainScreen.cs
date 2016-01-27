@@ -107,13 +107,13 @@ namespace Launcher2 {
 			base.SelectWidget( widget );
 			if( signingIn || !resumeValid || widget != widgets[4] ) return;
 			const string format = "&eResume to {0}:{1}, as {2}";
-			SetStatusNoLock( String.Format( format, resumeIp, resumePort, resumeUser ) );
+			SetStatus( String.Format( format, resumeIp, resumePort, resumeUser ) );
 		}
 		
 		protected override void UnselectWidget( LauncherWidget widget ) {
 			base.UnselectWidget( widget );
 			if( signingIn || !resumeValid || widget != widgets[4] ) return;
-			SetStatusNoLock( "" );
+			SetStatus( "" );
 		}
 		
 		public override void Dispose() {

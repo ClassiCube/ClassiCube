@@ -60,6 +60,16 @@ namespace Launcher2 {
 					Framebuffer.Dispose();
 				Framebuffer = new Bitmap( Width, Height );
 			}
+			
+			if( ClassicMode ) {
+				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
+					ClearTile( 0, 0, Width, 48, elemSize, 128, 64, dst );
+					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst );
+				}
+			} else {
+				ClearArea( 0, 0, Width, Height );
+			}
+			
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
 
@@ -67,49 +77,46 @@ namespace Launcher2 {
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
-				if( ClassicMode )
-					ClearTile( 0, 0, Width, 48, elemSize, 128, 64 );
-				else
-					ClearArea( 0, 0, Width, Height );
 				
 				args.Text = "&0Classical&0Sharp";
 				drawer.DrawChatText( ref args, xStart + 4, 8 + 4 );
 				args.Text = "&eClassical&fSharp";
 				drawer.DrawChatText( ref args, xStart, 8 );
 				drawer.UseBitmappedChat = false;
-				if( ClassicMode )
-					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96 );
 			}
 			Dirty = true;
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
+			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
+				ClearArea( x, y, width, height, dst );
+		}
+		
+		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
 			if( ClassicMode ) {
-				ClearTile( x, y, width, height, 0, 96, 96 );
+				ClearTile( x, y, width, height, 0, 96, 96, dst );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;
-				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
-					Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
+				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
 			}
 		}
 		
-		void ClearTile( int x, int y, int width, int height, int srcX, byte scaleA, byte scaleB ) {
+		void ClearTile( int x, int y, int width, int height, int srcX,
+		               byte scaleA, byte scaleB, FastBitmap dst ) {
 			if( x >= Width || y >= Height ) return;
-			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
-				Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
-				const int tileSize = 48;
-				Size size = new Size( tileSize, tileSize );
-				int xOrig = x, xMax = x + width, yMax = y + height;
+			Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
+			const int tileSize = 48;
+			Size size = new Size( tileSize, tileSize );
+			int xOrig = x, xMax = x + width, yMax = y + height;
+			
+			for( ; y < yMax; y += tileSize )
+				for( x = xOrig; x < xMax; x += tileSize )
+			{
+				int x2 = Math.Min( x + tileSize, Math.Min( xMax, Width ) );
+				int y2 = Math.Min( y + tileSize, Math.Min( yMax, Height ) );
 				
-				for( ; y < yMax; y += tileSize )
-					for( x = xOrig; x < xMax; x += tileSize )
-				{
-					int x2 = Math.Min( x + tileSize, Math.Min( xMax, Width ) );
-					int y2 = Math.Min( y + tileSize, Math.Min( yMax, Height ) );
-					
-					Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
-					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
-				}
+				Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
+				Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
 			}
 		}
 	}

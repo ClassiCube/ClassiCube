@@ -51,10 +51,11 @@ namespace Launcher2 {
 		}
 		
 		void SetStatus( string text ) {
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
+			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+			
 			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
-				game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+				drawer.SetBitmap( game.Framebuffer );							
 				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 				Dirty = true;
 			}

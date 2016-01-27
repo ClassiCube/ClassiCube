@@ -84,9 +84,9 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
+			DrawBackground();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				game.ClearArea( 0, 0, game.Width, tableY );
 				
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				if( table != null )
@@ -111,14 +111,23 @@ namespace Launcher2 {
 			MakeTableWidget();
 		}
 		
+		void DrawBackground() {
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
+				game.ClearArea( 0, 0, game.Width, tableY, dst );				
+				int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+				Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
+				
+				if( !game.ClassicMode ) {
+					FastColour col = LauncherTableWidget.backGridCol;
+					Drawer2DExt.FastClear( dst, rec, col );
+				} else {
+					game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
+				}
+			}
+		}
+		
 		void MakeTableWidget() {
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
-			FastColour col = LauncherTableWidget.backGridCol;
-			if( !game.ClassicMode )
-				drawer.Clear( col, tableX, tableY, game.Width - tableX, tableHeight );
-			else
-				game.ClearArea( tableX, tableY, game.Width - tableX, tableHeight );
-			
 			if( widgets[tableIndex] != null ) {
 				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 				table.Height = tableHeight;

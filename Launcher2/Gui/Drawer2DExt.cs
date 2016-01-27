@@ -39,9 +39,9 @@ namespace Launcher2 {
 		
 		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
 			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
-			int dstX = dstRect.X, dstY = dstRect.Y;
-			
+			int dstX = dstRect.X, dstY = dstRect.Y;			
 			if( dstX >= dst.Width || dstY >= dst.Height ) return;
+			
 			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
 			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
 			const int alpha = 255 << 24;
@@ -55,6 +55,22 @@ namespace Launcher2 {
 					int b = col.B + (int)(n * variation); Utils.Clamp( ref b, 0, 255 );
 					row[dstX + xx] = alpha | (r << 16) | (g << 8) | b;
 				}
+			}
+		}
+		
+		public unsafe static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
+			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
+			int dstX = dstRect.X, dstY = dstRect.Y;		
+			if( dstX >= dst.Width || dstY >= dst.Height ) return;
+			
+			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
+			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			int pixel = col.ToArgb();
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int* row = dst.GetRowPtr( dstY + yy );
+				for( int xx = 0; xx < dstWidth; xx++ )
+					row[dstX + xx] = pixel;
 			}
 		}
 		

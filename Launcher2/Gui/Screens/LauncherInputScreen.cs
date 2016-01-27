@@ -57,8 +57,8 @@ namespace Launcher2 {
 				HandleTab();
 			}
 			if( lastInput == null ) {
-				 if( e.Key == Key.Escape )
-				 	game.SetScreen( new MainScreen( game ) );
+				if( e.Key == Key.Escape )
+					game.SetScreen( new MainScreen( game ) );
 				return;
 			}
 			
@@ -113,11 +113,11 @@ namespace Launcher2 {
 		}
 		
 		protected virtual void RedrawLastInput() {
+			if( lastInput.Width > lastInput.ButtonWidth )
+				game.ClearArea( lastInput.X, lastInput.Y, lastInput.Width + 1, lastInput.Height + 1 );
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				if( lastInput.Width > lastInput.ButtonWidth )
-					game.ClearArea( lastInput.X, lastInput.Y,
-					               lastInput.Width + 1, lastInput.Height + 1 );
 				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
 				Dirty = true;
 			}

@@ -44,22 +44,16 @@ namespace Launcher2 {
 				   e.X < widget.X + widget.Width && e.Y < widget.Y + widget.Height ) {
 					if( selectedWidget == widget ) return;
 					
-					using( drawer ) {
-						drawer.SetBitmap( game.Framebuffer );
-						if( selectedWidget != null )
-							UnselectWidget( selectedWidget );
-						SelectWidget( widget );
-					}
+					if( selectedWidget != null )
+						UnselectWidget( selectedWidget );
+					SelectWidget( widget );
 					selectedWidget = widget;
 					return;
 				}
 			}
 			
 			if( selectedWidget == null ) return;
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				UnselectWidget( selectedWidget );
-			}
+			UnselectWidget( selectedWidget );
 			selectedWidget = null;
 		}
 		
@@ -70,7 +64,10 @@ namespace Launcher2 {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
 				button.Active = false;
-				button.Redraw( drawer, button.Text, buttonFont );
+				using( drawer ) {
+					drawer.SetBitmap( game.Framebuffer );
+					button.Redraw( drawer, button.Text, buttonFont );
+				}
 				Dirty = true;
 			}
 		}
@@ -80,7 +77,10 @@ namespace Launcher2 {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
 				button.Active = true;
-				button.Redraw( drawer, button.Text, buttonFont );
+				using( drawer ) {
+					drawer.SetBitmap( game.Framebuffer );
+					button.Redraw( drawer, button.Text, buttonFont );
+				}
 				Dirty = true;
 			}
 		}
@@ -92,7 +92,7 @@ namespace Launcher2 {
 			if( lastClicked != null && lastClicked != selectedWidget )
 				WidgetUnclicked( lastClicked );
 			if( selectedWidget != null && selectedWidget.OnClick != null )
-				selectedWidget.OnClick( e.X, e.Y );			
+				selectedWidget.OnClick( e.X, e.Y );
 			lastClicked = selectedWidget;
 		}
 		
@@ -107,7 +107,7 @@ namespace Launcher2 {
 			tabDown = true;
 			int index = lastClicked == null ? -1 :
 				Array.IndexOf<LauncherWidget>( widgets, lastClicked );
-			int dir = (game.Window.Keyboard[Key.ShiftLeft] 
+			int dir = (game.Window.Keyboard[Key.ShiftLeft]
 			           || game.Window.Keyboard[Key.ShiftRight]) ? -1 : 1;
 			index += dir;
 			Utils.Clamp( ref index, 0, widgets.Length - 1);
