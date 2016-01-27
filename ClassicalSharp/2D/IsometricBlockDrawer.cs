@@ -130,12 +130,12 @@ namespace ClassicalSharp {
 			FlushIfNotSame();
 			
 			FastColour col = colNormal;
-			float x1 = firstPart ? -0.2f : 0.5f, x2 = firstPart ? 0.5f : 1.2f;
+			float x1 = firstPart ? -0.1f : 0.5f, x2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x1 ), Make( 0.0f ), Make( 0.5f ), rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x1 ), Make( 1.2f ), Make( 0.5f ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x2 ), Make( 1.2f ), Make( 0.5f ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x1 ), Make( 1.1f ), Make( 0.5f ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x2 ), Make( 1.1f ), Make( 0.5f ), rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x2 ), Make( 0.0f ), Make( 0.5f ), rec.U2, rec.V2, col );
 		}
 
@@ -145,12 +145,12 @@ namespace ClassicalSharp {
 			FlushIfNotSame();
 			
 			FastColour col = colNormal;
-			float z1 = firstPart ? -0.2f : 0.5f, z2 = firstPart ? 0.5f : 1.2f;
+			float z1 = firstPart ? -0.1f : 0.5f, z2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 0.0f ), Make( z1 ), rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.2f ), Make( z1 ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.2f ), Make( z2 ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.1f ), Make( z1 ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.1f ), Make( z2 ), rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 0.0f ), Make( z2 ), rec.U2, rec.V2, col );
 		}
 		

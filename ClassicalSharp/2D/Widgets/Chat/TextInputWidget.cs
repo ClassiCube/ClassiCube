@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		
 		const int len = 64 * 3;
 		const int lines = 3;
-		AltTextInputWidget altText;
+		internal AltTextInputWidget altText;
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;

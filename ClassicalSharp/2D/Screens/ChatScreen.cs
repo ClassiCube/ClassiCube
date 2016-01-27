@@ -155,6 +155,13 @@ namespace ClassicalSharp {
 			}
 			game.Events.ChatReceived += ChatReceived;
 			game.Events.ChatFontChanged += ChatFontChanged;
+			game.Events.ColourCodesChanged += ColourCodesChanged;
+		}
+
+		void ColourCodesChanged( object sender, EventArgs e ) {
+			textInput.altText.UpdateColours();
+			UpdateChatYOffset( true );
+			textInput.MoveTo( textInput.X, textInput.Y );
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
@@ -202,6 +209,7 @@ namespace ClassicalSharp {
 			graphicsApi.DeleteTexture( ref announcementTex );
 			game.Events.ChatReceived -= ChatReceived;
 			game.Events.ChatFontChanged -= ChatFontChanged;
+			game.Events.ColourCodesChanged -= ColourCodesChanged;
 		}
 		
 		void ChatFontChanged( object sender, EventArgs e ) {
