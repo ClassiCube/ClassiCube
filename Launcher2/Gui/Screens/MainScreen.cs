@@ -48,8 +48,8 @@ namespace Launcher2 {
 			MakeButtonAt( "Update check", 160, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
-			string mode = game.ClassicMode ? "Normal mode" : "Classic mode";
-			MakeButtonAt( mode, 160, buttonHeight, buttonFont,
+			string mode = game.ClassicMode ? "Normal mode" : "Pure classic mode";
+			MakeButtonAt( mode, 190, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.BottomOrRight, 0, -10, ModeClick );
 			
 			if( widgets[widgetIndex] != null ) {
@@ -89,6 +89,8 @@ namespace Launcher2 {
 			game.ClassicMode = !game.ClassicMode;
 			Options.Load();
 			Options.Set( "mode-classic", game.ClassicMode );
+			if( game.ClassicMode )
+				Options.Set( "namesmode", "AllNamesAndHovered" );
 			
 			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
 			Options.Set( "nostalgia-usecpe", !game.ClassicMode );

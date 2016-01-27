@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Mode of how names of hovered entities are rendered (with or without depth testing),
 		/// and how other entity names are rendered. </summary>
-		public NameMode NamesMode = NameMode.AllNames;
+		public NameMode NamesMode = NameMode.AllNamesAndHovered;
 		
 		public EntityList( Game game ) {
 			this.game = game;

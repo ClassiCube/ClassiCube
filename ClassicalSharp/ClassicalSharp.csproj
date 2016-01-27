@@ -95,6 +95,7 @@
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\HotkeyScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
+    <Compile Include="2D\Screens\Menu\ClassicOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />

@@ -58,16 +58,16 @@ namespace ClassicalSharp {
 			titleFont = new Font( "Arial", size, FontStyle.Bold );			
 			regularFont = new Font( "Arial", 16, FontStyle.Regular );
 			
-			inputs = new [] { MakeInput( -80 ), MakeInput( -40 ), 
-				MakeInput( 0 ), MakeInput( 40 )
+			inputs = new [] { MakeInput( -100 ), MakeInput( -60 ), 
+				MakeInput( -20 ), MakeInput( 20 )
 			};
-			labels = new [] { MakeLabel( -80, "Width:" ), MakeLabel( -40, "Height:" ), 
-				MakeLabel( 0, "Length:" ), MakeLabel( 40, "Seed:" ),
+			labels = new [] { MakeLabel( -100, "Width:" ), MakeLabel( -60, "Height:" ), 
+				MakeLabel( -20, "Length:" ), MakeLabel( 20, "Seed:" ),
 			};
 			widgets = new [] {
-				ButtonWidget.Create( game, 0, 90, 250, 30, "Generate flatgrass", Anchor.Centre,
+				ButtonWidget.Create( game, 0, 80, 250, 35, "Generate flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
-				ButtonWidget.Create( game, 0, 140, 250, 30, "Generate notchy", Anchor.Centre,
+				ButtonWidget.Create( game, 0, 130, 250, 35, "Generate notchy", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenNotchyClick ),
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),

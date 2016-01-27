@@ -20,11 +20,11 @@ namespace ClassicalSharp {
 					     g => g.LocalPlayer.ReachDistance.ToString(),
 					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
 				
-				Make( -140, -150, "Use sound", OnWidgetClick,
-				     g => g.UseSound ? "yes" : "no",
-				     (g, v) => { g.UseSound = v == "yes";
-				     	g.AudioPlayer.SetSound( g.UseSound );
-				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
+				Make( -140, -150, "Music", OnWidgetClick,
+				     g => g.UseMusic ? "yes" : "no",
+				     (g, v) => { g.UseMusic = v == "yes";
+				     	g.AudioPlayer.SetMusic( g.UseMusic );
+				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
 				Make( -140, -100, "Names mode", OnWidgetClick,
 				     g => g.Players.NamesMode.ToString(),
@@ -51,11 +51,11 @@ namespace ClassicalSharp {
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( 140, -150, "Use music", OnWidgetClick,
-				     g => g.UseMusic ? "yes" : "no",
-				     (g, v) => { g.UseMusic = v == "yes";
-				     	g.AudioPlayer.SetMusic( g.UseMusic );
-				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
+				Make( 140, -150, "Sound", OnWidgetClick,
+				     g => g.UseSound ? "yes" : "no",
+				     (g, v) => { g.UseSound = v == "yes";
+				     	g.AudioPlayer.SetSound( g.UseSound );
+				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
 				Make( 140, -100, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",

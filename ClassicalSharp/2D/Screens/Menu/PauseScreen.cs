@@ -69,20 +69,18 @@ namespace ClassicalSharp {
 		void MakeClassic() {
 			widgets = new ButtonWidget[] {
 				MakeClassic( 0, -150, "Options", Anchor.Centre, 
-				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
+				     (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
 				MakeClassic( 0, -100, "Key bindings", Anchor.Centre,
 				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
-				MakeClassic( 0, -50, "Save level", Anchor.Centre, 
-				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				!game.Network.IsSinglePlayer ? null :
+					MakeClassic( 0, -50, "Generate level", Anchor.Centre, 
+					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
 					MakeClassic( 0, 0, "Load level", Anchor.Centre, 
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				!game.Network.IsSinglePlayer ? null :
-					MakeClassic( 0, 50, "Generate level", Anchor.Centre, 
-					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
 				
-				MakeClassic( 0, 100, "Nostalgia options", Anchor.Centre, 
-				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+				MakeClassic( 0, 50, "Save level", Anchor.Centre, 
+				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
