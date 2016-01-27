@@ -10,13 +10,20 @@ namespace Launcher2 {
 		
 		public static string AppDirectory;
 		
+		public static bool ShowingErrorDialog = false;
+		
 		[STAThread]
 		static void Main( string[] args ) {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;			
 			string logPath = Path.Combine( AppDirectory, "launcher.log" );
+			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 			ErrorHandler.InstallHandler( logPath );
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
+		}
+
+		static void UnhandledExceptionHandler( object sender, UnhandledExceptionEventArgs e ) {
+			ShowingErrorDialog = true;
 		}
 	}
 }

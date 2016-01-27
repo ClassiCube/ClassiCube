@@ -70,6 +70,7 @@ namespace Launcher2 {
 		}
 
 		void FocusedChanged( object sender, EventArgs e ) {
+			if( Program.ShowingErrorDialog ) return;
 			MakeBackground();
 			Screen.Resize();
 		}
