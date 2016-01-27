@@ -61,8 +61,10 @@ namespace Launcher2 {
 			
 			FastColour foreCol = Active ? new FastColour( 126, 136, 191 ) : new FastColour( 111, 111, 111 );
 			Rectangle rect = new Rectangle( X + border, Y + border, Width - border * 2, Height - border * 2 );
+			drawer.Dispose();
 			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
 				Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
+			drawer.SetBitmap( Window.Framebuffer );
 			
 			FastColour highlightCol = Active ? new FastColour( 189, 198, 255 ) : new FastColour( 168, 168, 168 );
 			drawer.Clear( highlightCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
