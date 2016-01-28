@@ -38,12 +38,9 @@ namespace Launcher2 {
 		}
 		
 		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
-			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
-			int dstX = dstRect.X, dstY = dstRect.Y;			
-			if( dstX >= dst.Width || dstY >= dst.Height ) return;
-			
-			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
-			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			int dstX, dstY, dstWidth, dstHeight;
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) ) 
+				return;
 			const int alpha = 255 << 24;
 			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
@@ -59,12 +56,9 @@ namespace Launcher2 {
 		}
 		
 		public unsafe static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
-			int dstWidth = dstRect.Width, dstHeight = dstRect.Height;
-			int dstX = dstRect.X, dstY = dstRect.Y;		
-			if( dstX >= dst.Width || dstY >= dst.Height ) return;
-			
-			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
-			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			int dstX, dstY, dstWidth, dstHeight;
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) ) 
+				return;
 			int pixel = col.ToArgb();
 			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
@@ -72,6 +66,21 @@ namespace Launcher2 {
 				for( int xx = 0; xx < dstWidth; xx++ )
 					row[dstX + xx] = pixel;
 			}
+		}
+		
+		static bool CheckCoords( FastBitmap dst,Rectangle dstRect, out int dstX, 
+		                 out int dstY, out int dstWidth, out int dstHeight ) {
+			dstWidth = dstRect.Width; dstHeight = dstRect.Height;
+			dstX = dstRect.X; dstY = dstRect.Y;
+			if( dstX >= dst.Width || dstY >= dst.Height ) return false;
+			
+			if( dstX < 0 ) { dstWidth += dstX; dstX = 0; }
+			if( dstY < 0 ) { dstHeight += dstY; dstY = 0; }
+			
+			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
+			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			if( dstWidth < 0 || dstHeight < 0 ) return false;
+			return true;
 		}
 		
 		static float Noise( int x, int y ) {
