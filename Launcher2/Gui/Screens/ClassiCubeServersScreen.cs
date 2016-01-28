@@ -85,18 +85,19 @@ namespace Launcher2 {
 		
 		public override void Resize() {
 			DrawBackground();
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			if( table != null )
+				table.ClampIndex();
+			MakeWidgets();
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				
-				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				if( table != null )
-					table.ClampIndex();
-				Draw();
+				RedrawAll();
 			}
 			Dirty = true;
 		}
 		
-		void Draw() {
+		void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput( Get(), 475, Anchor.LeftOrTop, Anchor.LeftOrTop,
 			          false, 10, 10, 32, "&7Search servers.." );
@@ -137,14 +138,13 @@ namespace Launcher2 {
 				widget.SetEntries( game.Session.Servers );
 				
 				widget.SetDrawData( drawer, tableFont, inputFont, inputFont,
-				              Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
+				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
 				widget.NeedRedraw = Resize;
 				widget.SelectedChanged = SelectedChanged;
 				widgets[widgetIndex] = widget;
 			}
 			
 			widget.Height = tableHeight;
-			widget.Redraw( drawer );
 			widgetIndex++;
 		}
 		

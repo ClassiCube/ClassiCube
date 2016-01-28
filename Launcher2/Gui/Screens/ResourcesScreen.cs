@@ -41,9 +41,12 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
+			MakeWidgets();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw();
+				drawer.Clear( clearCol );
+				drawer.Clear( backCol, game.Width / 2 - 175, game.Height / 2 - 70, 175 * 2, 70 * 2 );
+				RedrawAll();
 			}
 			Dirty = true;
 		}
@@ -67,11 +70,8 @@ namespace Launcher2 {
 		static readonly string format = "Download size: {0} megabytes";
 		static FastColour clearCol = new FastColour( 12, 12, 12 );
 		
-		void Draw() {
+		void MakeWidgets() {
 			widgetIndex = 0;
-			drawer.Clear( clearCol );
-			drawer.Clear( backCol, game.Width / 2 - 175,
-			                game.Height / 2 - 70, 175 * 2, 70 * 2 );
 			
 			float dataSize = game.fetcher.DownloadSize;
 			string text = widgets[0] != null ? widgets[0].Text

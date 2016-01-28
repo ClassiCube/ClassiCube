@@ -195,7 +195,6 @@ namespace Launcher2 {
 			}
 			
 			widget.SetDrawData( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
-			widget.Redraw( drawer );
 			widgetIndex++;
 		}
 		

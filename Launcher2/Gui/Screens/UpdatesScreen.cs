@@ -66,9 +66,10 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
+			MakeWidgets();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw();
+				RedrawAll();
 			}
 			Dirty = true;
 		}
@@ -78,7 +79,7 @@ namespace Launcher2 {
 		bool validStable = true, validDev = true;
 		bool updateCheckFailed;
 		
-		void Draw() {
+		void MakeWidgets() {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			

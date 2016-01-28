@@ -70,6 +70,11 @@ namespace Launcher2 {
 			if( Password ) text = new String( '*', text.Length );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
+			Size size = drawer.MeasureSize( ref args );
+			Width = Math.Max( ButtonWidth, size.Width + 15 );
+			textHeight = size.Height;	
+			args.SkipPartsCheck = true;
+			
 			FastColour col = Active ? new FastColour( 240, 240, 240 ) : new FastColour( 180, 180, 180 );
 			drawer.Clear( col, X + 1, Y, Width - 2, 2 );
 			drawer.Clear( col, X + 1, Y + Height - 2, Width - 2, 2 );

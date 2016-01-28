@@ -87,6 +87,13 @@ namespace Launcher2 {
 			}
 		}
 		
+		protected void RedrawAll() {
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null ) continue;
+				widgets[i].Redraw( drawer );
+			}
+		}
+		
 		protected LauncherWidget lastClicked;
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( e.Button != MouseButton.Left ) return;
@@ -162,7 +169,6 @@ namespace Launcher2 {
 			
 			widget.Active = false;
 			widget.SetDrawData( drawer, text, font, horAnchor, verAnchor, width, height, x, y );
-			widget.Redraw( drawer );
 			widgetIndex++;
 		}
 		
@@ -176,7 +182,6 @@ namespace Launcher2 {
 			}
 			
 			widget.SetDrawData( drawer, text, font, horAnchor, verAnchor, x, y );
-			widget.Redraw( drawer );
 			widgetIndex++;
 		}
 		
@@ -193,7 +198,6 @@ namespace Launcher2 {
 			}
 			
 			widget.SetDrawData( drawer, horAnchor, verAnchor, x, y );
-			widget.Redraw( drawer );
 			widgetIndex++;
 		}
 	}

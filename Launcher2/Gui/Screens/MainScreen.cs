@@ -15,14 +15,15 @@ namespace Launcher2 {
 		}
 		
 		public override void Resize() {
+			MakeWidgets();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw();
+				RedrawAll();
 			}
 			Dirty = true;
 		}
 		
-		void Draw() {
+		void MakeWidgets() {
 			widgetIndex = 0;
 			DrawClassicube();
 			

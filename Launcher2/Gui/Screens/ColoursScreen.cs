@@ -18,9 +18,10 @@ namespace Launcher2 {
 		}
 
 		public override void Resize() {
+			MakeWidgets();
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				Draw();
+				RedrawAll();
 			}
 			Dirty = true;
 		}
@@ -32,7 +33,7 @@ namespace Launcher2 {
 			return widget == null ? col.ToString() : widget.Text;
 		}
 		
-		void Draw() {
+		void MakeWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
 			MakeLabelAt( "Background", inputFont, Anchor.Centre, Anchor.Centre, -60, -100 );
@@ -105,9 +106,11 @@ namespace Launcher2 {
 		void ResetColours() {
 			LauncherSkin.ResetToDefault();
 			widgetIndex = 0;
+			MakeAllRGBTriplets( true );
+			
 			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				MakeAllRGBTriplets( true );
+				drawer.SetBitmap( game.Framebuffer );			
+				RedrawAll();
 			}
 			widgetIndex = widgets.Length;
 			game.MakeBackground();
