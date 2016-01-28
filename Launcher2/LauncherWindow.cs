@@ -44,6 +44,10 @@ namespace Launcher2 {
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
 		public bool ShouldExit;
 		
+		public bool Minimised {
+			get { return Window.WindowState == WindowState.Minimized || (Width == 1 && Height == 1); }
+		}
+		
 		/// <summary> Contains metadata attached for different screen instances,
 		/// typically used to save 'last text entered' text when a screen is disposed. </summary>
 		public Dictionary<string, Dictionary<string, object>> ScreenMetadata =
@@ -60,6 +64,7 @@ namespace Launcher2 {
 			logoFont = new Font( "Arial", 24, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
 			Window.Icon = Icon.ExtractAssociatedIcon( path );
+			//Minimised = Window.WindowState == WindowState.Minimized;
 			                                         
 			if( Configuration.RunningOnWindows )
 				platformDrawer = new WinPlatformDrawer();

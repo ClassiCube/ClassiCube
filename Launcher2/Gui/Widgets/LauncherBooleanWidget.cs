@@ -22,6 +22,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
+			if( Window.Minimised ) return;
 			drawer.DrawRect( FastColour.Black, X, Y, Width, Height );
 			if( Value ) {
 				DrawTextArgs args = new DrawTextArgs( "X", font, false );

@@ -27,6 +27,7 @@ namespace Launcher2 {
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
+			if( Window.Minimised ) return;
 			string text = Text;
 			if( !Active ) text = "&7" + text;
 			int xOffset = Width - textSize.Width, yOffset = Height - textSize.Height;
@@ -62,11 +63,13 @@ namespace Launcher2 {
 		}
 		
 		public void RedrawBackground() {
+			if( Window.Minimised ) return;
 			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
 				RedrawBackground( dst );
 		}
 		
 		public void RedrawBackground( FastBitmap dst ) {
+			if( Window.Minimised ) return;
 			Rectangle rect = new Rectangle( X + border, Y + border, Width - border * 2, Height - border * 2 );
 			if( Window.ClassicMode ) {
 				FastColour foreCol = Active ? new FastColour( 126, 136, 191 ) : new FastColour( 111, 111, 111 );

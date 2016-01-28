@@ -73,7 +73,8 @@ namespace Launcher2 {
 			Size size = drawer.MeasureSize( ref args );
 			Width = Math.Max( ButtonWidth, size.Width + 15 );
 			textHeight = size.Height;	
-			args.SkipPartsCheck = true;
+			args.SkipPartsCheck = true;			
+			if( Window.Minimised ) return;
 			
 			FastColour col = Active ? new FastColour( 240, 240, 240 ) : new FastColour( 180, 180, 180 );
 			drawer.Clear( col, X + 1, Y, Width - 2, 2 );
