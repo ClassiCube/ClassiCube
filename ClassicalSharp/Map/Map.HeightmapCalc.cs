@@ -25,7 +25,8 @@ namespace ClassicalSharp {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
-			int offset = (info.LightOffset[newBlock] >> TileSide.Top) & 1;
+			int oldOffset = (info.LightOffset[oldBlock] >> TileSide.Top) & 1;
+			int newOffset = (info.LightOffset[newBlock] >> TileSide.Top) & 1;
 			
 			int index = (z * Width) + x;
 			int height = heightmap[index];
@@ -33,16 +34,19 @@ namespace ClassicalSharp {
 				// We have to calculate the entire column for visibility, because the old/new block info is
 				// useless if there is another block higher than block.y that blocks sunlight.
 				CalcHeightAt( x, maxY, z, index );
-			} else if( (y - offset >= height) ) {
+			} else if( (y - newOffset >= height) ) {
 				if( nowBlocks ) {
-					heightmap[index] = (short)(y - offset);
+					heightmap[index] = (short)(y - newOffset);
 				} else {
 					// Part of the column is now visible to light, we don't know how exactly how high it should be though.
 					// However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y
 					CalcHeightAt( x, y, z, index );
 				}
-			} else {
-				CalcHeightAt( x, maxY, z, index );
+			} else if( y == height && oldOffset == 0 ) {
+				if( nowBlocks )
+					heightmap[index] = (short)(y - newOffset);
+				else
+					CalcHeightAt( x, y - 1, z, index );
 			}
 		}
 		

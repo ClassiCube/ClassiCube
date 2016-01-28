@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 				if( min.Z != 0 ) flags &= ~(1 << TileSide.Front);
 				if( max.Z != 1 ) flags &= ~(1 << TileSide.Back);
 				
-				if( (min.Y != 0 && max.Y == 1) || IsAir[tile] ) {
+				if( (min.Y != 0 && max.Y == 1) && !IsAir[tile] ) {
 					flags &= ~(1 << TileSide.Top);
 					flags &= ~(1 << TileSide.Bottom);
 				}
