@@ -9,33 +9,36 @@ namespace Launcher2 {
 		public bool Shadow = true;
 		public bool Active = false;
 		const int border = 2;
+		Size textSize;
+		Font font;
 		
 		public LauncherButtonWidget( LauncherWindow window ) : base( window ) {
 		}
 		
-		public void DrawAt( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
-		                   Anchor verAnchor, int width, int height, int x, int y ) {
+		public void SetDrawData( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
+		                        Anchor verAnchor, int width, int height, int x, int y ) {
 			Width = width; Height = height;
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			RedrawBackground();
-			Redraw( drawer, text, font );
+			this.font = font;
+
+			Text = text;
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			textSize = drawer.MeasureSize( ref args );
 		}
 		
-		public void Redraw( IDrawer2D drawer, string text, Font font ) {
-			Text = text;
-			if( !Active )
-				text = "&7" + text;
+		public override void Redraw( IDrawer2D drawer ) {
+			string text = Text;
+			if( !Active ) text = "&7" + text;
+			int xOffset = Width - textSize.Width, yOffset = Height - textSize.Height;
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			Size size = drawer.MeasureSize( ref args );
-			int xOffset = Width - size.Width, yOffset = Height - size.Height;		
 			
+			RedrawBackground();
 			DrawBorder( drawer );
 			if( Window.ClassicMode )
-				DrawClassic( drawer, ref args, xOffset, yOffset );
+				DrawClassic( drawer, xOffset, yOffset );
 			else
-				DrawNormal( drawer, ref args, xOffset, yOffset );
+				DrawNormal( drawer, xOffset, yOffset );
 			
-			args.SkipPartsCheck = true;
 			drawer.DrawText( ref args, X + xOffset / 2, Y + yOffset / 2 );
 		}
 		
@@ -47,13 +50,13 @@ namespace Launcher2 {
 			drawer.Clear( backCol, X + Width - border, Y + 1, border, Height - 2 );
 		}
 		
-		void DrawNormal( IDrawer2D drawer, ref DrawTextArgs args, int xOffset, int yOffset ) {
+		void DrawNormal( IDrawer2D drawer, int xOffset, int yOffset ) {
 			if( Active ) return;
 			FastColour lineCol = LauncherSkin.ButtonHighlightCol;
 			drawer.Clear( lineCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
 		}
 		
-		void DrawClassic( IDrawer2D drawer, ref DrawTextArgs args, int xOffset, int yOffset ) {
+		void DrawClassic( IDrawer2D drawer, int xOffset, int yOffset ) {
 			FastColour highlightCol = Active ? new FastColour( 189, 198, 255 ) : new FastColour( 168, 168, 168 );
 			drawer.Clear( highlightCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
 			drawer.Clear( highlightCol, X + border, Y + border + 1, border, Height - (border * 2 + 1) );

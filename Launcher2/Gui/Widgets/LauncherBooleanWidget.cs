@@ -17,12 +17,11 @@ namespace Launcher2 {
 			this.font = font;
 		}
 
-		public void DrawAt( IDrawer2D drawer, Anchor horAnchor, Anchor verAnchor, int x, int y ) {		
+		public void SetDrawData( IDrawer2D drawer, Anchor horAnchor, Anchor verAnchor, int x, int y ) {		
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer );
 		}
 		
-		public void Redraw( IDrawer2D drawer ) {
+		public override void Redraw( IDrawer2D drawer ) {
 			drawer.DrawRect( FastColour.Black, X, Y, Width, Height );
 			if( Value ) {
 				DrawTextArgs args = new DrawTextArgs( "X", font, false );

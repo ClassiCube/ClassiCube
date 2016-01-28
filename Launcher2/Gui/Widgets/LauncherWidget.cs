@@ -24,5 +24,7 @@ namespace Launcher2 {
 			else if( verAnchor == Anchor.Centre ) Y = y + Window.Height / 2 - Height / 2;
 			else if( verAnchor == Anchor.BottomOrRight ) Y = y + Window.Height - Height;
 		}
+		
+		public abstract void Redraw( IDrawer2D drawer );
 	}
 }

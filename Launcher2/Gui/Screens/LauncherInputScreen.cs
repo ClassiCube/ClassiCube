@@ -39,7 +39,8 @@ namespace Launcher2 {
 			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+				lastInput.SetDrawData( drawer, lastInput.Text );
+				lastInput.Redraw( drawer );
 				if( caretShow )
 					lastInput.DrawCaret( drawer, inputFont );
 				Dirty = true;
@@ -114,11 +115,11 @@ namespace Launcher2 {
 		
 		protected virtual void RedrawLastInput() {
 			if( lastInput.Width > lastInput.ButtonWidth )
-				game.ClearArea( lastInput.X, lastInput.Y, lastInput.Width + 1, lastInput.Height + 1 );
+				game.ClearArea( lastInput.X, lastInput.Y, lastInput.Width, lastInput.Height );
 			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+				lastInput.Redraw( drawer );
 				Dirty = true;
 			}
 		}
@@ -135,8 +136,8 @@ namespace Launcher2 {
 		}
 		
 		protected void Set( int index, string text ) {
-			((LauncherInputWidget)widgets[index])
-				.Redraw( drawer, text, inputFont, inputHintFont );
+			((LauncherInputWidget)widgets[index]).SetDrawData( drawer, text );
+			((LauncherInputWidget)widgets[index]).Redraw( drawer );
 		}
 		
 		protected virtual void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
@@ -149,14 +150,14 @@ namespace Launcher2 {
 				drawer.SetBitmap( game.Framebuffer );
 				if( lastInput != null ) {
 					lastInput.Active = false;
-					lastInput.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+					lastInput.Redraw( drawer );
 				}
 				
 				input.Active = true;
 				widgetOpenTime = DateTime.UtcNow;
 				lastCaretFlash = false;
 				input.SetCaretToCursor( mouseX, mouseY, drawer, inputFont );
-				input.Redraw( drawer, input.Text, inputFont, inputHintFont );
+				input.Redraw( drawer );
 			}
 			lastInput = input;
 			Dirty = true;
@@ -168,7 +169,7 @@ namespace Launcher2 {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				input.Active = false;
-				input.Redraw( drawer, lastInput.Text, inputFont, inputHintFont );
+				input.Redraw( drawer );
 			}
 			lastInput = null;
 			Dirty = true;
@@ -181,21 +182,21 @@ namespace Launcher2 {
 		
 		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
 		                         bool password, int x, int y, int maxChars, string hint ) {
+			LauncherInputWidget widget;
 			if( widgets[widgetIndex] != null ) {
-				LauncherInputWidget input = (LauncherInputWidget)widgets[widgetIndex];
-				input.DrawAt( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
-				widgetIndex++;
-				return;
+				widget = (LauncherInputWidget)widgets[widgetIndex];
+			} else {
+				widget = new LauncherInputWidget( game );
+				widget.OnClick = InputClick;
+				widget.Password = password;
+				widget.MaxTextLength = maxChars;
+				widget.HintText = hint;
+				widgets[widgetIndex] = widget;
 			}
 			
-			LauncherInputWidget widget = new LauncherInputWidget( game );
-			widget.OnClick = InputClick;
-			widget.Password = password;
-			widget.MaxTextLength = maxChars;
-			widget.HintText = hint;
-			
-			widget.DrawAt( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
-			widgets[widgetIndex++] = widget;
+			widget.SetDrawData( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
+			widget.Redraw( drawer );
+			widgetIndex++;
 		}
 		
 		public override void Dispose() {

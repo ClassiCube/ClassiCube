@@ -67,13 +67,16 @@ namespace Launcher2 {
 			public int Y, Height;
 		}
 		
-		public void DrawAt( IDrawer2D drawer, Font font, Font titleFont, Font boldFont,
+		Font font, titleFont, boldFont;
+		public void SetDrawData( IDrawer2D drawer, Font font, Font titleFont, Font boldFont,
 		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer, font, titleFont, boldFont );
+			this.font = font;
+			this.titleFont = titleFont;
+			this.boldFont = boldFont;
 		}
 		
-		public void Redraw( IDrawer2D drawer, Font font, Font titleFont, Font boldFont ) {
+		public override void Redraw( IDrawer2D drawer ) {
 			for( int i = 0; i < ColumnWidths.Length; i++ ) {
 				ColumnWidths[i] = DesiredColumnWidths[i];
 				Utils.Clamp( ref ColumnWidths[i], 20, Window.Width - 20 );

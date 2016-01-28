@@ -113,7 +113,7 @@ namespace Launcher2 {
 		
 		void DrawBackground() {
 			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
-				game.ClearArea( 0, 0, game.Width, tableY, dst );				
+				game.ClearArea( 0, 0, game.Width, tableY, dst );
 				int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
 				Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
 				
@@ -128,24 +128,24 @@ namespace Launcher2 {
 		
 		void MakeTableWidget() {
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			LauncherTableWidget widget;
 			if( widgets[tableIndex] != null ) {
-				LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
-				table.Height = tableHeight;
-				table.Redraw( drawer, tableFont, inputFont, inputFont );
-				return;
+				widget = (LauncherTableWidget)widgets[tableIndex];
+			} else {
+				widget = new LauncherTableWidget( game );
+				widget.CurrentIndex = 0;
+				widget.SetEntries( game.Session.Servers );
+				
+				widget.SetDrawData( drawer, tableFont, inputFont, inputFont,
+				              Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
+				widget.NeedRedraw = Resize;
+				widget.SelectedChanged = SelectedChanged;
+				widgets[widgetIndex] = widget;
 			}
 			
-			LauncherTableWidget widget = new LauncherTableWidget( game );
-			widget.CurrentIndex = 0;
-			widget.SetEntries( game.Session.Servers );
-			
 			widget.Height = tableHeight;
-			
-			widget.DrawAt( drawer, tableFont, inputFont, inputFont,
-			              Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
-			widget.NeedRedraw = Resize;
-			widget.SelectedChanged = SelectedChanged;
-			widgets[widgetIndex++] = widget;
+			widget.Redraw( drawer );
+			widgetIndex++;
 		}
 		
 		void FilterList() {

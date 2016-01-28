@@ -33,24 +33,42 @@ namespace Launcher2 {
 		
 		public int CaretPos = -1;
 		
+		Font font, hintFont;
+		int textHeight;
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 		}
 
-		public void DrawAt( IDrawer2D drawer, string text, Font font, Font hintFont,
+		public void SetDrawData( IDrawer2D drawer, string text, Font font, Font hintFont,
 		                   Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
 			Width = width; Height = height;
 			CalculateOffset( x, y, horAnchor, verAnchor );
-			Redraw( drawer, text, font, hintFont );
-		}
-		
-		public void Redraw( IDrawer2D drawer, string text, Font font, Font hintFont ) {
+			
 			Text = text;
-			if( Password )
-				text = new String( '*', text.Length );
+			if( Password ) text = new String( '*', text.Length );
+			this.font = font;
+			this.hintFont = hintFont;
+			
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			Size size = drawer.MeasureSize( ref args );
-			Width = Math.Max( ButtonWidth, size.Width + 7 );
+			Width = Math.Max( ButtonWidth, size.Width + 15 );
+			textHeight = size.Height;
+		}
+		
+		public void SetDrawData( IDrawer2D drawer, string text ) {
+			Text = text;
+			if( Password ) text = new String( '*', text.Length );
+			
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			Size size = drawer.MeasureSize( ref args );
+			Width = Math.Max( ButtonWidth, size.Width + 15 );
+			textHeight = size.Height;		
+		}
+		
+		public override void Redraw( IDrawer2D drawer ) {
+			string text = Text;
+			if( Password ) text = new String( '*', text.Length );
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
 			FastColour col = Active ? new FastColour( 240, 240, 240 ) : new FastColour( 180, 180, 180 );
 			drawer.Clear( col, X + 1, Y, Width - 2, 2 );
@@ -59,9 +77,8 @@ namespace Launcher2 {
 			drawer.Clear( col, X + Width - 2, Y + 1, 2, Height - 2 );
 			drawer.Clear( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
 			
-			args.SkipPartsCheck = true;
 			if( Text.Length != 0 || HintText == null ) {
-				int y = Y + 2 + (Height - size.Height) / 2;
+				int y = Y + 2 + (Height - textHeight) / 2;
 				drawer.DrawText( ref args, X + 5, y );
 			} else {
 				args.SkipPartsCheck = false;

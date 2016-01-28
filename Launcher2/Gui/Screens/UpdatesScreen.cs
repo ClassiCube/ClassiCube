@@ -98,7 +98,7 @@ namespace Launcher2 {
 			MakeLabelAt( "Update to dev build", titleFont, Anchor.Centre, Anchor.Centre, -120, 30 );
 			MakeLabelAt( "Latest dev:", infoFont, Anchor.Centre, Anchor.Centre, -100, 60 );
 			string latestDev = GetDateString( lastDev, validDev );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 30, 60 );
+			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 50, 60 );
 			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 95,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
 			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 95,

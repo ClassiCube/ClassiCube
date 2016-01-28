@@ -58,7 +58,8 @@ namespace Launcher2 {
 			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				widget.DrawAt( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+				widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+				widget.Redraw( drawer );
 			}
 			Dirty = true;
 		}

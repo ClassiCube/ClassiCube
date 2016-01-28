@@ -103,7 +103,8 @@ namespace Launcher2 {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
-				widget.Redraw( drawer, text, statusFont );
+				widget.SetDrawData( drawer, text, statusFont, Anchor.Centre, Anchor.Centre, 0, 5 );
+				widget.Redraw( drawer );
 				Dirty = true;
 			}
 		}
