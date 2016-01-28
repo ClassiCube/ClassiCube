@@ -88,7 +88,8 @@ namespace Launcher2 {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( table != null )
 				table.ClampIndex();
-			MakeWidgets();
+			MakeWidgets();	
+			RedrawAllButtonBackgrounds();
 			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

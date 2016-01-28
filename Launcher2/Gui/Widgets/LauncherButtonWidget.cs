@@ -32,7 +32,6 @@ namespace Launcher2 {
 			int xOffset = Width - textSize.Width, yOffset = Height - textSize.Height;
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
-			RedrawBackground();
 			DrawBorder( drawer );
 			if( Window.ClassicMode )
 				DrawClassic( drawer, xOffset, yOffset );
@@ -63,15 +62,18 @@ namespace Launcher2 {
 		}
 		
 		public void RedrawBackground() {
+			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
+				RedrawBackground( dst );
+		}
+		
+		public void RedrawBackground( FastBitmap dst ) {
 			Rectangle rect = new Rectangle( X + border, Y + border, Width - border * 2, Height - border * 2 );
 			if( Window.ClassicMode ) {
 				FastColour foreCol = Active ? new FastColour( 126, 136, 191 ) : new FastColour( 111, 111, 111 );
-				using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
-					Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
+				Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
 			} else {
 				FastColour foreCol = Active ? LauncherSkin.ButtonForeActiveCol : LauncherSkin.ButtonForeCol;
-				using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
-					Drawer2DExt.FastClear( dst, rect, foreCol );
+				Drawer2DExt.FastClear( dst, rect, foreCol );
 			}
 		}
 	}

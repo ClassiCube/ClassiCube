@@ -19,6 +19,8 @@ namespace Launcher2 {
 
 		public override void Resize() {
 			MakeWidgets();
+			RedrawAllButtonBackgrounds();
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				RedrawAll();

@@ -87,6 +87,24 @@ namespace Launcher2 {
 			}
 		}
 		
+		protected void RedrawAllButtonBackgrounds() {
+			int buttons = 0;
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null || !(widgets[i] is LauncherButtonWidget) ) continue;
+				buttons++;
+			}
+			if( buttons == 0 ) return;
+			
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
+				for( int i = 0; i < widgets.Length; i++ ) {
+					if( widgets[i] == null ) continue;
+					LauncherButtonWidget button = widgets[i] as LauncherButtonWidget;
+					if( button != null )
+						button.RedrawBackground( dst );
+				}
+			}
+		}
+		
 		protected void RedrawAll() {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;

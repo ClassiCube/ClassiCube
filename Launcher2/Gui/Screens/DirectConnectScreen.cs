@@ -19,15 +19,21 @@ namespace Launcher2 {
 
 		public override void Init() {
 			base.Init();
-			Resize();
+			MakeWidgets();
+			RedrawAllButtonBackgrounds();
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
+				RedrawAll();
 				LoadSavedInfo();
 			}
+			Dirty = true;
 		}
 		
 		public override void Resize() {
 			MakeWidgets();
+			RedrawAllButtonBackgrounds();
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );			
 				RedrawAll();
