@@ -59,7 +59,9 @@ namespace ClassicalSharp {
 	public static class Options {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
-		public static bool HasChanged;
+		public static Dictionary<string, bool> OptionsChanged = new Dictionary<string, bool>();
+		public static bool HasChanged { get { return OptionsChanged.Count > 0; } }
+		
 		const string OptionsFile = "options.txt";
 		
 		public static string Get( string key ) {
@@ -118,13 +120,13 @@ namespace ClassicalSharp {
 			} else {
 				OptionsSet.Remove( key );
 			}
-			HasChanged = true;
+			OptionsChanged[key] = true;
 		}
 		
 		public static void Set<T>( string key, T value ) {
 			key = key.ToLower();
 			OptionsSet[key] = value.ToString();
-			HasChanged = true;
+			OptionsChanged[key] = true;
 		}
 		
 		public static bool Load() {
@@ -163,7 +165,8 @@ namespace ClassicalSharp {
 				separatorIndex++;
 				if( separatorIndex == line.Length ) continue;
 				string value = line.Substring( separatorIndex, line.Length - separatorIndex );
-				OptionsSet[key] = value;
+				if( !OptionsChanged.ContainsKey( key ) )
+					OptionsSet[key] = value;
 			}
 		}
 		
@@ -173,6 +176,7 @@ namespace ClassicalSharp {
 				using( Stream fs = File.Create( path ) )
 					using( StreamWriter writer = new StreamWriter( fs ) )
 						SaveTo( writer );
+				OptionsChanged.Clear();
 				return true;
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "saving options", ex );

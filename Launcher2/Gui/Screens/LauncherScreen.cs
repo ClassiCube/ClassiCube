@@ -64,6 +64,7 @@ namespace Launcher2 {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
 				button.Active = false;
+				button.RedrawBackground();
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
 					button.Redraw( drawer, button.Text, buttonFont );
@@ -77,6 +78,7 @@ namespace Launcher2 {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
 			if( button != null ) {
 				button.Active = true;
+				button.RedrawBackground();
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
 					button.Redraw( drawer, button.Text, buttonFont );

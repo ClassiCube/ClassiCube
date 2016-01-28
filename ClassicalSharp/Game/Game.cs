@@ -462,8 +462,10 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref GuiTexId );
 			Graphics.DeleteTexture( ref GuiClassicTexId );
 			
-			if( Options.HasChanged )
+			if( Options.HasChanged ) {
+				Options.Load();
 				Options.Save();
+			}
 		}
 		
 		internal bool CanPick( byte block ) {
