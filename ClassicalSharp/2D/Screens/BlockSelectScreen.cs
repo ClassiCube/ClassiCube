@@ -28,7 +28,8 @@ namespace ClassicalSharp {
 		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
 		public override void Render( double delta ) {
 			graphicsApi.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
-			DrawScrollbar();
+			if( rows > maxRows )
+				DrawScrollbar();
 			graphicsApi.Texturing = true;
 			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
@@ -79,8 +80,9 @@ namespace ClassicalSharp {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			
+			int rowsUsed = Math.Min( maxRows, rows );
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
-			startY = game.Height / 2 - (maxRows * blockSize) / 2;
+			startY = game.Height / 2 - (rowsUsed * blockSize) / 2;
 			blockInfoTexture.X1 = startX + (blockSize * blocksPerRow) / 2 - blockInfoTexture.Width / 2;
 			blockInfoTexture.Y1 = startY - blockInfoTexture.Height - 5;
 		}
@@ -198,20 +200,25 @@ namespace ClassicalSharp {
 			int blocksCount = 0;
 			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalBlocksCount;
 			for( int tile = 1; tile < count; tile++ ) {
-				if( tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid" )
-					blocksCount++;
+				if( ShowTile( tile ) ) blocksCount++;
 			}
 			
 			rows = Utils.CeilDiv( blocksCount, blocksPerRow );
+			int rowsUsed = Math.Min( maxRows, rows );
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
-			startY = game.Height / 2 - (maxRows * blockSize) / 2;
+			startY = game.Height / 2 - (rowsUsed * blockSize) / 2;
 			blocksTable = new Block[blocksCount];
 			
 			int tableIndex = 0;
 			for( int tile = 1; tile < count; tile++ ) {
-				if( tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid" )
-					blocksTable[tableIndex++] = (Block)tile;
+				if( ShowTile( tile ) ) blocksTable[tableIndex++] = (Block)tile;
 			}
+		}
+		
+		bool ShowTile( int tile ) {
+			if( game.PureClassicMode && (tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
+				return false;
+			return tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid";
 		}
 		
 		public override bool HandlesAllInput {

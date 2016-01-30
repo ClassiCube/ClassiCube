@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			
 			graphicsApi.Texturing = true;
 			fpsTextWidget.Render( delta );
-			if( game.activeScreen == null ) {
+			if( !game.PureClassicMode && game.activeScreen == null ) {
 				UpdateHackState( false );
 				DrawPosition();
 				hackStatesWidget.Render( delta );
@@ -38,11 +38,18 @@ namespace ClassicalSharp {
 
 			if( accumulator >= 1 ) {
 				int index = 0;
-				text.Clear()
+				if( game.PureClassicMode ) {
+					text.Clear()
+					.AppendNum( ref index, (int)(fpsCount / accumulator) ).Append( ref index, " fps, " )
+					.AppendNum( ref index, game.ChunkUpdates ).Append( ref index, " chunk updates" );
+				} else {
+					text.Clear()
 					.Append( ref index, "FPS: " ).AppendNum( ref index, (int)(fpsCount / accumulator) )
 					.Append( ref index, " (min " ).AppendNum( ref index, (int)(1f / maxDelta) )
 					.Append( ref index, "), chunks/s: " ).AppendNum( ref index, game.ChunkUpdates )
 					.Append( ref index, ", vertices: " ).AppendNum( ref index, game.Vertices );
+				}
+				
 				
 				string textString = text.GetString();
 				fpsTextWidget.SetText( textString );
