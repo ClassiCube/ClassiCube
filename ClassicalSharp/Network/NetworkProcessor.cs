@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
-			lastPing = DateTime.UtcNow;
+			lastPacket = DateTime.UtcNow;
 		}
 		
 		public override void Dispose() {
@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
-			if( (DateTime.UtcNow - lastPing).TotalSeconds >= 10 )
+			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 20 )
 				CheckDisconnection( delta );
 			if( Disconnected ) return;
 			
@@ -186,6 +186,7 @@ namespace ClassicalSharp {
 			reader.Remove( 1 ); // remove opcode
 			lastOpcode = (PacketId)opcode;
 			Action handler = handlers[opcode];
+			lastPacket = DateTime.UtcNow;
 			
 			if( handler == null )
 				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );

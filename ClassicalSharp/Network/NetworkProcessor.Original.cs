@@ -69,7 +69,6 @@ namespace ClassicalSharp {
 		int mapSizeIndex, mapIndex;
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
-		DateTime lastPing;
 		
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
@@ -80,9 +79,7 @@ namespace ClassicalSharp {
 			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 		}
 			
-		void HandlePing() {
-			lastPing = DateTime.UtcNow;
-		}
+		void HandlePing() { }
 		
 		void HandleLevelInit() {
 			if( gzipStream != null )
