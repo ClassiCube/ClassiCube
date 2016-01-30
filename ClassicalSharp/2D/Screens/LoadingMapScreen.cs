@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Model;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -10,53 +12,92 @@ namespace ClassicalSharp {
 		public LoadingMapScreen( Game game, string name, string motd ) : base( game ) {
 			serverName = name;
 			serverMotd = motd;
-			font = new Font( "Arial", 14 );
+			font = new Font( "Arial", 16 );
 		}
 		
 		string serverName, serverMotd;
 		int progress;
-		Texture progressBoxTexture;
-		TextWidget titleWidget, messageWidget;
-		float progX, progY = 100f;
-		int	progWidth = 200, progHeight = 40;
+		ChatTextWidget titleWidget, messageWidget;
+		const int progWidth = 220, progHeight = 10;
+		readonly FastColour backCol = new FastColour( 128, 128, 128 );
+		readonly FastColour progressCol = new FastColour( 128, 255, 128 );
 		
 		public override void Render( double delta ) {
-			graphicsApi.ClearColour( FastColour.Black );
 			graphicsApi.Texturing = true;
+			DrawBackground();
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
-			progressBoxTexture.Render( graphicsApi );
 			graphicsApi.Texturing = false;
-			graphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, FastColour.White );
+			
+			int progX = game.Width / 2 - progWidth / 2;
+			int progY = game.Height / 2 - progHeight / 2;
+			graphicsApi.Draw2DQuad( progX, progY, progWidth, progHeight, backCol );
+			graphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, progressCol );
+		}
+		
+		void DrawBackground() {
+			VertexPos3fTex2fCol4b[] vertices = game.ModelCache.vertices;
+			int index = 0, atlasIndex = 0;
+			int drawnY = 0, height = game.Height;
+			FastColour col = new FastColour( 64, 64, 64 );
+			
+			int texLoc = game.BlockInfo.GetTextureLoc( (byte)Block.Dirt, TileSide.Top );
+			TerrainAtlas1D atlas = game.TerrainAtlas1D;
+			TextureRec tex = atlas.GetTexRec( texLoc, 1, out atlasIndex );
+			tex.U2 = (float)game.Width / 64;
+			bool bound = false;
+			
+			while( drawnY < height ) {
+				float x1 = 0, x2 = game.Width;
+				float y1 = drawnY, y2 = drawnY + 64;
+				#if USE_DX
+				// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
+				// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
+				x1 -= 0.5f; x2 -= 0.5f;
+				y1 -= 0.5f; y2 -= 0.5f;
+				#endif
+				
+				vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
+				vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
+				vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
+				vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
+				if( index >= vertices.Length )
+					DrawBackgroundVertices( ref index, atlasIndex, ref bound );
+				drawnY += 64;
+			}
+			DrawBackgroundVertices( ref index, atlasIndex, ref bound );
+		}
+		
+		void DrawBackgroundVertices( ref int index, int atlasIndex, ref bool bound ) {
+			if( index == 0 ) return;
+			if (!bound) {
+				bound = true;
+				graphicsApi.BindTexture( game.TerrainAtlas1D.TexIds[atlasIndex] );
+			}
+					
+			ModelCache cache = game.ModelCache;
+			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			graphicsApi.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			index = 0;
 		}
 		
 		public override void Init() {
 			graphicsApi.Fog = false;
 			SetTitle( serverName );
 			SetMessage( serverMotd );
-			progX = game.Width / 2f - progWidth / 2f;
-			
-			Size size = new Size( progWidth, progHeight );
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-				using( IDrawer2D drawer = game.Drawer2D ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawRectBounds( FastColour.White, 3f, 0, 0, progWidth, progHeight );
-					progressBoxTexture = drawer.Make2DTexture( bmp, size, (int)progX, (int)progY );
-				}
-			}
 			game.MapEvents.MapLoading += MapLoading;
 		}
 		
 		public void SetTitle( string title ) {
 			if( titleWidget != null )
 				titleWidget.Dispose();
-			titleWidget = TextWidget.Create( game, 0, 30, title, Anchor.Centre, Anchor.LeftOrTop, font );
+			titleWidget = ChatTextWidget.Create( game, 0, -80, title, Anchor.Centre, Anchor.Centre, font );
 		}
 		
 		public void SetMessage( string message ) {
 			if( messageWidget != null )
 				messageWidget.Dispose();
-			messageWidget = TextWidget.Create( game, 0, 60, message, Anchor.Centre, Anchor.LeftOrTop, font );
+			messageWidget = ChatTextWidget.Create( game, 0, -30, message, Anchor.Centre, Anchor.Centre, font );
 		}
 		
 		public void SetProgress( float progress ) {
@@ -71,16 +112,13 @@ namespace ClassicalSharp {
 			font.Dispose();
 			messageWidget.Dispose();
 			titleWidget.Dispose();
-			graphicsApi.DeleteTexture( ref progressBoxTexture );
 			game.MapEvents.MapLoading -= MapLoading;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			int deltaX = ( width - oldWidth ) / 2;
+			int dx = (width - oldWidth) / 2;
 			messageWidget.OnResize( oldWidth, oldHeight, width, height );
 			titleWidget.OnResize( oldWidth, oldHeight, width, height );
-			progressBoxTexture.X1 += deltaX;
-			progX += deltaX;
 		}
 		
 		public override bool BlocksWorld {
@@ -97,10 +135,10 @@ namespace ClassicalSharp {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Tab ) return true;
-			return game.hudScreen.HandlesKeyDown( key ); 
+			return game.hudScreen.HandlesKeyDown( key );
 		}
 		
-		public override bool HandlesKeyPress( char key )  { 
+		public override bool HandlesKeyPress( char key )  {
 			return game.hudScreen.HandlesKeyPress( key );
 		}
 		

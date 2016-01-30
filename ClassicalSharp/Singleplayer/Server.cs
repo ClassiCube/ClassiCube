@@ -103,7 +103,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.Map.Reset();
 			GC.Collect();
 			this.generator = generator;
-			game.SetNewScreen( new LoadingMapScreen( game, "Single player", "Generating.." ) );
+			game.SetNewScreen( new LoadingMapScreen( game, "Generating level", "Generating.." ) );
 			generator.GenerateAsync( game, width, height, length, seed );
 		}
 		
