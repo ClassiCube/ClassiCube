@@ -62,6 +62,7 @@ namespace ClassicalSharp {
 			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
 			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
+			ShowFPS = Options.GetBool( OptionsKey.ShowFPS, true );
 			defaultIb = Graphics.MakeDefaultIb();
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );

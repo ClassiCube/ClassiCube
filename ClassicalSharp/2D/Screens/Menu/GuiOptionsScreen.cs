@@ -20,7 +20,8 @@ namespace ClassicalSharp {
 				
 				Make( -140, -100, "Show FPS", OnWidgetClick,
 				     g => g.ShowFPS ? "yes" : "no",
-				     (g, v) => g.ShowFPS = v == "yes" ),
+				     (g, v) => { g.ShowFPS = v == "yes";
+				     	Options.Set( OptionsKey.ShowFPS, v == "yes" ); }),
 				
 				Make( -140, -50, "Hotbar scale", OnWidgetClick,
 				     g => g.HotbarScale.ToString(),

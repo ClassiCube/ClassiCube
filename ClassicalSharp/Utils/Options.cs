@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		public const string HotbarScale = "gui-hotbarscale";
 		public const string InventoryScale = "gui-inventoryscale";
 		public const string ChatScale = "chatscale";
+		public const string ShowFPS = "gui-showfps";
 		
 		public const string AllowCustomBlocks = "nostalgia-customblocks";
 		public const string UseCPE = "nostalgia-usecpe";

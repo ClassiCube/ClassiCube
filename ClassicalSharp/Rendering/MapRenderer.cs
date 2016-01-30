@@ -91,9 +91,9 @@ namespace ClassicalSharp {
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
-			if( fullResetRequired ) {
+			if( fullResetRequired )
 				Refresh();
-			}
+			
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
 			RecalcBooleans( true );
@@ -102,6 +102,7 @@ namespace ClassicalSharp {
 		void BlockDefinitionChanged( object sender, EventArgs e ) {
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
 			RecalcBooleans( true );
+			Refresh();
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

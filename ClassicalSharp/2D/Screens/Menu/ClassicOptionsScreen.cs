@@ -52,7 +52,8 @@ namespace ClassicalSharp {
 				
 				Make( 140, -150, "Show FPS", OnWidgetClick,
 				     g => g.ShowFPS ? "yes" : "no",
-				     (g, v) => g.ShowFPS = v == "yes" ),
+				    (g, v) => { g.ShowFPS = v == "yes";
+				     	Options.Set( OptionsKey.ShowFPS, v == "yes" ); }),
 				
 				Make( 140, -100, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",

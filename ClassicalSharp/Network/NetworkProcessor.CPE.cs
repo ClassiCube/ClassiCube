@@ -423,6 +423,7 @@ namespace ClassicalSharp {
 			}
 			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
+			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
 		void HandleCpeDefineBlockExt() {
@@ -494,6 +495,7 @@ namespace ClassicalSharp {
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
 			info.SetupCullingCache( block );
 			info.InitLightOffsets();
+			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
 		const int bulkCount = 256;
