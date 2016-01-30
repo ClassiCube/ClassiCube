@@ -21,8 +21,10 @@ namespace ClassicalSharp {
 		int blockSize;
 		
 		public override void Render( double delta ) {
-			status.Render( delta );
-			bottomRight.Render( delta );
+			if( !game.PureClassicMode ) {
+				status.Render( delta );
+				bottomRight.Render( delta );
+			}
 			
 			UpdateChatYOffset( false );
 			RenderClientStatus();
@@ -32,7 +34,7 @@ namespace ClassicalSharp {
 			else
 				RenderRecentChat( now, delta );
 			
-			if( announcementTex.IsValid )
+			if( !game.PureClassicMode && announcementTex.IsValid )
 				announcementTex.Render( graphicsApi );
 			if( HandlesAllInput )
 				textInput.Render( delta );
@@ -168,7 +170,7 @@ namespace ClassicalSharp {
 			MessageType type = e.Type;
 			if( type == MessageType.Normal ) {
 				chatIndex++;
-				List<ChatLine> chat = game.Chat.Log;				
+				List<ChatLine> chat = game.Chat.Log;
 				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1].Text );
 				
 				int[] metadata = (int[])Metadata;

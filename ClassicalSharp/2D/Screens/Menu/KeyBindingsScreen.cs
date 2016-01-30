@@ -6,8 +6,7 @@ namespace ClassicalSharp {
 	
 	public abstract class KeyBindingsScreen : MenuScreen {
 		
-		public KeyBindingsScreen( Game game ) : base( game ) {
-		}
+		public KeyBindingsScreen( Game game ) : base( game ) { }
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
@@ -100,14 +99,33 @@ namespace ClassicalSharp {
 		}
 	}
 	
+	public sealed class ClassicKeyBindingsScreen : KeyBindingsScreen {
+		
+		public ClassicKeyBindingsScreen( Game game ) : base( game ) { }
+		
+		static string[] normDescriptions = new [] { "Forward", "Back", "Left", 
+			"Right", "Jump", "Load loc", "Save loc", "Chat", "Build", "Toggle fog" };
+		
+		public override void Init() {
+			base.Init();
+			descriptions = normDescriptions;
+			originKey = KeyBinding.Forward;
+			widgets = new Widget[descriptions.Length + 2];
+			MakeKeys( KeyBinding.Forward, 0, 5, -150 );
+			MakeKeys( KeyBinding.Respawn, 5, 5, 150 );
+			
+			widgets[index++] = MakeBack( false, titleFont,
+			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+		}
+	}
+	
 	public sealed class NormalKeyBindingsScreen : KeyBindingsScreen {
 		
-		public NormalKeyBindingsScreen( Game game ) : base( game ) {
-		}
+		public NormalKeyBindingsScreen( Game game ) : base( game ) { }
 		
 		static string[] normDescriptions = new [] { "Forward", "Back", "Left",
-			"Right", "Jump", "Respawn", "Set spawn", "Open chat", "Send chat",
-			"Pause", "Open inventory", "Cycle view distance", "Show player list"  };
+			"Right", "Jump", "Respawn", "Set spawn", "Open chat", "Open inventory", 
+			"View distance", "Send chat", "Pause", "Player list"  };
 		
 		public override void Init() {
 			base.Init();
@@ -132,12 +150,11 @@ namespace ClassicalSharp {
 	
 	public sealed class AdvancedKeyBindingsScreen : KeyBindingsScreen {
 		
-		public AdvancedKeyBindingsScreen( Game game ) : base( game ) {
-		}
+		public AdvancedKeyBindingsScreen( Game game ) : base( game ) { }
 		
-		static string[] normDescriptions = new [] { "Speed", "Toggle noclip", "Toggle fly",
-			"Fly up", "Fly down", "Toggle ext input", "Hide FPS", "Take screenshot", "Toggle fullscreen",
-			"Toggle 3rd person", "Hide gui", "Show axis lines", "Zoom scrolling", "Half speed" };
+		static string[] normDescriptions = new [] { "Speed", "Noclip mode", "Fly mode",
+			"Fly up", "Fly down", "Show ext input", "Hide FPS", "Take screenshot", "Fullscreen",
+			"Third person", "Hide gui", "Show axis lines", "Zoom scrolling", "Half speed" };
 		
 		public override void Init() {
 			base.Init();
@@ -161,8 +178,7 @@ namespace ClassicalSharp {
 	
 	public sealed class MouseKeyBindingsScreen : KeyBindingsScreen {
 		
-		public MouseKeyBindingsScreen( Game game ) : base( game ) {
-		}
+		public MouseKeyBindingsScreen( Game game ) : base( game ) { }
 		
 		static string[] normDescriptions = new [] { "Left mouse", "Middle mouse", "Right mouse" };
 		

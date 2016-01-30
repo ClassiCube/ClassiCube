@@ -68,10 +68,8 @@ namespace ClassicalSharp {
 		
 		void MakeClassic() {
 			widgets = new ButtonWidget[] {
-				MakeClassic( 0, -150, "Options", Anchor.Centre, 
+				MakeClassic( 0, -100, "Options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
-				MakeClassic( 0, -100, "Key bindings", Anchor.Centre,
-				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
 					MakeClassic( 0, -50, "Generate level", Anchor.Centre, 
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
@@ -84,6 +82,10 @@ namespace ClassicalSharp {
 				
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
+				
+				game.PureClassicMode ? null :
+					MakeClassic( 0, 150, "Nostalgia options", Anchor.Centre,
+				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
 			};
 		}
 

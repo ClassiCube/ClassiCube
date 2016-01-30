@@ -38,11 +38,6 @@ namespace ClassicalSharp {
 					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
 					     }),
 				
-				Make( -140, 0, "Mouse sensitivity", OnWidgetClick,
-				     g => g.MouseSensitivity.ToString(),
-				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
-				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
-				
 				// Column 2
 				Make( 140, -200, "Sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
@@ -65,6 +60,9 @@ namespace ClassicalSharp {
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
+				
+				Make( 0, 50, "Controls", LeftOnly(
+					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ), null, null ),
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),

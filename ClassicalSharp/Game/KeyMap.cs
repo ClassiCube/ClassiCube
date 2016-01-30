@@ -5,7 +5,7 @@ namespace ClassicalSharp {
 	
 	public enum KeyBinding {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-		SendChat, PauseOrExit, OpenInventory, ViewDistance, PlayerList, 
+		OpenInventory, ViewDistance, SendChat, PauseOrExit, PlayerList, 
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
 		Screenshot, Fullscreen, ThirdPersonCamera, HideGui, ShowAxisLines,
 		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight,
@@ -48,8 +48,8 @@ namespace ClassicalSharp {
 			keys = new Key[30];
 			keys[0] = Key.W; keys[1] = Key.S; keys[2] = Key.A; keys[3] = Key.D;
 			keys[4] = Key.Space; keys[5] = Key.R; keys[6] = Key.Enter; keys[7] = Key.T;
-			keys[8] = Key.Enter; keys[9] = Key.Escape; keys[10] = Key.B;
-			keys[11] = Key.F; keys[12] = Key.Tab; keys[13] = Key.ShiftLeft;
+			keys[8] = Key.B; keys[9] = Key.F; keys[10] = Key.Enter;
+			keys[11] = Key.Escape; keys[12] = Key.Tab; keys[13] = Key.ShiftLeft;
 			keys[14] = Key.X; keys[15] = Key.Z; keys[16] = Key.Q;
 			keys[17] = Key.E; keys[18] = Key.AltLeft; keys[19] = Key.F3;
 			keys[20] = Key.F12; keys[21] = Key.F11; keys[22] = Key.F5;

@@ -71,6 +71,7 @@ namespace ClassicalSharp {
 			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
 			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
 			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
+			PureClassicMode = Options.GetBool( "mode-classic", false );
 			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
 			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );
 			
