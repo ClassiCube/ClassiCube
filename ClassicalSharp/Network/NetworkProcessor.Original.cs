@@ -141,9 +141,8 @@ namespace ClassicalSharp {
 			}
 			
 			reader.Remove( 1024 );
-			reader.ReadUInt8(); // progress byte, but we ignore this.
-			float progress = (float)mapIndex / map.Length;
-			game.MapEvents.RaiseMapLoading( (byte)(progress * 100) );
+			byte progress = reader.ReadUInt8();
+			game.MapEvents.RaiseMapLoading( progress );
 		}
 		
 		void HandleLevelFinalise() {
