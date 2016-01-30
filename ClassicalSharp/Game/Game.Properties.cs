@@ -69,7 +69,7 @@ namespace ClassicalSharp {
 		public CommandManager CommandManager;
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
-		public PickingRenderer Picking;
+		public PickedPosRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos(), CameraClipPos = new PickedPos();
 		public ModelCache ModelCache;
 		internal string skinServer, chatInInputBuffer = null;

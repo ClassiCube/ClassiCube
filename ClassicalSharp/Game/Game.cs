@@ -144,7 +144,7 @@ namespace ClassicalSharp {
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
-			Picking = new PickingRenderer( this );
+			Picking = new PickedPosRenderer( this );
 			AudioPlayer = new AudioPlayer( this );
 			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
 			AxisLinesRenderer = new AxisLinesRenderer( this );

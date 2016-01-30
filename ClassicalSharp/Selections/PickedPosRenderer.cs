@@ -4,13 +4,13 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class PickingRenderer : IDisposable {
+	public sealed class PickedPosRenderer : IDisposable {
 		
 		IGraphicsApi graphics;
 		Game game;
 		int vb;
 		
-		public PickingRenderer( Game game ) {
+		public PickedPosRenderer( Game game ) {
 			graphics = game.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
 			this.game = game;

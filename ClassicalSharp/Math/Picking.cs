@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 							case CpeBlockFace.ZMin:
 								pickedPos.IntersectPoint.Z -= adjust; break;
 							case CpeBlockFace.ZMax:
-								pickedPos.IntersectPoint.Z += adjust; break;	
+								pickedPos.IntersectPoint.Z += adjust; break;
 						}
 						return;
 					}
@@ -125,7 +125,7 @@ namespace ClassicalSharp {
 		}
 		
 		static void CalcVectors( Vector3 origin, Vector3 dir, out Vector3I step,
-		                           out Vector3I cellBoundary, out Vector3 tMax, out Vector3 tDelta ) {
+		                        out Vector3I cellBoundary, out Vector3 tMax, out Vector3 tDelta ) {
 			Vector3I start = Vector3I.Floor( origin );
 			// Determine which way we go.
 			step.X = Math.Sign( dir.X ); step.Y = Math.Sign( dir.Y ); step.Z = Math.Sign( dir.Z );
@@ -174,11 +174,15 @@ namespace ClassicalSharp {
 			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
 				if( y >= map.Height ) return 0;
 				if( y >= 0 ) return map.GetBlock( x, y, z );
-				
-				// special case: we want to be able to pick bedrock when we're standing on top of it
-				if( origin.Y >= 0 && y == -1 )
+				if( map.SidesBlock != Block.Air && y == -1 ) 
 					return (byte)Block.Bedrock;
 			}
+			if( map.SidesBlock == Block.Air ) return 0;
+			
+			bool validX = (x == -1 || x == map.Width) && (z >= 0 && z < map.Length);
+			bool validZ = (z == -1 || z == map.Length) && (x >= 0 && x < map.Width);
+			if( y >= 0 && y < Math.Max( 1, map.SidesHeight ) && (validX || validZ) )
+				return (byte)Block.Bedrock;
 			return 0;
 		}
 	}

@@ -218,10 +218,10 @@
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
-    <Compile Include="Physics\BoundingBox.cs" />
-    <Compile Include="Physics\IntersectionUtils.cs" />
-    <Compile Include="Physics\PickedPos.cs" />
-    <Compile Include="Physics\Picking.cs" />
+    <Compile Include="Math\BoundingBox.cs" />
+    <Compile Include="Math\IntersectionUtils.cs" />
+    <Compile Include="Math\PickedPos.cs" />
+    <Compile Include="Math\Picking.cs" />
     <Compile Include="Platform\Font.cs" />
     <Compile Include="Platform\IPlatformWindow.cs" />
     <Compile Include="Platform\Platform.cs" />
@@ -236,10 +236,10 @@
     <Compile Include="Rendering\FrustumCulling.cs" />
     <Compile Include="Rendering\MapBordersRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.cs" />
-    <Compile Include="Rendering\PickingRenderer.cs" />
     <Compile Include="Rendering\StandardEnvRenderer.cs" />
     <Compile Include="Rendering\WeatherRenderer.cs" />
     <Compile Include="Selections\AxisLinesRenderer.cs" />
+    <Compile Include="Selections\PickedPosRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
@@ -301,7 +301,7 @@
     <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />
-    <Folder Include="Physics" />
+    <Folder Include="Math" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenTK\OpenTK.csproj">
