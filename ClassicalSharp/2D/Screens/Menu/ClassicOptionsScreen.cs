@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null,
 			};
-			widgets[8].Metadata = typeof(FpsLimitMethod);
+			widgets[7].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
 			MakeDescriptions();
 			okayIndex = widgets.Length - 1;
@@ -81,7 +81,6 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new IntegerValidator( 16, 4096 ),
 				network.IsSinglePlayer ? new BooleanValidator() : null,
-				new IntegerValidator( 1, 100 ),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
