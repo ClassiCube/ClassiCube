@@ -209,7 +209,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal bool ValidColour( char c ) {
-			return Colours[c].A > 0;
+			return (int)c < 256 && Colours[c].A > 0;
 		}
 	}
 }
