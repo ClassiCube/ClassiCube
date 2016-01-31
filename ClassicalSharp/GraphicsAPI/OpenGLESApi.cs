@@ -225,6 +225,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
+		public override void SetDynamicVbData<T>( DrawMode mode, int id, T[] vertices, int count ) {
+			GL.BindBuffer( All.ArrayBuffer, id );
+			GL.BufferSubData( All.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
+		}
+		
 		public override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffers( 1, &id );
@@ -259,11 +264,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
-			setupBatchFunc();
-			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
-		}
-		
 		public override void BindVb( int vb ) {
 			GL.BindBuffer( All.ArrayBuffer, vb );
 		}
@@ -273,6 +273,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const All indexType = All.UnsignedShort;
+		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
+			setupBatchFunc();
+			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
+		}		
+		
 		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
 			setupBatchFunc();
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );

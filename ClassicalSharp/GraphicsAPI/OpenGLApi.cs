@@ -246,6 +246,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
+		public override void SetDynamicVbData<T>( DrawMode mode, int id, T[] vertices, int count ) {
+			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
+		}
+		
 		public override void DeleteDynamicVb( int id ) {
 			if( id <= 0 ) return;
 			GL.DeleteBuffers( 1, &id );
@@ -280,11 +285,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
-			setupBatchFunc();
-			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
-		}
-		
 		public override void BindVb( int vb ) {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, vb );
 		}
@@ -294,6 +294,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
+		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
+			setupBatchFunc();
+			GL.DrawArrays( modeMappings[(int)mode], startVertex, verticesCount );
+		}		
+		
 		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
 			setupBatchFunc();
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, new IntPtr( startIndex * 2 ) );
@@ -424,23 +429,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void InitFields() {
-			// See comment in Game() constructor
-			#if !__MonoCS__
-			modeMappings = new [] { BeginMode.Triangles, BeginMode.Lines };
-			blendFuncs = new [] {
-				BlendingFactor.Zero, BlendingFactor.One,
-				BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha,
-				BlendingFactor.DstAlpha, BlendingFactor.OneMinusDstAlpha,
-			};
-			compareFuncs = new [] {
-				Compare.Always, Compare.Notequal, Compare.Never, Compare.Less,
-				Compare.Lequal, Compare.Equal, Compare.Gequal, Compare.Greater,
-			};
-			fogModes = new [] { FogMode.Linear, FogMode.Exp, FogMode.Exp2 };
-			matrixModes = new [] { MatrixMode.Projection, MatrixMode.Modelview, MatrixMode.Texture };
-			#else
-			modeMappings = new BeginMode[2];
-			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
+			// See comment in Game() constructor for why this is necessary.			
 			blendFuncs = new BlendingFactor[6];
 			blendFuncs[0] = BlendingFactor.Zero; blendFuncs[1] = BlendingFactor.One;
 			blendFuncs[2] = BlendingFactor.SrcAlpha; blendFuncs[3] = BlendingFactor.OneMinusSrcAlpha;
@@ -450,13 +439,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			compareFuncs[2] = Compare.Never; compareFuncs[3] = Compare.Less;
 			compareFuncs[4] = Compare.Lequal; compareFuncs[5] = Compare.Equal;
 			compareFuncs[6] = Compare.Gequal; compareFuncs[7] = Compare.Greater;
+			
+			modeMappings = new BeginMode[2];
+			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
 			fogModes = new FogMode[3];
 			fogModes[0] = FogMode.Linear; fogModes[1] = FogMode.Exp;
 			fogModes[2] = FogMode.Exp2;
 			matrixModes = new MatrixMode[3];
 			matrixModes[0] = MatrixMode.Projection; matrixModes[1] = MatrixMode.Modelview;
 			matrixModes[2] = MatrixMode.Texture;
-			#endif
 		}
 	}
 }

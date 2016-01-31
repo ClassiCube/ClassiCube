@@ -7,14 +7,17 @@ namespace ClassicalSharp.Particles {
 		
 		static Vector2 terrainSize = new Vector2( 1/8f, 1/8f );
 		internal TextureRec rec;
+		internal int texLoc;
 		
 		public override bool Tick( Game game, double delta ) {
 			return Tick( game, 5.4f, delta );
 		}
 		
-		public override void CountVertices( Game game, int[] counts ) { }
+		public override int Get1DBatch( Game game ) {
+			return game.TerrainAtlas1D.Get1DIndex( texLoc );
+		}
 		
-		public override void Render( Game game, double delta, float t, 
+		public override void Render( Game game, double delta, float t,
 		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			Vector3 p111, p121, p212, p222;

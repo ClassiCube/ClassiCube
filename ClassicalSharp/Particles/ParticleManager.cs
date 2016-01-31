@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using ClassicalSharp.GraphicsAPI;
-using OpenTK;
 
 namespace ClassicalSharp.Particles {
 	
-	public class ParticleManager : IDisposable {
+	public partial class ParticleManager : IDisposable {
 		
 		public int ParticlesTexId;
 		TerrainParticle[] terrainParticles = new TerrainParticle[maxParticles];
 		RainParticle[] rainParticles = new RainParticle[maxParticles];
 		int terrainCount, rainCount;
-		int[] terrain1DCount;
+		int[] terrain1DCount, terrain1DIndices;
 		
 		Game game;
 		Random rnd;
@@ -22,6 +20,12 @@ namespace ClassicalSharp.Particles {
 			this.game = game;
 			rnd = new Random();
 			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, maxParticles * 4 );
+			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
+		}
+
+		void TerrainAtlasChanged( object sender, EventArgs e ) {
+			terrain1DCount = new int[game.TerrainAtlas1D.TexIds.Length];
+			terrain1DIndices = new int[game.TerrainAtlas1D.TexIds.Length];
 		}
 		
 		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[0];
@@ -32,22 +36,52 @@ namespace ClassicalSharp.Particles {
 			graphics.AlphaTest = true;
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
-			int count = RenderParticles( terrainParticles, terrainCount, delta, t );
-			if( count > 0 ) {
-				graphics.BindTexture( game.TerrainAtlas.TexId );
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
-			}
-			count = RenderParticles( rainParticles, rainCount, delta, t );
-			if( count > 0 ) {
-				graphics.BindTexture( ParticlesTexId );
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, count, count * 6 / 4 );
-			}
+			RenderTerrainParticles( graphics, terrainParticles, terrainCount, delta, t );
+			RenderRainParticles( graphics, rainParticles, rainCount, delta, t );
 			
 			graphics.AlphaTest = false;
 			graphics.Texturing = false;
 		}
 		
-		int RenderParticles( Particle[] particles, int elems, double delta, float t ) {
+		void RenderTerrainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
+			int count = elems * 4;
+			if( count > vertices.Length )
+				vertices = new VertexPos3fTex2fCol4b[count];
+
+			Update1DCounts( particles, elems );
+			for( int i = 0; i < elems; i++ ) {
+				int index = particles[i].Get1DBatch( game );
+				particles[i].Render( game, delta, t, vertices, ref terrain1DIndices[index] );
+			}			
+			int drawCount = Math.Min( count, maxParticles * 4 );
+			if( drawCount == 0 ) return;
+			
+			graphics.SetDynamicVbData( DrawMode.Triangles, vb, vertices, drawCount );
+			int offset = 0;
+			for( int i = 0; i < terrain1DCount.Length; i++ ) {
+				int partCount = terrain1DCount[i];
+				if( partCount == 0 ) continue;
+				
+				graphics.BindTexture( game.TerrainAtlas1D.TexIds[i] );
+				graphics.DrawIndexedVb( DrawMode.Triangles, partCount * 6 / 4, offset * 6 / 4 );
+				offset += partCount;
+			}
+		}
+		
+		void Update1DCounts( Particle[] particles, int elems ) {
+			for( int i = 0; i < terrain1DCount.Length; i++ ) {
+				terrain1DCount[i] = 0;
+				terrain1DIndices[i] = 0;
+			}
+			for( int i = 0; i < elems; i++ ) {
+				int index = particles[i].Get1DBatch( game );
+				terrain1DCount[index] += 4;
+			}
+			for( int i = 1; i < terrain1DCount.Length; i++ )
+				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];			
+		}
+		
+		void RenderRainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
 			int count = elems * 4;
 			if( count > vertices.Length )
 				vertices = new VertexPos3fTex2fCol4b[count];
@@ -55,7 +89,11 @@ namespace ClassicalSharp.Particles {
 			int index = 0;
 			for( int i = 0; i < elems; i++ )
 				particles[i].Render( game, delta, t, vertices, ref index );
-			return Math.Min( count, maxParticles * 4 );
+			
+			int drawCount = Math.Min( count, maxParticles * 4 );
+			if( drawCount == 0 ) return;
+			graphics.BindTexture( ParticlesTexId );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount, drawCount * 6 / 4 );
 		}
 		
 		public void Tick( double delta ) {
@@ -76,81 +114,7 @@ namespace ClassicalSharp.Particles {
 		public void Dispose() {
 			game.Graphics.DeleteDynamicVb( vb );
 			game.Graphics.DeleteTexture( ref ParticlesTexId );
-		}
-		
-		public void BreakBlockEffect( Vector3I position, byte block ) {
-			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
-			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left );
-			TextureRec baseRec = game.TerrainAtlas.GetTexRec( texLoc );			
-			const float uvScale = (1/16f) * TerrainAtlas2D.invElementSize;
-			const float elemSize = 4 * uvScale;
-			
-			Vector3 minBB = game.BlockInfo.MinBB[block];
-			Vector3 maxBB = game.BlockInfo.MaxBB[block];
-			int minU = Math.Min( (int)(minBB.X * 16), (int)(minBB.Z * 16) );
-			int maxU = Math.Min( (int)(maxBB.X * 16), (int)(maxBB.Z * 16) );
-			int minV = (int)(16 - maxBB.Y * 16), maxV = (int)(16 - minBB.Y * 16);
-			// This way we can avoid creating particles which outside the bounds and need to be clamped
-			if( minU < 13 && maxU > 13 ) maxU = 13;
-			if( minV < 13 && maxV > 13 ) maxV = 13;
-			
-			for( int i = 0; i < 30; i++ ) {
-				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
-				double velZ = rnd.NextDouble() * 0.8 - 0.4;
-				double velY = rnd.NextDouble() + 0.2;
-				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
-				
-				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
-				double yOffset = (rnd.NextDouble() - 0.125) * maxBB.Y;
-				double zOffset = rnd.NextDouble() - 0.5;
-				Vector3 pos = startPos + new Vector3( 0.5f + (float)xOffset,
-				                                     (float)yOffset, 0.5f + (float)zOffset );
-				
-				TextureRec rec = baseRec;
-				rec.U1 = baseRec.U1 + rnd.Next( minU, maxU ) * uvScale;
-				rec.V1 = baseRec.V1 + rnd.Next( minV, maxV ) * uvScale;
-				rec.U2 = Math.Min( baseRec.U1 + maxU * uvScale, rec.U1 + elemSize );
-				rec.V2 = Math.Min( baseRec.V1 + maxV * uvScale, rec.V1 + elemSize );
-				double life = 0.3 + rnd.NextDouble() * 0.7;
-				
-				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
-				p.ResetState( pos, velocity, life );
-				p.rec = rec;
-			}
-		}
-		
-		public void AddRainParticle( Vector3 pos ) {
-			Vector3 startPos = pos;			
-			for( int i = 0; i < 2; i++ ) {
-				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
-				double velZ = rnd.NextDouble() * 0.8 - 0.4;
-				double velY = rnd.NextDouble() + 0.4;
-				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
-				
-				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
-				double yOffset = rnd.NextDouble() * 0.1 + 0.01;
-				double zOffset = rnd.NextDouble() - 0.5;
-				pos = startPos + new Vector3( 0.5f + (float)xOffset,
-				                                     (float)yOffset, 0.5f + (float)zOffset );
-				double life = 40;
-				RainParticle p = AddParticle( rainParticles, ref rainCount, true );
-				p.ResetState( pos, velocity, life );
-				p.Big = rnd.Next( 0, 20 ) >= 18;
-				p.Tiny = rnd.Next( 0, 30 ) >= 28;
-			}
-		}
-		
-		T AddParticle<T>( T[] particles, ref int count, bool rain ) where T : Particle, new() {
-			if( count == maxParticles )
-				RemoveAt( 0, particles, ref count );
-			count++;
-			
-			T old = particles[count - 1];
-			if( old != null ) return old;
-			
-			T newT = rain ? (T)(object)new RainParticle() : (T)(object)new TerrainParticle();
-			particles[count - 1] = newT;
-			return newT;
+			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 		}
 		
 		void RemoveAt<T>( int index, T[] particles, ref int count ) where T : Particle {
@@ -161,6 +125,6 @@ namespace ClassicalSharp.Particles {
 			
 			particles[count - 1] = removed;
 			count--;
-		}		
+		}
 	}
 }

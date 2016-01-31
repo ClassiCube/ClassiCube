@@ -19,9 +19,9 @@ namespace ClassicalSharp.Particles {
 			return hitTerrain ? true : dies;
 		}
 		
-		public override void CountVertices( Game game, int[] counts ) { }
+		public override int Get1DBatch( Game game ) { return 0; }
 		
-		public override void Render( Game game, double delta, float t, 
+		public override void Render( Game game, double delta, float t,
 		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			Vector3 p111, p121, p212, p222;
