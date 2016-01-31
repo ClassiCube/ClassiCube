@@ -6,7 +6,6 @@ namespace ClassicalSharp.Particles {
 	public abstract class CollidableParticle : Particle {
 		
 		protected bool hitTerrain = false, throughLiquids = true;
-		public CollidableParticle( Game game ) : base( game) { }
 		
 		public void ResetState( Vector3 pos, Vector3 velocity, double lifetime ) {
 			Position = lastPos = nextPos = pos;
@@ -15,14 +14,14 @@ namespace ClassicalSharp.Particles {
 			hitTerrain = false;
 		}
 
-		protected bool Tick( float gravity, double delta ) {
+		protected bool Tick( Game game, float gravity, double delta ) {
 			hitTerrain = false;
 			lastPos = Position = nextPos;
-			byte curBlock = GetBlock( (int)Position.X, (int)Position.Y, (int)Position.Z );
+			byte curBlock = GetBlock( game, (int)Position.X, (int)Position.Y, (int)Position.Z );
 			float minY = Utils.Floor( Position.Y ) + game.BlockInfo.MinBB[curBlock].Y;
 			float maxY = Utils.Floor( Position.Y ) + game.BlockInfo.MaxBB[curBlock].Y;			
-			if( !CanPassThrough( curBlock ) && Position.Y >= minY && 
-			   Position.Y < maxY && CollideHor( curBlock ) )
+			if( !CanPassThrough( game, curBlock ) && Position.Y >= minY && 
+			   Position.Y < maxY && CollideHor( game, curBlock ) )
 				return true;
 			
 			Velocity.Y -= gravity * (float)delta;
@@ -32,16 +31,16 @@ namespace ClassicalSharp.Particles {
 			
 			if( Velocity.Y > 0 ) {
 				// don't test block we are already in
-				for( int y = startY + 1; y <= endY && TestY( y, false ); y++ );
+				for( int y = startY + 1; y <= endY && TestY( game, y, false ); y++ );
 			} else {
-				for( int y = startY; y >= endY && TestY( y, true ); y-- );
+				for( int y = startY; y >= endY && TestY( game, y, true ); y-- );
 			}
 			nextPos = Position;
 			Position = lastPos;
-			return base.Tick( delta );
+			return base.Tick( game, delta );
 		}	
 		
-		bool TestY( int y, bool topFace ) {
+		bool TestY( Game game, int y, bool topFace ) {
 			if( y < 0 ) {
 				Position.Y = nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
 				Velocity = Vector3.Zero;
@@ -49,14 +48,14 @@ namespace ClassicalSharp.Particles {
 				return false;
 			}
 			
-			byte block = GetBlock( (int)Position.X, y, (int)Position.Z );
-			if( CanPassThrough( block ) ) return true;
+			byte block = GetBlock( game, (int)Position.X, y, (int)Position.Z );
+			if( CanPassThrough( game, block ) ) return true;
 			Vector3 minBB = game.BlockInfo.MinBB[block];
 			Vector3 maxBB = game.BlockInfo.MaxBB[block];
 			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
 			bool collideVer = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
 			
-			if( collideVer && CollideHor( block ) ) {
+			if( collideVer && CollideHor( game, block ) ) {
 				float adjust = topFace ? Entity.Adjustment : -Entity.Adjustment;
 				Position.Y = nextPos.Y = lastPos.Y = collideY + adjust;
 				Velocity = Vector3.Zero;
@@ -66,29 +65,29 @@ namespace ClassicalSharp.Particles {
 			return true;
 		}
 		
-		bool CanPassThrough( byte block ) {
+		bool CanPassThrough( Game game, byte block ) {
 			return game.BlockInfo.IsAir[block] || game.BlockInfo.IsSprite[block] 
 				|| (throughLiquids && game.BlockInfo.IsLiquid[block]);
 		}
 		
-		bool CollideHor( byte block ) {
-			Vector3 min = game.BlockInfo.MinBB[block] + Floor( Position );
-			Vector3 max = game.BlockInfo.MaxBB[block] + Floor( Position );
+		bool CollideHor( Game game, byte block ) {
+			Vector3 min = game.BlockInfo.MinBB[block] + FloorHor( Position );
+			Vector3 max = game.BlockInfo.MaxBB[block] + FloorHor( Position );
 			return Position.X >= min.X && Position.Z >= min.Z &&
 				Position.X < max.X && Position.Z < max.Z;
 		}
 		
-		static Vector3 Floor( Vector3 v ) {
-			return new Vector3( Utils.Floor( v.X ), 0, Utils.Floor( v.Z ) );
-		}
-		
-		byte GetBlock( int x, int y, int z ) {
+		byte GetBlock( Game game, int x, int y, int z ) {
 			if( game.Map.IsValidPos( x, y, z ) )
 				return game.Map.GetBlock( x, y, z );
 			
 			if( y >= game.Map.EdgeHeight ) return (byte)Block.Air;
 			if( y >= game.Map.SidesHeight ) return (byte)game.Map.EdgeBlock;
 			return (byte)game.Map.SidesBlock;
+		}
+		
+		static Vector3 FloorHor( Vector3 v ) {
+			return new Vector3( Utils.Floor( v.X ), 0, Utils.Floor( v.Z ) );
 		}
 	}
 }

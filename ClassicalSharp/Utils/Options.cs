@@ -21,23 +21,23 @@ namespace ClassicalSharp {
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";
 		
-		public const string HacksEnabled = "hacksenabled";
-		public const string FieldOfView = "fov";		
-		public const string Speed = "speedmultiplier";
-		public const string LiquidsBreakable = "liquidsbreakable";
-		public const string PushbackPlacing = "pushbackplacing";	
-		public const string NoclipSlide = "noclipslide";
-		public const string CameraClipping = "cameraclipping";
-		public const string DoubleJump = "doublejump";
+		public const string HacksEnabled = "hacks-hacksenabled";
+		public const string FieldOfView = "hacks-fov";		
+		public const string Speed = "hacks-speedmultiplier";
+		public const string LiquidsBreakable = "hacks-liquidsbreakable";
+		public const string PushbackPlacing = "hacks-pushbackplacing";	
+		public const string NoclipSlide = "hacks-noclipslide";
+		public const string CameraClipping = "hacks-cameraclipping";
+		public const string DoubleJump = "hacks-doublejump";
 		
-		public const string TabAutocomplete = "tab-autocomplete";
-		public const string ShowBlockInHand = "blockinhand";
-		public const string ChatLines = "chatlines";
-		public const string ClickableChat = "chatclickable";
-		public const string ArialChatFont = "arialchatfont";
+		public const string TabAutocomplete = "gui-tab-autocomplete";
+		public const string ShowBlockInHand = "gui-blockinhand";
+		public const string ChatLines = "gui-chatlines";
+		public const string ClickableChat = "gui-chatclickable";
+		public const string ArialChatFont = "gui-arialchatfont";
 		public const string HotbarScale = "gui-hotbarscale";
 		public const string InventoryScale = "gui-inventoryscale";
-		public const string ChatScale = "chatscale";
+		public const string ChatScale = "gui-chatscale";
 		public const string ShowFPS = "gui-showfps";
 		
 		public const string AllowCustomBlocks = "nostalgia-customblocks";
@@ -65,16 +65,23 @@ namespace ClassicalSharp {
 		
 		const string OptionsFile = "options.txt";
 		
+		static bool TryGetValue( string key, out string value ) {
+			if( OptionsSet.TryGetValue( key, out value ) ) return true;
+			int index = key.IndexOf( '-' );
+			
+			if( index == -1 ) return false;		
+			return OptionsSet.TryGetValue( key.Substring( index + 1 ), out value );
+		}
+		
 		public static string Get( string key ) {
 			string value;
-			return OptionsSet.TryGetValue( key, out value ) ? value : null;
+			return TryGetValue( key, out value ) ? value : null;
 		}
 		
 		public static int GetInt( string key, int min, int max, int defValue ) {
 			string value;
 			int valueInt = 0;
-			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
-			   || !Int32.TryParse( value, out valueInt ) )
+			if( !TryGetValue( key, out value ) || !Int32.TryParse( value, out valueInt ) )
 				return defValue;
 
 			Utils.Clamp( ref valueInt, min, max );
@@ -84,8 +91,7 @@ namespace ClassicalSharp {
 		public static bool GetBool( string key, bool defValue ) {
 			string value;
 			bool valueBool = false;
-			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
-			   || !Boolean.TryParse( value, out valueBool ) )
+			if( !TryGetValue( key, out value ) || !Boolean.TryParse( value, out valueBool ) )
 				return defValue;
 			return valueBool;
 		}
@@ -93,10 +99,8 @@ namespace ClassicalSharp {
 		public static float GetFloat( string key, float min, float max, float defValue ) {
 			string value;
 			float valueFloat = 0;
-			if( !OptionsSet.TryGetValue( key, out value ) || String.IsNullOrEmpty( value )
-			   || !Single.TryParse( value, out valueFloat ) )
+			if( !TryGetValue( key, out value ) || !Single.TryParse( value, out valueFloat ) )
 				return defValue;
-
 			Utils.Clamp( ref valueFloat, min, max );
 			return valueFloat;
 		}
@@ -116,11 +120,10 @@ namespace ClassicalSharp {
 		
 		public static void Set( string key, string value ) {
 			key = key.ToLower();
-			if( value != null ) {
+			if( value != null )
 				OptionsSet[key] = value;
-			} else {
+			else
 				OptionsSet.Remove( key );
-			}
 			OptionsChanged[key] = true;
 		}
 		

@@ -11,6 +11,7 @@ namespace ClassicalSharp.Particles {
 		TerrainParticle[] terrainParticles = new TerrainParticle[maxParticles];
 		RainParticle[] rainParticles = new RainParticle[maxParticles];
 		int terrainCount, rainCount;
+		int[] terrain1DCount;
 		
 		Game game;
 		Random rnd;
@@ -53,7 +54,7 @@ namespace ClassicalSharp.Particles {
 			
 			int index = 0;
 			for( int i = 0; i < elems; i++ )
-				particles[i].Render( delta, t, vertices, ref index );
+				particles[i].Render( game, delta, t, vertices, ref index );
 			return Math.Min( count, maxParticles * 4 );
 		}
 		
@@ -65,7 +66,7 @@ namespace ClassicalSharp.Particles {
 		void TickParticles( Particle[] particles, ref int count, double delta ) {
 			for( int i = 0; i < count; i++ ) {
 				Particle particle = particles[i];
-				if( particle.Tick( delta ) ) {
+				if( particle.Tick( game, delta ) ) {
 					RemoveAt( i, particles, ref count );
 					i--;
 				}
@@ -139,7 +140,7 @@ namespace ClassicalSharp.Particles {
 			}
 		}
 		
-		T AddParticle<T>( T[] particles, ref int count, bool rain ) where T : Particle {
+		T AddParticle<T>( T[] particles, ref int count, bool rain ) where T : Particle, new() {
 			if( count == maxParticles )
 				RemoveAt( 0, particles, ref count );
 			count++;
@@ -147,8 +148,7 @@ namespace ClassicalSharp.Particles {
 			T old = particles[count - 1];
 			if( old != null ) return old;
 			
-			T newT = rain ? (T)(object)new RainParticle( game ) 
-				: (T)(object)new TerrainParticle( game );
+			T newT = rain ? (T)(object)new RainParticle() : (T)(object)new TerrainParticle();
 			particles[count - 1] = newT;
 			return newT;
 		}
@@ -161,7 +161,6 @@ namespace ClassicalSharp.Particles {
 			
 			particles[count - 1] = removed;
 			count--;
-		}
-		
+		}		
 	}
 }
