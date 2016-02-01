@@ -43,8 +43,7 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.TabAutocomplete, v == "yes" );
 				     } ),
 				
-				// Column 2
-				
+				// Column 2				
 				Make( 140, -150, "Clickable chat", OnWidgetClick,
 				     g => g.ClickableChat ? "yes" : "no",
 				     (g, v) => { g.ClickableChat = v == "yes";
@@ -67,8 +66,7 @@ namespace ClassicalSharp {
 				
 				Make( 140, 0, "Arial chat font", OnWidgetClick,
 				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
-				     (g, v) => { g.ChatLines = Int32.Parse( v );
-				     	g.Drawer2D.UseBitmappedChat = v == "no";
+				     (g, v) => { g.Drawer2D.UseBitmappedChat = v == "no";
 				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
 				     	HandleFontChange();
 				     } ),			
@@ -106,12 +104,12 @@ namespace ClassicalSharp {
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new BooleanValidator(),
-				new RealValidator( 0.25f, 5f ),
-				new RealValidator( 0.25f, 5f ),
+				new RealValidator( 0.25f, 4f ),
+				new RealValidator( 0.25f, 4f ),
 				new BooleanValidator(),
 				
 				new BooleanValidator(),
-				new RealValidator( 0.25f, 5f ),
+				new RealValidator( 0.25f, 4f ),
 				new IntegerValidator( 1, 30 ),
 				new BooleanValidator(),
 				new StringValidator( 32 ),
