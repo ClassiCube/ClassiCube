@@ -436,7 +436,7 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( PacketId.CpeDefineBlockExt ); return;
 			}
-			byte block = HandleCpeDefineBlockCommonStart( false );
+			byte block = HandleCpeDefineBlockCommonStart( blockDefinitionsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
