@@ -8,7 +8,7 @@ namespace Launcher2 {
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
-			buttonFont = new Font( "Arial", 16, FontStyle.Bold );
+			buttonFont = new Font( game.FontName, 16, FontStyle.Bold );
 			enterIndex = 2;
 			widgets = new LauncherWidget[14];
 			LoadResumeInfo();

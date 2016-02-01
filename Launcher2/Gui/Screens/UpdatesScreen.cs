@@ -15,8 +15,8 @@ namespace Launcher2 {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			infoFont = new Font( "Arial", 14, FontStyle.Regular );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
+			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
 			buttonFont = titleFont;
 			widgets = new LauncherWidget[20];
 		}

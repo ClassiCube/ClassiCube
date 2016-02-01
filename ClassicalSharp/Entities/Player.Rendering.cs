@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected void InitRenderingData() {
-			using( Font font = new Font( "Arial", 20 ) ) {
+			using( Font font = new Font( game.FontName, 20 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
 				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
 			}

@@ -8,7 +8,7 @@ namespace ClassicalSharp {
 		
 		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {
 			textures = new Texture[512];
-			titleFont = new Font( "Arial", 12, FontStyle.Underline );
+			titleFont = new Font( game.FontName, 12, FontStyle.Underline );
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[512];

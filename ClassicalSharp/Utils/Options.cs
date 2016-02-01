@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 		public const string InventoryScale = "gui-inventoryscale";
 		public const string ChatScale = "gui-chatscale";
 		public const string ShowFPS = "gui-showfps";
+		public const string FontName = "gui-fontname";
 		
 		public const string AllowCustomBlocks = "nostalgia-customblocks";
 		public const string UseCPE = "nostalgia-usecpe";
@@ -50,11 +51,7 @@ namespace ClassicalSharp {
 	}
 	
 	public enum FpsLimitMethod {
-		LimitVSync,
-		Limit30FPS,
-		Limit60FPS,
-		Limit120FPS,		
-		LimitNone,
+		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
 	}
 	
 	public static class Options {

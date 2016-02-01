@@ -66,6 +66,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
+				new BooleanValidator(),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),

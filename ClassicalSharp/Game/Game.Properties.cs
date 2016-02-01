@@ -132,6 +132,8 @@ namespace ClassicalSharp {
 		
 		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		
+		public string FontName = "Arial";
+		
 		public int ChatLines = 12;
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
 		internal float HotbarScale = 1, ChatScale = 1, InventoryScale = 1;

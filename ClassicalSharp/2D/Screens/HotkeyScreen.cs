@@ -74,9 +74,9 @@ namespace ClassicalSharp {
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
-			arrowFont = new Font( "Arial", 18, FontStyle.Bold );
-			textFont = new Font( "Arial", 14, FontStyle.Bold );
+			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
+			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
+			textFont = new Font( game.FontName, 14, FontStyle.Bold );
 			
 			widgets = new [] {
 				MakeHotkey( 0, -160, 0 ),

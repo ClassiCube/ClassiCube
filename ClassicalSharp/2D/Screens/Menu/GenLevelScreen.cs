@@ -55,8 +55,8 @@ namespace ClassicalSharp {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
 			int size = game.Drawer2D.UseBitmappedChat ? 14 : 18;
-			titleFont = new Font( "Arial", size, FontStyle.Bold );			
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
+			titleFont = new Font( game.FontName, size, FontStyle.Bold );			
+			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputs = new [] { MakeInput( -100 ), MakeInput( -60 ), 
 				MakeInput( -20 ), MakeInput( 20 )

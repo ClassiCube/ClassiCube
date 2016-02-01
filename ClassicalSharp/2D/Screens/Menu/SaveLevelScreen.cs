@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
+			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputWidget = MenuInputWidget.Create(
 				game, -30, 50, 500, 25, "", Anchor.Centre, Anchor.Centre,

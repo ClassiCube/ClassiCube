@@ -12,9 +12,9 @@ namespace Launcher2 {
 		protected int enterIndex = -1;
 		public LauncherInputScreen( LauncherWindow game, bool makeFonts ) : base( game ) {
 			if( !makeFonts ) return;
-			titleFont = new Font( "Arial", 15, FontStyle.Bold );
-			inputFont = new Font( "Arial", 14, FontStyle.Regular );
-			inputHintFont = new Font( "Arial", 12, FontStyle.Italic );
+			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
+			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 		}
 		
 		public override void Init() {

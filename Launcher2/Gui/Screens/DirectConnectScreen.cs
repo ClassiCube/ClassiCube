@@ -12,7 +12,7 @@ namespace Launcher2 {
 		Font booleanFont;
 		const int skinsIndex = 7;
 		public DirectConnectScreen( LauncherWindow game ) : base( game, true ) {
-			booleanFont = new Font( "Arial", 22, FontStyle.Regular );
+			booleanFont = new Font( game.FontName, 22, FontStyle.Regular );
 			enterIndex = 3;
 			widgets = new LauncherWidget[8];
 		}

@@ -25,8 +25,8 @@ namespace ClassicalSharp {
 		bool confirmNo, confirmMode;
 		
 		public override void Init() {
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			regularFont = new Font( "Arial", 14, FontStyle.Regular );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
+			regularFont = new Font( game.FontName, 14, FontStyle.Regular );
 			InitStandardButtons();
 			SetText( title, body );
 		}

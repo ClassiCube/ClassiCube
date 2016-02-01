@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public LoadingMapScreen( Game game, string name, string motd ) : base( game ) {
 			serverName = name;
 			serverMotd = motd;
-			font = new Font( "Arial", 16 );
+			font = new Font( game.FontName, 16 );
 		}
 		
 		string serverName, serverMotd;

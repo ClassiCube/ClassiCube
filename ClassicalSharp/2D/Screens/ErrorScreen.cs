@@ -14,8 +14,8 @@ namespace ClassicalSharp {
 		public ErrorScreen( Game game, string title, string message ) : base( game ) {
 			this.title = title;
 			this.message = message;
-			titleFont = new Font( "Arial", 16, FontStyle.Bold );
-			messageFont = new Font( "Arial", 14, FontStyle.Regular );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
+			messageFont = new Font( game.FontName, 14, FontStyle.Regular );
 		}
 		
 		public override void Render( double delta ) {

@@ -42,9 +42,9 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			base.Init();
-			regularFont = new Font( "Arial", 16, FontStyle.Regular );
+			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			int size = game.Drawer2D.UseBitmappedChat ? 11 : 12;
-			extendedHelpFont = new Font( "Arial", size, FontStyle.Regular );
+			extendedHelpFont = new Font( game.FontName, size, FontStyle.Regular );
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -235,7 +235,8 @@ namespace ClassicalSharp {
 			UpdateDescription( targetWidget );
 			targetWidget = null;
 			
-			widgets[okayIndex].Dispose();
+			if( widgets[okayIndex] != null )
+				widgets[okayIndex].Dispose();
 			widgets[okayIndex] = null;
 			InputClosed();
 		}

@@ -57,15 +57,10 @@ namespace ClassicalSharp {
 			UserViewDistance = ViewDistance;
 			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
 			InputHandler = new InputHandler( this );
-			Chat = new Chat( this );
-			ParticleManager = new ParticleManager( this );
-			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
-			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
-			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
-			ShowFPS = Options.GetBool( OptionsKey.ShowFPS, true );
 			defaultIb = Graphics.MakeDefaultIb();
+			ParticleManager = new ParticleManager( this );
 			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
-			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
+			LoadGui();
 			
 			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
 			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
@@ -155,6 +150,23 @@ namespace ClassicalSharp {
 			Graphics.WarnIfNecessary( Chat );
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		void LoadGui() {
+			Chat = new Chat( this );			
+			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
+			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
+			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
+			ShowFPS = Options.GetBool( OptionsKey.ShowFPS, true );
+			
+			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
+			FontName = Options.Get( OptionsKey.FontName ) ?? "Arial";
+			try {
+				using( Font f = new Font( FontName, 16 ) ) { }
+			} catch( Exception ) {
+				FontName = "Arial";
+				Options.Set( OptionsKey.FontName, "Arial" );
+			}
 		}
 		
 		void LoadIcon() {

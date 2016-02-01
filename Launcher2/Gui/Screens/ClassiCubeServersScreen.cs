@@ -12,7 +12,7 @@ namespace Launcher2 {
 		const int tableX = 10, tableY = 50;
 		
 		public ClassiCubeServersScreen( LauncherWindow game ) : base( game, true ) {
-			tableFont = new Font( "Arial", 11, FontStyle.Regular );
+			tableFont = new Font( game.FontName, 11, FontStyle.Regular );
 			enterIndex = 3;
 			widgets = new LauncherWidget[7];
 		}

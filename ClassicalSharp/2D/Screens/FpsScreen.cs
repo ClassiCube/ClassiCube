@@ -61,8 +61,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Init() {
-			font = new Font( "Arial", 13 );
-			posFont = new Font( "Arial", 12, FontStyle.Italic );
+			font = new Font( game.FontName, 13 );
+			posFont = new Font( game.FontName, 12, FontStyle.Italic );
 			game.Events.ChatFontChanged += ChatFontChanged;
 			
 			fpsTextWidget = new ChatTextWidget( game, font );

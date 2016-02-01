@@ -26,8 +26,8 @@ namespace ClassicalSharp {
 			base.Init();
 			if( keyNames == null )
 				keyNames = Enum.GetNames( typeof( Key ) );
-			keyFont = new Font( "Arial", 15, FontStyle.Bold );
-			regularFont = new Font( "Arial", 15, FontStyle.Italic );
+			keyFont = new Font( game.FontName, 15, FontStyle.Bold );
+			regularFont = new Font( game.FontName, 15, FontStyle.Italic );
 			statusWidget = TextWidget.Create( game, 0, 130, "", Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		

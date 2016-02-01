@@ -18,10 +18,10 @@ namespace ClassicalSharp {
 		protected string titleText;
 		
 		public override void Init() {
-			textFont = new Font( "Arial", 14, FontStyle.Bold );
-			arrowFont = new Font( "Arial", 18, FontStyle.Bold );
+			textFont = new Font( game.FontName, 14, FontStyle.Bold );
+			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
 			int size = game.Drawer2D.UseBitmappedChat ? 13 : 16;
-			titleFont = new Font( "Arial", size, FontStyle.Bold );
+			titleFont = new Font( game.FontName, size, FontStyle.Bold );
 			title = TextWidget.Create( game, 0, -130, titleText, Anchor.Centre, Anchor.Centre, titleFont );
 			title.Init();
 			

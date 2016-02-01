@@ -44,6 +44,8 @@ namespace Launcher2 {
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
 		public bool ShouldExit;
 		
+		public string FontName = "Arial";
+		
 		public bool Minimised {
 			get { return Window.WindowState == WindowState.Minimized || (Width == 1 && Height == 1); }
 		}
@@ -61,7 +63,8 @@ namespace Launcher2 {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
-			logoFont = new Font( "Arial", 24, FontStyle.Regular );
+			LoadFont();
+			logoFont = new Font( FontName, 24, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
 			Window.Icon = Icon.ExtractAssociatedIcon( path );
 			//Minimised = Window.WindowState == WindowState.Minimized;
@@ -72,6 +75,17 @@ namespace Launcher2 {
 				platformDrawer = new X11PlatformDrawer();
 			else if( Configuration.RunningOnMacOS )
 				platformDrawer = new OSXPlatformDrawer();
+		}
+		
+		void LoadFont() {
+			Options.Load();
+			FontName = Options.Get( "gui-fontname" ) ?? "Arial";
+			try {
+				using( Font f = new Font( FontName, 16 ) ) { }
+			} catch( Exception ) {
+				FontName = "Arial";
+				Options.Set( "gui-fontname", "Arial" );
+			}
 		}
 
 		void FocusedChanged( object sender, EventArgs e ) {
