@@ -56,11 +56,11 @@ namespace ClassicalSharp {
 		
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes;
-		int envMapApperanceVer = 2;
+		int envMapAppearanceVer = 2, blockDefinitionsExtVer = 2;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
-			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance", 
-			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437", 
+			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
+			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt",
 			// proposals
 			"BulkBlockUpdate", "TextColors",
@@ -90,8 +90,8 @@ namespace ClassicalSharp {
 			} else if( extName == "PlayerClick" ) {
 				UsingPlayerClick = true;
 			} else if( extName == "EnvMapAppearance" ) {
-				envMapApperanceVer = extVersion;
-				if( extVersion == 2 ) {
+				envMapAppearanceVer = extVersion;
+				if( extVersion >= 2 ) {
 					handlers[(int)PacketId.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
 					packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
 				}
@@ -99,6 +99,10 @@ namespace ClassicalSharp {
 				ServerSupportsPartialMessages = true;
 			} else if( extName == "FullCP437" ) {
 				ServerSupportsFullCP437 = true;
+			} else if( extName == "BlockDefinitionsExt" ) {
+				blockDefinitionsExtVer = extVersion;
+				if( extVersion >= 2 )
+					packetSizes[(int)PacketId.CpeDefineBlockExt] += 3;
 			}
 			cpeServerExtensionsCount--;
 			SendCpeExtInfoReply();
@@ -110,14 +114,16 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) count -= 2;
 			
 			MakeExtInfo( Program.AppName, count );
-			SendPacket();			
+			SendPacket();
 			for( int i = 0; i < clientExtensions.Length; i++ ) {
 				string name = clientExtensions[i];
-				int ver = name == "ExtPlayerList" ? 2 : 1;
-				if( name == "EnvMapAppearance" ) ver = envMapApperanceVer;
-							
+				int ver = 1;
+				if( name == "ExtPlayerList" ) ver = 2;
+				if( name == "EnvMapAppearance" ) ver = envMapAppearanceVer;
+				if( name == "BlockDefinitionsExt" ) ver = blockDefinitionsExtVer;
+				
 				if( !game.AllowCustomBlocks && name.StartsWith( "BlockDefinitions" ) )
-					continue;				
+					continue;
 				MakeExtEntry( name, ver );
 				SendPacket();
 			}
@@ -281,7 +287,7 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			
 			if( blockId == 0 ) {
-				int count = supportsCustomBlocks ? BlockInfo.CpeBlocksCount 
+				int count = supportsCustomBlocks ? BlockInfo.CpeBlocksCount
 					: BlockInfo.OriginalBlocksCount;
 				for( int i = 1; i < count; i++ ) {
 					inv.CanPlace.SetNotOverridable( canPlace, i );
@@ -307,7 +313,7 @@ namespace ClassicalSharp {
 			string url = reader.ReadAsciiString();
 			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
-			game.Map.SetEdgeLevel( reader.ReadInt16() );			
+			game.Map.SetEdgeLevel( reader.ReadInt16() );
 			if( !game.AllowServerTextures )
 				return;
 			
@@ -342,7 +348,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DownloadTexturePack( string url ) {
-			if( game.DeniedUrls.HasUrl( url ) ) return;			
+			if( game.DeniedUrls.HasUrl( url ) ) return;
 			game.Animations.Dispose();
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
 
@@ -398,7 +404,7 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( PacketId.CpeDefineBlock ); return;
 			}
-			byte block = HandleCpeDefineBlockCommonStart();
+			byte block = HandleCpeDefineBlockCommonStart( false );
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
 			if( shape == 0 ) {
@@ -430,7 +436,7 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( PacketId.CpeDefineBlockExt ); return;
 			}
-			byte block = HandleCpeDefineBlockCommonStart();
+			byte block = HandleCpeDefineBlockCommonStart( false );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
@@ -446,7 +452,7 @@ namespace ClassicalSharp {
 			HandleCpeDefineBlockCommonEnd( block );
 		}
 		
-		byte HandleCpeDefineBlockCommonStart() {
+		byte HandleCpeDefineBlockCommonStart( bool uniqueSideTexs ) {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockInfo( block, false );
@@ -459,9 +465,17 @@ namespace ClassicalSharp {
 			}
 			
 			info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
-			info.SetTop( reader.ReadUInt8(), (Block)block );
-			info.SetSide( reader.ReadUInt8(), (Block)block );
-			info.SetBottom( reader.ReadUInt8(), (Block)block );
+			info.SetTex( reader.ReadUInt8(), TileSide.Top, (Block)block );
+			if( uniqueSideTexs ) {
+				info.SetTex( reader.ReadUInt8(), TileSide.Left, (Block)block );
+				info.SetTex( reader.ReadUInt8(), TileSide.Right, (Block)block );
+				info.SetTex( reader.ReadUInt8(), TileSide.Front, (Block)block );
+				info.SetTex( reader.ReadUInt8(), TileSide.Back, (Block)block );
+			} else {
+				info.SetSide( reader.ReadUInt8(), (Block)block );
+			}
+			info.SetTex( reader.ReadUInt8(), TileSide.Bottom, (Block)block );
+			
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
 			byte sound = reader.ReadUInt8();
 			if( sound < breakSnds.Length ) {
@@ -530,12 +544,12 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleSetTextColor() {
-			FastColour col = new FastColour( reader.ReadUInt8(), reader.ReadUInt8(), 
+			FastColour col = new FastColour( reader.ReadUInt8(), reader.ReadUInt8(),
 			                                reader.ReadUInt8(), reader.ReadUInt8() );
 			byte code = reader.ReadUInt8();
 			
 			if( code <= ' ' || code > '~' ) return; // Control chars, space, extended chars cannot be used
-			if( (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f') 
+			if( (code >= '0' && code <= '9') || (code >= 'a' && code <= 'f')
 			   || (code >= 'A' && code <= 'F') ) return; // Standard chars cannot be used.
 			game.Drawer2D.Colours[code] = col;
 			game.Events.RaiseColourCodesChanged();

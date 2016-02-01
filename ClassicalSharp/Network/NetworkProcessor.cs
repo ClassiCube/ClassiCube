@@ -42,7 +42,8 @@ namespace ClassicalSharp {
 			reader = new NetReader( stream );
 			writer = new NetWriter( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
-			envMapApperanceVer = 2;
+			envMapAppearanceVer = 2;
+			blockDefinitionsExtVer = 2;
 			
 			Disconnected = false;
 			receivedFirstPosition = false;

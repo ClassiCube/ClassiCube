@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 			// Row 1
 			SetAll( Block.Grass ); SetAll( Block.Stone );
 			SetAll( Block.Dirt ); SetSide( Block.Grass );
-			SetBottom( 0 + 2, Block.Grass ); SetAll( Block.WoodenPlanks );
+			SetTex( 0 + 2, TileSide.Bottom, Block.Grass ); SetAll( Block.WoodenPlanks );
 			SetSide( Block.DoubleSlab ); SetSide( 0 + 5, Block.Slab );
 			SetTopAndBottom( Block.DoubleSlab ); SetTopAndBottom( 0 + 6, Block.Slab );
 			SetAll( Block.Brick ); SetSide( Block.TNT );
@@ -72,9 +72,8 @@ namespace ClassicalSharp {
 		
 		internal void SetSide( int textureId, Block blockId ) {
 			int index = (byte)blockId * TileSide.Sides;
-			for( int i = index; i < index + TileSide.Bottom; i++ ) {
+			for( int i = index; i < index + TileSide.Bottom; i++ )
 				textures[i] = textureId;
-			}
 		}
 		
 		internal void SetTopAndBottom( int textureId, Block blockId ) {
@@ -82,12 +81,8 @@ namespace ClassicalSharp {
 			textures[(byte)blockId * TileSide.Sides + TileSide.Top] = textureId;
 		}
 		
-		internal void SetTop( int textureId, Block blockId ) {
-			textures[(byte)blockId * TileSide.Sides + TileSide.Top] = textureId;
-		}
-		
-		internal void SetBottom( int textureId, Block blockId ) {
-			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
+		internal void SetTex( int textureId, int face, Block blockId ) {
+			textures[(byte)blockId * TileSide.Sides + face] = textureId;
 		}
 
 		int texId;
@@ -104,11 +99,11 @@ namespace ClassicalSharp {
 		}
 		
 		void SetTop( Block blockId ) {
-			SetTop( texId, blockId ); texId++;
+			SetTex( texId, TileSide.Top, blockId ); texId++;
 		}
 		
 		void SetBottom( Block blockId ) {
-			SetBottom( texId, blockId ); texId++;
+			SetTex( texId, TileSide.Bottom, blockId ); texId++;
 		}
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>
