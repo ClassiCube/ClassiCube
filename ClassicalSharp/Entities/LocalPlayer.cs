@@ -317,7 +317,7 @@ namespace ClassicalSharp {
 		
 		internal bool HandleKeyDown( Key key ) {
 			KeyMap keys = game.InputHandler.Keys;
-			if( key == keys[KeyBinding.Respawn] && CanRespawn && HacksEnabled ) {
+			if( key == keys[KeyBinding.Respawn] && CanRespawn ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
 				if( game.Map.IsValidPos( p ) ) {
 					// Spawn player at highest valid position.
@@ -334,7 +334,7 @@ namespace ClassicalSharp {
 				Vector3 spawn = (Vector3)p + new Vector3( 0.5f, 0.01f, 0.5f );
 				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, SpawnYaw, SpawnPitch, false );
 				SetLocation( update, false );
-			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn && HacksEnabled ) {
+			} else if( key == keys[KeyBinding.SetSpawn] && CanRespawn ) {
 				SpawnPoint = Position;
 				SpawnYaw = HeadYawDegrees;
 				SpawnPitch = PitchDegrees;
