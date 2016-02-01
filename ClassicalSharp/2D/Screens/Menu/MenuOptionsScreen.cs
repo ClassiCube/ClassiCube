@@ -230,7 +230,8 @@ namespace ClassicalSharp {
 			string text = inputWidget.GetText();
 			if( inputWidget.Validator.IsValidValue( text ) )
 				targetWidget.SetValue( game, text );
-			inputWidget.Dispose();
+			if( inputWidget != null )
+				inputWidget.Dispose();
 			inputWidget = null;
 			UpdateDescription( targetWidget );
 			targetWidget = null;

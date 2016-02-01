@@ -67,14 +67,17 @@ namespace ClassicalSharp {
 				
 				Make( 140, 0, "Arial chat font", OnWidgetClick,
 				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
-				     HandleArialChatFont ),
+				     (g, v) => { g.ChatLines = Int32.Parse( v );
+				     	g.Drawer2D.UseBitmappedChat = v == "no";
+				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
+				     	HandleFontChange();
+				     } ),			
 				
 				Make( 140, 50, "Chat font name", OnWidgetClick,
 				     g => g.FontName,
 				     (g, v) => { g.FontName = v;
 				     	Options.Set( OptionsKey.FontName, v );
-				     	g.RefreshHud();
-				     	Recreate();
+				     	HandleFontChange();
 				     } ),
 				
 				MakeBack( false, titleFont,
@@ -86,9 +89,7 @@ namespace ClassicalSharp {
 			okayIndex = widgets.Length - 1;
 		}
 		
-		void HandleArialChatFont( Game g, string v ) {
-			g.Drawer2D.UseBitmappedChat = v == "no";
-			Options.Set( OptionsKey.ArialChatFont, v == "yes" );
+		void HandleFontChange() {
 			game.Events.RaiseChatFontChanged();
 			
 			if( inputWidget != null ) {
@@ -96,9 +97,8 @@ namespace ClassicalSharp {
 			}
 			if( descWidget != null ) {
 				descWidget.Dispose(); descWidget = null;
-			}
-			
-			g.RefreshHud();
+			}		
+			game.RefreshHud();
 			Recreate();
 		}
 		
@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 5f ),
-				new RealValidator( 0.25f, 5f ),				
+				new RealValidator( 0.25f, 5f ),
 				new BooleanValidator(),
 				
 				new BooleanValidator(),

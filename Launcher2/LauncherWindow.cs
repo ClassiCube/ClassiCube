@@ -85,6 +85,7 @@ namespace Launcher2 {
 			} catch( Exception ) {
 				FontName = "Arial";
 				Options.Set( "gui-fontname", "Arial" );
+				FontFamily.Families;
 			}
 		}
 
