@@ -35,34 +35,21 @@ namespace ClassicalSharp.Generator {
 			double u = x * x * x * (x * (x * 6 - 15) + 10); // Fade(x)
 			double v = y * y * y * (y * (y * 6 - 15) + 10); // Fade(y)
 			int A = p[X] + Y, B = p[X + 1] + Y;
+			const int xFlags = 0x46552222, yFlags = 0x2222550A;
 			
-			double g22 = Grad( p[p[A]], x, y ), g12 = Grad( p[p[B]], x - 1, y );
+			int hash = (p[p[A]] & 0xF) << 1; 
+			double g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[A], x, y)
+			hash = (p[p[B]] & 0xF) << 1; 
+			double g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[B], x - 1, y)
 			double c1 = g22 + u * (g12 - g22);
-			double g21 = Grad( p[p[A + 1]], x, y - 1 ), g11 = Grad( p[p[B + 1]], x - 1, y - 1 );
+			
+			hash = (p[p[A + 1]] & 0xF) << 1; 
+			double g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[A + 1], x, y - 1)
+			hash = (p[p[B + 1]] & 0xF) << 1; 
+			double g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[B + 1], x - 1, y - 1)
 			double c2 = g21 + u * (g11 - g21);
+			
 			return c1 + v * (c2 - c1);
-		}
-		
-		static double Grad( int hash, double x, double y ) {
-			switch( hash & 15 ) {
-					case 0: return x + y;
-					case 1: return -x + y;
-					case 2: return x - y;
-					case 3: return -x - y;
-					case 4: return x;
-					case 5: return -x;
-					case 6: return x;
-					case 7: return -x;
-					case 8: return y;
-					case 9: return -y;
-					case 10: return y;
-					case 11: return -y;
-					case 12: return x + y;
-					case 13: return -y;
-					case 14: return -x + y;
-					case 15: return -y;
-					default: return 0;
-			}
 		}
 		
 		byte[] p = new byte[512];
