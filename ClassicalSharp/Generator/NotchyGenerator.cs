@@ -32,9 +32,9 @@ namespace ClassicalSharp.Generator {
 			CreateHeightmap();
 			CreateStrata();
 			CarveCaves();
-			CarveOreVeins( 0.9f, (byte)Block.CoalOre );
-			CarveOreVeins( 0.7f, (byte)Block.IronOre );
-			CarveOreVeins( 0.5f, (byte)Block.GoldOre );
+			CarveOreVeins( 0.9f, "coal ore", (byte)Block.CoalOre );
+			CarveOreVeins( 0.7f, "iron ore", (byte)Block.IronOre );
+			CarveOreVeins( 0.5f, "gold ore", (byte)Block.GoldOre );
 			
 			FloodFillWaterBorders();
 			FloodFillWater();
@@ -137,9 +137,9 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		void CarveOreVeins( float abundance, byte block ) {
+		void CarveOreVeins( float abundance, string blockName, byte block ) {
 			int numVeins = (int)(blocks.Length * abundance / 16384);
-			CurrentState = "Carving " + (Block)block;
+			CurrentState = "Carving " + blockName;
 			
 			for( int i = 0; i < numVeins; i++ ) {
 				CurrentProgress = (float)i / numVeins;

@@ -160,8 +160,7 @@ namespace ClassicalSharp {
 				
 				int separatorIndex = line.IndexOf( '=' );
 				if( separatorIndex <= 0 ) continue;
-				string key = line.Substring( 0, separatorIndex );
-				key = key.ToLower();
+				string key = line.Substring( 0, separatorIndex ).ToLower();
 				
 				separatorIndex++;
 				if( separatorIndex == line.Length ) continue;

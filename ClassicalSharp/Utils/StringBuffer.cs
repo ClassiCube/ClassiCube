@@ -27,6 +27,17 @@ namespace ClassicalSharp {
 			return this;
 		}
 		
+		public StringBuffer AppendColourless( ref int index, string s ) {
+			for( int i = 0; i < s.Length; i++ ) {
+				char token = s[i];
+				if( token == '&' )
+					i++;// Skip over the following colour code.
+				else
+					value[index++] = token;
+			}
+			return this;
+		}
+		
 		public StringBuffer Append( ref int index, char c) {
 			value[index++] = c;
 			return this;
@@ -34,18 +45,29 @@ namespace ClassicalSharp {
 		
 		static char[] numBuffer = new char[20];
 		public StringBuffer AppendNum( ref int index, long num ) {
-			int numIndex = 0;
-			numBuffer[numIndex++] = (char)('0' + (num % 10));
-			num /= 10;
-			
-			while( num > 0 ) {
-				numBuffer[numIndex++] = (char)('0' + (num % 10));
-				num /= 10;
-			}
-			
-			for( int i = numIndex - 1; i >= 0; i-- )
+			int numLen = MakeNum( num );
+			for( int i = numLen - 1; i >= 0; i-- )
 				value[index++] = numBuffer[i];
 			return this;
+		}
+		
+		public StringBuffer AppendPaddedNum( ref int index, int minDigits, long num ) {
+			for( int i = 0; i < minDigits; i++ )
+				numBuffer[i] = '0';
+			int numLen = Math.Max( minDigits, MakeNum( num ) );
+			for( int i = numLen - 1; i >= 0; i-- )
+				value[index++] = numBuffer[i];
+			return this;
+		}
+		
+		int MakeNum( long num ) {
+			int len = 0;
+			numBuffer[len++] = (char)('0' + (num % 10)); num /= 10;
+			
+			while( num > 0 ) {
+				numBuffer[len++] = (char)('0' + (num % 10)); num /= 10;
+			}
+			return len;
 		}
 		
 		public StringBuffer Clear() {

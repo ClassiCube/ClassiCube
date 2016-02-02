@@ -36,6 +36,7 @@ namespace ClassicalSharp {
 		}
 		
 		static char[] trimChars = new [] { ' ', '\0' };
+		StringBuffer logBuffer = new StringBuffer( 128 );
 		public void Add( string text ) {
 			Log.Add( text );
 			LogChatToFile( text );
@@ -83,11 +84,21 @@ namespace ClassicalSharp {
 			}
 			
 			last = now;
-			if( writer != null ) {
-				string data = Utils.StripColours( text );
-				string entry = now.ToString( "[yyyy-MM-dd HH:mm:ss] " ) + data;
-				writer.WriteLine( entry );
-			}
+			if( writer == null ) return;
+			
+			if( 32 + text.Length > logBuffer.capacity )
+				logBuffer = new StringBuffer( 32 + text.Length );
+			int index = 0;
+			logBuffer.Clear() // [yyyy-MM-dd HH:mm:ss] text
+				.Append( ref index, '[' ).AppendPaddedNum( ref index, 4, now.Year )
+				.Append( ref index, '-' ).AppendPaddedNum( ref index, 2, now.Month )
+				.Append( ref index, '-' ).AppendPaddedNum( ref index, 2, now.Day )
+				.Append( ref index, ' ' ).AppendPaddedNum( ref index, 2, now.Hour )
+				.Append( ref index, ':' ).AppendPaddedNum( ref index, 2, now.Minute )
+				.Append( ref index, ':' ).AppendPaddedNum( ref index, 2, now.Second )
+				.Append( ref index, "] " ).AppendColourless( ref index, text )
+				.Append( ref index, Environment.NewLine );
+			writer.Write( logBuffer.value, 0, logBuffer.Length );
 		}
 		
 		void OpenChatFile( DateTime now ) {
@@ -118,7 +129,7 @@ namespace ClassicalSharp {
 				return;
 			}
 			ErrorHandler.LogError( "creating chat log",
-			               "Failed to open or create a chat log file after 20 tries, giving up." );
+			                      "Failed to open or create a chat log file after 20 tries, giving up." );
 		}
 	}
 	

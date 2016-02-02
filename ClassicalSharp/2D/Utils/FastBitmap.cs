@@ -11,18 +11,24 @@ namespace ClassicalSharp {
 	/// <summary> Wrapper around a bitmap that allows extremely fast manipulation of 32bpp images. </summary>
 	public unsafe class FastBitmap : IDisposable {
 		
+		public FastBitmap() { }
+		
 		[Obsolete( "You should always specify whether the bitmap is readonly or not." )]
 		public FastBitmap( Bitmap bmp, bool lockBits ) : this( bmp, lockBits, false ) {
 		}
 		
 		public FastBitmap( Bitmap bmp, bool lockBits, bool readOnly ) {
+			SetData( bmp, lockBits, readOnly );
+		}
+		
+		public void SetData( Bitmap bmp, bool lockBits, bool readOnly ) {
 			Bitmap = bmp;
 			if( lockBits )
 				LockBits();
 			ReadOnly = readOnly;
 		}
 		
-		public FastBitmap( int width, int height, int stride, IntPtr scan0, bool readOnly ) {
+		public void SetData( int width, int height, int stride, IntPtr scan0, bool readOnly ) {
 			Width = width;
 			Height = height;
 			Stride = stride;

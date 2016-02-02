@@ -9,7 +9,6 @@ namespace ClassicalSharp {
 		public void SetText( int index, string text ) {
 			graphicsApi.DeleteTexture( ref Textures[index] );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			Font underlineFont = new Font( font, FontStyle.Underline );
 			urlBounds[index] = null;
 			
 			if( !String.IsNullOrEmpty( text ) ) {

@@ -107,12 +107,11 @@ namespace ClassicalSharp {
 			CheckSkin();
 			
 			Vector3 soundPos = nextPos;
-			bool anyNonAir = false;
-			SoundType type = GetSound( ref anyNonAir );
+			GetSound();
 			if( !anyNonAir ) soundPos = new Vector3( -100000 );
 			
 			if( onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
-				game.AudioPlayer.PlayStepSound( type );
+				game.AudioPlayer.PlayStepSound( sndType );
 				lastSoundPos = soundPos;
 			}
 			UpdateCurrentBodyYaw();
@@ -130,44 +129,46 @@ namespace ClassicalSharp {
 			return Math.Sign( oldLegRot ) != Math.Sign( newLegRot );
 		}
 		
-		SoundType GetSound( ref bool anyNonAir ) {
+		bool anyNonAir = false;
+		SoundType sndType = SoundType.None;
+		void GetSound() {
 			Vector3 pos = nextPos, size = CollisionSize;
-			BoundingBox bounds = new BoundingBox( pos - size / 2, pos + size / 2);
-			SoundType type = SoundType.None;
-			bool nonAir = false;
+			BoundingBox bounds = new BoundingBox( pos - size / 2, pos + size / 2 );
+			sndType = SoundType.None;
+			anyNonAir = false;
 			
 			// first check surrounding liquids/gas for sounds
-			TouchesAny( bounds, b => {
-			           	SoundType newType = game.BlockInfo.StepSounds[b];
-			           	BlockCollideType collide = game.BlockInfo.CollideType[b];
-			           	if( newType != SoundType.None && collide != BlockCollideType.Solid)
-			           		type = newType;
-			           	if( b != 0 ) nonAir = true;
-			           	return false;
-			           });
-			if( type != SoundType.None )
-				return type;
+			TouchesAny( bounds, CheckSoundNonSolid );
+			if( sndType != SoundType.None ) return;
 			
 			// then check block standing on
 			byte blockUnder = (byte)BlockUnderFeet;
 			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
 			BlockCollideType collideType = game.BlockInfo.CollideType[blockUnder];
 			if( collideType == BlockCollideType.Solid && typeUnder != SoundType.None ) {
-				nonAir = true;
-				return typeUnder;
+				anyNonAir = true; sndType = typeUnder; return;
 			}
 			
 			// then check all solid blocks at feet
 			pos.Y -= 0.01f;
 			bounds.Max.Y = bounds.Min.Y = pos.Y;
-			TouchesAny( bounds, b => {
-			           	SoundType newType = game.BlockInfo.StepSounds[b];
-			           	if( newType != SoundType.None ) type = newType;
-			           	if( b != 0 ) nonAir = true;
-			           	return false;
-			           });
-			anyNonAir = nonAir;
-			return type;
+			TouchesAny( bounds, CheckSoundSolid );
+		}
+		
+		bool CheckSoundNonSolid( byte b ) {
+			SoundType newType = game.BlockInfo.StepSounds[b];
+			BlockCollideType collide = game.BlockInfo.CollideType[b];
+			if( newType != SoundType.None && collide != BlockCollideType.Solid )
+				sndType = newType;
+			if( b != 0 ) anyNonAir = true;
+			return false;
+		}
+		
+		bool CheckSoundSolid( byte b ) {
+			SoundType newType = game.BlockInfo.StepSounds[b];
+			if( newType != SoundType.None ) sndType = newType;
+			if( b != 0 ) anyNonAir = true;
+			return false;
 		}
 		
 		public override void RenderModel( double deltaTime, float t ) {

@@ -39,12 +39,15 @@ namespace ClassicalSharp {
 			throw new NotImplementedException();
 		}
 		
+		FastBitmap bitmapWrapper = new FastBitmap();
 		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			using( FastBitmap fastBmp = new FastBitmap( curBmp, true ) )
-				DrawTextImpl( fastBmp, ref args, x, y );
+			using( bitmapWrapper ) {
+				bitmapWrapper.SetData( curBmp, true, false );
+				DrawBitmappedTextImpl( bitmapWrapper, ref args, x, y );
+			}
 		}
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {

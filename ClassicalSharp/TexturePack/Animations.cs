@@ -88,6 +88,7 @@ namespace ClassicalSharp.TexturePack {
 			animations.Add( data );
 		}
 		
+		FastBitmap animPart = new FastBitmap();
 		unsafe void ApplyAnimation( AnimationData data ) {
 			data.Tick--;
 			if( data.Tick >= 0 ) return;
@@ -102,9 +103,9 @@ namespace ClassicalSharp.TexturePack {
 			
 			int size = data.FrameSize;
 			byte* temp = stackalloc byte[size * size * 4];
-			FastBitmap part = new FastBitmap( size, size, size * 4, (IntPtr)temp, false );
-			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, fastBmp, part, size );
-			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, part );
+			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
+			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, fastBmp, animPart, size );
+			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
 		}
 		
 		class AnimationData {

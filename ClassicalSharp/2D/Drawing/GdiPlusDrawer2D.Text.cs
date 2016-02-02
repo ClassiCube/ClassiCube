@@ -67,12 +67,15 @@ namespace ClassicalSharp {
 			format.FormatFlags = flags;
 		}
 		
+		FastBitmap bitmapWrapper = new FastBitmap();
 		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			using( FastBitmap fastBmp = new FastBitmap( curBmp, true, false ) )
-				DrawBitmapTextImpl( fastBmp, ref args, x, y );
+			using( bitmapWrapper ) {
+				bitmapWrapper.SetData( curBmp, true, false );
+				DrawBitmapTextImpl( bitmapWrapper, ref args, x, y );
+			}
 		}
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
