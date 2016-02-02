@@ -40,12 +40,16 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	public sealed class IntegerValidator : MenuInputValidator {
+	public class IntegerValidator : MenuInputValidator {
 		
 		int min, max;
 		public IntegerValidator( int min, int max ) {
 			this.min = min;
 			this.max = max;
+			SetRange();
+		}
+		
+		protected virtual void SetRange() {
 			MakeRange( min.ToString(), max.ToString() );
 		}
 		
@@ -63,6 +67,15 @@ namespace ClassicalSharp {
 			int value;
 			if( !Int32.TryParse( s, out value ) ) return false;
 			return min <= value && value <= max;
+		}
+	}
+	
+	public sealed class SeedValidator : IntegerValidator {
+		
+		public SeedValidator() : base( 0, 0 ) { }
+		
+		protected override void SetRange() {
+			Range = "&7(an integer)";
 		}
 	}
 	

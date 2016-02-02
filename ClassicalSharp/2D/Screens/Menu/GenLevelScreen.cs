@@ -15,6 +15,7 @@ namespace ClassicalSharp {
 		TextWidget[] labels;
 		MenuInputWidget[] inputs;
 		MenuInputWidget selectedWidget;
+		Font labelFont;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
@@ -55,14 +56,19 @@ namespace ClassicalSharp {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
 			int size = game.Drawer2D.UseBitmappedChat ? 14 : 18;
-			titleFont = new Font( game.FontName, size, FontStyle.Bold );			
+			labelFont = new Font( game.FontName, size, FontStyle.Regular );
+			titleFont = new Font( game.FontName, size, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
-			inputs = new [] { MakeInput( -100 ), MakeInput( -60 ), 
-				MakeInput( -20 ), MakeInput( 20 )
+			inputs = new [] { 
+				MakeInput( -100, false, game.Map.Width.ToString() ), 
+				MakeInput( -60, false, game.Map.Height.ToString() ),
+				MakeInput( -20, false, game.Map.Length.ToString() ),
+				MakeInput( 20, true, "" )
 			};
-			labels = new [] { MakeLabel( -100, "Width:" ), MakeLabel( -60, "Height:" ), 
-				MakeLabel( -20, "Length:" ), MakeLabel( 20, "Seed:" ),
+			labels = new [] { 
+				MakeLabel( -150, -100, "Width:" ), MakeLabel( -150, -60, "Height:" ),
+				MakeLabel( -150, -20, "Length:" ), MakeLabel( -140, 20, "Seed:" ),
 			};
 			widgets = new [] {
 				ButtonWidget.Create( game, 0, 80, 250, 35, "Generate flatgrass", Anchor.Centre,
@@ -74,18 +80,19 @@ namespace ClassicalSharp {
 			};
 		}
 		
-		MenuInputWidget MakeInput( int y ) {
+		MenuInputWidget MakeInput( int y, bool seed, string value ) {
+			MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator( 1, 8192 );
 			MenuInputWidget widget = MenuInputWidget.Create(
-				game, 0, y, 200, 25, "", Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, new IntegerValidator( 1, 8192 ) );
+				game, 0, y, 200, 25, value, Anchor.Centre, Anchor.Centre,
+				regularFont, titleFont, validator );
 			widget.Active = false;
 			widget.OnClick = InputClick;
 			return widget;
 		}
 		
-		TextWidget MakeLabel( int y, string text ) {
-			return TextWidget.Create( game, -140, y, text,
-			                         Anchor.Centre, Anchor.Centre, titleFont );
+		TextWidget MakeLabel( int x, int y, string text ) {
+			return TextWidget.Create( game, x, y, text,
+			                         Anchor.Centre, Anchor.Centre, labelFont );
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
@@ -102,6 +109,7 @@ namespace ClassicalSharp {
 				inputs[i].Dispose();
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Dispose();
+			labelFont.Dispose();
 			base.Dispose();
 		}
 		
