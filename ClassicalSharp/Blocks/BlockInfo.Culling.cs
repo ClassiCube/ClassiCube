@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
+		public bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
 		
 		public bool[] CanStretch = new bool[BlocksCount * TileSide.Sides];
 		

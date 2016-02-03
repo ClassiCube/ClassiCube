@@ -4,7 +4,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
-	public partial class ChunkMeshBuilder {
+	public unsafe partial class ChunkMeshBuilder {
 		
 		DrawInfo[] drawInfoNormal, drawInfoTranslucent;
 		TerrainAtlas1D atlas;
@@ -63,9 +63,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !info.IsFaceHidden( tile, GetNeighbour( chunkIndex, face ), face ) 
+			return tile == initialTile && !info.IsFaceHidden( tile, chunk[chunkIndex + offsets[face]], face )
 				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, tile ) );
 		}
 		

@@ -97,9 +97,6 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add( "map width: " + game.Map.Width );
 				game.Chat.Add( "map height: " + game.Map.Height );
 				game.Chat.Add( "map length: " + game.Map.Length );
-			} else if( Utils.CaselessEquals( property, "spam" ) ) {
-				for( int i = 0; i < 1000; i++ )
-					game.Chat.Add( "spamsdfdfd sdfd  dsfdfdf &e" + i );
 			} else {
 				game.Chat.Add( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
 			}
