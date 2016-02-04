@@ -261,11 +261,13 @@ namespace OpenTK.Platform.Windows
 							// The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
 							// to distinguish between left and right keys. Moreover, pressing both keys and releasing one
 							// may result in both keys being held down (but not always).
-							ushort lShiftState =  API.GetKeyState( (int)VirtualKeys.LSHIFT );
-							ushort rShiftState = API.GetKeyState( (int)VirtualKeys.RSHIFT );
+							bool lShiftDown = (API.GetKeyState( (int)VirtualKeys.LSHIFT ) >> 15) == 1;
+							bool rShiftDown = (API.GetKeyState( (int)VirtualKeys.RSHIFT ) >> 15) == 1;
 							
-							Keyboard[Input.Key.ShiftLeft] = (lShiftState >> 15) == 1;
-							Keyboard[Input.Key.ShiftRight] = (rShiftState >> 15) == 1;
+							if( !pressed || lShiftDown != rShiftDown ) {
+								Keyboard[Input.Key.ShiftLeft] = lShiftDown;
+								Keyboard[Input.Key.ShiftRight] = rShiftDown;
+							}
 							return IntPtr.Zero;
 
 						case VirtualKeys.CONTROL:
