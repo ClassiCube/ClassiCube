@@ -121,17 +121,13 @@ namespace ClassicalSharp {
 			titleWidget.OnResize( oldWidth, oldHeight, width, height );
 		}
 		
-		public override bool BlocksWorld {
-			get { return true; }
-		}
+		public override bool BlocksWorld { get { return true; } }
 		
-		public override bool HandlesAllInput {
-			get { return true; }
-		}
+		public override bool HandlesAllInput { get { return true; } }
 		
-		public override bool HidesHud {
-			get { return false; }
-		}
+		public override bool HidesHud { get { return false; } }
+		
+		public override bool RenderHudAfter { get { return true; } }
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Tab ) return true;

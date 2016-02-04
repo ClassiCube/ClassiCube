@@ -7,8 +7,7 @@ namespace ClassicalSharp {
 	
 	public class HudScreen : Screen {
 		
-		public HudScreen( Game game ) : base( game ) {
-		}
+		public HudScreen( Game game ) : base( game ) { }
 		
 		ChatScreen chat;
 		internal BlockHotbarWidget hotbar;
@@ -100,9 +99,7 @@ namespace ClassicalSharp {
 			playerList = null;
 		}
 		
-		public override bool HandlesAllInput {
-			get { return chat.HandlesAllInput; }
-		}
+		public override bool HandlesAllInput { get { return chat.HandlesAllInput; } }
 
 		public override bool HandlesKeyPress( char key ) {
 			return chat.HandlesKeyPress( key );

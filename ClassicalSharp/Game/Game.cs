@@ -256,10 +256,12 @@ namespace ClassicalSharp {
 			
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
 			fpsScreen.Render( delta );
-			if( activeScreen == null || !activeScreen.HidesHud )
+			if( activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudAfter )
 				hudScreen.Render( delta );
 			if( activeScreen != null )
 				activeScreen.Render( delta );
+			if( activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter )
+				hudScreen.Render( delta );
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 			
 			if( screenshotRequested )
