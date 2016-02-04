@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 		public void Render( double deltaTime ) {
 			Weather weather = map.Weather;
 			if( weather == Weather.Sunny ) return;
-			if( heightmap == null ) InitHeightmap();
+			if( heightmap == null ) InitHeightmap();			
 			
 			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
 			Vector3 camPos = game.CurrentCameraPos;

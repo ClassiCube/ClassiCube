@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 SpawnPoint;
-		
+
 		public float SpawnYaw, SpawnPitch;
 		
 		/// <summary> The distance (in blocks) that players are allowed to
@@ -20,6 +20,8 @@ namespace ClassicalSharp {
 		/// <summary> The speed that the player move at, relative to normal speed,
 		/// when the 'speeding' key binding is held down. </summary>
 		public float SpeedMultiplier = 10;
+		
+		public bool ShowShadow = false;
 		
 		public byte UserType;
 		
