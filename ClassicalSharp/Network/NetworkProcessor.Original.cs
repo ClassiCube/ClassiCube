@@ -79,7 +79,10 @@ namespace ClassicalSharp {
 			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
 		}
 			
-		void HandlePing() { }
+		void HandlePing() {
+			writer.WriteUInt8( (byte)PacketId.Ping );
+			SendPacket();
+		}
 		
 		void HandleLevelInit() {
 			if( gzipStream != null )
