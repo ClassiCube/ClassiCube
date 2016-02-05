@@ -186,19 +186,22 @@ namespace ClassicalSharp {
 			return multiply;
 		}
 		
+		const float inf = float.PositiveInfinity;
 		float LowestSpeedModifier() {
 			BoundingBox bounds = CollisionBounds;
 			useLiquidGravity = false;
 			float baseModifier = LowestModifier( bounds, false );
 			bounds.Min.Y -= 0.1f; // also check block standing on
 			float solidModifier = LowestModifier( bounds, true );
-			return Math.Max( baseModifier, solidModifier );
+			
+			if( baseModifier == inf && solidModifier == inf ) return 1;
+			return baseModifier == inf ? solidModifier : baseModifier;
 		}
 		
 		float LowestModifier( BoundingBox bounds, bool checkSolid ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
-			float modifier = float.PositiveInfinity;
+			float modifier = inf;
 			
 			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
 				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
@@ -219,7 +222,7 @@ namespace ClassicalSharp {
 				if( block >= BlockInfo.CpeBlocksCount && type == BlockCollideType.SwimThrough )
 					useLiquidGravity = true;
 			}
-			return modifier == float.PositiveInfinity ? 1 : modifier;
+			return modifier;
 		}
 		
 		/// <summary> Calculates the jump velocity required such that when a client presses
