@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 			SkinName = game.Username;
 			SkinIdentifier = "skin_255";
 			
-			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 7 );
+			SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			PushbackPlacing = Options.GetBool( OptionsKey.PushbackPlacing, false );
 			NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
 			DoubleJump = Options.GetBool( OptionsKey.DoubleJump, false );
