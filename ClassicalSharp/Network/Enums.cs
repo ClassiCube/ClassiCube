@@ -63,16 +63,14 @@ namespace ClassicalSharp {
 		ClientStatus4 = 259,
 		ClientStatus5 = 260,
 		ClientStatus6 = 261, // no LongerMessages warning
+		ClientClock = 262,
 	}
 	
 	public enum CpeBlockFace {
-		XMax, XMin, YMax,
-		YMin, ZMax, ZMin,
+		XMax, XMin, YMax, YMin, ZMax, ZMin,
 	}
 	
 	public enum Weather {
-		Sunny,
-		Rainy,
-		Snowy,
+		Sunny, Rainy, Snowy,
 	}
 }

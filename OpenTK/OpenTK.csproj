@@ -143,11 +143,6 @@
     <Folder Include="SharpDX.Direct3D" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="OpenTK.dll.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
       <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
       <Name>InteropPatcher</Name>

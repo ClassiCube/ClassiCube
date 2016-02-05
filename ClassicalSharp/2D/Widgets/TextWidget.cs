@@ -25,6 +25,8 @@ namespace ClassicalSharp {
 		protected int defaultHeight;
 		protected readonly Font font;
 		
+		public bool IsValid { get { return texture.IsValid; } }
+		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			defaultHeight = game.Drawer2D.MeasureSize( ref args ).Height;

@@ -59,6 +59,8 @@ namespace ClassicalSharp {
 		/// <summary> Whether the third person camera should have their camera position clipped so as to not intersect blocks. </summary>
 		public bool CameraClipping = true;
 		
+		public bool ShowClock = false;
+		
 		public MapRenderer MapRenderer;
 		public MapBordersRenderer MapBordersRenderer;
 		public EnvRenderer EnvRenderer;

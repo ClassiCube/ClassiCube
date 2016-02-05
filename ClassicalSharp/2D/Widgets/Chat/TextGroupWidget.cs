@@ -6,11 +6,13 @@ namespace ClassicalSharp {
 	
 	public sealed partial class TextGroupWidget : Widget {
 		
-		public TextGroupWidget( Game game, int elementsCount, 
-		                       Font font, Font underlineFont ) : base( game ) {
+		public TextGroupWidget( Game game, int elementsCount, Font font, 
+		                       Font underlineFont, Anchor horAnchor, Anchor verAnchor ) : base( game ) {
 			ElementsCount = elementsCount;
 			this.font = font;
 			this.underlineFont = underlineFont;
+			HorizontalAnchor = horAnchor;
+			VerticalAnchor = verAnchor;
 		}
 		
 		public Texture[] Textures;

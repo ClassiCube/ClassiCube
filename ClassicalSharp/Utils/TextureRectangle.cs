@@ -11,10 +11,10 @@ namespace ClassicalSharp {
 			U2 = u + uWidth; V2 = v + vHeight;
 		}
 		
-		public static TextureRec FromPoints( float u1, float u2, float v1, float v2 ) {
+		public static TextureRec FromPoints( float u1, float v1, float u2,  float v2 ) {
 			TextureRec rec;
-			rec.U1 = u1;rec.U2 = u2;
-			rec.V1 = v1; rec.V2 = v2;
+			rec.U1 = u1; rec.V1 = v1;
+			rec.U2 = u2; rec.V2 = v2;
 			return rec;
 		}
 
@@ -23,9 +23,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal void SwapU() {
-			float u2 = U2;
-			U2 = U1;
-			U1 = u2;
+			float u2 = U2; U2 = U1; U1 = u2;
 		}
 	}
 }

@@ -13,17 +13,104 @@ namespace ClassicalSharp {
 		}
 		
 		int chatLines;
-		Texture announcementTex;
+		ChatTextWidget announcement, clock;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
 		int chatIndex;
 		int blockSize;
 		
+		Font chatFont, chatBoldFont, chatItalicFont, chatUnderlineFont, announcementFont;
+		public override void Init() {
+			int fontSize = (int)(12 * game.GuiChatScale);
+			Utils.Clamp( ref fontSize, 8, 60 );
+			chatFont = new Font( game.FontName, fontSize );
+			chatBoldFont = new Font( game.FontName, fontSize, FontStyle.Bold );
+			chatItalicFont = new Font( game.FontName, fontSize, FontStyle.Italic );
+			chatUnderlineFont = new Font( game.FontName, fontSize, FontStyle.Underline );
+			
+			fontSize = (int)(14 * game.GuiChatScale);
+			Utils.Clamp( ref fontSize, 8, 60 );
+			announcementFont = new Font( game.FontName, fontSize );
+			blockSize = (int)(23 * 2 * game.GuiHotbarScale);
+			ConstructWidgets();
+			
+			int[] indices = new int[chatLines];
+			for( int i = 0; i < indices.Length; i++ )
+				indices[i] = -1;
+			Metadata = indices;
+			SetInitialMessages();
+			
+			game.Events.ChatReceived += ChatReceived;
+			game.Events.ChatFontChanged += ChatFontChanged;
+			game.Events.ColourCodesChanged += ColourCodesChanged;
+		}
+		
+		void ConstructWidgets() {
+			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
+			textInput.YOffset = blockSize + 5;
+			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont, 
+			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
+			status.Init();
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont, 
+			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
+			bottomRight.YOffset = blockSize * 3 / 2;
+			bottomRight.Init();
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont, 
+			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
+			normalChat.XOffset = 10;
+			normalChat.YOffset = blockSize * 2 + 15;
+			normalChat.Init();
+			clientStatus = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont, 
+			                                   Anchor.LeftOrTop, Anchor.BottomOrRight );
+			clientStatus.XOffset = 10;
+			clientStatus.YOffset = blockSize * 2 + 15;
+			clientStatus.Init();
+			announcement = ChatTextWidget.Create( game, 0, 0, null, 
+			                                     Anchor.Centre, Anchor.Centre, announcementFont );
+			announcement.YOffset = game.Height / 4;
+			clock = ChatTextWidget.Create( game, 0, 0, null, 
+			                              Anchor.BottomOrRight, Anchor.LeftOrTop, chatItalicFont );
+		}
+		
+		void SetInitialMessages() {
+			Chat chat = game.Chat;
+			chatIndex = chat.Log.Count - chatLines;
+			ResetChat();
+			status.SetText( 0, chat.Status1.Text );
+			status.SetText( 1, chat.Status2.Text );
+			status.SetText( 2, chat.Status3.Text );
+			if( game.ShowClock ) clock.SetText( chat.ClientClock.Text );
+			
+			bottomRight.SetText( 2, chat.BottomRight1.Text );
+			bottomRight.SetText( 1, chat.BottomRight2.Text );
+			bottomRight.SetText( 0, chat.BottomRight3.Text );
+			announcement.SetText( chat.Announcement.Text );
+			for( int i = 0; i < chat.ClientStatus.Length; i++ )
+				clientStatus.SetText( i, chat.ClientStatus[i].Text );
+			
+			if( game.chatInInputBuffer != null ) {
+				OpenTextInputBar( game.chatInInputBuffer );
+				game.chatInInputBuffer = null;
+			}
+		}
+		
 		public override void Render( double delta ) {
 			if( !game.PureClassicMode ) {
 				status.Render( delta );
 				bottomRight.Render( delta );
+			}
+			
+			if( game.ShowClock ) {
+				if( !clock.IsValid ) clock.SetText( game.Chat.ClientClock.Text );
+				clock.Render( delta );
+			} else if( clock.IsValid ) {
+				clock.Dispose();
+			}
+			int statusOffset = clock.IsValid ? clock.Height : 0;
+			if( statusOffset != oldStatusOffset ) {
+				oldStatusOffset = statusOffset;
+				status.MoveTo( status.X, oldStatusOffset );
 			}
 			
 			UpdateChatYOffset( false );
@@ -34,15 +121,13 @@ namespace ClassicalSharp {
 			else
 				RenderRecentChat( now, delta );
 			
-			if( !game.PureClassicMode && announcementTex.IsValid )
-				announcementTex.Render( graphicsApi );
+			if( !game.PureClassicMode )
+				announcement.Render( delta );
 			if( HandlesAllInput )
 				textInput.Render( delta );
 			
-			if( game.Chat.Announcement.Text != null && announcementTex.IsValid &&
-			   (now - game.Chat.Announcement.Received).TotalSeconds > 5 ) {
-				graphicsApi.DeleteTexture( ref announcementTex );
-			}
+			if( announcement.IsValid && (now - game.Chat.Announcement.Received).TotalSeconds > 5 )
+				announcement.Dispose();
 		}
 		
 		void RenderRecentChat( DateTime now, double delta ) {
@@ -81,7 +166,7 @@ namespace ClassicalSharp {
 				graphicsApi.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
 		}
 		
-		int inputOldHeight = -1;
+		int inputOldHeight = -1, oldStatusOffset = -1;
 		void UpdateChatYOffset( bool force ) {
 			int height = textInput.RealHeight;
 			if( force || height != inputOldHeight ) {
@@ -94,70 +179,6 @@ namespace ClassicalSharp {
 				normalChat.MoveTo( normalChat.X, y );
 				inputOldHeight = height;
 			}
-		}
-		
-		Font chatFont, chatInputFont, chatUnderlineFont, announcementFont;
-		public override void Init() {
-			int fontSize = (int)(12 * game.GuiChatScale);
-			Utils.Clamp( ref fontSize, 8, 60 );
-			chatFont = new Font( game.FontName, fontSize );
-			chatInputFont = new Font( game.FontName, fontSize, FontStyle.Bold );
-			chatUnderlineFont = new Font( game.FontName, fontSize, FontStyle.Underline );
-			
-			fontSize = (int)(14 * game.GuiChatScale);
-			Utils.Clamp( ref fontSize, 8, 60 );
-			announcementFont = new Font( game.FontName, fontSize );
-			blockSize = (int)(23 * 2 * game.GuiHotbarScale);
-			
-			textInput = new TextInputWidget( game, chatFont, chatInputFont );
-			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont );
-			status.VerticalAnchor = Anchor.LeftOrTop;
-			status.HorizontalAnchor = Anchor.BottomOrRight;
-			status.Init();
-			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont );
-			bottomRight.VerticalAnchor = Anchor.BottomOrRight;
-			bottomRight.HorizontalAnchor = Anchor.BottomOrRight;
-			bottomRight.YOffset = blockSize * 3 / 2;
-			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont );
-			normalChat.XOffset = 10;
-			normalChat.YOffset = blockSize * 2 + 15;
-			normalChat.HorizontalAnchor = Anchor.LeftOrTop;
-			normalChat.VerticalAnchor = Anchor.BottomOrRight;
-			normalChat.Init();
-			clientStatus = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont );
-			clientStatus.XOffset = 10;
-			clientStatus.YOffset = blockSize * 2 + 15;
-			clientStatus.HorizontalAnchor = Anchor.LeftOrTop;
-			clientStatus.VerticalAnchor = Anchor.BottomOrRight;
-			clientStatus.Init();
-			
-			int[] indices = new int[chatLines];
-			for( int i = 0; i < indices.Length; i++ )
-				indices[i] = -1;
-			Metadata = indices;
-			
-			Chat chat = game.Chat;
-			chatIndex = chat.Log.Count - chatLines;
-			ResetChat();
-			status.SetText( 0, chat.Status1.Text );
-			status.SetText( 1, chat.Status2.Text );
-			status.SetText( 2, chat.Status3.Text );
-			bottomRight.SetText( 2, chat.BottomRight1.Text );
-			bottomRight.SetText( 1, chat.BottomRight2.Text );
-			bottomRight.SetText( 0, chat.BottomRight3.Text );
-			UpdateAnnouncement( chat.Announcement.Text );
-			for( int i = 0; i < chat.ClientStatus.Length; i++ )
-				clientStatus.SetText( i, chat.ClientStatus[i].Text );
-			
-			if( game.chatInInputBuffer != null ) {
-				OpenTextInputBar( game.chatInInputBuffer );
-				game.chatInInputBuffer = null;
-			}
-			game.Events.ChatReceived += ChatReceived;
-			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Events.ColourCodesChanged += ColourCodesChanged;
 		}
 
 		void ColourCodesChanged( object sender, EventArgs e ) {
@@ -182,10 +203,12 @@ namespace ClassicalSharp {
 			} else if( type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3 ) {
 				bottomRight.SetText( 2 - (int)(type - MessageType.BottomRight1), e.Text );
 			} else if( type == MessageType.Announcement ) {
-				UpdateAnnouncement( e.Text );
+				announcement.SetText( e.Text );
 			} else if( type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6 ) {
 				clientStatus.SetText( (int)(type - MessageType.ClientStatus1), e.Text );
 				UpdateChatYOffset( true );
+			} else if( type == MessageType.ClientClock && game.ShowClock ) {
+				clock.SetText( e.Text );
 			}
 		}
 
@@ -198,7 +221,8 @@ namespace ClassicalSharp {
 				game.chatInInputBuffer = null;
 			}
 			chatFont.Dispose();
-			chatInputFont.Dispose();
+			chatItalicFont.Dispose();
+			chatBoldFont.Dispose();
 			chatUnderlineFont.Dispose();
 			announcementFont.Dispose();
 			
@@ -207,8 +231,8 @@ namespace ClassicalSharp {
 			status.Dispose();
 			bottomRight.Dispose();
 			clientStatus.Dispose();
+			announcement.Dispose();
 			
-			graphicsApi.DeleteTexture( ref announcementTex );
 			game.Events.ChatReceived -= ChatReceived;
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			game.Events.ColourCodesChanged -= ColourCodesChanged;
@@ -222,8 +246,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			announcementTex.X1 += (width - oldWidth) / 2;
-			announcementTex.Y1 += (height - oldHeight) / 2;
+			announcement.OnResize( oldWidth, oldHeight, width, height );
+			announcement.YOffset = height / 4;
+			announcement.MoveTo( announcement.X, announcement.YOffset - announcement.Height / 2 );
 			blockSize = (int)(23 * 2 * game.GuiHotbarScale);
 			textInput.YOffset = blockSize + 5;
 			bottomRight.YOffset = blockSize * 3 / 2;
@@ -234,14 +259,7 @@ namespace ClassicalSharp {
 			bottomRight.OnResize( oldWidth, oldHeight, width, height );
 			UpdateChatYOffset( true );
 		}
-		
-		void UpdateAnnouncement( string text ) {
-			DrawTextArgs args = new DrawTextArgs( text, announcementFont, true );
-			announcementTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-			announcementTex.X1 = game.Width / 2 - announcementTex.Width / 2;
-			announcementTex.Y1 = game.Height / 4 - announcementTex.Height / 2;
-		}
-		
+
 		void ResetChat() {
 			normalChat.Dispose();
 			List<ChatLine> chat = game.Chat.Log;

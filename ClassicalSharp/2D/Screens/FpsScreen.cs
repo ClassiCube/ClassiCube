@@ -30,7 +30,9 @@ namespace ClassicalSharp {
 		}
 		
 		double accumulator, maxDelta;
-		int fpsCount;
+		int fpsCount, totalSeconds;
+		int oldMinutes = -1;
+		
 		void UpdateFPS( double delta ) {
 			fpsCount++;
 			maxDelta = Math.Max( maxDelta, delta );
@@ -38,6 +40,7 @@ namespace ClassicalSharp {
 
 			if( accumulator >= 1 ) {
 				int index = 0;
+				totalSeconds++;
 				if( game.PureClassicMode ) {
 					text.Clear()
 					.AppendNum( ref index, (int)(fpsCount / accumulator) ).Append( ref index, " fps, " )
@@ -49,7 +52,21 @@ namespace ClassicalSharp {
 					.Append( ref index, "), chunks/s: " ).AppendNum( ref index, game.ChunkUpdates )
 					.Append( ref index, ", vertices: " ).AppendNum( ref index, game.Vertices );
 				}
-				
+				int minutes = totalSeconds / 60;
+				if( minutes != oldMinutes && game.ShowClock ) {
+					oldMinutes = minutes;
+					TimeSpan span = TimeSpan.FromMinutes( minutes );
+					string format = null;
+					
+					if( span.TotalDays > 1 )
+						format = "&eBeen playing for {2} day" + Q( span.Days ) + ", {1} hour" + Q( span.Hours ) + ", {0} min" + Q( span.Minutes );
+					else if( span.TotalHours > 1 )
+						format = "&eBeen playing for {1} hour" + Q( span.Hours ) + ", {0} mins" + Q( span.Minutes );
+					else
+						format = "&eBeen playing for {0} min" + Q( span.Minutes );
+					string spanText = String.Format( format, span.Minutes, span.Hours, span.Days );
+					game.Chat.Add( spanText, MessageType.ClientClock );
+				}
 				
 				string textString = text.GetString();
 				fpsTextWidget.SetText( textString );
@@ -59,6 +76,8 @@ namespace ClassicalSharp {
 				game.ChunkUpdates = 0;
 			}
 		}
+		
+		string Q( int value ) { return value == 1 ? "" : "s"; }
 		
 		public override void Init() {
 			font = new Font( game.FontName, 13 );
