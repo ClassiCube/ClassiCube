@@ -81,6 +81,7 @@ namespace ClassicalSharp {
 			
 		void HandlePing() {
             writer.WriteUInt8((byte)PacketId.Ping);
+            SendPacket();
         }
 		
 		void HandleLevelInit() {
