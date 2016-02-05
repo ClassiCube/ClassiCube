@@ -347,9 +347,10 @@ namespace ClassicalSharp {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBinding.OpenInventory] ) {
 				game.SetNewScreen( new BlockSelectScreen( game ) );
-			}  else if( key == Key.F8 ) {
-				game.LocalPlayer.ShowShadow = !game.LocalPlayer.ShowShadow;
-			} else {
+			} else if( key == Key.F8 ) {
+				int newMode = ((int)game.LocalPlayer.Shadow + 1) % 3;
+				game.LocalPlayer.Shadow = (EntityShadow)newMode;
+			}else {
 				return false;
 			}
 			return true;

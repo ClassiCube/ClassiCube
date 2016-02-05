@@ -47,9 +47,20 @@ namespace ClassicalSharp {
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
 		}
 		
-		internal void DrawShadow( bool show ) {
-			int x = Utils.Floor( Position.X ), z = Utils.Floor( Position.Z );
-			if( !show || !game.Map.IsValidPos( x, 0, z ) || Position.Y < 0 ) return;
+		internal void DrawShadow( EntityShadow shadow ) {
+			if( shadow == EntityShadow.None ) return;
+			float posX = Position.X, posZ = Position.Z;
+			float x1 = 0, x2 = 0, z1, z2 = 0;
+			if( shadow == EntityShadow.SnapToBlock ) {
+				x1 = Utils.Floor( posX ); x2 = x1 + 1;
+				z1 = Utils.Floor( posZ ); z2 = z1 + 1;
+			} else {
+				x1 = posX - 7/16f; x2 = posX + 7/16f;
+				z1 = posZ - 7/16f; z2 = posZ + 7/16f;
+			}
+
+			int blockX = Utils.Floor( Position.X ), blockZ = Utils.Floor( Position.Z );
+			if( !game.Map.IsValidPos( blockX, 0, blockZ ) || Position.Y < 0 ) return;
 			CheckShadowTexture();
 			BlockInfo info = game.BlockInfo;
 			game.Graphics.BindTexture( shadowTex );
@@ -57,25 +68,31 @@ namespace ClassicalSharp {
 			int y = Math.Min( (int)Position.Y, game.Map.Height - 1 );
 			float shadowY = 0;
 			while( y >= 0 ) {
-				byte block = game.Map.GetBlock( x, y, z );
+				byte block = game.Map.GetBlock( blockX, y, blockZ );
 				if( !(info.IsAir[block] || info.IsSprite[block]) ) {
 					shadowY = y + info.MaxBB[block].Y; break;
 				}
 				y--;
 			}
 			
-			if( (Position.Y - y) <= 16 ) shadowY += 1/32f;
+			byte rgb = 80;
+			if( (Position.Y - y) <= 16 ) { shadowY += 1/32f; rgb = (byte)(80 * (Position.Y - y) / 16); }
 			else if( (Position.Y - y) <= 32 ) shadowY += 1/16f;
 			else if( (Position.Y - y) <= 96 ) shadowY += 1/8f;
 			else shadowY += 1/4f;
 			VertexPos3fTex2fCol4b[] verts = game.Graphics.texVerts;
 			int vb = game.Graphics.texVb;
+			game.Graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
-			FastColour col = FastColour.White;
-			verts[0] = new VertexPos3fTex2fCol4b( x, shadowY, z, 0, 0, col );
-			verts[1] = new VertexPos3fTex2fCol4b( x + 1, shadowY, z, 1, 0, col );
-			verts[2] = new VertexPos3fTex2fCol4b( x + 1, shadowY, z + 1, 1, 1, col );
-			verts[3] = new VertexPos3fTex2fCol4b( x, shadowY, z + 1, 0, 1, col );
+			FastColour col = new FastColour( rgb, rgb, rgb );
+			float u1 = 0, v1 = 0, u2 = 1, v2 = 1;
+			if( shadow == EntityShadow.SnapToBlock ) {
+				u1 = 63/128f; v1 = 63/128f; u2 = 64/128f; v2 = 64/128f;
+			}
+			verts[0] = new VertexPos3fTex2fCol4b( x1, shadowY, z1, u1, v1, col );
+			verts[1] = new VertexPos3fTex2fCol4b( x2, shadowY, z1, u2, v1, col );
+			verts[2] = new VertexPos3fTex2fCol4b( x2, shadowY, z2, u2, v2, col );
+			verts[3] = new VertexPos3fTex2fCol4b( x1, shadowY, z2, u1, v2, col );
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, 4, 6 );
 		}
 		
@@ -86,7 +103,7 @@ namespace ClassicalSharp {
 			using( Bitmap bmp = new Bitmap( size, size ) )
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) )
 			{
-				int inPix = new FastColour( 0, 0, 0, 200 ).ToArgb();
+				int inPix = new FastColour( 127, 127, 127, 200 ).ToArgb();
 				int outPix = inPix & 0xFFFFFF;
 				for( int y = 0; y < fastBmp.Height; y++ ) {
 					int* row = fastBmp.GetRowPtr( y );

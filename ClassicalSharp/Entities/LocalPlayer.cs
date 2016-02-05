@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 		/// when the 'speeding' key binding is held down. </summary>
 		public float SpeedMultiplier = 10;
 		
-		public bool ShowShadow = false;
+		public EntityShadow Shadow = EntityShadow.None;
 		
 		public byte UserType;
 		
