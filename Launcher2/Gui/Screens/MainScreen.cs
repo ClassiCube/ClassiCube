@@ -92,8 +92,10 @@ namespace Launcher2 {
 			game.ClassicMode = !game.ClassicMode;
 			Options.Load();
 			Options.Set( "mode-classic", game.ClassicMode );
-			if( game.ClassicMode )
+			if( game.ClassicMode ) {
 				Options.Set( "namesmode", "AllNamesAndHovered" );
+				Options.Set( "gui-arialchatfont", "false" );
+			}
 			
 			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
 			Options.Set( "nostalgia-usecpe", !game.ClassicMode );

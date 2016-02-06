@@ -30,32 +30,32 @@ namespace ClassicalSharp {
 		void MakeNormal() {
 			widgets = new Widget[] {
 				// Column 1
-				Make( -140, -150, "Misc options", Anchor.Centre,
+				Make( -140, -150, "Misc options",
 				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
-				Make( -140, -100, "Gui options", Anchor.Centre,
+				Make( -140, -100, "Gui options",
 				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
-				Make( -140, -50, "Hacks settings", Anchor.Centre,
+				Make( -140, -50, "Hacks settings",
 				     (g, w) => g.SetNewScreen( new HacksSettingsScreen( g ) ) ),
-				Make( -140, 0, "Env settings", Anchor.Centre,
+				Make( -140, 0, "Env settings",
 				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( -140, 50, "Key bindings", Anchor.Centre,
+				Make( -140, 50, "Key bindings",
 				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
 				
 				// Column 2
-				Make( 140, -150, "Save level", Anchor.Centre,
+				Make( 140, -150, "Save level",
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -100, "Load level", Anchor.Centre,
+					Make( 140, -100, "Load level",
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -50, "Generate level", Anchor.Centre,
+					Make( 140, -50, "Generate level",
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
-				Make( 140, 0, "Select texture pack", Anchor.Centre,
+				Make( 140, 0, "Select texture pack",
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
-				Make( 140, 50, "Hotkeys", Anchor.Centre,
+				Make( 140, 50, "Hotkeys",
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
 				
-				Make( 0, 100, "Nostalgia options", Anchor.Centre,
+				Make( 0, 100, "Nostalgia options",
 				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
 				
 				// Other
@@ -68,23 +68,23 @@ namespace ClassicalSharp {
 		
 		void MakeClassic() {
 			widgets = new Widget[] {
-				MakeClassic( 0, -100, "Options", Anchor.Centre, 
+				MakeClassic( 0, -100, "Options",
 				     (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					MakeClassic( 0, -50, "Generate level", Anchor.Centre, 
+					MakeClassic( 0, -50, "Generate level",
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :
-					MakeClassic( 0, 0, "Load level", Anchor.Centre, 
+					MakeClassic( 0, 0, "Load level",
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				
-				MakeClassic( 0, 50, "Save level", Anchor.Centre, 
+				MakeClassic( 0, 50, "Save level",
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
 				
 				game.PureClassicMode ? null :
-					MakeClassic( 0, 150, "Nostalgia options", Anchor.Centre,
+					MakeClassic( 0, 150, "Nostalgia options",
 				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
 			};
 		}
@@ -100,14 +100,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
+		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create( game, x, y, 240, 35, text,
-			                           Anchor.Centre, vDocking, titleFont, LeftOnly( onClick ) );
+			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
 		}
 		
-		ButtonWidget MakeClassic( int x, int y, string text, Anchor vDocking, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 400, 40, text,
-			                           Anchor.Centre, vDocking, titleFont, LeftOnly( onClick ) );
+		ButtonWidget MakeClassic( int x, int y, string text, Action<Game, Widget> onClick ) {
+			return ButtonWidget.Create( game, x, y, 401, 41, text,
+			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
 		}
 		
 		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {

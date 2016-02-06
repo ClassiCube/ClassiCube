@@ -119,12 +119,19 @@ namespace ClassicalSharp {
 		
 		protected virtual void InputClosed() { }
 		
-		protected virtual ButtonWidget Make( int x, int y, string text, ClickHandler onClick,
-		                                    Func<Game, string> getter, Action<Game, string> setter ) {
+		protected ButtonWidget Make( int x, int y, string text, ClickHandler onClick,
+		                            Func<Game, string> getter, Action<Game, string> setter ) {
 			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter;
-			widget.SetValue = setter;
+			widget.GetValue = getter; widget.SetValue = setter;
+			return widget;
+		}
+		
+		protected ButtonWidget MakeClassic( int x, int y, string text, ClickHandler onClick,
+		                                   Func<Game, string> getter, Action<Game, string> setter ) {
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, 301, 41, text, Anchor.Centre,
+			                                          Anchor.Centre, titleFont, onClick );
+			widget.GetValue = getter; widget.SetValue = setter;
 			return widget;
 		}
 		
@@ -209,7 +216,7 @@ namespace ClassicalSharp {
 			                                     Anchor.Centre, regularFont, titleFont, validator );
 			widgets[widgets.Length - 2] = inputWidget;
 			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
-			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
+			                                                  Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			InputOpened();
 			UpdateDescription( targetWidget );
 		}

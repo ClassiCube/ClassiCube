@@ -15,23 +15,23 @@ namespace ClassicalSharp {
 			
 			widgets = new Widget[] {
 				// Column 1
-				Make( -140, -200, "Music", OnWidgetClick,
+				MakeClassic( -165, -200, "Music", OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
 				     	g.AudioPlayer.SetMusic( g.UseMusic );
 				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
-				Make( -140, -150, "Invert mouse", OnWidgetClick,
+				MakeClassic( -165, -150, "Invert mouse", OnWidgetClick,
 				     g => g.InvertMouse ? "yes" : "no",
 				     (g, v) => { g.InvertMouse = v == "yes";
 				     	Options.Set( OptionsKey.InvertMouse, v == "yes" ); }),
 				
-				Make( -140, -100, "View distance", OnWidgetClick,
+				MakeClassic( -165, -100, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
 				!network.IsSinglePlayer ? null :
-					Make( -140, -50, "Block physics", OnWidgetClick,
+					MakeClassic( -165, -50, "Block physics", OnWidgetClick,
 					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
 					     (g, v) => {
 					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
@@ -39,29 +39,29 @@ namespace ClassicalSharp {
 					     }),
 				
 				// Column 2
-				Make( 140, -200, "Sound", OnWidgetClick,
+				MakeClassic( 165, -200, "Sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
-				Make( 140, -150, "Show FPS", OnWidgetClick,
+				MakeClassic( 165, -150, "Show FPS", OnWidgetClick,
 				     g => g.ShowFPS ? "yes" : "no",
 				    (g, v) => { g.ShowFPS = v == "yes";
 				     	Options.Set( OptionsKey.ShowFPS, v == "yes" ); }),
 				
-				Make( 140, -100, "View bobbing", OnWidgetClick,
+				MakeClassic( 165, -100, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
-				Make( 140, -50, "FPS limit", OnWidgetClick,
+				MakeClassic( 165, -50, "FPS limit", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 				
-				Make( 0, 50, "Controls", LeftOnly(
+				MakeClassic( 0, 50, "Controls", LeftOnly(
 					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ), null, null ),
 				
 				MakeBack( false, titleFont,
