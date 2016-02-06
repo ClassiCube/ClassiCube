@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static T GetEnum<T>( string key, T defValue ) {
-			string value = Options.Get( key.ToLower() );
+			string value = Get( key.ToLower() );
 			if( value == null ) {
 				Set( key, defValue );
 				return defValue;
@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 			
 			T mapping;
 			if( !Utils.TryParseEnum( value, defValue, out mapping ) )
-				Options.Set( key, defValue );
+				Set( key, defValue );
 			return mapping;
 		}
 		

@@ -134,7 +134,7 @@ namespace ClassicalSharp {
 		public static bool TryParseEnum<T>( string value, T defValue, out T result ) {
 			T mapping;
 			try {
-				mapping = (T)Enum.Parse( typeof( T ), value, true );
+				mapping = (T)Enum.Parse( typeof(T), value, true );
 			} catch( ArgumentException ) {
 				result = defValue;
 				return false;

@@ -48,10 +48,10 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
-			Graphics.MakeGraphicsInfo();
-			Players = new EntityList( this );
+			Graphics.MakeGraphicsInfo();			
 			
 			Options.Load();
+			Players = new EntityList( this );
 			AcceptedUrls.Load(); DeniedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			UserViewDistance = ViewDistance;
