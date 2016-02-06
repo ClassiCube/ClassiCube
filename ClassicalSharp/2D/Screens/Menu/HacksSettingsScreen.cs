@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				// Column 1
 				Make( -140, -150, "Hacks enabled", OnWidgetClick,
 				     g => g.LocalPlayer.HacksEnabled ? "yes" : "no",
@@ -65,12 +65,11 @@ namespace ClassicalSharp {
 				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
-				null,
+				null, null,
 			};
 			
 			MakeValidators();
 			MakeDescriptions();
-			okayIndex = widgets.Length - 1;
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			CheckHacksAllowed( null, null );
 		}

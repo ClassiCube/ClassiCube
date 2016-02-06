@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				// Column 1
 				Make( -140, -150, "Block in hand", OnWidgetClick,
 				     g => g.ShowBlockInHand ? "yes" : "no",
@@ -80,11 +80,9 @@ namespace ClassicalSharp {
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
-				null,
-			};
-			
+				null, null,
+			};			
 			MakeValidators();
-			okayIndex = widgets.Length - 1;
 		}
 		
 		void HandleFontChange() {
@@ -92,6 +90,7 @@ namespace ClassicalSharp {
 			
 			if( inputWidget != null ) {
 				inputWidget.Dispose(); inputWidget = null;
+				widgets[widgets.Length - 2] = null;
 			}
 			if( descWidget != null ) {
 				descWidget.Dispose(); descWidget = null;

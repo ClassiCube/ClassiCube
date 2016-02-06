@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			statusWidget.Render( delta );
 			graphicsApi.Texturing = false;
 		}

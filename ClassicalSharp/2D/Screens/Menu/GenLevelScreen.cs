@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			for( int i = 0; i < inputs.Length; i++ )
 				inputs[i].Render( delta );
 			for( int i = 0; i < labels.Length; i++ )
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 		MenuInputWidget MakeInput( int y, bool seed, string value ) {
 			MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator( 1, 8192 );
 			MenuInputWidget widget = MenuInputWidget.Create(
-				game, 0, y, 200, 25, value, Anchor.Centre, Anchor.Centre,
+				game, 0, y, 200, 30, value, Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, validator );
 			widget.Active = false;
 			widget.OnClick = InputClick;

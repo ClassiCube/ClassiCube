@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			graphicsApi.Texturing = false;
 		}
 		
@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeNormal() {
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				// Column 1
 				Make( -140, -150, "Misc options", Anchor.Centre,
 				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 		}
 		
 		void MakeClassic() {
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				MakeClassic( 0, -100, "Options", Anchor.Centre, 
 				     (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
 				!game.Network.IsSinglePlayer ? null :

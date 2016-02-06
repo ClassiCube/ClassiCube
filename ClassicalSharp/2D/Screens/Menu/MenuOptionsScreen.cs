@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 		protected MenuInputWidget inputWidget;
 		protected MenuInputValidator[] validators;
 		protected TextWidget descWidget;
-		protected int okayIndex;
 		protected string[][] descriptions;
 		protected ChatTextWidget[] extendedHelp;
 		Font extendedHelpFont;
@@ -26,7 +25,7 @@ namespace ClassicalSharp {
 			}
 			
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			if( inputWidget != null )
 				inputWidget.Render( delta );
 			
@@ -98,7 +97,7 @@ namespace ClassicalSharp {
 		protected ButtonWidget selectedWidget, targetWidget;
 		protected override void WidgetSelected( Widget widget ) {
 			DisposeExtendedHelp();
-			ButtonWidget button = (ButtonWidget)widget;
+			ButtonWidget button = widget as ButtonWidget;
 			if( selectedWidget == button || button == null ||
 			   button == widgets[widgets.Length - 2] ) return;
 			
@@ -181,13 +180,13 @@ namespace ClassicalSharp {
 		}
 		
 		protected void OnWidgetClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			ButtonWidget button = widget as ButtonWidget;
 			if( mouseBtn == MouseButton.Right ) { ShowExtendedHelp(); return; }
 			if( mouseBtn != MouseButton.Left ) return;
-			if( widget == widgets[okayIndex] ) {
-				ChangeSetting();
-				return;
+			if( widget == widgets[widgets.Length - 1] ) {
+				ChangeSetting(); return;
 			}
-			ButtonWidget button = (ButtonWidget)widget;
+			if( button == null ) return;
 			DisposeExtendedHelp();
 			
 			int index = Array.IndexOf<Widget>( widgets, button );
@@ -206,9 +205,10 @@ namespace ClassicalSharp {
 				inputWidget.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 25, button.GetValue( game ), Anchor.Centre,
+			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 30, button.GetValue( game ), Anchor.Centre,
 			                                     Anchor.Centre, regularFont, titleFont, validator );
-			widgets[okayIndex] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
+			widgets[widgets.Length - 2] = inputWidget;
+			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
 			                                         Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			InputOpened();
 			UpdateDescription( targetWidget );
@@ -232,10 +232,12 @@ namespace ClassicalSharp {
 				targetWidget.SetValue( game, text );
 			if( inputWidget != null )
 				inputWidget.Dispose();
+			widgets[widgets.Length - 2] = null;
 			inputWidget = null;
 			UpdateDescription( targetWidget );
 			targetWidget = null;
 			
+			int okayIndex = widgets.Length - 1;
 			if( widgets[okayIndex] != null )
 				widgets[okayIndex].Dispose();
 			widgets[okayIndex] = null;

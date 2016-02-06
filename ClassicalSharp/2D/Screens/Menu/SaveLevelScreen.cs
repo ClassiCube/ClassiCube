@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			inputWidget.Render( delta );
 			if( descWidget != null )
 				descWidget.Render( delta );
@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputWidget = MenuInputWidget.Create(
-				game, -30, 50, 500, 25, "", Anchor.Centre, Anchor.Centre,
+				game, -30, 50, 500, 30, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new PathValidator() );
 			
 			widgets = new [] {

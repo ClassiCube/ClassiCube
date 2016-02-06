@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 		protected Texture texture;
 		public int XOffset = 0, YOffset = 0;
 		protected int defaultHeight;
-		protected readonly Font font;
+		protected internal Font font;
 		
 		public bool IsValid { get { return texture.IsValid; } }
 		

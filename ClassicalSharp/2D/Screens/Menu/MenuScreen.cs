@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
 		}
 		
-		protected void RenderMenuButtons( double delta ) {
+		protected void RenderMenuWidgets( double delta ) {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;
 				widgets[i].Render( delta );

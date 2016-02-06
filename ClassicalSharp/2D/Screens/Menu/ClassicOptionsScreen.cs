@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 			base.Init();
 			INetworkProcessor network = game.Network;
 			
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				// Column 1
 				Make( -140, -200, "Music", OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
@@ -66,12 +66,11 @@ namespace ClassicalSharp {
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
-				null,
+				null, null,
 			};
 			widgets[7].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
 			MakeDescriptions();
-			okayIndex = widgets.Length - 1;
 		}
 		
 		void MakeValidators() {

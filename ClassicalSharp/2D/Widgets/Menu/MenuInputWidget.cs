@@ -41,8 +41,10 @@ namespace ClassicalSharp {
 		double accumulator;
 		public override void Render( double delta ) {
 			chatInputTexture.Render( graphicsApi );
-			if( (accumulator % 1) >= 0.5 && Active )
-				chatCaretTexture.Render( graphicsApi );
+			//if( (accumulator % 1) < 0.5 && Active ) {
+			//	chatCaretTexture.Y1 = chatInputTexture.Y1 + yOffset;
+			//	chatCaretTexture.Render( graphicsApi );
+			//}
 			accumulator += delta;
 		}
 
@@ -52,6 +54,7 @@ namespace ClassicalSharp {
 			SetText( chatInputText.GetString() );
 		}
 		
+		int yOffset;
 		public void SetText( string value ) {
 			chatInputText.Clear();
 			chatInputText.Append( 0, value );
@@ -59,6 +62,10 @@ namespace ClassicalSharp {
 			Size textSize = game.Drawer2D.MeasureSize( ref args );
 			Size size = new Size( Math.Max( textSize.Width, DesiredMaxWidth ),
 			                     Math.Max( textSize.Height, DesiredMaxHeight ) );
+			yOffset = 0;
+			if( textSize.Height < DesiredMaxHeight )
+				yOffset = DesiredMaxHeight / 2 - textSize.Height / 2;
+			Console.WriteLine( yOffset );
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
 				using( IDrawer2D drawer = game.Drawer2D )
@@ -76,7 +83,7 @@ namespace ClassicalSharp {
 				int hintX = size.Width - hintSize.Width;
 				if( textSize.Width < hintX )
 					drawer.DrawText( ref args, hintX, 0 );
-				chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
+				chatInputTexture = drawer.Make2DTexture( bmp, size, 0, yOffset );
 			}
 			
 			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalAnchor );

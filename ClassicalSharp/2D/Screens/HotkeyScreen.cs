@@ -17,7 +17,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			
 			if( currentAction != null ) {
 				currentAction.Render( delta );
@@ -202,7 +202,7 @@ namespace ClassicalSharp {
 			                   180, 35, textFont, RemoveHotkeyClick );
 			
 			currentAction = MenuInputWidget.Create(
-				game, 0, 90, 600, 25, "", Anchor.Centre, Anchor.Centre,
+				game, 0, 90, 600, 30, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new StringValidator( 64 ) );
 			currentMoreInputLabel = TextWidget.Create(
 				game, -170, 120, "Keep input bar open:",

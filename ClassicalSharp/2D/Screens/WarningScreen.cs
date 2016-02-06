@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			graphicsApi.Texturing = true;
-			RenderMenuButtons( delta );
+			RenderMenuWidgets( delta );
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Render( delta );
 			graphicsApi.Texturing = false;

@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 			base.Init();
 			INetworkProcessor network = game.Network;
 			
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
 					Make( -140, -200, "Click distance", OnWidgetClick,
@@ -78,13 +78,12 @@ namespace ClassicalSharp {
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
-				null,
+				null, null,
 			};
 			widgets[2].Metadata = typeof(NameMode);
 			widgets[3].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
 			MakeDescriptions();
-			okayIndex = widgets.Length - 1;
 		}
 		
 		void MakeValidators() {

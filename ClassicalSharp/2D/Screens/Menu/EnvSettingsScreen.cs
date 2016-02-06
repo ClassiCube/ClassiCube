@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			
-			widgets = new ButtonWidget[] {
+			widgets = new Widget[] {
 				Make( -140, -150, "Clouds colour", OnWidgetClick,
 				     g => g.Map.CloudsCol.ToRGBHexString(),
 				     (g, v) => g.Map.SetCloudsColour( FastColour.Parse( v ) ) ),
@@ -54,13 +54,15 @@ namespace ClassicalSharp {
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
-				null,
-				null,
+				null, null, null,
 			};
 			widgets[7].Metadata = typeof(Weather);
-			defaultIndex = widgets.Length - 2;
-			okayIndex = widgets.Length - 1;
-			
+			MakeDefaultValues();
+			MakeValidators();
+		}
+		
+		void MakeDefaultValues() {
+			defaultIndex = widgets.Length - 3;			
 			defaultValues = new [] {
 				Map.DefaultCloudsColour.ToRGBHexString(),
 				Map.DefaultSkyColour.ToRGBHexString(),
@@ -73,7 +75,9 @@ namespace ClassicalSharp {
 				Weather.Sunny.ToString(),
 				(game.Map.Height / 2).ToString(),
 			};
-			
+		}
+		
+		void MakeValidators() {
 			validators = new MenuInputValidator[] {
 				new HexColourValidator(),
 				new HexColourValidator(),

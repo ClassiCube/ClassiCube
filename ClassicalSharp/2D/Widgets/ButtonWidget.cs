@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		public int XOffset = 0, YOffset = 0;
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		int defaultHeight;
-		readonly Font font;
+		internal Font font;
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
