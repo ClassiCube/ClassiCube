@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			clientStatus.Init();
 			announcement = ChatTextWidget.Create( game, 0, 0, null, 
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
-			announcement.YOffset = game.Height / 4;
+			announcement.YOffset = -game.Height / 4;
 			clock = ChatTextWidget.Create( game, 0, 0, null, 
 			                              Anchor.BottomOrRight, Anchor.LeftOrTop, chatItalicFont );
 		}
@@ -247,7 +247,7 @@ namespace ClassicalSharp {
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			announcement.OnResize( oldWidth, oldHeight, width, height );
-			announcement.YOffset = height / 4;
+			announcement.YOffset = -height / 4;
 			announcement.MoveTo( announcement.X, announcement.YOffset - announcement.Height / 2 );
 			blockSize = (int)(23 * 2 * game.GuiHotbarScale);
 			textInput.YOffset = blockSize + 5;

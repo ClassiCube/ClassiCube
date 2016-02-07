@@ -65,8 +65,13 @@ namespace ClassicalSharp {
 			DownloadedItem item;
 			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
 				if( item.Data != null ) {
-					game.ChangeTerrainAtlas( (Bitmap)item.Data );
-					TextureCache.AddToCache( item.Url, (Bitmap)item.Data );
+					Bitmap bmp = (Bitmap)item.Data;
+					if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+						Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
+						game.Drawer2D.ConvertTo32Bpp( ref bmp );
+					}
+					game.ChangeTerrainAtlas( bmp );
+					TextureCache.AddToCache( item.Url, bmp );
 				} else if( Is304Status( item.WebEx ) ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
 					if( bmp == null ) // Should never happen, but handle anyways.
