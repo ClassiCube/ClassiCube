@@ -189,6 +189,7 @@ namespace ClassicalSharp {
 			Height = defaultHeight;
 			originalText = null;
 			altText.SetActive( false );
+			game.Chat.Add( null, MessageType.ClientStatus4 );
 			game.Chat.Add( null, MessageType.ClientStatus5 );
 			game.Chat.Add( null, MessageType.ClientStatus6 );
 		}

@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 			get { return true; }
 		}
 
-		BinaryWriter writer;		
+		BinaryWriter writer;
 		public override void Save( Stream stream, Game game ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Compress ) ) {
 				writer = new BinaryWriter( wrapper );
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 			WriteString( "Z" ); WriteInt16( (short)spawn.Z );
 			
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "H" ); 
+			WriteString( "H" );
 			WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnYaw, 256 ) );
 			
 			WriteTag( NbtTagType.Int8 );
@@ -113,13 +113,40 @@ namespace ClassicalSharp {
 			WriteTag( NbtTagType.Compound ); WriteString( name );
 			
 			WriteTag( NbtTagType.Int16 );
-			WriteString( "R" ); WriteInt16( col.R );			
+			WriteString( "R" ); WriteInt16( col.R );
 			WriteTag( NbtTagType.Int16 );
-			WriteString( "G" ); WriteInt16( col.G );		
+			WriteString( "G" ); WriteInt16( col.G );
 			WriteTag( NbtTagType.Int16 );
 			WriteString( "B" ); WriteInt16( col.B );
 			
 			WriteTag( NbtTagType.End );
+		}
+		
+		unsafe void WriteCustomBlocksCompound( BlockInfo info, byte id ) {
+			WriteTag( NbtTagType.Compound ); WriteString( "CustomBlock" );
+			
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "ID" ); WriteUInt8( id );
+			WriteTag( NbtTagType.String );
+			WriteString( "Name" ); WriteString( info.Name[id] );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "CollideType" ); WriteUInt8( (byte)info.CollideType[id] );
+			
+			float speed = info.SpeedMultiplier[id];
+			WriteTag( NbtTagType.Real32 );
+			WriteString( "Speed" ); WriteInt32( *((int*)&speed) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Top" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Top ) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Bottom" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Bottom ) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Left" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Left ) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Right" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Right ) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Front" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Front ) );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "Back" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Back ) );
 		}
 		
 		void WriteTag( NbtTagType v ) { writer.Write( (byte)v ); }

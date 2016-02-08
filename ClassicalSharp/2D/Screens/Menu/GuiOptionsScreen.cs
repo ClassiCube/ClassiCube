@@ -109,7 +109,7 @@ namespace ClassicalSharp {
 				
 				new BooleanValidator(),
 				new RealValidator( 0.25f, 4f ),
-				new IntegerValidator( 1, 30 ),
+				new IntegerValidator( 0, 30 ),
 				new BooleanValidator(),
 				new StringValidator( 32 ),
 			};

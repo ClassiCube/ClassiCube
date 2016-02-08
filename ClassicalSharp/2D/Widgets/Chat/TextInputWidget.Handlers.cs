@@ -230,11 +230,14 @@ namespace ClassicalSharp {
 			if( key == Key.V && chatInputText.Length < len ) {
 				string text = Clipboard.GetText();
 				if( String.IsNullOrEmpty( text ) ) return true;
+				game.Chat.Add( null, MessageType.ClientStatus4 );
 				
 				for( int i = 0; i < text.Length; i++ ) {
 					if( !IsValidInputChar( text[i] ) ) {
-						game.Chat.Add( "&eClipboard contained characters that can't be sent on this server." );
-						return true;
+						const string warning = "&eClipboard contained some characters that can't be sent.";
+						game.Chat.Add( warning, MessageType.ClientStatus4 );
+						text = RemoveInvalidChars( text );
+						break;
 					}
 				}
 				AppendText( text );
@@ -246,6 +249,17 @@ namespace ClassicalSharp {
 				return true;
 			}
 			return false;
+		}
+		
+		string RemoveInvalidChars( string input ) {
+			char[] chars = new char[input.Length];
+			int length = 0;
+			for( int i = 0; i < input.Length; i++ ) {
+				char c = input[i];
+				if( !IsValidInputChar( c ) ) continue;
+				chars[length++] = c;
+			}
+			return new String( chars, 0, length );
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {

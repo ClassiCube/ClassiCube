@@ -22,6 +22,9 @@ namespace ClassicalSharp {
 			SetSound( 1, SoundType.Stone ); SetSound( 1, SoundType.Snow ); SetSound( 1, SoundType.Wood );
 			SetSound( 5, SoundType.Cloth ); SetSound( 4, SoundType.Stone ); SetSound( 1, SoundType.Wood );
 			SetSound( 1, SoundType.Stone );
+			
+			curSoundBlock = (int)Block.Fire;
+			SetSound( 1, SoundType.Wood, SoundType.None );
 		}
 		
 		void SetSound( int count, SoundType type ) {

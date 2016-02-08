@@ -60,8 +60,8 @@ namespace ClassicalSharp {
 		ClientStatus1 = 256,
 		ClientStatus2 = 257,
 		ClientStatus3 = 258,
-		ClientStatus4 = 259,
-		ClientStatus5 = 260,
+		ClientStatus4 = 259, // clipboard invalid characters
+		ClientStatus5 = 260, // tab list matching names
 		ClientStatus6 = 261, // no LongerMessages warning
 		ClientClock = 262,
 	}

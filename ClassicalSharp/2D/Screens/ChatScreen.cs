@@ -61,8 +61,8 @@ namespace ClassicalSharp {
 			normalChat.XOffset = 10;
 			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.Init();
-			clientStatus = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont, 
-			                                   Anchor.LeftOrTop, Anchor.BottomOrRight );
+			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont, 
+			                                   chatUnderlineFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
 			clientStatus.XOffset = 10;
 			clientStatus.YOffset = blockSize * 2 + 15;
 			clientStatus.Init();
@@ -191,6 +191,7 @@ namespace ClassicalSharp {
 			MessageType type = e.Type;
 			if( type == MessageType.Normal ) {
 				chatIndex++;
+				if( game.ChatLines == 0 ) return;
 				List<ChatLine> chat = game.Chat.Log;
 				normalChat.PushUpAndReplaceLast( chat[chatIndex + chatLines - 1].Text );
 				
