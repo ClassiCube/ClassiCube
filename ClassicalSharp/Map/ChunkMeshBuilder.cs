@@ -135,15 +135,19 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			Vector3 min = info.MinBB[tile], max = info.MaxBB[tile];
-			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
-			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
-			this.minBB = min; this.maxBB = max;
-			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
-			
 			fullBright = info.FullBright[tile];
 			isTranslucent = info.IsTranslucent[tile];
 			lightFlags = info.LightOffset[tile];
+			
+			Vector3 min = info.MinBB[tile], max = info.MaxBB[tile];
+			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
+			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
+			if( isTranslucent && info.CollideType[tile] == BlockCollideType.SwimThrough ) {
+				x1 -= 0.1f/16; x2 -= 0.1f/16f; z1 -= 0.1f/16f; z2 -= 0.1f/16f;
+				y1 += 0.1f/16; y2 += 0.1f/16f;
+			}
+			this.minBB = min; this.maxBB = max;
+			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
 			if( leftCount != 0 ) DrawLeftFace( leftCount );
 			if( rightCount != 0 ) DrawRightFace( rightCount );

@@ -245,7 +245,8 @@ namespace ClassicalSharp {
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			if( !game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) {
 				Inventory inv = game.Inventory;
-				if( game.Camera.MouseZoom( e ) || CycleZoom( e ) || !inv.CanChangeHeldBlock ) return;
+				bool doZoom = !(IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ));
+				if( (doZoom && game.Camera.MouseZoom( e )) || CycleZoom( e ) || !inv.CanChangeHeldBlock ) return;
 				
 				// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
 				// We must use rounding at final step, not at every intermediate step.
