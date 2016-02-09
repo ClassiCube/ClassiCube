@@ -43,7 +43,7 @@ namespace ClassicalSharp.Model {
 		public abstract BoundingBox PickingBounds { get; }
 		
 		protected Vector3 pos;
-		protected float cosA, sinA;
+		protected float cosYaw, sinYaw, cosHead, sinHead;
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
 		public void RenderModel( Player p ) {
@@ -53,6 +53,11 @@ namespace ClassicalSharp.Model {
 				pos.Y += p.bobYOffset;
 			Map map = game.Map;
 			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
+			
+			cosYaw = (float)Math.Cos( p.YawDegrees * Utils.Deg2Rad );
+			sinYaw = (float)Math.Sin( p.YawDegrees * Utils.Deg2Rad );
+			cosHead = (float)Math.Cos( p.HeadYawDegrees * Utils.Deg2Rad );
+			sinHead = (float)Math.Sin( p.HeadYawDegrees * Utils.Deg2Rad );
 
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			DrawPlayerModel( p );
@@ -193,7 +198,7 @@ namespace ClassicalSharp.Model {
 			float vScale = _64x64 ? 64f : 32f;
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex model = vertices[part.Offset + i];
-				Vector3 newPos = Utils.RotateY( model.X, model.Y, model.Z, cosA, sinA ) + pos;
+				Vector3 newPos = Utils.RotateY( model.X, model.Y, model.Z, cosYaw, sinYaw ) + pos;
 				
 				FastColour col = GetCol( i, part.Count );
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
@@ -205,6 +210,14 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
+			DrawRotated( x, y, z, angleX, angleY, angleZ, part, false );
+		}
+		
+		protected void DrawHeadRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
+			DrawRotated( x, y, z, angleX, angleY, angleZ, part, true );
+		}
+		
+		protected void DrawRotated( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part, bool head ) {
 			float cosX = (float)Math.Cos( -angleX ), sinX = (float)Math.Sin( -angleX );
 			float cosY = (float)Math.Cos( -angleY ), sinY = (float)Math.Sin( -angleY );
 			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
@@ -225,7 +238,9 @@ namespace ClassicalSharp.Model {
 				
 				FastColour col = GetCol( i, part.Count );
 				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
-				Vector3 newPos = Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosA, sinA ) + pos;
+				Vector3 newPos = !head ? Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosYaw, sinYaw ) + pos :
+					Utils.RotateY( loc, cosHead, sinHead ) + Utils.RotateY( new Vector3( x, y, z ), cosYaw, sinYaw ) + pos;
+				
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				AdjustUV( model.U, model.V, vScale, i, ref vertex );

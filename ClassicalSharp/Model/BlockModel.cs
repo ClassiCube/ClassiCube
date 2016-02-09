@@ -70,8 +70,6 @@ namespace ClassicalSharp.Model {
 				block = Byte.Parse( p.ModelName );
 			}
 			
-			cosA = (float)Math.Cos( p.YawRadians );
-			sinA = (float)Math.Sin( p.YawRadians );
 			CalcState( block );
 			if( game.BlockInfo.IsAir[block] )
 				return;
@@ -213,7 +211,7 @@ namespace ClassicalSharp.Model {
 		void TransformVertices() {
 			for( int i = 0; i < index; i++ ) {
 				VertexPos3fTex2fCol4b vertex = cache.vertices[i];
-				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosA, sinA ) + pos;
+				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosYaw, sinYaw ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				cache.vertices[i] = vertex;
 			}

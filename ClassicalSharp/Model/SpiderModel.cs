@@ -45,12 +45,8 @@ namespace ClassicalSharp.Model {
 		protected override void DrawPlayerModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.SpiderTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			cosA = (float)Math.Cos( p.HeadYawRadians );
-			sinA = (float)Math.Sin( p.HeadYawRadians );
-			DrawRotate( 0, 8/16f, -3/16f, -p.PitchRadians, 0, 0, Head );
+			DrawHeadRotate( 0, 8/16f, -3/16f, -p.PitchRadians, 0, 0, Head );
 			
-			cosA = (float)Math.Cos( p.YawRadians );
-			sinA = (float)Math.Sin( p.YawRadians );
 			DrawPart( Link );
 			DrawPart( End );			
 			float rotX = (float)(Math.Sin( p.walkTime ) * p.swing * Math.PI);
