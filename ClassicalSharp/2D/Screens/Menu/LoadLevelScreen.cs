@@ -15,14 +15,14 @@ namespace ClassicalSharp {
 			Array.Copy( cwFiles, 0, files, 0, cwFiles.Length );
 			Array.Copy( datFiles, 0, files, cwFiles.Length, datFiles.Length );
 			
-			for( int i = 0; i < files.Length; i++ ) 
+			for( int i = 0; i < files.Length; i++ )
 				files[i] = Path.GetFileName( files[i] );
 			Array.Sort( files );
 		}
 		
 		public override void Init() {
 			base.Init();
-			buttons[buttons.Length - 1] = 
+			buttons[buttons.Length - 1] =
 				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
 		}
 		
@@ -42,16 +42,23 @@ namespace ClassicalSharp {
 				mapFile = new MapFcm3();
 			} else if( path.EndsWith( ".cw" ) ) {
 				mapFile = new MapCw();
-			}		
+			}
 			
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 					int width, height, length;
 					game.Map.Reset();
+					game.Map.TextureUrl = null;
+					for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
+						game.BlockInfo.ResetBlockInfo( (byte)tile, false );
+					game.BlockInfo.SetupCullingCache();
+					game.BlockInfo.InitLightOffsets();
 					
 					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
 					game.Map.SetData( blocks, width, height, length );
 					game.MapEvents.RaiseOnNewMapLoaded();
+					if( game.AllowServerTextures && game.Map.TextureUrl != null )
+						game.Network.RetrieveTexturePack( game.Map.TextureUrl );
 					
 					LocalPlayer p = game.LocalPlayer;
 					LocationUpdate update = LocationUpdate.MakePosAndOri( p.SpawnPoint, p.SpawnYaw, p.SpawnPitch, false );

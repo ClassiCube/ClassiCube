@@ -9,7 +9,6 @@ namespace ClassicalSharp.Singleplayer {
 
 	public sealed class SinglePlayerServer : INetworkProcessor {
 		
-		Game game;
 		internal Physics physics;
 		internal byte[] generatedMap;
 		IMapGenerator generator;
@@ -62,6 +61,7 @@ namespace ClassicalSharp.Singleplayer {
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
 			physics.Tick();
+			CheckAsyncResources();
 			
 			if( generator == null )
 				return;

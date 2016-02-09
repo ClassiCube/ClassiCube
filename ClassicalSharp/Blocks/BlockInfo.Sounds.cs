@@ -41,8 +41,7 @@ namespace ClassicalSharp {
 	}
 	
 	public enum SoundType : byte {
-		None, Cloth, Glass,
-		Grass, Gravel, Sand,
-		Snow, Stone, Wood,
+		None, Wood, Gravel, Grass, Stone, 
+		Metal, Glass, Cloth, Sand, Snow,
 	}
 }

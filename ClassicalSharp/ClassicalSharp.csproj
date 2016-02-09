@@ -158,6 +158,7 @@
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
+    <Compile Include="Map\Formats\MapCw.Nbt.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />

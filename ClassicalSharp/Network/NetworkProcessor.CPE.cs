@@ -320,17 +320,9 @@ namespace ClassicalSharp {
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
+				game.Map.TextureUrl = null;
 			} else if( Utils.IsUrlPrefix( url ) ) {
-				if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
-					game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
-					game.ShowWarning( new WarningScreen(
-						game, "CL_" + url, true, "Do you want to download the server's texture pack?",
-						DownloadTexturePack, null, WarningScreenTick,
-						"Texture pack url:", url,
-						"Download size: Determining..." ) );
-				} else {
-					DownloadTexturePack( url );
-				}
+				RetrieveTexturePack( url );
 			}
 			Utils.LogDebug( "Image url: " + url );
 		}
@@ -341,36 +333,6 @@ namespace ClassicalSharp {
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 			game.SetViewDistance( game.UserViewDistance, false );
-		}
-		
-		void DownloadTexturePack( WarningScreen screen ) {
-			DownloadTexturePack( ((string)screen.Metadata).Substring( 3 ) );
-		}
-		
-		void DownloadTexturePack( string url ) {
-			if( game.DeniedUrls.HasUrl( url ) ) return;
-			game.Animations.Dispose();
-			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
-
-			if( url.Contains( ".zip" ) )
-				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
-			else
-				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
-		}
-		
-		void WarningScreenTick( WarningScreen screen ) {
-			string identifier = (string)screen.Metadata;
-			DownloadedItem item;
-			if( !game.AsyncDownloader.TryGetItem( identifier, out item ) || item.Data == null ) return;
-			
-			long contentLength = (long)item.Data;
-			if( contentLength <= 0 ) return;
-			string url = identifier.Substring( 3 );
-			
-			float contentLengthMB = (contentLength / 1024f / 1024f );
-			screen.SetText( "Do you want to download the server's texture pack?",
-			               "Texture pack url:", url,
-			               "Download size: " + contentLengthMB.ToString( "F3" ) + " MB" );
 		}
 		
 		void HandleCpeEnvWeatherType() {
@@ -404,23 +366,24 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( PacketId.CpeDefineBlock ); return;
 			}
-			byte block = HandleCpeDefineBlockCommonStart( false );
+			byte id = HandleCpeDefineBlockCommonStart( false );
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
 			if( shape == 0 ) {
-				info.IsSprite[block] = true;
-				info.IsOpaque[block] = false;
-				info.IsTransparent[block] = true;
+				info.IsSprite[id] = true;
+				info.IsOpaque[id] = false;
+				info.IsTransparent[id] = true;
 			} else if( shape <= 16 ) {
-				info.MaxBB[block].Y = shape / 16f;
+				info.MaxBB[id].Y = shape / 16f;
 			}
 			
-			HandleCpeDefineBlockCommonEnd( block );
+			HandleCpeDefineBlockCommonEnd( id );
 			// Update sprite BoundingBox if necessary
-			if( info.IsSprite[block] ) {
+			if( info.IsSprite[id] ) {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
-					info.RecalculateBB( block, dst );
+					info.RecalculateBB( id, dst );
 			}
+			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
 		void HandleCpeRemoveBlockDefinition() {
@@ -436,7 +399,7 @@ namespace ClassicalSharp {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( PacketId.CpeDefineBlockExt ); return;
 			}
-			byte block = HandleCpeDefineBlockCommonStart( blockDefinitionsExtVer >= 2 );
+			byte id = HandleCpeDefineBlockCommonStart( blockDefinitionsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
@@ -447,9 +410,10 @@ namespace ClassicalSharp {
 			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Y, 1/16f, 1 );
 			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Z, 1/16f, 1 );
 			
-			info.MinBB[block] = min;
-			info.MaxBB[block] = max;
-			HandleCpeDefineBlockCommonEnd( block );
+			info.MinBB[id] = min;
+			info.MaxBB[id] = max;
+			HandleCpeDefineBlockCommonEnd( id );
+			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
 		byte HandleCpeDefineBlockCommonStart( bool uniqueSideTexs ) {
@@ -489,19 +453,7 @@ namespace ClassicalSharp {
 		void HandleCpeDefineBlockCommonEnd( byte block ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
-			if( blockDraw == 1 ) {
-				info.IsTransparent[block] = true;
-			} else if( blockDraw == 2 ) {
-				info.IsTransparent[block] = true;
-				info.CullWithNeighbours[block] = false;
-			} else if( blockDraw == 3 ) {
-				info.IsTranslucent[block] = true;
-			} else if( blockDraw == 4 ) {
-				info.IsTransparent[block] = true;
-				info.IsAir[block] = true;
-			}
-			if( info.IsOpaque[block] )
-				info.IsOpaque[block] = blockDraw == 0;
+			SetBlockDraw( info, block, blockDraw );
 			
 			byte fogDensity = reader.ReadUInt8();
 			info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
@@ -555,7 +507,7 @@ namespace ClassicalSharp {
 			game.Events.RaiseColourCodesChanged();
 		}
 		
-		static SoundType[] stepSnds, breakSnds;
+		internal static SoundType[] stepSnds, breakSnds;
 		static NetworkProcessor() {
 			stepSnds = new SoundType[10];
 			breakSnds = new SoundType[10];
@@ -570,6 +522,22 @@ namespace ClassicalSharp {
 			stepSnds[7] = SoundType.Cloth; breakSnds[7] = SoundType.Cloth;
 			stepSnds[8] = SoundType.Sand; breakSnds[8] = SoundType.Sand;
 			stepSnds[9] = SoundType.Snow; breakSnds[9] = SoundType.Snow;
+		}
+		
+		internal static void SetBlockDraw( BlockInfo info, byte block, byte blockDraw ) {
+			if( blockDraw == 1 ) {
+				info.IsTransparent[block] = true;
+			} else if( blockDraw == 2 ) {
+				info.IsTransparent[block] = true;
+				info.CullWithNeighbours[block] = false;
+			} else if( blockDraw == 3 ) {
+				info.IsTranslucent[block] = true;
+			} else if( blockDraw == 4 ) {
+				info.IsTransparent[block] = true;
+				info.IsAir[block] = true;
+			}
+			if( info.IsOpaque[block] )
+				info.IsOpaque[block] = blockDraw == 0;
 		}
 	}
 	#endregion

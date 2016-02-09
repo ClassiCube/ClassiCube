@@ -48,7 +48,7 @@ namespace Launcher2 {
 				widgets[widgetIndex++] = null;
 			}
 			
-			MakeButtonAt( "Update check", 160, buttonHeight, buttonFont,
+			MakeButtonAt( "Update", 120, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
 			string mode = game.ClassicMode ? "Normal mode" : "Pure classic mode";

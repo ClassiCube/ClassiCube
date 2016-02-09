@@ -20,7 +20,6 @@ namespace ClassicalSharp {
 		}
 		
 		Socket socket;
-		Game game;
 		bool receivedFirstPosition;
 		DateTime lastPacket;
 		Screen prevScreen;
@@ -59,61 +58,7 @@ namespace ClassicalSharp {
 			game.MapEvents.OnNewMap -= OnNewMap;
 			socket.Close();
 			Disconnected = true;
-		}
-		
-		void CheckForNewTerrainAtlas() {
-			DownloadedItem item;
-			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
-				if( item.Data != null ) {
-					Bitmap bmp = (Bitmap)item.Data;
-					if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
-						Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
-						game.Drawer2D.ConvertTo32Bpp( ref bmp );
-					}
-					game.ChangeTerrainAtlas( bmp );
-					TextureCache.AddToCache( item.Url, bmp );
-				} else if( Is304Status( item.WebEx ) ) {
-					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
-					if( bmp == null ) // Should never happen, but handle anyways.
-						ExtractDefault();
-					else
-						game.ChangeTerrainAtlas( bmp );
-				} else {
-					ExtractDefault();
-				}
-			}
-			
-			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
-				if( item.Data != null ) {
-					TexturePackExtractor extractor = new TexturePackExtractor();
-					extractor.Extract( (byte[])item.Data, game );
-					TextureCache.AddToCache( item.Url, (byte[])item.Data );
-				} else if( Is304Status( item.WebEx ) ) {
-					byte[] data = TextureCache.GetDataFromCache( item.Url );
-					if( data == null ) { // Should never happen, but handle anyways.
-						ExtractDefault();
-					} else {
-						TexturePackExtractor extractor = new TexturePackExtractor();
-						extractor.Extract( data, game );
-					}
-				} else {
-					ExtractDefault();
-				}
-			}
-		}
-		
-		void ExtractDefault() {
-			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( game.DefaultTexturePack, game );
-		}
-		
-		bool Is304Status( WebException ex ) {
-			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
-				return false;
-			HttpWebResponse response = (HttpWebResponse)ex.Response;
-			return response.StatusCode == HttpStatusCode.NotModified;
-		}
-		
+		}	
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
@@ -157,7 +102,7 @@ namespace ClassicalSharp {
 			if( receivedFirstPosition ) {
 				SendPosition( player.Position, player.HeadYawDegrees, player.PitchDegrees );
 			}
-			CheckForNewTerrainAtlas();
+			CheckAsyncResources();
 			CheckForWomEnvironment();
 		}
 		

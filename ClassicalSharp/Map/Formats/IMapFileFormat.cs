@@ -19,9 +19,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Replaces the current map from a stream that contains a map in this format. </summary>
 		public virtual byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
-			width = 0;
-			height = 0;
-			length = 0;
+			width = 0; height = 0; length = 0;
 			return null;
 		}
 		

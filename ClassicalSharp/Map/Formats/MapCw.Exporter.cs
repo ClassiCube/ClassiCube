@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
-using System.Text;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -87,7 +85,19 @@ namespace ClassicalSharp {
 			
 			WriteCpeExtCompound( "EnvWeatherType", 1 );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "WeatherType" ); WriteInt8( (sbyte)((byte)map.Weather) );
+			WriteString( "WeatherType" ); WriteUInt8( (byte)map.Weather );
+			WriteTag( NbtTagType.End );
+			
+			WriteCpeExtCompound( "EnvMapAppearance", 1 );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "SideBlock" ); WriteUInt8( (byte)map.SidesBlock );
+			WriteTag( NbtTagType.Int8 );
+			WriteString( "EdgeBlock" ); WriteUInt8( (byte)map.EdgeBlock );
+			WriteTag( NbtTagType.Int16 );
+			WriteString( "SideLevel" ); WriteInt16( (short)map.EdgeHeight );
+			WriteTag( NbtTagType.String );
+			string url = game.Map.TextureUrl == null ? "" : game.Map.TextureUrl;
+			WriteString( "TextureURL" ); WriteString( url );
 			WriteTag( NbtTagType.End );
 			
 			WriteCpeExtCompound( "EnvColors", 1 );
@@ -98,15 +108,16 @@ namespace ClassicalSharp {
 			WriteColourCompound( "Sunlight", map.Sunlight );
 			WriteTag( NbtTagType.End );
 			
+			WriteCpeExtCompound( "BlockDefinitions", 1 );
+			uint[] flags = game.BlockInfo.DefinedCustomBlocks;
+			for( int tile = 1; tile < 256; tile++ ) {
+				if( (flags[tile >> 5] & (1u << (tile & 0x1F))) != 0 )
+					WriteBlockDefinitionCompound( (byte)tile );
+			}
 			WriteTag( NbtTagType.End );
-			WriteTag( NbtTagType.End );
-		}
-		
-		void WriteCpeExtCompound( string name, int version ) {
-			WriteTag( NbtTagType.Compound ); WriteString( name );
 			
-			WriteTag( NbtTagType.Int32 );
-			WriteString( "ExtensionVersion" ); WriteInt32( 1 );
+			WriteTag( NbtTagType.End );
+			WriteTag( NbtTagType.End );
 		}
 		
 		void WriteColourCompound( string name, FastColour col ) {
@@ -122,46 +133,65 @@ namespace ClassicalSharp {
 			WriteTag( NbtTagType.End );
 		}
 		
-		unsafe void WriteCustomBlocksCompound( BlockInfo info, byte id ) {
-			WriteTag( NbtTagType.Compound ); WriteString( "CustomBlock" );
+		unsafe void WriteBlockDefinitionCompound( byte id ) {
+			BlockInfo info = game.BlockInfo;
+			WriteTag( NbtTagType.Compound ); WriteString( "Block" + id );
 			
 			WriteTag( NbtTagType.Int8 );
 			WriteString( "ID" ); WriteUInt8( id );
 			WriteTag( NbtTagType.String );
 			WriteString( "Name" ); WriteString( info.Name[id] );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "CollideType" ); WriteUInt8( (byte)info.CollideType[id] );
-			
+			WriteString( "CollideType" ); WriteUInt8( (byte)info.CollideType[id] );		
 			float speed = info.SpeedMultiplier[id];
 			WriteTag( NbtTagType.Real32 );
 			WriteString( "Speed" ); WriteInt32( *((int*)&speed) );
+			
+			WriteTag( NbtTagType.Int8Array );
+			WriteString( "Textures" ); WriteInt32( 6 );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Top ) );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Bottom ) );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Left ) );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Right ) );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Front ) );
+			WriteUInt8( info.GetTextureLoc( id, TileSide.Back ) );
+			
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "Top" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Top ) );
+			WriteString( "TransmitsLight" ); WriteUInt8( info.BlocksLight[id] ? 0 : 1 );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "Bottom" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Bottom ) );
+			WriteString( "WalkSound" ); WriteUInt8( (byte)info.DigSounds[id] );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "Left" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Left ) );
+			WriteString( "FullBright" ); WriteUInt8( info.FullBright[id] ? 1 : 0 );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "Right" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Right ) );
+			WriteString( "Shape" ); WriteUInt8( GetShape( info, id ) );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "Front" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Front ) );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "Back" ); WriteUInt8( (byte)info.GetTextureLoc( id, TileSide.Back ) );
+			WriteString( "BlockDraw" ); WriteUInt8( GetDraw( info, id ) );
+			
+			FastColour col = info.FogColour[id];
+			WriteTag( NbtTagType.Int8Array );
+			WriteString( "Fog" ); WriteInt32( 4 );
+			WriteUInt8( (byte)(128 * info.FogDensity[id] - 1) );
+			WriteUInt8( col.R ); WriteUInt8( col.G ); WriteUInt8( col.B );
+			
+			Vector3 min = info.MinBB[id], max = info.MaxBB[id];
+			WriteTag( NbtTagType.Int8Array );
+			WriteString( "Coords" ); WriteInt32( 6 );
+			WriteUInt8( (byte)(min.X * 16) ); WriteUInt8( (byte)(min.Y * 16) ); 
+			WriteUInt8( (byte)(min.Z * 16) ); WriteUInt8( (byte)(max.X * 16) );
+			WriteUInt8( (byte)(max.Y * 16) ); WriteUInt8( (byte)(max.Z * 16) );
+			WriteTag( NbtTagType.End );
 		}
 		
-		void WriteTag( NbtTagType v ) { writer.Write( (byte)v ); }
-		void WriteInt64( long v ) { writer.Write( IPAddress.HostToNetworkOrder( v ) ); }
-		void WriteInt32( int v ) { writer.Write( IPAddress.HostToNetworkOrder( v ) ); }
-		void WriteInt16( short v ) { writer.Write( IPAddress.HostToNetworkOrder( v ) ); }
-		void WriteInt8( sbyte v ) { writer.Write( (byte)v ); }
-		void WriteUInt8( byte v ) { writer.Write( v ); }
-		void WriteBytes( byte[] v ) { writer.Write( v ); }
+		int GetShape( BlockInfo info, byte id ) {
+			return info.IsSprite[id] ? 0 : (byte)(info.MaxBB[id].Y * 16);
+		}
 		
-		void WriteString( string value ) {
-			ushort len = (ushort)value.Length;
-			byte[] data = Encoding.UTF8.GetBytes( value );
-			WriteInt16( (short)len );
-			writer.Write( data );
+		int GetDraw( BlockInfo info, byte id) {
+			if( info.IsTranslucent[id] ) return 3;
+			if( info.IsAir[id] ) return 4;
+			if( info.IsTransparent[id] ) 
+				return info.CullWithNeighbours[id] ? 1 : 2;
+			return 0;
 		}
 	}
 }

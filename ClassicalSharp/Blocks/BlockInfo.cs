@@ -48,6 +48,8 @@ namespace ClassicalSharp {
 		
 		public byte[] LightOffset = new byte[BlocksCount];
 		
+		public uint[] DefinedCustomBlocks = new uint[BlocksCount >> 5];
+		
 		public const byte MaxDefinedOriginalBlock = (byte)Block.Obsidian;
 		public const int OriginalBlocksCount = MaxDefinedOriginalBlock + 1;
 		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
@@ -166,6 +168,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void ResetBlockInfo( byte id, bool updateCulling ) {
+			DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
 			IsTransparent[id] = false;
 			IsTranslucent[id] = false;
 			IsOpaque[id] = true;

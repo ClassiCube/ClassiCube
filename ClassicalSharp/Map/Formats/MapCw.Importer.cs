@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
-using System.Text;
+using OpenTK;
+using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.MapCw.NbtTag>;
 
 namespace ClassicalSharp {
 
@@ -28,11 +27,11 @@ namespace ClassicalSharp {
 				
 				invalid.TagId = NbtTagType.Invalid;
 				NbtTag root = ReadTag( (byte)NbtTagType.Compound, true );
-				Dictionary<string, NbtTag> children = (Dictionary<string, NbtTag>)root.Value;
+				NbtCompound children = (NbtCompound)root.Value;
 				if( children.ContainsKey( "Metadata" ) )
 					ParseMetadata( children );
 				
-				Dictionary<string, NbtTag> spawn = (Dictionary<string, NbtTag>)children["Spawn"].Value;
+				NbtCompound spawn = (NbtCompound)children["Spawn"].Value;
 				LocalPlayer p = game.LocalPlayer;
 				p.SpawnPoint.X = (short)spawn["X"].Value;
 				p.SpawnPoint.Y = (short)spawn["Y"].Value;
@@ -40,7 +39,7 @@ namespace ClassicalSharp {
 				if( spawn.ContainsKey( "H" ) )
 					p.SpawnYaw = (float)Utils.PackedToDegrees( (byte)spawn["H"].Value );
 				if( spawn.ContainsKey( "P" ) )
-					p.SpawnPitch = (float)Utils.PackedToDegrees( (byte)spawn["P"].Value );				
+					p.SpawnPitch = (float)Utils.PackedToDegrees( (byte)spawn["P"].Value );
 				
 				map.Uuid = new Guid( (byte[])children["UUID"].Value );
 				width = (short)children["X"].Value;
@@ -48,21 +47,21 @@ namespace ClassicalSharp {
 				length = (short)children["Z"].Value;
 				
 				// Older versions incorrectly multiplied spawn coords by * 32, so we check for that.
-				if (p.SpawnPoint.X < 0 || p.SpawnPoint.X >= width || p.SpawnPoint.Y < 0 ||
-				    p.SpawnPoint.Y >= height || p.SpawnPoint.Z < 0 || p.SpawnPoint.Z >= length) {
+				if( p.SpawnPoint.X < 0 || p.SpawnPoint.X >= width || p.SpawnPoint.Y < 0 ||
+				   p.SpawnPoint.Y >= height || p.SpawnPoint.Z < 0 || p.SpawnPoint.Z >= length ) {
 					p.SpawnPoint.X /= 32; p.SpawnPoint.Y /= 32; p.SpawnPoint.Z /= 32;
 				}
 				return (byte[])children["BlockArray"].Value;
 			}
 		}
 		
-		void ParseMetadata( Dictionary<string, NbtTag> children ) {
-			Dictionary<string, NbtTag> metadata = (Dictionary<string, NbtTag>)children["Metadata"].Value;
+		void ParseMetadata( NbtCompound children ) {
+			NbtCompound metadata = (NbtCompound)children["Metadata"].Value;
 			NbtTag cpeTag;
-			LocalPlayer p = game.LocalPlayer;			
+			LocalPlayer p = game.LocalPlayer;
 			if( !metadata.TryGetValue( "CPE", out cpeTag ) ) return;
 			
-			metadata = (Dictionary<string, NbtTag>)cpeTag.Value;
+			metadata = (NbtCompound)cpeTag.Value;
 			if( CheckKey( "ClickDistance", 1, metadata ) ) {
 				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
 			}
@@ -74,7 +73,8 @@ namespace ClassicalSharp {
 				map.SetShadowlight( GetColour( "Ambient", Map.DefaultShadowlight ) );
 			}
 			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
-				string url = (string)curCpeExt["TextureURL"].Value;
+				if( curCpeExt.ContainsKey( "TextureURL" ) )
+					map.TextureUrl = (string)curCpeExt["TextureURL"].Value;
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
 				map.SetSidesBlock( (Block)sidesBlock );
@@ -85,28 +85,23 @@ namespace ClassicalSharp {
 				byte weather = (byte)curCpeExt["WeatherType"].Value;
 				map.SetWeather( (Weather)weather );
 			}
-		}
-		
-		FastColour GetColour( string key, FastColour def ) {
-			NbtTag tag;
-			if( !curCpeExt.TryGetValue( key, out tag ) )
-				return def;
 			
-			Dictionary<string, NbtTag> compound = (Dictionary<string, NbtTag>)tag.Value;
-			short r = (short)compound["R"].Value;
-			short g = (short)compound["G"].Value;
-			short b = (short)compound["B"].Value;
-			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
-			return invalid ? def : new FastColour( r, g, b );
+			if( game.AllowCustomBlocks && CheckKey( "BlockDefinitions", 1, metadata ) ) {
+				foreach( var pair in curCpeExt ) {
+					if( pair.Value.TagId != NbtTagType.Compound ) continue;
+					if( !Utils.CaselessStarts( pair.Key, "Block" ) ) continue;
+					ParseBlockDefinition( (NbtCompound)pair.Value.Value );
+				}
+			}
 		}
 		
-		Dictionary<string, NbtTag> curCpeExt;
-		bool CheckKey( string key, int version, Dictionary<string, NbtTag> tag ) {
+		NbtCompound curCpeExt;
+		bool CheckKey( string key, int version, NbtCompound tag ) {
 			NbtTag value;
 			if( !tag.TryGetValue( key, out value ) ) return false;
 			if( value.TagId != NbtTagType.Compound ) return false;
 			
-			tag = (Dictionary<string, NbtTag>)value.Value;
+			tag = (NbtCompound)value.Value;
 			if( !tag.TryGetValue( "ExtensionVersion", out value ) ) return false;
 			if( (int)value.Value == version ) {
 				curCpeExt = tag;
@@ -115,88 +110,58 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		unsafe NbtTag ReadTag( byte typeId, bool readTagName ) {
-			if( typeId == 0 ) return invalid;
+		FastColour GetColour( string key, FastColour def ) {
+			NbtTag tag;
+			if( !curCpeExt.TryGetValue( key, out tag ) )
+				return def;
 			
-			NbtTag tag = default( NbtTag );
-			tag.Name = readTagName ? ReadString() : null;
-			tag.TagId = (NbtTagType)typeId;
+			NbtCompound compound = (NbtCompound)tag.Value;
+			short r = (short)compound["R"].Value;
+			short g = (short)compound["G"].Value;
+			short b = (short)compound["B"].Value;
+			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
+			return invalid ? def : new FastColour( r, g, b );
+		}
+		
+		void ParseBlockDefinition( NbtCompound compound ) {
+			byte id = (byte)compound["ID"].Value;
+			BlockInfo info = game.BlockInfo;
+			info.Name[id] = (string)compound["Name"].Value;
+			info.CollideType[id] = (BlockCollideType)compound["CollideType"].Value;
+			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
-			switch( (NbtTagType)typeId ) {
-				case NbtTagType.Int8:
-					tag.Value = reader.ReadByte(); break;
-				case NbtTagType.Int16:
-					tag.Value = ReadInt16(); break;
-				case NbtTagType.Int32:
-					tag.Value = ReadInt32(); break;
-				case NbtTagType.Int64:
-					tag.Value = ReadInt64(); break;
-				case NbtTagType.Real32:
-					int temp32 = ReadInt32();
-					tag.Value = *(float*)&temp32; break;
-				case NbtTagType.Real64:
-					long temp64 = ReadInt64();
-					tag.Value = *(double*)&temp64; break;
-				case NbtTagType.Int8Array:
-					tag.Value = reader.ReadBytes( ReadInt32() ); break;
-				case NbtTagType.String:
-					tag.Value = ReadString(); break;
-					
-				case NbtTagType.List:
-					NbtList list = new NbtList();
-					list.ChildTagId = (NbtTagType)reader.ReadByte();
-					list.ChildrenValues = new object[ReadInt32()];
-					for( int i = 0; i < list.ChildrenValues.Length; i++ ) {
-						list.ChildrenValues[i] = ReadTag( (byte)list.ChildTagId, false );
-					}
-					tag.Value = list; break;
-					
-				case NbtTagType.Compound:
-					Dictionary<string, NbtTag> children = new Dictionary<string, NbtTag>();
-					NbtTag child;
-					while( (child = ReadTag( reader.ReadByte(), true )).TagId != NbtTagType.Invalid ) {
-						children[child.Name] = child;
-					}
-					tag.Value = children; break;
-					
-				case NbtTagType.Int32Array:
-					int[] array = new int[ReadInt32()];
-					for( int i = 0; i < array.Length; i++ )
-						array[i] = ReadInt32();
-					tag.Value = array; break;
-					
-				default:
-					throw new InvalidDataException( "Unrecognised tag id: " + typeId );
+			byte[] data = (byte[])compound["Textures"].Value;
+			info.SetTex( data[0], TileSide.Top, (Block)id );
+			info.SetTex( data[1], TileSide.Bottom, (Block)id );
+			info.SetTex( data[2], TileSide.Left, (Block)id );
+			info.SetTex( data[3], TileSide.Right, (Block)id );
+			info.SetTex( data[4], TileSide.Front, (Block)id );
+			info.SetTex( data[5], TileSide.Back, (Block)id );
+			
+			info.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
+			byte soundId = (byte)compound["WalkSound"].Value;
+			info.DigSounds[id] = NetworkProcessor.breakSnds[soundId];
+			info.StepSounds[id] = NetworkProcessor.stepSnds[soundId];
+			info.FullBright[id] = (byte)compound["FullBright"].Value != 0;
+			info.IsSprite[id] = (byte)compound["Shape"].Value == 0;
+			NetworkProcessor.SetBlockDraw( info, id, (byte)compound["BlockDraw"].Value );
+			
+			data = (byte[])compound["Fog"].Value;
+			info.FogDensity[id] = (data[0] + 1) / 128f;
+			info.FogColour[id] = new FastColour( data[1], data[2], data[3] );
+
+			data = (byte[])compound["Coords"].Value;
+			info.MinBB[id] = new Vector3( data[0] / 16f, data[1] / 16f, data[2] / 16f );
+			info.MaxBB[id] = new Vector3( data[3] / 16f, data[4] / 16f, data[5] / 16f );
+			
+			if( info.CollideType[id] != BlockCollideType.Solid ) {
+				info.IsTransparent[id] = true;
+				info.IsOpaque[id] = false;
 			}
-			return tag;
-		}
-		
-		struct NbtTag {
-			public string Name;
-			public object Value;
-			public NbtTagType TagId;
-		}
-		
-		class NbtList {
-			public NbtTagType ChildTagId;
-			public object[] ChildrenValues;
-		}		
-		
-		enum NbtTagType : byte {
-			End, Int8, Int16, Int32, Int64, 
-			Real32, Real64, Int8Array, String, 
-			List, Compound, Int32Array,
-			Invalid = 255,
-		}
-		
-		long ReadInt64() { return IPAddress.HostToNetworkOrder( reader.ReadInt64() ); }
-		int ReadInt32() { return IPAddress.HostToNetworkOrder( reader.ReadInt32() ); }
-		short ReadInt16() { return IPAddress.HostToNetworkOrder( reader.ReadInt16() ); }
-		
-		string ReadString() {
-			int len = (ushort)ReadInt16();
-			byte[] data = reader.ReadBytes( len );
-			return Encoding.UTF8.GetString( data ); 
+			info.SetupCullingCache( id );
+			info.InitLightOffsets();
+			game.Events.RaiseBlockDefinitionChanged();
+			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 	}
 }

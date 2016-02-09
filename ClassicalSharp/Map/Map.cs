@@ -68,6 +68,9 @@ namespace ClassicalSharp {
 			get { return Width == 0 && Height == 0 && Length == 0; }
 		}
 		
+		/// <summary> Current terrain.png or texture pack url of this map. </summary>
+		public string TextureUrl = null;
+		
 		public Map( Game game ) {
 			this.game = game;
 			info = game.BlockInfo;

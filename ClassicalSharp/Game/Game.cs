@@ -344,6 +344,11 @@ namespace ClassicalSharp {
 			Map.Reset();
 			Map.mapData = null;
 			Drawer2D.InitColours();
+			
+			for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
+				BlockInfo.ResetBlockInfo( (byte)tile, false );
+			BlockInfo.SetupCullingCache();
+			BlockInfo.InitLightOffsets();
 			GC.Collect();
 		}
 		
