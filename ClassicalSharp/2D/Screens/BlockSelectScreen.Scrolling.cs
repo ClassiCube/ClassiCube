@@ -41,12 +41,7 @@ namespace ClassicalSharp {
 		}
 		int scrollY;
 		
-		void ClampScrollY() {
-			if( scrollY >= rows - maxRows )
-				scrollY = rows - maxRows;
-			if( scrollY < 0 )
-				scrollY = 0;
-		}
+		void ClampScrollY() { Utils.Clamp( ref scrollY, 0, rows - maxRows ); }
 		
 		void ScrollbarClick( int mouseY ) {
 			mouseY -= TableY;

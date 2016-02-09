@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 				     	g.Players.NamesMode = (NameMode)raw;
 				     	Options.Set( OptionsKey.NamesMode, v ); } ),
 				
-				Make( -140, -50, "FPS limit", OnWidgetClick,
+				Make( -140, -50, "FPS limit mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
@@ -107,11 +107,10 @@ namespace ClassicalSharp {
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
 			descriptions[0] = new[] {
-				"&aControls how far away you can place/delete blocks",
-				"&eThe default click distance is 5 blocks.",
+				"&eSets how far away you can place/delete blocks",
+				"&fThe default click distance is 5 blocks.",
 			};
 			descriptions[2] = new[] {
-				"&aDetermines how the names of other players are drawn",
 				"&eNoNames: &fNo player names are drawn.",
 				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
 				"&eAllNames: &fAll player names are drawn normally.",
@@ -119,7 +118,6 @@ namespace ClassicalSharp {
 				"&f               All other player names are drawn normally.",
 			};
 			descriptions[3] = new[] {
-				"&aDetermines the method used to limit the number of FPS",
 				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
 				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
 				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",

@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
 				
-				MakeClassic( 165, -50, "FPS limit", OnWidgetClick,
+				MakeClassic( 165, -50, "FPS limit mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
@@ -70,7 +70,6 @@ namespace ClassicalSharp {
 			};
 			widgets[7].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
-			MakeDescriptions();
 		}
 		
 		void MakeValidators() {
@@ -85,17 +84,6 @@ namespace ClassicalSharp {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new EnumValidator(),
-			};
-		}
-		
-		void MakeDescriptions() {
-			descriptions = new string[widgets.Length][];
-			descriptions[8] = new[] {
-				"&aDetermines the method used to limit the number of FPS",
-				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
-				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
-				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",
-				"&cUsing NoLimit mode is discouraged for general usage.",
 			};
 		}
 	}

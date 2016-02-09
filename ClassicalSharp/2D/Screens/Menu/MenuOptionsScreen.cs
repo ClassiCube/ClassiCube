@@ -18,7 +18,8 @@ namespace ClassicalSharp {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			if( extendedHelp != null ) {
+			int extEndY = extendedHelp == null ? 0 : extendedHelp[extendedHelp.Length - 1].BottomRight.Y;
+			if( extendedHelp != null && extEndY <= widgets[widgets.Length - 3].Y ) {
 				int x = game.Width / 2 - tableWidth / 2 - 5;
 				int y = game.Height / 2 + extHelpY - 5;
 				graphicsApi.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
@@ -29,12 +30,13 @@ namespace ClassicalSharp {
 			if( inputWidget != null )
 				inputWidget.Render( delta );
 			
-			if( extendedHelp != null ) {
+			
+			if( extendedHelp != null && extEndY <= widgets[widgets.Length - 3].Y ) {
 				for( int i = 0; i < extendedHelp.Length; i++ )
 					extendedHelp[i].Render( delta );
-			} else if( descWidget != null ) {
-				descWidget.Render( delta );
 			}
+			if( descWidget != null )
+				descWidget.Render( delta );
 			
 			graphicsApi.Texturing = false;
 		}
@@ -96,7 +98,6 @@ namespace ClassicalSharp {
 		
 		protected ButtonWidget selectedWidget, targetWidget;
 		protected override void WidgetSelected( Widget widget ) {
-			DisposeExtendedHelp();
 			ButtonWidget button = widget as ButtonWidget;
 			if( selectedWidget == button || button == null ||
 			   button == widgets[widgets.Length - 2] ) return;
@@ -109,10 +110,12 @@ namespace ClassicalSharp {
 		protected void UpdateDescription( ButtonWidget widget ) {
 			if( descWidget != null )
 				descWidget.Dispose();
+			DisposeExtendedHelp();
 			if( widget == null || widget.GetValue == null ) return;
 			
 			string text = widget.Text + ": " + widget.GetValue( game );
 			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			ShowExtendedHelp();
 		}
 		
 		protected virtual void InputOpened() { }
@@ -147,7 +150,7 @@ namespace ClassicalSharp {
 		
 		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
 		int tableWidth, tableHeight;
-		const int extHelpY = 90;
+		const int extHelpY = 120;
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new ChatTextWidget[desc.Length];
 			int x = 0, y = extHelpY;
@@ -161,16 +164,11 @@ namespace ClassicalSharp {
 			}
 			tableHeight = y - extHelpY;
 			
-			// Left align all body text.
 			int yOffset = 0;
 			for( int i = 0; i < desc.Length; i++ ) {
 				ChatTextWidget widget = extendedHelp[i];
-				if( i == 0 ) {
-					x = widget.X;
-				} else {
-					widget.XOffset = (widget.Width - tableWidth) / 2;
-					x = CalcOffset( game.Width, widget.Width, widget.XOffset, Anchor.Centre );
-				}
+				widget.XOffset = (widget.Width - tableWidth) / 2;
+				x = CalcOffset( game.Width, widget.Width, widget.XOffset, Anchor.Centre );
 				
 				widget.YOffset = yOffset + extHelpY + extendedHelp[0].Height / 2;
 				y = CalcOffset( game.Height, widget.Height, widget.YOffset, Anchor.Centre );
@@ -188,7 +186,6 @@ namespace ClassicalSharp {
 		
 		protected void OnWidgetClick( Game game, Widget widget, MouseButton mouseBtn ) {
 			ButtonWidget button = widget as ButtonWidget;
-			if( mouseBtn == MouseButton.Right ) { ShowExtendedHelp(); return; }
 			if( mouseBtn != MouseButton.Left ) return;
 			if( widget == widgets[widgets.Length - 1] ) {
 				ChangeSetting(); return;
