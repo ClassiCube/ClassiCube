@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 		void GenerateMap( IMapGenerator gen ) {
 			SinglePlayerServer server = (SinglePlayerServer)game.Network;
 			int width = GetInt( 0 ), height = GetInt( 1 );
-			int length = GetInt( 2 ), seed = GetInt( 3 );
+			int length = GetInt( 2 ), seed = GetSeedInt( 3 );
 			
 			long volume = (long)width * height * length;
 			if( volume > 800 * 800 * 800 ) {
@@ -149,6 +149,15 @@ namespace ClassicalSharp {
 		
 		int GetInt( int index ) {
 			string text = inputs[index].GetText();
+			if( !inputs[index].Validator.IsValidValue( text ) )
+				return 0;
+			return text == "" ? 0 : Int32.Parse( text );
+		}
+		
+		int GetSeedInt( int index ) {
+			string text = inputs[index].GetText();
+			if( text == "" ) return new Random().Next();
+			
 			if( !inputs[index].Validator.IsValidValue( text ) )
 				return 0;
 			return text == "" ? 0 : Int32.Parse( text );

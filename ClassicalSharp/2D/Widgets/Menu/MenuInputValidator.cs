@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 	
 	public sealed class SeedValidator : IntegerValidator {
 		
-		public SeedValidator() : base( 0, 0 ) { }
+		public SeedValidator() : base( int.MinValue, int.MaxValue ) { }
 		
 		protected override void SetRange() {
 			Range = "&7(an integer)";
