@@ -132,7 +132,7 @@ namespace ClassicalSharp.Generator {
 					double radius = (height - cenY) / (double)height;
 					radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
 					radius = radius + Math.Sin( j * Math.PI / caveLen );
-					FillOblateSpheroid( cenX, cenY, cenZ, (int)radius, (byte)Block.Air );
+					FillOblateSpheroid( cenX, cenY, cenZ, (float)radius, (byte)Block.Air );
 				}
 			}
 		}
@@ -161,7 +161,7 @@ namespace ClassicalSharp.Generator {
 					phi = phi / 2 + deltaPhi / 4;
 					deltaPhi = deltaPhi * 0.9 + rnd.NextDouble() - rnd.NextDouble();
 					
-					int radius = (int)(abundance * Math.Sin( j * Math.PI / veinLen ) + 1);
+					float radius = abundance * (float)Math.Sin( j * Math.PI / veinLen ) + 1;
 					FillOblateSpheroid( (int)veinX, (int)veinY, (int)veinZ, radius, block );
 				}
 			}

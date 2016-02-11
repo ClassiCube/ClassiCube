@@ -10,11 +10,14 @@ namespace ClassicalSharp.Generator {
 	// TODO: figure out how noise functions differ, probably based on rnd.
 	public sealed partial class NotchyGenerator {
 		
-		void FillOblateSpheroid( int x, int y, int z, int radius, byte block ) {
-			int xStart = Math.Max( x - radius, 0 ), xEnd = Math.Min( x + radius, width - 1 );
-			int yStart = Math.Max( y - radius, 0 ), yEnd = Math.Min( y + radius, height - 1 );
-			int zStart = Math.Max( z - radius, 0 ), zEnd = Math.Min( z + radius, length - 1 );
-			int radiusSq = radius * radius;
+		void FillOblateSpheroid( int x, int y, int z, float radius, byte block ) {
+			int xStart = Utils.Floor( Math.Max( x - radius, 0 ) );
+			int xEnd = Utils.Floor( Math.Min( x + radius, width - 1 ) );
+			int yStart = Utils.Floor( Math.Max( y - radius, 0 ) );
+			int yEnd = Utils.Floor( Math.Min( y + radius, height - 1 ) );
+			int zStart = Utils.Floor( Math.Max( z - radius, 0 ) );
+			int zEnd = Utils.Floor( Math.Min( z + radius, length - 1 ) );
+			float radiusSq = radius * radius;
 			
 			for( int yy = yStart; yy <= yEnd; yy++ )
 				for( int zz = zStart; zz <= zEnd; zz++ )
