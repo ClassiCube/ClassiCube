@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	public static class Intersection {
 		
 		/// <summary> Calculates the intersection points of a ray and a rotated bounding box.  </summary>
-		internal static bool RayIntersectsRotatedBox( Vector3 origin, Vector3 dir, Player target, out float tMin, out float tMax ) {
+		internal static bool RayIntersectsRotatedBox( Vector3 origin, Vector3 dir, Entity target, out float tMin, out float tMax ) {
 			// This is the rotated AABB of the model we want to test for intersection
 			//        *
 			//       / \     we then perform a counter       *---*   and we can then do
@@ -72,10 +72,10 @@ namespace ClassicalSharp {
 		
 		//http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/raytri/raytri.c
 		/// <summary> Calculates the intersection point of a ray and a triangle. </summary>
-		public static bool RayTriangleIntersect( Vector3 orig, Vector3 dir, Vector3 p0, Vector3 p1, Vector3 p2, out Vector3 I ) {
+		public static bool RayTriangleIntersect( Vector3 orig, Vector3 dir, Vector3 p0, Vector3 p1, Vector3 p2, out Vector3 intersect ) {
 			Vector3 edge1 = p1 - p0;
 			Vector3 edge2 = p2 - p0;
-			I = Vector3.Zero;
+			intersect = Vector3.Zero;
 
 			Vector3 p = Vector3.Cross( dir, edge2 );
 			float det = Vector3.Dot( edge1, p );
@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 			if( v < 0 || u + v > 1 ) return false;
 
 			float t = Vector3.Dot( edge2, q ) * invDet;
-			I = orig + dir * t;
+			intersect = orig + dir * t;
 			return t > 0.000001f;
 		}
 	}

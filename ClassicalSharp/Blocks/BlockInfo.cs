@@ -159,10 +159,6 @@ namespace ClassicalSharp {
 			MaxBB[(int)id].Y = height;
 		}
 		
-		void SetBlocksLight( Block id, bool blocks ) {
-			BlocksLight[(int)id] = blocks;
-		}
-		
 		void SetFullBright( Block id, bool emits ) {
 			FullBright[(int)id] = emits;
 		}

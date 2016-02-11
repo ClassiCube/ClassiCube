@@ -4,7 +4,7 @@ using ClassicalSharp;
 
 namespace Launcher2 {
 
-	internal sealed class Program {
+	internal static class Program {
 		
 		public const string AppName = "ClassicalSharp Launcher 0.98.6";
 		

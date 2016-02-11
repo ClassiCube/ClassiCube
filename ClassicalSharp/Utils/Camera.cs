@@ -112,13 +112,7 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 		
-		float HorLength( Vector3 v ) {
-			return (float)Math.Sqrt( v.X * v.X + v.Z * v.Z );
-		}
-		
-		protected float bobYOffset = 0;
-		const float angle = 0.25f * Utils.Deg2Rad;
-		
+		protected float bobYOffset = 0;		
 		protected void CalcViewBobbing( double delta ) {
 			if( !game.ViewBobbing || !game.LocalPlayer.onGround ) {
 				tiltMatrix = Matrix4.Identity;

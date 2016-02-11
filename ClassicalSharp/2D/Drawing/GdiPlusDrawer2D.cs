@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		[Obsolete]
+		[Obsolete("Method is not guaranteed to work on all platforms.")]
 		public override void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height ) {
 			GraphicsPath path = new GraphicsPath();
 			float x1 = x, y1 = y, x2 = x + width, y2 = y + height;

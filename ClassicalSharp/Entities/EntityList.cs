@@ -110,9 +110,9 @@ namespace ClassicalSharp {
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
-		public byte GetClosetPlayer( LocalPlayer localP ) {
-			Vector3 eyePos = localP.EyePosition;
-			Vector3 dir = Utils.GetDirVector( localP.HeadYawRadians, localP.PitchRadians );
+		public byte GetClosetPlayer( Player src ) {
+			Vector3 eyePos = src.EyePosition;
+			Vector3 dir = Utils.GetDirVector( src.HeadYawRadians, src.PitchRadians );
 			float closestDist = float.PositiveInfinity;
 			byte targetId = 255;
 			

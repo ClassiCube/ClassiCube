@@ -87,7 +87,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void ReadCentralDirectory( BinaryReader reader, ZipEntry[] entries ) {
 			ZipEntry entry;
-			entry.CentralHeaderOffset = (int)( reader.BaseStream.Position - 4 );
+			entry.CentralHeaderOffset = (int)(reader.BaseStream.Position - 4);
 			reader.ReadUInt16(); // OS
 			ushort versionNeeded = reader.ReadUInt16();
 			ushort flags = reader.ReadUInt16();

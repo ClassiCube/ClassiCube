@@ -88,12 +88,5 @@ namespace Launcher2 {
 			n = (n << 13) ^ n;
 			return 1f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824f;
 		}
-		
-		static float SmoothNoise2D( int x, int y ) {
-			float corners = (Noise( x - 1, y - 1 ) + Noise( x + 1, y -  1) +
-			                 Noise( x - 1, y + 1 ) + Noise( x + 1, y + 1 )) / 16;
-			float sides = (Noise( x - 1, y ) + Noise( x + 1, y ) + Noise( x, y - 1 ) + Noise( x, y + 1 )) / 8;
-			return corners + sides + Noise(x, y) / 4;
-		}
 	}
 }
