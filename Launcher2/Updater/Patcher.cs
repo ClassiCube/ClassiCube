@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Threading;
 using ClassicalSharp.TexturePack;
 
 namespace Launcher2.Updater {
@@ -14,8 +15,8 @@ namespace Launcher2.Updater {
 				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
 				MakeUpdatesFolder( zipData );
 			}
-			if( !OpenTK.Configuration.RunningOnWindows ) return;
 			LaunchUpdateScript();
+			Thread.Sleep( 200 );
 			Process.GetCurrentProcess().Kill();
 		}
 
@@ -32,10 +33,8 @@ namespace Launcher2.Updater {
 				int code = chmod( path, (flags << 6) | (flags << 3) | 4 ); 
 				if( code != 0 )
 					throw new InvalidOperationException( "chmod returned : " + code );
-				info = new ProcessStartInfo( "/bin/bash", "-c " + path );
+				info = new ProcessStartInfo( "xterm", '"' + path + '"');
 			}
-			// TODO: delete directory
-			// TODO: why no start new window?
 			info.CreateNoWindow = false;
 			info.UseShellExecute = false;
 			Process.Start( info );

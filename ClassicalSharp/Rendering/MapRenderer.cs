@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		
 		Game game;
 		IGraphicsApi api;
-		int _1Dcount = 1, _1DUsed = 1;
+		int _1DUsed = 1;
 		ChunkMeshBuilder builder;
 		BlockInfo info;
 		
@@ -41,7 +41,6 @@ namespace ClassicalSharp {
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
-			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
 			RecalcBooleans( true );
 			
@@ -89,9 +88,8 @@ namespace ClassicalSharp {
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			_1Dcount = game.TerrainAtlas1D.TexIds.Length;
-			bool fullResetRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
-			if( fullResetRequired )
+			bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
+			if( refreshRequired )
 				Refresh();
 			
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;

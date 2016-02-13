@@ -49,16 +49,14 @@ echo Extracting files from CS_Update folder
 UPDATEDIR=""`pwd`/CS_Update/""
 find ""$UPDATEDIR"" -name '*.*' | xargs cp -t `pwd`
 
+rm -r ""$UPDATEDIR""
 echo Starting launcher again
 if [ -f ""Launcher.exe"" ];
 then
-mono Launcher.exe &
+mono Launcher.exe
 else
-mono Launcher2.exe &
+mono Launcher2.exe
 fi
-disown
-echo Waiting
-sleep 10
 ";
 	}
 }

@@ -213,9 +213,7 @@ namespace OpenTK.Platform.X11 {
 
 		public static IntPtr CreatePixmapFromImage(Display display, System.Drawing.Bitmap image)
 		{
-			int width = image.Width;
-			int height = image.Height;
-			int size = width * height;
+			int width = image.Width, height = image.Height;
 
 			System.Drawing.Imaging.BitmapData data = image.LockBits(new System.Drawing.Rectangle(0, 0, width, height),
 			                                                        System.Drawing.Imaging.ImageLockMode.ReadOnly,

@@ -58,7 +58,6 @@ namespace ClassicalSharp {
 			api.AlphaTest = true;
 			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
-			Vector3 dir = Utils.GetDirVector( localP.HeadYawRadians, localP.PitchRadians );
 			closestId = 255;
 			
 			if( NamesMode != NameMode.AllNames )

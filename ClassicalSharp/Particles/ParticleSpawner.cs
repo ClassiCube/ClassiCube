@@ -38,8 +38,6 @@ namespace ClassicalSharp.Particles {
 				rec.V1 = baseRec.V1 + rnd.Next( minV, maxUsedV ) * vScale;
 				rec.U2 = Math.Min( baseRec.U1 + maxU * uScale, rec.U1 + 4 * uScale ) - 0.01f * uScale;
 				rec.V2 = Math.Min( baseRec.V1 + maxV * vScale, rec.V1 + 4 * vScale ) - 0.01f * vScale;
-				int pixU1 = (int)(rec.U1 / uScale), pixU2 = (int)(rec.U2 / uScale);
-				int pixV1 = (int)(rec.V1 / vScale), pixV2 = (int)(rec.V2 / vScale);
 				double life = 0.3 + rnd.NextDouble() * 0.7;
 				
 				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );

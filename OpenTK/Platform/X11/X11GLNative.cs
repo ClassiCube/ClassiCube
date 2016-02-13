@@ -56,7 +56,6 @@ namespace OpenTK.Platform.X11 {
 
 		IntPtr net_wm_icon;
 		IntPtr net_frame_extents;
-		IntPtr motif_wm_hints;
 
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
 		static readonly IntPtr _remove = (IntPtr)0;
@@ -190,7 +189,6 @@ namespace OpenTK.Platform.X11 {
 			net_wm_state_maximized_vertical = API.XInternAtom(window.Display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
 			net_wm_icon = API.XInternAtom(window.Display, "_NEW_WM_ICON", false);
 			net_frame_extents = API.XInternAtom(window.Display, "_NET_FRAME_EXTENTS", false);
-			motif_wm_hints = API.XInternAtom(window.Display, "_MOTIF_WM_HINTS", true);
 		}
 
 		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {

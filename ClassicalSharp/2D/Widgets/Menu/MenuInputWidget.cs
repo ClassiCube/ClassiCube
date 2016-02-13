@@ -106,13 +106,12 @@ namespace ClassicalSharp {
 		}
 
 		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X;
-			int deltaY = newY - Y;
+			int dx = newX - X, dy = newY - Y;
 			X = newX; Y = newY;
-			chatCaretTexture.X1 += deltaX;
-			chatCaretTexture.Y1 += deltaY;
-			chatInputTexture.X1 += deltaX;
-			chatInputTexture.Y1 += deltaY;
+			chatCaretTexture.X1 += dx;
+			chatCaretTexture.Y1 += dy;
+			chatInputTexture.X1 += dx;
+			chatInputTexture.Y1 += dy;
 		}
 		
 		static bool IsInvalidChar( char c ) {
