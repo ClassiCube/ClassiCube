@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClassicalSharp;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
@@ -16,11 +17,12 @@ namespace Launcher2 {
 	public sealed class UpdateCheckTask : IWebTask {
 		
 		public const string UpdatesUri = "http://cs.classicube.net/";
-		public const string BuildsUri = "http://cs.classicube.net/builds.json";	
+		public const string BuildsUri = "http://cs.classicube.net/builds.json";
 		public Build LatestDev, LatestStable;
 		
 		public void CheckForUpdatesAsync() {
 			Working = true;
+			Done = false;
 			Exception = null;
 			LatestDev = null;
 			LatestStable = null;
@@ -45,14 +47,14 @@ namespace Launcher2 {
 			JsonObject data = (JsonObject)Json.ParseValue( response, ref index, ref success );
 			
 			JsonObject devBuild = (JsonObject)data["latest"];
-			JsonObject releaseBuilds = (JsonObject)data["releases"];		
-			LatestDev = MakeBuild( devBuild, false );		
+			JsonObject releaseBuilds = (JsonObject)data["releases"];
+			LatestDev = MakeBuild( devBuild, false );
 			Build[] stableBuilds = new Build[releaseBuilds.Count];
 			
 			int i = 0;
 			foreach( KeyValuePair<string, object> pair in releaseBuilds )
-				stableBuilds[i++] = MakeBuild( (JsonObject)pair.Value, true );		
-			Array.Sort<Build>( stableBuilds, 
+				stableBuilds[i++] = MakeBuild( (JsonObject)pair.Value, true );
+			Array.Sort<Build>( stableBuilds,
 			                  (a, b) => b.TimeBuilt.CompareTo( a.TimeBuilt ) );
 			LatestStable = stableBuilds[0];
 		}
@@ -69,6 +71,18 @@ namespace Launcher2 {
 			build.OpenGLSize = Int32.Parse( (string)obj["ogl_size"] );
 			build.OpenGLPath = (string)obj["ogl_file"];
 			return build;
-		}		
+		}
+		
+		public bool TaskTick( Action<UpdateCheckTask> taskSuccess, LauncherScreen screen ) {
+			if( Working ) return true;			
+			if( Exception != null )
+				return false;
+			else
+				taskSuccess( this );
+			
+			screen.game.MakeBackground();
+			screen.Resize();
+			return true;
+		}
 	}
 }

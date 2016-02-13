@@ -10,17 +10,12 @@ namespace Launcher2 {
 	public sealed partial class MainScreen : LauncherInputScreen {
 
 		const int skipSSLIndex = 9;
-		public override void Init() {
-			base.Init();
-			Resize();
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				LoadSavedInfo( drawer );
-			}
-		}
 		
 		public override void Tick() {
 			base.Tick();
+			// TODO: Why is this broken?
+			//if( game.checkTask != null )
+			//	 game.checkTask.TaskTick( SuccessfulUpdateCheck, this );
 			if( !signingIn ) return;
 			
 			ClassicubeSession session = game.Session;

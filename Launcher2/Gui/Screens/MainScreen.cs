@@ -7,11 +7,23 @@ namespace Launcher2 {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
+		Font updateFont;
+		
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
 			buttonFont = new Font( game.FontName, 16, FontStyle.Bold );
+			updateFont = new Font( game.FontName, 12, FontStyle.Italic );
 			enterIndex = 2;
-			widgets = new LauncherWidget[14];
+			widgets = new LauncherWidget[16];
 			LoadResumeInfo();
+		}
+		
+		public override void Init() {
+			base.Init();
+			Resize();
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				LoadSavedInfo( drawer );
+			}
 		}
 		
 		public override void Resize() {
@@ -23,6 +35,14 @@ namespace Launcher2 {
 				RedrawAll();
 			}
 			Dirty = true;
+		}
+		
+		string updateText = "&eChecking for updates..";
+		bool updateDone;
+		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
+			//if( updateDone ) return; TODO: Why is this broken?
+			//updateText = "&aNew release available";
+			//updateDone = true;
 		}
 		
 		void MakeWidgets() {
@@ -41,19 +61,22 @@ namespace Launcher2 {
 			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
 			
 			if( !game.ClassicMode ) {
-				MakeButtonAt( "Colour scheme", 160, buttonHeight, buttonFont,
+				MakeButtonAt( "Colours", 110, buttonHeight, buttonFont,
 				             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
 				             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );
 			} else {
 				widgets[widgetIndex++] = null;
 			}
 			
-			MakeButtonAt( "Update", 120, buttonHeight, buttonFont,
+			MakeButtonAt( "Updates", 110, buttonHeight, buttonFont,
 			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
 			string mode = game.ClassicMode ? "Normal mode" : "Pure classic mode";
-			MakeButtonAt( mode, 190, buttonHeight, buttonFont,
+			MakeButtonAt( mode, 200, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.BottomOrRight, 0, -10, ModeClick );
+			
+			MakeLabelAt( updateText, updateFont, Anchor.BottomOrRight, 
+			            Anchor.BottomOrRight, -10, -50 );
 			
 			if( widgets[widgetIndex] != null ) {
 				MakeSSLSkipValidationBoolean();
@@ -126,6 +149,7 @@ namespace Launcher2 {
 		
 		public override void Dispose() {
 			buttonFont.Dispose();
+			updateFont.Dispose();
 			StoreFields();
 			base.Dispose();
 		}

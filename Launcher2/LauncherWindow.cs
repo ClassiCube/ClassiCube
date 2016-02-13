@@ -56,6 +56,7 @@ namespace Launcher2 {
 			new Dictionary<string, Dictionary<string, object>>();
 		
 		internal ResourceFetcher fetcher;
+		internal UpdateCheckTask checkTask;
 		
 		Font logoFont;
 		PlatformDrawer platformDrawer;
@@ -146,11 +147,12 @@ namespace Launcher2 {
 			
 			fetcher = new ResourceFetcher();
 			fetcher.CheckResourceExistence();
-			if( !fetcher.AllResourcesExist ) {
+			checkTask = new UpdateCheckTask();
+			checkTask.CheckForUpdatesAsync();
+			if( !fetcher.AllResourcesExist )
 				SetScreen( new ResourcesScreen( this ) );
-			} else {
+			else
 				SetScreen( new MainScreen( this ) );
-			}
 			
 			while( true ) {
 				Window.ProcessEvents();

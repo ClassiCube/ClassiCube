@@ -18,11 +18,13 @@ namespace Launcher2 {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
 			buttonFont = titleFont;
-			widgets = new LauncherWidget[20];
+			widgets = new LauncherWidget[13];
 		}
 
 		UpdateCheckTask checkTask;
 		public override void Init() {
+			if( game.checkTask.Done )
+				SuccessfulUpdateCheck( game.checkTask );
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
 			game.Window.Keyboard.KeyDown += KeyDown;
@@ -47,22 +49,20 @@ namespace Launcher2 {
 
 		Build dev, stable;
 		public override void Tick() {
-			if( checkTask != null && !checkTask.Working ) {
-				if( checkTask.Exception != null ) {
-					updateCheckFailed = true;
-				} else {
-					dev = checkTask.LatestDev;
-					lastDev = dev.TimeBuilt;
-					validDev = dev.DirectXSize > 50000 && dev.OpenGLSize > 50000;
-					
-					stable = checkTask.LatestStable;
-					lastStable = stable.TimeBuilt;
-					validStable = stable.DirectXSize > 50000 && stable.OpenGLSize > 50000;
-				}
-				checkTask = null;
-				game.MakeBackground();
-				Resize();
-			}
+			if( checkTask.Done ) return;
+			if( !checkTask.TaskTick( SuccessfulUpdateCheck, this ) )
+				updateCheckFailed = true;
+		}
+		
+		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
+			dev = task.LatestDev;
+			lastDev = dev.TimeBuilt;
+			validDev = dev.DirectXSize > 50000 && dev.OpenGLSize > 50000;
+			
+			stable = task.LatestStable;
+			lastStable = stable.TimeBuilt;
+			validStable = stable.DirectXSize > 50000 && stable.OpenGLSize > 50000;
+			game.checkTask = checkTask;
 		}
 		
 		public override void Resize() {
@@ -72,6 +72,10 @@ namespace Launcher2 {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				RedrawAll();
+				FastColour col = LauncherSkin.ButtonBorderCol;
+				int middle = game.Height / 2;
+				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 100, 320, 1 );
+				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 10, 320, 1 );
 			}
 			Dirty = true;
 		}
@@ -85,29 +89,29 @@ namespace Launcher2 {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			
-			MakeLabelAt( "Your build:", infoFont, Anchor.Centre, Anchor.Centre, -100, -120 );
+			MakeLabelAt( "Your build:", infoFont, Anchor.Centre, Anchor.Centre, -60, -120 );
 			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
-			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 30, -120 );
+			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 70, -120 );
 			
-			MakeLabelAt( "Update to stable build", titleFont, Anchor.Centre, Anchor.Centre, -130, -80 );
-			MakeLabelAt( "Latest stable:", infoFont, Anchor.Centre, Anchor.Centre, -90, -50 );
+			MakeLabelAt( "Latest stable:", infoFont, Anchor.Centre, Anchor.Centre, -70, -75 );
 			string latestStable = GetDateString( lastStable, validStable );
-			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 50, -50 );
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -15,
+			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 70, -75 );
+			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -40,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, true ) );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -15,
+			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -40,
 			             (x, y) => UpdateBuild( lastStable, validStable, true, false ) );
 			
-			MakeLabelAt( "Update to dev build", titleFont, Anchor.Centre, Anchor.Centre, -120, 30 );
-			MakeLabelAt( "Latest dev:", infoFont, Anchor.Centre, Anchor.Centre, -100, 60 );
+			MakeLabelAt( "Latest dev build:", infoFont, Anchor.Centre, Anchor.Centre, -80, 15 );
 			string latestDev = GetDateString( lastDev, validDev );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 50, 60 );
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 95,
+			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 70, 15 );
+			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 50,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 95,
+			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 50,
 			             (x, y) => UpdateBuild( lastDev, validDev, false, false ) );
 			
-			MakeLabelAt( "&eThe Direct3D 9 builds are the recommended builds for Windows.", 
+			MakeLabelAt( "&eDirect3D 9 is recommended for Windows.",
+			            infoFont, Anchor.Centre, Anchor.Centre, 0, 105 );
+			MakeLabelAt( "&eThe client must be closed before updating.",
 			            infoFont, Anchor.Centre, Anchor.Centre, 0, 130 );
 			
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,

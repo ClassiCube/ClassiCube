@@ -191,7 +191,7 @@ namespace ClassicalSharp {
 			BoundingBox bounds = CollisionBounds;
 			useLiquidGravity = false;
 			float baseModifier = LowestModifier( bounds, false );
-			bounds.Min.Y -= 0.1f; // also check block standing on
+			bounds.Min.Y -= 0.5f/16f; // also check block standing on
 			float solidModifier = LowestModifier( bounds, true );
 			
 			if( baseModifier == inf && solidModifier == inf ) return 1;

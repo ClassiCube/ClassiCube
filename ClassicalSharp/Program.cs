@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			SelectResolution( out width, out height );
 				
 			if( args.Length == 0 || args.Length == 1 ) {
-				const string skinServer = "http://s3.amazonaws.com/MinecraftSkins/";
+				const string skinServer = "http://static.classicube.net/skins/";
 				
 				using( Game game = new Game( "Singleplayer", null, skinServer, nullContext, width, height ) )
 					game.Run();

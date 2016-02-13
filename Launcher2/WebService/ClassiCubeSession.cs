@@ -20,6 +20,7 @@ namespace Launcher2 {
 		public void LoginAsync( string user, string password ) {
 			Username = user;
 			Working = true;
+			Done = false;
 			Exception = null;
 			Status = "&eSigning in..";
 			Servers = new List<ServerListEntry>();

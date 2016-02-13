@@ -6,8 +6,8 @@ using OpenTK.Input;
 namespace Launcher2 {
 	
 	public abstract class LauncherScreen {
-		protected LauncherWindow game;
-		protected IDrawer2D drawer;
+		protected internal LauncherWindow game;
+		protected internal IDrawer2D drawer;
 		
 		public bool Dirty;
 		protected int widgetIndex;
