@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "OpenTK\OpenTK.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InteropPatcher", "InteropPatcher\InteropPatcher.csproj", "{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher2\Launcher.csproj", "{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher2", "Launcher2\Launcher2.csproj", "{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
