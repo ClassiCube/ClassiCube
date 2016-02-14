@@ -9,7 +9,7 @@ using ClassicalSharp.Network;
 using OpenTK;
 using OpenTK.Graphics;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public sealed partial class LauncherWindow {
 		
@@ -179,6 +179,7 @@ namespace Launcher2 {
 		void Display() {
 			Dirty = false;
 			Screen.Dirty = false;
+			Console.WriteLine( "~~redraw~~" );
 			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
 		}
 		

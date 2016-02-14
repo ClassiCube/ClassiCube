@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
@@ -40,9 +41,16 @@ namespace Launcher2 {
 		string updateText = "&eChecking for updates..";
 		bool updateDone;
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
-			//if( updateDone ) return; TODO: Why is this broken?
-			//updateText = "&aNew release available";
-			//updateDone = true;
+			if( updateDone ) return;			
+			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
+			DateTime lastTime = File.GetLastWriteTime( exePath );
+			DateTime lastRelease = game.checkTask.LatestStable.TimeBuilt;
+			
+			updateText = lastTime >= lastRelease ? "&eUp to date     " : "&aNew release available";
+			updateDone = true;
+			game.MakeBackground();
+			Resize();
+			SelectWidget( selectedWidget );
 		}
 		
 		void MakeWidgets() {

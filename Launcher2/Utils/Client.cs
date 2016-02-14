@@ -5,7 +5,7 @@ using System.IO;
 using ClassicalSharp;
 using OpenTK;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public static class Client {
 		

@@ -4,7 +4,7 @@ using ClassicalSharp.Network;
 using SharpWave;
 using SharpWave.Codecs.Vorbis;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed class SoundPatcher {
 

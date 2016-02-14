@@ -6,7 +6,7 @@ using OpenTK.Platform.X11;
 using OSX = OpenTK.Platform.MacOS.Carbon;
 using OSStatus = OpenTK.Platform.MacOS.OSStatus;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	/// <summary> Platform specific class used to transfer a bitmap directly to the screen. </summary>
 	public abstract class PlatformDrawer {
@@ -36,7 +36,6 @@ namespace Launcher2 {
 		}
 	}
 	
-	// TODO: broken
 	public sealed class OSXPlatformDrawer : PlatformDrawer {
 		
 		IntPtr windowPort;

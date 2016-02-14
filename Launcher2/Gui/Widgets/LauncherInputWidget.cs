@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	/// <summary> Widget that represents text can have modified by the user. </summary>
 	public sealed class LauncherInputWidget : LauncherWidget {

@@ -2,7 +2,7 @@
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	/// <summary> Widget that represents text that cannot be modified by the user. </summary>
 	public sealed class LauncherLabelWidget : LauncherWidget {

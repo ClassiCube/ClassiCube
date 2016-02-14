@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.IO;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public partial class ResourcePatcher {
 		

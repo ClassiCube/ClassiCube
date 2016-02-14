@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public partial class LauncherTableWidget : LauncherWidget {
 		

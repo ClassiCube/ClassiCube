@@ -2,7 +2,7 @@
 using System.IO;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	internal static class Program {
 		

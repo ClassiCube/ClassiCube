@@ -5,7 +5,7 @@ using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.TexturePack;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public partial class ResourcePatcher {
 

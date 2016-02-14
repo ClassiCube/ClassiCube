@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public class ServerListEntry {
 		

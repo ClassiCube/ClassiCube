@@ -2,7 +2,7 @@
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public static class LauncherSkin {
 		

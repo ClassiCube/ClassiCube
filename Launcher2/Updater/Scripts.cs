@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Launcher2.Updater {
+namespace Launcher.Updater {
 	
 	public static class Scripts {
 		

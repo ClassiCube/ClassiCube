@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public static class Json {
 		const int TOKEN_NONE = 0, TOKEN_CURLY_OPEN = 1, TOKEN_CURLY_CLOSE = 2;

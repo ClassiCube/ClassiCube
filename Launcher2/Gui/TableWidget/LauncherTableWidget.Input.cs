@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public partial class LauncherTableWidget : LauncherWidget {
 

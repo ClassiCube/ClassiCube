@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading;
 using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public class Build {
 		public DateTime TimeBuilt;
@@ -79,9 +79,6 @@ namespace Launcher2 {
 				return false;
 			else
 				taskSuccess( this );
-			
-			screen.game.MakeBackground();
-			screen.Resize();
 			return true;
 		}
 	}

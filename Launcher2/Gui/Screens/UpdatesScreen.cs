@@ -2,10 +2,10 @@
 using System.Drawing;
 using System.IO;
 using ClassicalSharp;
-using Launcher2.Updater;
+using Launcher.Updater;
 using OpenTK.Input;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	// TODO: Download asynchronously
 	public sealed class UpdatesScreen : LauncherScreen {
@@ -23,7 +23,7 @@ namespace Launcher2 {
 
 		UpdateCheckTask checkTask;
 		public override void Init() {
-			if( game.checkTask.Done )
+			if( game.checkTask != null && game.checkTask.Done )
 				SuccessfulUpdateCheck( game.checkTask );
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
@@ -55,14 +55,8 @@ namespace Launcher2 {
 		}
 		
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
-			dev = task.LatestDev;
-			lastDev = dev.TimeBuilt;
-			validDev = dev.DirectXSize > 50000 && dev.OpenGLSize > 50000;
-			
-			stable = task.LatestStable;
-			lastStable = stable.TimeBuilt;
-			validStable = stable.DirectXSize > 50000 && stable.OpenGLSize > 50000;
-			game.checkTask = checkTask;
+			dev = task.LatestDev; lastDev = dev.TimeBuilt;		
+			stable = task.LatestStable; lastStable = stable.TimeBuilt;
 		}
 		
 		public override void Resize() {
@@ -82,7 +76,6 @@ namespace Launcher2 {
 		
 		const string dateFormat = "dd-MM-yyyy HH:mm";
 		DateTime lastStable, lastDev;
-		bool validStable = true, validDev = true;
 		bool updateCheckFailed;
 		
 		void MakeWidgets() {
@@ -93,21 +86,21 @@ namespace Launcher2 {
 			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
 			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 70, -120 );
 			
-			MakeLabelAt( "Latest stable:", infoFont, Anchor.Centre, Anchor.Centre, -70, -75 );
-			string latestStable = GetDateString( lastStable, validStable );
+			MakeLabelAt( "Latest release:", infoFont, Anchor.Centre, Anchor.Centre, -70, -75 );
+			string latestStable = GetDateString( lastStable );
 			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 70, -75 );
 			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -40,
-			             (x, y) => UpdateBuild( lastStable, validStable, true, true ) );
+			             (x, y) => UpdateBuild( lastStable, true, true ) );
 			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -40,
-			             (x, y) => UpdateBuild( lastStable, validStable, true, false ) );
+			             (x, y) => UpdateBuild( lastStable, true, false ) );
 			
 			MakeLabelAt( "Latest dev build:", infoFont, Anchor.Centre, Anchor.Centre, -80, 15 );
-			string latestDev = GetDateString( lastDev, validDev );
+			string latestDev = GetDateString( lastDev );
 			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 70, 15 );
 			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 50,
-			             (x, y) => UpdateBuild( lastDev, validDev, false, true ) );
+			             (x, y) => UpdateBuild( lastDev, false, true ) );
 			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 50,
-			             (x, y) => UpdateBuild( lastDev, validDev, false, false ) );
+			             (x, y) => UpdateBuild( lastDev, false, false ) );
 			
 			MakeLabelAt( "&eDirect3D 9 is recommended for Windows.",
 			            infoFont, Anchor.Centre, Anchor.Centre, 0, 105 );
@@ -118,21 +111,20 @@ namespace Launcher2 {
 			             0, 170, (x, y) => game.SetScreen( new MainScreen( game ) ) );
 		}
 		
-		string GetDateString( DateTime last, bool valid ) {
+		string GetDateString( DateTime last ) {
 			if( updateCheckFailed ) return "Update check failed";
-			if( !valid ) return "Build corrupted";
-			if( last == DateTime.MinValue ) return "Checking..";
-			
+			if( last == DateTime.MinValue ) return "Checking..";	
 			return last.ToString( dateFormat );
 		}
 		
-		void UpdateBuild( DateTime last, bool valid, bool release, bool dx ) {
-			if( last == DateTime.MinValue || !valid ) return;
-			
+		void UpdateBuild( DateTime last, bool release, bool dx ) {
 			Build build = release ? stable : dev;
-			string dir = dx ? build.DirectXPath : build.OpenGLPath;
-			Console.WriteLine( "FETCH! " + dir );
-			Patcher.Update( dir );
+			if( last == DateTime.MinValue || build.DirectXSize < 50000 
+			   || build.OpenGLSize < 50000 ) return;
+			
+			string path = dx ? build.DirectXPath : build.OpenGLPath;
+			Utils.LogDebug( "Updating to: " + path );
+			Patcher.Update( path );
 		}
 		
 		public override void Dispose() {

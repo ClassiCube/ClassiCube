@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public partial class LauncherTableWidget : LauncherWidget {
 		

@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using ClassicalSharp.TexturePack;
 
-namespace Launcher2.Updater {
+namespace Launcher.Updater {
 	
 	public static class Patcher {
 		

@@ -3,7 +3,7 @@ using System.Drawing;
 using ClassicalSharp;
 using OpenTK.Input;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public abstract class LauncherScreen {
 		protected internal LauncherWindow game;

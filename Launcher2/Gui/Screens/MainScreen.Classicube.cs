@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 
@@ -13,9 +13,8 @@ namespace Launcher2 {
 		
 		public override void Tick() {
 			base.Tick();
-			// TODO: Why is this broken?
-			//if( game.checkTask != null )
-			//	 game.checkTask.TaskTick( SuccessfulUpdateCheck, this );
+			if( game.checkTask != null )
+				 game.checkTask.TaskTick( SuccessfulUpdateCheck, this );
 			if( !signingIn ) return;
 			
 			ClassicubeSession session = game.Session;

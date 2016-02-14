@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading;
 using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed class ClassicubeSession : IWebTask {
 		

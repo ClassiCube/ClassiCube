@@ -3,7 +3,7 @@ using System.IO;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed class ResourceFetcher {
 		

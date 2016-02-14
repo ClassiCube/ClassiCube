@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed class DirectConnectScreen : LauncherInputScreen {
 		

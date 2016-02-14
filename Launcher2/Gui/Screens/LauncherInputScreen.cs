@@ -4,7 +4,7 @@ using ClassicalSharp;
 using OpenTK;
 using OpenTK.Input;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public abstract class LauncherInputScreen : LauncherScreen {
 		

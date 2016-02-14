@@ -3,7 +3,7 @@ using System.Drawing;
 using ClassicalSharp;
 using ClassicalSharp.Network;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public sealed class ResourcesScreen : LauncherScreen {
 		

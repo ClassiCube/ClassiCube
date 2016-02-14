@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace Launcher2 {
+namespace Launcher {
 	
 	public static class Secure {
 		

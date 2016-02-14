@@ -1,7 +1,7 @@
 ﻿using System;
 using ClassicalSharp;
 
-namespace Launcher2 {
+namespace Launcher {
 
 	public abstract class LauncherWidget {
 		
