@@ -11,11 +11,6 @@ namespace ClassicalSharp {
 
 	public abstract partial class Player : Entity {
 		
-		/// <summary> Gets the position of the player's eye in the world. </summary>
-		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, Position.Y + Model.GetEyeY( this ), Position.Z ); }
-		}
-		
 		public string DisplayName, SkinName, SkinIdentifier;
 		public SkinType SkinType;
 		internal AnimatedComponent anim;
@@ -26,20 +21,6 @@ namespace ClassicalSharp {
 			SkinType = game.DefaultPlayerSkinType;
 			anim = new AnimatedComponent( game, this );
 			SetModel( "humanoid" );
-		}
-		
-		/// <summary> Gets the block just underneath the player's feet position. </summary>
-		public Block BlockUnderFeet {
-			get { return GetBlock( new Vector3( Position.X, Position.Y - 0.01f, Position.Z ) ); }
-		}
-		
-		/// <summary> Gets the block at player's eye position. </summary>
-		public Block BlockAtHead {
-			get { return GetBlock( EyePosition ); }
-		}
-		
-		protected Block GetBlock( Vector3 coords ) {
-			return (Block)game.Map.SafeGetBlock( Vector3I.Floor( coords ) );
 		}
 		
 		protected void CheckSkin() {
@@ -112,12 +93,6 @@ namespace ClassicalSharp {
 					}
 				}
 			}
-		}
-		
-		protected void RemoveOldest<T>(T[] array, ref int count) {
-			for( int i = 0; i < array.Length - 1; i++ )
-				array[i] = array[i + 1];
-			count--;
 		}
 	}
 }

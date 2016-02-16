@@ -22,17 +22,11 @@ namespace ClassicalSharp.Model {
 			                    .SetTexOrigin( 40, 16 ) );
 		}
 		
-		public override bool Bobbing {
-			get { return true; }
-		}
+		public override bool Bobbing { get { return true; } }
 
-		public override float NameYOffset {
-			get { return 2.075f; }
-		}
+		public override float NameYOffset { get { return 2.075f; } }
 		
-		public override float GetEyeY( Player player ) {
-			return 26/16f;
-		}
+		public override float GetEyeY( Entity entity ) { return 26/16f; }
 		
 		public override Vector3 CollisionSize {
 			get { return new Vector3( 8/16f, 30/16f, 8/16f ); }

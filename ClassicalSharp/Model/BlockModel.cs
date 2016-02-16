@@ -17,16 +17,12 @@ namespace ClassicalSharp.Model {
 		public BlockModel( Game game ) : base( game ) {
 		}
 		
-		public override bool Bobbing {
-			get { return false; }
-		}
+		public override bool Bobbing { get { return false; } }
 		
-		public override float NameYOffset {
-			get { return height + 0.075f; }
-		}
+		public override float NameYOffset { get { return height + 0.075f; } }
 		
-		public override float GetEyeY( Player player ) {
-			byte block = Byte.Parse( player.ModelName );
+		public override float GetEyeY( Entity entity ) {
+			byte block = Byte.Parse( entity.ModelName );
 			float minY = game.BlockInfo.MinBB[block].Y;
 			float maxY = game.BlockInfo.MaxBB[block].Y;
 			return block == 0 ? 1 : (minY + maxY) / 2;

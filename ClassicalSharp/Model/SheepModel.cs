@@ -44,17 +44,11 @@ namespace ClassicalSharp.Model {
 			FurRightLegBack = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f ) );
 		}
 		
-		public override bool Bobbing {
-			get { return true; }
-		}
+		public override bool Bobbing { get { return true; } }
 		
-		public override float NameYOffset {
-			get { return Fur ? 1.48125f: 1.075f; }
-		}
+		public override float NameYOffset { get { return Fur ? 1.48125f: 1.075f; } }
 		
-		public override float GetEyeY( Player player ) {
-			return 20/16f;
-		}
+		public override float GetEyeY( Entity entity ) { return 20/16f; }
 		
 		public override Vector3 CollisionSize {
 			get { return new Vector3( 14/16f, 20/16f, 14/16f ); }

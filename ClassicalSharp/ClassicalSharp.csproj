@@ -148,6 +148,7 @@
     <Compile Include="Entities\Components\HacksComponent.cs" />
     <Compile Include="Entities\Components\InterpolatedComponent.cs" />
     <Compile Include="Entities\Components\PhysicsComponent.cs" />
+    <Compile Include="Entities\Entity.Bounds.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />

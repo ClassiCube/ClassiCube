@@ -32,7 +32,7 @@ namespace ClassicalSharp.Model {
 		public abstract float NameYOffset { get; }
 		
 		/// <summary> Vertical offset from the model's feet/base that the model's eye is located. </summary>
-		public abstract float GetEyeY( Player player );
+		public abstract float GetEyeY( Entity entity );
 		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
