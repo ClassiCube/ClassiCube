@@ -40,10 +40,6 @@ namespace ClassicalSharp {
 			return (Block)game.Map.SafeGetBlock( Vector3I.Floor( coords ) );
 		}
 		
-		public abstract void Tick( double delta );
-		
-		public abstract void SetLocation( LocationUpdate update, bool interpolate );
-		
 		protected void CheckSkin() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( SkinIdentifier, out item );

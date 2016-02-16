@@ -69,6 +69,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public abstract void Tick( double delta );
+		
+		public abstract void SetLocation( LocationUpdate update, bool interpolate );
+		
 		public abstract void Despawn();
 		
 		/// <summary> Renders the entity's model, interpolating between the previous and next state. </summary>

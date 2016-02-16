@@ -141,6 +141,9 @@
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\BlockInfo.Sounds.cs" />
+    <Compile Include="Entities\AI\AI.cs" />
+    <Compile Include="Entities\AI\FleeAI.cs" />
+    <Compile Include="Entities\AI\HostileAI.cs" />
     <Compile Include="Entities\AnimatedEntity.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
@@ -286,6 +289,7 @@
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
+    <Folder Include="Entities\AI" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Platform" />
