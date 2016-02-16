@@ -61,10 +61,10 @@ namespace ClassicalSharp.Model {
 			DrawHeadRotate( 0, 9/16f, -4/16f, -p.PitchRadians, 0, 0, Head3 );
 
 			DrawPart( Torso );
-			DrawRotate( 0, 5/16f, 1/16f, p.legXRot, 0, 0, LeftLeg );
-			DrawRotate( 0, 5/16f, 1/16f, -p.legXRot, 0, 0, RightLeg );
-			DrawRotate( -3/16f, 11/16f, 0, 0, 0, -Math.Abs( p.armXRot ), LeftWing );
-			DrawRotate( 3/16f, 11/16f, 0, 0, 0, Math.Abs( p.armXRot ), RightWing );
+			DrawRotate( 0, 5/16f, 1/16f, p.anim.legXRot, 0, 0, LeftLeg );
+			DrawRotate( 0, 5/16f, 1/16f, -p.anim.legXRot, 0, 0, RightLeg );
+			DrawRotate( -3/16f, 11/16f, 0, 0, 0, -Math.Abs( p.anim.armXRot ), LeftWing );
+			DrawRotate( 3/16f, 11/16f, 0, 0, 0, Math.Abs( p.anim.armXRot ), RightWing );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

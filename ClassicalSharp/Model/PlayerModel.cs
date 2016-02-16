@@ -71,11 +71,11 @@ namespace ClassicalSharp.Model {
 			DrawHeadRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, model.Head );
 			
 			DrawPart( model.Torso );
-			DrawRotate( 0, 12/16f, 0, p.legXRot, 0, 0, model.LeftLeg );
-			DrawRotate( 0, 12/16f, 0, -p.legXRot, 0, 0, model.RightLeg );
+			DrawRotate( 0, 12/16f, 0, p.anim.legXRot, 0, 0, model.LeftLeg );
+			DrawRotate( 0, 12/16f, 0, -p.anim.legXRot, 0, 0, model.RightLeg );
 			Rotate = RotateOrder.XZY;
-			DrawRotate( -5/16f, 22/16f, 0, p.leftXRot, 0, p.leftZRot, model.LeftArm );
-			DrawRotate( 5/16f, 22/16f, 0, p.rightXRot, 0, p.rightZRot, model.RightArm );
+			DrawRotate( -5/16f, 22/16f, 0, p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArm );
+			DrawRotate( 5/16f, 22/16f, 0, p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArm );
 			Rotate = RotateOrder.ZYX;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			

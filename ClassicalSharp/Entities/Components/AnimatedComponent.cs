@@ -4,17 +4,23 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	/// <summary> Entity that is animated depending on movement speed and time. </summary>
-	public abstract class AnimatedEntity : PhysicsEntity {
+	/// <summary> Entity component that performs model animation depending on movement speed and time. </summary>
+	public sealed class AnimatedComponent {
 		
-		public AnimatedEntity( Game game ) : base( game ) {
+		Game game;
+		Entity entity;
+		public AnimatedComponent( Game game, Entity entity ) {
+			this.game = game;
+			this.entity = entity;
 		}
+		
 		public float legXRot, armXRot, armZRot;
 		public float bobYOffset, tilt, walkTime, swing;
-		protected internal float walkTimeO, walkTimeN, swingO, swingN;
+		internal float walkTimeO, walkTimeN, swingO, swingN;
+		internal float leftXRot, leftZRot, rightXRot, rightZRot;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
-		protected void UpdateAnimState( Vector3 oldPos, Vector3 newPos, double delta ) {
+		public void UpdateAnimState( Vector3 oldPos, Vector3 newPos, double delta ) {
 			walkTimeO = walkTimeN;
 			swingO = swingN;
 			float dx = newPos.X - oldPos.X;
@@ -38,7 +44,7 @@ namespace ClassicalSharp {
 		const float idleZPeriod = (float)(2 * Math.PI / 3.5f);
 		
 		/// <summary> Calculates the interpolated state between the last and next animation state. </summary>
-		protected void GetCurrentAnimState( float t ) {
+		public void GetCurrentAnimState( float t ) {
 			swing = Utils.Lerp( swingO, swingN, t );
 			walkTime = Utils.Lerp( walkTimeO, walkTimeN, t );
 			float idleTime = (float)game.accumulator;
@@ -51,11 +57,10 @@ namespace ClassicalSharp {
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2.5f/16f));
 			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);		
-			if( Model is PlayerModel )
+			if( entity.Model is PlayerModel )
 				CalcHumanAnim( idleXRot, idleZRot );
 		}
 		
-		internal float leftXRot, leftZRot, rightXRot, rightZRot;
 		void CalcHumanAnim( float idleXRot, float idleZRot ) {
 			if( game.SimpleArmsAnim ) {
 				leftXRot = armXRot; leftZRot = armZRot;

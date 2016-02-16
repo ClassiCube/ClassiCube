@@ -406,7 +406,7 @@ namespace ClassicalSharp {
 			else if( Camera == thirdPersonCam ) Camera = forwardThirdPersonCam;
 			else Camera = firstPersonCam;
 
-			if( !LocalPlayer.CanUseThirdPersonCamera || !LocalPlayer.HacksEnabled )
+			if( !LocalPlayer.Hacks.CanUseThirdPersonCamera || !LocalPlayer.Hacks.Enabled )
 				Camera = firstPersonCam;
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;

@@ -160,7 +160,7 @@ namespace ClassicalSharp.Renderers {
 		bool stop = false;
 		public void Tick( double delta ) {
 			Player p = game.LocalPlayer;
-			float bobTimeDelta = p.walkTimeN - p.walkTimeO;
+			float bobTimeDelta = p.anim.walkTimeN - p.anim.walkTimeO;
 			bobTimeO = bobTimeN;
 
 			if( game.LocalPlayer.onGround ) stop = false;

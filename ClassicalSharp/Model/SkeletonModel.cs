@@ -48,10 +48,10 @@ namespace ClassicalSharp.Model {
 			DrawHeadRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, Head );
 
 			DrawPart( Torso );
-			DrawRotate( 0, 12/16f, 0, p.legXRot, 0, 0, LeftLeg );
-			DrawRotate( 0, 12/16f, 0, -p.legXRot, 0, 0, RightLeg );
-			DrawRotate( -5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, p.armZRot, LeftArm );
-			DrawRotate( 5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, -p.armZRot, RightArm );
+			DrawRotate( 0, 12/16f, 0, p.anim.legXRot, 0, 0, LeftLeg );
+			DrawRotate( 0, 12/16f, 0, -p.anim.legXRot, 0, 0, RightLeg );
+			DrawRotate( -5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, p.anim.armZRot, LeftArm );
+			DrawRotate( 5/16f, 23/16f, 0, 90 * Utils.Deg2Rad, 0, -p.anim.armZRot, RightArm );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

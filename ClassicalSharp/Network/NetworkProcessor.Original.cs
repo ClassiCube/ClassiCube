@@ -73,10 +73,13 @@ namespace ClassicalSharp {
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
 			ServerName = reader.ReadCp437String();
-			ServerMotd = reader.ReadCp437String();
-			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
+			ServerMotd = reader.ReadCp437String();		
 			receivedFirstPosition = false;
-			game.LocalPlayer.ParseHackFlags( ServerName, ServerMotd );
+			
+			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
+			game.LocalPlayer.Hacks.ParseHackFlags( ServerName, ServerMotd );
+			game.LocalPlayer.CheckHacksConsistency();
+			game.Events.RaiseHackPermissionsChanged();
 		}
 			
 		void HandlePing() { }
@@ -257,7 +260,7 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleSetPermission() {
-			game.LocalPlayer.SetUserType( reader.ReadUInt8() );
+			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
 		}
 		
 		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {

@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 			
 			if( game.LocalPlayer.noClip || !localBB.Intersects( blockBB ) ) return true;
 			
-			if( game.LocalPlayer.PushbackPlacing ) {
+			if( game.LocalPlayer.Hacks.PushbackPlacing ) {
 				return PushbackPlace( selected, blockBB );
 			} else {
 				localBB.Min.Y += 0.25f + Entity.Adjustment;
@@ -384,7 +384,7 @@ namespace ClassicalSharp {
 			if( !game.IsKeyDown( KeyBinding.ZoomScrolling ) )
 				return false;
 			LocalPlayer p = game.LocalPlayer;
-			if( !p.HacksEnabled || !p.CanAnyHacks || !p.CanUseThirdPersonCamera )
+			if( !p.Hacks.Enabled || !p.Hacks.CanAnyHacks || !p.Hacks.CanUseThirdPersonCamera )
 				return false;
 			
 			if( fovIndex == -1 ) fovIndex = game.ZoomFieldOfView;

@@ -9,7 +9,7 @@ using Android.Graphics;
 
 namespace ClassicalSharp {
 
-	public abstract partial class Player : AnimatedEntity {
+	public abstract partial class Player : Entity {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
@@ -18,11 +18,13 @@ namespace ClassicalSharp {
 		
 		public string DisplayName, SkinName, SkinIdentifier;
 		public SkinType SkinType;
+		internal AnimatedComponent anim;
 		
 		public Player( Game game ) : base( game ) {
 			this.game = game;
 			StepSize = 0.5f;
 			SkinType = game.DefaultPlayerSkinType;
+			anim = new AnimatedComponent( game, this );
 			SetModel( "humanoid" );
 		}
 		

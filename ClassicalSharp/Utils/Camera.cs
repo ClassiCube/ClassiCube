@@ -118,8 +118,8 @@ namespace ClassicalSharp {
 				tiltMatrix = Matrix4.Identity;
 				bobYOffset = 0;
 			} else {
-				tiltMatrix = Matrix4.RotateZ( game.LocalPlayer.tilt );
-				bobYOffset = game.LocalPlayer.bobYOffset * (2.0f/2.5f);
+				tiltMatrix = Matrix4.RotateZ( game.LocalPlayer.anim.tilt );
+				bobYOffset = game.LocalPlayer.anim.bobYOffset * (2.0f/2.5f);
 			}
 		}
 	}

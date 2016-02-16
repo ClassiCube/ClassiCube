@@ -15,15 +15,15 @@ namespace ClassicalSharp {
 			widgets = new Widget[] {
 				// Column 1
 				Make( -140, -150, "Hacks enabled", OnWidgetClick,
-				     g => g.LocalPlayer.HacksEnabled ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.HacksEnabled = v == "yes";
+				     g => g.LocalPlayer.Hacks.Enabled ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.Hacks.Enabled = v == "yes";
 				     	Options.Set( OptionsKey.HacksEnabled, v == "yes" );
 				     	g.LocalPlayer.CheckHacksConsistency();
 				     } ),
 				
 				Make( -140, -100, "Speed multiplier", OnWidgetClick,
-				     g => g.LocalPlayer.SpeedMultiplier.ToString(),
-				     (g, v) => { g.LocalPlayer.SpeedMultiplier = Single.Parse( v );
+				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString(),
+				     (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				Make( -140, -50, "Camera clipping", OnWidgetClick,
@@ -36,8 +36,8 @@ namespace ClassicalSharp {
 				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
 				
 				Make( -140, 50, "Double jump", OnWidgetClick,
-				     g => g.LocalPlayer.DoubleJump ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.DoubleJump = v == "yes";
+				     g => g.LocalPlayer.Hacks.DoubleJump ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.Hacks.DoubleJump = v == "yes";
 				     	Options.Set( OptionsKey.DoubleJump, v == "yes" ); } ),
 				
 				// Column 2
@@ -47,13 +47,13 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
 				
 				Make( 140, -100, "Pushback placing", OnWidgetClick,
-				     g => g.LocalPlayer.PushbackPlacing ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.PushbackPlacing = v == "yes";
+				     g => g.LocalPlayer.Hacks.PushbackPlacing ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.Hacks.PushbackPlacing = v == "yes";
 				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" ); }),
 				
 				Make( 140, -50, "Noclip slide", OnWidgetClick,
-				     g => g.LocalPlayer.NoclipSlide ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.NoclipSlide = v == "yes";
+				     g => g.LocalPlayer.Hacks.NoclipSlide ? "yes" : "no",
+				     (g, v) => { g.LocalPlayer.Hacks.NoclipSlide = v == "yes";
 				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
 				
 				Make( 140, 0, "Field of view", OnWidgetClick,
@@ -81,10 +81,10 @@ namespace ClassicalSharp {
 			}
 			
 			LocalPlayer p = game.LocalPlayer;
-			bool noGlobalHacks = !p.CanAnyHacks || !p.HacksEnabled;
-			widgets[3].Disabled = noGlobalHacks || !p.CanSpeed;
-			widgets[4].Disabled = noGlobalHacks || !p.CanSpeed;
-			widgets[6].Disabled = noGlobalHacks || !p.CanPushbackBlocks;
+			bool noGlobalHacks = !p.Hacks.CanAnyHacks || !p.Hacks.Enabled;
+			widgets[3].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[4].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[6].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
 		}
 		
 		public override void Dispose() {

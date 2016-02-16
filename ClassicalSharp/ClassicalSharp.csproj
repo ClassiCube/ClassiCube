@@ -144,7 +144,10 @@
     <Compile Include="Entities\AI\AI.cs" />
     <Compile Include="Entities\AI\FleeAI.cs" />
     <Compile Include="Entities\AI\HostileAI.cs" />
-    <Compile Include="Entities\AnimatedEntity.cs" />
+    <Compile Include="Entities\Components\AnimatedComponent.cs" />
+    <Compile Include="Entities\Components\HacksComponent.cs" />
+    <Compile Include="Entities\Components\InterpolatedComponent.cs" />
+    <Compile Include="Entities\Components\PhysicsComponent.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
@@ -168,7 +171,6 @@
     <Compile Include="Particles\ParticleSpawner.cs" />
     <Compile Include="Particles\RainParticle.cs" />
     <Compile Include="Particles\TerrainParticle.cs" />
-    <Compile Include="Entities\PhysicsEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\Player.Rendering.cs" />
     <Compile Include="Game\ChatLog.cs" />
@@ -290,6 +292,7 @@
     <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\AI" />
+    <Folder Include="Entities\Components" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Platform" />

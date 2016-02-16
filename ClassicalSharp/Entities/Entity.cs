@@ -23,6 +23,8 @@ namespace ClassicalSharp {
 		
 		protected Game game;
 		protected BlockInfo info;
+		protected internal bool onGround;		
+		internal float StepSize;
 		
 		/// <summary> Rotation of the entity's head horizontally (i.e. looking north or east) </summary>
 		public float HeadYawRadians {

@@ -1,20 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using OpenTK;
 
 namespace ClassicalSharp {
 	
-	/// <summary> Entity that performs collision detection. </summary>
-	public abstract partial class PhysicsEntity : Entity {
+	/// <summary> Entity component that performs collision detection. </summary>
+	public sealed class PhysicsComponent {
 		
-		public PhysicsEntity( Game game ) : base( game ) {
+		Game game;
+		Entity entity;
+		BlockInfo info;
+		public PhysicsComponent( Game game, Entity entity ) {
+			this.game = game;
+			this.entity = entity;
+			info = game.BlockInfo;
 		}
 		
-		protected internal bool onGround, hitYMax;
-		protected bool collideX, collideY, collideZ;
-		protected float StepSize;
+		internal bool hitYMax, collideX, collideY, collideZ;
 		
-		protected byte GetPhysicsBlockId( int x, int y, int z ) {
+		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
+		public const float Adjustment = 0.001f;
+		
+		public byte GetPhysicsBlockId( int x, int y, int z ) {
 			if( x < 0 || x >= game.Map.Width || z < 0 ||
 			   z >= game.Map.Length || y < 0 ) return (byte)Block.Bedrock;
 			
@@ -37,10 +43,9 @@ namespace ClassicalSharp {
 		
 		
 		// TODO: test for corner cases, and refactor this.	
-		protected void MoveAndWallSlide() {
-			if( Velocity == Vector3.Zero )
-				return;
-			Vector3 size = CollisionSize;
+		internal void MoveAndWallSlide() {
+			if( entity.Velocity == Vector3.Zero ) return;
+			Vector3 size = entity.CollisionSize;
 			BoundingBox entityBB, entityExtentBB;
 			int count = 0;
 			FindReachableBlocks( ref count, ref size, out entityBB, out entityExtentBB );
@@ -49,8 +54,8 @@ namespace ClassicalSharp {
 		
 		void FindReachableBlocks( ref int count, ref Vector3 size,
 		                         out BoundingBox entityBB, out BoundingBox entityExtentBB ) {
-			Vector3 vel = Velocity;
-			Vector3 pos = Position;
+			Vector3 vel = entity.Velocity;
+			Vector3 pos = entity.Position;
 			entityBB = new BoundingBox(
 				pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
 				pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2
@@ -93,8 +98,8 @@ namespace ClassicalSharp {
 		
 		void CollideWithReachableBlocks( int count, ref Vector3 size,
 		                                ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			bool wasOn = onGround;
-			onGround = false;
+			bool wasOn = entity.onGround;
+			entity.onGround = false;
 			if( count > 0 )
 				QuickSort( stateCache, 0, count - 1 );
 			collideX = false; collideY = false; collideZ = false;
@@ -109,10 +114,10 @@ namespace ClassicalSharp {
 				if( !entityExtentBB.Intersects( blockBB ) ) continue;
 				
 				float tx = 0, ty = 0, tz = 0;
-				CalcTime( ref Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz );
+				CalcTime( ref entity.Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz );
 				if( tx > 1 || ty > 1 || tz > 1 )
 					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
-				BoundingBox finalBB = entityBB.Offset( Velocity * new Vector3( tx, ty, tz ) );
+				BoundingBox finalBB = entityBB.Offset( entity.Velocity * new Vector3( tx, ty, tz ) );
 				
 				// if we have hit the bottom of a block, we need to change the axis we test first.
 				if( hitYMax ) {
@@ -150,7 +155,7 @@ namespace ClassicalSharp {
 		void ClipXMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
 		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
 			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
+				entity.Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
 				ClipX( ref size, ref entityBB, ref entityExtentBB );
 			}
 		}
@@ -158,7 +163,7 @@ namespace ClassicalSharp {
 		void ClipXMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
 		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
 			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
+				entity.Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
 				ClipX( ref size, ref entityBB, ref entityExtentBB );
 			}
 		}
@@ -166,7 +171,7 @@ namespace ClassicalSharp {
 		void ClipZMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
 		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
 			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
+				entity.Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
 				ClipZ( ref size, ref entityBB, ref entityExtentBB );
 			}
 		}
@@ -174,22 +179,22 @@ namespace ClassicalSharp {
 		void ClipZMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
 		              BoundingBox finalBB, ref BoundingBox extentBB, ref Vector3 size ) {
 			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref extentBB ) ) {
-				Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
+				entity.Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
 				ClipZ( ref size, ref entityBB, ref extentBB );
 			}
 		}
 		
 		void ClipYMin( ref BoundingBox blockBB, ref BoundingBox entityBB,
 		              ref BoundingBox extentBB, ref Vector3 size ) {
-			Position.Y = blockBB.Min.Y - size.Y - Adjustment;
+			entity.Position.Y = blockBB.Min.Y - size.Y - Adjustment;
 			ClipY( ref size, ref entityBB, ref extentBB );
 			hitYMax = false;
 		}
 		
 		void ClipYMax( ref BoundingBox blockBB, ref BoundingBox entityBB,
 		              ref BoundingBox extentBB, ref Vector3 size ) {
-			Position.Y = blockBB.Max.Y + Adjustment;
-			onGround = true;
+			entity.Position.Y = blockBB.Max.Y + Adjustment;
+			entity.onGround = true;
 			ClipY( ref size, ref entityBB, ref extentBB );
 			hitYMax = true;
 		}
@@ -197,7 +202,7 @@ namespace ClassicalSharp {
 		bool DidSlide( BoundingBox blockBB, ref Vector3 size, BoundingBox finalBB,
 		              ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
 			float yDist = blockBB.Max.Y - entityBB.Min.Y;
-			if( yDist > 0 && yDist <= StepSize + 0.01f ) {
+			if( yDist > 0 && yDist <= entity.StepSize + 0.01f ) {
 				float blockXMin = blockBB.Min.X, blockZMin = blockBB.Min.Z;
 				blockBB.Min.X = Math.Max( blockBB.Min.X, blockBB.Max.X - size.X / 2 );
 				blockBB.Max.X = Math.Min( blockBB.Max.X, blockXMin + size.X / 2 );
@@ -214,8 +219,8 @@ namespace ClassicalSharp {
 				
 				if( !CanSlideThrough( ref adjBB ) )
 					return false;
-				Position.Y = blockBB.Max.Y + Adjustment;
-				onGround = true;
+				entity.Position.Y = blockBB.Max.Y + Adjustment;
+				entity.onGround = true;
 				ClipY( ref size, ref entityBB, ref entityExtentBB );
 				return true;
 			}
@@ -244,23 +249,23 @@ namespace ClassicalSharp {
 		}
 		
 		void ClipX( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			Velocity.X = 0;
-			entityBB.Min.X = entityExtentBB.Min.X = Position.X - size.X / 2;
-			entityBB.Max.X = entityExtentBB.Max.X = Position.X + size.X / 2;
+			entity.Velocity.X = 0;
+			entityBB.Min.X = entityExtentBB.Min.X = entity.Position.X - size.X / 2;
+			entityBB.Max.X = entityExtentBB.Max.X = entity.Position.X + size.X / 2;
 			collideX = true;
 		}
 		
 		void ClipY( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			Velocity.Y = 0;
-			entityBB.Min.Y = entityExtentBB.Min.Y = Position.Y;
-			entityBB.Max.Y = entityExtentBB.Max.Y = Position.Y + size.Y;
+			entity.Velocity.Y = 0;
+			entityBB.Min.Y = entityExtentBB.Min.Y = entity.Position.Y;
+			entityBB.Max.Y = entityExtentBB.Max.Y = entity.Position.Y + size.Y;
 			collideY = true;
 		}
 		
 		void ClipZ( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			Velocity.Z = 0;
-			entityBB.Min.Z = entityExtentBB.Min.Z = Position.Z - size.Z / 2;
-			entityBB.Max.Z = entityExtentBB.Max.Z = Position.Z + size.Z / 2;
+			entity.Velocity.Z = 0;
+			entityBB.Min.Z = entityExtentBB.Min.Z = entity.Position.Z - size.Z / 2;
+			entityBB.Max.Z = entityExtentBB.Max.Z = entity.Position.Z + size.Z / 2;
 			collideZ = true;
 		}
 		

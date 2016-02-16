@@ -50,7 +50,7 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			pos = p.Position;
 			if( Bobbing )
-				pos.Y += p.bobYOffset;
+				pos.Y += p.anim.bobYOffset;
 			Map map = game.Map;
 			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 			

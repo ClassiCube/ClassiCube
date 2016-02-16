@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		bool firstJump = false, secondJump = false;
 		
 		void UpdateVelocityState( float xMoving, float zMoving ) {
-			if( !NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
+			if( !Hacks.NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
 				Velocity = Vector3.Zero;
 			
 			if( flying || noClip ) {
@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 					if( halfSpeeding ) Velocity.Y += 0.02f;
 				} else if( pastJumpPoint ) {
 					// either A) jump bob in water B) climb up solid on side
-					if( canLiquidJump || (collideX || collideZ) )
+					if( canLiquidJump || (physics.collideX || physics.collideZ) )
 						Velocity.Y += touchLava ? 0.20f : 0.10f;
 					canLiquidJump = false;
 				}
@@ -94,8 +94,7 @@ namespace ClassicalSharp {
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
-			if( noClip )
-				onGround = false;
+			if( noClip ) onGround = false;
 			float multiply = GetBaseMultiply();			
 			float modifier = LowestSpeedModifier();
 			
@@ -164,7 +163,7 @@ namespace ClassicalSharp {
 		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			Velocity.Y *= yMul;
 			if( !noClip )
-				MoveAndWallSlide();
+				physics.MoveAndWallSlide();
 			Position += Velocity;
 			
 			Velocity.Y /= yMul;
@@ -175,12 +174,12 @@ namespace ClassicalSharp {
 		float GetBaseMultiply() {
 			float multiply = 0;
 			if( flying || noClip ) {
-				if( speeding ) multiply += SpeedMultiplier * 8;
-				if( halfSpeeding ) multiply += SpeedMultiplier * 8 / 2;
+				if( speeding ) multiply += Hacks.SpeedMultiplier * 8;
+				if( halfSpeeding ) multiply += Hacks.SpeedMultiplier * 8 / 2;
 				if( multiply == 0 ) multiply = 8f;
 			} else {
-				if( speeding ) multiply += SpeedMultiplier;
-				if( halfSpeeding ) multiply += SpeedMultiplier / 2;
+				if( speeding ) multiply += Hacks.SpeedMultiplier;
+				if( halfSpeeding ) multiply += Hacks.SpeedMultiplier / 2;
 				if( multiply == 0 ) multiply = 1;
 			}
 			return multiply;

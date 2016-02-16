@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 			
 			if( NamesMode != NameMode.AllNames )
 				closestId = GetClosetPlayer( game.LocalPlayer );
-			if( NamesMode == NameMode.HoveredOnly || !game.LocalPlayer.CanSeeAllNames ) {
+			if( NamesMode == NameMode.HoveredOnly || !game.LocalPlayer.Hacks.CanSeeAllNames ) {
 				api.Texturing = false;
 				api.AlphaTest = false;
 				return;

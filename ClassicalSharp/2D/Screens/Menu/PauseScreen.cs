@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 				if( widgets[i] == null ) continue;
 				widgets[i].Disabled = false;
 			}
-			if( !game.LocalPlayer.CanAnyHacks && !game.UseClassicOptions ) {
+			if( !game.LocalPlayer.Hacks.CanAnyHacks && !game.UseClassicOptions ) {
 				widgets[3].Disabled = true; // env settings
 				widgets[8].Disabled = true; // select texture pack
 			}

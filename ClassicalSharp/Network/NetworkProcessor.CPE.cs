@@ -341,11 +341,11 @@ namespace ClassicalSharp {
 		
 		void HandleCpeHackControl() {
 			LocalPlayer p = game.LocalPlayer;
-			p.CanFly = reader.ReadUInt8() != 0;
-			p.CanNoclip = reader.ReadUInt8() != 0;
-			p.CanSpeed = reader.ReadUInt8() != 0;
-			p.CanRespawn = reader.ReadUInt8() != 0;
-			p.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
+			p.Hacks.CanFly = reader.ReadUInt8() != 0;
+			p.Hacks.CanNoclip = reader.ReadUInt8() != 0;
+			p.Hacks.CanSpeed = reader.ReadUInt8() != 0;
+			p.Hacks.CanRespawn = reader.ReadUInt8() != 0;
+			p.Hacks.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
 			p.CheckHacksConsistency();
 			
 			float jumpHeight = reader.ReadInt16() / 32f;

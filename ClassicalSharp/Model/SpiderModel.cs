@@ -49,9 +49,9 @@ namespace ClassicalSharp.Model {
 			
 			DrawPart( Link );
 			DrawPart( End );			
-			float rotX = (float)(Math.Sin( p.walkTime ) * p.swing * Math.PI);
-			float rotZ = (float)(Math.Cos( p.walkTime * 2 ) * p.swing * Math.PI / 16f);
-			float rotY = (float)(Math.Sin( p.walkTime * 2 ) * p.swing * Math.PI / 32f);
+			float rotX = (float)(Math.Sin( p.anim.walkTime ) * p.anim.swing * Math.PI);
+			float rotZ = (float)(Math.Cos( p.anim.walkTime * 2 ) * p.anim.swing * Math.PI / 16f);
+			float rotY = (float)(Math.Sin( p.anim.walkTime * 2 ) * p.anim.swing * Math.PI / 32f);
 			Rotate = RotateOrder.XZY;
 			
 			DrawRotate( -3/16f, 8/16f, 0, rotX, quarterPi + rotY,  eighthPi + rotZ, LeftLeg );
