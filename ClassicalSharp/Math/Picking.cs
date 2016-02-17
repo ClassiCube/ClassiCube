@@ -169,19 +169,33 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		const byte border = (byte)Block.Bedrock;
 		static byte GetBlock( Map map, int x, int y, int z, Vector3 origin ) {
-			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
-				if( y >= map.Height ) return 0;
-				if( y >= 0 ) return map.GetBlock( x, y, z );
-				if( map.SidesBlock != Block.Air && y == -1 ) 
-					return (byte)Block.Bedrock;
-			}
-			if( map.SidesBlock == Block.Air ) return 0;
+			bool sides = map.SidesBlock != Block.Air;
+			int height = Math.Max( 1, map.SidesHeight );
+			bool insideMap = map.IsValidPos( Vector3I.Floor( origin ) );
 			
+			// handling of blocks inside the map, above, and on borders
+			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
+				if( y >= map.Height ) return 0;				
+				if( sides && y == -1 && insideMap ) return border;
+				if( sides && y == 0 && origin.Y < 0 ) return border;
+				
+				if( sides && x == 0 && y >= 0 && y < height && origin.X < 0 ) return border;
+				if( sides && z == 0 && y >= 0 && y < height && origin.Z < 0 ) return border;
+				if( sides && x == (map.Width - 1) && y >= 0 && y < height && origin.X >= map.Width ) 
+					return border;
+				if( sides && z == (map.Length - 1) && y >= 0 && y < height && origin.Z >= map.Length ) 
+					return border;
+				if( y >= 0 ) return map.GetBlock( x, y, z );
+			}
+			
+			// pick blocks on the map boundaries (when inside the map)
+			if( !sides || !insideMap ) return 0;
+			if( y == 0 && origin.Y < 0 ) return border;	
 			bool validX = (x == -1 || x == map.Width) && (z >= 0 && z < map.Length);
 			bool validZ = (z == -1 || z == map.Length) && (x >= 0 && x < map.Width);
-			if( y >= 0 && y < Math.Max( 1, map.SidesHeight ) && (validX || validZ) )
-				return (byte)Block.Bedrock;
+			if( y >= 0 && y < height && (validX || validZ) ) return border;
 			return 0;
 		}
 	}

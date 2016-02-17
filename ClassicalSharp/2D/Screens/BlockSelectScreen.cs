@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-						
+			
 			RecreateBlockTable();
 			SetBlockTo( game.Inventory.HeldBlock );
 			game.Keyboard.KeyRepeat = true;
@@ -254,8 +254,11 @@ namespace ClassicalSharp {
 			if( button == MouseButton.Left && mouseX >= TableX && mouseX < TableX + scrollbarWidth ) {
 				ScrollbarClick( mouseY );
 				draggingMouse = true;
-			} else if( button == MouseButton.Left && selIndex != -1 ) {
-				game.Inventory.HeldBlock = blocksTable[selIndex];
+			} else if( button == MouseButton.Left ) {
+				if( selIndex != -1 )
+					game.Inventory.HeldBlock = blocksTable[selIndex];
+				else if( Contains( TableX, TableY, TableWidth, TableHeight, mouseX, mouseY ) )
+					return true;
 				game.SetNewScreen( null );
 			}
 			return true;
