@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		BlockInfo info;
 		
 		int width, height, length;
-		ChunkInfo[] chunks, unsortedChunks;
+		ChunkInfo[] chunks;
 		int[] distances;
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
@@ -60,7 +60,6 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			ClearChunkCache();
 			chunks = null;
-			unsortedChunks = null;
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 			game.MapEvents.OnNewMap -= OnNewMap;
 			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
@@ -107,7 +106,6 @@ namespace ClassicalSharp {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
 			chunks = null;
-			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 			builder.OnNewMap();
 		}
@@ -142,7 +140,6 @@ namespace ClassicalSharp {
 			chunksZ = length >> 4;
 			
 			chunks = new ChunkInfo[chunksX * chunksY * chunksZ];
-			unsortedChunks = new ChunkInfo[chunksX * chunksY * chunksZ];
 			distances = new int[chunks.Length];
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
@@ -176,21 +173,19 @@ namespace ClassicalSharp {
 		
 		void CreateChunkCache() {
 			int index = 0;
-			for( int z = 0; z < length; z += 16 ) {
-				for( int y = 0; y < height; y += 16 ) {
-					for( int x = 0; x < width; x += 16 ) {
-						chunks[index] = new ChunkInfo( x, y, z );
-						unsortedChunks[index] = chunks[index];
-						index++;
-					}
-				}
+			for( int z = 0; z < length; z += 16 )				
+				for( int x = 0; x < width; x += 16 )
+					for( int y = 0; y < height; y += 16 )
+			{
+				chunks[index] = new ChunkInfo( x, y, z );
+				index++;
 			}
 		}
-		
+
 		static int NextMultipleOf16( int value ) {
 			return (value + 0x0F) & ~0x0F;
 		}
-		
+
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
 			int cx = x >> 4, bX = x & 0x0F;
 			int cy = y >> 4, bY = y & 0x0F;
@@ -215,13 +210,13 @@ namespace ClassicalSharp {
 			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( x, y, z, x, y, z + 1 ) )
 				ResetChunkAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
 		}
-		
+
 		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
 			byte b1 = game.Map.SafeGetBlock( x1, y1, z1 );
 			byte b2 = game.Map.SafeGetBlock( x2, y2, z2 );
 			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
 		}
-		
+
 		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
 			if( newLightCy == oldLightCy ) {
 				ResetChunk( cx, cy, cz );
@@ -233,13 +228,12 @@ namespace ClassicalSharp {
 				}
 			}
 		}
-		
+
 		void ResetChunk( int cx, int cy, int cz ) {
-			if( cx < 0 || cy < 0 || cz < 0 ||
-			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
-			DeleteChunk( unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
+			if( cx < 0 || cy < 0 || cz < 0 || cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
+			DeleteChunk( chunks[cy + chunksY * (cx + cz * chunksX)] );
 		}
-		
+
 		public void Render( double deltaTime ) {
 			if( chunks == null ) return;
 			UpdateSortOrder();
@@ -275,7 +269,7 @@ namespace ClassicalSharp {
 		}
 		Vector3 lastCamPos;
 		float lastYaw, lastPitch;
-		
+
 		void UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdats, int adjViewDistSqr ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
@@ -291,7 +285,7 @@ namespace ClassicalSharp {
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 			}
 		}
-		
+
 		void UpdateChunksStill( double deltaTime, ref int chunkUpdates, int adjViewDistSqr ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
@@ -306,10 +300,10 @@ namespace ClassicalSharp {
 						info.Visible = inRange &&
 							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 					}
-				}		
+				}
 			}
 		}
-		
+
 		void BuildChunk( ChunkInfo info, ref int chunkUpdates ) {
 			game.ChunkUpdates++;
 			builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,

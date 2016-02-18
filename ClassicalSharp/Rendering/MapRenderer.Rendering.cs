@@ -23,7 +23,6 @@ namespace ClassicalSharp {
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
-			DebugPickedPos();
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.

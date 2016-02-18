@@ -102,6 +102,7 @@ namespace ClassicalSharp {
 					map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
 				}
 			}
+			if( !allAir ) CastShadows( x1, y1, z1 );
 			return allAir || allSolid;
 		}
 		
@@ -118,6 +119,7 @@ namespace ClassicalSharp {
 		}
 
 		Vector3 minBB, maxBB;
+		byte shadowFlags;
 		public void RenderTile( int chunkIndex, int index, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
 			
@@ -135,6 +137,11 @@ namespace ClassicalSharp {
 			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
+			shadowFlags = map.mapShadows[x + width * (z + y * length)];
+			if( shadowFlags != 0 ) {
+				int index2 = x + width * (z + y * length);
+				Console.WriteLine( "RENDER: " + index2 + "," + width + "," + length );
+			}
 			fullBright = info.FullBright[tile];
 			isTranslucent = info.IsTranslucent[tile];
 			lightFlags = info.LightOffset[tile];
@@ -161,17 +168,6 @@ namespace ClassicalSharp {
 			int xMax = Math.Min( width, x1 + chunkSize );
 			int yMax = Math.Min( height, y1 + chunkSize );
 			int zMax = Math.Min( length, z1 + chunkSize );
-			#if DEBUG_OCCLUSION
-			int flags = ComputeOcclusion();
-			FastColour col = new FastColour( 60, 60, 60, 255 );
-			if( (flags & 1) != 0 ) col.R = 255; // x
-			if( (flags & 4) != 0 ) col.G = 255; // y
-			if( (flags & 2) != 0 ) col.B = 255; // z
-			map.Sunlight = map.Shadowlight = col;
-			map.SunlightXSide = map.ShadowlightXSide = col;
-			map.SunlightZSide = map.ShadowlightZSide = col;
-			map.SunlightYBottom = map.ShadowlightYBottom = col;
-			#endif
 			bool[] hidden = game.BlockInfo.hidden;
 			
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {

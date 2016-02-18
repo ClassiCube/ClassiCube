@@ -11,6 +11,7 @@ namespace ClassicalSharp {
 		internal byte[] mapData;
 		public int Width, Height, Length;
 		internal short[] heightmap;
+		internal byte[] mapShadows; // TODO: use sparse byte arrays
 		int maxY, oneY;
 		
 		/// <summary> Colour of the sky located behind/above clouds. </summary>
@@ -198,6 +199,7 @@ namespace ClassicalSharp {
 			maxY = height - 1;
 			oneY = length * width;
 			if( CloudHeight == -1 ) CloudHeight = height + 2;
+			mapShadows = new byte[blocks.Length];
 			
 			heightmap = new short[width * length];
 			for( int i = 0; i < heightmap.Length; i++ )

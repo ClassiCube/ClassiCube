@@ -4,7 +4,7 @@
     <ProjectGuid>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>ClassicalSharp</RootNamespace>
     <AssemblyName>ClassicalSharp</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -166,6 +166,7 @@
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
+    <Compile Include="Map\ChunkMeshBuilder.Shadows.cs" />
     <Compile Include="Map\Formats\MapCw.Nbt.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
@@ -192,7 +193,6 @@
     <Compile Include="Ionic.Zlib\InfTree.cs" />
     <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\ChunkMeshBuilder.cs" />
-    <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\Formats\IMapFileFormat.cs" />
     <Compile Include="Map\Formats\MapCw.Exporter.cs" />
@@ -237,7 +237,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\BlockHandRenderer.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
-    <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
     <Compile Include="Rendering\MapRenderer.Rendering.cs" />
     <Compile Include="Rendering\MapRenderer.Sorting.cs" />
     <Compile Include="Rendering\MinimalEnvRenderer.cs" />

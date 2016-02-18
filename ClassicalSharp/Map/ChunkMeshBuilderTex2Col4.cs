@@ -268,6 +268,7 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 
+			col = shadowFlags == 3 ? FastColour.Red : shadowFlags == 2 ? FastColour.Blue : shadowFlags == 1 ? FastColour.Green : FastColour.Black;
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col );
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
 			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col );
