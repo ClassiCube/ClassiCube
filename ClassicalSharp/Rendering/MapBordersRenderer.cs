@@ -54,10 +54,9 @@ namespace ClassicalSharp {
 			Vector3 camPos = game.CurrentCameraPos;
 			bool underWater = camPos.Y < game.Map.EdgeHeight;
 			graphics.AlphaBlending = true;
-			if( underWater ) {
-				game.LocalPlayer.DrawShadow( game.LocalPlayer.Shadow );
+			game.Players.DrawShadows();
+			if( underWater )
 				game.WeatherRenderer.Render( deltaTime );
-			}
 			
 			graphics.BindTexture( edgeTexId );
 			graphics.BindVb( edgesVb );			
@@ -67,10 +66,8 @@ namespace ClassicalSharp {
 			if( game.Map.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
-			if( !underWater ) {
-				game.LocalPlayer.DrawShadow( game.LocalPlayer.Shadow );
+			if( !underWater )
 				game.WeatherRenderer.Render( deltaTime );
-			}
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 			graphics.AlphaTest = false;

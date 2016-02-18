@@ -138,7 +138,7 @@ namespace ClassicalSharp {
 			} catch( ArgumentException ) {
 				result = defValue;
 				return false;
-			}		
+			}
 			result = mapping;
 			return true;
 		}
@@ -247,7 +247,8 @@ namespace ClassicalSharp {
 		}
 		
 		public static int Floor( float value ) {
-			return value >= 0 ? (int)value : (int)value - 1;
+			int valueI = (int)value;
+			return value < valueI ? valueI - 1 : valueI;
 		}
 		
 		public static int AdjViewDist( int value ) {
@@ -282,7 +283,7 @@ namespace ClassicalSharp {
 			p222 = Transform( 0.5f, 0.5f, ref size, ref centre, ref up, ref right );
 		}
 		
-		static Vector3 Transform( float x, float y, ref Vector2 size, 
+		static Vector3 Transform( float x, float y, ref Vector2 size,
 		                         ref Vector3 centre, ref Vector3 up, ref Vector3 right ) {
 			return centre + right * x * size.X + up * y * size.Y;
 		}

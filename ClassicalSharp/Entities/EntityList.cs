@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		public const int MaxCount = 256;
 		public Player[] Players = new Player[MaxCount];
 		public Game game;
+		public EntityShadow ShadowMode = EntityShadow.None;
 		byte closestId;
 		
 		/// <summary> Mode of how names of hovered entities are rendered (with or without depth testing),
@@ -26,6 +27,7 @@ namespace ClassicalSharp {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllNamesAndHovered );
+			ShadowMode = Options.GetEnum( OptionsKey.EntityShadow, EntityShadow.None );
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
@@ -135,6 +137,18 @@ namespace ClassicalSharp {
 				Players[id] = value;
 				if( value != null )
 					value.ID = (byte)id;
+			}
+		}
+		
+		public void DrawShadows() {
+			if( ShadowMode == EntityShadow.None ) return;
+			Player.boundShadowTex = false;
+			Players[255].DrawShadow( ShadowMode );
+			if( ShadowMode != EntityShadow.CircleAll ) return;			
+			
+			for( int i = 0; i < 255; i++) {
+				if( Players[i] == null ) continue;
+				Players[i].DrawShadow( ShadowMode );
 			}
 		}
 	}

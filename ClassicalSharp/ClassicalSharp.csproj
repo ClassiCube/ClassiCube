@@ -155,6 +155,7 @@
     <Compile Include="Entities\LocalPlayer.Physics.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Entities\Player.Shadows.cs" />
     <Compile Include="Events\EntityEvents.cs" />
     <Compile Include="Events\Events.cs" />
     <Compile Include="Events\MapEvents.cs" />
@@ -173,7 +174,6 @@
     <Compile Include="Particles\RainParticle.cs" />
     <Compile Include="Particles\TerrainParticle.cs" />
     <Compile Include="Entities\Player.cs" />
-    <Compile Include="Entities\Player.Rendering.cs" />
     <Compile Include="Game\ChatLog.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\InputHandler.cs" />

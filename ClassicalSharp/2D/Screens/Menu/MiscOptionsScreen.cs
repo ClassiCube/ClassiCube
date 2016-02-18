@@ -42,6 +42,12 @@ namespace ClassicalSharp {
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
+				Make( -140, 50, "Entity shadows", OnWidgetClick,
+				     g => g.Players.ShadowMode.ToString(),
+				     (g, v) => { object raw = Enum.Parse( typeof(EntityShadow), v );
+				     	g.Players.ShadowMode = (EntityShadow)raw;
+				     	Options.Set( OptionsKey.EntityShadow, v ); } ),
+				
 				// Column 2
 				!network.IsSinglePlayer ? null :
 					Make( 140, -200, "Block physics", OnWidgetClick,
@@ -82,6 +88,7 @@ namespace ClassicalSharp {
 			};
 			widgets[2].Metadata = typeof(NameMode);
 			widgets[3].Metadata = typeof(FpsLimitMethod);
+			widgets[5].Metadata = typeof(EntityShadow);
 			MakeValidators();
 			MakeDescriptions();
 		}
@@ -94,6 +101,7 @@ namespace ClassicalSharp {
 				new EnumValidator(),
 				new EnumValidator(),
 				new IntegerValidator( 16, 4096 ),
+				new EnumValidator(),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,
 				new BooleanValidator(),
@@ -122,6 +130,13 @@ namespace ClassicalSharp {
 				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
 				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",
 				"&cUsing NoLimit mode is discouraged for general usage.",
+			};
+			
+			descriptions[5] = new[] {
+				"&eNone: &fNo entity shadows are drawn.",
+				"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
+				"&eCircle: &fA circular shadow is shown across the blocks you are above.",
+				"&eCircleAll: &fA circular shadow is shown underneath all entities.",
 			};
 		}
 	}

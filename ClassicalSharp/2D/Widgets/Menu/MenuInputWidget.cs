@@ -65,7 +65,6 @@ namespace ClassicalSharp {
 			yOffset = 0;
 			if( textSize.Height < DesiredMaxHeight )
 				yOffset = DesiredMaxHeight / 2 - textSize.Height / 2;
-			Console.WriteLine( yOffset );
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
 				using( IDrawer2D drawer = game.Drawer2D )

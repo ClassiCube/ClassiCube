@@ -17,8 +17,6 @@ namespace ClassicalSharp {
 		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
 		
-		public EntityShadow Shadow = EntityShadow.None;
-		
 		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
