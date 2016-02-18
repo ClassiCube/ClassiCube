@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 			game.Graphics.AlphaArgBlend = true;
 			
 			Players[255].DrawShadow( ShadowMode );
-			if( ShadowMode != EntityShadow.CircleAll )
+			if( ShadowMode == EntityShadow.CircleAll )
 				DrawOtherShadows();
 			game.Graphics.AlphaTest = true;
 			game.Graphics.AlphaArgBlend = false;
