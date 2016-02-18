@@ -414,7 +414,13 @@ namespace SharpDX.Direct3D9 {
 	}
 	
 	public enum TextureStage : int {
+		AlphaOperation = 4,
 		TextureTransformFlags = 24,
+	}
+	
+	public enum TextureOp : int {
+		SelectArg1 = 2,
+		Modulate = 4,
 	}
 	
 	[Flags]

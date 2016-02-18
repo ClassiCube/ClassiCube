@@ -143,9 +143,17 @@ namespace ClassicalSharp {
 		public void DrawShadows() {
 			if( ShadowMode == EntityShadow.None ) return;
 			Player.boundShadowTex = false;
-			Players[255].DrawShadow( ShadowMode );
-			if( ShadowMode != EntityShadow.CircleAll ) return;			
+			game.Graphics.AlphaTest = false;
+			game.Graphics.AlphaArgBlend = true;
 			
+			Players[255].DrawShadow( ShadowMode );
+			if( ShadowMode != EntityShadow.CircleAll )
+				DrawOtherShadows();
+			game.Graphics.AlphaTest = true;
+			game.Graphics.AlphaArgBlend = false;
+		}
+		
+		void DrawOtherShadows() {
 			for( int i = 0; i < 255; i++) {
 				if( Players[i] == null ) continue;
 				Players[i].DrawShadow( ShadowMode );

@@ -120,6 +120,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }
 		
+		/// <summary> Whether blending between the alpha components of the texture and colour are performed. </summary>
+		public abstract bool AlphaArgBlend { set; }
+		
 		/// <summary> Creates a vertex buffer that can have its data dynamically updated. </summary>
 		public abstract int CreateDynamicVb( VertexFormat format, int maxVertices );
 		

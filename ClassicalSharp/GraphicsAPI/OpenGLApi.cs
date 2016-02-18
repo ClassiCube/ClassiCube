@@ -18,7 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			InitFields();
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
-			textureDimensions = texDims;
+			texDims = texDims;
 			CheckVboSupport();
 			base.InitDynamicBuffers();
 			
@@ -46,13 +46,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.UseArbVboAddresses();
 		}
 
-		public override bool AlphaTest {
-			set { ToggleCap( EnableCap.AlphaTest, value ); }
-		}
+		public override bool AlphaTest { set { Toggle( EnableCap.AlphaTest, value ); } }
 		
-		public override bool AlphaBlending {
-			set { ToggleCap( EnableCap.Blend, value ); }
-		}
+		public override bool AlphaBlending { set { Toggle( EnableCap.Blend, value ); } }
 		
 		Compare[] compareFuncs;
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
@@ -64,9 +60,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc] );
 		}
 		
-		public override bool Fog {
-			set { ToggleCap( EnableCap.Fog, value ); }
-		}
+		public override bool Fog { set { Toggle( EnableCap.Fog, value ); } }
 		
 		FastColour lastFogCol = FastColour.Black;
 		public override void SetFogColour( FastColour col ) {
@@ -125,31 +119,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override bool ColourWrite {
-			set { GL.ColorMask( value, value, value, value ); }
-		}
+		public override bool ColourWrite { set { GL.ColorMask( value, value, value, value ); } }
 		
 		public override void DepthTestFunc( CompareFunc func ) {
 			GL.DepthFunc( compareFuncs[(int)func] );
 		}
 		
-		public override bool DepthTest {
-			set { ToggleCap( EnableCap.DepthTest, value ); }
-		}
+		public override bool DepthTest { set { Toggle( EnableCap.DepthTest, value ); } }
 		
-		public override bool DepthWrite {
-			set { GL.DepthMask( value ); }
-		}
+		public override bool DepthWrite { set { GL.DepthMask( value ); } }
+		
+		public override bool AlphaArgBlend { set { } }
 		
 		#region Texturing
-		int textureDimensions;
-		public override int MaxTextureDimensions {
-			get { return textureDimensions; }
-		}
 		
-		public override bool Texturing {
-			set { ToggleCap( EnableCap.Texture2D, value ); }
-		}
+		int texDimensions;
+		public override int MaxTextureDimensions { get { return texDimensions; } }
+		
+		public override bool Texturing { set { Toggle( EnableCap.Texture2D, value ); } }
 		
 		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
@@ -423,7 +410,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Viewport( 0, 0, game.Width, game.Height );
 		}
 		
-		static void ToggleCap( EnableCap cap, bool value ) {
+		static void Toggle( EnableCap cap, bool value ) {
 			if( value ) GL.Enable( cap );
 			else GL.Disable( cap );
 		}

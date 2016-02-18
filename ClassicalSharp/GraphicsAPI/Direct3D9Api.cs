@@ -213,6 +213,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { depthWrite = value; device.SetRenderState( RenderState.ZWriteEnable, value ); }
 		}
 		
+		public override bool AlphaArgBlend {
+			set {
+				TextureOp op = value ? TextureOp.Modulate : TextureOp.SelectArg1;
+				device.SetTextureStageState( 0, TextureStage.AlphaOperation, (int)op ); 
+			}
+		}
+		
 		#region Vertex buffers
 		
 		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {

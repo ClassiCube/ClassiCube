@@ -9,7 +9,6 @@ namespace ClassicalSharp {
 		internal static bool boundShadowTex = false;
 		
 		internal unsafe void DrawShadow( EntityShadow shadow ) {
-			if( shadow == EntityShadow.None ) return;
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min( (int)Position.Y, game.Map.Height - 1 );
 			float y; byte alpha;
@@ -62,13 +61,12 @@ namespace ClassicalSharp {
 			
 			if( index == 0 ) return;
 			CheckShadowTexture();
-			game.Graphics.AlphaTest = false;
+			
 			if( !boundShadowTex ) {
 				game.Graphics.BindTexture( shadowTex );
 				boundShadowTex = true;
 			}
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
-			game.Graphics.AlphaTest = true;
 		}
 		
 		unsafe bool CalculateShadow( Vector3I* coords, ref int coordsCount, float x, float z, int posY, out float y, out byte alpha ) {
@@ -91,7 +89,7 @@ namespace ClassicalSharp {
 			}
 			
 			coords[coordsCount] = p; coordsCount++;
-			if( (Position.Y - posY) <= 6 ) { y += 1/64f; alpha = (byte)(255 - 255 * (Position.Y - posY) / 6); }
+			if( (Position.Y - posY) <= 6 ) { y += 1/64f; alpha = (byte)(220 - 220 * (Position.Y - posY) / 6); }
 			else if( (Position.Y - posY) <= 16 ) { y += 1/64f; alpha = 0; }
 			else if( (Position.Y - posY) <= 32 ) { y += 1/16f; alpha = 0; }
 			else if( (Position.Y - posY) <= 96 ) { y += 1/8f; alpha = 0; }
