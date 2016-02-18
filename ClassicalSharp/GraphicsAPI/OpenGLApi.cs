@@ -18,7 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			InitFields();
 			int texDims;
 			GL.GetIntegerv( GetPName.MaxTextureSize, &texDims );
-			texDims = texDims;
+			texDimensions = texDims;
 			CheckVboSupport();
 			base.InitDynamicBuffers();
 			
