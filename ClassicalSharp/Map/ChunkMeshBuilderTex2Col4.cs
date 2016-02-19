@@ -14,15 +14,16 @@ namespace ClassicalSharp {
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			int newArraysCount = game.TerrainAtlas1D.TexIds.Length;
-			if( arraysCount > 0 && arraysCount != newArraysCount ) {
-				Array.Resize( ref drawInfoNormal, newArraysCount );
-				Array.Resize( ref drawInfoTranslucent, newArraysCount );
-				for( int i = arraysCount; i < drawInfoNormal.Length; i++ ) {
-					drawInfoNormal[i] = new DrawInfo();
-					drawInfoTranslucent[i] = new DrawInfo();
-				}
-			}
+			if( arraysCount == newArraysCount ) return;
 			arraysCount = newArraysCount;
+			Array.Resize( ref drawInfoNormal, arraysCount );
+			Array.Resize( ref drawInfoTranslucent, arraysCount );
+			
+			for( int i = 0; i < drawInfoNormal.Length; i++ ) {
+				if( drawInfoNormal[i] != null ) continue;
+				drawInfoNormal[i] = new DrawInfo();
+				drawInfoTranslucent[i] = new DrawInfo();
+			}
 		}
 		
 		public void Dispose() {
@@ -74,11 +75,11 @@ namespace ClassicalSharp {
 			int offset = (info.LightOffset[type] >> face) & 1;
 			switch( face ) {
 				case TileSide.Left:
-					return x < offset || y > map.heightmap[(z * width) + (x - offset)];			
+					return x < offset || y > map.heightmap[(z * width) + (x - offset)];
 				case TileSide.Right:
 					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
 				case TileSide.Front:
-					return z < offset || y > map.heightmap[((z - offset) * width) + x];					
+					return z < offset || y > map.heightmap[((z - offset) * width) + x];
 				case TileSide.Back:
 					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
 				case TileSide.Bottom:
@@ -118,10 +119,10 @@ namespace ClassicalSharp {
 		int elementsPerAtlas1D;
 		
 		void PreStretchTiles( int x1, int y1, int z1 ) {
-			invVerElementSize = game.TerrainAtlas1D.invElementSize;
-			elementsPerAtlas1D = game.TerrainAtlas1D.elementsPerAtlas1D;
-			arraysCount = game.TerrainAtlas1D.TexIds.Length;
 			atlas = game.TerrainAtlas1D;
+			invVerElementSize = atlas.invElementSize;
+			elementsPerAtlas1D = atlas.elementsPerAtlas1D;
+			arraysCount = atlas.TexIds.Length;
 			
 			if( drawInfoNormal == null ) {
 				drawInfoNormal = new DrawInfo[arraysCount];
@@ -164,7 +165,7 @@ namespace ClassicalSharp {
 		
 		void DrawLeftFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Left];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Left) & 1;
 			
@@ -183,13 +184,13 @@ namespace ClassicalSharp {
 
 		void DrawRightFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Right) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;	
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
@@ -202,7 +203,7 @@ namespace ClassicalSharp {
 
 		void DrawFrontFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Front];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Front) & 1;
 			
@@ -221,13 +222,13 @@ namespace ClassicalSharp {
 		
 		void DrawBackFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Back];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Back) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;	
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
@@ -240,7 +241,7 @@ namespace ClassicalSharp {
 		
 		void DrawBottomFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Bottom];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Bottom) & 1;
 			
@@ -258,7 +259,7 @@ namespace ClassicalSharp {
 
 		void DrawTopFace( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Top];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> TileSide.Top) & 1;
 			
@@ -276,7 +277,7 @@ namespace ClassicalSharp {
 		
 		void DrawSprite( int count ) {
 			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
-			int i = texId / elementsPerAtlas1D;			
+			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float blockHeight = 1;
 			
