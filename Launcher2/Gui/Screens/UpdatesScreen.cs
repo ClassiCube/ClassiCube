@@ -125,6 +125,8 @@ namespace Launcher {
 			string path = dx ? build.DirectXPath : build.OpenGLPath;
 			Utils.LogDebug( "Updating to: " + path );
 			Patcher.Update( path );
+			game.ShouldExit = true;
+			game.ShouldUpdate = true;
 		}
 		
 		public override void Dispose() {

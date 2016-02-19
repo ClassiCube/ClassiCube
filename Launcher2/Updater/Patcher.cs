@@ -15,12 +15,9 @@ namespace Launcher.Updater {
 				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
 				MakeUpdatesFolder( zipData );
 			}
-			LaunchUpdateScript();
-			Thread.Sleep( 200 );
-			Process.GetCurrentProcess().Kill();
 		}
 
-		static void LaunchUpdateScript() {
+		public static void LaunchUpdateScript() {
 			ProcessStartInfo info;
 			if( OpenTK.Configuration.RunningOnWindows ) {
 				string path = Path.Combine( Program.AppDirectory, "update.bat" );

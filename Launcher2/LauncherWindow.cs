@@ -43,6 +43,7 @@ namespace Launcher {
 		
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
 		public bool ShouldExit;
+		public bool ShouldUpdate;
 		
 		public string FontName = "Arial";
 		
@@ -173,6 +174,8 @@ namespace Launcher {
 				LauncherSkin.SaveToOptions();
 				Options.Save();
 			}
+			if( ShouldUpdate )
+				Updater.Patcher.LaunchUpdateScript();
 			Window.Close();
 		}
 		

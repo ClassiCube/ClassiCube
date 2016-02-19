@@ -54,7 +54,6 @@ namespace ClassicalSharp {
 			Vector3 camPos = game.CurrentCameraPos;
 			bool underWater = camPos.Y < game.Map.EdgeHeight;
 			graphics.AlphaBlending = true;
-			game.Players.DrawShadows();
 			if( underWater ) game.WeatherRenderer.Render( deltaTime );
 			
 			graphics.BindTexture( edgeTexId );

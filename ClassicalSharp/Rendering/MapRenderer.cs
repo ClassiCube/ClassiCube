@@ -248,6 +248,7 @@ namespace ClassicalSharp {
 			RenderNormal();
 			game.MapBordersRenderer.Render( deltaTime );
 			RenderTranslucent();
+			game.Players.DrawShadows();
 		}
 
 		int chunksTarget = 4;
