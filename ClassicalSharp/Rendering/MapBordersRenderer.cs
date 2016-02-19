@@ -55,8 +55,7 @@ namespace ClassicalSharp {
 			bool underWater = camPos.Y < game.Map.EdgeHeight;
 			graphics.AlphaBlending = true;
 			game.Players.DrawShadows();
-			if( underWater )
-				game.WeatherRenderer.Render( deltaTime );
+			if( underWater ) game.WeatherRenderer.Render( deltaTime );
 			
 			graphics.BindTexture( edgeTexId );
 			graphics.BindVb( edgesVb );			
@@ -66,8 +65,7 @@ namespace ClassicalSharp {
 			if( game.Map.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
-			if( !underWater )
-				game.WeatherRenderer.Render( deltaTime );
+			if( !underWater ) game.WeatherRenderer.Render( deltaTime );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 			graphics.AlphaTest = false;
@@ -175,7 +173,7 @@ namespace ClassicalSharp {
 			fullColEdge = game.BlockInfo.FullBright[(byte)game.Map.EdgeBlock];
 			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel - 0.1f/16f, axisSize, col, ref vertices );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
 		}
@@ -218,7 +216,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void DrawY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
+		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;

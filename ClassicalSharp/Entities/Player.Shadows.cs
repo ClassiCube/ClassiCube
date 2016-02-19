@@ -98,8 +98,11 @@ namespace ClassicalSharp {
 		}
 		
 		byte GetShadowBlock( int x, int y, int z ) {
-			if( x < 0 || z < 0 || x >= game.Map.Width || z >= game.Map.Length )
-				return y == (game.Map.SidesHeight - 1) ? (byte)game.Map.SidesBlock : (byte)0;
+			if( x < 0 || z < 0 || x >= game.Map.Width || z >= game.Map.Length ) {
+				if (y == game.Map.EdgeHeight - 1) return (byte)game.Map.EdgeBlock;
+				if (y == game.Map.SidesHeight - 1) return (byte)game.Map.SidesBlock;
+				return (byte)Block.Air;
+			}
 			return game.Map.GetBlock( x, y, z );
 		}
 		

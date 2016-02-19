@@ -357,7 +357,7 @@ namespace ClassicalSharp {
 		public void SetNewScreen( Screen screen ) { SetNewScreen( screen, true ); }
 		
 		public void SetNewScreen( Screen screen, bool disposeOld ) {
-			// don't switch to the new screen immediately if the user
+			// Don't switch to the new screen immediately if the user
 			// is currently looking at a warning dialog.
 			if( activeScreen is WarningScreen ) {
 				WarningScreen warning = (WarningScreen)activeScreen;
