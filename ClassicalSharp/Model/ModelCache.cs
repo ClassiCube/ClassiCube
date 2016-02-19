@@ -29,9 +29,8 @@ namespace ClassicalSharp.Model {
 		public IModel GetModel( string modelName ) {
 			IModel model;
 			byte blockId;
-			if( Byte.TryParse( modelName, out blockId ) ) {
+			if( Byte.TryParse( modelName, out blockId ) )
 				modelName = "block";
-			}
 			
 			if( !cache.TryGetValue( modelName, out model ) ) {
 				model = InitModel( modelName );
@@ -42,23 +41,15 @@ namespace ClassicalSharp.Model {
 		}
 		
 		IModel InitModel( string modelName ) {
-			if( modelName == "chicken" ) {
-				return new ChickenModel( game );
-			} else if( modelName == "creeper" ) {
-				return new CreeperModel( game );
-			} else if( modelName == "pig" ) {
-				return new PigModel( game );
-			} else if( modelName == "sheep" ) {
-				return new SheepModel( game );
-			} else if( modelName == "skeleton" ) {
-				return new SkeletonModel( game );
-			} else if( modelName == "spider" ) {
-				return new SpiderModel( game );
-			} else if( modelName == "zombie" ) {
-				return new ZombieModel( game );
-			} else if( modelName == "block" ) {
-				return new BlockModel( game );
-			}
+			if( modelName == "chicken" ) return new ChickenModel( game );
+			else if( modelName == "creeper" ) return new CreeperModel( game );
+			else if( modelName == "pig" ) return new PigModel( game );
+			else if( modelName == "sheep" ) return new SheepModel( game );
+			else if( modelName == "skeleton" ) return new SkeletonModel( game );
+			else if( modelName == "spider" ) return new SpiderModel( game );
+			else if( modelName == "zombie" ) return new ZombieModel( game );
+			else if( modelName == "block" ) return new BlockModel( game );
+			else if( modelName == "chibi" ) return new ChibiModel( game ); 
 			return null;
 		}
 		
