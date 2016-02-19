@@ -138,10 +138,6 @@ namespace ClassicalSharp {
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
 			shadowFlags = map.mapShadows[x + width * (z + y * length)];
-			if( shadowFlags != 0 ) {
-				int index2 = x + width * (z + y * length);
-				Console.WriteLine( "RENDER: " + index2 + "," + width + "," + length );
-			}
 			fullBright = info.FullBright[tile];
 			isTranslucent = info.IsTranslucent[tile];
 			lightFlags = info.LightOffset[tile];

@@ -64,10 +64,12 @@ namespace ClassicalSharp {
 		}
 		
 		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
-		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) { 
+			return false; // TODO: figure out why
 			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !info.IsFaceHidden( tile, chunk[chunkIndex + offsets[face]], face )
-				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, tile ) );
+			return tile == initialTile && map.mapShadows[x + width * (z + y * length)] == 0 &&
+				!info.IsFaceHidden( tile, chunk[chunkIndex + offsets[face]], face )
+				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, tile ));
 		}
 		
 		bool IsLit( int x, int y, int z, int face, byte type ) {
@@ -155,10 +157,10 @@ namespace ClassicalSharp {
 		unsafe void AddVertices( byte tile, int count, int face ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, face ) );
 			DrawInfo part = info.IsTranslucent[tile] ? drawInfoTranslucent[i] : drawInfoNormal[i];
-			part.iCount += 6;
+			part.iCount += (face == TileSide.Top ? 12 : 6);
 
 			DrawInfoFaceData counts = part.Count;
-			*(&counts.left + face) += 6;
+			*(&counts.left + face) += (face == TileSide.Top ? 12 : 6);
 			part.Count = counts;
 		}
 		
@@ -267,12 +269,24 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
-
-			col = shadowFlags == 3 ? FastColour.Red : shadowFlags == 2 ? FastColour.Blue : shadowFlags == 1 ? FastColour.Green : FastColour.Black;
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col );
+			
+			FastColour col1 = (shadowFlags & 1) != 0 ? new FastColour( 50, 50, 50 ) : col;
+			FastColour col2 = (shadowFlags & 2) != 0 ? new FastColour( 50, 50, 50 ) : col;
+			
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col1 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col1 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col1 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col1 );
+			
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col2 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col2 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col2 );
+			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col2 );
+			
+			//part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col1 );
+			//part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col1 );
+			//part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col2 );
+			//part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col );
 		}
 		
 		void DrawSprite( int count ) {

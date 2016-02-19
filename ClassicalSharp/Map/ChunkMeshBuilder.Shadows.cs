@@ -21,23 +21,18 @@ namespace ClassicalSharp {
 		}
 		
 		void RayCast( int x, int y, int z, byte flags ) {
-			bool debug = y == 14;
-			if( debug ) Console.WriteLine( "CAST SRC " + x + "," + z );
 			while( x < width && z < length && y >= 0 && y < height ) {
 				byte block = y == (height - 1) ? (byte)0 : map.GetBlock( x, y + 1, z );
 				if( info.BlocksLight[block] && block != 0 ) return;
-				if( debug ) Console.WriteLine( "Doing: " + x + "," + y + "," + z + " : " + flags );
 				
 				block = map.GetBlock( x, y, z );
 				if( info.BlocksLight[block] && block != 0 ) {
 					int index = x + width * (z + y * length);
 					map.mapShadows[index] |= flags;
-					if( debug ) Console.WriteLine( "=== fin ===" + ":" + index + "," + width + "," + length );
 					return;
 				}
 				x++; z++; y--;
 			}
-			if( debug ) Console.WriteLine( "=== xxx ===" );
 		}
 	}
 }
