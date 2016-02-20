@@ -326,8 +326,10 @@ namespace OpenTK.Platform.X11 {
 
 							if (!ce.Cancel) {
 								isExiting = true;
-								Debug.Print("Destroying window.");
-								API.XDestroyWindow(window.Display, window.WindowHandle);
+
+								DestroyWindow();
+								if (Closed != null)
+									Closed(this, EventArgs.Empty);
 							}
 						} break;
 
@@ -335,8 +337,6 @@ namespace OpenTK.Platform.X11 {
 						Debug.Print("Window destroyed");
 						exists = false;
 
-						if (Closed != null)
-							Closed(this, EventArgs.Empty);
 						break;
 
 					case XEventName.ConfigureNotify:
@@ -766,7 +766,9 @@ namespace OpenTK.Platform.X11 {
 
 		public void DestroyWindow() {
 			Debug.Print("X11GLNative shutdown sequence initiated.");
+			API.XSync(window.Display, true);
 			API.XDestroyWindow(window.Display, window.WindowHandle);
+			exists = false;
 		}
 
 		public Point PointToClient(Point point) {
@@ -793,10 +795,7 @@ namespace OpenTK.Platform.X11 {
 			if (manuallyCalled) {
 				if (window != null && window.WindowHandle != IntPtr.Zero) {
 					if (Exists) {
-						API.XDestroyWindow(window.Display, window.WindowHandle);
-
-						while (Exists)
-							ProcessEvents();
+						DestroyWindow();
 					}
 					window.Dispose();
 					window = null;
