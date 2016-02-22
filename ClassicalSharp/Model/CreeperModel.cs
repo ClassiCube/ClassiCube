@@ -37,7 +37,7 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -4/16f, 0, -6/16f, 4/16f, 26/16f, 6/16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player p ) {
+		protected override void DrawModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.CreeperTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			DrawHeadRotate( 0, 18/16f, 0, -p.PitchRadians, 0, 0, Head );

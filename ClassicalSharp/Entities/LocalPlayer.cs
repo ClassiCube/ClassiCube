@@ -134,7 +134,7 @@ namespace ClassicalSharp {
 			curWalkTime = Utils.Lerp( anim.walkTimeO, anim.walkTimeN, t );
 			
 			if( !game.Camera.IsThirdPerson ) return;
-			Model.RenderModel( this );
+			Model.Render( this );
 		}
 		
 		public override void RenderName() {

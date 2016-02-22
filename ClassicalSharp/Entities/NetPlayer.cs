@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			PitchDegrees = Utils.LerpAngle( interp.oldState.pitch, interp.newState.pitch, t );
 			
 			anim.GetCurrentAnimState( t );
-			Model.RenderModel( this );
+			Model.Render( this );
 		}
 		
 		public override void RenderName() { DrawName(); }

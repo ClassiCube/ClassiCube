@@ -309,7 +309,8 @@ namespace ClassicalSharp {
 			} else if( bmp.Width == bmp.Height ) {
 				// Minecraft alex skins have this particular pixel with alpha of 0.
 				if( bmp.Width == 64 ) {
-					bool isNormal = bmp.GetPixel( 54, 20 ).A >= 127;
+					int scale = bmp.Width / 64;
+					bool isNormal = bmp.GetPixel( 54 * scale, 20 * scale ).A >= 127;
 					return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
 				} else {
 					return SkinType.Type64x64;

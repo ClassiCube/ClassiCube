@@ -58,7 +58,7 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -6/16f, 0, -13/16f, 6/16f, 23/16f, 10/16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player p ) {
+		protected override void DrawModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.SheepTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
 			DrawHeadRotate( 0, 18/16f, -8/16f, -p.PitchRadians, 0, 0, Head );

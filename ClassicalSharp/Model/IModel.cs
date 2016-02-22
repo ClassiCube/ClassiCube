@@ -46,7 +46,7 @@ namespace ClassicalSharp.Model {
 		protected float cosYaw, sinYaw, cosHead, sinHead;
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
-		public void RenderModel( Player p ) {
+		public void Render( Player p ) {
 			index = 0;
 			pos = p.Position;
 			if( Bobbing )
@@ -60,10 +60,10 @@ namespace ClassicalSharp.Model {
 			sinHead = (float)Math.Sin( p.HeadYawDegrees * Utils.Deg2Rad );
 
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			DrawPlayerModel( p );
+			DrawModel( p );
 		}
 		
-		protected abstract void DrawPlayerModel( Player p );
+		protected abstract void DrawModel( Player p );
 		
 		public virtual void Dispose() {
 		}

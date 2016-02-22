@@ -54,7 +54,7 @@ namespace ClassicalSharp.Model {
 			get { return new BoundingBox( -8/16f, 0, -4/16f, 8/16f, 32/16f, 4/16f ); }
 		}
 		
-		protected override void DrawPlayerModel( Player p ) {
+		protected override void DrawModel( Player p ) {
 			int texId = p.PlayerTextureId <= 0 ? cache.HumanoidTexId : p.PlayerTextureId;
 			graphics.BindTexture( texId );
 			graphics.AlphaTest = false;

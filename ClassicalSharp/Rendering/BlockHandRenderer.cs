@@ -52,7 +52,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref game.HeldBlockProjection );
 			fakeP.Block = type;
-			block.RenderModel( fakeP );
+			block.Render( fakeP );
 			
 			game.Graphics.LoadMatrix( ref game.Projection );
 			game.Graphics.SetMatrixMode( MatrixType.Modelview );
