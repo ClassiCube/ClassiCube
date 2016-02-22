@@ -258,6 +258,7 @@ namespace ClassicalSharp {
 			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {
 				flying = !flying;
 			} else if( key == keys[KeyBinding.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
+				if( noClip ) Velocity.Y = 0;
 				noClip = !noClip;
 			} else if( key == keys[KeyBinding.Jump] && !onGround && !(flying || noClip) ) {
 				if( !firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
