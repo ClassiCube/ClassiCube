@@ -349,8 +349,8 @@ namespace ClassicalSharp {
 			p.CheckHacksConsistency();
 			
 			float jumpHeight = reader.ReadInt16() / 32f;
-			if( jumpHeight < 0 ) jumpHeight = 39/32f;
-			p.CalculateJumpVelocity( jumpHeight );
+			if( jumpHeight < 0 ) p.jumpVel = 0.42f;
+			else p.CalculateJumpVelocity( jumpHeight );			
 			p.serverJumpVel = p.jumpVel;
 			game.Events.RaiseHackPermissionsChanged();
 		}

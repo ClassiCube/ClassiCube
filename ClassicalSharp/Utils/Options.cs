@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 		public const string HacksEnabled = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";		
 		public const string Speed = "hacks-speedmultiplier";
-		public const string LiquidsBreakable = "hacks-liquidsbreakable";
+		public const string ModifiableLiquids = "hacks-liquidsbreakable";
 		public const string PushbackPlacing = "hacks-pushbackplacing";	
 		public const string NoclipSlide = "hacks-noclipslide";
 		public const string CameraClipping = "hacks-cameraclipping";

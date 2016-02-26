@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
 		internal float HotbarScale = 1, ChatScale = 1, InventoryScale = 1;
 		public bool ViewBobbing, ShowBlockInHand;
-		public bool UseSound, UseMusic, LiquidsBreakable;
+		public bool UseSound, UseMusic, ModifiableLiquids;
 		
 		public Vector3 CurrentCameraPos;
 		

@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			int coordsCount = 0;
 			Vector3I* coords = stackalloc Vector3I[4];
 			for( int i = 0; i < 4; i++ )
-				coords[i] = Vector3I.Zero;
+				coords[i] = new Vector3I( int.MinValue );
 			
 			if( mode == EntityShadow.SnapToBlock ) {
 				vb = game.Graphics.texVb; verts = game.Graphics.texVerts;						

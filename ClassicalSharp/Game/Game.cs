@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			Picking = new PickedPosRenderer( this );
 			AudioPlayer = new AudioPlayer( this );
-			LiquidsBreakable = Options.GetBool( OptionsKey.LiquidsBreakable, false );
+			ModifiableLiquids = Options.GetBool( OptionsKey.ModifiableLiquids, false );
 			AxisLinesRenderer = new AxisLinesRenderer( this );
 			
 			LoadIcon();
@@ -494,7 +494,7 @@ namespace ClassicalSharp {
 				return false;
 			if( !BlockInfo.IsLiquid[block] ) return true;
 			
-			return !LiquidsBreakable ? false :
+			return !ModifiableLiquids ? false :
 				Inventory.CanPlace[block] && Inventory.CanDelete[block];
 		}
 		

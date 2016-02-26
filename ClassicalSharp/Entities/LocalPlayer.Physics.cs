@@ -232,9 +232,8 @@ namespace ClassicalSharp {
 			if( jumpHeight >= 512 ) jumpVel = 16.5f;
 			if( jumpHeight >= 768 ) jumpVel = 22.5f;
 			
-			while( GetMaxHeight( jumpVel ) <= jumpHeight ) {
-				jumpVel += 0.01f;
-			}
+			while( GetMaxHeight( jumpVel ) <= jumpHeight )
+				jumpVel += 0.001f;
 		}
 		
 		static double GetMaxHeight( float u ) {

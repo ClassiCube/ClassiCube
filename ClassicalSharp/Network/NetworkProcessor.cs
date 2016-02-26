@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
 				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
 					reader.Remove( 1 );
-					game.LocalPlayer.CalculateJumpVelocity( 39/32f ); // assume default jump height
+					game.LocalPlayer.jumpVel = 0.42f; // assume default jump height
 					game.LocalPlayer.serverJumpVel = game.LocalPlayer.jumpVel;
 					continue;
 				}

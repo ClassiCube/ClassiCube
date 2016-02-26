@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.CameraClipping, v == "yes" ); } ),
 				
 				Make( -140, 0, "Jump height", OnWidgetClick,
-				     g => g.LocalPlayer.JumpHeight.ToString(),
+				     g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
 				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
 				
 				Make( -140, 50, "Double jump", OnWidgetClick,
@@ -41,10 +41,10 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.DoubleJump, v == "yes" ); } ),
 				
 				// Column 2
-				Make( 140, -150, "Liquids breakable", OnWidgetClick,
-				     g => g.LiquidsBreakable ? "yes" : "no",
-				     (g, v) => { g.LiquidsBreakable = v == "yes";
-				     	Options.Set( OptionsKey.LiquidsBreakable, v == "yes" ); } ),
+				Make( 140, -150, "Modifiable liquids", OnWidgetClick,
+				     g => g.ModifiableLiquids ? "yes" : "no",
+				     (g, v) => { g.ModifiableLiquids = v == "yes";
+				     	Options.Set( OptionsKey.ModifiableLiquids, v == "yes" ); } ),
 				
 				Make( 140, -100, "Pushback placing", OnWidgetClick,
 				     g => g.LocalPlayer.Hacks.PushbackPlacing ? "yes" : "no",
@@ -109,9 +109,17 @@ namespace ClassicalSharp {
 		
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
+			descriptions[2] = new [] {
+				"&eIf camera clipping is set to true, then the third person",
+				"&ecameras will limit their zoom distance if they hit a solid block.",
+			};
+			descriptions[3] = new [] {
+				"&eSets how many blocks high you can jump up.",
+				"&eNote: You jump much higher when holding down the speed key binding.",
+			};
 			descriptions[5] = new [] {
-				"&eIf breaking liquids is set to true, then water/lava",
-				"&ecan be deleted the same way as any regular block.",
+				"&eIf modifiable liquids is set to true, then water/lava can",
+				"&ebe placed and deleted the same way as any other block.",
 			};
 			descriptions[6] = new [] {
 				"&eWhen this is active, placing blocks that intersect your own position",

@@ -44,11 +44,9 @@ namespace ClassicalSharp {
 				// Column 2
 				Make( 140, -150, "Save level",
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
-				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -100, "Load level",
+				Make( 140, -100, "Load level",
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				!game.Network.IsSinglePlayer ? null :
-					Make( 140, -50, "Generate level",
+				Make( 140, -50, "Generate level",
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
 				Make( 140, 0, "Select texture pack",
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
@@ -64,40 +62,44 @@ namespace ClassicalSharp {
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
 			};
+			if( !game.Network.IsSinglePlayer ) {
+				widgets[6].Disabled = true;
+				widgets[7].Disabled = true;
+			}
 		}
 		
 		void MakeClassic() {
 			widgets = new Widget[] {
 				MakeClassic( 0, -100, "Options",
-				     (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
-				!game.Network.IsSinglePlayer ? null :
-					MakeClassic( 0, -50, "Generate level",
-					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
-				!game.Network.IsSinglePlayer ? null :
-					MakeClassic( 0, 0, "Load level",
-					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
+				            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
+				
+				MakeClassic( 0, -50, "Generate level",
+				            (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
+				
+				MakeClassic( 0, 0, "Load level",
+				            (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				
 				MakeClassic( 0, 50, "Save level",
-				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				            (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				
 				MakeBack( true, titleFont,
 				         (g, w) => g.SetNewScreen( null ) ),
 				
 				game.PureClassicMode ? null :
 					MakeClassic( 0, 150, "Nostalgia options",
-				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+					            (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
 			};
+			if( !game.Network.IsSinglePlayer ) {
+				widgets[1].Disabled = true;
+				widgets[2].Disabled = true;
+			}
 		}
 
 		void CheckHacksAllowed( object sender, EventArgs e ) {
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null ) continue;
-				widgets[i].Disabled = false;
-			}
-			if( !game.LocalPlayer.Hacks.CanAnyHacks && !game.UseClassicOptions ) {
-				widgets[3].Disabled = true; // env settings
-				widgets[8].Disabled = true; // select texture pack
-			}
+			if( game.UseClassicOptions ) return;
+			
+			widgets[3].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
+			widgets[8].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
