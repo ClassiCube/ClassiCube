@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
 			ServerName = reader.ReadCp437String();
-			ServerMotd = reader.ReadCp437String();		
+			ServerMotd = reader.ReadCp437String();
 			receivedFirstPosition = false;
 			
 			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			game.LocalPlayer.CheckHacksConsistency();
 			game.Events.RaiseHackPermissionsChanged();
 		}
-			
+		
 		void HandlePing() { }
 		
 		void HandleLevelInit() {
@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 		
 		void HandleLevelFinalise() {
 			game.SetNewScreen( null );
-			game.activeScreen = prevScreen;		
+			game.activeScreen = prevScreen;
 			if( prevScreen != null && prevCursorVisible != game.CursorVisible )
 				game.CursorVisible = prevCursorVisible;
 			prevScreen = null;
@@ -272,21 +272,21 @@ namespace ClassicalSharp {
 					oldPlayer.Despawn();
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
-				string identifier = game.Players[entityId].SkinIdentifier;
 				game.EntityEvents.RaiseEntityAdded( entityId );
-				game.AsyncDownloader.DownloadSkin( identifier, skinName );
 			} else {
-				game.LocalPlayer.SkinName = skinName;
-				game.AsyncDownloader.DownloadSkin( "skin_255", skinName );
+				game.LocalPlayer.SkinName = skinName;				
 			}
-			if( readPosition ) {
-				ReadAbsoluteLocation( entityId, false );
-				if( entityId == 0xFF ) {
-					LocalPlayer p = game.LocalPlayer;
-					p.SpawnPoint = p.Position;
-					p.SpawnYaw = p.HeadYawDegrees;
-					p.SpawnPitch = p.PitchDegrees;
-				}
+			
+			string identifier = game.Players[entityId].SkinIdentifier;
+			game.AsyncDownloader.DownloadSkin( identifier, skinName );
+			if( !readPosition ) return;
+			
+			ReadAbsoluteLocation( entityId, false );
+			if( entityId == 0xFF ) {
+				LocalPlayer p = game.LocalPlayer;
+				p.SpawnPoint = p.Position;
+				p.SpawnYaw = p.HeadYawDegrees;
+				p.SpawnPitch = p.PitchDegrees;
 			}
 		}
 		

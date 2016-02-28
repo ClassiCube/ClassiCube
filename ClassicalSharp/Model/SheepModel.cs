@@ -23,8 +23,7 @@ namespace ClassicalSharp.Model {
 			                       .SetTexOrigin( 0, 16 ) );
 			RightLegBack = BuildBox( MakeBoxBounds( 1, 0, 5, 5, 12, 9 )
 			                        .SetTexOrigin( 0, 16 ) );
-			if( Fur )
-				MakeFurModel();
+			if( Fur ) MakeFurModel();
 		}
 		
 		
@@ -35,9 +34,9 @@ namespace ClassicalSharp.Model {
 			FurTorso = BuildRotatedBox( MakeRotatedBoxBounds( -4, 12, -8, 4, 18, 8 )
 			                           .SetTexOrigin( 28, 8 )
 			                           .SetModelBounds( -6f, 10.5f, -10f, 6f, 19.5f, 10f ) );
-			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2  )
-				.SetTexOrigin( 0, 16 );
 			
+			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2  )
+				.SetTexOrigin( 0, 16 );			
 			FurLeftLegFront = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f ) );
 			FurRightLegFront = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f ) );
 			FurLeftLegBack = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f ) );

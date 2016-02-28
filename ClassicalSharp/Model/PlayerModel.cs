@@ -21,8 +21,7 @@ namespace ClassicalSharp.Model {
 			Set.RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 ).
 			                        SetTexOrigin( 0, 16 ) );
 			Set.Hat = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
-			                   .SetTexOrigin( 32, 0 )
-			                   .SetModelBounds( -4.5f, 23.5f, -4.5f, 4.5f, 32.5f, 4.5f ) );
+			                   .SetTexOrigin( 32, 0 ).ExpandBounds( 0.5f ) );
 			Set.LeftArm = BuildBox( MakeBoxBounds( -4, 12, -2, -8, 24, 2 )
 			                       .SetTexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )

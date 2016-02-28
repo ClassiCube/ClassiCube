@@ -86,6 +86,13 @@ namespace ClassicalSharp.Model {
 				Z1 = z1 / 16f; Z2 = z2 / 16f;
 				return this;
 			}
+			
+			public BoxDescription ExpandBounds( float amount ) {
+				X1 -= amount / 16f; X2 += amount / 16f;
+				Y1 -= amount / 16f; Y2 += amount / 16f;
+				Z1 -= amount / 16f; Z2 += amount / 16f;
+				return this;
+			}
 		}
 		
 		protected BoxDescription MakeBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
