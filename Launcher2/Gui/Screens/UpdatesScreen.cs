@@ -124,6 +124,7 @@ namespace Launcher {
 			
 			string path = dx ? build.DirectXPath : build.OpenGLPath;
 			Utils.LogDebug( "Updating to: " + path );
+			Patcher.PatchTime = build.TimeBuilt;
 			Patcher.Update( path );
 			game.ShouldExit = true;
 			game.ShouldUpdate = true;

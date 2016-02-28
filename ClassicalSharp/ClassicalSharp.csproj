@@ -148,6 +148,7 @@
     <Compile Include="Entities\Components\HacksComponent.cs" />
     <Compile Include="Entities\Components\InterpolatedComponent.cs" />
     <Compile Include="Entities\Components\PhysicsComponent.cs" />
+    <Compile Include="Entities\Components\ShadowComponent.cs" />
     <Compile Include="Entities\Entity.Bounds.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
@@ -155,7 +156,6 @@
     <Compile Include="Entities\LocalPlayer.Physics.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
-    <Compile Include="Entities\Player.Shadows.cs" />
     <Compile Include="Events\EntityEvents.cs" />
     <Compile Include="Events\Events.cs" />
     <Compile Include="Events\MapEvents.cs" />

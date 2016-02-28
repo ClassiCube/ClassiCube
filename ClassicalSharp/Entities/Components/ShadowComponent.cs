@@ -5,11 +5,19 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	partial class Player {
+	/// <summary> Entity component that draws square and circle shadows beneath entities. </summary>
+	public unsafe sealed class ShadowComponent {
 		
-		internal static bool boundShadowTex = false;
+		Game game;
+		Entity entity;
+		public ShadowComponent( Game game, Entity entity ) {
+			this.game = game;
+			this.entity = entity;
+		}
 		
-		internal unsafe void DrawShadow( EntityShadow mode ) {
+		internal void Draw() {
+			EntityShadow mode = game.Players.ShadowMode;
+			Vector3 Position = entity.Position;
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min( (int)Position.Y, game.Map.Height - 1 );			
 			int index = 0, vb = 0;
@@ -49,7 +57,7 @@ namespace ClassicalSharp {
 			}
 			
 			if( index == 0 ) return;
-			CheckShadowTexture();
+			CheckShadowTexture( game.Graphics );
 			
 			if( !boundShadowTex ) {
 				game.Graphics.BindTexture( shadowTex );
@@ -58,11 +66,12 @@ namespace ClassicalSharp {
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
 		}
 		
-		unsafe bool CalculateShadow( Vector3I* coords, ref int coordsCount, float x, float z, int posY, ref ShadowData data ) {
+		bool CalculateShadow( Vector3I* coords, ref int coordsCount, float x, float z, int posY, ref ShadowData data ) {
 			data = new ShadowData();
 			int blockX = Utils.Floor( x ), blockZ = Utils.Floor( z );
 			Vector3I p = new Vector3I( blockX, 0, blockZ );
 			BlockInfo info = game.BlockInfo;
+			Vector3 Position = entity.Position;
 			
 			if( Position.Y < 0 ) return false;
 			for( int i = 0; i < 4; i++ )
@@ -96,26 +105,7 @@ namespace ClassicalSharp {
 			return game.Map.GetBlock( x, y, z );
 		}
 		
-		int shadowTex = -1;
-		unsafe void CheckShadowTexture() {
-			if( shadowTex != -1 ) return;
-			const int size = 128, half = size / 2;
-			using( Bitmap bmp = new Bitmap( size, size ) )
-				using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) )
-			{
-				int inPix = new FastColour( 0, 0, 0, 200 ).ToArgb();
-				int outPix = inPix & 0xFFFFFF;
-				for( int y = 0; y < fastBmp.Height; y++ ) {
-					int* row = fastBmp.GetRowPtr( y );
-					for( int x = 0; x < fastBmp.Width; x++ ) {
-						double dist = (half - (x + 0.5)) * (half - (x + 0.5)) +
-							(half - (y + 0.5)) * (half - (y + 0.5));
-						row[x] = dist < half * half ? inPix : outPix;
-					}
-				}
-				shadowTex = game.Graphics.CreateTexture( fastBmp );
-			}
-		}
+		
 		
 		void DraqSquareShadow( VertexPos3fTex2fCol4b[] verts, ref int index, float y, byte alpha, float x, float z ) {
 			FastColour col = FastColour.White; col.A = alpha;
@@ -162,6 +152,29 @@ namespace ClassicalSharp {
 		
 		static bool lequal(float a, float b) {
 			return a < b || Math.Abs(a - b) < 0.001f;
+		}
+		
+		
+		internal static bool boundShadowTex = false;
+		internal static int shadowTex = -1;
+		static void CheckShadowTexture( IGraphicsApi graphics ) {
+			if( shadowTex != -1 ) return;
+			const int size = 128, half = size / 2;
+			using( Bitmap bmp = new Bitmap( size, size ) )
+				using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) )
+			{
+				int inPix = new FastColour( 0, 0, 0, 200 ).ToArgb();
+				int outPix = inPix & 0xFFFFFF;
+				for( int y = 0; y < fastBmp.Height; y++ ) {
+					int* row = fastBmp.GetRowPtr( y );
+					for( int x = 0; x < fastBmp.Width; x++ ) {
+						double dist = (half - (x + 0.5)) * (half - (x + 0.5)) +
+							(half - (y + 0.5)) * (half - (y + 0.5));
+						row[x] = dist < half * half ? inPix : outPix;
+					}
+				}
+				shadowTex = graphics.CreateTexture( fastBmp );
+			}
 		}
 	}
 }

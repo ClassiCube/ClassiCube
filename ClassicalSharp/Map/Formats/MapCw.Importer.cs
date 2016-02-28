@@ -162,6 +162,10 @@ namespace ClassicalSharp {
 			info.InitLightOffsets();
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
+			
+			game.Inventory.CanPlace.SetNotOverridable( true, id );
+			game.Inventory.CanDelete.SetNotOverridable( true, id );
+			game.Events.RaiseBlockPermissionsChanged();
 		}
 	}
 }

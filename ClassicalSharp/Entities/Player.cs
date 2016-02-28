@@ -15,12 +15,14 @@ namespace ClassicalSharp {
 		public string DisplayName, SkinName, SkinIdentifier;
 		public SkinType SkinType;
 		internal AnimatedComponent anim;
+		internal ShadowComponent shadow;
 		
 		public Player( Game game ) : base( game ) {
 			this.game = game;
 			StepSize = 0.5f;
 			SkinType = game.DefaultPlayerSkinType;
 			anim = new AnimatedComponent( game, this );
+			shadow = new ShadowComponent( game, this );
 			SetModel( "humanoid" );
 		}
 		
@@ -38,8 +40,6 @@ namespace ClassicalSharp {
 		public override void Despawn() {
 			game.Graphics.DeleteTexture( ref PlayerTextureId );
 			game.Graphics.DeleteTexture( ref nameTex.ID );
-			if( shadowTex != -1 )
-				game.Graphics.DeleteTexture( ref shadowTex );
 		}
 		
 		protected void InitRenderingData() {

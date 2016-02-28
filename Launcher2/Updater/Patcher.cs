@@ -4,11 +4,14 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
+using ClassicalSharp;
 using ClassicalSharp.TexturePack;
 
 namespace Launcher.Updater {
 	
 	public static class Patcher {
+		
+		public static DateTime PatchTime;
 		
 		public static void Update( string dir ) {
 			using( WebClient client = new WebClient() ) {
@@ -25,9 +28,9 @@ namespace Launcher.Updater {
 				info = new ProcessStartInfo( "cmd.exe", "/c update.bat" );
 			} else {
 				string path = Path.Combine( Program.AppDirectory, "update.sh" );
-				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );			
+				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );
 				const int flags = 0x7;// read | write | executable
-				int code = chmod( path, (flags << 6) | (flags << 3) | 4 ); 
+				int code = chmod( path, (flags << 6) | (flags << 3) | 4 );
 				if( code != 0 )
 					throw new InvalidOperationException( "chmod returned : " + code );
 				info = new ProcessStartInfo( "xterm", '"' + path + '"');
@@ -50,11 +53,19 @@ namespace Launcher.Updater {
 				reader.Extract( stream );
 			}
 		}
-			
+		
 		static void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			string path = Path.Combine( Program.AppDirectory, "CS_Update" );
 			path = Path.Combine( path, Path.GetFileName( filename ) );
 			File.WriteAllBytes( path, data );
+			
+			try {
+				File.SetLastWriteTimeUtc( path, PatchTime );
+			} catch( IOException ex ) {
+				ErrorHandler.LogError( "I/O exception when trying to set modified time for: " + filename, ex );
+			} catch( UnauthorizedAccessException ex ) {
+				ErrorHandler.LogError( "Permissions exception when trying to set modified time for: " + filename, ex );
+			}
 		}
 	}
 }
