@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 				if( (reader.size - reader.index) < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}
-			reader.RemoveRead();
+			reader.RemoveProcessed();
 			
 			Player player = game.LocalPlayer;
 			if( receivedFirstPosition ) {
