@@ -190,7 +190,7 @@ namespace ClassicalSharp {
 							countIndex += TileSide.Top;
 							if( counts[countIndex] != 0 ) {
 								X = x; Y = y; Z = z;
-								AddSpriteVertices( tile, 1 );
+								AddSpriteVertices( tile );
 								counts[countIndex] = 1;
 							}
 						} else {

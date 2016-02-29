@@ -71,14 +71,16 @@ namespace ClassicalSharp {
 				ChunkPartInfo part = info.NormalParts[batch];
 				if( part.IndicesCount == 0 ) continue;
 				usedNormal[batch] = true;
-				if( part.IndicesCount > maxIndices ) {
+				if( part.IndicesCount > maxIndices )
 					DrawBigPart( info, ref part );
-				} else {
-					DrawPart( info, ref part );
-				}				
+				else
+					DrawPart( info, ref part );			
 				
-				if( part.spriteCount > 0 )
+				if( part.spriteCount > 0 ) {
+					api.FaceCulling = true;
 					api.DrawIndexedVb_TrisT2fC4b( part.spriteCount, 0 );
+					api.FaceCulling = false;
+				}
 				game.Vertices += part.IndicesCount;
 			}
 		}

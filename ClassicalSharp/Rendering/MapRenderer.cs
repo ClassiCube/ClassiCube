@@ -176,14 +176,13 @@ namespace ClassicalSharp {
 		
 		void CreateChunkCache() {
 			int index = 0;
-			for( int z = 0; z < length; z += 16 ) {
-				for( int y = 0; y < height; y += 16 ) {
-					for( int x = 0; x < width; x += 16 ) {
-						chunks[index] = new ChunkInfo( x, y, z );
-						unsortedChunks[index] = chunks[index];
-						index++;
-					}
-				}
+			for( int z = 0; z < length; z += 16 )
+				for( int y = 0; y < height; y += 16 )
+					for( int x = 0; x < width; x += 16 )
+			{
+				chunks[index] = new ChunkInfo( x, y, z );
+				unsortedChunks[index] = chunks[index];
+				index++;
 			}
 		}
 		
@@ -307,7 +306,7 @@ namespace ClassicalSharp {
 						info.Visible = inRange &&
 							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 					}
-				}		
+				}
 			}
 		}
 		
