@@ -8,23 +8,16 @@ namespace ClassicalSharp {
 	internal class FixedBufferStream : Stream {
 		
 		public byte[] _buffer;
-		int _position, _length;
+		int _position, _length;		
+		public int Offset;
 		
-		public override bool CanRead {
-			get { return true; }
-		}
+		public override bool CanRead { get { return true; } }
 		
-		public override bool CanSeek {
-			get { return false; }
-		}
+		public override bool CanSeek { get { return false; } }
 		
-		public override bool CanWrite {
-			get { return false; }
-		}
+		public override bool CanWrite { get { return false; } }
 		
-		public override long Length {
-			get { return _length; }
-		}
+		public override long Length { get { return _length; } }
 		
 		public override long Position {
 			get { return _position; }
@@ -35,22 +28,23 @@ namespace ClassicalSharp {
 			_buffer = buffer;
 		}
 		
-		public override void Flush() {
-		}
+		public override void Flush() { }
 		
 		public override int Read( byte[] buffer, int offset, int count ) {
 			int numBytes = _length - _position;
 			if( numBytes > count ) numBytes = count;
 			if( numBytes <= 0 ) return 0;
 			
-			Buffer.BlockCopy( _buffer, _position, buffer, offset, numBytes );
+			Buffer.BlockCopy( _buffer, Offset + _position, buffer, offset, numBytes );
 			_position += numBytes;
 			return numBytes;
 		}
 		
 		public override int ReadByte() {
 			if( _position >= _length ) return -1;
-			return _buffer[_position++];
+			byte value = _buffer[Offset + _position];
+			_position++;
+			return value;
 		}
 		
 		public override long Seek( long offset, SeekOrigin origin ) {

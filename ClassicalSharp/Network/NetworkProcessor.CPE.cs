@@ -469,16 +469,15 @@ namespace ClassicalSharp {
 			int count = reader.ReadUInt8() + 1;
 			if( game.Map.IsNotLoaded ) {
 				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
-				reader.Remove( bulkCount * (sizeof(int) + 1) );
+				reader.Skip( bulkCount * (sizeof(int) + 1) );
 				return;
-			}
-			
+			}			
 			int* indices = stackalloc int[bulkCount];
 			for( int i = 0; i < count; i++ )
-				indices[i] = ReadInt32( reader.buffer, i * 4 );
+				indices[i] = reader.ReadInt32();
 			
 			for( int i = 0; i < count; i++ ) {
-				byte block = reader.buffer[i + bulkCount * sizeof(int)];
+				byte block = reader.ReadUInt8();
 				Vector3I coords = game.Map.GetCoords( indices[i] );
 				
 				if( coords.X < 0 ) {
@@ -487,12 +486,6 @@ namespace ClassicalSharp {
 				}
 				game.UpdateBlock( coords.X, coords.Y, coords.Z, block );
 			}
-			reader.Remove( bulkCount * (sizeof(int) + 1) );
-		}
-		
-		static int ReadInt32( byte[] buffer, int offset ) {
-			return buffer[offset + 0] << 24 | buffer[offset + 1] << 16
-				| buffer[offset + 2] << 8 | buffer[offset + 3];
 		}
 		
 		void HandleSetTextColor() {

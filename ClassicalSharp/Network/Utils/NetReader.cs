@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	internal class NetReader {
 		
 		public byte[] buffer = new byte[4096 * 5];
-		public int size = 0;
+		public int index = 0, size = 0;
 		public NetworkStream Stream;
 		
 		public NetReader( NetworkStream stream ) {
@@ -21,52 +21,59 @@ namespace ClassicalSharp {
 			size += received;
 		}
 		
-		public void Remove( int byteCount ) {
-			size -= byteCount;
-			Buffer.BlockCopy( buffer, byteCount, buffer, 0, size );
+		public void Skip( int byteCount ) {
+			index += byteCount;
+		}
+		
+		public void RemoveProcessed() {			
+			size -= index;
+			if( size > 0 ) // only copy left over bytes
+				Buffer.BlockCopy( buffer, index, buffer, 0, size );			
+			index = 0;
 			// We don't need to zero the old bytes, since they will be overwritten when ReadData() is called.
 		}
 		
 		public int ReadInt32() {
-			int value = buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
-			Remove( 4 );
+			int value = buffer[index] << 24 | buffer[index + 1] << 16 | 
+				buffer[index + 2] << 8 | buffer[index + 3];
+			index += 4;
 			return value;
 		}
 		
 		public short ReadInt16() {
-			short value = (short)( buffer[0] << 8 | buffer[1] );
-			Remove( 2 );
+			short value = (short)(buffer[index] << 8 | buffer[index + 1]);
+			index += 2;
 			return value;
 		}
 		
 		public sbyte ReadInt8() {
-			sbyte value = (sbyte)buffer[0];
-			Remove( 1 );
+			sbyte value = (sbyte)buffer[index];
+			index++;
 			return value;
 		}
 		
 		public byte ReadUInt8() {
-			byte value = buffer[0];
-			Remove( 1 );
+			byte value = buffer[index];
+			index++;
 			return value;
 		}
 		
 		public byte[] ReadBytes( int length ) {
 			byte[] data = new byte[length];
-			Buffer.BlockCopy( buffer, 0, data, 0, length );
-			Remove( length );
+			Buffer.BlockCopy( buffer, index, data, 0, length );
+			index += length;
 			return data;
 		}
 
 		public string ReadCp437String() {
-			int length = GetString( buffer, false );
-			Remove( 64 );
+			int length = GetString( false );
+			index += 64;
 			return new String( characters, 0, length );
 		}
 		
 		public string ReadAsciiString() {
-			int length = GetString( buffer, true );
-			Remove( 64 );
+			int length = GetString( true );
+			index += 64;
 			return new String( characters, 0, length );
 		}
 		
@@ -75,8 +82,8 @@ namespace ClassicalSharp {
 				return ReadCp437String();
 					
 			messageType = (byte)MessageType.Normal;
-			int length = GetString( buffer, false );		
-			Remove( 64 );
+			int length = GetString( false );		
+			index += 64;
 			
 			int offset = 0;
 			if( length >= womDetail.Length && IsWomDetailString() ) {
@@ -97,10 +104,10 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		static int GetString( byte[] data, bool ascii ) {			
+		int GetString( bool ascii ) {			
 			int length = 0;
 			for( int i = 63; i >= 0; i-- ) {
-				byte code = data[i];
+				byte code = buffer[index + i];
 				if( length == 0 && !( code == 0 || code == 0x20 ) )
 				   length = i + 1;
 				

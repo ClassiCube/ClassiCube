@@ -77,11 +77,11 @@ namespace ClassicalSharp {
 				throw;
 			}
 			
-			while( reader.size > 0 ) {
-				byte opcode = reader.buffer[0];
+			while( (reader.size - reader.index) > 0 ) {
+				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
 				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
-					reader.Remove( 1 );
+					reader.Skip( 1 );
 					game.LocalPlayer.jumpVel = 0.42f; // assume default jump height
 					game.LocalPlayer.serverJumpVel = game.LocalPlayer.jumpVel;
 					continue;
@@ -90,13 +90,14 @@ namespace ClassicalSharp {
 				if( opcode >= maxHandledPacket ) {
 					ErrorHandler.LogError( "NetworkProcessor.Tick",
 					                      "received an invalid opcode of " + opcode );
-					reader.Remove( 1 );
+					reader.Skip( 1 );
 					continue;
 				}
 				
-				if( reader.size < packetSizes[opcode] ) break;
+				if( (reader.size - reader.index) < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}
+			reader.RemoveRead();
 			
 			Player player = game.LocalPlayer;
 			if( receivedFirstPosition ) {
@@ -134,7 +135,7 @@ namespace ClassicalSharp {
 		PacketId lastOpcode;
 		
 		void ReadPacket( byte opcode ) {
-			reader.Remove( 1 ); // remove opcode
+			reader.Skip( 1 ); // remove opcode
 			lastOpcode = (PacketId)opcode;
 			Action handler = handlers[opcode];
 			lastPacket = DateTime.UtcNow;
@@ -145,7 +146,7 @@ namespace ClassicalSharp {
 		}
 		
 		void SkipPacketData( PacketId opcode ) {
-			reader.Remove( packetSizes[(byte)opcode] - 1 );
+			reader.Skip( packetSizes[(byte)opcode] - 1 );
 		}
 		
 		Action[] handlers;

@@ -124,6 +124,7 @@ namespace ClassicalSharp {
 				HandleLevelInit();
 			int usedLength = reader.ReadInt16();
 			gzippedMap.Position = 0;
+			gzippedMap.Offset = reader.index;
 			gzippedMap.SetLength( usedLength );
 			
 			if( gzipHeader.done || gzipHeader.ReadHeader( gzippedMap ) ) {
@@ -140,7 +141,7 @@ namespace ClassicalSharp {
 				}
 			}
 			
-			reader.Remove( 1024 );
+			reader.Skip( 1024 );
 			byte progress = reader.ReadUInt8();
 			game.MapEvents.RaiseMapLoading( progress );
 		}
