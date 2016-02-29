@@ -288,16 +288,16 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 			
 			// Draw Z axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
 			
 			// Draw Z axis mirrored
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
 
 			// Draw X axis
 			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col );
