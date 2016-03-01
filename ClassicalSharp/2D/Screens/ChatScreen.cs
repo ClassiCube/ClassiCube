@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		}
 		
 		int chatLines;
-		ChatTextWidget announcement, clock;
+		ChatTextWidget announcement;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont, 
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
+			status.SetUsePlaceHolder( 0, false );
 			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont, 
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
 			bottomRight.YOffset = blockSize * 3 / 2;
@@ -69,18 +70,16 @@ namespace ClassicalSharp {
 			announcement = ChatTextWidget.Create( game, 0, 0, null, 
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
 			announcement.YOffset = -game.Height / 4;
-			clock = ChatTextWidget.Create( game, 0, 0, null, 
-			                              Anchor.BottomOrRight, Anchor.LeftOrTop, chatItalicFont );
 		}
 		
 		void SetInitialMessages() {
 			Chat chat = game.Chat;
 			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
-			status.SetText( 0, chat.Status1.Text );
-			status.SetText( 1, chat.Status2.Text );
-			status.SetText( 2, chat.Status3.Text );
-			if( game.ShowClock ) clock.SetText( chat.ClientClock.Text );
+			status.SetText( 1, chat.Status1.Text );
+			status.SetText( 2, chat.Status2.Text );
+			status.SetText( 3, chat.Status3.Text );
+			if( game.ShowClock ) status.SetText( 0, chat.ClientClock.Text );
 			
 			bottomRight.SetText( 2, chat.BottomRight1.Text );
 			bottomRight.SetText( 1, chat.BottomRight2.Text );
@@ -101,16 +100,11 @@ namespace ClassicalSharp {
 				bottomRight.Render( delta );
 			}
 			
+			bool clockValid = status.Textures[0].IsValid;
 			if( game.ShowClock ) {
-				if( !clock.IsValid ) clock.SetText( game.Chat.ClientClock.Text );
-				clock.Render( delta );
-			} else if( clock.IsValid ) {
-				clock.Dispose();
-			}
-			int statusOffset = clock.IsValid ? clock.Height : 0;
-			if( statusOffset != oldStatusOffset ) {
-				oldStatusOffset = statusOffset;
-				status.MoveTo( status.X, oldStatusOffset );
+				if( !clockValid ) status.SetText( 0, game.Chat.ClientClock.Text );
+			} else if( clockValid ) {
+				status.SetText( 0, null );
 			}
 			
 			UpdateChatYOffset( false );
@@ -200,7 +194,7 @@ namespace ClassicalSharp {
 					metadata[i] = metadata[i + 1];
 				metadata[chatLines - 1] = chatIndex + chatLines - 1;
 			} else if( type >= MessageType.Status1 && type <= MessageType.Status3 ) {
-				status.SetText( (int)(type - MessageType.Status1), e.Text );
+				status.SetText( 1 + (int)(type - MessageType.Status1), e.Text );
 			} else if( type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3 ) {
 				bottomRight.SetText( 2 - (int)(type - MessageType.BottomRight1), e.Text );
 			} else if( type == MessageType.Announcement ) {
@@ -209,7 +203,7 @@ namespace ClassicalSharp {
 				clientStatus.SetText( (int)(type - MessageType.ClientStatus1), e.Text );
 				UpdateChatYOffset( true );
 			} else if( type == MessageType.ClientClock && game.ShowClock ) {
-				clock.SetText( e.Text );
+				status.SetText( 0, e.Text );
 			}
 		}
 
