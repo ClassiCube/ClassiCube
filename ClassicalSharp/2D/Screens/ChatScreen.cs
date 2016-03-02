@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using ClassicalSharp.Network;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -49,10 +50,11 @@ namespace ClassicalSharp {
 		void ConstructWidgets() {
 			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
 			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont,
+			status = new TextGroupWidget( game, 5, chatFont, chatUnderlineFont,
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
 			status.SetUsePlaceHolder( 0, false );
+			status.SetUsePlaceHolder( 1, false );
 			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont,
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
 			bottomRight.YOffset = blockSize * 3 / 2;
@@ -76,9 +78,9 @@ namespace ClassicalSharp {
 			Chat chat = game.Chat;
 			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
-			status.SetText( 1, chat.Status1.Text );
-			status.SetText( 2, chat.Status2.Text );
-			status.SetText( 3, chat.Status3.Text );
+			status.SetText( 2, chat.Status1.Text );
+			status.SetText( 3, chat.Status2.Text );
+			status.SetText( 4, chat.Status3.Text );
 			if( game.ShowClock ) status.SetText( 0, chat.ClientClock.Text );
 			
 			bottomRight.SetText( 2, chat.BottomRight1.Text );
@@ -99,13 +101,7 @@ namespace ClassicalSharp {
 				status.Render( delta );
 				bottomRight.Render( delta );
 			}
-			
-			bool clockValid = status.Textures[0].IsValid;
-			if( game.ShowClock ) {
-				if( !clockValid ) status.SetText( 0, game.Chat.ClientClock.Text );
-			} else if( clockValid ) {
-				status.SetText( 0, null );
-			}
+			CheckOtherStatuses();
 			
 			UpdateChatYOffset( false );
 			RenderClientStatus();
@@ -122,6 +118,42 @@ namespace ClassicalSharp {
 			
 			if( announcement.IsValid && (now - game.Chat.Announcement.Received).TotalSeconds > 5 )
 				announcement.Dispose();
+		}
+		
+		int lastDownloadStatus = int.MinValue;
+		StringBuffer lastDownload = new StringBuffer( 48 );
+		void CheckOtherStatuses() {
+			bool clockValid = status.Textures[0].IsValid;
+			if( game.ShowClock ) {
+				if( !clockValid ) status.SetText( 0, game.Chat.ClientClock.Text );
+			} else if( clockValid ) {
+				status.SetText( 0, null );
+			}
+			
+			Request item = game.AsyncDownloader.CurrentItem;
+			if( item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack") ) {
+				if( status.Textures[1].IsValid ) status.SetText( 1, null );
+				lastDownloadStatus = int.MinValue;
+				return;
+			}
+			
+			int progress = game.AsyncDownloader.CurrentItemProgress;
+			if( progress == lastDownloadStatus ) return;			
+			lastDownloadStatus = progress;
+			SetTexturePackMessage( progress );
+		}
+		
+		void SetTexturePackMessage( int progress ) {
+			lastDownload.Clear();
+			int index = 0;
+			if( progress == -2 ) 
+				lastDownload.Append( ref index, "&eRetrieving texture pack.." );
+			else if( progress == -1 ) 
+				lastDownload.Append( ref index, "&eDownloading texture pack" );
+			else if( progress >= 0 && progress <= 100 ) 
+				lastDownload.Append( ref index, "&eDownloading texture pack (&7" )
+					.AppendNum( ref index, progress ).Append( ref index, "&e%)" );
+			status.SetText( 1, lastDownload.ToString() );
 		}
 		
 		void RenderRecentChat( DateTime now, double delta ) {
@@ -196,7 +228,7 @@ namespace ClassicalSharp {
 					metadata[i] = metadata[i + 1];
 				metadata[chatLines - 1] = chatIndex + chatLines - 1;
 			} else if( type >= MessageType.Status1 && type <= MessageType.Status3 ) {
-				status.SetText( 1 + (int)(type - MessageType.Status1), e.Text );
+				status.SetText( 2 + (int)(type - MessageType.Status1), e.Text );
 			} else if( type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3 ) {
 				bottomRight.SetText( 2 - (int)(type - MessageType.BottomRight1), e.Text );
 			} else if( type == MessageType.Announcement ) {

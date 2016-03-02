@@ -148,9 +148,7 @@ namespace ClassicalSharp {
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
-		public override bool IsThirdPerson {
-			get { return true; }
-		}
+		public override bool IsThirdPerson { get { return true; } }
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians, 
@@ -184,9 +182,7 @@ namespace ClassicalSharp {
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
 		
-		public override bool IsThirdPerson {
-			get { return true; }
-		}
+		public override bool IsThirdPerson { get { return true; } }
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, 
@@ -210,9 +206,7 @@ namespace ClassicalSharp {
 			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * tiltMatrix;
 		}
 		
-		public override bool IsThirdPerson {
-			get { return false; }
-		}
+		public override bool IsThirdPerson { get { return false; } }
 		
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			return eyePos;

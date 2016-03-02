@@ -221,9 +221,7 @@ namespace ClassicalSharp {
 			return tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid";
 		}
 		
-		public override bool HandlesAllInput {
-			get { return true; }
-		}
+		public override bool HandlesAllInput { get { return true; } }
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
 			if( draggingMouse ) {

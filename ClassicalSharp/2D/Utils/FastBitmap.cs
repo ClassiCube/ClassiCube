@@ -42,9 +42,7 @@ namespace ClassicalSharp {
 		BitmapData data;
 		byte* scan0Byte;
 		
-		public bool IsLocked {
-			get { return data != null; }
-		}
+		public bool IsLocked { get { return data != null; } }
 		
 		public IntPtr Scan0;
 		public int Stride;

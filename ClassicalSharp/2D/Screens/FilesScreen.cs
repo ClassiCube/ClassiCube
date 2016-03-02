@@ -96,9 +96,7 @@ namespace ClassicalSharp {
 			return HandleMouseClick( buttons, mouseX, mouseY, button );
 		}
 		
-		public override bool HandlesAllInput {
-			get { return true; }
-		}
+		public override bool HandlesAllInput { get { return true; } }
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			for( int i = 0; i < buttons.Length; i++ )

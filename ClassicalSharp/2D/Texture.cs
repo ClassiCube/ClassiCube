@@ -13,9 +13,7 @@ namespace ClassicalSharp {
 		public float U1, V1;
 		public float U2, V2;
 		
-		public Rectangle Bounds {
-			get { return new Rectangle( X1, Y1, Width, Height ); }
-		}
+		public Rectangle Bounds { get { return new Rectangle( X1, Y1, Width, Height ); } }
 
 		public Texture( int id, int x, int y, int width, int height, float u2, float v2 )
 			: this( id, x, y, width, height, 0, u2, 0, v2 )	{
@@ -33,9 +31,7 @@ namespace ClassicalSharp {
 			U2 = u2; V2 = v2;
 		}
 		
-		public bool IsValid {
-			get { return ID > 0; }
-		}
+		public bool IsValid { get { return ID > 0; } }
 		
 		public void Render( IGraphicsApi graphics ) {
 			graphics.BindTexture( ID );
@@ -47,15 +43,9 @@ namespace ClassicalSharp {
 			graphics.Draw2DTexture( ref this, colour );
 		}
 		
-		public int X2 {
-			get { return X1 + Width; }
-			//set { X1 = value - Width; }
-		}
+		public int X2 { get { return X1 + Width; } }
 		
-		public int Y2 {
-			get { return Y1 + Height; }
-			//set { Y1 = value - Height; }
-		}
+		public int Y2 { get { return Y1 + Height; } }
 		
 		public override string ToString() {
 			return ID + String.Format( "({0}, {1} -> {2},{3}", X1, Y1, Width, Height );

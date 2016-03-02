@@ -21,9 +21,7 @@ namespace ClassicalSharp.Singleplayer {
 			ServerSupportsPartialMessages = true;
 		}
 		
-		public override bool IsSinglePlayer {
-			get { return true; }
-		}
+		public override bool IsSinglePlayer { get { return true; } }
 		
 		public override void Connect( IPAddress address, int port ) {
 			int max = game.UseCPE ? BlockInfo.MaxDefinedCpeBlock : BlockInfo.MaxDefinedOriginalBlock;

@@ -12,9 +12,7 @@ namespace ClassicalSharp {
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;
 		
-		public override bool SupportsLoading { 
-			get { return true; } 
-		}
+		public override bool SupportsLoading { get { return true; }  }
 
 		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			BinaryReader reader = new BinaryReader( stream );

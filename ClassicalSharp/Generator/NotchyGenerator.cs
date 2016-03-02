@@ -7,7 +7,6 @@ using System.Collections.Generic;
 
 namespace ClassicalSharp.Generator {
 	
-	// TODO: figure out how noise functions differ, probably based on rnd.
 	public sealed partial class NotchyGenerator : IMapGenerator {
 		
 		int width, height, length;
@@ -16,9 +15,7 @@ namespace ClassicalSharp.Generator {
 		short[] heightmap;
 		Random rnd;
 		
-		public override string GeneratorName {
-			get { return "Vanilla classic generator"; }
-		}
+		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
 		public override byte[] Generate( int width, int height, int length, int seed ) {
 			this.width = width;

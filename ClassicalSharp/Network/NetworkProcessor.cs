@@ -15,9 +15,7 @@ namespace ClassicalSharp {
 			SetupHandlers();
 		}
 		
-		public override bool IsSinglePlayer {
-			get { return false; }
-		}
+		public override bool IsSinglePlayer { get { return false; } }
 		
 		Socket socket;
 		bool receivedFirstPosition;

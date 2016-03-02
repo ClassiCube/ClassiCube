@@ -40,24 +40,16 @@ namespace ClassicalSharp {
 		public Anchor VerticalAnchor;
 		
 		/// <summary> Width and height of widget in window space. </summary>
-		public Size Size {
-			get { return new Size( Width, Height ); }
-		}
+		public Size Size { get { return new Size( Width, Height ); } }
 		
 		/// <summary> Coordinate of top left corner of widget's bounds in window space. </summary>
-		public Point TopLeft {
-			get { return new Point( X, Y ); }
-		}
+		public Point TopLeft { get { return new Point( X, Y ); } }
 		
 		/// <summary> Coordinate of bottom right corner of widget's bounds in window space. </summary>
-		public Point BottomRight {
-			get { return new Point( X + Width, Y + Height ); }
-		}
+		public Point BottomRight { get { return new Point( X + Width, Y + Height ); } }
 		
 		/// <summary> Specifies the boundaries of the widget in window space. </summary>
-		public Rectangle Bounds {
-			get { return new Rectangle( X, Y, Width, Height ); }
-		}
+		public Rectangle Bounds { get { return new Rectangle( X, Y, Width, Height ); } }
 		
 		/// <summary> Moves the widget to the specified window space coordinates. </summary>
 		public virtual void MoveTo( int newX, int newY ) {
