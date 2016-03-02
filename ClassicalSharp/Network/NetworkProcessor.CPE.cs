@@ -475,6 +475,7 @@ namespace ClassicalSharp {
 			int* indices = stackalloc int[bulkCount];
 			for( int i = 0; i < count; i++ )
 				indices[i] = reader.ReadInt32();
+			reader.Skip( (bulkCount - count) * sizeof(int) );
 			
 			for( int i = 0; i < count; i++ ) {
 				byte block = reader.ReadUInt8();
@@ -486,6 +487,7 @@ namespace ClassicalSharp {
 				}
 				game.UpdateBlock( coords.X, coords.Y, coords.Z, block );
 			}
+			reader.Skip( bulkCount - count );
 		}
 		
 		void HandleSetTextColor() {
