@@ -49,25 +49,25 @@ namespace ClassicalSharp {
 		void ConstructWidgets() {
 			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
 			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont, 
+			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont,
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
 			status.SetUsePlaceHolder( 0, false );
-			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont, 
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont,
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
 			bottomRight.YOffset = blockSize * 3 / 2;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont, 
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont,
 			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.Init();
-			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont, 
+			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont,
 			                                   chatUnderlineFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
 			clientStatus.XOffset = 10;
 			clientStatus.YOffset = blockSize * 2 + 15;
 			clientStatus.Init();
-			announcement = ChatTextWidget.Create( game, 0, 0, null, 
+			announcement = ChatTextWidget.Create( game, 0, 0, null,
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
 			announcement.YOffset = -game.Height / 4;
 		}
@@ -150,7 +150,9 @@ namespace ClassicalSharp {
 		
 		static FastColour backColour = new FastColour( 60, 60, 60, 180 );
 		public void RenderBackground() {
-			int height = normalChat.GetUsedHeight();
+			int minIndex = Math.Min( 0, game.Chat.Log.Count - chatLines );
+			int height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
+			
 			int y = normalChat.Y + normalChat.Height - height - 5;
 			int x = normalChat.X - 5;
 			int width = Math.Max( clientStatus.Width, normalChat.Width ) + 10;
@@ -160,7 +162,7 @@ namespace ClassicalSharp {
 				graphicsApi.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
 		}
 		
-		int inputOldHeight = -1, oldStatusOffset = -1;
+		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
 			int height = textInput.RealHeight;
 			if( force || height != inputOldHeight ) {
@@ -313,13 +315,13 @@ namespace ClassicalSharp {
 					textInput.SendTextInBufferAndReset();
 					
 					chatIndex = game.Chat.Log.Count - chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else if( key == Key.PageDown ) {
 					chatIndex += chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
@@ -339,40 +341,43 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseScroll( int delta ) {
 			if( !HandlesAllInput ) return false;
 			chatIndex -= delta;
-			ResetIndex();
+			ScrollHistory();
 			return true;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( !HandlesAllInput || game.HideGui ) return false;
-			if( normalChat.Bounds.Contains( mouseX, mouseY ) ) {
-				int height = normalChat.GetUsedHeight();
-				int y = normalChat.Y + normalChat.Height - height;
-				if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) ) {
-					string text = normalChat.GetSelected( mouseX, mouseY );
-					if( text == null ) return false;
-					
-					if( Utils.IsUrlPrefix( text ) ) {
-						game.ShowWarning( new WarningScreen(
-							game, text, false, "Are you sure you want to go to this url?",
-							OpenUrl, AppendUrl, null, text,
-							"Be careful - urls from strangers may link to websites that",
-							" may have viruses, or things you may not want to open/see."
-						) );
-					} else if( game.ClickableChat ) {
-						for( int i = 0; i < text.Length; i++ ) {
-							if( !IsValidInputChar( text[i] ) ) {
-								game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
-								return true;
-							}
-						}
-						textInput.AppendText( text );
+			if( !normalChat.Bounds.Contains( mouseX, mouseY ) )
+				return textInput.HandlesMouseClick( mouseX, mouseY, button );
+			
+			int height = normalChat.GetUsedHeight();
+			int y = normalChat.Y + normalChat.Height - height;
+			if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) )
+				return HandlesChatClick( mouseX, mouseY );
+			return false;
+		}
+		
+		bool HandlesChatClick( int mouseX, int mouseY ) {
+			string text = normalChat.GetSelected( mouseX, mouseY );
+			if( text == null ) return false;
+			
+			if( Utils.IsUrlPrefix( text ) ) {
+				game.ShowWarning( new WarningScreen(
+					game, text, false, "Are you sure you want to go to this url?",
+					OpenUrl, AppendUrl, null, text,
+					"Be careful - urls from strangers may link to websites that",
+					" may have viruses, or things you may not want to open/see."
+				) );
+			} else if( game.ClickableChat ) {
+				for( int i = 0; i < text.Length; i++ ) {
+					if( !IsValidInputChar( text[i] ) ) {
+						game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
+						return true;
 					}
-					return true;
 				}
-				return false;
+				textInput.AppendText( text );
 			}
-			return textInput.HandlesMouseClick( mouseX, mouseY, button );
+			return true;
 		}
 		
 		void OpenUrl( WarningScreen screen ) {
@@ -388,7 +393,7 @@ namespace ClassicalSharp {
 			textInput.AppendText( (string)screen.Metadata );
 		}
 		
-		void ResetIndex() {
+		void ScrollHistory() {
 			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min( 0, maxIndex );
 			Utils.Clamp( ref chatIndex, minIndex, maxIndex );
