@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using ClassicalSharp.Network;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
@@ -13,7 +14,7 @@ namespace ClassicalSharp {
 		}
 		
 		int chatLines;
-		ChatTextWidget announcement, clock;
+		ChatTextWidget announcement;
 		TextInputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
@@ -49,38 +50,38 @@ namespace ClassicalSharp {
 		void ConstructWidgets() {
 			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
 			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 4, chatFont, chatUnderlineFont, 
+			status = new TextGroupWidget( game, 5, chatFont, chatUnderlineFont,
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
-			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont, 
+			status.SetUsePlaceHolder( 0, false );
+			status.SetUsePlaceHolder( 1, false );
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont,
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
 			bottomRight.YOffset = blockSize * 3 / 2;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont, 
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont,
 			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.Init();
-			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont, 
+			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont,
 			                                   chatUnderlineFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
 			clientStatus.XOffset = 10;
 			clientStatus.YOffset = blockSize * 2 + 15;
 			clientStatus.Init();
-			announcement = ChatTextWidget.Create( game, 0, 0, null, 
+			announcement = ChatTextWidget.Create( game, 0, 0, null,
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
 			announcement.YOffset = -game.Height / 4;
-			clock = ChatTextWidget.Create( game, 0, 0, null, 
-			                              Anchor.BottomOrRight, Anchor.LeftOrTop, chatItalicFont );
 		}
 		
 		void SetInitialMessages() {
 			Chat chat = game.Chat;
 			chatIndex = chat.Log.Count - chatLines;
 			ResetChat();
-			status.SetText( 0, chat.Status1.Text );
-			status.SetText( 1, chat.Status2.Text );
-			status.SetText( 2, chat.Status3.Text );
-			if( game.ShowClock ) clock.SetText( chat.ClientClock.Text );
+			status.SetText( 2, chat.Status1.Text );
+			status.SetText( 3, chat.Status2.Text );
+			status.SetText( 4, chat.Status3.Text );
+			if( game.ShowClock ) status.SetText( 0, chat.ClientClock.Text );
 			
 			bottomRight.SetText( 2, chat.BottomRight1.Text );
 			bottomRight.SetText( 1, chat.BottomRight2.Text );
@@ -100,18 +101,7 @@ namespace ClassicalSharp {
 				status.Render( delta );
 				bottomRight.Render( delta );
 			}
-			
-			if( game.ShowClock ) {
-				if( !clock.IsValid ) clock.SetText( game.Chat.ClientClock.Text );
-				clock.Render( delta );
-			} else if( clock.IsValid ) {
-				clock.Dispose();
-			}
-			int statusOffset = clock.IsValid ? clock.Height : 0;
-			if( statusOffset != oldStatusOffset ) {
-				oldStatusOffset = statusOffset;
-				status.MoveTo( status.X, oldStatusOffset );
-			}
+			CheckOtherStatuses();
 			
 			UpdateChatYOffset( false );
 			RenderClientStatus();
@@ -128,6 +118,42 @@ namespace ClassicalSharp {
 			
 			if( announcement.IsValid && (now - game.Chat.Announcement.Received).TotalSeconds > 5 )
 				announcement.Dispose();
+		}
+		
+		int lastDownloadStatus = int.MinValue;
+		StringBuffer lastDownload = new StringBuffer( 48 );
+		void CheckOtherStatuses() {
+			bool clockValid = status.Textures[0].IsValid;
+			if( game.ShowClock ) {
+				if( !clockValid ) status.SetText( 0, game.Chat.ClientClock.Text );
+			} else if( clockValid ) {
+				status.SetText( 0, null );
+			}
+			
+			Request item = game.AsyncDownloader.CurrentItem;
+			if( item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack") ) {
+				if( status.Textures[1].IsValid ) status.SetText( 1, null );
+				lastDownloadStatus = int.MinValue;
+				return;
+			}
+			
+			int progress = game.AsyncDownloader.CurrentItemProgress;
+			if( progress == lastDownloadStatus ) return;			
+			lastDownloadStatus = progress;
+			SetTexturePackMessage( progress );
+		}
+		
+		void SetTexturePackMessage( int progress ) {
+			lastDownload.Clear();
+			int index = 0;
+			if( progress == -2 ) 
+				lastDownload.Append( ref index, "&eRetrieving texture pack.." );
+			else if( progress == -1 ) 
+				lastDownload.Append( ref index, "&eDownloading texture pack" );
+			else if( progress >= 0 && progress <= 100 ) 
+				lastDownload.Append( ref index, "&eDownloading texture pack (&7" )
+					.AppendNum( ref index, progress ).Append( ref index, "&e%)" );
+			status.SetText( 1, lastDownload.ToString() );
 		}
 		
 		void RenderRecentChat( DateTime now, double delta ) {
@@ -156,7 +182,9 @@ namespace ClassicalSharp {
 		
 		static FastColour backColour = new FastColour( 60, 60, 60, 180 );
 		public void RenderBackground() {
-			int height = normalChat.GetUsedHeight();
+			int minIndex = Math.Min( 0, game.Chat.Log.Count - chatLines );
+			int height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
+			
 			int y = normalChat.Y + normalChat.Height - height - 5;
 			int x = normalChat.X - 5;
 			int width = Math.Max( clientStatus.Width, normalChat.Width ) + 10;
@@ -166,7 +194,7 @@ namespace ClassicalSharp {
 				graphicsApi.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
 		}
 		
-		int inputOldHeight = -1, oldStatusOffset = -1;
+		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
 			int height = textInput.RealHeight;
 			if( force || height != inputOldHeight ) {
@@ -200,7 +228,7 @@ namespace ClassicalSharp {
 					metadata[i] = metadata[i + 1];
 				metadata[chatLines - 1] = chatIndex + chatLines - 1;
 			} else if( type >= MessageType.Status1 && type <= MessageType.Status3 ) {
-				status.SetText( (int)(type - MessageType.Status1), e.Text );
+				status.SetText( 2 + (int)(type - MessageType.Status1), e.Text );
 			} else if( type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3 ) {
 				bottomRight.SetText( 2 - (int)(type - MessageType.BottomRight1), e.Text );
 			} else if( type == MessageType.Announcement ) {
@@ -209,7 +237,7 @@ namespace ClassicalSharp {
 				clientStatus.SetText( (int)(type - MessageType.ClientStatus1), e.Text );
 				UpdateChatYOffset( true );
 			} else if( type == MessageType.ClientClock && game.ShowClock ) {
-				clock.SetText( e.Text );
+				status.SetText( 0, e.Text );
 			}
 		}
 
@@ -319,13 +347,13 @@ namespace ClassicalSharp {
 					textInput.SendTextInBufferAndReset();
 					
 					chatIndex = game.Chat.Log.Count - chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else if( key == Key.PageUp ) {
 					chatIndex -= chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else if( key == Key.PageDown ) {
 					chatIndex += chatLines;
-					ResetIndex();
+					ScrollHistory();
 				} else {
 					textInput.HandlesKeyDown( key );
 				}
@@ -345,40 +373,43 @@ namespace ClassicalSharp {
 		public override bool HandlesMouseScroll( int delta ) {
 			if( !HandlesAllInput ) return false;
 			chatIndex -= delta;
-			ResetIndex();
+			ScrollHistory();
 			return true;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( !HandlesAllInput || game.HideGui ) return false;
-			if( normalChat.Bounds.Contains( mouseX, mouseY ) ) {
-				int height = normalChat.GetUsedHeight();
-				int y = normalChat.Y + normalChat.Height - height;
-				if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) ) {
-					string text = normalChat.GetSelected( mouseX, mouseY );
-					if( text == null ) return false;
-					
-					if( Utils.IsUrlPrefix( text ) ) {
-						game.ShowWarning( new WarningScreen(
-							game, text, false, "Are you sure you want to go to this url?",
-							OpenUrl, AppendUrl, null, text,
-							"Be careful - urls from strangers may link to websites that",
-							" may have viruses, or things you may not want to open/see."
-						) );
-					} else if( game.ClickableChat ) {
-						for( int i = 0; i < text.Length; i++ ) {
-							if( !IsValidInputChar( text[i] ) ) {
-								game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
-								return true;
-							}
-						}
-						textInput.AppendText( text );
+			if( !normalChat.Bounds.Contains( mouseX, mouseY ) )
+				return textInput.HandlesMouseClick( mouseX, mouseY, button );
+			
+			int height = normalChat.GetUsedHeight();
+			int y = normalChat.Y + normalChat.Height - height;
+			if( new Rectangle( normalChat.X, y, normalChat.Width, height ).Contains( mouseX, mouseY ) )
+				return HandlesChatClick( mouseX, mouseY );
+			return false;
+		}
+		
+		bool HandlesChatClick( int mouseX, int mouseY ) {
+			string text = normalChat.GetSelected( mouseX, mouseY );
+			if( text == null ) return false;
+			
+			if( Utils.IsUrlPrefix( text ) ) {
+				game.ShowWarning( new WarningScreen(
+					game, text, false, "Are you sure you want to go to this url?",
+					OpenUrl, AppendUrl, null, text,
+					"Be careful - urls from strangers may link to websites that",
+					" may have viruses, or things you may not want to open/see."
+				) );
+			} else if( game.ClickableChat ) {
+				for( int i = 0; i < text.Length; i++ ) {
+					if( !IsValidInputChar( text[i] ) ) {
+						game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
+						return true;
 					}
-					return true;
 				}
-				return false;
+				textInput.AppendText( text );
 			}
-			return textInput.HandlesMouseClick( mouseX, mouseY, button );
+			return true;
 		}
 		
 		void OpenUrl( WarningScreen screen ) {
@@ -394,7 +425,7 @@ namespace ClassicalSharp {
 			textInput.AppendText( (string)screen.Metadata );
 		}
 		
-		void ResetIndex() {
+		void ScrollHistory() {
 			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min( 0, maxIndex );
 			Utils.Clamp( ref chatIndex, minIndex, maxIndex );

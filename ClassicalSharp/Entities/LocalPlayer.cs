@@ -152,8 +152,8 @@ namespace ClassicalSharp {
 				if( game.IsKeyDown( KeyBinding.Right ) ) zMoving += 0.98f;
 
 				jumping = game.IsKeyDown( KeyBinding.Jump );
-				speeding = Hacks.CanSpeed && Hacks.Enabled && game.IsKeyDown( KeyBinding.Speed );
-				halfSpeeding = Hacks.CanSpeed && Hacks.Enabled && game.IsKeyDown( KeyBinding.HalfSpeed );
+				speeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.Speed );
+				halfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.HalfSpeed );
 				flyingUp = game.IsKeyDown( KeyBinding.FlyUp );
 				flyingDown = game.IsKeyDown( KeyBinding.FlyDown );
 			}

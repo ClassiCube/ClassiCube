@@ -5,9 +5,7 @@ namespace ClassicalSharp.Generator {
 	
 	public unsafe sealed class FlatGrassGenerator : IMapGenerator {
 		
-		public override string GeneratorName {
-			get { return "Flatgrass generator"; }
-		}
+		public override string GeneratorName { get { return "Flatgrass"; } }
 		
 		int width, length;
 		public override byte[] Generate( int width, int height, int length, int seed ) {

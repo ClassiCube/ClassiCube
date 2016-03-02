@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		public bool CanRespawn = true;
 		
 		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
-		public bool CanNoclip  = true;
+		public bool CanNoclip = true;
 		
 		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
 		public bool CanPushbackBlocks = true;
@@ -61,14 +61,17 @@ namespace ClassicalSharp {
 		/// <summary> Whether the player is allowed to double jump. </summary>
 		public bool CanDoubleJump = true;
 		
+		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
+		public float MaxSpeedMultiplier = 1;
+		
 		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
-		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax </remarks>
+		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
 		public void ParseHackFlags( string name, string motd ) {
 			string joined = name + motd;
 			SetAllHacks( true );
+			MaxSpeedMultiplier = 1;
 			// By default (this is also the case with WoM), we can use hacks.
-			if( joined.Contains( "-hax" ) )
-				SetAllHacks( false );
+			if( joined.Contains( "-hax" ) ) SetAllHacks( false );
 			
 			ParseFlag( b => CanFly = b, joined, "fly" );
 			ParseFlag( b => CanNoclip = b, joined, "noclip" );
@@ -77,6 +80,21 @@ namespace ClassicalSharp {
 
 			if( UserType == 0x64 )
 				ParseFlag( b => SetAllHacks( b ), joined, "ophax" );
+			ParseHorizontalSpeed( joined );
+		}
+		
+		void ParseHorizontalSpeed( string joined ) {
+			int start = joined.IndexOf( "horspeed=", StringComparison.OrdinalIgnoreCase );
+			if( start < 0 ) return;
+			start += 9;
+			
+			int end = joined.IndexOf(' ', start );
+			if( end < 0 ) end = joined.Length;
+			
+			string num = joined.Substring( start, end - start );
+			float value = 0;
+			if( !Single.TryParse( num, out value ) || value <= 0 ) return;
+			MaxSpeedMultiplier = value;
 		}
 		
 		void SetAllHacks( bool allowed ) {

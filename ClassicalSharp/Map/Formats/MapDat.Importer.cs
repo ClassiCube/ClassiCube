@@ -15,9 +15,7 @@ namespace ClassicalSharp {
 		const byte TC_STRING = 0x74, TC_ARRAY = 0x75;
 		const byte TC_ENDBLOCKDATA = 0x78;
 		
-		public override bool SupportsLoading { 
-			get { return true; } 
-		}
+		public override bool SupportsLoading { get { return true; }  }
 		
 		BinaryReader reader;		
 		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {

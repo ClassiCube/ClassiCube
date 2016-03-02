@@ -7,9 +7,7 @@ namespace ClassicalSharp {
 
 	public sealed partial class MapCw : IMapFileFormat {
 		
-		public override bool SupportsSaving {
-			get { return true; }
-		}
+		public override bool SupportsSaving { get { return true; } }
 
 		BinaryWriter writer;
 		public override void Save( Stream stream, Game game ) {

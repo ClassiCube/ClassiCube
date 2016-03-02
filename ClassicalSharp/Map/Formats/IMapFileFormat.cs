@@ -8,14 +8,10 @@ namespace ClassicalSharp {
 	public abstract class IMapFileFormat {
 		
 		/// <summary> Whether a map can be exported to a file in this format. </summary>
-		public virtual bool SupportsLoading { 
-			get { return false; } 
-		}
+		public virtual bool SupportsLoading { get { return false; } }
 		
 		/// <summary> Whether a map can be imported from a file in this format. </summary>
-		public virtual bool SupportsSaving { 
-			get { return false; } 
-		}
+		public virtual bool SupportsSaving { get { return false; } }
 		
 		/// <summary> Replaces the current map from a stream that contains a map in this format. </summary>
 		public virtual byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {

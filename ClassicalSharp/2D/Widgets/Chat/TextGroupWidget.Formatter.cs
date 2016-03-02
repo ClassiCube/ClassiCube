@@ -19,7 +19,9 @@ namespace ClassicalSharp {
 				Textures[index] = tex;
 				lines[index] = text;
 			} else {
-				Textures[index] = new Texture( -1, 0, 0, 0, defaultHeight, 0, 0 );
+				int height = PlaceholderHeight[index] ? defaultHeight : 0;
+				int y = CalcY( index, height );
+				Textures[index] = new Texture( -1, 0, y, 0, height, 0, 0 );
 				lines[index] = null;
 			}
 			UpdateDimensions();

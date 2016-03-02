@@ -59,14 +59,10 @@ namespace ClassicalSharp {
 		public Block SidesBlock = Block.Bedrock;
 		
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
-		public int SidesHeight {
-			get { return EdgeHeight - 2; }
-		}
+		public int SidesHeight { get { return EdgeHeight - 2; } }
 		
 		/// <summary> Whether this map is empty. </summary>
-		public bool IsNotLoaded {
-			get { return Width == 0 && Height == 0 && Length == 0; }
-		}
+		public bool IsNotLoaded { get { return Width == 0 && Height == 0 && Length == 0; } }
 		
 		/// <summary> Current terrain.png or texture pack url of this map. </summary>
 		public string TextureUrl = null;

@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		}
 		
 		public Texture[] Textures;
+		public bool[] PlaceholderHeight;
 		string[] lines;
 		Rectangle[][] urlBounds;
 		int ElementsCount, defaultHeight;
@@ -24,14 +25,26 @@ namespace ClassicalSharp {
 		
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
+			PlaceholderHeight = new bool[ElementsCount];
 			lines = new string[ElementsCount];
 			urlBounds = new Rectangle[ElementsCount][];
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			
-			for( int i = 0; i < Textures.Length; i++ )
+			for( int i = 0; i < Textures.Length; i++ ) {
 				Textures[i].Height = defaultHeight;
+				PlaceholderHeight[i] = true;
+			}
 			UpdateDimensions();
+		}
+		
+		public void SetUsePlaceHolder( int index, bool placeHolder ) {
+			PlaceholderHeight[index] = placeHolder;
+			if( Textures[index].ID > 0 ) return;
+			
+			int newHeight = placeHolder ? defaultHeight : 0;
+			Textures[index].Y1 = CalcY( index, newHeight );
+			Textures[index].Height = newHeight;
 		}
 		
 		public void PushUpAndReplaceLast( string text ) {
@@ -56,31 +69,32 @@ namespace ClassicalSharp {
 			
 			if( VerticalAnchor == Anchor.LeftOrTop ) {
 				y = Y;
-				for( int i = 0; i < index; i++ ) {
+				for( int i = 0; i < index; i++ )
 					y += Textures[i].Height;
-				}
-				for( int i = index + 1; i < Textures.Length; i++ ) {
+				for( int i = index + 1; i < Textures.Length; i++ )
 					Textures[i].Y1 += deltaY;
-				}
 			} else {
 				y = game.Height - YOffset;
-				for( int i = index + 1; i < Textures.Length; i++ ) {
+				for( int i = index + 1; i < Textures.Length; i++ )
 					y -= Textures[i].Height;
-				}
+				
 				y -= newHeight;
-				for( int i = 0; i < index; i++ ) {
+				for( int i = 0; i < index; i++ )
 					Textures[i].Y1 -= deltaY;
-				}
 			}
 			return y;
 		}
 		
 		public int GetUsedHeight() {
-			int sum = 0;
+			int sum = 0, max = Textures.Length;
 			for( int i = 0; i < Textures.Length; i++ ) {
-				if( Textures[i].IsValid )
-					sum += Textures[i].Height;
+				if( Textures[i].IsValid ) {
+					max = i; break;
+				}
 			}
+			
+			for( int i = max; i < Textures.Length; i++ )
+				sum += Textures[i].Height;
 			return sum;
 		}
 		

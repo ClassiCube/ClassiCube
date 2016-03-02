@@ -14,19 +14,14 @@ namespace ClassicalSharp {
 		
 		void UpdateVelocityState( float xMoving, float zMoving ) {
 			if( !Hacks.NoclipSlide && (noClip && xMoving == 0 && zMoving == 0) )
-				Velocity = Vector3.Zero;
-			
+				Velocity = Vector3.Zero;			
 			if( flying || noClip ) {
 				Velocity.Y = 0; // eliminate the effect of gravity
-				if( flyingUp || jumping ) {
-					Velocity.Y = 0.12f;
-					if( speeding ) Velocity.Y += 0.12f;
-					if( halfSpeeding ) Velocity.Y += 0.06f;
-				} else if( flyingDown ) {
-					Velocity.Y -= 0.12f;
-					if( speeding ) Velocity.Y -= 0.12f;
-					if( halfSpeeding ) Velocity.Y -= 0.06f;
-				}
+				int dir = (flyingUp || jumping) ? 1 : (flyingDown ? -1 : 0);
+				
+				Velocity.Y += 0.12f * dir;
+				if( speeding && Hacks.CanSpeed ) Velocity.Y += 0.12f * dir;
+				if( halfSpeeding && Hacks.CanSpeed ) Velocity.Y += 0.06f * dir;
 			} else if( jumping && TouchesAnyRope() && Velocity.Y > 0.02f ) {
 				Velocity.Y = 0.02f;
 			}
@@ -63,22 +58,21 @@ namespace ClassicalSharp {
 				}
 			} else if( useLiquidGravity ) {
 				Velocity.Y += 0.04f;
-				if( speeding ) Velocity.Y += 0.04f;
-				if( halfSpeeding ) Velocity.Y += 0.02f;
+				if( speeding && Hacks.CanSpeed ) Velocity.Y += 0.04f;
+				if( halfSpeeding && Hacks.CanSpeed ) Velocity.Y += 0.02f;
 				canLiquidJump = false;
 			} else if( TouchesAnyRope() ) {
-				Velocity.Y += speeding ? 0.15f : 0.10f;
+				Velocity.Y += (speeding && Hacks.CanSpeed) ? 0.15f : 0.10f;
 				canLiquidJump = false;
-			} else if( onGround ) {				
+			} else if( onGround ) {
 				DoNormalJump();
 			}
 		}
 		
 		void DoNormalJump() {
-			Velocity.Y = 0;
-			Velocity.Y += jumpVel;
-			if( speeding ) Velocity.Y += jumpVel;
-			if( halfSpeeding ) Velocity.Y += jumpVel / 2;
+			Velocity.Y = jumpVel;
+			if( speeding && Hacks.CanSpeed ) Velocity.Y += jumpVel;
+			if( halfSpeeding && Hacks.CanSpeed ) Velocity.Y += jumpVel / 2;
 			canLiquidJump = false;
 		}
 		
@@ -95,10 +89,11 @@ namespace ClassicalSharp {
 		
 		void PhysicsTick( float xMoving, float zMoving ) {
 			if( noClip ) onGround = false;
-			float multiply = GetBaseMultiply();			
+			float multiply = GetBaseMultiply( true );
+			float yMultiply = GetBaseMultiply( Hacks.CanSpeed );
 			float modifier = LowestSpeedModifier();
 			
-			float yMul = Math.Max( 1f, multiply / 5 ) * modifier;
+			float yMul = Math.Max( 1f, yMultiply / 5 ) * modifier;
 			float horMul = multiply * modifier;
 			if( !(flying || noClip) ) {
 				if( secondJump ) { horMul *= 93f; yMul *= 10f; }
@@ -171,18 +166,18 @@ namespace ClassicalSharp {
 			Velocity.Y -= gravity;
 		}
 
-		float GetBaseMultiply() {
+		float GetBaseMultiply( bool canSpeed ) {
 			float multiply = 0;
 			if( flying || noClip ) {
-				if( speeding ) multiply += Hacks.SpeedMultiplier * 8;
-				if( halfSpeeding ) multiply += Hacks.SpeedMultiplier * 8 / 2;
+				if( speeding && canSpeed ) multiply += Hacks.SpeedMultiplier * 8;
+				if( halfSpeeding && canSpeed ) multiply += Hacks.SpeedMultiplier * 8 / 2;
 				if( multiply == 0 ) multiply = 8f;
 			} else {
-				if( speeding ) multiply += Hacks.SpeedMultiplier;
-				if( halfSpeeding ) multiply += Hacks.SpeedMultiplier / 2;
+				if( speeding && canSpeed ) multiply += Hacks.SpeedMultiplier;
+				if( halfSpeeding && canSpeed ) multiply += Hacks.SpeedMultiplier / 2;
 				if( multiply == 0 ) multiply = 1;
 			}
-			return multiply;
+			return Hacks.CanSpeed ? multiply : Math.Min( multiply, Hacks.MaxSpeedMultiplier );
 		}
 		
 		const float inf = float.PositiveInfinity;
@@ -213,9 +208,9 @@ namespace ClassicalSharp {
 					continue;
 				
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
-				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];				
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				BoundingBox blockBB = new BoundingBox( min, max );
-				if( !blockBB.Intersects( bounds ) ) continue;	
+				if( !blockBB.Intersects( bounds ) ) continue;
 				
 				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
 				if( block >= BlockInfo.CpeBlocksCount && type == BlockCollideType.SwimThrough )

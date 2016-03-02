@@ -19,6 +19,9 @@ namespace ClassicalSharp.Network {
 		Dictionary<string, DownloadedItem> downloaded = new Dictionary<string, DownloadedItem>();
 		string skinServer = null;
 		
+		internal Request CurrentItem;
+		internal int CurrentItemProgress = -3;
+		
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
@@ -148,7 +151,12 @@ namespace ClassicalSharp.Network {
 					}
 				}
 				if( request != null ) {
+					CurrentItem = request;
+					CurrentItemProgress = -2;
 					ProcessRequest( request );
+					
+					CurrentItem = null;
+					CurrentItemProgress = -3;
 				} else {
 					handle.WaitOne();
 				}
@@ -241,41 +249,39 @@ namespace ClassicalSharp.Network {
 		static byte[] buffer = new byte[4096 * 8];
 		MemoryStream DownloadBytes( HttpWebResponse response ) {
 			int length = (int)response.ContentLength;
-			MemoryStream dst = length >= 0 ?
+			MemoryStream dst = length > 0 ?
 				new MemoryStream( length ) : new MemoryStream();
+			CurrentItemProgress = length > 0 ? 0 : -1;
 			
 			using( Stream src = response.GetResponseStream() ) {
 				int read = 0;
 				while( (read = src.Read( buffer, 0, buffer.Length )) > 0 ) {
 					dst.Write( buffer, 0, read );
+					if( length <= 0 ) continue;
+					CurrentItemProgress = (int)(100 * (float)dst.Length / length);
 				}
 			}
 			return dst;
 		}
-		
-		sealed class Request {
-			
-			public string Url;
-			public string Identifier;
-			public RequestType Type;
-			public DateTime TimeAdded;
-			public DateTime LastModified;
-			
-			public Request( string url, string identifier, RequestType type, DateTime lastModified ) {
-				Url = url;
-				Identifier = identifier;
-				Type = type;
-				TimeAdded = DateTime.UtcNow;
-				LastModified = lastModified;
-			}
-		}
 	}
 	
-	public enum RequestType {
-		Bitmap,
-		String,
-		ByteArray,
-		ContentLength,
+	public enum RequestType { Bitmap, String, ByteArray, ContentLength }
+	
+	internal sealed class Request {
+		
+		public string Url;
+		public string Identifier;
+		public RequestType Type;
+		public DateTime TimeAdded;
+		public DateTime LastModified;
+		
+		public Request( string url, string identifier, RequestType type, DateTime lastModified ) {
+			Url = url;
+			Identifier = identifier;
+			Type = type;
+			TimeAdded = DateTime.UtcNow;
+			LastModified = lastModified;
+		}
 	}
 	
 	/// <summary> Represents an item that was asynchronously downloaded. </summary>

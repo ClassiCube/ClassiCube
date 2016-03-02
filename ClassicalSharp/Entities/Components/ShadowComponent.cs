@@ -19,41 +19,42 @@ namespace ClassicalSharp {
 			EntityShadow mode = game.Players.ShadowMode;
 			Vector3 Position = entity.Position;
 			float posX = Position.X, posZ = Position.Z;
-			int posY = Math.Min( (int)Position.Y, game.Map.Height - 1 );			
+			int posY = Math.Min( (int)Position.Y, game.Map.Height - 1 );
 			int index = 0, vb = 0;
 			
 			VertexPos3fTex2fCol4b[] verts = null;
-			ShadowData data = new ShadowData();
-			int coordsCount = 0;
+			int posCount = 0, dataCount = 0;
 			Vector3I* coords = stackalloc Vector3I[4];
-			for( int i = 0; i < 4; i++ )
+			ShadowData* data = stackalloc ShadowData[4];
+			for( int i = 0; i < 4; i++ ) {
 				coords[i] = new Vector3I( int.MinValue );
+				data[i] = new ShadowData();
+			}
 			
 			if( mode == EntityShadow.SnapToBlock ) {
-				vb = game.Graphics.texVb; verts = game.Graphics.texVerts;						
-				if( !CalculateShadow( coords, ref coordsCount, posX, posZ, posY, ref data ) ) return;
+				vb = game.Graphics.texVb; verts = game.Graphics.texVerts;
+				if( !GetBlocks( coords, ref posCount, posX, posZ, posY, data, ref dataCount ) ) return;
 				
 				float x1 = Utils.Floor( posX ), z1 = Utils.Floor( posZ );
-				DraqSquareShadow( verts, ref index, data.Y, 220, x1, z1 );
+				DraqSquareShadow( verts, ref index, data[0].Y, 220, x1, z1 );
 			} else {
 				vb = game.ModelCache.vb; verts = game.ModelCache.vertices;
 				
-				float x1 = posX - 7/16f, x2 = Math.Min( posX + 7/16f, Utils.Floor( x1 ) + 1 );
-				float z1 = posZ - 7/16f, z2 = Math.Min( posZ + 7/16f, Utils.Floor( z1 ) + 1 );
-				if( CalculateShadow( coords, ref coordsCount, x1, z1, posY, ref data ) && data.A > 0 )
-					DrawCoords( verts, ref index, data, new Vector2( x1, z1 ), new Vector2( x2, z2 ), Position );
+				float x = posX - 7/16f, z = posZ - 7/16f;
+				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
+					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				x2 = posX + 7/16f; x1 = Math.Max( posX - 7/16f, Utils.Floor( x2 ) );
-				if( CalculateShadow( coords, ref coordsCount, x1, z1, posY, ref data ) && data.A > 0 )
-					DrawCoords( verts, ref index, data, new Vector2( x1, z1 ), new Vector2( x2, z2 ), Position );
+				x = Math.Max( posX - 7/16f, Utils.Floor( posX + 7/16f ) );
+				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
+					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				z2 = posZ + 7/16f; z1 = Math.Max( posZ - 7/16f, Utils.Floor( z2 ) );
-				if( CalculateShadow( coords, ref coordsCount, x1, z1, posY, ref data ) && data.A > 0 )
-					DrawCoords( verts, ref index, data, new Vector2( x1, z1 ), new Vector2( x2, z2 ), Position );
+				z = Math.Max( posZ - 7/16f, Utils.Floor( posZ + 7/16f ) );
+				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
+					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				x1 = posX - 7/16f; x2 = Math.Min( posX + 7/16f, Utils.Floor( x1 ) + 1 );
-				if( CalculateShadow( coords, ref coordsCount, x1, z1, posY, ref data ) && data.A > 0 )
-					DrawCoords( verts, ref index, data, new Vector2( x1, z1 ), new Vector2( x2, z2 ), Position );
+				x = posX - 7/16f;
+				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
+					DrawCircle( verts, ref index, data, dataCount, x, z );
 			}
 			
 			if( index == 0 ) return;
@@ -66,47 +67,6 @@ namespace ClassicalSharp {
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
 		}
 		
-		bool CalculateShadow( Vector3I* coords, ref int coordsCount, float x, float z, int posY, ref ShadowData data ) {
-			data = new ShadowData();
-			int blockX = Utils.Floor( x ), blockZ = Utils.Floor( z );
-			Vector3I p = new Vector3I( blockX, 0, blockZ );
-			BlockInfo info = game.BlockInfo;
-			Vector3 Position = entity.Position;
-			
-			if( Position.Y < 0 ) return false;
-			for( int i = 0; i < 4; i++ )
-				if( coords[i] == p ) return false;
-			
-			while( posY >= 0 ) {
-				byte block = GetShadowBlock( blockX, posY, blockZ );
-				if( !(info.IsAir[block] || info.IsSprite[block] || info.IsLiquid[block]) ) {
-					float blockY = posY + info.MaxBB[block].Y;
-					if( blockY < Position.Y + 0.01f ) { 
-						data.Block = block; data.Y = blockY; break; 
-					}
-				}
-				posY--;
-			}
-			if( posY == -1 ) data.Y = 0;
-			
-			coords[coordsCount] = p; coordsCount++;
-			CalcAlpha( Position.Y, ref data.Y, ref data.A );
-			return true;
-		}
-		
-		byte GetShadowBlock( int x, int y, int z ) {
-			if( x < 0 || z < 0 || x >= game.Map.Width || z >= game.Map.Length ) {
-				if (y == game.Map.EdgeHeight - 1)
-					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.EdgeBlock] ? 0 : Block.Bedrock);
-				if (y == game.Map.SidesHeight - 1)
-					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.SidesBlock] ? 0 : Block.Bedrock);
-				return (byte)Block.Air;
-			}
-			return game.Map.GetBlock( x, y, z );
-		}
-		
-		
-		
 		void DraqSquareShadow( VertexPos3fTex2fCol4b[] verts, ref int index, float y, byte alpha, float x, float z ) {
 			FastColour col = FastColour.White; col.A = alpha;
 			TextureRec rec = new TextureRec( 63/128f, 63/128f, 1/128f, 1/128f );
@@ -116,24 +76,95 @@ namespace ClassicalSharp {
 			verts[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U1, rec.V2, col );
 		}
 		
-		void DrawCoords( VertexPos3fTex2fCol4b[] verts, ref int index, ShadowData data, Vector2 p1, Vector2 p2, Vector3 centre ) {
-			if( lequal( p2.X, p1.X ) || lequal( p2.Y, p1.Y ) ) return;
-			float u1 = (p1.X - centre.X) * 16/14f + 0.5f;
-			float v1 = (p1.Y - centre.Z) * 16/14f + 0.5f;
-			float u2 = (p2.X - centre.X) * 16/14f + 0.5f;
-			float v2 = (p2.Y - centre.Z) * 16/14f + 0.5f;
+		void DrawCircle( VertexPos3fTex2fCol4b[] verts, ref int index, 
+		                ShadowData* data, int dataCount, float x, float z ) {
+			x = Utils.Floor( x ); z = Utils.Floor( z );
+			BlockInfo info = game.BlockInfo;
+			Vector3 min = info.MinBB[data[0].Block], max = info.MaxBB[data[0].Block];
+			
+			DrawCoords( verts, ref index, data[0], x + min.X, z + min.Z, x + max.X, z + max.Z );
+			for( int i = 1; i < dataCount; i++ ) {
+				Vector3 nMin = info.MinBB[data[i].Block], nMax = info.MaxBB[data[i].Block];
+				DrawCoords( verts, ref index, data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z );
+				DrawCoords( verts, ref index, data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z );
+				
+				DrawCoords( verts, ref index, data[i], x + nMin.X, z + nMin.Z, x + min.X, z + nMax.Z );
+				DrawCoords( verts, ref index, data[i], x + max.X, z + nMin.Z, x + nMax.X, z + nMax.Z );
+				min = nMin; max = nMax;
+			}
+		}
+		void DrawCoords( VertexPos3fTex2fCol4b[] verts, ref int index, ShadowData data, 
+		                float x1, float z1, float x2, float z2 ) {
+			Vector3 centre = entity.Position;
+			BlockInfo info = game.BlockInfo;
+			
+			if( lequal( x2, x1 ) || lequal( z2, z1 ) ) return;
+			float u1 = (x1 - centre.X) * 16/14f + 0.5f;
+			float v1 = (z1 - centre.Z) * 16/14f + 0.5f;
+			float u2 = (x2 - centre.X) * 16/14f + 0.5f;
+			float v2 = (z2 - centre.Z) * 16/14f + 0.5f;
 			if( u2 <= 0 || v2 <= 0 || u1 >= 1 || v1 >= 1 ) return;
 			
-			p1.X = Math.Max( p1.X, centre.X - 14/16f ); u1 = Math.Max( u1, 0 );
-			p1.Y = Math.Max( p1.Y, centre.Z - 14/16f ); v1 = Math.Max( v1, 0 );
-			p2.X = Math.Min( p2.X, centre.X + 14/16f ); u2 = Math.Min( u2, 1 );
-			p2.Y = Math.Min( p2.Y, centre.Z + 14/16f ); v2 = Math.Min( v2, 1 );
+			x1 = Math.Max( x1, centre.X - 7/16f ); u1 = Math.Max( u1, 0 );
+			z1 = Math.Max( z1, centre.Z - 7/16f ); v1 = Math.Max( v1, 0 );
+			x2 = Math.Min( x2, centre.X + 7/16f ); u2 = Math.Min( u2, 1 );
+			z2 = Math.Min( z2, centre.Z + 7/16f ); v2 = Math.Min( v2, 1 );
 			
 			FastColour col = FastColour.White; col.A = data.A;
-			verts[index++] = new VertexPos3fTex2fCol4b( p1.X, data.Y, p1.Y, u1, v1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( p2.X, data.Y, p1.Y, u2, v1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( p2.X, data.Y, p2.Y, u2, v2, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( p1.X, data.Y, p2.Y, u1, v2, col );
+			verts[index++] = new VertexPos3fTex2fCol4b( x1, data.Y, z1, u1, v1, col );
+			verts[index++] = new VertexPos3fTex2fCol4b( x2, data.Y, z1, u2, v1, col );
+			verts[index++] = new VertexPos3fTex2fCol4b( x2, data.Y, z2, u2, v2, col );
+			verts[index++] = new VertexPos3fTex2fCol4b( x1, data.Y, z2, u1, v2, col );
+		}
+		
+		bool GetBlocks( Vector3I* coords, ref int posCount, float x, float z,
+		               int posY, ShadowData* data, ref int index ) {
+			int blockX = Utils.Floor( x ), blockZ = Utils.Floor( z );
+			Vector3I p = new Vector3I( blockX, 0, blockZ );
+			BlockInfo info = game.BlockInfo;
+			Vector3 Position = entity.Position;
+			index = 0;
+			
+			// Check we have not processed this particular block already.
+			if( Position.Y < 0 ) return false;
+			for( int i = 0; i < 4; i++ ) {
+				if( coords[i] == p ) return false;
+				data[i] = new ShadowData();
+			}
+			coords[posCount] = p; posCount++;
+			
+			while( posY >= 0 && index < 4 ) {
+				byte block = GetShadowBlock( blockX, posY, blockZ );
+				posY--;
+				if( info.IsAir[block] || info.IsSprite[block] || info.IsLiquid[block] ) continue;				
+				float blockY = posY + 1 + info.MaxBB[block].Y;
+				if( blockY >= Position.Y + 0.01f ) continue;
+				
+				data[index].Block = block; data[index].Y = blockY;
+				CalcAlpha( Position.Y, ref data[index] );
+				index++;				
+				// Check if the casted shadow will continue on further down.
+				if( info.MinBB[block].X == 0 && info.MaxBB[block].X == 1 &&
+				   info.MinBB[block].Z == 0 && info.MaxBB[block].Z == 1 ) return true;
+			}
+			
+			if( index < 4 ) {
+				data[index].Block = (byte)game.Map.EdgeBlock; data[index].Y = 0;
+				CalcAlpha( Position.Y, ref data[index] );
+				index++;
+			}
+			return true;
+		}
+		
+		byte GetShadowBlock( int x, int y, int z ) {
+			if( x < 0 || z < 0 || x >= game.Map.Width || z >= game.Map.Length ) {
+				if( y == game.Map.EdgeHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.EdgeBlock] ? 0 : Block.Bedrock);
+				if( y == game.Map.SidesHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.SidesBlock] ? 0 : Block.Bedrock);
+				return (byte)Block.Air;
+			}
+			return game.Map.GetBlock( x, y, z );
 		}
 		
 		struct ShadowData {
@@ -142,18 +173,23 @@ namespace ClassicalSharp {
 			public byte A;
 		}
 		
-		static void CalcAlpha( float playerY, ref float y, ref byte alpha ) {
-			if( (playerY - y) <= 6 ) { y += 1/64f; alpha = (byte)(190 - 190 * (playerY - y) / 6); }
-			else if( (playerY - y) <= 16 ) { y += 1/64f; alpha = 0; }
-			else if( (playerY - y) <= 32 ) { y += 1/16f; alpha = 0; }
-			else if( (playerY - y) <= 96 ) { y += 1/8f; alpha = 0; }
-			else { y += 1/4f; alpha = 0; }
+		static void CalcAlpha( float playerY, ref ShadowData data ) {
+			float y = data.Y;
+			if( (playerY - y) <= 6 ) {
+				data.A = (byte)(190 - 190 * (playerY - y) / 6);
+				data.Y += 1/64f; return;
+			}
+			
+			data.A = 0;
+			if( (playerY - y) <= 16 ) data.Y += 1/64f;
+			else if( (playerY - y) <= 32 ) data.Y += 1/16f;
+			else if( (playerY - y) <= 96 ) data.Y += 1/8f;
+			else data.Y += 1/4f;
 		}
 		
 		static bool lequal(float a, float b) {
 			return a < b || Math.Abs(a - b) < 0.001f;
 		}
-		
 		
 		internal static bool boundShadowTex = false;
 		internal static int shadowTex = -1;
