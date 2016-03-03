@@ -321,7 +321,7 @@ namespace ClassicalSharp {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
 				game.Map.TextureUrl = null;
-			} else if( Utils.IsUrlPrefix( url ) ) {
+			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
 				RetrieveTexturePack( url );
 			}
 			Utils.LogDebug( "Image url: " + url );

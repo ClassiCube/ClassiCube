@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using OpenTK.Input;
 using System.Windows.Forms;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
@@ -11,15 +10,8 @@ namespace ClassicalSharp {
 		public override bool HandlesKeyPress( char key ) {
 			if( game.HideGui ) return true;
 			
-			if( chatInputText.Length < len && IsValidInputChar( key ) && key != '&' ) {
-				if( caretPos == -1 ) {
-					chatInputText.Append( chatInputText.Length, key );
-				} else {
-					chatInputText.InsertAt( caretPos, key );
-					caretPos++;
-				}
-				Dispose();
-				Init();
+			if( IsValidInputChar( key ) && key != '&' ) {
+				AppendChar( key );
 				return true;
 			}
 			return false;

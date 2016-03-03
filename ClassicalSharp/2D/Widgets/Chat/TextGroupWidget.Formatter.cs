@@ -9,10 +9,11 @@ namespace ClassicalSharp {
 		public void SetText( int index, string text ) {
 			graphicsApi.DeleteTexture( ref Textures[index] );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			urlBounds[index] = null;
+			linkData[index] = default(LinkData);
+			LinkFlags prevFlags = index > 0 ? linkData[index - 1].flags : 0;
 			
 			if( !String.IsNullOrEmpty( text ) ) {
-				Texture tex = NextToken( text, 0 ) == -1 ? DrawSimple( ref args ) :
+				Texture tex = NextToken( text, 0, ref prevFlags ) == -1 ? DrawSimple( ref args ) :
 					DrawAdvanced( ref args, index, text );
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
@@ -31,13 +32,14 @@ namespace ClassicalSharp {
 			return game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 		}
 		
-		Texture DrawAdvanced( ref DrawTextArgs args, int index, string text ) {
-			string[] items = Split( index, text );
+		unsafe Texture DrawAdvanced( ref DrawTextArgs args, int index, string text ) {
+			LinkData data = Split( index, text );
 			Size total = Size.Empty;
-			Size[] partSizes = new Size[items.Length];
+			Size* partSizes = stackalloc Size[data.parts.Length];
+			linkData[index] = data;
 			
-			for( int i = 0; i < items.Length; i++ ) {
-				args.Text = items[i];
+			for( int i = 0; i < data.parts.Length; i++ ) {
+				args.Text = data.parts[i];
 				args.Font = (i & 1) == 0 ? font : underlineFont;
 				partSizes[i] = game.Drawer2D.MeasureChatSize( ref args );
 				total.Height = Math.Max( partSizes[i].Height, total.Height );
@@ -50,44 +52,65 @@ namespace ClassicalSharp {
 				drawer.SetBitmap( bmp );
 				int x = 0;
 				
-				for( int i = 0; i < items.Length; i++ ) {
-					args.Text = items[i];
+				for( int i = 0; i < data.parts.Length; i++ ) {
+					args.Text = data.parts[i];
 					args.Font = (i & 1) == 0 ? font : underlineFont;
 					Size size = partSizes[i];
 					
 					drawer.DrawChatText( ref args, x, 0 );
-					urlBounds[index][i].X = x;
-					urlBounds[index][i].Width = size.Width;
+					data.bounds[i].X = x;
+					data.bounds[i].Width = size.Width;
 					x += size.Width;
 				}
 				return drawer.Make2DTexture( bmp, total, 0, 0 );
 			}
 		}
 		
-		string[] Split( int index, string line ) {
+		LinkData Split( int index, string line ) {
 			int start = 0, lastEnd = 0, count = 0;
-			string[] items = new string[GetTokensCount( line )];
-			Rectangle[] parts = new Rectangle[items.Length];
+			LinkData data = default(LinkData);
+			data.parts = new string[GetTokensCount( index, line )];
+			data.urls = new string[data.parts.Length];
+			data.bounds = new Rectangle[data.parts.Length];
+			LinkFlags prevFlags = index > 0 ? linkData[index - 1].flags : 0;
 			
-			while( (start = NextToken( line, start )) >= 0 ) {
+			while( (start = NextToken( line, start, ref prevFlags )) >= 0 ) {
 				int nextEnd = line.IndexOf( ' ', start );
-				if( nextEnd == -1 )
+				if( nextEnd == -1 ) {
 					nextEnd = line.Length;
+					data.flags |= LinkFlags.Continue;
+				}
 				
-				parts[count].Y = lastEnd << 12 | (start - lastEnd);
-				items[count++] = GetPart( line, lastEnd, start ); // word bit
-				parts[count].Y = start << 12 | (nextEnd - start);
-				items[count++] = GetPart( line, start, nextEnd ); // url bit
+				data.AddPart( count, GetPart( line, lastEnd, start ) );     // word bit
+				data.AddPart( count + 1, GetPart( line, start, nextEnd ) ); // url bit
+				count += 2;
+				
+				if( (prevFlags & LinkFlags.Append) != 0 ) {
+					string url = linkData[index - 1].LastUrl + data.urls[count - 1];
+					data.urls[count - 1] =  url;
+					data.parts[count - 2] = "";
+					UpdatePreviousUrls( index - 1, url );
+				}
+				
+				if( (prevFlags & LinkFlags.NewLink) != 0 )
+					data.flags |= LinkFlags.NewLink;
 				start = nextEnd;
 				lastEnd = nextEnd;
 			}
 			
-			if( lastEnd < line.Length ) {
-				parts[count].Y = lastEnd << 12 | (line.Length - lastEnd);
-				items[count++] = GetPart( line, lastEnd, line.Length );
+			if( lastEnd < line.Length )
+				data.AddPart( count, GetPart( line, lastEnd, line.Length ) ); // word bit
+			return data;
+		}
+		
+		void UpdatePreviousUrls( int i, string url ) {			
+			while( i >= 0 && linkData[i].urls != null && (linkData[i].flags & LinkFlags.Continue) != 0 ) {
+				linkData[i].LastUrl = url;
+				Console.WriteLine( "SET: " + lines[i] + "," + linkData[i].flags + "____" + url );
+				if( linkData[i].urls.Length > 2 || (linkData[i].flags & LinkFlags.NewLink) != 0 ) 
+					break;
+				i--;
 			}
-			urlBounds[index] = parts;
-			return items;
 		}
 		
 		string GetPart( string line, int start, int end ) {
@@ -103,15 +126,29 @@ namespace ClassicalSharp {
 			return part;
 		}
 		
-		int NextToken( string line, int start ) {
+		int NextToken( string line, int start, ref LinkFlags prevFlags ) {
+			bool isWrapped = start == 0 && line.StartsWith( "> " );
+			if( (prevFlags & LinkFlags.Continue) != 0 && isWrapped ) {
+				prevFlags = 0;
+				if( !Utils.IsUrlPrefix( Utils.StripColours( line ), 2 ) )
+					prevFlags |= LinkFlags.Append;
+				else
+					prevFlags |= LinkFlags.NewLink;
+				Console.WriteLine( "FLAGS FOR " + prevFlags + "___" + line );
+				return 2;
+			}
+			
+			prevFlags = 0;		
 			int nextHttp = line.IndexOf( "http://", start );
 			int nextHttps = line.IndexOf( "https://", start );
 			return nextHttp == -1 ? nextHttps : nextHttp;
 		}
 		
-		int GetTokensCount( string line ) {
+		int GetTokensCount( int index, string line ) {
 			int start = 0, lastEnd = 0, count = 0;
-			while( (start = NextToken( line, start )) >= 0 ) {
+			LinkFlags prevFlags = index > 0 ? linkData[index - 1].flags : 0;
+			
+			while( (start = NextToken( line, start, ref prevFlags )) >= 0 ) {
 				int nextEnd = line.IndexOf( ' ', start );
 				if( nextEnd == -1 )
 					nextEnd = line.Length;
@@ -124,6 +161,29 @@ namespace ClassicalSharp {
 			if( lastEnd < line.Length )
 				count++;
 			return count;
+		}
+		
+		struct LinkData {
+			public Rectangle[] bounds;
+			public string[] parts, urls;
+			public LinkFlags flags;
+			
+			public void AddPart( int index, string part ) {
+				parts[index] = part;
+				urls[index] = part;
+			}
+			
+			public string LastUrl { 
+				get { return urls[parts.Length - 1]; }
+				set { urls[parts.Length - 1] = value; }
+			}
+		}
+		
+		[Flags]
+		enum LinkFlags : byte {
+			Continue = 2, // "part1" "> part2" type urls
+			Append = 4, // used for internally combining "part2" and "part2"
+			NewLink = 8, // used to signify that part2 is a separate url from part1
 		}
 	}
 }

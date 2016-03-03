@@ -392,11 +392,12 @@ namespace ClassicalSharp {
 		bool HandlesChatClick( int mouseX, int mouseY ) {
 			string text = normalChat.GetSelected( mouseX, mouseY );
 			if( text == null ) return false;
+			string url = Utils.StripColours( text );
 			
-			if( Utils.IsUrlPrefix( text ) ) {
+			if( Utils.IsUrlPrefix( url, 0 ) ) {
 				game.ShowWarning( new WarningScreen(
 					game, text, false, "Are you sure you want to go to this url?",
-					OpenUrl, AppendUrl, null, text,
+					OpenUrl, AppendUrl, null, url,
 					"Be careful - urls from strangers may link to websites that",
 					" may have viruses, or things you may not want to open/see."
 				) );

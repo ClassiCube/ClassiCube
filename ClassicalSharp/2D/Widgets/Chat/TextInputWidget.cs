@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using OpenTK.Input;
-using System.Windows.Forms;
 
 namespace ClassicalSharp {
 	

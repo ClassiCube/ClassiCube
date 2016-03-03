@@ -321,8 +321,10 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Returns whether the specified string starts with http:// or https:// </summary>
-		public static bool IsUrlPrefix( string value ) {
-			return value.StartsWith( "http://" ) || value.StartsWith( "https://" );
+		public static bool IsUrlPrefix( string value, int index ) {
+			int http = value.IndexOf( "http://", index );
+			int https = value.IndexOf( "https://", index );
+			return http == index || https == index;
 		}
 		
 		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>

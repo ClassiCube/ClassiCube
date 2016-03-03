@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		public Texture[] Textures;
 		public bool[] PlaceholderHeight;
 		string[] lines;
-		Rectangle[][] urlBounds;
+		LinkData[] linkData;
 		int ElementsCount, defaultHeight;
 		public int XOffset = 0, YOffset = 0;
 		readonly Font font, underlineFont;
@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 			Textures = new Texture[ElementsCount];
 			PlaceholderHeight = new bool[ElementsCount];
 			lines = new string[ElementsCount];
-			urlBounds = new Rectangle[ElementsCount][];
+			linkData = new LinkData[ElementsCount];
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			
@@ -55,10 +55,10 @@ namespace ClassicalSharp {
 				lines[i] = lines[i + 1];
 				Textures[i].Y1 = y;
 				y += Textures[i].Height;
-				urlBounds[i] = urlBounds[i + 1];
+				linkData[i] = linkData[i + 1];
 			}
 			
-			urlBounds[Textures.Length - 1] = null;
+			linkData[Textures.Length - 1] = default(LinkData);
 			Textures[Textures.Length - 1].ID = 0; // Delete() is called by SetText otherwise.
 			SetText( Textures.Length - 1, text );
 		}
@@ -124,10 +124,10 @@ namespace ClassicalSharp {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int diffX = newX - X, diffY = newY - Y;
+			int dx = newX - X, dy = newY - Y;
 			for( int i = 0; i < Textures.Length; i++ ) {
-				Textures[i].X1 += diffX;
-				Textures[i].Y1 += diffY;
+				Textures[i].X1 += dx;
+				Textures[i].Y1 += dy;
 			}
 			X = newX; Y = newY;
 		}
@@ -141,19 +141,15 @@ namespace ClassicalSharp {
 			return null;
 		}
 		
-		string GetUrl( int index, int mouseX ) {				
-			Rectangle[] partBounds = urlBounds[index];
-			if( partBounds == null ) 
-				return null;
+		string GetUrl( int index, int mouseX ) {
+			Rectangle[] partBounds = linkData[index].bounds;
+			if( partBounds == null ) return null;
 			Texture tex = Textures[index];	
 			mouseX -= tex.X1;
-			string text = lines[index];	
 			
 			for( int i = 1; i < partBounds.Length; i += 2 ) {
-				if( mouseX >= partBounds[i].Left && mouseX < partBounds[i].Right ) {
-					int packed = partBounds[i].Y;
-					return text.Substring( packed >> 12, packed & 0xFFF );
-				}
+				if( mouseX >= partBounds[i].Left && mouseX < partBounds[i].Right )
+					return linkData[index].urls[i];
 			}
 			return null;
 		}
