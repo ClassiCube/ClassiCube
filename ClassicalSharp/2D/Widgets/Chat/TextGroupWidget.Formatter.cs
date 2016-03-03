@@ -106,7 +106,6 @@ namespace ClassicalSharp {
 		void UpdatePreviousUrls( int i, string url ) {			
 			while( i >= 0 && linkData[i].urls != null && (linkData[i].flags & LinkFlags.Continue) != 0 ) {
 				linkData[i].LastUrl = url;
-				Console.WriteLine( "SET: " + lines[i] + "," + linkData[i].flags + "____" + url );
 				if( linkData[i].urls.Length > 2 || (linkData[i].flags & LinkFlags.NewLink) != 0 ) 
 					break;
 				i--;
@@ -134,7 +133,6 @@ namespace ClassicalSharp {
 					prevFlags |= LinkFlags.Append;
 				else
 					prevFlags |= LinkFlags.NewLink;
-				Console.WriteLine( "FLAGS FOR " + prevFlags + "___" + line );
 				return 2;
 			}
 			

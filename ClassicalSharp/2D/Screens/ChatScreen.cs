@@ -396,7 +396,7 @@ namespace ClassicalSharp {
 			
 			if( Utils.IsUrlPrefix( url, 0 ) ) {
 				game.ShowWarning( new WarningScreen(
-					game, text, false, "Are you sure you want to go to this url?",
+					game, url, false, "Are you sure you want to go to this url?",
 					OpenUrl, AppendUrl, null, url,
 					"Be careful - urls from strangers may link to websites that",
 					" may have viruses, or things you may not want to open/see."
