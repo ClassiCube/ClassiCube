@@ -27,6 +27,7 @@ namespace ClassicalSharp {
 				widgets[1].Disabled = true;
 				widgets[2].Disabled = true;
 			}
+			CheckHacksAllowed( null, null );
 		}
 		
 		void MakeNormal() {
