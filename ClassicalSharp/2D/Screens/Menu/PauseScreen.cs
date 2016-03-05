@@ -19,87 +19,59 @@ namespace ClassicalSharp {
 		public override void Init() {
 			base.Init();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			
 			if( game.UseClassicOptions )
 				MakeClassic();
-			else
-				MakeNormal();
-			CheckHacksAllowed( null, null );
-		}
-		
-		void MakeNormal() {
-			widgets = new Widget[] {
-				// Column 1
-				Make( -140, -150, "Misc options",
-				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
-				Make( -140, -100, "Gui options",
-				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
-				Make( -140, -50, "Hacks settings",
-				     (g, w) => g.SetNewScreen( new HacksSettingsScreen( g ) ) ),
-				Make( -140, 0, "Env settings",
-				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
-				Make( -140, 50, "Key bindings",
-				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
-				
-				// Column 2
-				Make( 140, -150, "Save level",
-				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
-				Make( 140, -100, "Load level",
-					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				Make( 140, -50, "Generate level",
-					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
-				Make( 140, 0, "Select texture pack",
-				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
-				Make( 140, 50, "Hotkeys",
-				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
-				
-				Make( 0, 100, "Nostalgia options",
-				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
-				
-				// Other
-				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
-				          (g, w) => g.Exit() ),
-				MakeBack( true, titleFont,
-				         (g, w) => g.SetNewScreen( null ) ),
-			};
-			if( !game.Network.IsSinglePlayer ) {
-				widgets[6].Disabled = true;
-				widgets[7].Disabled = true;
-			}
-		}
-		
-		void MakeClassic() {
-			widgets = new Widget[] {
-				MakeClassic( 0, -100, "Options",
-				            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
-				
-				MakeClassic( 0, -50, "Generate level",
-				            (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),
-				
-				MakeClassic( 0, 0, "Load level",
-				            (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				
-				MakeClassic( 0, 50, "Save level",
-				            (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
-				
-				MakeBack( true, titleFont,
-				         (g, w) => g.SetNewScreen( null ) ),
-				
-				game.PureClassicMode ? null :
-					MakeClassic( 0, 150, "Nostalgia options",
-					            (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
-			};
+			else 
+				MakeNormal();			
 			if( !game.Network.IsSinglePlayer ) {
 				widgets[1].Disabled = true;
 				widgets[2].Disabled = true;
 			}
 		}
-
+		
+		void MakeNormal() {
+			widgets = new Widget[] {
+				Make( -140, -50, "Options",
+				     (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				Make( 140, -50, "Generate level",
+					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),	
+				Make( 140, 0, "Load level",
+					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
+				Make( 140, 50, "Save level",
+				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				Make( -140, 0, "Select texture pack",
+				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
+				Make( -140, 50, "Hotkeys",
+				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				
+				// Other
+				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
+				          (g, w) => g.Exit() ),
+				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
+			};
+		}
+		
+		void MakeClassic() {
+			widgets = new Widget[] {
+				MakeClassic( 0, -100, "Options",
+				            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),				
+				MakeClassic( 0, -50, "Generate level",
+				            (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),				
+				MakeClassic( 0, 0, "Load level",
+				            (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),				
+				MakeClassic( 0, 50, "Save level",
+				            (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),				
+				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
+				
+				game.PureClassicMode ? null :
+					MakeClassic( 0, 150, "Nostalgia options",
+					            (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+			};
+		}
+		
 		void CheckHacksAllowed( object sender, EventArgs e ) {
 			if( game.UseClassicOptions ) return;
-			
-			widgets[3].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
-			widgets[8].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
+			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {

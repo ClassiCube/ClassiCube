@@ -98,6 +98,7 @@
     <Compile Include="2D\Screens\Menu\ClassicOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
+    <Compile Include="2D\Screens\Menu\GraphicsOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\HacksSettingsScreen.cs" />
     <Compile Include="2D\Screens\Menu\KeyBindingsScreen.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="2D\Screens\Menu\MenuOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\NostalgiaScreen.cs" />
+    <Compile Include="2D\Screens\Menu\OptionsGroupScreen.cs" />
     <Compile Include="2D\Screens\Menu\PauseScreen.cs" />
     <Compile Include="2D\Screens\Menu\MiscOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\SaveLevelScreen.cs" />

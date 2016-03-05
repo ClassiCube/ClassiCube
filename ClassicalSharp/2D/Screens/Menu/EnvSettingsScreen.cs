@@ -36,24 +36,24 @@ namespace ClassicalSharp {
 				     g => g.Map.CloudHeight.ToString(),
 				     (g, v) => g.Map.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
-				Make( 140, -150, "Sunlight colour", OnWidgetClick,
+				Make( 140, -100, "Sunlight colour", OnWidgetClick,
 				     g => g.Map.Sunlight.ToRGBHexString(),
 				     (g, v) => g.Map.SetSunlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, -100, "Shadow colour", OnWidgetClick,
+				Make( 140, -50, "Shadow colour", OnWidgetClick,
 				     g => g.Map.Shadowlight.ToRGBHexString(),
 				     (g, v) => g.Map.SetShadowlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, -50, "Weather", OnWidgetClick,
+				Make( 140, 0, "Weather", OnWidgetClick,
 				     g => g.Map.Weather.ToString(),
 				     (g, v) => g.Map.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
 				
-				Make( 140, 0, "Water level", OnWidgetClick,
+				Make( 140, 50, "Water level", OnWidgetClick,
 				     g => g.Map.EdgeHeight.ToString(),
 				     (g, v) => g.Map.SetEdgeLevel( Int32.Parse( v ) ) ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null, null,
 			};
 			widgets[7].Metadata = typeof(Weather);

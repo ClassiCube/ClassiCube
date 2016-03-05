@@ -41,22 +41,22 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.DoubleJump, v == "yes" ); } ),
 				
 				// Column 2
-				Make( 140, -150, "Modifiable liquids", OnWidgetClick,
+				Make( 140, -100, "Modifiable liquids", OnWidgetClick,
 				     g => g.ModifiableLiquids ? "yes" : "no",
 				     (g, v) => { g.ModifiableLiquids = v == "yes";
 				     	Options.Set( OptionsKey.ModifiableLiquids, v == "yes" ); } ),
 				
-				Make( 140, -100, "Pushback placing", OnWidgetClick,
+				Make( 140, -50, "Pushback placing", OnWidgetClick,
 				     g => g.LocalPlayer.Hacks.PushbackPlacing ? "yes" : "no",
 				     (g, v) => { g.LocalPlayer.Hacks.PushbackPlacing = v == "yes";
 				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" ); }),
 				
-				Make( 140, -50, "Noclip slide", OnWidgetClick,
+				Make( 140, 0, "Noclip slide", OnWidgetClick,
 				     g => g.LocalPlayer.Hacks.NoclipSlide ? "yes" : "no",
 				     (g, v) => { g.LocalPlayer.Hacks.NoclipSlide = v == "yes";
 				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
 				
-				Make( 140, 0, "Field of view", OnWidgetClick,
+				Make( 140, 50, "Field of view", OnWidgetClick,
 				     g => g.FieldOfView.ToString(),
 				     (g, v) => { g.FieldOfView = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FieldOfView, v );
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 				     } ),
 				
 				MakeBack( false, titleFont,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				     (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};
 			

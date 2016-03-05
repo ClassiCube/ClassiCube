@@ -16,57 +16,35 @@ namespace ClassicalSharp {
 			widgets = new Widget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
-					Make( -140, -200, "Click distance", OnWidgetClick,
+					Make( -140, -100, "Click distance", OnWidgetClick,
 					     g => g.LocalPlayer.ReachDistance.ToString(),
 					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
 				
-				Make( -140, -150, "Music", OnWidgetClick,
+				Make( -140, -50, "Music", OnWidgetClick,
 				     g => g.UseMusic ? "yes" : "no",
 				     (g, v) => { g.UseMusic = v == "yes";
 				     	g.AudioPlayer.SetMusic( g.UseMusic );
 				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
 				
-				Make( -140, -100, "Names mode", OnWidgetClick,
-				     g => g.Players.NamesMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
-				     	g.Players.NamesMode = (NameMode)raw;
-				     	Options.Set( OptionsKey.NamesMode, v ); } ),
-				
-				Make( -140, -50, "FPS limit mode", OnWidgetClick,
-				     g => g.FpsLimit.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
-				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
-				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
-
-				Make( -140, 0, "View distance", OnWidgetClick,
-				     g => g.ViewDistance.ToString(),
-				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
-				
-				Make( -140, 50, "Entity shadows", OnWidgetClick,
-				     g => g.Players.ShadowMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(EntityShadow), v );
-				     	g.Players.ShadowMode = (EntityShadow)raw;
-				     	Options.Set( OptionsKey.EntityShadow, v ); } ),
-				
-				// Column 2
-				!network.IsSinglePlayer ? null :
-					Make( 140, -200, "Block physics", OnWidgetClick,
-					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
-					     (g, v) => {
-					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
-					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
-					     }),
-				
-				Make( 140, -150, "Sound", OnWidgetClick,
+				Make( -140, 0, "Sound", OnWidgetClick,
 				     g => g.UseSound ? "yes" : "no",
 				     (g, v) => { g.UseSound = v == "yes";
 				     	g.AudioPlayer.SetSound( g.UseSound );
 				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
 				
-				Make( 140, -100, "View bobbing", OnWidgetClick,
+				Make( -140, 50, "View bobbing", OnWidgetClick,
 				     g => g.ViewBobbing ? "yes" : "no",
 				     (g, v) => { g.ViewBobbing = v == "yes";
 				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
+				
+				// Column 2
+				!network.IsSinglePlayer ? null :
+					Make( 140, -100, "Block physics", OnWidgetClick,
+					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
+					     (g, v) => {
+					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
+					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
+					     }),
 				
 				Make( 140, -50, "Auto close launcher", OnWidgetClick,
 				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
@@ -83,12 +61,9 @@ namespace ClassicalSharp {
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};
-			widgets[2].Metadata = typeof(NameMode);
-			widgets[3].Metadata = typeof(FpsLimitMethod);
-			widgets[5].Metadata = typeof(EntityShadow);
 			MakeValidators();
 			MakeDescriptions();
 		}
@@ -98,14 +73,10 @@ namespace ClassicalSharp {
 			validators = new MenuInputValidator[] {
 				network.IsSinglePlayer ? new RealValidator( 1, 1024 ) : null,
 				new BooleanValidator(),
-				new EnumValidator(),
-				new EnumValidator(),
-				new IntegerValidator( 16, 4096 ),
-				new EnumValidator(),
+				new BooleanValidator(),
+				new BooleanValidator(),
 				
-				network.IsSinglePlayer ? new BooleanValidator() : null,
-				new BooleanValidator(),
-				new BooleanValidator(),
+				network.IsSinglePlayer ? new BooleanValidator() : null,			
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),
@@ -117,26 +88,6 @@ namespace ClassicalSharp {
 			descriptions[0] = new[] {
 				"&eSets how far away you can place/delete blocks",
 				"&fThe default click distance is 5 blocks.",
-			};
-			descriptions[2] = new[] {
-				"&eNoNames: &fNo player names are drawn.",
-				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
-				"&eAllNames: &fAll player names are drawn normally.",
-				"&eAllNamesAndHovered: &fName of the targeted player is drawn see-through.",
-				"&f               All other player names are drawn normally.",
-			};
-			descriptions[3] = new[] {
-				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
-				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
-				"&eNoLimit: &Renders as many frames as the GPU can handle each second.",
-				"&cUsing NoLimit mode is discouraged for general usage.",
-			};
-			
-			descriptions[5] = new[] {
-				"&eNone: &fNo entity shadows are drawn.",
-				"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
-				"&eCircle: &fA circular shadow is shown across the blocks you are above.",
-				"&eCircleAll: &fA circular shadow is shown underneath all entities.",
 			};
 		}
 	}

@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 				     } ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};			
 			MakeValidators();

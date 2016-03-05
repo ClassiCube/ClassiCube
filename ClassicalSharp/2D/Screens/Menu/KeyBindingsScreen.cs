@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 			MakeKeys( KeyBinding.Respawn, 5, 5, 150 );
 			
 			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
 		}
 	}
 	
@@ -136,7 +136,7 @@ namespace ClassicalSharp {
 			MakeKeys( KeyBinding.SetSpawn, 6, 7, 150 );
 			
 			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
 			widgets[index++] = ButtonWidget.Create(
 				game, 0, 170, 300, 35, "Advanced key bindings",
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
@@ -164,7 +164,7 @@ namespace ClassicalSharp {
 			MakeKeys( KeyBinding.Speed, 0, 7, -150 );
 			MakeKeys( KeyBinding.Screenshot, 7, 7, 150 );
 			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
 			widgets[index++] = ButtonWidget.Create(
 				game, 0, 170, 300, 35, "Mouse key bindings",
 				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
