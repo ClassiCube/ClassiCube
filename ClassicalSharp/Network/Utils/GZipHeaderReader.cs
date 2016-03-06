@@ -6,17 +6,9 @@ namespace ClassicalSharp {
 	internal class GZipHeaderReader {
 		
 		enum State {
-			Header1,
-			Header2,
-			CompressionMethod,
-			Flags,
-			LastModifiedTime,
-			CompressionFlags,
-			OperatingSystem,
-			HeaderChecksum,
-			Filename,
-			Comment,
-			Done,
+			Header1, Header2, CompressionMethod, Flags,
+			LastModifiedTime, CompressionFlags, OperatingSystem,
+			HeaderChecksum, Filename, Comment, Done,
 		}
 		
 		State state = State.Header1;

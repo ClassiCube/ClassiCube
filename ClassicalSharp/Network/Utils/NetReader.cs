@@ -52,6 +52,12 @@ namespace ClassicalSharp {
 			return value;
 		}
 		
+		public ushort ReadUInt16() {
+			ushort value = (ushort)(buffer[index] << 8 | buffer[index + 1]);
+			index += 2;
+			return value;
+		}
+		
 		public byte ReadUInt8() {
 			byte value = buffer[index];
 			index++;
@@ -66,13 +72,13 @@ namespace ClassicalSharp {
 		}
 
 		public string ReadCp437String() {
-			int length = GetString( false );
+			int length = GetString( false, 64 );
 			index += 64;
 			return new String( characters, 0, length );
 		}
 		
 		public string ReadAsciiString() {
-			int length = GetString( true );
+			int length = GetString( true, 64 );
 			index += 64;
 			return new String( characters, 0, length );
 		}
@@ -82,7 +88,7 @@ namespace ClassicalSharp {
 				return ReadCp437String();
 					
 			messageType = (byte)MessageType.Normal;
-			int length = GetString( false );		
+			int length = GetString( false, 64 );		
 			index += 64;
 			
 			int offset = 0;
@@ -104,9 +110,9 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		int GetString( bool ascii ) {			
+		int GetString( bool ascii, int bufferSize ) {
 			int length = 0;
-			for( int i = 63; i >= 0; i-- ) {
+			for( int i = bufferSize - 1; i >= 0; i-- ) {
 				byte code = buffer[index + i];
 				if( length == 0 && !( code == 0 || code == 0x20 ) )
 				   length = i + 1;

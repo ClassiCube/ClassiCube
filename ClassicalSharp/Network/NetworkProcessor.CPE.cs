@@ -502,6 +502,23 @@ namespace ClassicalSharp {
 			game.Events.RaiseColourCodesChanged();
 		}
 		
+		void HandleDefineModel() {
+			int start = reader.index - 1;
+			byte modelId = reader.ReadUInt8();
+			switch( reader.ReadUInt8() ) {
+				case 0: // setup
+					break;
+				case 1: // metadata
+					break;
+				case 2: // define part
+					break;
+				case 3: // rotation
+					break;
+			}
+			int read = reader.index - start;
+			// TODO: skip remaining data
+		}
+		
 		internal static SoundType[] stepSnds, breakSnds;
 		static NetworkProcessor() {
 			stepSnds = new SoundType[10];

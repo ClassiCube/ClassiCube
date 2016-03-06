@@ -44,6 +44,7 @@ namespace ClassicalSharp {
 		CpeDefineBlockExt = 37,
 		CpeBulkBlockUpdate = 38,
 		CpeSetTextColor = 39,
+		CpeDefineModel = 40,
 	}
 	
 	public enum MessageType {
