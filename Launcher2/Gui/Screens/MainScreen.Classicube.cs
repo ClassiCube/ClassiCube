@@ -9,7 +9,7 @@ namespace Launcher {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 
-		const int skipSSLIndex = 9;
+		const int skipSSLIndex = 11;
 		
 		public override void Tick() {
 			base.Tick();
@@ -112,9 +112,11 @@ namespace Launcher {
 				SetStatus( text );
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					widgetIndex = 9;
+					widgetIndex = skipSSLIndex;
 					MakeSSLSkipValidationBoolean();
 					MakeSSLSkipValidationLabel();
+					widgets[skipSSLIndex].Redraw( drawer );
+					widgets[skipSSLIndex + 1].Redraw( drawer );
 				}
 			} else {
 				string text = "&eFailed to " + action + ":" +
@@ -124,11 +126,11 @@ namespace Launcher {
 		}
 		
 		void MakeSSLSkipValidationBoolean() {
-			MakeBooleanAt( Anchor.Centre, Anchor.Centre, inputFont, true, 30, 30, 160, -40, SSLSkipValidationClick );
+			MakeBooleanAt( Anchor.Centre, Anchor.Centre, inputFont, true, 30, 30, 160, -20, SSLSkipValidationClick );
 		}
 		
 		void MakeSSLSkipValidationLabel() {
-			MakeLabelAt( "Skip SSL check", inputFont, Anchor.Centre, Anchor.Centre, 250, -40 );
+			MakeLabelAt( "Skip SSL check", inputFont, Anchor.Centre, Anchor.Centre, 250, -20 );
 		}
 		
 		void SSLSkipValidationClick( int mouseX, int mouseY ) {
