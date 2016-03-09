@@ -84,10 +84,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal string ReadChatString( ref byte messageType, bool useMessageTypes ) {
-			if( useMessageTypes ) 
-				return ReadCp437String();
-					
-			messageType = (byte)MessageType.Normal;
+			if( !useMessageTypes ) messageType = (byte)MessageType.Normal;
 			int length = GetString( false, 64 );		
 			index += 64;
 			
