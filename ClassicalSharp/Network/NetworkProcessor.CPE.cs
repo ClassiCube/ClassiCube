@@ -350,7 +350,7 @@ namespace ClassicalSharp {
 			
 			float jumpHeight = reader.ReadInt16() / 32f;
 			if( jumpHeight < 0 ) p.jumpVel = 0.42f;
-			else p.CalculateJumpVelocity( jumpHeight );			
+			else p.CalculateJumpVelocity( jumpHeight );
 			p.serverJumpVel = p.jumpVel;
 			game.Events.RaiseHackPermissionsChanged();
 		}
@@ -468,10 +468,12 @@ namespace ClassicalSharp {
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
 			if( game.Map.IsNotLoaded ) {
+				#if DEBUG_BLOCKS
 				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
+				#endif
 				reader.Skip( bulkCount * (sizeof(int) + 1) );
 				return;
-			}			
+			}
 			int* indices = stackalloc int[bulkCount];
 			for( int i = 0; i < count; i++ )
 				indices[i] = reader.ReadInt32();
@@ -482,7 +484,9 @@ namespace ClassicalSharp {
 				Vector3I coords = game.Map.GetCoords( indices[i] );
 				
 				if( coords.X < 0 ) {
+					#if DEBUG_BLOCKS
 					Utils.LogDebug( "Server tried to update a block at an invalid position!" );
+					#endif
 					continue;
 				}
 				game.UpdateBlock( coords.X, coords.Y, coords.Z, block );
