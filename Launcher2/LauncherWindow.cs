@@ -182,7 +182,6 @@ namespace Launcher {
 		void Display() {
 			Dirty = false;
 			Screen.Dirty = false;
-			Console.WriteLine( "~~redraw~~" );
 			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
 		}
 		

@@ -42,11 +42,12 @@ namespace Launcher {
 		bool updateDone;
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
 			if( updateDone ) return;			
-			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
-			DateTime lastTime = File.GetLastWriteTime( exePath );
-			DateTime lastRelease = game.checkTask.LatestStable.TimeBuilt;
+			string latestVer = game.checkTask.LatestStable.Version.Substring( 1 );
+			int spaceIndex = Program.AppName.LastIndexOf( ' ' );
+			string currentVer = Program.AppName.Substring( spaceIndex + 1 );		
+			bool update = new Version( latestVer ) > new Version( currentVer );
 			
-			updateText = lastTime >= lastRelease ? "&eUp to date     " : "&aNew release available";
+			updateText = update ? "&aNew release available" : "&eUp to date     ";
 			updateDone = true;
 			game.MakeBackground();
 			Resize();

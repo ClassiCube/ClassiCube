@@ -121,20 +121,19 @@ namespace ClassicalSharp {
 			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
 			
 			if( game.LocalPlayer.noClip || !localBB.Intersects( blockBB ) ) return true;
-			
-			if( game.LocalPlayer.Hacks.PushbackPlacing ) {
+			HacksComponent hacks = game.LocalPlayer.Hacks;			
+			if( hacks.CanPushbackBlocks && hacks.PushbackPlacing && hacks.Enabled )
 				return PushbackPlace( selected, blockBB );
-			} else {
-				localBB.Min.Y += 0.25f + Entity.Adjustment;
-				if( localBB.Intersects( blockBB ) ) return false;
-				
-				// Push player up if they are jumping and trying to place a block underneath them.
-				Vector3 p = game.LocalPlayer.Position;
-				p.Y = pos.Y + game.BlockInfo.MaxBB[newBlock].Y + Entity.Adjustment;
-				LocationUpdate update = LocationUpdate.MakePos( p, false );
-				game.LocalPlayer.SetLocation( update, false );
-				return true;
-			}
+			
+			localBB.Min.Y += 0.25f + Entity.Adjustment;
+			if( localBB.Intersects( blockBB ) ) return false;
+			
+			// Push player up if they are jumping and trying to place a block underneath them.
+			Vector3 p = game.LocalPlayer.Position;
+			p.Y = pos.Y + game.BlockInfo.MaxBB[newBlock].Y + Entity.Adjustment;
+			LocationUpdate update = LocationUpdate.MakePos( p, false );
+			game.LocalPlayer.SetLocation( update, false );
+			return true;
 		}
 		
 		bool PushbackPlace( PickedPos selected, BoundingBox blockBB ) {
