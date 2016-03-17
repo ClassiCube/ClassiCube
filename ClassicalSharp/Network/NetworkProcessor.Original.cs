@@ -280,7 +280,7 @@ namespace ClassicalSharp {
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
 				game.EntityEvents.RaiseEntityAdded( entityId );
 			} else {
-				game.LocalPlayer.SkinName = skinName;				
+				game.LocalPlayer.SkinName = skinName;
 			}
 			
 			string identifier = game.Players[entityId].SkinIdentifier;

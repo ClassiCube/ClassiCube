@@ -67,7 +67,7 @@ namespace Launcher {
 			
 			MakeButtonAt( "Singleplayer", 200, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.Centre, 0, 110,
-			             (x, y) => Client.Start( "", ref game.ShouldExit ) );
+			             (x, y) => Client.Start( widgets[0].Text, ref game.ShouldExit ) );
 			
 			if( !game.ClassicMode ) {
 				MakeButtonAt( "Colours", 110, buttonHeight, buttonFont,

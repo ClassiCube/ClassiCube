@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 			
 			bobYOffset = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2.5f/16f));
 			tilt = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);		
-			if( entity.Model is PlayerModel || entity.Model is ChibiModel )
+			if( entity.Model is HumanoidModel || entity.Model is ChibiModel )
 				CalcHumanAnim( idleXRot, idleZRot );
 		}
 		

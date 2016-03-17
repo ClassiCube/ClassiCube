@@ -35,8 +35,8 @@ namespace ClassicalSharp {
 				
 			if( args.Length == 0 || args.Length == 1 ) {
 				const string skinServer = "http://static.classicube.net/skins/";
-				
-				using( Game game = new Game( "Singleplayer", null, skinServer, nullContext, width, height ) )
+				string user = args.Length > 0 ? args[0] : "Singleplayer";
+				using( Game game = new Game( user, null, skinServer, nullContext, width, height ) )
 					game.Run();
 			} else if( args.Length < 4 ) {
 				Utils.LogDebug( "ClassicalSharp.exe is only the raw client. You must either use the launcher or"

@@ -304,9 +304,7 @@ namespace ClassicalSharp {
 			byte playerId = reader.ReadUInt8();
 			string modelName = reader.ReadAsciiString().ToLowerInvariant();
 			Player player = game.Players[playerId];
-			if( player != null ) {
-				player.SetModel( modelName );
-			}
+			if( player != null ) player.SetModel( modelName );
 		}
 		
 		void HandleCpeEnvSetMapApperance() {
