@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
-					if( Model is PlayerModel || Model is ChibiModel )
+					if( Model is HumanoidModel || Model is ChibiModel )
 						ClearHat( bmp, SkinType );
 					PlayerTextureId = game.Graphics.CreateTexture( bmp );
 					MobTextureId = -1;

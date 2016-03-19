@@ -151,4 +151,25 @@ namespace ClassicalSharp.Commands {
 			}
 		}
 	}
+	
+	public sealed class ModelCommand : Command {
+		
+		public ModelCommand() {
+			Name = "Model";
+			Help = new [] {
+				"&a/client model [name]",
+				"&bnames: &echibi, chicken, creeper, human, pig, sheep",
+				"&e       skeleton, spider, zombie, <numerical block id>",
+			};
+		}
+		
+		public override void Execute( CommandReader reader ) {
+			string name = reader.Next();
+			if( String.IsNullOrEmpty( name ) ) {
+				game.Chat.Add( "&e/client model: &cYou didn't specify a model name." );
+			} else {
+				game.LocalPlayer.SetModel( name );
+			}
+		}
+	}
 }

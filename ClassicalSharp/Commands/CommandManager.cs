@@ -15,14 +15,16 @@ namespace ClassicalSharp.Commands {
 		public List<Command> RegisteredCommands = new List<Command>();
 		public void Init( Game game ) {
 			this.game = game;			
-			RegisterCommand( new CommandsCommand() );
-			RegisterCommand( new GpuInfoCommand() );
-			RegisterCommand( new HelpCommand() );
-			RegisterCommand( new InfoCommand() );
-			RegisterCommand( new RenderTypeCommand() );
+			Register( new CommandsCommand() );
+			Register( new GpuInfoCommand() );
+			Register( new HelpCommand() );
+			Register( new InfoCommand() );
+			Register( new RenderTypeCommand() );
+			if( game.Network.IsSinglePlayer )
+				Register( new ModelCommand() );
 		}
 		
-		public void RegisterCommand( Command command ) {
+		public void Register( Command command ) {
 			command.game = game;
 			foreach( Command cmd in RegisteredCommands ) {
 				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {

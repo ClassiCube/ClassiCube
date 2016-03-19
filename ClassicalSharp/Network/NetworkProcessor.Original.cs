@@ -180,12 +180,17 @@ namespace ClassicalSharp {
 			int z = reader.ReadInt16();
 			byte type = reader.ReadUInt8();
 			
+			#if DEBUG_BLOCKS
 			if( game.Map.IsNotLoaded )
 				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
 			else if( !game.Map.IsValidPos( x, y, z ) )
 				Utils.LogDebug( "Server tried to update a block at an invalid position!" );
 			else
 				game.UpdateBlock( x, y, z, type );
+			#else
+			if( !game.Map.IsNotLoaded && game.Map.IsValidPos( x, y, z ) )
+				game.UpdateBlock( x, y, z, type );
+			#endif
 		}
 		
 		bool[] needRemoveNames;
@@ -275,7 +280,7 @@ namespace ClassicalSharp {
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
 				game.EntityEvents.RaiseEntityAdded( entityId );
 			} else {
-				game.LocalPlayer.SkinName = skinName;				
+				game.LocalPlayer.SkinName = skinName;
 			}
 			
 			string identifier = game.Players[entityId].SkinIdentifier;

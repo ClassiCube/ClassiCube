@@ -166,7 +166,6 @@ namespace ClassicalSharp {
 			if( !Hacks.CanFly || !Hacks.Enabled ) { flying = false; flyingDown = false; flyingUp = false; }
 			if( !Hacks.CanNoclip || !Hacks.Enabled ) noClip = false;
 			if( !Hacks.CanSpeed || !Hacks.Enabled ) { speeding = false; halfSpeeding = false; }
-			if( !Hacks.CanPushbackBlocks || !Hacks.Enabled ) Hacks.PushbackPlacing = false;
 			Hacks.CanDoubleJump = Hacks.CanAnyHacks && Hacks.Enabled && Hacks.CanSpeed;
 			
 			if( !Hacks.CanUseThirdPersonCamera || !Hacks.Enabled )

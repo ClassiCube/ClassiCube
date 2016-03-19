@@ -12,6 +12,7 @@ namespace Launcher {
 		public DateTime TimeBuilt;
 		public string DirectXPath, OpenGLPath;
 		public int DirectXSize, OpenGLSize;
+		public string Version;
 	}
 	
 	public sealed class UpdateCheckTask : IWebTask {
@@ -70,6 +71,8 @@ namespace Launcher {
 			build.DirectXPath = (string)obj["dx_file"];
 			build.OpenGLSize = Int32.Parse( (string)obj["ogl_size"] );
 			build.OpenGLPath = (string)obj["ogl_file"];
+			if( obj.ContainsKey( "version" ) )
+				build.Version = (string)obj["version"];
 			return build;
 		}
 		
