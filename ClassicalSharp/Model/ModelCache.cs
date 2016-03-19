@@ -27,6 +27,7 @@ namespace ClassicalSharp.Model {
 		SkeletonTexId, SpiderTexId, ZombieTexId, SheepFurTexId, HumanoidTexId;
 		
 		public IModel GetModel( string modelName ) {
+			if( modelName == "block" ) return cache["humanoid"];
 			IModel model;
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) )
