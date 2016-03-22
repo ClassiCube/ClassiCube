@@ -13,19 +13,25 @@ namespace ClassicalSharp.Model {
 			Set = new ModelSet();
 			
 			Set.Head = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
-			                    .SetTexOrigin( 0, 0 ) );
+			                    .SetTexOrigin( 0, 0 )
+			                    .SetRotOrigin( 0, 24, 0 ) );
 			Set.Torso = BuildBox( MakeBoxBounds( -4, 12, -2, 4, 24, 2 )
 			                     .SetTexOrigin( 16, 16 ) );
 			Set.LeftLeg = BuildBox( MakeBoxBounds( 0, 0, -2, -4, 12, 2 )
-			                       .SetTexOrigin( 0, 16 ) );
-			Set.RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 ).
-			                        SetTexOrigin( 0, 16 ) );
+			                       .SetTexOrigin( 0, 16 )
+			                       .SetRotOrigin( 0, 12, 0 ) );
+			Set.RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 )
+			                        .SetTexOrigin( 0, 16 )
+			                        .SetRotOrigin( 0, 12, 0 ) );
 			Set.Hat = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
-			                   .SetTexOrigin( 32, 0 ).ExpandBounds( 0.5f ) );
+			                   .SetTexOrigin( 32, 0 ).ExpandBounds( 0.5f )
+			                   .SetRotOrigin( 0, 24, 0 ) );
 			Set.LeftArm = BuildBox( MakeBoxBounds( -4, 12, -2, -8, 24, 2 )
-			                       .SetTexOrigin( 40, 16 ) );
+			                       .SetTexOrigin( 40, 16 )
+			                       .SetRotOrigin( -5, 22, 0 ) );
 			Set.RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )
-			                        .SetTexOrigin( 40, 16 ) );
+			                        .SetTexOrigin( 40, 16 )
+			                        .SetRotOrigin( 5, 22, 0 ) );
 			
 			SetSlim = new ModelSet();
 			SetSlim.Head = Set.Head;
@@ -33,9 +39,11 @@ namespace ClassicalSharp.Model {
 			SetSlim.LeftLeg = Set.LeftLeg;
 			SetSlim.RightLeg = Set.RightLeg;
 			SetSlim.LeftArm = BuildBox( MakeBoxBounds( -7, 12, -2, -4, 24, 2 )
-			                           .SetTexOrigin( 32, 48 ) );
+			                           .SetTexOrigin( 32, 48 )
+			                           .SetRotOrigin( -5, 22, 0 ) );
 			SetSlim.RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 7, 24, 2 )
-			                            .SetTexOrigin( 40, 16 ) );
+			                            .SetTexOrigin( 40, 16 )
+			                            .SetRotOrigin( 5, 22, 0 ) );
 			SetSlim.Hat = Set.Hat;
 		}
 		
@@ -61,20 +69,20 @@ namespace ClassicalSharp.Model {
 			SkinType skinType = p.SkinType;
 			_64x64 = skinType != SkinType.Type64x32;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim : Set;
-			DrawHeadRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, model.Head );
+			DrawHeadRotate( -p.PitchRadians, 0, 0, model.Head );
 			
 			DrawPart( model.Torso );
-			DrawRotate( 0, 12/16f, 0, p.anim.legXRot, 0, 0, model.LeftLeg );
-			DrawRotate( 0, 12/16f, 0, -p.anim.legXRot, 0, 0, model.RightLeg );
+			DrawRotate( p.anim.legXRot, 0, 0, model.LeftLeg );
+			DrawRotate( -p.anim.legXRot, 0, 0, model.RightLeg );
 			Rotate = RotateOrder.XZY;
-			DrawRotate( -5/16f, 22/16f, 0, p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArm );
-			DrawRotate( 5/16f, 22/16f, 0, p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArm );
+			DrawRotate( p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArm );
+			DrawRotate( p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArm );
 			Rotate = RotateOrder.ZYX;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			
 			graphics.AlphaTest = true;
 			index = 0;
-			DrawHeadRotate( 0, 24f/16f, 0, -p.PitchRadians, 0, 0, model.Hat );
+			DrawHeadRotate( -p.PitchRadians, 0, 0, model.Hat );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

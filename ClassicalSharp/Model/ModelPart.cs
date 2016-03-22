@@ -8,17 +8,16 @@ namespace ClassicalSharp {
 	public struct ModelPart {
 		
 		public int Offset, Count;
+		public float RotX, RotY, RotZ;
 		
-		public ModelPart( int vertexOffset, int vertexCount ) {
-			Offset = vertexOffset;
-			Count = vertexCount;
+		public ModelPart( int offset, int count, float rotX, float rotY, float rotZ ) {
+			Offset = offset; Count = count;
+			RotX = rotX; RotY = rotY; RotZ = rotZ;
 		}
 	}
 	
 	/// <summary> Describes the type of skin that a humanoid model uses. </summary>
 	public enum SkinType {
-		Type64x32,
-		Type64x64,
-		Type64x64Slim,
+		Type64x32, Type64x64, Type64x64Slim,
 	}
 }

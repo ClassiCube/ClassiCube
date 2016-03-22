@@ -75,6 +75,7 @@ namespace ClassicalSharp.Model {
 		public struct BoxDescription {
 			public int TexX, TexY, SidesW, BodyW, BodyH;
 			public float X1, X2, Y1, Y2, Z1, Z2;
+			public float RotX, RotY, RotZ;
 			
 			public BoxDescription SetTexOrigin( int x, int y ) {
 				TexX = x; TexY = y; return this;
@@ -91,6 +92,11 @@ namespace ClassicalSharp.Model {
 				X1 -= amount / 16f; X2 += amount / 16f;
 				Y1 -= amount / 16f; Y2 += amount / 16f;
 				Z1 -= amount / 16f; Z2 += amount / 16f;
+				return this;
+			}
+			
+			public BoxDescription SetRotOrigin( sbyte x, sbyte y, sbyte z ) {
+				RotX = x / 16f; RotY = y / 16f; RotZ = z / 16f;
 				return this;
 			}
 		}
@@ -138,7 +144,7 @@ namespace ClassicalSharp.Model {
 			ZQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
 			XQuad( x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2 ); // left
 			XQuad( x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1 ); // right
-			return new ModelPart( index - 6 * 4, 6 * 4 );
+			return new ModelPart( index - 6 * 4, 6 * 4, desc.RotX, desc.RotY, desc.RotZ );
 		}
 		
 		/// <summary>Builds a box model assuming the follow texture layout:<br/>
@@ -173,7 +179,7 @@ namespace ClassicalSharp.Model {
 				float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
 				vertices[i] = vertex;
 			}
-			return new ModelPart( index - 6 * 4, 6 * 4 );
+			return new ModelPart( index - 6 * 4, 6 * 4, desc.RotX, desc.RotY, desc.RotZ );
 		}
 		
 		protected void XQuad( int texX, int texY, int texWidth, int texHeight,
@@ -222,6 +228,14 @@ namespace ClassicalSharp.Model {
 		
 		protected void DrawHeadRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
 			DrawRotated( x, y, z, angleX, angleY, angleZ, part, true );
+		}
+		
+		protected void DrawRotate( float angleX, float angleY, float angleZ, ModelPart part ) {
+			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, false );
+		}
+		
+		protected void DrawHeadRotate( float angleX, float angleY, float angleZ, ModelPart part ) {
+			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, true );
 		}
 		
 		protected void DrawRotated( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part, bool head ) {

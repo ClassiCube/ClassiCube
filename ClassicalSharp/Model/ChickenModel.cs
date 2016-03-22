@@ -29,7 +29,7 @@ namespace ClassicalSharp.Model {
 			const float y1 = 1/64f, y2 = 5/16f, z2 = 1/16f, z1 = -2/16f;
 			YQuad( 32, 0, 3, 3, x2/16f, x1/16f, z1, z2, y1 ); // bottom feet
 			ZQuad( 36, 3, 1, 5, legX1/16f, legX2/16f, y1, y2, z2 ); // vertical part of leg
-			return new ModelPart( index - 2 * 4, 2 * 4 );
+			return new ModelPart( index - 2 * 4, 2 * 4, 0, 0, 0 );
 		}
 		
 		public override bool Bobbing { get { return true; } }
