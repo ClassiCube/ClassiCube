@@ -222,14 +222,6 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		protected void DrawRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
-			DrawRotated( x, y, z, angleX, angleY, angleZ, part, false );
-		}
-		
-		protected void DrawHeadRotate( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part ) {
-			DrawRotated( x, y, z, angleX, angleY, angleZ, part, true );
-		}
-		
 		protected void DrawRotate( float angleX, float angleY, float angleZ, ModelPart part ) {
 			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, false );
 		}

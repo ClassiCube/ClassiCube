@@ -9,17 +9,22 @@ namespace ClassicalSharp.Model {
 		public ZombieModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
-			                .SetTexOrigin( 0, 0 ) );
-			Torso =  BuildBox( MakeBoxBounds( -4, 12, -2, 4, 24, 2 )
+			                .SetTexOrigin( 0, 0 )
+			                .SetRotOrigin( 0, 24, 0 ) );
+			Torso = BuildBox( MakeBoxBounds( -4, 12, -2, 4, 24, 2 )
 			                  .SetTexOrigin( 16, 16 ) );
-			LeftLeg =  BuildBox( MakeBoxBounds( 0, 0, -2, -4, 12, 2 )
-			                    .SetTexOrigin( 0, 16 ) );
+			LeftLeg = BuildBox( MakeBoxBounds( 0, 0, -2, -4, 12, 2 )
+			                    .SetTexOrigin( 0, 16 )
+			                    .SetRotOrigin( 0, 12, 0 ) );
 			RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 )
-			                    .SetTexOrigin( 0, 16 ) );
+			                    .SetTexOrigin( 0, 16 )
+			                    .SetRotOrigin( 0, 12, 0 ) );
 			LeftArm = BuildBox( MakeBoxBounds( -4, 12, -2, -8, 24, 2 )
-			                   .SetTexOrigin( 40, 16 ) );
+			                   .SetTexOrigin( 40, 16 )
+			                   .SetRotOrigin( -6, 22, 0 ) );
 			RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )
-			                    .SetTexOrigin( 40, 16 ) );
+			                    .SetTexOrigin( 40, 16 )
+			                    .SetRotOrigin( 6, 22, 0 ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }
@@ -39,13 +44,13 @@ namespace ClassicalSharp.Model {
 		protected override void DrawModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.ZombieTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			DrawHeadRotate( 0, 24/16f, 0, -p.PitchRadians, 0, 0, Head );
+			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 			
 			DrawPart( Torso );
-			DrawRotate( 0, 12/16f, 0, p.anim.legXRot, 0, 0, LeftLeg );
-			DrawRotate( 0, 12/16f, 0, -p.anim.legXRot, 0, 0, RightLeg );
-			DrawRotate( -6/16f, 22/16f, 0, (float)Math.PI / 2, 0, p.anim.armZRot, LeftArm );
-			DrawRotate( 6/16f, 22/16f, 0, (float)Math.PI / 2, 0, -p.anim.armZRot, RightArm );
+			DrawRotate( p.anim.legXRot, 0, 0, LeftLeg );
+			DrawRotate( -p.anim.legXRot, 0, 0, RightLeg );
+			DrawRotate( 90 * Utils.Deg2Rad, 0, p.anim.armZRot, LeftArm );
+			DrawRotate( 90 * Utils.Deg2Rad, 0, -p.anim.armZRot, RightArm );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

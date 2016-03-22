@@ -12,17 +12,22 @@ namespace ClassicalSharp.Model {
 		public SheepModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6 * ( Fur ? 2 : 1 )];
 			Head = BuildBox( MakeBoxBounds( -3, 16, -14, 3, 22, -6 )
-			                .SetTexOrigin( 0, 0 ) );
+			                .SetTexOrigin( 0, 0 )
+			                .SetRotOrigin( 0, 18, -8 ) );
 			Torso = BuildRotatedBox( MakeRotatedBoxBounds( -4, 12, -8, 4, 18, 8 )
 			                        .SetTexOrigin( 28, 8 ) );
 			LeftLegFront = BuildBox( MakeBoxBounds( -5, 0, -7, -1, 12, -3 )
-			                        .SetTexOrigin( 0, 16 ) );
+			                        .SetTexOrigin( 0, 16 )
+			                        .SetRotOrigin( 0, 12, -5 ) );
 			RightLegFront = BuildBox( MakeBoxBounds( 1, 0, -7, 5, 12, -3 )
-			                         .SetTexOrigin( 0, 16 ) );
+			                         .SetTexOrigin( 0, 16 )
+			                         .SetRotOrigin( 0, 12, -5 ) );
 			LeftLegBack = BuildBox( MakeBoxBounds( -5, 0, 5, -1, 12, 9 )
-			                       .SetTexOrigin( 0, 16 ) );
+			                       .SetTexOrigin( 0, 16 )
+			                       .SetRotOrigin( 0, 12, 7 ) );
 			RightLegBack = BuildBox( MakeBoxBounds( 1, 0, 5, 5, 12, 9 )
-			                        .SetTexOrigin( 0, 16 ) );
+			                        .SetTexOrigin( 0, 16 )
+			                        .SetRotOrigin( 0, 12, 7 ) );
 			if( Fur ) MakeFurModel();
 		}
 		
@@ -30,17 +35,22 @@ namespace ClassicalSharp.Model {
 		void MakeFurModel() {
 			FurHead = BuildBox( MakeBoxBounds( -3, -3, -3, 3, 3, 3 )
 			                   .SetTexOrigin( 0, 0 )
-			                   .SetModelBounds( -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f ) );
+			                   .SetModelBounds( -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f )
+			                   .SetRotOrigin( 0, 18, -8 ) );
 			FurTorso = BuildRotatedBox( MakeRotatedBoxBounds( -4, 12, -8, 4, 18, 8 )
 			                           .SetTexOrigin( 28, 8 )
 			                           .SetModelBounds( -6f, 10.5f, -10f, 6f, 19.5f, 10f ) );
 			
-			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2  )
-				.SetTexOrigin( 0, 16 );			
-			FurLeftLegFront = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f ) );
-			FurRightLegFront = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f ) );
-			FurLeftLegBack = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f ) );
-			FurRightLegBack = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f ) );
+			BoxDescription legDesc = MakeBoxBounds( -2, -3, -2, 2, 3, 2 )
+				.SetTexOrigin( 0, 16 );
+			FurLeftLegFront = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f )
+			                           .SetRotOrigin( 0, 12, -5 ) );
+			FurRightLegFront = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f )
+			                            .SetRotOrigin( 0, 12, -5 ) );
+			FurLeftLegBack = BuildBox( legDesc.SetModelBounds( -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f )
+			                          .SetRotOrigin( 0, 12, 7 ) );
+			FurRightLegBack = BuildBox( legDesc.SetModelBounds( 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f )
+			                           .SetRotOrigin( 0, 12, 7 ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }
@@ -60,25 +70,25 @@ namespace ClassicalSharp.Model {
 		protected override void DrawModel( Player p ) {
 			int texId = p.MobTextureId <= 0 ? cache.SheepTexId : p.MobTextureId;
 			graphics.BindTexture( texId );
-			DrawHeadRotate( 0, 18/16f, -8/16f, -p.PitchRadians, 0, 0, Head );
+			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 			
 			DrawPart( Torso );
-			DrawRotate( 0, 12/16f, -5/16f, p.anim.legXRot, 0, 0, LeftLegFront );
-			DrawRotate( 0, 12/16f, -5/16f, -p.anim.legXRot, 0, 0, RightLegFront );
-			DrawRotate( 0, 12/16f, 7/16f, -p.anim.legXRot, 0, 0, LeftLegBack );
-			DrawRotate( 0, 12/16f, 7/16f, p.anim.legXRot, 0, 0, RightLegBack );
+			DrawRotate( p.anim.legXRot, 0, 0, LeftLegFront );
+			DrawRotate( -p.anim.legXRot, 0, 0, RightLegFront );
+			DrawRotate( -p.anim.legXRot, 0, 0, LeftLegBack );
+			DrawRotate( p.anim.legXRot, 0, 0, RightLegBack );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			index = 0;
 			
 			if( Fur ) {
-				graphics.BindTexture( cache.SheepFurTexId );				
-				DrawHeadRotate( 0, 18/16f, -8/16f, -p.PitchRadians, 0, 0, FurHead );
+				graphics.BindTexture( cache.SheepFurTexId );
+				DrawHeadRotate( -p.PitchRadians, 0, 0, FurHead );
 				
 				DrawPart( FurTorso );
-				DrawRotate( 0, 12/16f, -5/16f, p.anim.legXRot, 0, 0, FurLeftLegFront );
-				DrawRotate( 0, 12/16f, -5/16f, -p.anim.legXRot, 0, 0, FurRightLegFront );
-				DrawRotate( 0, 12/16f, 7/16f, -p.anim.legXRot, 0, 0, FurLeftLegBack );
-				DrawRotate( 0, 12/16f, 7/16f, p.anim.legXRot, 0, 0, FurRightLegBack );
+				DrawRotate( p.anim.legXRot, 0, 0, FurLeftLegFront );
+				DrawRotate( -p.anim.legXRot, 0, 0, FurRightLegFront );
+				DrawRotate( -p.anim.legXRot, 0, 0, FurLeftLegBack );
+				DrawRotate( p.anim.legXRot, 0, 0, FurRightLegBack );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			}
 		}
