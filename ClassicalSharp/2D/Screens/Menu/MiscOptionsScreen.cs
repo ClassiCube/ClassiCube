@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 					     }),
 				
 				Make( 140, -50, "Auto close launcher", OnWidgetClick,
-				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ) ? "yes" : "no",
+				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, true ) ? "yes" : "no",
 				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
 				
 				Make( 140, 0, "Invert mouse", OnWidgetClick,

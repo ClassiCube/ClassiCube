@@ -124,10 +124,6 @@ namespace Launcher {
 			game.ClassicMode = !game.ClassicMode;
 			Options.Load();
 			Options.Set( "mode-classic", game.ClassicMode );
-			if( game.ClassicMode ) {
-				Options.Set( "namesmode", "AllNamesAndHovered" );
-				Options.Set( "gui-arialchatfont", "false" );
-			}
 			
 			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
 			Options.Set( "nostalgia-usecpe", !game.ClassicMode );
@@ -135,8 +131,6 @@ namespace Launcher {
 			Options.Set( "nostalgia-classictablist", game.ClassicMode );
 			Options.Set( "nostalgia-classicoptions", game.ClassicMode );
 			Options.Set( "nostalgia-classicgui", true );
-			Options.Set( "hacksenabled", !game.ClassicMode );
-			Options.Set( "doublejump", false );
 			Options.Save();
 			
 			game.MakeBackground();

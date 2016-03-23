@@ -51,6 +51,7 @@ namespace ClassicalSharp {
 			Graphics.MakeGraphicsInfo();			
 			
 			Options.Load();
+			PureClassicMode = Options.GetBool( "mode-classic", false );
 			Players = new EntityList( this );
 			AcceptedUrls.Load(); DeniedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
@@ -66,7 +67,6 @@ namespace ClassicalSharp {
 			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
 			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
 			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
-			PureClassicMode = Options.GetBool( "mode-classic", false );
 			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
 			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );
 			
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
-			Drawer2D.UseBitmappedChat = !Options.GetBool( OptionsKey.ArialChatFont, false );
+			Drawer2D.UseBitmappedChat = PureClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
 			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
 			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
 			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			Picking = new PickedPosRenderer( this );
 			AudioPlayer = new AudioPlayer( this );
-			ModifiableLiquids = Options.GetBool( OptionsKey.ModifiableLiquids, false );
+			ModifiableLiquids = !PureClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
 			AxisLinesRenderer = new AxisLinesRenderer( this );
 			
 			LoadIcon();
@@ -161,6 +161,8 @@ namespace ClassicalSharp {
 			
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
 			FontName = Options.Get( OptionsKey.FontName ) ?? "Arial";
+			if( PureClassicMode ) FontName = "Arial";
+			
 			try {
 				using( Font f = new Font( FontName, 16 ) ) { }
 			} catch( Exception ) {

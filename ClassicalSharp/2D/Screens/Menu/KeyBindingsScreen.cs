@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 			MakeKeys( KeyBinding.Respawn, 5, 5, 150 );
 			
 			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
+			                            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) );
 		}
 	}
 	
