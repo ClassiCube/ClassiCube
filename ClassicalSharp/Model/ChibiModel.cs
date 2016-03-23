@@ -70,7 +70,7 @@ namespace ClassicalSharp.Model {
 			
 			graphics.AlphaTest = true;
 			index = 0;
-			DrawHeadRotate( p.PitchRadians, 0, 0, Hat );
+			DrawHeadRotate( -p.PitchRadians, 0, 0, Hat );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 		}
 		

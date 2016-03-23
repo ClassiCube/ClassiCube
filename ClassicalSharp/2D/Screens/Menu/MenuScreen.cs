@@ -54,6 +54,8 @@ namespace ClassicalSharp {
 			return HandleMouseMove( widgets, mouseX, mouseY );
 		}
 		
+		public override bool HandlesMouseScroll( int delta ) { return true; }
+		
 		public override bool HandlesKeyPress( char key ) { return true; }
 		
 		public override bool HandlesKeyDown( Key key ) { return true; }
