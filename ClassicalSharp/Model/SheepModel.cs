@@ -9,7 +9,9 @@ namespace ClassicalSharp.Model {
 
 		public bool Fur = true;
 		
-		public SheepModel( Game window ) : base( window ) {
+		public SheepModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6 * ( Fur ? 2 : 1 )];
 			Head = BuildBox( MakeBoxBounds( -3, 16, -14, 3, 22, -6 )
 			                .TexOrigin( 0, 0 )

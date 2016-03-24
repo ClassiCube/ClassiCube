@@ -6,7 +6,9 @@ namespace ClassicalSharp.Model {
 
 	public class SkeletonModel : IModel {
 		
-		public SkeletonModel( Game window ) : base( window ) {
+		public SkeletonModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
 			                .TexOrigin( 0, 0 )

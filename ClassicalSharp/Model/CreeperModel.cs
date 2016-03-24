@@ -6,7 +6,9 @@ namespace ClassicalSharp.Model {
 
 	public class CreeperModel : IModel {
 		
-		public CreeperModel( Game window ) : base( window ) {
+		public CreeperModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head =  BuildBox( MakeBoxBounds( -4, 18, -4, 4, 26, 4 )
 			                 .TexOrigin( 0, 0 )

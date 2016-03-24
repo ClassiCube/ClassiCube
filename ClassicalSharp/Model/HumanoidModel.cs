@@ -8,7 +8,9 @@ namespace ClassicalSharp.Model {
 	public class HumanoidModel : IModel {
 		
 		ModelSet Set, SetSlim, Set64;
-		public HumanoidModel( Game window ) : base( window ) {
+		public HumanoidModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * ( 7 + 11 )];
 			Set = new ModelSet();
 			
@@ -21,19 +23,19 @@ namespace ClassicalSharp.Model {
 			
 			Set.Head = BuildBox( head.TexOrigin( 0, 0 ) );
 			Set.Torso = BuildBox( torso.TexOrigin( 16, 16 ) );
-			Set.LeftLeg = BuildBox( lLeg.MirrorX().TexOrigin( 0, 16 ) );
+			Set.LeftLeg = BuildBox( lLeg.TexOrigin( 0, 16 ) );
 			Set.RightLeg = BuildBox( rLeg.TexOrigin( 0, 16 ) );
 			Set.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( 0.5f ) );
-			Set.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 40, 16 ) );
+			Set.LeftArm = BuildBox( lArm.TexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
 			
 			Set64 = new ModelSet();
 			Set64.Head = Set.Head;
 			Set64.Torso = Set.Torso;
-			Set64.LeftLeg = BuildBox( lLeg.TexOrigin( 16, 48 ) );
+			Set64.LeftLeg = BuildBox( lLeg.MirrorX().TexOrigin( 16, 48 ) );
 			Set64.RightLeg = Set.RightLeg;
 			Set64.Hat = Set.Hat;
-			Set64.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
+			Set64.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 32, 48 ) );
 			Set64.RightArm = Set.RightArm;
 			Set64.TorsoLayer = BuildBox( torso.TexOrigin( 16, 32 ).Expand( 0.5f ) );
 			Set64.LeftLegLayer = BuildBox( lLeg.TexOrigin( 0, 48 ).Expand( 0.5f ) );
@@ -47,7 +49,7 @@ namespace ClassicalSharp.Model {
 			SetSlim.LeftLeg = Set64.LeftLeg;
 			SetSlim.RightLeg = Set.RightLeg;
 			SetSlim.Hat = Set.Hat;
-			lArm.BodyW -= 1; lArm.X1 += 1/16f;
+			lArm.BodyW -= 1; lArm.X2 += 1/16f;
 			SetSlim.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
 			rArm.BodyW -= 1; rArm.X2 -= 1/16f;
 			SetSlim.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
@@ -55,7 +57,7 @@ namespace ClassicalSharp.Model {
 			SetSlim.LeftLegLayer = Set64.LeftLegLayer;
 			SetSlim.RightLegLayer = Set64.RightLegLayer;
 			SetSlim.LeftArmLayer = BuildBox( lArm.TexOrigin( 32, 48 ).Expand( 0.5f ) );
-			SetSlim.RightArmLayer = BuildBox( rArm.TexOrigin( 40, 16 ).Expand( 0.5f ) );
+			SetSlim.RightArmLayer = BuildBox( rArm.TexOrigin( 40, 32 ).Expand( 0.5f ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }

@@ -6,7 +6,9 @@ namespace ClassicalSharp.Model {
 
 	public class ChickenModel : IModel {
 		
-		public ChickenModel( Game window ) : base( window ) {
+		public ChickenModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6 + quadVertices * 2 * 2];
 			Head = BuildBox( MakeBoxBounds( -2, 9, -6, 2, 15, -3 )
 			                .TexOrigin( 0, 0 )

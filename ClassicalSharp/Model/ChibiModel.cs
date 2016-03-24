@@ -6,7 +6,9 @@ namespace ClassicalSharp.Model {
 
 	public class ChibiModel : IModel {
 		
-		public ChibiModel( Game window ) : base( window ) {
+		public ChibiModel( Game window ) : base( window ) { }
+		
+		internal override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * (7 + 2)];
 			
 			Head = BuildBox( MakeBoxBounds( -4, 12, -4, 4, 20, 4 )

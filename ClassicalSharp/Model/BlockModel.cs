@@ -14,8 +14,9 @@ namespace ClassicalSharp.Model {
 		bool bright;
 		Vector3 minBB, maxBB;
 		
-		public BlockModel( Game game ) : base( game ) {
-		}
+		public BlockModel( Game game ) : base( game ) { }
+		
+		internal override void CreateParts() { }
 		
 		public override bool Bobbing { get { return false; } }
 		
