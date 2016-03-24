@@ -184,8 +184,9 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		/// <summary> Splits the input string by recognised colour codes. (e.g &amp;f) </summary>
 		protected void SplitText( string value ) {
-			char code = 'F';
+			char code = 'f';
 			for( int i = 0; i < value.Length; i++ ) {
 				int nextAnd = value.IndexOf( '&', i );
 				int partLength = nextAnd == -1 ? value.Length - i : nextAnd - i;
@@ -199,8 +200,8 @@ namespace ClassicalSharp {
 				
 				if( nextAnd >= 0 && nextAnd + 1 < value.Length ) {
 					if( !ValidColour( value[nextAnd + 1] ) ) {
-						code = 'F';
-						i--; // include the character that isn't a colour code.
+						code = 'f';
+						i--; // include character that isn't a valid colour code.
 					} else {
 						code = value[nextAnd + 1];
 					}
@@ -208,8 +209,27 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal bool ValidColour( char c ) {
+		/// <summary> Returns whenever the given character is a valid colour code. </summary>
+		public bool ValidColour( char c ) {
 			return (int)c < 256 && Colours[c].A > 0;
+		}
+		
+		/// <summary> Returns the last valid colour code in the given input, 
+		/// or \0 if no valid colour code was found. </summary>
+		public char LastColour( string input, int start ) {
+			if( start >= input.Length )
+				start = input.Length - 1;
+			
+			for( int i = start; i >= 0; i--) {
+				if( input[i] != '&' ) continue;
+				if( i < input.Length - 1 && ValidColour( input[i + 1] ) )
+					return input[i + 1];
+			}
+			return '\0';
+		}
+		
+		public static bool IsWhiteColour( char c ) {
+			return c == '\0' || c == 'f' || c == 'F';
 		}
 	}
 }

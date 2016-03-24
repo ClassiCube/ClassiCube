@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			graphicsApi.Texturing = false;
 			int y = Y, x = X;
 			for( int i = 0; i < sizes.Length; i++ ) {
-				bool caretAtEnd = caretTex.Y1 == y && (indexX == 64 || caretPos == -1);
+				bool caretAtEnd = caretTex.Y1 == y && (indexX == LineLength || caretPos == -1);
 				int offset = caretAtEnd ? defaultWidth : 0;
 				graphicsApi.Draw2DQuad( x + 5, y, sizes[i].Width + offset, sizes[i].Height, backColour );
 				y += sizes[i].Height;
@@ -64,9 +64,11 @@ namespace ClassicalSharp {
 		int indexX, indexY;
 		bool shownWarning;
 		
+		int LineLength { get { return game.Network.ServerSupportsPartialMessages ? 64 : 62; } }
+		
 		public override void Init() {
 			X = 5;
-			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, 64 );
+			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, LineLength );
 
 			maxWidth = 0;
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
@@ -77,10 +79,10 @@ namespace ClassicalSharp {
 			}
 			
 			bool supports = game.Network.ServerSupportsPartialMessages;
-			if( chatInputText.Length > 64 && !shownWarning && !supports ) {
+			if( chatInputText.Length > LineLength && !shownWarning && !supports ) {
 				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
 				shownWarning = true;
-			} else if( chatInputText.Length <= 64 && shownWarning ) {
+			} else if( chatInputText.Length <= LineLength && shownWarning ) {
 				game.Chat.Add( null, MessageType.ClientStatus6 );
 				shownWarning = false;
 			}
@@ -89,14 +91,14 @@ namespace ClassicalSharp {
 			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
 			altText.Y = altText.texture.Y1;
 			CalculateCaretData();
-		}	
+		}
 		
 		void CalculateCaretData() {
 			if( caretPos >= chatInputText.Length ) caretPos = -1;
 			chatInputText.MakeCoords( caretPos, partLens, out indexX, out indexY );
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
 
-			if( indexX == 64 ) {
+			if( indexX == LineLength ) {
 				caretTex.X1 = 10 + sizes[indexY].Width;
 				caretCol = FastColour.Yellow;
 			} else {
@@ -111,7 +113,7 @@ namespace ClassicalSharp {
 				caretCol = FastColour.Scale( FastColour.White, 0.8f );
 			}
 			caretTex.Y1 = sizes[0].Height * indexY + Y;
-			CalculateCaretCol();
+			CalcCaretColour();
 		}
 		
 		void DrawString() {
@@ -130,6 +132,9 @@ namespace ClassicalSharp {
 				for( int i = 0; i < parts.Length; i++ ) {
 					if( parts[i] == null ) break;
 					args.Text = parts[i];
+					char lastCol = GetLastColour( 0, i );
+					if( !IDrawer2D.IsWhiteColour( lastCol ) )
+						args.Text = "&" + lastCol + args.Text;
 					
 					drawer.DrawChatText( ref args, 0, realHeight );
 					realHeight += sizes[i].Height;
@@ -143,20 +148,23 @@ namespace ClassicalSharp {
 			Width = size.Width;
 		}
 		
-		void CalculateCaretCol() {
+		void CalcCaretColour() {
+			IDrawer2D drawer = game.Drawer2D;
+			char code = GetLastColour( indexX, indexY );
+			if( code != '\0' )
+				caretCol = drawer.Colours[code];
+		}
+		
+		char GetLastColour( int indexX, int indexY ) {
 			int x = indexX;
 			IDrawer2D drawer = game.Drawer2D;
 			for( int y = indexY; y >= 0; y-- ) {
 				string part = parts[y];
-				if( x == partLens[y] ) x = partLens[y] - 1;
-				int start = part.LastIndexOf( '&', x, x + 1 );
-				bool validIndex = start >= 0 && start < partLens[y] - 1;
-				
-				if( validIndex && drawer.ValidColour( part[start + 1] ) ) {
-					caretCol = drawer.Colours[part[start + 1]]; return;
-				}
-				if( y > 0 ) x = partLens[y - 1] - 1;
+				char code = drawer.LastColour( part, x );
+				if( code != '\0' ) return code;
+				if( y > 0 ) x = parts[y - 1].Length;
 			}
+			return '\0';
 		}
 
 		public override void Dispose() {
@@ -197,26 +205,40 @@ namespace ClassicalSharp {
 			string allText = chatInputText.GetString();
 			game.Chat.InputLog.Add( allText );
 			
-			if( game.Network.ServerSupportsPartialMessages ) {
-				// don't automatically word wrap the message.
-				while( allText.Length > 64 ) {
-					game.Chat.Send( allText.Substring( 0, 64 ), true );
-					allText = allText.Substring( 64 );
-				}
-				game.Chat.Send( allText, false );
-				return;
+			if( game.Network.ServerSupportsPartialMessages )
+				SendWithPartial( allText );
+			else
+				SendNormal();
+		}
+		
+		void SendWithPartial( string allText ) {
+			// don't automatically word wrap the message.
+			while( allText.Length > 64 ) {
+				game.Chat.Send( allText.Substring( 0, 64 ), true );
+				allText = allText.Substring( 64 );
 			}
-			
+			game.Chat.Send( allText, false );
+		}
+		
+		void SendNormal() {
 			int packetsCount = 0;
 			for( int i = 0; i < parts.Length; i++ ) {
 				if( parts[i] == null ) break;
 				packetsCount++;
 			}
+			
 			// split up into both partial and final packet.
-			for( int i = 0; i < packetsCount - 1; i++ ) {
-				game.Chat.Send( parts[i], true );
-			}
-			game.Chat.Send( parts[packetsCount - 1], false );
+			for( int i = 0; i < packetsCount - 1; i++ )
+				SendNormalText( i, true );
+			SendNormalText( packetsCount - 1, false );
+		}
+		
+		void SendNormalText( int i, bool partial ) {
+			string text = parts[i];
+			char lastCol = GetLastColour( 0, i );
+			if( !IDrawer2D.IsWhiteColour( lastCol ) )
+				text = "&" + lastCol + text;
+			game.Chat.Send( text, partial );
 		}
 		
 		public void Clear() {

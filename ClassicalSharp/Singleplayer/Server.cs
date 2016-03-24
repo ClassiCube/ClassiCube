@@ -37,9 +37,20 @@ namespace ClassicalSharp.Singleplayer {
 			GenMap( 128, 64, 128, seed, new NotchyGenerator() );
 		}
 		
+		char lastCol = '\0';
 		public override void SendChat( string text, bool partial ) {
-			if( String.IsNullOrEmpty( text ) ) return;
+			if( !String.IsNullOrEmpty( text ) )
+				AddChat( text );			
+			if( !partial ) lastCol = '\0'; 
+		}
+		
+		void AddChat( string text ) {
 			text = text.TrimEnd().Replace( '%', '&' );
+			if( !IDrawer2D.IsWhiteColour( lastCol ) )
+				text = "&" + lastCol + text;
+			
+			char col = game.Drawer2D.LastColour( text, text.Length );
+			if( col != '\0' ) lastCol = col;
 			game.Chat.Add( text, MessageType.Normal );
 		}
 		

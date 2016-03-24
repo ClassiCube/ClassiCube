@@ -137,7 +137,6 @@ namespace ClassicalSharp {
 			lastOpcode = (PacketId)opcode;
 			Action handler = handlers[opcode];
 			lastPacket = DateTime.UtcNow;
-			Console.WriteLine( "IN " + lastOpcode );
 			
 			if( handler == null )
 				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );

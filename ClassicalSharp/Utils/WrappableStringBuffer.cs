@@ -68,9 +68,8 @@ namespace ClassicalSharp {
 					value[i] = '&';
 			}
 			
-			for( int i = 0; i < Math.Max( 1, linesCount ); i++ ) {
+			for( int i = 0; i < Math.Max( 1, linesCount ); i++ )
 				lines[i] = new String( value, i * lineSize, lineLens[i] );
-			}
 		}
 		
 		int WrapLine( int index, int lineSize ) {
