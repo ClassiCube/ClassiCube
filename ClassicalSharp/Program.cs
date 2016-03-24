@@ -25,7 +25,6 @@ namespace ClassicalSharp {
 				Utils.LogDebug( "default.zip not found. Cannot start." );
 				return;
 			}
-			Console.BufferHeight = short.MaxValue - 10;
 			
 			bool nullContext = true;
 			#if !USE_DX

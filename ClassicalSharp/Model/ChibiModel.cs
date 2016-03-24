@@ -10,30 +10,30 @@ namespace ClassicalSharp.Model {
 			vertices = new ModelVertex[boxVertices * (7 + 2)];
 			
 			Head = BuildBox( MakeBoxBounds( -4, 12, -4, 4, 20, 4 )
-			                .SetTexOrigin( 0, 0 )
-			                .SetRotOrigin( 0, 13, 0 ) );
+			                .TexOrigin( 0, 0 )
+			                .RotOrigin( 0, 13, 0 ) );
 			Hat = BuildBox( MakeBoxBounds( -4, 12, -4, 4, 20, 4 )
-			               .SetTexOrigin( 32, 0 ).ExpandBounds( 0.25f )
-			               .SetRotOrigin( 0, 13, 0 ) );
+			               .TexOrigin( 32, 0 ).Expand( 0.25f )
+			               .RotOrigin( 0, 13, 0 ) );
 			Torso = BuildBox( MakeBoxBounds( -4, -6, -2, 4, 6, 2 )
-			                 .SetTexOrigin( 16, 16 )
+			                 .TexOrigin( 16, 16 )
 			                 .SetModelBounds( -2, 6, -1, 2, 12, 1 ) );
 			LeftLeg = BuildBox( MakeBoxBounds( -2, -6, -2, 2, 6, 2 )
-			                   .SetTexOrigin( 0, 16 )
+			                   .TexOrigin( 0, 16 )
 			                   .SetModelBounds( -0, 0, -1, -2, 6, 1 )
-			                   .SetRotOrigin( 0, 6, 0 ) );
+			                   .RotOrigin( 0, 6, 0 ) );
 			RightLeg = BuildBox( MakeBoxBounds( -2, -6, -2, 2, 6, 2 )
-			                    .SetTexOrigin( 0, 16 )
+			                    .TexOrigin( 0, 16 )
 			                    .SetModelBounds( 0, 0, -1, 2, 6, 1 )
-			                    .SetRotOrigin( 0, 6, 0 ) );
+			                    .RotOrigin( 0, 6, 0 ) );
 			LeftArm = BuildBox( MakeBoxBounds( -2, -6, -2, 2, 6, 2 )
-			                   .SetTexOrigin( 40, 16 )
+			                   .TexOrigin( 40, 16 )
 			                   .SetModelBounds( -2, 6, -1, -4, 12, 1 )
-			                   .SetRotOrigin( -3, 11, 0 ) );
+			                   .RotOrigin( -3, 11, 0 ) );
 			RightArm = BuildBox( MakeBoxBounds( -2, -6, -2, 2, 6, 2 )
-			                    .SetTexOrigin( 40, 16 )
+			                    .TexOrigin( 40, 16 )
 			                    .SetModelBounds( 2, 6, -1, 4, 12, 1 )
-			                    .SetRotOrigin( 3, 11, 0 ) );
+			                    .RotOrigin( 3, 11, 0 ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }

@@ -9,25 +9,25 @@ namespace ClassicalSharp.Model {
 		public ChickenModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6 + quadVertices * 2 * 2];
 			Head = BuildBox( MakeBoxBounds( -2, 9, -6, 2, 15, -3 )
-			                .SetTexOrigin( 0, 0 )
-			                .SetRotOrigin( 0, 9, -4 ) );
+			                .TexOrigin( 0, 0 )
+			                .RotOrigin( 0, 9, -4 ) );
 			Head2 = BuildBox( MakeBoxBounds( -1, 9, -7, 1, 11, -5 )
-			                 .SetTexOrigin( 14, 4 ) // TODO: Find a more appropriate name.
-			                 .SetRotOrigin( 0, 9, -4 ) );
+			                 .TexOrigin( 14, 4 ) // TODO: Find a more appropriate name.
+			                 .RotOrigin( 0, 9, -4 ) );
 			Head3 = BuildBox( MakeBoxBounds( -2, 11, -8, 2, 13, -6 )
-			                 .SetTexOrigin( 14, 0 )
-			                 .SetRotOrigin( 0, 9, -4 ) );
+			                 .TexOrigin( 14, 0 )
+			                 .RotOrigin( 0, 9, -4 ) );
 			Torso = BuildRotatedBox( MakeRotatedBoxBounds( -3, 5, -4, 3, 11, 3 )
-			                       .SetTexOrigin( 0, 9 ) );
+			                       .TexOrigin( 0, 9 ) );
 			
 			LeftLeg = MakeLeg( -3, 0, -2, -1 );
 			RightLeg = MakeLeg( 0, 3, 1, 2 );
 			LeftWing = BuildBox( MakeBoxBounds( -4, 7, -3, -3, 11, 3 )
-			                    .SetTexOrigin( 24, 13 )
-			                    .SetRotOrigin( -3, 11, 0 ) );
+			                    .TexOrigin( 24, 13 )
+			                    .RotOrigin( -3, 11, 0 ) );
 			RightWing = BuildBox( MakeBoxBounds( 3, 7, -3, 4, 11, 3 )
-			                     .SetTexOrigin( 24, 13 )
-			                     .SetRotOrigin( 3, 11, 0 ) );
+			                     .TexOrigin( 24, 13 )
+			                     .RotOrigin( 3, 11, 0 ) );
 		}
 		
 		ModelPart MakeLeg( int x1, int x2, int legX1, int legX2 ) {

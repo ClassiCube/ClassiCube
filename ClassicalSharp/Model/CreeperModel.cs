@@ -9,23 +9,23 @@ namespace ClassicalSharp.Model {
 		public CreeperModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head =  BuildBox( MakeBoxBounds( -4, 18, -4, 4, 26, 4 )
-			                 .SetTexOrigin( 0, 0 )
-			                 .SetRotOrigin( 0, 18, 0 ) );
+			                 .TexOrigin( 0, 0 )
+			                 .RotOrigin( 0, 18, 0 ) );
 			Torso = BuildBox( MakeBoxBounds( -4, 6, -2, 4, 18, 2 )
-			                 .SetTexOrigin( 16, 16 ) );
+			                 .TexOrigin( 16, 16 ) );
 			
 			LeftLegFront = BuildBox( MakeBoxBounds( -4, 0, -6, 0, 6, -2 )
-			                        .SetTexOrigin( 0, 16 )
-			                        .SetRotOrigin( 0, 6, -2 ) );
+			                        .TexOrigin( 0, 16 )
+			                        .RotOrigin( 0, 6, -2 ) );
 			RightLegFront = BuildBox( MakeBoxBounds( 0, 0, -6, 4, 6, -2 )
-			                         .SetTexOrigin( 0, 16 )
-			                         .SetRotOrigin( 0, 6, -2 ) );
+			                         .TexOrigin( 0, 16 )
+			                         .RotOrigin( 0, 6, -2 ) );
 			LeftLegBack = BuildBox( MakeBoxBounds( -4, 0, 2, 0, 6, 6 )
-			                       .SetTexOrigin( 0, 16 )
-			                       .SetRotOrigin( 0, 6, 2 ) );
+			                       .TexOrigin( 0, 16 )
+			                       .RotOrigin( 0, 6, 2 ) );
 			RightLegBack = BuildBox( MakeBoxBounds( 0, 0, 2, 4, 6, 6 )
-			                        .SetTexOrigin( 0, 16 )
-			                        .SetRotOrigin( 0, 6, 2 ) );
+			                        .TexOrigin( 0, 16 )
+			                        .RotOrigin( 0, 6, 2 ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }

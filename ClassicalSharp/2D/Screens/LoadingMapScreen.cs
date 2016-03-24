@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 		
 		void DrawBackgroundVertices( ref int index, int atlasIndex, ref bool bound ) {
 			if( index == 0 ) return;
-			if (!bound) {
+			if( !bound ) {
 				bound = true;
 				graphicsApi.BindTexture( game.TerrainAtlas1D.TexIds[atlasIndex] );
 			}

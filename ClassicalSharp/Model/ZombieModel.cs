@@ -9,22 +9,22 @@ namespace ClassicalSharp.Model {
 		public ZombieModel( Game window ) : base( window ) {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox( MakeBoxBounds( -4, 24, -4, 4, 32, 4 )
-			                .SetTexOrigin( 0, 0 )
-			                .SetRotOrigin( 0, 24, 0 ) );
+			                .TexOrigin( 0, 0 )
+			                .RotOrigin( 0, 24, 0 ) );
 			Torso = BuildBox( MakeBoxBounds( -4, 12, -2, 4, 24, 2 )
-			                  .SetTexOrigin( 16, 16 ) );
+			                  .TexOrigin( 16, 16 ) );
 			LeftLeg = BuildBox( MakeBoxBounds( 0, 0, -2, -4, 12, 2 )
-			                    .SetTexOrigin( 0, 16 )
-			                    .SetRotOrigin( 0, 12, 0 ) );
+			                    .TexOrigin( 0, 16 )
+			                    .RotOrigin( 0, 12, 0 ) );
 			RightLeg = BuildBox( MakeBoxBounds( 0, 0, -2, 4, 12, 2 )
-			                    .SetTexOrigin( 0, 16 )
-			                    .SetRotOrigin( 0, 12, 0 ) );
+			                    .TexOrigin( 0, 16 )
+			                    .RotOrigin( 0, 12, 0 ) );
 			LeftArm = BuildBox( MakeBoxBounds( -4, 12, -2, -8, 24, 2 )
-			                   .SetTexOrigin( 40, 16 )
-			                   .SetRotOrigin( -6, 22, 0 ) );
+			                   .TexOrigin( 40, 16 )
+			                   .RotOrigin( -6, 22, 0 ) );
 			RightArm = BuildBox( MakeBoxBounds( 4, 12, -2, 8, 24, 2 )
-			                    .SetTexOrigin( 40, 16 )
-			                    .SetRotOrigin( 6, 22, 0 ) );
+			                    .TexOrigin( 40, 16 )
+			                    .RotOrigin( 6, 22, 0 ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }
