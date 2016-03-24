@@ -61,9 +61,7 @@ namespace ClassicalSharp {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437",
-			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt",
-			// proposals
-			"BulkBlockUpdate", "TextColors",
+			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
 		};
 		
 		void HandleCpeExtInfo() {
