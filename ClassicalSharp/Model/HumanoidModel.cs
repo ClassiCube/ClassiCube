@@ -24,7 +24,7 @@ namespace ClassicalSharp.Model {
 			Set.LeftLeg = BuildBox( lLeg.MirrorX().TexOrigin( 0, 16 ) );
 			Set.RightLeg = BuildBox( rLeg.TexOrigin( 0, 16 ) );
 			Set.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( 0.5f ) );
-			Set.LeftArm = BuildBox( lArm.TexOrigin( 40, 16 ) );
+			Set.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
 			
 			Set64 = new ModelSet();
@@ -33,13 +33,13 @@ namespace ClassicalSharp.Model {
 			Set64.LeftLeg = BuildBox( lLeg.TexOrigin( 16, 48 ) );
 			Set64.RightLeg = Set.RightLeg;
 			Set64.Hat = Set.Hat;
-			Set64.LeftArm = BuildBox( lLeg.TexOrigin( 32, 48 ) );
+			Set64.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
 			Set64.RightArm = Set.RightArm;
 			Set64.TorsoLayer = BuildBox( torso.TexOrigin( 16, 32 ).Expand( 0.5f ) );
 			Set64.LeftLegLayer = BuildBox( lLeg.TexOrigin( 0, 48 ).Expand( 0.5f ) );
 			Set64.RightLegLayer = BuildBox( rLeg.TexOrigin( 0, 32 ).Expand( 0.5f ) );
-			Set64.LeftArmLayer = BuildBox( lLeg.TexOrigin( 48, 48 ).Expand( 0.5f ) );
-			Set64.RightArmLayer = BuildBox( rLeg.TexOrigin( 40, 32 ).Expand( 0.5f ) );			
+			Set64.LeftArmLayer = BuildBox( lArm.TexOrigin( 48, 48 ).Expand( 0.5f ) );
+			Set64.RightArmLayer = BuildBox( rArm.TexOrigin( 40, 32 ).Expand( 0.5f ) );			
 			
 			SetSlim = new ModelSet();
 			SetSlim.Head = Set.Head;
@@ -54,8 +54,8 @@ namespace ClassicalSharp.Model {
 			SetSlim.TorsoLayer = Set64.TorsoLayer;
 			SetSlim.LeftLegLayer = Set64.LeftLegLayer;
 			SetSlim.RightLegLayer = Set64.RightLegLayer;
-			SetSlim.LeftArmLayer = BuildBox( lArm.Expand( 0.5f ) );
-			SetSlim.RightArmLayer = BuildBox( rArm.Expand( 0.5f ) );			
+			SetSlim.LeftArmLayer = BuildBox( lArm.TexOrigin( 32, 48 ).Expand( 0.5f ) );
+			SetSlim.RightArmLayer = BuildBox( rArm.TexOrigin( 40, 16 ).Expand( 0.5f ) );
 		}
 		
 		public override bool Bobbing { get { return true; } }
