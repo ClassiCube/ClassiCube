@@ -80,7 +80,7 @@ namespace ClassicalSharp.Model {
 			SkinType skinType = p.SkinType;
 			_64x64 = skinType != SkinType.Type64x32;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
-				skinType == SkinType.Type64x64 : Set64 : Set;
+				(skinType == SkinType.Type64x64 ? Set64 : Set);
 			DrawHeadRotate( -p.PitchRadians, 0, 0, model.Head );
 			DrawPart( model.Torso );
 			
