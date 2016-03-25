@@ -19,11 +19,12 @@ namespace ClassicalSharp.Model {
 			
 			Set.Head = BuildBox( head.TexOrigin( 0, 0 ) );
 			Set.Torso = BuildBox( torso.TexOrigin( 16, 16 ) );
-			Set.LeftLeg = BuildBox( lLeg.TexOrigin( 0, 16 ) );
+			Set.LeftLeg = BuildBox( lLeg.MirrorX().TexOrigin( 0, 16 ) );
 			Set.RightLeg = BuildBox( rLeg.TexOrigin( 0, 16 ) );
 			Set.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( offset ) );
-			Set.LeftArm = BuildBox( lArm.TexOrigin( 40, 16 ) );
+			Set.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
+			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();
 			
 			Set64 = new ModelSet();
 			Set64.Head = Set.Head;
