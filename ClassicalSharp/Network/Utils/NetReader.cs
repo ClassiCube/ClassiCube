@@ -73,20 +73,22 @@ namespace ClassicalSharp {
 
 		public string ReadCp437String() {
 			int length = GetString( false, 64 );
-			index += 64;
 			return new String( characters, 0, length );
 		}
 		
 		public string ReadAsciiString() {
 			int length = GetString( true, 64 );
-			index += 64;
+			return new String( characters, 0, length );
+		}
+		
+		public string ReadAsciiString( int maxLength ) {
+			int length = GetString( true, maxLength );
 			return new String( characters, 0, length );
 		}
 		
 		internal string ReadChatString( ref byte messageType, bool useMessageTypes ) {
 			if( !useMessageTypes ) messageType = (byte)MessageType.Normal;
-			int length = GetString( false, 64 );		
-			index += 64;
+			int length = GetString( false, 64 );
 			
 			int offset = 0;
 			if( length >= womDetail.Length && IsWomDetailString() ) {
@@ -107,9 +109,10 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		int GetString( bool ascii, int bufferSize ) {
+		int GetString( bool ascii, int maxLength ) {
 			int length = 0;
-			for( int i = bufferSize - 1; i >= 0; i-- ) {
+			index += maxLength;
+			for( int i = maxLength - 1; i >= 0; i-- ) {
 				byte code = buffer[index + i];
 				if( length == 0 && !( code == 0 || code == 0x20 ) )
 				   length = i + 1;

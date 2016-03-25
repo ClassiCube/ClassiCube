@@ -171,6 +171,7 @@
     <Compile Include="Map\Formats\MapCw.Nbt.cs" />
     <Compile Include="Model\ChibiModel.cs" />
     <Compile Include="Model\CustomModel.cs" />
+    <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
