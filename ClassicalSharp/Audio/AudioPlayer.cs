@@ -51,6 +51,7 @@ namespace ClassicalSharp.Audio {
 						musicOut.PlayStreaming( container );
 					} catch( InvalidOperationException ex) {
 						HandleMusicError( ex );
+						return;
 					}
 				}
 				if( disposingMusic ) break;

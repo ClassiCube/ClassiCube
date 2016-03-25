@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		
 		int GetString( bool ascii, int maxLength ) {
 			int length = 0;
-			index += maxLength;
+			
 			for( int i = maxLength - 1; i >= 0; i-- ) {
 				byte code = buffer[index + i];
 				if( length == 0 && !( code == 0 || code == 0x20 ) )
@@ -131,6 +131,7 @@ namespace ClassicalSharp {
 					characters[i] = Utils.ExtendedCharReplacements[code - 0x7F];
 				}
 			}
+			index += maxLength;
 			return length;
 		}
 	}
