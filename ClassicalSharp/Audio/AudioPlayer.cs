@@ -12,8 +12,10 @@ namespace ClassicalSharp.Audio {
 		IAudioOutput[] monoOutputs, stereoOutputs;
 		string[] musicFiles;
 		Thread musicThread;
+		Game game;
 		
 		public AudioPlayer( Game game ) {
+			this.game = game;
 			game.UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
 			SetMusic( game.UseMusic );
 			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
@@ -45,13 +47,28 @@ namespace ClassicalSharp.Audio {
 				
 				using( FileStream fs = File.OpenRead( path ) ) {
 					OggContainer container = new OggContainer( fs );
-					musicOut.PlayStreaming( container );
+					try {
+						musicOut.PlayStreaming( container );
+					} catch( InvalidOperationException ex) {
+						HandleMusicError( ex );
+					}
 				}
 				if( disposingMusic ) break;
 				
 				int delay = 2000 * 60 + rnd.Next( 0, 5000 * 60 );
 				musicHandle.WaitOne( delay );
 			}
+		}
+		
+		void HandleMusicError( InvalidOperationException ex ) {
+			ErrorHandler.LogError( "AudioPlayer.DoMusicThread()", ex );
+			if( ex.Message == "No audio devices found" )
+				game.Chat.Add( "&cNo audio devices found, disabling music." );
+			else
+				game.Chat.Add( "&cAn error occured when trying to play music, disabling music." );
+			
+			SetMusic( false );
+			game.UseMusic = false;
 		}
 		
 		bool disposingMusic;

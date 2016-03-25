@@ -29,7 +29,7 @@ namespace ClassicalSharp.Audio {
 			GetGroups();
 		}
 		
-		public Sound PlayRandomSound( SoundType type ) {
+		public Sound PickRandomSound( SoundType type ) {
 			if( type == SoundType.None ) 
 				return null;
 			string name = soundNames[(int)type];
