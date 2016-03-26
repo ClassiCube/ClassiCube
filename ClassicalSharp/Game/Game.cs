@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 			FpsLimitMethod method = Options.GetEnum( OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync );
 			SetFpsLimitMethod( method );
 			Graphics.DepthTest = true;
-			Graphics.DepthTestFunc( CompareFunc.LessEqual );
+			Graphics.DepthTestFunc( CompareFunc.GreaterEqual );
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );

@@ -216,6 +216,7 @@ namespace SharpDX.Direct3D9 {
 		D24X8 = 77,
 		D24X4S4 = 79,
 		D16 = 80,
+		D32F_Lockable = 82,
 		VertexData = 100,
 		Index16 = 101,
 		Index32 = 102,

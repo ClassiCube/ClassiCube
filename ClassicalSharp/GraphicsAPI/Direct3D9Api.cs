@@ -46,7 +46,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
 					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
-				} catch ( SharpDXException ) {
+				} catch( SharpDXException ) {
 					createFlags = CreateFlags.SoftwareVertexProcessing;
 					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
 				}
@@ -188,7 +188,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		int lastClearCol;
 		public override void Clear() {
-			device.Clear( ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0 );
+			device.Clear( ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 0f, 0 );
 		}
 
 		public override void ClearColour( FastColour col ) {
@@ -597,7 +597,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			modeMappings = new PrimitiveType[2];
 			modeMappings[0] = PrimitiveType.TriangleList; modeMappings[1] = PrimitiveType.LineList;
 			depthFormats = new Format[6];
-			depthFormats[0] = Format.D32; depthFormats[1] = Format.D24X8; depthFormats[2] = Format.D24S8;
+			depthFormats[0] = Format.D32F_Lockable; depthFormats[1] = Format.D24X8; depthFormats[2] = Format.D24S8;
 			depthFormats[3] = Format.D24X4S4; depthFormats[4] = Format.D16; depthFormats[5] = Format.D15S1;
 			viewFormats = new Format[4];
 			viewFormats[0] = Format.X8R8G8B8; viewFormats[1] = Format.R8G8B8;
