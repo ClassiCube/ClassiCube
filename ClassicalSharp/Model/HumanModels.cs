@@ -23,19 +23,44 @@ namespace ClassicalSharp.Model {
 				.SetModelBounds( 2, 6, -1, 4, 12, 1 );
 			offset = 0.25f;
 		}
-		
-		public override bool Bobbing { get { return true; } }
 
 		public override float NameYOffset { get { return 1.3875f; } }
 		
 		public override float GetEyeY( Entity entity ) { return 14/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 8/16f + 0.6f/16f, 20.1f/16f, 8/16f + 0.6f/16f ); }
+			get { return new Vector3( 4/16f + 0.6f/16f, 20.1f/16f, 4/16f + 0.6f/16f ); }
 		}
 		
 		public override BoundingBox PickingBounds {
 			get { return new BoundingBox( -4/16f, 0, -4/16f, 4/16f, 16/16f, 4/16f ); }
+		}
+	}
+	
+	public class GiantModel : HumanoidModel {
+		
+		const float scale = 2f;
+		public GiantModel( Game window ) : base( window ) { }
+		
+		protected override void MakeDescriptions() {
+			base.MakeDescriptions();
+			head = head.Scale( scale ); torso = torso.Scale( scale );
+			lLeg = lLeg.Scale( scale ); rLeg = rLeg.Scale( scale );
+			lArm = lArm.Scale( scale ); rArm = rArm.Scale( scale );
+			offset = 0.5f;
+		}
+
+		public override float NameYOffset { get { return 2 * scale + 0.1375f; } }
+		
+		public override float GetEyeY( Entity entity ) { return base.GetEyeY( entity ) * scale; }
+		
+		public override Vector3 CollisionSize {
+			get { return new Vector3( 8/16f * scale + 0.6f/16f, 
+			                         28.1f/16f * scale, 8/16f * scale + 0.6f/16f ); }
+		}
+		
+		public override BoundingBox PickingBounds {
+			get { return base.PickingBounds.Scale( scale ); }
 		}
 	}
 }

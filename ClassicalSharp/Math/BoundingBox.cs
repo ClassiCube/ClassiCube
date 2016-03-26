@@ -30,6 +30,12 @@ namespace ClassicalSharp {
 		public BoundingBox Expand( Vector3 amount ) {
 			return new BoundingBox( Min - amount, Max + amount );
 		}
+		
+		/// <summary> Returns a new bounding box, with the minimum and maximum coordinates 
+		/// of the original bounding box scaled away from origin the given value. </summary>
+		public BoundingBox Scale( float scale ) {
+			return new BoundingBox( Min * scale, Max * scale );
+		}
 
 		/// <summary> Determines whether this bounding box intersects 
 		/// the given bounding box on any axes. </summary>

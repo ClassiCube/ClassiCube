@@ -17,7 +17,6 @@ namespace ClassicalSharp.Model {
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
-		protected bool flipBottomY; // for modern 1.8 skins
 
 		public IModel( Game game ) {
 			this.game = game;
@@ -94,11 +93,19 @@ namespace ClassicalSharp.Model {
 				return this;
 			}
 			
-			/// <summary> Expands the corners of this box outwards by the given amount in pixel unis. </summary>
+			/// <summary> Expands the corners of this box outwards by the given amount in pixel units. </summary>
 			public BoxDesc Expand( float amount ) {
 				X1 -= amount / 16f; X2 += amount / 16f;
 				Y1 -= amount / 16f; Y2 += amount / 16f;
 				Z1 -= amount / 16f; Z2 += amount / 16f;
+				return this;
+			}
+			
+			/// <summary> Scales the corners of this box outwards by the given amounts. </summary>
+			public BoxDesc Scale( float scale ) {
+				X1 *= scale; Y1 *= scale; Z1 *= scale;
+				X2 *= scale; Y2 *= scale; Z2 *= scale;
+				RotX *= scale; RotY *= scale; RotZ *= scale;
 				return this;
 			}
 			
@@ -155,8 +162,7 @@ namespace ClassicalSharp.Model {
 			int x = desc.TexX, y = desc.TexY;
 			
 			YQuad( x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2 ); // top
-			if( flipBottomY ) YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1 );
-			else YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z1, z2, y1 ); // bottom				
+			YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1 ); // bottom		
 			ZQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1 ); // front
 			ZQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
 			XQuad( x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2 ); // left

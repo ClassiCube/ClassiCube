@@ -14,7 +14,7 @@ namespace ClassicalSharp.Model {
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 		protected float offset = 0.5f;
 		internal override void CreateParts() {
-			vertices = new ModelVertex[boxVertices * (7 + 12 + 4)];
+			vertices = new ModelVertex[boxVertices * (7 + 7 + 4)];
 			Set = new ModelSet();
 			MakeDescriptions();
 			
@@ -25,17 +25,16 @@ namespace ClassicalSharp.Model {
 			Set.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( offset ) );
 			Set.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
-			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();			
-			flipBottomY = true;
+			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();
 			
 			Set64 = new ModelSet();
-			Set64.Head = BuildBox( head.TexOrigin( 0, 0 ) );
-			Set64.Torso = BuildBox( torso.TexOrigin( 16, 16 ) );
+			Set64.Head = Set.Head;
+			Set64.Torso = Set.Torso;
 			Set64.LeftLeg = BuildBox( lLeg.TexOrigin( 16, 48 ) );
-			Set64.RightLeg = BuildBox( rLeg.TexOrigin( 0, 16 ) );
-			Set64.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( offset ) );
+			Set64.RightLeg = Set.RightLeg;
+			Set64.Hat = Set.Hat;
 			Set64.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
-			Set64.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
+			Set64.RightArm = Set.RightArm;
 			
 			Set64.TorsoLayer = BuildBox( torso.TexOrigin( 16, 32 ).Expand( offset ) );
 			Set64.LeftLegLayer = BuildBox( lLeg.TexOrigin( 0, 48 ).Expand( offset ) );

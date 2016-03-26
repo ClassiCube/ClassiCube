@@ -56,7 +56,8 @@ namespace ClassicalSharp.Model {
 			else if( modelName == "spider" ) return new SpiderModel( game );
 			else if( modelName == "zombie" ) return new ZombieModel( game );
 			else if( modelName == "block" ) return new BlockModel( game );
-			else if( modelName == "chibi" ) return new ChibiModel( game ); 
+			else if( modelName == "chibi" ) return new ChibiModel( game );
+			else if( modelName == "giant" ) return new GiantModel( game ); 
 			return null;
 		}
 		
