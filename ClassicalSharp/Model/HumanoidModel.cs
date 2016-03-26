@@ -14,7 +14,7 @@ namespace ClassicalSharp.Model {
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 		protected float offset = 0.5f;
 		internal override void CreateParts() {
-			vertices = new ModelVertex[boxVertices * ( 7 + 11 )];
+			vertices = new ModelVertex[boxVertices * (7 + 12 + 4)];
 			Set = new ModelSet();
 			MakeDescriptions();
 			
@@ -25,16 +25,18 @@ namespace ClassicalSharp.Model {
 			Set.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( offset ) );
 			Set.LeftArm = BuildBox( lArm.MirrorX().TexOrigin( 40, 16 ) );
 			Set.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
-			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();
+			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();			
+			flipBottomY = true;
 			
 			Set64 = new ModelSet();
-			Set64.Head = Set.Head;
-			Set64.Torso = Set.Torso;
+			Set64.Head = BuildBox( head.TexOrigin( 0, 0 ) );
+			Set64.Torso = BuildBox( torso.TexOrigin( 16, 16 ) );
 			Set64.LeftLeg = BuildBox( lLeg.TexOrigin( 16, 48 ) );
-			Set64.RightLeg = Set.RightLeg;
-			Set64.Hat = Set.Hat;
+			Set64.RightLeg = BuildBox( rLeg.TexOrigin( 0, 16 ) );
+			Set64.Hat = BuildBox( head.TexOrigin( 32, 0 ).Expand( offset ) );
 			Set64.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
-			Set64.RightArm = Set.RightArm;
+			Set64.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
+			
 			Set64.TorsoLayer = BuildBox( torso.TexOrigin( 16, 32 ).Expand( offset ) );
 			Set64.LeftLegLayer = BuildBox( lLeg.TexOrigin( 0, 48 ).Expand( offset ) );
 			Set64.RightLegLayer = BuildBox( rLeg.TexOrigin( 0, 32 ).Expand( offset ) );
@@ -42,15 +44,16 @@ namespace ClassicalSharp.Model {
 			Set64.RightArmLayer = BuildBox( rArm.TexOrigin( 40, 32 ).Expand( offset ) );
 			
 			SetSlim = new ModelSet();
-			SetSlim.Head = Set.Head;
-			SetSlim.Torso = Set.Torso;
+			SetSlim.Head = Set64.Head;
+			SetSlim.Torso = Set64.Torso;
 			SetSlim.LeftLeg = Set64.LeftLeg;
 			SetSlim.RightLeg = Set.RightLeg;
-			SetSlim.Hat = Set.Hat;
+			SetSlim.Hat = Set64.Hat;
 			lArm.BodyW -= 1; lArm.X1 += 1/16f;
 			SetSlim.LeftArm = BuildBox( lArm.TexOrigin( 32, 48 ) );
 			rArm.BodyW -= 1; rArm.X2 -= 1/16f;
 			SetSlim.RightArm = BuildBox( rArm.TexOrigin( 40, 16 ) );
+			
 			SetSlim.TorsoLayer = Set64.TorsoLayer;
 			SetSlim.LeftLegLayer = Set64.LeftLegLayer;
 			SetSlim.RightLegLayer = Set64.RightLegLayer;
