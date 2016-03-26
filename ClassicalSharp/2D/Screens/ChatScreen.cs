@@ -139,12 +139,12 @@ namespace ClassicalSharp {
 			}
 			
 			int progress = game.AsyncDownloader.CurrentItemProgress;
-			if( progress == lastDownloadStatus ) return;			
+			if( progress == lastDownloadStatus ) return;
 			lastDownloadStatus = progress;
-			SetTexturePackMessage( progress );
+			SetFetchStatus( progress );
 		}
 		
-		void SetTexturePackMessage( int progress ) {
+		void SetFetchStatus( int progress ) {
 			lastDownload.Clear();
 			int index = 0;
 			if( progress == -2 ) 

@@ -20,8 +20,8 @@ namespace ClassicalSharp.Network {
 		Dictionary<string, DownloadedItem> downloaded = new Dictionary<string, DownloadedItem>();
 		string skinServer = null;
 		
-		internal Request CurrentItem;
-		internal int CurrentItemProgress = -3;
+		public Request CurrentItem;
+		public int CurrentItemProgress = -3;
 		
 		public AsyncDownloader( string skinServer ) {
 			this.skinServer = skinServer;
@@ -268,7 +268,7 @@ namespace ClassicalSharp.Network {
 	
 	public enum RequestType { Bitmap, String, ByteArray, ContentLength }
 	
-	internal sealed class Request {
+	public sealed class Request {
 		
 		public string Url;
 		public string Identifier;
