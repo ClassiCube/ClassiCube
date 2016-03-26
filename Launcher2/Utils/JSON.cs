@@ -1,4 +1,5 @@
-﻿//-----------------------------------------------------------------------
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+//-----------------------------------------------------------------------
 // <copyright file="SimpleJson.cs" company="The Outercurve Foundation">
 //    Copyright (c) 2011, The Outercurve Foundation.
 //

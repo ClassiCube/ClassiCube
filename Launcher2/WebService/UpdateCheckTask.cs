@@ -1,4 +1,5 @@
-﻿using ClassicalSharp;
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+using ClassicalSharp;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

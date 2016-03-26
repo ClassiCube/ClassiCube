@@ -1,4 +1,5 @@
-﻿//#define TEST_VANILLA
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+//#define TEST_VANILLA
 using System;
 using System.Net;
 using ClassicalSharp.Generator;

@@ -1,10 +1,8 @@
-﻿using System;
-using System.IO;
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+using System;
 using System.Threading;
-using OpenTK;
 using SharpWave;
 using SharpWave.Codecs;
-using SharpWave.Codecs.Vorbis;
 
 namespace ClassicalSharp.Audio {
 	

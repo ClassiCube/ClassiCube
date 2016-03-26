@@ -1,4 +1,5 @@
-﻿// Part of fCraft | Copyright (c) 2009-2014 Matvei Stefarov <me@matvei.org> | BSD-3 | See LICENSE.txt
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+// Part of fCraft | Copyright (c) 2009-2014 Matvei Stefarov <me@matvei.org> | BSD-3 | See LICENSE.txt
 using System;
 using System.IO;
 using System.IO.Compression;

@@ -1,4 +1,5 @@
-﻿// Based on:
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+// Based on:
 // https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
 // Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
 // I believe this process adheres to clean room reverse engineering.

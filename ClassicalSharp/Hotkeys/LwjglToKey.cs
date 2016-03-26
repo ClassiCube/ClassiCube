@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+using System;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Hotkeys {

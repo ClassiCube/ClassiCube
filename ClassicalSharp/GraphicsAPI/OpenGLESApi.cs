@@ -1,4 +1,5 @@
-﻿#if ANDROID
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+#if ANDROID
 using System;
 using System.IO;
 using OpenTK;

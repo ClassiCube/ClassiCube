@@ -1,4 +1,5 @@
-﻿// This class was partially based on information from http://files.worldofminecraft.com/texturing/
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+// This class was partially based on information from http://files.worldofminecraft.com/texturing/
 // NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015
 using System;
 using System.Drawing;

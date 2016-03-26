@@ -1,4 +1,5 @@
-﻿//#define DEBUG_OCCLUSION
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+//#define DEBUG_OCCLUSION
 using System;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;

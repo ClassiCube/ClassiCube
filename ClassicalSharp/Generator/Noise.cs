@@ -1,4 +1,5 @@
-﻿// Source from http://mrl.nyu.edu/~perlin/noise/
+﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+// Source from http://mrl.nyu.edu/~perlin/noise/
 // Optimised form as we can always treat Z as being = 0.
 // Octave and combined noise based on:
 // https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
