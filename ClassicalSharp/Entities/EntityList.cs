@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 		void ChatFontChanged( object sender, EventArgs e ) {
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] != null )
-					Players[i].UpdateNameFont();
+					Players[i].UpdateName();
 			}
 		}
 		

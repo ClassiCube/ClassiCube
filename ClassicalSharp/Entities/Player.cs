@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void UpdateNameFont() {
+		public void UpdateName() {
 			game.Graphics.DeleteTexture( ref nameTex );
 			InitRenderingData();
 		}
