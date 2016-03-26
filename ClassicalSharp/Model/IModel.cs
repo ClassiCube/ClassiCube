@@ -155,7 +155,7 @@ namespace ClassicalSharp.Model {
 			int x = desc.TexX, y = desc.TexY;
 			
 			YQuad( x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2 ); // top
-			if( flipBottomY ) YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, z2, z1, y1 );
+			if( flipBottomY ) YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1 );
 			else YQuad( x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z1, z2, y1 ); // bottom				
 			ZQuad( x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1 ); // front
 			ZQuad( x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2 ); // back
