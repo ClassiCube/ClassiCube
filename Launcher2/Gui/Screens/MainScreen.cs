@@ -83,7 +83,7 @@ namespace Launcher {
 			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
 			MakeButtonAt( "Choose mode", 200, buttonHeight, buttonFont,
 			             Anchor.Centre, Anchor.BottomOrRight, 0, -10,
-			             (x, y) => game.SetScreen( new ChooseModeScreen( game ) ) );
+			             (x, y) => game.SetScreen( new ChooseModeNormalScreen( game ) ) );
 			
 			MakeLabelAt( updateText, updateFont, Anchor.BottomOrRight, 
 			            Anchor.BottomOrRight, -10, -50 );

@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.Network;
 
@@ -37,7 +38,7 @@ namespace Launcher {
 				fetcher = null;
 				GC.Collect();
 				game.TryLoadTexturePack();
-				game.SetScreen( new MainScreen( game ) );
+				GotoNextMenu();
 			}
 		}
 		
@@ -94,11 +95,18 @@ namespace Launcher {
 				             -50, 40, DownloadResources );
 				
 				MakeButtonAt( "No", 60, 30, textFont, Anchor.Centre,
-				             50, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+				             50, 40, (x, y) => GotoNextMenu() );
 			} else {
 				MakeButtonAt( "Cancel", 120, 30, textFont, Anchor.Centre,
-				             0, 40, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+				             0, 40, (x, y) => GotoNextMenu() );
 			}
+		}
+		
+		void GotoNextMenu() {
+			if( File.Exists( "options.txt" ) )
+				game.SetScreen( new MainScreen( game ) );
+			else
+				game.SetScreen( new ChooseModeFirstTimeScreen( game ) );
 		}
 		
 		void SetStatus( string text ) {
