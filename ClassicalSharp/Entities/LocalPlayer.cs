@@ -37,10 +37,11 @@ namespace ClassicalSharp {
 			Hacks = new HacksComponent( game, this );
 			
 			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
-			Hacks.PushbackPlacing = !game.PureClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
+			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
 			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
-			Hacks.DoubleJump = !game.PureClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
-			Hacks.Enabled = !game.PureClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
+			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
+			Hacks.Enabled = !game.ClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
+			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
 			InitRenderingData();
 		}
 		

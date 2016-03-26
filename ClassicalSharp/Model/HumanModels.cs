@@ -47,7 +47,7 @@ namespace ClassicalSharp.Model {
 			head = head.Scale( scale ); torso = torso.Scale( scale );
 			lLeg = lLeg.Scale( scale ); rLeg = rLeg.Scale( scale );
 			lArm = lArm.Scale( scale ); rArm = rArm.Scale( scale );
-			offset = 0.5f;
+			offset = 0.5f * scale;
 		}
 
 		public override float NameYOffset { get { return 2 * scale + 0.1375f; } }

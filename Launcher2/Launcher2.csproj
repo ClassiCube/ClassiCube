@@ -67,7 +67,7 @@
     <Compile Include="Gui\Screens\MainScreen.Classicube.cs" />
     <Compile Include="Gui\Screens\MainScreen.cs" />
     <Compile Include="Gui\Screens\ResourcesScreen.cs" />
-    <Compile Include="Gui\Screens\SelectModeScreen.cs" />
+    <Compile Include="Gui\Screens\ChooseModeScreen.cs" />
     <Compile Include="Gui\Screens\UpdatesScreen.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Comparers.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />

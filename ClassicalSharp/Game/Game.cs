@@ -52,7 +52,8 @@ namespace ClassicalSharp {
 			Graphics.MakeGraphicsInfo();			
 			
 			Options.Load();
-			PureClassicMode = Options.GetBool( "mode-classic", false );
+			ClassicMode = Options.GetBool( "mode-classic", false );
+			ClassicHacks = Options.GetBool( OptionsKey.AllowClassicHacks, false );
 			Players = new EntityList( this );
 			AcceptedUrls.Load(); DeniedUrls.Load();
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
@@ -79,7 +80,7 @@ namespace ClassicalSharp {
 			ModelCache.InitCache();
 			AsyncDownloader = new AsyncDownloader( skinServer );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
-			Drawer2D.UseBitmappedChat = PureClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
+			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
 			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
 			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
 			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
@@ -143,7 +144,7 @@ namespace ClassicalSharp {
 			MapBordersRenderer.Init();
 			Picking = new PickedPosRenderer( this );
 			AudioPlayer = new AudioPlayer( this );
-			ModifiableLiquids = !PureClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
+			ModifiableLiquids = !ClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
 			AxisLinesRenderer = new AxisLinesRenderer( this );
 			
 			LoadIcon();
@@ -162,7 +163,7 @@ namespace ClassicalSharp {
 			
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
 			FontName = Options.Get( OptionsKey.FontName ) ?? "Arial";
-			if( PureClassicMode ) FontName = "Arial";
+			if( ClassicMode ) FontName = "Arial";
 			
 			try {
 				using( Font f = new Font( FontName, 16 ) ) { }
@@ -404,6 +405,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void CycleCamera() {
+			if( ClassicMode ) return;
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
 			if( Camera == firstPersonCam ) Camera = thirdPersonCam;
 			else if( Camera == thirdPersonCam ) Camera = forwardThirdPersonCam;

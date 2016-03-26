@@ -28,9 +28,9 @@ namespace ClassicalSharp {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllNamesAndHovered );
-			if( game.PureClassicMode ) NamesMode = NameMode.HoveredOnly;
+			if( game.ClassicMode ) NamesMode = NameMode.HoveredOnly;
 			ShadowMode = Options.GetEnum( OptionsKey.EntityShadow, EntityShadow.None );
-			if( game.PureClassicMode ) ShadowMode = EntityShadow.None;
+			if( game.ClassicMode ) ShadowMode = EntityShadow.None;
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>

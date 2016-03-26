@@ -8,10 +8,10 @@ using OpenTK.Input;
 
 namespace Launcher {
 	
-	public sealed class SelectModeScreen : LauncherScreen {
+	public sealed class ChooseModeScreen : LauncherScreen {
 		
 		Font titleFont, infoFont;
-		public SelectModeScreen( LauncherWindow game ) : base( game ) {
+		public ChooseModeScreen( LauncherWindow game ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
@@ -21,7 +21,6 @@ namespace Launcher {
 			widgets = new LauncherWidget[13];
 		}
 
-		UpdateCheckTask checkTask;
 		public override void Init() {
 			game.Window.Keyboard.KeyDown += KeyDown;
 			game.Window.Keyboard.KeyUp += KeyUp;
@@ -64,21 +63,21 @@ namespace Launcher {
 			widgetIndex = 0;
 						
 			MakeButtonAt( "Normal", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, 70, -72,
-			             (x, y) => {} );
+			             (x, y) => ModeClick( false, false ) );
 			MakeLabelAt( "&eEnables custom blocks, env settings,",
 			            infoFont, Anchor.LeftOrTop, Anchor.Centre, 235, -72 - 12 );
 			MakeLabelAt( "&elonger messages, and more",
 			            infoFont, Anchor.LeftOrTop, Anchor.Centre, 235, -72 + 12 );
 			
 			MakeButtonAt( "Classic", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, 70, 0,
-			             (x, y) => {} );		
+			             (x, y) => ModeClick( true, false ) );	
 			MakeLabelAt( "&eOnly uses blocks and features from",
 			            infoFont, Anchor.LeftOrTop, Anchor.Centre, 235, 0 - 12 );
 			MakeLabelAt( "&ethe original minecraft classic",
 			            infoFont, Anchor.LeftOrTop, Anchor.Centre, 235, 0 + 12 );
 			
 			MakeButtonAt( "Classic +hax", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, 70, 72,
-			             (x, y) => {} );
+			             (x, y) => ModeClick( true, true ) );
 			MakeLabelAt( "&eSame as Classic mode, except that",
 			            infoFont, Anchor.LeftOrTop, Anchor.Centre, 235, 72 - 12 );
 			MakeLabelAt( "&ehacks (noclip/fly/speed) are enabled",
@@ -86,6 +85,24 @@ namespace Launcher {
 			
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
 			             0, 175, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+		}
+		
+		void ModeClick( bool classic, bool classicHacks ) {
+			game.ClassicMode = classic;
+			Options.Load();
+			Options.Set( "mode-classic", game.ClassicMode );
+			if( classic )
+				Options.Set( "nostalgia-hacks", classicHacks );
+			
+			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
+			Options.Set( "nostalgia-usecpe", !game.ClassicMode );
+			Options.Set( "nostalgia-servertextures", !game.ClassicMode );
+			Options.Set( "nostalgia-classictablist", game.ClassicMode );
+			Options.Set( "nostalgia-classicoptions", game.ClassicMode );
+			Options.Set( "nostalgia-classicgui", true );
+			Options.Save();
+			
+			game.SetScreen( new MainScreen( game ) );
 		}
 
 		public override void Dispose() {

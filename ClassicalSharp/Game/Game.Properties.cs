@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 		
 		public bool TabAutocomplete;
 		
-		public bool UseClassicGui, UseClassicTabList, UseClassicOptions, PureClassicMode;
+		public bool UseClassicGui, UseClassicTabList, UseClassicOptions, ClassicMode, ClassicHacks;
 		
 		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		

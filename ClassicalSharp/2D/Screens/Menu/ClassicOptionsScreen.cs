@@ -62,8 +62,15 @@ namespace ClassicalSharp {
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 				
-				MakeClassic( 0, 50, "Controls", LeftOnly(
-					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ), null, null ),
+				!game.ClassicHacks ? null :
+					MakeClassic( 165, 0, "Hacks enabled", OnWidgetClick,
+				         g => g.LocalPlayer.Hacks.Enabled ? "yes" : "no",
+				         (g, v) => { g.LocalPlayer.Hacks.Enabled = v == "yes";
+				              Options.Set( OptionsKey.HacksEnabled, v == "yes" );
+				             g.LocalPlayer.CheckHacksConsistency();
+				    } ),
+				
+				MakeControlsWidget(),
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
@@ -73,18 +80,27 @@ namespace ClassicalSharp {
 			MakeValidators();
 		}
 		
+		Widget MakeControlsWidget() {
+			if( !game.ClassicHacks )
+				return MakeClassic( 0, 50, "Controls", LeftOnly(
+					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ), null, null );
+			return MakeClassic( 0, 50, "Controls", LeftOnly(
+				(g, w) => g.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) ) ), null, null );
+		}
+		
 		void MakeValidators() {
 			INetworkProcessor network = game.Network;
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator( 16, 4096 ),
-				network.IsSinglePlayer ? new BooleanValidator() : null,
+				network.IsSinglePlayer ? new BooleanValidator() : null,			
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new EnumValidator(),
+				game.ClassicHacks ? new BooleanValidator() : null,
 			};
 		}
 	}

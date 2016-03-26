@@ -98,7 +98,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Render( double delta ) {
-			if( !game.PureClassicMode ) {
+			if( !game.ClassicMode ) {
 				status.Render( delta );
 				bottomRight.Render( delta );
 			}
@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 			else
 				RenderRecentChat( now, delta );
 			
-			if( !game.PureClassicMode )
+			if( !game.ClassicMode )
 				announcement.Render( delta );
 			if( HandlesAllInput )
 				textInput.Render( delta );
