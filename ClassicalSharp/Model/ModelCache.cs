@@ -13,6 +13,7 @@ namespace ClassicalSharp.Model {
 			this.game = window;
 			api = game.Graphics;		
 		}
+		public CustomModel[] CustomModels = new CustomModel[256];
 		
 		public void InitCache() {
 			vertices = new VertexPos3fTex2fCol4b[24 * 12];

@@ -46,7 +46,7 @@ namespace ClassicalSharp.Audio {
 		void PlaySound( SoundType type, Soundboard board ) {
 			if( type == SoundType.None || monoOutputs == null )
 				return;
-			Sound snd = board.PlayRandomSound( type );
+			Sound snd = board.PickRandomSound( type );
 			snd.Metadata = board == digBoard ? (byte)1 : (byte)2;
 			chunk.Channels = snd.Channels;
 			chunk.Frequency = snd.SampleRate;
@@ -72,12 +72,26 @@ namespace ClassicalSharp.Audio {
 						firstSoundOut = output;
 					outputs[i] = output;
 				}
+				if( !output.DoneRawAsync() ) continue;
 				
-				if( output.DoneRawAsync() ) {
+				try {
 					output.PlayRawAsync( chunk );
-					return;
+				} catch( InvalidOperationException ex ) {
+					HandleSoundError( ex );
 				}
+				return;
 			}
+		}
+		
+		void HandleSoundError( InvalidOperationException ex ) {
+			ErrorHandler.LogError( "AudioPlayer.PlayCurrentSound()", ex );
+			if( ex.Message == "No audio devices found" )
+				game.Chat.Add( "&cNo audio devices found, disabling sounds." );
+			else
+				game.Chat.Add( "&cAn error occured when trying to play sounds, disabling sounds." );
+			
+			SetSound( false );
+			game.UseSound = false;
 		}
 		
 		void DisposeSound() {
@@ -108,6 +122,6 @@ namespace ClassicalSharp.Audio {
 				outputs[i].Dispose();
 			}
 			outputs = null;
-		}		
+		}
 	}
 }
