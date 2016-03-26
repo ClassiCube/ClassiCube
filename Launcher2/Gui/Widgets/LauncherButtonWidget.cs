@@ -35,7 +35,7 @@ namespace Launcher {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
 			DrawBorder( drawer );
-			if( Window.ClassicMode )
+			if( Window.ClassicBackground )
 				DrawClassic( drawer, xOffset, yOffset );
 			else
 				DrawNormal( drawer, xOffset, yOffset );
@@ -44,7 +44,7 @@ namespace Launcher {
 		}
 		
 		void DrawBorder( IDrawer2D drawer ) {
-			FastColour backCol = Window.ClassicMode ? FastColour.Black : LauncherSkin.ButtonBorderCol;
+			FastColour backCol = Window.ClassicBackground ? FastColour.Black : LauncherSkin.ButtonBorderCol;
 			drawer.Clear( backCol, X + 1, Y, Width - 2, border );
 			drawer.Clear( backCol, X + 1, Y + Height - border, Width - 2, border );
 			drawer.Clear( backCol, X, Y + 1, border, Height - 2 );
@@ -72,7 +72,7 @@ namespace Launcher {
 		public void RedrawBackground( FastBitmap dst ) {
 			if( Window.Minimised ) return;
 			Rectangle rect = new Rectangle( X + border, Y + border, Width - border * 2, Height - border * 2 );
-			if( Window.ClassicMode ) {
+			if( Window.ClassicBackground ) {
 				FastColour foreCol = Active ? new FastColour( 126, 136, 191 ) : new FastColour( 111, 111, 111 );
 				Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
 			} else {

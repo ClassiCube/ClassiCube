@@ -90,17 +90,18 @@ namespace Launcher {
 		protected virtual void MakeOtherWidgets() { }
 		
 		void ModeClick( bool classic, bool classicHacks ) {
-			game.ClassicMode = classic;
+			game.ClassicBackground = classic;
 			Options.Load();
-			Options.Set( "mode-classic", game.ClassicMode );
+			Options.Set( "mode-classic", classic );
 			if( classic )
 				Options.Set( "nostalgia-hacks", classicHacks );
 			
-			Options.Set( "nostalgia-customblocks", !game.ClassicMode );
-			Options.Set( "nostalgia-usecpe", !game.ClassicMode );
-			Options.Set( "nostalgia-servertextures", !game.ClassicMode );
-			Options.Set( "nostalgia-classictablist", game.ClassicMode );
-			Options.Set( "nostalgia-classicoptions", game.ClassicMode );
+			Options.Set( "nostalgia-classicbg", classic );
+			Options.Set( "nostalgia-customblocks", !classic );
+			Options.Set( "nostalgia-usecpe", !classic );
+			Options.Set( "nostalgia-servertextures", !classic );
+			Options.Set( "nostalgia-classictablist", classic );
+			Options.Set( "nostalgia-classicoptions", classic );
 			Options.Set( "nostalgia-classicgui", true );
 			Options.Save();
 			

@@ -70,7 +70,7 @@ namespace Launcher {
 			             Anchor.Centre, Anchor.Centre, 0, 110,
 			             (x, y) => Client.Start( widgets[0].Text, ref game.ShouldExit ) );
 			
-			if( !game.ClassicMode ) {
+			if( !game.ClassicBackground ) {
 				MakeButtonAt( "Colours", 110, buttonHeight, buttonFont,
 				             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
 				             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );

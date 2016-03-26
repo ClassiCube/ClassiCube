@@ -120,7 +120,7 @@ namespace Launcher {
 				}
 			}
 			
-			if( separator && !Window.ClassicMode )
+			if( separator && !Window.ClassicBackground )
 				drawer.Clear( LauncherSkin.BackgroundCol, x - 7, Y, 2, Height );
 			return maxWidth + 5;
 		}
@@ -157,7 +157,7 @@ namespace Launcher {
 		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
 			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
 			Size size = drawer.MeasureSize( ref args );
-			if( !Window.ClassicMode )
+			if( !Window.ClassicBackground )
 				drawer.Clear( LauncherSkin.BackgroundCol, X, Y + size.Height + 5, Width, 2 );
 			headerStartY = Y;
 			
@@ -168,11 +168,11 @@ namespace Launcher {
 		
 		int maxIndex;
 		void DrawScrollbar( IDrawer2D drawer ) {
-			FastColour col = Window.ClassicMode ? new FastColour( 80, 80, 80 ) : LauncherSkin.ButtonBorderCol;
+			FastColour col = Window.ClassicBackground ? new FastColour( 80, 80, 80 ) : LauncherSkin.ButtonBorderCol;
 			drawer.Clear( col, Window.Width - 10, Y, 10, Height );
 			float scale = Height / (float)Count;
 			
-			col =  Window.ClassicMode ? new FastColour( 160, 160, 160 ) : LauncherSkin.ButtonForeActiveCol;
+			col =  Window.ClassicBackground ? new FastColour( 160, 160, 160 ) : LauncherSkin.ButtonForeActiveCol;
 			int y1 = (int)(Y + CurrentIndex * scale);
 			int height = (int)((maxIndex - CurrentIndex) * scale);
 			drawer.Clear( col, Window.Width - 10, y1, 10, height + 1 );

@@ -9,12 +9,16 @@ namespace Launcher {
 
 	public sealed partial class LauncherWindow {
 
-		internal bool ClassicMode = false;
+		internal bool ClassicBackground = false;
 		
 		internal void TryLoadTexturePack() {
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
-			ClassicMode = Options.GetBool( "mode-classic", false );
+			if( Options.Get( "nostalgia-classicbg" ) != null )
+				ClassicBackground = Options.GetBool( "nostalgia-classicbg", false );
+			else
+				ClassicBackground = Options.GetBool( "mode-classic", false );
+			
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string texPack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
 			texPack = Path.Combine( texDir, texPack );
@@ -62,7 +66,7 @@ namespace Launcher {
 				Framebuffer = new Bitmap( Width, Height );
 			}
 			
-			if( ClassicMode ) {
+			if( ClassicBackground ) {
 				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
 					ClearTile( 0, 0, Width, 48, elemSize, 128, 64, dst );
 					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst );
@@ -94,7 +98,7 @@ namespace Launcher {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
-			if( ClassicMode ) {
+			if( ClassicBackground ) {
 				ClearTile( x, y, width, height, 0, 96, 96, dst );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;

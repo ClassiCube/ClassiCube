@@ -120,7 +120,7 @@ namespace Launcher {
 				int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
 				Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
 				
-				if( !game.ClassicMode ) {
+				if( !game.ClassicBackground ) {
 					FastColour col = LauncherTableWidget.backGridCol;
 					Drawer2DExt.FastClear( dst, rec, col );
 				} else {
