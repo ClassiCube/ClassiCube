@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
@@ -21,7 +22,7 @@ namespace ClassicalSharp.Model {
 				.SetModelBounds( -4, 6, -1, -2, 12, 1 );
 			rArm = MakeBoxBounds( -2, -6, -2, 2, 6, 2 ).RotOrigin( 3, 11, 0 )
 				.SetModelBounds( 2, 6, -1, 4, 12, 1 );
-			offset = 0.25f;
+			offset = 0.5f * 0.5f;
 		}
 
 		public override float NameYOffset { get { return 1.3875f; } }

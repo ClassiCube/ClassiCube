@@ -2,7 +2,7 @@
 using System;
 using ClassicalSharp.GraphicsAPI;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Model {
 	
 	/// <summary> Describes the starting index of this part within a model's array of vertices,
 	/// and the number of vertices following the starting index that this part uses. </summary>

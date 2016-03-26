@@ -1,11 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Events {
 	
 	/// <summary> Contains events related to the spawning/despawning of entities, 
 	/// and the creation/removal of CPE player list entries. </summary>
-	public sealed class EntityEvents : Events {
+	public sealed class EntityEvents : OtherEvents {
 		
 		IdEventArgs idArgs = new IdEventArgs();
 		

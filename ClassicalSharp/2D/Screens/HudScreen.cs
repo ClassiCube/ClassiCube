@@ -4,7 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class HudScreen : Screen {
 		
@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
-			game.MapEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMap += OnNewMap;
 		}
 
 		void OnNewMap( object sender, EventArgs e ) {

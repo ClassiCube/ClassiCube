@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
 	public sealed partial class MapCw : IMapFileFormat {
 		

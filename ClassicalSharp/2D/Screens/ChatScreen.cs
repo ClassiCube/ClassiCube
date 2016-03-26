@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using ClassicalSharp.Events;
 using ClassicalSharp.Network;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class ChatScreen : Screen {
 		

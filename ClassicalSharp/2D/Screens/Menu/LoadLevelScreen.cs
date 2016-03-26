@@ -1,9 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.IO;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Map;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class LoadLevelScreen : FilesScreen {
 		
@@ -48,18 +50,18 @@ namespace ClassicalSharp {
 			try {
 				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
 					int width, height, length;
-					game.Map.Reset();
-					game.Map.TextureUrl = null;
+					game.World.Reset();
+					game.World.TextureUrl = null;
 					for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
 						game.BlockInfo.ResetBlockInfo( (byte)tile, false );
 					game.BlockInfo.SetupCullingCache();
 					game.BlockInfo.InitLightOffsets();
 					
 					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
-					game.Map.SetData( blocks, width, height, length );
-					game.MapEvents.RaiseOnNewMapLoaded();
-					if( game.AllowServerTextures && game.Map.TextureUrl != null )
-						game.Network.RetrieveTexturePack( game.Map.TextureUrl );
+					game.World.SetData( blocks, width, height, length );
+					game.WorldEvents.RaiseOnNewMapLoaded();
+					if( game.AllowServerTextures && game.World.TextureUrl != null )
+						game.Network.RetrieveTexturePack( game.World.TextureUrl );
 					
 					LocalPlayer p = game.LocalPlayer;
 					LocationUpdate update = LocationUpdate.MakePosAndOri( p.SpawnPoint, p.SpawnYaw, p.SpawnPitch, false );

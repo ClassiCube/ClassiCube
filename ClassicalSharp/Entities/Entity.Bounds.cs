@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	/// <summary> Contains a model, along with position, velocity, and rotation.
 	/// May also contain other fields and properties. </summary>
@@ -42,8 +42,8 @@ namespace ClassicalSharp {
 				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
 					for( int x = bbMin.X; x <= bbMax.X; x++ )
 			{
-				if( !game.Map.IsValidPos( x, y, z ) ) continue;
-				byte block = game.Map.GetBlock( x, y, z );
+				if( !game.World.IsValidPos( x, y, z ) ) continue;
+				byte block = game.World.GetBlock( x, y, z );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				

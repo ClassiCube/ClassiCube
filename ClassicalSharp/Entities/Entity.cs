@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	/// <summary> Contains a model, along with position, velocity, and rotation.
 	/// May also contain other fields and properties. </summary>
@@ -85,7 +85,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected Block GetBlock( Vector3 coords ) {
-			return (Block)game.Map.SafeGetBlock( Vector3I.Floor( coords ) );
+			return (Block)game.World.SafeGetBlock( Vector3I.Floor( coords ) );
 		}
 	}
 }

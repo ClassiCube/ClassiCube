@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		

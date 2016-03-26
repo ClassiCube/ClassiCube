@@ -1,4 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+using ClassicalSharp.Events;
 using System;
 
 namespace ClassicalSharp.Renderers {
@@ -9,7 +10,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public MinimalEnvRenderer( Game game ) {
 			this.game = game;
-			map = game.Map;
+			map = game.World;
 		}
 		
 		public override void Render( double deltaTime ) {

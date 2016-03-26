@@ -9,7 +9,7 @@ using OpenTK;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
 	public abstract partial class Player : Entity {
 		

@@ -6,7 +6,7 @@ using ClassicalSharp.Generator;
 using ClassicalSharp.Singleplayer;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class GenLevelScreen : MenuScreen {
 		
@@ -62,9 +62,9 @@ namespace ClassicalSharp {
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputs = new [] { 
-				MakeInput( -100, false, game.Map.Width.ToString() ), 
-				MakeInput( -60, false, game.Map.Height.ToString() ),
-				MakeInput( -20, false, game.Map.Length.ToString() ),
+				MakeInput( -100, false, game.World.Width.ToString() ), 
+				MakeInput( -60, false, game.World.Height.ToString() ),
+				MakeInput( -20, false, game.World.Length.ToString() ),
 				MakeInput( 20, true, "" )
 			};
 			labels = new [] { 

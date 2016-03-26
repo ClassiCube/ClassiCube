@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.Events;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class ExtPlayerListWidget : PlayerListWidget {
 		

@@ -1,11 +1,14 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Events;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
+	public enum Weather { Sunny, Rainy, Snowy, }
+	
 	/// <summary> Represents a fixed size map of blocks. Stores the raw block data,
 	/// heightmap, dimensions and various metadata such as environment settings. </summary>
-	public sealed partial class Map {
+	public sealed partial class World {
 
 		Game game;
 		BlockInfo info;
@@ -68,7 +71,7 @@ namespace ClassicalSharp {
 		/// <summary> Current terrain.png or texture pack url of this map. </summary>
 		public string TextureUrl = null;
 		
-		public Map( Game game ) {
+		public World( Game game ) {
 			this.game = game;
 			info = game.BlockInfo;
 			ResetLight();
@@ -89,7 +92,7 @@ namespace ClassicalSharp {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
-			game.MapEvents.RaiseOnNewMap();
+			game.WorldEvents.RaiseOnNewMap();
 		}
 		
 		void ResetLight() {
@@ -110,7 +113,7 @@ namespace ClassicalSharp {
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			game.MapEvents.RaiseEnvVariableChanged( EnvVar.SidesBlock );
+			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.SidesBlock );
 		}
 		
 		/// <summary> Sets the edge block to the given block, and raises the
@@ -122,7 +125,7 @@ namespace ClassicalSharp {
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			game.MapEvents.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
+			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
 		}
 		
 		/// <summary> Sets the height of the clouds in world space, and raises the
@@ -157,7 +160,7 @@ namespace ClassicalSharp {
 			Set( col, ref Sunlight, EnvVar.SunlightColour );
 			FastColour.GetShaded( Sunlight, ref SunlightXSide,
 			                     ref SunlightZSide, ref SunlightYBottom );
-			game.MapEvents.RaiseEnvVariableChanged( EnvVar.SunlightColour );
+			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.SunlightColour );
 		}
 		
 		/// <summary> Sets the current shadowlight colour, and raises the
@@ -168,7 +171,7 @@ namespace ClassicalSharp {
 			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
 			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
 			                     ref ShadowlightZSide, ref ShadowlightYBottom );
-			game.MapEvents.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
+			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
 		}
 		
 		/// <summary> Sets the current weather, and raises the
@@ -176,13 +179,13 @@ namespace ClassicalSharp {
 		public void SetWeather( Weather weather ) {
 			if( weather == Weather ) return;
 			Weather = weather;
-			game.MapEvents.RaiseEnvVariableChanged( EnvVar.Weather );
+			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.Weather );
 		}
 		
 		void Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
 			if( value.Equals( target ) ) return;
 			target = value;
-			game.MapEvents.RaiseEnvVariableChanged( var );
+			game.WorldEvents.RaiseEnvVariableChanged( var );
 		}
 		
 		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>

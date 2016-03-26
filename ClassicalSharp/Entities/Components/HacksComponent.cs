@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
 	/// <summary> Entity component that performs management of hack states. </summary>
 	public sealed class HacksComponent {

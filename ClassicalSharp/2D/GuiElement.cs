@@ -3,7 +3,11 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp {	
+	public enum Anchor { LeftOrTop, Centre, BottomOrRight, }	
+}
+
+namespace ClassicalSharp.Gui {
 	
 	public delegate void ClickHandler( Game g, Widget w, MouseButton btn );
 	                                  
@@ -72,11 +76,5 @@ namespace ClassicalSharp {
 				action( g, w );
 			};
 		}
-	}
-	
-	public enum Anchor {
-		LeftOrTop = 0,
-		Centre = 1,
-		BottomOrRight = 2,
 	}
 }

@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 
 namespace ClassicalSharp {

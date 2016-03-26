@@ -1,5 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Gui;
 using ClassicalSharp.Hotkeys;
 using OpenTK;
 using OpenTK.Input;
@@ -77,7 +79,7 @@ namespace ClassicalSharp {
 			if( middle ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				byte block = 0;
-				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
+				if( game.World.IsValidPos( pos ) && (block = game.World.GetBlock( pos )) != 0
 				   && (inv.CanPlace[block] || inv.CanDelete[block]) ) {
 					
 					for( int i = 0; i < inv.Hotbar.Length; i++ ) {
@@ -90,7 +92,7 @@ namespace ClassicalSharp {
 			} else if( left ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				byte block = 0;
-				if( game.Map.IsValidPos( pos ) && (block = game.Map.GetBlock( pos )) != 0
+				if( game.World.IsValidPos( pos ) && (block = game.World.GetBlock( pos )) != 0
 				   && inv.CanDelete[block] ) {
 					game.ParticleManager.BreakBlockEffect( pos, block );
 					game.AudioPlayer.PlayDigSound( game.BlockInfo.DigSounds[block] );
@@ -99,10 +101,10 @@ namespace ClassicalSharp {
 				}
 			} else if( right ) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
-				if( !game.Map.IsValidPos( pos ) ) return;
+				if( !game.World.IsValidPos( pos ) ) return;
 				
 				byte block = (byte)inv.HeldBlock;
-				if( !game.CanPick( game.Map.GetBlock( pos ) ) && inv.CanPlace[block]
+				if( !game.CanPick( game.World.GetBlock( pos ) ) && inv.CanPlace[block]
 				   && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
 					game.AudioPlayer.PlayDigSound( game.BlockInfo.StepSounds[block] );
@@ -157,7 +159,7 @@ namespace ClassicalSharp {
 			
 			Vector3I newLoc = Vector3I.Floor( newP );
 			bool validPos = newLoc.X >= 0 && newLoc.Y >= 0 && newLoc.Z >= 0 &&
-				newLoc.X < game.Map.Width && newP.Z < game.Map.Length;
+				newLoc.X < game.World.Width && newP.Z < game.World.Length;
 			if( !validPos ) return false;
 			
 			game.LocalPlayer.Position = newP;
@@ -344,7 +346,7 @@ namespace ClassicalSharp {
 				} else {
 					CycleDistanceForwards();
 				}
-			} else if( key == Keys[KeyBinding.PauseOrExit] && !game.Map.IsNotLoaded ) {
+			} else if( key == Keys[KeyBinding.PauseOrExit] && !game.World.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBinding.OpenInventory] ) {
 				game.SetNewScreen( new BlockSelectScreen( game ) );

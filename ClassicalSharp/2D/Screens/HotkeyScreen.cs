@@ -4,7 +4,7 @@ using System.Drawing;
 using ClassicalSharp.Hotkeys;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	// TODO: Hotkey added event for CPE
 	public sealed class HotkeyScreen : MenuScreen {

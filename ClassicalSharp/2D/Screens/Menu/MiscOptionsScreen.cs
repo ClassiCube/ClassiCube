@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp.Singleplayer;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class MiscOptionsScreen : MenuOptionsScreen {
 		

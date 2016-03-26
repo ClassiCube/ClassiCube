@@ -4,7 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class BlockHotbarWidget : Widget {
 		

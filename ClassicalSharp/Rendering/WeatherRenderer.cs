@@ -1,19 +1,20 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Map;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Renderers {
 
 	public class WeatherRenderer {
 		
 		Game game;
-		Map map;
+		World map;
 		IGraphicsApi graphics;
 		BlockInfo info;
 		public WeatherRenderer( Game game ) {
 			this.game = game;
-			map = game.Map;
+			map = game.World;
 			graphics = game.Graphics;
 			info = game.BlockInfo;
 			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
@@ -46,11 +47,11 @@ namespace ClassicalSharp {
 			int index = 0;
 			graphics.AlphaTest = false;
 			graphics.DepthWrite = false;
-			FastColour col = game.Map.Sunlight;
+			FastColour col = game.World.Sunlight;
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
 					float rainY = GetRainHeight( pos.X + dx, pos.Z + dz );
-					float height = Math.Max( game.Map.Height, pos.Y + 64 ) - rainY;
+					float height = Math.Max( game.World.Height, pos.Y + 64 ) - rainY;
 					if( height <= 0 ) continue;
 					
 					if( particles && (rainAcc >= 0.25 || moved) )
@@ -112,13 +113,13 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.MapEvents.OnNewMap += OnNewMap;
-			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.WorldEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		public void Dispose() {
-			game.MapEvents.OnNewMap -= OnNewMap;
-			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.WorldEvents.OnNewMap -= OnNewMap;
+			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			graphics.DeleteDynamicVb( weatherVb );
 		}
 		
@@ -150,7 +151,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			if( game.Map.IsNotLoaded || heightmap == null ) return;
+			if( game.World.IsNotLoaded || heightmap == null ) return;
 			bool didBlock = BlocksRain( oldBlock );
 			bool nowBlocks = BlocksRain( newBlock );
 			if( didBlock == nowBlocks ) return;

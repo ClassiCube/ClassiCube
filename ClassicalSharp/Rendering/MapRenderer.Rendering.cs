@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Renderers {
 	
 	public partial class MapRenderer : IDisposable {
 		

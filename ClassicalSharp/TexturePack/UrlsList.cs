@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.TexturePack {
 	
 	public sealed class UrlsList {
 		

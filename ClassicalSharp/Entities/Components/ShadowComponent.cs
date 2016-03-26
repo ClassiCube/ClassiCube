@@ -4,7 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
 	/// <summary> Entity component that draws square and circle shadows beneath entities. </summary>
 	public unsafe sealed class ShadowComponent {
@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			EntityShadow mode = game.Players.ShadowMode;
 			Vector3 Position = entity.Position;
 			float posX = Position.X, posZ = Position.Z;
-			int posY = Math.Min( (int)Position.Y, game.Map.Height - 1 );
+			int posY = Math.Min( (int)Position.Y, game.World.Height - 1 );
 			int index = 0, vb = 0;
 			
 			VertexPos3fTex2fCol4b[] verts = null;
@@ -150,7 +150,7 @@ namespace ClassicalSharp {
 			}
 			
 			if( index < 4 ) {
-				data[index].Block = (byte)game.Map.EdgeBlock; data[index].Y = 0;
+				data[index].Block = (byte)game.World.EdgeBlock; data[index].Y = 0;
 				CalcAlpha( Position.Y, ref data[index] );
 				index++;
 			}
@@ -158,14 +158,14 @@ namespace ClassicalSharp {
 		}
 		
 		byte GetShadowBlock( int x, int y, int z ) {
-			if( x < 0 || z < 0 || x >= game.Map.Width || z >= game.Map.Length ) {
-				if( y == game.Map.EdgeHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.EdgeBlock] ? 0 : Block.Bedrock);
-				if( y == game.Map.SidesHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.Map.SidesBlock] ? 0 : Block.Bedrock);
+			if( x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length ) {
+				if( y == game.World.EdgeHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.World.EdgeBlock] ? 0 : Block.Bedrock);
+				if( y == game.World.SidesHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.World.SidesBlock] ? 0 : Block.Bedrock);
 				return (byte)Block.Air;
 			}
-			return game.Map.GetBlock( x, y, z );
+			return game.World.GetBlock( x, y, z );
 		}
 		
 		struct ShadowData {

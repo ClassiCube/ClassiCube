@@ -5,7 +5,7 @@ using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	public partial class LocalPlayer : Player {
 		
@@ -202,7 +202,7 @@ namespace ClassicalSharp {
 				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
 					for( int x = bbMin.X; x <= bbMax.X; x++ )
 			{
-				byte block = game.Map.SafeGetBlock( x, y, z );
+				byte block = game.World.SafeGetBlock( x, y, z );
 				if( block == 0 ) continue;
 				BlockCollideType type = info.CollideType[block];
 				if( type == BlockCollideType.Solid && !checkSolid )

@@ -2,7 +2,7 @@
 using System;
 using System.Net.Sockets;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 	
 	internal class NetWriter {
 		

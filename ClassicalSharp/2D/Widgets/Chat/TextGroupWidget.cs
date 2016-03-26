@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed partial class TextGroupWidget : Widget {
 		

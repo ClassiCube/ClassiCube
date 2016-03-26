@@ -1,12 +1,14 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Hotkeys;
+using ClassicalSharp.Map;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
@@ -267,15 +269,15 @@ namespace ClassicalSharp {
 			FastColour col = new FastColour( red, green, blue );
 
 			if( variable == 0 ) {
-				game.Map.SetSkyColour( invalid ? Map.DefaultSkyColour : col );
+				game.World.SetSkyColour( invalid ? World.DefaultSkyColour : col );
 			} else if( variable == 1 ) {
-				game.Map.SetCloudsColour( invalid ? Map.DefaultCloudsColour : col );
+				game.World.SetCloudsColour( invalid ? World.DefaultCloudsColour : col );
 			} else if( variable == 2 ) {
-				game.Map.SetFogColour( invalid ? Map.DefaultFogColour : col );
+				game.World.SetFogColour( invalid ? World.DefaultFogColour : col );
 			} else if( variable == 3 ) {
-				game.Map.SetShadowlight( invalid ? Map.DefaultShadowlight : col );
+				game.World.SetShadowlight( invalid ? World.DefaultShadowlight : col );
 			} else if( variable == 4 ) {
-				game.Map.SetSunlight( invalid ? Map.DefaultSunlight : col );
+				game.World.SetSunlight( invalid ? World.DefaultSunlight : col );
 			}
 		}
 		
@@ -308,16 +310,16 @@ namespace ClassicalSharp {
 		
 		void HandleCpeEnvSetMapApperance() {
 			string url = reader.ReadAsciiString();
-			game.Map.SetSidesBlock( (Block)reader.ReadUInt8() );
-			game.Map.SetEdgeBlock( (Block)reader.ReadUInt8() );
-			game.Map.SetEdgeLevel( reader.ReadInt16() );
+			game.World.SetSidesBlock( (Block)reader.ReadUInt8() );
+			game.World.SetEdgeBlock( (Block)reader.ReadUInt8() );
+			game.World.SetEdgeLevel( reader.ReadInt16() );
 			if( !game.AllowServerTextures )
 				return;
 			
 			if( url == String.Empty ) {
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( game.DefaultTexturePack, game );
-				game.Map.TextureUrl = null;
+				game.World.TextureUrl = null;
 			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
 				RetrieveTexturePack( url );
 			}
@@ -326,14 +328,14 @@ namespace ClassicalSharp {
 		
 		void HandleCpeEnvSetMapAppearance2() {
 			HandleCpeEnvSetMapApperance();
-			game.Map.SetCloudsLevel( reader.ReadInt16() );
+			game.World.SetCloudsLevel( reader.ReadInt16() );
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 			game.SetViewDistance( game.UserViewDistance, false );
 		}
 		
 		void HandleCpeEnvWeatherType() {
-			game.Map.SetWeather( (Weather)reader.ReadUInt8() );
+			game.World.SetWeather( (Weather)reader.ReadUInt8() );
 		}
 		
 		void HandleCpeHackControl() {
@@ -362,7 +364,7 @@ namespace ClassicalSharp {
 		const int bulkCount = 256;
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
-			if( game.Map.IsNotLoaded ) {
+			if( game.World.IsNotLoaded ) {
 				#if DEBUG_BLOCKS
 				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
 				#endif
@@ -376,7 +378,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < count; i++ ) {
 				byte block = reader.ReadUInt8();
-				Vector3I coords = game.Map.GetCoords( indices[i] );
+				Vector3I coords = game.World.GetCoords( indices[i] );
 				
 				if( coords.X < 0 ) {
 					#if DEBUG_BLOCKS

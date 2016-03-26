@@ -3,14 +3,11 @@ using System;
 using OpenTK;
 using ClassicalSharp.GraphicsAPI;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
-	public enum NameMode {
-		NoNames,
-		HoveredOnly,
-		AllNames,
-		AllNamesAndHovered,
-	}
+	public enum NameMode { NoNames, HoveredOnly, AllNames, AllNamesAndHovered, }
+	
+	public enum EntityShadow { None, SnapToBlock, Circle, CircleAll, }
 	
 	public class EntityList : IDisposable {
 		

@@ -2,7 +2,7 @@
 using System;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	/// <summary> Entity component that performs collision detection. </summary>
 	public sealed class PhysicsComponent {
@@ -22,11 +22,11 @@ namespace ClassicalSharp {
 		public const float Adjustment = 0.001f;
 		
 		public byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( x < 0 || x >= game.Map.Width || z < 0 ||
-			   z >= game.Map.Length || y < 0 ) return (byte)Block.Bedrock;
+			if( x < 0 || x >= game.World.Width || z < 0 ||
+			   z >= game.World.Length || y < 0 ) return (byte)Block.Bedrock;
 			
-			if( y >= game.Map.Height ) return (byte)Block.Air;
-			return game.Map.GetBlock( x, y, z );
+			if( y >= game.World.Height ) return (byte)Block.Air;
+			return game.World.GetBlock( x, y, z );
 		}
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {

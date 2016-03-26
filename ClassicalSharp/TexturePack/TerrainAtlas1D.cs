@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.TexturePack {
 	
 	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
 	public sealed class TerrainAtlas1D : IDisposable {

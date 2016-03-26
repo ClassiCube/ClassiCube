@@ -4,7 +4,7 @@ using System.IO;
 using ClassicalSharp.TexturePack;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class TexturePackScreen : FilesScreen {
 		

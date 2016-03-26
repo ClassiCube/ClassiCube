@@ -1,10 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using OpenTK.Input;
 using System.IO;
+using ClassicalSharp.Map;
+using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class SaveLevelScreen : MenuScreen {
 		

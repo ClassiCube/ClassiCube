@@ -1,6 +1,8 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Net;
 using OpenTK;
 
 namespace ClassicalSharp.Model {

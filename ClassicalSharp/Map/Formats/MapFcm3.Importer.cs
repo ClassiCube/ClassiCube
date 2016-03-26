@@ -5,9 +5,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
-	/// <summary> Imports a map from a FCMv3 map file (fCraft server map) </summary>
+	/// <summary> Imports a world from a FCMv3 map file (fCraft server map) </summary>
 	public sealed class MapFcm3 : IMapFileFormat {
 		
 		const uint Identifier = 0x0FC2AF40;
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 
 			reader.ReadUInt32(); // date modified
 			reader.ReadUInt32(); // date created
-			game.Map.Uuid = new Guid( reader.ReadBytes( 16 ) );
+			game.World.Uuid = new Guid( reader.ReadBytes( 16 ) );
 			reader.ReadBytes( 26 ); // layer index
 			int metaSize = reader.ReadInt32();
 

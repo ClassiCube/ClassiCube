@@ -1,7 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	/// <summary> Represents a container of widgets and other 2D elements. </summary>
 	/// <remarks> May cover the entire game window. </remarks>

@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using ClassicalSharp.Entities;
 using OpenTK;
 using OpenTK.Input;
 

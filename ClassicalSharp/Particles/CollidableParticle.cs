@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
 using OpenTK;
 
 namespace ClassicalSharp.Particles {
@@ -79,12 +80,12 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		byte GetBlock( Game game, int x, int y, int z ) {
-			if( game.Map.IsValidPos( x, y, z ) )
-				return game.Map.GetBlock( x, y, z );
+			if( game.World.IsValidPos( x, y, z ) )
+				return game.World.GetBlock( x, y, z );
 			
-			if( y >= game.Map.EdgeHeight ) return (byte)Block.Air;
-			if( y >= game.Map.SidesHeight ) return (byte)game.Map.EdgeBlock;
-			return (byte)game.Map.SidesBlock;
+			if( y >= game.World.EdgeHeight ) return (byte)Block.Air;
+			if( y >= game.World.SidesHeight ) return (byte)game.World.EdgeBlock;
+			return (byte)game.World.SidesBlock;
 		}
 		
 		static Vector3 FloorHor( Vector3 v ) {

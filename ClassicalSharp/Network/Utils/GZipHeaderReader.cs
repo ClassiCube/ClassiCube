@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 	
 	internal class GZipHeaderReader {
 		

@@ -1,7 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 	
 	public enum PacketId {
 		Handshake = 0,
@@ -47,6 +47,9 @@ namespace ClassicalSharp {
 		CpeSetTextColor = 39,
 		CpeDefineModel = 40,
 	}
+}
+
+namespace ClassicalSharp {
 	
 	public enum MessageType {
 		Normal = 0,
@@ -68,11 +71,5 @@ namespace ClassicalSharp {
 		ClientClock = 262,
 	}
 	
-	public enum CpeBlockFace {
-		XMax, XMin, YMax, YMin, ZMax, ZMin,
-	}
-	
-	public enum Weather {
-		Sunny, Rainy, Snowy,
-	}
+	public enum CpeBlockFace { XMax, XMin, YMax, YMin, ZMax, ZMin, }
 }

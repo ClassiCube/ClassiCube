@@ -2,9 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using ClassicalSharp.Entities;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed partial class TextInputWidget : Widget {
 		

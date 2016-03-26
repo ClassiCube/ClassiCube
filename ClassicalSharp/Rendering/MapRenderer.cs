@@ -1,9 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Renderers {
 	
 	// TODO: optimise chunk rendering
 	//  --> reduce iterations: liquid and sprite pass only need 1 row
@@ -21,9 +23,9 @@ namespace ClassicalSharp {
 			public ChunkPartInfo[] TranslucentParts;
 			
 			public ChunkInfo( int x, int y, int z ) {
-				CentreX = (ushort)( x + 8 );
-				CentreY = (ushort)( y + 8 );
-				CentreZ = (ushort)( z + 8 );
+				CentreX = (ushort)(x + 8);
+				CentreY = (ushort)(y + 8);
+				CentreZ = (ushort)(z + 8);
 			}
 		}
 		
@@ -51,9 +53,9 @@ namespace ClassicalSharp {
 			info = game.BlockInfo;
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
-			game.MapEvents.OnNewMap += OnNewMap;
-			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
-			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
+			game.WorldEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged += ViewDistanceChanged;
 		}
@@ -63,16 +65,16 @@ namespace ClassicalSharp {
 			chunks = null;
 			unsortedChunks = null;
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
-			game.MapEvents.OnNewMap -= OnNewMap;
-			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
-			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
-			game.MapEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
+			game.WorldEvents.OnNewMap -= OnNewMap;
+			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			game.WorldEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged -= ViewDistanceChanged;
 			builder.Dispose();
 		}
 		
 		public void Refresh() {
-			if( chunks != null && !game.Map.IsNotLoaded ) {
+			if( chunks != null && !game.World.IsNotLoaded ) {
 				ClearChunkCache();
 				CreateChunkCache();
 			}
@@ -83,7 +85,7 @@ namespace ClassicalSharp {
 			if( e.Var == EnvVar.SunlightColour || e.Var == EnvVar.ShadowlightColour ) {
 				Refresh();
 			} else if( e.Var == EnvVar.EdgeLevel ) {
-				builder.clipLevel = Math.Max( 0, game.Map.SidesHeight );
+				builder.clipLevel = Math.Max( 0, game.World.SidesHeight );
 				Refresh();
 			}
 		}
@@ -135,9 +137,9 @@ namespace ClassicalSharp {
 		
 		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded( object sender, EventArgs e ) {
-			width = NextMultipleOf16( game.Map.Width );
-			height = NextMultipleOf16( game.Map.Height );
-			length = NextMultipleOf16( game.Map.Length );
+			width = NextMultipleOf16( game.World.Width );
+			height = NextMultipleOf16( game.World.Height );
+			length = NextMultipleOf16( game.World.Length );
 			chunksX = width >> 4;
 			chunksY = height >> 4;
 			chunksZ = length >> 4;
@@ -217,8 +219,8 @@ namespace ClassicalSharp {
 		}
 		
 		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			byte b1 = game.Map.SafeGetBlock( x1, y1, z1 );
-			byte b2 = game.Map.SafeGetBlock( x2, y2, z2 );
+			byte b1 = game.World.SafeGetBlock( x1, y1, z1 );
+			byte b2 = game.World.SafeGetBlock( x2, y2, z2 );
 			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
 		}
 		

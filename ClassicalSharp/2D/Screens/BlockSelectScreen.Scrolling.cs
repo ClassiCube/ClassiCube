@@ -2,7 +2,7 @@
 using System;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public partial class BlockSelectScreen : Screen {
 		

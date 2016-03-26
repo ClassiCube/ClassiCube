@@ -1,7 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class GuiOptionsScreen : MenuOptionsScreen {
 		

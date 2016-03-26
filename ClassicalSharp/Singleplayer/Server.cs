@@ -2,7 +2,9 @@
 //#define TEST_VANILLA
 using System;
 using System.Net;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Generator;
+using ClassicalSharp.Gui;
 using OpenTK;
 using OpenTK.Input;
 
@@ -98,11 +100,11 @@ namespace ClassicalSharp.Singleplayer {
 				game.Chat.Add( "&cFailed to generate the map." );
 			} else {
 				IMapGenerator gen = generator;
-				game.Map.SetData( generatedMap, generator.Width,
+				game.World.SetData( generatedMap, generator.Width,
 				                 generator.Height, generator.Length );
 				generatedMap = null;
 				
-				game.MapEvents.RaiseOnNewMapLoaded();
+				game.WorldEvents.RaiseOnNewMapLoaded();
 				ResetPlayerPosition();
 			}
 			
@@ -112,7 +114,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		internal void GenMap( int width, int height, int length, int seed, IMapGenerator generator ) {
-			game.Map.Reset();
+			game.World.Reset();
 			GC.Collect();
 			this.generator = generator;
 			game.SetNewScreen( new LoadingMapScreen( game, "Generating level", "Generating.." ) );
@@ -126,8 +128,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void ResetPlayerPosition() {
-			int x = game.Map.Width / 2, z = game.Map.Length / 2;
-			int y = game.Map.GetLightHeight( x, z ) + 2;
+			int x = game.World.Width / 2, z = game.World.Length / 2;
+			int y = game.World.GetLightHeight( x, z ) + 2;
 			
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, 0, 0, false );
 			game.LocalPlayer.SetLocation( update, false );

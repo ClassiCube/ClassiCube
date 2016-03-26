@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public sealed class ClassicPlayerListWidget : PlayerListWidget {
 		

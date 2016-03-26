@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
@@ -9,7 +10,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public StandardEnvRenderer( Game game ) {
 			this.game = game;
-			map = game.Map;
+			map = game.World;
 		}
 		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
@@ -90,7 +91,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RenderClouds( double delta ) {
-			if( game.Map.CloudHeight < -2000 ) return;
+			if( game.World.CloudHeight < -2000 ) return;
 			double time = game.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );
 			graphics.SetMatrixMode( MatrixType.Texture );
@@ -128,7 +129,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Vector3I headCoords = Vector3I.Floor( game.LocalPlayer.EyePosition );
 			Vector3 pos = (Vector3)headCoords;
-			byte headBlock = game.Map.SafeGetBlock( headCoords );
+			byte headBlock = game.World.SafeGetBlock( headCoords );
 			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[headBlock],
 			                                      pos + game.BlockInfo.MaxBB[headBlock] );
 			BoundingBox localBB = game.LocalPlayer.CollisionBounds;

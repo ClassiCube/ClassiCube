@@ -4,11 +4,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
+using ClassicalSharp.Entities;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 	
-	/// <summary> Imports a map from a dat map file (original minecraft classic map) </summary>
+	/// <summary> Imports a world from a dat map file (original minecraft classic map) </summary>
 	public sealed class MapDat : IMapFileFormat {
 		
 		const byte TC_NULL = 0x70, TC_REFERENCE = 0x71;

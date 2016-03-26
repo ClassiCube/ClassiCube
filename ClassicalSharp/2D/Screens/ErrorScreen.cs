@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class ErrorScreen : ClickableScreen {
 		

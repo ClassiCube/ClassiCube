@@ -2,7 +2,7 @@
 using System;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	public sealed class NetPlayer : Player {
 		

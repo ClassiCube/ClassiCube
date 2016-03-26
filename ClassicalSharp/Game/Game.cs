@@ -7,7 +7,10 @@ using System.Net;
 using System.Threading;
 using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui;
+using ClassicalSharp.Map;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -98,7 +101,7 @@ namespace ClassicalSharp {
 			Inventory = new Inventory( this );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
-			Map = new Map( this );
+			World = new World( this );
 			LocalPlayer = new LocalPlayer( this );
 			Players[255] = LocalPlayer;
 			width = Width;
@@ -109,7 +112,7 @@ namespace ClassicalSharp {
 			if( IPAddress == null ) {
 				Network = new Singleplayer.SinglePlayerServer( this );
 			} else {
-				Network = new NetworkProcessor( this );
+				Network = new Net.NetworkProcessor( this );
 			}
 			Graphics.LostContextFunction = Network.Tick;
 			
@@ -232,7 +235,7 @@ namespace ClassicalSharp {
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( Map.IsNotLoaded ) visible = false;
+			if( World.IsNotLoaded ) visible = false;
 			if( visible ) {
 				AxisLinesRenderer.Render( delta );
 				Players.RenderModels( Graphics, delta, t );
@@ -345,8 +348,8 @@ namespace ClassicalSharp {
 		
 		public void Disconnect( string title, string reason ) {
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
-			Map.Reset();
-			Map.mapData = null;
+			World.Reset();
+			World.mapData = null;
 			Drawer2D.InitColours();
 			
 			for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
@@ -420,9 +423,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock( int x, int y, int z, byte block ) {
-			int oldHeight = Map.GetLightHeight( x, z ) + 1;
-			Map.SetBlock( x, y, z, block );
-			int newHeight = Map.GetLightHeight( x, z ) + 1;
+			int oldHeight = World.GetLightHeight( x, z ) + 1;
+			World.SetBlock( x, y, z, block );
+			int newHeight = World.GetLightHeight( x, z ) + 1;
 			MapRenderer.RedrawBlock( x, y, z, block, oldHeight, newHeight );
 		}
 		

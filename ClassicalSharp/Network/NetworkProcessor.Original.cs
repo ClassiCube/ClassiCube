@@ -1,5 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Gui;
+using ClassicalSharp.Entities;
 using OpenTK;
 #if __MonoCS__
 using Ionic.Zlib;
@@ -7,7 +9,7 @@ using Ionic.Zlib;
 using System.IO.Compression;
 #endif
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
@@ -88,7 +90,7 @@ namespace ClassicalSharp {
 		void HandleLevelInit() {
 			if( gzipStream != null )
 				return;
-			game.Map.Reset();
+			game.World.Reset();
 			prevScreen = game.activeScreen;
 			if( prevScreen is LoadingMapScreen )
 				prevScreen = null;
@@ -144,7 +146,7 @@ namespace ClassicalSharp {
 			
 			reader.Skip( 1024 );
 			byte progress = reader.ReadUInt8();
-			game.MapEvents.RaiseMapLoading( progress );
+			game.WorldEvents.RaiseMapLoading( progress );
 		}
 		
 		void HandleLevelFinalise() {
@@ -160,8 +162,8 @@ namespace ClassicalSharp {
 			
 			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 			Utils.LogDebug( "map loading took:" + loadingMs );
-			game.Map.SetData( map, mapWidth, mapHeight, mapLength );
-			game.MapEvents.RaiseOnNewMapLoaded();
+			game.World.SetData( map, mapWidth, mapHeight, mapLength );
+			game.WorldEvents.RaiseOnNewMapLoaded();
 			
 			map = null;
 			gzipStream.Dispose();
@@ -182,14 +184,14 @@ namespace ClassicalSharp {
 			byte type = reader.ReadUInt8();
 			
 			#if DEBUG_BLOCKS
-			if( game.Map.IsNotLoaded )
+			if( game.World.IsNotLoaded )
 				Utils.LogDebug( "Server tried to update a block while still sending us the map!" );
-			else if( !game.Map.IsValidPos( x, y, z ) )
+			else if( !game.World.IsValidPos( x, y, z ) )
 				Utils.LogDebug( "Server tried to update a block at an invalid position!" );
 			else
 				game.UpdateBlock( x, y, z, type );
 			#else
-			if( !game.Map.IsNotLoaded && game.Map.IsValidPos( x, y, z ) )
+			if( !game.World.IsNotLoaded && game.World.IsValidPos( x, y, z ) )
 				game.UpdateBlock( x, y, z, type );
 			#endif
 		}

@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
+using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp.Singleplayer {
@@ -8,7 +9,7 @@ namespace ClassicalSharp.Singleplayer {
 	public class Physics {
 		
 		Game game;
-		Map map;
+		World map;
 		Random rnd = new Random();
 		BlockInfo info;
 		int width, length, height, oneY;
@@ -26,9 +27,9 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public Physics( Game game ) {
 			this.game = game;
-			map = game.Map;
+			map = game.World;
 			info = game.BlockInfo;
-			game.MapEvents.OnNewMapLoaded += ResetMap;
+			game.WorldEvents.OnNewMapLoaded += ResetMap;
 			enabled = Options.GetBool( OptionsKey.SingleplayerPhysics, true );
 		}
 		
@@ -63,7 +64,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
-			if( !Enabled || game.Map.IsNotLoaded ) return;
+			if( !Enabled || game.World.IsNotLoaded ) return;
 			
 			//if( (tickCount % 5) == 0 ) {
 			TickLava();
@@ -108,7 +109,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public void Dispose() {
-			game.MapEvents.OnNewMapLoaded -= ResetMap;
+			game.WorldEvents.OnNewMapLoaded -= ResetMap;
 		}
 		
 		#region General

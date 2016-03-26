@@ -1,7 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Runtime.InteropServices;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Map;
 using ClassicalSharp.Renderers;
 using OpenTK;
 
@@ -54,8 +56,8 @@ namespace ClassicalSharp.Model {
 			pos = p.Position;
 			if( Bobbing )
 				pos.Y += p.anim.bobYOffset;
-			Map map = game.Map;
-			col = game.Map.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
+			World map = game.World;
+			col = game.World.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 			
 			cosYaw = (float)Math.Cos( p.YawDegrees * Utils.Deg2Rad );
 			sinYaw = (float)Math.Sin( p.YawDegrees * Utils.Deg2Rad );

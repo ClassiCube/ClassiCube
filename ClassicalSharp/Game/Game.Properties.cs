@@ -6,7 +6,11 @@ using System.IO;
 using System.Net;
 using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui;
+using ClassicalSharp.Map;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -23,8 +27,8 @@ namespace ClassicalSharp {
 		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
 		public IGraphicsApi Graphics;
 		
-		/// <summary> Contains the block data and metadata of the player's current world. </summary>
-		public Map Map;
+		/// <summary> Contains the block data and metadata/properties for the player's current world. </summary>
+		public World World;
 		
 		/// <summary> Represents a connection to a multiplayer or a singleplayer server. </summary>
 		public INetworkProcessor Network;
@@ -79,9 +83,9 @@ namespace ClassicalSharp {
 		internal int defaultIb;
 		FpsScreen fpsScreen;
 		internal HudScreen hudScreen;
-		public Events Events = new Events();
+		public OtherEvents Events = new OtherEvents();
 		public EntityEvents EntityEvents = new EntityEvents();
-		public MapEvents MapEvents = new MapEvents();
+		public WorldEvents WorldEvents = new WorldEvents();
 		public InputHandler InputHandler;
 		public Chat Chat;
 		public BlockHandRenderer BlockHandRenderer;

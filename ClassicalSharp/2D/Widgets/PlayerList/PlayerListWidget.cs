@@ -2,7 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public abstract class PlayerListWidget : Widget {
 		

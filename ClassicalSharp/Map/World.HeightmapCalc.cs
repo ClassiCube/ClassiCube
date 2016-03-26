@@ -1,11 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
 	/// <summary> Represents a fixed size map of blocks. Stores the raw block data,
 	/// heightmap, dimensions and various metadata such as environment settings. </summary>
-	public sealed partial class Map {
+	public sealed partial class World {
 		
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
 			int mapIndex = (maxY * Length + z) * Width + x;

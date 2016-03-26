@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
 	/// <summary> Entity component that performs model animation depending on movement speed and time. </summary>
 	public sealed class AnimatedComponent {

@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Renderers;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	/// <summary> Entity component that performs interpolation of position and model head yaw over time. </summary>
 	public sealed class InterpolatedComponent {

@@ -4,10 +4,12 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
@@ -46,7 +48,7 @@ namespace ClassicalSharp {
 			Disconnected = false;
 			receivedFirstPosition = false;
 			lastPacket = DateTime.UtcNow;
-			game.MapEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMap += OnNewMap;
 			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
@@ -54,7 +56,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void Dispose() {
-			game.MapEvents.OnNewMap -= OnNewMap;
+			game.WorldEvents.OnNewMap -= OnNewMap;
 			socket.Close();
 			Disconnected = true;
 		}	

@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -24,7 +25,7 @@ namespace ClassicalSharp {
 			Vector3 tMax, tDelta;
 			CalcVectors( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
 			
-			Map map = game.Map;
+			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
@@ -73,7 +74,7 @@ namespace ClassicalSharp {
 			Vector3 tMax, tDelta;
 			CalcVectors( origin, dir, out step, out cellBoundary, out tMax, out tDelta );
 			
-			Map map = game.Map;
+			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
@@ -171,7 +172,7 @@ namespace ClassicalSharp {
 		}
 		
 		const byte border = (byte)Block.Bedrock;
-		static byte GetBlock( Map map, int x, int y, int z, Vector3 origin ) {
+		static byte GetBlock( World map, int x, int y, int z, Vector3 origin ) {
 			bool sides = map.SidesBlock != Block.Air;
 			int height = Math.Max( 1, map.SidesHeight );
 			bool insideMap = map.IsValidPos( Vector3I.Floor( origin ) );

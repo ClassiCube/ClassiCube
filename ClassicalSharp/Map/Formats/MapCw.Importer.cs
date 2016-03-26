@@ -2,10 +2,12 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Net;
 using OpenTK;
-using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.MapCw.NbtTag>;
+using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.MapCw.NbtTag>;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
 	public sealed partial class MapCw : IMapFileFormat {
 		
@@ -13,7 +15,7 @@ namespace ClassicalSharp {
 
 		BinaryReader reader;
 		Game game;
-		Map map;
+		World map;
 		NbtTag invalid = default( NbtTag );
 		
 		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
@@ -22,7 +24,7 @@ namespace ClassicalSharp {
 				if( reader.ReadByte() != (byte)NbtTagType.Compound )
 					throw new InvalidDataException( "Nbt file must start with Tag_Compound" );
 				this.game = game;
-				map = game.Map;
+				map = game.World;
 				
 				invalid.TagId = NbtTagType.Invalid;
 				NbtTag root = ReadTag( (byte)NbtTagType.Compound, true );
@@ -65,11 +67,11 @@ namespace ClassicalSharp {
 				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
 			}
 			if( CheckKey( "EnvColors", 1, metadata ) ) {
-				map.SetSkyColour( GetColour( "Sky", Map.DefaultSkyColour ) );
-				map.SetCloudsColour( GetColour( "Cloud", Map.DefaultCloudsColour ) );
-				map.SetFogColour( GetColour( "Fog", Map.DefaultFogColour ) );
-				map.SetSunlight( GetColour( "Sunlight", Map.DefaultSunlight ) );
-				map.SetShadowlight( GetColour( "Ambient", Map.DefaultShadowlight ) );
+				map.SetSkyColour( GetColour( "Sky", World.DefaultSkyColour ) );
+				map.SetCloudsColour( GetColour( "Cloud", World.DefaultCloudsColour ) );
+				map.SetFogColour( GetColour( "Fog", World.DefaultFogColour ) );
+				map.SetSunlight( GetColour( "Sunlight", World.DefaultSunlight ) );
+				map.SetShadowlight( GetColour( "Ambient", World.DefaultShadowlight ) );
 			}
 			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
 				if( curCpeExt.ContainsKey( "TextureURL" ) )

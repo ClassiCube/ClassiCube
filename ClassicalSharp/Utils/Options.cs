@@ -57,10 +57,6 @@ namespace ClassicalSharp {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
 	}
 	
-	public enum EntityShadow { 
-		None, SnapToBlock, Circle, CircleAll,
-	}
-	
 	public static class Options {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();

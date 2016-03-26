@@ -2,7 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	/// <summary> Draws text to the screen, uses the given font when the user has specified 'use arial' in options,
 	/// otherwise draws text using the bitmapped font in default.png </summary>

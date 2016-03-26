@@ -2,9 +2,10 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using ClassicalSharp.Entities;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Map {
 
 	public sealed partial class MapCw : IMapFileFormat {
 		
@@ -15,7 +16,7 @@ namespace ClassicalSharp {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Compress ) ) {
 				writer = new BinaryWriter( wrapper );
 				this.game = game;
-				map = game.Map;
+				map = game.World;
 				
 				WriteTag( NbtTagType.Compound ); WriteString( "ClassicWorld" );
 				
@@ -95,7 +96,7 @@ namespace ClassicalSharp {
 			WriteTag( NbtTagType.Int16 );
 			WriteString( "SideLevel" ); WriteInt16( (short)map.EdgeHeight );
 			WriteTag( NbtTagType.String );
-			string url = game.Map.TextureUrl == null ? "" : game.Map.TextureUrl;
+			string url = game.World.TextureUrl == null ? "" : game.World.TextureUrl;
 			WriteString( "TextureURL" ); WriteString( url );
 			WriteTag( NbtTagType.End );
 			

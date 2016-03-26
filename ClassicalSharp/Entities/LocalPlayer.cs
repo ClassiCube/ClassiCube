@@ -5,7 +5,7 @@ using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 	
 	public partial class LocalPlayer : Player {
 		
@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 		
 		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
 		public override void Tick( double delta ) {
-			if( game.Map.IsNotLoaded ) return;
+			if( game.World.IsNotLoaded ) return;
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
@@ -237,9 +237,9 @@ namespace ClassicalSharp {
 			KeyMap keys = game.InputHandler.Keys;
 			if( key == keys[KeyBinding.Respawn] && Hacks.CanRespawn ) {
 				Vector3I p = Vector3I.Floor( SpawnPoint );
-				if( game.Map.IsValidPos( p ) ) {
+				if( game.World.IsValidPos( p ) ) {
 					// Spawn player at highest valid position.
-					for( int y = p.Y; y <= game.Map.Height; y++ ) {
+					for( int y = p.Y; y <= game.World.Height; y++ ) {
 						byte block1 = physics.GetPhysicsBlockId( p.X, y, p.Z );
 						byte block2 = physics.GetPhysicsBlockId( p.X, y + 1, p.Z );
 						if( info.CollideType[block1] != BlockCollideType.Solid &&

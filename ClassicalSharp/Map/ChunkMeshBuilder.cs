@@ -2,6 +2,7 @@
 //#define DEBUG_OCCLUSION
 using System;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -14,7 +15,7 @@ namespace ClassicalSharp {
 		float x1, y1, z1, x2, y2, z2;
 		byte tile;
 		BlockInfo info;
-		Map map;
+		World map;
 		Game game;
 		IGraphicsApi graphics;
 		const int chunkSize = 16, extChunkSize = 18;
@@ -300,11 +301,11 @@ namespace ClassicalSharp {
 		}
 		
 		public void OnNewMapLoaded() {
-			map = game.Map;
+			map = game.World;
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
-			clipLevel = Math.Max( 0, game.Map.SidesHeight );
+			clipLevel = Math.Max( 0, game.World.SidesHeight );
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

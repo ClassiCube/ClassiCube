@@ -4,9 +4,10 @@
 using System;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp.Map;
 using ClassicalSharp.Network;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Net {
 
 	public partial class NetworkProcessor {
 		
@@ -33,18 +34,18 @@ namespace ClassicalSharp {
 					string value = parts[1].TrimStart();
 					
 					if( key == "environment.cloud" ) {
-						FastColour col = ParseWomColour( value, Map.DefaultCloudsColour );
-						game.Map.SetCloudsColour( col );
+						FastColour col = ParseWomColour( value, World.DefaultCloudsColour );
+						game.World.SetCloudsColour( col );
 					} else if( key == "environment.sky" ) {
-						FastColour col = ParseWomColour( value, Map.DefaultSkyColour );
-						game.Map.SetSkyColour( col );
+						FastColour col = ParseWomColour( value, World.DefaultSkyColour );
+						game.World.SetSkyColour( col );
 					} else if( key == "environment.fog" ) {
-						FastColour col = ParseWomColour( value, Map.DefaultFogColour );
-						game.Map.SetFogColour( col );
+						FastColour col = ParseWomColour( value, World.DefaultFogColour );
+						game.World.SetFogColour( col );
 					} else if( key == "environment.level" ) {
 						int waterLevel = 0;
 						if( Int32.TryParse( value, out waterLevel ) )
-							game.Map.SetEdgeLevel( waterLevel );
+							game.World.SetEdgeLevel( waterLevel );
 					} else if( key == "user.detail" && !useMessageTypes ) {
 						game.Chat.Add( value, MessageType.Status2 );
 					}

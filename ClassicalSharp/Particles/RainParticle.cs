@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp.Particles {
@@ -29,7 +30,7 @@ namespace ClassicalSharp.Particles {
 			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize );
 			Utils.CalcBillboardPoints( size, Position, ref game.View,
 			                          out p111, out p121, out p212, out p222 );
-			Map map = game.Map;
+			World map = game.World;
 			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Sunlight : map.Shadowlight;
 			
 			vertices[index++] = new VertexPos3fTex2fCol4b( p111, rec.U1, rec.V2, col );

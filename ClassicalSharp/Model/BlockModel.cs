@@ -1,7 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Renderers;
+using ClassicalSharp.TexturePack;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -61,7 +63,7 @@ namespace ClassicalSharp.Model {
 			// a string every single time held block changes.
 			if( p is FakePlayer ) {
 				Vector3I eyePos = Vector3I.Floor( game.LocalPlayer.EyePosition );
-				FastColour baseCol = game.Map.IsLit( eyePos ) ? game.Map.Sunlight : game.Map.Shadowlight;
+				FastColour baseCol = game.World.IsLit( eyePos ) ? game.World.Sunlight : game.World.Shadowlight;
 				col = FastColour.Scale( baseCol, 0.8f );
 				block = ((FakePlayer)p).Block;
 			} else {

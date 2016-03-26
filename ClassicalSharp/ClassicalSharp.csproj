@@ -161,7 +161,7 @@
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Events\EntityEvents.cs" />
     <Compile Include="Events\Events.cs" />
-    <Compile Include="Events\MapEvents.cs" />
+    <Compile Include="Events\WorldEvents.cs" />
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Generator\FlatGrassGenerator.cs" />
     <Compile Include="Generator\IMapGenerator.cs" />
@@ -205,8 +205,8 @@
     <Compile Include="Map\Formats\MapCw.Importer.cs" />
     <Compile Include="Map\Formats\MapDat.Importer.cs" />
     <Compile Include="Map\Formats\MapFcm3.Importer.cs" />
-    <Compile Include="Map\Map.cs" />
-    <Compile Include="Map\Map.HeightmapCalc.cs" />
+    <Compile Include="Map\World.cs" />
+    <Compile Include="Map\World.HeightmapCalc.cs" />
     <Compile Include="Model\BlockModel.cs" />
     <Compile Include="Model\ChickenModel.cs" />
     <Compile Include="Model\CreeperModel.cs" />

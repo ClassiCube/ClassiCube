@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Net;
+using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 using OpenTK;
@@ -122,17 +123,17 @@ namespace ClassicalSharp {
 					}
 					game.ChangeTerrainAtlas( bmp );
 					TextureCache.AddToCache( item.Url, bmp );
-					game.Map.TextureUrl = item.Url;
+					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
 					if( bmp == null ) // Should never happen, but handle anyways.
 						ExtractDefault();
 					else
 						game.ChangeTerrainAtlas( bmp );
-					game.Map.TextureUrl = item.Url;
+					game.World.TextureUrl = item.Url;
 				} else {
 					ExtractDefault();
-					game.Map.TextureUrl = null;
+					game.World.TextureUrl = null;
 				}
 			}
 			
@@ -141,7 +142,7 @@ namespace ClassicalSharp {
 					TexturePackExtractor extractor = new TexturePackExtractor();
 					extractor.Extract( (byte[])item.Data, game );
 					TextureCache.AddToCache( item.Url, (byte[])item.Data );
-					game.Map.TextureUrl = item.Url;
+					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					byte[] data = TextureCache.GetDataFromCache( item.Url );
 					if( data == null ) { // Should never happen, but handle anyways.
@@ -150,10 +151,10 @@ namespace ClassicalSharp {
 						TexturePackExtractor extractor = new TexturePackExtractor();
 						extractor.Extract( data, game );
 					}
-					game.Map.TextureUrl = item.Url;
+					game.World.TextureUrl = item.Url;
 				} else {
 					ExtractDefault();
-					game.Map.TextureUrl = null;
+					game.World.TextureUrl = null;
 				}
 			}
 		}

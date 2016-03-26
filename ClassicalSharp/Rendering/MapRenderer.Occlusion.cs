@@ -3,16 +3,16 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Renderers {
 	
 	public partial class MapRenderer : IDisposable {
 		
 		void SimpleOcclusionCulling() { // TODO: still broken
 			Vector3 p = game.LocalPlayer.EyePosition;
 			Vector3I mapLoc = Vector3I.Floor( p );
-			Utils.Clamp( ref mapLoc.X, 0, game.Map.Width - 1 );
-			Utils.Clamp( ref mapLoc.Y, 0, game.Map.Height - 1 );
-			Utils.Clamp( ref mapLoc.Z, 0, game.Map.Length- 1 );
+			Utils.Clamp( ref mapLoc.X, 0, game.World.Width - 1 );
+			Utils.Clamp( ref mapLoc.Y, 0, game.World.Height - 1 );
+			Utils.Clamp( ref mapLoc.Z, 0, game.World.Length- 1 );
 			
 			int cx = mapLoc.X >> 4;
 			int cy = mapLoc.Y >> 4;
@@ -32,13 +32,13 @@ namespace ClassicalSharp {
 			
 			chunkIn.Visited = true;
 			mapLoc = Vector3I.Floor( p );
-			if( game.Map.IsValidPos( mapLoc ) ) {
+			if( game.World.IsValidPos( mapLoc ) ) {
 				chunkIn.DistanceFlags = flagX | flagY | flagZ;
 			} else {
 				chunkIn.OccludedFlags = chunkIn.OcclusionFlags = chunkInOcclusionFlags;
-				chunkIn.DistanceFlags |= (mapLoc.X < 0 || mapLoc.X >= game.Map.Width) ? flagX : (byte)0;
-				chunkIn.DistanceFlags |= (mapLoc.Y < 0 || mapLoc.Y >= game.Map.Height) ? flagY : (byte)0;
-				chunkIn.DistanceFlags |= (mapLoc.Z < 0 || mapLoc.Z >= game.Map.Length) ? flagZ : (byte)0;
+				chunkIn.DistanceFlags |= (mapLoc.X < 0 || mapLoc.X >= game.World.Width) ? flagX : (byte)0;
+				chunkIn.DistanceFlags |= (mapLoc.Y < 0 || mapLoc.Y >= game.World.Height) ? flagY : (byte)0;
+				chunkIn.DistanceFlags |= (mapLoc.Z < 0 || mapLoc.Z >= game.World.Length) ? flagZ : (byte)0;
 			}
 			
 			Console.WriteLine( "SRC    {0}", cx + "," + cy + "," + cz );

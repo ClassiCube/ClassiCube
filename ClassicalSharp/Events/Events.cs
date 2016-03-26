@@ -1,9 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Events {
 
-	public class Events {			
+	public class OtherEvents {			
 		
 		/// <summary> Raised when the terrain atlas ("terrain.png") is changed. </summary>
 		public event EventHandler TerrainAtlasChanged;

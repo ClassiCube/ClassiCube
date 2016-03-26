@@ -1,11 +1,13 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
+using ClassicalSharp.TexturePack;
 using OpenTK.Input;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Gui {
 	
 	public class LoadingMapScreen : Screen {
 		
@@ -86,7 +88,7 @@ namespace ClassicalSharp {
 			graphicsApi.Fog = false;
 			SetTitle( serverName );
 			SetMessage( serverMotd );
-			game.MapEvents.MapLoading += MapLoading;
+			game.WorldEvents.MapLoading += MapLoading;
 		}
 		
 		public void SetTitle( string title ) {
@@ -113,7 +115,7 @@ namespace ClassicalSharp {
 			font.Dispose();
 			messageWidget.Dispose();
 			titleWidget.Dispose();
-			game.MapEvents.MapLoading -= MapLoading;
+			game.WorldEvents.MapLoading -= MapLoading;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

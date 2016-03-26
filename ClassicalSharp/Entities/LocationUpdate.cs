@@ -2,7 +2,7 @@
 using System;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Entities {
 
 	/// <summary> Stores data that describes either a relative position, 
 	/// full position, or an orientation update for an entity. </summary>

@@ -2,20 +2,22 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Map;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Renderers {
 	
 	public unsafe sealed class MapBordersRenderer : IDisposable {
 		
-		Map map;
+		World map;
 		Game game;
 		IGraphicsApi graphics;
 		
 		public MapBordersRenderer( Game game ) {
 			this.game = game;
-			map = game.Map;
+			map = game.World;
 			graphics = game.Graphics;
 		}
 		
@@ -30,9 +32,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			game.MapEvents.OnNewMap += OnNewMap;
-			game.MapEvents.OnNewMapLoaded += OnNewMapLoaded;
-			game.MapEvents.EnvVariableChanged += EnvVariableChanged;
+			game.WorldEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
+			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged += ResetTextures;
 			
@@ -47,13 +49,13 @@ namespace ClassicalSharp {
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
 			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
-			if( game.Map.SidesBlock != Block.Air ) {
+			if( game.World.SidesBlock != Block.Air ) {
 				graphics.BindVb( sidesVb );
 				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
 			}
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			bool underWater = camPos.Y < game.Map.EdgeHeight;
+			bool underWater = camPos.Y < game.World.EdgeHeight;
 			graphics.AlphaBlending = true;
 			if( underWater ) game.WeatherRenderer.Render( deltaTime );
 			
@@ -62,7 +64,7 @@ namespace ClassicalSharp {
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.Map.EdgeBlock != Block.Air && camPos.Y >= yVisible )
+			if( game.World.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
 			if( !underWater ) game.WeatherRenderer.Render( deltaTime );
@@ -72,9 +74,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			game.MapEvents.OnNewMap -= OnNewMap;
-			game.MapEvents.OnNewMapLoaded -= OnNewMapLoaded;
-			game.MapEvents.EnvVariableChanged -= EnvVariableChanged;
+			game.WorldEvents.OnNewMap -= OnNewMap;
+			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
+			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged -= ResetTextures;
 			
@@ -123,7 +125,7 @@ namespace ClassicalSharp {
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
-			if( game.Map.IsNotLoaded ) return;
+			if( game.World.IsNotLoaded ) return;
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
 			
@@ -143,7 +145,7 @@ namespace ClassicalSharp {
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColSides = game.BlockInfo.FullBright[(byte)game.Map.SidesBlock];
+			fullColSides = game.BlockInfo.FullBright[(byte)game.World.SidesBlock];
 			FastColour col = fullColSides ? FastColour.White : map.Shadowlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
@@ -170,7 +172,7 @@ namespace ClassicalSharp {
 			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColEdge = game.BlockInfo.FullBright[(byte)game.Map.EdgeBlock];
+			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.EdgeBlock];
 			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel - 0.1f/16f, axisSize, col, ref vertices );
