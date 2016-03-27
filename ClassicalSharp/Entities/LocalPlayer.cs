@@ -185,7 +185,9 @@ namespace ClassicalSharp.Entities {
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {
 			if( update.IncludesPosition ) {
 				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
-				nextPos.Y += Entity.Adjustment;
+				double blockOffset = nextPos.Y - Math.Floor( nextPos.Y );
+				if( blockOffset < Entity.Adjustment )
+					nextPos.Y += Entity.Adjustment;
 				if( !interpolate ) {
 					lastPos = Position = nextPos;
 				}
