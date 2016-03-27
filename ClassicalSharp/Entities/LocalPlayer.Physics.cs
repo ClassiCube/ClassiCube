@@ -30,6 +30,7 @@ namespace ClassicalSharp.Entities {
 			if( !jumping ) {
 				canLiquidJump = false; return;
 			}
+==
 			
 			bool touchWater = TouchesAnyWater();
 			bool touchLava = TouchesAnyLava();
@@ -49,8 +50,8 @@ namespace ClassicalSharp.Entities {
 				if( !pastJumpPoint ) {
 					canLiquidJump = true;
 					Velocity.Y += 0.04f;
-					if( speeding ) Velocity.Y += 0.04f;
-					if( halfSpeeding ) Velocity.Y += 0.02f;
+					if( speeding && Hacks.CanSpeed ) Velocity.Y += 0.04f;
+					if( halfSpeeding && Hacks.CanSpeed ) Velocity.Y += 0.02f;
 				} else if( pastJumpPoint ) {
 					// either A) jump bob in water B) climb up solid on side
 					if( canLiquidJump || (physics.collideX || physics.collideZ) )
