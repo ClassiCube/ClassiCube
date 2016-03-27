@@ -30,7 +30,6 @@ namespace ClassicalSharp.Entities {
 			if( !jumping ) {
 				canLiquidJump = false; return;
 			}
-==
 			
 			bool touchWater = TouchesAnyWater();
 			bool touchLava = TouchesAnyLava();

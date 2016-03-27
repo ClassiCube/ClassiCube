@@ -18,39 +18,41 @@ namespace ClassicalSharp.Gui {
 			base.Init();
 			
 			widgets = new Widget[] {
-				Make( -140, -150, "Clouds colour", OnWidgetClick,
+				// Column 1
+				Make( -1, -150, "Clouds colour", OnWidgetClick,
 				     g => g.World.CloudsCol.ToRGBHexString(),
 				     (g, v) => g.World.SetCloudsColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, -100, "Sky colour", OnWidgetClick,
+				Make( -1, -100, "Sky colour", OnWidgetClick,
 				     g => g.World.SkyCol.ToRGBHexString(),
 				     (g, v) => g.World.SetSkyColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, -50, "Fog colour", OnWidgetClick,
+				Make( -1, -50, "Fog colour", OnWidgetClick,
 				     g => g.World.FogCol.ToRGBHexString(),
 				     (g, v) => g.World.SetFogColour( FastColour.Parse( v ) ) ),
 				
-				Make( -140, 0, "Clouds speed", OnWidgetClick,
+				Make( -1, 0, "Clouds speed", OnWidgetClick,
 				     g => g.World.CloudsSpeed.ToString(),
 				     (g, v) => g.World.SetCloudsSpeed( Single.Parse( v ) ) ),
 				
-				Make( -140, 50, "Clouds height", OnWidgetClick,
+				Make( -1, 50, "Clouds height", OnWidgetClick,
 				     g => g.World.CloudHeight.ToString(),
 				     (g, v) => g.World.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
-				Make( 140, -100, "Sunlight colour", OnWidgetClick,
+				// Column 2
+				Make( 1, -100, "Sunlight colour", OnWidgetClick,
 				     g => g.World.Sunlight.ToRGBHexString(),
 				     (g, v) => g.World.SetSunlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, -50, "Shadow colour", OnWidgetClick,
+				Make( 1, -50, "Shadow colour", OnWidgetClick,
 				     g => g.World.Shadowlight.ToRGBHexString(),
 				     (g, v) => g.World.SetShadowlight( FastColour.Parse( v ) ) ),
 				
-				Make( 140, 0, "Weather", OnWidgetClick,
+				Make( 1, 0, "Weather", OnWidgetClick,
 				     g => g.World.Weather.ToString(),
 				     (g, v) => g.World.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
 				
-				Make( 140, 50, "Water level", OnWidgetClick,
+				Make( 1, 50, "Water level", OnWidgetClick,
 				     g => g.World.EdgeHeight.ToString(),
 				     (g, v) => g.World.SetEdgeLevel( Int32.Parse( v ) ) ),
 				

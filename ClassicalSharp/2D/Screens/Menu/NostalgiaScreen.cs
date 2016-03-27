@@ -15,48 +15,28 @@ namespace ClassicalSharp.Gui {
 			base.Init();
 			
 			widgets = new Widget[] {
-				// Column 1
-				Make( -140, -100, "Simple arms anim", OnWidgetClick,
-				     g => g.SimpleArmsAnim? "yes" : "no",
-				     (g, v) => { g.SimpleArmsAnim = v == "yes";
-				     	Options.Set( OptionsKey.SimpleArmsAnim, v == "yes" ); }),
+				// Column 1				
+				MakeBool( -1, -100, "Simple arms anim", OptionsKey.SimpleArmsAnim,
+				         OnWidgetClick, g => g.SimpleArmsAnim, (g, v) => g.SimpleArmsAnim = v ),
 				
-				Make( -140, -50, "Classic gui textures", OnWidgetClick,
-				     g => g.UseClassicGui ? "yes" : "no",
-				     (g, v) => { g.UseClassicGui = v == "yes";
-				     	Options.Set( OptionsKey.UseClassicGui, v == "yes" );
-				     } ),
+				MakeBool( -1, -50, "Classic gui textures", OptionsKey.UseClassicGui,
+				         OnWidgetClick, g => g.UseClassicGui, (g, v) => g.UseClassicGui = v ),
 				
-				Make( -140, 0, "Classic player list", OnWidgetClick,
-				     g => g.UseClassicTabList ? "yes" : "no",
-				     (g, v) => { g.UseClassicTabList = v == "yes";
-				     	Options.Set( OptionsKey.UseClassicTabList, v == "yes" );
-				     } ),
+				MakeBool( -1, 0, "Classic player list", OptionsKey.UseClassicTabList,
+				         OnWidgetClick, g => g.UseClassicTabList, (g, v) => g.UseClassicTabList = v ),
 				
-				Make( -140, 50, "Classic options menu", OnWidgetClick,
-				     g => g.UseClassicOptions ? "yes" : "no",
-				     (g, v) => { g.UseClassicOptions = v == "yes";
-				     	Options.Set( OptionsKey.UseClassicOptions, v == "yes" );
-				     } ),
+				MakeBool( -1, 50, "Classic options menu", OptionsKey.UseClassicOptions,
+				         OnWidgetClick, g => g.UseClassicOptions, (g, v) => g.UseClassicOptions = v ),
 				
 				// Column 2
-				Make( 140, -100, "Allow custom blocks", OnWidgetClick,
-				     g => g.AllowCustomBlocks ? "yes" : "no",
-				     (g, v) => { g.AllowCustomBlocks = v == "yes";
-				     	Options.Set( OptionsKey.AllowCustomBlocks, v == "yes" );
-				     } ),
+				MakeBool( 1, -100, "Allow custom blocks", OptionsKey.AllowCustomBlocks,
+				         OnWidgetClick, g => g.AllowCustomBlocks, (g, v) => g.AllowCustomBlocks = v ),
 				
-				Make( 140, -50, "Use CPE", OnWidgetClick,
-				     g => g.UseCPE ? "yes" : "no",
-				     (g, v) => { g.UseCPE = v == "yes";
-				     	Options.Set( OptionsKey.UseCPE, v == "yes" );
-				     } ),
+				MakeBool( 1, -50, "Use CPE", OptionsKey.UseCPE,
+				         OnWidgetClick, g => g.UseCPE, (g, v) => g.UseCPE = v ),
 				
-				Make( 140, 0, "Allow server textures", OnWidgetClick,
-				     g => g.AllowServerTextures ? "yes" : "no",
-				     (g, v) => { g.AllowServerTextures = v == "yes";
-				     	Options.Set( OptionsKey.AllowServerTextures, v == "yes" );
-				     } ),
+				MakeBool( 1, 0, "Allow server textures", OptionsKey.AllowServerTextures,
+				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v ),
 				
 				MakeBack( false, titleFont,
 				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),

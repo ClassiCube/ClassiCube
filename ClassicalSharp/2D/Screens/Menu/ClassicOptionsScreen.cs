@@ -16,59 +16,44 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {
 				// Column 1
-				MakeClassic( -165, -200, "Music", OnWidgetClick,
-				     g => g.UseMusic ? "yes" : "no",
-				     (g, v) => { g.UseMusic = v == "yes";
-				     	g.AudioPlayer.SetMusic( g.UseMusic );
-				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
+				MakeClassicBool( -1, -200, "Music", OptionsKey.UseMusic,
+				     OnWidgetClick, g => g.UseMusic,
+				     (g, v) => { g.UseMusic = v; g.AudioPlayer.SetMusic( g.UseMusic ); }),
 				
-				MakeClassic( -165, -150, "Invert mouse", OnWidgetClick,
-				     g => g.InvertMouse ? "yes" : "no",
-				     (g, v) => { g.InvertMouse = v == "yes";
-				     	Options.Set( OptionsKey.InvertMouse, v == "yes" ); }),
+				MakeClassicBool( -1, -150, "Invert mouse", OptionsKey.InvertMouse,
+				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v ),
 				
-				MakeClassic( -165, -100, "View distance", OnWidgetClick,
+				MakeClassic( -1, -100, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
 				!network.IsSinglePlayer ? null :
-					MakeClassic( -165, -50, "Block physics", OnWidgetClick,
-					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
-					     (g, v) => {
-					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
-					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
-					     }),
+					MakeClassicBool( -1, -50, "Block physics", OptionsKey.SingleplayerPhysics, OnWidgetClick,
+					     g => ((SinglePlayerServer)network).physics.Enabled,
+					     (g, v) => ((SinglePlayerServer)network).physics.Enabled = v),
 				
 				// Column 2
-				MakeClassic( 165, -200, "Sound", OnWidgetClick,
-				     g => g.UseSound ? "yes" : "no",
-				     (g, v) => { g.UseSound = v == "yes";
-				     	g.AudioPlayer.SetSound( g.UseSound );
-				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
+				MakeClassicBool( 1, -200, "Sound", OptionsKey.UseSound,
+				     OnWidgetClick, g => g.UseSound,
+				     (g, v) => { g.UseSound = v; g.AudioPlayer.SetSound( g.UseSound ); }),
 				
-				MakeClassic( 165, -150, "Show FPS", OnWidgetClick,
-				     g => g.ShowFPS ? "yes" : "no",
-				    (g, v) => { g.ShowFPS = v == "yes";
-				     	Options.Set( OptionsKey.ShowFPS, v == "yes" ); }),
+				MakeClassicBool( 1, -150, "Show FPS", OptionsKey.ShowFPS,
+				     OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v ),
 				
-				MakeClassic( 165, -100, "View bobbing", OnWidgetClick,
-				     g => g.ViewBobbing ? "yes" : "no",
-				     (g, v) => { g.ViewBobbing = v == "yes";
-				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
+				MakeClassicBool( 1, -100, "View bobbing", OptionsKey.ViewBobbing,
+				     OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v ),
 				
-				MakeClassic( 165, -50, "FPS limit mode", OnWidgetClick,
+				MakeClassic( 1, -50, "FPS limit mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 				
 				!game.ClassicHacks ? null :
-					MakeClassic( 165, 0, "Hacks enabled", OnWidgetClick,
-				         g => g.LocalPlayer.Hacks.Enabled ? "yes" : "no",
-				         (g, v) => { g.LocalPlayer.Hacks.Enabled = v == "yes";
-				              Options.Set( OptionsKey.HacksEnabled, v == "yes" );
-				             g.LocalPlayer.CheckHacksConsistency();
-				    } ),
+					MakeClassicBool( 0, 0, "Hacks enabled", OptionsKey.HacksEnabled,
+					     OnWidgetClick, g => g.LocalPlayer.Hacks.Enabled,
+				         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
+					     	g.LocalPlayer.CheckHacksConsistency(); } ),
 				
 				MakeControlsWidget(),
 				

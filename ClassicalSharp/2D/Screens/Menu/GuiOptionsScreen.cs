@@ -13,66 +13,52 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {
 				// Column 1
-				Make( -140, -150, "Block in hand", OnWidgetClick,
-				     g => g.ShowBlockInHand ? "yes" : "no",
-				     (g, v) => { g.ShowBlockInHand = v == "yes";
-				     	Options.Set( OptionsKey.ShowBlockInHand, v == "yes" );
-				     } ),
+				MakeBool( -1, -150, "Block in hand", OptionsKey.ShowBlockInHand,
+				     OnWidgetClick, g => g.ShowBlockInHand, (g, v) => g.ShowBlockInHand = v ),
 				
-				Make( -140, -100, "Show FPS", OnWidgetClick,
-				     g => g.ShowFPS ? "yes" : "no",
-				     (g, v) => { g.ShowFPS = v == "yes";
-				     	Options.Set( OptionsKey.ShowFPS, v == "yes" ); }),
+				MakeBool( -1, -100, "Show FPS", OptionsKey.ShowFPS,
+				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v ),
 				
-				Make( -140, -50, "Hotbar scale", OnWidgetClick,
+				Make( -1, -50, "Hotbar scale", OnWidgetClick,
 				     g => g.HotbarScale.ToString(),
 				     (g, v) => { g.HotbarScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.HotbarScale, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -140, 0, "Inventory scale", OnWidgetClick,
+				Make( -1, 0, "Inventory scale", OnWidgetClick,
 				     g => g.InventoryScale.ToString(),
 				     (g, v) => { g.InventoryScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.InventoryScale, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -140, 50, "Tab auto-complete", OnWidgetClick,
-				     g => g.TabAutocomplete ? "yes" : "no",
-				     (g, v) => { g.TabAutocomplete = v == "yes";
-				     	Options.Set( OptionsKey.TabAutocomplete, v == "yes" );
-				     } ),
+				MakeBool( -1, 50, "Tab auto-complete", OptionsKey.TabAutocomplete, 
+				         OnWidgetClick, g => g.TabAutocomplete, (g, v) => g.TabAutocomplete = v ),
 				
 				// Column 2				
-				Make( 140, -150, "Clickable chat", OnWidgetClick,
-				     g => g.ClickableChat ? "yes" : "no",
-				     (g, v) => { g.ClickableChat = v == "yes";
-				     	Options.Set( OptionsKey.ClickableChat, v == "yes" );
-				     } ),
+				MakeBool( 1, -150, "Clickable chat", OptionsKey.ClickableChat,
+				     OnWidgetClick, g => g.ClickableChat, (g, v) => g.ClickableChat = v ),
 				
-				Make( 140, -100, "Chat scale", OnWidgetClick,
+				Make( 1, -100, "Chat scale", OnWidgetClick,
 				     g => g.ChatScale.ToString(),
 				     (g, v) => { g.ChatScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.ChatScale, v );
 				     	g.RefreshHud();
 				     } ),
 
-				Make( 140, -50, "Chat lines", OnWidgetClick,
+				Make( 1, -50, "Chat lines", OnWidgetClick,
 				     g => g.ChatLines.ToString(),
 				     (g, v) => { g.ChatLines = Int32.Parse( v );
 				     	Options.Set( OptionsKey.ChatLines, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( 140, 0, "Arial chat font", OnWidgetClick,
-				     g => g.Drawer2D.UseBitmappedChat ? "no" : "yes",
-				     (g, v) => { g.Drawer2D.UseBitmappedChat = v == "no";
-				     	Options.Set( OptionsKey.ArialChatFont, v == "yes" );
-				     	HandleFontChange();
-				     } ),			
+				MakeBool( 1, 0, "Arial chat font", OptionsKey.ArialChatFont,
+				     OnWidgetClick, g => !g.Drawer2D.UseBitmappedChat,
+				     (g, v) => { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); } ),		
 				
-				Make( 140, 50, "Chat font name", OnWidgetClick,
+				Make( 1, 50, "Chat font name", OnWidgetClick,
 				     g => g.FontName,
 				     (g, v) => { g.FontName = v;
 				     	Options.Set( OptionsKey.FontName, v );
@@ -88,16 +74,19 @@ namespace ClassicalSharp.Gui {
 		
 		void HandleFontChange() {
 			game.Events.RaiseChatFontChanged();
-			
-			if( inputWidget != null ) {
-				inputWidget.Dispose(); inputWidget = null;
-				widgets[widgets.Length - 2] = null;
-			}
-			if( descWidget != null ) {
-				descWidget.Dispose(); descWidget = null;
-			}		
+			base.Dispose();
+			base.Init();
 			game.RefreshHud();
-			Recreate();
+			
+			for( int i = 0; i < widgets.Length; i++) {
+				if( widgets[i] == null || !(widgets[i] is ButtonWidget)) {
+					widgets[i] = null; continue;
+				}
+				
+				ButtonWidget btn = widgets[i] as ButtonWidget;
+				btn.font = titleFont;
+				btn.SetText( btn.Text );
+			}
 		}
 		
 		void MakeValidators() {

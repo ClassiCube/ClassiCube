@@ -17,23 +17,23 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {				
 				
-				Make( -140, 0, "FPS limit mode", OnWidgetClick,
+				Make( -1, 0, "FPS limit mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
 				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
 
-				Make( -140, 50, "View distance", OnWidgetClick,
+				Make( -1, 50, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
-				Make( 140, 0, "Names mode", OnWidgetClick,
+				Make( 1, 0, "Names mode", OnWidgetClick,
 				     g => g.Players.NamesMode.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
 				     	g.Players.NamesMode = (NameMode)raw;
 				     	Options.Set( OptionsKey.NamesMode, v ); } ),
 				
-				Make( 140, 50, "Entity shadows", OnWidgetClick,
+				Make( 1, 50, "Entity shadows", OnWidgetClick,
 				     g => g.Players.ShadowMode.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(EntityShadow), v );
 				     	g.Players.ShadowMode = (EntityShadow)raw;

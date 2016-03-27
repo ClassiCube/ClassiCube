@@ -16,49 +16,40 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {
 				// Column 1
-				Make( -140, -150, "Hacks enabled", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.Enabled ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.Hacks.Enabled = v == "yes";
-				     	Options.Set( OptionsKey.HacksEnabled, v == "yes" );
-				     	g.LocalPlayer.CheckHacksConsistency();
-				     } ),
+				MakeBool( -1, -150, "Hacks enabled", OptionsKey.HacksEnabled,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.Enabled,
+				     (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
+				     	g.LocalPlayer.CheckHacksConsistency(); } ),
 				
-				Make( -140, -100, "Speed multiplier", OnWidgetClick,
+				Make( -1, -100, "Speed multiplier", OnWidgetClick,
 				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString(),
 				     (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
-				Make( -140, -50, "Camera clipping", OnWidgetClick,
-				     g => g.CameraClipping ? "yes" : "no",
-				     (g, v) => { g.CameraClipping = v == "yes";
-				     	Options.Set( OptionsKey.CameraClipping, v == "yes" ); } ),
+				MakeBool( -1, -50, "Camera clipping", OptionsKey.CameraClipping,
+				     OnWidgetClick, g => g.CameraClipping, (g, v) => g.CameraClipping = v ),
 				
-				Make( -140, 0, "Jump height", OnWidgetClick,
+				Make( -1, 0, "Jump height", OnWidgetClick,
 				     g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
 				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
 				
-				Make( -140, 50, "Double jump", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.DoubleJump ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.Hacks.DoubleJump = v == "yes";
-				     	Options.Set( OptionsKey.DoubleJump, v == "yes" ); } ),
+				MakeBool( -1, 50, "Double jump", OptionsKey.DoubleJump,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.DoubleJump,
+				     (g, v) => g.LocalPlayer.Hacks.DoubleJump = v ),
 				
 				// Column 2
-				Make( 140, -100, "Modifiable liquids", OnWidgetClick,
-				     g => g.ModifiableLiquids ? "yes" : "no",
-				     (g, v) => { g.ModifiableLiquids = v == "yes";
-				     	Options.Set( OptionsKey.ModifiableLiquids, v == "yes" ); } ),
+				MakeBool( 1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids,
+				         OnWidgetClick, g => g.ModifiableLiquids, (g, v) => g.ModifiableLiquids = v ),
 				
-				Make( 140, -50, "Pushback placing", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.PushbackPlacing ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.Hacks.PushbackPlacing = v == "yes";
-				     		Options.Set( OptionsKey.PushbackPlacing, v == "yes" ); }),
+				MakeBool( 1, -50, "Pushback placing", OptionsKey.PushbackPlacing,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.PushbackPlacing,
+				     (g, v) => g.LocalPlayer.Hacks.PushbackPlacing = v ),
 				
-				Make( 140, 0, "Noclip slide", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.NoclipSlide ? "yes" : "no",
-				     (g, v) => { g.LocalPlayer.Hacks.NoclipSlide = v == "yes";
-				     	Options.Set( OptionsKey.NoclipSlide, v == "yes" ); } ),
+				MakeBool( 1, 0, "Noclip slide", OptionsKey.NoclipSlide,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.NoclipSlide,
+				     (g, v) => g.LocalPlayer.Hacks.NoclipSlide = v ),
 				
-				Make( 140, 50, "Field of view", OnWidgetClick,
+				Make( 1, 50, "Field of view", OnWidgetClick,
 				     g => g.FieldOfView.ToString(),
 				     (g, v) => { g.FieldOfView = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FieldOfView, v );

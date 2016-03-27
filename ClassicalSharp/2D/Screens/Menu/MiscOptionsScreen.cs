@@ -17,46 +17,35 @@ namespace ClassicalSharp.Gui {
 			widgets = new Widget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
-					Make( -140, -100, "Click distance", OnWidgetClick,
+					Make( -1, -100, "Click distance", OnWidgetClick,
 					     g => g.LocalPlayer.ReachDistance.ToString(),
 					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
 				
-				Make( -140, -50, "Music", OnWidgetClick,
-				     g => g.UseMusic ? "yes" : "no",
-				     (g, v) => { g.UseMusic = v == "yes";
-				     	g.AudioPlayer.SetMusic( g.UseMusic );
-				     	Options.Set( OptionsKey.UseMusic, v == "yes" ); }),
+				MakeBool( -1, -50, "Music", OptionsKey.UseMusic,
+				     OnWidgetClick, g => g.UseMusic,
+				     (g, v) => { g.UseMusic = v; g.AudioPlayer.SetMusic( g.UseMusic ); }),
 				
-				Make( -140, 0, "Sound", OnWidgetClick,
-				     g => g.UseSound ? "yes" : "no",
-				     (g, v) => { g.UseSound = v == "yes";
-				     	g.AudioPlayer.SetSound( g.UseSound );
-				     	Options.Set( OptionsKey.UseSound, v == "yes" ); }),
+				MakeBool( -1, 0, "Sound", OptionsKey.UseSound,
+				     OnWidgetClick, g => g.UseSound,
+				     (g, v) => { g.UseSound = v; g.AudioPlayer.SetSound( g.UseSound ); }),
 				
-				Make( -140, 50, "View bobbing", OnWidgetClick,
-				     g => g.ViewBobbing ? "yes" : "no",
-				     (g, v) => { g.ViewBobbing = v == "yes";
-				     	Options.Set( OptionsKey.ViewBobbing, v == "yes" ); }),
+				MakeBool( -1, 50, "View bobbing", OptionsKey.ViewBobbing,
+				         OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v ),
 				
 				// Column 2
 				!network.IsSinglePlayer ? null :
-					Make( 140, -100, "Block physics", OnWidgetClick,
-					     g => ((SinglePlayerServer)network).physics.Enabled ? "yes" : "no",
-					     (g, v) => {
-					     	((SinglePlayerServer)network).physics.Enabled = v == "yes";
-					     	Options.Set( OptionsKey.SingleplayerPhysics, v == "yes" );
-					     }),
+					MakeBool( 1, -100, "Block physics", OptionsKey.SingleplayerPhysics, OnWidgetClick,
+					         g => ((SinglePlayerServer)network).physics.Enabled,
+					         (g, v) => ((SinglePlayerServer)network).physics.Enabled = v ),
 				
-				Make( 140, -50, "Auto close launcher", OnWidgetClick,
-				     g => Options.GetBool( OptionsKey.AutoCloseLauncher, true ) ? "yes" : "no",
-				     (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v == "yes" ) ),
+				MakeBool( 1, -50, "Auto close launcher", OptionsKey.AutoCloseLauncher, OnWidgetClick,
+				         g => Options.GetBool( OptionsKey.AutoCloseLauncher, true ),
+				         (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v ) ),
 				
-				Make( 140, 0, "Invert mouse", OnWidgetClick,
-				     g => g.InvertMouse ? "yes" : "no",
-				     (g, v) => { g.InvertMouse = v == "yes";
-				     	Options.Set( OptionsKey.InvertMouse, v == "yes" ); }),
+				MakeBool( 1, 0, "Invert mouse", OptionsKey.InvertMouse,
+				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v ),
 				
-				Make( 140, 50, "Mouse sensitivity", OnWidgetClick,
+				Make( 1, 50, "Mouse sensitivity", OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),
@@ -77,7 +66,7 @@ namespace ClassicalSharp.Gui {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				
-				network.IsSinglePlayer ? new BooleanValidator() : null,			
+				network.IsSinglePlayer ? new BooleanValidator() : null,
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator( 1, 100 ),

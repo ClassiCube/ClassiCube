@@ -87,10 +87,15 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Dispose() {
-			if( descWidget != null )
+			if( descWidget != null ) {
 				descWidget.Dispose();
-			if( inputWidget != null )
+				descWidget = null;
+			}
+			if( inputWidget != null ) {
 				inputWidget.Dispose();
+				inputWidget = null;
+			}
+			
 			game.Keyboard.KeyRepeat = false;
 			extendedHelpFont.Dispose();
 			DisposeExtendedHelp();
@@ -114,8 +119,11 @@ namespace ClassicalSharp.Gui {
 			DisposeExtendedHelp();
 			if( widget == null || widget.GetValue == null ) return;
 			
-			string text = widget.Text + ": " + widget.GetValue( game );
-			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			int index = Array.IndexOf<Widget>( widgets, widget );			
+			if( index >= validators.Length || !(validators[index] is BooleanValidator) ) {
+				string text = widget.Text + ": " + widget.GetValue( game );
+				descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			}
 			ShowExtendedHelp();
 		}
 		
@@ -123,19 +131,45 @@ namespace ClassicalSharp.Gui {
 		
 		protected virtual void InputClosed() { }
 		
-		protected ButtonWidget Make( int x, int y, string text, ClickHandler onClick,
+		protected ButtonWidget Make( int dir, int y, string text, ClickHandler onClick,
 		                            Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 240, 35, text, Anchor.Centre,
+			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 280, 35, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter; widget.SetValue = setter;
 			return widget;
 		}
 		
-		protected ButtonWidget MakeClassic( int x, int y, string text, ClickHandler onClick,
+		protected ButtonWidget MakeBool( int dir, int y, string optName, string optKey, 
+		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+			return MakeBoolImpl( 160 * dir, y, 280, 35, optName, optKey, onClick, getter, setter );
+		}
+		
+		protected ButtonWidget MakeClassic( int dir, int y, string text, ClickHandler onClick,
 		                                   Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, 301, 41, text, Anchor.Centre,
+			ButtonWidget widget = ButtonWidget.Create( game, 165 * dir, y, 301, 41, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter; widget.SetValue = setter;
+			return widget;
+		}
+		
+		protected ButtonWidget MakeClassicBool( int dir, int y, string text, string optKey, 
+		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+			return MakeBoolImpl( 165 * dir, y, 301, 41, text, optKey, onClick, getter, setter );
+		}
+		
+		ButtonWidget MakeBoolImpl( int x, int y, int width, int height, string text, string optKey, 
+		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+			string optName = text;
+			text = text + ": " + (getter( game ) ? "ON" : "OFF");
+			ButtonWidget widget = ButtonWidget.Create( game, x, y, width, height, text, Anchor.Centre,
+			                                          Anchor.Centre, titleFont, onClick );
+			widget.Metadata = optName;
+			widget.GetValue = g => getter( g ) ? "yes" : "no";
+			widget.SetValue = (g, v) => { 
+				setter( g, v == "yes" );
+				Options.Set( optKey, v == "yes" );
+				widget.SetText( (string)widget.Metadata + ": " + (v == "yes" ? "ON" : "OFF") );
+			};
 			return widget;
 		}
 		
