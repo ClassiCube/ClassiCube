@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 					return;
 				}
 				
-				if( info.CollideType[block] == BlockCollideType.Solid && !info.IsAir[block] ) {
+				if( info.Collide[block] == CollideType.Solid && !info.IsAir[block] ) {
 					float t0, t1;
 					const float adjust = 0.1f;
 					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {

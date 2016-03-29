@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool CannotPassThrough( byte block ) {
-			return game.BlockInfo.CollideType[block] == BlockCollideType.Solid;
+			return game.BlockInfo.Collide[block] == CollideType.Solid;
 		}
 		
 		bool IntersectsOtherPlayers( Vector3 pos, byte newType ) {

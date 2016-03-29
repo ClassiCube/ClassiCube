@@ -144,7 +144,7 @@ namespace ClassicalSharp {
 			Vector3 min = info.MinBB[tile], max = info.MaxBB[tile];
 			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
 			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
-			if( isTranslucent && info.CollideType[tile] != BlockCollideType.Solid ) {
+			if( isTranslucent && info.Collide[tile] != CollideType.Solid ) {
 				x1 -= 0.1f/16; x2 -= 0.1f/16f; z1 -= 0.1f/16f; z2 -= 0.1f/16f;
 				y1 -= 0.1f/16; y2 -= 0.1f/16f;
 			}

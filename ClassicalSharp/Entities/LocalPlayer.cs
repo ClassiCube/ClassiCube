@@ -103,8 +103,8 @@ namespace ClassicalSharp.Entities {
 			// then check block standing on
 			byte blockUnder = (byte)BlockUnderFeet;
 			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
-			BlockCollideType collideType = game.BlockInfo.CollideType[blockUnder];
-			if( collideType == BlockCollideType.Solid && typeUnder != SoundType.None ) {
+			CollideType collideType = game.BlockInfo.Collide[blockUnder];
+			if( collideType == CollideType.Solid && typeUnder != SoundType.None ) {
 				anyNonAir = true; sndType = typeUnder; return;
 			}
 			
@@ -116,8 +116,8 @@ namespace ClassicalSharp.Entities {
 		
 		bool CheckSoundNonSolid( byte b ) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
-			BlockCollideType collide = game.BlockInfo.CollideType[b];
-			if( newType != SoundType.None && collide != BlockCollideType.Solid )
+			CollideType collide = game.BlockInfo.Collide[b];
+			if( newType != SoundType.None && collide != CollideType.Solid )
 				sndType = newType;
 			if( b != 0 ) anyNonAir = true;
 			return false;
@@ -244,8 +244,8 @@ namespace ClassicalSharp.Entities {
 					for( int y = p.Y; y <= game.World.Height; y++ ) {
 						byte block1 = physics.GetPhysicsBlockId( p.X, y, p.Z );
 						byte block2 = physics.GetPhysicsBlockId( p.X, y + 1, p.Z );
-						if( info.CollideType[block1] != BlockCollideType.Solid &&
-						   info.CollideType[block2] != BlockCollideType.Solid ) {
+						if( info.Collide[block1] != CollideType.Solid &&
+						   info.Collide[block2] != CollideType.Solid ) {
 							p.Y = y;
 							break;
 						}

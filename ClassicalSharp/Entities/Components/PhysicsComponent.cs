@@ -30,7 +30,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {
-			if( info.CollideType[block] != BlockCollideType.Solid ) return false;
+			if( info.Collide[block] != CollideType.Solid ) return false;
 			Add( x, y, z, ref info.MinBB[block], ref box.Min );
 			Add( x, y, z, ref info.MaxBB[block], ref box.Max );
 			return true;
@@ -243,7 +243,7 @@ namespace ClassicalSharp.Entities {
 				BoundingBox blockBB = new BoundingBox( min, max );
 				if( !blockBB.Intersects( adjFinalBB ) )
 					continue;
-				if( info.CollideType[GetPhysicsBlockId( x, y, z )] == BlockCollideType.Solid )
+				if( info.Collide[GetPhysicsBlockId( x, y, z )] == CollideType.Solid )
 					return false;
 			}
 			return true;

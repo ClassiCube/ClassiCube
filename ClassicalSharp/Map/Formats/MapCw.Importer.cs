@@ -128,7 +128,7 @@ namespace ClassicalSharp.Map {
 			byte id = (byte)compound["ID"].Value;
 			BlockInfo info = game.BlockInfo;
 			info.Name[id] = (string)compound["Name"].Value;
-			info.CollideType[id] = (BlockCollideType)compound["CollideType"].Value;
+			info.Collide[id] = (CollideType)compound["CollideType"].Value;
 			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
 			byte[] data = (byte[])compound["Textures"].Value;
@@ -155,7 +155,7 @@ namespace ClassicalSharp.Map {
 			info.MinBB[id] = new Vector3( data[0] / 16f, data[1] / 16f, data[2] / 16f );
 			info.MaxBB[id] = new Vector3( data[3] / 16f, data[4] / 16f, data[5] / 16f );
 			
-			if( info.CollideType[id] != BlockCollideType.Solid ) {
+			if( info.Collide[id] != CollideType.Solid ) {
 				info.IsTransparent[id] = true;
 				info.IsOpaque[id] = false;
 			}

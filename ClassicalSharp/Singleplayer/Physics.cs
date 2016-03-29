@@ -209,7 +209,7 @@ namespace ClassicalSharp.Singleplayer {
 			byte block = map.mapData[posIndex];
 			if( block == (byte)Block.Water || block == (byte)Block.StillWater ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
-			} else if( info.CollideType[block] == BlockCollideType.WalkThrough ) {
+			} else if( info.Collide[block] == CollideType.WalkThrough ) {
 				Lava.Enqueue( defLavaTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Lava );
 			}
@@ -250,7 +250,7 @@ namespace ClassicalSharp.Singleplayer {
 			byte block = map.mapData[posIndex];
 			if( block == (byte)Block.Lava || block == (byte)Block.StillLava ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
-			} else if( info.CollideType[block] == BlockCollideType.WalkThrough && block != (byte)Block.Rope ) {
+			} else if( info.Collide[block] == CollideType.WalkThrough && block != (byte)Block.Rope ) {
 				if( CheckIfSponge( x, y, z ) ) return;
 				Water.Enqueue( defWaterTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Water );

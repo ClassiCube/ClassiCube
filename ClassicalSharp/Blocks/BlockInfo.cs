@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		
 		public float[] FogDensity = new float[BlocksCount];
 		
-		public BlockCollideType[] CollideType = new BlockCollideType[BlocksCount];
+		public CollideType[] Collide = new CollideType[BlocksCount];
 		
 		public float[] SpeedMultiplier = new float[BlocksCount];
 		
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 				BlocksLight[tile] = true;
 				IsOpaque[tile] = true;
 				IsOpaqueY[tile] = true;
-				CollideType[tile] = BlockCollideType.Solid;
+				Collide[tile] = CollideType.Solid;
 				SpeedMultiplier[tile] = 1;
 				CullWithNeighbours[tile] = true;
 			}
@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			FogColour[(byte)Block.StillLava] = new FastColour( 153, 25, 0 );
 			FogDensity[(byte)Block.Lava] = 2f;
 			FogColour[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
-			CollideType[(byte)Block.Snow] = BlockCollideType.WalkThrough;
+			Collide[(byte)Block.Snow] = CollideType.WalkThrough;
 			SpeedMultiplier[0] = 1f;
 			CullWithNeighbours[(byte)Block.Leaves] = false;
 			SetupTextures();
@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 			BlocksLight[(int)id] = false;
 			IsOpaque[(int)id] = false;
 			IsOpaqueY[(int)id] = false;
-			CollideType[(int)id] = BlockCollideType.WalkThrough;
+			Collide[(int)id] = CollideType.WalkThrough;
 		}
 		
 		void MarkTranslucent( Block id ) {
@@ -153,7 +153,7 @@ namespace ClassicalSharp {
 		
 		void SetIsLiquid( Block id ) {
 			IsLiquid[(int)id] = true;
-			CollideType[(int)id] = BlockCollideType.SwimThrough;
+			Collide[(int)id] = CollideType.SwimThrough;
 		}
 		
 		void SetBlockHeight( Block id, float height ) {
@@ -179,7 +179,7 @@ namespace ClassicalSharp {
 			Name[id] = "Invalid";
 			FogColour[id] = default( FastColour );
 			FogDensity[id] = 0;
-			CollideType[id] = BlockCollideType.Solid;
+			Collide[id] = CollideType.Solid;
 			SpeedMultiplier[id] = 1;
 			SetAll( 0, (Block)id );
 			if( updateCulling )
@@ -191,7 +191,7 @@ namespace ClassicalSharp {
 		}
 	}
 	
-	public enum BlockCollideType : byte {
+	public enum CollideType : byte {
 		WalkThrough, // i.e. gas or sprite
 		SwimThrough, // i.e. liquid
 		Solid,       // i.e. solid

@@ -142,7 +142,7 @@ namespace ClassicalSharp.Map {
 			WriteTag( NbtTagType.String );
 			WriteString( "Name" ); WriteString( info.Name[id] );
 			WriteTag( NbtTagType.Int8 );
-			WriteString( "CollideType" ); WriteUInt8( (byte)info.CollideType[id] );		
+			WriteString( "CollideType" ); WriteUInt8( (byte)info.Collide[id] );		
 			float speed = info.SpeedMultiplier[id];
 			WriteTag( NbtTagType.Real32 );
 			WriteString( "Speed" ); WriteInt32( *((int*)&speed) );

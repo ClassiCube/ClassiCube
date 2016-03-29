@@ -78,7 +78,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool StandardLiquid( byte block ) {
-			return info.CollideType[block] == BlockCollideType.SwimThrough;
+			return info.Collide[block] == CollideType.SwimThrough;
 		}
 		
 		static Vector3 waterDrag = new Vector3( 0.8f, 0.8f, 0.8f ),
@@ -204,8 +204,8 @@ namespace ClassicalSharp.Entities {
 			{
 				byte block = game.World.SafeGetBlock( x, y, z );
 				if( block == 0 ) continue;
-				BlockCollideType type = info.CollideType[block];
-				if( type == BlockCollideType.Solid && !checkSolid )
+				CollideType type = info.Collide[block];
+				if( type == CollideType.Solid && !checkSolid )
 					continue;
 				
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
@@ -214,7 +214,7 @@ namespace ClassicalSharp.Entities {
 				if( !blockBB.Intersects( bounds ) ) continue;
 				
 				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
-				if( block >= BlockInfo.CpeBlocksCount && type == BlockCollideType.SwimThrough )
+				if( block >= BlockInfo.CpeBlocksCount && type == CollideType.SwimThrough )
 					useLiquidGravity = true;
 			}
 			return modifier;

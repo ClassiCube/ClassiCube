@@ -67,8 +67,8 @@ namespace ClassicalSharp.Net {
 			info.ResetBlockInfo( block, false );
 			
 			info.Name[block] = reader.ReadAsciiString();
-			info.CollideType[block] = (BlockCollideType)reader.ReadUInt8();
-			if( info.CollideType[block] != BlockCollideType.Solid ) {
+			info.Collide[block] = (CollideType)reader.ReadUInt8();
+			if( info.Collide[block] != CollideType.Solid ) {
 				info.IsTransparent[block] = true;
 				info.IsOpaque[block] = false;
 			}

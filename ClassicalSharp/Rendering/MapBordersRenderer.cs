@@ -148,7 +148,7 @@ namespace ClassicalSharp.Renderers {
 			fullColSides = game.BlockInfo.FullBright[(byte)game.World.SidesBlock];
 			FastColour col = fullColSides ? FastColour.White : map.Shadowlight;
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, 0, ref vertices );
 			}
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = groundLevel;
@@ -156,7 +156,7 @@ namespace ClassicalSharp.Renderers {
 				y1 = groundLevel;
 				y2 = 0;
 			}
-			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, ref vertices );
+			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, 0, ref vertices );
 			DrawZ( 0, 0, map.Width, y1, y2, axisSize, col, ref vertices );
 			DrawZ( map.Length, 0, map.Width, y1, y2, axisSize, col, ref vertices );
 			DrawX( 0, 0, map.Length, y1, y2, axisSize, col, ref vertices );
@@ -175,7 +175,7 @@ namespace ClassicalSharp.Renderers {
 			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.EdgeBlock];
 			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
 			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel - 0.1f/16f, axisSize, col, ref vertices );
+				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, -0.1f/16f, ref vertices );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
 		}
@@ -218,7 +218,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
+		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, float offset, ref VertexPos3fTex2fCol4b* vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -229,10 +229,10 @@ namespace ClassicalSharp.Renderers {
 					if( z2 > endZ ) z2 = endZ;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, z2 - z1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z1, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y, z2, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z2, rec.U2, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y, z1, rec.U2, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col );
+					*vertices++ = new VertexPos3fTex2fCol4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col );
 				}
 			}
 		}

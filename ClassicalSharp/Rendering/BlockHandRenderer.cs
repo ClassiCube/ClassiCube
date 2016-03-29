@@ -34,12 +34,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render( double delta, float t ) {
-			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand )
-				return;
-			game.Graphics.Texturing = true;
-			game.Graphics.DepthTest = false;
-			game.Graphics.AlphaTest = true;
-			
+			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
+
 			fakeP.Position = Vector3.Zero;
 			type = (byte)game.Inventory.HeldBlock;
 			if( playAnimation )
@@ -53,15 +49,23 @@ namespace ClassicalSharp.Renderers {
 				game.Graphics.LoadMatrix( ref normalMat );
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref game.HeldBlockProjection );
+			bool translucent = game.BlockInfo.IsTranslucent[type];
+			
+			game.Graphics.Texturing = true;
+			game.Graphics.DepthTest = false;
+			if( translucent ) game.Graphics.AlphaBlending = true;
+			else game.Graphics.AlphaTest = true;
 			fakeP.Block = type;
 			block.Render( fakeP );
 			
 			game.Graphics.LoadMatrix( ref game.Projection );
 			game.Graphics.SetMatrixMode( MatrixType.Modelview );
 			game.Graphics.LoadMatrix( ref game.View );
+			
 			game.Graphics.Texturing = false;
 			game.Graphics.DepthTest = true;
-			game.Graphics.AlphaTest = false;
+			if( translucent ) game.Graphics.AlphaBlending = false;
+			else game.Graphics.AlphaTest = false;
 		}
 		
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
