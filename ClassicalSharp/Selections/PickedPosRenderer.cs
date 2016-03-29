@@ -20,7 +20,7 @@ namespace ClassicalSharp.Renderers {
 		FastColour col = FastColour.Black;
 		int index;
 		const int verticesCount = 16 * 6;
-		VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[verticesCount];
+		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];
 		const float offset = 0.01f;
 		
 		public void Render( double delta, PickedPos pickedPos ) {
@@ -73,24 +73,24 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void XQuad( float x, float z1, float y1, float z2, float y2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z1, col );		
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z2, col );
+			vertices[index++] = new VertexP3fC4b( x, y1, z1, col );
+			vertices[index++] = new VertexP3fC4b( x, y2, z1, col );		
+			vertices[index++] = new VertexP3fC4b( x, y2, z2, col );
+			vertices[index++] = new VertexP3fC4b( x, y1, z2, col );
 		}
 		
 		void ZQuad( float z, float x1, float y1, float x2, float y2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y2, z, col );	
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y1, z, col );
+			vertices[index++] = new VertexP3fC4b( x1, y1, z, col );
+			vertices[index++] = new VertexP3fC4b( x1, y2, z, col );	
+			vertices[index++] = new VertexP3fC4b( x2, y2, z, col );
+			vertices[index++] = new VertexP3fC4b( x2, y1, z, col );
 		}
 		
 		void YQuad( float y, float x1, float z1, float x2, float z2 ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z1, col );
 		}
 	}
 }

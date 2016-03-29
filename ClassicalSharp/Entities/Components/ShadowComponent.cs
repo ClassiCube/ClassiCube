@@ -23,7 +23,7 @@ namespace ClassicalSharp.Entities {
 			int posY = Math.Min( (int)Position.Y, game.World.Height - 1 );
 			int index = 0, vb = 0;
 			
-			VertexPos3fTex2fCol4b[] verts = null;
+			VertexP3fT2fC4b[] verts = null;
 			int posCount = 0, dataCount = 0;
 			Vector3I* coords = stackalloc Vector3I[4];
 			ShadowData* data = stackalloc ShadowData[4];
@@ -68,16 +68,16 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
 		}
 		
-		void DraqSquareShadow( VertexPos3fTex2fCol4b[] verts, ref int index, float y, byte alpha, float x, float z ) {
+		void DraqSquareShadow( VertexP3fT2fC4b[] verts, ref int index, float y, byte alpha, float x, float z ) {
 			FastColour col = FastColour.White; col.A = alpha;
 			TextureRec rec = new TextureRec( 63/128f, 63/128f, 1/128f, 1/128f );
-			verts[index++] = new VertexPos3fTex2fCol4b( x, y, z, rec.U1, rec.V1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, rec.U2, rec.V1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, rec.U2, rec.V2, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, rec.U1, rec.V2, col );
+			verts[index++] = new VertexP3fT2fC4b( x, y, z, rec.U1, rec.V1, col );
+			verts[index++] = new VertexP3fT2fC4b( x + 1, y, z, rec.U2, rec.V1, col );
+			verts[index++] = new VertexP3fT2fC4b( x + 1, y, z + 1, rec.U2, rec.V2, col );
+			verts[index++] = new VertexP3fT2fC4b( x, y, z + 1, rec.U1, rec.V2, col );
 		}
 		
-		void DrawCircle( VertexPos3fTex2fCol4b[] verts, ref int index, 
+		void DrawCircle( VertexP3fT2fC4b[] verts, ref int index, 
 		                ShadowData* data, int dataCount, float x, float z ) {
 			x = Utils.Floor( x ); z = Utils.Floor( z );
 			BlockInfo info = game.BlockInfo;
@@ -94,7 +94,7 @@ namespace ClassicalSharp.Entities {
 				min = nMin; max = nMax;
 			}
 		}
-		void DrawCoords( VertexPos3fTex2fCol4b[] verts, ref int index, ShadowData data, 
+		void DrawCoords( VertexP3fT2fC4b[] verts, ref int index, ShadowData data, 
 		                float x1, float z1, float x2, float z2 ) {
 			Vector3 centre = entity.Position;
 			BlockInfo info = game.BlockInfo;
@@ -112,10 +112,10 @@ namespace ClassicalSharp.Entities {
 			z2 = Math.Min( z2, centre.Z + 7/16f ); v2 = Math.Min( v2, 1 );
 			
 			FastColour col = FastColour.White; col.A = data.A;
-			verts[index++] = new VertexPos3fTex2fCol4b( x1, data.Y, z1, u1, v1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x2, data.Y, z1, u2, v1, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x2, data.Y, z2, u2, v2, col );
-			verts[index++] = new VertexPos3fTex2fCol4b( x1, data.Y, z2, u1, v2, col );
+			verts[index++] = new VertexP3fT2fC4b( x1, data.Y, z1, u1, v1, col );
+			verts[index++] = new VertexP3fT2fC4b( x2, data.Y, z1, u2, v1, col );
+			verts[index++] = new VertexP3fT2fC4b( x2, data.Y, z2, u2, v2, col );
+			verts[index++] = new VertexP3fT2fC4b( x1, data.Y, z2, u1, v2, col );
 		}
 		
 		bool GetBlocks( Vector3I* coords, ref int posCount, float x, float z,

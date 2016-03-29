@@ -14,7 +14,7 @@ namespace ClassicalSharp.Particles {
 		public abstract int Get1DBatch( Game game );
 		
 		public abstract void Render( Game game, double delta, float t,
-		                            VertexPos3fTex2fCol4b[] vertices, ref int index );
+		                            VertexP3fT2fC4b[] vertices, ref int index );
 		
 		public virtual bool Tick( Game game, double delta ) {
 			Lifetime -= (float)delta;

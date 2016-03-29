@@ -64,10 +64,10 @@ namespace ClassicalSharp.Entities {
 			FastColour col = FastColour.White;
 			Vector2 size = new Vector2( nameTex.Width / 70f, nameTex.Height / 70f );
 			Utils.CalcBillboardPoints( size, pos, ref game.View, out p111, out p121, out p212, out p222 );
-			api.texVerts[0] = new VertexPos3fTex2fCol4b( p111, nameTex.U1, nameTex.V2, col );
-			api.texVerts[1] = new VertexPos3fTex2fCol4b( p121, nameTex.U1, nameTex.V1, col );
-			api.texVerts[2] = new VertexPos3fTex2fCol4b( p222, nameTex.U2, nameTex.V1, col );
-			api.texVerts[3] = new VertexPos3fTex2fCol4b( p212, nameTex.U2, nameTex.V2, col );
+			api.texVerts[0] = new VertexP3fT2fC4b( p111, nameTex.U1, nameTex.V2, col );
+			api.texVerts[1] = new VertexP3fT2fC4b( p121, nameTex.U1, nameTex.V1, col );
+			api.texVerts[2] = new VertexP3fT2fC4b( p222, nameTex.U2, nameTex.V1, col );
+			api.texVerts[3] = new VertexP3fT2fC4b( p212, nameTex.U2, nameTex.V2, col );
 			
 			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );

@@ -142,7 +142,7 @@ namespace ClassicalSharp.Renderers {
 			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
 			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( groundLevel ), axisSize ); // ZQuads
 			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( groundLevel ), axisSize ); // XQuads
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[sidesVertices];
+			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
 			fullColSides = game.BlockInfo.FullBright[(byte)game.World.SidesBlock];
@@ -169,7 +169,7 @@ namespace ClassicalSharp.Renderers {
 			foreach( Rectangle rec in rects ) {
 				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
 			}
-			VertexPos3fTex2fCol4b* vertices = stackalloc VertexPos3fTex2fCol4b[edgesVertices];
+			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
 			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.EdgeBlock];
@@ -180,7 +180,7 @@ namespace ClassicalSharp.Renderers {
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
 		}
 		
-		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
+		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexP3fT2fC4b* vertices ) {
 			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
 				z2 = z1 + axisSize;
@@ -191,15 +191,15 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, z2 - z1, y2 - y1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z1, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z1, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y2, z2, rec.U2, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x, y1, z2, rec.U2, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x, y1, z1, rec.U1, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x, y2, z1, rec.U1, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x, y2, z2, rec.U2, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x, y1, z2, rec.U2, rec.V2, col );
 				}
 			}
 		}
 		
-		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, FastColour col, ref VertexPos3fTex2fCol4b* vertices ) {
+		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, FastColour col, ref VertexP3fT2fC4b* vertices ) {
 			int endX = x2, endY = y2, startY = y1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -210,15 +210,15 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, y2 - y1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y1, z, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1, y2, z, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y2, z, rec.U2, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2, y1, z, rec.U2, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x1, y1, z, rec.U1, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x1, y2, z, rec.U1, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x2, y2, z, rec.U2, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x2, y1, z, rec.U2, rec.V2, col );
 				}
 			}
 		}
 		
-		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, float offset, ref VertexPos3fTex2fCol4b* vertices ) {
+		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, float offset, ref VertexP3fT2fC4b* vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -229,10 +229,10 @@ namespace ClassicalSharp.Renderers {
 					if( z2 > endZ ) z2 = endZ;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, z2 - z1 );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col );
-					*vertices++ = new VertexPos3fTex2fCol4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col );
+					*vertices++ = new VertexP3fT2fC4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col );
+					*vertices++ = new VertexP3fT2fC4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col );
 				}
 			}
 		}

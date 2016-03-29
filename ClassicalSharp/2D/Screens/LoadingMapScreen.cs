@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		string serverName, serverMotd;
-		int progress;
+		float progress;
 		ChatTextWidget titleWidget, messageWidget;
 		const int progWidth = 220, progHeight = 10;
 		readonly FastColour backCol = new FastColour( 128, 128, 128 );
@@ -35,11 +35,11 @@ namespace ClassicalSharp.Gui {
 			int progX = game.Width / 2 - progWidth / 2;
 			int progY = game.Height / 2 - progHeight / 2;
 			graphicsApi.Draw2DQuad( progX, progY, progWidth, progHeight, backCol );
-			graphicsApi.Draw2DQuad( progX, progY, progWidth * progress / 100f, progHeight, progressCol );
+			graphicsApi.Draw2DQuad( progX, progY, progWidth * progress, progHeight, progressCol );
 		}
 		
 		void DrawBackground() {
-			VertexPos3fTex2fCol4b[] vertices = game.ModelCache.vertices;
+			VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
 			int index = 0, atlasIndex = 0;
 			int drawnY = 0, height = game.Height;
 			FastColour col = new FastColour( 64, 64, 64 );
@@ -60,10 +60,10 @@ namespace ClassicalSharp.Gui {
 				y1 -= 0.5f; y2 -= 0.5f;
 				#endif
 				
-				vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
-				vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
-				vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
-				vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
+				vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
+				vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
+				vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
+				vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
 				if( index >= vertices.Length )
 					DrawBackgroundVertices( ref index, atlasIndex, ref bound );
 				drawnY += 64;
@@ -104,7 +104,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void SetProgress( float progress ) {
-			this.progress = (int)(progress * 100);
+			this.progress = progress;
 		}
 
 		void MapLoading( object sender, MapLoadingEventArgs e ) {

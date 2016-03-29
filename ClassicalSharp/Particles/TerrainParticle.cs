@@ -20,7 +20,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public override void Render( Game game, double delta, float t,
-		                            VertexPos3fTex2fCol4b[] vertices, ref int index ) {
+		                            VertexP3fT2fC4b[] vertices, ref int index ) {
 			Position = Vector3.Lerp( lastPos, nextPos, t );
 			Vector3 p111, p121, p212, p222;
 			Utils.CalcBillboardPoints( terrainSize, Position, ref game.View,
@@ -28,10 +28,10 @@ namespace ClassicalSharp.Particles {
 			World map = game.World;
 			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Sunlight : map.Shadowlight;
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( p111, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( p121, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( p222, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( p212, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( p111, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( p121, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( p222, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( p212, rec.U2, rec.V2, col );
 		}
 	}
 }

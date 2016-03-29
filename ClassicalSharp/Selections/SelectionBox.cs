@@ -18,7 +18,7 @@ namespace ClassicalSharp.Selections {
 			Colour = col;
 		}
 		
-		public void Render( double delta, VertexPos3fCol4b[] vertices, VertexPos3fCol4b[] lineVertices,
+		public void Render( double delta, VertexP3fC4b[] vertices, VertexP3fC4b[] lineVertices,
 		                  ref int index, ref int lineIndex ) {
 			float offset = MinDist < 32 * 32 ? 1/32f : 1/16f;
 			Vector3 p1 = (Vector3)Min - new Vector3( offset );
@@ -50,34 +50,34 @@ namespace ClassicalSharp.Selections {
 			Line( lineVertices, ref lineIndex, p1.X, p1.Y, p2.Z, p1.X, p2.Y, p2.Z, col );
 		}
 		
-		static void ZQuad( VertexPos3fCol4b[] vertices, ref int index, float z1, float y1, 
+		static void ZQuad( VertexP3fC4b[] vertices, ref int index, float z1, float y1, 
 		                  float z2, float y2, float x, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y2, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x, y1, z2, col );
+			vertices[index++] = new VertexP3fC4b( x, y1, z1, col );
+			vertices[index++] = new VertexP3fC4b( x, y2, z1, col );
+			vertices[index++] = new VertexP3fC4b( x, y2, z2, col );
+			vertices[index++] = new VertexP3fC4b( x, y1, z2, col );
 		}
 		
-		static void XQuad( VertexPos3fCol4b[] vertices, ref int index, float x1, float y1, 
+		static void XQuad( VertexP3fC4b[] vertices, ref int index, float x1, float y1, 
 		                  float x2, float y2, float z, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y1, z, col );
+			vertices[index++] = new VertexP3fC4b( x1, y1, z, col );
+			vertices[index++] = new VertexP3fC4b( x1, y2, z, col );
+			vertices[index++] = new VertexP3fC4b( x2, y2, z, col );
+			vertices[index++] = new VertexP3fC4b( x2, y1, z, col );
 		}
 		
-		static void YQuad( VertexPos3fCol4b[] vertices, ref int index, float x1, float z1, 
+		static void YQuad( VertexP3fC4b[] vertices, ref int index, float x1, float z1, 
 		                  float x2, float z2, float y, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z1, col );
 		}
 		
-		static void Line( VertexPos3fCol4b[] vertices, ref int index, float x1, float y1, float z1, 
+		static void Line( VertexP3fC4b[] vertices, ref int index, float x1, float y1, float z1, 
 		          float x2, float y2, float z2, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z2, col );
+			vertices[index++] = new VertexP3fC4b( x1, y1, z1, col );
+			vertices[index++] = new VertexP3fC4b( x2, y2, z2, col );
 		}
 	}
 }

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Selections {
 		
 		protected Game game;
 		public IGraphicsApi Graphics;
-		VertexPos3fCol4b[] vertices, lineVertices;
+		VertexP3fC4b[] vertices, lineVertices;
 		int vb, lineVb;
 		
 		public SelectionManager( Game window ) {
@@ -78,8 +78,8 @@ namespace ClassicalSharp.Selections {
 		
 		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2, IndicesCount = 6 * 6;
 		void InitData() {
-			vertices = new VertexPos3fCol4b[256 * VerticesCount];
-			lineVertices = new VertexPos3fCol4b[256 * LineVerticesCount];
+			vertices = new VertexP3fC4b[256 * VerticesCount];
+			lineVertices = new VertexP3fC4b[256 * LineVerticesCount];
 			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, vertices.Length );
 			lineVb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, lineVertices.Length );
 		}

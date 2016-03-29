@@ -86,10 +86,10 @@ namespace ClassicalSharp {
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * (15.99f/16f);
 
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( minBB.X ), y, Make( minBB.Z ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( maxBB.X ), y, Make( minBB.Z ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( maxBB.X ), y, Make( maxBB.Z ), rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( minBB.X ), y, Make( maxBB.Z ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( minBB.Z ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( minBB.Z ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( maxBB.Z ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( maxBB.Z ), rec.U1, rec.V2, col );
 		}
 
 		static void ZQuad( byte block, float z, int side ) {
@@ -103,10 +103,10 @@ namespace ClassicalSharp {
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * (15.99f/16f);
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( minBB.X ), Make( maxBB.Y ), z, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( minBB.X ), Make( minBB.Y ), z, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( maxBB.X ), Make( minBB.Y ), z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( maxBB.X ), Make( maxBB.Y ), z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), Make( maxBB.Y ), z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), Make( minBB.Y ), z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), Make( minBB.Y ), z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), Make( maxBB.Y ), z, rec.U1, rec.V2, col );
 		}
 
 		static void XQuad( byte block, float x, int side ) {
@@ -120,10 +120,10 @@ namespace ClassicalSharp {
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * (15.99f/16f);
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, Make( maxBB.Y ), Make( minBB.Z ), rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, Make( minBB.Y ), Make( minBB.Z ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, Make( minBB.Y ), Make( maxBB.Z ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, Make( maxBB.Y ), Make( maxBB.Z ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, Make( maxBB.Y ), Make( minBB.Z ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, Make( minBB.Y ), Make( minBB.Z ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, Make( minBB.Y ), Make( maxBB.Z ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, Make( maxBB.Y ), Make( maxBB.Z ), rec.U1, rec.V2, col );
 		}
 		
 		static void SpriteZQuad( byte block, int side, bool firstPart ) {
@@ -135,10 +135,10 @@ namespace ClassicalSharp {
 			float x1 = firstPart ? -0.1f : 0.5f, x2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x1 ), Make( 0.0f ), Make( 0.5f ), rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x1 ), Make( 1.1f ), Make( 0.5f ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x2 ), Make( 1.1f ), Make( 0.5f ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( x2 ), Make( 0.0f ), Make( 0.5f ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( x1 ), Make( 0.0f ), Make( 0.5f ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( x1 ), Make( 1.1f ), Make( 0.5f ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( x2 ), Make( 1.1f ), Make( 0.5f ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( x2 ), Make( 0.0f ), Make( 0.5f ), rec.U2, rec.V2, col );
 		}
 
 		static void SpriteXQuad( byte block, int side, bool firstPart ) {
@@ -150,10 +150,10 @@ namespace ClassicalSharp {
 			float z1 = firstPart ? -0.1f : 0.5f, z2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 0.0f ), Make( z1 ), rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.1f ), Make( z1 ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 1.1f ), Make( z2 ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( Make( 0.5f ), Make( 0.0f ), Make( z2 ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 0.0f ), Make( z1 ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 1.1f ), Make( z1 ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 1.1f ), Make( z2 ), rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 0.0f ), Make( z2 ), rec.U2, rec.V2, col );
 		}
 		
 		static float Make( float value ) { return scale - (scale * value * 2); }
@@ -174,7 +174,7 @@ namespace ClassicalSharp {
 			api.BindTexture( texId );		
 		}
 		
-		static void TransformVertex( ref VertexPos3fTex2fCol4b vertex ) {
+		static void TransformVertex( ref VertexP3fT2fC4b vertex ) {
 			Vector3 p = new Vector3( vertex.X, vertex.Y, vertex.Z ) + pos;
 			//p = Utils.RotateY( p - pos, time ) + pos;
 			// See comment in IGraphicsApi.Draw2DTexture()

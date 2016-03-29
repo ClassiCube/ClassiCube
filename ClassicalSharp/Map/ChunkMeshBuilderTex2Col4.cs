@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 		}
 		
 		class DrawInfo {
-			public VertexPos3fTex2fCol4b[] vertices;
+			public VertexP3fT2fC4b[] vertices;
 			public int vCount, iCount;
 			public DrawInfoFaceData vIndex;
 			public DrawInfoFaceData Count;
@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 				vCount = iCount / 6 * 4;
 
 				if( vertices == null || (vCount + 2) > vertices.Length ) {
-					vertices = new VertexPos3fTex2fCol4b[vCount + 2]; 
+					vertices = new VertexP3fT2fC4b[vCount + 2]; 
 					// ensure buffer is up to 64 bits aligned for last element
 				}
 				vIndex.left = spriteCount / 6 * 4;
@@ -179,10 +179,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White :
 				X >= offset ? (Y > map.heightmap[(Z * width) + (X - offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
 			
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z2 + (count - 1), u2, v1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u1, v2, col );
-			part.vertices[part.vIndex.left++] = new VertexPos3fTex2fCol4b( x1, y1, z2 + (count - 1), u2, v2, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col );
 		}
 
 		void DrawRightFace( int count ) {
@@ -198,10 +198,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White :
 				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? map.SunlightXSide : map.ShadowlightXSide) : map.SunlightXSide;
 			
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y2, z2 + (count - 1), u1, v1, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z2 + (count - 1), u1, v2, col );
-			part.vertices[part.vIndex.right++] = new VertexPos3fTex2fCol4b( x2, y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col );
 		}
 
 		void DrawFrontFace( int count ) {
@@ -217,10 +217,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White :
 				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
 			
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z1, u1, v2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u2, v2, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.front++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col );
 		}
 		
 		void DrawBackFace( int count ) {
@@ -236,10 +236,10 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White :
 				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? map.SunlightZSide : map.ShadowlightZSide) : map.SunlightZSide;
 			
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v1, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
-			part.vertices[part.vIndex.back++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
 		}
 		
 		void DrawBottomFace( int count ) {
@@ -254,10 +254,10 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - 1 - offset) >= map.heightmap[(Z * width) + X] ? map.SunlightYBottom : map.ShadowlightYBottom);
 			
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z2, u2, v2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z2, u1, v2, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x1, y1, z1, u1, v1, col );
-			part.vertices[part.vIndex.bottom++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y1, z1, u2, v1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v1, col );
 		}
 
 		void DrawTopFace( int count ) {
@@ -272,10 +272,10 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z1, u1, v1, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x1, y2, z2, u1, v2, col );
-			part.vertices[part.vIndex.top++] = new VertexPos3fTex2fCol4b( x2 + (count - 1), y2, z2, u2, v2, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v2, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v2, col );
 		}
 		
 		void DrawSprite( int count ) {
@@ -290,28 +290,28 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 			
 			// Draw Z axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
 			
 			// Draw Z axis mirrored
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
 
 			// Draw X axis
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 2.5f/16, u1, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u1, v2, col );
 			
 			// Draw X axis mirrored
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexPos3fTex2fCol4b( X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col );
 		}
 	}
 }

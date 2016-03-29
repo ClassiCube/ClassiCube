@@ -109,10 +109,10 @@ namespace ClassicalSharp.Model {
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * 15.99f/16f;
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( minBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( maxBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( maxBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( minBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U1, rec.V2, col );
 		}
 
 		void ZQuad( float z, int side, bool swapU, float shade ) {
@@ -127,10 +127,10 @@ namespace ClassicalSharp.Model {
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, 0, z, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( minBB.X - 0.5f, height, z, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, height, z, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( maxBB.X - 0.5f, 0, z, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( minBB.X - 0.5f, 0, z, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( minBB.X - 0.5f, height, z, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( maxBB.X - 0.5f, height, z, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( maxBB.X - 0.5f, 0, z, rec.U2, rec.V1, col );
 		}
 
 		void XQuad( float x, int side, bool swapU, float shade ) {
@@ -145,10 +145,10 @@ namespace ClassicalSharp.Model {
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
 			if( swapU ) rec.SwapU();
 			
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, minBB.Z - 0.5f, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, minBB.Z - 0.5f, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, height, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, 0, minBB.Z - 0.5f, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, height, minBB.Z - 0.5f, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, height, maxBB.Z - 0.5f, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
 		}
 		
 		void SpriteZQuad( int side, bool firstPart ) {
@@ -165,10 +165,10 @@ namespace ClassicalSharp.Model {
 			} else {
 				rec.U2 = 0.5f; p1 = 0.0f/16; p2 = 5.5f/16;
 			}
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p1, 0, p1, rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p1, 1, p1, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, 1, p2, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( p2, 0, p2, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 0, p1, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 1, p1, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 1, p2, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 0, p2, rec.U1, rec.V2, col );
 		}
 
 		void SpriteXQuad( int side, bool firstPart ) {
@@ -188,10 +188,10 @@ namespace ClassicalSharp.Model {
 				x2 = 5.5f/16; z1 = 0.0f/16; z2 = -5.5f/16;
 			}
 
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x1, 0, z1, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x1, 1, z1, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x2, 1, z2, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexPos3fTex2fCol4b( x2, 0, z2, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 0, z1, rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 1, z1, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 1, z2, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 0, z2, rec.U2, rec.V2, col );
 		}
 		
 		void FlushIfNotSame( int texIndex ) {
@@ -210,7 +210,7 @@ namespace ClassicalSharp.Model {
 		
 		void TransformVertices() {
 			for( int i = 0; i < index; i++ ) {
-				VertexPos3fTex2fCol4b vertex = cache.vertices[i];
+				VertexP3fT2fC4b vertex = cache.vertices[i];
 				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosYaw, sinYaw ) + pos;
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				cache.vertices[i] = vertex;

@@ -17,7 +17,7 @@ namespace ClassicalSharp.Model {
 		public CustomModel[] CustomModels = new CustomModel[256];
 		
 		public void InitCache() {
-			vertices = new VertexPos3fTex2fCol4b[24 * 12];
+			vertices = new VertexP3fT2fC4b[24 * 12];
 			vb = api.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
 			IModel model = new HumanoidModel( game );
 			model.CreateParts();
@@ -26,7 +26,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		internal int vb;
-		internal VertexPos3fTex2fCol4b[] vertices;
+		internal VertexP3fT2fC4b[] vertices;
 		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();
 		internal int ChickenTexId, CreeperTexId, PigTexId, SheepTexId,
 		SkeletonTexId, SpiderTexId, ZombieTexId, SheepFurTexId, HumanoidTexId;

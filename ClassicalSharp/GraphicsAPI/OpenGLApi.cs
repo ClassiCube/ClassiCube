@@ -266,10 +266,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			if( format == VertexFormat.Pos3fTex2fCol4b ) {
 				GL.EnableClientState( ArrayCap.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
-				batchStride = VertexPos3fTex2fCol4b.Size;
+				batchStride = VertexP3fT2fC4b.Size;
 			} else {
 				setupBatchFunc = setupBatchFuncCol4b;
-				batchStride = VertexPos3fCol4b.Size;
+				batchStride = VertexP3fC4b.Size;
 			}
 		}
 		
@@ -300,7 +300,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startVertex, int startIndex ) {
-			int offset = startVertex * VertexPos3fTex2fCol4b.Size;
+			int offset = startVertex * VertexP3fT2fC4b.Size;
 			GL.VertexPointer( 3, PointerType.Float, 24, new IntPtr( offset ) );
 			GL.ColorPointer( 4, PointerType.UnsignedByte, 24, new IntPtr( offset + 12 ) );
 			GL.TexCoordPointer( 2, PointerType.Float, 24, new IntPtr( offset + 16 ) );
@@ -310,14 +310,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		IntPtr zero = new IntPtr( 0 ), twelve = new IntPtr( 12 ), sixteen = new IntPtr( 16 );
 		
 		void SetupVbPos3fCol4b() {
-			GL.VertexPointer( 3, PointerType.Float, VertexPos3fCol4b.Size, zero );
-			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexPos3fCol4b.Size, twelve );
+			GL.VertexPointer( 3, PointerType.Float, VertexP3fC4b.Size, zero );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexP3fC4b.Size, twelve );
 		}
 		
 		void SetupVbPos3fTex2fCol4b() {
-			GL.VertexPointer( 3, PointerType.Float, VertexPos3fTex2fCol4b.Size, zero );
-			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexPos3fTex2fCol4b.Size, twelve );
-			GL.TexCoordPointer( 2, PointerType.Float, VertexPos3fTex2fCol4b.Size, sixteen );
+			GL.VertexPointer( 3, PointerType.Float, VertexP3fT2fC4b.Size, zero );
+			GL.ColorPointer( 4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, twelve );
+			GL.TexCoordPointer( 2, PointerType.Float, VertexP3fT2fC4b.Size, sixteen );
 		}
 		#endregion
 		

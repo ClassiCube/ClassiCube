@@ -239,7 +239,7 @@ namespace ClassicalSharp.Model {
 				Vector3 newPos = Utils.RotateY( model.X, model.Y, model.Z, cosYaw, sinYaw ) + pos;
 				
 				FastColour col = GetCol( i, part.Count );
-				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
+				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				AdjustUV( model.U, model.V, vScale, i, ref vertex );
@@ -275,7 +275,7 @@ namespace ClassicalSharp.Model {
 				}
 				
 				FastColour col = GetCol( i, part.Count );
-				VertexPos3fTex2fCol4b vertex = default( VertexPos3fTex2fCol4b );
+				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 				Vector3 newPos = !head ? Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosYaw, sinYaw ) + pos :
 					Utils.RotateY( loc, cosHead, sinHead ) + Utils.RotateY( new Vector3( x, y, z ), cosYaw, sinYaw ) + pos;
 				
@@ -298,7 +298,7 @@ namespace ClassicalSharp.Model {
 			return col;
 		}
 		
-		void AdjustUV( ushort u, ushort v, float vScale, int i, ref VertexPos3fTex2fCol4b vertex ) {
+		void AdjustUV( ushort u, ushort v, float vScale, int i, ref VertexP3fT2fC4b vertex ) {
 			vertex.U = u / 64f; vertex.V = v / vScale;
 			int quadIndex = i % 4;
 			if( quadIndex == 0 || quadIndex == 3 )

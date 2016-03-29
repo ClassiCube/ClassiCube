@@ -169,7 +169,7 @@ namespace ClassicalSharp.Renderers {
 			int z1 = -extent, z2 = map.Length + extent;
 			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
-			VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[cloudVertices];
+			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
 			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
 			cloudsVb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b, cloudVertices );
 		}
@@ -180,14 +180,14 @@ namespace ClassicalSharp.Renderers {
 			int z1 = -extent, z2 = map.Length + extent;
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );			
 			
-			VertexPos3fCol4b[] vertices = new VertexPos3fCol4b[skyVertices];
+			VertexP3fC4b[] vertices = new VertexP3fC4b[skyVertices];
 			int height = Math.Max( map.Height + 2 + 6, map.CloudHeight + 6);
 			
 			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.SkyCol, vertices );
 			skyVb = graphics.CreateVb( vertices, VertexFormat.Pos3fCol4b, skyVertices );
 		}
 		
-		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fCol4b[] vertices ) {
+		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexP3fC4b[] vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			int i = 0;
 			
@@ -199,15 +199,15 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					vertices[i++] = new VertexPos3fCol4b( x1, y, z1, col );
-					vertices[i++] = new VertexPos3fCol4b( x1, y, z2, col );
-					vertices[i++] = new VertexPos3fCol4b( x2, y, z2, col );
-					vertices[i++] = new VertexPos3fCol4b( x2, y, z1, col );
+					vertices[i++] = new VertexP3fC4b( x1, y, z1, col );
+					vertices[i++] = new VertexP3fC4b( x1, y, z2, col );
+					vertices[i++] = new VertexP3fC4b( x2, y, z2, col );
+					vertices[i++] = new VertexP3fC4b( x2, y, z1, col );
 				}
 			}
 		}
 		
-		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexPos3fTex2fCol4b[] vertices ) {
+		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexP3fT2fC4b[] vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
 			float offset = Utils.CeilDiv( -x1, 2048 );
@@ -221,10 +221,10 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if( z2 > endZ ) z2 = endZ;
 					
-					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y + 0.1f, z1, x1 / 2048f + offset, z1 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x1, y + 0.1f, z2, x1 / 2048f + offset, z2 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y + 0.1f, z2, x2 / 2048f + offset, z2 / 2048f + offset, col );
-					vertices[i++] = new VertexPos3fTex2fCol4b( x2, y + 0.1f, z1, x2 / 2048f + offset, z1 / 2048f + offset, col );
+					vertices[i++] = new VertexP3fT2fC4b( x1, y + 0.1f, z1, x1 / 2048f + offset, z1 / 2048f + offset, col );
+					vertices[i++] = new VertexP3fT2fC4b( x1, y + 0.1f, z2, x1 / 2048f + offset, z2 / 2048f + offset, col );
+					vertices[i++] = new VertexP3fT2fC4b( x2, y + 0.1f, z2, x2 / 2048f + offset, z2 / 2048f + offset, col );
+					vertices[i++] = new VertexP3fT2fC4b( x2, y + 0.1f, z1, x2 / 2048f + offset, z1 / 2048f + offset, col );
 				}
 			}
 		}

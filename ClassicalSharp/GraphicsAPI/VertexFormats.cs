@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 	/// <summary> 3 floats for position (X, Y, Z),<br/>
 	/// 4 bytes for colour (R, G, B, A) </summary>
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
-	public struct VertexPos3fCol4b {
+	public struct VertexP3fC4b {
 		public float X, Y, Z;
 		#if !USE_DX
 		public byte R, G, B, A;
@@ -17,22 +17,22 @@ namespace ClassicalSharp {
 		public byte B, G, R, A;
 		#endif
 		
-		public VertexPos3fCol4b( float x, float y, float z, FastColour c ) {
+		public VertexP3fC4b( float x, float y, float z, FastColour c ) {
 			X = x; Y = y; Z = z;
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
-		public VertexPos3fCol4b( float x, float y, float z, Color c ) {
+		public VertexP3fC4b( float x, float y, float z, Color c ) {
 			X = x; Y = y; Z = z;
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
-		public VertexPos3fCol4b( float x, float y, float z, byte r, byte g, byte b, byte a ) {
+		public VertexP3fC4b( float x, float y, float z, byte r, byte g, byte b, byte a ) {
 			X = x; Y = y; Z = z;
 			R = r; G = g; B = b; A = a;
 		}
 		
-		public VertexPos3fCol4b( float x, float y, float z, byte r, byte g, byte b ) {
+		public VertexP3fC4b( float x, float y, float z, byte r, byte g, byte b ) {
 			X = x; Y = y; Z = z;
 			R = r; G = g; B = b; A = 255;
 		}
@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 	/// 2 floats for texture coordinates (U, V),<br/>
 	/// 4 bytes for colour (R, G, B, A) </summary>
 	[StructLayout( LayoutKind.Sequential, Pack = 1 )]
-	public struct VertexPos3fTex2fCol4b {
+	public struct VertexP3fT2fC4b {
 		public float X, Y, Z;	
 		#if !USE_DX
 		public byte R, G, B, A;
@@ -57,25 +57,25 @@ namespace ClassicalSharp {
 		#endif
 		public float U, V;
 		
-		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, FastColour c ) {
+		public VertexP3fT2fC4b( float x, float y, float z, float u, float v, FastColour c ) {
 			X = x; Y = y; Z = z;
 			U = u; V = v;
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
-		public VertexPos3fTex2fCol4b( Vector3 p, float u, float v, FastColour c ) {
+		public VertexP3fT2fC4b( Vector3 p, float u, float v, FastColour c ) {
 			X = p.X; Y = p.Y; Z = p.Z;
 			U = u; V = v;
 			R = c.R; G = c.G; B = c.B; A = c.A;
 		}
 		
-		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, byte r, byte g, byte b, byte a ) {
+		public VertexP3fT2fC4b( float x, float y, float z, float u, float v, byte r, byte g, byte b, byte a ) {
 			X = x; Y = y; Z = z;
 			U = u; V = v;
 			R = r; G = g; B = b; A = a;
 		}
 		
-		public VertexPos3fTex2fCol4b( float x, float y, float z, float u, float v, byte r, byte g, byte b ) {
+		public VertexP3fT2fC4b( float x, float y, float z, float u, float v, byte r, byte g, byte b ) {
 			X = x; Y = y; Z = z;
 			U = u; V = v;
 			R = r; G = g; B = b; A = 255;

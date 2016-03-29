@@ -252,18 +252,18 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteDynamicVb( texVb );
 		}
 		
-		internal VertexPos3fCol4b[] quadVerts = new VertexPos3fCol4b[4];
+		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
 		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
-			quadVerts[0] = new VertexPos3fCol4b( x, y, 0, col );
-			quadVerts[1] = new VertexPos3fCol4b( x + width, y, 0, col );
-			quadVerts[2] = new VertexPos3fCol4b( x + width, y + height, 0, col );
-			quadVerts[3] = new VertexPos3fCol4b( x, y + height, 0, col );
+			quadVerts[0] = new VertexP3fC4b( x, y, 0, col );
+			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, col );
+			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, col );
+			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, col );
 			SetBatchFormat( VertexFormat.Pos3fCol4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
-		internal VertexPos3fTex2fCol4b[] texVerts = new VertexPos3fTex2fCol4b[4];
+		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
 		internal int texVb;
 		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
@@ -273,25 +273,25 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			texVerts[0] = new VertexPos3fTex2fCol4b( x1, y1, 0, tex.U1, tex.V1, col );
-			texVerts[1] = new VertexPos3fTex2fCol4b( x2, y1, 0, tex.U2, tex.V1, col );
-			texVerts[2] = new VertexPos3fTex2fCol4b( x2, y2, 0, tex.U2, tex.V2, col );
-			texVerts[3] = new VertexPos3fTex2fCol4b( x1, y2, 0, tex.U1, tex.V2, col );
+			texVerts[0] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
+			texVerts[1] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
+			texVerts[2] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
+			texVerts[3] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
 			SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
 		public static void Make2DQuad( TextureRec xy, TextureRec uv,
-		                              VertexPos3fTex2fCol4b[] vertices, ref int index ) {
+		                              VertexP3fT2fC4b[] vertices, ref int index ) {
 			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
 			#if USE_DX
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y1, 0, uv.U1, uv.V1, FastColour.White );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y1, 0, uv.U2, uv.V1, FastColour.White );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x2, y2, 0, uv.U2, uv.V2, FastColour.White );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x1, y2, 0, uv.U1, uv.V2, FastColour.White );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, uv.U1, uv.V1, FastColour.White );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, uv.U2, uv.V1, FastColour.White );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, uv.U2, uv.V2, FastColour.White );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, uv.U1, uv.V2, FastColour.White );
 		}
 		
 		public void Draw2DTexture( ref Texture tex ) {

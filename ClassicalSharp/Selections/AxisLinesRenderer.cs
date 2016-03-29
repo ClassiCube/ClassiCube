@@ -7,7 +7,7 @@ namespace ClassicalSharp.Selections {
 
 	public class AxisLinesRenderer : IDisposable {
 		
-		VertexPos3fCol4b[] vertices;
+		VertexP3fC4b[] vertices;
 		int vb;
 		Game game;
 		
@@ -19,7 +19,7 @@ namespace ClassicalSharp.Selections {
 			if( !game.ShowAxisLines ) 
 				return;
 			if( vertices == null ) {
-				vertices = new VertexPos3fCol4b[12];
+				vertices = new VertexP3fC4b[12];
 				vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, vertices.Length );
 			}
 			game.Graphics.Texturing = false;			
@@ -41,17 +41,17 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		void VerQuad( ref int index, float x1, float y1, float z1, float x2, float y2, float z2, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y1, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y2, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y2, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y1, z2, col );
+			vertices[index++] = new VertexP3fC4b( x1, y1, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y2, z1, col );
+			vertices[index++] = new VertexP3fC4b( x2, y2, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y1, z2, col );
 		}
 		
 		void HorQuad( ref int index, float x1, float z1, float x2, float z2, float y, FastColour col ) {
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z1, col );
-			vertices[index++] = new VertexPos3fCol4b( x1, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z2, col );
-			vertices[index++] = new VertexPos3fCol4b( x2, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z1, col );
+			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
+			vertices[index++] = new VertexP3fC4b( x2, y, z1, col );
 		}
 	}
 }

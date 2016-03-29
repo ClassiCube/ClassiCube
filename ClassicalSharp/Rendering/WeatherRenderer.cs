@@ -24,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 		short[] heightmap;
 		float vOffset;
 		const int extent = 4;
-		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
+		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
 		double rainAcc;
 		Vector3I lastPos = new Vector3I( Int32.MinValue );
 		
@@ -81,15 +81,15 @@ namespace ClassicalSharp.Renderers {
 			float v1 = y / 6f + worldV;
 			float v2 = (y + height) / 6f + worldV;
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z, 0, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z, 0, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z + 1, 2, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z + 1, 2, v2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x, y, z, 0, v2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x, y + height, z, 0, v1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x + 1, y + height, z + 1, 2, v1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x + 1, y, z + 1, 2, v2, col );
 			
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y, z, 2, v2, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x + 1, y + height, z, 2, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y + height, z + 1, 0, v1, col );
-			vertices[index++] = new VertexPos3fTex2fCol4b( x, y, z + 1, 0, v2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x + 1, y, z, 2, v2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x + 1, y + height, z, 2, v1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x, y + height, z + 1, 0, v1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x, y, z + 1, 0, v2, col );
 		}
 
 		int length, width, maxY, oneY;

@@ -29,7 +29,7 @@ namespace ClassicalSharp.Particles {
 			terrain1DIndices = new int[game.TerrainAtlas1D.TexIds.Length];
 		}
 		
-		VertexPos3fTex2fCol4b[] vertices = new VertexPos3fTex2fCol4b[0];
+		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[0];
 		public void Render( double delta, float t ) {
 			if( terrainCount == 0 && rainCount == 0 ) return;
 			IGraphicsApi graphics = game.Graphics;
@@ -47,7 +47,7 @@ namespace ClassicalSharp.Particles {
 		void RenderTerrainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
 			int count = elems * 4;
 			if( count > vertices.Length )
-				vertices = new VertexPos3fTex2fCol4b[count];
+				vertices = new VertexP3fT2fC4b[count];
 
 			Update1DCounts( particles, elems );
 			for( int i = 0; i < elems; i++ ) {
@@ -85,7 +85,7 @@ namespace ClassicalSharp.Particles {
 		void RenderRainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
 			int count = elems * 4;
 			if( count > vertices.Length )
-				vertices = new VertexPos3fTex2fCol4b[count];
+				vertices = new VertexP3fT2fC4b[count];
 			
 			int index = 0;
 			for( int i = 0; i < elems; i++ )

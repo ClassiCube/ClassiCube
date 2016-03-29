@@ -144,8 +144,8 @@ namespace ClassicalSharp.Net {
 				}
 			}
 			
-			reader.Skip( 1024 );
-			byte progress = reader.ReadUInt8();
+			reader.Skip( 1025 ); // also skip progress since we calculate client side
+			float progress = map == null ? 0 : (float)mapIndex / map.Length;
 			game.WorldEvents.RaiseMapLoading( progress );
 		}
 		
