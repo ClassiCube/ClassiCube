@@ -24,6 +24,7 @@ namespace Launcher {
 			if( !game.Window.Mouse[MouseButton.Left] ) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
+				table.mouseOffset = 0;
 			}
 		}
 		
@@ -39,6 +40,7 @@ namespace Launcher {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.DraggingColumn = -1;
 			table.DraggingScrollbar = false;
+			table.mouseOffset = 0;
 		}
 		
 		protected override void OnAddedChar() { FilterList(); }

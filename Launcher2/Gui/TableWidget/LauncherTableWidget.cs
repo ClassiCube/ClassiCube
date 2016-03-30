@@ -170,12 +170,17 @@ namespace Launcher {
 		void DrawScrollbar( IDrawer2D drawer ) {
 			FastColour col = Window.ClassicBackground ? new FastColour( 80, 80, 80 ) : LauncherSkin.ButtonBorderCol;
 			drawer.Clear( col, Window.Width - 10, Y, 10, Height );
+			col = Window.ClassicBackground ? new FastColour( 160, 160, 160 ) : LauncherSkin.ButtonForeActiveCol;
+			int yOffset, height;
+			GetScrollbarCoords( out yOffset, out height );
+			drawer.Clear( col, Window.Width - 10, Y + yOffset, 10, height );
+		}
+		
+		void GetScrollbarCoords( out int y, out int height ) {
 			float scale = Height / (float)Count;
-			
-			col =  Window.ClassicBackground ? new FastColour( 160, 160, 160 ) : LauncherSkin.ButtonForeActiveCol;
-			int y1 = (int)(Y + CurrentIndex * scale);
-			int height = (int)((maxIndex - CurrentIndex) * scale);
-			drawer.Clear( col, Window.Width - 10, y1, 10, height + 1 );
+			y = (int)Math.Ceiling(CurrentIndex * scale);
+			height = (int)Math.Ceiling((maxIndex - CurrentIndex) * scale);
+			height = Math.Min(y + height, Height) - y;
 		}
 		
 		public void SetSelected( int index ) {

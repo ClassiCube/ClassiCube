@@ -22,9 +22,7 @@ namespace ClassicalSharp.Gui {
 			float scale = ScrollbarScale;
 			y = (int)Math.Ceiling( scrollY * scale );
 			height = (int)Math.Ceiling( maxRows * scale );
-			
-			if( y + height > TableHeight )
-				height = TableHeight - y;
+			height = Math.Min(y + height, TableHeight) - y;
 		}
 		
 		public override bool HandlesMouseScroll( int delta ) {

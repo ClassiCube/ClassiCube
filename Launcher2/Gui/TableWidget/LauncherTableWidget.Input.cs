@@ -11,23 +11,9 @@ namespace Launcher {
 		PlayersComparer playerComp = new PlayersComparer();
 		UptimeComparer uptimeComp = new UptimeComparer();
 		SoftwareComparer softwareComp = new SoftwareComparer();
-		public int DraggingColumn = -1;
-		public bool DraggingScrollbar = false;
-		
-		void HandleOnClick( int mouseX, int mouseY ) {			
-			if( mouseX >= Window.Width - 10 ) {
-				ScrollbarClick( mouseY );
-				DraggingScrollbar = true;
-				lastIndex = -10; return;
-			}
-			
-			if( mouseY >= headerStartY && mouseY < headerEndY ) {
-				SelectHeader( mouseX, mouseY );
-			} else {
-				GetSelectedServer( mouseX, mouseY );
-			}
-			lastPress = DateTime.UtcNow;
-		}
+		internal int DraggingColumn = -1;
+		internal bool DraggingScrollbar = false;
+		internal int mouseOffset;
 		
 		void SelectHeader( int mouseX, int mouseY ) {
 			int x = X;		
@@ -88,27 +74,53 @@ namespace Launcher {
 			}
 		}
 		
+		void HandleOnClick( int mouseX, int mouseY ) {			
+			if( mouseX >= Window.Width - 10 ) {
+				ScrollbarClick( mouseY );
+				DraggingScrollbar = true;
+				lastIndex = -10; return;
+			}
+			
+			if( mouseY >= headerStartY && mouseY < headerEndY ) {
+				SelectHeader( mouseX, mouseY );
+			} else {
+				GetSelectedServer( mouseX, mouseY );
+			}
+			lastPress = DateTime.UtcNow;
+		}
+		
 		int lastIndex = -10;
 		DateTime lastPress;
 		public void MouseMove( int x, int y, int deltaX, int deltaY ) {
 			if( DraggingScrollbar ) {
-				ScrollbarClick( y );
+				y -= Y;
+				float scale = Height / (float)Count;
+				CurrentIndex = (int)((y - mouseOffset) / scale);
+				ClampIndex();
 			} else if( DraggingColumn >= 0 ) {
 				if( x >= Window.Width - 20 ) return;
 				int col = DraggingColumn;
 				ColumnWidths[col] += deltaX;
 				Utils.Clamp( ref ColumnWidths[col], 20, Window.Width - 20 );
-				DesiredColumnWidths[col] = ColumnWidths[col];
-				NeedRedraw();
+				DesiredColumnWidths[col] = ColumnWidths[col];				
 			}
+			NeedRedraw();
 		}
 		
 		void ScrollbarClick( int mouseY ) {
 			mouseY -= Y;
-			float scale = (Window.Height - 10) / (float)Count;
+			int y, height;
+			GetScrollbarCoords( out y, out height );
+			int delta = (maxIndex - CurrentIndex);
 			
-			int currentIndex = (int)(mouseY / scale);
-			CurrentIndex = currentIndex;
+			if( mouseY < y ) {
+				CurrentIndex -= delta;
+			} else if( mouseY >= y + height ) {
+				CurrentIndex += delta;
+			} else {
+				DraggingScrollbar = true;
+				mouseOffset = mouseY - y;
+			}
 			ClampIndex();
 			NeedRedraw();
 		}

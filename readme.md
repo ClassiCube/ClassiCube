@@ -32,12 +32,12 @@ Run classicalsharp.exe.
 Run launcher.exe. You can connect to LAN/locally hosted servers, ~~minecraft.net servers,~~ and classicube.net servers through the launcher.
 
 ###### *Mono specific*
-*You must use either build using the Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
+*If you are using Wine, you need to mark both ClassicalSharp.exe and Launcher.exe as executable, then type this into the terminal: `./Launcher.exe`
+If you are using Mono, you just need to type `mono Launcher.exe` into the terminal.*
 
 *Also when using older mono versions, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.*
 
-*If you are using Wine, you need to mark both ClassicalSharp.exe and Launcher.exe as executable, then type this into the terminal: `./Launcher.exe`
-If you are using Mono, you just need to type `mono Launcher.exe` into the terminal.*
+*You must use either build using the Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
 
 #### Tips
 * Press escape (after joining a world) to switch to the pause menu.
