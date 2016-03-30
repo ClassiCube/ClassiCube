@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui {
 					         (g, v) => ((SinglePlayerServer)network).physics.Enabled = v ),
 				
 				MakeBool( 1, -50, "Auto close launcher", OptionsKey.AutoCloseLauncher, OnWidgetClick,
-				         g => Options.GetBool( OptionsKey.AutoCloseLauncher, true ),
+				         g => Options.GetBool( OptionsKey.AutoCloseLauncher, false ),
 				         (g, v) => Options.Set( OptionsKey.AutoCloseLauncher, v ) ),
 				
 				MakeBool( 1, 0, "Invert mouse", OptionsKey.InvertMouse,

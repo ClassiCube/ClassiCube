@@ -59,7 +59,7 @@ namespace Launcher {
 			// Make sure if the client has changed some settings in the meantime, we keep the changes
 			if( !Options.Load() )
 				return;
-			shouldExit = Options.GetBool( OptionsKey.AutoCloseLauncher, true );
+			shouldExit = Options.GetBool( OptionsKey.AutoCloseLauncher, false );
 			if( data == null ) return;
 			
 			Options.Set( "launcher-username", data.RealUsername );
