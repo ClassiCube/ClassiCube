@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.World.SetFogColour( FastColour.Parse( v ) ) ),
 				
 				Make2( -1, 0, "Clouds speed", OnWidgetClick,
-				     g => g.World.CloudsSpeed.ToString(),
+				     g => g.World.CloudsSpeed.ToString( "F2" ),
 				     (g, v) => g.World.SetCloudsSpeed( Single.Parse( v ) ) ),
 				
 				Make2( -1, 50, "Clouds height", OnWidgetClick,
@@ -103,7 +103,7 @@ namespace ClassicalSharp.Gui {
 		
 		protected override void InputOpened() {
 			widgets[defaultIndex] = ButtonWidget.Create(
-				game, 0, 200, 180, 35, "Default value", Anchor.Centre, 
+				game, 0, 160, 180, 35, "Default value", Anchor.Centre, 
 				Anchor.Centre, titleFont, DefaultButtonClick );
 		}
 		

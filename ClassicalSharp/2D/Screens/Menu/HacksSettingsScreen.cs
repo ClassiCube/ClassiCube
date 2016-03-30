@@ -22,7 +22,7 @@ namespace ClassicalSharp.Gui {
 				     	g.LocalPlayer.CheckHacksConsistency(); } ),
 				
 				Make2( -1, -100, "Speed multiplier", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString( "F3" ),
+				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString( "F2" ),
 				     (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				

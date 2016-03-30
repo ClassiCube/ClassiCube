@@ -190,7 +190,7 @@ namespace ClassicalSharp.Gui {
 		
 		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
 		int tableWidth, tableHeight;
-		const int extHelpY = 120;
+		const int extHelpY = 100;
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new ChatTextWidget[desc.Length];
 			int x = 0, y = extHelpY;
@@ -250,10 +250,10 @@ namespace ClassicalSharp.Gui {
 				inputWidget.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 150, 400, 30, button.GetValue( game ), Anchor.Centre,
+			inputWidget = MenuInputWidget.Create( game, 0, 110, 400, 30, button.GetValue( game ), Anchor.Centre,
 			                                     Anchor.Centre, regularFont, titleFont, validator );
 			widgets[widgets.Length - 2] = inputWidget;
-			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 240, 150, 40, 30, "OK",
+			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 240, 110, 40, 30, "OK",
 			                                                  Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
 			InputOpened();
 			UpdateDescription( targetWidget );

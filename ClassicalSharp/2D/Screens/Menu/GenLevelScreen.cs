@@ -56,25 +56,25 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
-			int size = game.Drawer2D.UseBitmappedChat ? 14 : 18;
-			labelFont = new Font( game.FontName, size, FontStyle.Regular );
-			titleFont = new Font( game.FontName, size, FontStyle.Bold );
+			labelFont = new Font( game.FontName, 15, FontStyle.Regular );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputs = new [] { 
-				MakeInput( -100, false, game.World.Width.ToString() ), 
-				MakeInput( -60, false, game.World.Height.ToString() ),
-				MakeInput( -20, false, game.World.Length.ToString() ),
-				MakeInput( 20, true, "" )
+				MakeInput( -80, false, game.World.Width.ToString() ), 
+				MakeInput( -40, false, game.World.Height.ToString() ),
+				MakeInput( 0, false, game.World.Length.ToString() ),
+				MakeInput( 40, true, "" )
 			};
 			labels = new [] { 
-				MakeLabel( -150, -100, "Width:" ), MakeLabel( -150, -60, "Height:" ),
-				MakeLabel( -150, -20, "Length:" ), MakeLabel( -140, 20, "Seed:" ),
+				MakeLabel( -150, -80, "Width:" ), MakeLabel( -150, -40, "Height:" ),
+				MakeLabel( -150, 0, "Length:" ), MakeLabel( -140, 40, "Seed:" ),
+				TextWidget.Create( game, 0, -130, "Generate new level", Anchor.Centre, Anchor.Centre, titleFont ), 
 			};
 			widgets = new [] {
-				ButtonWidget.Create( game, 0, 80, 250, 35, "Generate flatgrass", Anchor.Centre,
+				ButtonWidget.Create( game, -90, 100, 120, 35, "Flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
-				ButtonWidget.Create( game, 0, 130, 250, 35, "Generate notchy", Anchor.Centre,
+				ButtonWidget.Create( game, 90, 100, 120, 35, "Vanilla", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenNotchyClick ),
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),

@@ -110,6 +110,7 @@ namespace ClassicalSharp.Gui {
 			descriptions = new string[widgets.Length][];
 			descriptions[8] = new[] {
 				"&eWhether a system font is used instead of default.png for drawing text",
+				"&fThe default system font used is Arial.",
 			};
 		}
 	}
