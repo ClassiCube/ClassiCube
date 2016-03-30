@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public virtual void SetText( string text ) {
-			graphicsApi.DeleteTexture( ref texture );
+			api.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Height = defaultHeight;
@@ -51,11 +51,11 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			if( texture.IsValid )
-				texture.Render( graphicsApi );
+				texture.Render( api );
 		}
 		
 		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref texture );
+			api.DeleteTexture( ref texture );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

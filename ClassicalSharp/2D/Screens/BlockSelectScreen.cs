@@ -28,17 +28,16 @@ namespace ClassicalSharp.Gui {
 		
 		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
 		public override void Render( double delta ) {
-			graphicsApi.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
+			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
 			if( rows > maxRows )
 				DrawScrollbar();
-			graphicsApi.Texturing = true;
-			graphicsApi.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.Texturing = true;
+			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
 			
 			IsometricBlockDrawer.lastTexId = -1;
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;
-				if( !GetCoords( i, out x, out y ) )
-					continue;
+				if( !GetCoords( i, out x, out y ) ) continue;
 				
 				// We want to always draw the selected block on top of others
 				if( i == selIndex ) continue;
@@ -55,9 +54,9 @@ namespace ClassicalSharp.Gui {
 			}
 			
 			if( blockInfoTexture.IsValid )
-				blockInfoTexture.Render( graphicsApi );
+				blockInfoTexture.Render( api );
 			game.hudScreen.RenderHotbar( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		bool GetCoords( int i, out int x, out int y ) {
@@ -72,7 +71,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Dispose() {
 			font.Dispose();
-			graphicsApi.DeleteTexture( ref blockInfoTexture );
+			api.DeleteTexture( ref blockInfoTexture );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 			game.Keyboard.KeyRepeat = false;
 		}
@@ -181,7 +180,7 @@ namespace ClassicalSharp.Gui {
 			if( selIndex == lastCreatedIndex ) return;
 			lastCreatedIndex = selIndex;
 			
-			graphicsApi.DeleteTexture( ref blockInfoTexture );
+			api.DeleteTexture( ref blockInfoTexture );
 			if( selIndex == -1 ) return;
 			
 			Block block = blocksTable[selIndex];
@@ -226,7 +225,9 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
 			if( draggingMouse ) {
-				ScrollbarClick( mouseY );
+				mouseY -= TableY;
+				scrollY = (int)((mouseY - mouseOffset) / ScrollbarScale);
+				ClampScrollY();
 				return true;
 			}
 			
@@ -252,7 +253,6 @@ namespace ClassicalSharp.Gui {
 				return true;
 			if( button == MouseButton.Left && mouseX >= TableX && mouseX < TableX + scrollbarWidth ) {
 				ScrollbarClick( mouseY );
-				draggingMouse = true;
 			} else if( button == MouseButton.Left ) {
 				if( selIndex != -1 )
 					game.Inventory.HeldBlock = blocksTable[selIndex];

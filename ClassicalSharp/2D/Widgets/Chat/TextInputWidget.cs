@@ -40,20 +40,20 @@ namespace ClassicalSharp.Gui {
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 60, 60, 60, 200 );
 		public override void Render( double delta ) {
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 			int y = Y, x = X;
 			for( int i = 0; i < sizes.Length; i++ ) {
 				bool caretAtEnd = caretTex.Y1 == y && (indexX == LineLength || caretPos == -1);
 				int offset = caretAtEnd ? defaultWidth : 0;
-				graphicsApi.Draw2DQuad( x + 5, y, sizes[i].Width + offset, sizes[i].Height, backColour );
+				api.Draw2DQuad( x + 5, y, sizes[i].Width + offset, sizes[i].Height, backColour );
 				y += sizes[i].Height;
 			}
 			if( sizes.Length == 0 || sizes[0] == Size.Empty )
-				graphicsApi.Draw2DQuad( x + 5, y, defaultWidth, defaultHeight, backColour );
-			graphicsApi.Texturing = true;
+				api.Draw2DQuad( x + 5, y, defaultWidth, defaultHeight, backColour );
+			api.Texturing = true;
 			
-			inputTex.Render( graphicsApi );
-			caretTex.Render( graphicsApi, caretCol );
+			inputTex.Render( api );
+			caretTex.Render( api, caretCol );
 			if( altText.Active )
 				altText.Render( delta );
 		}
@@ -169,12 +169,12 @@ namespace ClassicalSharp.Gui {
 		}
 
 		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref inputTex );
+			api.DeleteTexture( ref inputTex );
 		}
 		
 		public void DisposeFully() {
 			Dispose();
-			graphicsApi.DeleteTexture( ref caretTex );
+			api.DeleteTexture( ref caretTex );
 		}
 
 		public override void MoveTo( int newX, int newY ) {

@@ -21,10 +21,10 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			UpdateReconnectState();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			for( int i = 0; i < widgets.Length; i++ )
 				widgets[i].Render( delta );
-			graphicsApi.Texturing = false;			
+			api.Texturing = false;			
 		}
 		
 		int lastSecsLeft;
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			graphicsApi.ClearColour( new FastColour( 65, 31, 31 ) );
+			api.ClearColour( new FastColour( 65, 31, 31 ) );
 			widgets = new Widget[] {
 				ChatTextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
 				ChatTextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),

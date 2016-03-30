@@ -59,9 +59,9 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			base.Render( delta );
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			infoWidget.Render( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		public override void Dispose() {

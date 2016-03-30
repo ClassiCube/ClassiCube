@@ -22,10 +22,10 @@ namespace ClassicalSharp.Gui {
 			if( extendedHelp != null && extEndY <= widgets[widgets.Length - 3].Y ) {
 				int x = game.Width / 2 - tableWidth / 2 - 5;
 				int y = game.Height / 2 + extHelpY - 5;
-				graphicsApi.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
+				api.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
 			}
 			
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			if( inputWidget != null )
 				inputWidget.Render( delta );			
@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui {
 				for( int i = 0; i < extendedHelp.Length; i++ )
 					extendedHelp[i].Render( delta );
 			}
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		public override void Init() {

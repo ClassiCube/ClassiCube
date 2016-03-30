@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void SetText( string text ) {
-			graphicsApi.DeleteTexture( ref texture );
+			api.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Height = defaultHeight;

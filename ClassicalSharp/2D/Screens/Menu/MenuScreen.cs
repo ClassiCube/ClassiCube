@@ -13,7 +13,7 @@ namespace ClassicalSharp.Gui {
 		protected Font titleFont, regularFont;
 		
 		protected void RenderMenuBounds() {
-			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
+			api.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
 		}
 		
 		protected void RenderMenuWidgets( double delta ) {

@@ -63,12 +63,12 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Render( double delta ) {
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 			int offset = overview.Height;
 			int height = namesPerColumn * (elemHeight + 1) + boundsSize * 2 + offset;
-			graphicsApi.Draw2DQuad( X, Y - offset, Width, height, lightTableCol );
+			api.Draw2DQuad( X, Y - offset, Width, height, lightTableCol );
 			
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			overview.MoveTo( game.Width / 2 - overview.Width / 2,
 			                Y - offset + boundsSize / 2 );
 			overview.Render( delta );
@@ -76,7 +76,7 @@ namespace ClassicalSharp.Gui {
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid )
-					texture.Render( graphicsApi );
+					texture.Render( api );
 			}
 		}
 		
@@ -159,7 +159,7 @@ namespace ClassicalSharp.Gui {
 				if( pInfo.Id != e.Id ) continue;
 				
 				Texture tex = textures[i];
-				graphicsApi.DeleteTexture( ref tex );
+				api.DeleteTexture( ref tex );
 				AddPlayerInfo( new PlayerInfo( game.CpePlayersList[e.Id] ), i );
 				SortPlayerInfo();
 				return;

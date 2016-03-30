@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui {
 			bool showMinimal = game.GetActiveScreen != this;
 			if( chat.HandlesAllInput )
 				chat.RenderBackground();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			chat.Render( delta );
 			if( !showMinimal )
 				RenderHotbar( delta );
@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui {
 				}
 			}
 			
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 			if( playerList == null && !showMinimal )
 				DrawCrosshairs();
 		}
@@ -51,9 +51,9 @@ namespace ClassicalSharp.Gui {
 			int curCol = 150 + (int)( 50 * Math.Abs( Math.Sin( game.accumulator ) ) );
 			FastColour col = new FastColour( curCol, curCol, curCol );
 			float centreX = game.Width / 2, centreY = game.Height / 2;
-			graphicsApi.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
+			api.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
 			                       crosshairExtent * 2, crosshairWeight * 2, col );
-			graphicsApi.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
+			api.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
 			                       crosshairWeight * 2, crosshairExtent * 2, col );
 		}
 		

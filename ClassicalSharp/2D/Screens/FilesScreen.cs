@@ -104,12 +104,12 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Render( double delta ) {
-			graphicsApi.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
-			graphicsApi.Texturing = true;
+			api.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
+			api.Texturing = true;
 			title.Render( delta );
 			for( int i = 0; i < buttons.Length; i++ )
 				buttons[i].Render( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 	}
 }

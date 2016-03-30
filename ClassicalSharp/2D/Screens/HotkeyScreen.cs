@@ -17,14 +17,14 @@ namespace ClassicalSharp.Gui {
 		Font arrowFont, textFont;
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			
 			if( currentAction != null ) {
 				currentAction.Render( delta );
 				currentMoreInputLabel.Render( delta );
 			}
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {

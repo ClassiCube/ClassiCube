@@ -14,11 +14,11 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			if( descWidget != null )
 				descWidget.Render( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		public override void Init() {

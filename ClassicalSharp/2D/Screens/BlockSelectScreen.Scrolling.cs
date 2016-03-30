@@ -9,17 +9,22 @@ namespace ClassicalSharp.Gui {
 		const int scrollbarWidth = 10;
 		static FastColour scrollCol = new FastColour( 10, 10, 10, 220 );
 		static FastColour scrollUsedCol = new FastColour( 100, 100, 100, 220 );
+		float ScrollbarScale { get { return TableHeight / (float)rows; } }
+		
 		void DrawScrollbar() {
-			graphicsApi.Draw2DQuad( TableX, TableY, scrollbarWidth,
-			                       TableHeight, scrollCol );
-			float scale = TableHeight / (float)rows;
-			int yOffset = (int)Math.Ceiling( scrollY * scale );
-			int height = (int)Math.Ceiling( maxRows * scale );
+			api.Draw2DQuad( TableX, TableY, scrollbarWidth, TableHeight, scrollCol );
+			int y, height;
+			GetScrollbarCoords( out y, out height );
+			api.Draw2DQuad( TableX, TableY + y, scrollbarWidth, height, scrollUsedCol );
+		}
+		
+		void GetScrollbarCoords( out int y, out int height ) {
+			float scale = ScrollbarScale;
+			y = (int)Math.Ceiling( scrollY * scale );
+			height = (int)Math.Ceiling( maxRows * scale );
 			
-			if( yOffset + height > TableHeight )
-				height = TableHeight - yOffset;
-			graphicsApi.Draw2DQuad( TableX, TableY + yOffset, scrollbarWidth,
-			                       height, scrollUsedCol );
+			if( y + height > TableHeight )
+				height = TableHeight - y;
 		}
 		
 		public override bool HandlesMouseScroll( int delta ) {
@@ -49,15 +54,26 @@ namespace ClassicalSharp.Gui {
 		
 		void ScrollbarClick( int mouseY ) {
 			mouseY -= TableY;
-			float scale = TableHeight / (float)rows;
-			scrollY = (int)(mouseY / scale);
+			int y, height;
+			GetScrollbarCoords( out y, out height );
+			
+			if( mouseY < y ) {
+				scrollY -= maxRows;
+			} else if( mouseY >= y + height ) {
+				scrollY += maxRows;
+			} else {
+				draggingMouse = true;
+				mouseOffset = mouseY - y;
+			}
 			ClampScrollY();
 		}
 		
 		bool draggingMouse = false;
+		int mouseOffset = 0;
 		
 		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) {
 			draggingMouse = false;
+			mouseOffset = 0;
 			return true;
 		}
 	}

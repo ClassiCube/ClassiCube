@@ -47,7 +47,7 @@ namespace ClassicalSharp.Gui {
 		                                         new TextureRec( 0, 46/256f, 200/256f, 20/256f ) );		
 		public string Text;
 		public void SetText( string text ) {
-			graphicsApi.DeleteTexture( ref texture );
+			api.DeleteTexture( ref texture );
 			Text = text;
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
@@ -71,14 +71,14 @@ namespace ClassicalSharp.Gui {
 			backTex.X1 = X; backTex.Y1 = Y;
 			backTex.Width = Width; backTex.Height = Height;
 			
-			backTex.Render( graphicsApi );
+			backTex.Render( api );
 			FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
 			if( Disabled ) col = new FastColour( 150, 150, 150 );
-			texture.Render( graphicsApi, col );
+			texture.Render( api, col );
 		}
 		
 		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref texture );
+			api.DeleteTexture( ref texture );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

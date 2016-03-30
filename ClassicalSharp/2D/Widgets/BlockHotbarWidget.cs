@@ -37,7 +37,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Render( double delta ) {
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderHotbar();
 			IsometricBlockDrawer.lastTexId = -1;
 			
@@ -49,20 +49,20 @@ namespace ClassicalSharp.Gui {
 				float scale = (elemSize * 13.5f/16f) / 2f;
 				IsometricBlockDrawer.Draw( game, block, scale, x, y );
 			}
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		void RenderHotbar() {
 			int texId = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
 			backTex.ID = texId;
-			backTex.Render( graphicsApi );
+			backTex.Render( api );
 			
 			int i = game.Inventory.HeldBlockIndex;
 			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 			
 			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
-			graphicsApi.Draw2DTexture( ref selTex );
+			api.Draw2DTexture( ref selTex );
 		}
 		
 		public override void Dispose() { }

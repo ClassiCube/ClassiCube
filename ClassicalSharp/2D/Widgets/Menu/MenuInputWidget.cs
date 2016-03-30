@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui {
 		
 		double accumulator;
 		public override void Render( double delta ) {
-			chatInputTexture.Render( graphicsApi );
+			chatInputTexture.Render( api );
 			//if( (accumulator % 1) < 0.5 && Active ) {
 			//	chatCaretTexture.Y1 = chatInputTexture.Y1 + yOffset;
 			//	chatCaretTexture.Render( graphicsApi );
@@ -101,8 +101,8 @@ namespace ClassicalSharp.Gui {
 		}
 
 		public override void Dispose() {
-			graphicsApi.DeleteTexture( ref chatCaretTexture );
-			graphicsApi.DeleteTexture( ref chatInputTexture );
+			api.DeleteTexture( ref chatCaretTexture );
+			api.DeleteTexture( ref chatInputTexture );
 		}
 
 		public override void MoveTo( int newX, int newY ) {
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Gui {
 					chatInputText.DeleteAt( chatInputText.Length - 1 );
 					return true;
 				}
-				graphicsApi.DeleteTexture( ref chatInputTexture );
+				api.DeleteTexture( ref chatInputTexture );
 				SetText( chatInputText.ToString() );
 			}
 			return true;
@@ -138,7 +138,7 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.BackSpace && !chatInputText.Empty ) {
 				chatInputText.DeleteAt( chatInputText.Length - 1 );
-				graphicsApi.DeleteTexture( ref chatInputTexture );
+				api.DeleteTexture( ref chatInputTexture );
 				SetText( chatInputText.ToString() );
 			}
 			return key < Key.F1 || key > Key.F35;

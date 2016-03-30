@@ -30,13 +30,13 @@ namespace ClassicalSharp.Gui {
 		public abstract string GetNameUnder( int mouseX, int mouseY );
 		
 		public override void Render( double delta ) {
-			graphicsApi.Texturing = false;
-			graphicsApi.Draw2DQuad( X, Y, Width, Height, tableCol );
-			graphicsApi.Texturing = true;
+			api.Texturing = false;
+			api.Draw2DQuad( X, Y, Width, Height, tableCol );
+			api.Texturing = true;
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
 				if( texture.IsValid ) {
-					texture.Render( graphicsApi );
+					texture.Render( api );
 				}
 			}
 		}
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui {
 		public override void Dispose() {
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture tex = textures[i];
-				graphicsApi.DeleteTexture( ref tex );
+				api.DeleteTexture( ref tex );
 				textures[i] = tex;
 			}
 		}
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Gui {
 		
 		protected void RemoveInfoAt<T>( T[] info, int i ) {
 			Texture tex = textures[i];
-			graphicsApi.DeleteTexture( ref tex );
+			api.DeleteTexture( ref tex );
 			RemoveItemAt( info, i );
 			RemoveItemAt( textures, i );
 			namesCount--;

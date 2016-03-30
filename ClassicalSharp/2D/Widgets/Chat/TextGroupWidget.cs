@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui {
 		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
-			graphicsApi.DeleteTexture( ref Textures[0] );
+			api.DeleteTexture( ref Textures[0] );
 			for( int i = 0; i < Textures.Length - 1; i++ ) {
 				Textures[i] = Textures[i + 1];
 				lines[i] = lines[i + 1];
@@ -115,13 +115,13 @@ namespace ClassicalSharp.Gui {
 			for( int i = 0; i < Textures.Length; i++ ) {
 				Texture texture = Textures[i];
 				if( texture.IsValid )
-					texture.Render( graphicsApi );
+					texture.Render( api );
 			}
 		}
 		
 		public override void Dispose() {
 			for( int i = 0; i < Textures.Length; i++ )
-				graphicsApi.DeleteTexture( ref Textures[i] );
+				api.DeleteTexture( ref Textures[i] );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

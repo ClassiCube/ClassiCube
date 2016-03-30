@@ -17,12 +17,12 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			inputWidget.Render( delta );
 			if( descWidget != null )
 				descWidget.Render( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 			
 			if( textPath != null ) {
 				SaveMap( textPath );

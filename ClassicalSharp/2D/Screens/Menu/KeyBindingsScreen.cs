@@ -11,10 +11,10 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			graphicsApi.Texturing = true;
+			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			statusWidget.Render( delta );
-			graphicsApi.Texturing = false;
+			api.Texturing = false;
 		}
 		
 		Font keyFont;

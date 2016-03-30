@@ -8,7 +8,7 @@ namespace ClassicalSharp.Gui {
 	public sealed partial class TextGroupWidget : Widget {
 		
 		public void SetText( int index, string text ) {
-			graphicsApi.DeleteTexture( ref Textures[index] );
+			api.DeleteTexture( ref Textures[index] );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			linkData[index] = default(LinkData);
 			LinkFlags prevFlags = index > 0 ? linkData[index - 1].flags : 0;

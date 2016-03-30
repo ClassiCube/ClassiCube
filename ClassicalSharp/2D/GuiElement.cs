@@ -14,14 +14,14 @@ namespace ClassicalSharp.Gui {
 	public abstract class GuiElement : IDisposable {
 		
 		protected Game game;
-		protected IGraphicsApi graphicsApi;
+		protected IGraphicsApi api;
 		
 		/// <summary> Object that represents any form of metadata attached to this widget. </summary>
 		public object Metadata = null;
 		
 		public GuiElement( Game game ) {
 			this.game = game;
-			graphicsApi = game.Graphics;
+			api = game.Graphics;
 		}
 		
 		public abstract void Init();
