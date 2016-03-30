@@ -21,15 +21,15 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
 				     	g.LocalPlayer.CheckHacksConsistency(); } ),
 				
-				Make( -1, -100, "Speed multiplier", OnWidgetClick,
-				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString(),
+				Make2( -1, -100, "Speed multiplier", OnWidgetClick,
+				     g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString( "F3" ),
 				     (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Single.Parse( v );
 				     	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				MakeBool( -1, -50, "Camera clipping", OptionsKey.CameraClipping,
 				     OnWidgetClick, g => g.CameraClipping, (g, v) => g.CameraClipping = v ),
 				
-				Make( -1, 0, "Jump height", OnWidgetClick,
+				Make2( -1, 0, "Jump height", OnWidgetClick,
 				     g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
 				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
 				
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Gui {
 				     OnWidgetClick, g => g.LocalPlayer.Hacks.NoclipSlide,
 				     (g, v) => g.LocalPlayer.Hacks.NoclipSlide = v ),
 				
-				Make( 1, 50, "Field of view", OnWidgetClick,
+				Make2( 1, 50, "Field of view", OnWidgetClick,
 				     g => g.FieldOfView.ToString(),
 				     (g, v) => { g.FieldOfView = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FieldOfView, v );

@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui {
 				MakeClassicBool( -1, -150, "Invert mouse", OptionsKey.InvertMouse,
 				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v ),
 				
-				MakeClassic( -1, -100, "View distance", OnWidgetClick,
+				MakeClassic2( -1, -100, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui {
 				MakeClassicBool( 1, -100, "View bobbing", OptionsKey.ViewBobbing,
 				     OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v ),
 				
-				MakeClassic( 1, -50, "FPS limit mode", OnWidgetClick,
+				MakeClassic2( 1, -50, "FPS mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );

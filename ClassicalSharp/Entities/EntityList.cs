@@ -5,7 +5,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Entities {
 
-	public enum NameMode { NoNames, HoveredOnly, AllNames, AllNamesAndHovered, }
+	public enum NameMode { NoNames, HoveredOnly, All, AllAndHovered, }
 	
 	public enum EntityShadow { None, SnapToBlock, Circle, CircleAll, }
 	
@@ -19,12 +19,12 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Mode of how names of hovered entities are rendered (with or without depth testing),
 		/// and how other entity names are rendered. </summary>
-		public NameMode NamesMode = NameMode.AllNamesAndHovered;
+		public NameMode NamesMode = NameMode.AllAndHovered;
 		
 		public EntityList( Game game ) {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
-			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllNamesAndHovered );
+			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllAndHovered );
 			if( game.ClassicMode ) NamesMode = NameMode.HoveredOnly;
 			ShadowMode = Options.GetEnum( OptionsKey.EntityShadow, EntityShadow.None );
 			if( game.ClassicMode ) ShadowMode = EntityShadow.None;
@@ -62,7 +62,7 @@ namespace ClassicalSharp.Entities {
 			Vector3 eyePos = localP.EyePosition;
 			closestId = 255;
 			
-			if( NamesMode != NameMode.AllNames )
+			if( NamesMode != NameMode.All )
 				closestId = GetClosetPlayer( game.LocalPlayer );
 			if( NamesMode == NameMode.HoveredOnly || !game.LocalPlayer.Hacks.CanSeeAllNames ) {
 				api.Texturing = false;
@@ -80,7 +80,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void RenderHoveredNames( IGraphicsApi api, double delta, float t ) {
-			if( NamesMode == NameMode.NoNames || NamesMode == NameMode.AllNames )
+			if( NamesMode == NameMode.NoNames || NamesMode == NameMode.All )
 				return;
 			api.Texturing = true;
 			api.AlphaTest = true;

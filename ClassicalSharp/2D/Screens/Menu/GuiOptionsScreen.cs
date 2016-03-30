@@ -19,15 +19,15 @@ namespace ClassicalSharp.Gui {
 				MakeBool( -1, -100, "Show FPS", OptionsKey.ShowFPS,
 				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v ),
 				
-				Make( -1, -50, "Hotbar scale", OnWidgetClick,
-				     g => g.HotbarScale.ToString(),
+				Make2( -1, -50, "Hotbar scale", OnWidgetClick,
+				     g => g.HotbarScale.ToString( "F1" ),
 				     (g, v) => { g.HotbarScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.HotbarScale, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				Make( -1, 0, "Inventory scale", OnWidgetClick,
-				     g => g.InventoryScale.ToString(),
+				Make2( -1, 0, "Inventory scale", OnWidgetClick,
+				     g => g.InventoryScale.ToString( "F1" ),
 				     (g, v) => { g.InventoryScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.InventoryScale, v );
 				     	g.RefreshHud();
@@ -40,25 +40,25 @@ namespace ClassicalSharp.Gui {
 				MakeBool( 1, -150, "Clickable chat", OptionsKey.ClickableChat,
 				     OnWidgetClick, g => g.ClickableChat, (g, v) => g.ClickableChat = v ),
 				
-				Make( 1, -100, "Chat scale", OnWidgetClick,
-				     g => g.ChatScale.ToString(),
+				Make2( 1, -100, "Chat scale", OnWidgetClick,
+				     g => g.ChatScale.ToString( "F1" ),
 				     (g, v) => { g.ChatScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.ChatScale, v );
 				     	g.RefreshHud();
 				     } ),
 
-				Make( 1, -50, "Chat lines", OnWidgetClick,
+				Make2( 1, -50, "Chat lines", OnWidgetClick,
 				     g => g.ChatLines.ToString(),
 				     (g, v) => { g.ChatLines = Int32.Parse( v );
 				     	Options.Set( OptionsKey.ChatLines, v );
 				     	g.RefreshHud();
 				     } ),
 				
-				MakeBool( 1, 0, "Arial chat font", OptionsKey.ArialChatFont,
+				MakeBool( 1, 0, "Use font", OptionsKey.ArialChatFont,
 				     OnWidgetClick, g => !g.Drawer2D.UseBitmappedChat,
 				     (g, v) => { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); } ),		
 				
-				Make( 1, 50, "Chat font name", OnWidgetClick,
+				Make2( 1, 50, "Font", OnWidgetClick,
 				     g => g.FontName,
 				     (g, v) => { g.FontName = v;
 				     	Options.Set( OptionsKey.FontName, v );
@@ -70,6 +70,7 @@ namespace ClassicalSharp.Gui {
 				null, null,
 			};			
 			MakeValidators();
+			MakeDescriptions();
 		}
 		
 		void HandleFontChange() {
@@ -102,6 +103,13 @@ namespace ClassicalSharp.Gui {
 				new IntegerValidator( 0, 30 ),
 				new BooleanValidator(),
 				new StringValidator( 32 ),
+			};
+		}
+		
+		void MakeDescriptions() {
+			descriptions = new string[widgets.Length][];
+			descriptions[8] = new[] {
+				"&eWhether a system font is used instead of default.png for drawing text",
 			};
 		}
 	}
