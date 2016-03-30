@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui {
 				
 				new HexColourValidator(),
 				new HexColourValidator(),
-				new EnumValidator(),
+				new EnumValidator( typeof(Weather) ),
 				new IntegerValidator( -2048, 2048 ),
 			};
 		}

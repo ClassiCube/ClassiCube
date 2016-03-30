@@ -117,9 +117,7 @@ namespace ClassicalSharp.Gui {
 			         || c == '<' || c == '>' || c == '|' || c == '"');
 		}
 		
-		public override bool IsValidString( string s ) {
-			return true;
-		}
+		public override bool IsValidString( string s ) { return true; }
 	}
 	
 	public sealed class BooleanValidator : MenuInputValidator {
@@ -128,32 +126,25 @@ namespace ClassicalSharp.Gui {
 			Range = "&7(yes or no)";
 		}
 		
-		public override bool IsValidChar( char c ) {
-			return c >= 'a' && c <= 'z';
-		}
+		public override bool IsValidChar( char c ) { return true; }
 		
-		public override bool IsValidString( string s ) {
-			return s.Length <= 3;
-		}
+		public override bool IsValidString( string s ) { return true; }
 		
-		public override bool IsValidValue( string s ) {
-			return s == "yes" || s == "no";
-		}
+		public override bool IsValidValue( string s ) { return true; }
 	}
 	
 	public sealed class EnumValidator : MenuInputValidator {
 		
-		public override bool IsValidChar( char c ) {
-			return true;
+		public Type EnumType;
+		public EnumValidator( Type type ) {
+			EnumType = type;
 		}
 		
-		public override bool IsValidString( string s ) {
-			return true;
-		}
+		public override bool IsValidChar( char c ) { return true; }
 		
-		public override bool IsValidValue( string s ) {
-			return true;
-		}
+		public override bool IsValidString( string s ) { return true; }
+		
+		public override bool IsValidValue( string s ) { return true; }
 	}
 	
 	public sealed class StringValidator : MenuInputValidator {

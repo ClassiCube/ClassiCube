@@ -236,7 +236,8 @@ namespace ClassicalSharp.Gui {
 				UpdateDescription( button );
 				return;
 			} else if( validator is EnumValidator ) {
-				HandleEnumOption( button );
+				Type type = ((EnumValidator)validator).EnumType;
+				HandleEnumOption( button, type );
 				return;
 			}
 			
@@ -253,9 +254,8 @@ namespace ClassicalSharp.Gui {
 			UpdateDescription( targetWidget );
 		}
 		
-		void HandleEnumOption( ButtonWidget button ) {
+		void HandleEnumOption( ButtonWidget button, Type type ) {
 			string value = button.GetValue( game );
-			Type type = (Type)button.Metadata;
 			int enumValue = (int)Enum.Parse( type, value, true );
 			enumValue++;
 			// go back to first value

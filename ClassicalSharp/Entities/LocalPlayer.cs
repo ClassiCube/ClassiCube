@@ -270,15 +270,13 @@ namespace ClassicalSharp.Entities {
 			Vector3 size = Model.CollisionSize;
 			BoundingBox bb = CollisionBounds;
 			Vector3I P = Vector3I.Floor( spawn );
-			int bbMax = Utils.Floor( size.Y );
-			
+			int bbMax = Utils.Floor( size.Y );			
 			int minX = Utils.Floor( -size.X / 2 ), maxX = Utils.Floor( size.X / 2 );
 			int minZ = Utils.Floor( -size.Z / 2 ), maxZ = Utils.Floor( size.Z / 2 );
 			
 			// Spawn player at highest valid position.
 			for( int y = P.Y; y <= game.World.Height; y++ ) {
 				bool anyHit = false;
-				Console.WriteLine( "~~~~~" );
 				for( int yy = 0; yy <= bbMax; yy++ )
 					for( int zz = minZ; zz <= maxZ; zz++ )
 						for ( int xx = minX; xx <= maxX; xx++ )							

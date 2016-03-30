@@ -61,7 +61,6 @@ namespace ClassicalSharp.Gui {
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null, null,
 			};
-			widgets[7].Metadata = typeof(FpsLimitMethod);
 			MakeValidators();
 		}
 		
@@ -84,7 +83,7 @@ namespace ClassicalSharp.Gui {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
-				new EnumValidator(),
+				new EnumValidator( typeof(FpsLimitMethod) ),
 				game.ClassicHacks ? new BooleanValidator() : null,
 			};
 		}

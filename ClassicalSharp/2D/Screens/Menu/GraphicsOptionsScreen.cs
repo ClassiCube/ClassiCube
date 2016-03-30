@@ -43,9 +43,6 @@ namespace ClassicalSharp.Gui {
 				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};
-			widgets[0].Metadata = typeof(FpsLimitMethod);
-			widgets[2].Metadata = typeof(NameMode);		
-			widgets[3].Metadata = typeof(EntityShadow);
 			MakeValidators();
 			MakeDescriptions();
 		}
@@ -53,10 +50,10 @@ namespace ClassicalSharp.Gui {
 		void MakeValidators() {
 			INetworkProcessor network = game.Network;
 			validators = new MenuInputValidator[] {
-				new EnumValidator(),
+				new EnumValidator( typeof(FpsLimitMethod) ),
 				new IntegerValidator( 16, 4096 ),
-				new EnumValidator(),			
-				new EnumValidator(),
+				new EnumValidator( typeof(NameMode) ),
+				new EnumValidator( typeof(EntityShadow) ),
 			};
 		}
 		

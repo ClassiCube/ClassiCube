@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui {
 				MakeBool( -1, 0, "Classic player list", OptionsKey.UseClassicTabList,
 				         OnWidgetClick, g => g.UseClassicTabList, (g, v) => g.UseClassicTabList = v ),
 				
-				MakeBool( -1, 50, "Classic options menu", OptionsKey.UseClassicOptions,
+				MakeBool( -1, 50, "Classic options", OptionsKey.UseClassicOptions,
 				         OnWidgetClick, g => g.UseClassicOptions, (g, v) => g.UseClassicOptions = v ),
 				
 				// Column 2
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui {
 				MakeBool( 1, -50, "Use CPE", OptionsKey.UseCPE,
 				         OnWidgetClick, g => g.UseCPE, (g, v) => g.UseCPE = v ),
 				
-				MakeBool( 1, 0, "Allow server textures", OptionsKey.AllowServerTextures,
+				MakeBool( 1, 0, "Use server textures", OptionsKey.AllowServerTextures,
 				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v ),
 				
 				MakeBack( false, titleFont,
