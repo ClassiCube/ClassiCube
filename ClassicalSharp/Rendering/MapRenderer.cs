@@ -219,8 +219,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			byte b1 = game.World.SafeGetBlock( x1, y1, z1 );
-			byte b2 = game.World.SafeGetBlock( x2, y2, z2 );
+			byte b1 = game.World.GetBlock( x1, y1, z1 );
+			byte b2 = game.World.GetBlock( x2, y2, z2 );
 			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
 		}
 		

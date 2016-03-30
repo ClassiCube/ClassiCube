@@ -76,6 +76,7 @@ namespace ClassicalSharp.Map {
 			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
 				if( curCpeExt.ContainsKey( "TextureURL" ) )
 					map.TextureUrl = (string)curCpeExt["TextureURL"].Value;
+				if( map.TextureUrl.Length == 0 ) map.TextureUrl = null;
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
 				map.SetSidesBlock( (Block)sidesBlock );

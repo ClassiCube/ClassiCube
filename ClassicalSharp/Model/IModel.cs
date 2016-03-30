@@ -307,7 +307,6 @@ namespace ClassicalSharp.Model {
 				vertex.U -= 0.01f / 64f;
 		}
 		
-		[StructLayout( LayoutKind.Sequential, Pack = 1 )]
 		protected struct ModelVertex {
 			public float X, Y, Z;
 			public ushort U, V;

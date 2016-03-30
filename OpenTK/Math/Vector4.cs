@@ -27,7 +27,7 @@ using System.Runtime.InteropServices;
 
 namespace OpenTK {
 	
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	[StructLayout(LayoutKind.Sequential)]
 	public struct Vector4 : IEquatable<Vector4> {
 
 		public float X;
