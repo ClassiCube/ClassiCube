@@ -13,6 +13,20 @@ namespace Launcher {
 			public abstract int Compare( TableEntry a, TableEntry b );
 		}
 		
+		sealed class DefaultComparer : TableEntryComparer {
+			
+			public override int Compare( TableEntry a, TableEntry b ) {
+				long valX = Int64.Parse( a.Players.Substring( 0, a.Players.IndexOf( '/' ) ) );
+				long valY = Int64.Parse( b.Players.Substring( 0, b.Players.IndexOf( '/' ) ) );
+				int value = valY.CompareTo( valX );
+				if( value != 0 ) return value;
+				
+				TimeSpan timeX = UptimeComparer.Parse( a.Uptime );
+				TimeSpan timeY = UptimeComparer.Parse( b.Uptime );
+				return timeY.CompareTo( timeX );
+			}
+		}
+		
 		sealed class NameComparer : TableEntryComparer {
 			
 			public override int Compare( TableEntry a, TableEntry b ) {
@@ -35,13 +49,13 @@ namespace Launcher {
 		sealed class UptimeComparer : TableEntryComparer {
 			
 			public override int Compare( TableEntry a, TableEntry b ) {
-				TimeSpan valX = ParseUptimeString( a.Uptime );
-				TimeSpan valY = ParseUptimeString( b.Uptime );
+				TimeSpan valX = Parse( a.Uptime );
+				TimeSpan valY = Parse( b.Uptime );
 				int value = valX.CompareTo( valY );
 				return Invert ? -value : value;
 			}
 			
-			static TimeSpan ParseUptimeString( string s ) {
+			internal static TimeSpan Parse( string s ) {
 				int sum = 0;
 				for( int i = 0; i < s.Length - 1; i++ ) {
 					sum *= 10;

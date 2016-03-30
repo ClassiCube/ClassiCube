@@ -7,6 +7,7 @@ namespace Launcher {
 
 	public partial class LauncherTableWidget : LauncherWidget {
 
+		DefaultComparer defComp = new DefaultComparer();
 		NameComparer nameComp = new NameComparer();
 		PlayersComparer playerComp = new PlayersComparer();
 		UptimeComparer uptimeComp = new UptimeComparer();
@@ -14,6 +15,10 @@ namespace Launcher {
 		internal int DraggingColumn = -1;
 		internal bool DraggingScrollbar = false;
 		internal int mouseOffset;
+		
+		public void SortDefault() {
+			SortEntries( defComp, true );
+		}
 		
 		void SelectHeader( int mouseX, int mouseY ) {
 			int x = X;		
@@ -30,27 +35,28 @@ namespace Launcher {
 		void TrySortColumns( int mouseX ) {
 			int x = X;
 			if( mouseX >= x && mouseX < x + ColumnWidths[0] - 10 ) {
-				SortEntries( nameComp ); return;
+				SortEntries( nameComp, false ); return;
 			}
 			x += ColumnWidths[0];
 			if( mouseX >= x && mouseX < x + ColumnWidths[1] ) {
-				SortEntries( playerComp ); return;
+				SortEntries( playerComp, false ); return;
 			}
 			x += ColumnWidths[1];
 			if( mouseX >= x && mouseX < x + ColumnWidths[2] ) {
-				SortEntries( uptimeComp ); return;
+				SortEntries( uptimeComp, false ); return;
 			}
 			x += ColumnWidths[2];
 			if( mouseX >= x ) {
-				SortEntries( softwareComp ); return;
+				SortEntries( softwareComp, false ); return;
 			}
 		}
 		
-		void SortEntries( TableEntryComparer comparer ) {
+		void SortEntries( TableEntryComparer comparer, bool noRedraw ) {
 			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Array.Sort( usedEntries, 0, Count, comparer );
 			Array.Sort( entries, 0, entries.Length, comparer );
 			lastIndex = -10;
+			if( noRedraw ) return;
 			
 			comparer.Invert = !comparer.Invert;
 			SetSelected( selHash );

@@ -142,9 +142,10 @@ namespace Launcher {
 				widget.SetEntries( game.Session.Servers );
 				
 				widget.SetDrawData( drawer, tableFont, inputFont, inputFont,
-				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
+				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );			
 				widget.NeedRedraw = Resize;
 				widget.SelectedChanged = SelectedChanged;
+				widget.SortDefault();
 				widgets[widgetIndex] = widget;
 			}
 			
