@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 	// John Amanatides, Andrew Woo
 	// http://www.cse.yorku.ca/~amana/research/grid.pdf
 	// http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20traversal%20algorithm%20for%20ray%20tracing.pdf
-	public sealed class RayCaster {
+	public sealed class RayTracer {
 		
 		public int X, Y, Z;
 		Vector3I step, cellBoundary;

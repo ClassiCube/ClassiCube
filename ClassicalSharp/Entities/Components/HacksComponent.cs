@@ -27,43 +27,45 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Whether the player has allowed hacks usage as an option.
 		/// Note that all 'can use X' set by the server override this. </summary>
-		public bool Enabled = true;
-		
+		public bool Enabled = true;		
 		/// <summary> Whether the player is allowed to use any type of hacks. </summary>
-		public bool CanAnyHacks = true;
-		
+		public bool CanAnyHacks = true;		
 		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
-		public bool CanUseThirdPersonCamera = true;
-		
+		public bool CanUseThirdPersonCamera = true;		
 		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
-		public bool CanSpeed = true;
-		
+		public bool CanSpeed = true;		
 		/// <summary> Whether the player is allowed to fly in the world. </summary>
-		public bool CanFly = true;
-		
+		public bool CanFly = true;		
 		/// <summary> Whether the player is allowed to teleport to their respawn coordinates. </summary>
-		public bool CanRespawn = true;
-		
+		public bool CanRespawn = true;		
 		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
-		public bool CanNoclip = true;
-		
+		public bool CanNoclip = true;		
 		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
-		public bool CanPushbackBlocks = true;
-		
+		public bool CanPushbackBlocks = true;		
 		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
-		public bool CanSeeAllNames = true;
+		public bool CanSeeAllNames = true;					
+		/// <summary> Whether the player is allowed to double jump. </summary>
+		public bool CanDoubleJump = true;	
+		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
+		public float MaxSpeedMultiplier = 1;
 		
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
-		public bool NoclipSlide = true;
-		
+		public bool NoclipSlide = true;		
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
 		public bool DoubleJump = false;
 		
-		/// <summary> Whether the player is allowed to double jump. </summary>
-		public bool CanDoubleJump = true;
-		
-		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
-		public float MaxSpeedMultiplier = 1;
+		/// <summary> Whether the player currently has noclip on. </summary>
+		public bool Noclip;
+		/// <summary> Whether the player currently has fly mode active. </summary>
+		public bool Flying;
+		/// <summary> Whether the player is currently flying upwards. </summary>
+		public bool FlyingUp;
+		/// <summary> Whether the player is currently flying downwards. </summary>
+		public bool FlyingDown;
+		/// <summary> Whether the player is currently walking at base speed * speed multiplier. </summary>
+		public bool Speeding;
+		/// <summary> Whether the player is currently walking at base speed * 0.5 * speed multiplier. </summary>
+		public bool HalfSpeeding;
 		
 		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
@@ -123,6 +125,17 @@ namespace ClassicalSharp.Entities {
 			inv.CanPlace[(int)Block.Lava] = value == 0x64;
 			inv.CanPlace[(int)Block.StillLava] = value == 0x64;
 			CanSeeAllNames = value == 0x64;
+		}
+		
+		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
+		public void CheckHacksConsistency() {
+			if( !CanFly || !Enabled ) { Flying = false; FlyingDown = false; FlyingUp = false; }
+			if( !CanNoclip || !Enabled ) Noclip = false;
+			if( !CanSpeed || !Enabled ) { Speeding = false; HalfSpeeding = false; }
+			CanDoubleJump = CanAnyHacks && Enabled && CanSpeed;
+			
+			if( !CanUseThirdPersonCamera || !Enabled )
+				game.CycleCamera();
 		}
 	}
 }

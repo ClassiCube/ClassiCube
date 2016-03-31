@@ -66,6 +66,7 @@ namespace ClassicalSharp.Net {
 			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 20 )
 				CheckDisconnection( delta );
 			if( Disconnected ) return;
+			LocalPlayer player = game.LocalPlayer;
 			
 			try {
 				reader.ReadPendingData();
@@ -76,15 +77,15 @@ namespace ClassicalSharp.Net {
 				return;
 			} catch {
 				throw;
-			}
+			}			
 			
 			while( (reader.size - reader.index) > 0 ) {
 				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
 				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
 					reader.Skip( 1 );
-					game.LocalPlayer.jumpVel = 0.42f; // assume default jump height
-					game.LocalPlayer.serverJumpVel = game.LocalPlayer.jumpVel;
+					player.physics.jumpVel = 0.42f; // assume default jump height
+					player.physics.serverJumpVel = player.physics.jumpVel;
 					continue;
 				}
 				
@@ -98,9 +99,8 @@ namespace ClassicalSharp.Net {
 				if( (reader.size - reader.index) < packetSizes[opcode] ) break;
 				ReadPacket( opcode );
 			}
-			reader.RemoveProcessed();
 			
-			Player player = game.LocalPlayer;
+			reader.RemoveProcessed();			
 			if( receivedFirstPosition ) {
 				SendPosition( player.Position, player.HeadYawDegrees, player.PitchDegrees );
 			}

@@ -137,10 +137,10 @@ namespace ClassicalSharp.Gui {
 		bool speeding, halfSpeeding, noclip, fly;
 		int lastZoomFov;
 		void UpdateHackState( bool force ) {
-			LocalPlayer p = game.LocalPlayer;
-			if( force || p.speeding != speeding || p.halfSpeeding != halfSpeeding || p.noClip != noclip || 
-			   p.flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
-				speeding = p.speeding; halfSpeeding = p.halfSpeeding; noclip = p.noClip; fly = p.flying;
+			HacksComponent hacks = game.LocalPlayer.Hacks;
+			if( force || hacks.Speeding != speeding || hacks.HalfSpeeding != halfSpeeding || hacks.Noclip != noclip || 
+			   hacks.Flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
+				speeding = hacks.Speeding; halfSpeeding = hacks.HalfSpeeding; noclip = hacks.Noclip; fly = hacks.Flying;
 				lastZoomFov = game.ZoomFieldOfView;
 				int index = 0;
 				text.Clear();

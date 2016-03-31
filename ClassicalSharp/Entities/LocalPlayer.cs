@@ -18,23 +18,26 @@ namespace ClassicalSharp.Entities {
 		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
 		
-		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
 		public float JumpHeight {
-			get { return (float)GetMaxHeight( jumpVel ); }
+			get { return (float)PhysicsComponent.GetMaxHeight( physics.jumpVel ); }
 		}
 		
 		internal float curWalkTime, curSwing;
-		internal PhysicsComponent physics;
+		internal CollisionsComponent collisions;
 		public HacksComponent Hacks;
+		internal PhysicsComponent physics;
 		
 		public LocalPlayer( Game game ) : base( game ) {
 			DisplayName = game.Username;
 			SkinName = game.Username;
 			SkinIdentifier = "skin_255";
-			physics = new PhysicsComponent( game, this );
+			collisions = new CollisionsComponent( game, this );
 			Hacks = new HacksComponent( game, this );
+			physics = new PhysicsComponent( game, this );
+			physics.hacks = Hacks;
+			physics.collisions = collisions;
 			
 			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
@@ -56,9 +59,8 @@ namespace ClassicalSharp.Entities {
 			bool wasOnGround = onGround;
 			
 			HandleInput( ref xMoving, ref zMoving );
-			UpdateVelocityState( xMoving, zMoving );
-			PhysicsTick( xMoving, zMoving );
-			if( onGround ) { firstJump = false; secondJump = false; }
+			physics.UpdateVelocityState( xMoving, zMoving );
+			physics.PhysicsTick( xMoving, zMoving );
 			
 			nextPos = Position;
 			Position = lastPos;
@@ -146,34 +148,26 @@ namespace ClassicalSharp.Entities {
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {
 			if( game.ScreenLockedInput ) {
-				jumping = speeding = flyingUp = flyingDown = false;
+				physics.jumping = Hacks.Speeding = Hacks.FlyingUp = Hacks.FlyingDown = false;
 			} else {
 				if( game.IsKeyDown( KeyBinding.Forward ) ) xMoving -= 0.98f;
 				if( game.IsKeyDown( KeyBinding.Back ) ) xMoving += 0.98f;
 				if( game.IsKeyDown( KeyBinding.Left ) ) zMoving -= 0.98f;
 				if( game.IsKeyDown( KeyBinding.Right ) ) zMoving += 0.98f;
 
-				jumping = game.IsKeyDown( KeyBinding.Jump );
-				speeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.Speed );
-				halfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.HalfSpeed );
-				flyingUp = game.IsKeyDown( KeyBinding.FlyUp );
-				flyingDown = game.IsKeyDown( KeyBinding.FlyDown );
+				physics.jumping = game.IsKeyDown( KeyBinding.Jump );
+				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.Speed );
+				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.HalfSpeed );
+				Hacks.FlyingUp = game.IsKeyDown( KeyBinding.FlyUp );
+				Hacks.FlyingDown = game.IsKeyDown( KeyBinding.FlyDown );
 			}
 		}
 		
-		internal bool jumping, speeding, halfSpeeding, flying, noClip, flyingDown, flyingUp;
-		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
-			if( !Hacks.CanFly || !Hacks.Enabled ) { flying = false; flyingDown = false; flyingUp = false; }
-			if( !Hacks.CanNoclip || !Hacks.Enabled ) noClip = false;
-			if( !Hacks.CanSpeed || !Hacks.Enabled ) { speeding = false; halfSpeeding = false; }
-			Hacks.CanDoubleJump = Hacks.CanAnyHacks && Hacks.Enabled && Hacks.CanSpeed;
-			
-			if( !Hacks.CanUseThirdPersonCamera || !Hacks.Enabled )
-				game.CycleCamera();
+			Hacks.CheckHacksConsistency();
 			if( !Hacks.Enabled || !Hacks.CanAnyHacks || !Hacks.CanSpeed )
-				jumpVel = serverJumpVel;
+				physics.jumpVel = physics.serverJumpVel;
 		}
 		
 		internal Vector3 lastPos, nextPos;
@@ -248,17 +242,17 @@ namespace ClassicalSharp.Entities {
 				SpawnYaw = HeadYawDegrees;
 				SpawnPitch = PitchDegrees;
 			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {
-				flying = !flying;
+				Hacks.Flying = !Hacks.Flying;
 			} else if( key == keys[KeyBinding.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
-				if( noClip ) Velocity.Y = 0;
-				noClip = !noClip;
-			} else if( key == keys[KeyBinding.Jump] && !onGround && !(flying || noClip) ) {
-				if( !firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
-					DoNormalJump();
-					firstJump = true;
-				} else if( !secondJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
-					DoNormalJump();
-					secondJump = true;
+				if( Hacks.Noclip ) Velocity.Y = 0;
+				Hacks.Noclip = !Hacks.Noclip;
+			} else if( key == keys[KeyBinding.Jump] && !onGround && !(Hacks.Flying || Hacks.Noclip) ) {
+				if( !physics.firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
+					physics.DoNormalJump();
+					physics.firstJump = true;
+				} else if( !physics.secondJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
+					physics.DoNormalJump();
+					physics.secondJump = true;
 				}
 			} else {
 				return false;
@@ -282,10 +276,9 @@ namespace ClassicalSharp.Entities {
 						for ( int xx = minX; xx <= maxX; xx++ )							
 				{
 					Vector3I coords = new Vector3I( P.X + xx, y + yy, P.Z + zz );
-					byte block = physics.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
+					byte block = collisions.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
 					Vector3 min = info.MinBB[block] + (Vector3)coords;
 					Vector3 max = info.MaxBB[block] + (Vector3)coords;
-					Console.WriteLine( min + "_" + max );
 					if( !bb.Intersects( new BoundingBox( min, max ) ) ) continue;
 					anyHit |= info.Collide[block] == CollideType.Solid;
 				}

@@ -60,7 +60,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
-		protected bool TouchesAnyLava() {
+		public bool TouchesAnyLava() {
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
 			AdjustLiquidTestBounds( ref bounds );
 			return TouchesAny( bounds,
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are rope. </summary>
-		protected bool TouchesAnyRope() {
+		public bool TouchesAnyRope() {
 			BoundingBox bounds = CollisionBounds;
 			bounds.Max.Y += 0.5f/16f;
 			return TouchesAny( bounds, b => b == (byte)Block.Rope );
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
-		protected bool TouchesAnyWater() {
+		public bool TouchesAnyWater() {
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
 			AdjustLiquidTestBounds( ref bounds );
 			return TouchesAny( bounds,

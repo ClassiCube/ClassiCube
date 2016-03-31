@@ -7,325 +7,257 @@ namespace ClassicalSharp.Entities {
 	/// <summary> Entity component that performs collision detection. </summary>
 	public sealed class PhysicsComponent {
 		
-		Game game;
+		bool useLiquidGravity = false; // used by BlockDefinitions.
+		bool canLiquidJump = true;
+		internal bool firstJump, secondJump, jumping;
 		Entity entity;
+		Game game;
 		BlockInfo info;
+		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
+		internal HacksComponent hacks;
+		internal CollisionsComponent collisions;
+		
 		public PhysicsComponent( Game game, Entity entity ) {
 			this.game = game;
 			this.entity = entity;
 			info = game.BlockInfo;
 		}
 		
-		internal bool hitYMax, collideX, collideY, collideZ;
-		
-		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
-		public const float Adjustment = 0.001f;
-		
-		public byte GetPhysicsBlockId( int x, int y, int z ) {
-			if( x < 0 || x >= game.World.Width || z < 0 ||
-			   z >= game.World.Length || y < 0 ) return (byte)Block.Bedrock;
-			
-			if( y >= game.World.Height ) return (byte)Block.Air;
-			return game.World.GetBlock( x, y, z );
-		}
-		
-		bool GetBoundingBox( byte block, int x, int y, int z, ref BoundingBox box ) {
-			if( info.Collide[block] != CollideType.Solid ) return false;
-			Add( x, y, z, ref info.MinBB[block], ref box.Min );
-			Add( x, y, z, ref info.MaxBB[block], ref box.Max );
-			return true;
-		}
-		
-		static void Add( int x, int y, int z, ref Vector3 offset, ref Vector3 target ) {
-			target.X = x + offset.X;
-			target.Y = y + offset.Y;
-			target.Z = z + offset.Z;
-		}
-		
-		
-		// TODO: test for corner cases, and refactor this.	
-		internal void MoveAndWallSlide() {
-			if( entity.Velocity == Vector3.Zero ) return;
-			Vector3 size = entity.CollisionSize;
-			BoundingBox entityBB, entityExtentBB;
-			int count = 0;
-			FindReachableBlocks( ref count, ref size, out entityBB, out entityExtentBB );
-			CollideWithReachableBlocks( count, ref size, ref entityBB, ref entityExtentBB );
-		}
-		
-		void FindReachableBlocks( ref int count, ref Vector3 size,
-		                         out BoundingBox entityBB, out BoundingBox entityExtentBB ) {
-			Vector3 vel = entity.Velocity;
-			Vector3 pos = entity.Position;
-			entityBB = new BoundingBox(
-				pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
-				pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2
-			);
-			
-			// Exact maximum extent the entity can reach, and the equivalent map coordinates.
-			entityExtentBB = new BoundingBox(
-				vel.X < 0 ? entityBB.Min.X + vel.X : entityBB.Min.X,
-				vel.Y < 0 ? entityBB.Min.Y + vel.Y : entityBB.Min.Y,
-				vel.Z < 0 ? entityBB.Min.Z + vel.Z : entityBB.Min.Z,
-				vel.X > 0 ? entityBB.Max.X + vel.X : entityBB.Max.X,
-				vel.Y > 0 ? entityBB.Max.Y + vel.Y : entityBB.Max.Y,
-				vel.Z > 0 ? entityBB.Max.Z + vel.Z : entityBB.Max.Z
-			);
-			Vector3I min = Vector3I.Floor( entityExtentBB.Min );
-			Vector3I max = Vector3I.Floor( entityExtentBB.Max );
-			
-			int elements = (max.X + 1 - min.X) * (max.Y + 1 - min.Y) * (max.Z + 1 - min.Z);
-			if( elements > stateCache.Length ) {
-				stateCache = new State[elements];
+		public void UpdateVelocityState( float xMoving, float zMoving ) {
+			if( !hacks.NoclipSlide && (hacks.Noclip && xMoving == 0 && zMoving == 0) )
+				entity.Velocity = Vector3.Zero;			
+			if( hacks.Flying || hacks.Noclip ) {
+				entity.Velocity.Y = 0; // eliminate the effect of gravity
+				int dir = (hacks.FlyingUp || jumping) ? 1 : (hacks.FlyingDown ? -1 : 0);
+				
+				entity.Velocity.Y += 0.12f * dir;
+				if( hacks.Speeding && hacks.CanSpeed ) entity.Velocity.Y += 0.12f * dir;
+				if( hacks.HalfSpeeding && hacks.CanSpeed ) entity.Velocity.Y += 0.06f * dir;
+			} else if( jumping && entity.TouchesAnyRope() && entity.Velocity.Y > 0.02f ) {
+				entity.Velocity.Y = 0.02f;
 			}
 			
-			BoundingBox blockBB = default( BoundingBox );
-			// Order loops so that we minimise cache misses
-			for( int y = min.Y; y <= max.Y; y++ )
-				for( int z = min.Z; z <= max.Z; z++ )
-					for( int x = min.X; x <= max.X; x++ )
-			{
-				byte blockId = GetPhysicsBlockId( x, y, z );
-				if( !GetBoundingBox( blockId, x, y, z, ref blockBB ) ) continue;
-				if( !entityExtentBB.Intersects( blockBB ) ) continue; // necessary for non whole blocks. (slabs)
-				
-				float tx = 0, ty = 0, tz = 0;
-				CalcTime( ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz );
-				if( tx > 1 || ty > 1 || tz > 1 ) continue;
-				float tSquared = tx * tx + ty * ty + tz * tz;
-				stateCache[count++] = new State( x, y, z, blockId, tSquared );
+			if( !jumping ) {
+				canLiquidJump = false; return;
 			}
-		}
-		
-		void CollideWithReachableBlocks( int count, ref Vector3 size,
-		                                ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			bool wasOn = entity.onGround;
-			entity.onGround = false;
-			if( count > 0 )
-				QuickSort( stateCache, 0, count - 1 );
-			collideX = false; collideY = false; collideZ = false;
-			BoundingBox blockBB = default(BoundingBox);
-
-			for( int i = 0; i < count; i++ ) {
-				State state = stateCache[i];
-				Vector3 blockPos = new Vector3( state.X >> 3, state.Y >> 3, state.Z >> 3 );
-				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
-				blockBB.Min = blockPos + info.MinBB[block];
-				blockBB.Max = blockPos + info.MaxBB[block];
-				if( !entityExtentBB.Intersects( blockBB ) ) continue;
+			
+			bool touchWater = entity.TouchesAnyWater();
+			bool touchLava = entity.TouchesAnyLava();
+			if( touchWater || touchLava ) {
+				BoundingBox bounds = entity.CollisionBounds;
+				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
+				int headY = Utils.Floor( bounds.Max.Y );
+				if( bodyY > headY ) bodyY = headY;
 				
-				float tx = 0, ty = 0, tz = 0;
-				CalcTime( ref entity.Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz );
-				if( tx > 1 || ty > 1 || tz > 1 )
-					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
-				BoundingBox finalBB = entityBB.Offset( entity.Velocity * new Vector3( tx, ty, tz ) );
+				bounds.Max.Y = bounds.Min.Y = feetY;
+				bool liquidFeet = entity.TouchesAny( bounds, StandardLiquid );
+				bounds.Min.Y = Math.Min( bodyY, headY );
+				bounds.Max.Y = Math.Max( bodyY, headY );
+				bool liquidRest = entity.TouchesAny( bounds, StandardLiquid );
 				
-				// if we have hit the bottom of a block, we need to change the axis we test first.
-				if( hitYMax ) {
-					if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
-						ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
-						ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-					else if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
-						ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
-						ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
-						ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
-						ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					continue;
+				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.4);
+				if( !pastJumpPoint ) {
+					canLiquidJump = true;
+					entity.Velocity.Y += 0.04f;
+					if( hacks.Speeding && hacks.CanSpeed ) entity.Velocity.Y += 0.04f;
+					if( hacks.HalfSpeeding && hacks.CanSpeed ) entity.Velocity.Y += 0.02f;
+				} else if( pastJumpPoint ) {
+					// either A) jump bob in water B) climb up solid on side
+					if( canLiquidJump || (collisions.collideX || collisions.collideZ) )
+						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;
+					canLiquidJump = false;
 				}
-				
-				// if flying or falling, test the horizontal axes first.
-				if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
-					ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
-					ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
-					ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
-					ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
-					ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
-					ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
+			} else if( useLiquidGravity ) {
+				entity.Velocity.Y += 0.04f;
+				if( hacks.Speeding && hacks.CanSpeed ) entity.Velocity.Y += 0.04f;
+				if( hacks.HalfSpeeding && hacks.CanSpeed ) entity.Velocity.Y += 0.02f;
+				canLiquidJump = false;
+			} else if( entity.TouchesAnyRope() ) {
+				entity.Velocity.Y += (hacks.Speeding && hacks.CanSpeed) ? 0.15f : 0.10f;
+				canLiquidJump = false;
+			} else if( entity.onGround ) {
+				DoNormalJump();
 			}
 		}
 		
-		void ClipXMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
-		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
-			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				entity.Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
-				ClipX( ref size, ref entityBB, ref entityExtentBB );
+		public void DoNormalJump() {
+			entity.Velocity.Y = jumpVel;
+			if( hacks.Speeding && hacks.CanSpeed ) entity.Velocity.Y += jumpVel;
+			if( hacks.HalfSpeeding && hacks.CanSpeed ) entity.Velocity.Y += jumpVel / 2;
+			canLiquidJump = false;
+		}
+		
+		bool StandardLiquid( byte block ) {
+			return info.Collide[block] == CollideType.SwimThrough;
+		}
+		
+		static Vector3 waterDrag = new Vector3( 0.8f, 0.8f, 0.8f ),
+		lavaDrag = new Vector3( 0.5f, 0.5f, 0.5f ),
+		ropeDrag = new Vector3( 0.5f, 0.85f, 0.5f ),
+		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
+		airDrag = new Vector3( 0.6f, 1f, 0.6f );
+		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		
+		public void PhysicsTick( float xMoving, float zMoving ) {
+			if( hacks.Noclip ) entity.onGround = false;
+			float multiply = GetBaseMultiply( true );
+			float yMultiply = GetBaseMultiply( hacks.CanSpeed );
+			float modifier = LowestSpeedModifier();
+			
+			float yMul = Math.Max( 1f, yMultiply / 5 ) * modifier;
+			float horMul = multiply * modifier;
+			if( !(hacks.Flying || hacks.Noclip) ) {
+				if( secondJump ) { horMul *= 93f; yMul *= 10f; }
+				else if( firstJump ) { horMul *= 46.5f; yMul *= 7.5f; }
 			}
-		}
-		
-		void ClipXMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
-		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
-			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				entity.Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
-				ClipX( ref size, ref entityBB, ref entityExtentBB );
+			
+			if( entity.TouchesAnyWater() && !hacks.Flying && !hacks.Noclip ) {
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, waterDrag, liquidGrav, yMul );
+			} else if( entity.TouchesAnyLava() && !hacks.Flying && !hacks.Noclip ) {
+				MoveNormal( xMoving, zMoving, 0.02f * horMul, lavaDrag, liquidGrav, yMul );
+			} else if( entity.TouchesAnyRope() && !hacks.Flying && !hacks.Noclip ) {
+				MoveNormal( xMoving, zMoving, 0.02f * 1.7f, ropeDrag, ropeGrav, yMul );
+			} else {
+				float factor = !(hacks.Flying || hacks.Noclip) && entity.onGround ? 0.1f : 0.02f;
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
+				if( hacks.Flying || hacks.Noclip )
+					MoveFlying( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
+				else
+					MoveNormal( xMoving, zMoving, factor * horMul, normalDrag, gravity, yMul );
+
+				if( entity.BlockUnderFeet == Block.Ice && !(hacks.Flying || hacks.Noclip) ) {
+					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
+					if( Math.Abs( entity.Velocity.X ) > 0.25f || Math.Abs( entity.Velocity.Z ) > 0.25f ) {
+						float scale = Math.Min(
+							Math.Abs( 0.25f / entity.Velocity.X ), Math.Abs( 0.25f / entity.Velocity.Z ) );
+						entity.Velocity.X *= scale;
+						entity.Velocity.Z *= scale;
+					}
+				} else if( entity.onGround || hacks.Flying ) {
+					entity.Velocity *= airDrag; // air drag or ground friction
+				}
 			}
+			
+			if( entity.onGround ) { firstJump = false; secondJump = false; }
 		}
 		
-		void ClipZMax( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
-		              BoundingBox finalBB, ref BoundingBox entityExtentBB, ref Vector3 size ) {
-			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref entityExtentBB ) ) {
-				entity.Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
-				ClipZ( ref size, ref entityBB, ref entityExtentBB );
+		void AdjHeadingVelocity( float x, float z, float factor ) {
+			float dist = (float)Math.Sqrt( x * x + z * z );
+			if( dist < 0.00001f ) return;
+			if( dist < 1 ) dist = 1;
+
+			float multiply = factor / dist;
+			entity.Velocity += Utils.RotateY( x * multiply, 0, z * multiply, entity.HeadYawRadians );
+		}
+		
+		void MoveFlying( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			AdjHeadingVelocity( zMoving, xMoving, factor );
+			float yVel = (float)Math.Sqrt( entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z );
+			// make vertical speed the same as vertical speed.
+			if( (xMoving != 0 || zMoving != 0) && yVel > 0.001f ) {
+				entity.Velocity.Y = 0;
+				yMul = 1;
+				if( hacks.FlyingUp || jumping ) entity.Velocity.Y += yVel;
+				if( hacks.FlyingDown ) entity.Velocity.Y -= yVel;
 			}
+			Move( xMoving, zMoving, factor, drag, gravity, yMul );
 		}
 		
-		void ClipZMin( ref BoundingBox blockBB, ref BoundingBox entityBB, bool wasOn,
-		              BoundingBox finalBB, ref BoundingBox extentBB, ref Vector3 size ) {
-			if( !wasOn || !DidSlide( blockBB, ref size, finalBB, ref entityBB, ref extentBB ) ) {
-				entity.Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
-				ClipZ( ref size, ref entityBB, ref extentBB );
+		void MoveNormal( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			AdjHeadingVelocity( zMoving, xMoving, factor );
+			Move( xMoving, zMoving, factor, drag, gravity, yMul );
+		}
+		
+		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			entity.Velocity.Y *= yMul;
+			if( !hacks.Noclip )
+				collisions.MoveAndWallSlide();
+			entity.Position += entity.Velocity;
+			
+			entity.Velocity.Y /= yMul;
+			entity.Velocity *= drag;
+			entity.Velocity.Y -= gravity;
+		}
+
+		float GetBaseMultiply( bool canSpeed ) {
+			float multiply = 0;
+			if( hacks.Flying || hacks.Noclip ) {
+				if( hacks.Speeding && canSpeed ) multiply += hacks.SpeedMultiplier * 8;
+				if( hacks.HalfSpeeding && canSpeed ) multiply += hacks.SpeedMultiplier * 8 / 2;
+				if( multiply == 0 ) multiply = 8f;
+			} else {
+				if( hacks.Speeding && canSpeed ) multiply += hacks.SpeedMultiplier;
+				if( hacks.HalfSpeeding && canSpeed ) multiply += hacks.SpeedMultiplier / 2;
+				if( multiply == 0 ) multiply = 1;
 			}
+			return hacks.CanSpeed ? multiply : Math.Min( multiply, hacks.MaxSpeedMultiplier );
 		}
 		
-		void ClipYMin( ref BoundingBox blockBB, ref BoundingBox entityBB,
-		              ref BoundingBox extentBB, ref Vector3 size ) {
-			entity.Position.Y = blockBB.Min.Y - size.Y - Adjustment;
-			ClipY( ref size, ref entityBB, ref extentBB );
-			hitYMax = false;
+		const float inf = float.PositiveInfinity;
+		float LowestSpeedModifier() {
+			BoundingBox bounds = entity.CollisionBounds;
+			useLiquidGravity = false;
+			float baseModifier = LowestModifier( bounds, false );
+			bounds.Min.Y -= 0.5f/16f; // also check block standing on
+			float solidModifier = LowestModifier( bounds, true );
+			
+			if( baseModifier == inf && solidModifier == inf ) return 1;
+			return baseModifier == inf ? solidModifier : baseModifier;
 		}
 		
-		void ClipYMax( ref BoundingBox blockBB, ref BoundingBox entityBB,
-		              ref BoundingBox extentBB, ref Vector3 size ) {
-			entity.Position.Y = blockBB.Max.Y + Adjustment;
-			entity.onGround = true;
-			ClipY( ref size, ref entityBB, ref extentBB );
-			hitYMax = true;
-		}
-		
-		bool DidSlide( BoundingBox blockBB, ref Vector3 size, BoundingBox finalBB,
-		              ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			float yDist = blockBB.Max.Y - entityBB.Min.Y;
-			if( yDist > 0 && yDist <= entity.StepSize + 0.01f ) {
-				float blockXMin = blockBB.Min.X, blockZMin = blockBB.Min.Z;
-				blockBB.Min.X = Math.Max( blockBB.Min.X, blockBB.Max.X - size.X / 2 );
-				blockBB.Max.X = Math.Min( blockBB.Max.X, blockXMin + size.X / 2 );
-				blockBB.Min.Z = Math.Max( blockBB.Min.Z, blockBB.Max.Z - size.Z / 2 );
-				blockBB.Max.Z = Math.Min( blockBB.Max.Z, blockZMin + size.Z / 2 );
-				
-				BoundingBox adjBB = finalBB;
-				adjBB.Min.X = Math.Min( finalBB.Min.X, blockBB.Min.X + Adjustment );
-				adjBB.Max.X = Math.Max( finalBB.Max.X, blockBB.Max.X - Adjustment );
-				adjBB.Min.Y = blockBB.Max.Y + Adjustment;
-				adjBB.Max.Y = adjBB.Min.Y + size.Y;
-				adjBB.Min.Z = Math.Min( finalBB.Min.Z, blockBB.Min.Z + Adjustment );
-				adjBB.Max.Z = Math.Max( finalBB.Max.Z, blockBB.Max.Z - Adjustment );
-				
-				if( !CanSlideThrough( ref adjBB ) )
-					return false;
-				entity.Position.Y = blockBB.Max.Y + Adjustment;
-				entity.onGround = true;
-				ClipY( ref size, ref entityBB, ref entityExtentBB );
-				return true;
-			}
-			return false;
-		}
-		
-		bool CanSlideThrough( ref BoundingBox adjFinalBB ) {
-			Vector3I bbMin = Vector3I.Floor( adjFinalBB.Min );
-			Vector3I bbMax = Vector3I.Floor( adjFinalBB.Max );
+		float LowestModifier( BoundingBox bounds, bool checkSolid ) {
+			Vector3I bbMin = Vector3I.Floor( bounds.Min );
+			Vector3I bbMax = Vector3I.Floor( bounds.Max );
+			float modifier = inf;
 			
 			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
 				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
 					for( int x = bbMin.X; x <= bbMax.X; x++ )
 			{
-				byte block = GetPhysicsBlockId( x, y, z );
+				byte block = game.World.SafeGetBlock( x, y, z );
+				if( block == 0 ) continue;
+				CollideType type = info.Collide[block];
+				if( type == CollideType.Solid && !checkSolid )
+					continue;
+				
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				
 				BoundingBox blockBB = new BoundingBox( min, max );
-				if( !blockBB.Intersects( adjFinalBB ) )
-					continue;
-				if( info.Collide[GetPhysicsBlockId( x, y, z )] == CollideType.Solid )
-					return false;
-			}
-			return true;
-		}
-		
-		void ClipX( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			entity.Velocity.X = 0;
-			entityBB.Min.X = entityExtentBB.Min.X = entity.Position.X - size.X / 2;
-			entityBB.Max.X = entityExtentBB.Max.X = entity.Position.X + size.X / 2;
-			collideX = true;
-		}
-		
-		void ClipY( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			entity.Velocity.Y = 0;
-			entityBB.Min.Y = entityExtentBB.Min.Y = entity.Position.Y;
-			entityBB.Max.Y = entityExtentBB.Max.Y = entity.Position.Y + size.Y;
-			collideY = true;
-		}
-		
-		void ClipZ( ref Vector3 size, ref BoundingBox entityBB, ref BoundingBox entityExtentBB ) {
-			entity.Velocity.Z = 0;
-			entityBB.Min.Z = entityExtentBB.Min.Z = entity.Position.Z - size.Z / 2;
-			entityBB.Max.Z = entityExtentBB.Max.Z = entity.Position.Z + size.Z / 2;
-			collideZ = true;
-		}
-		
-		static void CalcTime( ref Vector3 vel, ref BoundingBox entityBB, ref BoundingBox blockBB,
-		                     out float tx, out float ty, out float tz ) {
-			float dx = vel.X > 0 ? blockBB.Min.X - entityBB.Max.X : entityBB.Min.X - blockBB.Max.X;
-			float dy = vel.Y > 0 ? blockBB.Min.Y - entityBB.Max.Y : entityBB.Min.Y - blockBB.Max.Y;
-			float dz = vel.Z > 0 ? blockBB.Min.Z - entityBB.Max.Z : entityBB.Min.Z - blockBB.Max.Z;
-			
-			tx = vel.X == 0 ? float.PositiveInfinity : Math.Abs( dx / vel.X );
-			ty = vel.Y == 0 ? float.PositiveInfinity : Math.Abs( dy / vel.Y );
-			tz = vel.Z == 0 ? float.PositiveInfinity : Math.Abs( dz / vel.Z );
-			
-			if( entityBB.XIntersects( blockBB ) ) tx = 0;
-			if( entityBB.YIntersects( blockBB ) ) ty = 0;
-			if( entityBB.ZIntersects( blockBB ) ) tz = 0;
-		}
-		
-		
-		struct State {
-			public int X, Y, Z;
-			public float tSquared;
-			
-			public State( int x, int y, int z, byte block, float tSquared ) {
-				X = x << 3; Y = y << 3; Z = z << 3;
-				X |= (block & 0x07);
-				Y |= (block & 0x38) >> 3;
-				Z |= (block & 0xC0) >> 6;
-				this.tSquared = tSquared;
-			}
-		}
-		static State[] stateCache = new State[0];
-		
-		static void QuickSort( State[] keys, int left, int right ) {
-			while( left < right ) {
-				int i = left, j = right;		
-				float pivot = keys[(i + j) / 2].tSquared;
-				// partition the list
-				while( i <= j ) {
-					while( pivot > keys[i].tSquared ) i++;
-					while( pivot < keys[j].tSquared ) j--;
-					
-					if( i <= j ) {
-						State key = keys[i]; keys[i] = keys[j]; keys[j] = key;
-						i++; j--;
-					}					
-				}
+				if( !blockBB.Intersects( bounds ) ) continue;
 				
-				// recurse into the smaller subset
-				if( j - left <= right - i ) {
-					if( left < j )
-						QuickSort( keys, left, j );
-					left = i;
-				} else {
-					if( i < right )
-						QuickSort( keys, i, right );
-					right = j;
-				}
+				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
+				if( block >= BlockInfo.CpeBlocksCount && type == CollideType.SwimThrough )
+					useLiquidGravity = true;
 			}
+			return modifier;
+		}
+		
+		/// <summary> Calculates the jump velocity required such that when a client presses
+		/// the jump binding they will be able to jump up to the given height. </summary>
+		internal void CalculateJumpVelocity( float jumpHeight ) {
+			jumpVel = 0;
+			if( jumpHeight >= 256 ) jumpVel = 10.0f;
+			if( jumpHeight >= 512 ) jumpVel = 16.5f;
+			if( jumpHeight >= 768 ) jumpVel = 22.5f;
+			
+			while( GetMaxHeight( jumpVel ) <= jumpHeight )
+				jumpVel += 0.001f;
+		}
+		
+		public static double GetMaxHeight( float u ) {
+			// equation below comes from solving diff(x(t, u))= 0
+			// We only work in discrete timesteps, so test both rounded up and down.
+			double t = 49.49831645 * Math.Log( 0.247483075 * u + 0.9899323 );
+			return Math.Max( YPosAt( (int)t, u ), YPosAt( (int)t + 1, u ) );
+		}
+		
+		static double YPosAt( int t, float u ) {
+			// v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity
+			// x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps)
+			// plugging into Wolfram Alpha gives 1 equation as
+			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
+			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
+			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
 		}
 	}
 }

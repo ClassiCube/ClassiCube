@@ -31,7 +31,7 @@ namespace ClassicalSharp.Gui {
 				
 				Make2( -1, 0, "Jump height", OnWidgetClick,
 				     g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
-				     (g, v) => g.LocalPlayer.CalculateJumpVelocity( Single.Parse( v ) ) ),
+				     (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity( Single.Parse( v ) ) ),
 				
 				MakeBool( -1, 50, "Double jump", OptionsKey.DoubleJump,
 				     OnWidgetClick, g => g.LocalPlayer.Hacks.DoubleJump,

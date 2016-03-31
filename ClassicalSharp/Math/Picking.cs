@@ -7,20 +7,20 @@ namespace ClassicalSharp {
 
 	public static class Picking {
 		
-		static RayCaster ray = new RayCaster();
+		static RayTracer tracer = new RayTracer();
 		
 		/// <summary> Determines the picked block based on the given origin and direction vector.<br/>
 		/// Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
 		/// or not being able to find a suitable candiate within the given reach distance. </summary>
 		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
-			ray.SetRayData( origin, dir );			
+			tracer.SetRayData( origin, dir );			
 			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
 
 			while( iterations < 10000 ) {
-				int x = ray.X, y = ray.Y, z = ray.Z;
+				int x = tracer.X, y = tracer.Y, z = tracer.Z;
 				byte block = GetBlock( map, x, y, z, origin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 						return;
 					}
 				}
-				ray.Step();
+				tracer.Step();
 				iterations++;
 			}
 			throw new InvalidOperationException( "did over 10000 iterations in CalculatePickedBlock(). " +
@@ -56,14 +56,14 @@ namespace ClassicalSharp {
 				pickedPos.IntersectPoint = origin + dir * reach;
 				return;
 			}
-			ray.SetRayData( origin, dir );			
+			tracer.SetRayData( origin, dir );			
 			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
 
 			while( iterations < 10000 ) {
-				int x = ray.X, y = ray.Y, z = ray.Z;
+				int x = tracer.X, y = tracer.Y, z = tracer.Z;
 				byte block = GetBlock( map, x, y, z, origin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 						return;
 					}
 				}
-				ray.Step();
+				tracer.Step();
 				iterations++;
 			}
 			throw new InvalidOperationException( "did over 10000 iterations in ClipCameraPos(). " +
