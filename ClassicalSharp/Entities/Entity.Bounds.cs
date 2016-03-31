@@ -78,6 +78,9 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
+			// TODO: proper way to check seems to be:
+			// If liquid block above, leave height same
+			// otherwise reduce water BB height by 0.5 blocks
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
 			AdjustLiquidTestBounds( ref bounds );
 			return TouchesAny( bounds,

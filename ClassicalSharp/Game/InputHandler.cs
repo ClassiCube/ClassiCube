@@ -350,7 +350,7 @@ namespace ClassicalSharp {
 			} else if( key == Keys[KeyBinding.PauseOrExit] && !game.World.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBinding.OpenInventory] ) {
-				game.SetNewScreen( new BlockSelectScreen( game ) );
+				game.SetNewScreen( new InventoryScreen( game ) );
 			} else if( key == Key.F9 ) {
 				game.ShowClock = !game.ShowClock;
 			} else {

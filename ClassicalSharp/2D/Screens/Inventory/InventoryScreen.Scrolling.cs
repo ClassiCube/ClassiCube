@@ -1,10 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Drawing;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui {
 	
-	public partial class BlockSelectScreen : Screen {
+	public partial class InventoryScreen : Screen {
 		
 		const int scrollbarWidth = 10;
 		static FastColour scrollCol = new FastColour( 10, 10, 10, 220 );
@@ -36,10 +37,11 @@ namespace ClassicalSharp.Gui {
 			
 			selIndex = scrollY * blocksPerRow + (selIndex % blocksPerRow);
 			for( int row = 0; row < rowY; row++ ) {
-				if( selIndex + blocksPerRow >= blocksTable.Length ) break;
 				selIndex += blocksPerRow;
 			}
-			MoveCursorToSelected();
+			
+			if( selIndex >= blocksTable.Length )
+				selIndex = -1;			
 			RecreateBlockInfoTexture();
 			return true;
 		}
