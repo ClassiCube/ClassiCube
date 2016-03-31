@@ -83,21 +83,19 @@ namespace Launcher {
 	public unsafe sealed class X11PlatformDrawer : PlatformDrawer {
 		
 		IntPtr gc;
-		int depth;
 		public override void Init( IWindowInfo info ) {
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
-			depth = ((X11WindowInfo)info).VisualInfo.Depth;
 		}
 		
 		public override void Resize( IWindowInfo info ) {
 			if( gc != IntPtr.Zero ) API.XFreeGC( API.DefaultDisplay, gc );
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
-			depth = ((X11WindowInfo)info).VisualInfo.Depth;
 		}
 		
 		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
 			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true ) ) {
+				int depth = x11Info.VisualInfo.Depth;
 				switch( depth ) {
 					case 32: DrawDirect( fastBmp, 32, x11Info ); break;
 					case 24: DrawDirect( fastBmp, 24, x11Info ); break;
