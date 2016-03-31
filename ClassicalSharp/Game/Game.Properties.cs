@@ -213,9 +213,15 @@ namespace ClassicalSharp {
 			set { window.VSync = value; }
 		}
 		
+		bool visible = true;
 		public bool CursorVisible { 
-			get { return window.CursorVisible; }
-			set { window.CursorVisible = value; }
+			get { return visible; }
+			set {
+				// Only set the value when it has changes.
+				if( visible == value ) return;
+				window.CursorVisible = value;
+				visible = value;
+			}
 		}
 		
 		public Point DesktopCursorPos {

@@ -399,7 +399,7 @@ namespace ClassicalSharp {
 				activeScreen = screen;
 				
 				screen.wasCursorVisible = CursorVisible;
-				if( !CursorVisible ) CursorVisible = true;
+				CursorVisible = true;
 			} else {
 				screen.wasCursorVisible = WarningScreens[0].wasCursorVisible;
 			}

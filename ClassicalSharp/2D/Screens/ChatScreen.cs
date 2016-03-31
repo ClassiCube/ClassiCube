@@ -246,8 +246,7 @@ namespace ClassicalSharp.Gui {
 		public override void Dispose() {
 			if( HandlesAllInput ) {
 				game.chatInInputBuffer = textInput.chatInputText.ToString();
-				if( game.CursorVisible )
-					game.CursorVisible = false;
+				game.CursorVisible = false;
 			} else {
 				game.chatInInputBuffer = null;
 			}
@@ -316,8 +315,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void OpenTextInputBar( string initialText ) {
-			if( !game.CursorVisible )
-				game.CursorVisible = true;
+			game.CursorVisible = true;
 			suppressNextPress = true;
 			HandlesAllInput = true;
 			game.Keyboard.KeyRepeat = true;
@@ -339,8 +337,7 @@ namespace ClassicalSharp.Gui {
 				if( key == game.Mapping( KeyBinding.SendChat ) || key == Key.KeypadEnter
 				   || key == game.Mapping( KeyBinding.PauseOrExit ) ) {
 					HandlesAllInput = false;
-					if( game.CursorVisible )
-						game.CursorVisible = false;
+					game.CursorVisible = false;
 					game.Camera.RegrabMouse();
 					game.Keyboard.KeyRepeat = false;
 					

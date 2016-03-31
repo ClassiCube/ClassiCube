@@ -66,16 +66,14 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void GainFocus() {
-			if( game.CursorVisible )
-				game.CursorVisible = false;
+			game.CursorVisible = false;
 			game.Camera.RegrabMouse();
 		}
 		
 		public void LoseFocus() {
 			if( playerList != null )
 				playerList.Dispose();
-			if( !game.CursorVisible )
-				game.CursorVisible = true;
+			game.CursorVisible = true;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

@@ -69,8 +69,7 @@ namespace ClassicalSharp.Gui {
 				game.activeScreen = game.WarningScreens[0];
 			} else {
 				game.activeScreen = lastScreen;
-				if( game.CursorVisible != wasCursorVisible )
-					game.CursorVisible = wasCursorVisible;
+				game.CursorVisible = wasCursorVisible;
 				if( game.activeScreen == null && game.CursorVisible )
 					game.CursorVisible = false;
 			}
