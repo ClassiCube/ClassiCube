@@ -50,11 +50,13 @@ namespace Launcher {
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( e.Key == Key.Enter ) {
-				if( table.Count == 1 && String.IsNullOrEmpty( Get( hashIndex ) ) ) {
+				string curServer = Get( hashIndex ) ?? "";
+				if( table.Count >= 1 && curServer == "" ) {
 					widgets[hashIndex].Text = table.usedEntries[0].Hash;
 					ConnectToServer( 0, 0 );
-				} else {
-					base.KeyDown( sender, e );
+				} else if( curServer != "" && 
+				          (selectedWidget == null || selectedWidget == widgets[tableIndex]) ) {
+					ConnectToServer( 0, 0 );
 				}
 			} else if( e.Key == Key.Up ) {
 				table.SetSelected( table.SelectedIndex - 1 );
