@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security;
 using ClassicalSharp;
 using OpenTK.Platform;
 using OpenTK.Platform.X11;
@@ -22,19 +23,46 @@ namespace Launcher {
 	
 	public sealed class WinPlatformDrawer : PlatformDrawer {
 		
-		Graphics g;
+		const uint SRCCOPY = 0xCC0020;
+		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern int BitBlt( IntPtr dcDst, int dstX, int dstY, int width, int height,
+		                         IntPtr dcSrc, int srcX, int srcY, uint drawOp );
+		
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern IntPtr GetDC( IntPtr hwnd );
+		
+		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern IntPtr CreateCompatibleDC(IntPtr dc);
+		
+		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern IntPtr SelectObject( IntPtr dc, IntPtr handle );
+		
+		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern int DeleteObject( IntPtr handle );
+		
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern int ReleaseDC( IntPtr dc, IntPtr hwnd );
+		
+		IntPtr dc;
 		public override void Init( IWindowInfo info ) {
-			g = Graphics.FromHwnd( info.WinHandle );
+			dc = GetDC( info.WinHandle );
 		}
 		
 		public override void Resize( IWindowInfo info ) {
-			if( g != null )
-				g.Dispose();
-			g = Graphics.FromHwnd( info.WinHandle );
+			if( dc != IntPtr.Zero )
+				ReleaseDC( info.WinHandle, dc );
+			dc = GetDC( info.WinHandle );
 		}
 		
 		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
-			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
+			IntPtr srcDC = CreateCompatibleDC( dc );
+			IntPtr srcHB = framebuffer.GetHbitmap();
+			IntPtr oldSrc = SelectObject( srcDC, srcHB );
+			int success = BitBlt( dc, 0, 0, framebuffer.Width, framebuffer.Height, srcDC, 0, 0, SRCCOPY );
+
+			SelectObject( srcDC, oldSrc );
+			DeleteObject( srcDC );
+			DeleteObject( srcHB );
 		}
 	}
 	
