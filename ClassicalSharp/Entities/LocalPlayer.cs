@@ -284,7 +284,8 @@ namespace ClassicalSharp.Entities {
 				}
 				
 				if( !anyHit ) {
-					spawn.Y = y + Entity.Adjustment;
+					byte block = collisions.GetPhysicsBlockId( P.X, y, P.Z );
+					spawn.Y = y + info.MaxBB[block].Y + Entity.Adjustment;
 					return;
 				}
 			}

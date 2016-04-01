@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui {
 		
 		Block[] blocksTable;
 		Texture blockInfoTexture;
-		const int blocksPerRow = 10, maxRows = 4;
+		const int blocksPerRow = 10, maxRows = 8;
 		int selIndex, rows;
 		int startX, startY, blockSize;
 		float selBlockExpand;
