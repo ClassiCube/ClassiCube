@@ -17,7 +17,7 @@ namespace Launcher {
 		
 		public abstract void Resize( IWindowInfo info );
 		
-		public abstract void Draw( IWindowInfo info , Bitmap framebuffer );
+		public abstract void Display( IWindowInfo info, Bitmap framebuffer );
 	}
 	
 	public sealed class WinPlatformDrawer : PlatformDrawer {
@@ -33,7 +33,7 @@ namespace Launcher {
 			g = Graphics.FromHwnd( info.WinHandle );
 		}
 		
-		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
 			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
 		}
 	}
@@ -49,7 +49,7 @@ namespace Launcher {
 			windowPort = OSX.API.GetWindowPort( info.WinHandle );
 		}
 		
-		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
 			
 			using( FastBitmap bmp = new FastBitmap( framebuffer, true ) ) {
 				IntPtr scan0 = bmp.Scan0;
@@ -92,7 +92,7 @@ namespace Launcher {
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
 		}
 		
-		public override void Draw( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
 			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true ) ) {
 				int depth = x11Info.VisualInfo.Depth;

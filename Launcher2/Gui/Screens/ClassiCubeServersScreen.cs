@@ -75,7 +75,7 @@ namespace Launcher {
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.SetSelected( widgets[hashIndex].Text );
-			RedrawTable();
+			MarkPendingRedraw();
 		}
 
 		public override void Init() {
@@ -147,9 +147,9 @@ namespace Launcher {
 				widget.CurrentIndex = 0;
 				widget.SetEntries( game.Session.Servers );
 				
-				widget.SetDrawData( drawer, tableFont, inputFont, inputFont,
+				widget.SetDrawData( drawer, tableFont, inputFont,
 				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
-				widget.NeedRedraw = RedrawTable;
+				widget.NeedRedraw = MarkPendingRedraw;
 				widget.SelectedChanged = SelectedChanged;
 				widget.SortDefault();
 				widgets[widgetIndex] = widget;
@@ -164,7 +164,7 @@ namespace Launcher {
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.FilterEntries( lastInput.Text );
-			RedrawTable();
+			MarkPendingRedraw();
 		}
 
 		void SelectedChanged( string hash ) {
@@ -183,7 +183,7 @@ namespace Launcher {
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.CurrentIndex -= e.Delta;
-			RedrawTable();
+			MarkPendingRedraw();
 		}
 		
 		string HashFilter( string input ) {
@@ -211,6 +211,20 @@ namespace Launcher {
 			}
 		}
 		
+		bool pendingRedraw;
+		public override void OnDisplay() {
+			if( pendingRedraw ) RedrawTable();
+			pendingRedraw = false;
+		}
+		
+		void MarkPendingRedraw() {
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			table.ClampIndex();
+			table.RecalculateDrawData();
+			pendingRedraw = true;
+			Dirty = true;
+		}
+		
 		void RedrawTable() {
 			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) )
 				DrawTableBackground( dst );
@@ -221,7 +235,7 @@ namespace Launcher {
 			table.Height = tableHeight;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				table.Redraw( drawer );
+				table.RedrawData( drawer );
 			}
 			Dirty = true;
 		}

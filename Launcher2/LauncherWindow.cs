@@ -181,9 +181,10 @@ namespace Launcher {
 		}
 		
 		void Display() {
-			Dirty = false;
+			Screen.OnDisplay();
+			Dirty = false;			
 			Screen.Dirty = false;
-			platformDrawer.Draw( Window.WindowInfo, Framebuffer );
+			platformDrawer.Display( Window.WindowInfo, Framebuffer );
 		}
 		
 		public void Dispose() {

@@ -20,15 +20,21 @@ namespace Launcher {
 			drawer = game.Drawer;
 		}
 		
+		/// <summary> Function called to setup the widgets and other data for this screen. </summary>
 		public abstract void Init();
 		
 		/// <summary> Function that is repeatedly called multiple times every second. </summary>
 		public abstract void Tick();
 		
+		/// <summary> Function called to redraw all widgets in this screen. </summary>
 		public abstract void Resize();
 		
 		/// <summary> Cleans up all native resources held by this screen. </summary>
 		public abstract void Dispose();
+		
+		/// <summary>Function called when the pixels from the framebuffer 
+		/// are about to be transferred to the window. </summary>
+		public virtual void OnDisplay() { }
 		
 		protected LauncherWidget selectedWidget;
 		protected LauncherWidget[] widgets;
