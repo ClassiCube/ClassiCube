@@ -40,7 +40,7 @@ namespace Launcher {
 		bool useBitmappedFont;
 		Bitmap terrainBmp;
 		FastBitmap terrainPixels;
-		int elemSize;
+		const int tileSize = 48;
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
@@ -49,17 +49,20 @@ namespace Launcher {
 				Drawer.SetFontBitmap( bmp );
 				useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
 			} else if( filename == "terrain.png" ) {
-				FastBitmap src = new FastBitmap( bmp, true );
-				elemSize = src.Width / 16;
-				
-				terrainBmp = new Bitmap( elemSize * 2, elemSize );
+				int elemSize = bmp.Width / 16;
+				Size size = new Size( tileSize, tileSize );
+				terrainBmp = new Bitmap( tileSize * 2, tileSize );
 				terrainPixels = new FastBitmap( terrainBmp, true );
-				FastBitmap.MovePortion( elemSize * 1, 0, elemSize * 0, 0, src, terrainPixels, elemSize );
-				FastBitmap.MovePortion( elemSize * 2, 0, elemSize * 1, 0, src, terrainPixels, elemSize );
 				
-				// Precompute the darkened stone background
-				Rectangle rect = new Rectangle( 0, 0, elemSize, elemSize );
-				Drawer2DExt.DrawScaledPixels( terrainPixels, terrainPixels, rect.Size, rect, rect, 96, 96 );
+				// Precompute the scaled background
+				using( FastBitmap src = new FastBitmap( bmp, true ) ) {
+					Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
+					                             new Rectangle( 2 * elemSize, 0, elemSize, elemSize ),
+					                             new Rectangle( tileSize, 0, tileSize, tileSize ), 255, 255 );
+					Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
+					                             new Rectangle( 1 * elemSize, 0, elemSize, elemSize ),
+					                             new Rectangle( 0, 0, tileSize, tileSize ), 96, 96 );
+				}
 			}
 		}
 		
@@ -72,7 +75,7 @@ namespace Launcher {
 			
 			if( ClassicBackground ) {
 				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
-					ClearTile( 0, 0, Width, 48, elemSize, 128, 64, dst, true );
+					ClearTile( 0, 0, Width, 48, tileSize, 128, 64, dst, true );
 					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst, false );
 				}
 			} else {
@@ -113,8 +116,7 @@ namespace Launcher {
 		void ClearTile( int x, int y, int width, int height, int srcX,
 		               byte scaleA, byte scaleB, FastBitmap dst, bool scale ) {
 			if( x >= Width || y >= Height ) return;
-			Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
-			const int tileSize = 48;
+			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );
 			Size size = new Size( tileSize, tileSize );
 			int xOrig = x, xMax = x + width, yMax = y + height;
 			
@@ -124,11 +126,15 @@ namespace Launcher {
 				int x2 = Math.Min( x + tileSize, Math.Min( xMax, Width ) );
 				int y2 = Math.Min( y + tileSize, Math.Min( yMax, Height ) );
 				
-				Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
+				Rectangle area = new Rectangle( x, y, x2 - x, y2 - y );
+				if( area.X >= dst.Width || area.Y >= dst.Height ) continue;
+				area.Width = Math.Min( area.X + area.Width, dst.Width ) - area.X;
+				area.Height = Math.Min( area.Y + area.Height, dst.Height ) - area.Y;
+				
 				if( scale )
-					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
+					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, area, scaleA, scaleB );
 				else
-					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect );
+					Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, area );
 			}
 		}
 	}
