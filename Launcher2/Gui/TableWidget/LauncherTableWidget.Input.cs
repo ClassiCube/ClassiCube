@@ -103,14 +103,16 @@ namespace Launcher {
 				float scale = Height / (float)Count;
 				CurrentIndex = (int)((y - mouseOffset) / scale);
 				ClampIndex();
+				NeedRedraw();
 			} else if( DraggingColumn >= 0 ) {
 				if( x >= Window.Width - 20 ) return;
 				int col = DraggingColumn;
 				ColumnWidths[col] += deltaX;
 				Utils.Clamp( ref ColumnWidths[col], 20, Window.Width - 20 );
-				DesiredColumnWidths[col] = ColumnWidths[col];				
+				DesiredColumnWidths[col] = ColumnWidths[col];
+				NeedRedraw();
 			}
-			NeedRedraw();
+			
 		}
 		
 		void ScrollbarClick( int mouseY ) {
