@@ -92,13 +92,13 @@ namespace ClassicalSharp {
 			DisposeBitmappedText();
 		}
 		
-		SolidBrush GetOrCreateBrush( Color color ) {
-			int key = color.ToArgb();
+		SolidBrush GetOrCreateBrush( FastColour col ) {
+			int key = col.ToArgb();
 			SolidBrush brush;
 			if( brushCache.TryGetValue( key, out brush ) )
 				return brush;
 			
-			brush = new SolidBrush( color );
+			brush = new SolidBrush( col );
 			brushCache[key] = brush;
 			return brush;
 		}

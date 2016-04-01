@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			Brush shadowBrush = GetOrCreateBrush( Color.Black );
+			Brush shadowBrush = GetOrCreateBrush( FastColour.Black );
 			float textX = x;
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			Brush shadowBrush = GetOrCreateBrush( Color.Black );
+			Brush shadowBrush = GetOrCreateBrush( FastColour.Black );
 			StringFormatFlags flags = format.FormatFlags;
  			format.FormatFlags |= StringFormatFlags.NoWrap;
 			format.Trimming = StringTrimming.EllipsisCharacter;

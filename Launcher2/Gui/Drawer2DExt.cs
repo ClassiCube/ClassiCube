@@ -38,6 +38,30 @@ namespace Launcher {
 			}
 		}
 		
+		public unsafe static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
+		                                           Rectangle srcRect, Rectangle dstRect ) {
+			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
+			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
+			int srcX = srcRect.X, dstX = dstRect.X;
+			int srcY = srcRect.Y, dstY = dstRect.Y;
+			int scaleWidth = scale.Width, scaleHeight = scale.Height;
+			
+			if( dstX >= dst.Width || dstY >= dst.Height ) return;
+			dstWidth = Math.Min( dstX + dstWidth, dst.Width ) - dstX;
+			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int scaledY = (yy + dstRect.Y) * srcHeight / scaleHeight;
+				int* srcRow = src.GetRowPtr( srcY + (scaledY % srcHeight) );
+				int* dstRow = dst.GetRowPtr( dstY + yy );
+				
+				for( int xx = 0; xx < dstWidth; xx++ ) {
+					int scaledX = (xx + dstRect.X) * srcWidth / scaleWidth;
+					dstRow[dstX + xx] = srcRow[srcX + (scaledX % srcWidth)];
+				}
+			}
+		}
+		
 		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) ) 

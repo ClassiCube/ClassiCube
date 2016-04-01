@@ -56,6 +56,10 @@ namespace Launcher {
 				terrainPixels = new FastBitmap( terrainBmp, true );
 				FastBitmap.MovePortion( elemSize * 1, 0, elemSize * 0, 0, src, terrainPixels, elemSize );
 				FastBitmap.MovePortion( elemSize * 2, 0, elemSize * 1, 0, src, terrainPixels, elemSize );
+				
+				// Precompute the darkened stone background
+				Rectangle rect = new Rectangle( 0, 0, elemSize, elemSize );
+				Drawer2DExt.DrawScaledPixels( terrainPixels, terrainPixels, rect.Size, rect, rect, 96, 96 );
 			}
 		}
 		
@@ -68,8 +72,8 @@ namespace Launcher {
 			
 			if( ClassicBackground ) {
 				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
-					ClearTile( 0, 0, Width, 48, elemSize, 128, 64, dst );
-					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst );
+					ClearTile( 0, 0, Width, 48, elemSize, 128, 64, dst, true );
+					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst, false );
 				}
 			} else {
 				ClearArea( 0, 0, Width, Height );
@@ -99,7 +103,7 @@ namespace Launcher {
 		
 		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
 			if( ClassicBackground ) {
-				ClearTile( x, y, width, height, 0, 96, 96, dst );
+				ClearTile( x, y, width, height, 0, 96, 96, dst, false );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;
 				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
@@ -107,7 +111,7 @@ namespace Launcher {
 		}
 		
 		void ClearTile( int x, int y, int width, int height, int srcX,
-		               byte scaleA, byte scaleB, FastBitmap dst ) {
+		               byte scaleA, byte scaleB, FastBitmap dst, bool scale ) {
 			if( x >= Width || y >= Height ) return;
 			Rectangle srcRect = new Rectangle( srcX, 0, elemSize, elemSize );
 			const int tileSize = 48;
@@ -121,7 +125,10 @@ namespace Launcher {
 				int y2 = Math.Min( y + tileSize, Math.Min( yMax, Height ) );
 				
 				Rectangle dstRect = new Rectangle( x, y, x2 - x, y2 - y );
-				Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
+				if( scale )
+					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect, scaleA, scaleB );
+				else
+					Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, dstRect );
 			}
 		}
 	}
