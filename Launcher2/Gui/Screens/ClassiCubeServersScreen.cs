@@ -54,7 +54,7 @@ namespace Launcher {
 				if( table.Count >= 1 && curServer == "" ) {
 					widgets[hashIndex].Text = table.usedEntries[0].Hash;
 					ConnectToServer( 0, 0 );
-				} else if( curServer != "" && 
+				} else if( curServer != "" &&
 				          (selectedWidget == null || selectedWidget == widgets[tableIndex]) ) {
 					ConnectToServer( 0, 0 );
 				}
@@ -75,7 +75,7 @@ namespace Launcher {
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.SetSelected( widgets[hashIndex].Text );
-			Resize();
+			RedrawTable();
 		}
 
 		public override void Init() {
@@ -93,7 +93,7 @@ namespace Launcher {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( table != null )
 				table.ClampIndex();
-			MakeWidgets();	
+			MakeWidgets();
 			RedrawAllButtonBackgrounds();
 			
 			using( drawer ) {
@@ -121,15 +121,19 @@ namespace Launcher {
 		void DrawBackground() {
 			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
 				game.ClearArea( 0, 0, game.Width, tableY, dst );
-				int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
-				Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
-				
-				if( !game.ClassicBackground ) {
-					FastColour col = LauncherTableWidget.backGridCol;
-					Drawer2DExt.FastClear( dst, rec, col );
-				} else {
-					game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
-				}
+				DrawTableBackground( dst );
+			}
+		}
+		
+		void DrawTableBackground( FastBitmap dst ) {
+			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
+			
+			if( !game.ClassicBackground ) {
+				FastColour col = LauncherTableWidget.backGridCol;
+				Drawer2DExt.FastClear( dst, rec, col );
+			} else {
+				game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
 			}
 		}
 		
@@ -144,8 +148,8 @@ namespace Launcher {
 				widget.SetEntries( game.Session.Servers );
 				
 				widget.SetDrawData( drawer, tableFont, inputFont, inputFont,
-				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );			
-				widget.NeedRedraw = Resize;
+				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
+				widget.NeedRedraw = RedrawTable;
 				widget.SelectedChanged = SelectedChanged;
 				widget.SortDefault();
 				widgets[widgetIndex] = widget;
@@ -160,8 +164,7 @@ namespace Launcher {
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.FilterEntries( lastInput.Text );
-			table.ClampIndex();
-			Resize();
+			RedrawTable();
 		}
 
 		void SelectedChanged( string hash ) {
@@ -180,8 +183,7 @@ namespace Launcher {
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.CurrentIndex -= e.Delta;
-			table.ClampIndex();
-			Resize();
+			RedrawTable();
 		}
 		
 		string HashFilter( string input ) {
@@ -207,6 +209,21 @@ namespace Launcher {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
 			}
+		}
+		
+		void RedrawTable() {
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) )
+				DrawTableBackground( dst );
+			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			table.ClampIndex();
+			
+			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			table.Height = tableHeight;
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				table.Redraw( drawer );
+			}
+			Dirty = true;
 		}
 	}
 }
