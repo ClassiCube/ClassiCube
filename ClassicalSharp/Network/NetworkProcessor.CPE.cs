@@ -313,13 +313,10 @@ namespace ClassicalSharp.Net {
 			game.World.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.World.SetEdgeBlock( (Block)reader.ReadUInt8() );
 			game.World.SetEdgeLevel( reader.ReadInt16() );
-			if( !game.AllowServerTextures )
-				return;
+			if( !game.AllowServerTextures ) return;
 			
-			if( url == String.Empty ) {
-				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( game.DefaultTexturePack, game );
-				game.World.TextureUrl = null;
+			if( url == "" ) {
+				ExtractDefault();
 			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
 				RetrieveTexturePack( url );
 			}

@@ -103,6 +103,7 @@ namespace ClassicalSharp {
 		protected void ExtractDefault() {
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( game.DefaultTexturePack, game );
+			game.World.TextureUrl = null;
 		}
 		
 		static bool Is304Status( WebException ex ) {
@@ -126,14 +127,14 @@ namespace ClassicalSharp {
 					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
+					if( bmp != null ) game.World.TextureUrl = item.Url;
+					
 					if( bmp == null ) // Should never happen, but handle anyways.
 						ExtractDefault();
-					else
-						game.ChangeTerrainAtlas( bmp );
-					game.World.TextureUrl = item.Url;
+					else if( item.Url != game.World.TextureUrl )
+						game.ChangeTerrainAtlas( bmp );				
 				} else {
-					ExtractDefault();
-					game.World.TextureUrl = null;
+					ExtractDefault();					
 				}
 			}
 			
@@ -145,16 +146,16 @@ namespace ClassicalSharp {
 					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					byte[] data = TextureCache.GetDataFromCache( item.Url );
+					if( data != null ) game.World.TextureUrl = item.Url;
+					
 					if( data == null ) { // Should never happen, but handle anyways.
 						ExtractDefault();
-					} else {
+					} else if( item.Url != game.World.TextureUrl ) {
 						TexturePackExtractor extractor = new TexturePackExtractor();
 						extractor.Extract( data, game );
-					}
-					game.World.TextureUrl = item.Url;
+					}					
 				} else {
 					ExtractDefault();
-					game.World.TextureUrl = null;
 				}
 			}
 		}
