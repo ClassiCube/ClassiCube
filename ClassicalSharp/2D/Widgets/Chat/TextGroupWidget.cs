@@ -137,7 +137,7 @@ namespace ClassicalSharp.Gui {
 			for( int i = 0; i < Textures.Length; i++ ) {
 				Texture tex = Textures[i];
 				if( tex.IsValid && tex.Bounds.Contains( mouseX, mouseY ) )
-					return GetUrl( i, mouseX ) ?? lines[i];					
+					return GetUrl( i, mouseX ) ?? lines[i];
 			}
 			return null;
 		}

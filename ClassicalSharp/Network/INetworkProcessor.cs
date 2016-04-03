@@ -53,7 +53,7 @@ namespace ClassicalSharp {
 		public bool ServerSupportsFullCP437;
 		
 		
-		#region Texture pack / terrain.png 
+		#region Texture pack / terrain.png
 
 		protected Game game;
 		
@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 			if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
 				game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
 				game.ShowWarning( new WarningScreen(
-					game, "CL_" + url, true, "Do you want to download the server's texture pack?",
+					game, "CL_" + url, true, true, "Do you want to download the server's texture pack?",
 					DownloadTexturePack, null, WarningScreenTick,
 					"Texture pack url:", url,
 					"Download size: Determining..." ) );
@@ -127,14 +127,14 @@ namespace ClassicalSharp {
 					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
-					if( bmp != null ) game.World.TextureUrl = item.Url;
-					
 					if( bmp == null ) // Should never happen, but handle anyways.
 						ExtractDefault();
 					else if( item.Url != game.World.TextureUrl )
-						game.ChangeTerrainAtlas( bmp );				
+						game.ChangeTerrainAtlas( bmp );
+					
+					if( bmp != null ) game.World.TextureUrl = item.Url;
 				} else {
-					ExtractDefault();					
+					ExtractDefault();
 				}
 			}
 			
@@ -146,14 +146,14 @@ namespace ClassicalSharp {
 					game.World.TextureUrl = item.Url;
 				} else if( Is304Status( item.WebEx ) ) {
 					byte[] data = TextureCache.GetDataFromCache( item.Url );
-					if( data != null ) game.World.TextureUrl = item.Url;
-					
 					if( data == null ) { // Should never happen, but handle anyways.
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
 						TexturePackExtractor extractor = new TexturePackExtractor();
 						extractor.Extract( data, game );
-					}					
+					}
+					
+					if( data != null ) game.World.TextureUrl = item.Url;
 				} else {
 					ExtractDefault();
 				}

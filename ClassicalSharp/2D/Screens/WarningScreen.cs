@@ -7,7 +7,7 @@ namespace ClassicalSharp.Gui {
 	
 	public sealed class WarningScreen : MenuScreen {
 		
-		public WarningScreen( Game game, object metadata, bool confirmNo, string title,
+		public WarningScreen( Game game, object metadata, bool showAlways, bool confirmNo, string title,
 		                     Action<WarningScreen> yesClick, Action<WarningScreen> noClick,
 		                     Action<WarningScreen> renderFrame, params string[] body ) : base( game ) {
 			this.Metadata = metadata;
@@ -17,13 +17,14 @@ namespace ClassicalSharp.Gui {
 			this.title = title;
 			this.body = body;
 			this.confirmNo = confirmNo;
+			this.showAlways = showAlways;
 		}
 		
 		internal Screen lastScreen;
 		internal bool wasCursorVisible;
 		string title, lastTitle;
 		string[] body, lastBody;
-		bool confirmNo, confirmMode;
+		bool confirmNo, confirmMode, showAlways;
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
@@ -51,7 +52,7 @@ namespace ClassicalSharp.Gui {
 					labels[i].Dispose();
 			}
 			this.title = title;
-			this.body = body;			
+			this.body = body;
 			
 			labels = new TextWidget[body.Length + 1];
 			labels[0] = TextWidget.Create( game, 0, -120, title,
@@ -100,16 +101,17 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void InitStandardButtons() {
-			widgets = new ButtonWidget[] {
-				ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnYesClick ),
-				ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnNoClick ),
-				ButtonWidget.Create( game, -110, 80, 160, 35, "Always yes", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnYesAlwaysClick ),
-				ButtonWidget.Create( game, 110, 80, 160, 35, "Always no", Anchor.Centre,
-				                    Anchor.Centre, titleFont, OnNoAlwaysClick ),
-			};
+			widgets = new ButtonWidget[showAlways ? 4 : 2];
+			widgets[0] = ButtonWidget.Create( game, -110, 30, 160, 35, "Yes", Anchor.Centre,
+			                                 Anchor.Centre, titleFont, OnYesClick );
+			widgets[1] = ButtonWidget.Create( game, 110, 30, 160, 35, "No", Anchor.Centre,
+			                                 Anchor.Centre, titleFont, OnNoClick );
+			if( !showAlways ) return;
+			
+			widgets[2] = ButtonWidget.Create( game, -110, 80, 160, 35, "Always yes", Anchor.Centre,
+			                                 Anchor.Centre, titleFont, OnYesAlwaysClick );
+			widgets[3] = ButtonWidget.Create( game, 110, 80, 160, 35, "Always no", Anchor.Centre,
+			                                 Anchor.Centre, titleFont, OnNoAlwaysClick );
 		}
 		
 		Action<WarningScreen> yesClick, noClick, renderFrame;

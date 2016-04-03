@@ -48,23 +48,10 @@ namespace ClassicalSharp.Entities {
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
 				BoundingBox blockBB = new BoundingBox( min, max );
-				if( !blockBB.Intersects( bounds ) ) continue;		
+				if( !blockBB.Intersects( bounds ) ) continue;
 				if( condition( block ) ) return true;
 			}
 			return false;
-		}
-		
-		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
-		public const float Adjustment = 0.001f;
-		static readonly Vector3 liqExpand = new Vector3( 0.25f/16f, 0/16f, 0.25f/16f );
-		
-		/// <summary> Determines whether any of the blocks that intersect the
-		/// bounding box of this entity are lava or still lava. </summary>
-		public bool TouchesAnyLava() {
-			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
-			AdjustLiquidTestBounds( ref bounds );
-			return TouchesAny( bounds,
-			                  b => b == (byte)Block.Lava || b == (byte)Block.StillLava );
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the
@@ -75,24 +62,56 @@ namespace ClassicalSharp.Entities {
 			return TouchesAny( bounds, b => b == (byte)Block.Rope );
 		}
 		
+		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
+		public const float Adjustment = 0.001f;
+		
+		
+		static readonly Vector3 liqExpand = new Vector3( 0.25f/16f, 0/16f, 0.25f/16f );
+		
+		// If liquid block above, leave height same
+		// otherwise reduce water BB height by 0.5 blocks
+		bool TouchesAnyLiquid( BoundingBox bounds, byte block1, byte block2 ) {
+			Vector3I bbMin = Vector3I.Floor( bounds.Min );
+			Vector3I bbMax = Vector3I.Floor( bounds.Max );
+			int height = game.World.Height;
+			
+			// Order loops so that we minimise cache misses
+			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
+				for( int z = bbMin.Z; z <= bbMax.Z; z++ )
+					for( int x = bbMin.X; x <= bbMax.X; x++ )
+			{
+				if( !game.World.IsValidPos( x, y, z ) ) continue;
+				byte block = game.World.GetBlock( x, y, z );
+				byte below = (y - 1) < 0 ? (byte)0 : game.World.GetBlock( x, y - 1, z );
+				byte above = (y + 1) >= height ? (byte)0 : game.World.GetBlock( x, y + 1, z );
+				
+				// TODO: use recording to find right constants when I have more time
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
+				//if( game.BlockInfo.Collide[below] != CollideType.SwimThrough )
+				//	min.Y += 4/16f;
+				//if( game.BlockInfo.Collide[above] != CollideType.SwimThrough )
+				//	max.Y -= 4/16f;
+				
+				BoundingBox blockBB = new BoundingBox( min, max );
+				if( !blockBB.Intersects( bounds ) ) continue;		
+				if( block == block1 || block == block2 ) return true;
+			}
+			return false;
+		}
+		
+		/// <summary> Determines whether any of the blocks that intersect the
+		/// bounding box of this entity are lava or still lava. </summary>
+		public bool TouchesAnyLava() {
+			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
+			return TouchesAnyLiquid( bounds, (byte)Block.Lava, (byte)Block.StillLava );
+		}
+
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
-			// TODO: proper way to check seems to be:
-			// If liquid block above, leave height same
-			// otherwise reduce water BB height by 0.5 blocks
 			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
-			AdjustLiquidTestBounds( ref bounds );
-			return TouchesAny( bounds,
-			                  b => b == (byte)Block.Water || b == (byte)Block.StillWater );
-		}
-		
-		void AdjustLiquidTestBounds( ref BoundingBox bounds ) {
-			// Even though we collide with lava 3 blocks above our feet, vanilla client thinks
-			// that we do not.. so we have to maintain compatibility here.
-			float height = bounds.Max.Y - bounds.Min.Y;
-			const float pHeight = (28.5f - 4f)/16f;
-			bounds.Max.Y = bounds.Min.Y + Math.Min( height, pHeight );
+			return TouchesAnyLiquid( bounds, (byte)Block.Water, (byte)Block.StillWater );
 		}
 	}
 }
