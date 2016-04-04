@@ -65,7 +65,7 @@ namespace Launcher {
 			using( FastBitmap src = new FastBitmap( bmp, true ) ) {
 				Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
 				                             new Rectangle( 2 * elemSize, 0, elemSize, elemSize ),
-				                             new Rectangle( tileSize, 0, tileSize, tileSize ), 255, 255 );
+				                             new Rectangle( tileSize, 0, tileSize, tileSize ), 128, 64 );
 				Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
 				                             new Rectangle( 1 * elemSize, 0, elemSize, elemSize ),
 				                             new Rectangle( 0, 0, tileSize, tileSize ), 96, 96 );
@@ -81,8 +81,8 @@ namespace Launcher {
 			
 			if( ClassicBackground ) {
 				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
-					ClearTile( 0, 0, Width, 48, tileSize, 128, 64, dst, true );
-					ClearTile( 0, 48, Width, Height - 48, 0, 96, 96, dst, false );
+					ClearTile( 0, 0, Width, 48, tileSize, dst );
+					ClearTile( 0, 48, Width, Height - 48, 0, dst );
 				}
 			} else {
 				ClearArea( 0, 0, Width, Height );
@@ -112,26 +112,21 @@ namespace Launcher {
 		
 		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
 			if( ClassicBackground ) {
-				ClearTile( x, y, width, height, 0, 96, 96, dst, false );
+				ClearTile( x, y, width, height, 0, dst );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;
 				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
 			}
 		}
 		
-		void ClearTile( int x, int y, int width, int height, int srcX,
-		               byte scaleA, byte scaleB, FastBitmap dst, bool scale ) {
+		void ClearTile( int x, int y, int width, int height, int srcX, FastBitmap dst ) {
 			if( x >= Width || y >= Height ) return;
 			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );
 			Size size = new Size( tileSize, tileSize );			
 			Rectangle area = new Rectangle( x, y, width, height );
 			area.Width = Math.Min( area.X + area.Width, dst.Width ) - area.X;
 			area.Height = Math.Min( area.Y + area.Height, dst.Height ) - area.Y;
-			
-			if( scale )
-				Drawer2DExt.DrawScaledPixels( terrainPixels, dst, size, srcRect, area, scaleA, scaleB );
-			else
-				Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, area );
+			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, area );
 		}
 	}
 }

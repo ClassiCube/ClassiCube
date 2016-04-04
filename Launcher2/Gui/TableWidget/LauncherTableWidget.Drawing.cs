@@ -87,8 +87,11 @@ namespace Launcher {
 			
 			for( int i = CurrentIndex; i < Count; i++ ) {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
-				if( i == SelectedIndex && !separator )
-					drawer.Clear( foreGridCol, X, y - 3, Width, defaultInputHeight + 4 );
+				if( i == SelectedIndex && !separator ) {
+					int startY = y - 3;
+					int height = Math.Min( startY + (defaultInputHeight + 4), Y + Height ) - startY;
+					drawer.Clear( foreGridCol, X, startY, Width, height );
+				}
 				
 				if( !DrawColumnEntry( drawer, ref args, maxWidth, x, ref y, ref usedEntries[i] ) ) {
 					maxIndex = i; break;
