@@ -35,7 +35,7 @@ namespace Launcher {
 		}
 		
 		public unsafe static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
-		                                           Rectangle srcRect, Rectangle dstRect ) {
+		                                          Rectangle srcRect, Rectangle dstRect ) {
 			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
 			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
 			int srcX = srcRect.X, dstX = dstRect.X;
@@ -52,17 +52,22 @@ namespace Launcher {
 		
 		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
 			int dstX, dstY, dstWidth, dstHeight;
-			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) ) 
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;
 			const int alpha = 255 << 24;
-			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
 				int* row = dst.GetRowPtr( dstY + yy );
 				for( int xx = 0; xx < dstWidth; xx++ ) {
-					float n = Noise( dstX + xx, dstY + yy );
-					int r = col.R + (int)(n * variation); Utils.Clamp( ref r, 0, 255 );
-					int g = col.G + (int)(n * variation); Utils.Clamp( ref g, 0, 255 );
-					int b = col.B + (int)(n * variation); Utils.Clamp( ref b, 0, 255 );
+					int n = (dstX + xx) + (dstY + yy) * 57;
+					n = (n << 13) ^ n;
+					float noise = 1f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824f;
+					
+					int r = col.R + (int)(noise * variation);
+					r = r < 0 ? 0 : (r > 255 ? 255 : r);
+					int g = col.G + (int)(noise * variation);
+					g = g < 0 ? 0 : (g > 255 ? 255 : g);
+					int b = col.B + (int)(noise * variation);
+					b = b < 0 ? 0 : (b > 255 ? 255 : b);
 					row[dstX + xx] = alpha | (r << 16) | (g << 8) | b;
 				}
 			}
@@ -70,7 +75,7 @@ namespace Launcher {
 		
 		public unsafe static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
 			int dstX, dstY, dstWidth, dstHeight;
-			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) ) 
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;
 			int pixel = col.ToArgb();
 			
@@ -81,8 +86,8 @@ namespace Launcher {
 			}
 		}
 		
-		static bool CheckCoords( FastBitmap dst, Rectangle dstRect, out int dstX, 
-		                 out int dstY, out int dstWidth, out int dstHeight ) {
+		static bool CheckCoords( FastBitmap dst, Rectangle dstRect, out int dstX,
+		                        out int dstY, out int dstWidth, out int dstHeight ) {
 			dstWidth = dstRect.Width; dstHeight = dstRect.Height;
 			dstX = dstRect.X; dstY = dstRect.Y;
 			if( dstX >= dst.Width || dstY >= dst.Height ) return false;
