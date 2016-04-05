@@ -74,14 +74,16 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Refresh() {
-			if( chunks != null && !game.World.IsNotLoaded ) {
-				ClearChunkCache();
-				CreateChunkCache();
-			}
 			chunkPos = new Vector3I( int.MaxValue );
+			if( chunks == null || game.World.IsNotLoaded ) return;
+			ClearChunkCache();
+			CreateChunkCache();
 		}
 		
 		void RefreshBorders( int clipLevel ) {
+			chunkPos = new Vector3I( int.MaxValue );
+			if( chunks == null || game.World.IsNotLoaded ) return;
+			
 			int index = 0;
 			for( int z = 0; z < chunksZ; z++ )
 				for( int y = 0; y < chunksY; y++ )
@@ -92,7 +94,6 @@ namespace ClassicalSharp.Renderers {
 					DeleteChunk( unsortedChunks[index] );
 				index++;
 			}
-			chunkPos = new Vector3I( int.MaxValue );
 		}
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
