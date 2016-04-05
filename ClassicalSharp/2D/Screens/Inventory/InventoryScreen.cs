@@ -26,8 +26,10 @@ namespace ClassicalSharp.Gui {
 		int TableWidth { get { return blocksPerRow * blockSize + 10 + 10; } }
 		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 30; } }
 		
-		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
+		static FastColour normBackCol = new FastColour( 30, 30, 30, 200 );
+		static FastColour classicBackCol = new FastColour( 48, 48, 96, 192 );
 		public override void Render( double delta ) {
+			FastColour backCol = game.ClassicMode ? classicBackCol : normBackCol;
 			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
 			if( rows > maxRows )
 				DrawScrollbar();
@@ -220,7 +222,9 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool ShowTile( int tile ) {
-			if( game.ClassicMode && (tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
+			bool hackBlocks = !game.ClassicMode || game.ClassicHacks;
+			if( !hackBlocks && (tile == (byte)Block.Bedrock || 
+			                    tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
 				return false;
 			return tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid";
 		}

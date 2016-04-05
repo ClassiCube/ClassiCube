@@ -36,13 +36,14 @@ namespace Launcher {
 		
 		public unsafe static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
 		                                          Rectangle srcRect, Rectangle dstRect ) {
-			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
-			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
-			int srcX = srcRect.X, dstX = dstRect.X;
-			int srcY = srcRect.Y, dstY = dstRect.Y;
+			int srcX = srcRect.X, srcWidth = srcRect.Width, srcHeight = srcRect.Height;
+			int dstX, dstY, dstWidth, dstHeight;
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
+				return;
 			
 			for( int yy = 0; yy < dstHeight; yy++ ) {
-				int* srcRow = src.GetRowPtr( srcY + ((yy + dstY) % srcHeight) );
+				// srcY is always 0 so we don't need to add
+				int* srcRow = src.GetRowPtr( ((yy + dstY) % srcHeight) );
 				int* dstRow = dst.GetRowPtr( dstY + yy );
 				
 				for( int xx = 0; xx < dstWidth; xx++ )
@@ -99,12 +100,6 @@ namespace Launcher {
 			dstHeight = Math.Min( dstY + dstHeight, dst.Height ) - dstY;
 			if( dstWidth < 0 || dstHeight < 0 ) return false;
 			return true;
-		}
-		
-		static float Noise( int x, int y ) {
-			int n = x + y * 57;
-			n = (n << 13) ^ n;
-			return 1f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824f;
 		}
 	}
 }

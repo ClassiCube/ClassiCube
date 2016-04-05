@@ -120,13 +120,9 @@ namespace Launcher {
 		}
 		
 		void ClearTile( int x, int y, int width, int height, int srcX, FastBitmap dst ) {
-			if( x >= Width || y >= Height ) return;
-			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );
-			Size size = new Size( tileSize, tileSize );			
-			Rectangle area = new Rectangle( x, y, width, height );
-			area.Width = Math.Min( area.X + area.Width, dst.Width ) - area.X;
-			area.Height = Math.Min( area.Y + area.Height, dst.Height ) - area.Y;
-			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, area );
+			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );	
+			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, 
+			                            new Rectangle( x, y, width, height ) );
 		}
 	}
 }
