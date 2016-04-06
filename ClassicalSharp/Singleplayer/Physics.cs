@@ -422,7 +422,7 @@ namespace ClassicalSharp.Singleplayer {
 			// Base trunk
 			y -= 2 + trunkH;
 			for( int yy = 0; yy < trunkH + 3; yy++ )
-				game.UpdateBlock( x, y + yy, z, (byte)Block.Wood );
+				game.UpdateBlock( x, y + yy, z, (byte)Block.Log );
 		}
 		
 		bool CheckBounds( int x1, int x2, int y1, int y2, int z1, int z2 ) {

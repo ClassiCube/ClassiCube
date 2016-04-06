@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 			// Row 1
 			SetAll( Block.Grass ); SetAll( Block.Stone );
 			SetAll( Block.Dirt ); SetSide( Block.Grass );
-			SetTex( 0 + 2, TileSide.Bottom, Block.Grass ); SetAll( Block.WoodenPlanks );
+			SetTex( 0 + 2, TileSide.Bottom, Block.Grass ); SetAll( Block.Wood );
 			SetSide( Block.DoubleSlab ); SetSide( 0 + 5, Block.Slab );
 			SetTopAndBottom( Block.DoubleSlab ); SetTopAndBottom( 0 + 6, Block.Slab );
 			SetAll( Block.Brick ); SetSide( Block.TNT );
@@ -23,9 +23,9 @@ namespace ClassicalSharp {
 			// Row 2
 			SetAll( Block.Cobblestone ); SetAll( Block.Bedrock );
 			SetAll( Block.Sand ); SetAll( Block.Gravel );
-			SetAll( 16 + 0, Block.CobblestoneSlab ); SetSide( Block.Wood );
-			SetTopAndBottom( Block.Wood ); SetAll( Block.Leaves );
-			SetTop( Block.IronBlock ); SetTop( Block.GoldBlock );
+			SetAll( 16 + 0, Block.CobblestoneSlab ); SetSide( Block.Log );
+			SetTopAndBottom( Block.Log ); SetAll( Block.Leaves );
+			SetTop( Block.Iron ); SetTop( Block.Gold );
 			SetTop( Block.Sandstone ); SetTop( Block.Pillar );
 			texId += 1;
 			SetAll( Block.RedMushroom ); SetAll( Block.BrownMushroom );
@@ -36,30 +36,30 @@ namespace ClassicalSharp {
 			SetAll( Block.CoalOre ); SetAll( Block.Bookshelf );
 			SetAll(  Block.MossyCobblestone ); SetAll( Block.Obsidian );
 			SetAll(	Block.Fire ); SetTopAndBottom( 0 + 4, Block.Bookshelf );
-			SetSide( Block.IronBlock ); SetSide( Block.GoldBlock );
+			SetSide( Block.Iron ); SetSide( Block.Gold );
 			SetSide( Block.Sandstone ); SetSide( Block.Pillar );
 			texId += 5;
 			// Row 4
 			SetAll( Block.Sponge ); SetAll( Block.Glass ); 
 			SetAll( Block.Snow ); SetAll( Block.Ice ); 
 			SetAll( Block.StoneBrick ); SetAll( Block.Crate ); 
-			SetAll( Block.CeramicTile ); SetBottom( Block.IronBlock ); 
-			SetBottom( Block.GoldBlock ); SetBottom( Block.Sandstone ); 
+			SetAll( Block.CeramicTile ); SetBottom( Block.Iron ); 
+			SetBottom( Block.Gold ); SetBottom( Block.Sandstone ); 
 			SetBottom( Block.Pillar );
 			texId += 5;
 			// Row 5
-			SetAll( Block.RedCloth ); SetAll( Block.OrangeCloth ); 
-			SetAll( Block.YellowCloth ); SetAll( Block.LimeCloth ); 
-			SetAll( Block.GreenCloth ); SetAll( Block.AquaCloth ); 
-			SetAll( Block.CyanCloth ); SetAll( Block.BlueCloth ); 
-			SetAll( Block.PurpleCloth ); SetAll( Block.IndigoCloth ); 
-			SetAll( Block.VioletCloth ); SetAll( Block.MagentaCloth ); 
-			SetAll( Block.PinkCloth ); SetAll( Block.BlackCloth );
-			SetAll( Block.GrayCloth ); SetAll( Block.WhiteCloth );
+			SetAll( Block.Red ); SetAll( Block.Orange ); 
+			SetAll( Block.Yellow ); SetAll( Block.Lime ); 
+			SetAll( Block.Green ); SetAll( Block.Aqua ); 
+			SetAll( Block.Cyan ); SetAll( Block.Blue ); 
+			SetAll( Block.Purple ); SetAll( Block.Indigo ); 
+			SetAll( Block.Violet ); SetAll( Block.Magenta ); 
+			SetAll( Block.Pink ); SetAll( Block.Black );
+			SetAll( Block.Gray ); SetAll( Block.White );
 			// Row 6
-			SetAll( Block.LightPinkWool ); SetAll( Block.ForestGreenWool );
-			SetAll( Block.BrownWool ); SetAll( Block.DeepBlueWool );
-			SetAll( Block.TurquoiseWool );
+			SetAll( Block.LightPink ); SetAll( Block.ForestGreen );
+			SetAll( Block.Brown ); SetAll( Block.DeepBlue );
+			SetAll( Block.Turquoise );
 			texId += 1;
 			SetAll( Block.Magma );
 		}

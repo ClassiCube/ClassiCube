@@ -385,7 +385,7 @@ namespace ClassicalSharp.Generator {
 			// then place trunk
 			index = (treeY * length + treeZ ) * width + treeX;
 			for( int y = 0; y < height - 1; y++ ) {
-				blocks[index] = (byte)Block.Wood;
+				blocks[index] = (byte)Block.Log;
 				index += oneY;
 			}
 		}
