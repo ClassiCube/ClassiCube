@@ -28,6 +28,7 @@ namespace ClassicalSharp.Entities {
 		internal CollisionsComponent collisions;
 		public HacksComponent Hacks;
 		internal PhysicsComponent physics;
+		internal InputComponent input;
 		
 		public LocalPlayer( Game game ) : base( game ) {
 			DisplayName = game.Username;
@@ -36,8 +37,10 @@ namespace ClassicalSharp.Entities {
 			collisions = new CollisionsComponent( game, this );
 			Hacks = new HacksComponent( game, this );
 			physics = new PhysicsComponent( game, this );
-			physics.hacks = Hacks;
-			physics.collisions = collisions;
+			input = new InputComponent( game, this );
+			physics.hacks = Hacks; input.Hacks = Hacks;
+			physics.collisions = collisions; input.collisions = collisions;
+			input.physics = physics;
 			
 			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
@@ -229,66 +232,6 @@ namespace ClassicalSharp.Entities {
 			count--;
 		}
 		
-		internal bool HandleKeyDown( Key key ) {
-			KeyMap keys = game.InputHandler.Keys;
-			if( key == keys[KeyBinding.Respawn] && Hacks.CanRespawn ) {
-				Vector3 spawn = SpawnPoint;
-				if( game.World.IsValidPos( Vector3I.Floor( spawn ) ) )
-					FindHighestFree( ref spawn );
-				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, SpawnYaw, SpawnPitch, false );
-				SetLocation( update, false );
-			} else if( key == keys[KeyBinding.SetSpawn] && Hacks.CanRespawn ) {
-				SpawnPoint = Position;
-				SpawnYaw = HeadYawDegrees;
-				SpawnPitch = PitchDegrees;
-			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {
-				Hacks.Flying = !Hacks.Flying;
-			} else if( key == keys[KeyBinding.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
-				if( Hacks.Noclip ) Velocity.Y = 0;
-				Hacks.Noclip = !Hacks.Noclip;
-			} else if( key == keys[KeyBinding.Jump] && !onGround && !(Hacks.Flying || Hacks.Noclip) ) {
-				if( !physics.firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
-					physics.DoNormalJump();
-					physics.firstJump = true;
-				} else if( !physics.secondJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
-					physics.DoNormalJump();
-					physics.secondJump = true;
-				}
-			} else {
-				return false;
-			}
-			return true;
-		}
-		
-		void FindHighestFree( ref Vector3 spawn ) {
-			Vector3 size = Model.CollisionSize;
-			BoundingBox bb = CollisionBounds;
-			Vector3I P = Vector3I.Floor( spawn );
-			int bbMax = Utils.Floor( size.Y );			
-			int minX = Utils.Floor( -size.X / 2 ), maxX = Utils.Floor( size.X / 2 );
-			int minZ = Utils.Floor( -size.Z / 2 ), maxZ = Utils.Floor( size.Z / 2 );
-			
-			// Spawn player at highest valid position.
-			for( int y = P.Y; y <= game.World.Height; y++ ) {
-				bool anyHit = false;
-				for( int yy = 0; yy <= bbMax; yy++ )
-					for( int zz = minZ; zz <= maxZ; zz++ )
-						for ( int xx = minX; xx <= maxX; xx++ )							
-				{
-					Vector3I coords = new Vector3I( P.X + xx, y + yy, P.Z + zz );
-					byte block = collisions.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
-					Vector3 min = info.MinBB[block] + (Vector3)coords;
-					Vector3 max = info.MaxBB[block] + (Vector3)coords;
-					if( !bb.Intersects( new BoundingBox( min, max ) ) ) continue;
-					anyHit |= info.Collide[block] == CollideType.Solid;
-				}
-				
-				if( !anyHit ) {
-					byte block = collisions.GetPhysicsBlockId( P.X, y, P.Z );
-					spawn.Y = y + info.MaxBB[block].Y + Entity.Adjustment;
-					return;
-				}
-			}
-		}
+		internal bool HandleKeyDown( Key key ) { return input.HandleKeyDown( key ); }
 	}
 }

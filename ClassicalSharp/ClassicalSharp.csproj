@@ -150,6 +150,7 @@
     <Compile Include="Entities\AI\HostileAI.cs" />
     <Compile Include="Entities\Components\AnimatedComponent.cs" />
     <Compile Include="Entities\Components\HacksComponent.cs" />
+    <Compile Include="Entities\Components\InputComponent.cs" />
     <Compile Include="Entities\Components\InterpolatedComponent.cs" />
     <Compile Include="Entities\Components\CollisionsComponent.cs" />
     <Compile Include="Entities\Components\PhysicsComponent.cs" />
