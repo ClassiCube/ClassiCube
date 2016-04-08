@@ -45,7 +45,10 @@ namespace ClassicalSharp.Gui {
 					game.Inventory.HeldBlock = blocksTable[selIndex];
 				else if( Contains( TableX, TableY, TableWidth, TableHeight, mouseX, mouseY ) )
 					return true;
-				game.SetNewScreen( null );
+				
+				bool hotbar = game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight );
+				if( !hotbar )
+					game.SetNewScreen( null );
 			}
 			return true;
 		}
