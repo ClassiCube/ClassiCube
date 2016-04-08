@@ -22,18 +22,14 @@ namespace ClassicalSharp {
 		/// <remarks> This causes the local player to be renderered if true. </remarks>
 		public abstract bool IsThirdPerson { get; }
 		
-		public virtual void Tick( double elapsed ) {
-		}
+		public virtual void Tick( double elapsed ) { }
 		
-		public virtual bool MouseZoom( MouseWheelEventArgs e ) {
-			return false;
-		}
+		public virtual bool DoZoom( float deltaPrecise ) { return false; }
 		
 		public abstract void RegrabMouse();
 		
 		/// <summary> Calculates the picked block based on the camera's current position. </summary>
-		public virtual void GetPickedBlock( PickedPos pos ) {
-		}
+		public virtual void GetPickedBlock( PickedPos pos ) { }
 		
 		protected float AdjustPitch( float value ) {
 			if( value >= 90.00f && value <= 90.25f ) return 90.25f * Utils.Deg2Rad;
@@ -131,10 +127,9 @@ namespace ClassicalSharp {
 		public ThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
-		float distance = 3;
-		public override bool MouseZoom( MouseWheelEventArgs e ) {
-			distance -= e.DeltaPrecise;
-			if( distance < 2 ) distance = 2;
+		float dist = 3;
+		public override bool DoZoom( float deltaPrecise ) {
+			dist = Math.Max( dist - deltaPrecise, 2 );
 			return true;
 		}
 		
@@ -145,7 +140,7 @@ namespace ClassicalSharp {
 			
 			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians, 
 			                                  AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
 			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
@@ -155,7 +150,7 @@ namespace ClassicalSharp {
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians, 
 			                                  AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
 			return game.CameraClipPos.IntersectPoint;
 		}
 	}
@@ -165,10 +160,9 @@ namespace ClassicalSharp {
 		public ForwardThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
-		float distance = 3;
-		public override bool MouseZoom( MouseWheelEventArgs e ) {
-			distance -= e.DeltaPrecise;
-			if( distance < 2 ) distance = 2;
+		float dist = 3;
+		public override bool DoZoom( float deltaPrecise ) {
+			dist = Math.Max( dist - deltaPrecise, 2 );
 			return true;
 		}
 		
@@ -179,7 +173,7 @@ namespace ClassicalSharp {
 			
 			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, 
 			                                 AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
 			Vector3 cameraPos = game.CameraClipPos.IntersectPoint;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltMatrix;
 		}
@@ -189,7 +183,7 @@ namespace ClassicalSharp {
 		public override Vector3 GetCameraPos( Vector3 eyePos ) {
 			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians, 
 			                                 AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, distance, game.CameraClipPos );
+			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
 			return game.CameraClipPos.IntersectPoint;
 		}
 	}

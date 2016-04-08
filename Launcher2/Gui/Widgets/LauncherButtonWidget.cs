@@ -65,7 +65,7 @@ namespace Launcher {
 		
 		public void RedrawBackground() {
 			if( Window.Minimised ) return;
-			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true ) )
+			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true, false ) )
 				RedrawBackground( dst );
 		}
 		

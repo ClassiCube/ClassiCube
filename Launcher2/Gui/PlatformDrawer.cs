@@ -79,7 +79,7 @@ namespace Launcher {
 		
 		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
 			
-			using( FastBitmap bmp = new FastBitmap( framebuffer, true ) ) {
+			using( FastBitmap bmp = new FastBitmap( framebuffer, true, true ) ) {
 				IntPtr scan0 = bmp.Scan0;
 				int size = bmp.Width * bmp.Height * 4;
 				
@@ -122,7 +122,7 @@ namespace Launcher {
 		
 		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
-			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true ) ) {
+			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
 				int depth = x11Info.VisualInfo.Depth;
 				switch( depth ) {
 					case 32: DrawDirect( fastBmp, 32, x11Info ); break;

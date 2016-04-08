@@ -106,8 +106,8 @@ namespace Launcher {
 		}
 		
 		unsafe void PatchImage( Bitmap dstBitmap, Bitmap maskBitmap ) {
-			using( FastBitmap dst = new FastBitmap( dstBitmap, true ),
-			      src = new FastBitmap( maskBitmap, true ) ) {
+			using( FastBitmap dst = new FastBitmap( dstBitmap, true, false ),
+			      src = new FastBitmap( maskBitmap, true, true ) ) {
 				int size = src.Width, tileSize = size / 16;
 				
 				for( int y = 0; y < size; y += tileSize ) {

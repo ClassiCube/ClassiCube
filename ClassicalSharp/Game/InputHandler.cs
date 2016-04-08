@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
 			
 			if( game.LocalPlayer.Hacks.Noclip || !localBB.Intersects( blockBB ) ) return true;
-			HacksComponent hacks = game.LocalPlayer.Hacks;			
+			HacksComponent hacks = game.LocalPlayer.Hacks;
 			if( hacks.CanPushbackBlocks && hacks.PushbackPlacing && hacks.Enabled )
 				return PushbackPlace( selected, blockBB );
 			
@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			if( !validPos ) return false;
 			
 			game.LocalPlayer.Position = newP;
-			if( !game.LocalPlayer.Hacks.Noclip 
+			if( !game.LocalPlayer.Hacks.Noclip
 			   && game.LocalPlayer.TouchesAny( CannotPassThrough ) ) {
 				game.LocalPlayer.Position = oldP;
 				return false;
@@ -246,23 +246,29 @@ namespace ClassicalSharp {
 
 		float deltaAcc = 0;
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			if( !game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) {
-				Inventory inv = game.Inventory;
-				bool doZoom = !(IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight ));
-				if( (doZoom && game.Camera.MouseZoom( e )) || CycleZoom( e ) || !inv.CanChangeHeldBlock ) return;
-				
-				// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
-				// We must use rounding at final step, not at every intermediate step.
-				deltaAcc += e.DeltaPrecise;
-				int delta = (int)deltaAcc;
-				deltaAcc -= delta;
-				
-				int diff = -delta % inv.Hotbar.Length;
-				int newIndex = inv.HeldBlockIndex + diff;
-				if( newIndex < 0 ) newIndex += inv.Hotbar.Length;
-				if( newIndex >= inv.Hotbar.Length ) newIndex -= inv.Hotbar.Length;
-				inv.HeldBlockIndex = newIndex;
-			}
+			if( game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) return;
+			
+			Inventory inv = game.Inventory;
+			bool hotbar = IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight );
+			if( (!hotbar && game.Camera.DoZoom( e.DeltaPrecise )) || DoFovZoom( e.DeltaPrecise ) 
+			   || !inv.CanChangeHeldBlock )
+				return;
+			ScrollHotbar( e.DeltaPrecise );
+		}
+		
+		public void ScrollHotbar( float deltaPrecise ) {
+			// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
+			// We must use rounding at final step, not at every intermediate step.
+			Inventory inv = game.Inventory;
+			deltaAcc += deltaPrecise;
+			int delta = (int)deltaAcc;
+			deltaAcc -= delta;
+			
+			int diff = -delta % inv.Hotbar.Length;
+			int newIndex = inv.HeldBlockIndex + diff;
+			if( newIndex < 0 ) newIndex += inv.Hotbar.Length;
+			if( newIndex >= inv.Hotbar.Length ) newIndex -= inv.Hotbar.Length;
+			inv.HeldBlockIndex = newIndex;
 		}
 
 		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
@@ -297,13 +303,12 @@ namespace ClassicalSharp {
 		void HandleHotkey( Key key ) {
 			string text;
 			bool more;
+			if( !Hotkeys.IsHotkey( key, game.Keyboard, out text, out more ) ) return;
 			
-			if( Hotkeys.IsHotkey( key, game.Keyboard, out text, out more ) ) {
-				if( !more )
-					game.Network.SendChat( text, false );
-				else if( game.activeScreen == null )
-					game.hudScreen.OpenTextInputBar( text );
-			}
+			if( !more )
+				game.Network.SendChat( text, false );
+			else if( game.activeScreen == null )
+				game.hudScreen.OpenTextInputBar( text );
 		}
 		
 		MouseButtonEventArgs simArgs = new MouseButtonEventArgs();
@@ -319,10 +324,8 @@ namespace ClassicalSharp {
 			simArgs.Y = game.Mouse.Y;
 			simArgs.IsPressed = pressed;
 			
-			if( pressed )
-				MouseButtonDown( null, simArgs );
-			else
-				MouseButtonUp( null, simArgs );
+			if( pressed ) MouseButtonDown( null, simArgs );
+			else MouseButtonUp( null, simArgs );
 			return true;
 		}
 		
@@ -380,15 +383,14 @@ namespace ClassicalSharp {
 		}
 		
 		float fovIndex = -1;
-		bool CycleZoom( MouseWheelEventArgs e ) {
-			if( !game.IsKeyDown( KeyBinding.ZoomScrolling ) )
-				return false;
+		bool DoFovZoom( float deltaPrecise ) {
+			if( !game.IsKeyDown( KeyBinding.ZoomScrolling ) ) return false;
 			LocalPlayer p = game.LocalPlayer;
 			if( !p.Hacks.Enabled || !p.Hacks.CanAnyHacks || !p.Hacks.CanUseThirdPersonCamera )
 				return false;
 			
 			if( fovIndex == -1 ) fovIndex = game.ZoomFieldOfView;
-			fovIndex -= e.DeltaPrecise * 5;
+			fovIndex -= deltaPrecise * 5;
 			int max = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 			Utils.Clamp( ref fovIndex, 1, max );
 			

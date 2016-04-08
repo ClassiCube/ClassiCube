@@ -119,7 +119,7 @@ namespace Launcher {
 		}
 		
 		void DrawBackground() {
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) ) {
 				game.ClearArea( 0, 0, game.Width, tableY, dst );
 				DrawTableBackground( dst );
 			}
@@ -226,7 +226,7 @@ namespace Launcher {
 		}
 		
 		void RedrawTable() {
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) )
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) )
 				DrawTableBackground( dst );
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.ClampIndex();

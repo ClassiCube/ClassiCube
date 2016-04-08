@@ -102,7 +102,7 @@ namespace Launcher {
 			}
 			if( buttons == 0 ) return;
 			
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true ) ) {
+			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) ) {
 				for( int i = 0; i < widgets.Length; i++ ) {
 					if( widgets[i] == null ) continue;
 					LauncherButtonWidget button = widgets[i] as LauncherButtonWidget;

@@ -59,10 +59,10 @@ namespace Launcher {
 			int elemSize = bmp.Width / 16;
 			Size size = new Size( tileSize, tileSize );
 			terrainBmp = new Bitmap( tileSize * 2, tileSize );
-			terrainPixels = new FastBitmap( terrainBmp, true );
+			terrainPixels = new FastBitmap( terrainBmp, true, false );
 			
 			// Precompute the scaled background
-			using( FastBitmap src = new FastBitmap( bmp, true ) ) {
+			using( FastBitmap src = new FastBitmap( bmp, true, true ) ) {
 				Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
 				                             new Rectangle( 2 * elemSize, 0, elemSize, elemSize ),
 				                             new Rectangle( tileSize, 0, tileSize, tileSize ), 128, 64 );
@@ -80,7 +80,7 @@ namespace Launcher {
 			}
 			
 			if( ClassicBackground ) {
-				using( FastBitmap dst = new FastBitmap( Framebuffer, true ) ) {
+				using( FastBitmap dst = new FastBitmap( Framebuffer, true, false ) ) {
 					ClearTile( 0, 0, Width, 48, tileSize, dst );
 					ClearTile( 0, 48, Width, Height - 48, 0, dst );
 				}
@@ -106,7 +106,7 @@ namespace Launcher {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {
-			using( FastBitmap dst = new FastBitmap( Framebuffer, true ) )
+			using( FastBitmap dst = new FastBitmap( Framebuffer, true, false ) )
 				ClearArea( x, y, width, height, dst );
 		}
 		
