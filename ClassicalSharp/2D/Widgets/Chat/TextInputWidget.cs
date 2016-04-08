@@ -6,7 +6,6 @@ namespace ClassicalSharp.Gui {
 	
 	public sealed partial class TextInputWidget : Widget {
 		
-		const int len = 64 * 3;
 		const int lines = 3;
 		internal AltTextInputWidget altText;
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
@@ -14,7 +13,7 @@ namespace ClassicalSharp.Gui {
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			
-			chatInputText = new WrappableStringBuffer( len );
+			chatInputText = new WrappableStringBuffer( TotalChars );
 			DrawTextArgs args = new DrawTextArgs( "A", boldFont, true );
 			Size defSize = game.Drawer2D.MeasureChatSize( ref args );
 			defaultWidth = defSize.Width; defaultHeight = defSize.Height;
@@ -66,6 +65,7 @@ namespace ClassicalSharp.Gui {
 		bool shownWarning;
 		
 		int LineLength { get { return game.Network.ServerSupportsPartialMessages ? 64 : 62; } }
+		int TotalChars { get { return LineLength * lines; } }
 		
 		public override void Init() {
 			X = 5;
@@ -250,8 +250,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void AppendText( string text ) {
-			if( chatInputText.Length + text.Length > len ) {
-				text = text.Substring( 0, len - chatInputText.Length );
+			if( chatInputText.Length + text.Length > TotalChars ) {
+				text = text.Substring( 0, TotalChars - chatInputText.Length );
 			}
 			if( text == "" ) return;
 			
@@ -267,7 +267,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void AppendChar( char c ) {
-			if( chatInputText.Length == len ) return;
+			if( chatInputText.Length == TotalChars ) return;
 			
 			if( caretPos == -1 ) {
 				chatInputText.InsertAt( chatInputText.Length, c );

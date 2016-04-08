@@ -221,7 +221,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool OtherKey( Key key ) {
-			if( key == Key.V && chatInputText.Length < len ) {
+			if( key == Key.V && chatInputText.Length < TotalChars ) {
 				string text = Clipboard.GetText();
 				if( String.IsNullOrEmpty( text ) ) return true;
 				game.Chat.Add( null, MessageType.ClientStatus4 );
