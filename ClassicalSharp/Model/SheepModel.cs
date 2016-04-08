@@ -64,7 +64,7 @@ namespace ClassicalSharp.Model {
 		public override float GetEyeY( Entity entity ) { return 20/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 14/16f, 20/16f, 14/16f ); }
+			get { return new Vector3( 10/16f, 20/16f, 10/16f ); }
 		}
 		
 		public override BoundingBox PickingBounds {
