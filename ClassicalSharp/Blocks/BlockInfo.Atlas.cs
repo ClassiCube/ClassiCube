@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			// Row 3
 			SetAll( Block.GoldOre ); SetAll( Block.IronOre );
 			SetAll( Block.CoalOre ); SetAll( Block.Bookshelf );
-			SetAll(  Block.MossyCobblestone ); SetAll( Block.Obsidian );
+			SetAll(  Block.MossyRocks ); SetAll( Block.Obsidian );
 			SetAll(	Block.Fire ); SetTopAndBottom( 0 + 4, Block.Bookshelf );
 			SetSide( Block.Iron ); SetSide( Block.Gold );
 			SetSide( Block.Sandstone ); SetSide( Block.Pillar );
@@ -50,9 +50,9 @@ namespace ClassicalSharp {
 			// Row 5
 			SetAll( Block.Red ); SetAll( Block.Orange ); 
 			SetAll( Block.Yellow ); SetAll( Block.Lime ); 
-			SetAll( Block.Green ); SetAll( Block.Aqua ); 
-			SetAll( Block.Cyan ); SetAll( Block.Blue ); 
-			SetAll( Block.Purple ); SetAll( Block.Indigo ); 
+			SetAll( Block.Green ); SetAll( Block.Teal ); 
+			SetAll( Block.Aqua ); SetAll( Block.Cyan ); 
+			SetAll( Block.Blue ); SetAll( Block.Indigo ); 
 			SetAll( Block.Violet ); SetAll( Block.Magenta ); 
 			SetAll( Block.Pink ); SetAll( Block.Black );
 			SetAll( Block.Gray ); SetAll( Block.White );

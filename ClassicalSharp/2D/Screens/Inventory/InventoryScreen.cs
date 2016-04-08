@@ -146,6 +146,8 @@ namespace ClassicalSharp.Gui {
 			} else {
 				buffer.Append( ref index, value );
 			}
+			if( game.ClassicMode ) return;
+			
 			buffer.Append( ref index, " (ID: " );
 			buffer.AppendNum( ref index, (byte)block );
 			buffer.Append( ref index, ", place: " );
@@ -160,11 +162,6 @@ namespace ClassicalSharp.Gui {
 			for( int i = 0; i < normalNames.Length; i++ ) {
 				string origName = Enum.GetName( typeof(Block), (byte)i );
 				buffer.Clear();
-				
-				if( origName == "TNT") {
-					normalNames[i] = "TNT";
-					continue;
-				}
 				int index = 0;
 				SplitUppercase( origName, ref index );
 				normalNames[i] = buffer.ToString();
@@ -174,10 +171,15 @@ namespace ClassicalSharp.Gui {
 		void SplitUppercase( string value, ref int index ) {
 			for( int i = 0; i < value.Length; i++ ) {
 				char c = value[i];
-				if( Char.IsUpper( c ) && i > 0 ) {
+				bool upper = Char.IsUpper( c ) && i > 0;
+				bool nextLower = i < value.Length - 1 && !Char.IsUpper( value[i + 1] );
+				
+				if( upper && nextLower ) {
 					buffer.Append( ref index, ' ' );
-				}
-				buffer.Append( ref index, c );
+					buffer.Append( ref index, Char.ToLower( c ) );
+				} else {
+					buffer.Append( ref index, c );
+				}				
 			}
 		}
 		
