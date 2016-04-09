@@ -33,6 +33,7 @@ namespace ClassicalSharp.Gui {
 				return;
 			
 			game.DefaultTexturePack = file;
+			game.World.TextureUrl = null;
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( path, game );
 			Recreate();
