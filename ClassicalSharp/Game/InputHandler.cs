@@ -256,7 +256,7 @@ namespace ClassicalSharp {
 			ScrollHotbar( e.DeltaPrecise );
 		}
 		
-		public void ScrollHotbar( float deltaPrecise ) {
+		void ScrollHotbar( float deltaPrecise ) {
 			// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
 			// We must use rounding at final step, not at every intermediate step.
 			Inventory inv = game.Inventory;

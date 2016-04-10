@@ -12,14 +12,26 @@ namespace ClassicalSharp.Gui {
 		public LoadLevelScreen( Game game ) : base( game ) {
 			titleText = "Select a level";
 			string dir = Path.Combine( Program.AppDirectory, "maps" );
-			string[] cwFiles = Directory.GetFiles( dir, "*.cw" );
-			string[] datFiles = Directory.GetFiles( dir, "*.dat" );
-			files = new string[cwFiles.Length + datFiles.Length];
-			Array.Copy( cwFiles, 0, files, 0, cwFiles.Length );
-			Array.Copy( datFiles, 0, files, cwFiles.Length, datFiles.Length );
+			string[] rawFiles = Directory.GetFiles( dir );
+			int count = 0;
 			
-			for( int i = 0; i < files.Length; i++ )
-				files[i] = Path.GetFileName( files[i] );
+			// Only add map files
+			for( int i = 0; i < rawFiles.Length; i++ ) {
+				string file = rawFiles[i];
+				if( file.EndsWith( ".cw" ) || file.EndsWith( ".dat" ) 
+				   || file.EndsWith( ".fcm" ) || file.EndsWith( ".lvl" ) ) {
+					count++;
+				} else {
+					rawFiles[i] = null;
+				}
+			}
+			
+			files = new string[count];
+			for( int i = 0, j = 0; i < rawFiles.Length; i++ ) {
+				string file = rawFiles[i];
+				if( file == null ) continue;
+				files[j] = Path.GetFileName( file ); j++;
+			}
 			Array.Sort( files );
 		}
 		
@@ -38,13 +50,15 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void LoadMap( string path ) {
-			IMapFileFormat mapFile = null;
+			IMapFormatImporter importer = null;
 			if( path.EndsWith( ".dat" ) ) {
-				mapFile = new MapDat();
+				importer = new MapDat();
 			} else if( path.EndsWith( ".fcm" ) ) {
-				mapFile = new MapFcm3();
+				importer = new MapFcm3();
 			} else if( path.EndsWith( ".cw" ) ) {
-				mapFile = new MapCw();
+				importer = new MapCw();
+			} else if( path.EndsWith( ".lvl" ) ) {
+				importer = new MapLvl();
 			}
 			
 			try {
@@ -57,14 +71,14 @@ namespace ClassicalSharp.Gui {
 					game.BlockInfo.SetupCullingCache();
 					game.BlockInfo.InitLightOffsets();
 					
-					byte[] blocks = mapFile.Load( fs, game, out width, out height, out length );
+					byte[] blocks = importer.Load( fs, game, out width, out height, out length );
 					game.World.SetData( blocks, width, height, length );
 					game.WorldEvents.RaiseOnNewMapLoaded();
 					if( game.AllowServerTextures && game.World.TextureUrl != null )
 						game.Network.RetrieveTexturePack( game.World.TextureUrl );
 					
 					LocalPlayer p = game.LocalPlayer;
-					LocationUpdate update = LocationUpdate.MakePosAndOri( p.SpawnPoint, p.SpawnYaw, p.SpawnPitch, false );
+					LocationUpdate update = LocationUpdate.MakePosAndOri( p.Spawn, p.SpawnYaw, p.SpawnPitch, false );
 					p.SetLocation( update, false );
 				}
 			} catch( Exception ex ) {

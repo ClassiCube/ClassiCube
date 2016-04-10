@@ -10,23 +10,21 @@ using OpenTK;
 namespace ClassicalSharp.Map {
 	
 	/// <summary> Imports a world from a dat map file (original minecraft classic map) </summary>
-	public sealed class MapDat : IMapFileFormat {
+	public sealed class MapDat : IMapFormatImporter {
 		
 		const byte TC_NULL = 0x70, TC_REFERENCE = 0x71;
 		const byte TC_CLASSDESC = 0x72, TC_OBJECT = 0x73;
 		const byte TC_STRING = 0x74, TC_ARRAY = 0x75;
 		const byte TC_ENDBLOCKDATA = 0x78;
 		
-		public override bool SupportsLoading { get { return true; }  }
-		
 		BinaryReader reader;		
-		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			byte[] map = null;
-			width = 0;		
+			width = 0;
 			height = 0;
 			length = 0;
 			LocalPlayer p = game.LocalPlayer;
-			p.SpawnPoint = Vector3.Zero;
+			p.Spawn = Vector3.Zero;
 			
 			using( GZipStream gs = new GZipStream( stream, CompressionMode.Decompress ) ) {
 				reader = new BinaryReader( gs );
@@ -42,11 +40,11 @@ namespace ClassicalSharp.Map {
 					else if( field.FieldName == "blocks" )
 						map = (byte[])field.Value;
 					else if( field.FieldName == "xSpawn" )
-						p.SpawnPoint.X = (int)field.Value;
+						p.Spawn.X = (int)field.Value;
 					else if( field.FieldName == "ySpawn" )
-						p.SpawnPoint.Y = (int)field.Value;
+						p.Spawn.Y = (int)field.Value;
 					else if( field.FieldName == "zSpawn" )
-						p.SpawnPoint.Z = (int)field.Value;
+						p.Spawn.Z = (int)field.Value;
 				}
 			}
 			return map;
