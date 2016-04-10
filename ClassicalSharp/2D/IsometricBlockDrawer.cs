@@ -86,10 +86,10 @@ namespace ClassicalSharp {
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * (15.99f/16f);
 
-			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( minBB.Z ), rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( minBB.Z ), rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( maxBB.Z ), rec.U2, rec.V2, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( maxBB.Z ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( minBB.Z ), rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( minBB.Z ), rec.U1, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( maxBB.Z ), rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( maxBB.Z ), rec.U2, rec.V1, col );
 		}
 
 		static void ZQuad( byte block, float z, int side ) {
