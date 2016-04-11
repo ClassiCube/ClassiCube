@@ -116,13 +116,14 @@ namespace ClassicalSharp {
 			int height = PtToPx( args.Font.Size, boxSize );
 			int offset = ShadowOffset( args.Font.Size );
 			int col = FastColour.White.ToArgb();
+			
 			float point = args.Font.Size;			
 			string text = args.Text;
 			if( args.UseShadow ) height += offset;
-					
+			int startX = x;
+			
 			for( int yy = height - offset; yy < height; yy++ ) {
-				int* dstRow = dst.GetRowPtr( yy + yOffset );
-				int startX = x;
+				int* dstRow = dst.GetRowPtr( yy + yOffset );				
 				
 				for( int i = 0; i < text.Length; i++ ) {
 					char c = text[i];
