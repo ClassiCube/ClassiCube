@@ -66,49 +66,82 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart( FastBitmap dst, ref DrawTextArgs args, ref int x, int y, bool shadowCol ) {
-			FastColour textCol = FastColour.White;
-			float point = args.Font.Size;
+			FastColour col = shadowCol ? FastColour.Black : FastColour.White;
+			FastColour lastCol = col;
 			int xMul = args.Font.Style == FontStyle.Italic ? 1 : 0;
+			int runCount = 0, lastY = -1;
 			string text = args.Text;
+			float point = args.Font.Size;
+			byte* coordsPtr = stackalloc byte[256];
 			
 			for( int i = 0; i < text.Length; i++ ) {
 				char c = text[i];
 				bool code = c == '&' && i < text.Length - 1;
 				if( code && ValidColour( text[i + 1] ) ) {
-					textCol = Colours[text[i + 1]];
+					col = Colours[text[i + 1]];
 					i++; continue; // Skip over the colour code.
 				}
-				if( shadowCol ) textCol = FastColour.Black;
-				
+				if( shadowCol ) col = FastColour.Black;
 				int coords = ConvertToCP437( c );
-				int srcX = (coords & 0x0F) * boxSize;
-				int srcY = (coords >> 4) * boxSize;
 				
-				int srcWidth = widths[coords], dstWidth = PtToPx( point, srcWidth );
-				int srcHeight = boxSize, dstHeight = PtToPx( point, srcHeight );
-				for( int yy = 0; yy < dstHeight; yy++ ) {
-					int fontY = srcY + yy * srcHeight / dstHeight;
-					int* fontRow = fontPixels.GetRowPtr( fontY );
-					int dstY = y + yy;
-					if( dstY >= dst.Height ) continue;
-					
-					int* dstRow = dst.GetRowPtr( dstY );
-					int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);
+				// First character in the string, begin run counting
+				if( lastY == -1 ) {
+					lastY = coords >> 4; lastCol = col;
+					coordsPtr[0] = (byte)coords; runCount = 1;
+					continue;
+				}
+				if( lastY == (coords >> 4) && col == lastCol ) {
+					coordsPtr[runCount] = (byte)coords; runCount++;
+					continue;
+				}
+				
+				DrawRun( dst, x, y, xMul, args.Text, runCount, coordsPtr, point, lastCol );
+				lastY = coords >> 4; lastCol = col;
+				for( int j = 0; j < runCount; j++ )
+					x += PtToPx( point, widths[coordsPtr[j]] + 1 );
+				coordsPtr[0] = (byte)coords; runCount = 1;
+			}
+			DrawRun( dst, x, y, xMul, args.Text, runCount, coordsPtr, point, lastCol );
+		}
+		
+		void DrawRun( FastBitmap dst, int x, int y, int xMul, string text,
+		             int runCount, byte* coords, float point, FastColour col ) {
+			if( runCount == 0 ) return;
+			int srcY = (coords[0] >> 4) * boxSize;
+			int srcHeight = boxSize, dstHeight = PtToPx( point, srcHeight );
+			int startX = x;
+			ushort* dstWidths = stackalloc ushort[runCount];
+			for( int i = 0; i < runCount; i++ )
+				dstWidths[i] = (ushort)PtToPx( point, widths[coords[i]] );
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int fontY = srcY + yy * srcHeight / dstHeight;
+				int* fontRow = fontPixels.GetRowPtr( fontY );
+				int dstY = y + yy;
+				if( dstY >= dst.Height ) return;
+				
+				int* dstRow = dst.GetRowPtr( dstY );
+				int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);			
+				for( int i = 0; i < runCount; i++ ) {
+					int srcX = (coords[i] & 0x0F) * boxSize;
+					int srcWidth = widths[coords[i]], dstWidth = dstWidths[i];
+			
 					for( int xx = 0; xx < dstWidth; xx++ ) {
 						int fontX = srcX + xx * srcWidth / dstWidth;
-						int pixel = fontRow[fontX];
-						if( (byte)(pixel >> 24) == 0 ) continue;
+						int src = fontRow[fontX];
+						if( (byte)(src >> 24) == 0 ) continue;
 						int dstX = x + xx + xOffset;
-						if( dstX >= dst.Width ) continue;
+						if( dstX >= dst.Width ) break;
 						
-						int col = pixel & ~0xFFFFFF;
-						col |= ((pixel & 0xFF) * textCol.B / 255);
-						col |= (((pixel >> 8) & 0xFF) * textCol.G / 255) << 8;
-						col |= (((pixel >> 16) & 0xFF) * textCol.R / 255) << 16;
-						dstRow[dstX] = col;
+						int pixel = src & ~0xFFFFFF;
+						pixel |= ((src & 0xFF) * col.B / 255);
+						pixel |= (((src >> 8) & 0xFF) * col.G / 255) << 8;
+						pixel |= (((src >> 16) & 0xFF) * col.R / 255) << 16;
+						dstRow[dstX] = pixel;
 					}
+					x += PtToPx( point, srcWidth + 1 );
 				}
-				x += PtToPx( point, srcWidth + 1 );
+				x = startX;
 			}
 		}
 		
@@ -132,7 +165,7 @@ namespace ClassicalSharp {
 						col = Colours[text[i + 1]].ToArgb();
 						i++; continue; // Skip over the colour code.
 					}
-					if( shadowCol ) col = FastColour.Black.ToArgb();					
+					if( shadowCol ) col = FastColour.Black.ToArgb();
 					
 					int coords = ConvertToCP437( c );
 					int width = PtToPx( point, widths[coords] + 1 );
