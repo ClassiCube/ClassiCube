@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 		
 		Texture MakeTextureImpl( ref DrawTextArgs args, int windowX, int windowY, bool bitmapped ) {
 			Size size = bitmapped ? MeasureBitmappedSize( ref args ) : MeasureSize( ref args );
-			if( parts.Count == 0 )
+			if( size == Size.Empty )
 				return new Texture( -1, windowX, windowY, 0, 0, 1, 1 );
 			
 			using( Bitmap bmp = CreatePow2Bitmap( size ) ) {
