@@ -60,6 +60,7 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged += ViewDistanceChanged;
+			game.Events.ProjectionChanged += ProjectionChanged;
 		}
 		
 		public void Dispose() {
@@ -72,6 +73,7 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.WorldEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged -= ViewDistanceChanged;
+			game.Events.ProjectionChanged -= ProjectionChanged;
 			builder.Dispose();
 		}
 		
@@ -121,6 +123,10 @@ namespace ClassicalSharp.Renderers {
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
 			RecalcBooleans( true );
 			Refresh();
+		}
+		
+		void ProjectionChanged( object sender, EventArgs e ) {
+			lastCamPos = new Vector3( float.MaxValue );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

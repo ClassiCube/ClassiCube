@@ -50,8 +50,8 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.LocalPlayer.Hacks.NoclipSlide = v ),
 				
 				Make2( 1, 50, "Field of view", OnWidgetClick,
-				     g => g.FieldOfView.ToString(),
-				     (g, v) => { g.FieldOfView = Int32.Parse( v );
+				     g => g.Fov.ToString(),
+				     (g, v) => { g.Fov = Int32.Parse( v );
 				     	Options.Set( OptionsKey.FieldOfView, v );
 				     	g.UpdateProjection();
 				     } ),

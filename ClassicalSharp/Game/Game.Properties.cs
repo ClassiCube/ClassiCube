@@ -109,8 +109,8 @@ namespace ClassicalSharp {
 		internal int MaxViewDistance = 32768, UserViewDistance = 512;
 		
 		/// <summary> Field of view for the current camera in degrees. </summary>
-		public int FieldOfView = 70;
-		internal int ZoomFieldOfView = 0;
+		public int Fov = 70;
+		internal int DefaultFov, ZoomFov = 0;
 		
 		/// <summary> Strategy used to limit how many frames should be displayed at most each second. </summary>
 		public FpsLimitMethod FpsLimit;

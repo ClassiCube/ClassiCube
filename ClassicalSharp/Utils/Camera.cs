@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetProjection( out Matrix4 heldBlockProj ) {
-			float fovy = game.FieldOfView * Utils.Deg2Rad;
+			float fovy = game.Fov * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
 			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView( 70 * Utils.Deg2Rad,

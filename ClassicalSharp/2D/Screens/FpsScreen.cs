@@ -135,19 +135,18 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool speeding, halfSpeeding, noclip, fly;
-		int lastZoomFov;
+		int lastFov;
 		void UpdateHackState( bool force ) {
 			HacksComponent hacks = game.LocalPlayer.Hacks;
 			if( force || hacks.Speeding != speeding || hacks.HalfSpeeding != halfSpeeding || hacks.Noclip != noclip || 
-			   hacks.Flying != fly || game.ZoomFieldOfView != lastZoomFov ) {
+			   hacks.Flying != fly || game.Fov != lastFov ) {
 				speeding = hacks.Speeding; halfSpeeding = hacks.HalfSpeeding; noclip = hacks.Noclip; fly = hacks.Flying;
-				lastZoomFov = game.ZoomFieldOfView;
+				lastFov = game.Fov;
 				int index = 0;
 				text.Clear();
-				int defFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 				
-				if( lastZoomFov != defFov ) text.Append( ref index, "Zoom fov " )
-					.AppendNum( ref index, lastZoomFov ).Append( ref index, "  " );
+				if( game.Fov != game.DefaultFov ) text.Append( ref index, "Zoom fov " )
+					.AppendNum( ref index, lastFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				if( speeding || halfSpeeding ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );

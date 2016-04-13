@@ -43,6 +43,10 @@ namespace ClassicalSharp.Events {
 		/// <summary> Raised when the colour codes usable by the player changes. </summary>
 		public event EventHandler ColourCodesChanged;
 		internal void RaiseColourCodesChanged() { Raise( ColourCodesChanged ); }
+		
+		/// <summary> Raised when the projection matrix changes. </summary>
+		public event EventHandler ProjectionChanged;
+		internal void RaiseProjectionChanged() { Raise( ProjectionChanged ); }
 	
 		ChatEventArgs chatArgs = new ChatEventArgs();
 		protected void Raise( EventHandler handler ) {

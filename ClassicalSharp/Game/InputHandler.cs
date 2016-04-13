@@ -282,6 +282,8 @@ namespace ClassicalSharp {
 			if( SimulateMouse( key, false ) ) return;
 			
 			if( !game.GetActiveScreen.HandlesKeyUp( key ) ) {
+				if( key == Keys[KeyBinding.ZoomScrolling] )
+					SetFOV( game.DefaultFov, false );
 			}
 		}
 
@@ -389,13 +391,21 @@ namespace ClassicalSharp {
 			if( !p.Hacks.Enabled || !p.Hacks.CanAnyHacks || !p.Hacks.CanUseThirdPersonCamera )
 				return false;
 			
-			if( fovIndex == -1 ) fovIndex = game.ZoomFieldOfView;
+			if( fovIndex == -1 ) fovIndex = game.ZoomFov;
 			fovIndex -= deltaPrecise * 5;
-			int max = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
-			Utils.Clamp( ref fovIndex, 1, max );
 			
-			game.FieldOfView = (int)fovIndex;
-			game.ZoomFieldOfView = (int)fovIndex;
+			Utils.Clamp( ref fovIndex, 1, game.DefaultFov );
+			return SetFOV( (int)fovIndex, true );
+		}
+		
+		public bool SetFOV( int fov, bool setZoom ) {
+			LocalPlayer p = game.LocalPlayer;
+			if( game.Fov == fov ) return true;
+			if( !p.Hacks.Enabled || !p.Hacks.CanAnyHacks || !p.Hacks.CanUseThirdPersonCamera )
+				return false;
+			
+			game.Fov = fov;
+			if( setZoom ) game.ZoomFov = fov;
 			game.UpdateProjection();
 			return true;
 		}

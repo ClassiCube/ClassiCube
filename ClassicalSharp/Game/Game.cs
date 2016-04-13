@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		
 		public void Run() { window.Run(); }
 		
-		public void Exit() { window.Exit(); }		
+		public void Exit() { window.Exit(); }
 		
 		
 		internal void OnLoad() {
@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
-			Graphics.MakeGraphicsInfo();			
+			Graphics.MakeGraphicsInfo();
 			
 			Options.Load();
 			ClassicMode = Options.GetBool( "mode-classic", false );
@@ -120,8 +120,9 @@ namespace ClassicalSharp {
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
-			FieldOfView = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
-			ZoomFieldOfView = FieldOfView;
+			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
+			Fov = Fov;
+			ZoomFov = Fov;
 			UpdateProjection();
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
@@ -158,7 +159,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadGui() {
-			Chat = new Chat( this );			
+			Chat = new Chat( this );
 			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
 			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
@@ -222,45 +223,66 @@ namespace ClassicalSharp {
 			Vertices = 0;
 			if( !Focused && !ScreenLockedInput )
 				SetNewScreen( new PauseScreen( this ) );
+			CheckZoomFov();
 			
 			CheckScheduledTasks( delta );
 			float t = (float)( ticksAccumulator / ticksPeriod );
-			LocalPlayer.SetInterpPosition( t );
-			
+			LocalPlayer.SetInterpPosition( t );		
 			Graphics.Clear();
+			UpdateViewMatrix( delta );
+			
+			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
+			if( World.IsNotLoaded ) visible = false;
+			if( visible )
+				Render3D( delta, t );
+			else
+				SelectedPos.SetAsInvalid();
+			
+			RenderGui( delta );
+			if( screenshotRequested )
+				TakeScreenshot();
+			Graphics.EndFrame( this );
+			LimitFPS();
+		}
+		
+		void CheckZoomFov() {
+			bool allowZoom = activeScreen == null && !hudScreen.HandlesAllInput;
+			if( allowZoom && IsKeyDown( KeyBinding.ZoomScrolling ) )
+				InputHandler.SetFOV( ZoomFov, false );
+		}
+		
+		void UpdateViewMatrix( double delta ) {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
 			Matrix4 modelView = Camera.GetView( delta );
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
+		}
+		
+		void Render3D( double delta, float t ) {
+			AxisLinesRenderer.Render( delta );
+			Players.RenderModels( Graphics, delta, t );
+			Players.RenderNames( Graphics, delta, t );
+			CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
 			
-			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
-			if( World.IsNotLoaded ) visible = false;
-			if( visible ) {
-				AxisLinesRenderer.Render( delta );
-				Players.RenderModels( Graphics, delta, t );
-				Players.RenderNames( Graphics, delta, t );
-				CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
-				
-				ParticleManager.Render( delta, t );
-				Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-				EnvRenderer.Render( delta );
-				if( SelectedPos.Valid && !HideGui )
-					Picking.Render( delta, SelectedPos );
-				MapRenderer.Render( delta );
-				SelectionManager.Render( delta );
-				Players.RenderHoveredNames( Graphics, delta, t );
-				
-				bool left = IsMousePressed( MouseButton.Left );
-				bool middle = IsMousePressed( MouseButton.Middle );
-				bool right = IsMousePressed( MouseButton.Right );
-				InputHandler.PickBlocks( true, left, middle, right );
-				if( !HideGui )
-					BlockHandRenderer.Render( delta, t );
-			} else {
-				SelectedPos.SetAsInvalid();
-			}
+			ParticleManager.Render( delta, t );
+			Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
+			EnvRenderer.Render( delta );
+			if( SelectedPos.Valid && !HideGui )
+				Picking.Render( delta, SelectedPos );
+			MapRenderer.Render( delta );
+			SelectionManager.Render( delta );
+			Players.RenderHoveredNames( Graphics, delta, t );
 			
+			bool left = IsMousePressed( MouseButton.Left );
+			bool middle = IsMousePressed( MouseButton.Middle );
+			bool right = IsMousePressed( MouseButton.Right );
+			InputHandler.PickBlocks( true, left, middle, right );
+			if( !HideGui )
+				BlockHandRenderer.Render( delta, t );
+		}
+		
+		void RenderGui( double delta ) {
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
 			fpsScreen.Render( delta );
 			if( activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudAfter )
@@ -270,11 +292,6 @@ namespace ClassicalSharp {
 			if( activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter )
 				hudScreen.Render( delta );
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
-			
-			if( screenshotRequested )
-				TakeScreenshot();
-			Graphics.EndFrame( this );
-			LimitFPS();
 		}
 		
 		const int ticksFrequency = 20;
@@ -329,11 +346,14 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateProjection() {
+			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 			Matrix4 projection = Camera.GetProjection( out HeldBlockProjection );
 			Projection = projection;
+			
 			Graphics.SetMatrixMode( MatrixType.Projection );
 			Graphics.LoadMatrix( ref projection );
 			Graphics.SetMatrixMode( MatrixType.Modelview );
+			Events.RaiseProjectionChanged();
 		}
 		
 		internal void OnResize() {
