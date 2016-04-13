@@ -52,20 +52,15 @@ namespace ClassicalSharp {
 			bool underline = args.Font.Style == FontStyle.Underline;
 			if( args.UseShadow ) {
 				int offset = ShadowOffset( args.Font.Size );
-				int shadowX = x + offset, shadowY = y + offset;
-				
-				DrawPart( dst, ref args, ref shadowX, shadowY, true );
-				if( underline )
-					DrawUnderline( dst, x + offset, 0, ref args, true );
+				DrawPart( dst, ref args, x + offset, y + offset, true );
+				if( underline ) DrawUnderline( dst, x + offset, 0, ref args, true );
 			}
 
-			int orignX = x;
-			DrawPart( dst, ref args, ref x, y, false );
-			if( underline )
-				DrawUnderline( dst, orignX, -2, ref args, false );
+			DrawPart( dst, ref args, x, y, false );
+			if( underline ) DrawUnderline( dst, x, -2, ref args, false );
 		}
 		
-		void DrawPart( FastBitmap dst, ref DrawTextArgs args, ref int x, int y, bool shadowCol ) {
+		void DrawPart( FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol ) {
 			FastColour col = shadowCol ? FastColour.Black : FastColour.White;
 			FastColour lastCol = col;
 			int xMul = args.Font.Style == FontStyle.Italic ? 1 : 0;

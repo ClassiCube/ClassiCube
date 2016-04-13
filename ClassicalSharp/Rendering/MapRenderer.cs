@@ -41,10 +41,12 @@ namespace ClassicalSharp.Renderers {
 		Vector3I chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
 		int elementsPerBitmap = 0;
 		bool[] usedTranslucent, usedNormal, pendingTranslucent, pendingNormal;
+		int[] totalUsed;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
 			RecalcBooleans( true );
 			
 			builder = new ChunkMeshBuilder( game );
@@ -74,8 +76,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Refresh() {
-			chunkPos = new Vector3I( int.MaxValue );
-			if( chunks == null || game.World.IsNotLoaded ) return;
+			chunkPos = new Vector3I( int.MaxValue );			
+			if( chunks == null || game.World.IsNotLoaded ) return;			
 			ClearChunkCache();
 			CreateChunkCache();
 		}
@@ -108,11 +110,10 @@ namespace ClassicalSharp.Renderers {
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
-			if( refreshRequired )
-				Refresh();
-			
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			
+			if( refreshRequired ) Refresh();
 			RecalcBooleans( true );
 		}
 		
@@ -125,6 +126,9 @@ namespace ClassicalSharp.Renderers {
 		void OnNewMap( object sender, EventArgs e ) {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
+			for( int i = 0; i < totalUsed.Length; i++ )
+				totalUsed[i] = 0;
+			
 			chunks = null;
 			unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
@@ -174,6 +178,7 @@ namespace ClassicalSharp.Renderers {
 			if( chunks == null ) return;
 			for( int i = 0; i < chunks.Length; i++ )
 				DeleteChunk( chunks[i] );
+			totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
 		}
 		
 		void DeleteChunk( ChunkInfo info ) {
@@ -185,11 +190,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DeleteData( ref ChunkPartInfo[] parts ) {
+			DecrementUsed( parts );
 			if( parts == null ) return;
 			
-			for( int i = 0; i < parts.Length; i++ ) {
+			for( int i = 0; i < parts.Length; i++ )
 				api.DeleteVb( parts[i].VbId );
-			}
 			parts = null;
 		}
 		
@@ -334,9 +339,29 @@ namespace ClassicalSharp.Renderers {
 			builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
 			                    ref info.NormalParts, ref info.TranslucentParts, ref info.OcclusionFlags );
 			
-			if( info.NormalParts == null && info.TranslucentParts == null )
+			if( info.NormalParts == null && info.TranslucentParts == null ) {
 				info.Empty = true;
+			} else {
+				IncrementUsed( info.NormalParts );
+				IncrementUsed( info.TranslucentParts );
+			}
 			chunkUpdates++;
+		}
+		
+		void IncrementUsed( ChunkPartInfo[] parts ) {
+			if( parts == null ) return;
+			for( int i = 0; i < parts.Length; i++ ) {
+				if( parts[i].IndicesCount == 0 ) continue;
+				totalUsed[i]++;
+			}
+		}
+		
+		void DecrementUsed( ChunkPartInfo[] parts ) {
+			if( parts == null ) return;
+			for( int i = 0; i < parts.Length; i++ ) {
+				if( parts[i].IndicesCount == 0 ) continue;
+				totalUsed[i]--;
+			}
 		}
 	}
 }
