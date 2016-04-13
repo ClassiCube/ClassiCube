@@ -9,16 +9,14 @@ using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp
 
 namespace ClassicalSharp.Map {
 
-	public sealed partial class MapCw : IMapFileFormat {
+	public sealed partial class MapCw : IMapFormatImporter {
 		
-		public override bool SupportsLoading { get { return true; } }
-
 		BinaryReader reader;
 		Game game;
 		World map;
 		NbtTag invalid = default( NbtTag );
 		
-		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Decompress ) ) {
 				reader = new BinaryReader( wrapper );
 				if( reader.ReadByte() != (byte)NbtTagType.Compound )
@@ -34,9 +32,9 @@ namespace ClassicalSharp.Map {
 				
 				NbtCompound spawn = (NbtCompound)children["Spawn"].Value;
 				LocalPlayer p = game.LocalPlayer;
-				p.SpawnPoint.X = (short)spawn["X"].Value;
-				p.SpawnPoint.Y = (short)spawn["Y"].Value;
-				p.SpawnPoint.Z = (short)spawn["Z"].Value;
+				p.Spawn.X = (short)spawn["X"].Value;
+				p.Spawn.Y = (short)spawn["Y"].Value;
+				p.Spawn.Z = (short)spawn["Z"].Value;
 				if( spawn.ContainsKey( "H" ) )
 					p.SpawnYaw = (float)Utils.PackedToDegrees( (byte)spawn["H"].Value );
 				if( spawn.ContainsKey( "P" ) )
@@ -48,9 +46,9 @@ namespace ClassicalSharp.Map {
 				length = (short)children["Z"].Value;
 				
 				// Older versions incorrectly multiplied spawn coords by * 32, so we check for that.
-				if( p.SpawnPoint.X < 0 || p.SpawnPoint.X >= width || p.SpawnPoint.Y < 0 ||
-				   p.SpawnPoint.Y >= height || p.SpawnPoint.Z < 0 || p.SpawnPoint.Z >= length ) {
-					p.SpawnPoint.X /= 32; p.SpawnPoint.Y /= 32; p.SpawnPoint.Z /= 32;
+				if( p.Spawn.X < 0 || p.Spawn.X >= width || p.Spawn.Y < 0 ||
+				   p.Spawn.Y >= height || p.Spawn.Z < 0 || p.Spawn.Z >= length ) {
+					p.Spawn.X /= 32; p.Spawn.Y /= 32; p.Spawn.Z /= 32;
 				}
 				return (byte[])children["BlockArray"].Value;
 			}

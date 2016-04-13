@@ -10,7 +10,7 @@ namespace ClassicalSharp.Entities {
 	public partial class LocalPlayer : Player {
 		
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
-		public Vector3 SpawnPoint;
+		public Vector3 Spawn;
 
 		public float SpawnYaw, SpawnPitch;
 		

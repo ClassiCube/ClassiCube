@@ -70,9 +70,6 @@ namespace ClassicalSharp {
 		
 		FastBitmap bitmapWrapper = new FastBitmap();
 		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
-			if( !args.SkipPartsCheck )
-				GetTextParts( args.Text );
-			
 			using( bitmapWrapper ) {
 				bitmapWrapper.SetData( curBmp, true, false );
 				DrawBitmapTextImpl( bitmapWrapper, ref args, x, y );
@@ -97,25 +94,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
-			GetTextParts( args.Text );
-			if( parts.Count == 0 ) return Size.Empty;
-			float point = args.Font.Size;
-			Size total = new Size( 0, PtToPx( point, boxSize ) );
-			
-			for( int i = 0; i < parts.Count; i++ ) {
-				foreach( char c in parts[i].Text ) {
-					int coords = ConvertToCP437( c );
-					total.Width += PtToPx( point, widths[coords] + 1 );
-				}
-			}
-			
-			if( args.Font.Style == FontStyle.Italic )
-				total.Width += Utils.CeilDiv( total.Height, italicSize );
-			if( args.UseShadow ) {
-				int offset = ShadowOffset( args.Font.Size );
-				total.Width += offset; total.Height += offset;
-			}
-			return total;
+			return MeasureBitmappedSizeImpl( ref args );
 		}
 		
 		void DisposeText() {

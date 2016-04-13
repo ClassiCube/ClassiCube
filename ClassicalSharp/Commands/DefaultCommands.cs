@@ -86,6 +86,8 @@ namespace ClassicalSharp.Commands {
 			} else if( Utils.CaselessEquals( property, "pos" ) ) {
 				game.Chat.Add( "Feet: " + game.LocalPlayer.Position );
 				game.Chat.Add( "Eye: " + game.LocalPlayer.EyePosition );
+				Vector3I p = Vector3I.Floor( game.LocalPlayer.Position );
+				game.Chat.Add( game.World.GetLightHeight( p.X, p.Z ).ToString() );
 			} else if( Utils.CaselessEquals( property, "target" ) ) {
 				PickedPos pos = game.SelectedPos;
 				if( !pos.Valid ) {

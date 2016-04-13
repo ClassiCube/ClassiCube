@@ -26,7 +26,7 @@ namespace Launcher {
 			int index = 0;
 			
 			foreach( ServerListEntry e in servers ) {
-				TableEntry tableEntry = default( TableEntry );
+				TableEntry tableEntry = default(TableEntry);
 				tableEntry.Hash = e.Hash;
 				tableEntry.Name = e.Name;
 				tableEntry.Players = e.Players + "/" + e.MaximumPlayers;

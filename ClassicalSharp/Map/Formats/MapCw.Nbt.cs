@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ClassicalSharp.Map {
 
-	public sealed partial class MapCw : IMapFileFormat {
+	public sealed partial class MapCw {
 		
 		internal struct NbtTag {
 			public string Name;

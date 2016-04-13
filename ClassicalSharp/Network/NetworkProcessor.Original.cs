@@ -298,7 +298,7 @@ namespace ClassicalSharp.Net {
 			ReadAbsoluteLocation( entityId, false );
 			if( entityId == 0xFF ) {
 				LocalPlayer p = game.LocalPlayer;
-				p.SpawnPoint = p.Position;
+				p.Spawn = p.Position;
 				p.SpawnYaw = p.HeadYawDegrees;
 				p.SpawnPitch = p.PitchDegrees;
 			}

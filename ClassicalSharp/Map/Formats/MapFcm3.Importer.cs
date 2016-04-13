@@ -4,18 +4,17 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using ClassicalSharp.Entities;
 
 namespace ClassicalSharp.Map {
 
 	/// <summary> Imports a world from a FCMv3 map file (fCraft server map) </summary>
-	public sealed class MapFcm3 : IMapFileFormat {
+	public sealed class MapFcm3 : IMapFormatImporter {
 		
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;
-		
-		public override bool SupportsLoading { get { return true; }  }
 
-		public override byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			BinaryReader reader = new BinaryReader( stream );
 			if( reader.ReadInt32() != Identifier || reader.ReadByte() != Revision ) {
 				throw new InvalidDataException( "Unexpected constant in .fcm file" );
@@ -25,11 +24,12 @@ namespace ClassicalSharp.Map {
 			height = reader.ReadInt16();
 			length = reader.ReadInt16();
 
-			game.LocalPlayer.SpawnPoint.X = reader.ReadInt32() / 32f;
-			game.LocalPlayer.SpawnPoint.Y = reader.ReadInt32() / 32f;
-			game.LocalPlayer.SpawnPoint.Z = reader.ReadInt32() / 32f;
-			game.LocalPlayer.SpawnYaw = (float)Utils.PackedToDegrees( reader.ReadByte() );
-			game.LocalPlayer.SpawnPitch = (float)Utils.PackedToDegrees( reader.ReadByte() );
+			LocalPlayer p = game.LocalPlayer;
+			p.Spawn.X = reader.ReadInt32() / 32f;
+			p.Spawn.Y = reader.ReadInt32() / 32f;
+			p.Spawn.Z = reader.ReadInt32() / 32f;
+			p.SpawnYaw = (float)Utils.PackedToDegrees( reader.ReadByte() );
+			p.SpawnPitch = (float)Utils.PackedToDegrees( reader.ReadByte() );
 
 			reader.ReadUInt32(); // date modified
 			reader.ReadUInt32(); // date created

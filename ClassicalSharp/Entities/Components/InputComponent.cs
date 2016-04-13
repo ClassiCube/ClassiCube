@@ -24,7 +24,7 @@ namespace ClassicalSharp.Entities {
 			KeyMap keys = game.InputHandler.Keys;
 			
 			if( key == keys[KeyBinding.Respawn] && Hacks.CanRespawn ) {
-				Vector3 spawn = p.SpawnPoint;
+				Vector3 spawn = p.Spawn;
 				if( game.World.IsValidPos( Vector3I.Floor( spawn ) ) )
 					FindHighestFree( ref spawn );
 				
@@ -32,11 +32,11 @@ namespace ClassicalSharp.Entities {
 				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 				entity.SetLocation( update, false );
 			} else if( key == keys[KeyBinding.SetSpawn] && Hacks.CanRespawn ) {
-				p.SpawnPoint = entity.Position;
+				p.Spawn = entity.Position;
 				p.SpawnYaw = entity.YawDegrees;
 				p.SpawnPitch = entity.PitchDegrees;
 				
-				Vector3 spawn = p.SpawnPoint; spawn.Y += 1/16f;
+				Vector3 spawn = p.Spawn; spawn.Y += 1/16f;
 				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 				entity.SetLocation( update, false );
 			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {

@@ -7,12 +7,10 @@ using OpenTK;
 
 namespace ClassicalSharp.Map {
 
-	public sealed partial class MapCw : IMapFileFormat {
-		
-		public override bool SupportsSaving { get { return true; } }
+	public sealed partial class MapCw : IMapFormatExporter {
 
 		BinaryWriter writer;
-		public override void Save( Stream stream, Game game ) {
+		public void Save( Stream stream, Game game ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Compress ) ) {
 				writer = new BinaryWriter( wrapper );
 				this.game = game;

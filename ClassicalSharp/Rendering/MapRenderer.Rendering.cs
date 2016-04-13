@@ -16,6 +16,7 @@ namespace ClassicalSharp.Renderers {
 			api.AlphaTest = true;
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( totalUsed[batch] <= 0 ) continue;
 				if( pendingNormal[batch] || usedNormal[batch] ) {
 					api.BindTexture( texIds[batch] );
 					RenderNormalBatch( batch );
@@ -38,6 +39,7 @@ namespace ClassicalSharp.Renderers {
 			api.AlphaBlending = false;
 			api.ColourWrite = false;
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( totalUsed[batch] <= 0 ) continue;
 				if( pendingTranslucent[batch] || usedTranslucent[batch] ) {
 					RenderTranslucentBatchDepthPass( batch );
 					pendingTranslucent[batch] = false;
@@ -51,6 +53,7 @@ namespace ClassicalSharp.Renderers {
 			api.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
+				if( totalUsed[batch] <= 0 ) continue;
 				if( !usedTranslucent[batch] ) continue;
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
