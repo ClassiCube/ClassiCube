@@ -44,6 +44,7 @@ namespace ClassicalSharp.Net {
 			gzippedMap = new FixedBufferStream( reader.buffer );
 			envMapAppearanceVer = 2;
 			blockDefinitionsExtVer = 2;
+			needD3Fix = false;
 			
 			Disconnected = false;
 			receivedFirstPosition = false;
@@ -82,7 +83,8 @@ namespace ClassicalSharp.Net {
 			while( (reader.size - reader.index) > 0 ) {
 				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
-				if( opcode == 0xFF && lastOpcode == PacketId.CpeHackControl ) {
+				if( needD3Fix && lastOpcode == PacketId.CpeHackControl && (opcode == 0x00 || opcode == 0xFF) ) {
+					Utils.LogDebug( "Skipping invalid HackControl byte from D3 server." );
 					reader.Skip( 1 );
 					player.physics.jumpVel = 0.42f; // assume default jump height
 					player.physics.serverJumpVel = player.physics.jumpVel;

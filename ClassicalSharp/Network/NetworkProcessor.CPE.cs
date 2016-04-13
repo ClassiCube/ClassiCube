@@ -60,6 +60,7 @@ namespace ClassicalSharp.Net {
 		int cpeServerExtensionsCount;
 		bool sendHeldBlock, useMessageTypes;
 		int envMapAppearanceVer = 2, blockDefinitionsExtVer = 2;
+		bool needD3Fix;
 		static string[] clientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
@@ -70,6 +71,8 @@ namespace ClassicalSharp.Net {
 		void HandleCpeExtInfo() {
 			string appName = reader.ReadAsciiString();
 			game.Chat.Add( "Server software: " + appName );
+			if( Utils.CaselessStarts( appName, "D3 server" ) )
+				needD3Fix = true;
 			
 			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means
 			// ExtEntry may sometimes arrive before ExtInfo, and thus we have to use += instead of =
