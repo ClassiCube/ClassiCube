@@ -40,9 +40,8 @@ namespace ClassicalSharp {
 		/// <summary> Returns the next highest power of 2 that is ≥ to the given value. </summary>
 		public static int NextPowerOf2( int value ) {
 			int next = 1;
-			while( value > next ) {
+			while( value > next )
 				next <<= 1;
-			}
 			return next;
 		}
 		
@@ -53,10 +52,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns a string with all the colour codes stripped from it. </summary>
 		public static string StripColours( string value ) {
-			if( value.IndexOf( '&' ) == -1 ) {
-				return value;
-			}
-			
+			if( value.IndexOf( '&' ) == -1 ) return value;			
 			char[] output = new char[value.Length];
 			int usedChars = 0;
 			

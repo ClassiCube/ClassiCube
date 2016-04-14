@@ -288,11 +288,12 @@ namespace ClassicalSharp {
 		}
 
 		static int[] viewDistances = { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+		Key lastKey;
 		void KeyDownHandler( object sender, KeyboardKeyEventArgs e ) {
 			Key key = e.Key;
 			if( SimulateMouse( key, true ) ) return;
 			
-			if( key == Key.F4 && (game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight )) ) {
+			if( IsShutdown( key ) ) {
 				game.Exit();
 			} else if( key == Keys[KeyBinding.Screenshot] ) {
 				game.screenshotRequested = true;
@@ -300,6 +301,15 @@ namespace ClassicalSharp {
 				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) )
 					HandleHotkey( key );
 			}
+			lastKey = key;
+		}
+		
+		bool IsShutdown( Key key ) {
+			if( key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight) )
+				return true;
+			// On OSX, Cmd+Q should also terminate the process.
+			if( !OpenTK.Configuration.RunningOnMacOS ) return false;
+			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
 		}
 		
 		void HandleHotkey( Key key ) {
