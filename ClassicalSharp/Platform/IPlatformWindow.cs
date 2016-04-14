@@ -5,6 +5,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
 using OpenTK.Platform;
+using Clipboard = System.Windows.Forms.Clipboard;
 
 namespace ClassicalSharp {
 	
@@ -38,6 +39,8 @@ namespace ClassicalSharp {
 		WindowState WindowState { get; set; }
 		
 		IWindowInfo WindowInfo { get; }
+		
+		string ClipboardText { get; set; }
 		
 		void Run();
 		
@@ -75,6 +78,11 @@ namespace ClassicalSharp {
 		protected override void OnResize( object sender, EventArgs e ) {
 			game.OnResize();
 			base.OnResize( sender, e );
+		}
+		
+		public string ClipboardText {
+			get { return Clipboard.GetText(); }
+			set { Clipboard.SetText( value ); }
 		}
 	}
 }

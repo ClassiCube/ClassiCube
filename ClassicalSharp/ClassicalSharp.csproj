@@ -165,6 +165,7 @@
     <Compile Include="Events\Events.cs" />
     <Compile Include="Events\WorldEvents.cs" />
     <Compile Include="Game\Game.Properties.cs" />
+    <Compile Include="Game\PickingHandler.cs" />
     <Compile Include="Generator\FlatGrassGenerator.cs" />
     <Compile Include="Generator\IMapGenerator.cs" />
     <Compile Include="Generator\Noise.cs" />
@@ -176,6 +177,7 @@
     <Compile Include="Math\RayTracer.cs" />
     <Compile Include="Model\CustomModel.cs" />
     <Compile Include="Model\HumanModels.cs" />
+    <Compile Include="Model\ModelBuilder.cs" />
     <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />

@@ -40,9 +40,8 @@ namespace ClassicalSharp {
 		/// <summary> Returns the next highest power of 2 that is ≥ to the given value. </summary>
 		public static int NextPowerOf2( int value ) {
 			int next = 1;
-			while( value > next ) {
+			while( value > next )
 				next <<= 1;
-			}
 			return next;
 		}
 		
@@ -53,10 +52,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns a string with all the colour codes stripped from it. </summary>
 		public static string StripColours( string value ) {
-			if( value.IndexOf( '&' ) == -1 ) {
-				return value;
-			}
-			
+			if( value.IndexOf( '&' ) == -1 ) return value;			
 			char[] output = new char[value.Length];
 			int usedChars = 0;
 			
@@ -182,6 +178,12 @@ namespace ClassicalSharp {
 			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
+		public static void RotateX( ref float y, ref float z, float cosA, float sinA ) {
+			float y2 = cosA * y + sinA * z, z2 = -sinA * y + cosA * z;
+			y = y2; z = z2;
+		}
+		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY( Vector3 p, float cosA, float sinA ) {
 			return new Vector3( cosA * p.X - sinA * p.Z, p.Y, sinA * p.X + cosA * p.Z );
@@ -192,6 +194,12 @@ namespace ClassicalSharp {
 			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
 		}
 		
+		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
+		public static void RotateY( ref float x, ref float z, float cosA, float sinA ) {
+			float x2 = cosA * x - sinA * z, z2 = sinA * x + cosA * z;
+			x = x2; z = z2;
+		}
+		
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
 			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
@@ -200,6 +208,12 @@ namespace ClassicalSharp {
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ( float x, float y, float z, float cosA, float sinA ) {
 			return new Vector3( cosA * x + sinA * y, -sinA * x + cosA * y, z );
+		}
+		
+		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
+		public static void RotateZ( ref float x, ref float y, float cosA, float sinA ) {
+			float x2 = cosA * x + sinA * y, y2 = -sinA * x + cosA * y;
+			x = x2; y = y2;
 		}
 		
 		/// <summary> Returns the square of the euclidean distance between two points. </summary>

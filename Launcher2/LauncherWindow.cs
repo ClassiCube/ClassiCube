@@ -9,6 +9,7 @@ using ClassicalSharp;
 using ClassicalSharp.Network;
 using OpenTK;
 using OpenTK.Graphics;
+using OpenTK.Input;
 
 namespace Launcher {
 
@@ -66,10 +67,11 @@ namespace Launcher {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
+			Window.Keyboard.KeyDown += KeyDown;
 			LoadFont();
 			logoFont = new Font( FontName, 24, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
-			Window.Icon = Icon.ExtractAssociatedIcon( path );
+			Window.Icon = Icon.ExtractAssociatedIcon( path );			
 			//Minimised = Window.WindowState == WindowState.Minimized;
 			                                         
 			if( Configuration.RunningOnWindows )
@@ -187,8 +189,27 @@ namespace Launcher {
 			platformDrawer.Display( Window.WindowInfo, Framebuffer );
 		}
 		
+		Key lastKey;
+		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			if( IsShutdown( e.Key ) )
+				ShouldExit = true;
+			lastKey = e.Key;
+		}
+		
 		public void Dispose() {
+			Window.Resize -= Resize;
+			Window.FocusedChanged -= FocusedChanged;
+			Window.WindowStateChanged -= Resize;
+			Window.Keyboard.KeyDown -= KeyDown;			
 			logoFont.Dispose();
+		}
+		
+		bool IsShutdown( Key key ) {
+			if( key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight) )
+				return true;
+			// On OSX, Cmd+Q should also terminate the process.
+			if( !OpenTK.Configuration.RunningOnMacOS ) return false;
+			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
 		}
 	}
 }
