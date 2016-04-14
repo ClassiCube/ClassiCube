@@ -97,6 +97,8 @@ namespace ClassicalSharp.TexturePack {
 		
 		void SetFontBitmap( Game game, Stream stream ) {
 			Bitmap bmp = Platform.ReadBmp( stream );
+			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
+				game.Drawer2D.ConvertTo32Bpp( ref bmp );
 			game.Drawer2D.SetFontBitmap( bmp );
 			game.Events.RaiseChatFontChanged();
 		}
