@@ -57,6 +57,11 @@ namespace ClassicalSharp.Model {
 			World map = game.World;
 			col = game.World.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 			
+			cols[0] = col;
+			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom );
+			cols[2] = FastColour.Scale( col, FastColour.ShadeZ ); cols[3] = cols[2];
+			cols[4] = FastColour.Scale( col, FastColour.ShadeX ); cols[5] = cols[4];
+			
 			cosYaw = (float)Math.Cos( p.YawDegrees * Utils.Deg2Rad );
 			sinYaw = (float)Math.Sin( p.YawDegrees * Utils.Deg2Rad );
 			cosHead = (float)Math.Cos( p.HeadYawDegrees * Utils.Deg2Rad );
@@ -71,6 +76,7 @@ namespace ClassicalSharp.Model {
 		public virtual void Dispose() { }
 		
 		protected FastColour col;
+		protected FastColour[] cols = new FastColour[6];
 		protected internal ModelVertex[] vertices;
 		protected internal int index;
 		
@@ -79,7 +85,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected BoxDesc MakeRotatedBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			return ModelBuilder.MakeBoxBounds( x1, y1, z1, x2, y2, z2 );
+			return ModelBuilder.MakeRotatedBoxBounds( x1, y1, z1, x2, y2, z2 );
 		}
 		
 		protected ModelPart BuildBox( BoxDesc desc ) {
@@ -95,13 +101,19 @@ namespace ClassicalSharp.Model {
 			float vScale = _64x64 ? 64f : 32f;
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex model = vertices[part.Offset + i];
-				Vector3 newPos = Utils.RotateY( model.X, model.Y, model.Z, cosYaw, sinYaw ) + pos;
+				Utils.RotateY( ref model.X, ref model.Z, cosYaw, sinYaw );
+				model.X += pos.X; model.Y += pos.Y; model.Z += pos.Z;
 				
-				FastColour col = GetCol( i, part.Count );
+				FastColour col = part.Count == boxVertices ? 
+					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
 				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
-				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				vertex.X = model.X; vertex.Y = model.Y; vertex.Z = model.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				AdjustUV( model.U, model.V, vScale, i, ref vertex );
+				
+				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				int quadI = i % 4;
+				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
+				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -122,48 +134,43 @@ namespace ClassicalSharp.Model {
 			
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex model = vertices[part.Offset + i];
-				Vector3 loc = new Vector3( model.X - x, model.Y - y, model.Z - z );
+				model.X -= x; model.Y -= y; model.Z -= z;
+				
+				// Rotate locally
 				if( Rotate == RotateOrder.ZYX ) {
-					loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
-					loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
-					loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
+					Utils.RotateZ( ref model.X, ref model.Y, cosZ, sinZ );
+					Utils.RotateY( ref model.X, ref model.Z, cosY, sinY );
+					Utils.RotateX( ref model.Y, ref model.Z, cosX, sinX );
 				} else if( Rotate == RotateOrder.XZY ) {
-					loc = Utils.RotateX( loc.X, loc.Y, loc.Z, cosX, sinX );
-					loc = Utils.RotateZ( loc.X, loc.Y, loc.Z, cosZ, sinZ );
-					loc = Utils.RotateY( loc.X, loc.Y, loc.Z, cosY, sinY );
+					Utils.RotateX( ref model.Y, ref model.Z, cosX, sinX );
+					Utils.RotateZ( ref model.X, ref model.Y, cosZ, sinZ );
+					Utils.RotateY( ref model.X, ref model.Z, cosY, sinY );
 				}
 				
-				FastColour col = GetCol( i, part.Count );
-				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
-				Vector3 newPos = !head ? Utils.RotateY( loc.X + x, loc.Y + y, loc.Z + z, cosYaw, sinYaw ) + pos :
-					Utils.RotateY( loc, cosHead, sinHead ) + Utils.RotateY( new Vector3( x, y, z ), cosYaw, sinYaw ) + pos;
+				// Rotate globally
+				if( !head) {
+					model.X += x; model.Y += y; model.Z += z;
+					Utils.RotateY( ref model.X, ref model.Z, cosYaw, sinYaw );
+				} else {
+					Utils.RotateY( ref model.X, ref model.Z, cosHead, sinHead );
+					float tempX = x, tempZ = z;
+					Utils.RotateY( ref tempX, ref tempZ, cosYaw, sinYaw );
+					model.X += tempX; model.Y += y; model.Z += tempZ;
+				}
+				model.X += pos.X; model.Y += pos.Y; model.Z += pos.Z;
 				
-				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
+				FastColour col = part.Count == boxVertices ? 
+					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
+				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
+				vertex.X = model.X; vertex.Y = model.Y; vertex.Z = model.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
-				AdjustUV( model.U, model.V, vScale, i, ref vertex );
+				
+				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				int quadI = i % 4;
+				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
+				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
 				cache.vertices[index++] = vertex;
 			}
-		}
-		
-		FastColour GetCol( int i, int count ) {
-			if( count != boxVertices )
-				return FastColour.Scale( col, 0.7f );
-			if( i >= 4 && i < 8 )
-				return FastColour.Scale( col, FastColour.ShadeYBottom );
-			if( i >= 8 && i < 16 )
-				return FastColour.Scale( col, FastColour.ShadeZ );
-			if( i >= 16 && i < 24 )
-				return FastColour.Scale( col, FastColour.ShadeX );
-			return col;
-		}
-		
-		void AdjustUV( ushort u, ushort v, float vScale, int i, ref VertexP3fT2fC4b vertex ) {
-			vertex.U = u / 64f; vertex.V = v / vScale;
-			int quadIndex = i % 4;
-			if( quadIndex == 0 || quadIndex == 3 )
-				vertex.V -= 0.01f / vScale;
-			if( quadIndex == 2 || quadIndex == 3 )
-				vertex.U -= 0.01f / 64f;
 		}
 		
 		protected enum RotateOrder { ZYX, XZY }
