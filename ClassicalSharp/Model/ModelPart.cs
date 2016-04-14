@@ -17,6 +17,16 @@ namespace ClassicalSharp.Model {
 		}
 	}
 	
+	public struct ModelVertex {
+		public float X, Y, Z;
+		public ushort U, V;
+		
+		public ModelVertex( float x, float y, float z, int u, int v ) {
+			X = x; Y = y; Z = z;
+			U = (ushort)u; V = (ushort)v;
+		}
+	}
+	
 	/// <summary> Describes the type of skin that a humanoid model uses. </summary>
 	public enum SkinType {
 		Type64x32, Type64x64, Type64x64Slim,
