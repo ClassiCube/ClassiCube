@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			Keys = new KeyMap();
 			Hotkeys = new HotkeyList();
 			Hotkeys.LoadSavedHotkeys();
-			picking = new PickingHandler( game );
+			picking = new PickingHandler( game, this );
 		}
 		
 		void RegisterInputHandlers() {

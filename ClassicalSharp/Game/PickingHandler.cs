@@ -10,9 +10,9 @@ namespace ClassicalSharp {
 		
 		Game game;
 		InputHandler input;
-		public PickingHandler( Game game ) {
+		public PickingHandler( Game game, InputHandler input ) {
 			this.game = game;
-			input = game.InputHandler;
+			this.input = input;
 		}		
 
 		internal DateTime lastClick = DateTime.MinValue;
