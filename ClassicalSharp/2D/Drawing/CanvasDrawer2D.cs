@@ -39,12 +39,6 @@ namespace ClassicalSharp {
 			brush.SetStyle( Paint.Style.FillAndStroke );
 		}
 		
-		[Obsolete]
-		public override void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height ) {
-			RectF rec = new RectF( x, y, x + width, y + height );
-			c.DrawRoundRect( rec, radius, radius, GetOrCreateBrush( colour ) );
-		}
-		
 		public override void Clear( FastColour colour ) {
 			c.DrawColor( colour );
 		}

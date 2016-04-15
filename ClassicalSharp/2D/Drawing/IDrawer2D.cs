@@ -32,11 +32,6 @@ namespace ClassicalSharp {
 		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRectBounds( FastColour colour, float lineWidth, int x, int y, int width, int height );
 		
-		/// <summary> Draws a 2D rectangle with rounded borders of the specified dimensions
-		/// at the specified coordinates in the currently bound bitmap. </summary>
-		[Obsolete("Method is not guaranteed to work on all platforms.")]
-		public abstract void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height );
-		
 		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
 		public abstract void Clear( FastColour colour );
 		

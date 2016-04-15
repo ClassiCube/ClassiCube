@@ -38,27 +38,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		[Obsolete("Method is not guaranteed to work on all platforms.")]
-		public override void DrawRoundedRect( FastColour colour, float radius, float x, float y, float width, float height ) {
-			GraphicsPath path = new GraphicsPath();
-			float x1 = x, y1 = y, x2 = x + width, y2 = y + height;
-			
-			float r = radius, dia = radius * 2;
-			path.AddArc( x1, y1, dia, dia, 180, 90 );
-			path.AddLine( x1 + r, y1, x2 - r, y1 );
-			path.AddArc( x2 - dia, y1, dia, dia, 270, 90 );
-			path.AddLine( x2, y1 + r, x2, y2 - r );
-			path.AddArc( x2 - dia, y2 - dia, dia, dia, 0, 90 );
-			path.AddLine( x1 + r, y2, x2 - r, y2 );
-			path.AddArc( x1, y2 - dia, dia, dia, 90, 90 );
-			path.AddLine( x1, y1 + r, x1, y2 - r );
-			path.CloseAllFigures();
-			
-			using( Brush brush = new SolidBrush( colour ) )
-				g.FillPath( brush, path );
-			path.Dispose();
-		}
-		
 		public override void Clear( FastColour colour ) {
 			g.Clear( colour );
 		}

@@ -177,9 +177,11 @@ namespace Launcher {
 				LauncherSkin.SaveToOptions();
 				Options.Save();
 			}
+			
 			if( ShouldUpdate )
 				Updater.Patcher.LaunchUpdateScript();
-			Window.Close();
+			if( Window.Exists )
+				Window.Close();
 		}
 		
 		void Display() {

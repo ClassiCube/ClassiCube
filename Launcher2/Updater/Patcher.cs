@@ -34,10 +34,16 @@ namespace Launcher.Updater {
 				int code = chmod( path, (flags << 6) | (flags << 3) | 4 );
 				if( code != 0 )
 					throw new InvalidOperationException( "chmod returned : " + code );
-				info = new ProcessStartInfo( "xterm", '"' + path + '"');
+				
+				//if( OpenTK.Configuration.RunningOnMacOS )
+				//	info = new ProcessStartInfo( "/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal", 
+				//	                            '"' + path + '"');
+				//else
+					info = new ProcessStartInfo( "xterm", '"' + path + '"');
 			}
 			info.CreateNoWindow = false;
 			info.UseShellExecute = false;
+			info.WorkingDirectory = Program.AppDirectory;
 			Process.Start( info );
 		}
 
@@ -47,7 +53,8 @@ namespace Launcher.Updater {
 		static void MakeUpdatesFolder( byte[] zipData ) {
 			using( MemoryStream stream = new MemoryStream( zipData ) ) {
 				ZipReader reader = new ZipReader();
-				Directory.CreateDirectory( "CS_Update" );
+				string path = Path.Combine( Program.AppDirectory, "CS_Update" );
+				Directory.CreateDirectory( path );
 				
 				reader.ShouldProcessZipEntry = (f) => true;
 				reader.ProcessZipEntry = ProcessZipEntry;
