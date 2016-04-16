@@ -22,7 +22,7 @@ namespace ClassicalSharp.Gui {
 		static string[] keyNames;
 		protected string[] descriptions;
 		protected KeyBinding originKey;
-		protected const int buttonDistance = 45;
+		protected int btnDistance = 45, btnWidth = 260, btnHeight = 35;
 		
 		public override void Init() {
 			base.Init();
@@ -40,9 +40,9 @@ namespace ClassicalSharp.Gui {
 				string text = descriptions[descStart + i] + ": "
 					+ keyNames[(int)game.Mapping( binding )];
 				
-				widgets[index++] = ButtonWidget.Create( game, x, y, 260, 35, text,
+				widgets[index++] = ButtonWidget.Create( game, x, y, btnWidth, btnHeight, text,
 				                                       Anchor.Centre, Anchor.Centre, keyFont, OnBindingClick );
-				y += buttonDistance;
+				y += btnDistance;
 			}
 		}
 		

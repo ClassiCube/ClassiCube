@@ -14,11 +14,13 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
+			btnWidth = 301; btnHeight = 40;
+			btnDistance = 48;
 			descriptions = normDescriptions;
 			originKey = KeyBinding.Forward;
 			widgets = new Widget[descriptions.Length + 2];
-			MakeKeys( KeyBinding.Forward, 0, 5, -150, -180 );
-			MakeKeys( KeyBinding.Respawn, 5, 5, 150, -180 );
+			MakeKeys( KeyBinding.Forward, 0, 5, -160, -180 );
+			MakeKeys( KeyBinding.Respawn, 5, 5, 160, -180 );
 			
 			widgets[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) );
@@ -41,7 +43,7 @@ namespace ClassicalSharp.Gui {
 			MakeKeys( KeyBinding.Forward, 0, 8, -150, -220 );
 			MakeKeys( KeyBinding.OpenInventory, 8, 2, 150, -220 );
 			index += 3; // Skip SendChat, PauseOrExit, PlayerList
-			MakeKeys( KeyBinding.Speed, 13, 5, 150, -220 + 2 * buttonDistance );
+			MakeKeys( KeyBinding.Speed, 13, 5, 150, -220 + 2 * btnDistance );
 			
 			widgets[index++] = MakeBack( false, titleFont,
 			                            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) );
