@@ -110,8 +110,7 @@ namespace Launcher {
 			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
 			if( !Directory.Exists( audioPath ) )
 				Directory.CreateDirectory( audioPath );
-			AllResourcesExist = File.Exists( digPath + ".bin" )
-				&& File.Exists( stepPath + ".bin" );
+			AllResourcesExist = CheckSoundsExist();
 			
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string zipPath = Path.Combine( texDir, "default.zip" );
@@ -172,12 +171,10 @@ namespace Launcher {
 		
 		bool CheckMusicFiles( Action<string> setStatus ) {
 			for( int i = 0; i < musicFiles.Length; i++ ) {
-				string next = i < musicFiles.Length - 1 ?
-					musicFiles[i + 1] : "dig_cloth1";
+				string next = i < musicFiles.Length - 1 ? musicFiles[i + 1] : "dig_cloth1";
 				string name = musicFiles[i];
 				byte[] data = null;
-				if( !DownloadItem( name, name, next,
-				                  ref data, setStatus ) )
+				if( !DownloadItem( name, name, next, ref data, setStatus ) )
 					return false;
 				
 				if( data == null ) continue;
@@ -195,6 +192,20 @@ namespace Launcher {
 				string url = baseUri + musicFiles[i] + ".ogg";
 				downloader.DownloadData( url, false, musicFiles[i] );
 			}
+		}
+		
+		bool CheckSoundsExist() {
+			string path = Path.Combine( Program.AppDirectory, "audio" );
+			for( int i = 0; i < digSounds.Length; i++ ) {
+				string file = "dig_" + digSounds[i].Substring( 1 ) + ".wav";
+				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
+			}
+			
+			for( int i = 0; i < stepSounds.Length; i++ ) {
+				string file = "step_" + stepSounds[i].Substring( 1 ) + ".wav";
+				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
+			}
+			return true;
 		}
 		
 		string digPath, stepPath;
