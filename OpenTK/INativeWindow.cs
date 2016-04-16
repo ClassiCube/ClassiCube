@@ -36,6 +36,12 @@ namespace OpenTK {
 	/// <summary> Defines the interface for a native window.  </summary>
 	public interface INativeWindow : IDisposable {
 		
+		/// <summary> Gets the current contents of the clipboard. </summary>
+		string GetClipboardText();
+		
+		/// <summary> Sets the current contents of the clipboard. </summary>
+		void SetClipboardText( string value );
+		
 		/// <summary> Gets or sets the <see cref="System.Drawing.Icon"/> of the window. </summary>
 		Icon Icon { get; set; }
 

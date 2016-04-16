@@ -430,6 +430,10 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		public string GetClipboardText() { return ""; }
+		
+		public void SetClipboardText( string value ) {	}	
+		
 		public Rectangle Bounds {
 			get { return bounds; }
 			set {

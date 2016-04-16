@@ -80,6 +80,7 @@ namespace ClassicalSharp {
 			base.OnResize( sender, e );
 		}
 		
+		// TODO: retry when clipboard returns null.
 		public string ClipboardText {
 			get { return Clipboard.GetText(); }
 			set { Clipboard.SetText( value ); }

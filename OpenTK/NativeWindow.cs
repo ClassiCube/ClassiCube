@@ -98,6 +98,16 @@ namespace OpenTK {
 			EnsureUndisposed();
 			implementation.Close();
 		}
+		
+		/// <summary> Gets the current contents of the clipboard. </summary>
+		public string GetClipboardText() {
+			EnsureUndisposed(); return implementation.GetClipboardText();
+		}
+		
+		/// <summary> Sets the current contents of the clipboard. </summary>
+		public void SetClipboardText(string value) {
+			EnsureUndisposed(); implementation.SetClipboardText(value);
+		}		
 
 		/// <summary> Transforms the specified point from screen to client coordinates. </summary>
 		/// <param name="point"> A <see cref="System.Drawing.Point"/> to transform. </param>

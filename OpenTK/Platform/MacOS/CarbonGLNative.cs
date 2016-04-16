@@ -555,6 +555,10 @@ namespace OpenTK.Platform.MacOS
 		#endregion
 
 		#region INativeWindow Members
+		
+		public string GetClipboardText() { return ""; }
+		
+		public void SetClipboardText( string value ) {	}	
 
 		public void ProcessEvents()
 		{
