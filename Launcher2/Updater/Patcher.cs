@@ -35,11 +35,11 @@ namespace Launcher.Updater {
 				if( code != 0 )
 					throw new InvalidOperationException( "chmod returned : " + code );
 				
-				if( OpenTK.Configuration.RunningOnMacOS )
-					info = new ProcessStartInfo( "open -a Terminal ", 
-					                            '"' + path + '"');
-				else
-					info = new ProcessStartInfo( "xterm", '"' + path + '"');
+				//if( OpenTK.Configuration.RunningOnMacOS )
+				//	info = new ProcessStartInfo( "open -a Terminal ", 
+				//	                            '"' + path + '"');
+				//else
+				info = new ProcessStartInfo( "xterm", '"' + path + '"');
 			}
 			info.CreateNoWindow = false;
 			info.UseShellExecute = false;

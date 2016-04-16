@@ -29,6 +29,7 @@ namespace ClassicalSharp.Entities {
 		public HacksComponent Hacks;
 		internal PhysicsComponent physics;
 		internal InputComponent input;
+		Predicate<byte> checkSoundNonSolid, checkSoundSolid;
 		
 		public LocalPlayer( Game game ) : base( game ) {
 			DisplayName = game.Username;
@@ -48,7 +49,10 @@ namespace ClassicalSharp.Entities {
 			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
 			Hacks.Enabled = !game.ClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
 			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
+			
 			InitRenderingData();
+			checkSoundNonSolid = CheckSoundNonSolid;
+			checkSoundSolid = CheckSoundSolid;
 		}
 		
 		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
@@ -102,7 +106,7 @@ namespace ClassicalSharp.Entities {
 			anyNonAir = false;
 			
 			// first check surrounding liquids/gas for sounds
-			TouchesAny( bounds, CheckSoundNonSolid );
+			TouchesAny( bounds, checkSoundNonSolid );
 			if( sndType != SoundType.None ) return;
 			
 			// then check block standing on
@@ -116,7 +120,7 @@ namespace ClassicalSharp.Entities {
 			// then check all solid blocks at feet
 			pos.Y -= 0.01f;
 			bounds.Max.Y = bounds.Min.Y = pos.Y;
-			TouchesAny( bounds, CheckSoundSolid );
+			TouchesAny( bounds, checkSoundSolid );
 		}
 		
 		bool CheckSoundNonSolid( byte b ) {

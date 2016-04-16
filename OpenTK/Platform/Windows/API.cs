@@ -167,37 +167,6 @@ namespace OpenTK.Platform.Windows {
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern ushort GetKeyState( int code );
-		
-		#region Clipboard
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool OpenClipboard(IntPtr hwndMain);
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool CloseClipboard();
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool IsClipboardFormatAvailable(int format);
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern IntPtr GetClipboardData(int format);
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern IntPtr SetClipboardData(int format, IntPtr hGlobal);
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool EmptyClipboard();
-		
-		[DllImport("kernel32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern IntPtr GlobalLock(IntPtr hGlobal);
-		
-		[DllImport("kernel32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool GlobalUnlock(IntPtr hGlobal);	
-
-		[DllImport("kernel32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern IntPtr GlobalAlloc(int flags, int bytes);
-		
-		#endregion
 	}
 
 	internal struct Constants {
