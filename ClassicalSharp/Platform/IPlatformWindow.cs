@@ -82,8 +82,18 @@ namespace ClassicalSharp {
 		
 		// TODO: retry when clipboard returns null.
 		public string ClipboardText {
-			get { return Clipboard.GetText(); }
-			set { Clipboard.SetText( value ); }
+			get {
+				if ( OpenTK.Configuration.RunningOnMacOS )
+					return GetClipboardText();
+				else
+					return Clipboard.GetText();				
+			}
+			set {
+				if ( OpenTK.Configuration.RunningOnMacOS )
+					SetClipboardText( value );
+				else
+					Clipboard.SetText( value );
+			}
 		}
 	}
 }

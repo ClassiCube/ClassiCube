@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui {
 			
 			string part = new String( value, start, pos + 1 - start );
 			List<string> matches = new List<string>();
-			game.Chat.Add( null, MessageType.ClientStatus5 );			
+			game.Chat.Add( null, MessageType.ClientStatus5 );
 			
 			bool extList = game.Network.UsingExtPlayerList;
 			CpeListInfo[] info = game.CpePlayersList;
@@ -222,23 +222,37 @@ namespace ClassicalSharp.Gui {
 		
 		bool OtherKey( Key key ) {
 			if( key == Key.V && chatInputText.Length < TotalChars ) {
-				string text = game.window.ClipboardText;
+				string text = null;
+				try {
+					text = game.window.ClipboardText;
+				} catch( Exception ex ) {
+					ErrorHandler.LogError( "Paste from clipboard", ex );
+					const string warning = "&cError while trying to paste from clipboard.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+					return true;
+				}
+
 				if( String.IsNullOrEmpty( text ) ) return true;
 				game.Chat.Add( null, MessageType.ClientStatus4 );
 				
 				for( int i = 0; i < text.Length; i++ ) {
-					if( !IsValidInputChar( text[i] ) ) {
-						const string warning = "&eClipboard contained some characters that can't be sent.";
-						game.Chat.Add( warning, MessageType.ClientStatus4 );
-						text = RemoveInvalidChars( text );
-						break;
-					}
+					if( IsValidInputChar( text[i] ) ) continue;
+					const string warning = "&eClipboard contained some characters that can't be sent.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+					text = RemoveInvalidChars( text );
+					break;
 				}
 				AppendText( text );
 				return true;
 			} else if( key == Key.C ) {
-				if( !chatInputText.Empty )
+				if( chatInputText.Empty ) return true;
+				try {
 					game.window.ClipboardText = chatInputText.ToString();
+				} catch( Exception ex ) {
+					ErrorHandler.LogError( "Copy to clipboard", ex );
+					const string warning = "&cError while trying to copy to clipboard.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+				}
 				return true;
 			}
 			return false;

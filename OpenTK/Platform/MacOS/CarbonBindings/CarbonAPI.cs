@@ -780,6 +780,29 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		public extern static OSStatus QDEndCGContext( IntPtr port, ref IntPtr context );
 		#endregion
+		#region --- Clipboard ---
+		
+		[DllImport (carbon)]
+		public static extern IntPtr CFDataCreate(IntPtr allocator, IntPtr buf, Int32 length);
+		[DllImport (carbon)]
+		public static extern IntPtr CFDataGetBytePtr(IntPtr data);
+		[DllImport (carbon)]
+		public static extern int PasteboardSynchronize(IntPtr pbref);		
+
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardClear(IntPtr pbref);
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardCreate(IntPtr str, out IntPtr pbref);
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardCopyItemFlavorData(IntPtr pbref, UInt32 itemid, IntPtr key, out IntPtr data);
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardGetItemCount(IntPtr pbref, out UInt32 count);
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardGetItemIdentifier(IntPtr pbref, UInt32 itemindex, out UInt32 itemid);
+		[DllImport (carbon)]
+		public static extern OSStatus PasteboardPutItemFlavor(IntPtr pbref, UInt32 itemid, IntPtr key, IntPtr data, UInt32 flags);
+		
+		#endregion
 
 		[DllImport(carbon)]
 		public static extern OSStatus ActivateWindow (IntPtr inWindow, bool inActivate);

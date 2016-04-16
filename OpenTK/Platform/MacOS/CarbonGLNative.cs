@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using OpenTK.Graphics;
 using OpenTK.Platform.MacOS.Carbon;
 using OpenTK.Input;
@@ -556,9 +557,63 @@ namespace OpenTK.Platform.MacOS
 
 		#region INativeWindow Members
 		
-		public string GetClipboardText() { return ""; }
+		IntPtr pbStr, utf16, utf8;
+		public string GetClipboardText() {
+			IntPtr pbRef = GetPasteboard();
+			API.PasteboardSynchronize( pbRef );
+
+			uint itemCount;
+			OSStatus err = API.PasteboardGetItemCount( pbRef, out itemCount );
+			if( err != OSStatus.NoError )
+				throw new MacOSException( err, "Getting item count from Pasteboard." );
+			if( itemCount < 1 ) return "";
+
+			uint itemID;
+			err = API.PasteboardGetItemIdentifier( pbRef, 1, out itemID );
+			if( err != OSStatus.NoError )
+				throw new MacOSException( err, "Getting item identifier from Pasteboard." );
+			
+			IntPtr outData;
+			if ( (err = API.PasteboardCopyItemFlavorData( pbRef, itemID, utf16, out outData )) == OSStatus.NoError ) {
+				IntPtr ptr = API.CFDataGetBytePtr( outData );
+				if( ptr == IntPtr.Zero )
+					throw new InvalidOperationException( "CFDataGetBytePtr() returned null pointer." );
+				return Marshal.PtrToStringUni( ptr );
+			}
+			// TODO: UTF 8
+			return "";
+		}
 		
-		public void SetClipboardText( string value ) {	}	
+		public void SetClipboardText( string value ) {
+			IntPtr pbRef = GetPasteboard();
+			OSStatus err = API.PasteboardClear( pbRef );
+			if( err != OSStatus.NoError )
+				throw new MacOSException( err, "Cleaing Pasteboard." );
+			API.PasteboardSynchronize( pbRef );
+
+			IntPtr ptr = Marshal.StringToHGlobalUni( value );
+			IntPtr cfData = API.CFDataCreate( IntPtr.Zero, ptr, (value.Length + 1) * 2 );
+			if( cfData == IntPtr.Zero )
+			    throw new InvalidOperationException( "CFDataCreate() returned null pointer." );
+			
+			API.PasteboardPutItemFlavor( pbRef, 1, utf16, cfData, 0 );
+			Marshal.FreeHGlobal( ptr );
+		}
+		
+		IntPtr GetPasteboard() {
+			if( pbStr == IntPtr.Zero ) {
+				pbStr = CF.CFSTR( "com.apple.pasteboard.clipboard" );
+				utf16 = CF.CFSTR( "public.utf16-plain-text" );
+				utf8 = CF.CFSTR( "public.utf8-plain-text" );
+			}
+			
+			IntPtr pbRef;
+			OSStatus err = API.PasteboardCreate( pbStr, out pbRef );
+			if( err != OSStatus.NoError )
+				throw new MacOSException( err, "Creating Pasteboard reference." );
+			API.PasteboardSynchronize( pbRef );
+			return pbRef;
+		}
 
 		public void ProcessEvents()
 		{
