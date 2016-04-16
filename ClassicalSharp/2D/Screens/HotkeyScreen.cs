@@ -80,13 +80,13 @@ namespace ClassicalSharp.Gui {
 			textFont = new Font( game.FontName, 14, FontStyle.Bold );
 			
 			widgets = new [] {
-				MakeHotkey( 0, -160, 0 ),
-				MakeHotkey( 0, -120, 1 ),
-				MakeHotkey( 0, -80, 2 ),
-				MakeHotkey( 0, -40, 3 ),
-				MakeHotkey( 0, 0, 4 ),
-				Make( -160, -80, "<", 40, 40, arrowFont, (g, w) => PageClick( false ) ),
-				Make( 160, -80, ">", 40, 40, arrowFont, (g, w) => PageClick( true ) ),
+				MakeHotkey( 0, -180, 0 ),
+				MakeHotkey( 0, -140, 1 ),
+				MakeHotkey( 0, -100, 2 ),
+				MakeHotkey( 0, -60, 3 ),
+				MakeHotkey( 0, -20, 4 ),
+				Make( -160, -100, "<", 40, 40, arrowFont, (g, w) => PageClick( false ) ),
+				Make( 160, -100, ">", 40, 40, arrowFont, (g, w) => PageClick( true ) ),
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
@@ -191,22 +191,22 @@ namespace ClassicalSharp.Gui {
 		void CreateEditingWidgets() {
 			DisposeEditingWidgets();
 			
-			widgets[8] = Make( -140, 55, "Key: " + curHotkey.BaseKey,
+			widgets[8] = Make( -140, 45, "Key: " + curHotkey.BaseKey,
 			                  250, 35, textFont, BaseKeyClick );
-			widgets[9] = Make( 140, 55, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
+			widgets[9] = Make( 140, 45, "Modifiers: " + MakeFlagsString( curHotkey.Flags ),
 			                  250, 35, textFont, ModifiersClick );
-			widgets[10] = Make( -10, 120, curHotkey.MoreInput ? "yes" : "no",
+			widgets[10] = Make( -10, 110, curHotkey.MoreInput ? "yes" : "no",
 			                   50, 25, textFont, LeaveOpenClick );
-			widgets[11] = Make( -120, 160, "Save changes",
+			widgets[11] = Make( -120, 150, "Save changes",
 			                   180, 35, textFont, SaveChangesClick );
-			widgets[12] = Make( 120, 160, "Remove hotkey",
+			widgets[12] = Make( 120, 150, "Remove hotkey",
 			                   180, 35, textFont, RemoveHotkeyClick );
 			
 			currentAction = MenuInputWidget.Create(
-				game, 0, 90, 600, 30, "", Anchor.Centre, Anchor.Centre,
+				game, 0, 80, 600, 30, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new StringValidator( 64 ) );
 			currentMoreInputLabel = TextWidget.Create(
-				game, -170, 120, "Keep input bar open:",
+				game, -170, 110, "Keep input bar open:",
 				Anchor.Centre, Anchor.Centre, textFont );
 			
 			if( curHotkey.Text == null ) curHotkey.Text = "";

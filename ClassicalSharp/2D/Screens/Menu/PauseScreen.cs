@@ -64,9 +64,7 @@ namespace ClassicalSharp.Gui {
 				MakeClassic( 0, 50, "Save level",
 				            (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
 
-				ButtonWidget.Create( game, 0, 25, 301, 40, "Back to game",
-				                    Anchor.Centre, Anchor.BottomOrRight, titleFont,
-				                    LeftOnly( (g, w) => g.SetNewScreen( null ) ) ),
+				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
 				
 				game.ClassicMode ? null :
 					MakeClassic( 0, 150, "Nostalgia options",

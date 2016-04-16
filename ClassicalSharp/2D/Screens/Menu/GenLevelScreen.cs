@@ -72,9 +72,9 @@ namespace ClassicalSharp.Gui {
 				TextWidget.Create( game, 0, -130, "Generate new level", Anchor.Centre, Anchor.Centre, titleFont ), 
 			};
 			widgets = new [] {
-				ButtonWidget.Create( game, -90, 100, 130, 35, "Flatgrass", Anchor.Centre,
+				ButtonWidget.Create( game, -120, 100, 201, 40, "Flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
-				ButtonWidget.Create( game, 90, 100, 130, 35, "Vanilla", Anchor.Centre,
+				ButtonWidget.Create( game, 120, 100, 201, 40, "Vanilla", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenNotchyClick ),
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
