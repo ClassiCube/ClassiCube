@@ -31,11 +31,9 @@ namespace Launcher {
 		public void DownloadItems( AsyncDownloader downloader, Action<string> setStatus ) {
 			this.downloader = downloader;
 			DownloadMusicFiles();
-			digPatcher = new SoundPatcher( digSounds, "dig_",
-			                              "step_cloth1", digPath );
+			digPatcher = new SoundPatcher( digSounds, "dig_", "step_cloth1" );
 			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this );
-			stepPatcher = new SoundPatcher( stepSounds, "step_",
-			                               "classic jar", stepPath );
+			stepPatcher = new SoundPatcher( stepSounds, "step_", "classic jar" );
 			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this );
 			if( !defaultZipExists ) {
 				downloader.DownloadData( jarClassicUri, false, "classic_jar" );

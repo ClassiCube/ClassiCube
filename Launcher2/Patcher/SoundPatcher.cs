@@ -11,21 +11,16 @@ namespace Launcher {
 
 		string[] files, identifiers;
 		string prefix, nextAction;
-		FileStream outData;
-		StreamWriter outText;
-		RawOut outDecoder;
 		public bool Done;
 		
-		public SoundPatcher( string[] files, string prefix, 
-		                    string nextAction, string outputPath ) {
+		public SoundPatcher( string[] files, string prefix, string nextAction ) {
 			this.files = files;
 			this.prefix = prefix;
 			this.nextAction = nextAction;
-			InitOutput( outputPath );
 		}
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
- 		public void FetchFiles( string baseUrl, string altBaseUrl, ResourceFetcher fetcher ) {
+		public void FetchFiles( string baseUrl, string altBaseUrl, ResourceFetcher fetcher ) {
 			identifiers = new string[files.Length];
 			for( int i = 0; i < files.Length; i++ )
 				identifiers[i] = prefix + files[i].Substring( 1 );
@@ -51,7 +46,6 @@ namespace Launcher {
 					
 					// TODO: setStatus( next );
 					if( i == identifiers.Length - 1 ) {
-						Dispose();
 						Done = true;
 						setStatus( fetcher.MakeNext( nextAction ) );
 					} else {
@@ -63,35 +57,44 @@ namespace Launcher {
 		}
 		
 		void DecodeSound( string name, byte[] rawData ) {
-			long start = outData.Position;
-			using( MemoryStream ms = new MemoryStream( rawData ) ) {
-				OggContainer container = new OggContainer( ms );
-				outDecoder.PlayStreaming( container );
+			string path = Path.Combine( Program.AppDirectory, "audio" );
+			path = Path.Combine( path, prefix + name + ".wav" );
+			
+			using( FileStream dst = File.Create( path ) )
+				using ( MemoryStream src = new MemoryStream( rawData ) ) 
+			{
+				dst.SetLength( 44 );
+				RawOut output = new RawOut( dst, true );
+				OggContainer container = new OggContainer( src );
+				output.PlayStreaming( container );
+				
+				dst.Position = 0;
+				BinaryWriter w = new BinaryWriter( dst );
+				WriteWaveHeader( w, dst, output );
 			}
-			
-			long len = outData.Position - start;
-			outText.WriteLine( format, name, outDecoder.Frequency,
-			                  outDecoder.BitsPerSample, outDecoder.Channels,
-			                  start, len );
 		}
 		
-		const string format = "{0},{1},{2},{3},{4},{5}";
-		void InitOutput( string outputPath ) {
-			outData = File.Create( outputPath + ".bin" );
-			outText = new StreamWriter( outputPath + ".txt" );
-			outDecoder = new RawOut( outData, true );
+		void WriteWaveHeader( BinaryWriter w, Stream stream, RawOut data ) {
+			WriteFourCC( w, "RIFF" );
+			w.Write( (int)(stream.Length - 8) );
+			WriteFourCC( w, "WAVE" );
 			
-			outText.WriteLine( "# This file indicates where the various raw decompressed sound data " +
-			                  "are found in the corresponding raw .bin file." );
-			outText.WriteLine( "# Each line is in the following format:" );
-			outText.WriteLine( "# Identifier, Frequency/Sample rate, BitsPerSample, " +
-			                  "Channels, Offset from start, Length in bytes" );
+			WriteFourCC( w, "fmt " );
+			w.Write( 16 );
+			w.Write( (ushort)1 ); // audio format, PCM
+			w.Write( (ushort)data.Channels );
+			w.Write( data.Frequency );
+			w.Write((data.Frequency * data.Channels * data.BitsPerSample) / 8 ); // byte rate
+			w.Write( (ushort)((data.Channels * data.BitsPerSample) / 8) ); // block align
+			w.Write( (ushort)data.BitsPerSample );
+			
+			WriteFourCC( w, "data" );
+			w.Write( (int)(stream.Length - 44) );
 		}
 		
-		void Dispose() {
-			outDecoder.Dispose();
-			outData.Close();
-			outText.Close();
+		void WriteFourCC( BinaryWriter w, string fourCC ) {
+			w.Write( (byte)fourCC[0] ); w.Write( (byte)fourCC[1] );
+			w.Write( (byte)fourCC[2] ); w.Write( (byte)fourCC[3] );
 		}
 	}
 }
