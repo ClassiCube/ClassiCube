@@ -11,16 +11,18 @@ namespace ClassicalSharp.Gui {
 		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
-			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
-			
+			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
 			chatInputText = new WrappableStringBuffer( TotalChars );
-			DrawTextArgs args = new DrawTextArgs( "A", boldFont, true );
-			Size defSize = game.Drawer2D.MeasureChatSize( ref args );
-			defaultWidth = defSize.Width; defaultHeight = defSize.Height;
-			Width = defaultWidth; Height = defaultHeight;
 			
-			args = new DrawTextArgs( "_", boldFont, true );
+			DrawTextArgs args = new DrawTextArgs( "_", boldFont, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+			caretTex.Width = (caretTex.Width * 3) / 4; 
+			defaultCaretWidth = caretTex.Width;
+			
+			args = new DrawTextArgs( "> ", font, true );
+			Size defSize = game.Drawer2D.MeasureChatSize( ref args );
+			defaultWidth = Width = defSize.Width;
+			defaultHeight = Height = defSize.Height;
 			
 			this.font = font;
 			altText = new AltTextInputWidget( game, font, this );
@@ -29,10 +31,10 @@ namespace ClassicalSharp.Gui {
 		
 		public int RealHeight { get { return Height + altText.Height; } }
 		
-		Texture inputTex, caretTex;
+		Texture inputTex, caretTex, prefixTex;
 		int caretPos = -1, typingLogPos = 0;
 		public int YOffset;
-		int defaultWidth, defaultHeight;
+		int defaultCaretWidth, defaultWidth, defaultHeight;
 		internal WrappableStringBuffer chatInputText;
 		readonly Font font;
 
@@ -41,16 +43,17 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			api.Texturing = false;
 			int y = Y, x = X;
-			for( int i = 0; i < sizes.Length; i++ ) {
-				bool caretAtEnd = caretTex.Y1 == y && (indexX == LineLength || caretPos == -1);
-				int offset = caretAtEnd ? defaultWidth : 0;
-				api.Draw2DQuad( x + 5, y, sizes[i].Width + offset, sizes[i].Height, backColour );
-				y += sizes[i].Height;
-			}
-			if( sizes.Length == 0 || sizes[0] == Size.Empty )
-				api.Draw2DQuad( x + 5, y, defaultWidth, defaultHeight, backColour );
-			api.Texturing = true;
 			
+			for( int i = 0; i < sizes.Length; i++ ) {
+				if( i > 0 && sizes[i].Height == 0 ) break;
+				bool caretAtEnd = caretTex.Y1 == y && (indexX == LineLength || caretPos == -1);				
+				int drawWidth = sizes[i].Width + (caretAtEnd ? caretTex.Width : 0);
+				
+				api.Draw2DQuad( x, y, drawWidth + 10, defaultHeight, backColour );
+				y += sizes[i].Height;				
+			}
+			api.Texturing = true;
+			                 
 			inputTex.Render( api );
 			caretTex.Render( api, caretCol );
 			if( altText.Active )
@@ -71,13 +74,18 @@ namespace ClassicalSharp.Gui {
 			X = 5;
 			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, LineLength );
 
-			maxWidth = 0;
+			for( int y = 0; y < sizes.Length; y++ )
+				sizes[y] = Size.Empty;
+			sizes[0].Width = defaultWidth; maxWidth = defaultWidth;
+				
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
-			for( int i = 0; i < lines; i++ ) {
-				args.Text = parts[i];
-				sizes[i] = game.Drawer2D.MeasureChatSize( ref args );
-				maxWidth = Math.Max( maxWidth, sizes[i].Width );
+			for( int y = 0; y < lines; y++ ) {
+				int offset = y == 0 ? defaultWidth : 0;
+				args.Text = parts[y];
+				sizes[y] += game.Drawer2D.MeasureChatSize( ref args );
+				maxWidth = Math.Max( maxWidth, sizes[y].Width );
 			}
+			if( sizes[0].Height == 0 ) sizes[0].Height = defaultHeight;
 			
 			bool supports = game.Network.ServerSupportsPartialMessages;
 			if( chatInputText.Length > LineLength && !shownWarning && !supports ) {
@@ -102,16 +110,18 @@ namespace ClassicalSharp.Gui {
 			if( indexX == LineLength ) {
 				caretTex.X1 = 10 + sizes[indexY].Width;
 				caretCol = FastColour.Yellow;
+				caretTex.Width = defaultCaretWidth;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
 				Size trimmedSize = game.Drawer2D.MeasureChatSize( ref args );
+				if( indexY == 0 ) trimmedSize.Width += defaultWidth;
 				caretTex.X1 = 10 + trimmedSize.Width;
+				caretCol = FastColour.Scale( FastColour.White, 0.8f );
 				
 				string line = parts[indexY];
-				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : " ";
-				Size charSize = game.Drawer2D.MeasureChatSize( ref args );
-				caretTex.Width = charSize.Width;
-				caretCol = FastColour.Scale( FastColour.White, 0.8f );
+				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : "";
+				caretTex.Width = indexX < line.Length ? 
+					game.Drawer2D.MeasureChatSize( ref args ).Width : defaultCaretWidth;
 			}
 			caretTex.Y1 = sizes[0].Height * indexY + Y;
 			CalcCaretColour();
@@ -128,7 +138,8 @@ namespace ClassicalSharp.Gui {
 				using( IDrawer2D drawer = game.Drawer2D )
 			{
 				drawer.SetBitmap( bmp );
-				DrawTextArgs args = new DrawTextArgs( null, font, true );
+				DrawTextArgs args = new DrawTextArgs( "> ", font, true );
+				drawer.DrawChatText( ref args, 0, 0 );
 				
 				for( int i = 0; i < parts.Length; i++ ) {
 					if( parts[i] == null ) break;
@@ -137,7 +148,8 @@ namespace ClassicalSharp.Gui {
 					if( !IDrawer2D.IsWhiteColour( lastCol ) )
 						args.Text = "&" + lastCol + args.Text;
 					
-					drawer.DrawChatText( ref args, 0, realHeight );
+					int offset = i == 0 ? defaultWidth : 0;
+					drawer.DrawChatText( ref args, offset, realHeight );
 					realHeight += sizes[i].Height;
 				}
 				inputTex = drawer.Make2DTexture( bmp, size, 10, 0 );
@@ -175,6 +187,7 @@ namespace ClassicalSharp.Gui {
 		public void DisposeFully() {
 			Dispose();
 			api.DeleteTexture( ref caretTex );
+			api.DeleteTexture( ref prefixTex );
 		}
 
 		public override void MoveTo( int newX, int newY ) {

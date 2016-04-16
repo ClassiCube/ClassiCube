@@ -289,11 +289,12 @@ namespace ClassicalSharp.Gui {
 			
 			for( int y = 0; y < lines; y++ ) {
 				string line = parts[y];
+				int xOffset = y == 0 ? defaultWidth : 0;
 				if( line == null ) continue;
 				
 				for( int x = 0; x < line.Length; x++ ) {
 					args.Text = line.Substring( 0, x );
-					int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
+					int trimmedWidth = drawer.MeasureChatSize( ref args ).Width + xOffset;
 					// avoid allocating an unnecessary string
 					fixed( char* ptr = oneChar )
 						ptr[0] = line[x];
