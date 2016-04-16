@@ -20,7 +20,7 @@ namespace ClassicalSharp.Particles {
 		public ParticleManager( Game game ) {
 			this.game = game;
 			rnd = new Random();
-			vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, maxParticles * 4 );
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Particles {
 			IGraphicsApi graphics = game.Graphics;
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
-			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
 			RenderTerrainParticles( graphics, terrainParticles, terrainCount, delta, t );
 			RenderRainParticles( graphics, rainParticles, rainCount, delta, t );

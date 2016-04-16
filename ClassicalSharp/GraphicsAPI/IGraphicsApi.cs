@@ -243,8 +243,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public Action<double> LostContextFunction;
 		
 		protected void InitDynamicBuffers() {
-			quadVb = CreateDynamicVb( VertexFormat.Pos3fCol4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, 4 );
+			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
+			texVb = CreateDynamicVb( VertexFormat.P3fT2fC4b, 4 );
 		}
 		
 		public virtual void Dispose() {
@@ -259,7 +259,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, col );
 			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, col );
-			SetBatchFormat( VertexFormat.Pos3fCol4b );
+			SetBatchFormat( VertexFormat.P3fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
@@ -277,7 +277,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texVerts[1] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
 			texVerts[2] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
 			texVerts[3] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
-			SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			SetBatchFormat( VertexFormat.P3fT2fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
 		}
 		
@@ -352,13 +352,11 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 
 	public enum VertexFormat {
-		Pos3fCol4b = 0,
-		Pos3fTex2fCol4b = 1,
+		P3fC4b = 0, P3fT2fC4b = 1,
 	}
 	
 	public enum DrawMode {
-		Triangles = 0,
-		Lines = 1,
+		Triangles = 0, Lines = 1,
 	}
 	
 	public enum CompareFunc {
@@ -384,14 +382,10 @@ namespace ClassicalSharp.GraphicsAPI {
 	}
 	
 	public enum Fog {
-		Linear = 0,
-		Exp = 1,
-		Exp2 = 2,
+		Linear = 0, Exp = 1, Exp2 = 2,
 	}
 	
 	public enum MatrixType {
-		Projection = 0,
-		Modelview = 1,
-		Texture = 2,
+		Projection = 0, Modelview = 1, Texture = 2,
 	}
 }

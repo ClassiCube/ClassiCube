@@ -32,6 +32,12 @@ namespace ClassicalSharp.Gui {
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		int defaultHeight;
 		internal Font font;
+		bool active = false;
+		
+		public override bool Active {
+			get { return active; }
+			set { active = value; SetText( Text ); }
+		}
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
@@ -92,6 +98,8 @@ namespace ClassicalSharp.Gui {
 		
 		void MakeTexture( string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			if( active )
+				args.Text = "&" + (char)0xFF + args.Text;
 			Size size = game.Drawer2D.MeasureChatSize( ref args );
 			
 			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;

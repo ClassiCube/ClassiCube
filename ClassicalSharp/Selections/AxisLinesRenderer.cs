@@ -20,7 +20,7 @@ namespace ClassicalSharp.Selections {
 				return;
 			if( vertices == null ) {
 				vertices = new VertexP3fC4b[12];
-				vb = game.Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, vertices.Length );
+				vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
 			}
 			game.Graphics.Texturing = false;			
 			Vector3 pos = game.LocalPlayer.Position; pos.Y += 0.05f;
@@ -31,7 +31,7 @@ namespace ClassicalSharp.Selections {
 			if( game.Camera.IsThirdPerson )
 				VerQuad( ref index, pos.X - size, pos.Y, pos.Z + size, pos.X + size, pos.Y + 3, pos.Z - size, FastColour.Green );
 			
-			game.Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
+			game.Graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
 		}
 		

@@ -237,12 +237,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void SetBatchFormat( VertexFormat format ) {
 			if( format == batchFormat ) return;
 			
-			if( batchFormat == VertexFormat.Pos3fTex2fCol4b ) {
+			if( batchFormat == VertexFormat.P3fT2fC4b ) {
 				GL.DisableClientState( All.TextureCoordArray );
 			}
 			
 			batchFormat = format;
-			if( format == VertexFormat.Pos3fTex2fCol4b ) {
+			if( format == VertexFormat.P3fT2fC4b ) {
 				GL.EnableClientState( All.TextureCoordArray );
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
 				batchStride = VertexP3fT2fC4b.Size;

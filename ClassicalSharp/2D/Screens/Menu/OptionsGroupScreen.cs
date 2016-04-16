@@ -47,7 +47,8 @@ namespace ClassicalSharp.Gui {
 				Make( 140, 50, "Nostalgia options",
 				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
 				
-				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
+				MakeBack( false, titleFont, 
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
 		

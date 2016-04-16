@@ -79,7 +79,7 @@ namespace ClassicalSharp.Gui {
 			}
 					
 			ModelCache cache = game.ModelCache;
-			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			index = 0;
 		}

@@ -13,7 +13,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public PickedPosRenderer( Game game ) {
 			graphics = game.Graphics;
-			vb = graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, verticesCount );
+			vb = graphics.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;
 		}
 		
@@ -64,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 			ZQuad( p2.Z, p1.X, p1.Y, p2.X, p1.Y + size );
 			ZQuad( p2.Z, p1.X, p2.Y, p2.X, p2.Y - size );
 			
-			graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, verticesCount, verticesCount * 6 / 4 );
 		}
 		

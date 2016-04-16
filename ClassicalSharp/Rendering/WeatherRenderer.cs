@@ -17,7 +17,7 @@ namespace ClassicalSharp.Renderers {
 			map = game.World;
 			graphics = game.Graphics;
 			info = game.BlockInfo;
-			weatherVb = graphics.CreateDynamicVb( VertexFormat.Pos3fTex2fCol4b, vertices.Length );
+			weatherVb = graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 		}
 		
 		int weatherVb;
@@ -64,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 				rainAcc = 0;
 			
 			if( index > 0 ) {
-				graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+				graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 			}
 			graphics.AlphaTest = true;

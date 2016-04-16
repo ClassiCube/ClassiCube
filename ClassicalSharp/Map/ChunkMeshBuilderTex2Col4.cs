@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 			if( part.iCount == 0 ) return;
 			
 			ChunkPartInfo info;
-			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.Pos3fTex2fCol4b, part.vCount + 2 );
+			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, part.vCount + 2 );
 			info.IndicesCount = part.iCount;
 			info.leftCount = (ushort)part.Count.left; info.rightCount = (ushort)part.Count.right;
 			info.frontCount = (ushort)part.Count.front; info.backCount = (ushort)part.Count.back;

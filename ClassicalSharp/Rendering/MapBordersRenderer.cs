@@ -48,7 +48,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
-			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			if( game.World.SidesBlock != Block.Air ) {
 				graphics.BindVb( sidesVb );
 				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
@@ -161,7 +161,7 @@ namespace ClassicalSharp.Renderers {
 			DrawZ( map.Length, 0, map.Width, y1, y2, axisSize, col, ref vertices );
 			DrawX( 0, 0, map.Length, y1, y2, axisSize, col, ref vertices );
 			DrawX( map.Width, 0, map.Length, y1, y2, axisSize, col, ref vertices );
-			sidesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, sidesVertices );
+			sidesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, sidesVertices );
 		}
 		
 		void RebuildEdges( int waterLevel, int axisSize ) {
@@ -177,7 +177,7 @@ namespace ClassicalSharp.Renderers {
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, -0.1f/16f, ref vertices );
 			}
-			edgesVb = graphics.CreateVb( ptr, VertexFormat.Pos3fTex2fCol4b, edgesVertices );
+			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexP3fT2fC4b* vertices ) {

@@ -56,7 +56,7 @@ namespace ClassicalSharp.Selections {
 				box.Render( delta, vertices, lineVertices, ref index, ref lineIndex );
 			}
 			
-			Graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
+			Graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			Graphics.UpdateDynamicVb( DrawMode.Lines, lineVb, lineVertices, selections.Count * LineVerticesCount );
 			
 			Graphics.DepthWrite = false;
@@ -80,8 +80,8 @@ namespace ClassicalSharp.Selections {
 		void InitData() {
 			vertices = new VertexP3fC4b[256 * VerticesCount];
 			lineVertices = new VertexP3fC4b[256 * LineVerticesCount];
-			vb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, vertices.Length );
-			lineVb = Graphics.CreateDynamicVb( VertexFormat.Pos3fCol4b, lineVertices.Length );
+			vb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
+			lineVb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, lineVertices.Length );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

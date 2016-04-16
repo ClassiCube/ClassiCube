@@ -29,7 +29,7 @@ namespace ClassicalSharp.Renderers {
 			float normalY = map.Height + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
 			
-			graphics.SetBatchFormat( VertexFormat.Pos3fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			graphics.BindVb( skyVb );
 			if( skyY == normalY ) {
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
@@ -102,7 +102,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.AlphaTest = true;
 			graphics.Texturing = true;
 			graphics.BindTexture( game.CloudsTexId );
-			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			graphics.BindVb( cloudsVb );
 			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
 			graphics.AlphaTest = false;
@@ -171,7 +171,7 @@ namespace ClassicalSharp.Renderers {
 			
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
 			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
-			cloudsVb = graphics.CreateVb( vertices, VertexFormat.Pos3fTex2fCol4b, cloudVertices );
+			cloudsVb = graphics.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
 		}
 		
 		void ResetSky( int extent, int axisSize ) {
@@ -184,7 +184,7 @@ namespace ClassicalSharp.Renderers {
 			int height = Math.Max( map.Height + 2 + 6, map.CloudHeight + 6);
 			
 			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.SkyCol, vertices );
-			skyVb = graphics.CreateVb( vertices, VertexFormat.Pos3fCol4b, skyVertices );
+			skyVb = graphics.CreateVb( vertices, VertexFormat.P3fC4b, skyVertices );
 		}
 		
 		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexP3fC4b[] vertices ) {

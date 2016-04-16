@@ -67,7 +67,7 @@ namespace ClassicalSharp.Model {
 			cosHead = (float)Math.Cos( p.HeadYawDegrees * Utils.Deg2Rad );
 			sinHead = (float)Math.Sin( p.HeadYawDegrees * Utils.Deg2Rad );
 
-			graphics.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			DrawModel( p );
 		}
 		

@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui {
 			if( rows > maxRows )
 				DrawScrollbar();
 			api.Texturing = true;
-			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
 			IsometricBlockDrawer.lastTexId = -1;
 			for( int i = 0; i < blocksTable.Length; i++ ) {

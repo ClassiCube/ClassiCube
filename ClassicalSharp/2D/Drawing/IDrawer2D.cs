@@ -157,6 +157,7 @@ namespace ClassicalSharp {
 				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i );
 				Colours['A' + i - 10] = FastColour.GetHexEncodedCol( i );
 			}
+			Colours[255] = new FastColour( 255, 255, 160 );
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );

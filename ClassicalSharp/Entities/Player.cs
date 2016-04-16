@@ -69,7 +69,7 @@ namespace ClassicalSharp.Entities {
 			api.texVerts[2] = new VertexP3fT2fC4b( p222, nameTex.U2, nameTex.V1, col );
 			api.texVerts[3] = new VertexP3fT2fC4b( p212, nameTex.U2, nameTex.V2, col );
 			
-			api.SetBatchFormat( VertexFormat.Pos3fTex2fCol4b );
+			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
 		}
 		
