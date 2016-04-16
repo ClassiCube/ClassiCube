@@ -19,18 +19,16 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void InitSound() {
-			if( digBoard == null )
-				InitSoundboards();
-			
+			if( digBoard == null ) InitSoundboards();			
 			monoOutputs = new IAudioOutput[maxSounds];
 			stereoOutputs = new IAudioOutput[maxSounds];
 		}
 		
 		void InitSoundboards() {
 			digBoard = new Soundboard();
-			digBoard.Init( "dig" );
+			digBoard.Init( "dig_", files );
 			stepBoard = new Soundboard();
-			stepBoard.Init( "step" );
+			stepBoard.Init( "step_", files );
 		}
 
 		public void Tick( double delta ) {
@@ -45,13 +43,12 @@ namespace ClassicalSharp.Audio {
 			if( type == SoundType.None || monoOutputs == null )
 				return;
 			Sound snd = board.PickRandomSound( type );
-			snd.Metadata = board == digBoard ? (byte)1 : (byte)2;
 			chunk.Channels = snd.Channels;
 			chunk.Frequency = snd.SampleRate;
 			chunk.BitsPerSample = snd.BitsPerSample;
-			chunk.BytesOffset = snd.Offset;
-			chunk.BytesUsed = snd.Length;
-			chunk.Data = board.Data;
+			chunk.BytesOffset = 0;
+			chunk.BytesUsed = snd.Data.Length;
+			chunk.Data = snd.Data;
 			
 			if( snd.Channels == 1 )
 				PlayCurrentSound( monoOutputs );

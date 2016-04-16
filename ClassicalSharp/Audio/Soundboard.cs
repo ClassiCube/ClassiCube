@@ -8,89 +8,89 @@ namespace ClassicalSharp.Audio {
 	public class Soundboard {
 		
 		public byte[] Data;
-		internal List<Sound> rawSounds = new List<Sound>();
-		Dictionary<string, int> groupFlags = new Dictionary<string, int>();
+		Dictionary<string, List<Sound>> allSounds = new Dictionary<string, List<Sound>>();
 		Random rnd = new Random();
 		
-		static string[] soundNames;	
+		static string[] soundNames;
 		static Soundboard() {
 			soundNames = Enum.GetNames( typeof( SoundType ) );
 			for( int i = 0; i < soundNames.Length; i++ )
 				soundNames[i] = soundNames[i].ToLower();
 		}
 		
-		public void Init( string group ) {
-			string basePath = Path.Combine( Program.AppDirectory, "audio" );
-			string binPath = Path.Combine( basePath, group + ".bin" );
-			string txtPath = Path.Combine( basePath, group + ".txt" );
-			
-			Data = File.ReadAllBytes( binPath );
-			ReadMetadata( txtPath );
-			rawSounds.Sort( (a, b) => a.Name.CompareTo( b.Name ) );
-			GetGroups();
+		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
+		public void Init( string group, string[] files ) {
+			for( int i = 0; i < files.Length; i++ ) {
+				string name = Path.GetFileNameWithoutExtension( files[i] );
+				if( !name.StartsWith( group, comp )) continue;
+				
+				// Convert dig_grass1.wav to grass				
+				name = name.Substring( group.Length ).ToLower();
+				name = name.Substring( 0, name.Length - 1 );
+				
+				List<Sound> sounds = null;
+				if( !allSounds.TryGetValue( name, out sounds ) ) {
+					sounds = new List<Sound>();
+					allSounds[name] = sounds;
+				}
+				
+				try {
+					Sound snd = ReadWave( files[i] );
+					sounds.Add( snd );
+				} catch ( Exception ex ) {
+					ErrorHandler.LogError( "Soundboard.ReadWave()", ex );
+				}
+			}
+		}
+		
+		Sound ReadWave( string file ) {
+			using( FileStream fs = File.OpenRead( file ) )
+				using( BinaryReader r = new BinaryReader( fs ) )
+			{
+				CheckFourCC( r, "RIFF" );
+				r.ReadInt32(); // file size, but we don't care
+				CheckFourCC( r, "WAVE" );
+				Sound snd = new Sound();
+				
+				CheckFourCC( r, "fmt " );
+				int size = r.ReadInt32();
+				if( r.ReadUInt16() != 1 ) 
+					throw new InvalidDataException( "Only PCM audio is supported." );
+				size -= 2;
+				
+				snd.Channels = r.ReadUInt16(); size -= 2;
+				snd.SampleRate = r.ReadInt32(); size -= 4;
+				r.ReadInt32(); r.ReadUInt16(); size -= 6;
+				snd.BitsPerSample = r.ReadUInt16(); size -= 2;
+				if( size > 0 ) 
+					fs.Seek( size, SeekOrigin.Current );
+				
+				CheckFourCC( r, "data" );
+				size = r.ReadInt32();
+				byte[] data = r.ReadBytes( size );
+				snd.Data = data;
+				return snd;
+			}
+		}
+		
+		void CheckFourCC( BinaryReader r, string fourCC ) {
+			if( r.ReadByte() != (byte)fourCC[0] || r.ReadByte() != (byte)fourCC[1]
+			   || r.ReadByte() != (byte)fourCC[2] || r.ReadByte() != (byte)fourCC[3] )
+				throw new InvalidDataException( "Expected " + fourCC + " fourcc" );
 		}
 		
 		public Sound PickRandomSound( SoundType type ) {
-			if( type == SoundType.None ) 
-				return null;
+			if( type == SoundType.None )  return null;
 			string name = soundNames[(int)type];
-			int flags = groupFlags[name];
 			
-			int offset = flags & 0xFFF, count = flags >> 12;
-			return rawSounds[offset + rnd.Next( count )];
-		}
-		
-		void ReadMetadata( string path ) {
-			using( StreamReader reader = new StreamReader( path ) ) {
-				string line;
-				while( (line = reader.ReadLine()) != null ) {
-					if( line.Length == 0 || line[0] == '#' ) continue;
-					string[] parts = line.Split( ',' );
-					if( parts.Length < 6 ) continue;
-					string name = parts[0].ToLower();
-					int sampleRate, bitsPerSample, channels;
-					int offset, length;
-					
-					if( !Int32.TryParse( parts[1], out sampleRate ) ||
-					   !Int32.TryParse( parts[2], out bitsPerSample ) ||
-					   !Int32.TryParse( parts[3], out channels ) ||
-					   !Int32.TryParse( parts[4], out offset ) ||
-					   !Int32.TryParse( parts[5], out length ) )
-						continue;
-					Sound s = new Sound();
-					s.Name = name; s.SampleRate = sampleRate;
-					s.BitsPerSample = bitsPerSample; s.Channels = channels;
-					s.Offset = offset; s.Length = length;
-					rawSounds.Add( s );
-				}
-			}
-		}
-		
-		void GetGroups() {
-			string last = Group( rawSounds[0].Name );
-			int offset = 0, count = 0;
-			for( int i = 0; i < rawSounds.Count; i++ ) {
-				string group = Group( rawSounds[i].Name );
-				if( group != last ) {
-					groupFlags[last] = (count << 12) | offset;
-					offset = i;
-					last = group;
-					count = 0;
-				}
-				count++;
-			}
-			groupFlags[last] = (count << 12) | offset;
-		}
-		
-		string Group( string name ) {
-			return name.Substring( 0, name.Length - 1 );
-		}
+			List<Sound> sounds;
+			if( !allSounds.TryGetValue( name, out sounds ) ) return null;
+			return sounds[rnd.Next( sounds.Count )];
+		}		
 	}
 	
 	public class Sound {
-		public string Name;
 		public int SampleRate, BitsPerSample, Channels;
-		public int Offset, Length;
-		public byte Metadata;
+		public byte[] Data;
 	}
 }

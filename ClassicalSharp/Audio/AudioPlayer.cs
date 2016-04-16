@@ -11,12 +11,15 @@ namespace ClassicalSharp.Audio {
 		
 		IAudioOutput musicOut;
 		IAudioOutput[] monoOutputs, stereoOutputs;
-		string[] musicFiles;
+		string[] files, musicFiles;
 		Thread musicThread;
 		Game game;
 		
 		public AudioPlayer( Game game ) {
 			this.game = game;
+			string path = Path.Combine( Program.AppDirectory, "audio" );
+			files = Directory.GetFiles( path );
+			
 			game.UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
 			SetMusic( game.UseMusic );
 			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
@@ -30,9 +33,19 @@ namespace ClassicalSharp.Audio {
 				DisposeMusic();
 		}
 		
+		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		void InitMusic() {
-			string path = Path.Combine( Program.AppDirectory, "audio" );
-			musicFiles = Directory.GetFiles( path, "*.ogg" );
+			int musicCount = 0;
+			for( int i = 0; i < files.Length; i++ ) {
+				if( files[i].EndsWith( ".ogg", comp ) ) musicCount++;
+			}
+			
+			musicFiles = new string[musicCount];
+			for( int i = 0, j = 0; i < files.Length; i++ ) {
+				if( !files[i].EndsWith( ".ogg", comp ) ) continue;
+				musicFiles[j] = files[i]; j++;
+			}
+			
 			disposingMusic = false;
 			musicThread = MakeThread( DoMusicThread, ref musicOut,
 			                         "ClassicalSharp.DoMusic" );
