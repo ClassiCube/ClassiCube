@@ -57,6 +57,8 @@ namespace Launcher {
 		void ProcessZipEntry_Classic( string filename, byte[] data, ZipEntry entry ) {
 			if( writer.entries == null )
 				writer.entries = new ZipEntry[reader.entries.Length];
+			if( !filename.EndsWith( ".png", comp ) ) return;
+			
 			if( filename != "terrain.png" ) {
 				int lastSlash = filename.LastIndexOf( '/' );
 				if( lastSlash >= 0 )
