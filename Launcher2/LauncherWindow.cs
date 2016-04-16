@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
@@ -148,6 +149,10 @@ namespace Launcher {
 			Init();
 			TryLoadTexturePack();
 			platformDrawer.Init( Window.WindowInfo );
+			
+			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
+			BinUnpacker.Unpack( audioPath, "dig" );
+			BinUnpacker.Unpack( audioPath, "step" );
 			
 			fetcher = new ResourceFetcher();
 			fetcher.CheckResourceExistence();
