@@ -76,7 +76,7 @@ namespace Launcher {
 			if( Framebuffer == null || (Framebuffer.Width != Width || Framebuffer.Height != Height) ) {
 				if( Framebuffer != null )
 					Framebuffer.Dispose();
-				Framebuffer = new Bitmap( Width, Height );
+				Framebuffer = platformDrawer.CreateFrameBuffer( Width, Height );
 			}
 			
 			if( ClassicBackground ) {
@@ -88,6 +88,11 @@ namespace Launcher {
 				ClearArea( 0, 0, Width, Height );
 			}
 			
+			DrawTitle();
+			Dirty = true;
+		}
+		
+		void DrawTitle() {
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
 
@@ -102,7 +107,6 @@ namespace Launcher {
 				drawer.DrawChatText( ref args, xStart, 8 );
 				drawer.UseBitmappedChat = false;
 			}
-			Dirty = true;
 		}
 		
 		public void ClearArea( int x, int y, int width, int height ) {

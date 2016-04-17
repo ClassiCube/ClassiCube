@@ -16,6 +16,10 @@ namespace Launcher {
 		
 		public abstract void Init( IWindowInfo info );
 		
+		public virtual Bitmap CreateFrameBuffer( int width, int height ) {
+			return new Bitmap( width, height );
+		}
+		
 		public abstract void Resize( IWindowInfo info );
 		
 		public abstract void Display( IWindowInfo info, Bitmap framebuffer );
@@ -43,26 +47,62 @@ namespace Launcher {
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		static extern int ReleaseDC( IntPtr dc, IntPtr hwnd );
 		
-		IntPtr dc;
+		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern IntPtr CreateDIBSection( IntPtr hdc, [In] ref BITMAPINFO pbmi,
+		                                      uint pila, out IntPtr ppvBits, IntPtr hSection, uint dwOffset );
+		
+		[StructLayout(LayoutKind.Sequential)]
+		public struct BITMAPINFO {
+			public int biSize;
+			public int biWidth;
+			public int biHeight;
+			public short biPlanes;
+			public short biBitCount;
+			public int biCompression;
+			public int biSizeImage;
+			public int biXPelsPerMeter;
+			public int biYPelsPerMeter;
+			public int biClrUsed;
+			public int biClrImportant;
+			public uint bmiColors;
+		}
+		
+		IntPtr dc, srcDC, srcHB;
 		public override void Init( IWindowInfo info ) {
 			dc = GetDC( info.WinHandle );
+			srcDC = CreateCompatibleDC( dc );
+		}
+		
+		public override Bitmap CreateFrameBuffer( int width, int height ) {
+			if( srcHB != IntPtr.Zero )
+				DeleteObject( srcHB );
+			
+			BITMAPINFO bmp = new BITMAPINFO();
+			bmp.biSize = (int)Marshal.SizeOf(typeof(BITMAPINFO));
+			bmp.biWidth = width;
+			bmp.biHeight = -height;
+			bmp.biBitCount = 32;
+			bmp.biPlanes = 1;
+
+			IntPtr pointer;
+			srcHB = CreateDIBSection( srcDC, ref bmp, 0, out pointer, IntPtr.Zero, 0 );
+			return new Bitmap( width, height, width * 4, 
+			                  System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer );
 		}
 		
 		public override void Resize( IWindowInfo info ) {
-			if( dc != IntPtr.Zero )
+			if( dc != IntPtr.Zero ) {
 				ReleaseDC( info.WinHandle, dc );
+				DeleteObject( srcDC );
+			}
 			dc = GetDC( info.WinHandle );
+			srcDC = CreateCompatibleDC( dc );
 		}
 		
 		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
-			IntPtr srcDC = CreateCompatibleDC( dc );
-			IntPtr srcHB = framebuffer.GetHbitmap();
 			IntPtr oldSrc = SelectObject( srcDC, srcHB );
 			int success = BitBlt( dc, 0, 0, framebuffer.Width, framebuffer.Height, srcDC, 0, 0, SRCCOPY );
-
 			SelectObject( srcDC, oldSrc );
-			DeleteObject( srcDC );
-			DeleteObject( srcHB );
 		}
 	}
 	
@@ -154,11 +194,11 @@ namespace Launcher {
 				int* src = bmp.GetRowPtr( y );
 				for( int x = 0; x < bmp.Width; x++ ) {
 					int value = *src; src++;
-					int pixel = 
+					int pixel =
 						(((value & 0xFF0000) >> (16 + 3)) << 11) // R
 						| (((value & 0xFF00) >> (8 + 2)) << 5)   // G
 						| ((value & 0xFF) >> (0 + 3));           // B
-					*dst = (ushort)pixel; dst++;
+		 			*dst = (ushort)pixel; dst++;
 				}
 			}
 			
@@ -180,11 +220,11 @@ namespace Launcher {
 				int* src = bmp.GetRowPtr( y );
 				for( int x = 0; x < bmp.Width; x++ ) {
 					int value = *src; src++;
-					int pixel = 
+					int pixel =
 						(((value & 0xFF0000) >> (16 + 3)) << 10) // R
 						| (((value & 0xFF00) >> (8 + 3)) << 5)   // G
 						| ((value & 0xFF) >> (0 + 3));           // B
-					*dst = (ushort)pixel; dst++;
+		 			*dst = (ushort)pixel; dst++;
 				}
 			}
 			
