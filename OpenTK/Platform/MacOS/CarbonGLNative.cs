@@ -417,9 +417,7 @@ namespace OpenTK.Platform.MacOS
 					return OSStatus.NoError;
 
 				case MouseEventKind.WheelMoved:
-
-					int delta = API.GetEventMouseWheelDelta(inEvent) / 3;
-					mouse.Wheel += delta;
+					mouse.WheelPrecise += API.GetEventMouseWheelDelta(inEvent);
 					return OSStatus.NoError;
 
 				case MouseEventKind.MouseMoved:

@@ -22,21 +22,23 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesKeyDown( Key key ) {
 			if( game.HideGui )
 				return key < Key.F1 || key > Key.F35;
-			bool controlDown = game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight );
+			bool clipboardDown = OpenTK.Configuration.RunningOnMacOS ?
+				(game.IsKeyDown( Key.WinLeft ) || game.IsKeyDown( Key.WinRight ))
+				: (game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight ));
 			
 			if( key == Key.Tab ) TabKey();
-			else if( key == Key.Down ) DownKey( controlDown );
-			else if( key == Key.Up ) UpKey( controlDown );
-			else if( key == Key.Left ) LeftKey( controlDown );
-			else if( key == Key.Right ) RightKey( controlDown );
-			else if( key == Key.BackSpace ) BackspaceKey( controlDown );
+			else if( key == Key.Down ) DownKey( clipboardDown );
+			else if( key == Key.Up ) UpKey( clipboardDown );
+			else if( key == Key.Left ) LeftKey( clipboardDown );
+			else if( key == Key.Right ) RightKey( clipboardDown );
+			else if( key == Key.BackSpace ) BackspaceKey( clipboardDown );
 			else if( key == Key.Delete ) DeleteKey();
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
 			else if( game.Network.ServerSupportsFullCP437 &&
 			        key == game.InputHandler.Keys[KeyBinding.ExtendedInput] )
 				altText.SetActive( !altText.Active );
-			else if( controlDown && !OtherKey( key ) ) return false;
+			else if( clipboardDown && !OtherKey( key ) ) return false;
 			
 			return true;
 		}
