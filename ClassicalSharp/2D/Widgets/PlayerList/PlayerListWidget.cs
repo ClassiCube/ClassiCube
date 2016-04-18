@@ -35,9 +35,8 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = true;
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture texture = textures[i];
-				if( texture.IsValid ) {
+				if( texture.IsValid )
 					texture.Render( api );
-				}
 			}
 		}
 		

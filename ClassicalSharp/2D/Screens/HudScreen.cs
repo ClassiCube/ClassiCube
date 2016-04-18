@@ -84,7 +84,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			playerFont = new Font( game.FontName, 12 );
+			playerFont = new Font( game.FontName, 14 );
 			chat = new ChatScreen( game );
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );

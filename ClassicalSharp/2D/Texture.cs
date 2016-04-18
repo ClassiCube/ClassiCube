@@ -16,15 +16,18 @@ namespace ClassicalSharp {
 		
 		public Rectangle Bounds { get { return new Rectangle( X1, Y1, Width, Height ); } }
 
-		public Texture( int id, int x, int y, int width, int height, float u2, float v2 )
+		public Texture( int id, int x, int y, int width, int height, 
+		               float u2, float v2 )
 			: this( id, x, y, width, height, 0, u2, 0, v2 )	{
 		}
 		
-		public Texture( int id, int x, int y, int width, int height, TextureRec rec )
+		public Texture( int id, int x, int y, int width, int height, 
+		               TextureRec rec )
 			: this( id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2 ) {
 		}
 		
-		public Texture( int id, int x, int y, int width, int height, float u1, float u2, float v1, float v2 ) {
+		public Texture( int id, int x, int y, int width, int height, 
+		               float u1, float u2, float v1, float v2 ) {
 			ID = id;
 			X1 = x; Y1 = y;
 			Width = width; Height = height;

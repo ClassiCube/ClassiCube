@@ -144,10 +144,11 @@ namespace ClassicalSharp {
 		
 		void DrawUnderline( FastBitmap dst, int x, int yOffset, ref DrawTextArgs args, bool shadowCol ) {
 			int point = Utils.Floor( args.Font.Size );
-			int height = PtToPx( point, boxSize );
+			int padding = CellSize( point ) - AdjTextSize( point );
+			int height = AdjTextSize( point ) + Utils.CeilDiv(padding, 2);
 			int offset = ShadowOffset( args.Font.Size );
 			
-			int col = FastColour.White.ToArgb();			
+			int col = FastColour.White.ToArgb();
 			string text = args.Text;
 			if( args.UseShadow ) height += offset;
 			int startX = x;
