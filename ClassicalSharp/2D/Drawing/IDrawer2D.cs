@@ -232,9 +232,15 @@ namespace ClassicalSharp {
 		public void ReducePadding( ref Texture tex, int point ) {
 			if( !UseBitmappedChat ) return;
 			int padding = (tex.Height - point) / 4;
-			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );			
+			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );
 			tex.V1 += vAdj; tex.V2 -= vAdj;
 			tex.Height -= padding * 2;
+		}
+
+		public void ReducePadding( ref int height, int point ) {
+			if( !UseBitmappedChat ) return;
+			int padding = (height - point) / 4;
+			height -= padding * 2;
 		}
 	}
 }
