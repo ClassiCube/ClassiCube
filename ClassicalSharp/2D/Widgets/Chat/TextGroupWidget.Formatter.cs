@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui {
 			if( !String.IsNullOrEmpty( text ) ) {
 				Texture tex = NextToken( text, 0, ref prevFlags ) == -1 ? DrawSimple( ref args ) :
 					DrawAdvanced( ref args, index, text );
-				ReducePadding( ref tex, Utils.Floor( args.Font.Size ) );
+				game.Drawer2D.ReducePadding( ref tex, Utils.Floor( args.Font.Size ) );
 				
 				tex.X1 = CalcOffset( game.Width, tex.Width, XOffset, HorizontalAnchor );
 				tex.Y1 = CalcY( index, tex.Height );
@@ -29,15 +29,6 @@ namespace ClassicalSharp.Gui {
 				lines[index] = null;
 			}
 			UpdateDimensions();
-		}
-		
-		void ReducePadding( ref Texture tex, int point ) {
-			int padding = tex.Height - Utils.Floor( font.Size );
-			padding /= 4;
-			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );
-			
-			tex.V1 += vAdj; tex.V2 -= vAdj;
-			tex.Height -= padding * 2;
 		}
 		
 		Texture DrawSimple( ref DrawTextArgs args ) {

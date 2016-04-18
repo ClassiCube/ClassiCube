@@ -13,13 +13,15 @@ namespace ClassicalSharp.Gui {
 		protected MenuInputWidget inputWidget;
 		protected MenuInputValidator[] validators;
 		protected string[][] descriptions;
-		protected ChatTextWidget[] extendedHelp;
+		protected TextGroupWidget extendedHelp;
 		Font extendedHelpFont;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			int extEndY = extendedHelp == null ? 0 : extendedHelp[extendedHelp.Length - 1].BottomRight.Y;
-			if( extendedHelp != null && extEndY <= widgets[widgets.Length - 3].Y ) {
+			int extClipY = widgets[widgets.Length - 3].Y;
+			int extEndY = extendedHelp == null ? 0 : extendedHelp.Y + extendedHelp.Height;
+			
+			if( extendedHelp != null && extEndY <= extClipY ) {
 				int x = game.Width / 2 - tableWidth / 2 - 5;
 				int y = game.Height / 2 + extHelpY - 5;
 				api.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
@@ -30,10 +32,8 @@ namespace ClassicalSharp.Gui {
 			if( inputWidget != null )
 				inputWidget.Render( delta );			
 			
-			if( extendedHelp != null && extEndY <= widgets[widgets.Length - 3].Y ) {
-				for( int i = 0; i < extendedHelp.Length; i++ )
-					extendedHelp[i].Render( delta );
-			}
+			if( extendedHelp != null && extEndY <= extClipY )
+				extendedHelp.Render( delta );
 			api.Texturing = false;
 		}
 		
@@ -74,8 +74,7 @@ namespace ClassicalSharp.Gui {
 			
 			base.OnResize( oldWidth, oldHeight, width, height );
 			if( extendedHelp == null ) return;
-			for( int i = 0; i < extendedHelp.Length; i++ )
-				extendedHelp[i].OnResize( oldWidth, oldHeight, width, height );
+			extendedHelp.OnResize( oldWidth, oldHeight, width, height );
 		}
 		
 		public override void Dispose() {
@@ -191,35 +190,23 @@ namespace ClassicalSharp.Gui {
 		int tableWidth, tableHeight;
 		const int extHelpY = 100;
 		void MakeExtendedHelp( string[] desc ) {
-			extendedHelp = new ChatTextWidget[desc.Length];
-			int x = 0, y = extHelpY;
-			tableWidth = 0;
+			extendedHelp = new TextGroupWidget( game, desc.Length, extendedHelpFont, null,
+			                                   Anchor.Centre, Anchor.Centre );
+			extendedHelp.Init();
 			
-			for( int i = 0; i < desc.Length; i++ ) {
-				extendedHelp[i] = ChatTextWidget.Create( game, 0, y,
-				                                        desc[i], Anchor.Centre, Anchor.Centre, extendedHelpFont );
-				tableWidth = Math.Max( extendedHelp[i].Width, tableWidth );
-				y += extendedHelp[i].Height + 5;
-			}
-			tableHeight = y - extHelpY;
+			for( int i = 0; i < desc.Length; i++ )
+				extendedHelp.SetText( i, desc[i] );
+			for( int i = 0; i < desc.Length; i++ )
+				extendedHelp.Textures[i].X1 = extendedHelp.X;
 			
-			int yOffset = 0;
-			for( int i = 0; i < desc.Length; i++ ) {
-				ChatTextWidget widget = extendedHelp[i];
-				widget.XOffset = (widget.Width - tableWidth) / 2;
-				x = CalcOffset( game.Width, widget.Width, widget.XOffset, Anchor.Centre );
-				
-				widget.YOffset = yOffset + extHelpY + extendedHelp[0].Height / 2;
-				y = CalcOffset( game.Height, widget.Height, widget.YOffset, Anchor.Centre );
-				yOffset += extendedHelp[i].Height + 5;
-				widget.MoveTo( x, y );
-			}
+			tableWidth = extendedHelp.Width;
+			tableHeight = extendedHelp.Height;
+			extendedHelp.MoveTo( extendedHelp.X, extHelpY + tableHeight / 2 );
 		}
 		
 		void DisposeExtendedHelp() {
 			if( extendedHelp == null ) return;
-			for( int i = 0; i < extendedHelp.Length; i++ )
-				extendedHelp[i].Dispose();
+			extendedHelp.Dispose();
 			extendedHelp = null;
 		}
 		

@@ -65,6 +65,8 @@ namespace ClassicalSharp.Gui {
 		void AddPlayerInfo( Player player ) {
 			DrawTextArgs args = new DrawTextArgs( player.DisplayName, font, true );
 			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ) );
+			
 			info[namesCount] = new PlayerInfo( player );
 			textures[namesCount] = tex;
 			namesCount++;

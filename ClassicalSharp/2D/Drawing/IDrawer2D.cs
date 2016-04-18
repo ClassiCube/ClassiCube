@@ -228,5 +228,13 @@ namespace ClassicalSharp {
 		public static bool IsWhiteColour( char c ) {
 			return c == '\0' || c == 'f' || c == 'F';
 		}
+		
+		public void ReducePadding( ref Texture tex, int point ) {
+			if( !UseBitmappedChat ) return;
+			int padding = (tex.Height - point) / 4;
+			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );			
+			tex.V1 += vAdj; tex.V2 -= vAdj;
+			tex.Height -= padding * 2;
+		}
 	}
 }
