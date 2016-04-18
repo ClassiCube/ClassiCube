@@ -96,15 +96,15 @@ namespace Launcher {
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
 
-				drawer.UseBitmappedChat = useBitmappedFont;
+				drawer.UseBitmappedChat = useBitmappedFont || ClassicBackground;
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
 				
 				args.Text = "&0Classical&0Sharp";
-				drawer.DrawChatText( ref args, xStart + 4, 8 + 4 );
+				drawer.DrawChatText( ref args, xStart + 3, 3 );
 				args.Text = "&eClassical&fSharp";
-				drawer.DrawChatText( ref args, xStart, 8 );
+				drawer.DrawChatText( ref args, xStart, 0 );
 				drawer.UseBitmappedChat = false;
 			}
 		}

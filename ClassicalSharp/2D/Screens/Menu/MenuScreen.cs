@@ -24,8 +24,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			int size = game.Drawer2D.UseBitmappedChat ? 13 : 16;
-			titleFont = new Font( game.FontName, size, FontStyle.Bold );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 		} 
 		
 		public override void Dispose() {

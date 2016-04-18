@@ -40,8 +40,7 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			base.Init();
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
-			int size = game.Drawer2D.UseBitmappedChat ? 11 : 12;
-			extendedHelpFont = new Font( game.FontName, size, FontStyle.Regular );
+			extendedHelpFont = new Font( game.FontName, 13, FontStyle.Regular );
 			game.Keyboard.KeyRepeat = true;
 		}
 		

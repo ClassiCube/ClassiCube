@@ -66,6 +66,10 @@ namespace ClassicalSharp {
 			return Size.Ceiling( total );
 		}
 		
+		int PtToPx( int point ) {
+			return (int)Math.Ceiling( (float)point / 72 * 96 ); // TODO: not sure if even right, non 96 dpi?
+		}
+		
 		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {
 			return MeasureBitmappedSizeImpl( ref args );
 		}

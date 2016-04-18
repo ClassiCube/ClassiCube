@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 			int xMul = args.Font.Style == FontStyle.Italic ? 1 : 0;
 			int runCount = 0, lastY = -1;
 			string text = args.Text;
-			float point = args.Font.Size;
+			int point = Utils.Floor( args.Font.Size );
 			byte* coordsPtr = stackalloc byte[256];
 			
 			for( int i = 0; i < text.Length; i++ ) {
@@ -100,23 +100,25 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawRun( FastBitmap dst, int x, int y, int xMul, string text,
-		             int runCount, byte* coords, float point, FastColour col ) {
+		             int runCount, byte* coords, int point, FastColour col ) {
 			if( runCount == 0 ) return;
 			int srcY = (coords[0] >> 4) * boxSize;
-			int srcHeight = boxSize, dstHeight = PtToPx( point, srcHeight );
+			int textHeight = AdjTextSize( point ), cellHeight = CellSize( textHeight );
+			int padding = (cellHeight - textHeight) / 2;
 			int startX = x;
+			
 			ushort* dstWidths = stackalloc ushort[runCount];
 			for( int i = 0; i < runCount; i++ )
 				dstWidths[i] = (ushort)PtToPx( point, widths[coords[i]] );
 			
-			for( int yy = 0; yy < dstHeight; yy++ ) {
-				int fontY = srcY + yy * srcHeight / dstHeight;
+			for( int yy = 0; yy < textHeight; yy++ ) {
+				int fontY = srcY + yy * boxSize / textHeight;
 				int* fontRow = fontPixels.GetRowPtr( fontY );
-				int dstY = y + yy;
+				int dstY = y + (yy + padding);
 				if( dstY >= dst.Height ) return;
 				
 				int* dstRow = dst.GetRowPtr( dstY );
-				int xOffset = xMul * ((dstHeight - 1 - yy) / italicSize);			
+				int xOffset = xMul * ((textHeight - 1 - yy) / italicSize);			
 				for( int i = 0; i < runCount; i++ ) {
 					int srcX = (coords[i] & 0x0F) * boxSize;
 					int srcWidth = widths[coords[i]], dstWidth = dstWidths[i];
@@ -141,17 +143,17 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawUnderline( FastBitmap dst, int x, int yOffset, ref DrawTextArgs args, bool shadowCol ) {
-			int height = PtToPx( args.Font.Size, boxSize );
+			int point = Utils.Floor( args.Font.Size );
+			int height = PtToPx( point, boxSize );
 			int offset = ShadowOffset( args.Font.Size );
-			int col = FastColour.White.ToArgb();
 			
-			float point = args.Font.Size;			
+			int col = FastColour.White.ToArgb();			
 			string text = args.Text;
 			if( args.UseShadow ) height += offset;
 			int startX = x;
 			
 			for( int yy = height - offset; yy < height; yy++ ) {
-				int* dstRow = dst.GetRowPtr( yy + yOffset );				
+				int* dstRow = dst.GetRowPtr( yy + yOffset );
 				
 				for( int i = 0; i < text.Length; i++ ) {
 					char c = text[i];
@@ -175,8 +177,9 @@ namespace ClassicalSharp {
 		
 		protected Size MeasureBitmappedSizeImpl( ref DrawTextArgs args ) {
 			if( String.IsNullOrEmpty( args.Text ) ) return Size.Empty;
-			float point = args.Font.Size;
-			Size total = new Size( 0, PtToPx( point, boxSize ) );
+			int textHeight = AdjTextSize( Utils.Floor( args.Font.Size ) );
+			Size total = new Size( 0, CellSize( textHeight ) );
+			int point = Utils.Floor( args.Font.Size );
 			
 			for( int i = 0; i < args.Text.Length; i++ ) {
 				char c = args.Text[i];
@@ -209,18 +212,26 @@ namespace ClassicalSharp {
 			return (int)'?';
 		}
 		
-		protected static int ShadowOffset( float fontSize ) {
+		protected int ShadowOffset( float fontSize ) {
 			if( fontSize < 9.9f ) return 1;
 			if( fontSize < 24.9f ) return 2;
 			return 3;
 		}
 		
-		protected int PtToPx( int point ) {
-			return (int)Math.Ceiling( (float)point / 72 * 96 ); // TODO: non 96 dpi?
+		protected int PtToPx( int point, int value ) {
+			return Utils.CeilDiv( value * point, boxSize );
 		}
 		
-		protected int PtToPx( float point, float value ) {
-			return (int)Math.Ceiling( (value / boxSize) * point / 72f * 96f );
+		/// <summary> Rounds the given font size up to the nearest whole 
+		/// multiple of the size of a character in default.png. </summary>
+		protected int AdjTextSize( int point ) { 
+			return Utils.CeilDiv( point, boxSize ) * boxSize; 
+		}
+		
+		/// <summary> Returns the height of the bounding box that 
+		/// contains both the given font size in addition to padding. </summary>
+		protected static int CellSize( int point ) { 
+			return Utils.CeilDiv( point * 3, 2 ); 
 		}
 		
 		protected void DisposeBitmappedText() {

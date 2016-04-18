@@ -82,8 +82,8 @@ namespace ClassicalSharp.Gui {
 		string Q( int value ) { return value == 1 ? "" : "s"; }
 		
 		public override void Init() {
-			font = new Font( game.FontName, 13 );
-			posFont = new Font( game.FontName, 12, FontStyle.Italic );
+			font = new Font( game.FontName, 14 );
+			posFont = new Font( game.FontName, 13, FontStyle.Italic );
 			game.Events.ChatFontChanged += ChatFontChanged;
 			
 			fpsTextWidget = new ChatTextWidget( game, font );

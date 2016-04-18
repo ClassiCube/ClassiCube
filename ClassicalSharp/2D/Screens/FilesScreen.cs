@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui {
 		protected string titleText;
 		
 		public override void Init() {
-			textFont = new Font( game.FontName, 14, FontStyle.Bold );
+			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			title = TextWidget.Create( game, 0, -130, titleText, Anchor.Centre, Anchor.Centre, titleFont );

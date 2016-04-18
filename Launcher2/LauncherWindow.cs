@@ -70,7 +70,7 @@ namespace Launcher {
 			Window.WindowStateChanged += Resize;
 			Window.Keyboard.KeyDown += KeyDown;
 			LoadFont();
-			logoFont = new Font( FontName, 24, FontStyle.Regular );
+			logoFont = new Font( FontName, 32, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
 			Window.Icon = Icon.ExtractAssociatedIcon( path );			
 			//Minimised = Window.WindowState == WindowState.Minimized;
