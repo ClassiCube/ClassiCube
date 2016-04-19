@@ -79,8 +79,6 @@ namespace ClassicalSharp.Gui {
 			base.Dispose();
 			base.Init();
 			game.RefreshHud();
-			if( selIndex >= 0 )
-				selectedWidget = (ButtonWidget)widgets[selIndex];
 			
 			for( int i = 0; i < widgets.Length; i++) {
 				if( widgets[i] == null || !(widgets[i] is ButtonWidget)) {
@@ -91,6 +89,9 @@ namespace ClassicalSharp.Gui {
 				btn.font = titleFont;
 				btn.SetText( btn.Text );
 			}
+			
+			if( selIndex >= 0 )
+				selectedWidget = (ButtonWidget)widgets[selIndex];
 		}
 		
 		void MakeValidators() {

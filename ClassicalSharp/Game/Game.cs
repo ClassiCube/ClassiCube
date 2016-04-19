@@ -205,13 +205,12 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
-		/// <summary> Gets whether the active screen handles all input. </summary>
-		public bool ScreenLockedInput {
-			get { return activeScreen == null ? hudScreen.HandlesAllInput :
-					activeScreen.HandlesAllInput; } // inlined here.
-		}
+		/// <summary> Gets whether the screen the user is currently interacting with 
+		/// handles all input. </summary>
+		public bool ScreenLockedInput { get { return ActiveScreen.HandlesAllInput; } }
 		
-		public Screen GetActiveScreen {
+		/// <summary> Gets the screen that the user is currently interacting with. </summary>
+		public Screen ActiveScreen {
 			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
 		

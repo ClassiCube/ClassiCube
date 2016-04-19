@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
-			bool showMinimal = game.GetActiveScreen.BlocksWorld;
+			bool showMinimal = game.ActiveScreen.BlocksWorld;
 			if( chat.HandlesAllInput )
 				chat.RenderBackground();
 			api.Texturing = true;

@@ -72,7 +72,6 @@ namespace ClassicalSharp.Renderers {
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			api.Texturing = true;
 			api.AlphaTest = true;
-			Console.WriteLine( _1DUsed );
 			
 			for( int batch = 0; batch < _1DUsed; batch++ ) {
 				if( totalUsed[batch] <= 0 ) continue;
