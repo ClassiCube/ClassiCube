@@ -29,8 +29,11 @@ namespace ClassicalSharp.Gui {
 			PlaceholderHeight = new bool[ElementsCount];
 			lines = new string[ElementsCount];
 			linkData = new LinkData[ElementsCount];
+			
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
-			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
+			int height = game.Drawer2D.MeasureChatSize( ref args ).Height;
+			game.Drawer2D.ReducePadding( ref height, Utils.Floor( font.Size ) );
+			defaultHeight = height;
 			
 			for( int i = 0; i < Textures.Length; i++ ) {
 				Textures[i].Height = defaultHeight;
