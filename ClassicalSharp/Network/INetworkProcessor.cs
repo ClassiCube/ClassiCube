@@ -67,18 +67,25 @@ namespace ClassicalSharp {
 			string url = identifier.Substring( 3 );
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f );
+			string address = url;
+			if( url.StartsWith( "https://" ) ) address = url.Substring( 8 );
+			if( url.StartsWith( "http://" ) ) address = url.Substring( 7 );
 			screen.SetText( "Do you want to download the server's texture pack?",
-			               "Texture pack url:", url,
+			               "Texture pack url:", address,
 			               "Download size: " + contentLengthMB.ToString( "F3" ) + " MB" );
 		}
 		
 		protected internal void RetrieveTexturePack( string url ) {
 			if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
 				game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
+				string address = url;
+				if( url.StartsWith( "https://" ) ) address = url.Substring( 8 );
+				if( url.StartsWith( "http://" ) ) address = url.Substring( 7 );
+				
 				game.ShowWarning( new WarningScreen(
 					game, "CL_" + url, true, true, "Do you want to download the server's texture pack?",
 					DownloadTexturePack, null, WarningScreenTick,
-					"Texture pack url:", url,
+					"Texture pack url:", address,
 					"Download size: Determining..." ) );
 			} else {
 				DownloadTexturePack( url );

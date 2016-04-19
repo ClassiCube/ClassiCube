@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			regularFont = new Font( game.FontName, 14, FontStyle.Regular );
+			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			InitStandardButtons();
 			SetText( title, body );
 		}
@@ -58,8 +58,9 @@ namespace ClassicalSharp.Gui {
 			labels[0] = TextWidget.Create( game, 0, -120, title,
 			                              Anchor.Centre, Anchor.Centre, titleFont );
 			for( int i = 0; i < body.Length; i++ ) {
-				labels[i + 1] = TextWidget.Create( game, 0, -70 + 20 * i, body[i],
+				labels[i + 1] = ChatTextWidget.Create( game, 0, -70 + 20 * i, body[i],
 				                                  Anchor.Centre, Anchor.Centre, regularFont );
+				labels[i + 1].Colour = new FastColour( 224, 224, 224 );
 			}
 		}
 		TextWidget[] labels;

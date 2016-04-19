@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
-			defaultHeight = game.Drawer2D.MeasureSize( ref args ).Height;
+			defaultHeight = game.Drawer2D.MeasureChatSize( ref args ).Height;
 			Height = defaultHeight;
 		}
 		
