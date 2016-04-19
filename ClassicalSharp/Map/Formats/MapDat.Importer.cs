@@ -10,7 +10,7 @@ using OpenTK;
 namespace ClassicalSharp.Map {
 	
 	/// <summary> Imports a world from a dat map file (original minecraft classic map) </summary>
-	public sealed class MapDat : IMapFormatImporter {
+	public sealed class MapDatImporter : IMapFormatImporter {
 		
 		const byte TC_NULL = 0x70, TC_REFERENCE = 0x71;
 		const byte TC_CLASSDESC = 0x72, TC_OBJECT = 0x73;

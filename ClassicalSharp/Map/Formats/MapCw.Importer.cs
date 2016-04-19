@@ -5,16 +5,16 @@ using System.IO.Compression;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Net;
 using OpenTK;
-using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.MapCw.NbtTag>;
+using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.NbtTag>;
 
 namespace ClassicalSharp.Map {
 
-	public sealed partial class MapCw : IMapFormatImporter {
+	public sealed class MapCwImporter : IMapFormatImporter {
 		
 		BinaryReader reader;
+		NbtFile file;
 		Game game;
 		World map;
-		NbtTag invalid = default( NbtTag );
 		
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Decompress ) ) {
@@ -23,9 +23,9 @@ namespace ClassicalSharp.Map {
 					throw new InvalidDataException( "Nbt file must start with Tag_Compound" );
 				this.game = game;
 				map = game.World;
+				file = new NbtFile( reader );
 				
-				invalid.TagId = NbtTagType.Invalid;
-				NbtTag root = ReadTag( (byte)NbtTagType.Compound, true );
+				NbtTag root = file.ReadTag( (byte)NbtTagType.Compound, true );
 				NbtCompound children = (NbtCompound)root.Value;
 				if( children.ContainsKey( "Metadata" ) )
 					ParseMetadata( children );

@@ -7,177 +7,182 @@ using OpenTK;
 
 namespace ClassicalSharp.Map {
 
-	public sealed partial class MapCw : IMapFormatExporter {
+	public sealed class MapCwExporter : IMapFormatExporter {
 
 		BinaryWriter writer;
+		NbtFile nbt;
+		Game game;
+		World map;
+		
 		public void Save( Stream stream, Game game ) {
 			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Compress ) ) {
 				writer = new BinaryWriter( wrapper );
+				nbt = new NbtFile( writer );
 				this.game = game;
 				map = game.World;
 				
-				WriteTag( NbtTagType.Compound ); WriteString( "ClassicWorld" );
+				nbt.Write( NbtTagType.Compound ); nbt.Write( "ClassicWorld" );
 				
-				WriteTag( NbtTagType.Int8 );
-				WriteString( "FormatVersion" ); WriteInt8( 1 );
+				nbt.Write( NbtTagType.Int8 );
+				nbt.Write( "FormatVersion" ); nbt.WriteInt8( 1 );
 				
-				WriteTag( NbtTagType.Int8Array );
-				WriteString( "UUID" ); WriteInt32( 16 );
-				WriteBytes( map.Uuid.ToByteArray() );
+				nbt.Write( NbtTagType.Int8Array );
+				nbt.Write( "UUID" ); nbt.WriteInt32( 16 );
+				nbt.WriteBytes( map.Uuid.ToByteArray() );
 				
-				WriteTag( NbtTagType.Int16 );
-				WriteString( "X" ); WriteInt16( (short)map.Width );
+				nbt.Write( NbtTagType.Int16 );
+				nbt.Write( "X" ); nbt.WriteInt16( (short)map.Width );
 				
-				WriteTag( NbtTagType.Int16 );
-				WriteString( "Y" ); WriteInt16( (short)map.Height );
+				nbt.Write( NbtTagType.Int16 );
+				nbt.Write( "Y" ); nbt.WriteInt16( (short)map.Height );
 				
-				WriteTag( NbtTagType.Int16 );
-				WriteString( "Z" ); WriteInt16( (short)map.Length );
+				nbt.Write( NbtTagType.Int16 );
+				nbt.Write( "Z" ); nbt.WriteInt16( (short)map.Length );
 				
 				WriteSpawnCompoundTag();
 				
-				WriteTag( NbtTagType.Int8Array );
-				WriteString( "BlockArray" ); WriteInt32( map.mapData.Length );
-				WriteBytes( map.mapData );
+				nbt.Write( NbtTagType.Int8Array );
+				nbt.Write( "BlockArray" ); nbt.WriteInt32( map.mapData.Length );
+				nbt.WriteBytes( map.mapData );
 				
 				WriteMetadata();
 				
-				WriteTag( NbtTagType.End );
+				nbt.Write( NbtTagType.End );
 			}
 		}
 		
 		void WriteSpawnCompoundTag() {
-			WriteTag( NbtTagType.Compound ); WriteString( "Spawn" );
+			nbt.Write( NbtTagType.Compound ); nbt.Write( "Spawn" );
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 spawn = p.Position; // TODO: Maybe also keep real spawn too?
 			
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "X" ); WriteInt16( (short)spawn.X );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "X" ); nbt.WriteInt16( (short)spawn.X );
 			
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "Y" ); WriteInt16( (short)spawn.Y );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "Y" ); nbt.WriteInt16( (short)spawn.Y );
 			
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "Z" ); WriteInt16( (short)spawn.Z );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "Z" ); nbt.WriteInt16( (short)spawn.Z );
 			
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "H" );
-			WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnYaw, 256 ) );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "H" );
+			nbt.WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnYaw, 256 ) );
 			
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "P" );
-			WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnPitch, 256 ) );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "P" );
+			nbt.WriteUInt8( (byte)Utils.DegreesToPacked( p.SpawnPitch, 256 ) );
 			
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
 		}
 		
 		void WriteMetadata() {
-			WriteTag( NbtTagType.Compound ); WriteString( "Metadata" );
-			WriteTag( NbtTagType.Compound ); WriteString( "CPE" );
+			nbt.Write( NbtTagType.Compound ); nbt.Write( "Metadata" );
+			nbt.Write( NbtTagType.Compound ); nbt.Write( "CPE" );
 			LocalPlayer p = game.LocalPlayer;
 
-			WriteCpeExtCompound( "ClickDistance", 1 );
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "Distance" ); WriteInt16( (short)(p.ReachDistance * 32) );
-			WriteTag( NbtTagType.End );
+			nbt.WriteCpeExtCompound( "ClickDistance", 1 );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "Distance" ); nbt.WriteInt16( (short)(p.ReachDistance * 32) );
+			nbt.Write( NbtTagType.End );
 			
-			WriteCpeExtCompound( "EnvWeatherType", 1 );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "WeatherType" ); WriteUInt8( (byte)map.Weather );
-			WriteTag( NbtTagType.End );
+			nbt.WriteCpeExtCompound( "EnvWeatherType", 1 );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "WeatherType" ); nbt.WriteUInt8( (byte)map.Weather );
+			nbt.Write( NbtTagType.End );
 			
-			WriteCpeExtCompound( "EnvMapAppearance", 1 );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "SideBlock" ); WriteUInt8( (byte)map.SidesBlock );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "EdgeBlock" ); WriteUInt8( (byte)map.EdgeBlock );
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "SideLevel" ); WriteInt16( (short)map.EdgeHeight );
-			WriteTag( NbtTagType.String );
+			nbt.WriteCpeExtCompound( "EnvMapAppearance", 1 );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "SideBlock" ); nbt.WriteUInt8( (byte)map.SidesBlock );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "EdgeBlock" ); nbt.WriteUInt8( (byte)map.EdgeBlock );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "SideLevel" ); nbt.WriteInt16( (short)map.EdgeHeight );
+			nbt.Write( NbtTagType.String );
 			string url = game.World.TextureUrl == null ? "" : game.World.TextureUrl;
-			WriteString( "TextureURL" ); WriteString( url );
-			WriteTag( NbtTagType.End );
+			nbt.Write( "TextureURL" ); nbt.Write( url );
+			nbt.Write( NbtTagType.End );
 			
-			WriteCpeExtCompound( "EnvColors", 1 );
+			nbt.WriteCpeExtCompound( "EnvColors", 1 );
 			WriteColourCompound( "Sky", map.SkyCol );
 			WriteColourCompound( "Cloud", map.CloudsCol );
 			WriteColourCompound( "Fog", map.FogCol );
 			WriteColourCompound( "Ambient", map.Shadowlight );
 			WriteColourCompound( "Sunlight", map.Sunlight );
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
 			
-			WriteCpeExtCompound( "BlockDefinitions", 1 );
+			nbt.WriteCpeExtCompound( "BlockDefinitions", 1 );
 			uint[] flags = game.BlockInfo.DefinedCustomBlocks;
 			for( int tile = 1; tile < 256; tile++ ) {
 				if( (flags[tile >> 5] & (1u << (tile & 0x1F))) != 0 )
 					WriteBlockDefinitionCompound( (byte)tile );
 			}
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
 			
-			WriteTag( NbtTagType.End );
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
 		}
 		
 		void WriteColourCompound( string name, FastColour col ) {
-			WriteTag( NbtTagType.Compound ); WriteString( name );
+			nbt.Write( NbtTagType.Compound ); nbt.Write( name );
 			
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "R" ); WriteInt16( col.R );
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "G" ); WriteInt16( col.G );
-			WriteTag( NbtTagType.Int16 );
-			WriteString( "B" ); WriteInt16( col.B );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "R" ); nbt.WriteInt16( col.R );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "G" ); nbt.WriteInt16( col.G );
+			nbt.Write( NbtTagType.Int16 );
+			nbt.Write( "B" ); nbt.WriteInt16( col.B );
 			
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.End );
 		}
 		
 		unsafe void WriteBlockDefinitionCompound( byte id ) {
 			BlockInfo info = game.BlockInfo;
-			WriteTag( NbtTagType.Compound ); WriteString( "Block" + id );
+			nbt.Write( NbtTagType.Compound ); nbt.Write( "Block" + id );
 			
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "ID" ); WriteUInt8( id );
-			WriteTag( NbtTagType.String );
-			WriteString( "Name" ); WriteString( info.Name[id] );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "CollideType" ); WriteUInt8( (byte)info.Collide[id] );		
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "ID" ); nbt.WriteUInt8( id );
+			nbt.Write( NbtTagType.String );
+			nbt.Write( "Name" ); nbt.Write( info.Name[id] );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "CollideType" ); nbt.WriteUInt8( (byte)info.Collide[id] );		
 			float speed = info.SpeedMultiplier[id];
-			WriteTag( NbtTagType.Real32 );
-			WriteString( "Speed" ); WriteInt32( *((int*)&speed) );
+			nbt.Write( NbtTagType.Real32 );
+			nbt.Write( "Speed" ); nbt.WriteInt32( *((int*)&speed) );
 			
-			WriteTag( NbtTagType.Int8Array );
-			WriteString( "Textures" ); WriteInt32( 6 );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Top ) );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Bottom ) );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Left ) );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Right ) );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Front ) );
-			WriteUInt8( info.GetTextureLoc( id, TileSide.Back ) );
+			nbt.Write( NbtTagType.Int8Array );
+			nbt.Write( "Textures" ); nbt.WriteInt32( 6 );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Top ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Bottom ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Left ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Right ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Front ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Back ) );
 			
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "TransmitsLight" ); WriteUInt8( info.BlocksLight[id] ? 0 : 1 );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "WalkSound" ); WriteUInt8( (byte)info.DigSounds[id] );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "FullBright" ); WriteUInt8( info.FullBright[id] ? 1 : 0 );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "Shape" ); WriteUInt8( GetShape( info, id ) );
-			WriteTag( NbtTagType.Int8 );
-			WriteString( "BlockDraw" ); WriteUInt8( GetDraw( info, id ) );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "TransmitsLight" ); nbt.WriteUInt8( info.BlocksLight[id] ? 0 : 1 );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "WalkSound" ); nbt.WriteUInt8( (byte)info.DigSounds[id] );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "FullBright" ); nbt.WriteUInt8( info.FullBright[id] ? 1 : 0 );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "Shape" ); nbt.WriteUInt8( GetShape( info, id ) );
+			nbt.Write( NbtTagType.Int8 );
+			nbt.Write( "BlockDraw" ); nbt.WriteUInt8( GetDraw( info, id ) );
 			
 			FastColour col = info.FogColour[id];
-			WriteTag( NbtTagType.Int8Array );
-			WriteString( "Fog" ); WriteInt32( 4 );
-			WriteUInt8( (byte)(128 * info.FogDensity[id] - 1) );
-			WriteUInt8( col.R ); WriteUInt8( col.G ); WriteUInt8( col.B );
+			nbt.Write( NbtTagType.Int8Array );
+			nbt.Write( "Fog" ); nbt.WriteInt32( 4 );
+			nbt.WriteUInt8( (byte)(128 * info.FogDensity[id] - 1) );
+			nbt.WriteUInt8( col.R ); nbt.WriteUInt8( col.G ); nbt.WriteUInt8( col.B );
 			
 			Vector3 min = info.MinBB[id], max = info.MaxBB[id];
-			WriteTag( NbtTagType.Int8Array );
-			WriteString( "Coords" ); WriteInt32( 6 );
-			WriteUInt8( (byte)(min.X * 16) ); WriteUInt8( (byte)(min.Y * 16) ); 
-			WriteUInt8( (byte)(min.Z * 16) ); WriteUInt8( (byte)(max.X * 16) );
-			WriteUInt8( (byte)(max.Y * 16) ); WriteUInt8( (byte)(max.Z * 16) );
-			WriteTag( NbtTagType.End );
+			nbt.Write( NbtTagType.Int8Array );
+			nbt.Write( "Coords" ); nbt.WriteInt32( 6 );
+			nbt.WriteUInt8( (byte)(min.X * 16) ); nbt.WriteUInt8( (byte)(min.Y * 16) ); 
+			nbt.WriteUInt8( (byte)(min.Z * 16) ); nbt.WriteUInt8( (byte)(max.X * 16) );
+			nbt.WriteUInt8( (byte)(max.Y * 16) ); nbt.WriteUInt8( (byte)(max.Z * 16) );
+			nbt.Write( NbtTagType.End );
 		}
 		
 		int GetShape( BlockInfo info, byte id ) {

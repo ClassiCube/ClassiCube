@@ -172,8 +172,8 @@
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
-    <Compile Include="Map\Formats\MapCw.Nbt.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
+    <Compile Include="Map\Formats\NbtFile.cs" />
     <Compile Include="Math\RayTracer.cs" />
     <Compile Include="Model\CustomModel.cs" />
     <Compile Include="Model\HumanModels.cs" />

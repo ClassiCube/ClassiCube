@@ -52,13 +52,13 @@ namespace ClassicalSharp.Gui {
 		void LoadMap( string path ) {
 			IMapFormatImporter importer = null;
 			if( path.EndsWith( ".dat" ) ) {
-				importer = new MapDat();
+				importer = new MapDatImporter();
 			} else if( path.EndsWith( ".fcm" ) ) {
-				importer = new MapFcm3();
+				importer = new MapFcm3Importer();
 			} else if( path.EndsWith( ".cw" ) ) {
-				importer = new MapCw();
+				importer = new MapCwImporter();
 			} else if( path.EndsWith( ".lvl" ) ) {
-				importer = new MapLvl();
+				importer = new MapLvlImporter();
 			}
 			
 			try {

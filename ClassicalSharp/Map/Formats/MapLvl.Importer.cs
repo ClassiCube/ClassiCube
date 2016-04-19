@@ -9,7 +9,7 @@ using ClassicalSharp.Entities;
 namespace ClassicalSharp.Map {
 
 	/// <summary> Imports a world from a LVL map file (MCLawl server map) </summary>
-	public sealed class MapLvl : IMapFormatImporter {
+	public sealed class MapLvlImporter : IMapFormatImporter {
 
 		const int Version = 1874;
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {

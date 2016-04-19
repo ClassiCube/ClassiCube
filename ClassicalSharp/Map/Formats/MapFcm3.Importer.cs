@@ -9,7 +9,7 @@ using ClassicalSharp.Entities;
 namespace ClassicalSharp.Map {
 
 	/// <summary> Imports a world from a FCMv3 map file (fCraft server map) </summary>
-	public sealed class MapFcm3 : IMapFormatImporter {
+	public sealed class MapFcm3Importer : IMapFormatImporter {
 		
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;

@@ -126,7 +126,7 @@ namespace ClassicalSharp.Gui {
 				if( File.Exists( path ) )
 					File.Delete( path );
 				using( FileStream fs = new FileStream( path, FileMode.CreateNew, FileAccess.Write ) ) {
-					IMapFormatExporter exporter = new MapCw();
+					IMapFormatExporter exporter = new MapCwExporter();
 					exporter.Save( fs, game );
 				}
 			} catch( Exception ex ) {
