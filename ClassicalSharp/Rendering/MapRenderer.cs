@@ -80,7 +80,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Refresh() {
-			chunkPos = new Vector3I( int.MaxValue );			
+			chunkPos = new Vector3I( int.MaxValue );
+			totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];			
 			if( chunks == null || game.World.IsNotLoaded ) return;			
 			ClearChunkCache();
 			CreateChunkCache();
