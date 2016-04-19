@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui {
 			if( lastX == mouseX && lastY == mouseY )
 				return true;
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null ) continue;
+				if( widgets[i] == null || !widgets[i].Active ) continue;
 				widgets[i].Active = false;
 			}
 			

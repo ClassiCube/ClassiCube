@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			int extClipY = widgets[widgets.Length - 3].Y;
+			int extClipY = extendedHelp == null ? 0 : widgets[widgets.Length - 3].Y;
 			int extEndY = extendedHelp == null ? 0 : extendedHelp.Y + extendedHelp.Height;
 			
 			if( extendedHelp != null && extEndY <= extClipY ) {

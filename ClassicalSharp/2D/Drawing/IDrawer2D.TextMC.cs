@@ -226,7 +226,7 @@ namespace ClassicalSharp {
 		/// <summary> Rounds the given font size up to the nearest whole 
 		/// multiple of the size of a character in default.png. </summary>
 		protected int AdjTextSize( int point ) { 
-			return Utils.CeilDiv( point, boxSize ) * boxSize; 
+			return point; //Utils.CeilDiv( point, boxSize ) * boxSize; 
 		}
 		
 		/// <summary> Returns the height of the bounding box that 

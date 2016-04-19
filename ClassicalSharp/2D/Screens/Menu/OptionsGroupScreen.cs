@@ -67,7 +67,7 @@ namespace ClassicalSharp.Gui {
 			if( button == null ) return;
 			
 			string text = descriptions[Array.IndexOf<Widget>(widgets, button)];
-			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			descWidget = ChatTextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {

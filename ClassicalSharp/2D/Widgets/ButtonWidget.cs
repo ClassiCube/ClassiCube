@@ -32,12 +32,6 @@ namespace ClassicalSharp.Gui {
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		int defaultHeight;
 		internal Font font;
-		bool active = false;
-		
-		public override bool Active {
-			get { return active; }
-			set { active = value; SetText( Text ); }
-		}
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
@@ -45,12 +39,12 @@ namespace ClassicalSharp.Gui {
 			Height = defaultHeight;
 		}
 		
-		static Texture shadowTex = new Texture( 0, 0, 0, 0, 0, 
+		static Texture shadowTex = new Texture( 0, 0, 0, 0, 0,
 		                                       new TextureRec( 0, 66/256f, 200/256f, 20/256f ) );
 		static Texture selectedTex = new Texture( 0, 0, 0, 0, 0,
 		                                         new TextureRec( 0, 86/256f, 200/256f, 20/256f ) );
 		static Texture disabledTex = new Texture( 0, 0, 0, 0, 0,
-		                                         new TextureRec( 0, 46/256f, 200/256f, 20/256f ) );		
+		                                         new TextureRec( 0, 46/256f, 200/256f, 20/256f ) );
 		public string Text;
 		public void SetText( string text ) {
 			api.DeleteTexture( ref texture );
@@ -67,6 +61,9 @@ namespace ClassicalSharp.Gui {
 			Width = texture.Width;
 		}
 		
+		static FastColour normCol = new FastColour( 224, 224, 224 ),
+		activeCol = new FastColour( 255, 255, 160 ),
+		disabledCol = new FastColour( 160, 160, 160 );
 		public override void Render( double delta ) {
 			if( !texture.IsValid )
 				return;
@@ -78,8 +75,7 @@ namespace ClassicalSharp.Gui {
 			backTex.Width = Width; backTex.Height = Height;
 			
 			backTex.Render( api );
-			FastColour col = Active ? FastColour.White : new FastColour( 200, 200, 200 );
-			if( Disabled ) col = new FastColour( 150, 150, 150 );
+			FastColour col = Disabled ? disabledCol : (Active ? activeCol : normCol);
 			texture.Render( api, col );
 		}
 		
@@ -98,8 +94,6 @@ namespace ClassicalSharp.Gui {
 		
 		void MakeTexture( string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			if( active )
-				args.Text = "&" + (char)0xFF + args.Text;
 			Size size = game.Drawer2D.MeasureChatSize( ref args );
 			
 			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;
@@ -110,7 +104,7 @@ namespace ClassicalSharp.Gui {
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
 				using( IDrawer2D drawer = game.Drawer2D )
 			{
-				drawer.SetBitmap( bmp );			
+				drawer.SetBitmap( bmp );
 				args.SkipPartsCheck = true;
 				drawer.DrawChatText( ref args, xOffset / 2, yOffset / 2 );
 				texture = drawer.Make2DTexture( bmp, size, 0, 0 );

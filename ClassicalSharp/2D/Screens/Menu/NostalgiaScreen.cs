@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui {
 				new BooleanValidator(),
 				new BooleanValidator(),
 			};
-			infoWidget = TextWidget.Create( game, 0, 150, "&eButtons on the right require a client restart.", 
+			infoWidget = ChatTextWidget.Create( game, 0, 100, "&eButtons on the right require a client restart", 
 			                               Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
