@@ -205,9 +205,9 @@ namespace ClassicalSharp.Gui {
 			currentAction = MenuInputWidget.Create(
 				game, 0, 80, 600, 30, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new StringValidator( 64 ) );
-			currentMoreInputLabel = TextWidget.Create(
-				game, -170, 110, "Keep input bar open:",
-				Anchor.Centre, Anchor.Centre, textFont );
+			currentMoreInputLabel = ChatTextWidget.Create(
+				game, -150, 110, "Keep input bar open:",
+				Anchor.Centre, Anchor.Centre, titleFont );
 			
 			if( curHotkey.Text == null ) curHotkey.Text = "";
 			currentAction.SetText( curHotkey.Text );

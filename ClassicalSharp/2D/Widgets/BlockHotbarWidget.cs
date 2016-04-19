@@ -62,7 +62,7 @@ namespace ClassicalSharp.Gui {
 			
 			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
-			api.Draw2DTexture( ref selTex );
+			api.Draw2DTexture( ref selTex, FastColour.White );
 		}
 		
 		public override void Dispose() { }

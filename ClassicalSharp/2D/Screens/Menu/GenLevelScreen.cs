@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
-			labelFont = new Font( game.FontName, 15, FontStyle.Regular );
+			labelFont = new Font( game.FontName, 16, FontStyle.Regular );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
@@ -92,8 +92,12 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		TextWidget MakeLabel( int x, int y, string text ) {
-			return TextWidget.Create( game, x, y, text,
+			TextWidget widget = ChatTextWidget.Create( game, x, y, text,
 			                         Anchor.Centre, Anchor.Centre, labelFont );
+			int start = game.Width / 2 - 110;
+			widget.MoveTo( start - widget.Width, widget.Y );
+			widget.Colour = new FastColour( 224, 224, 224 );
+			return widget;
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {

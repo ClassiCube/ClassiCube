@@ -25,8 +25,9 @@ namespace ClassicalSharp.Gui {
 		public int XOffset = 0, YOffset = 0;
 		protected int defaultHeight;
 		protected internal Font font;
-		public bool ReducePadding;
 		
+		public bool ReducePadding;
+		public FastColour Colour = FastColour.White;
 		public bool IsValid { get { return texture.IsValid; } }
 		
 		public override void Init() {
@@ -62,7 +63,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			if( texture.IsValid )
-				texture.Render( api );
+				texture.Render( api, Colour );
 		}
 		
 		public override void Dispose() {

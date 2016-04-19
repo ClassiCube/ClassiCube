@@ -293,10 +293,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, uv.U1, uv.V2, FastColour.White );
 		}
 		
-		public void Draw2DTexture( ref Texture tex ) {
-			Draw2DTexture( ref tex, FastColour.White );
-		}
-		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
 		public void Mode2D( float width, float height, bool setFog ) {

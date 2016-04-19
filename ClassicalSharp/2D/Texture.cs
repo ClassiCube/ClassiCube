@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		
 		public void Render( IGraphicsApi graphics ) {
 			graphics.BindTexture( ID );
-			graphics.Draw2DTexture( ref this );
+			graphics.Draw2DTexture( ref this, FastColour.White );
 		}
 		
 		public void Render( IGraphicsApi graphics, FastColour colour ) {

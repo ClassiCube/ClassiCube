@@ -65,8 +65,7 @@ namespace ClassicalSharp.Gui {
 		activeCol = new FastColour( 255, 255, 160 ),
 		disabledCol = new FastColour( 160, 160, 160 );
 		public override void Render( double delta ) {
-			if( !texture.IsValid )
-				return;
+			if( !texture.IsValid ) return;
 			Texture backTex = Active ? selectedTex : shadowTex;
 			if( Disabled ) backTex = disabledTex;
 			

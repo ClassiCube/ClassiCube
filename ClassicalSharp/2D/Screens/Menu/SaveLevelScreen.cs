@@ -140,7 +140,8 @@ namespace ClassicalSharp.Gui {
 		
 		void MakeDescWidget( string text ) {
 			DisposeDescWidget();
-			descWidget = TextWidget.Create( game, 0, 90, text, Anchor.Centre, Anchor.Centre, regularFont );
+			descWidget = ChatTextWidget.Create( game, 0, 90, text, 
+			                                   Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		void DisposeDescWidget() {
