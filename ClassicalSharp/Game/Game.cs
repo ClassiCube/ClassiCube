@@ -121,8 +121,8 @@ namespace ClassicalSharp {
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
 			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
-			Fov = Fov;
-			ZoomFov = Fov;
+			Fov = DefaultFov;
+			ZoomFov = DefaultFov;
 			UpdateProjection();
 			CommandManager = new CommandManager();
 			CommandManager.Init( this );
