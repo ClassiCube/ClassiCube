@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui {
 			base.Init();
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
-			textFont = new Font( game.FontName, 14, FontStyle.Bold );
+			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			
 			widgets = new [] {
 				MakeHotkey( 0, -180, 0 ),

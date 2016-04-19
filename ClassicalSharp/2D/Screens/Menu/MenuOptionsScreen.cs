@@ -40,7 +40,7 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			base.Init();
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
-			extendedHelpFont = new Font( game.FontName, 13, FontStyle.Regular );
+			extendedHelpFont = new Font( game.FontName, 16, FontStyle.Regular );
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -78,11 +78,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Dispose() {
-			if( inputWidget != null ) {
-				inputWidget.Dispose();
-				inputWidget = null;
-			}
-			
+			DisposeWidgets();		
 			game.Keyboard.KeyRepeat = false;
 			extendedHelpFont.Dispose();
 			DisposeExtendedHelp();
@@ -260,18 +256,23 @@ namespace ClassicalSharp.Gui {
 			string text = inputWidget.GetText();
 			if( inputWidget.Validator.IsValidValue( text ) )
 				targetWidget.SetValue( game, text );
+			
+			DisposeWidgets();
+			UpdateDescription( targetWidget );
+			targetWidget = null;
+			InputClosed();
+		}
+		
+		void DisposeWidgets() {
 			if( inputWidget != null )
 				inputWidget.Dispose();
 			widgets[widgets.Length - 2] = null;
 			inputWidget = null;
-			UpdateDescription( targetWidget );
-			targetWidget = null;
 			
 			int okayIndex = widgets.Length - 1;
 			if( widgets[okayIndex] != null )
 				widgets[okayIndex].Dispose();
 			widgets[okayIndex] = null;
-			InputClosed();
 		}
 	}
 }

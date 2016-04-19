@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui {
 			base.Init();
 			if( keyNames == null )
 				keyNames = Enum.GetNames( typeof( Key ) );
-			keyFont = new Font( game.FontName, 15, FontStyle.Bold );
+			keyFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Italic );
 			statusWidget = ChatTextWidget.Create( game, 0, 130, "", 
 			                                     Anchor.Centre, Anchor.Centre, regularFont );

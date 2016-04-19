@@ -74,10 +74,13 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void HandleFontChange() {
+			int selIndex = Array.IndexOf<Widget>( widgets, selectedWidget );
 			game.Events.RaiseChatFontChanged();
 			base.Dispose();
 			base.Init();
 			game.RefreshHud();
+			if( selIndex >= 0 )
+				selectedWidget = (ButtonWidget)widgets[selIndex];
 			
 			for( int i = 0; i < widgets.Length; i++) {
 				if( widgets[i] == null || !(widgets[i] is ButtonWidget)) {

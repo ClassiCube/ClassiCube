@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui {
 			this.title = title;
 			this.message = message;
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			messageFont = new Font( game.FontName, 14, FontStyle.Regular );
+			messageFont = new Font( game.FontName, 16, FontStyle.Regular );
 		}
 		
 		public override void Render( double delta ) {

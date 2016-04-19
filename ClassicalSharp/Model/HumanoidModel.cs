@@ -72,7 +72,7 @@ namespace ClassicalSharp.Model {
 		
 		public override bool Bobbing { get { return true; } }
 		
-		public override float NameYOffset { get { return 2.1375f; } }
+		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
 		
 		public override float GetEyeY( Entity entity ) { return 26/16f; }
 		

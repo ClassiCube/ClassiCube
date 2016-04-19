@@ -941,4 +941,3 @@ namespace OpenTK.Platform.MacOS.Carbon
 	#endregion
 	
 }
-

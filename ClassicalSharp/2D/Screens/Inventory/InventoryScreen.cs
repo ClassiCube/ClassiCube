@@ -9,7 +9,7 @@ namespace ClassicalSharp.Gui {
 	public partial class InventoryScreen : Screen {
 		
 		public InventoryScreen( Game game ) : base( game ) {
-			font = new Font( game.FontName, 13 );
+			font = new Font( game.FontName, 16 );
 		}
 		
 		Block[] blocksTable;

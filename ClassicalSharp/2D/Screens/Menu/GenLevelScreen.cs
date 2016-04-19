@@ -16,7 +16,6 @@ namespace ClassicalSharp.Gui {
 		TextWidget[] labels;
 		MenuInputWidget[] inputs;
 		MenuInputWidget selectedWidget;
-		Font labelFont;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
@@ -56,20 +55,20 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
-			labelFont = new Font( game.FontName, 16, FontStyle.Regular );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
-			inputs = new [] { 
-				MakeInput( -80, false, game.World.Width.ToString() ), 
+			inputs = new [] {
+				MakeInput( -80, false, game.World.Width.ToString() ),
 				MakeInput( -40, false, game.World.Height.ToString() ),
 				MakeInput( 0, false, game.World.Length.ToString() ),
 				MakeInput( 40, true, "" )
 			};
-			labels = new [] { 
+			labels = new [] {
 				MakeLabel( -150, -80, "Width:" ), MakeLabel( -150, -40, "Height:" ),
 				MakeLabel( -150, 0, "Length:" ), MakeLabel( -140, 40, "Seed:" ),
-				TextWidget.Create( game, 0, -130, "Generate new level", Anchor.Centre, Anchor.Centre, titleFont ), 
+				ChatTextWidget.Create( game, 0, -130, "Generate new level",
+				                      Anchor.Centre, Anchor.Centre, regularFont ),
 			};
 			widgets = new [] {
 				ButtonWidget.Create( game, -120, 100, 201, 40, "Flatgrass", Anchor.Centre,
@@ -93,7 +92,7 @@ namespace ClassicalSharp.Gui {
 		
 		TextWidget MakeLabel( int x, int y, string text ) {
 			TextWidget widget = ChatTextWidget.Create( game, x, y, text,
-			                         Anchor.Centre, Anchor.Centre, labelFont );
+			                                          Anchor.Centre, Anchor.Centre, regularFont );
 			int start = game.Width / 2 - 110;
 			widget.MoveTo( start - widget.Width, widget.Y );
 			widget.Colour = new FastColour( 224, 224, 224 );
@@ -114,7 +113,6 @@ namespace ClassicalSharp.Gui {
 				inputs[i].Dispose();
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Dispose();
-			labelFont.Dispose();
 			base.Dispose();
 		}
 		
@@ -128,7 +126,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void GenFlatgrassClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return; 
+			if( mouseBtn != MouseButton.Left ) return;
 			GenerateMap( new FlatGrassGenerator() );
 		}
 		
