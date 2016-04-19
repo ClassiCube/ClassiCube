@@ -14,10 +14,12 @@ namespace ClassicalSharp.Renderers {
 		class ChunkInfo {
 			
 			public ushort CentreX, CentreY, CentreZ;
-			public bool Visible = true, Occluded = false;
-			public bool Visited = false, Empty = false;
+			public bool Visible = true, Empty = false;
 			public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
+			#if OCCLUSION
+			public bool Visited = false, Occluded = false;
 			public byte OcclusionFlags, OccludedFlags, DistanceFlags;
+			#endif
 			
 			public ChunkPartInfo[] NormalParts;
 			public ChunkPartInfo[] TranslucentParts;
@@ -189,8 +191,10 @@ namespace ClassicalSharp.Renderers {
 		
 		void DeleteChunk( ChunkInfo info ) {
 			info.Empty = false;
+			#if OCCLUSION
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
+			#endif
 			DeleteData( ref info.NormalParts );
 			DeleteData( ref info.TranslucentParts );
 		}
@@ -343,7 +347,7 @@ namespace ClassicalSharp.Renderers {
 		void BuildChunk( ChunkInfo info, ref int chunkUpdates ) {
 			game.ChunkUpdates++;
 			builder.GetDrawInfo( info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-			                    ref info.NormalParts, ref info.TranslucentParts, ref info.OcclusionFlags );
+			                    ref info.NormalParts, ref info.TranslucentParts );
 			
 			if( info.NormalParts == null && info.TranslucentParts == null ) {
 				info.Empty = true;

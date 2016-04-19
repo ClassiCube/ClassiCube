@@ -108,15 +108,18 @@ namespace ClassicalSharp {
 		}
 		
 		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] normalParts,
-		                        ref ChunkPartInfo[] translucentParts, ref byte occlusionFlags ) {
+		                        ref ChunkPartInfo[] translucentParts ) {
 			if( !BuildChunk( x, y, z ) ) return;
 			
 			for( int i = 0; i < arraysCount; i++ ) {
 				SetPartInfo( drawInfoNormal[i], i, ref normalParts );
 				SetPartInfo( drawInfoTranslucent[i], i, ref translucentParts );
 			}
+			#if OCCLUSION
+			//  , ref byte occlusionFlags
 			if( normalParts != null || translucentParts != null )
-				occlusionFlags = 0;//(byte)ComputeOcclusion();
+				occlusionFlags = (byte)ComputeOcclusion();
+			#endif
 		}
 
 		Vector3 minBB, maxBB;
@@ -163,8 +166,10 @@ namespace ClassicalSharp {
 			int xMax = Math.Min( width, x1 + chunkSize );
 			int yMax = Math.Min( height, y1 + chunkSize );
 			int zMax = Math.Min( length, z1 + chunkSize );
+			#if OCCLUSION
+			int flags = ComputeOcclusion();			
+			#endif
 			#if DEBUG_OCCLUSION
-			int flags = ComputeOcclusion();
 			FastColour col = new FastColour( 60, 60, 60, 255 );
 			if( (flags & 1) != 0 ) col.R = 255; // x
 			if( (flags & 4) != 0 ) col.G = 255; // y

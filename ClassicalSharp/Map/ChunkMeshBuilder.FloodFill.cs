@@ -1,4 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+#if OCCLUSION
 using System;
 using ClassicalSharp.GraphicsAPI;
 
@@ -93,3 +94,4 @@ namespace ClassicalSharp {
 		}
 	}
 }
+#endif

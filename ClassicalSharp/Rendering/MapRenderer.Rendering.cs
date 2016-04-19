@@ -25,7 +25,9 @@ namespace ClassicalSharp.Renderers {
 			}
 			api.AlphaTest = false;
 			api.Texturing = false;
+			#if DEBUG_OCCLUSION
 			DebugPickedPos();
+			#endif
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
@@ -70,7 +72,11 @@ namespace ClassicalSharp.Renderers {
 		void RenderNormalBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
+				#if OCCLUSION
 				if( info.NormalParts == null || !info.Visible || info.Occluded ) continue;
+				#else
+				if( info.NormalParts == null || !info.Visible ) continue;
+				#endif
 
 				ChunkPartInfo part = info.NormalParts[batch];
 				if( part.IndicesCount == 0 ) continue;
@@ -92,7 +98,11 @@ namespace ClassicalSharp.Renderers {
 		void RenderTranslucentBatch( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
+				#if OCCLUSION
 				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
+				#else
+				if( info.TranslucentParts == null || !info.Visible ) continue;
+				#endif
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				
 				if( part.IndicesCount == 0 ) continue;
@@ -104,7 +114,11 @@ namespace ClassicalSharp.Renderers {
 		void RenderTranslucentBatchDepthPass( int batch ) {
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
+				#if OCCLUSION
 				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
+				#else
+				if( info.TranslucentParts == null || !info.Visible ) continue;
+				#endif
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
