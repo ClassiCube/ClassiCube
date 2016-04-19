@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using OpenTK;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Entities {
@@ -24,6 +25,7 @@ namespace ClassicalSharp.Entities {
 		public EntityList( Game game ) {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
+			game.Events.TextureChanged += TextureChanged;
 			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllAndHovered );
 			if( game.ClassicMode ) NamesMode = NameMode.HoveredOnly;
 			ShadowMode = Options.GetEnum( OptionsKey.EntityShadow, EntityShadow.None );
@@ -95,20 +97,29 @@ namespace ClassicalSharp.Entities {
 			api.DepthTest = true;
 		}
 		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			if( e.Texture != "char" ) return;
+			for( int i = 0; i < Players.Length; i++ ) {
+				if( Players[i] == null || Players[i].TextureId != -1 ) continue;
+				Players[i].SkinType = game.DefaultPlayerSkinType;				
+			}
+		}
+		
 		void ChatFontChanged( object sender, EventArgs e ) {
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null )
-					Players[i].UpdateName();
+				if( Players[i] == null ) continue;
+				Players[i].UpdateName();
 			}
 		}
 		
 		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for( int i = 0; i < Players.Length; i++ ) {
-				if( Players[i] != null )
-					Players[i].Despawn();
+				if( Players[i] == null ) continue;
+				Players[i].Despawn();
 			}
 			game.Events.ChatFontChanged -= ChatFontChanged;
+			game.Events.TextureChanged -= TextureChanged;
 		}
 		
 		public byte GetClosetPlayer( Player src ) {

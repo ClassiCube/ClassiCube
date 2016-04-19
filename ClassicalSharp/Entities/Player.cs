@@ -36,10 +36,10 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		protected Texture nameTex;
-		protected internal int PlayerTextureId = -1, MobTextureId = -1;
+		protected internal int TextureId = -1, MobTextureId = -1;
 		
 		public override void Despawn() {
-			game.Graphics.DeleteTexture( ref PlayerTextureId );
+			game.Graphics.DeleteTexture( ref TextureId );
 			game.Graphics.DeleteTexture( ref nameTex.ID );
 		}
 		
@@ -78,7 +78,7 @@ namespace ClassicalSharp.Entities {
 			game.AsyncDownloader.TryGetItem( SkinIdentifier, out item );
 			if( item != null && item.Data != null ) {
 				Bitmap bmp = (Bitmap)item.Data;
-				game.Graphics.DeleteTexture( ref PlayerTextureId );
+				game.Graphics.DeleteTexture( ref TextureId );
 				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
 					game.Drawer2D.ConvertTo32Bpp( ref bmp );
 				
@@ -86,12 +86,12 @@ namespace ClassicalSharp.Entities {
 					SkinType = Utils.GetSkinType( bmp );
 					if( Model is HumanoidModel )
 						ClearHat( bmp, SkinType );
-					PlayerTextureId = game.Graphics.CreateTexture( bmp );
+					TextureId = game.Graphics.CreateTexture( bmp );
 					MobTextureId = -1;
 					
 					// Custom mob textures.
 					if( Utils.IsUrlPrefix( SkinName, 0 ) && item.TimeAdded > lastModelChange )
-						MobTextureId = PlayerTextureId;					
+						MobTextureId = TextureId;					
 				} catch( NotSupportedException ) {
 					ResetSkin( bmp );
 				}
@@ -103,7 +103,7 @@ namespace ClassicalSharp.Entities {
 			string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
 			Utils.LogDebug( formatString, SkinName, bmp.Width, bmp.Height );
 			MobTextureId = -1;
-			PlayerTextureId = -1;
+			TextureId = -1;
 			SkinType = game.DefaultPlayerSkinType;
 		}
 		

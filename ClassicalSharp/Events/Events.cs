@@ -7,7 +7,12 @@ namespace ClassicalSharp.Events {
 		
 		/// <summary> Raised when the terrain atlas ("terrain.png") is changed. </summary>
 		public event EventHandler TerrainAtlasChanged;
-		internal void RaiseTerrainAtlasChanged() { Raise( TerrainAtlasChanged );  }
+		internal void RaiseTerrainAtlasChanged() { Raise( TerrainAtlasChanged ); }
+		
+		/// <summary> Raised when a texture is changed. (such as "terrain", "rain") </summary>
+		public event EventHandler<TextureEventArgs> TextureChanged;
+		internal void RaiseTextureChanged( string texture ) { 
+			texArgs.Texture = texture; Raise( TextureChanged, texArgs ); }
 		
 		/// <summary> Raised when the user changed their view/fog distance. </summary>
 		public event EventHandler ViewDistanceChanged;
@@ -49,6 +54,7 @@ namespace ClassicalSharp.Events {
 		internal void RaiseProjectionChanged() { Raise( ProjectionChanged ); }
 	
 		ChatEventArgs chatArgs = new ChatEventArgs();
+		TextureEventArgs texArgs = new TextureEventArgs();
 		protected void Raise( EventHandler handler ) {
 			if( handler != null )
 				handler( this, EventArgs.Empty );
@@ -68,5 +74,12 @@ namespace ClassicalSharp.Events {
 		/// <summary> Raw text of the message (including colour codes), 
 		/// with code page 437 indices converted to their unicode representations. </summary>
 		public string Text;
+	}
+	
+	public sealed class TextureEventArgs : EventArgs {
+		
+		/// <summary> Location of the texture within a texture pack. (e.g. "snow", "default", "char") </summary>
+		/// <remarks> See TexturePackExtractor for a list of supported textures. </remarks>
+		public string Texture;
 	}
 }

@@ -38,31 +38,27 @@ namespace ClassicalSharp.TexturePack {
 			MemoryStream stream = new MemoryStream( data );
 			ModelCache cache = game.ModelCache;
 			IGraphicsApi api = game.Graphics;
+			filename = filename.ToLower();
+			if( filename.StartsWith( "mob/" ) )
+				filename = filename.Substring( 4 );
+			
 			switch( filename ) {
 				case "terrain.png":
 					game.ChangeTerrainAtlas( Platform.ReadBmp( stream ) ); break;
-				case "mob/chicken.png":
 				case "chicken.png":
 					UpdateTexture( ref cache.ChickenTexId, stream, false ); break;
-				case "mob/creeper.png":
 				case "creeper.png":
 					UpdateTexture( ref cache.CreeperTexId, stream, false ); break;
-				case "mob/pig.png":
 				case "pig.png":
 					UpdateTexture( ref cache.PigTexId, stream, false ); break;
-				case "mob/sheep.png":
 				case "sheep.png":
 					UpdateTexture( ref cache.SheepTexId, stream, false ); break;
-				case "mob/skeleton.png":
 				case "skeleton.png":
 					UpdateTexture( ref cache.SkeletonTexId, stream, false ); break;
-				case "mob/spider.png":
 				case "spider.png":
 					UpdateTexture( ref cache.SpiderTexId, stream, false ); break;
-				case "mob/zombie.png":
 				case "zombie.png":
 					UpdateTexture( ref cache.ZombieTexId, stream, false ); break;
-				case "mob/sheep_fur.png":
 				case "sheep_fur.png":
 					UpdateTexture( ref cache.SheepFurTexId, stream, false ); break;
 				case "char.png":
@@ -90,9 +86,12 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref game.ParticleManager.ParticlesTexId, 
 					              stream, false ); break;
 				case "default.png":
-					SetFontBitmap( game, stream );
-					break;
+					SetFontBitmap( game, stream ); break;
 			}
+			
+			if( !filename.EndsWith( ".png" ) ) return;
+			string tex = filename.Substring( 0, filename.Length - 4 );
+			game.Events.RaiseTextureChanged( tex );
 		}
 		
 		void SetFontBitmap( Game game, Stream stream ) {

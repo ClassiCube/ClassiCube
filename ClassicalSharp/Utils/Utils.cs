@@ -77,15 +77,15 @@ namespace ClassicalSharp {
 				value.Substring( 0, value.Length - 1 ) : value;
 		}
 		
+		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		/// <summary> Returns whether a equals b, ignoring any case differences. </summary>
-		public static bool CaselessEquals( string a, string b ) {
-			return a.Equals( b, StringComparison.OrdinalIgnoreCase );
-		}
+		public static bool CaselessEquals( string a, string b ) { return a.Equals( b, comp ); }
 		
 		/// <summary> Returns whether a starts with b, ignoring any case differences. </summary>
-		public static bool CaselessStarts( string a, string b ) {
-			return a.StartsWith( b, StringComparison.OrdinalIgnoreCase );
-		}
+		public static bool CaselessStarts( string a, string b ) { return a.StartsWith( b, comp ); }
+		
+		/// <summary> Returns whether a ends with b, ignoring any case differences. </summary>
+		public static bool CaselessEnds( string a, string b ) { return a.EndsWith( b, comp ); }
 		
 		/// <summary> Converts the given byte array of length N to a hex string of length 2N. </summary>
 		public static string ToHexString( byte[] array ) {

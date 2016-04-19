@@ -29,7 +29,7 @@ namespace ClassicalSharp.Model {
 		public override BoundingBox PickingBounds { get { return pickingBounds; } }
 		
 		protected override void DrawModel( Player p ) {
-			int texId = p.PlayerTextureId <= 0 ? cache.HumanoidTexId : p.PlayerTextureId;
+			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;
 		}
 		
 		internal void ReadSetupPacket( NetReader reader ) {

@@ -85,7 +85,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawModel( Player p ) {
-			int texId = p.PlayerTextureId <= 0 ? cache.HumanoidTexId : p.PlayerTextureId;
+			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;
 			graphics.BindTexture( texId );
 			graphics.AlphaTest = false;
 			
