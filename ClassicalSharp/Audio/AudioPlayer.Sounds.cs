@@ -43,6 +43,8 @@ namespace ClassicalSharp.Audio {
 			if( type == SoundType.None || monoOutputs == null )
 				return;
 			Sound snd = board.PickRandomSound( type );
+			if( snd == null ) return;
+			
 			chunk.Channels = snd.Channels;
 			chunk.Frequency = snd.SampleRate;
 			chunk.BitsPerSample = snd.BitsPerSample;

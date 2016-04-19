@@ -231,6 +231,8 @@ namespace ClassicalSharp {
 		
 		public void ReducePadding( ref Texture tex, int point ) {
 			if( !UseBitmappedChat ) return;
+			point = AdjTextSize( point );
+			
 			int padding = (tex.Height - point) / 4;
 			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );
 			tex.V1 += vAdj; tex.V2 -= vAdj;
@@ -239,6 +241,8 @@ namespace ClassicalSharp {
 
 		public void ReducePadding( ref int height, int point ) {
 			if( !UseBitmappedChat ) return;
+			point = AdjTextSize( point );
+			
 			int padding = (height - point) / 4;
 			height -= padding * 2;
 		}
