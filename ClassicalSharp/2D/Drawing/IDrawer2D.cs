@@ -229,20 +229,28 @@ namespace ClassicalSharp {
 		}
 		
 		public void ReducePadding( ref Texture tex, int point ) {
+			ReducePadding( ref tex, point, 4 );
+		}
+
+		public void ReducePadding( ref int height, int point ) {
+			ReducePadding( ref height, point, 4 );
+		}
+		
+		public void ReducePadding( ref Texture tex, int point, int scale ) {
 			if( !UseBitmappedChat ) return;
 			point = AdjTextSize( point );
 			
-			int padding = (tex.Height - point) / 4;
+			int padding = (tex.Height - point) / scale;
 			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );
 			tex.V1 += vAdj; tex.V2 -= vAdj;
 			tex.Height -= padding * 2;
 		}
 
-		public void ReducePadding( ref int height, int point ) {
+		public void ReducePadding( ref int height, int point, int scale ) {
 			if( !UseBitmappedChat ) return;
 			point = AdjTextSize( point );
 			
-			int padding = (height - point) / 4;
+			int padding = (height - point) / scale;
 			height -= padding * 2;
 		}
 	}
