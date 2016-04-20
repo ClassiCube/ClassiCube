@@ -13,7 +13,6 @@ namespace ClassicalSharp.Renderers {
 		
 		Game game;
 		IGraphicsApi api;
-		int _1DUsed = 1;
 		ChunkMeshBuilder builder;
 		BlockInfo info;
 		
@@ -26,14 +25,15 @@ namespace ClassicalSharp.Renderers {
 		public ChunkUpdater( Game game, MapRenderer renderer ) {
 			this.game = game;
 			this.renderer = renderer;
-			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			info = game.BlockInfo;
+			
+			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
 			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
 			RecalcBooleans( true );
 			
 			builder = new ChunkMeshBuilder( game );
 			api = game.Graphics;
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
-			info = game.BlockInfo;
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.WorldEvents.OnNewMap += OnNewMap;
@@ -95,14 +95,14 @@ namespace ClassicalSharp.Renderers {
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
-			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
 			
 			if( refreshRequired ) Refresh();
 			RecalcBooleans( true );
 		}
 		
 		void BlockDefinitionChanged( object sender, EventArgs e ) {
-			_1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, game.BlockInfo );
+			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
 			RecalcBooleans( true );
 			Refresh();
 		}
@@ -130,14 +130,15 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		internal void RecalcBooleans( bool sizeChanged ) {
+			int used = renderer._1DUsed;
 			if( sizeChanged ) {
-				renderer.usedTranslucent = new bool[_1DUsed];
-				renderer.usedNormal = new bool[_1DUsed];
-				renderer.pendingTranslucent = new bool[_1DUsed];
-				renderer.pendingNormal = new bool[_1DUsed];
+				renderer.usedTranslucent = new bool[used];
+				renderer.usedNormal = new bool[used];
+				renderer.pendingTranslucent = new bool[used];
+				renderer.pendingNormal = new bool[used];
 			}
 			
-			for( int i = 0; i < _1DUsed; i++ ) {
+			for( int i = 0; i < used; i++ ) {
 				renderer.pendingTranslucent[i] = true; 
 				renderer.usedTranslucent[i] = false;
 				renderer.pendingNormal[i] = true; 
