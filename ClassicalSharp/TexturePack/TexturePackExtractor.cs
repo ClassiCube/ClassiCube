@@ -37,7 +37,6 @@ namespace ClassicalSharp.TexturePack {
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
 			ModelCache cache = game.ModelCache;
-			IGraphicsApi api = game.Graphics;
 			filename = filename.ToLower();
 			if( filename.StartsWith( "mob/" ) )
 				filename = filename.Substring( 4 );

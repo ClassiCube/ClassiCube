@@ -11,11 +11,6 @@ namespace Launcher {
 		public bool Done = false;
 		internal AsyncDownloader downloader;
 		SoundPatcher digPatcher, stepPatcher;
-		public ResourceFetcher() {
-			string basePath = Path.Combine( Program.AppDirectory, "audio" );
-			digPath = Path.Combine( basePath, "dig" );
-			stepPath = Path.Combine( basePath, "step" );
-		}
 		
 		const string jarClassicUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
 		const string jar162Uri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
@@ -208,7 +203,6 @@ namespace Launcher {
 			return true;
 		}
 		
-		string digPath, stepPath;
 		string[] digSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
 			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2",
 			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3",

@@ -56,6 +56,7 @@ namespace Launcher {
 		}
 		
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
+			if( task.LatestDev == null || task.LatestStable == null ) return;
 			dev = task.LatestDev; lastDev = dev.TimeBuilt;		
 			stable = task.LatestStable; lastStable = stable.TimeBuilt;
 		}
