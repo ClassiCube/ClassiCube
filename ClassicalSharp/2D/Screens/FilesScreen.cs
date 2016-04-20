@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 		
 		protected Font textFont, arrowFont, titleFont;
 		protected string[] files;
-		int currentIndex;
+		protected int currentIndex;
 		protected ButtonWidget[] buttons;
 		
 		TextWidget title;
@@ -64,15 +64,16 @@ namespace ClassicalSharp.Gui {
 		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn );
 		
 		protected void PageClick( bool forward ) {
-			currentIndex += forward ? 5 : -5;
-			if( currentIndex >= files.Length )
-				currentIndex -= 5;
-			if( currentIndex < 0 )
-				currentIndex = 0;
+			SetCurrentIndex( currentIndex + (forward ? 5 : -5) );
+		}
+		
+		protected void SetCurrentIndex( int index ) {
+			if( index >= files.Length ) index -= 5;
+			if( index < 0 ) index = 0;
+			currentIndex = index;
 			
-			for( int i = 0; i < 5; i++ ) {
+			for( int i = 0; i < 5; i++ )
 				buttons[i].SetText( Get( currentIndex + i ) );
-			}
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
