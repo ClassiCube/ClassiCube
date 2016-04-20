@@ -77,7 +77,7 @@ namespace ClassicalSharp.Renderers {
 			{
 				bool isBorder = x == 0 || z == 0 || x == (chunksX - 1) || z == (chunksZ - 1);
 				if( isBorder && (y * 16) < clipLevel )
-					DeleteChunk( renderer.unsortedChunks[index] );
+					DeleteChunk( renderer.unsortedChunks[index], true );
 				index++;
 			}
 		}
@@ -168,22 +168,22 @@ namespace ClassicalSharp.Renderers {
 		void ClearChunkCache() {
 			if( renderer.chunks == null ) return;
 			for( int i = 0; i < renderer.chunks.Length; i++ )
-				DeleteChunk( renderer.chunks[i] );
+				DeleteChunk( renderer.chunks[i], false );
 			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
 		}
 		
-		void DeleteChunk( ChunkInfo info ) {
+		void DeleteChunk( ChunkInfo info, bool decUsed ) {
 			info.Empty = false;
 			#if OCCLUSION
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
 			#endif
-			DeleteData( ref info.NormalParts );
-			DeleteData( ref info.TranslucentParts );
+			DeleteData( ref info.NormalParts, decUsed );
+			DeleteData( ref info.TranslucentParts, decUsed );
 		}
 		
-		void DeleteData( ref ChunkPartInfo[] parts ) {
-			DecrementUsed( parts );
+		void DeleteData( ref ChunkPartInfo[] parts, bool decUsed ) {
+			if( decUsed ) DecrementUsed( parts );
 			if( parts == null ) return;
 			
 			for( int i = 0; i < parts.Length; i++ )
@@ -253,7 +253,7 @@ namespace ClassicalSharp.Renderers {
 		void ResetChunk( int cx, int cy, int cz ) {
 			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
-			DeleteChunk( renderer.unsortedChunks[cx + chunksX * ( cy + cz * chunksY )] );
+			DeleteChunk( renderer.unsortedChunks[cx + chunksX * ( cy + cz * chunksY )], true );
 		}
 
 		int chunksTarget = 4;
