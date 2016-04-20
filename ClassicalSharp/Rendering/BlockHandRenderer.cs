@@ -36,9 +36,10 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double delta, float t ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
+			Vector3 last = fakeP.Position;
+			fakeP.Position = Vector3.Zero;
 			type = (byte)game.Inventory.HeldBlock;
-			if( playAnimation )
-				DoAnimation( delta );
+			if( playAnimation ) DoAnimation( delta, last );
 			PerformViewBobbing( t );
 			SetupMatrices();
 			
@@ -68,23 +69,18 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
-		void DoAnimation( double delta ) {
+		void DoAnimation( double delta, Vector3 last ) {
 			if( swingAnimation || !leftAnimation ) {
-				float oldY = fakeP.Position.Y;
-				fakeP.Position.X = 0;
 				fakeP.Position.Y = -1.2f * (float)Math.Sin( animTime * animSpeed );
-				fakeP.Position.Z = 0;
-
 				if( swingAnimation ) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
-					if( fakeP.Position.Y > oldY )
+					if( fakeP.Position.Y > last.Y )
 						lastType = type;
 					type = lastType;
 				}
 			} else {
 				//fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
-				fakeP.Position.X = 0;
 				fakeP.Position.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
 				fakeP.Position.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
 				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
