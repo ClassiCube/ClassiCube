@@ -29,14 +29,15 @@ namespace ClassicalSharp.Gui {
 			string file = ((ButtonWidget)widget).Text;
 			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
 			string path = Path.Combine( dir, file );
-			if( !File.Exists( path ) )
-				return;
+			if( !File.Exists( path ) ) return;
 			
+			int index = currentIndex;
 			game.DefaultTexturePack = file;
 			game.World.TextureUrl = null;
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( path, game );
 			Recreate();
+			SetCurrentIndex( index );
 		}
 	}
 }

@@ -248,10 +248,10 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\BlockHandRenderer.cs" />
+    <Compile Include="Rendering\ChunkSorter.cs" />
+    <Compile Include="Rendering\ChunkUpdater.cs" />
     <Compile Include="Rendering\EnvRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
-    <Compile Include="Rendering\MapRenderer.Rendering.cs" />
-    <Compile Include="Rendering\MapRenderer.Sorting.cs" />
     <Compile Include="Rendering\MinimalEnvRenderer.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />
     <Compile Include="Rendering\MapBordersRenderer.cs" />

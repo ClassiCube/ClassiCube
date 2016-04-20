@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
-			bool showMinimal = game.GetActiveScreen.BlocksWorld;
+			bool showMinimal = game.ActiveScreen.BlocksWorld;
 			if( chat.HandlesAllInput )
 				chat.RenderBackground();
 			api.Texturing = true;
@@ -84,7 +84,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			playerFont = new Font( game.FontName, 16 );
+			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
+			playerFont = new Font( game.FontName, size );
 			chat = new ChatScreen( game );
 			chat.Init();
 			hotbar = new BlockHotbarWidget( game );

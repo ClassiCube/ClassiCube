@@ -90,7 +90,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			font = new Font( game.FontName, 14 );
-			posFont = new Font( game.FontName, 13, FontStyle.Italic );
+			posFont = new Font( game.FontName, 14, FontStyle.Italic );
 			game.Events.ChatFontChanged += ChatFontChanged;
 			
 			fpsText = new ChatTextWidget( game, font );

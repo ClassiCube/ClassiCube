@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 		#region Event handlers
 		
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
-			if( !game.GetActiveScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
+			if( !game.ActiveScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
 				if( game.Network.UsingPlayerClick && e.Button <= MouseButton.Middle ) {
 					byte targetId = game.Players.GetClosetPlayer( game.LocalPlayer );
 					ButtonStateChanged( e.Button, false, targetId );
@@ -95,7 +95,7 @@ namespace ClassicalSharp {
 		}
 
 		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
-			if( !game.GetActiveScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
+			if( !game.ActiveScreen.HandlesMouseClick( e.X, e.Y, e.Button ) ) {
 				bool left = e.Button == MouseButton.Left;
 				bool middle = e.Button == MouseButton.Middle;
 				bool right = e.Button == MouseButton.Right;
@@ -106,13 +106,13 @@ namespace ClassicalSharp {
 		}
 
 		void MouseMove( object sender, MouseMoveEventArgs e ) {
-			if( !game.GetActiveScreen.HandlesMouseMove( e.X, e.Y ) ) {
+			if( !game.ActiveScreen.HandlesMouseMove( e.X, e.Y ) ) {
 			}
 		}
 
 		float deltaAcc = 0;
 		void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			if( game.GetActiveScreen.HandlesMouseScroll( e.Delta ) ) return;
+			if( game.ActiveScreen.HandlesMouseScroll( e.Delta ) ) return;
 			
 			Inventory inv = game.Inventory;
 			bool hotbar = IsKeyDown( Key.AltLeft ) || IsKeyDown( Key.AltRight );
@@ -139,7 +139,7 @@ namespace ClassicalSharp {
 
 		void KeyPressHandler( object sender, KeyPressEventArgs e ) {
 			char key = e.KeyChar;
-			if( !game.GetActiveScreen.HandlesKeyPress( key ) ) {
+			if( !game.ActiveScreen.HandlesKeyPress( key ) ) {
 			}
 		}
 		
@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if( SimulateMouse( key, false ) ) return;
 			
-			if( !game.GetActiveScreen.HandlesKeyUp( key ) ) {
+			if( !game.ActiveScreen.HandlesKeyUp( key ) ) {
 				if( key == Keys[KeyBinding.ZoomScrolling] )
 					SetFOV( game.DefaultFov, false );
 			}
@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 				game.Exit();
 			} else if( key == Keys[KeyBinding.Screenshot] ) {
 				game.screenshotRequested = true;
-			} else if( !game.GetActiveScreen.HandlesKeyDown( key ) ) {
+			} else if( !game.ActiveScreen.HandlesKeyDown( key ) ) {
 				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) )
 					HandleHotkey( key );
 			}

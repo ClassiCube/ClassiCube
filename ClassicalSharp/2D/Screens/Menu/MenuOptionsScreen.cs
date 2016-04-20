@@ -177,6 +177,7 @@ namespace ClassicalSharp.Gui {
 			if( !canShow ) return;
 			
 			int index = Array.IndexOf<Widget>( widgets, selectedWidget );
+			if( index < 0 || index >= descriptions.Length ) return;
 			string[] desc = descriptions[index];
 			if( desc == null ) return;
 			MakeExtendedHelp( desc );
