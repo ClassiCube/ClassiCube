@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 		int sidesVertices, edgesVertices;
 		bool legacy, fullColSides, fullColEdge;
 		
-		public void SetUseLegacyMode( bool legacy ) {
+		public void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
 			ResetSidesAndEdges( null, null );
 		}

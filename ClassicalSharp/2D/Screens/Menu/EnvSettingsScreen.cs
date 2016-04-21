@@ -103,7 +103,7 @@ namespace ClassicalSharp.Gui {
 		
 		protected override void InputOpened() {
 			widgets[defaultIndex] = ButtonWidget.Create(
-				game, 0, 160, 180, 35, "Default value", Anchor.Centre, 
+				game, 0, 150, 201, 40, "Default value", Anchor.Centre, 
 				Anchor.Centre, titleFont, DefaultButtonClick );
 		}
 		

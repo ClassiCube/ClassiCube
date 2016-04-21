@@ -139,7 +139,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		void SetNewRenderType( bool legacy, bool minimal ) {
-			game.MapBordersRenderer.SetUseLegacyMode( legacy );
+			game.MapBordersRenderer.UseLegacyMode( legacy );
 			if( minimal ) {
 				game.EnvRenderer.Dispose();
 				game.EnvRenderer = new MinimalEnvRenderer( game );
@@ -150,7 +150,7 @@ namespace ClassicalSharp.Commands {
 					game.EnvRenderer = new StandardEnvRenderer( game );
 					game.EnvRenderer.Init();
 				}
-				((StandardEnvRenderer)game.EnvRenderer).SetUseLegacyMode( legacy );
+				((StandardEnvRenderer)game.EnvRenderer).UseLegacyMode( legacy );
 			}
 		}
 	}

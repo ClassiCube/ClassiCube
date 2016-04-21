@@ -33,22 +33,23 @@ namespace ClassicalSharp.Gui {
 		
 		void MakeNormal() {
 			widgets = new Widget[] {
-				Make( -140, -50, "Options",
+				Make( -1, -50, "Options",
 				     (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
-				Make( 140, -50, "Generate level",
+				Make( 1, -50, "Generate level",
 					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),	
-				Make( 140, 0, "Load level",
+				Make( 1, 0, "Load level",
 					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
-				Make( 140, 50, "Save level",
+				Make( 1, 50, "Save level",
 				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
-				Make( -140, 0, "Select texture pack",
+				Make( -1, 0, "Select texture pack",
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
-				Make( -140, 50, "Hotkeys",
+				Make( -1, 50, "Hotkeys",
 				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
 				
 				// Other
-				MakeOther( 10, 5, 120, "Quit game", Anchor.BottomOrRight,
-				          (g, w) => g.Exit() ),
+				ButtonWidget.Create( game, 5, 5, 120, 40, "Quit game",
+				                    Anchor.BottomOrRight, Anchor.BottomOrRight, 
+				                    titleFont, LeftOnly( (g, w) => g.Exit() ) ),
 				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
 			};
 		}
@@ -77,19 +78,14 @@ namespace ClassicalSharp.Gui {
 			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
 		
-		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 240, 35, text,
+		ButtonWidget Make( int dir, int y, string text, Action<Game, Widget> onClick ) {
+			return ButtonWidget.Create( game, dir * 160, y, 301, 40, text,
 			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
 		}
 		
 		ButtonWidget MakeClassic( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 401, 41, text,
+			return ButtonWidget.Create( game, x, y, 401, 40, text,
 			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
-		}
-		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 35, text,
-			                           hAnchor, Anchor.BottomOrRight, titleFont, LeftOnly( onClick ) );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

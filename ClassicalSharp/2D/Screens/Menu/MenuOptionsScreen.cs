@@ -68,10 +68,7 @@ namespace ClassicalSharp.Gui {
 			return inputWidget.HandlesKeyUp( key );
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			if( inputWidget != null )
-				inputWidget.OnResize( oldWidth, oldHeight, width, height );
-			
+		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {			
 			base.OnResize( oldWidth, oldHeight, width, height );
 			if( extendedHelp == null ) return;
 			extendedHelp.OnResize( oldWidth, oldHeight, width, height );
@@ -108,44 +105,17 @@ namespace ClassicalSharp.Gui {
 		protected virtual void InputClosed() { }
 		
 		protected ButtonWidget Make( int dir, int y, string text, ClickHandler onClick,
-		                            Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 280, 35, text, Anchor.Centre,
+		                                   Func<Game, string> getter, Action<Game, string> setter ) {
+			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.GetValue = getter; widget.SetValue = setter;
 			return widget;
 		}
 		
 		protected ButtonWidget Make2( int dir, int y, string text, ClickHandler onClick,
-		                             Func<Game, string> getter, Action<Game, string> setter ) {
-			return Make2Impl( 160 * dir, y, 280, 35, text, onClick, getter, setter );
-		}
-		
-		protected ButtonWidget MakeBool( int dir, int y, string optName, string optKey,
-		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
-			return MakeBoolImpl( 160 * dir, y, 280, 35, optName, optKey, onClick, getter, setter );
-		}
-		
-		protected ButtonWidget MakeClassic( int dir, int y, string text, ClickHandler onClick,
-		                                   Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, 165 * dir, y, 301, 41, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter; widget.SetValue = setter;
-			return widget;
-		}
-		
-		protected ButtonWidget MakeClassic2( int dir, int y, string text, ClickHandler onClick,
 		                                    Func<Game, string> getter, Action<Game, string> setter ) {
-			return Make2Impl( 165 * dir, y, 301, 41, text, onClick, getter, setter );
-		}
-		
-		protected ButtonWidget MakeClassicBool( int dir, int y, string text, string optKey,
-		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
-			return MakeBoolImpl( 165 * dir, y, 301, 41, text, optKey, onClick, getter, setter );
-		}
-		
-		ButtonWidget Make2Impl( int x, int y, int width, int height, string text,
-		                       ClickHandler onClick, Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, width, height, text + ": " + getter( game ),
+			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, 
+			                                          text + ": " + getter( game ),
 			                                          Anchor.Centre, Anchor.Centre, titleFont, onClick );
 			widget.Metadata = text;
 			widget.GetValue = getter;
@@ -156,11 +126,11 @@ namespace ClassicalSharp.Gui {
 			return widget;
 		}
 		
-		ButtonWidget MakeBoolImpl( int x, int y, int width, int height, string text, string optKey,
-		                          ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+		protected ButtonWidget MakeBool( int dir, int y, string text, string optKey,
+		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
 			string optName = text;
 			text = text + ": " + (getter( game ) ? "ON" : "OFF");
-			ButtonWidget widget = ButtonWidget.Create( game, x, y, width, height, text, Anchor.Centre,
+			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.Metadata = optName;
 			widget.GetValue = g => getter( g ) ? "yes" : "no";
@@ -185,7 +155,7 @@ namespace ClassicalSharp.Gui {
 		
 		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
 		int tableWidth, tableHeight;
-		const int extHelpY = 100;
+		protected int extHelpY = 100;
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new TextGroupWidget( game, desc.Length, extendedHelpFont, null,
 			                                   Anchor.Centre, Anchor.Centre );
