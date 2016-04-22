@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using OpenTK.Graphics;
 using OpenTK.Platform.MacOS.Carbon;
 using OpenTK.Input;
@@ -577,9 +578,25 @@ namespace OpenTK.Platform.MacOS
 				if( ptr == IntPtr.Zero )
 					throw new InvalidOperationException( "CFDataGetBytePtr() returned null pointer." );
 				return Marshal.PtrToStringUni( ptr );
+			} else if ( (err = API.PasteboardCopyItemFlavorData( pbRef, itemID, utf8, out outData )) == OSStatus.NoError ) {
+				IntPtr ptr = API.CFDataGetBytePtr( outData );
+				if( ptr == IntPtr.Zero )
+					throw new InvalidOperationException( "CFDataGetBytePtr() returned null pointer." );			
+				return GetUTF8( ptr );
 			}
-			// TODO: UTF 8
 			return "";
+		}
+		
+		unsafe static string GetUTF8( IntPtr ptr ) {
+			byte* countPtr = (byte*)ptr, readPtr = (byte*)ptr;
+			int length = 0;
+			while( *countPtr != 0 ) { length++; countPtr++; }
+			
+			byte[] text = new byte[length];
+			for( int i = 0; i < text.Length; i++ ) {
+				text[i] = *readPtr; readPtr++;
+			}
+			return Encoding.UTF8.GetString( text );
 		}
 		
 		public void SetClipboardText( string value ) {
@@ -613,40 +630,33 @@ namespace OpenTK.Platform.MacOS
 			return pbRef;
 		}
 
-		public void ProcessEvents()
-		{
+		public void ProcessEvents() {
 			API.ProcessEvents();
 		}
 
-		public Point PointToClient(Point point)
-		{
+		public Point PointToClient(Point point) {
 			IntPtr handle = window.WindowRef;
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
 			return new Point(point.X - r.X, point.Y - r.Y);
 		}
 		
-		public Point PointToScreen(Point point)
-		{
+		public Point PointToScreen(Point point) {
 			IntPtr handle = window.WindowRef;
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
 			return new Point(point.X + r.X, point.Y + r.Y);
 		}
 
-		public bool Exists
-		{
+		public bool Exists {
 			get { return mExists; }
 		}
 
-		public IWindowInfo WindowInfo
-		{
+		public IWindowInfo WindowInfo {
 			get { return window; }
 		}
 
 		public Icon Icon {
 			get { return mIcon; }
-			set {
-				SetIcon(value);
-			}
+			set { SetIcon(value); }
 		}
 
 		private unsafe void SetIcon(Icon icon)
@@ -702,24 +712,17 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public string Title
-		{
-			get
-			{
-				return title;
-			}
-			set
-			{
+		public string Title {
+			get { return title; }
+			set {
 				API.SetWindowTitle(window.WindowRef, value);
 				title = value;
 			}
 		}
 
-		public bool Visible
-		{
+		public bool Visible {
 			get { return API.IsWindowVisible(window.WindowRef); }
-			set
-			{
+			set {
 				if (value && Visible == false)
 					Show();
 				else
@@ -727,20 +730,13 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public bool Focused
-		{
+		public bool Focused {
 			get { return this.mIsActive; }
 		}
 
-		public Rectangle Bounds
-		{
-			get
-			{
-				
-				return bounds;
-			}
-			set
-			{
+		public Rectangle Bounds {
+			get { return bounds; }
+			set {
 				Location = value.Location;
 				Size = value.Size;
 			}
@@ -756,14 +752,12 @@ namespace OpenTK.Platform.MacOS
 			set { SetSize((short)value.Width, (short)value.Height); }
 		}
 
-		public int Width
-		{
+		public int Width {
 			get { return ClientRectangle.Width; }
 			set { SetClientSize((short)value, (short)Height); }
 		}
 
-		public int Height
-		{
+		public int Height {
 			get { return ClientRectangle.Height; }
 			set { SetClientSize((short)Width, (short)value); }
 		}
@@ -778,47 +772,33 @@ namespace OpenTK.Platform.MacOS
 			set { Location = new Point(X, value); }
 		}
 
-		public Rectangle ClientRectangle
-		{
-			get
-			{
-				return clientRectangle;
-			}
-			set
-			{
+		public Rectangle ClientRectangle {
+			get { return clientRectangle; }
+			set {
 				// just set the size, and ignore the location value.
 				// this is the behavior of the Windows WinGLNative.
 				ClientSize = value.Size;
 			}
 		}
 
-		public Size ClientSize
-		{
-			get
-			{
-				return clientRectangle.Size;
-			}
-			set
-			{
+		public Size ClientSize {
+			get { return clientRectangle.Size; }
+			set {
 				API.SizeWindow(window.WindowRef, (short)value.Width, (short)value.Height, true);
 				OnResize();
 			}
 		}
 
-		public void Close()
-		{
+		public void Close() {
 			CancelEventArgs e = new CancelEventArgs();
 			OnClosing(e);
-
-			if (e.Cancel)
-				return;
+			if (e.Cancel) return;
 
 			OnClosed();
 			Dispose();
 		}
 
-		public WindowState WindowState
-		{
+		public WindowState WindowState {
 			get
 			{
 				if (windowState == WindowState.Fullscreen)
