@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui {
 			
 			DrawTextArgs args = new DrawTextArgs( "I", font, true );
 			int height = game.Drawer2D.MeasureChatSize( ref args ).Height;
-			game.Drawer2D.ReducePadding( ref height, Utils.Floor( font.Size ) );
+			game.Drawer2D.ReducePadding( ref height, Utils.Floor( font.Size ), 3 );
 			defaultHeight = height;
 			
 			for( int i = 0; i < Textures.Length; i++ ) {
