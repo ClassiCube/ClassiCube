@@ -11,7 +11,8 @@ namespace ClassicalSharp {
 			wrap = new char[capacity];
 		}
 		
-		public void WordWrap( IDrawer2D drawer, ref string[] lines, ref int[] lineLens, int lineSize ) {
+		public void WordWrap( IDrawer2D drawer, ref string[] lines, ref int[] lineLens, 
+		                     int lineSize, int totalChars ) {
 			int len = Length;
 			for( int i = 0; i < lines.Length; i++ ) {
 				lines[i] = null;
@@ -23,16 +24,16 @@ namespace ClassicalSharp {
 			MakeWrapCopy();
 			
 			int linesCount = 0;
-			for( int index = 0; index < capacity; index += lineSize ) {
+			for( int index = 0; index < totalChars; index += lineSize ) {
 				if( value[index] == '\0' )
 					break;
 				
-				int lineEnd = index + (lineSize - 1);
-				int nextLine = index + lineSize;
+				int lineEnd = index + (lineSize - 1), nextLine = lineEnd + 1;
 				linesCount++;
 				
 				// Do we need word wrapping?
-				bool needWrap = !IsWrapper( value[lineEnd] ) && nextLine < capacity && !IsWrapper( value[nextLine] );
+				bool needWrap = !IsWrapper( value[lineEnd] ) 
+					&& nextLine < totalChars && !IsWrapper( value[nextLine] );
 				int wrappedLen = needWrap ? WrapLine( index, lineSize ) : lineSize;
 				
 				// Calculate the maximum size of this line
@@ -45,7 +46,8 @@ namespace ClassicalSharp {
 			}
 			
 			// Output the used lines
-			OutputLines( drawer, ref lines, linesCount, lineSize, lineLens );
+			OutputLines( drawer, ref lines, lineLens,
+			            linesCount, lineSize, totalChars );
 			value = realText;
 		}
 		
@@ -59,12 +61,13 @@ namespace ClassicalSharp {
 			value = wrap;
 		}
 		
-		void OutputLines( IDrawer2D drawer, ref string[] lines, int linesCount, int lineSize, int[] lineLens ) {
-			for( int i = 0; i < capacity; i++ ) {
+		void OutputLines( IDrawer2D drawer, ref string[] lines, int[] lineLens, 
+		                 int linesCount, int lineSize, int totalChars ) {
+			for( int i = 0; i < totalChars; i++ ) {
 				if( value[i] == '\0' ) value[i] = ' ';
 			}
 			// convert %0-f to &0-f for colour preview.
-			for( int i = 0; i < capacity - 1; i++ ) {
+			for( int i = 0; i < totalChars - 1; i++ ) {
 				if( value[i] == '%' && drawer.ValidColour( value[i + 1] ) )
 					value[i] = '&';
 			}

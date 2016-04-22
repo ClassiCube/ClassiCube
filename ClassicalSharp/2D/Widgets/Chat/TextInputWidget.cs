@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
-			chatInputText = new WrappableStringBuffer( TotalChars );
+			chatInputText = new WrappableStringBuffer( 64 * lines );
 			
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
@@ -72,7 +72,8 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			X = 5;
-			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, LineLength );
+			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, 
+			                       LineLength, TotalChars );
 
 			for( int y = 0; y < sizes.Length; y++ )
 				sizes[y] = Size.Empty;

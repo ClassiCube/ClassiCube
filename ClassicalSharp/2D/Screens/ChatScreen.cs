@@ -25,7 +25,8 @@ namespace ClassicalSharp.Gui {
 		
 		Font chatFont, chatBoldFont, chatItalicFont, chatUnderlineFont, announcementFont;
 		public override void Init() {
-			int fontSize = (int)(12 * game.GuiChatScale);
+			float textScale = game.Drawer2D.UseBitmappedChat ? 1.25f : 1;
+			int fontSize = (int)(12 * game.GuiChatScale * textScale);
 			Utils.Clamp( ref fontSize, 8, 60 );
 			chatFont = new Font( game.FontName, fontSize );
 			chatBoldFont = new Font( game.FontName, fontSize, FontStyle.Bold );
