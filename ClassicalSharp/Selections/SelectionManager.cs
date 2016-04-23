@@ -6,17 +6,17 @@ using OpenTK;
 
 namespace ClassicalSharp.Selections {
 	
-	public class SelectionManager : IDisposable {
+	public class SelectionManager : IGameComponent {
 		
 		protected Game game;
 		public IGraphicsApi Graphics;
 		VertexP3fC4b[] vertices, lineVertices;
 		int vb, lineVb;
 		
-		public SelectionManager( Game window ) {
-			game = window;
-			Graphics = window.Graphics;
-			window.WorldEvents.OnNewMap += OnNewMap;
+		public void Init( Game game ) {
+			this.game = game;
+			Graphics = game.Graphics;
+			game.WorldEvents.OnNewMap += OnNewMap;
 		}
 		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
@@ -70,10 +70,10 @@ namespace ClassicalSharp.Selections {
 		public void Dispose() {
 			OnNewMap( null, null );
 			game.WorldEvents.OnNewMap -= OnNewMap;
-			if( lineVb > 0 ) {
-				Graphics.DeleteDynamicVb( vb );
-				Graphics.DeleteDynamicVb( lineVb );
-			}
+			
+			if( lineVb <= 0 ) return;
+			Graphics.DeleteDynamicVb( vb );
+			Graphics.DeleteDynamicVb( lineVb );
 		}
 		
 		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2, IndicesCount = 6 * 6;

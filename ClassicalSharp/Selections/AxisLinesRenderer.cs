@@ -5,14 +5,18 @@ using OpenTK;
 
 namespace ClassicalSharp.Selections {
 
-	public class AxisLinesRenderer : IDisposable {
+	public class AxisLinesRenderer : IGameComponent {
 		
 		VertexP3fC4b[] vertices;
 		int vb;
 		Game game;
 		
-		public AxisLinesRenderer( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
+		}
+		
+		public void Dispose() {
+			game.Graphics.DeleteDynamicVb( vb );
 		}
 		
 		public void Render( double delta ) {
@@ -25,6 +29,7 @@ namespace ClassicalSharp.Selections {
 			game.Graphics.Texturing = false;			
 			Vector3 pos = game.LocalPlayer.Position; pos.Y += 0.05f;
 			int index = 0;
+			const float size = 1/32f;
 			
 			HorQuad( ref index, pos.X, pos.Z - size, pos.X + 3, pos.Z + size, pos.Y, FastColour.Red );
 			HorQuad( ref index, pos.X - size, pos.Z, pos.X + size, pos.Z + 3, pos.Y, FastColour.Blue );
@@ -33,11 +38,6 @@ namespace ClassicalSharp.Selections {
 			
 			game.Graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
-		}
-		
-		const float size = 1/32f;
-		public void Dispose() {
-			game.Graphics.DeleteDynamicVb( vb );
 		}
 		
 		void VerQuad( ref int index, float x1, float y1, float z1, float x2, float y2, float z2, FastColour col ) {

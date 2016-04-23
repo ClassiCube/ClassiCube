@@ -5,13 +5,13 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public sealed class PickedPosRenderer : IDisposable {
+	public sealed class PickedPosRenderer : IGameComponent {
 		
 		IGraphicsApi graphics;
 		Game game;
 		int vb;
 		
-		public PickedPosRenderer( Game game ) {
+		public void Init( Game game ) {
 			graphics = game.Graphics;
 			vb = graphics.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;

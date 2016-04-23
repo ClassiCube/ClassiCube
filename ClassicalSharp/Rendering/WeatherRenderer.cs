@@ -6,13 +6,14 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 
-	public class WeatherRenderer {
+	public class WeatherRenderer : IGameComponent {
 		
 		Game game;
 		World map;
 		IGraphicsApi graphics;
 		BlockInfo info;
-		public WeatherRenderer( Game game ) {
+		
+		public void Init( Game game ) {
 			this.game = game;
 			map = game.World;
 			graphics = game.Graphics;

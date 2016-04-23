@@ -124,11 +124,9 @@ namespace ClassicalSharp {
 			Fov = DefaultFov;
 			ZoomFov = DefaultFov;
 			UpdateProjection();
-			CommandManager = new CommandManager();
-			CommandManager.Init( this );
-			SelectionManager = new SelectionManager( this );
-			WeatherRenderer = new WeatherRenderer( this );
-			WeatherRenderer.Init();
+			CommandManager = AddComponent( new CommandManager() );
+			SelectionManager = AddComponent( new SelectionManager() );
+			WeatherRenderer = AddComponent( new WeatherRenderer() );
 			BlockHandRenderer = new BlockHandRenderer( this );
 			BlockHandRenderer.Init();
 			
@@ -146,10 +144,13 @@ namespace ClassicalSharp {
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
-			Picking = new PickedPosRenderer( this );
+			Picking = AddComponent( new PickedPosRenderer() );
 			AudioPlayer = new AudioPlayer( this );
 			ModifiableLiquids = !ClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
-			AxisLinesRenderer = new AxisLinesRenderer( this );
+			AxisLinesRenderer = AddComponent( new AxisLinesRenderer() );
+			
+			foreach( IGameComponent comp in Components )
+				comp.Init( this );
 			
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
@@ -159,6 +160,11 @@ namespace ClassicalSharp {
 			}
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		public T AddComponent<T>( T obj ) {
+			Components.Add( (IGameComponent)obj );
+			return obj;
 		}
 		
 		void LoadGui() {
@@ -486,19 +492,18 @@ namespace ClassicalSharp {
 			MapRenderer.Dispose();
 			MapBordersRenderer.Dispose();
 			EnvRenderer.Dispose();
-			WeatherRenderer.Dispose();
 			SetNewScreen( null );
 			fpsScreen.Dispose();
-			SelectionManager.Dispose();
 			TerrainAtlas.Dispose();
 			TerrainAtlas1D.Dispose();
 			ModelCache.Dispose();
-			Picking.Dispose();
 			ParticleManager.Dispose();
 			Players.Dispose();
 			AsyncDownloader.Dispose();
 			AudioPlayer.Dispose();
-			AxisLinesRenderer.Dispose();
+			
+			foreach( IGameComponent comp in Components )
+				comp.Dispose();
 			
 			Chat.Dispose();
 			if( activeScreen != null )

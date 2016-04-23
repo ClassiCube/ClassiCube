@@ -21,7 +21,14 @@ using OpenTK;
 using OpenTK.Input;
 
 namespace ClassicalSharp {
-
+		
+	/// <summary> Represents a game component. </summary>
+	public interface IGameComponent : IDisposable {
+		
+		/// <summary> Called when the game has loaded. </summary>
+		void Init( Game game );
+	}
+	
 	public partial class Game {
 		
 		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
@@ -91,6 +98,8 @@ namespace ClassicalSharp {
 		public BlockHandRenderer BlockHandRenderer;
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;
+		
+		public List<IGameComponent> Components = new List<IGameComponent>();
 		
 		/// <summary> Account username of the player. </summary>
 		public string Username;
