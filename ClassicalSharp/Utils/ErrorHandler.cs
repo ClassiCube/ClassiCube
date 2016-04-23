@@ -11,11 +11,13 @@ namespace ClassicalSharp {
 	public static class ErrorHandler {
 
 		static string logFile = "crash.log";
+		static string fileName = "crash.log";
 		
 		/// <summary> Adds a handler for when a unhandled exception occurs, unless 
 		/// a debugger is attached to the process in which case this does nothing. </summary>
 		public static void InstallHandler( string logFile ) {
 			ErrorHandler.logFile = logFile;
+			fileName = Path.GetFileName( logFile );
 			if( !Debugger.IsAttached )
 				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 		}
@@ -47,7 +49,7 @@ namespace ClassicalSharp {
 			}
 			
 			string message = wroteToCrashLog ?
-				"The cause of the error has been logged to \"client.log\". Please consider reporting the error to " +
+				"The cause of the error has been logged to \"" + fileName + "\". Please consider reporting the error to " +
 				"github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it." :
 				
 				"Failed to log the cause of the the error. Please consider reporting the circumstances " +
