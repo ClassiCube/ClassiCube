@@ -52,6 +52,7 @@ namespace ClassicalSharp {
 			bool underline = args.Font.Style == FontStyle.Underline;
 			if( args.UseShadow ) {
 				int offset = ShadowOffset( args.Font.Size );
+				Console.WriteLine( "OFFSET:" + offset + "," + args.Font.Size );
 				DrawPart( dst, ref args, x + offset, y + offset, true );
 				if( underline ) DrawUnderline( dst, x + offset, 0, ref args, true );
 			}
@@ -214,8 +215,8 @@ namespace ClassicalSharp {
 		}
 		
 		protected int ShadowOffset( float fontSize ) {
-			if( fontSize < 9.9f ) return 1;
-			if( fontSize < 24.9f ) return 2;
+			if( fontSize <= 12 ) return 1;
+			if( fontSize <= 30 ) return 2;
 			return 3;
 		}
 		

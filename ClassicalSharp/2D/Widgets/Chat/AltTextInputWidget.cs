@@ -7,10 +7,10 @@ namespace ClassicalSharp.Gui {
 	
 	public sealed partial class AltTextInputWidget : Widget {
 
-		public AltTextInputWidget( Game game, TextInputWidget parent ) : base( game ) {
+		public AltTextInputWidget( Game game, Font font, TextInputWidget parent ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
-			font = new Font( game.FontName, 16 );
+			this.font = font;
 			this.parent = parent;
 			Active = false;
 		}

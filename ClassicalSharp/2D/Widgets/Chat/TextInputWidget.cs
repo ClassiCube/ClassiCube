@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui {
 			defaultHeight = Height = defSize.Height;
 			
 			this.font = font;
-			altText = new AltTextInputWidget( game, this );
+			altText = new AltTextInputWidget( game, font, this );
 			altText.Init();
 		}
 		
