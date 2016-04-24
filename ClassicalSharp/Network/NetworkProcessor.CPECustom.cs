@@ -9,7 +9,7 @@ namespace ClassicalSharp.Net {
 		
 		void HandleCpeDefineBlock() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( PacketId.CpeDefineBlock ); return;
+				SkipPacketData( Opcode.CpeDefineBlock ); return;
 			}
 			byte id = HandleCpeDefineBlockCommonStart( false );
 			BlockInfo info = game.BlockInfo;
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Net {
 		
 		void HandleCpeRemoveBlockDefinition() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( PacketId.CpeRemoveBlockDefinition ); return;
+				SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
 			}
 			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Net {
 		
 		void HandleCpeDefineBlockExt() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( PacketId.CpeDefineBlockExt ); return;
+				SkipPacketData( Opcode.CpeDefineBlockExt ); return;
 			}
 			byte id = HandleCpeDefineBlockCommonStart( blockDefinitionsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
@@ -133,7 +133,7 @@ namespace ClassicalSharp.Net {
 					if( model != null ) model.ReadRotationPacket( reader );
 					break;
 			}
-			int total = packetSizes[(byte)PacketId.CpeDefineModel];
+			int total = packetSizes[(byte)Opcode.CpeDefineModel];
 			reader.Skip( total - (reader.index - start) );
 		}
 		

@@ -3,10 +3,10 @@ using System;
 
 namespace ClassicalSharp.Net {
 	
-	public enum PacketId {
+	public enum Opcode {
 		Handshake = 0,
 		Ping = 1,
-		LevelInitialise = 2,
+		LevelInit = 2,
 		LevelDataChunk = 3,
 		LevelFinalise = 4,
 		SetBlockClient = 5,

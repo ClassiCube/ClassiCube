@@ -20,7 +20,7 @@ namespace ClassicalSharp.Net {
 			byte payload = !ServerSupportsPartialMessages ? (byte)0xFF:
 				partial ? (byte)1 : (byte)0;
 			
-			writer.WriteUInt8( (byte)PacketId.Message );
+			writer.WriteUInt8( (byte)Opcode.Message );
 			writer.WriteUInt8( payload );
 			writer.WriteString( text );
 			SendPacket();
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			writer.WriteUInt8( (byte)PacketId.SetBlockClient );
+			writer.WriteUInt8( (byte)Opcode.SetBlockClient );
 			writer.WriteInt16( (short)x );
 			writer.WriteInt16( (short)y );
 			writer.WriteInt16( (short)z );
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		void MakeLoginPacket( string username, string verKey ) {
-			writer.WriteUInt8( (byte)PacketId.Handshake );
+			writer.WriteUInt8( (byte)Opcode.Handshake );
 			writer.WriteUInt8( 7 ); // protocol version
 			writer.WriteString( username );
 			writer.WriteString( verKey );
@@ -52,7 +52,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		void MakePositionPacket( Vector3 pos, float yaw, float pitch, byte payload ) {
-			writer.WriteUInt8( (byte)PacketId.EntityTeleport );
+			writer.WriteUInt8( (byte)Opcode.EntityTeleport );
 			writer.WriteUInt8( payload ); // held block when using HeldBlock, otherwise just 255
 			writer.WriteInt16( (short)(pos.X * 32) );
 			writer.WriteInt16( (short)((int)(pos.Y * 32) + 51) );

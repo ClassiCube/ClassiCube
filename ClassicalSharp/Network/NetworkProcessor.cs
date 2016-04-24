@@ -60,7 +60,7 @@ namespace ClassicalSharp.Net {
 			game.WorldEvents.OnNewMap -= OnNewMap;
 			socket.Close();
 			Disconnected = true;
-		}	
+		}
 		
 		public override void Tick( double delta ) {
 			if( Disconnected ) return;
@@ -78,12 +78,12 @@ namespace ClassicalSharp.Net {
 				return;
 			} catch {
 				throw;
-			}			
+			}
 			
 			while( (reader.size - reader.index) > 0 ) {
 				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
-				if( needD3Fix && lastOpcode == PacketId.CpeHackControl && (opcode == 0x00 || opcode == 0xFF) ) {
+				if( needD3Fix && lastOpcode == Opcode.CpeHackControl && (opcode == 0x00 || opcode == 0xFF) ) {
 					Utils.LogDebug( "Skipping invalid HackControl byte from D3 server." );
 					reader.Skip( 1 );
 					player.physics.jumpVel = 0.42f; // assume default jump height
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Net {
 					continue;
 				}
 				
-				if( opcode >= maxHandledPacket ) {
+				if( opcode > maxHandledPacket ) {
 					ErrorHandler.LogError( "NetworkProcessor.Tick",
 					                      "received an invalid opcode of " + opcode );
 					reader.Skip( 1 );
@@ -102,7 +102,7 @@ namespace ClassicalSharp.Net {
 				ReadPacket( opcode );
 			}
 			
-			reader.RemoveProcessed();			
+			reader.RemoveProcessed();
 			if( receivedFirstPosition ) {
 				SendPosition( player.Position, player.HeadYawDegrees, player.PitchDegrees );
 			}
@@ -110,12 +110,12 @@ namespace ClassicalSharp.Net {
 			CheckForWomEnvironment();
 		}
 		
-		readonly int[] packetSizes = {
-			131, 1, 1, 1028, 7, 9, 8, 74, 10, 7, 5, 4, 2,
-			66, 65, 2, 67, 69, 3, 2, 3, 134, 196, 130, 3,
-			8, 86, 2, 4, 66, 69, 2, 8, 138, 0, 80, 2, 85,
-			1282, 6,
-		};
+		/// <summary> Sets the incoming packet handler for the given packet id. </summary>
+		public void Set( Opcode opcode, Action handler, int packetSize ) {
+			handlers[(byte)opcode] = handler;
+			packetSizes[(byte)opcode] = (ushort)packetSize;
+			maxHandledPacket = Math.Max( (byte)opcode, maxHandledPacket );
+		}
 		
 		NetWriter writer;
 		void SendPacket() {
@@ -135,43 +135,72 @@ namespace ClassicalSharp.Net {
 		}
 		
 		NetReader reader;
-		PacketId lastOpcode;
+		Opcode lastOpcode;
 		
 		void ReadPacket( byte opcode ) {
 			reader.Skip( 1 ); // remove opcode
-			lastOpcode = (PacketId)opcode;
+			lastOpcode = (Opcode)opcode;
 			Action handler = handlers[opcode];
 			lastPacket = DateTime.UtcNow;
 			
 			if( handler == null )
-				throw new NotImplementedException( "Unsupported packet:" + (PacketId)opcode );
+				throw new NotImplementedException( "Unsupported packet:" + (Opcode)opcode );
 			handler();
 		}
 		
-		void SkipPacketData( PacketId opcode ) {
+		void SkipPacketData( Opcode opcode ) {
 			reader.Skip( packetSizes[(byte)opcode] - 1 );
 		}
 		
-		Action[] handlers;
-		int maxHandledPacket;
+		Action[] handlers = new Action[256];
+		ushort[] packetSizes = new ushort[256];
+		int maxHandledPacket = 0;
 		
 		void SetupHandlers() {
-			handlers = new Action[] { HandleHandshake, HandlePing, HandleLevelInit,
-				HandleLevelDataChunk, HandleLevelFinalise, null, HandleSetBlock,
-				HandleAddEntity, HandleEntityTeleport, HandleRelPosAndOrientationUpdate,
-				HandleRelPositionUpdate, HandleOrientationUpdate, HandleRemoveEntity,
-				HandleMessage, HandleKick, HandleSetPermission,
-				
-				HandleCpeExtInfo, HandleCpeExtEntry, HandleCpeSetClickDistance,
-				HandleCpeCustomBlockSupportLevel, HandleCpeHoldThis, HandleCpeSetTextHotkey,
-				HandleCpeExtAddPlayerName, HandleCpeExtAddEntity, HandleCpeExtRemovePlayerName,
-				HandleCpeEnvColours, HandleCpeMakeSelection, HandleCpeRemoveSelection,
-				HandleCpeSetBlockPermission, HandleCpeChangeModel, HandleCpeEnvSetMapApperance,
-				HandleCpeEnvWeatherType, HandleCpeHackControl, HandleCpeExtAddEntity2,
-				null, HandleCpeDefineBlock, HandleCpeRemoveBlockDefinition, HandleCpeDefineBlockExt,
-				HandleBulkBlockUpdate, HandleSetTextColor,
-			};
-			maxHandledPacket = handlers.Length;
+			Set( Opcode.Handshake, HandleHandshake, 131 );
+			Set( Opcode.Ping, HandlePing, 1 );
+			Set( Opcode.LevelInit, HandleLevelInit, 1 );
+			Set( Opcode.LevelDataChunk, HandleLevelDataChunk, 1028 );
+			Set( Opcode.LevelFinalise, HandleLevelFinalise, 7 );
+			Set( Opcode.SetBlock, HandleSetBlock, 8 );
+			
+			Set( Opcode.AddEntity, HandleAddEntity, 74 );
+			Set( Opcode.EntityTeleport, HandleEntityTeleport, 10 );
+			Set( Opcode.RelPosAndOrientationUpdate, HandleRelPosAndOrientationUpdate, 7 );
+			Set( Opcode.RelPosUpdate, HandleRelPositionUpdate, 5 );
+			Set( Opcode.OrientationUpdate, HandleOrientationUpdate, 4 );
+			Set( Opcode.RemoveEntity, HandleRemoveEntity, 2 );
+			
+			Set( Opcode.Message, HandleMessage, 66 );
+			Set( Opcode.Kick, HandleKick, 65 );
+			Set( Opcode.SetPermission, HandleSetPermission, 2 );
+			
+			Set( Opcode.CpeExtInfo, HandleCpeExtInfo, 67 );
+			Set( Opcode.CpeExtEntry, HandleCpeExtEntry, 69 );
+			Set( Opcode.CpeSetClickDistance, HandleCpeSetClickDistance, 3 );
+			Set( Opcode.CpeCustomBlockSupportLevel, HandleCpeCustomBlockSupportLevel, 2 );
+			Set( Opcode.CpeHoldThis, HandleCpeHoldThis, 3 );
+			Set( Opcode.CpeSetTextHotkey, HandleCpeSetTextHotkey, 134 );
+			
+			Set( Opcode.CpeExtAddPlayerName, HandleCpeExtAddPlayerName, 196 );
+			Set( Opcode.CpeExtAddEntity, HandleCpeExtAddEntity, 130 );
+			Set( Opcode.CpeExtRemovePlayerName, HandleCpeExtRemovePlayerName, 3 );
+			
+			Set( Opcode.CpeEnvColours, HandleCpeEnvColours, 8 );
+			Set( Opcode.CpeMakeSelection, HandleCpeMakeSelection, 86 );
+			Set( Opcode.CpeRemoveSelection, HandleCpeRemoveSelection, 2 );
+			Set( Opcode.CpeSetBlockPermission, HandleCpeSetBlockPermission, 4 );
+			Set( Opcode.CpeChangeModel, HandleCpeChangeModel, 66 );
+			Set( Opcode.CpeEnvSetMapApperance, HandleCpeEnvSetMapApperance, 69 );
+			Set( Opcode.CpeEnvWeatherType, HandleCpeEnvWeatherType, 2 );
+			Set( Opcode.CpeHackControl, HandleCpeHackControl, 8 );
+			Set( Opcode.CpeExtAddEntity2, HandleCpeExtAddEntity2, 138 );
+			
+			Set( Opcode.CpeDefineBlock, HandleCpeDefineBlock, 80 );
+			Set( Opcode.CpeRemoveBlockDefinition, HandleCpeRemoveBlockDefinition, 2 );
+			Set( Opcode.CpeDefineBlockExt, HandleCpeDefineBlockExt, 85 );
+			Set( Opcode.CpeBulkBlockUpdate, HandleBulkBlockUpdate, 1282 );
+			Set( Opcode.CpeSetTextColor, HandleSetTextColor, 6 );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

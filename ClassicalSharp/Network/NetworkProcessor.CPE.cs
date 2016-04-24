@@ -22,25 +22,25 @@ namespace ClassicalSharp.Net {
 		}
 		
 		void MakeExtInfo( string appName, int extensionsCount ) {
-			writer.WriteUInt8( (byte)PacketId.CpeExtInfo );
+			writer.WriteUInt8( (byte)Opcode.CpeExtInfo );
 			writer.WriteString( appName );
 			writer.WriteInt16( (short)extensionsCount );
 		}
 		
 		void MakeExtEntry( string extensionName, int extensionVersion ) {
-			writer.WriteUInt8( (byte)PacketId.CpeExtEntry );
+			writer.WriteUInt8( (byte)Opcode.CpeExtEntry );
 			writer.WriteString( extensionName );
 			writer.WriteInt32( extensionVersion );
 		}
 		
 		void MakeCustomBlockSupportLevel( byte version ) {
-			writer.WriteUInt8( (byte)PacketId.CpeCustomBlockSupportLevel );
+			writer.WriteUInt8( (byte)Opcode.CpeCustomBlockSupportLevel );
 			writer.WriteUInt8( version );
 		}
 		
 		void MakePlayerClick( byte button, bool buttonDown, float yaw, float pitch, byte targetEntity,
 		                     Vector3I targetPos, CpeBlockFace targetFace ) {
-			writer.WriteUInt8( (byte)PacketId.CpePlayerClick );
+			writer.WriteUInt8( (byte)Opcode.CpePlayerClick );
 			writer.WriteUInt8( button );
 			writer.WriteUInt8( buttonDown ? (byte)0 : (byte)1 );
 			writer.WriteInt16( (short)Utils.DegreesToPacked( yaw, 65536 ) );
@@ -96,8 +96,8 @@ namespace ClassicalSharp.Net {
 			} else if( extName == "EnvMapAppearance" ) {
 				envMapAppearanceVer = extVersion;
 				if( extVersion >= 2 ) {
-					handlers[(int)PacketId.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
-					packetSizes[(int)PacketId.CpeEnvSetMapApperance] += 4;
+					handlers[(int)Opcode.CpeEnvSetMapApperance] = HandleCpeEnvSetMapAppearance2;
+					packetSizes[(int)Opcode.CpeEnvSetMapApperance] += 4;
 				}
 			} else if( extName == "LongerMessages" ) {
 				ServerSupportsPartialMessages = true;
@@ -106,7 +106,7 @@ namespace ClassicalSharp.Net {
 			} else if( extName == "BlockDefinitionsExt" ) {
 				blockDefinitionsExtVer = extVersion;
 				if( extVersion >= 2 )
-					packetSizes[(int)PacketId.CpeDefineBlockExt] += 3;
+					packetSizes[(int)Opcode.CpeDefineBlockExt] += 3;
 			}
 			cpeServerExtensionsCount--;
 			SendCpeExtInfoReply();
