@@ -19,6 +19,10 @@ namespace ClassicalSharp.Selections {
 			game.WorldEvents.OnNewMap += OnNewMap;
 		}
 		
+		public void Reset( Game game ) {
+			selections.Clear();
+		}
+		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
 		public void AddSelection( byte id, Vector3I p1, Vector3I p2, FastColour col ) {
 			RemoveSelection( id );

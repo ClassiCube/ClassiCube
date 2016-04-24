@@ -27,6 +27,7 @@ namespace ClassicalSharp.Net {
 		bool prevCursorVisible, supportsCustomBlocks;
 		
 		public override void Connect( IPAddress address, int port ) {
+			
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
 			try {
 				socket.Connect( address, port );

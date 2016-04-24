@@ -15,6 +15,8 @@ namespace ClassicalSharp.Selections {
 			this.game = game;
 		}
 		
+		public void Reset( Game game ) { }
+		
 		public void Dispose() {
 			game.Graphics.DeleteDynamicVb( vb );
 		}

@@ -7,16 +7,18 @@ using ClassicalSharp.Commands;
 
 namespace ClassicalSharp {
 
-	public sealed class Chat : IDisposable {
+	public sealed class Chat : IGameComponent {
 		
 		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement, ClientClock;
 		public ChatLine[] ClientStatus = new ChatLine[6];
 		
 		Game game;
-		public Chat( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
 		}
+		
+		public void Reset( Game game ) { }
 		
 		/// <summary> List of chat messages received from the server and added by client commands. </summary>
 		/// <remarks> index 0 is the oldest chat message, last index is newest. </remarks>

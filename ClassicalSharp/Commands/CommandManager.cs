@@ -25,6 +25,8 @@ namespace ClassicalSharp.Commands {
 				Register( new ModelCommand() );
 		}
 		
+		public void Reset( Game game ) { }
+		
 		public void Register( Command command ) {
 			command.game = game;
 			foreach( Command cmd in RegisteredCommands ) {

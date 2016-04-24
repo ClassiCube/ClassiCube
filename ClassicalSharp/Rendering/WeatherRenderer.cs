@@ -23,6 +23,8 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
+		public void Reset( Game game ) { }
+		
 		int weatherVb;
 		short[] heightmap;
 		float vOffset;

@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadGui() {
-			Chat = new Chat( this );
+			Chat = AddComponent( new Chat() );
 			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
 			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
@@ -505,7 +505,6 @@ namespace ClassicalSharp {
 			foreach( IGameComponent comp in Components )
 				comp.Dispose();
 			
-			Chat.Dispose();
 			if( activeScreen != null )
 				activeScreen.Dispose();
 			Graphics.DeleteIb( defaultIb );

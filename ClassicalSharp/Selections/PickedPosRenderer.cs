@@ -17,6 +17,8 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 		}
 		
+		public void Reset( Game game ) { }
+		
 		FastColour col = FastColour.Black;
 		int index;
 		const int verticesCount = 16 * 6;

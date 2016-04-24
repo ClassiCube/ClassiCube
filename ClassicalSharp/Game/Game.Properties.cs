@@ -27,6 +27,9 @@ namespace ClassicalSharp {
 		
 		/// <summary> Called when the game has loaded. </summary>
 		void Init( Game game );
+		
+		/// <summary> Called to reset the state when the user is reconnecting to a server. </summary>
+		void Reset( Game game );
 	}
 	
 	public partial class Game {
