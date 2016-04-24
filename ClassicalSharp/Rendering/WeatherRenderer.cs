@@ -19,6 +19,8 @@ namespace ClassicalSharp.Renderers {
 			graphics = game.Graphics;
 			info = game.BlockInfo;
 			weatherVb = graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
+			game.WorldEvents.OnNewMap += OnNewMap;
+			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		int weatherVb;
@@ -111,11 +113,6 @@ namespace ClassicalSharp.Renderers {
 			for( int i = 0; i < heightmap.Length; i++ ) {
 				heightmap[i] = short.MaxValue;
 			}
-		}
-		
-		public void Init() {
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
 		}
 		
 		public void Dispose() {
