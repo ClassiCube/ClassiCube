@@ -45,8 +45,8 @@ namespace ClassicalSharp.Entities {
 		bool anyNonAir = false;
 		SoundType sndType = SoundType.None;
 		void GetSound() {
-			Vector3 pos = p.nextPos, size = p.CollisionSize;
-			BoundingBox bounds = new BoundingBox( pos - size / 2, pos + size / 2 );
+			Vector3 pos = p.nextPos;
+			BoundingBox bounds = p.CollisionBounds;
 			sndType = SoundType.None;
 			anyNonAir = false;
 			
@@ -55,15 +55,18 @@ namespace ClassicalSharp.Entities {
 			if( sndType != SoundType.None ) return;
 			
 			// then check block standing on
-			byte blockUnder = (byte)p.BlockUnderFeet;
+			pos.Y -= 0.01f;
+			Vector3I feetPos = Vector3I.Floor( pos );
+			byte blockUnder = game.World.SafeGetBlock( feetPos );
+			float maxY = feetPos.Y + game.BlockInfo.MaxBB[blockUnder].Y;
+			
 			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
 			CollideType collideType = game.BlockInfo.Collide[blockUnder];
-			if( collideType == CollideType.Solid && typeUnder != SoundType.None ) {
+			if( maxY >= pos.Y && collideType == CollideType.Solid && typeUnder != SoundType.None ) {
 				anyNonAir = true; sndType = typeUnder; return;
 			}
 			
 			// then check all solid blocks at feet
-			pos.Y -= 0.01f;
 			bounds.Max.Y = bounds.Min.Y = pos.Y;
 			p.TouchesAny( bounds, checkSoundSolid );
 		}
