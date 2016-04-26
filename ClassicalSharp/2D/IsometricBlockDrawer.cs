@@ -50,7 +50,8 @@ namespace ClassicalSharp {
 			scale = size / (2 * cosY);
 			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))
 			pos.X = x; pos.Y = y; pos.Z = 0;
-			pos = Utils.RotateY( Utils.RotateX( pos, cosX, -sinX ), cosY, -sinY );
+			Utils.RotateX( ref pos.Y, ref pos.Z, cosX, -sinX );
+			Utils.RotateY( ref pos.X, ref pos.Z, cosY, -sinY );
 			
 			if( info.IsSprite[block] ) {
 				SpriteXQuad( block, TileSide.Right, false );
@@ -171,16 +172,19 @@ namespace ClassicalSharp {
 				index = 0;
 			}
 			lastTexId = texId;
-			api.BindTexture( texId );		
+			api.BindTexture( texId );
 		}
 		
-		static void TransformVertex( ref VertexP3fT2fC4b vertex ) {
-			Vector3 p = new Vector3( vertex.X, vertex.Y, vertex.Z ) + pos;
+		static void TransformVertex( ref VertexP3fT2fC4b v ) {
+			v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
+			//Vector3 p = new Vector3( v.X, v.Y, v.Z ) + pos;
 			//p = Utils.RotateY( p - pos, time ) + pos;
+			//v coords = p
+			
 			// See comment in IGraphicsApi.Draw2DTexture()
-			p.X -= 0.5f; p.Y -= 0.5f;
-			p = Utils.RotateX( Utils.RotateY( p, cosY, sinY ), cosX, sinX );
-			vertex.X = p.X; vertex.Y = p.Y; vertex.Z = p.Z;
+			v.X -= 0.5f; v.Y -= 0.5f;
+			Utils.RotateY( ref v.X, ref v.Z, cosY, sinY );
+			Utils.RotateX( ref v.Y, ref v.Z, cosX, sinX );
 		}
 	}
 }

@@ -180,8 +180,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		public static void RotateX( ref float y, ref float z, float cosA, float sinA ) {
-			float y2 = cosA * y + sinA * z, z2 = -sinA * y + cosA * z;
-			y = y2; z = z2;
+			float y2 = cosA * y + sinA * z; z = -sinA * y + cosA * z; y = y2;
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
@@ -196,8 +195,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static void RotateY( ref float x, ref float z, float cosA, float sinA ) {
-			float x2 = cosA * x - sinA * z, z2 = sinA * x + cosA * z;
-			x = x2; z = z2;
+			float x2 = cosA * x - sinA * z; z = sinA * x + cosA * z; x = x2;
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
@@ -212,8 +210,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static void RotateZ( ref float x, ref float y, float cosA, float sinA ) {
-			float x2 = cosA * x + sinA * y, y2 = -sinA * x + cosA * y;
-			x = x2; y = y2;
+			float x2 = cosA * x + sinA * y; y = -sinA * x + cosA * y; x = x2;
 		}
 		
 		/// <summary> Returns the square of the euclidean distance between two points. </summary>
