@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 namespace ClassicalSharp.Generator {
 	
-	// TODO: figure out how noise functions differ, probably based on rnd.
 	public sealed partial class NotchyGenerator {
 		
 		void FillOblateSpheroid( int x, int y, int z, float radius, byte block ) {

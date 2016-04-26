@@ -66,7 +66,7 @@ namespace ClassicalSharp.Net {
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockInfo( block, false );
 			
-			info.Name[block] = reader.ReadAsciiString();
+			info.Name[block] = reader.ReadCp437String();
 			info.Collide[block] = (CollideType)reader.ReadUInt8();
 			if( info.Collide[block] != CollideType.Solid ) {
 				info.IsTransparent[block] = true;

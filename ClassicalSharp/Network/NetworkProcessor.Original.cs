@@ -263,7 +263,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		void HandleKick() {
-			string reason = reader.ReadAsciiString();
+			string reason = reader.ReadCp437String();
 			game.Disconnect( "&eLost connection to the server", reason );
 			Dispose();
 		}

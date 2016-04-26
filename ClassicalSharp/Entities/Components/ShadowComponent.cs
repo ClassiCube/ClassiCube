@@ -201,7 +201,7 @@ namespace ClassicalSharp.Entities {
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) )
 			{
 				int inPix = new FastColour( 0, 0, 0, 200 ).ToArgb();
-				int outPix = inPix & 0xFFFFFF;
+				int outPix = new FastColour( 0, 0, 0, 0 ).ToArgb();
 				for( int y = 0; y < fastBmp.Height; y++ ) {
 					int* row = fastBmp.GetRowPtr( y );
 					for( int x = 0; x < fastBmp.Width; x++ ) {
