@@ -165,7 +165,7 @@ namespace ClassicalSharp.Net {
 		
 		void HandleCpeSetTextHotkey() {
 			string label = reader.ReadAsciiString();
-			string action = reader.ReadAsciiString();
+			string action = reader.ReadCp437String();
 			int keyCode = reader.ReadInt32();
 			byte keyMods = reader.ReadUInt8();
 			
@@ -173,7 +173,7 @@ namespace ClassicalSharp.Net {
 			Key key = LwjglToKey.Map[keyCode];
 			if( key == Key.Unknown ) return;
 			
-			Console.WriteLine( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
+			Utils.LogDebug( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
 			if( action == "" ) {
 				game.InputHandler.Hotkeys.RemoveHotkey( key, keyMods );
 			} else if( action[action.Length - 1] == '\n' ) {

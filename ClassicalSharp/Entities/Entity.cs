@@ -53,7 +53,7 @@ namespace ClassicalSharp.Entities {
 		void UpdateModel() {
 			BlockModel model = Model as BlockModel;
 			if( model != null )
-				model.CalcState( byte.Parse( ModelName ) );
+				model.CalcState( Utils.FastByte( ModelName ) );
 		}
 		
 		public abstract void Tick( double delta );

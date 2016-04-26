@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns a string with all the colour codes stripped from it. </summary>
 		public static string StripColours( string value ) {
-			if( value.IndexOf( '&' ) == -1 ) return value;			
+			if( value.IndexOf( '&' ) == -1 ) return value;
 			char[] output = new char[value.Length];
 			int usedChars = 0;
 			
@@ -169,51 +169,18 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
-		public static Vector3 RotateX( Vector3 p, float cosA, float sinA ) {
-			return new Vector3( p.X, cosA * p.Y + sinA * p.Z, -sinA * p.Y + cosA * p.Z );
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
-		public static Vector3 RotateX( float x, float y, float z, float cosA, float sinA ) {
-			return new Vector3( x, cosA * y + sinA * z, -sinA * y + cosA * z );
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		public static void RotateX( ref float y, ref float z, float cosA, float sinA ) {
-			float y2 = cosA * y + sinA * z, z2 = -sinA * y + cosA * z;
-			y = y2; z = z2;
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
-		public static Vector3 RotateY( Vector3 p, float cosA, float sinA ) {
-			return new Vector3( cosA * p.X - sinA * p.Z, p.Y, sinA * p.X + cosA * p.Z );
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
-		public static Vector3 RotateY( float x, float y, float z, float cosA, float sinA ) {
-			return new Vector3( cosA * x - sinA * z, y, sinA * x + cosA * z );
+			float y2 = cosA * y + sinA * z; z = -sinA * y + cosA * z; y = y2;
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static void RotateY( ref float x, ref float z, float cosA, float sinA ) {
-			float x2 = cosA * x - sinA * z, z2 = sinA * x + cosA * z;
-			x = x2; z = z2;
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
-		public static Vector3 RotateZ( Vector3 p, float cosA, float sinA ) {
-			return new Vector3( cosA * p.X + sinA * p.Y, -sinA * p.X + cosA * p.Y, p.Z );
-		}
-		
-		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
-		public static Vector3 RotateZ( float x, float y, float z, float cosA, float sinA ) {
-			return new Vector3( cosA * x + sinA * y, -sinA * x + cosA * y, z );
+			float x2 = cosA * x - sinA * z; z = sinA * x + cosA * z; x = x2;
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static void RotateZ( ref float x, ref float y, float cosA, float sinA ) {
-			float x2 = cosA * x + sinA * y, y2 = -sinA * x + cosA * y;
-			x = x2; y = y2;
+			float x2 = cosA * x + sinA * y; y = -sinA * x + cosA * y; x = x2;
 		}
 		
 		/// <summary> Returns the square of the euclidean distance between two points. </summary>
@@ -284,6 +251,16 @@ namespace ClassicalSharp {
 		/// <summary> Performs linear interpolation between two values. </summary>
 		public static float Lerp( float a, float b, float t ) {
 			return a + (b - a) * t;
+		}
+		
+		internal static byte FastByte( string s ) {
+			int sum = 0;
+			switch( s.Length ) {
+				case 1: sum = (s[0] - '0'); break;
+				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
+				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
+			}
+			return (byte)sum;
 		}
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/

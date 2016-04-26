@@ -32,10 +32,10 @@ namespace ClassicalSharp {
 		public virtual void GetPickedBlock( PickedPos pos ) { }
 		
 		protected float AdjustPitch( float value ) {
-			if( value >= 90.00f && value <= 90.25f ) return 90.25f * Utils.Deg2Rad;
-			if( value >= 89.75f && value <= 90.00f ) return 89.75f * Utils.Deg2Rad;
-			if( value >= 270.00f && value <= 270.25f ) return 270.25f * Utils.Deg2Rad;
-			if( value >= 269.75f && value <= 270.00f ) return 269.75f * Utils.Deg2Rad;
+			if( value >= 90.0f && value <= 90.1f ) return 90.1f * Utils.Deg2Rad;
+			if( value >= 89.9f && value <= 90.0f ) return 89.9f * Utils.Deg2Rad;
+			if( value >= 270.0f && value <= 270.1f ) return 270.1f * Utils.Deg2Rad;
+			if( value >= 269.9f && value <= 270.0f ) return 269.9f * Utils.Deg2Rad;
 			return value * Utils.Deg2Rad;
 		}
 	}

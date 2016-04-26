@@ -67,7 +67,7 @@ namespace ClassicalSharp.Model {
 				col = FastColour.Scale( baseCol, 0.8f );
 				block = ((FakePlayer)p).Block;
 			} else {
-				block = Byte.Parse( p.ModelName );
+				block = Utils.FastByte( p.ModelName );
 			}
 			
 			CalcState( block );
@@ -210,10 +210,10 @@ namespace ClassicalSharp.Model {
 		
 		void TransformVertices() {
 			for( int i = 0; i < index; i++ ) {
-				VertexP3fT2fC4b vertex = cache.vertices[i];
-				Vector3 newPos = Utils.RotateY( vertex.X, vertex.Y, vertex.Z, cosYaw, sinYaw ) + pos;
-				vertex.X = newPos.X; vertex.Y = newPos.Y; vertex.Z = newPos.Z;
-				cache.vertices[i] = vertex;
+				VertexP3fT2fC4b v = cache.vertices[i];
+				Utils.RotateY( ref v.X, ref v.Z, cosYaw, sinYaw );
+				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
+				cache.vertices[i] = v;
 			}
 		}
 	}
