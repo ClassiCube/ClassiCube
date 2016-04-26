@@ -100,17 +100,17 @@ namespace ClassicalSharp.Model {
 		protected void DrawPart( ModelPart part ) {
 			float vScale = _64x64 ? 64f : 32f;
 			for( int i = 0; i < part.Count; i++ ) {
-				ModelVertex model = vertices[part.Offset + i];
-				Utils.RotateY( ref model.X, ref model.Z, cosYaw, sinYaw );
-				model.X += pos.X; model.Y += pos.Y; model.Z += pos.Z;
+				ModelVertex v = vertices[part.Offset + i];
+				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
+				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				
 				FastColour col = part.Count == boxVertices ? 
 					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
 				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
-				vertex.X = model.X; vertex.Y = model.Y; vertex.Z = model.Z;
+				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
-				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				vertex.U = v.U / 64f; vertex.V = v.V / vScale;
 				int quadI = i % 4;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
@@ -126,46 +126,48 @@ namespace ClassicalSharp.Model {
 			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, true );
 		}
 		
-		protected void DrawRotated( float x, float y, float z, float angleX, float angleY, float angleZ, ModelPart part, bool head ) {
+		protected void DrawRotated( float x, float y, float z, 
+		                           float angleX, float angleY, float angleZ, ModelPart part, bool head ) {
 			float cosX = (float)Math.Cos( -angleX ), sinX = (float)Math.Sin( -angleX );
 			float cosY = (float)Math.Cos( -angleY ), sinY = (float)Math.Sin( -angleY );
 			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
 			float vScale = _64x64 ? 64f : 32f;
 			
 			for( int i = 0; i < part.Count; i++ ) {
-				ModelVertex model = vertices[part.Offset + i];
-				model.X -= x; model.Y -= y; model.Z -= z;
+				ModelVertex v = vertices[part.Offset + i];
+				v.X -= x; v.Y -= y; v.Z -= z;
+				float t = 0;
 				
 				// Rotate locally
 				if( Rotate == RotateOrder.ZYX ) {
-					Utils.RotateZ( ref model.X, ref model.Y, cosZ, sinZ );
-					Utils.RotateY( ref model.X, ref model.Z, cosY, sinY );
-					Utils.RotateX( ref model.Y, ref model.Z, cosX, sinX );
+					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
+					t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  // Inlined RotY
+					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
 				} else if( Rotate == RotateOrder.XZY ) {
-					Utils.RotateX( ref model.Y, ref model.Z, cosX, sinX );
-					Utils.RotateZ( ref model.X, ref model.Y, cosZ, sinZ );
-					Utils.RotateY( ref model.X, ref model.Z, cosY, sinY );
+					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
+					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
+					t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  // Inlined RotY
 				}
 				
 				// Rotate globally
-				if( !head) {
-					model.X += x; model.Y += y; model.Z += z;
-					Utils.RotateY( ref model.X, ref model.Z, cosYaw, sinYaw );
+				if( !head ) {
+					v.X += x; v.Y += y; v.Z += z;
+					t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t;     // Inlined RotY
 				} else {
-					Utils.RotateY( ref model.X, ref model.Z, cosHead, sinHead );
-					float tempX = x, tempZ = z;
-					Utils.RotateY( ref tempX, ref tempZ, cosYaw, sinYaw );
-					model.X += tempX; model.Y += y; model.Z += tempZ;
+					t = cosHead * v.X - sinHead * v.Z; v.Z = sinHead * v.X + cosHead * v.Z; v.X = t; // Inlined RotY
+					float tX = x, tZ = z;
+					t = cosYaw * tX - sinYaw * tZ; tZ = sinYaw * tX + cosYaw * tZ; tX = t;           // Inlined RotY
+					v.X += tX; v.Y += y; v.Z += tZ;
 				}
-				model.X += pos.X; model.Y += pos.Y; model.Z += pos.Z;
+				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				
 				FastColour col = part.Count == boxVertices ? 
 					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
 				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
-				vertex.X = model.X; vertex.Y = model.Y; vertex.Z = model.Z;
+				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
-				vertex.U = model.U / 64f; vertex.V = model.V / vScale;
+				vertex.U = v.U / 64f; vertex.V = v.V / vScale;
 				int quadI = i % 4;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
