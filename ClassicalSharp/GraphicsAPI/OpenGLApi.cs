@@ -47,9 +47,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.UseArbVboAddresses();
 		}
 
-		public override bool AlphaTest { set { Toggle( EnableCap.AlphaTest, value ); } }
+		public override bool AlphaTest {
+			set { if( value ) GL.Enable( EnableCap.AlphaTest );
+				else GL.Disable( EnableCap.AlphaTest ); }
+		}
 		
-		public override bool AlphaBlending { set { Toggle( EnableCap.Blend, value ); } }
+		public override bool AlphaBlending {
+			set { if( value ) GL.Enable( EnableCap.Blend );
+				else GL.Disable( EnableCap.Blend ); }
+		}
 		
 		Compare[] compareFuncs;
 		public override void AlphaTestFunc( CompareFunc func, float value ) {
@@ -61,7 +67,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc( blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc] );
 		}
 		
-		public override bool Fog { set { Toggle( EnableCap.Fog, value ); } }
+		public override bool Fog {
+			set { if( value ) GL.Enable( EnableCap.Fog );
+				else GL.Disable( EnableCap.Fog ); }
+		}
 		
 		FastColour lastFogCol = FastColour.Black;
 		public override void SetFogColour( FastColour col ) {
@@ -102,10 +111,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool FaceCulling {
-			set {
-				if( value ) GL.Enable( EnableCap.CullFace );
-				else GL.Disable( EnableCap.CullFace );
-			}
+			set { if( value ) GL.Enable( EnableCap.CullFace );
+				else GL.Disable( EnableCap.CullFace ); }
 		}
 		
 		public override void Clear() {
@@ -126,7 +133,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DepthFunc( compareFuncs[(int)func] );
 		}
 		
-		public override bool DepthTest { set { Toggle( EnableCap.DepthTest, value ); } }
+		public override bool DepthTest  {
+			set { if( value ) GL.Enable( EnableCap.DepthTest );
+				else GL.Disable( EnableCap.DepthTest ); }
+		}
 		
 		public override bool DepthWrite { set { GL.DepthMask( value ); } }
 		
@@ -137,7 +147,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		int texDimensions;
 		public override int MaxTextureDimensions { get { return texDimensions; } }
 		
-		public override bool Texturing { set { Toggle( EnableCap.Texture2D, value ); } }
+		public override bool Texturing {
+			set { if( value ) GL.Enable( EnableCap.Texture2D );
+				else GL.Disable( EnableCap.Texture2D ); }
+		}
 		
 		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
 			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
@@ -407,11 +420,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void OnWindowResize( Game game ) {
 			GL.Viewport( 0, 0, game.Width, game.Height );
-		}
-		
-		static void Toggle( EnableCap cap, bool value ) {
-			if( value ) GL.Enable( cap );
-			else GL.Disable( cap );
 		}
 		
 		void InitFields() {
