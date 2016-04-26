@@ -183,8 +183,8 @@ namespace ClassicalSharp {
 			
 			// See comment in IGraphicsApi.Draw2DTexture()
 			v.X -= 0.5f; v.Y -= 0.5f;
-			Utils.RotateY( ref v.X, ref v.Z, cosY, sinY );
-			Utils.RotateX( ref v.Y, ref v.Z, cosX, sinX );
+			float t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
+			t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;      // Inlined RotX
 		}
 	}
 }
