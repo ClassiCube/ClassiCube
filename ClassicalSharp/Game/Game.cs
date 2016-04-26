@@ -211,13 +211,10 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
-		/// <summary> Gets whether the screen the user is currently interacting with 
-		/// handles all input. </summary>
-		public bool ScreenLockedInput { get { return ActiveScreen.HandlesAllInput; } }
-		
 		/// <summary> Gets the screen that the user is currently interacting with. </summary>
 		public Screen ActiveScreen {
-			get { return activeScreen == null ? hudScreen : activeScreen; }
+			get { return WarningOverlays.Count > 0 ? WarningOverlays[0]
+					: activeScreen == null ? hudScreen : activeScreen; }
 		}
 		
 		Stopwatch frameTimer = new Stopwatch();
@@ -229,7 +226,7 @@ namespace ClassicalSharp {
 			Graphics.BindIb( defaultIb );
 			accumulator += delta;
 			Vertices = 0;
-			if( !Focused && !ScreenLockedInput )
+			if( !Focused && !ActiveScreen.HandlesAllInput )
 				SetNewScreen( new PauseScreen( this ) );
 			CheckZoomFov();
 			
@@ -299,6 +296,9 @@ namespace ClassicalSharp {
 				activeScreen.Render( delta );
 			if( activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter )
 				hudScreen.Render( delta );
+			
+			if( WarningOverlays.Count > 0)
+				WarningOverlays[0].Render( delta );
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 		}
 		
@@ -392,18 +392,6 @@ namespace ClassicalSharp {
 		public void SetNewScreen( Screen screen ) { SetNewScreen( screen, true ); }
 		
 		public void SetNewScreen( Screen screen, bool disposeOld ) {
-			// Don't switch to the new screen immediately if the user
-			// is currently looking at a warning dialog.
-			if( activeScreen is WarningScreen ) {
-				WarningScreen warning = (WarningScreen)activeScreen;
-				if( warning.lastScreen != null )
-					warning.lastScreen.Dispose();
-				
-				warning.lastScreen = screen;
-				if( warning.lastScreen != null )
-					screen.Init();
-				return;
-			}
 			InputHandler.ScreenChanged( activeScreen, screen );
 			if( activeScreen != null && disposeOld )
 				activeScreen.Dispose();
@@ -422,16 +410,11 @@ namespace ClassicalSharp {
 		public void RefreshHud() { hudScreen.Recreate(); }
 		
 		public void ShowWarning( WarningScreen screen ) {
-			if( !(activeScreen is WarningScreen) ) {
-				screen.lastScreen = activeScreen;
-				activeScreen = screen;
-				
-				screen.wasCursorVisible = CursorVisible;
-				CursorVisible = true;
-			} else {
-				screen.wasCursorVisible = WarningScreens[0].wasCursorVisible;
-			}
-			WarningScreens.Add( screen );
+			bool cursorVis = CursorVisible;
+			if( WarningOverlays.Count == 0 ) CursorVisible = true;
+			WarningOverlays.Add( screen );
+			if( WarningOverlays.Count == 1 ) CursorVisible = cursorVis;
+			// Save cursor visibility state
 			screen.Init();
 		}
 		
@@ -516,6 +499,8 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref SnowTexId );
 			Graphics.DeleteTexture( ref GuiTexId );
 			Graphics.DeleteTexture( ref GuiClassicTexId );
+			foreach( WarningScreen screen in WarningOverlays )
+				screen.Dispose();
 			
 			if( Options.HasChanged ) {
 				Options.Load();

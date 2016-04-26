@@ -11,9 +11,10 @@ namespace ClassicalSharp.Gui {
 		}
 		protected Widget[] widgets;
 		protected Font titleFont, regularFont;
+		protected FastColour backCol = new FastColour( 60, 60, 60, 160 );
 		
 		protected void RenderMenuBounds() {
-			api.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
+			api.Draw2DQuad( 0, 0, game.Width, game.Height, backCol );
 		}
 		
 		protected void RenderMenuWidgets( double delta ) {

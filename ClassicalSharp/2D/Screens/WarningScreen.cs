@@ -20,8 +20,6 @@ namespace ClassicalSharp.Gui {
 			this.showAlways = showAlways;
 		}
 		
-		internal Screen lastScreen;
-		internal bool wasCursorVisible;
 		string title, lastTitle;
 		string[] body, lastBody;
 		bool confirmNo, confirmMode, showAlways;
@@ -29,6 +27,7 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
+			backCol.A = 210;
 			InitStandardButtons();
 			SetText( title, body );
 		}
@@ -66,15 +65,9 @@ namespace ClassicalSharp.Gui {
 		TextWidget[] labels;
 		
 		void CloseScreen() {
-			game.WarningScreens.RemoveAt( 0 );
-			if( game.WarningScreens.Count > 0 ) {
-				game.activeScreen = game.WarningScreens[0];
-			} else {
-				game.activeScreen = lastScreen;
-				game.CursorVisible = wasCursorVisible;
-				if( game.activeScreen == null && game.CursorVisible )
-					game.CursorVisible = false;
-			}
+			game.WarningOverlays.RemoveAt( 0 );
+			if( game.WarningOverlays.Count == 0 )
+				game.CursorVisible = game.realVisible;
 		}
 		
 		public override void Render( double delta ) {

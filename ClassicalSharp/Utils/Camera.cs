@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 		}
 
 		public override void Tick( double elapsed ) {
-			if( game.ScreenLockedInput ) return;
+			if( game.ActiveScreen.HandlesAllInput ) return;
 			CentreMousePosition();
 			UpdateMouseRotation();
 		}

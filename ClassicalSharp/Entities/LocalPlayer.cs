@@ -94,7 +94,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void HandleInput( ref float xMoving, ref float zMoving ) {
-			if( game.ScreenLockedInput ) {
+			if( game.ActiveScreen.HandlesAllInput ) {
 				physics.jumping = Hacks.Speeding = Hacks.FlyingUp = Hacks.FlyingDown = false;
 			} else {
 				if( game.IsKeyDown( KeyBinding.Forward ) ) xMoving -= 0.98f;

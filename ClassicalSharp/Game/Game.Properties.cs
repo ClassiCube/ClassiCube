@@ -104,6 +104,8 @@ namespace ClassicalSharp {
 		
 		public List<IGameComponent> Components = new List<IGameComponent>();
 		
+		public List<WarningScreen> WarningOverlays = new List<WarningScreen>();
+		
 		/// <summary> Account username of the player. </summary>
 		public string Username;
 		
@@ -164,7 +166,6 @@ namespace ClassicalSharp {
 		public Animations Animations;
 		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId, GuiClassicTexId;
 		internal bool screenshotRequested;
-		internal List<WarningScreen> WarningScreens = new List<WarningScreen>();
 		internal UrlsList AcceptedUrls = new UrlsList( "acceptedurls.txt" ), DeniedUrls = new UrlsList( "deniedurls.txt" );
 		
 		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
@@ -226,9 +227,14 @@ namespace ClassicalSharp {
 		}
 		
 		bool visible = true;
+		internal bool realVisible = true;
 		public bool CursorVisible { 
 			get { return visible; }
 			set {
+				// Defer mouse visibility changes.
+				realVisible = value;
+				if( WarningOverlays.Count > 0 ) return;
+				   
 				// Only set the value when it has changes.
 				if( visible == value ) return;
 				window.CursorVisible = value;

@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 			lastClick = now;
 			Inventory inv = game.Inventory;
 			
-			if( game.Network.UsingPlayerClick && !game.ScreenLockedInput ) {
+			if( game.Network.UsingPlayerClick && !game.ActiveScreen.HandlesAllInput ) {
 				byte targetId = game.Players.GetClosetPlayer( game.LocalPlayer );
 				input.ButtonStateChanged( MouseButton.Left, left, targetId );
 				input.ButtonStateChanged( MouseButton.Right, right, targetId );
@@ -32,7 +32,8 @@ namespace ClassicalSharp {
 			}
 			
 			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
-			if( buttonsDown > 1 || game.ScreenLockedInput || inv.HeldBlock == Block.Air ) return;
+			if( buttonsDown > 1 || game.ActiveScreen.HandlesAllInput || 
+			   inv.HeldBlock == Block.Air ) return;
 			
 			// always play delete animations, even if we aren't picking a block.
 			if( left ) game.BlockHandRenderer.SetAnimationClick( true );

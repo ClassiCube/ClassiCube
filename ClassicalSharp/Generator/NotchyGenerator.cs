@@ -27,7 +27,7 @@ namespace ClassicalSharp.Generator {
 			blocks = new byte[width * height * length];
 			rnd = new Random( seed );
 			
-			CreateHeightmap();
+			CreateHeightmap();			
 			CreateStrata();
 			CarveCaves();
 			CarveOreVeins( 0.9f, "coal ore", (byte)Block.CoalOre );
