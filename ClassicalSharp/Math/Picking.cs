@@ -18,10 +18,11 @@ namespace ClassicalSharp {
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
+			Vector3I pOrigin = Vector3I.Floor( origin );
 
 			while( iterations < 10000 ) {
 				int x = tracer.X, y = tracer.Y, z = tracer.Z;
-				byte block = GetBlock( map, x, y, z, origin );
+				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
@@ -56,15 +57,16 @@ namespace ClassicalSharp {
 				pickedPos.IntersectPoint = origin + dir * reach;
 				return;
 			}
-			tracer.SetRayData( origin, dir );			
+			tracer.SetRayData( origin, dir );
 			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
 			int iterations = 0;
+			Vector3I pOrigin = Vector3I.Floor( origin );
 
 			while( iterations < 10000 ) {
 				int x = tracer.X, y = tracer.Y, z = tracer.Z;
-				byte block = GetBlock( map, x, y, z, origin );
+				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
@@ -110,10 +112,10 @@ namespace ClassicalSharp {
 		}
 		
 		const byte border = (byte)Block.Bedrock;
-		static byte GetBlock( World map, int x, int y, int z, Vector3 origin ) {
+		static byte GetBlock( World map, int x, int y, int z, Vector3I origin ) {
 			bool sides = map.SidesBlock != Block.Air;
 			int height = Math.Max( 1, map.SidesHeight );
-			bool insideMap = map.IsValidPos( Vector3I.Floor( origin ) );
+			bool insideMap = map.IsValidPos( origin );
 			
 			// handling of blocks inside the map, above, and on borders
 			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
