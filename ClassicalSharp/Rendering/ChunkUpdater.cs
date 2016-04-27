@@ -222,14 +222,14 @@ namespace ClassicalSharp.Renderers {
 			if( bX == 0 && cx > 0 && NeedsUpdate( block, x - 1, y, z ) )
 				ResetColumn( cx - 1, cy, cz, minCy, maxCy );
 			if( bY == 0 && cy > 0 && NeedsUpdate( block, x, y - 1, z ) )
-				ResetChunk( cx, cy - 1, cz, minCy, maxCy );
+				ResetChunk( cx, cy - 1, cz );
 			if( bZ == 0 && cz > 0 && NeedsUpdate( block, x, y, z - 1 ) )
 				ResetColumn( cx, cy, cz - 1, minCy, maxCy );
 			
 			if( bX == 15 && cx < chunksX - 1 && NeedsUpdate( block, x + 1, y, z ) )
 				ResetColumn( cx + 1, cy, cz, minCy, maxCy );
 			if( bY == 15 && cy < chunksY - 1 && NeedsUpdate( block, x, y + 1, z ) )
-				ResetChunk( cx, cy + 1, cz, minCy, maxCy );
+				ResetChunk( cx, cy + 1, cz );
 			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( block, x, y, z + 1 ) )
 				ResetColumn( cx, cy, cz + 1, minCy, maxCy );
 		}
