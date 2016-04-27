@@ -144,9 +144,9 @@ namespace ClassicalSharp.Renderers {
 				else
 					DrawPart( info, ref part );			
 				
-				if( part.spriteCount > 0 ) {
+				if( part.SpriteCount > 0 ) {
 					api.FaceCulling = true;
-					api.DrawIndexedVb_TrisT2fC4b( part.spriteCount, 0 );
+					api.DrawIndexedVb_TrisT2fC4b( part.SpriteCount, 0 );
 					api.FaceCulling = false;
 				}
 				game.Vertices += part.IndicesCount;
@@ -187,136 +187,136 @@ namespace ClassicalSharp.Renderers {
 		
 		void DrawPart( ChunkInfo info, ref ChunkPartInfo part ) {
 			api.BindVb( part.VbId );
-			bool drawLeft = info.DrawLeft && part.leftCount > 0;
-			bool drawRight = info.DrawRight && part.rightCount > 0;
-			bool drawBottom = info.DrawBottom && part.bottomCount > 0;
-			bool drawTop = info.DrawTop && part.topCount > 0;
-			bool drawFront = info.DrawFront && part.frontCount > 0;
-			bool drawBack = info.DrawBack && part.backCount > 0;
+			bool drawLeft = info.DrawLeft && part.LeftCount > 0;
+			bool drawRight = info.DrawRight && part.RightCount > 0;
+			bool drawBottom = info.DrawBottom && part.BottomCount > 0;
+			bool drawTop = info.DrawTop && part.TopCount > 0;
+			bool drawFront = info.DrawFront && part.FrontCount > 0;
+			bool drawBack = info.DrawBack && part.BackCount > 0;
 			
 			if( drawLeft && drawRight ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount + part.rightCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
 				api.FaceCulling = false;
 			} else if( drawLeft ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
 			} else if( drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.rightCount, part.rightIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
 			}
 			
 			if( drawFront && drawBack ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount + part.backCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
 				api.FaceCulling = false;
 			} else if( drawFront ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
 			} else if( drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.backCount, part.backIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
 			}
 			
 			if( drawBottom && drawTop ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb_TrisT2fC4b( part.bottomCount + part.topCount, part.bottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
 				api.FaceCulling = false;
 			} else if( drawBottom ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.bottomCount, part.bottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.topCount, part.topIndex );			
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );			
 			}
 		}
 		
 		bool drawAllFaces = false;
 		void DrawTranslucentPart( ChunkInfo info, ref ChunkPartInfo part ) {
 			api.BindVb( part.VbId );
-			bool drawLeft = (drawAllFaces || info.DrawLeft) && part.leftCount > 0;
-			bool drawRight = (drawAllFaces || info.DrawRight) && part.rightCount > 0;
-			bool drawBottom = (drawAllFaces || info.DrawBottom) && part.bottomCount > 0;
-			bool drawTop = (drawAllFaces || info.DrawTop) && part.topCount > 0;
-			bool drawFront = (drawAllFaces || info.DrawFront) && part.frontCount > 0;
-			bool drawBack = (drawAllFaces || info.DrawBack) && part.backCount > 0;
+			bool drawLeft = (drawAllFaces || info.DrawLeft) && part.LeftCount > 0;
+			bool drawRight = (drawAllFaces || info.DrawRight) && part.RightCount > 0;
+			bool drawBottom = (drawAllFaces || info.DrawBottom) && part.BottomCount > 0;
+			bool drawTop = (drawAllFaces || info.DrawTop) && part.TopCount > 0;
+			bool drawFront = (drawAllFaces || info.DrawFront) && part.FrontCount > 0;
+			bool drawBack = (drawAllFaces || info.DrawBack) && part.BackCount > 0;
 			
 			if( drawLeft && drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount + part.rightCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
 			} else if( drawLeft ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
 			} else if( drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.rightCount, part.rightIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
 			}
 			
 			if( drawFront && drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount + part.backCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
 			} else if( drawFront ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
 			} else if( drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.backCount, part.backIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
 			}
 			
 			if( drawBottom && drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.bottomCount + part.topCount, part.bottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
 			} else if( drawBottom ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.bottomCount, part.bottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.topCount, part.topIndex );			
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );			
 			}
 		}
 		
 		void DrawBigPart( ChunkInfo info, ref ChunkPartInfo part ) {
 			api.BindVb( part.VbId );
-			bool drawLeft = info.DrawLeft && part.leftCount > 0;
-			bool drawRight = info.DrawRight && part.rightCount > 0;
-			bool drawBottom = info.DrawBottom && part.bottomCount > 0;
-			bool drawTop = info.DrawTop && part.topCount > 0;
-			bool drawFront = info.DrawFront && part.frontCount > 0;
-			bool drawBack = info.DrawBack && part.backCount > 0;
+			bool drawLeft = info.DrawLeft && part.LeftCount > 0;
+			bool drawRight = info.DrawRight && part.RightCount > 0;
+			bool drawBottom = info.DrawBottom && part.BottomCount > 0;
+			bool drawTop = info.DrawTop && part.TopCount > 0;
+			bool drawFront = info.DrawFront && part.FrontCount > 0;
+			bool drawBack = info.DrawBack && part.BackCount > 0;
 			
 			if( drawLeft && drawRight ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount + part.rightCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
 				api.FaceCulling = false;
 			} else if( drawLeft ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.leftCount, part.leftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
 			} else if( drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.rightCount, part.rightIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
 			}
 			
 			if( drawFront && drawBack ) {
 				api.FaceCulling = true;
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount + part.backCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
 				api.FaceCulling = false;
 			} else if( drawFront ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.frontCount, part.frontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
 			} else if( drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.backCount, part.backIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
 			}
 			
 			// Special handling for top and bottom as these can go over 65536 vertices and we need to adjust the indices in this case.
 			if( drawBottom && drawTop ) {
 				api.FaceCulling = true;
 				if( part.IndicesCount > maxIndices ) {
-					int part1Count = maxIndices - part.bottomIndex;
-					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.bottomIndex );
-					api.DrawIndexedVb_TrisT2fC4b( part.bottomCount + part.topCount - part1Count, maxVertex, 0 );
+					int part1Count = maxIndices - part.BottomIndex;
+					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.BottomIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb_TrisT2fC4b( part.bottomCount + part.topCount, part.bottomIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
 				}
 				api.FaceCulling = false;
 			} else if( drawBottom ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
-				   ( part1Count = maxIndices - part.bottomIndex ) < part.bottomCount ) {					
-					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.bottomIndex );
-					api.DrawIndexedVb_TrisT2fC4b( part.bottomCount - part1Count, maxVertex, 0 );
+				   ( part1Count = maxIndices - part.BottomIndex ) < part.BottomCount ) {					
+					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.BottomIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb_TrisT2fC4b( part.bottomCount, part.bottomIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 				}
 			} else if( drawTop ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
-				   ( part1Count = maxIndices - part.topIndex ) < part.topCount ) {
-					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.topIndex );
-					api.DrawIndexedVb_TrisT2fC4b( part.topCount - part1Count, maxVertex, 0 );
+				   ( part1Count = maxIndices - part.TopIndex ) < part.TopCount ) {
+					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.TopIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.TopCount - part1Count, maxVertex, 0 );
 				} else {
-					api.DrawIndexedVb_TrisT2fC4b( part.topCount, part.topIndex );
+					api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
 				}			
 			}
 		}

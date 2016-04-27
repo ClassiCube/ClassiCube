@@ -319,10 +319,10 @@ namespace ClassicalSharp {
 	
 	public struct ChunkPartInfo {
 		
-		public int VbId, IndicesCount;
-		public int leftIndex, rightIndex, frontIndex,
-		backIndex, bottomIndex, topIndex;
-		public ushort leftCount, rightCount, frontCount,
-		backCount, bottomCount, topCount, spriteCount;
+		public int VbId, IndicesCount, SpriteCount;
+		public int LeftIndex, RightIndex, FrontIndex,
+		BackIndex, BottomIndex, TopIndex;
+		public ushort LeftCount, RightCount, FrontCount,
+		BackCount, BottomCount, TopCount;
 	}
 }

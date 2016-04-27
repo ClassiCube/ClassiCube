@@ -99,17 +99,17 @@ namespace ClassicalSharp {
 			ChunkPartInfo info;
 			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, part.vCount + 2 );
 			info.IndicesCount = part.iCount;
-			info.leftCount = (ushort)part.Count.left; info.rightCount = (ushort)part.Count.right;
-			info.frontCount = (ushort)part.Count.front; info.backCount = (ushort)part.Count.back;
-			info.bottomCount = (ushort)part.Count.bottom; info.topCount = (ushort)part.Count.top;
-			info.spriteCount = (ushort)part.spriteCount;
+			info.LeftCount = (ushort)part.Count.left; info.RightCount = (ushort)part.Count.right;
+			info.FrontCount = (ushort)part.Count.front; info.BackCount = (ushort)part.Count.back;
+			info.BottomCount = (ushort)part.Count.bottom; info.TopCount = (ushort)part.Count.top;
+			info.SpriteCount = part.spriteCount;
 			
-			info.leftIndex = info.spriteCount;
-			info.rightIndex = info.leftIndex + info.leftCount;
-			info.frontIndex = info.rightIndex + info.rightCount;
-			info.backIndex = info.frontIndex + info.frontCount;
-			info.bottomIndex = info.backIndex + info.backCount;
-			info.topIndex = info.bottomIndex + info.bottomCount;
+			info.LeftIndex = info.SpriteCount;
+			info.RightIndex = info.LeftIndex + info.LeftCount;
+			info.FrontIndex = info.RightIndex + info.RightCount;
+			info.BackIndex = info.FrontIndex + info.FrontCount;
+			info.BottomIndex = info.BackIndex + info.BackCount;
+			info.TopIndex = info.BottomIndex + info.BottomCount;
 			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
 			if( parts == null )
