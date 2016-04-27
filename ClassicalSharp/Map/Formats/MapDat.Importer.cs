@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Net;
 using OpenTK;
 
 namespace ClassicalSharp.Map {
@@ -25,8 +26,10 @@ namespace ClassicalSharp.Map {
 			length = 0;
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = Vector3.Zero;
+			GZipHeaderReader gsHeader = new GZipHeaderReader();
+			while( !gsHeader.ReadHeader( stream ) ) { }
 			
-			using( GZipStream gs = new GZipStream( stream, CompressionMode.Decompress ) ) {
+			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Decompress ) ) {
 				reader = new BinaryReader( gs );
 				ClassDescription obj = ReadData();
 				for( int i = 0; i < obj.Fields.Length; i++ ) {
