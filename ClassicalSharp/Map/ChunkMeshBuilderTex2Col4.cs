@@ -39,31 +39,35 @@ namespace ClassicalSharp {
 		
 		class DrawInfo {
 			public VertexP3fT2fC4b[] vertices;
-			public int vCount, iCount;
-			public DrawInfoFaceData vIndex;
-			public DrawInfoFaceData Count;
-			public int spriteIndex, spriteCount;
+			public DrawInfoFaceData vIndex, sIndex, vCount;
+			public int iCount, spriteCount;
 			
 			public void ExpandToCapacity() {
-				vCount = iCount / 6 * 4;
-
-				if( vertices == null || (vCount + 2) > vertices.Length ) {
-					vertices = new VertexP3fT2fC4b[vCount + 2]; 
+				int vertCount = iCount / 6 * 4;
+				if( vertices == null || (vertCount + 2) > vertices.Length ) {
+					vertices = new VertexP3fT2fC4b[vertCount + 2]; 
 					// ensure buffer is up to 64 bits aligned for last element
-				}
-				vIndex.left = spriteCount / 6 * 4;
-				vIndex.right = vIndex.left + Count.left / 6 * 4;
-				vIndex.front = vIndex.right + Count.right / 6 * 4;
-				vIndex.back = vIndex.front + Count.front / 6 * 4;
-				vIndex.bottom = vIndex.back + Count.back / 6 * 4;
-				vIndex.top = vIndex.bottom + Count.bottom / 6 * 4;
+				}	
+				
+				// Adjust for the fact that we group all vertices by face.
+				sIndex.left = (spriteCount / 6) * 0;
+				sIndex.right = (spriteCount / 6) * 1;
+				sIndex.front = (spriteCount / 6) * 2;
+				sIndex.back = (spriteCount / 6) * 3;
+				
+				vIndex.left = (spriteCount / 6) * 4;
+				vIndex.right = vIndex.left + vCount.left / 6 * 4;
+				vIndex.front = vIndex.right + vCount.right / 6 * 4;
+				vIndex.back = vIndex.front + vCount.front / 6 * 4;
+				vIndex.bottom = vIndex.back + vCount.back / 6 * 4;
+				vIndex.top = vIndex.bottom + vCount.bottom / 6 * 4;
 			}
 			
 			public void ResetState() {
-				vCount = iCount = 0;
-				spriteIndex = spriteCount = 0;
+				iCount = 0; spriteCount = 0;
 				vIndex = new DrawInfoFaceData();
-				Count = new DrawInfoFaceData();
+				vCount = new DrawInfoFaceData();
+				sIndex = new DrawInfoFaceData();
 			}
 		}
 		
@@ -97,11 +101,12 @@ namespace ClassicalSharp {
 			if( part.iCount == 0 ) return;
 			
 			ChunkPartInfo info;
-			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, part.vCount + 2 );
+			int vertCount = (part.iCount / 6 * 4) + 2;
+			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, vertCount );
 			info.IndicesCount = part.iCount;
-			info.LeftCount = (ushort)part.Count.left; info.RightCount = (ushort)part.Count.right;
-			info.FrontCount = (ushort)part.Count.front; info.BackCount = (ushort)part.Count.back;
-			info.BottomCount = (ushort)part.Count.bottom; info.TopCount = (ushort)part.Count.top;
+			info.LeftCount = (ushort)part.vCount.left; info.RightCount = (ushort)part.vCount.right;
+			info.FrontCount = (ushort)part.vCount.front; info.BackCount = (ushort)part.vCount.back;
+			info.BottomCount = (ushort)part.vCount.bottom; info.TopCount = (ushort)part.vCount.top;
 			info.SpriteCount = part.spriteCount;
 			
 			info.LeftIndex = info.SpriteCount;
@@ -161,9 +166,9 @@ namespace ClassicalSharp {
 			DrawInfo part = info.IsTranslucent[tile] ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
 
-			DrawInfoFaceData counts = part.Count;
+			DrawInfoFaceData counts = part.vCount;
 			*(&counts.left + face) += 6;
-			part.Count = counts;
+			part.vCount = counts;
 		}
 		
 		void DrawLeftFace( int count ) {
@@ -290,28 +295,28 @@ namespace ClassicalSharp {
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? map.Sunlight : map.Shadowlight);
 			
 			// Draw Z axis
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
+			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col );
 			
 			// Draw Z axis mirrored
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
+			part.vertices[part.sIndex.right++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.sIndex.right++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
+			part.vertices[part.sIndex.right++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
+			part.vertices[part.sIndex.right++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col );
 
 			// Draw X axis
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u1, v2, col );
+			part.vertices[part.sIndex.front++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col );
+			part.vertices[part.sIndex.front++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col );
+			part.vertices[part.sIndex.front++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col );
+			part.vertices[part.sIndex.front++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u1, v2, col );
 			
 			// Draw X axis mirrored
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
-			part.vertices[part.spriteIndex++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col );
+			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b( X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col );
+			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b( X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col );
+			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b( X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col );
+			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b( X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col );
 		}
 	}
 }
