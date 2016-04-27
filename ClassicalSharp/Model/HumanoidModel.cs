@@ -90,9 +90,12 @@ namespace ClassicalSharp.Model {
 			graphics.AlphaTest = false;
 			
 			SkinType skinType = p.SkinType;
-			_64x64 = skinType != SkinType.Type64x32;
+			bool _64x64 = skinType != SkinType.Type64x32;
+			uScale = p.uScale / 64f;
+			vScale = p.vScale / (_64x64 ? 64 : 32);
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
 				(skinType == SkinType.Type64x64 ? Set64 : Set);
+			
 			DrawHeadRotate( -p.PitchRadians, 0, 0, model.Head );
 			DrawPart( model.Torso );
 			

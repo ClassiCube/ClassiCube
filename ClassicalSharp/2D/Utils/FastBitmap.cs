@@ -67,6 +67,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public static void CopyRow( int srcY, int dstY, FastBitmap src, FastBitmap dst, int width ) {
+			int* srcRow = src.GetRowPtr( srcY ), dstRow = dst.GetRowPtr( dstY);
+			for( int x = 0; x < width; x++ )
+				dstRow[x] = srcRow[x];
+		}
+		
 		public void Dispose() { UnlockBits(); }
 		
 		#if !ANDROID

@@ -47,15 +47,16 @@ namespace ClassicalSharp.Model {
 		
 		protected Vector3 pos;
 		protected float cosYaw, sinYaw, cosHead, sinHead;
+		protected float uScale, vScale;
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
 		public void Render( Player p ) {
 			index = 0;
 			pos = p.Position;
-			if( Bobbing )
-				pos.Y += p.anim.bobYOffset;
+			if( Bobbing ) pos.Y += p.anim.bobYOffset;
 			World map = game.World;
 			col = game.World.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
+			uScale = 1 / 64f; vScale = 1 / 32f;
 			
 			cols[0] = col;
 			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom );
@@ -96,9 +97,7 @@ namespace ClassicalSharp.Model {
 			return ModelBuilder.BuildRotatedBox( this, desc );
 		}
 		
-		protected bool _64x64 = false;
 		protected void DrawPart( ModelPart part ) {
-			float vScale = _64x64 ? 64f : 32f;
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
 				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
@@ -110,10 +109,10 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
-				vertex.U = v.U / 64f; vertex.V = v.V / vScale;
+				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i % 4;
-				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
-				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
+				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
+				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * uScale;
 				cache.vertices[index++] = vertex;
 			}
 		}
@@ -131,7 +130,6 @@ namespace ClassicalSharp.Model {
 			float cosX = (float)Math.Cos( -angleX ), sinX = (float)Math.Sin( -angleX );
 			float cosY = (float)Math.Cos( -angleY ), sinY = (float)Math.Sin( -angleY );
 			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
-			float vScale = _64x64 ? 64f : 32f;
 			
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
@@ -167,10 +165,10 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
-				vertex.U = v.U / 64f; vertex.V = v.V / vScale;
+				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i % 4;
-				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f / vScale;
-				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f / 64f;
+				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
+				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * vScale;
 				cache.vertices[index++] = vertex;
 			}
 		}

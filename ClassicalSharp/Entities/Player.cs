@@ -17,6 +17,7 @@ namespace ClassicalSharp.Entities {
 		public SkinType SkinType;
 		internal AnimatedComponent anim;
 		internal ShadowComponent shadow;
+		internal float uScale = 1, vScale = 1;
 		
 		public Player( Game game ) : base( game ) {
 			this.game = game;
@@ -81,6 +82,8 @@ namespace ClassicalSharp.Entities {
 				game.Graphics.DeleteTexture( ref TextureId );
 				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
 					game.Drawer2D.ConvertTo32Bpp( ref bmp );
+				uScale = 1; vScale = 1;
+				EnsurePow2( ref bmp );
 				
 				try {
 					SkinType = Utils.GetSkinType( bmp );
@@ -91,7 +94,7 @@ namespace ClassicalSharp.Entities {
 					
 					// Custom mob textures.
 					if( Utils.IsUrlPrefix( SkinName, 0 ) && item.TimeAdded > lastModelChange )
-						MobTextureId = TextureId;					
+						MobTextureId = TextureId;
 				} catch( NotSupportedException ) {
 					ResetSkin( bmp );
 				}
@@ -135,6 +138,25 @@ namespace ClassicalSharp.Entities {
 					}
 				}
 			}
+		}
+		
+		void EnsurePow2( ref Bitmap bmp ) {
+			int width = Utils.NextPowerOf2( bmp.Width );
+			int height = Utils.NextPowerOf2( bmp.Height );
+			if( width == bmp.Width && height == bmp.Height ) return;
+			
+			Bitmap scaled = Platform.CreateBmp( width, height );
+			using( FastBitmap src = new FastBitmap( bmp, true, true ) )
+				using( FastBitmap dst = new FastBitmap( scaled, true, false ) ) 
+			{
+				for( int y = 0; y < src.Height; y++ )
+					FastBitmap.CopyRow( y, y, src, dst, src.Width );
+			}
+			
+			uScale = (float)bmp.Width / width;
+			vScale = (float)bmp.Height / height;
+			bmp.Dispose();
+			bmp = scaled;
 		}
 	}
 }
