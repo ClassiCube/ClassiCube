@@ -17,8 +17,11 @@ namespace ClassicalSharp.Map {
 		World map;
 		
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
-			using( GZipStream wrapper = new GZipStream( stream, CompressionMode.Decompress ) ) {
-				reader = new BinaryReader( wrapper );
+			GZipHeaderReader gsHeader = new GZipHeaderReader();
+			while( !gsHeader.ReadHeader( stream ) ) { }
+			
+			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Decompress ) ) {
+				reader = new BinaryReader( gs );
 				if( reader.ReadByte() != (byte)NbtTagType.Compound )
 					throw new InvalidDataException( "Nbt file must start with Tag_Compound" );
 				this.game = game;

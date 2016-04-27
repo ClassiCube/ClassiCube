@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Net;
 
 namespace ClassicalSharp.Map {
 
@@ -13,7 +14,10 @@ namespace ClassicalSharp.Map {
 
 		const int Version = 1874;
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
-			using( GZipStream gs = new GZipStream( stream, CompressionMode.Decompress ) ) {
+			GZipHeaderReader gsHeader = new GZipHeaderReader();
+			while( !gsHeader.ReadHeader( stream ) ) { }
+			
+			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Decompress ) ) {
 				BinaryReader reader = new BinaryReader( gs );
 				ushort header = reader.ReadUInt16();
 
@@ -40,15 +44,15 @@ namespace ClassicalSharp.Map {
 			}
 		}
 		
-		void ReadCustomBlocks( GZipStream gs, int width, int height, int length, byte[] blocks ) {
+		void ReadCustomBlocks( Stream s, int width, int height, int length, byte[] blocks ) {
 			byte[] chunk = new byte[16 * 16 * 16];
 			
 			for( int y = 0; y < height; y += 16 )
 				for( int z = 0; z < length; z += 16 )
 					for( int x = 0; x < width; x += 16 ) 
 			{
-				if( gs.ReadByte() != 1 ) continue;
-				gs.Read( chunk, 0, chunk.Length );
+				if( s.ReadByte() != 1 ) continue;
+				s.Read( chunk, 0, chunk.Length );
 				
 				int baseIndex = (y * length + z) * width + x;
 				for( int i = 0; i < chunk.Length; i++ ) {
