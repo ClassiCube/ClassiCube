@@ -145,8 +145,16 @@ namespace ClassicalSharp.Renderers {
 					DrawPart( info, ref part );			
 				
 				if( part.SpriteCount > 0 ) {
+					int groupCount = part.SpriteCount / 4;
 					api.FaceCulling = true;
-					api.DrawIndexedVb_TrisT2fC4b( part.SpriteCount, 0 );
+					if( info.DrawRight || info.DrawFront )
+						api.DrawIndexedVb_TrisT2fC4b( groupCount, 0 );
+					if( info.DrawLeft || info.DrawBack )
+						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount );
+					if( info.DrawLeft || info.DrawFront )
+						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount * 2 );
+					if( info.DrawRight || info.DrawBack )
+						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount * 3 );
 					api.FaceCulling = false;
 				}
 				game.Vertices += part.IndicesCount;
