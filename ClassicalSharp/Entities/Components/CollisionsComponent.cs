@@ -53,18 +53,14 @@ namespace ClassicalSharp.Entities {
 			Vector3 size = entity.CollisionSize;
 			BoundingBox entityBB, entityExtentBB;
 			int count = 0;
-			FindReachableBlocks( ref count, ref size, out entityBB, out entityExtentBB );
+			FindReachableBlocks( ref count, out entityBB, out entityExtentBB );
 			CollideWithReachableBlocks( count, ref size, ref entityBB, ref entityExtentBB );
 		}
 		
-		void FindReachableBlocks( ref int count, ref Vector3 size,
-		                         out BoundingBox entityBB, out BoundingBox entityExtentBB ) {
+		void FindReachableBlocks( ref int count, out BoundingBox entityBB, 
+		                         out BoundingBox entityExtentBB ) {
 			Vector3 vel = entity.Velocity;
-			Vector3 pos = entity.Position;
-			entityBB = new BoundingBox(
-				pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
-				pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2
-			);
+			entityBB = entity.CollisionBounds;
 			
 			// Exact maximum extent the entity can reach, and the equivalent map coordinates.
 			entityExtentBB = new BoundingBox(
