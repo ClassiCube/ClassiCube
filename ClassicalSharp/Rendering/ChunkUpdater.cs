@@ -211,42 +211,40 @@ namespace ClassicalSharp.Renderers {
 			int cx = x >> 4, bX = x & 0x0F;
 			int cy = y >> 4, bY = y & 0x0F;
 			int cz = z >> 4, bZ = z & 0x0F;
+			
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
-			int newLightcy = newHeight < 0 ? 0 : newHeight >> 4;
-			int oldLightcy = oldHeight < 0 ? 0 : oldHeight >> 4;
-			ResetChunkAndBelow( cx, cy, cz, newLightcy, oldLightcy );
+			int newCy = newHeight < 0 ? 0 : newHeight >> 4;
+			int oldCy = oldHeight < 0 ? 0 : oldHeight >> 4;
+			int minCy = Math.Min( oldCy, newCy ), maxCy = Math.Max( oldCy, newCy );
+			ResetColumn( cx, cy, cz, minCy, maxCy );
 			
-			if( bX == 0 && cx > 0 && NeedsUpdate( x, y, z, x - 1, y, z ) )
-				ResetChunkAndBelow( cx - 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 0 && cy > 0 && NeedsUpdate( x, y, z, x, y - 1, z ) )
-				ResetChunkAndBelow( cx, cy - 1, cz, newLightcy, oldLightcy );
-			if( bZ == 0 && cz > 0 && NeedsUpdate( x, y, z, x, y, z - 1 ) )
-				ResetChunkAndBelow( cx, cy, cz - 1, newLightcy, oldLightcy );
+			if( bX == 0 && cx > 0 && NeedsUpdate( block, x - 1, y, z ) )
+				ResetColumn( cx - 1, cy, cz, minCy, maxCy );
+			if( bY == 0 && cy > 0 && NeedsUpdate( block, x, y - 1, z ) )
+				ResetChunk( cx, cy - 1, cz, minCy, maxCy );
+			if( bZ == 0 && cz > 0 && NeedsUpdate( block, x, y, z - 1 ) )
+				ResetColumn( cx, cy, cz - 1, minCy, maxCy );
 			
-			if( bX == 15 && cx < chunksX - 1 && NeedsUpdate( x, y, z, x + 1, y, z ) )
-				ResetChunkAndBelow( cx + 1, cy, cz, newLightcy, oldLightcy );
-			if( bY == 15 && cy < chunksY - 1 && NeedsUpdate( x, y, z, x, y + 1, z ) )
-				ResetChunkAndBelow( cx, cy + 1, cz, newLightcy, oldLightcy );
-			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( x, y, z, x, y, z + 1 ) )
-				ResetChunkAndBelow( cx, cy, cz + 1, newLightcy, oldLightcy );
+			if( bX == 15 && cx < chunksX - 1 && NeedsUpdate( block, x + 1, y, z ) )
+				ResetColumn( cx + 1, cy, cz, minCy, maxCy );
+			if( bY == 15 && cy < chunksY - 1 && NeedsUpdate( block, x, y + 1, z ) )
+				ResetChunk( cx, cy + 1, cz, minCy, maxCy );
+			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( block, x, y, z + 1 ) )
+				ResetColumn( cx, cy, cz + 1, minCy, maxCy );
 		}
 		
-		bool NeedsUpdate( int x1, int y1, int z1, int x2, int y2, int z2 ) {
-			byte b1 = game.World.GetBlock( x1, y1, z1 );
+		bool NeedsUpdate( byte b1, int x2, int y2, int z2 ) {
 			byte b2 = game.World.GetBlock( x2, y2, z2 );
-			return (!info.IsOpaque[b1] && info.IsOpaque[b2]) || !(info.IsOpaque[b1] && b2 == 0);
+			return !info.IsOpaque[b1] || !info.IsAir[b2];
 		}
 		
-		void ResetChunkAndBelow( int cx, int cy, int cz, int newLightCy, int oldLightCy ) {
-			if( newLightCy == oldLightCy ) {
+		void ResetColumn( int cx, int cy, int cz, int minCy, int maxCy ) {
+			if( minCy == maxCy ) {
 				ResetChunk( cx, cy, cz );
 			} else {
-				int cyMax = Math.Max( newLightCy, oldLightCy );
-				int cyMin = Math.Min( oldLightCy, newLightCy );
-				for( cy = cyMax; cy >= cyMin; cy-- ) {
+				for( cy = maxCy; cy >= minCy; cy-- )
 					ResetChunk( cx, cy, cz );
-				}
 			}
 		}
 		
