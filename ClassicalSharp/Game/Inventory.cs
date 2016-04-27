@@ -4,19 +4,27 @@ using System;
 namespace ClassicalSharp {
 	
 	/// <summary> Contains the hotbar of blocks, as well as the permissions for placing and deleting all blocks. </summary>
-	public sealed class Inventory {
+	public sealed class Inventory : IGameComponent {
 		
-		public Inventory( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
 			// We can't use enum array initaliser because this causes problems when building with mono
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
 			Hotbar = new Block[9];
+			SetDefaultHotbar();
+		}
+		
+		void SetDefaultHotbar() {
 			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
 			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
 			Hotbar[4] = Block.Wood; Hotbar[5] = Block.Log;
 			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Grass;
 			Hotbar[8] = Block.Slab;
 		}
+		
+		public void Reset( Game game ) { }
+		
+		public void Dispose() { }
 		
 		int hotbarIndex = 0;
 		public bool CanChangeHeldBlock = true;

@@ -6,7 +6,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Gui {
 	
-	public class HudScreen : Screen {
+	public class HudScreen : Screen, IGameComponent {
 		
 		public HudScreen( Game game ) : base( game ) { }
 		
@@ -14,6 +14,10 @@ namespace ClassicalSharp.Gui {
 		internal BlockHotbarWidget hotbar;
 		PlayerListWidget playerList;
 		Font playerFont;
+		
+		public void Init( Game game ) { Init(); }
+		
+		public void Reset( Game game ) { }
 		
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;

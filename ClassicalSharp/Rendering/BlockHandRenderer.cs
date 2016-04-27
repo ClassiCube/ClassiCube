@@ -7,7 +7,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class BlockHandRenderer : IDisposable {
+	public class BlockHandRenderer : IGameComponent {
 		
 		Game game;
 		BlockModel block;
@@ -22,16 +22,15 @@ namespace ClassicalSharp.Renderers {
 		byte lastMatrixType;
 		float lastMatrixAngleX;
 		
-		public BlockHandRenderer( Game window ) {
-			this.game = window;
-		}
-		
-		public void Init() {
+		public void Init( Game game ) {
+			this.game = game;
 			block = new BlockModel( game );
 			fakeP = new FakePlayer( game );
 			lastType = (byte)game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
+		
+		public void Reset( Game game ) { }
 		
 		public void Render( double delta, float t ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;

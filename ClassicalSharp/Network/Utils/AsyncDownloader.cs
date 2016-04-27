@@ -10,7 +10,7 @@ using System.Threading;
 namespace ClassicalSharp.Network {
 	
 	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
-	public class AsyncDownloader : IDisposable {
+	public class AsyncDownloader : IGameComponent {
 		
 		EventWaitHandle handle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		Thread worker;
@@ -23,14 +23,24 @@ namespace ClassicalSharp.Network {
 		public Request CurrentItem;
 		public int CurrentItemProgress = -3;
 		
-		public AsyncDownloader( string skinServer ) {
+		public AsyncDownloader() { }
+		public AsyncDownloader( string skinServer ) { Init( skinServer ); }	
+		public void Init( Game game ) { Init( game.skinServer ); }
+		                                                     
+		void Init( string skinServer ) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
 			
 			worker = new Thread( DownloadThreadWorker, 256 * 1024 );
-			worker.Name = "ClassicalSharp.ImageDownloader";
+			worker.Name = "ClassicalSharp.AsyncDownloader";
 			worker.IsBackground = true;
 			worker.Start();
+		}
+		
+		public void Reset( Game game ) {
+			lock( requestLocker )
+				requests.Clear();
+			handle.Set();
 		}
 		
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is

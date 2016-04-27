@@ -7,7 +7,7 @@ using SharpWave.Codecs.Vorbis;
 
 namespace ClassicalSharp.Audio {
 	
-	public sealed partial class AudioPlayer {
+	public sealed partial class AudioPlayer : IGameComponent {
 		
 		IAudioOutput musicOut;
 		IAudioOutput[] monoOutputs, stereoOutputs;
@@ -15,7 +15,7 @@ namespace ClassicalSharp.Audio {
 		Thread musicThread;
 		Game game;
 		
-		public AudioPlayer( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
 			string path = Path.Combine( Program.AppDirectory, "audio" );
 			files = Directory.GetFiles( path );
@@ -25,6 +25,8 @@ namespace ClassicalSharp.Audio {
 			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
 			SetSound( game.UseSound );
 		}
+		
+		public void Reset( Game game ) { }
 		
 		public void SetMusic( bool enabled ) {
 			if( enabled )

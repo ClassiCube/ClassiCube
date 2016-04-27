@@ -41,8 +41,7 @@ namespace ClassicalSharp {
 		
 		public void Run() { window.Run(); }
 		
-		public void Exit() { window.Exit(); }
-		
+		public void Exit() { window.Exit(); }		
 		
 		internal void OnLoad() {
 			Mouse = window.Mouse;
@@ -54,40 +53,23 @@ namespace ClassicalSharp {
 			#endif
 			Graphics.MakeGraphicsInfo();
 			
-			Options.Load();
-			ClassicMode = Options.GetBool( "mode-classic", false );
-			ClassicHacks = Options.GetBool( OptionsKey.AllowClassicHacks, false );
+			Options.Load();			
 			Players = new EntityList( this );
 			AcceptedUrls.Load(); DeniedUrls.Load();
-			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
-			UserViewDistance = ViewDistance;
-			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
 			InputHandler = new InputHandler( this );
 			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = new ParticleManager( this );
-			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
-			LoadGui();
-			
-			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
-			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
-			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
-			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
-			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
-			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );
+			LoadOptions();
+			LoadGuiOptions();
+			Chat = AddComponent( new Chat() );
 			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
-			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
-			ClickableChat = Options.GetBool( OptionsKey.ClickableChat, false );
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
-			AsyncDownloader = new AsyncDownloader( skinServer );
+			AsyncDownloader = AddComponent( new AsyncDownloader() );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
-			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
-			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
-			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
-			SimpleArmsAnim = Options.GetBool( OptionsKey.SimpleArmsAnim, false );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
@@ -98,7 +80,7 @@ namespace ClassicalSharp {
 			// in case the user's default texture pack doesn't have all required textures
 			if( defTexturePack != "default.zip" )
 				extractor.Extract( DefaultTexturePack, this );
-			Inventory = new Inventory( this );
+			Inventory = AddComponent( new Inventory() );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			World = new World( this );
@@ -120,18 +102,12 @@ namespace ClassicalSharp {
 			thirdPersonCam = new ThirdPersonCamera( this );
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
-			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
-			Fov = DefaultFov;
-			ZoomFov = DefaultFov;
 			UpdateProjection();
 			CommandManager = AddComponent( new CommandManager() );
 			SelectionManager = AddComponent( new SelectionManager() );
 			WeatherRenderer = AddComponent( new WeatherRenderer() );
-			BlockHandRenderer = new BlockHandRenderer( this );
-			BlockHandRenderer.Init();
+			BlockHandRenderer = AddComponent( new BlockHandRenderer() );
 			
-			FpsLimitMethod method = Options.GetEnum( OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync );
-			SetFpsLimitMethod( method );
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
 			//Graphics.DepthWrite = true;
@@ -139,14 +115,12 @@ namespace ClassicalSharp {
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
 			fpsScreen = new FpsScreen( this );
 			fpsScreen.Init();
-			hudScreen = new HudScreen( this );
-			hudScreen.Init();
+			hudScreen = AddComponent( new HudScreen( this ) );
 			Culling = new FrustumCulling();
 			EnvRenderer.Init();
 			MapBordersRenderer.Init();
 			Picking = AddComponent( new PickedPosRenderer() );
-			AudioPlayer = new AudioPlayer( this );
-			ModifiableLiquids = !ClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
+			AudioPlayer = AddComponent( new AudioPlayer() );
 			AxisLinesRenderer = AddComponent( new AxisLinesRenderer() );
 			
 			foreach( IGameComponent comp in Components )
@@ -167,8 +141,37 @@ namespace ClassicalSharp {
 			return obj;
 		}
 		
-		void LoadGui() {
-			Chat = AddComponent( new Chat() );
+		void LoadOptions() {
+			ClassicMode = Options.GetBool( "mode-classic", false );
+			ClassicHacks = Options.GetBool( OptionsKey.AllowClassicHacks, false );
+			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
+			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
+			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
+			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
+			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
+			SimpleArmsAnim = Options.GetBool( OptionsKey.SimpleArmsAnim, false );
+			
+			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );		
+			FpsLimitMethod method = Options.GetEnum( OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync );
+			SetFpsLimitMethod( method );
+			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
+			UserViewDistance = ViewDistance;
+			
+			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
+			Fov = DefaultFov;
+			ZoomFov = DefaultFov;
+			ModifiableLiquids = !ClassicMode && Options.GetBool( OptionsKey.ModifiableLiquids, false );
+			CameraClipping = Options.GetBool( OptionsKey.CameraClipping, true );
+			
+			AllowServerTextures = Options.GetBool( OptionsKey.AllowServerTextures, true );
+			MouseSensitivity = Options.GetInt( OptionsKey.Sensitivity, 1, 100, 30 );
+			ShowBlockInHand = Options.GetBool( OptionsKey.ShowBlockInHand, true );
+			InvertMouse = Options.GetBool( OptionsKey.InvertMouse, false );
+		}
+		
+		void LoadGuiOptions() {
+			ChatLines = Options.GetInt( OptionsKey.ChatLines, 1, 30, 12 );
+			ClickableChat = Options.GetBool( OptionsKey.ClickableChat, false );
 			InventoryScale = Options.GetFloat( OptionsKey.InventoryScale, 0.25f, 5f, 1f );
 			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
@@ -482,8 +485,6 @@ namespace ClassicalSharp {
 			ModelCache.Dispose();
 			ParticleManager.Dispose();
 			Players.Dispose();
-			AsyncDownloader.Dispose();
-			AudioPlayer.Dispose();
 			
 			foreach( IGameComponent comp in Components )
 				comp.Dispose();
