@@ -98,6 +98,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void DrawPart( ModelPart part ) {
+			VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
 				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
@@ -105,12 +106,11 @@ namespace ClassicalSharp.Model {
 				
 				FastColour col = part.Count == boxVertices ? 
 					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
-				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
-				int quadI = i % 4;
+				int quadI = i & 3;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * uScale;
 				cache.vertices[index++] = vertex;
@@ -118,18 +118,19 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected void DrawRotate( float angleX, float angleY, float angleZ, ModelPart part ) {
-			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, false );
+			DrawRotated( angleX, angleY, angleZ, part, false );
 		}
 		
 		protected void DrawHeadRotate( float angleX, float angleY, float angleZ, ModelPart part ) {
-			DrawRotated( part.RotX, part.RotY, part.RotZ, angleX, angleY, angleZ, part, true );
+			DrawRotated( angleX, angleY, angleZ, part, true );
 		}
 		
-		protected void DrawRotated( float x, float y, float z, 
-		                           float angleX, float angleY, float angleZ, ModelPart part, bool head ) {
+		protected void DrawRotated( float angleX, float angleY, float angleZ, ModelPart part, bool head ) {
 			float cosX = (float)Math.Cos( -angleX ), sinX = (float)Math.Sin( -angleX );
 			float cosY = (float)Math.Cos( -angleY ), sinY = (float)Math.Sin( -angleY );
 			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
+			float x = part.RotX, y = part.RotY, z = part.RotZ;
+			VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 			
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
@@ -161,12 +162,11 @@ namespace ClassicalSharp.Model {
 				
 				FastColour col = part.Count == boxVertices ? 
 					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
-				VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
-				int quadI = i % 4;
+				int quadI = i & 3;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * vScale;
 				cache.vertices[index++] = vertex;
