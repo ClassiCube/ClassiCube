@@ -10,8 +10,10 @@ namespace Launcher {
 	public sealed partial class LauncherWindow {
 
 		internal bool ClassicBackground = false;
+		bool fontPng, terrainPng;
 		
 		internal void TryLoadTexturePack() {
+			fontPng = false; terrainPng = false;
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
 			if( Options.Get( "nostalgia-classicbg" ) != null )
@@ -25,15 +27,38 @@ namespace Launcher {
 			
 			if( !File.Exists( texPack ) )
 				texPack = Path.Combine( texDir, "default.zip" );
-			if( !File.Exists( texPack ) )
-				return;
+			if( !File.Exists( texPack ) ) return;
 			
+			ExtractTexturePack( texPack );
+			if( !fontPng || !terrainPng ) {
+				texPack = Path.Combine( texDir, "default.zip" );
+				ExtractTexturePack( texPack );
+			}
+		}
+		
+		void ExtractTexturePack( string texPack ) {
 			using( Stream fs = new FileStream( texPack, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
-				ZipReader reader = new ZipReader();
-				
+				ZipReader reader = new ZipReader();				
 				reader.ShouldProcessZipEntry = (f) => f == "default.png" || f == "terrain.png";
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract( fs );
+			}
+		}
+		
+		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
+			MemoryStream stream = new MemoryStream( data );
+			
+			if( filename == "default.png" ) {
+				if( fontPng ) return;
+				Bitmap bmp = new Bitmap( stream );
+				Drawer.SetFontBitmap( bmp );
+				useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
+				fontPng = true;
+			} else if( filename == "terrain.png" ) {
+				if( terrainPng ) return;
+				using( Bitmap bmp = new Bitmap( stream ) )
+					MakeClassicTextures( bmp );
+				terrainPng = true;
 			}
 		}
 		
@@ -41,19 +66,6 @@ namespace Launcher {
 		Bitmap terrainBmp;
 		FastBitmap terrainPixels;
 		const int tileSize = 48;
-		
-		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
-			MemoryStream stream = new MemoryStream( data );
-			
-			if( filename == "default.png" ) {
-				Bitmap bmp = new Bitmap( stream );
-				Drawer.SetFontBitmap( bmp );
-				useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
-			} else if( filename == "terrain.png" ) {
-				using( Bitmap bmp = new Bitmap( stream ) )
-					MakeClassicTextures( bmp );
-			}
-		}
 		
 		void MakeClassicTextures( Bitmap bmp ) {
 			int elemSize = bmp.Width / 16;
