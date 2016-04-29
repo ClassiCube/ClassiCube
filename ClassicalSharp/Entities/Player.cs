@@ -57,6 +57,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		protected void DrawName() {
+			if( nameTex.ID == -1 ) return;
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
 			Vector3 pos = Position; pos.Y += Model.NameYOffset;
