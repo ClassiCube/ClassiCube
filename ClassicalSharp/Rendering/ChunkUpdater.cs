@@ -61,9 +61,9 @@ namespace ClassicalSharp.Renderers {
 		public void Refresh() {
 			chunkPos = new Vector3I( int.MaxValue );
 			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];			
-			if( renderer.chunks == null || game.World.IsNotLoaded ) return;			
+			if( renderer.chunks == null || game.World.IsNotLoaded ) return;	
 			ClearChunkCache();
-			CreateChunkCache();
+			ResetChunkCache();
 		}
 		
 		void RefreshBorders( int clipLevel ) {
@@ -165,6 +165,30 @@ namespace ClassicalSharp.Renderers {
 			lastPitch = float.MaxValue;
 		}
 		
+		void CreateChunkCache() {
+			int index = 0;
+			for( int z = 0; z < length; z += 16 )
+				for( int y = 0; y < height; y += 16 )
+					for( int x = 0; x < width; x += 16 )
+			{
+				renderer.chunks[index] = new ChunkInfo( x, y, z );
+				renderer.unsortedChunks[index] = renderer.chunks[index];
+				index++;
+			}
+		}
+		
+		void ResetChunkCache() {
+			int index = 0;
+			for( int z = 0; z < length; z += 16 )
+				for( int y = 0; y < height; y += 16 )
+					for( int x = 0; x < width; x += 16 )
+			{
+				renderer.chunks[index].Reset( x, y, z );
+				renderer.unsortedChunks[index] = renderer.chunks[index];
+				index++;
+			}
+		}
+		
 		void ClearChunkCache() {
 			if( renderer.chunks == null ) return;
 			for( int i = 0; i < renderer.chunks.Length; i++ )
@@ -189,18 +213,6 @@ namespace ClassicalSharp.Renderers {
 			for( int i = 0; i < parts.Length; i++ )
 				api.DeleteVb( parts[i].VbId );
 			parts = null;
-		}
-		
-		void CreateChunkCache() {
-			int index = 0;
-			for( int z = 0; z < length; z += 16 )
-				for( int y = 0; y < height; y += 16 )
-					for( int x = 0; x < width; x += 16 )
-			{
-				renderer.chunks[index] = new ChunkInfo( x, y, z );
-				renderer.unsortedChunks[index] = renderer.chunks[index];
-				index++;
-			}
 		}
 		
 		static int NextMultipleOf16( int value ) {

@@ -25,6 +25,16 @@ namespace ClassicalSharp.Renderers {
 			CentreY = (ushort)(y + 8);
 			CentreZ = (ushort)(z + 8);
 		}
+		
+		public void Reset( int x, int y, int z ) {
+			CentreX = (ushort)(x + 8);
+			CentreY = (ushort)(y + 8);
+			CentreZ = (ushort)(z + 8);
+			
+			Visible = true; Empty = false;
+			DrawLeft = false; DrawRight = false; DrawFront = false;
+			DrawBack = false; DrawBottom = false; DrawTop = false;
+		}
 	}
 	
 	public partial class MapRenderer : IDisposable {
