@@ -48,7 +48,7 @@ namespace ClassicalSharp.Gui {
 			int start = pos;
 			char[] value = chatInputText.value;
 			
-			while( start >= 0 && Char.IsLetterOrDigit( value[start] ) )
+			while( start >= 0 && IsNameChar( value[start] ) )
 				start--;
 			start++;
 			if( pos < 0 || start > pos ) return;
@@ -91,6 +91,11 @@ namespace ClassicalSharp.Gui {
 				}
 				game.Chat.Add( buffer.ToString(), MessageType.ClientStatus5 );
 			}
+		}
+		
+		bool IsNameChar( char c ) {
+			return c == '_' || c == '.' || (c >= '0' && c <= '9') 
+				|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 		}
 		
 		void BackspaceKey( bool controlDown ) {
