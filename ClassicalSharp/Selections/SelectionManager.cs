@@ -16,12 +16,11 @@ namespace ClassicalSharp.Selections {
 		public void Init( Game game ) {
 			this.game = game;
 			Graphics = game.Graphics;
-			game.WorldEvents.OnNewMap += OnNewMap;
 		}
 		
-		public void Reset( Game game ) {
-			selections.Clear();
-		}
+		public void Reset( Game game ) { selections.Clear(); }
+		public void OnNewMap( Game game ) { selections.Clear(); }
+		public void OnNewMapLoaded( Game game ) { }
 		
 		List<SelectionBox> selections = new List<SelectionBox>( 256 );
 		public void AddSelection( byte id, Vector3I p1, Vector3I p2, FastColour col ) {
@@ -71,10 +70,7 @@ namespace ClassicalSharp.Selections {
 			Graphics.AlphaBlending = false;
 		}
 		
-		public void Dispose() {
-			OnNewMap( null, null );
-			game.WorldEvents.OnNewMap -= OnNewMap;
-			
+		public void Dispose() {			
 			if( lineVb <= 0 ) return;
 			Graphics.DeleteDynamicVb( vb );
 			Graphics.DeleteDynamicVb( lineVb );
@@ -86,10 +82,6 @@ namespace ClassicalSharp.Selections {
 			lineVertices = new VertexP3fC4b[256 * LineVerticesCount];
 			vb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
 			lineVb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, lineVertices.Length );
-		}
-		
-		void OnNewMap( object sender, EventArgs e ) {
-			selections.Clear();
 		}
 	}
 }

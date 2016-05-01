@@ -8,11 +8,6 @@ namespace ClassicalSharp.Renderers {
 
 	public unsafe class StandardEnvRenderer : EnvRenderer {
 		
-		public StandardEnvRenderer( Game game ) {
-			this.game = game;
-			map = game.World;
-		}
-		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
 		bool legacy;
 		
@@ -58,23 +53,23 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		public override void OnNewMap( object sender, EventArgs e ) {
+		public override void Init( Game game ) {
+			base.Init( game );
+			graphics.Fog = true;
+			ResetAllEnv( null, null );
+			game.Events.ViewDistanceChanged += ResetAllEnv;
+		}
+		
+		public override void OnNewMap( Game game ) {
 			graphics.Fog = false;
 			graphics.DeleteVb( skyVb );
 			graphics.DeleteVb( cloudsVb );
 			skyVb = cloudsVb = -1;
 		}
 		
-		public override void OnNewMapLoaded( object sender, EventArgs e ) {
+		public override void OnNewMapLoaded( Game game ) {
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
-		}
-		
-		public override void Init() {
-			base.Init();
-			graphics.Fog = true;
-			ResetAllEnv( null, null );
-			game.Events.ViewDistanceChanged += ResetAllEnv;
 		}
 		
 		void ResetAllEnv( object sender, EventArgs e ) {

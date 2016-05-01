@@ -19,11 +19,7 @@ namespace ClassicalSharp.Renderers {
 			graphics = game.Graphics;
 			info = game.BlockInfo;
 			weatherVb = graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
-		}
-		
-		public void Reset( Game game ) { }
+		}		
 		
 		int weatherVb;
 		short[] heightmap;
@@ -98,12 +94,14 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		int length, width, maxY, oneY;
-		void OnNewMap( object sender, EventArgs e ) {
+		public void Reset( Game game ) { OnNewMap( game ); }
+		
+		public void OnNewMap( Game game ) {
 			heightmap = null;
 			lastPos = new Vector3I( Int32.MaxValue );
 		}
 		
-		void OnNewMapLoaded( object sender, EventArgs e ) {
+		public void OnNewMapLoaded( Game game ) {
 			length = map.Length;
 			width = map.Width;
 			maxY = map.Height - 1;
@@ -118,8 +116,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
-			game.WorldEvents.OnNewMap -= OnNewMap;
-			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			graphics.DeleteDynamicVb( weatherVb );
 		}
 		

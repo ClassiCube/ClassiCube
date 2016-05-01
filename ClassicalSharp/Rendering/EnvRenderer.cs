@@ -6,28 +6,26 @@ using ClassicalSharp.Map;
 
 namespace ClassicalSharp.Renderers {
 
-	public abstract class EnvRenderer : IDisposable {
+	public abstract class EnvRenderer : IGameComponent {
 		
 		protected World map;
 		protected Game game;	
 		protected IGraphicsApi graphics;
 		
-		public virtual void Init() {
+		public virtual void Init( Game game ) {
+			this.game = game;
+			map = game.World;
 			graphics = game.Graphics;
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
-		}		
-		
-		public virtual void OnNewMap( object sender, EventArgs e ) {
 		}
 		
-		public virtual void OnNewMapLoaded( object sender, EventArgs e ) {
-		}
+		public virtual void Reset( Game game ) { OnNewMap( game ); }
+		
+		public abstract void OnNewMap( Game game );
+		
+		public abstract void OnNewMapLoaded( Game game );
 		
 		public virtual void Dispose() {
-			game.WorldEvents.OnNewMap -= OnNewMap;
-			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 		}
 		

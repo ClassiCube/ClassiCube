@@ -42,6 +42,8 @@ namespace ClassicalSharp.Network {
 				requests.Clear();
 			handle.Set();
 		}
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
 		
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>

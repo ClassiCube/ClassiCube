@@ -9,17 +9,11 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public unsafe sealed class MapBordersRenderer : IDisposable {
+	public unsafe sealed class MapBordersRenderer : IGameComponent {
 		
 		World map;
 		Game game;
 		IGraphicsApi graphics;
-		
-		public MapBordersRenderer( Game game ) {
-			this.game = game;
-			map = game.World;
-			graphics = game.Graphics;
-		}
 		
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
@@ -31,9 +25,11 @@ namespace ClassicalSharp.Renderers {
 			ResetSidesAndEdges( null, null );
 		}
 		
-		public void Init() {
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
+		public void Init( Game game ) {
+			this.game = game;
+			map = game.World;
+			graphics = game.Graphics;
+			
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged += ResetTextures;
@@ -74,8 +70,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
-			game.WorldEvents.OnNewMap -= OnNewMap;
-			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged -= ResetTextures;
@@ -87,7 +81,9 @@ namespace ClassicalSharp.Renderers {
 			sidesVb = edgesVb = -1;
 		}
 		
-		void OnNewMap( object sender, EventArgs e ) {
+		public void Reset( Game game ) { OnNewMap( game ); }
+		
+		public void OnNewMap( Game game ) {
 			graphics.DeleteVb( sidesVb );
 			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
@@ -96,7 +92,7 @@ namespace ClassicalSharp.Renderers {
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
 		}
 		
-		void OnNewMapLoaded( object sender, EventArgs e ) {
+		public void OnNewMapLoaded( Game game ) {
 			CalculateRects( game.ViewDistance );
 			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );

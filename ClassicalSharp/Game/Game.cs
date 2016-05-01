@@ -62,6 +62,8 @@ namespace ClassicalSharp {
 			LoadOptions();
 			LoadGuiOptions();
 			Chat = AddComponent( new Chat() );
+			WorldEvents.OnNewMap += OnNewMapCore;
+			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
@@ -89,8 +91,8 @@ namespace ClassicalSharp {
 			width = Width;
 			height = Height;
 			MapRenderer = new MapRenderer( this );
-			MapBordersRenderer = new MapBordersRenderer( this );
-			EnvRenderer = new StandardEnvRenderer( this );
+			MapBordersRenderer = AddComponent( new MapBordersRenderer() );
+			EnvRenderer = AddComponent( new StandardEnvRenderer() );
 			if( IPAddress == null ) {
 				Network = new Singleplayer.SinglePlayerServer( this );
 			} else {
@@ -117,8 +119,6 @@ namespace ClassicalSharp {
 			fpsScreen.Init();
 			hudScreen = AddComponent( new HudScreen( this ) );
 			Culling = new FrustumCulling();
-			EnvRenderer.Init();
-			MapBordersRenderer.Init();
 			Picking = AddComponent( new PickedPosRenderer() );
 			AudioPlayer = AddComponent( new AudioPlayer() );
 			AxisLinesRenderer = AddComponent( new AxisLinesRenderer() );
@@ -134,11 +134,6 @@ namespace ClassicalSharp {
 			}
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
-		}
-		
-		public T AddComponent<T>( T obj ) {
-			Components.Add( (IGameComponent)obj );
-			return obj;
 		}
 		
 		void LoadOptions() {
@@ -198,6 +193,37 @@ namespace ClassicalSharp {
 			if( File.Exists( launcherPath ) ) {
 				window.Icon = Icon.ExtractAssociatedIcon( launcherPath );
 			}
+		}
+		
+		void OnNewMapCore( object sender, EventArgs e ) {
+			foreach( IGameComponent comp in Components )
+				comp.OnNewMap( this );
+		}
+		
+		void OnNewMapLoadedCore( object sender, EventArgs e ) {
+			foreach( IGameComponent comp in Components )
+				comp.OnNewMapLoaded( this );
+		}
+		
+		public T AddComponent<T>( T obj ) where T : IGameComponent {
+			Components.Add( obj );
+			return obj;
+		}
+		
+		public bool ReplaceComponent<T>( ref T old, T obj ) where T : IGameComponent {
+			for( int i = 0; i < Components.Count; i++ ) {
+				if( !object.ReferenceEquals( Components[i], old ) ) continue;
+				old.Dispose(); 
+				
+				Components[i] = obj;
+				old = obj;
+				obj.Init( this );				
+				return true;
+			}
+			
+			Components.Add( obj );
+			obj.Init( this );
+			return false;
 		}
 		
 		public void SetViewDistance( int distance, bool save ) {
@@ -485,6 +511,8 @@ namespace ClassicalSharp {
 			ModelCache.Dispose();
 			ParticleManager.Dispose();
 			Players.Dispose();
+			WorldEvents.OnNewMap -= OnNewMapCore;
+			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
 			
 			foreach( IGameComponent comp in Components )
 				comp.Dispose();

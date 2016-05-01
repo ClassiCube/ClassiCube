@@ -141,14 +141,10 @@ namespace ClassicalSharp.Commands {
 		void SetNewRenderType( bool legacy, bool minimal ) {
 			game.MapBordersRenderer.UseLegacyMode( legacy );
 			if( minimal ) {
-				game.EnvRenderer.Dispose();
-				game.EnvRenderer = new MinimalEnvRenderer( game );
-				game.EnvRenderer.Init();
+				game.ReplaceComponent( ref game.EnvRenderer, new MinimalEnvRenderer() );
 			} else {
-				if( !( game.EnvRenderer is StandardEnvRenderer ) ) {
-					game.EnvRenderer.Dispose();
-					game.EnvRenderer = new StandardEnvRenderer( game );
-					game.EnvRenderer.Init();
+				if( !(game.EnvRenderer is StandardEnvRenderer) ) {
+					game.ReplaceComponent( ref game.EnvRenderer, new StandardEnvRenderer() );
 				}
 				((StandardEnvRenderer)game.EnvRenderer).UseLegacyMode( legacy );
 			}

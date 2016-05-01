@@ -28,8 +28,14 @@ namespace ClassicalSharp {
 		/// <summary> Called when the game has loaded. </summary>
 		void Init( Game game );
 		
-		/// <summary> Called to reset the state when the user is reconnecting to a server. </summary>
+		/// <summary> Called to reset the component's state when the user is reconnecting to a server. </summary>
 		void Reset( Game game );
+		
+		/// <summary> Called to update the component's state when the user begins loading a new map. </summary>
+		void OnNewMap( Game game );
+		
+		/// <summary> Called to update the component's state when the user has finished loading a new map. </summary>
+		void OnNewMapLoaded( Game game );
 	}
 	
 	public partial class Game {

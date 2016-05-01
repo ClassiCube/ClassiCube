@@ -19,6 +19,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Reset( Game game ) { }
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
 		
 		/// <summary> List of chat messages received from the server and added by client commands. </summary>
 		/// <remarks> index 0 is the oldest chat message, last index is newest. </remarks>

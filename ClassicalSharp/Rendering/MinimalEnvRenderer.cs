@@ -8,25 +8,19 @@ namespace ClassicalSharp.Renderers {
 	/// (no fog, clouds, or proper overhead sky) </summary>
 	public class MinimalEnvRenderer : EnvRenderer {
 		
-		public MinimalEnvRenderer( Game game ) {
-			this.game = game;
-			map = game.World;
+		public override void Init( Game game ) {
+			base.Init( game );
+			graphics.Fog = false;
+			graphics.ClearColour( map.SkyCol );
 		}
 		
 		public override void Render( double deltaTime ) {
 			graphics.ClearColour( map.SkyCol );
 		}
 		
-		public override void Init() {
-			base.Init();
-			graphics.Fog = false;
-			graphics.ClearColour( map.SkyCol );
-		}
+		public override void OnNewMap( Game game ) { }
 		
-		public override void OnNewMap( object sender, EventArgs e ) {
-		}
-		
-		public override void OnNewMapLoaded( object sender, EventArgs e ) {
+		public override void OnNewMapLoaded( Game game ) {
 			graphics.ClearColour( map.SkyCol );
 		}
 		

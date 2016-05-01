@@ -23,6 +23,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Reset( Game game ) { }
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
 		
 		public void Dispose() { }
 		
