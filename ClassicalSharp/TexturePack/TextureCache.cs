@@ -87,6 +87,33 @@ namespace ClassicalSharp.TexturePack {
 				ErrorHandler.LogError( "Cache.AddToCache", ex );
 			}
 		}
+
+		static char[] trimChars = new char[] { ' ' };
+		public static string GetETagFromCache( string url, EntryList tags ) {
+			byte[] utf8 = Encoding.UTF8.GetBytes( url );
+			string crc32 = CRC32( utf8 ).ToString();
+			
+			foreach( string entry in tags.Entries ) {
+				if( !entry.StartsWith( crc32 ) ) continue;				
+				string[] parts = entry.Split( trimChars, 2 );
+				if( parts.Length == 1 ) continue;
+				return parts[1];
+			}
+			return null;
+		}
+		
+		public static void AddETagToCache( string url, string etag, EntryList tags ) {
+			if( etag == null ) return;
+			byte[] utf8 = Encoding.UTF8.GetBytes( url );
+			string crc32 = CRC32( utf8 ).ToString();
+			
+			for( int i = 0; i < tags.Entries.Count; i++ ) {
+				if( !tags.Entries[i].StartsWith( crc32 ) ) continue;
+				tags.Entries[i] = crc32 + " " + etag;
+				tags.Save(); return;
+			}
+			tags.AddEntry( crc32 + " " + etag );
+		}
 		
 		const string Folder = "texturecache";
 		

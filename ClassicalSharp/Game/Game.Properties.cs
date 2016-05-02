@@ -172,7 +172,10 @@ namespace ClassicalSharp {
 		public Animations Animations;
 		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId, GuiClassicTexId;
 		internal bool screenshotRequested;
-		internal UrlsList AcceptedUrls = new UrlsList( "acceptedurls.txt" ), DeniedUrls = new UrlsList( "deniedurls.txt" );
+		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
+		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );
+		internal EntryList ETags = new EntryList( "etags.txt" );
+		
 		
 		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the

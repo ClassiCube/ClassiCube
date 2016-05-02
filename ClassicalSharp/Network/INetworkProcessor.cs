@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected internal void RetrieveTexturePack( string url ) {
-			if( !game.AcceptedUrls.HasUrl( url ) && !game.DeniedUrls.HasUrl( url ) ) {
+			if( !game.AcceptedUrls.HasEntry( url ) && !game.DeniedUrls.HasEntry( url ) ) {
 				game.AsyncDownloader.RetrieveContentLength( url, true, "CL_" + url );
 				string address = url;
 				if( url.StartsWith( "https://" ) ) address = url.Substring( 8 );
@@ -97,13 +97,16 @@ namespace ClassicalSharp {
 		}
 		
 		void DownloadTexturePack( string url ) {
-			if( game.DeniedUrls.HasUrl( url ) ) return;
+			if( game.DeniedUrls.HasEntry( url ) ) return;
 			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
+			string etag = TextureCache.GetETagFromCache( url, game.ETags );
 
 			if( url.Contains( ".zip" ) )
-				game.AsyncDownloader.DownloadData( url, true, "texturePack", lastModified );
+				game.AsyncDownloader.DownloadData( url, true, "texturePack", 
+				                                  lastModified, etag );
 			else
-				game.AsyncDownloader.DownloadImage( url, true, "terrain", lastModified );
+				game.AsyncDownloader.DownloadImage( url, true, "terrain", 
+				                                   lastModified, etag );
 		}
 		
 		protected void ExtractDefault() {
@@ -132,7 +135,8 @@ namespace ClassicalSharp {
 						game.Drawer2D.ConvertTo32Bpp( ref bmp );
 					}
 					game.ChangeTerrainAtlas( bmp );
-					TextureCache.AddToCache( item.Url, bmp );					
+					TextureCache.AddToCache( item.Url, bmp );
+					TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
 				} else if( Is304Status( item.WebEx ) ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
 					if( bmp == null ) {// Should never happen, but handle anyways.
@@ -155,7 +159,8 @@ namespace ClassicalSharp {
 					
 					TexturePackExtractor extractor = new TexturePackExtractor();
 					extractor.Extract( (byte[])item.Data, game );
-					TextureCache.AddToCache( item.Url, (byte[])item.Data );				
+					TextureCache.AddToCache( item.Url, (byte[])item.Data );
+					TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
 				} else if( Is304Status( item.WebEx ) ) {
 					byte[] data = TextureCache.GetDataFromCache( item.Url );
 					if( data == null ) { // Should never happen, but handle anyways.

@@ -133,8 +133,8 @@ namespace ClassicalSharp.Gui {
 			if( mouseBtn != MouseButton.Left ) return;
 			OnYesClick( g, w, mouseBtn );
 			string url = ((string)Metadata).Substring( 3 );
-			if( !game.AcceptedUrls.HasUrl( url ) )
-				game.AcceptedUrls.AddUrl( url );
+			if( !game.AcceptedUrls.HasEntry( url ) )
+				game.AcceptedUrls.AddEntry( url );
 		}
 		
 		void OnNoAlwaysClick( Game g, Widget w, MouseButton mouseBtn ) {
@@ -145,8 +145,8 @@ namespace ClassicalSharp.Gui {
 			
 			OnNoClick( g, w, mouseBtn );
 			string url = ((string)Metadata).Substring( 3 );
-			if( !game.DeniedUrls.HasUrl( url ) )
-				game.DeniedUrls.AddUrl( url );
+			if( !game.DeniedUrls.HasEntry( url ) )
+				game.DeniedUrls.AddEntry( url );
 		}
 
 		

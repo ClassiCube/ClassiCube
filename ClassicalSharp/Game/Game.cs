@@ -55,7 +55,9 @@ namespace ClassicalSharp {
 			
 			Options.Load();			
 			Players = new EntityList( this );
-			AcceptedUrls.Load(); DeniedUrls.Load();
+			AcceptedUrls.Load(); 
+			DeniedUrls.Load();
+			ETags.Load();
 			InputHandler = new InputHandler( this );
 			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = new ParticleManager( this );
