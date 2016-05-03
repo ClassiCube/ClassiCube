@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -25,18 +26,35 @@ namespace ClassicalSharp {
 		/// <summary> Additional text that should be logged to the log file 
 		/// when an unhandled exception occurs. </summary>
 		public static string[] AdditionalInfo;
+		
+		static string Format( Exception ex ) {
+			return ex.GetType().FullName + ": " + ex.Message 
+				+ Environment.NewLine + ex.StackTrace;
+		}
 
 		static void UnhandledException( object sender, UnhandledExceptionEventArgs e ) {
 			// So we don't get the normal unhelpful crash dialog on Windows.
 			Exception ex = (Exception)e.ExceptionObject;
-			string error = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
 			bool wroteToCrashLog = true;
 			try {
 				using( StreamWriter writer = new StreamWriter( logFile, true ) ) {
 					writer.WriteLine( "=== crash occurred ===" );
-					writer.WriteLine( "Time: " + DateTime.Now.ToString() );
-					writer.WriteLine( error );
-					writer.WriteLine();
+					writer.WriteLine( "Time: " + DateTime.Now );
+					
+					string platform = Configuration.RunningOnMono ? "Mono " : ".NET ";
+					platform += Environment.Version;
+					
+					if( Configuration.RunningOnWindows ) platform += ", Windows - ";
+					if( Configuration.RunningOnMacOS ) platform += ", OSX - ";
+					if( Configuration.RunningOnLinux ) platform += ", Linux - ";
+					platform += Environment.OSVersion.Version.ToString();
+					writer.WriteLine( "Running on: " + platform );
+					
+					while( ex != null ) {
+						writer.WriteLine( Format( ex ) );
+						writer.WriteLine();
+						ex = ex.InnerException;
+					}
 					
 					if( AdditionalInfo != null ) {
 						foreach( string l in AdditionalInfo )
@@ -54,7 +72,7 @@ namespace ClassicalSharp {
 				
 				"Failed to log the cause of the the error. Please consider reporting the circumstances " +
 				"of the error to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it." +
-				Environment.NewLine + Environment.NewLine + error;
+				Environment.NewLine + Environment.NewLine + Format( ex );
 			
 			MessageBox.Show( "An error occured and ClassicalSharp was forced to close." + Environment.NewLine +
 			                Environment.NewLine + message, "We're sorry" );
