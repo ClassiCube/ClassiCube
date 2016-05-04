@@ -48,8 +48,6 @@ namespace ClassicalSharp {
 		
 		void UpdateCulling( byte tile, byte neighbour ) {
 			bool hidden = IsHidden( tile, neighbour );
-			if( tile == neighbour && !CullWithNeighbours[tile] )
-				hidden = false;
 			Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
 			Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
 			
@@ -73,10 +71,17 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool IsHidden( byte tile, byte block ) {
-			return
-				((tile == block || (IsOpaque[block] && !IsLiquid[block])) && !IsSprite[tile]) ||
-				((tile == (byte)Block.Water || tile == (byte)Block.StillWater) && block == (byte)Block.Ice);
+		bool IsHidden( byte tile, byte neighbour ) {
+			// Sprite blocks can never hide faces.
+			if( IsSprite[tile] ) return false;
+			// All blocks (except for say leaves) cull with themselves.
+			if( tile == neighbour ) return CullWithNeighbours[tile];			
+			// An opaque neighbour (asides from lava) culls the face.
+			if( IsOpaque[neighbour] && !IsLiquid[neighbour] ) return true;
+
+			// e.g. for water / ice, don't need to draw water.
+			return IsTranslucent[tile] && IsTranslucent[neighbour] 
+				&& Collide[neighbour] == CollideType.Solid;
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {
