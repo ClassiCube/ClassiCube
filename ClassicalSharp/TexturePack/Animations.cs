@@ -35,8 +35,8 @@ namespace ClassicalSharp.TexturePack {
 		public void Tick( double delta ) {
 			if( animations.Count == 0 ) return;
 			if( fastBmp == null ) {
-				game.Chat.Add( "&cCurrent texture pack specifies it uses animations,");
-				game.Chat.Add( "&cbut it is missing animations.png");
+				game.Chat.Add( "&cCurrent texture pack specifies it uses animations," );
+				game.Chat.Add( "&cbut is missing animations.png" );
 				animations.Clear();
 				return;
 			}

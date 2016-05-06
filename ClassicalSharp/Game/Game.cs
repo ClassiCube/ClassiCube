@@ -34,9 +34,16 @@ namespace ClassicalSharp {
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
 		}
 		
-		public void ChangeTerrainAtlas( Bitmap newAtlas ) {
-			LoadAtlas( newAtlas );
+		public bool ChangeTerrainAtlas( Bitmap atlas ) {
+			bool pow2 = Utils.IsPowerOf2( atlas.Width ) && Utils.IsPowerOf2( atlas.Height );
+			if( !pow2 || atlas.Width != atlas.Height ) {
+				Chat.Add( "&cCurrent texture pack has an invalid terrain.png" );
+				Chat.Add( "&cWidth and length must be the same, and also powers of two." );
+				return false;
+			}
+			LoadAtlas( atlas );
 			Events.RaiseTerrainAtlasChanged();
+			return true;
 		}
 		
 		public void Run() { window.Run(); }

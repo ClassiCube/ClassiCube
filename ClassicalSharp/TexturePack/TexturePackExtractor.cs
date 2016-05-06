@@ -43,7 +43,9 @@ namespace ClassicalSharp.TexturePack {
 			
 			switch( filename ) {
 				case "terrain.png":
-					game.ChangeTerrainAtlas( Platform.ReadBmp( stream ) ); break;
+					Bitmap atlas = Platform.ReadBmp( stream );
+					if( !game.ChangeTerrainAtlas( atlas ) ) atlas.Dispose();
+					break;
 				case "chicken.png":
 					UpdateTexture( ref cache.ChickenTexId, stream, false ); break;
 				case "creeper.png":

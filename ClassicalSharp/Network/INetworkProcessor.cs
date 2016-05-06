@@ -134,7 +134,7 @@ namespace ClassicalSharp {
 						Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
 						game.Drawer2D.ConvertTo32Bpp( ref bmp );
 					}
-					game.ChangeTerrainAtlas( bmp );
+					if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
 					TextureCache.AddToCache( item.Url, bmp );
 					TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
 				} else if( Is304Status( item.WebEx ) ) {
@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
 						game.Animations.Dispose();
-						game.ChangeTerrainAtlas( bmp );
+						if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
 					}
 					
 					if( bmp != null ) game.World.TextureUrl = item.Url;
