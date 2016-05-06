@@ -77,19 +77,19 @@ namespace ClassicalSharp.Model {
 			atlas = game.TerrainAtlas1D;
 			
 			if( game.BlockInfo.IsSprite[block] ) {
-				SpriteXQuad( TileSide.Right, false );
-				SpriteZQuad( TileSide.Back, false );
+				SpriteXQuad( Side.Right, false );
+				SpriteZQuad( Side.Back, false );
 				
-				SpriteZQuad( TileSide.Back, true );
-				SpriteXQuad( TileSide.Right, true );
+				SpriteZQuad( Side.Back, true );
+				SpriteXQuad( Side.Right, true );
 			} else {
-				YQuad( 0, TileSide.Bottom, FastColour.ShadeYBottom );
-				XQuad( maxBB.X - 0.5f, TileSide.Right, true, FastColour.ShadeX );
-				ZQuad( minBB.Z - 0.5f, TileSide.Front, true, FastColour.ShadeZ );
+				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
+				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
+				ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
 				
-				ZQuad( maxBB.Z - 0.5f, TileSide.Back, false, FastColour.ShadeZ );
-				YQuad( height, TileSide.Top, 1.0f );
-				XQuad( minBB.X - 0.5f, TileSide.Left, false, FastColour.ShadeX );
+				ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
+				YQuad( height, Side.Top, 1.0f );
+				XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
 			}
 			
 			if( index == 0 ) return;

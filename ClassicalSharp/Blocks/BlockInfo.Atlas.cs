@@ -6,13 +6,13 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		internal int[] textures = new int[BlocksCount * TileSide.Sides];
+		internal int[] textures = new int[BlocksCount * Side.Sides];
 
 		void SetupTextures() {
 			// Row 1
 			SetAll( Block.Grass ); SetAll( Block.Stone );
 			SetAll( Block.Dirt ); SetSide( Block.Grass );
-			SetTex( 0 + 2, TileSide.Bottom, Block.Grass ); SetAll( Block.Wood );
+			SetTex( 0 + 2, Side.Bottom, Block.Grass ); SetAll( Block.Wood );
 			SetSide( Block.DoubleSlab ); SetSide( 0 + 5, Block.Slab );
 			SetTopAndBottom( Block.DoubleSlab ); SetTopAndBottom( 0 + 6, Block.Slab );
 			SetAll( Block.Brick ); SetSide( Block.TNT );
@@ -65,25 +65,25 @@ namespace ClassicalSharp {
 		}
 		
 		void SetAll( int textureId, Block blockId ) {
-			int index = (byte)blockId * TileSide.Sides;
-			for( int i = index; i < index + TileSide.Sides; i++ ) {
+			int index = (byte)blockId * Side.Sides;
+			for( int i = index; i < index + Side.Sides; i++ ) {
 				textures[i] = textureId;
 			}
 		}
 		
 		internal void SetSide( int textureId, Block blockId ) {
-			int index = (byte)blockId * TileSide.Sides;
-			for( int i = index; i < index + TileSide.Bottom; i++ )
+			int index = (byte)blockId * Side.Sides;
+			for( int i = index; i < index + Side.Bottom; i++ )
 				textures[i] = textureId;
 		}
 		
 		internal void SetTopAndBottom( int textureId, Block blockId ) {
-			textures[(byte)blockId * TileSide.Sides + TileSide.Bottom] = textureId;
-			textures[(byte)blockId * TileSide.Sides + TileSide.Top] = textureId;
+			textures[(byte)blockId * Side.Sides + Side.Bottom] = textureId;
+			textures[(byte)blockId * Side.Sides + Side.Top] = textureId;
 		}
 		
 		internal void SetTex( int textureId, int face, Block blockId ) {
-			textures[(byte)blockId * TileSide.Sides + face] = textureId;
+			textures[(byte)blockId * Side.Sides + face] = textureId;
 		}
 
 		int texId;
@@ -100,17 +100,17 @@ namespace ClassicalSharp {
 		}
 		
 		void SetTop( Block blockId ) {
-			SetTex( texId, TileSide.Top, blockId ); texId++;
+			SetTex( texId, Side.Top, blockId ); texId++;
 		}
 		
 		void SetBottom( Block blockId ) {
-			SetTex( texId, TileSide.Bottom, blockId ); texId++;
+			SetTex( texId, Side.Bottom, blockId ); texId++;
 		}
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>
 		/// <param name="face"> Face of the given block, see TileSide constants. </param>
 		public int GetTextureLoc( byte block, int face ) {
-			return textures[block * TileSide.Sides + face];
+			return textures[block * Side.Sides + face];
 		}
 	}
 }

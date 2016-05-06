@@ -12,7 +12,7 @@ namespace ClassicalSharp.Map {
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = mapData[mapIndex];
 				if( info.BlocksLight[block] ) {
-					int offset = (info.LightOffset[block] >> TileSide.Top) & 1;
+					int offset = (info.LightOffset[block] >> Side.Top) & 1;
 					heightmap[index] = (short)(y - offset);
 					return y - offset;
 				}
@@ -26,8 +26,8 @@ namespace ClassicalSharp.Map {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
 			if( didBlock == nowBlocks ) return;
-			int oldOffset = (info.LightOffset[oldBlock] >> TileSide.Top) & 1;
-			int newOffset = (info.LightOffset[newBlock] >> TileSide.Top) & 1;
+			int oldOffset = (info.LightOffset[oldBlock] >> Side.Top) & 1;
+			int newOffset = (info.LightOffset[newBlock] >> Side.Top) & 1;
 			
 			int index = (z * Width) + x;
 			int height = heightmap[index];
@@ -104,7 +104,7 @@ namespace ClassicalSharp.Map {
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
 						if( x < xCount && info.BlocksLight[mapPtr[mapIndex]] ) {
-							int lightOffset = (info.LightOffset[mapPtr[mapIndex]] >> TileSide.Top) & 1;
+							int lightOffset = (info.LightOffset[mapPtr[mapIndex]] >> Side.Top) & 1;
 							heightmap[heightmapIndex + x] = (short)(y - lightOffset);
 							elemsLeft--;
 							skip[index] = 0;

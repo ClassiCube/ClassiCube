@@ -8,7 +8,7 @@ namespace ClassicalSharp.Particles {
 		
 		public void BreakBlockEffect( Vector3I position, byte block ) {
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
-			int texLoc = game.BlockInfo.GetTextureLoc( block, TileSide.Left ), texIndex = 0;
+			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Left ), texIndex = 0;
 			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec( texLoc, 1, out texIndex );			
 			float uScale = (1/16f), vScale = (1/16f) * game.TerrainAtlas1D.invElementSize;
 			

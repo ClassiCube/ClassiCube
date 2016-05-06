@@ -134,12 +134,12 @@ namespace ClassicalSharp.Map {
 			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
 			byte[] data = (byte[])compound["Textures"].Value;
-			info.SetTex( data[0], TileSide.Top, (Block)id );
-			info.SetTex( data[1], TileSide.Bottom, (Block)id );
-			info.SetTex( data[2], TileSide.Left, (Block)id );
-			info.SetTex( data[3], TileSide.Right, (Block)id );
-			info.SetTex( data[4], TileSide.Front, (Block)id );
-			info.SetTex( data[5], TileSide.Back, (Block)id );
+			info.SetTex( data[0], Side.Top, (Block)id );
+			info.SetTex( data[1], Side.Bottom, (Block)id );
+			info.SetTex( data[2], Side.Left, (Block)id );
+			info.SetTex( data[3], Side.Right, (Block)id );
+			info.SetTex( data[4], Side.Front, (Block)id );
+			info.SetTex( data[5], Side.Back, (Block)id );
 			
 			info.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
 			byte soundId = (byte)compound["WalkSound"].Value;

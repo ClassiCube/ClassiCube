@@ -7,9 +7,9 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		public bool[] hidden = new bool[BlocksCount * BlocksCount * TileSide.Sides];
+		public byte[] hidden = new byte[BlocksCount * BlocksCount];
 		
-		public bool[] CanStretch = new bool[BlocksCount * TileSide.Sides];
+		public bool[] CanStretch = new bool[BlocksCount * Side.Sides];
 		
 		public bool[] IsAir = new bool[BlocksCount];
 
@@ -52,22 +52,22 @@ namespace ClassicalSharp {
 			Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
 			
 			if( IsSprite[tile] ) {
-				SetHidden( tile, neighbour, TileSide.Left, hidden );
-				SetHidden( tile, neighbour, TileSide.Right, hidden );
-				SetHidden( tile, neighbour, TileSide.Front, hidden );
-				SetHidden( tile, neighbour, TileSide.Back, hidden );
-				SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 );
-				SetHidden( tile, neighbour, TileSide.Top, hidden && tMax.Y == 1 );
+				SetHidden( tile, neighbour, Side.Left, hidden );
+				SetHidden( tile, neighbour, Side.Right, hidden );
+				SetHidden( tile, neighbour, Side.Front, hidden );
+				SetHidden( tile, neighbour, Side.Back, hidden );
+				SetHidden( tile, neighbour, Side.Bottom, hidden && nMax.Y == 1 );
+				SetHidden( tile, neighbour, Side.Top, hidden && tMax.Y == 1 );
 			} else {
 				SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
 				SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
 				
-				SetHidden( tile, neighbour, TileSide.Left, hidden && nMax.X == 1 && tMin.X == 0 );
-				SetHidden( tile, neighbour, TileSide.Right, hidden && nMin.X == 0 && tMax.X == 1 );
-				SetHidden( tile, neighbour, TileSide.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
-				SetHidden( tile, neighbour, TileSide.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
-				SetHidden( tile, neighbour, TileSide.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
-				SetHidden( tile, neighbour, TileSide.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
+				SetHidden( tile, neighbour, Side.Left, hidden && nMax.X == 1 && tMin.X == 0 );
+				SetHidden( tile, neighbour, Side.Right, hidden && nMin.X == 0 && tMax.X == 1 );
+				SetHidden( tile, neighbour, Side.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
+				SetHidden( tile, neighbour, Side.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
+				SetHidden( tile, neighbour, Side.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
+				SetHidden( tile, neighbour, Side.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
 			}
 		}
 		
@@ -85,25 +85,27 @@ namespace ClassicalSharp {
 		}
 		
 		void SetHidden( byte tile, byte block, int tileSide, bool value ) {
-			hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide] = value;
+			int bit = value ? 1 : 0;
+			hidden[tile * BlocksCount + block] &= (byte)~(1 << tileSide);
+			hidden[tile * BlocksCount + block] |= (byte)(bit << tileSide);
 		}
 		
 		/// <summary> Returns whether the face at the given face of the tile
 		/// should be drawn with the neighbour 'block' present on the other side of the face. </summary>
 		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
-			return hidden[( tile * BlocksCount + block ) * TileSide.Sides + tileSide];
+			return (hidden[tile * BlocksCount + block] & (1 << tileSide)) != 0;
 		}
 		
 		void SetXStretch( byte tile, bool stretch ) {
-			CanStretch[tile * TileSide.Sides + TileSide.Front] = stretch;
-			CanStretch[tile * TileSide.Sides + TileSide.Back] = stretch;
-			CanStretch[tile * TileSide.Sides + TileSide.Top] = stretch;
-			CanStretch[tile * TileSide.Sides + TileSide.Bottom] = stretch;
+			CanStretch[tile * Side.Sides + Side.Front] = stretch;
+			CanStretch[tile * Side.Sides + Side.Back] = stretch;
+			CanStretch[tile * Side.Sides + Side.Top] = stretch;
+			CanStretch[tile * Side.Sides + Side.Bottom] = stretch;
 		}
 		
 		void SetZStretch( byte tile, bool stretch ) {
-			CanStretch[tile * TileSide.Sides + TileSide.Left] = stretch;
-			CanStretch[tile * TileSide.Sides + TileSide.Right] = stretch;
+			CanStretch[tile * Side.Sides + Side.Left] = stretch;
+			CanStretch[tile * Side.Sides + Side.Right] = stretch;
 		}
 	}
 }

@@ -27,14 +27,14 @@ namespace ClassicalSharp {
 			for( int tile = 0; tile < BlocksCount; tile++ ) {
 				int flags = 0xFF;
 				Vector3 min = MinBB[tile], max = MaxBB[tile];
-				if( min.X != 0 ) flags &= ~(1 << TileSide.Left);
-				if( max.X != 1 ) flags &= ~(1 << TileSide.Right);
-				if( min.Z != 0 ) flags &= ~(1 << TileSide.Front);
-				if( max.Z != 1 ) flags &= ~(1 << TileSide.Back);
+				if( min.X != 0 ) flags &= ~(1 << Side.Left);
+				if( max.X != 1 ) flags &= ~(1 << Side.Right);
+				if( min.Z != 0 ) flags &= ~(1 << Side.Front);
+				if( max.Z != 1 ) flags &= ~(1 << Side.Back);
 				
 				if( (min.Y != 0 && max.Y == 1) && !IsAir[tile] ) {
-					flags &= ~(1 << TileSide.Top);
-					flags &= ~(1 << TileSide.Bottom);
+					flags &= ~(1 << Side.Top);
+					flags &= ~(1 << Side.Bottom);
 				}
 				LightOffset[tile] = (byte)flags;
 			}
@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		static readonly Vector3 centre = new Vector3( 0.5f, 0, 0.5f );
 		internal void RecalculateBB( int block, FastBitmap fastBmp ) {
 			int elemSize = fastBmp.Width / 16;
-			int texId = GetTextureLoc( (byte)block, TileSide.Top );
+			int texId = GetTextureLoc( (byte)block, Side.Top );
 			int texX = texId & 0x0F, texY = texId >> 4;
 			
 			float topY = GetSpriteBB_TopY( elemSize, texX, texY, fastBmp );

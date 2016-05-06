@@ -54,15 +54,15 @@ namespace ClassicalSharp {
 			Utils.RotateY( ref pos.X, ref pos.Z, cosY, -sinY );
 			
 			if( info.IsSprite[block] ) {
-				SpriteXQuad( block, TileSide.Right, false );
-				SpriteZQuad( block, TileSide.Back, false );
+				SpriteXQuad( block, Side.Right, false );
+				SpriteZQuad( block, Side.Back, false );
 				
-				SpriteZQuad( block, TileSide.Back, true );
-				SpriteXQuad( block, TileSide.Right, true );
+				SpriteZQuad( block, Side.Back, true );
+				SpriteXQuad( block, Side.Right, true );
 			} else {
-				XQuad( block, Make( maxBB.X ), TileSide.Left );
-				ZQuad( block, Make( minBB.Z ), TileSide.Back );
-				YQuad( block, Make( maxBB.Y ), TileSide.Top );
+				XQuad( block, Make( maxBB.X ), Side.Left );
+				ZQuad( block, Make( minBB.Z ), Side.Back );
+				YQuad( block, Make( maxBB.Y ), Side.Top );
 			}
 			
 			if( index == 0 ) return;

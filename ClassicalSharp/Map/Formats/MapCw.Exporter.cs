@@ -152,12 +152,12 @@ namespace ClassicalSharp.Map {
 			
 			nbt.Write( NbtTagType.Int8Array );
 			nbt.Write( "Textures" ); nbt.WriteInt32( 6 );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Top ) );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Bottom ) );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Left ) );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Right ) );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Front ) );
-			nbt.WriteUInt8( info.GetTextureLoc( id, TileSide.Back ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Top ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Bottom ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Left ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Right ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Front ) );
+			nbt.WriteUInt8( info.GetTextureLoc( id, Side.Back ) );
 			
 			nbt.Write( NbtTagType.Int8 );
 			nbt.Write( "TransmitsLight" ); nbt.WriteUInt8( info.BlocksLight[id] ? 0 : 1 );

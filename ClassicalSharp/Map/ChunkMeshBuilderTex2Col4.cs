@@ -81,17 +81,17 @@ namespace ClassicalSharp {
 		bool IsLit( int x, int y, int z, int face, byte type ) {
 			int offset = (info.LightOffset[type] >> face) & 1;
 			switch( face ) {
-				case TileSide.Left:
+				case Side.Left:
 					return x < offset || y > map.heightmap[(z * width) + (x - offset)];
-				case TileSide.Right:
+				case Side.Right:
 					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
-				case TileSide.Front:
+				case Side.Front:
 					return z < offset || y > map.heightmap[((z - offset) * width) + x];
-				case TileSide.Back:
+				case Side.Back:
 					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
-				case TileSide.Bottom:
+				case Side.Bottom:
 					return y <= 0 || (y - 1 - offset) >= (map.heightmap[(z * width) + x]);
-				case TileSide.Top:
+				case Side.Top:
 					return y >= maxY || (y - offset) >= (map.heightmap[(z * width) + x]);
 			}
 			return true;
@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		}
 		
 		void AddSpriteVertices( byte tile ) {
-			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, TileSide.Left ) );
+			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, Side.Left ) );
 			DrawInfo part = drawInfoNormal[i];
 			part.spriteCount += 6 * 4;
 			part.iCount += 6 * 4;
@@ -172,10 +172,10 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawLeftFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Left];
+			int texId = info.textures[tile * Side.Sides + Side.Left];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Left) & 1;
+			int offset = (lightFlags >> Side.Left) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
@@ -191,10 +191,10 @@ namespace ClassicalSharp {
 		}
 
 		void DrawRightFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
+			int texId = info.textures[tile * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Right) & 1;
+			int offset = (lightFlags >> Side.Right) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
@@ -210,10 +210,10 @@ namespace ClassicalSharp {
 		}
 
 		void DrawFrontFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Front];
+			int texId = info.textures[tile * Side.Sides + Side.Front];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Front) & 1;
+			int offset = (lightFlags >> Side.Front) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
@@ -229,10 +229,10 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBackFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Back];
+			int texId = info.textures[tile * Side.Sides + Side.Back];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Back) & 1;
+			int offset = (lightFlags >> Side.Back) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
@@ -248,10 +248,10 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBottomFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Bottom];
+			int texId = info.textures[tile * Side.Sides + Side.Bottom];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Bottom) & 1;
+			int offset = (lightFlags >> Side.Bottom) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
@@ -266,10 +266,10 @@ namespace ClassicalSharp {
 		}
 
 		void DrawTopFace( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Top];
+			int texId = info.textures[tile * Side.Sides + Side.Top];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> TileSide.Top) & 1;
+			int offset = (lightFlags >> Side.Top) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
@@ -284,7 +284,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawSprite( int count ) {
-			int texId = info.textures[tile * TileSide.Sides + TileSide.Right];
+			int texId = info.textures[tile * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float blockHeight = 1;

@@ -36,8 +36,8 @@ namespace ClassicalSharp.Singleplayer {
 			                                  game.LocalPlayer.SkinName );
 			
 			game.Events.RaiseBlockPermissionsChanged();
-			int seed = new Random().Next();
-			GenMap( 128, 64, 128, seed, new NotchyGenerator() );
+			int seed = 500;//new Random().Next();
+			GenMap( 256, 256, 256, seed, new NotchyGenerator() );
 		}
 		
 		char lastCol = '\0';
