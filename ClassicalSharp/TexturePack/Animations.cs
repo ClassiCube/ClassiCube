@@ -18,7 +18,6 @@ namespace ClassicalSharp.TexturePack {
 		Bitmap bmp;
 		FastBitmap fastBmp;
 		List<AnimationData> animations = new List<AnimationData>();
-		public bool Enabled = true;
 		
 		public Animations( Game game ) {
 			this.game = game;
@@ -34,11 +33,16 @@ namespace ClassicalSharp.TexturePack {
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick( double delta ) {
-			if( animations.Count == 0 || !Enabled ) return;
-			
-			foreach( AnimationData anim in animations ) {
-				ApplyAnimation( anim );
+			if( animations.Count == 0 ) return;
+			if( fastBmp == null ) {
+				game.Chat.Add( "&cCurrent texture pack specifies it uses animations,");
+				game.Chat.Add( "&cbut it is missing animations.png");
+				animations.Clear();
+				return;
 			}
+			
+			foreach( AnimationData anim in animations )
+				ApplyAnimation( anim );
 		}
 		
 		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
@@ -124,9 +128,8 @@ namespace ClassicalSharp.TexturePack {
 			animations.Clear();
 			
 			if( bmp == null ) return;
-			fastBmp.Dispose();
-			bmp.Dispose();
-			bmp = null;
+			fastBmp.Dispose(); fastBmp = null;
+			bmp.Dispose(); bmp = null;
 		}
 	}
 }

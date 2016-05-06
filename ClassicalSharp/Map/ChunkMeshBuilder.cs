@@ -100,11 +100,11 @@ namespace ClassicalSharp {
 				
 				if( x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width ||
 				   y1 + chunkSize >= height || z1 + chunkSize >= length ) allSolid = false;
-				if( !( allAir || allSolid ) ) {
-					map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
-				}
+				if( allAir || allSolid ) return true;
+				
+				map.HeightmapHint( x1 - 1, z1 - 1, mapPtr );
+				return false;
 			}
-			return allAir || allSolid;
 		}
 		
 		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] normalParts,
