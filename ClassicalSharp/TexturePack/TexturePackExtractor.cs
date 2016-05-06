@@ -37,11 +37,15 @@ namespace ClassicalSharp.TexturePack {
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			MemoryStream stream = new MemoryStream( data );
 			ModelCache cache = game.ModelCache;
-			filename = filename.ToLower();
-			if( filename.StartsWith( "mob/" ) )
-				filename = filename.Substring( 4 );
 			
-			switch( filename ) {
+			// Ignore directories: convert x/name to name and x\name to name.
+			string name = filename.ToLower();
+			int i = name.LastIndexOf( '\\' );
+			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
+			i = name.LastIndexOf( '/' );
+			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
+			
+			switch( name ) {
 				case "terrain.png":
 					Bitmap atlas = Platform.ReadBmp( stream );
 					if( !game.ChangeTerrainAtlas( atlas ) ) atlas.Dispose();
@@ -90,8 +94,8 @@ namespace ClassicalSharp.TexturePack {
 					SetFontBitmap( game, stream ); break;
 			}
 			
-			if( !filename.EndsWith( ".png" ) ) return;
-			string tex = filename.Substring( 0, filename.Length - 4 );
+			if( !name.EndsWith( ".png" ) ) return;
+			string tex = name.Substring( 0, name.Length - 4 );
 			game.Events.RaiseTextureChanged( tex );
 		}
 		
