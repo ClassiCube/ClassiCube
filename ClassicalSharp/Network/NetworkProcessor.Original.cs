@@ -172,8 +172,6 @@ namespace ClassicalSharp.Net {
 				sentWomId = true;
 			}
 			gzipStream = null;
-			ServerName = null;
-			ServerMotd = null;
 			GC.Collect();
 		}
 		
