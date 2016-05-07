@@ -58,6 +58,40 @@ namespace ClassicalSharp {
 		public const byte MaxDefinedBlock = byte.MaxValue;
 		public const int BlocksCount = MaxDefinedBlock + 1;
 		
+		public void Reset( Game game ) {
+			// Reset properties
+			for( int i = 0; i < IsTransparent.Length; i++ ) IsTransparent[i] = false;
+			for( int i = 0; i < IsTranslucent.Length; i++ ) IsTranslucent[i] = false;
+			for( int i = 0; i < IsOpaque.Length; i++ ) IsOpaque[i] = false;
+			for( int i = 0; i < IsOpaqueY.Length; i++ ) IsOpaqueY[i] = false;
+			for( int i = 0; i < IsSprite.Length; i++ ) IsSprite[i] = false;
+			for( int i = 0; i < IsLiquid.Length; i++ ) IsLiquid[i] = false;
+			for( int i = 0; i < BlocksLight.Length; i++ ) BlocksLight[i] = false;
+			for( int i = 0; i < FullBright.Length; i++ ) FullBright[i] = false;
+			for( int i = 0; i < Name.Length; i++ ) Name[i] = "Invalid";
+			for( int i = 0; i < FogColour.Length; i++ ) FogColour[i] = default(FastColour);
+			for( int i = 0; i < FogDensity.Length; i++ ) FogDensity[i] = 0;
+			for( int i = 0; i < Collide.Length; i++ ) Collide[i] = CollideType.WalkThrough;
+			for( int i = 0; i < SpeedMultiplier.Length; i++ ) SpeedMultiplier[i] = 0;
+			for( int i = 0; i < CullWithNeighbours.Length; i++ ) CullWithNeighbours[i] = false;
+			for( int i = 0; i < LightOffset.Length; i++ ) LightOffset[i] = 0;
+			for( int i = 0; i < DefinedCustomBlocks.Length; i++ ) DefinedCustomBlocks[i] = 0;			
+			// Reset textures
+			texId = 0;
+			for( int i = 0; i < textures.Length; i++ ) textures[i] = 0;
+			// Reset culling
+			for( int i = 0; i < hidden.Length; i++ ) hidden[i] = 0;
+			for( int i = 0; i < CanStretch.Length; i++ ) CanStretch[i] = false;
+			for( int i = 0; i < IsAir.Length; i++ ) IsAir[i] = false;
+			// Reset bounds
+			for( int i = 0; i < MinBB.Length; i++ ) MinBB[i] = Vector3.Zero;
+			for( int i = 0; i < MaxBB.Length; i++ ) MaxBB[i] = Vector3.One;
+			// Reset sounds
+			for( int i = 0; i < DigSounds.Length; i++ ) DigSounds[i] = SoundType.None;
+			for( int i = 0; i < StepSounds.Length; i++ ) StepSounds[i] = SoundType.None;
+			Init();
+		}
+		
 		public void Init() {
 			for( int tile = 1; tile < BlocksCount; tile++ ) {
 				MaxBB[tile].Y = 1;
@@ -106,7 +140,7 @@ namespace ClassicalSharp {
 			IsOpaqueY[(byte)Block.Snow] = true;
 
 			InitBoundingBoxes();
-			InitSounds();			
+			InitSounds();
 			SetupCullingCache();
 			InitLightOffsets();
 		}
