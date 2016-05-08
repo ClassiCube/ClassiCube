@@ -26,7 +26,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void Extract( Stream stream, Game game ) {
 			this.game = game;
-			game.Animations.Dispose();
+			game.Animations.Clear();
 			ZipReader reader = new ZipReader();
 			
 			reader.ShouldProcessZipEntry = (f) => true;
@@ -79,22 +79,13 @@ namespace ClassicalSharp.TexturePack {
 					UpdateTexture( ref game.GuiTexId, stream, false ); break;
 				case "gui_classic.png":
 					UpdateTexture( ref game.GuiClassicTexId, stream, false ); break;
-				case "animations.png":
-				case "animation.png":
-					game.Animations.SetAtlas( Platform.ReadBmp( stream ) ); break;
-				case "animations.txt":
-				case "animation.txt":
-					StreamReader reader = new StreamReader( stream );
-					game.Animations.ReadAnimationsDescription( reader );
-					break;
 				case "particles.png":
 					UpdateTexture( ref game.ParticleManager.ParticlesTexId, 
 					              stream, false ); break;
 				case "default.png":
 					SetFontBitmap( game, stream ); break;
-			}
-			
-			game.Events.RaiseTextureChanged( name );
+			}		
+			game.Events.RaiseTextureChanged( name, data );
 		}
 		
 		void SetFontBitmap( Game game, Stream stream ) {
@@ -105,7 +96,9 @@ namespace ClassicalSharp.TexturePack {
 			game.Events.RaiseChatFontChanged();
 		}
 		
-		void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
+		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
+		/// and updates the native texture for it. </summary>
+		public void UpdateTexture( ref int texId, Stream stream, bool setSkinType ) {
 			game.Graphics.DeleteTexture( ref texId );
 			using( Bitmap bmp = Platform.ReadBmp( stream ) ) {
 				if( setSkinType )

@@ -275,11 +275,11 @@ namespace ClassicalSharp.Net {
 			if( entityId != 0xFF ) {
 				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
-					game.EntityEvents.RaiseEntityRemoved( entityId );
+					game.EntityEvents.RaiseRemoved( entityId );
 					oldPlayer.Despawn();
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
-				game.EntityEvents.RaiseEntityAdded( entityId );
+				game.EntityEvents.RaiseAdded( entityId );
 			} else {
 				// Server is only allowed to change our own name colours.
 				if( Utils.StripColours( displayName ) != game.Username )
@@ -307,7 +307,7 @@ namespace ClassicalSharp.Net {
 			if( player == null ) return;
 			
 			if( entityId != 0xFF ) {
-				game.EntityEvents.RaiseEntityRemoved( entityId );
+				game.EntityEvents.RaiseRemoved( entityId );
 				player.Despawn();
 				game.Players[entityId] = null;
 			}

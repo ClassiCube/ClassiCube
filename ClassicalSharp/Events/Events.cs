@@ -11,8 +11,8 @@ namespace ClassicalSharp.Events {
 		
 		/// <summary> Raised when a texture is changed. (such as "terrain", "rain") </summary>
 		public event EventHandler<TextureEventArgs> TextureChanged;
-		internal void RaiseTextureChanged( string texture ) { 
-			texArgs.Texture = texture; Raise( TextureChanged, texArgs ); }
+		internal void RaiseTextureChanged( string name, byte[] data ) {
+			texArgs.Name = name; texArgs.Data = data; Raise( TextureChanged, texArgs ); }
 		
 		/// <summary> Raised when the user changed their view/fog distance. </summary>
 		public event EventHandler ViewDistanceChanged;
@@ -78,8 +78,10 @@ namespace ClassicalSharp.Events {
 	
 	public sealed class TextureEventArgs : EventArgs {
 		
-		/// <summary> Location of the texture within a texture pack. (e.g. "snow", "default", "char") </summary>
-		/// <remarks> See TexturePackExtractor for a list of supported textures. </remarks>
-		public string Texture;
+		/// <summary> Location of the file within a texture pack, without a directory. (e.g. "snow.png") </summary>
+		public string Name;
+		
+		/// <summary> Raw data of the file. </summary>
+		public byte[] Data;
 	}
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 #if ANDROID
 using Android.Graphics;
@@ -11,7 +12,7 @@ using Android.Graphics;
 namespace ClassicalSharp.TexturePack {
 
 	/// <summary> Contains and describes the various animations applied to the terrain atlas. </summary>
-	public class Animations {
+	public class Animations : IGameComponent {
 		
 		Game game;
 		IGraphicsApi api;
@@ -19,14 +20,34 @@ namespace ClassicalSharp.TexturePack {
 		FastBitmap fastBmp;
 		List<AnimationData> animations = new List<AnimationData>();
 		
-		public Animations( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
 			api = game.Graphics;
+			game.Events.TextureChanged += TextureChanged;
+		}
+
+		public void Ready( Game game ) { }
+		public void Reset( Game game ) { }
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
+		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			if( e.Name == "animations.png" || e.Name == "animation.png" ) {
+				MemoryStream stream = new MemoryStream( e.Data );
+				SetAtlas( Platform.ReadBmp( stream ) );
+			} else if( e.Name == "animations.txt" || e.Name == "animation.txt" ) {
+				MemoryStream stream = new MemoryStream( e.Data );
+				StreamReader reader = new StreamReader( stream );
+				ReadAnimationsDescription( reader );
+			}
 		}
 		
 		/// <summary> Sets the atlas bitmap that animation frames are contained within. </summary>
 		public void SetAtlas( Bitmap bmp ) {
-			Dispose();
+			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
+				game.Drawer2D.ConvertTo32Bpp( ref bmp );
+			
+			Clear();
 			this.bmp = bmp;
 			fastBmp = new FastBitmap( bmp, true, true );
 		}
@@ -124,12 +145,17 @@ namespace ClassicalSharp.TexturePack {
 		
 		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
 		/// the list of defined animations. </summary>
-		public void Dispose() {
+		public void Clear() {
 			animations.Clear();
 			
 			if( bmp == null ) return;
 			fastBmp.Dispose(); fastBmp = null;
 			bmp.Dispose(); bmp = null;
+		}
+		
+		public void Dispose() {
+			Clear();
+			game.Events.TextureChanged -= TextureChanged;
 		}
 	}
 }

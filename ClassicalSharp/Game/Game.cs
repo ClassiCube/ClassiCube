@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
-			Animations = new Animations( this );
+			Animations = AddComponent( new Animations() );
 			Inventory = AddComponent( new Inventory() );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
@@ -536,7 +536,6 @@ namespace ClassicalSharp {
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Drawer2D.DisposeInstance();
-			Animations.Dispose();
 			Graphics.DeleteTexture( ref CloudsTexId );
 			Graphics.DeleteTexture( ref RainTexId );
 			Graphics.DeleteTexture( ref SnowTexId );
