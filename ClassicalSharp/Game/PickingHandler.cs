@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		public PickingHandler( Game game, InputHandler input ) {
 			this.game = game;
 			this.input = input;
-		}		
+		}
 
 		internal DateTime lastClick = DateTime.MinValue;
 		public void PickBlocks( bool cooldown, bool left, bool middle, bool right ) {
@@ -32,47 +32,51 @@ namespace ClassicalSharp {
 			}
 			
 			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
-			if( buttonsDown > 1 || game.ActiveScreen.HandlesAllInput || 
+			if( buttonsDown > 1 || game.ActiveScreen.HandlesAllInput ||
 			   inv.HeldBlock == Block.Air ) return;
 			
 			// always play delete animations, even if we aren't picking a block.
 			if( left ) game.BlockHandRenderer.SetAnimationClick( true );
 			if( !game.SelectedPos.Valid ) return;
+			BlockInfo info = game.BlockInfo;
 			
 			if( middle ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				byte block = 0;
-				if( game.World.IsValidPos( pos ) && (block = game.World.GetBlock( pos )) != 0
-				   && (inv.CanPlace[block] || inv.CanDelete[block]) ) {
-					
+				if( !game.World.IsValidPos( pos ) ) return;
+				byte old = game.World.GetBlock( pos );
+				
+				if( !info.IsAir[old] && (inv.CanPlace[old] || inv.CanDelete[old]) ) {
 					for( int i = 0; i < inv.Hotbar.Length; i++ ) {
-						if( inv.Hotbar[i] == (Block)block ) {
+						if( inv.Hotbar[i] == (Block)old ) {
 							inv.HeldBlockIndex = i; return;
 						}
 					}
-					inv.HeldBlock = (Block)block;
+					inv.HeldBlock = (Block)old;
 				}
 			} else if( left ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				byte block = 0;
-				if( game.World.IsValidPos( pos ) && (block = game.World.GetBlock( pos )) != 0
-				   && inv.CanDelete[block] ) {
-					game.ParticleManager.BreakBlockEffect( pos, block );
-					game.AudioPlayer.PlayDigSound( game.BlockInfo.DigSounds[block] );
+				if( !game.World.IsValidPos( pos ) ) return;
+				byte old = game.World.GetBlock( pos );
+				
+				if( !info.IsAir[old] && inv.CanDelete[old] ) {
+					game.ParticleManager.BreakBlockEffect( pos, old );
+					game.AudioPlayer.PlayDigSound( game.BlockInfo.DigSounds[old] );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
+					game.UserEvents.RaiseBlockChanged( pos, old, 0 );
 				}
 			} else if( right ) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if( !game.World.IsValidPos( pos ) ) return;
-				
+				byte old = game.World.GetBlock( pos );
 				byte block = (byte)inv.HeldBlock;
-				if( !game.CanPick( game.World.GetBlock( pos ) ) && inv.CanPlace[block]
-				   && CheckIsFree( game.SelectedPos, block ) ) {
+				
+				if( !game.CanPick( old ) && inv.CanPlace[block] && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
 					game.AudioPlayer.PlayDigSound( game.BlockInfo.StepSounds[block] );
 					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
 					game.BlockHandRenderer.SetAnimationClick( false );
+					game.UserEvents.RaiseBlockChanged( pos, old, block );
 				}
 			}
 		}

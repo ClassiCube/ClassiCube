@@ -105,6 +105,7 @@ namespace ClassicalSharp {
 		public OtherEvents Events = new OtherEvents();
 		public EntityEvents EntityEvents = new EntityEvents();
 		public WorldEvents WorldEvents = new WorldEvents();
+		public UserEvents UserEvents = new UserEvents();
 		public InputHandler InputHandler;
 		public Chat Chat;
 		public BlockHandRenderer BlockHandRenderer;
