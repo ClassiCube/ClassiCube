@@ -114,7 +114,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool IsValidChar( char c ) {
 			return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
-			         || c == '<' || c == '>' || c == '|' || c == '"');
+			         || c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 		}
 		
 		public override bool IsValidString( string s ) { return true; }
