@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Model {
@@ -12,7 +13,7 @@ namespace ClassicalSharp.Model {
 		IGraphicsApi api;
 		public ModelCache( Game window ) {
 			this.game = window;
-			api = game.Graphics;		
+			api = game.Graphics;
 		}
 		public CustomModel[] CustomModels = new CustomModel[256];
 		
@@ -23,6 +24,7 @@ namespace ClassicalSharp.Model {
 			model.CreateParts();
 			cache["humanoid"] = model;
 			cache["human"] = cache["humanoid"];
+			game.Events.TextureChanged += TextureChanged;
 		}
 		
 		internal int vb;
@@ -57,15 +59,16 @@ namespace ClassicalSharp.Model {
 			else if( modelName == "zombie" ) return new ZombieModel( game );
 			else if( modelName == "block" ) return new BlockModel( game );
 			else if( modelName == "chibi" ) return new ChibiModel( game );
-			else if( modelName == "giant" ) return new GiantModel( game ); 
+			else if( modelName == "giant" ) return new GiantModel( game );
 			return null;
 		}
 		
 		public void Dispose() {
-			foreach( var entry in cache ) {
+			foreach( var entry in cache )
 				entry.Value.Dispose();
-			}
 			api.DeleteDynamicVb( vb );
+			game.Events.TextureChanged -= TextureChanged;
+			
 			api.DeleteTexture( ref ChickenTexId );
 			api.DeleteTexture( ref CreeperTexId );
 			api.DeleteTexture( ref PigTexId );
@@ -74,7 +77,30 @@ namespace ClassicalSharp.Model {
 			api.DeleteTexture( ref SpiderTexId );
 			api.DeleteTexture( ref ZombieTexId );
 			api.DeleteTexture( ref SheepFurTexId );
-			api.DeleteTexture( ref HumanoidTexId );			
+			api.DeleteTexture( ref HumanoidTexId );
+		}
+		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			switch( e.Name ) {
+				case "chicken.png":
+					game.UpdateTexture( ref ChickenTexId, e.Data, false ); break;
+				case "creeper.png":
+					game.UpdateTexture( ref CreeperTexId, e.Data, false ); break;
+				case "pig.png":
+					game.UpdateTexture( ref PigTexId, e.Data, false ); break;
+				case "sheep.png":
+					game.UpdateTexture( ref SheepTexId, e.Data, false ); break;
+				case "skeleton.png":
+					game.UpdateTexture( ref SkeletonTexId, e.Data, false ); break;
+				case "spider.png":
+					game.UpdateTexture( ref SpiderTexId, e.Data, false ); break;
+				case "zombie.png":
+					game.UpdateTexture( ref ZombieTexId, e.Data, false ); break;
+				case "sheep_fur.png":
+					game.UpdateTexture( ref SheepFurTexId, e.Data, false ); break;
+				case "char.png":
+					game.UpdateTexture( ref HumanoidTexId, e.Data, true ); break;
+			}
 		}
 	}
 }

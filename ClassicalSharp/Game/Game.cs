@@ -537,8 +537,6 @@ namespace ClassicalSharp {
 			Graphics.Dispose();
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTexId );
-			Graphics.DeleteTexture( ref RainTexId );
-			Graphics.DeleteTexture( ref SnowTexId );
 			Graphics.DeleteTexture( ref GuiTexId );
 			Graphics.DeleteTexture( ref GuiClassicTexId );
 			foreach( WarningScreen screen in WarningOverlays )
@@ -557,6 +555,26 @@ namespace ClassicalSharp {
 			
 			return !ModifiableLiquids ? false :
 				Inventory.CanPlace[block] && Inventory.CanDelete[block];
+		}
+		
+		
+		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
+		/// and updates the native texture for it. </summary>
+		public void UpdateTexture( ref int texId, byte[] data, bool setSkinType ) {
+			MemoryStream stream = new MemoryStream( data );
+			Graphics.DeleteTexture( ref texId );
+			
+			using( Bitmap bmp = Platform.ReadBmp( stream ) ) {
+				if( setSkinType )
+					DefaultPlayerSkinType = Utils.GetSkinType( bmp );
+				
+				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+					using( Bitmap bmp32 = Drawer2D.ConvertTo32Bpp( bmp ) )
+						texId = Graphics.CreateTexture( bmp32 );
+				} else {
+					texId = Graphics.CreateTexture( bmp );
+				}
+			}
 		}
 		
 		public Game( string username, string mppass, string skinServer,

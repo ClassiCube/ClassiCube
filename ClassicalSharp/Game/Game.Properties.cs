@@ -173,7 +173,7 @@ namespace ClassicalSharp {
 		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
-		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId, GuiClassicTexId;
+		internal int CloudsTexId, GuiTexId, GuiClassicTexId;
 		internal bool screenshotRequested;
 		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
 		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );

@@ -1,5 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.IO;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
@@ -12,6 +14,7 @@ namespace ClassicalSharp.Renderers {
 		World map;
 		IGraphicsApi graphics;
 		BlockInfo info;
+		public int RainTexId, SnowTexId;
 		
 		public void Init( Game game ) {
 			this.game = game;
@@ -19,7 +22,8 @@ namespace ClassicalSharp.Renderers {
 			graphics = game.Graphics;
 			info = game.BlockInfo;
 			weatherVb = graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
-		}		
+			game.Events.TextureChanged += TextureChanged;
+		}
 		
 		int weatherVb;
 		short[] heightmap;
@@ -34,7 +38,7 @@ namespace ClassicalSharp.Renderers {
 			if( weather == Weather.Sunny ) return;
 			if( heightmap == null ) InitHeightmap();			
 			
-			graphics.BindTexture( weather == Weather.Rainy ? game.RainTexId : game.SnowTexId );
+			graphics.BindTexture( weather == Weather.Rainy ? RainTexId : SnowTexId );
 			Vector3 camPos = game.CurrentCameraPos;
 			Vector3I pos = Vector3I.Floor( camPos );
 			bool moved = pos != lastPos;
@@ -109,15 +113,26 @@ namespace ClassicalSharp.Renderers {
 			oneY = length * width;
 		}
 		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			if( e.Name == "snow.png" ) {
+				game.UpdateTexture( ref SnowTexId, e.Data, false );
+			} else if( e.Name == "rain.png" ) {
+				game.UpdateTexture( ref RainTexId, e.Data, false );
+			}
+		}
+		
+		public void Dispose() {
+			game.Graphics.DeleteTexture( ref RainTexId );
+			game.Graphics.DeleteTexture( ref SnowTexId );
+			graphics.DeleteDynamicVb( weatherVb );
+			game.Events.TextureChanged -= TextureChanged;
+		}
+		
 		void InitHeightmap() {
 			heightmap = new short[map.Width * map.Length];
 			for( int i = 0; i < heightmap.Length; i++ ) {
 				heightmap[i] = short.MaxValue;
 			}
-		}
-		
-		public void Dispose() {
-			graphics.DeleteDynamicVb( weatherVb );
 		}
 		
 		float GetRainHeight( int x, int z ) {
