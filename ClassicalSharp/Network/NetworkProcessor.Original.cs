@@ -57,8 +57,8 @@ namespace ClassicalSharp.Net {
 			writer.WriteInt16( (short)(pos.X * 32) );
 			writer.WriteInt16( (short)((int)(pos.Y * 32) + 51) );
 			writer.WriteInt16( (short)(pos.Z * 32) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw ) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch ) );
 		}
 		
 		#endregion

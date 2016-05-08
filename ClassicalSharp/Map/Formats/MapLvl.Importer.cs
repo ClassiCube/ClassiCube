@@ -13,6 +13,8 @@ namespace ClassicalSharp.Map {
 	public sealed class MapLvlImporter : IMapFormatImporter {
 
 		const int Version = 1874;
+		const byte customTile = 163;
+		
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
 			while( !gsHeader.ReadHeader( stream ) ) { }
@@ -59,7 +61,7 @@ namespace ClassicalSharp.Map {
 					int bx = i & 0xF, by = (i >> 8) & 0xF, bz = (i >> 4) & 0xF;
 					int index = baseIndex + (by * length + bz) * width + bx;
 					
-					if( blocks[index] == 163 ) // custom block id
+					if( blocks[index] == customTile )
 						blocks[index] = chunk[i];
 				}
 			}
@@ -82,8 +84,8 @@ namespace ClassicalSharp.Map {
 			34, 35, 36, 22, 20, 49, 45, 1, 4, 0, 9, 11, 4, 19, 5, 17, 10, 49, 20, 1,
 			18, 12, 5, 25, 46, 44, 17, 49, 20, 1, 18, 12, 5, 25, 36, 34, 0, 9, 11, 46,
 			44, 0, 9, 11, 8, 10, 22, 27, 22, 8, 10, 28, 17, 49, 20, 1, 18, 12, 5, 25, 46,
-			44, 11, 9, 0, 9, 11, 163, 0, 0, 9, 11, 0, 0, 0, 0, 0, 0, 0, 28, 22, 21, 11,
-			0, 0, 0, 46, 46, 10, 10, 46, 20, 41, 42, 11, 9, 0, 8, 10, 10, 8, 0, 22, 22,
+			44, 11, 9, 0, 9, 11, customTile, 0, 0, 9, 11, 0, 0, 0, 0, 0, 0, 0, 28, 22, 21,
+			11, 0, 0, 0, 46, 46, 10, 10, 46, 20, 41, 42, 11, 9, 0, 8, 10, 10, 8, 0, 22, 22,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 10, 0, 0, 0, 0, 0, 22, 22, 42, 3, 2, 29,
 			47, 0, 0, 0, 0, 0, 27, 46, 48, 24, 22, 36, 34, 8, 10, 21, 29, 22, 10, 22, 22,
 			41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
