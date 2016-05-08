@@ -223,6 +223,45 @@ namespace ClassicalSharp {
 			StepSounds[id] = SoundType.None;
 			DigSounds[id] = SoundType.None;
 		}
+		
+		internal static string[] normalNames = null;
+		public string GetBlockName( byte block ) {
+			if( normalNames == null )
+				MakeNormalNames();
+			
+			string value = Name[block];
+			if( block < CpeBlocksCount && value == "Invalid" )
+				return normalNames[block];
+			return value;
+		}
+		
+		static void MakeNormalNames() {
+			StringBuffer buffer = new StringBuffer( 64 );
+			normalNames = new string[CpeBlocksCount];
+			
+			for( int i = 0; i < normalNames.Length; i++ ) {
+				string origName = Enum.GetName( typeof(Block), (byte)i );
+				buffer.Clear();
+				int index = 0;
+				SplitUppercase( buffer, origName, ref index );
+				normalNames[i] = buffer.ToString();
+			}
+		}
+		
+		static void SplitUppercase( StringBuffer buffer, string value, ref int index ) {
+			for( int i = 0; i < value.Length; i++ ) {
+				char c = value[i];
+				bool upper = Char.IsUpper( c ) && i > 0;
+				bool nextLower = i < value.Length - 1 && !Char.IsUpper( value[i + 1] );
+				
+				if( upper && nextLower ) {
+					buffer.Append( ref index, ' ' );
+					buffer.Append( ref index, Char.ToLower( c ) );
+				} else {
+					buffer.Append( ref index, c );
+				}				
+			}
+		}
 	}
 	
 	public enum CollideType : byte {

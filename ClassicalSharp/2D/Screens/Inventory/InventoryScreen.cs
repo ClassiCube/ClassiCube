@@ -132,20 +132,12 @@ namespace ClassicalSharp.Gui {
 			RecreateBlockInfoTexture();
 		}
 		
-		static string[] normalNames = null;
-		void UpdateBlockInfoString( Block block ) {
-			if( normalNames == null )
-				MakeNormalNames();
-			
+		void UpdateBlockInfoString( Block block ) {		
 			int index = 0;
 			buffer.Clear();
 			buffer.Append( ref index, "&f" );
-			string value = game.BlockInfo.Name[(byte)block];
-			if( (byte)block < BlockInfo.CpeBlocksCount && value == "Invalid" ) {
-				buffer.Append( ref index, normalNames[(byte)block] );
-			} else {
-				buffer.Append( ref index, value );
-			}
+			string value = game.BlockInfo.GetBlockName( (byte)block );
+			buffer.Append( ref index, value );
 			if( game.ClassicMode ) return;
 			
 			buffer.Append( ref index, " (ID: " );
@@ -155,32 +147,6 @@ namespace ClassicalSharp.Gui {
 			buffer.Append( ref index, "&f, delete: " );
 			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f)" );
-		}
-		
-		void MakeNormalNames() {
-			normalNames = new string[BlockInfo.CpeBlocksCount];
-			for( int i = 0; i < normalNames.Length; i++ ) {
-				string origName = Enum.GetName( typeof(Block), (byte)i );
-				buffer.Clear();
-				int index = 0;
-				SplitUppercase( origName, ref index );
-				normalNames[i] = buffer.ToString();
-			}
-		}
-		
-		void SplitUppercase( string value, ref int index ) {
-			for( int i = 0; i < value.Length; i++ ) {
-				char c = value[i];
-				bool upper = Char.IsUpper( c ) && i > 0;
-				bool nextLower = i < value.Length - 1 && !Char.IsUpper( value[i + 1] );
-				
-				if( upper && nextLower ) {
-					buffer.Append( ref index, ' ' );
-					buffer.Append( ref index, Char.ToLower( c ) );
-				} else {
-					buffer.Append( ref index, c );
-				}				
-			}
 		}
 		
 		int lastCreatedIndex = -1000;

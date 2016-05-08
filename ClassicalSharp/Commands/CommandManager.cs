@@ -21,8 +21,11 @@ namespace ClassicalSharp.Commands {
 			Register( new HelpCommand() );
 			Register( new InfoCommand() );
 			Register( new RenderTypeCommand() );
-			if( game.Network.IsSinglePlayer )
+			
+			if( game.Network.IsSinglePlayer ) {
 				Register( new ModelCommand() );
+				Register( new CuboidCommand() );
+			}
 		}
 
 		public void Ready( Game game ) { }			
