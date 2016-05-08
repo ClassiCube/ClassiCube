@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = false;
 			
 			float cX = game.Width / 2, cY = game.Height / 2;
-			api.Draw2DQuad( cX - 300, cY + 90, 600, 2, grey );
+			api.Draw2DQuad( cX - 250, cY + 90, 500, 2, grey );
 			if( textPath == null ) return;
 			SaveMap( textPath );
 			textPath = null;
@@ -62,8 +62,10 @@ namespace ClassicalSharp.Gui {
 			widgets = new Widget[] {
 				ButtonWidget.Create( game, 0, 20, 301, 40, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, SaveClassic ),
-				ButtonWidget.Create( game, 0, 120, 201, 40, "Save schematic", Anchor.Centre,
+				ButtonWidget.Create( game, -150, 120, 201, 40, "Save schematic", Anchor.Centre,
 				                    Anchor.Centre, titleFont, SaveSchematic ),
+				ChatTextWidget.Create( game, 120, 110, "&eCan be imported into MCedit", Anchor.Centre,
+				                    Anchor.Centre, regularFont ),
 				null,
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
