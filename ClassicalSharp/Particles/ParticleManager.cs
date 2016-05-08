@@ -13,13 +13,12 @@ namespace ClassicalSharp.Particles {
 		int[] terrain1DCount, terrain1DIndices;
 		
 		Game game;
-		Random rnd;
+		Random rnd = new Random();
 		int vb;
 		const int maxParticles = 600;
 		
 		public ParticleManager( Game game ) {
 			this.game = game;
-			rnd = new Random();
 			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}

@@ -127,14 +127,7 @@ namespace ClassicalSharp {
 			
 			foreach( IGameComponent comp in Components )
 				comp.Init( this );
-			
-			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
-			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( "default.zip", this );
-			// in case the user's default texture pack doesn't have all required textures
-			if( defTexturePack != "default.zip" )
-				extractor.Extract( DefaultTexturePack, this );
-			
+			ExtractInitialTexturePack();
 			foreach( IGameComponent comp in Components )
 				comp.Ready( this );
 			
@@ -146,6 +139,15 @@ namespace ClassicalSharp {
 			}
 			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
+		}
+		
+		void ExtractInitialTexturePack() {
+			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( "default.zip", this );
+			// in case the user's default texture pack doesn't have all required textures
+			if( defTexturePack != "default.zip" )
+				extractor.Extract( DefaultTexturePack, this );
 		}
 		
 		void LoadOptions() {
