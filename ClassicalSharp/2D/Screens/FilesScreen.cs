@@ -22,18 +22,18 @@ namespace ClassicalSharp.Gui {
 			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			title = ChatTextWidget.Create( game, 0, -130, titleText, 
+			title = ChatTextWidget.Create( game, 0, -155, titleText, 
 			                          Anchor.Centre, Anchor.Centre, titleFont );
 			
 			buttons = new ButtonWidget[] {
-				MakeText( 0, -80, Get( 0 ) ),
-				MakeText( 0, -40, Get( 1 ) ),
+				MakeText( 0, -100, Get( 0 ) ),
+				MakeText( 0, -50, Get( 1 ) ),
 				MakeText( 0, 0, Get( 2 ) ),
-				MakeText( 0, 40, Get( 3 ) ),
-				MakeText( 0, 80, Get( 4 ) ),
+				MakeText( 0, 50, Get( 3 ) ),
+				MakeText( 0, 100, Get( 4 ) ),
 				
-				Make( -160, 0, "<", (g, w) => PageClick( false ) ),
-				Make( 160, 0, ">", (g, w) => PageClick( true ) ),
+				Make( -220, 0, "<", (g, w) => PageClick( false ) ),
+				Make( 220, 0, ">", (g, w) => PageClick( true ) ),
 				null,
 			};
 		}
@@ -52,12 +52,12 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		ButtonWidget MakeText( int x, int y, string text ) {
-			return ButtonWidget.Create( game, x, y, 240, 30, text,
+			return ButtonWidget.Create( game, x, y, 301, 40, text,
 			                           Anchor.Centre, Anchor.Centre, textFont, TextButtonClick );
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 40, 40, text,
+			return ButtonWidget.Create( game, x, y, 41, 40, text,
 			                           Anchor.Centre, Anchor.Centre, arrowFont, LeftOnly( onClick ) );
 		}
 		
