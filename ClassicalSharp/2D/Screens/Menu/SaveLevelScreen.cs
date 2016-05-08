@@ -54,11 +54,13 @@ namespace ClassicalSharp.Gui {
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputWidget = MenuInputWidget.Create(
-				game, -30, 50, 500, 30, "", Anchor.Centre, Anchor.Centre,
+				game, 0, 0, 500, 30, "", Anchor.Centre, Anchor.Centre,
 				regularFont, titleFont, new PathValidator() );
 			
-			widgets = new [] {
-				ButtonWidget.Create( game, 260, 50, 60, 30, "Save", Anchor.Centre,
+			widgets = new Widget[] {
+				ChatTextWidget.Create( game, 0, -70, "Save level", 
+			                          Anchor.Centre, Anchor.Centre, titleFont ),
+				ButtonWidget.Create( game, 0, 50, 201, 40, "Save", Anchor.Centre,
 				                    Anchor.Centre, titleFont, OkButtonClick ),
 				null,
 				MakeBack( false, titleFont,

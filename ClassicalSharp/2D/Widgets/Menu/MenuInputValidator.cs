@@ -109,7 +109,7 @@ namespace ClassicalSharp.Gui {
 	public sealed class PathValidator : MenuInputValidator {
 		
 		public PathValidator() {
-			Range = "&7(Enter filename)";
+			Range = "&7(Enter name)";
 		}
 		
 		public override bool IsValidChar( char c ) {
