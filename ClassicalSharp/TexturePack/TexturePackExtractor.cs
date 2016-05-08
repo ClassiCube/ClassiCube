@@ -94,9 +94,7 @@ namespace ClassicalSharp.TexturePack {
 					SetFontBitmap( game, stream ); break;
 			}
 			
-			if( !name.EndsWith( ".png" ) ) return;
-			string tex = name.Substring( 0, name.Length - 4 );
-			game.Events.RaiseTextureChanged( tex );
+			game.Events.RaiseTextureChanged( name );
 		}
 		
 		void SetFontBitmap( Game game, Stream stream ) {

@@ -43,25 +43,21 @@ namespace ClassicalSharp.Map {
 			}
 		}
 		
-		const int chunkSize = 64 * 1024;
+		
 		void WriteBlocks( NbtFile nbt, byte[] blocks ) {
-			byte[] chunk = new byte[chunkSize];
+			const int chunkSize = 64 * 1024 * 32;
 			nbt.Write( NbtTagType.Int8Array );
 			nbt.Write( "Blocks" );
 			nbt.WriteInt32( blocks.Length );
 			
 			for( int i = 0; i < blocks.Length; i += chunkSize ) {
 				int count = Math.Min( chunkSize, blocks.Length - i );
-				for( int j = 0; j < count; j++ ) {
-					byte block = blocks[i + j];
-					//if( block > BlockInfo.CpeBlocksCount ) block = 0;
-					chunk[j] = block;
-				}
-				nbt.WriteBytes( chunk, count );
+				nbt.WriteBytes( blocks, i, count );
 			}
 		}
 		
-		void WriteBlockData( NbtFile nbt, byte[] blocks ) {			
+		void WriteBlockData( NbtFile nbt, byte[] blocks ) {
+			const int chunkSize = 64 * 1024;
 			byte[] chunk = new byte[chunkSize];
 			nbt.Write( NbtTagType.Int8Array );
 			nbt.Write( "Data" );
@@ -70,7 +66,7 @@ namespace ClassicalSharp.Map {
 			for( int i = 0; i < blocks.Length; i += chunkSize ) {
 				// All 0 so we can skip this.
 				int count = Math.Min( chunkSize, blocks.Length - i );
-				nbt.WriteBytes( chunk, count );
+				nbt.WriteBytes( chunk, 0, count );
 			}
 		}
 	}
