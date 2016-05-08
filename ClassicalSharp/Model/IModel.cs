@@ -37,6 +37,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Vertical offset from the model's feet/base that the model's eye is located. </summary>
 		public abstract float GetEyeY( Entity entity );
 		
+		/// <sumary> The maximum scale the entity can have (for collisions and rendering). </summary>
+		public virtual float MaxScale { get { return 1; } }
+		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
 		public abstract Vector3 CollisionSize { get; }

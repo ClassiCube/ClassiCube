@@ -29,11 +29,26 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		DateTime lastModelChange = new DateTime( 1, 1, 1 );
-		public void SetModel( string modelName ) {
-			ModelName = modelName;
+		public void SetModel( string model ) {
+			ModelScale = 1;
+			int sep = model.IndexOf( '|' );
+			string scale = sep == -1 ? null : model.Substring( sep + 1 );
+			ModelName = sep == -1 ? model : model.Substring( 0, sep );
+			
 			Model = game.ModelCache.GetModel( ModelName );
 			lastModelChange = DateTime.UtcNow;
 			MobTextureId = -1;
+			ParseScale( scale );
+		}
+		
+		void ParseScale( string scale ) {
+			if( scale == null ) return;
+			float value;
+			if( !float.TryParse( scale, out value ) || float.IsNaN( value ) ) 
+				return;
+			
+			Utils.Clamp( ref value, 0.1f, Model.MaxScale );
+			ModelScale = value;
 		}
 		
 		protected Texture nameTex;
