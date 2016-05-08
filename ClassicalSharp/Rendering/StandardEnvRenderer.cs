@@ -37,14 +37,14 @@ namespace ClassicalSharp.Renderers {
 			}
 			
 			RenderClouds( deltaTime );
-			ResetFog();
+			UpdateFog();
 		}
 		
 		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.SkyColour ) {
 				ResetSky();
 			} else if( e.Var == EnvVar.FogColour ) {
-				ResetFog();
+				UpdateFog();
 			} else if( e.Var == EnvVar.CloudsColour ) {
 				ResetClouds();
 			} else if( e.Var == EnvVar.CloudsLevel ) {
@@ -55,6 +55,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Init( Game game ) {
 			base.Init( game );
+			graphics.SetFogStart( 0 );
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
 			game.Events.ViewDistanceChanged += ResetAllEnv;
@@ -73,7 +74,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetAllEnv( object sender, EventArgs e ) {
-			ResetFog();
+			UpdateFog();
 			ResetSky();
 			ResetClouds();
 		}
@@ -116,30 +117,27 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		void ResetFog() {
+		void UpdateFog() {
 			if( map.IsNotLoaded ) return;
 			FastColour adjFogCol = FastColour.White;
 			BlockInfo info = game.BlockInfo;
-			BoundingBox pBounds = game.LocalPlayer.CollisionBounds;
 			
-			Vector3I headCoords = Vector3I.Floor( game.LocalPlayer.EyePosition );
-			Vector3 pos = (Vector3)headCoords;
-			byte headBlock = game.World.SafeGetBlock( headCoords );
-			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[headBlock],
-			                                      pos + game.BlockInfo.MaxBB[headBlock] );
-			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
-			bool intersecting = blockBB.Intersects( localBB );
+			Vector3 pos = game.CurrentCameraPos;
+			Vector3I coords = Vector3I.Floor( pos );
+			byte block = game.World.SafeGetBlock( coords );
+			BoundingBox blockBB = new BoundingBox(
+				(Vector3)coords + info.MinBB[block],
+				(Vector3)coords + info.MaxBB[block] );
 			
-			if( intersecting && info.FogDensity[headBlock] != 0 ) {
+			if( blockBB.Contains( pos ) && info.FogDensity[block] != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( info.FogDensity[headBlock] );
-				adjFogCol = info.FogColour[headBlock];
+				graphics.SetFogDensity( info.FogDensity[block] );
+				adjFogCol = info.FogColour[block];
 			} else {
 				// Blend fog and sky together
 				float blend = (float)BlendFactor( game.ViewDistance );
 				adjFogCol = FastColour.Lerp( map.FogCol, map.SkyCol, blend );
 				graphics.SetFogMode( Fog.Linear );
-				graphics.SetFogStart( 0 );
 				graphics.SetFogEnd( game.ViewDistance );
 			}
 			graphics.ClearColour( adjFogCol );
@@ -173,7 +171,7 @@ namespace ClassicalSharp.Renderers {
 			extent = Utils.AdjViewDist( extent );
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
-			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );			
+			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexP3fC4b[] vertices = new VertexP3fC4b[skyVertices];
 			int height = Math.Max( map.Height + 2 + 6, map.CloudHeight + 6);
