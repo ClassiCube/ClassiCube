@@ -158,7 +158,9 @@ namespace ClassicalSharp.Gui {
 				if( game.Fov != game.DefaultFov ) text.Append( ref index, "Zoom fov " )
 					.AppendNum( ref index, lastFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
-				if( speeding || halfSpeeding ) text.Append( ref index, "Speed ON   " );
+				
+				bool showSpeedMsg = (speeding || halfSpeeding) && hacks.MaxSpeedMultiplier > 1;
+				if( showSpeedMsg ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
 				hackStates.SetText( text.GetString() );
 			}
