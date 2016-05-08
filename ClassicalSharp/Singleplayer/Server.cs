@@ -36,8 +36,8 @@ namespace ClassicalSharp.Singleplayer {
 			                                  game.LocalPlayer.SkinName );
 			
 			game.Events.RaiseBlockPermissionsChanged();
-			int seed = 500;//new Random().Next();
-			GenMap( 256, 256, 256, seed, new NotchyGenerator() );
+			int seed = new Random().Next();
+			GenMap( 128, 64, 128, seed, new NotchyGenerator() );
 		}
 		
 		char lastCol = '\0';
@@ -102,9 +102,8 @@ namespace ClassicalSharp.Singleplayer {
 				IMapGenerator gen = generator;
 				game.World.SetData( generatedMap, gen.Width, gen.Height, gen.Length );
 				generatedMap = null;
-				
-				game.WorldEvents.RaiseOnNewMapLoaded();
 				ResetPlayerPosition();
+				game.WorldEvents.RaiseOnNewMapLoaded();
 			}
 			
 			generator = null;
@@ -133,6 +132,7 @@ namespace ClassicalSharp.Singleplayer {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, 0, 0, false );
 			game.LocalPlayer.SetLocation( update, false );
 			game.LocalPlayer.Spawn = new Vector3( x, y, z );
+			game.CurrentCameraPos = game.Camera.GetCameraPos( game.LocalPlayer.EyePosition );
 		}
 	}
 }
