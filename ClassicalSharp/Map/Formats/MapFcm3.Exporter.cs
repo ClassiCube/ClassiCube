@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using ClassicalSharp.Entities;
 
 namespace ClassicalSharp.Map {
@@ -18,30 +17,30 @@ namespace ClassicalSharp.Map {
 		public void Save( Stream stream, Game game ) {
 			World map = game.World;
 			LocalPlayer p = game.LocalPlayer;
-			BinaryWriter writer = new BinaryWriter( stream );
-			writer.Write( Identifier );
-			writer.Write( Revision );
+			BinaryWriter w = new BinaryWriter( stream );
+			w.Write( Identifier );
+			w.Write( Revision );
 			
-			writer.Write( (short)map.Width );
-			writer.Write( (short)map.Height );
-			writer.Write( (short)map.Length );
+			w.Write( (short)map.Width );
+			w.Write( (short)map.Height );
+			w.Write( (short)map.Length );
 
-			writer.Write( (int)(p.Spawn.X * 32) );
-			writer.Write( (int)(p.Spawn.Y * 32) );
-			writer.Write( (int)(p.Spawn.Z * 32) );
+			w.Write( (int)(p.Spawn.X * 32) );
+			w.Write( (int)(p.Spawn.Y * 32) );
+			w.Write( (int)(p.Spawn.Z * 32) );
 
-			writer.Write( Utils.DegreesToPacked( p.SpawnYaw ) );
-			writer.Write( Utils.DegreesToPacked( p.SpawnPitch ) );
+			w.Write( Utils.DegreesToPacked( p.SpawnYaw ) );
+			w.Write( Utils.DegreesToPacked( p.SpawnPitch ) );
 
-			writer.Write( 0 ); // Date modified
-			writer.Write( 0 ); // Date created
+			w.Write( 0 ); // Date modified
+			w.Write( 0 ); // Date created
 
-			writer.Write( map.Uuid.ToByteArray() );
-			writer.Write( (byte)1 ); // layer count
+			w.Write( map.Uuid.ToByteArray() );
+			w.Write( (byte)1 ); // layer count
 
 			// skip over index and metacount
 			long indexOffset = stream.Position;
-			writer.Seek( 29, SeekOrigin.Current );
+			w.Seek( 29, SeekOrigin.Current );
 			long offset = stream.Position;
 			byte[] blocks = map.mapData;
 			
@@ -54,16 +53,16 @@ namespace ClassicalSharp.Map {
 			int compressedLength = (int)(stream.Position - offset);
 
 			// come back to write the index
-			writer.BaseStream.Seek( indexOffset, SeekOrigin.Begin );
+			w.BaseStream.Seek( indexOffset, SeekOrigin.Begin );
 
-			writer.Write( (byte)0 );            // data layer type (Blocks)
-			writer.Write( offset );             // offset, in bytes, from start of stream
-			writer.Write( compressedLength );   // compressed length, in bytes
-			writer.Write( 0 );                  // general purpose field
-			writer.Write( 1 );                  // element size
-			writer.Write( map.mapData.Length ); // element count
+			w.Write( (byte)0 );            // data layer type (Blocks)
+			w.Write( offset );             // offset, in bytes, from start of stream
+			w.Write( compressedLength );   // compressed length, in bytes
+			w.Write( 0 );                  // general purpose field
+			w.Write( 1 );                  // element size
+			w.Write( map.mapData.Length ); // element count
 
-			writer.Write( 0 ); // No metadata
+			w.Write( 0 ); // No metadata
 		}
 	}
 }

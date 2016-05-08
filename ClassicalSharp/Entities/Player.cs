@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.DeleteTexture( ref nameTex.ID );
 		}
 		
-		protected void InitRenderingData() {
+		protected void MakeNameTexture() {
 			using( Font font = new Font( game.FontName, 24 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
 				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
@@ -53,11 +53,13 @@ namespace ClassicalSharp.Entities {
 		
 		public void UpdateName() {
 			game.Graphics.DeleteTexture( ref nameTex );
-			InitRenderingData();
+			MakeNameTexture();
 		}
 		
 		protected void DrawName() {
+			if( nameTex.ID == 0 ) MakeNameTexture();
 			if( nameTex.ID == -1 ) return;
+			
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
 			Vector3 pos = Position; pos.Y += Model.NameYOffset;

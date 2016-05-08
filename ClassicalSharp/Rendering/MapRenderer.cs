@@ -42,7 +42,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		IGraphicsApi api;
 		
-		internal int _1DUsed = 1;		
+		internal int _1DUsed = -1;		
 		internal ChunkInfo[] chunks, unsortedChunks;
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;

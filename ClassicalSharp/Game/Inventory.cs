@@ -21,7 +21,8 @@ namespace ClassicalSharp {
 			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Grass;
 			Hotbar[8] = Block.Slab;
 		}
-		
+
+		public void Ready( Game game ) { }			
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }

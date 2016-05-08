@@ -85,12 +85,6 @@ namespace ClassicalSharp {
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );
 			Animations = new Animations( this );
-			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
-			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( "default.zip", this );
-			// in case the user's default texture pack doesn't have all required textures
-			if( defTexturePack != "default.zip" )
-				extractor.Extract( DefaultTexturePack, this );
 			Inventory = AddComponent( new Inventory() );
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
@@ -124,8 +118,7 @@ namespace ClassicalSharp {
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
-			fpsScreen = new FpsScreen( this );
-			fpsScreen.Init();
+			fpsScreen = AddComponent( new FpsScreen( this ) );
 			hudScreen = AddComponent( new HudScreen( this ) );
 			Culling = new FrustumCulling();
 			Picking = AddComponent( new PickedPosRenderer() );
@@ -134,6 +127,16 @@ namespace ClassicalSharp {
 			
 			foreach( IGameComponent comp in Components )
 				comp.Init( this );
+			
+			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( "default.zip", this );
+			// in case the user's default texture pack doesn't have all required textures
+			if( defTexturePack != "default.zip" )
+				extractor.Extract( DefaultTexturePack, this );
+			
+			foreach( IGameComponent comp in Components )
+				comp.Ready( this );
 			
 			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";

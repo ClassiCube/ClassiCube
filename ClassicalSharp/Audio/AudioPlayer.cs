@@ -25,7 +25,8 @@ namespace ClassicalSharp.Audio {
 			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
 			SetSound( game.UseSound );
 		}
-		
+
+		public void Ready( Game game ) { }		
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }		

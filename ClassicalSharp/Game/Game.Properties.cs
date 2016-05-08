@@ -25,8 +25,11 @@ namespace ClassicalSharp {
 	/// <summary> Represents a game component. </summary>
 	public interface IGameComponent : IDisposable {
 		
-		/// <summary> Called when the game has loaded. </summary>
+		/// <summary> Called when the game is being loaded. </summary>
 		void Init( Game game );
+		
+		/// <summary> Called when the texture pack has been loaded and all components have been initalised. </summary>
+		void Ready( Game game );
 		
 		/// <summary> Called to reset the component's state when the user is reconnecting to a server. </summary>
 		void Reset( Game game );

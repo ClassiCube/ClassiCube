@@ -6,7 +6,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Gui {
 	
-	public class FpsScreen : Screen {
+	public class FpsScreen : Screen, IGameComponent {
 		
 		Font font, posFont;
 		StringBuffer text;
@@ -15,6 +15,12 @@ namespace ClassicalSharp.Gui {
 			text = new StringBuffer( 128 );
 		}
 
+		public void Init( Game game ) { }
+		public void Ready( Game game) { Init(); }
+		public void Reset( Game game ) { }
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
+		
 		TextWidget fpsText, hackStates;
 		Texture posTex;
 		public override void Render( double delta ) {
@@ -168,7 +174,7 @@ namespace ClassicalSharp.Gui {
 
 		const string possibleChars = "0123456789-, ()";
 		int[] widths = new int[possibleChars.Length];
-		int baseWidth, curX, posHeight;
+		int baseWidth, curX;
 		float texWidth;
 		void MakePosTextWidget() {
 			DrawTextArgs args = new DrawTextArgs( "", posFont, true );

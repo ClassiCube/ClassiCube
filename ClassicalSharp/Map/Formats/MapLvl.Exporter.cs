@@ -2,9 +2,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Net;
 
 namespace ClassicalSharp.Map {
 
@@ -17,31 +15,30 @@ namespace ClassicalSharp.Map {
 		public void Save( Stream stream, Game game ) {
 			World map = game.World;
 			LocalPlayer p = game.LocalPlayer;
-			const int chunkSize = 128 * 128 * 128;
 			
 			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Compress ) ) {
-				BinaryWriter writer = new BinaryWriter( gs );
+				BinaryWriter w = new BinaryWriter( gs );
 				
-				writer.Write( (ushort)Version );
-				writer.Write( (ushort)map.Width );
-				writer.Write( (ushort)map.Length );
-				writer.Write( (ushort)map.Height );
+				w.Write( (ushort)Version );
+				w.Write( (ushort)map.Width );
+				w.Write( (ushort)map.Length );
+				w.Write( (ushort)map.Height );
 				
-				writer.Write( (ushort)p.Spawn.X );
-				writer.Write( (ushort)p.Spawn.Z );
-				writer.Write( (ushort)p.Spawn.Y );
-				writer.Write( Utils.DegreesToPacked( p.SpawnYaw ) );
-				writer.Write( Utils.DegreesToPacked( p.SpawnPitch ) );
+				w.Write( (ushort)p.Spawn.X );
+				w.Write( (ushort)p.Spawn.Z );
+				w.Write( (ushort)p.Spawn.Y );
+				w.Write( Utils.DegreesToPacked( p.SpawnYaw ) );
+				w.Write( Utils.DegreesToPacked( p.SpawnPitch ) );
 				
-				writer.Write( (ushort)0 ); // pervisit and perbuild perms
-				WriteBlocks( map.mapData, writer );
+				w.Write( (ushort)0 ); // pervisit and perbuild perms
+				WriteBlocks( map.mapData, w );
 				
-				writer.Write( (byte)0xBD );			
-				WriteCustomBlocks( map, writer );
+				w.Write( (byte)0xBD );			
+				WriteCustomBlocks( map, w );
 			}
 		}
 		
-		void WriteBlocks( byte[] blocks, BinaryWriter writer ) {
+		void WriteBlocks( byte[] blocks, BinaryWriter w ) {
 			const int bufferSize = 64 * 1024;
 			byte[] buffer = new byte[bufferSize];
 			int bIndex = 0;
@@ -52,20 +49,20 @@ namespace ClassicalSharp.Map {
 
 				bIndex++;
 				if( bIndex == bufferSize ) {
-					writer.Write( buffer, 0, bufferSize ); bIndex = 0;
+					w.Write( buffer, 0, bufferSize ); bIndex = 0;
 				}
 			}
-			if( bIndex > 0 ) writer.Write( buffer, 0, bIndex );
+			if( bIndex > 0 ) w.Write( buffer, 0, bIndex );
 		}
 		
-		void WriteCustomBlocks( World map, BinaryWriter writer ) {
+		void WriteCustomBlocks( World map, BinaryWriter w ) {
 			byte[] chunk = new byte[16 * 16 * 16];
 			
 			for( int y = 0; y < map.Height; y += 16 )
 				for( int z = 0; z < map.Length; z += 16 )
 					for( int x = 0; x < map.Width; x += 16 )
 			{
-				writer.Write( (byte)0 );
+				w.Write( (byte)0 );
 			}
 		}
 	}

@@ -36,7 +36,8 @@ namespace ClassicalSharp.Network {
 			worker.IsBackground = true;
 			worker.Start();
 		}
-		
+
+		public void Ready( Game game ) { }			
 		public void Reset( Game game ) {
 			lock( requestLocker )
 				requests.Clear();

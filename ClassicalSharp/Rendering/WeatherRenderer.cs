@@ -94,6 +94,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		int length, width, maxY, oneY;
+		public void Ready( Game game ) { }	
 		public void Reset( Game game ) { OnNewMap( game ); }
 		
 		public void OnNewMap( Game game ) {

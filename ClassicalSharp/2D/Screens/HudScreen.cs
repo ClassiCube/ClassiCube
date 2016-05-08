@@ -15,7 +15,8 @@ namespace ClassicalSharp.Gui {
 		PlayerListWidget playerList;
 		Font playerFont;
 		
-		public void Init( Game game ) { Init(); }		
+		public void Init( Game game ) { }
+		public void Ready( Game game) { Init(); }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }

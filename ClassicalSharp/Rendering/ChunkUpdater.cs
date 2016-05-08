@@ -27,13 +27,8 @@ namespace ClassicalSharp.Renderers {
 			this.renderer = renderer;
 			info = game.BlockInfo;
 			
-			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
-			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
-			RecalcBooleans( true );
-			
 			builder = new ChunkMeshBuilder( game );
 			api = game.Graphics;
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.WorldEvents.OnNewMap += OnNewMap;
@@ -60,8 +55,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Refresh() {
 			chunkPos = new Vector3I( int.MaxValue );
-			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];			
-			if( renderer.chunks == null || game.World.IsNotLoaded ) return;	
+			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
+			if( renderer.chunks == null || game.World.IsNotLoaded ) return;
 			ClearChunkCache();
 			ResetChunkCache();
 		}
@@ -93,11 +88,15 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
-			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
+			if( renderer._1DUsed == -1 ) {				
+				renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
+			} else {
+				bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
+				if( refreshRequired ) Refresh();
+			}
 			
-			if( refreshRequired ) Refresh();
+			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
 			RecalcBooleans( true );
 		}
 		
@@ -139,9 +138,9 @@ namespace ClassicalSharp.Renderers {
 			}
 			
 			for( int i = 0; i < used; i++ ) {
-				renderer.pendingTranslucent[i] = true; 
+				renderer.pendingTranslucent[i] = true;
 				renderer.usedTranslucent[i] = false;
-				renderer.pendingNormal[i] = true; 
+				renderer.pendingNormal[i] = true;
 				renderer.usedNormal[i] = false;
 			}
 		}

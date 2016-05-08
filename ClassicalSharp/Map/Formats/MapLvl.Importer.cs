@@ -20,22 +20,22 @@ namespace ClassicalSharp.Map {
 			while( !gsHeader.ReadHeader( stream ) ) { }
 			
 			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Decompress ) ) {
-				BinaryReader reader = new BinaryReader( gs );
-				ushort header = reader.ReadUInt16();
+				BinaryReader r = new BinaryReader( gs );
+				ushort header = r.ReadUInt16();
 
-				width = header == Version ? reader.ReadUInt16() : header;
-				length = reader.ReadUInt16();
-				height = reader.ReadUInt16();
+				width = header == Version ? r.ReadUInt16() : header;
+				length = r.ReadUInt16();
+				height = r.ReadUInt16();
 				
 				LocalPlayer p = game.LocalPlayer;
-				p.Spawn.X = reader.ReadUInt16();
-				p.Spawn.Z = reader.ReadUInt16();
-				p.Spawn.Y = reader.ReadUInt16();
-				p.SpawnYaw = (float)Utils.PackedToDegrees( reader.ReadByte() );
-				p.SpawnPitch = (float)Utils.PackedToDegrees( reader.ReadByte() );
+				p.Spawn.X = r.ReadUInt16();
+				p.Spawn.Z = r.ReadUInt16();
+				p.Spawn.Y = r.ReadUInt16();
+				p.SpawnYaw = (float)Utils.PackedToDegrees( r.ReadByte() );
+				p.SpawnPitch = (float)Utils.PackedToDegrees( r.ReadByte() );
 				
 				if( header == Version )
-					reader.ReadUInt16(); // pervisit and perbuild perms
+					r.ReadUInt16(); // pervisit and perbuild perms
 				byte[] blocks = new byte[width * height * length];
 				int read = gs.Read( blocks, 0, blocks.Length );
 				ConvertPhysicsBlocks( blocks );
