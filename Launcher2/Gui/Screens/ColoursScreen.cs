@@ -35,6 +35,11 @@ namespace Launcher {
 			Dirty = true;
 		}
 		
+		public override void Dispose() {
+			view.Dispose();
+			base.Dispose();
+		}
+		
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			AdjustSelectedColour( e.Delta );
 		}

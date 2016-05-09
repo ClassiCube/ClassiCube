@@ -8,22 +8,31 @@ using OpenTK.Input;
 
 namespace Launcher {
 	
-	public abstract class ChooseModeScreen : LauncherScreen {
+	public sealed class ChooseModeScreen : LauncherScreen {
 		
-		protected Font titleFont, infoFont;
-		public ChooseModeScreen( LauncherWindow game ) : base( game ) {
+		ChooseModeView view;
+		public ChooseModeScreen( LauncherWindow game, bool firstTime ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
-			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
-			buttonFont = titleFont;
-			widgets = new LauncherWidget[14];
+			view = new ChooseModeView( game );
+			view.FirstTime = firstTime;
+			widgets = view.widgets;
 		}
 
 		public override void Init() {
 			game.Window.Keyboard.KeyDown += KeyDown;
 			game.Window.Keyboard.KeyUp += KeyUp;
+			view.Init();
+			
+			widgets[view.nIndex].OnClick = (x, y) => ModeClick( false, false );
+			widgets[view.clIndex ].OnClick = (x, y) => ModeClick( true, false );
+			widgets[view.clHaxIndex].OnClick = (x, y) => ModeClick( true, true );
+			
+			if( view.backIndex >= 0 ) {
+				widgets[view.backIndex].OnClick = (x, y)
+					=> game.SetScreen( new MainScreen( game ) );
+			}
 			Resize();
 		}
 		
@@ -45,49 +54,9 @@ namespace Launcher {
 		}
 
 		public override void Resize() {
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-				FastColour col = LauncherSkin.ButtonBorderCol;
-				int middle = game.Height / 2;
-				game.Drawer.DrawRect( col, game.Width / 2 - 250, middle - 35, 490, 1 );
-				game.Drawer.DrawRect( col, game.Width / 2 - 250, middle + 35, 490, 1 );
-			}
+			view.DrawAll();
 			Dirty = true;
 		}
-		
-		void MakeWidgets() {
-			widgetIndex = 0;
-			int middle = game.Width / 2;			
-			MakeLabelAt("&fChoose game mode", titleFont, Anchor.Centre, Anchor.Centre, 0, -135 );
-						
-			MakeButtonAt( "Normal", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72,
-			             (x, y) => ModeClick( false, false ) );
-			MakeLabelAt( "&eEnables custom blocks, env settings,",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
-			MakeLabelAt( "&elonger messages, and more",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 + 12 );
-			
-			MakeButtonAt( "Classic", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0,
-			             (x, y) => ModeClick( true, false ) );	
-			MakeLabelAt( "&eOnly uses blocks and features from",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
-			MakeLabelAt( "&ethe original minecraft classic",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );
-			
-			MakeButtonAt( "Classic +hax", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72,
-			             (x, y) => ModeClick( true, true ) );
-			MakeLabelAt( "&eSame as Classic mode, except that",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 - 12 );
-			MakeLabelAt( "&ehacks (noclip/fly/speed) are enabled",
-			            infoFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );
-			MakeOtherWidgets();
-		}
-		
-		protected virtual void MakeOtherWidgets() { }
 		
 		void ModeClick( bool classic, bool classicHacks ) {
 			game.ClassicBackground = classic;
@@ -113,29 +82,7 @@ namespace Launcher {
 			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			
-			titleFont.Dispose();
-			infoFont.Dispose();
-		}
-	}
-	
-	public sealed class ChooseModeNormalScreen : ChooseModeScreen {
-		
-		public ChooseModeNormalScreen( LauncherWindow game ) : base( game ) { }
-			
-		protected override void MakeOtherWidgets() {
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
-			             0, 175, (x, y) => game.SetScreen( new MainScreen( game ) ) );
-		}
-	}
-	
-	public sealed class ChooseModeFirstTimeScreen : ChooseModeScreen {
-		
-		public ChooseModeFirstTimeScreen( LauncherWindow game ) : base( game ) { }
-			
-		protected override void MakeOtherWidgets() {
-			MakeLabelAt( "&eClick &fNormal &eif you are unsure which mode to choose.",
-			            infoFont, Anchor.Centre, Anchor.Centre, 0, 160 );
+			view.Dispose();
 		}
 	}
 }

@@ -25,7 +25,9 @@ namespace Launcher {
 		}
 		
 		public override void Init() {
-			base.Init();
+			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
+			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 			UpdateWidgets();
 		}
 		

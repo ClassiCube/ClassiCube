@@ -73,6 +73,7 @@
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Drawing.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
+    <Compile Include="Gui\Views\ChooseModeView.cs" />
     <Compile Include="Gui\Views\ColoursView.cs" />
     <Compile Include="Gui\Views\IView.cs" />
     <Compile Include="Gui\Widgets\LauncherBooleanWidget.cs" />

@@ -21,20 +21,16 @@ namespace Launcher {
 		}
 		
 		/// <summary> Function called to setup the widgets and other data for this view. </summary>
-		public virtual void Init() {
-			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
-			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
-		}
+		public abstract void Init();
 		
 		/// <summary> Function called to redraw all widgets in this view. </summary>
 		public abstract void DrawAll();
 		
 		/// <summary> Cleans up all native resources held by this view. </summary>
 		public virtual void Dispose() {
-			titleFont.Dispose();
-			inputFont.Dispose();
-			inputHintFont.Dispose();
+			if( titleFont != null ) titleFont.Dispose();
+			if( inputFont != null ) inputFont.Dispose();
+			if( inputHintFont != null ) inputHintFont.Dispose();
 		}
 		
 		protected void RedrawAllButtonBackgrounds() {

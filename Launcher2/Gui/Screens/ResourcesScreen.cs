@@ -146,7 +146,7 @@ namespace Launcher {
 			if( File.Exists( "options.txt" ) )
 				game.SetScreen( new MainScreen( game ) );
 			else
-				game.SetScreen( new ChooseModeFirstTimeScreen( game ) );
+				game.SetScreen( new ChooseModeScreen( game, true ) );
 		}
 		
 		void SetStatus( string text ) {
