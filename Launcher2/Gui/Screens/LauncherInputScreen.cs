@@ -178,13 +178,8 @@ namespace Launcher {
 		
 		protected void MakeInput( string text, int width, Anchor verAnchor, bool password,
 		                         int x, int y, int maxChars, string hint ) {
-			MakeInput( text, width, Anchor.Centre, verAnchor, password, x, y, maxChars, hint );
-		}
-		
-		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
-		                         bool password, int x, int y, int maxChars, string hint ) {
 			WidgetConstructors.MakeInput( game, widgets, ref widgetIndex,
-			                             text, width, horAnchor, verAnchor,
+			                             text, width, Anchor.Centre, verAnchor,
 			                             inputFont, inputHintFont, InputClick,
 			                             password, x, y, maxChars, hint );
 		}

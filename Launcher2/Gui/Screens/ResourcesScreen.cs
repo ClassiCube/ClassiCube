@@ -10,6 +10,7 @@ namespace Launcher {
 	public sealed class ResourcesScreen : LauncherScreen {
 		
 		Font infoFont, statusFont;
+		ResourcesView view;
 		public ResourcesScreen( LauncherWindow game ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
@@ -18,10 +19,15 @@ namespace Launcher {
 			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
 			statusFont = new Font( game.FontName, 13, FontStyle.Italic );
 			buttonFont = textFont;
-			widgets = new LauncherWidget[4];
+			view = new ResourcesView( game );
+			widgets = view.widgets;
 		}
 
-		public override void Init() { Resize(); }
+		public override void Init() {
+			view.Init();
+			MakeWidgets();
+			Resize();
+		}
 		
 		bool failed;
 		public override void Tick() {
@@ -45,46 +51,25 @@ namespace Launcher {
 		
 		public override void Resize() {
 			MakeWidgets();
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				drawer.Clear( clearCol );
-				drawer.Clear( backCol, game.Width / 2 - 190, game.Height / 2 - 70, 190 * 2, 70 * 2 );
-			}
-			
-			RedrawAllButtonBackgrounds();			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
+			view.DrawAll();
 			Dirty = true;
 		}
 		
-		int lastProgress = int.MinValue;
 		void CheckCurrentProgress() {
 			Request item = fetcher.downloader.CurrentItem;
 			if( item == null ) {
-				lastProgress = int.MinValue; return;
+				view.lastProgress = int.MinValue; return;
 			}
 			
 			int progress = fetcher.downloader.CurrentItemProgress;
-			if( progress == lastProgress ) return;
-			lastProgress = progress;
+			if( progress == view.lastProgress ) return;
+			view.lastProgress = progress;
 			SetFetchStatus( progress );
 		}
 		
 		void SetFetchStatus( int progress ) {
-			if( progress >= 0 && progress <= 100 )
-				DrawProgressBox( progress );
-		}
-		
-		static FastColour progBack = new FastColour( 220, 220, 220 );
-		static FastColour progFront = new FastColour( 0, 220, 0 );
-		void DrawProgressBox( int progress ) {
-			progress = (200 * progress) / 100;
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				drawer.DrawRect( progBack, game.Width / 2 - 100, game.Height / 2 + 10, 200, 4 );
-				drawer.DrawRect( progFront, game.Width / 2 - 100, game.Height / 2 + 10, progress, 4 );
+			if( progress >= 0 && progress <= 100 ) {
+				view.DrawProgressBox( progress );
 				Dirty = true;
 			}
 		}
@@ -127,8 +112,10 @@ namespace Launcher {
 				             0, 45, (x, y) => GotoNextMenu() );
 			}
 			
-			if( lastProgress >= 0 && lastProgress <= 100 )
-				DrawProgressBox( lastProgress );
+			if( view.lastProgress >= 0 && view.lastProgress <= 100 ) {
+				view.DrawProgressBox( view.lastProgress );
+				Dirty = true;
+			}
 		}
 		
 		void DownloadResources( int mouseX, int mouseY ) {
