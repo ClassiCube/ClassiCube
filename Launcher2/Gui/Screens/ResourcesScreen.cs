@@ -9,7 +9,7 @@ namespace Launcher {
 	
 	public sealed class ResourcesScreen : LauncherScreen {
 		
-		Font infoFont, statusFont;
+		Font infoFont;
 		ResourcesView view;
 		public ResourcesScreen( LauncherWindow game ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
@@ -17,7 +17,6 @@ namespace Launcher {
 			
 			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
-			statusFont = new Font( game.FontName, 13, FontStyle.Italic );
 			view = new ResourcesView( game );
 			widgets = view.widgets;
 		}
@@ -75,22 +74,13 @@ namespace Launcher {
 		
 		ResourceFetcher fetcher;
 		Font textFont;
-		static FastColour backCol = new FastColour( 120, 85, 151 );
+
 		static readonly string mainText = "Some required resources weren't found" +
-			Environment.NewLine + "Okay to download them?";
-		static readonly string format = "&eDownload size: {0} megabytes";
-		static FastColour clearCol = new FastColour( 12, 12, 12 );
-		bool useStatus;
-		
+			Environment.NewLine + "Okay to download them?";		
 		void MakeWidgets() {
 			widgetIndex = 0;
-			if( useStatus ) {
-				MakeLabelAt( widgets[0].Text, statusFont, Anchor.Centre, Anchor.Centre, 0, -10 );
-			} else {
-				float dataSize = game.fetcher.DownloadSize;
-				string text = String.Format( format, dataSize.ToString( "F2" ) );
-				MakeLabelAt( text, statusFont, Anchor.Centre, Anchor.Centre, 0, 10 );
-			}			
+			view.UpdateStatus();
+			widgetIndex = 1;
 
 			// Clear the entire previous widgets state.
 			for( int i = 1; i < widgets.Length; i++ ) {
@@ -136,24 +126,17 @@ namespace Launcher {
 		}
 		
 		void SetStatus( string text ) {
-			useStatus = true;
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[0];
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
-				widget.SetDrawData( drawer, text, statusFont, Anchor.Centre, Anchor.Centre, 0, -10 );
-				widget.Redraw( drawer );
-				Dirty = true;
-			}
+			view.useStatus = true;
+			view.RedrawStatus( text );
+			Dirty = true;
 		}
 		
 		public override void Dispose() {
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			
+			view.Dispose();
 			textFont.Dispose();
 			infoFont.Dispose();
-			statusFont.Dispose();
 		}
 	}
 }

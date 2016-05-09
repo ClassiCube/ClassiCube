@@ -76,11 +76,6 @@ namespace Launcher {
 		void ResetColours() {
 			LauncherSkin.ResetToDefault();
 			view.MakeAllRGBTriplets( true );
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );			
-				RedrawAll();
-			}
 			game.MakeBackground();
 			Resize();
 		}

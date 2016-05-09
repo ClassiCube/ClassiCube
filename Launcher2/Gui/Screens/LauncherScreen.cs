@@ -39,11 +39,9 @@ namespace Launcher {
 		protected LauncherWidget selectedWidget;
 		protected LauncherWidget[] widgets;
 		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
-			if( supressMove ) {
-				supressMove = false;
-				return;
-			}
+			if( supressMove ) { supressMove = false; return; }
 			mouseMoved = true;
+			
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
 				if( widget == null ) continue;
@@ -89,31 +87,6 @@ namespace Launcher {
 					button.Redraw( drawer );
 				}
 				Dirty = true;
-			}
-		}
-		
-		protected void RedrawAllButtonBackgrounds() {
-			int buttons = 0;
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is LauncherButtonWidget) ) continue;
-				buttons++;
-			}
-			if( buttons == 0 ) return;
-			
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) ) {
-				for( int i = 0; i < widgets.Length; i++ ) {
-					if( widgets[i] == null ) continue;
-					LauncherButtonWidget button = widgets[i] as LauncherButtonWidget;
-					if( button != null )
-						button.RedrawBackground( dst );
-				}
-			}
-		}
-		
-		protected void RedrawAll() {
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null ) continue;
-				widgets[i].Redraw( drawer );
 			}
 		}
 		
@@ -175,13 +148,8 @@ namespace Launcher {
 		
 		protected void MakeButtonAt( string text, int width, int height, Font font,
 		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
-			MakeButtonAt( text, width, height, font, Anchor.Centre, verAnchor, x, y, onClick );
-		}
-		
-		protected void MakeButtonAt( string text, int width, int height, Font font, Anchor horAnchor,
-		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
 			WidgetConstructors.MakeButtonAt( game, widgets, ref widgetIndex,
-			                                text, width, height, font, horAnchor,
+			                                text, width, height, font, Anchor.Centre,
 			                                verAnchor, x, y, onClick );
 		}
 		
