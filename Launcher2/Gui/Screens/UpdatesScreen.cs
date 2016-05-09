@@ -50,11 +50,17 @@ namespace Launcher {
 		}
 
 		Build dev, stable;
-		public override void Tick() {
-			if( checkTask.Done ) return;
+		public override void Tick() {;
+			if( checkTask.Done && checkTask.Exception == null ) return;
 			if( !checkTask.TaskTick( SuccessfulUpdateCheck, this ) ) {
 				view.LastStable = DateTime.MaxValue;
 				view.LastDev = DateTime.MaxValue;
+				checkTask.Exception = null;
+				
+				LauncherWidget w = widgets[view.devIndex - 1];
+				game.ClearArea( w.X, w.Y, w.Width, w.Height );
+				w = widgets[view.relIndex - 1];
+				game.ClearArea( w.X, w.Y, w.Width, w.Height );
 				Resize();
 			}
 		}

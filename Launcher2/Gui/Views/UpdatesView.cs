@@ -70,7 +70,7 @@ namespace Launcher {
 		}
 		
 		string GetDateString( DateTime last ) {
-			if( last == DateTime.MaxValue ) return "Update check failed";
+			if( last == DateTime.MaxValue ) return "&cCheck failed";
 			if( last == DateTime.MinValue ) return "Checking..";	
 			return last.ToString( dateFormat );
 		}
