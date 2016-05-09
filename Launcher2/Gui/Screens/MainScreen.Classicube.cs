@@ -27,7 +27,7 @@ namespace Launcher {
 				if( session.Exception != null ) {
 					DisplayWebException( session.Exception, session.Status );
 				} else if( HasServers ) {
-					game.SetScreen( new ClassiCubeServersScreen( game ) );
+					game.SetScreen( new ServersScreen( game ) );
 					return;
 				}
 				signingIn = false;

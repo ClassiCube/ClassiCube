@@ -59,7 +59,7 @@
   <ItemGroup>
     <Compile Include="Gui\Drawer2DExt.cs" />
     <Compile Include="Gui\PlatformDrawer.cs" />
-    <Compile Include="Gui\Screens\ClassiCubeServersScreen.cs" />
+    <Compile Include="Gui\Screens\ServersScreen.cs" />
     <Compile Include="Gui\Screens\ColoursScreen.cs" />
     <Compile Include="Gui\Screens\DirectConnectScreen.cs" />
     <Compile Include="Gui\Screens\LauncherInputScreen.cs" />
@@ -77,6 +77,7 @@
     <Compile Include="Gui\Views\ColoursView.cs" />
     <Compile Include="Gui\Views\DirectConnectView.cs" />
     <Compile Include="Gui\Views\IView.cs" />
+    <Compile Include="Gui\Views\ServersView.cs" />
     <Compile Include="Gui\Views\UpdatesView.cs" />
     <Compile Include="Gui\Widgets\LauncherBoolWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
