@@ -11,25 +11,26 @@ namespace Launcher {
 	// TODO: Download asynchronously
 	public sealed class UpdatesScreen : LauncherScreen {
 		
-		Font titleFont, infoFont;
+		UpdatesView view;
 		public UpdatesScreen( LauncherWindow game ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			
-			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
-			buttonFont = titleFont;
-			widgets = new LauncherWidget[13];
+			view = new UpdatesView( game );
+			widgets = view.widgets;
 		}
 
 		UpdateCheckTask checkTask;
 		public override void Init() {
+			view.Init();
 			if( game.checkTask != null && game.checkTask.Done )
 				SuccessfulUpdateCheck( game.checkTask );
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
+			
 			game.Window.Keyboard.KeyDown += KeyDown;
 			game.Window.Keyboard.KeyUp += KeyUp;
+			SetWidgetHandlers();
 			Resize();
 		}
 
@@ -51,75 +52,38 @@ namespace Launcher {
 		Build dev, stable;
 		public override void Tick() {
 			if( checkTask.Done ) return;
-			if( !checkTask.TaskTick( SuccessfulUpdateCheck, this ) )
-				updateCheckFailed = true;
+			if( !checkTask.TaskTick( SuccessfulUpdateCheck, this ) ) {
+				view.LastStable = DateTime.MaxValue;
+				view.LastDev = DateTime.MaxValue;
+				Resize();
+			}
 		}
 		
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
 			if( task.LatestDev == null || task.LatestStable == null ) return;
-			dev = task.LatestDev; lastDev = dev.TimeBuilt;		
-			stable = task.LatestStable; lastStable = stable.TimeBuilt;
+			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;		
+			stable = task.LatestStable; view.LastStable = stable.TimeBuilt;
+			Resize();
 		}
 		
 		public override void Resize() {
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-				FastColour col = LauncherSkin.ButtonBorderCol;
-				int middle = game.Height / 2;
-				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 100, 320, 1 );
-				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 10, 320, 1 );
-			}
+			view.DrawAll();
 			Dirty = true;
 		}
 		
-		const string dateFormat = "dd-MM-yyyy HH:mm";
-		DateTime lastStable, lastDev;
-		bool updateCheckFailed;
-		
-		void MakeWidgets() {
-			widgetIndex = 0;
-			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
+		void SetWidgetHandlers() {
+			widgets[view.relIndex].OnClick = (x, y) => UpdateBuild( true, true );
+			widgets[view.relIndex + 1].OnClick = (x, y) => UpdateBuild( true, false );
+
+			widgets[view.devIndex].OnClick =  (x, y) => UpdateBuild( false, true );
+			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild( false, false );			
 			
-			MakeLabelAt( "Your build:", infoFont, Anchor.Centre, Anchor.Centre, -60, -120 );
-			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
-			MakeLabelAt( yourBuild, infoFont, Anchor.Centre, Anchor.Centre, 70, -120 );
-			
-			MakeLabelAt( "Latest release:", infoFont, Anchor.Centre, Anchor.Centre, -70, -75 );
-			string latestStable = GetDateString( lastStable );
-			MakeLabelAt( latestStable, infoFont, Anchor.Centre, Anchor.Centre, 70, -75 );
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -40,
-			             (x, y) => UpdateBuild( lastStable, true, true ) );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -40,
-			             (x, y) => UpdateBuild( lastStable, true, false ) );
-			
-			MakeLabelAt( "Latest dev build:", infoFont, Anchor.Centre, Anchor.Centre, -80, 15 );
-			string latestDev = GetDateString( lastDev );
-			MakeLabelAt( latestDev, infoFont, Anchor.Centre, Anchor.Centre, 70, 15 );
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 50,
-			             (x, y) => UpdateBuild( lastDev, false, true ) );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 50,
-			             (x, y) => UpdateBuild( lastDev, false, false ) );
-			
-			MakeLabelAt( "&eDirect3D 9 is recommended for Windows.",
-			            infoFont, Anchor.Centre, Anchor.Centre, 0, 105 );
-			MakeLabelAt( "&eThe client must be closed before updating.",
-			            infoFont, Anchor.Centre, Anchor.Centre, 0, 130 );
-			
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre,
-			             0, 170, (x, y) => game.SetScreen( new MainScreen( game ) ) );
+			widgets[view.backIndex].OnClick = 
+				(x, y) => game.SetScreen( new MainScreen( game ) );
 		}
 		
-		string GetDateString( DateTime last ) {
-			if( updateCheckFailed ) return "Update check failed";
-			if( last == DateTime.MinValue ) return "Checking..";	
-			return last.ToString( dateFormat );
-		}
-		
-		void UpdateBuild( DateTime last, bool release, bool dx ) {
+		void UpdateBuild( bool release, bool dx ) {
+			DateTime last = release ? view.LastStable : view.LastDev;
 			Build build = release ? stable : dev;
 			if( last == DateTime.MinValue || build.DirectXSize < 50000 
 			   || build.OpenGLSize < 50000 ) return;
@@ -137,9 +101,7 @@ namespace Launcher {
 			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			
-			titleFont.Dispose();
-			infoFont.Dispose();
+			view.Dispose();
 		}
 	}
 }
