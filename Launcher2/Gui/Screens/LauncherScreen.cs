@@ -32,7 +32,7 @@ namespace Launcher {
 		/// <summary> Cleans up all native resources held by this screen. </summary>
 		public abstract void Dispose();
 		
-		/// <summary>Function called when the pixels from the framebuffer 
+		/// <summary> Function called when the pixels from the framebuffer 
 		/// are about to be transferred to the window. </summary>
 		public virtual void OnDisplay() { }
 		
@@ -182,48 +182,21 @@ namespace Launcher {
 		
 		protected void MakeButtonAt( string text, int width, int height, Font font, Anchor horAnchor,
 		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
-			LauncherButtonWidget widget;
-			if( widgets[widgetIndex] != null ) {
-				widget = (LauncherButtonWidget)widgets[widgetIndex];
-			} else {
-				widget = new LauncherButtonWidget( game );
-				widget.Text = text;
-				widget.OnClick = onClick;
-				widgets[widgetIndex] = widget;
-			}
-			
-			widget.Active = false;
-			widget.SetDrawData( drawer, text, font, horAnchor, verAnchor, width, height, x, y );
-			widgetIndex++;
+			WidgetConstructors.MakeButtonAt( game, widgets, ref widgetIndex,
+			                                text, width, height, font, horAnchor,
+			                                verAnchor, x, y, onClick );
 		}
 		
 		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			LauncherLabelWidget widget;
-			if( widgets[widgetIndex] != null ) {
-				widget = (LauncherLabelWidget)widgets[widgetIndex];
-			} else {
-				widget = new LauncherLabelWidget( game, text );
-				widgets[widgetIndex] = widget;
-			}
-			
-			widget.SetDrawData( drawer, text, font, horAnchor, verAnchor, x, y );
-			widgetIndex++;
+			WidgetConstructors.MakeLabelAt( game, widgets, ref widgetIndex,
+			                               text, font, horAnchor, verAnchor, x, y );
 		}
 		
 		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font, bool initValue,
 		                             int width, int height, int x, int y, Action<int, int> onClick ) {
-			LauncherBooleanWidget widget;
-			if( widgets[widgetIndex] != null ) {
-				widget = (LauncherBooleanWidget)widgets[widgetIndex];
-			} else {
-				widget = new LauncherBooleanWidget( game, font, width, height );
-				widget.Value = initValue;
-				widget.OnClick = onClick;
-				widgets[widgetIndex] = widget;
-			}
-			
-			widget.SetDrawData( drawer, horAnchor, verAnchor, x, y );
-			widgetIndex++;
+			WidgetConstructors.MakeBooleanAt( game, widgets, ref widgetIndex,
+			                                 horAnchor, verAnchor, font, initValue,
+			                                 width, height, x, y, onClick );
 		}
 	}
 }

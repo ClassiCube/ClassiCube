@@ -73,11 +73,13 @@
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Drawing.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
+    <Compile Include="Gui\Views\IView.cs" />
     <Compile Include="Gui\Widgets\LauncherBooleanWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
+    <Compile Include="Gui\Widgets\WidgetConstructors.cs" />
     <Compile Include="LauncherWindow.Background.cs" />
     <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />
@@ -112,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui" />
+    <Folder Include="Gui\Views" />
     <Folder Include="Gui\TableWidget" />
     <Folder Include="Gui\Screens" />
     <Folder Include="Gui\Widgets" />
