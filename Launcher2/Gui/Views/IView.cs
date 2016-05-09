@@ -12,7 +12,8 @@ namespace Launcher {
 		
 		public bool Dirty;
 		protected int widgetIndex;
-		protected LauncherWidget[] widgets;
+		internal LauncherWidget[] widgets;
+		protected Font titleFont, inputFont, inputHintFont;
 		
 		public IView( LauncherWindow game ) {
 			this.game = game;
@@ -20,13 +21,21 @@ namespace Launcher {
 		}
 		
 		/// <summary> Function called to setup the widgets and other data for this view. </summary>
-		public abstract void Init();
+		public virtual void Init() {
+			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
+			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
+		}
 		
 		/// <summary> Function called to redraw all widgets in this view. </summary>
-		public abstract void Resize();
+		public abstract void DrawAll();
 		
 		/// <summary> Cleans up all native resources held by this view. </summary>
-		public abstract void Dispose();
+		public virtual void Dispose() {
+			titleFont.Dispose();
+			inputFont.Dispose();
+			inputHintFont.Dispose();
+		}
 		
 		protected void RedrawAllButtonBackgrounds() {
 			int buttons = 0;
@@ -51,6 +60,38 @@ namespace Launcher {
 				if( widgets[i] == null ) continue;
 				widgets[i].Redraw( drawer );
 			}
+		}
+		
+		protected void MakeButtonAt( string text, int width, int height, Font font,
+		                            Anchor verAnchor, int x, int y ) {
+			MakeButtonAt( text, width, height, font, Anchor.Centre, verAnchor, x, y );
+		}
+		
+		protected void MakeButtonAt( string text, int width, int height, Font font, Anchor horAnchor,
+		                            Anchor verAnchor, int x, int y ) {
+			WidgetConstructors.MakeButtonAt( game, widgets, ref widgetIndex,
+			                                text, width, height, font, horAnchor,
+			                                verAnchor, x, y, null );
+		}
+		
+		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+			WidgetConstructors.MakeLabelAt( game, widgets, ref widgetIndex,
+			                               text, font, horAnchor, verAnchor, x, y );
+		}
+		
+		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font, bool initValue,
+		                             int width, int height, int x, int y ) {
+			WidgetConstructors.MakeBooleanAt( game, widgets, ref widgetIndex,
+			                                 horAnchor, verAnchor, font, initValue,
+			                                 width, height, x, y, null );
+		}
+		
+		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
+		                         bool password, int x, int y, int maxChars, string hint ) {
+			WidgetConstructors.MakeInput( game, widgets, ref widgetIndex,
+			                             text, width, horAnchor, verAnchor,
+			                             inputFont, inputHintFont, null,
+			                             password, x, y, maxChars, hint );
 		}
 	}
 }

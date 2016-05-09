@@ -56,5 +56,26 @@ namespace Launcher {
 			widget.SetDrawData( game.Drawer, horAnchor, verAnchor, x, y );
 			widgetIndex++;
 		}
+		
+		public static void MakeInput( LauncherWindow game, LauncherWidget[] widgets, ref int widgetIndex,
+		                             string text, int width, Anchor horAnchor, Anchor verAnchor,
+		                             Font inputFont, Font inputHintFont, Action<int, int> onClick,
+		                             bool password, int x, int y, int maxChars, string hint ) {
+			LauncherInputWidget widget;
+			if( widgets[widgetIndex] != null ) {
+				widget = (LauncherInputWidget)widgets[widgetIndex];
+			} else {
+				widget = new LauncherInputWidget( game );
+				widget.OnClick = onClick;
+				widget.Password = password;
+				widget.MaxTextLength = maxChars;
+				widget.HintText = hint;
+				widgets[widgetIndex] = widget;
+			}
+			
+			widget.SetDrawData( game.Drawer, text, inputFont, inputHintFont, 
+			                   horAnchor, verAnchor, width, 30, x, y );
+			widgetIndex++;
+		}
 	}
 }

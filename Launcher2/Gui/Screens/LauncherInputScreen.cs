@@ -183,20 +183,10 @@ namespace Launcher {
 		
 		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
 		                         bool password, int x, int y, int maxChars, string hint ) {
-			LauncherInputWidget widget;
-			if( widgets[widgetIndex] != null ) {
-				widget = (LauncherInputWidget)widgets[widgetIndex];
-			} else {
-				widget = new LauncherInputWidget( game );
-				widget.OnClick = InputClick;
-				widget.Password = password;
-				widget.MaxTextLength = maxChars;
-				widget.HintText = hint;
-				widgets[widgetIndex] = widget;
-			}
-			
-			widget.SetDrawData( drawer, text, inputFont, inputHintFont, horAnchor, verAnchor, width, 30, x, y );
-			widgetIndex++;
+			WidgetConstructors.MakeInput( game, widgets, ref widgetIndex,
+			                             text, width, horAnchor, verAnchor,
+			                             inputFont, inputHintFont, InputClick,
+			                             password, x, y, maxChars, hint );
 		}
 		
 		public override void Dispose() {
