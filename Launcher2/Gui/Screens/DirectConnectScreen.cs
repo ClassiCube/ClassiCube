@@ -43,23 +43,14 @@ namespace Launcher {
 		void SetStatus( string text ) {
 			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
 			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
-				widget.Redraw( drawer );
-				Dirty = true;
-			}
+			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
+			RedrawWidget( widget );
 		}
 		
 		void UseClassicubeSkinsClick( int mouseX, int mouseY ) {
-			using( drawer ) {
-				game.Drawer.SetBitmap( game.Framebuffer );
-				LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.ccSkinsIndex];
-				widget.Value = !widget.Value;
-				widget.Redraw( drawer );
-				Dirty = true;
-			}
+			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.ccSkinsIndex];
+			widget.Value = !widget.Value;
+			RedrawWidget( widget );
 		}
 		
 		public override void Dispose() {

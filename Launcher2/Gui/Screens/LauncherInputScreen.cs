@@ -166,11 +166,8 @@ namespace Launcher {
 		protected override void WidgetUnclicked( LauncherWidget widget ) {
 			LauncherInputWidget input = widget as LauncherInputWidget;
 			if( input == null ) return;
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				input.Active = false;
-				input.Redraw( drawer );
-			}
+			input.Active = false;
+			RedrawWidget( input );
 			lastInput = null;
 			Dirty = true;
 		}

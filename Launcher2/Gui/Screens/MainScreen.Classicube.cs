@@ -42,11 +42,8 @@ namespace Launcher {
 			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
 			
 			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
-				widget.Redraw( drawer );
-			}
+			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+			RedrawWidget( widget );
 			Dirty = true;
 		}
 		

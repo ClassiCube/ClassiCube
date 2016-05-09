@@ -32,7 +32,7 @@ namespace Launcher {
 		/// <summary> Cleans up all native resources held by this screen. </summary>
 		public abstract void Dispose();
 		
-		/// <summary> Function called when the pixels from the framebuffer 
+		/// <summary> Function called when the pixels from the framebuffer
 		/// are about to be transferred to the window. </summary>
 		public virtual void OnDisplay() { }
 		
@@ -68,11 +68,7 @@ namespace Launcher {
 			if( button != null ) {
 				button.Active = false;
 				button.RedrawBackground();
-				using( drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					button.Redraw( drawer );
-				}
-				Dirty = true;
+				RedrawWidget( button );
 			}
 		}
 		
@@ -82,12 +78,16 @@ namespace Launcher {
 			if( button != null ) {
 				button.Active = true;
 				button.RedrawBackground();
-				using( drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					button.Redraw( drawer );
-				}
-				Dirty = true;
+				RedrawWidget( button );
 			}
+		}
+		
+		protected void RedrawWidget( LauncherWidget widget ) {
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				widget.Redraw( drawer );
+			}
+			Dirty = true;
 		}
 		
 		protected LauncherWidget lastClicked;
