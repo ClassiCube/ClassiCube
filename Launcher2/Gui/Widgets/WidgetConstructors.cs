@@ -43,11 +43,11 @@ namespace Launcher {
 		public static void MakeBooleanAt( LauncherWindow game, LauncherWidget[] widgets, ref int widgetIndex,
 		                                 Anchor horAnchor, Anchor verAnchor, Font font, bool initValue,
 		                                 int width, int height, int x, int y, Action<int, int> onClick ) {
-			LauncherBooleanWidget widget;
+			LauncherBoolWidget widget;
 			if( widgets[widgetIndex] != null ) {
-				widget = (LauncherBooleanWidget)widgets[widgetIndex];
+				widget = (LauncherBoolWidget)widgets[widgetIndex];
 			} else {
-				widget = new LauncherBooleanWidget( game, font, width, height );
+				widget = new LauncherBoolWidget( game, font, width, height );
 				widget.Value = initValue;
 				widget.OnClick = onClick;
 				widgets[widgetIndex] = widget;

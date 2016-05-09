@@ -74,7 +74,7 @@ namespace Launcher {
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
 			
-			LauncherBooleanWidget booleanWidget = widgets[skipSSLIndex] as LauncherBooleanWidget;
+			LauncherBoolWidget booleanWidget = widgets[skipSSLIndex] as LauncherBoolWidget;
 			if( booleanWidget != null && booleanWidget.Value ) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			} else {
@@ -137,13 +137,13 @@ namespace Launcher {
 		void SSLSkipValidationClick( int mouseX, int mouseY ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skipSSLIndex];
+				LauncherBoolWidget widget = (LauncherBoolWidget)widgets[skipSSLIndex];
 				SetBool( !widget.Value );
 			}
 		}
 		
 		void SetBool( bool value ) {
-			LauncherBooleanWidget widget = (LauncherBooleanWidget)widgets[skipSSLIndex];
+			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[skipSSLIndex];
 			widget.Value = value;
 			widget.Redraw( game.Drawer );
 			Dirty = true;

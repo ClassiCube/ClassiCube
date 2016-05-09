@@ -75,9 +75,10 @@
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
     <Compile Include="Gui\Views\ChooseModeView.cs" />
     <Compile Include="Gui\Views\ColoursView.cs" />
+    <Compile Include="Gui\Views\DirectConnectView.cs" />
     <Compile Include="Gui\Views\IView.cs" />
     <Compile Include="Gui\Views\UpdatesView.cs" />
-    <Compile Include="Gui\Widgets\LauncherBooleanWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherBoolWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />

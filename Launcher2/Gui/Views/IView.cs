@@ -10,7 +10,6 @@ namespace Launcher {
 		protected internal LauncherWindow game;
 		protected internal IDrawer2D drawer;
 		
-		public bool Dirty;
 		protected int widgetIndex;
 		internal LauncherWidget[] widgets;
 		protected Font titleFont, inputFont, inputHintFont;

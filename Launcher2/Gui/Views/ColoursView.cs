@@ -21,7 +21,6 @@ namespace Launcher {
 				drawer.SetBitmap( game.Framebuffer );
 				RedrawAll();
 			}
-			Dirty = true;
 		}
 		
 		public override void Init() {

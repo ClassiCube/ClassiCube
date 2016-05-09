@@ -35,7 +35,6 @@ namespace Launcher {
 				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 100, 320, 1 );
 				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 10, 320, 1 );
 			}
-			Dirty = true;
 		}
 		
 		const string dateFormat = "dd-MM-yyyy HH:mm";
