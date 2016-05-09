@@ -58,6 +58,7 @@ namespace ClassicalSharp.Gui {
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
 			foreach( IGameComponent comp in game.Components )
 				comp.Reset( game );
+			game.BlockInfo.Reset( game );
 			
 			game.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );
 			game.Network.Connect( game.IPAddress, game.Port );

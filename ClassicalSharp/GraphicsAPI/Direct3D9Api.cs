@@ -131,8 +131,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void SetFogStart( float value ) {
-			if( value == fogStart ) return;
-			fogStart = value;
 			device.SetRenderState( RenderState.FogStart, value );
 		}
 

@@ -25,8 +25,11 @@ namespace ClassicalSharp {
 	/// <summary> Represents a game component. </summary>
 	public interface IGameComponent : IDisposable {
 		
-		/// <summary> Called when the game has loaded. </summary>
+		/// <summary> Called when the game is being loaded. </summary>
 		void Init( Game game );
+		
+		/// <summary> Called when the texture pack has been loaded and all components have been initalised. </summary>
+		void Ready( Game game );
 		
 		/// <summary> Called to reset the component's state when the user is reconnecting to a server. </summary>
 		void Reset( Game game );
@@ -102,6 +105,7 @@ namespace ClassicalSharp {
 		public OtherEvents Events = new OtherEvents();
 		public EntityEvents EntityEvents = new EntityEvents();
 		public WorldEvents WorldEvents = new WorldEvents();
+		public UserEvents UserEvents = new UserEvents();
 		public InputHandler InputHandler;
 		public Chat Chat;
 		public BlockHandRenderer BlockHandRenderer;
@@ -170,7 +174,7 @@ namespace ClassicalSharp {
 		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
-		internal int CloudsTexId, RainTexId, SnowTexId, GuiTexId, GuiClassicTexId;
+		internal int CloudsTexId, GuiTexId, GuiClassicTexId;
 		internal bool screenshotRequested;
 		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
 		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );

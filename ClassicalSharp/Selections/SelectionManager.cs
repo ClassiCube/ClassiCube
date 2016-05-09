@@ -17,7 +17,8 @@ namespace ClassicalSharp.Selections {
 			this.game = game;
 			Graphics = game.Graphics;
 		}
-		
+
+		public void Ready( Game game ) { }			
 		public void Reset( Game game ) { selections.Clear(); }
 		public void OnNewMap( Game game ) { selections.Clear(); }
 		public void OnNewMapLoaded( Game game ) { }

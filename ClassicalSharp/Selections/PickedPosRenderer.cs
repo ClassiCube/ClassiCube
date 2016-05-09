@@ -16,7 +16,8 @@ namespace ClassicalSharp.Renderers {
 			vb = graphics.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;
 		}
-		
+
+		public void Ready( Game game ) { }			
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }

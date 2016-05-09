@@ -75,9 +75,13 @@ namespace ClassicalSharp.Map {
 				map.SetShadowlight( GetColour( "Ambient", World.DefaultShadowlight ) );
 			}
 			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
+				string url = null;
 				if( curCpeExt.ContainsKey( "TextureURL" ) )
-					map.TextureUrl = (string)curCpeExt["TextureURL"].Value;
-				if( map.TextureUrl.Length == 0 ) map.TextureUrl = null;
+					url = (string)curCpeExt["TextureURL"].Value;
+				if( url.Length == 0 ) url = null;
+				if( game.AllowServerTextures && url != null )
+					game.Network.RetrieveTexturePack( url );
+				
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
 				map.SetSidesBlock( (Block)sidesBlock );

@@ -150,6 +150,10 @@ namespace ClassicalSharp {
 			return (int)(degrees * period / 360.0) % period;
 		}
 		
+		public static int DegreesToPacked( double degrees ) {
+			return (int)(degrees * 256 / 360.0) & 0xFF;
+		}
+		
 		public static double PackedToDegrees( byte packed ) {
 			return packed * 360.0 / 256.0;
 		}

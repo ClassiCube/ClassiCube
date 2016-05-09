@@ -56,6 +56,13 @@ namespace ClassicalSharp {
 				other.Max.X <= Max.X && other.Max.Y <= Max.Y && other.Max.Z <= Max.Z;
 		}
 		
+		/// <summary> Determines whether this bounding box entirely contains 
+		/// the coordinates on all axes. </summary>
+		public bool Contains( Vector3 P ) {
+			return P.X >= Min.X && P.Y >= Min.Y && P.Z >= Min.Z &&
+				P.X <= Max.X && P.Y <= Max.Y && P.Z <= Max.Z;
+		}
+		
 		/// <summary> Determines whether this bounding box intersects 
 		/// the given bounding box on the X axis. </summary>
 		public bool XIntersects( BoundingBox box ) {

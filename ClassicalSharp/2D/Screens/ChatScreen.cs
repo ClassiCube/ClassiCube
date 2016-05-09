@@ -246,7 +246,7 @@ namespace ClassicalSharp.Gui {
 
 		public override void Dispose() {
 			if( HandlesAllInput ) {
-				game.chatInInputBuffer = textInput.chatInputText.ToString();
+				game.chatInInputBuffer = textInput.buffer.ToString();
 				game.CursorVisible = false;
 			} else {
 				game.chatInInputBuffer = null;
@@ -321,8 +321,8 @@ namespace ClassicalSharp.Gui {
 			HandlesAllInput = true;
 			game.Keyboard.KeyRepeat = true;
 			
-			textInput.chatInputText.Clear();
-			textInput.chatInputText.Append( 0, initialText );
+			textInput.buffer.Clear();
+			textInput.buffer.Append( 0, initialText );
 			textInput.Init();
 		}
 		

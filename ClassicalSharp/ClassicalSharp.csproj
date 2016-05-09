@@ -145,6 +145,7 @@
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\BlockInfo.Sounds.cs" />
+    <Compile Include="Commands\SinglePlayerCommands.cs" />
     <Compile Include="Entities\AI\AI.cs" />
     <Compile Include="Entities\AI\FleeAI.cs" />
     <Compile Include="Entities\AI\HostileAI.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Events\EntityEvents.cs" />
     <Compile Include="Events\Events.cs" />
+    <Compile Include="Events\UserEvents.cs" />
     <Compile Include="Events\WorldEvents.cs" />
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Game\PickingHandler.cs" />
@@ -174,6 +176,7 @@
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
+    <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
     <Compile Include="Map\Formats\NbtFile.cs" />
     <Compile Include="Math\RayTracer.cs" />
@@ -208,7 +211,7 @@
     <Compile Include="Map\ChunkMeshBuilder.cs" />
     <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
     <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
-    <Compile Include="Map\Formats\IMapFileFormat.cs" />
+    <Compile Include="Map\Formats\IMapFormat.cs" />
     <Compile Include="Map\Formats\MapCw.Exporter.cs" />
     <Compile Include="Map\Formats\MapCw.Importer.cs" />
     <Compile Include="Map\Formats\MapDat.Importer.cs" />

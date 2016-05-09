@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
-			chatInputText = new WrappableStringBuffer( 64 * lines );
+			buffer = new WrappableStringBuffer( 64 * lines );
 			
 			DrawTextArgs args = new DrawTextArgs( "_", boldFont, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui {
 		int caretPos = -1, typingLogPos = 0;
 		public int YOffset;
 		int defaultCaretWidth, defaultWidth, defaultHeight;
-		internal WrappableStringBuffer chatInputText;
+		internal WrappableStringBuffer buffer;
 		readonly Font font;
 
 		FastColour caretCol;
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			X = 5;
-			chatInputText.WordWrap( game.Drawer2D, ref parts, ref partLens, 
+			buffer.WordWrap( game.Drawer2D, ref parts, ref partLens, 
 			                       LineLength, TotalChars );
 
 			for( int y = 0; y < sizes.Length; y++ )
@@ -89,10 +89,10 @@ namespace ClassicalSharp.Gui {
 			if( sizes[0].Height == 0 ) sizes[0].Height = defaultHeight;
 			
 			bool supports = game.Network.ServerSupportsPartialMessages;
-			if( chatInputText.Length > LineLength && !shownWarning && !supports ) {
+			if( buffer.Length > LineLength && !shownWarning && !supports ) {
 				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
 				shownWarning = true;
-			} else if( chatInputText.Length <= LineLength && shownWarning ) {
+			} else if( buffer.Length <= LineLength && shownWarning ) {
 				game.Chat.Add( null, MessageType.ClientStatus6 );
 				shownWarning = false;
 			}
@@ -104,8 +104,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void CalculateCaretData() {
-			if( caretPos >= chatInputText.Length ) caretPos = -1;
-			chatInputText.MakeCoords( caretPos, partLens, out indexX, out indexY );
+			if( caretPos >= buffer.Length ) caretPos = -1;
+			buffer.MakeCoords( caretPos, partLens, out indexX, out indexY );
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
 
 			if( indexX == LineLength ) {
@@ -204,7 +204,7 @@ namespace ClassicalSharp.Gui {
 		public void SendTextInBufferAndReset() {
 			SendInBuffer();
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
-			chatInputText.Clear();
+			buffer.Clear();
 			caretPos = -1;
 			Dispose();
 			Height = defaultHeight;
@@ -216,8 +216,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void SendInBuffer() {
-			if( chatInputText.Empty ) return;
-			string allText = chatInputText.GetString();
+			if( buffer.Empty ) return;
+			string allText = buffer.GetString();
 			game.Chat.InputLog.Add( allText );
 			
 			if( game.Network.ServerSupportsPartialMessages )
@@ -257,38 +257,38 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void Clear() {
-			chatInputText.Clear();
+			buffer.Clear();
 			for( int i = 0; i < parts.Length; i++ ) {
 				parts[i] = null;
 			}
 		}
 		
 		public void AppendText( string text ) {
-			if( chatInputText.Length + text.Length > TotalChars ) {
-				text = text.Substring( 0, TotalChars - chatInputText.Length );
+			if( buffer.Length + text.Length > TotalChars ) {
+				text = text.Substring( 0, TotalChars - buffer.Length );
 			}
 			if( text == "" ) return;
 			
 			if( caretPos == -1 ) {
-				chatInputText.InsertAt( chatInputText.Length, text );
+				buffer.InsertAt( buffer.Length, text );
 			} else {
-				chatInputText.InsertAt( caretPos, text );
+				buffer.InsertAt( caretPos, text );
 				caretPos += text.Length;
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
 			Dispose();
 			Init();
 		}
 		
 		public void AppendChar( char c ) {
-			if( chatInputText.Length == TotalChars ) return;
+			if( buffer.Length == TotalChars ) return;
 			
 			if( caretPos == -1 ) {
-				chatInputText.InsertAt( chatInputText.Length, c );
+				buffer.InsertAt( buffer.Length, c );
 			} else {
-				chatInputText.InsertAt( caretPos, c );
+				buffer.InsertAt( caretPos, c );
 				caretPos++;
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
 			Dispose();
 			Init();

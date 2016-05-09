@@ -33,10 +33,6 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged += ResetTextures;
-			
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
-			ResetSidesAndEdges( null, null );
 		}
 		
 		public void Render( double deltaTime ) {
@@ -80,7 +76,8 @@ namespace ClassicalSharp.Renderers {
 			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
 		}
-		
+
+		public void Ready( Game game ) { }			
 		public void Reset( Game game ) { OnNewMap( game ); }
 		
 		public void OnNewMap( Game game ) {

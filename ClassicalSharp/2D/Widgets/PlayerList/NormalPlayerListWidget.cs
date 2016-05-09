@@ -27,14 +27,14 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			game.EntityEvents.EntityAdded += PlayerSpawned;
-			game.EntityEvents.EntityRemoved += PlayerDespawned;
+			game.EntityEvents.Added += PlayerSpawned;
+			game.EntityEvents.Removed += PlayerDespawned;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.EntityEvents.EntityAdded -= PlayerSpawned;
-			game.EntityEvents.EntityRemoved -= PlayerDespawned;
+			game.EntityEvents.Added -= PlayerSpawned;
+			game.EntityEvents.Removed -= PlayerDespawned;
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {

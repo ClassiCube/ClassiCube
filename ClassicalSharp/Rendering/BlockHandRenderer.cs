@@ -29,7 +29,8 @@ namespace ClassicalSharp.Renderers {
 			lastType = (byte)game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 		}
-		
+
+		public void Ready( Game game ) { }		
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }

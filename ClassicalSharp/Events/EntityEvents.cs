@@ -10,12 +10,12 @@ namespace ClassicalSharp.Events {
 		IdEventArgs idArgs = new IdEventArgs();
 		
 		/// <summary> Raised when an entity is spawned in the current world. </summary>
-		public event EventHandler<IdEventArgs> EntityAdded;
-		internal void RaiseEntityAdded( byte id ) { idArgs.Id = id; Raise( EntityAdded, idArgs ); }
+		public event EventHandler<IdEventArgs> Added;
+		internal void RaiseAdded( byte id ) { idArgs.Id = id; Raise( Added, idArgs ); }
 		
 		/// <summary> Raised when an entity is despawned from the current world. </summary>
-		public event EventHandler<IdEventArgs> EntityRemoved;
-		internal void RaiseEntityRemoved( byte id ) { idArgs.Id = id; Raise( EntityRemoved, idArgs ); }
+		public event EventHandler<IdEventArgs> Removed;
+		internal void RaiseRemoved( byte id ) { idArgs.Id = id; Raise( Removed, idArgs ); }
 		
 		/// <summary> Raised when a new CPE player list entry is created. </summary>
 		public event EventHandler<IdEventArgs> CpeListInfoAdded;

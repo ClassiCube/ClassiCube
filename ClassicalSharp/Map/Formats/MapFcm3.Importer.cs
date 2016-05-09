@@ -15,34 +15,33 @@ namespace ClassicalSharp.Map {
 		const byte Revision = 13;
 
 		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
-			BinaryReader reader = new BinaryReader( stream );
-			if( reader.ReadInt32() != Identifier || reader.ReadByte() != Revision ) {
+			BinaryReader r = new BinaryReader( stream );
+			if( r.ReadInt32() != Identifier || r.ReadByte() != Revision )
 				throw new InvalidDataException( "Unexpected constant in .fcm file" );
-			}
 
-			width = reader.ReadInt16();
-			height = reader.ReadInt16();
-			length = reader.ReadInt16();
+			width = r.ReadInt16();
+			height = r.ReadInt16();
+			length = r.ReadInt16();
 
 			LocalPlayer p = game.LocalPlayer;
-			p.Spawn.X = reader.ReadInt32() / 32f;
-			p.Spawn.Y = reader.ReadInt32() / 32f;
-			p.Spawn.Z = reader.ReadInt32() / 32f;
-			p.SpawnYaw = (float)Utils.PackedToDegrees( reader.ReadByte() );
-			p.SpawnPitch = (float)Utils.PackedToDegrees( reader.ReadByte() );
+			p.Spawn.X = r.ReadInt32() / 32f;
+			p.Spawn.Y = r.ReadInt32() / 32f;
+			p.Spawn.Z = r.ReadInt32() / 32f;
+			p.SpawnYaw = (float)Utils.PackedToDegrees( r.ReadByte() );
+			p.SpawnPitch = (float)Utils.PackedToDegrees( r.ReadByte() );
 
-			reader.ReadUInt32(); // date modified
-			reader.ReadUInt32(); // date created
-			game.World.Uuid = new Guid( reader.ReadBytes( 16 ) );
-			reader.ReadBytes( 26 ); // layer index
-			int metaSize = reader.ReadInt32();
+			r.ReadUInt32(); // date modified
+			r.ReadUInt32(); // date created
+			game.World.Uuid = new Guid( r.ReadBytes( 16 ) );
+			r.ReadBytes( 26 ); // layer index
+			int metaSize = r.ReadInt32();
 
 			using( DeflateStream ds = new DeflateStream( stream, CompressionMode.Decompress ) ) {
-				reader = new BinaryReader( ds );
+				r = new BinaryReader( ds );
 				for( int i = 0; i < metaSize; i++ ) {
-					string group = ReadString( reader );
-					string key = ReadString( reader );
-					string value = ReadString( reader );
+					string group = ReadString( r );
+					string key = ReadString( r );
+					string value = ReadString( r );
 				}
 				
 				byte[] blocks = new byte[width * height * length];

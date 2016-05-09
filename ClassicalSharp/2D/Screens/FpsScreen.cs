@@ -6,7 +6,7 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Gui {
 	
-	public class FpsScreen : Screen {
+	public class FpsScreen : Screen, IGameComponent {
 		
 		Font font, posFont;
 		StringBuffer text;
@@ -15,6 +15,12 @@ namespace ClassicalSharp.Gui {
 			text = new StringBuffer( 128 );
 		}
 
+		public void Init( Game game ) { }
+		public void Ready( Game game) { Init(); }
+		public void Reset( Game game ) { }
+		public void OnNewMap( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
+		
 		TextWidget fpsText, hackStates;
 		Texture posTex;
 		public override void Render( double delta ) {
@@ -158,7 +164,9 @@ namespace ClassicalSharp.Gui {
 				if( game.Fov != game.DefaultFov ) text.Append( ref index, "Zoom fov " )
 					.AppendNum( ref index, lastFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
-				if( speeding || halfSpeeding ) text.Append( ref index, "Speed ON   " );
+				
+				bool showSpeedMsg = (speeding || halfSpeeding) && hacks.MaxSpeedMultiplier > 1;
+				if( showSpeedMsg ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
 				hackStates.SetText( text.GetString() );
 			}
@@ -166,7 +174,7 @@ namespace ClassicalSharp.Gui {
 
 		const string possibleChars = "0123456789-, ()";
 		int[] widths = new int[possibleChars.Length];
-		int baseWidth, curX, posHeight;
+		int baseWidth, curX;
 		float texWidth;
 		void MakePosTextWidget() {
 			DrawTextArgs args = new DrawTextArgs( "", posFont, true );

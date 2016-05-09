@@ -44,9 +44,9 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void TabKey() {
-			int pos = caretPos == -1 ? chatInputText.Length - 1 : caretPos;
+			int pos = caretPos == -1 ? buffer.Length - 1 : caretPos;
 			int start = pos;
-			char[] value = chatInputText.value;
+			char[] value = buffer.value;
 			
 			while( start >= 0 && IsNameChar( value[start] ) )
 				start--;
@@ -74,63 +74,76 @@ namespace ClassicalSharp.Gui {
 				if( caretPos == -1 ) pos++;
 				int len = pos - start;
 				for( int i = 0; i < len; i++ )
-					chatInputText.DeleteAt( start );
+					buffer.DeleteAt( start );
 				if( caretPos != -1 ) caretPos -= len;
 				AppendText( matches[0] );
 			} else if( matches.Count > 1 ) {
-				StringBuffer buffer = new StringBuffer( 64 );
+				StringBuffer sb = new StringBuffer( 64 );
 				int index = 0;
-				buffer.Append( ref index, "&e" );
-				buffer.AppendNum( ref index, matches.Count );
-				buffer.Append( ref index, " matching names: " );
+				sb.Append( ref index, "&e" );
+				sb.AppendNum( ref index, matches.Count );
+				sb.Append( ref index, " matching names: " );
 				
 				foreach( string match in matches ) {
-					if( (match.Length + 1 + buffer.Length) > LineLength ) break;
-					buffer.Append( ref index, match );
-					buffer.Append( ref index, ' ' );
+					if( (match.Length + 1 + sb.Length) > LineLength ) break;
+					sb.Append( ref index, match );
+					sb.Append( ref index, ' ' );
 				}
-				game.Chat.Add( buffer.ToString(), MessageType.ClientStatus5 );
+				game.Chat.Add( sb.ToString(), MessageType.ClientStatus5 );
 			}
 		}
 		
 		bool IsNameChar( char c ) {
-			return c == '_' || c == '.' || (c >= '0' && c <= '9') 
+			return c == '_' || c == '.' || (c >= '0' && c <= '9')
 				|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 		}
 		
 		void BackspaceKey( bool controlDown ) {
 			if( controlDown ) {
 				if( caretPos == -1 )
-					caretPos = chatInputText.Length - 1;
-				int len = chatInputText.GetBackLength( caretPos );
+					caretPos = buffer.Length - 1;
+				int len = buffer.GetBackLength( caretPos );
 				caretPos -= len;
 				
 				if( caretPos < 0 ) caretPos = 0;
 				if( caretPos != 0 ) caretPos++; // Don't remove space.
 				for( int i = 0; i <= len; i++ )
-					chatInputText.DeleteAt( caretPos );
+					buffer.DeleteAt( caretPos );
 				
 				Dispose();
 				Init();
-				return;
-			}
-			
-			if( !chatInputText.Empty && caretPos != 0 ) {
-				if( caretPos == -1 ) {
-					chatInputText.DeleteAt( chatInputText.Length - 1 );
-				} else {
-					caretPos--;
-					chatInputText.DeleteAt( caretPos );
-				}
+			} else if( !buffer.Empty && caretPos != 0 ) {
+				DeleteChar();
+				BackspaceColourCode();
 				Dispose();
 				Init();
 			}
 		}
 		
+		void BackspaceColourCode() {
+			// If text is XYZ%eH, backspaces to XYZ.
+			int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
+			if( index <= 0 ) return;
+			
+			if( index == 0 || buffer.value[index - 1] != '%'
+			   || !game.Drawer2D.ValidColour( buffer.value[index] ) )
+				return;			
+			DeleteChar(); DeleteChar();
+		}
+		
+		void DeleteChar() {
+			if( caretPos == -1 ) {
+				buffer.DeleteAt( buffer.Length - 1 );
+			} else {
+				caretPos--;
+				buffer.DeleteAt( caretPos );
+			}
+		}
+		
 		void DeleteKey() {
-			if( !chatInputText.Empty && caretPos != -1 ) {
-				chatInputText.DeleteAt( caretPos );
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+			if( !buffer.Empty && caretPos != -1 ) {
+				buffer.DeleteAt( caretPos );
+				if( caretPos >= buffer.Length ) caretPos = -1;
 				Dispose();
 				Init();
 			}
@@ -139,14 +152,14 @@ namespace ClassicalSharp.Gui {
 		void LeftKey( bool controlDown ) {
 			if( controlDown ) {
 				if( caretPos == -1 )
-					caretPos = chatInputText.Length - 1;
-				caretPos -= chatInputText.GetBackLength( caretPos );
+					caretPos = buffer.Length - 1;
+				caretPos -= buffer.GetBackLength( caretPos );
 				CalculateCaretData();
 				return;
 			}
 			
-			if( !chatInputText.Empty ) {
-				if( caretPos == -1 ) caretPos = chatInputText.Length;
+			if( !buffer.Empty ) {
+				if( caretPos == -1 ) caretPos = buffer.Length;
 				caretPos--;
 				if( caretPos < 0 ) caretPos = 0;
 				CalculateCaretData();
@@ -155,15 +168,15 @@ namespace ClassicalSharp.Gui {
 		
 		void RightKey( bool controlDown ) {
 			if( controlDown ) {
-				caretPos += chatInputText.GetForwardLength( caretPos );
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				caretPos += buffer.GetForwardLength( caretPos );
+				if( caretPos >= buffer.Length ) caretPos = -1;
 				CalculateCaretData();
 				return;
 			}
 			
-			if( !chatInputText.Empty && caretPos != -1 ) {
+			if( !buffer.Empty && caretPos != -1 ) {
 				caretPos++;
-				if( caretPos >= chatInputText.Length ) caretPos = -1;
+				if( caretPos >= buffer.Length ) caretPos = -1;
 				CalculateCaretData();
 			}
 		}
@@ -171,7 +184,7 @@ namespace ClassicalSharp.Gui {
 		string originalText;
 		void UpKey( bool controlDown ) {
 			if( controlDown ) {
-				int pos = caretPos == -1 ? chatInputText.Length : caretPos;
+				int pos = caretPos == -1 ? buffer.Length : caretPos;
 				if( pos < LineLength ) return;
 				
 				caretPos = pos - LineLength;
@@ -180,12 +193,12 @@ namespace ClassicalSharp.Gui {
 			}
 			
 			if( typingLogPos == game.Chat.InputLog.Count )
-				originalText = chatInputText.ToString();
+				originalText = buffer.ToString();
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos--;
 				if( typingLogPos < 0 ) typingLogPos = 0;
-				chatInputText.Clear();
-				chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
+				buffer.Clear();
+				buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
 				caretPos = -1;
 				Dispose();
 				Init();
@@ -202,13 +215,13 @@ namespace ClassicalSharp.Gui {
 			
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos++;
-				chatInputText.Clear();
+				buffer.Clear();
 				if( typingLogPos >= game.Chat.InputLog.Count ) {
 					typingLogPos = game.Chat.InputLog.Count;
 					if( originalText != null )
-						chatInputText.Append( 0, originalText );
+						buffer.Append( 0, originalText );
 				} else {
-					chatInputText.Append( 0, game.Chat.InputLog[typingLogPos] );
+					buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
 				caretPos = -1;
 				Dispose();
@@ -217,7 +230,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void HomeKey() {
-			if( chatInputText.Empty ) return;
+			if( buffer.Empty ) return;
 			caretPos = 0;
 			CalculateCaretData();
 		}
@@ -228,7 +241,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool OtherKey( Key key ) {
-			if( key == Key.V && chatInputText.Length < TotalChars ) {
+			if( key == Key.V && buffer.Length < TotalChars ) {
 				string text = null;
 				try {
 					text = game.window.ClipboardText;
@@ -252,9 +265,9 @@ namespace ClassicalSharp.Gui {
 				AppendText( text );
 				return true;
 			} else if( key == Key.C ) {
-				if( chatInputText.Empty ) return true;
+				if( buffer.Empty ) return true;
 				try {
-					game.window.ClipboardText = chatInputText.ToString();
+					game.window.ClipboardText = buffer.ToString();
 				} catch( Exception ex ) {
 					ErrorHandler.LogError( "Copy to clipboard", ex );
 					const string warning = "&cError while trying to copy to clipboard.";

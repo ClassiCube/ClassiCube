@@ -19,6 +19,7 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 		}
 		
+		public void Ready( Game game ) { }			
 		public virtual void Reset( Game game ) { OnNewMap( game ); }
 		
 		public abstract void OnNewMap( Game game );

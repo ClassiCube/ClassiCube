@@ -57,8 +57,8 @@ namespace ClassicalSharp.Net {
 			writer.WriteInt16( (short)(pos.X * 32) );
 			writer.WriteInt16( (short)((int)(pos.Y * 32) + 51) );
 			writer.WriteInt16( (short)(pos.Z * 32) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw, 256 ) );
-			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch, 256 ) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( yaw ) );
+			writer.WriteUInt8( (byte)Utils.DegreesToPacked( pitch ) );
 		}
 		
 		#endregion
@@ -172,8 +172,6 @@ namespace ClassicalSharp.Net {
 				sentWomId = true;
 			}
 			gzipStream = null;
-			ServerName = null;
-			ServerMotd = null;
 			GC.Collect();
 		}
 		
@@ -277,11 +275,11 @@ namespace ClassicalSharp.Net {
 			if( entityId != 0xFF ) {
 				Player oldPlayer = game.Players[entityId];
 				if( oldPlayer != null ) {
-					game.EntityEvents.RaiseEntityRemoved( entityId );
+					game.EntityEvents.RaiseRemoved( entityId );
 					oldPlayer.Despawn();
 				}
 				game.Players[entityId] = new NetPlayer( displayName, skinName, game, entityId );
-				game.EntityEvents.RaiseEntityAdded( entityId );
+				game.EntityEvents.RaiseAdded( entityId );
 			} else {
 				// Server is only allowed to change our own name colours.
 				if( Utils.StripColours( displayName ) != game.Username )
@@ -309,7 +307,7 @@ namespace ClassicalSharp.Net {
 			if( player == null ) return;
 			
 			if( entityId != 0xFF ) {
-				game.EntityEvents.RaiseEntityRemoved( entityId );
+				game.EntityEvents.RaiseRemoved( entityId );
 				player.Despawn();
 				game.Players[entityId] = null;
 			}

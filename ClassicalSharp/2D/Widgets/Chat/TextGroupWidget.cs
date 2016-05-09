@@ -90,15 +90,11 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public int GetUsedHeight() {
-			int sum = 0, max = Textures.Length;
+			int sum = 0;
 			for( int i = 0; i < Textures.Length; i++ ) {
-				if( Textures[i].IsValid ) {
-					max = i; break;
-				}
-			}
-			
-			for( int i = max; i < Textures.Length; i++ )
+				if( !Textures[i].IsValid ) continue;
 				sum += Textures[i].Height;
+			}
 			return sum;
 		}
 		

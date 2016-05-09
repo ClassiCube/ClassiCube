@@ -52,8 +52,6 @@ namespace ClassicalSharp.Entities {
 			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
 			Hacks.Enabled = !game.ClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
 			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
-			
-			InitRenderingData();
 		}
 		
 		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );

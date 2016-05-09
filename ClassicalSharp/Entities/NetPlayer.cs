@@ -13,7 +13,6 @@ namespace ClassicalSharp.Entities {
 			SkinName = skinName;
 			SkinIdentifier = "skin_" + id;
 			interp = new InterpolatedComponent( game, this );
-			InitRenderingData();
 		}
 		
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {

@@ -15,7 +15,8 @@ namespace ClassicalSharp.Gui {
 		PlayerListWidget playerList;
 		Font playerFont;
 		
-		public void Init( Game game ) { Init(); }		
+		public void Init( Game game ) { }
+		public void Ready( Game game) { Init(); }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
@@ -35,7 +36,7 @@ namespace ClassicalSharp.Gui {
 			//graphicsApi.BindTexture( game.TerrainAtlas.TexId );
 			//IsometricBlockDrawer.Draw( game, (byte)Block.Brick, 30, game.Width - 50, game.Height - 20 );
 			
-			if( playerList != null ) {
+			if( playerList != null && game.ActiveScreen == this ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
 				if( !game.IsKeyDown( KeyBinding.PlayerList ) ) {
@@ -76,8 +77,6 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public void LoseFocus() {
-			if( playerList != null )
-				playerList.Dispose();
 			game.CursorVisible = true;
 		}
 		

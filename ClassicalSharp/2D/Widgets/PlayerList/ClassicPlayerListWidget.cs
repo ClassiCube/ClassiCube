@@ -89,8 +89,8 @@ namespace ClassicalSharp.Gui {
 			
 			base.Init();
 			if( !extList ) {
-				game.EntityEvents.EntityAdded += PlayerSpawned;
-				game.EntityEvents.EntityRemoved += PlayerDespawned;
+				game.EntityEvents.Added += PlayerSpawned;
+				game.EntityEvents.Removed += PlayerDespawned;
 			} else {
 				game.EntityEvents.CpeListInfoAdded += PlayerListInfoAdded;
 				game.EntityEvents.CpeListInfoRemoved += PlayerDespawned;
@@ -102,8 +102,8 @@ namespace ClassicalSharp.Gui {
 			base.Dispose();
 			overview.Dispose();
 			if( !extList ) {
-				game.EntityEvents.EntityAdded -= PlayerSpawned;
-				game.EntityEvents.EntityRemoved -= PlayerDespawned;
+				game.EntityEvents.Added -= PlayerSpawned;
+				game.EntityEvents.Removed -= PlayerDespawned;
 			} else {
 				game.EntityEvents.CpeListInfoAdded -= PlayerListInfoAdded;
 				game.EntityEvents.CpeListInfoChanged -= PlayerListInfoChanged;
