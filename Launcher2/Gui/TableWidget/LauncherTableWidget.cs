@@ -58,10 +58,12 @@ namespace Launcher {
 		}		
 		
 		void GetScrollbarCoords( out int y, out int height ) {
+			if( Count == 0 ) { y = 0; height = 0; return; }
+			
 			float scale = Height / (float)Count;
-			y = (int)Math.Ceiling(CurrentIndex * scale);
-			height = (int)Math.Ceiling((maxIndex - CurrentIndex) * scale);
-			height = Math.Min(y + height, Height) - y;
+			y = (int)Math.Ceiling( CurrentIndex * scale );
+			height = (int)Math.Ceiling( (maxIndex - CurrentIndex) * scale );
+			height = Math.Min( y + height, Height ) - y;
 		}
 		
 		public void SetSelected( int index ) {
