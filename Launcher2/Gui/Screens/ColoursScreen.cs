@@ -21,11 +21,11 @@ namespace Launcher {
 			
 			widgets[view.defIndex].OnClick = (x, y) => ResetColours();
 			widgets[view.defIndex + 1].OnClick = (x, y) => game.SetScreen( new MainScreen( game ) );
+			SetupInputHandlers();
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherInputWidget input = widgets[i] as LauncherInputWidget;
 				if( input == null ) continue;
 				input.TextChanged = TextChanged;
-				input.OnClick = InputClick;
 			}
 			Resize();
 		}

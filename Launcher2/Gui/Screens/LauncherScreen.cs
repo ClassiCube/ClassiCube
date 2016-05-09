@@ -64,8 +64,6 @@ namespace Launcher {
 			selectedWidget = null;
 		}
 		
-		protected Font buttonFont;
-		
 		/// <summary> Called when the user has moved their mouse away from a previously selected widget. </summary>
 		protected virtual void UnselectWidget( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
@@ -190,13 +188,6 @@ namespace Launcher {
 		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
 			WidgetConstructors.MakeLabelAt( game, widgets, ref widgetIndex,
 			                               text, font, horAnchor, verAnchor, x, y );
-		}
-		
-		protected void MakeBooleanAt( Anchor horAnchor, Anchor verAnchor, Font font, bool initValue,
-		                             int width, int height, int x, int y, Action<int, int> onClick ) {
-			WidgetConstructors.MakeBooleanAt( game, widgets, ref widgetIndex,
-			                                 horAnchor, verAnchor, font, initValue,
-			                                 width, height, x, y, onClick );
 		}
 	}
 }

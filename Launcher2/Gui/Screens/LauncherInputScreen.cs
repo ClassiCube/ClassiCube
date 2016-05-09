@@ -19,7 +19,6 @@ namespace Launcher {
 		}
 		
 		public override void Init() {
-			buttonFont = titleFont;
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			game.Window.Mouse.WheelChanged += MouseWheelChanged;
@@ -176,12 +175,12 @@ namespace Launcher {
 			Dirty = true;
 		}
 		
-		protected void MakeInput( string text, int width, Anchor verAnchor, bool password,
-		                         int x, int y, int maxChars, string hint ) {
-			WidgetConstructors.MakeInput( game, widgets, ref widgetIndex,
-			                             text, width, Anchor.Centre, verAnchor,
-			                             inputFont, inputHintFont, InputClick,
-			                             password, x, y, maxChars, hint );
+		protected void SetupInputHandlers() {
+			for( int i = 0; i < widgets.Length; i++ ) {
+				if( widgets[i] == null || !(widgets[i] is LauncherInputWidget) )
+					continue;
+				widgets[i].OnClick = InputClick;
+			}
 		}
 		
 		public override void Dispose() {

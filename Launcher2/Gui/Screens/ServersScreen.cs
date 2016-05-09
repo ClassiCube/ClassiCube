@@ -104,12 +104,7 @@ namespace Launcher {
 			LauncherTableWidget widget = (LauncherTableWidget)widgets[view.tableIndex];
 			widget.NeedRedraw = MarkPendingRedraw;
 			widget.SelectedChanged = SelectedChanged;
-			
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is LauncherInputWidget) )
-					continue;
-				widgets[i].OnClick = InputClick;
-			}
+			SetupInputHandlers();
 		}
 		
 		void FilterList() {

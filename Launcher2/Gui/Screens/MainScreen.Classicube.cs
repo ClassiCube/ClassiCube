@@ -36,15 +36,6 @@ namespace Launcher {
 			}
 		}
 
-		void DrawClassicube() {
-			MakeInput( Get(), 280, Anchor.Centre, false, 0, -120, 32, "&7Username.." );
-			MakeInput( Get(), 280, Anchor.Centre, true, 0, -70, 64, "&7Password.." );
-			
-			MakeButtonAt( "Sign in", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, -90, -20, LoginAsync );
-			MakeLabelAt( Get(), inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
-		}
-
 		string lastStatus;
 		void SetStatus( string text ) {
 			lastStatus = text;
@@ -74,8 +65,8 @@ namespace Launcher {
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
 			
-			LauncherBoolWidget booleanWidget = widgets[skipSSLIndex] as LauncherBoolWidget;
-			if( booleanWidget != null && booleanWidget.Value ) {
+			LauncherBoolWidget skip = widgets[skipSSLIndex] as LauncherBoolWidget;
+			if( skip != null && skip.Value ) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			} else {
 				ServicePointManager.ServerCertificateValidationCallback = null;
@@ -113,25 +104,18 @@ namespace Launcher {
 				SetStatus( text );
 				using( drawer ) {
 					drawer.SetBitmap( game.Framebuffer );
-					widgetIndex = skipSSLIndex;
-					MakeSSLSkipValidationBoolean();
-					MakeSSLSkipValidationLabel();
-					widgets[skipSSLIndex].Redraw( drawer );
-					widgets[skipSSLIndex + 1].Redraw( drawer );
+					view.widgetIndex = view.sslIndex;
+					view.MakeSslWidgets();
+					
+					widgets[view.sslIndex].OnClick = SSLSkipValidationClick;
+					widgets[view.sslIndex].Redraw( drawer );
+					widgets[view.sslIndex + 1].Redraw( drawer );
 				}
 			} else {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + ex.Status;
 				SetStatus( text );
 			}
-		}
-		
-		void MakeSSLSkipValidationBoolean() {
-			MakeBooleanAt( Anchor.Centre, Anchor.Centre, inputFont, true, 30, 30, 160, -20, SSLSkipValidationClick );
-		}
-		
-		void MakeSSLSkipValidationLabel() {
-			MakeLabelAt( "Skip SSL check", inputFont, Anchor.Centre, Anchor.Centre, 250, -20 );
 		}
 		
 		void SSLSkipValidationClick( int mouseX, int mouseY ) {

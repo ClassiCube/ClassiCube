@@ -9,19 +9,20 @@ namespace Launcher {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
-		Font updateFont;
-		
+		MainView view;
 		public MainScreen( LauncherWindow game ) : base( game, true ) {
-			buttonFont = new Font( game.FontName, 16, FontStyle.Bold );
-			updateFont = new Font( game.FontName, 12, FontStyle.Italic );
 			enterIndex = 2;
-			widgets = new LauncherWidget[16];
+			view = new MainView( game );
+			widgets = view.widgets;
 			LoadResumeInfo();
 		}
 		
 		public override void Init() {
 			base.Init();
+			view.Init();
+			SetupWidgetHandlers();
 			Resize();
+			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				LoadSavedInfo( drawer );
@@ -29,69 +30,42 @@ namespace Launcher {
 		}
 		
 		public override void Resize() {
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
+			view.DrawAll();
 			Dirty = true;
 		}
 		
-		string updateText = "&eChecking for updates..";
 		bool updateDone;
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
-			if( updateDone ) return;			
+			if( updateDone ) return;
 			string latestVer = game.checkTask.LatestStable.Version.Substring( 1 );
 			int spaceIndex = Program.AppName.LastIndexOf( ' ' );
-			string currentVer = Program.AppName.Substring( spaceIndex + 1 );		
+			string currentVer = Program.AppName.Substring( spaceIndex + 1 );
 			bool update = new Version( latestVer ) > new Version( currentVer );
 			
-			updateText = update ? "&aNew release available" : "&eUp to date     ";
+			view.updateText = update ? "&aNew release available" : "&eUp to date     ";
 			updateDone = true;
 			game.MakeBackground();
 			Resize();
 			SelectWidget( selectedWidget );
 		}
 		
-		void MakeWidgets() {
-			widgetIndex = 0;
-			DrawClassicube();
+		void SetupWidgetHandlers() {
+			widgets[view.loginIndex].OnClick = LoginAsync;
+			widgets[view.resIndex].OnClick = ResumeClick;
+			widgets[view.dcIndex].OnClick =
+				(x, y) => game.SetScreen( new DirectConnectScreen( game ) );
+			widgets[view.spIndex].OnClick =
+				(x, y) => Client.Start( widgets[0].Text, ref game.ShouldExit );
 			
-			MakeButtonAt( "Resume", 100, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 90, -20, ResumeClick );
+			if( widgets[view.colIndex] != null )
+				widgets[view.colIndex].OnClick = 
+					(x, y) => game.SetScreen( new ColoursScreen( game ) );
 			
-			MakeButtonAt( "Direct connect", 200, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 60,
-			             (x, y) => game.SetScreen( new DirectConnectScreen( game ) ) );
-			
-			MakeButtonAt( "Singleplayer", 200, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.Centre, 0, 110,
-			             (x, y) => Client.Start( widgets[0].Text, ref game.ShouldExit ) );
-			
-			if( !game.ClassicBackground ) {
-				MakeButtonAt( "Colours", 110, buttonHeight, buttonFont,
-				             Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10,
-				             (x, y) => game.SetScreen( new ColoursScreen( game ) ) );
-			} else {
-				widgets[widgetIndex++] = null;
-			}
-			
-			MakeButtonAt( "Updates", 110, buttonHeight, buttonFont,
-			             Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10,
-			             (x, y) => game.SetScreen( new UpdatesScreen( game ) ) );
-			MakeButtonAt( "Choose mode", 200, buttonHeight, buttonFont,
-			             Anchor.Centre, Anchor.BottomOrRight, 0, -10,
-			             (x, y) => game.SetScreen( new ChooseModeScreen( game, false ) ) );
-			
-			MakeLabelAt( updateText, updateFont, Anchor.BottomOrRight, 
-			            Anchor.BottomOrRight, -10, -50 );
-			
-			if( widgets[widgetIndex] != null ) {
-				MakeSSLSkipValidationBoolean();
-				MakeSSLSkipValidationLabel();
-			}
+			widgets[view.updatesIndex].OnClick =
+				(x, y) => game.SetScreen( new UpdatesScreen( game ) );
+			widgets[view.modeIndex].OnClick =
+				(x, y) => game.SetScreen( new ChooseModeScreen( game, false ) );
+			SetupInputHandlers();
 		}
 
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
@@ -135,8 +109,6 @@ namespace Launcher {
 		}
 		
 		public override void Dispose() {
-			buttonFont.Dispose();
-			updateFont.Dispose();
 			StoreFields();
 			base.Dispose();
 		}

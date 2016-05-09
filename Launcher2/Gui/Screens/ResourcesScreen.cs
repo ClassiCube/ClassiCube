@@ -18,7 +18,6 @@ namespace Launcher {
 			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
 			statusFont = new Font( game.FontName, 13, FontStyle.Italic );
-			buttonFont = textFont;
 			view = new ResourcesView( game );
 			widgets = view.widgets;
 		}

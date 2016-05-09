@@ -35,13 +35,8 @@ namespace Launcher {
 			widgets[view.backIndex].OnClick =
 				(x, y) => game.SetScreen( new MainScreen( game ) );
 			widgets[view.connectIndex].OnClick = StartClient;
-			widgets[view.ccSkinsIndex].OnClick = UseClassicubeSkinsClick;
-			
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is LauncherInputWidget) )
-					continue;
-				widgets[i].OnClick = InputClick;
-			}
+			widgets[view.ccSkinsIndex].OnClick = UseClassicubeSkinsClick;			
+			SetupInputHandlers();
 			LoadSavedInfo();
 		}
 		

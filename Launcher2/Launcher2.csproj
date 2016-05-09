@@ -77,6 +77,7 @@
     <Compile Include="Gui\Views\ColoursView.cs" />
     <Compile Include="Gui\Views\DirectConnectView.cs" />
     <Compile Include="Gui\Views\IView.cs" />
+    <Compile Include="Gui\Views\MainView.cs" />
     <Compile Include="Gui\Views\ResourcesView.cs" />
     <Compile Include="Gui\Views\ServersView.cs" />
     <Compile Include="Gui\Views\UpdatesView.cs" />
