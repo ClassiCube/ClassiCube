@@ -48,7 +48,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public Vector3 CollisionSize {
-			get { UpdateModel(); return Model.CollisionSize; }
+			get { UpdateModel(); return Model.CollisionSize * ModelScale; }
 		}
 		
 		void UpdateModel() {
@@ -72,7 +72,8 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, Position.Y + Model.GetEyeY( this ), Position.Z ); }
+			get { return new Vector3( Position.X, 
+			                         Position.Y + Model.GetEyeY( this ) * ModelScale, Position.Z ); }
 		}
 
 		/// <summary> Gets the block just underneath the player's feet position. </summary>

@@ -60,7 +60,7 @@ namespace ClassicalSharp.Entities {
 		
 		void FindHighestFree( ref Vector3 spawn ) {
 			BlockInfo info = game.BlockInfo;
-			Vector3 size = entity.Model.CollisionSize;
+			Vector3 size = entity.CollisionSize;
 			BoundingBox bb = entity.CollisionBounds;
 			Vector3I P = Vector3I.Floor( spawn );
 			int bbMax = Utils.Floor( size.Y );			

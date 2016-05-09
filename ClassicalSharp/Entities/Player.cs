@@ -47,7 +47,7 @@ namespace ClassicalSharp.Entities {
 			if( !float.TryParse( scale, out value ) || float.IsNaN( value ) ) 
 				return;
 			
-			Utils.Clamp( ref value, 0.1f, Model.MaxScale );
+			Utils.Clamp( ref value, 0.25f, Model.MaxScale );
 			ModelScale = value;
 		}
 		
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Entities {
 			
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
-			Vector3 pos = Position; pos.Y += Model.NameYOffset;
+			Vector3 pos = Position; pos.Y += Model.NameYOffset * ModelScale;
 			
 			Vector3 p111, p121, p212, p222;
 			FastColour col = FastColour.White;

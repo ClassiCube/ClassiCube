@@ -11,7 +11,9 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Returns the bounding box that contains the model, assuming it is not rotated. </summary>
 		public BoundingBox PickingBounds {
-			get { UpdateModel(); return Model.PickingBounds.Offset( Position ); }
+			get { UpdateModel(); BoundingBox bb = Model.PickingBounds;
+				return bb.Scale( ModelScale ).Offset( Position );
+			}
 		}
 		
 		/// <summary> Bounding box of the model that collision detection

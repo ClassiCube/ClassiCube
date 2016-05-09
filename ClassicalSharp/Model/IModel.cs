@@ -37,8 +37,8 @@ namespace ClassicalSharp.Model {
 		/// <summary> Vertical offset from the model's feet/base that the model's eye is located. </summary>
 		public abstract float GetEyeY( Entity entity );
 		
-		/// <sumary> The maximum scale the entity can have (for collisions and rendering). </summary>
-		public virtual float MaxScale { get { return 1; } }
+		/// <summary> The maximum scale the entity can have (for collisions and rendering). </summary>
+		public virtual float MaxScale { get { return 2; } }
 		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Model {
 		
 		protected Vector3 pos;
 		protected float cosYaw, sinYaw, cosHead, sinHead;
-		protected float uScale, vScale;
+		protected float uScale, vScale, scale;
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
 		public void Render( Player p ) {
@@ -60,6 +60,7 @@ namespace ClassicalSharp.Model {
 			World map = game.World;
 			col = game.World.IsLit( Vector3I.Floor( p.EyePosition ) ) ? map.Sunlight : map.Shadowlight;
 			uScale = 1 / 64f; vScale = 1 / 32f;
+			scale = p.ModelScale;
 			
 			cols[0] = col;
 			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom );
@@ -105,6 +106,7 @@ namespace ClassicalSharp.Model {
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
 				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
+				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				
 				FastColour col = part.Count == boxVertices ? 
@@ -161,6 +163,7 @@ namespace ClassicalSharp.Model {
 					t = cosYaw * tX - sinYaw * tZ; tZ = sinYaw * tX + cosYaw * tZ; tX = t;           // Inlined RotY
 					v.X += tX; v.Y += y; v.Z += tZ;
 				}
+				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				
 				FastColour col = part.Count == boxVertices ? 

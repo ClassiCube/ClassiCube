@@ -25,6 +25,8 @@ namespace ClassicalSharp.Model {
 			offset = 0.5f * 0.5f;
 		}
 
+		public override float MaxScale { get { return 3; } }
+		
 		public override float NameYOffset { get { return 1.3875f; } }
 		
 		public override float GetEyeY( Entity entity ) { return 14/16f; }
@@ -40,28 +42,30 @@ namespace ClassicalSharp.Model {
 	
 	public class GiantModel : HumanoidModel {
 		
-		const float scale = 2f;
+		const float size = 2f;
 		public GiantModel( Game window ) : base( window ) { }
 		
 		protected override void MakeDescriptions() {
 			base.MakeDescriptions();
-			head = head.Scale( scale ); torso = torso.Scale( scale );
-			lLeg = lLeg.Scale( scale ); rLeg = rLeg.Scale( scale );
-			lArm = lArm.Scale( scale ); rArm = rArm.Scale( scale );
-			offset = 0.5f * scale;
+			head = head.Scale( size ); torso = torso.Scale( size );
+			lLeg = lLeg.Scale( size ); rLeg = rLeg.Scale( size );
+			lArm = lArm.Scale( size ); rArm = rArm.Scale( size );
+			offset = 0.5f * size;
 		}
-
-		public override float NameYOffset { get { return 2 * scale + 0.1375f; } }
 		
-		public override float GetEyeY( Entity entity ) { return base.GetEyeY( entity ) * scale; }
+		public override float MaxScale { get { return 1; } }
+
+		public override float NameYOffset { get { return 2 * size + 0.1375f; } }
+		
+		public override float GetEyeY( Entity entity ) { return base.GetEyeY( entity ) * size; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 8/16f * scale + 0.6f/16f, 
-			                         28.1f/16f * scale, 8/16f * scale + 0.6f/16f ); }
+			get { return new Vector3( 8/16f * size + 0.6f/16f, 
+			                         28.1f/16f * size, 8/16f * size + 0.6f/16f ); }
 		}
 		
 		public override BoundingBox PickingBounds {
-			get { return base.PickingBounds.Scale( scale ); }
+			get { return base.PickingBounds.Scale( size ); }
 		}
 	}
 }
