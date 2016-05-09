@@ -99,7 +99,7 @@ namespace ClassicalSharp {
 			if( IPAddress == null ) {
 				Network = new Singleplayer.SinglePlayerServer( this );
 			} else {
-				Network = new Net.NetworkProcessor( this );
+				Network = new Network.NetworkProcessor( this );
 			}
 			Graphics.LostContextFunction = Network.Tick;
 			

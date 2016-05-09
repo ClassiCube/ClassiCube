@@ -33,7 +33,7 @@ namespace Launcher {
 				FastColour col = LauncherSkin.ButtonBorderCol;
 				int middle = game.Height / 2;
 				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 100, 320, 1 );
-				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 10, 320, 1 );
+				game.Drawer.DrawRect( col, game.Width / 2 - 160, middle - 5, 320, 1 );
 			}
 		}
 		
@@ -42,7 +42,7 @@ namespace Launcher {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			
-			MakeLabelAt( "Your build:", inputFont, Anchor.Centre, Anchor.Centre, -60, -120 );
+			MakeLabelAt( "Your build:", inputFont, Anchor.Centre, Anchor.Centre, -55, -120 );
 			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
 			MakeLabelAt( yourBuild, inputFont, Anchor.Centre, Anchor.Centre, 70, -120 );
 			
@@ -50,15 +50,15 @@ namespace Launcher {
 			string latestStable = GetDateString( LastStable );
 			MakeLabelAt( latestStable, inputFont, Anchor.Centre, Anchor.Centre, 70, -75 );
 			relIndex = widgetIndex;
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, -40 );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, -40 );
+			MakeButtonAt( "Direct3D 9", 130, 35, titleFont, Anchor.Centre, -80, -40 );
+			MakeButtonAt( "OpenGL", 130, 35, titleFont, Anchor.Centre, 80, -40 );
 			
-			MakeLabelAt( "Latest dev build:", inputFont, Anchor.Centre, Anchor.Centre, -80, 15 );
+			MakeLabelAt( "Latest dev build:", inputFont, Anchor.Centre, Anchor.Centre, -80, 20 );
 			string latestDev = GetDateString( LastDev );
-			MakeLabelAt( latestDev, inputFont, Anchor.Centre, Anchor.Centre, 70, 15 );
+			MakeLabelAt( latestDev, inputFont, Anchor.Centre, Anchor.Centre, 70, 20 );
 			devIndex = widgetIndex;
-			MakeButtonAt( "Direct3D 9", 130, 30, titleFont, Anchor.Centre, -80, 50 );
-			MakeButtonAt( "OpenGL", 130, 30, titleFont, Anchor.Centre, 80, 50 );
+			MakeButtonAt( "Direct3D 9", 130, 35, titleFont, Anchor.Centre, -80, 55 );
+			MakeButtonAt( "OpenGL", 130, 35, titleFont, Anchor.Centre, 80, 55 );
 			
 			MakeLabelAt( "&eDirect3D 9 is recommended for Windows.",
 			            inputFont, Anchor.Centre, Anchor.Centre, 0, 105 );

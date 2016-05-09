@@ -6,6 +6,11 @@ using ClassicalSharp;
 
 namespace Launcher {
 
+	internal struct TableEntry {
+		public string Hash, Name, Players, Uptime, Software;
+		public int Y, Height;
+	}
+	
 	public partial class LauncherTableWidget : LauncherWidget {
 		
 		internal static FastColour backGridCol = new FastColour( 20, 20, 10 ),
@@ -14,11 +19,6 @@ namespace Launcher {
 		public int[] ColumnWidths = { 340, 65, 65, 140 };
 		public int[] DesiredColumnWidths = { 340, 65, 65, 140 };
 		int defaultInputHeight, defaultHeaderHeight;
-		
-		internal struct TableEntry {
-			public string Hash, Name, Players, Uptime, Software;
-			public int Y, Height;
-		}
 		
 		Font font, titleFont;
 		public void SetDrawData( IDrawer2D drawer, Font font, Font titleFont,
@@ -71,8 +71,8 @@ namespace Launcher {
 			DrawScrollbar( drawer );
 		}
 		
-		public override void Redraw( IDrawer2D drawer ) {				
-			RecalculateDrawData();			
+		public override void Redraw( IDrawer2D drawer ) {
+			RecalculateDrawData();
 			RedrawData( drawer );
 		}
 		

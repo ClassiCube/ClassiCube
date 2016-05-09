@@ -7,7 +7,7 @@ using System.IO;
 using ClassicalSharp.Map;
 using ClassicalSharp.Network;
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor {
 		
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Net {
 						int waterLevel = 0;
 						if( Int32.TryParse( value, out waterLevel ) )
 							game.World.SetEdgeLevel( waterLevel );
-					} else if( key == "user.detail" && !useMessageTypes ) {
+					} else if( key == "user.detail" && !cpe.useMessageTypes ) {
 						game.Chat.Add( value, MessageType.Status2 );
 					}
 				}

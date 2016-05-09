@@ -75,8 +75,9 @@ namespace ClassicalSharp.Model {
 				return;
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
+			bool sprite = game.BlockInfo.IsSprite[block];
 			
-			if( game.BlockInfo.IsSprite[block] ) {
+			if( sprite ) {
 				SpriteXQuad( Side.Right, false );
 				SpriteZQuad( Side.Back, false );
 				
@@ -95,7 +96,10 @@ namespace ClassicalSharp.Model {
 			if( index == 0 ) return;
 			graphics.BindTexture( lastTexId );
 			TransformVertices();
+			
+			if( sprite ) graphics.FaceCulling = true;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			if( sprite ) graphics.FaceCulling = false;
 		}
 		
 		void YQuad( float y, int side, float shade ) {
@@ -165,6 +169,7 @@ namespace ClassicalSharp.Model {
 			} else {
 				rec.U2 = 0.5f; p1 = 0.0f/16; p2 = 5.5f/16;
 			}
+			
 			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 0, p1, rec.U2, rec.V2, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 1, p1, rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 1, p2, rec.U1, rec.V1, col );
@@ -181,17 +186,17 @@ namespace ClassicalSharp.Model {
 			
 			float x1, x2, z1, z2;
 			if( firstPart ) {
-				rec.U1 = 0; rec.U2 = 0.5f; x1 = -5.5f/16;
+				rec.U1 = 0.5f; rec.U2 = 1f; x1 = -5.5f/16;
 				x2 = 0.0f/16; z1 = 5.5f/16; z2 = 0.0f/16;
 			} else {
-				rec.U1 = 0.5f; rec.U2 = 1f; x1 = 0.0f/16;
+				rec.U1 = 0f; rec.U2 = 0.5f; x1 = 0.0f/16;
 				x2 = 5.5f/16; z1 = 0.0f/16; z2 = -5.5f/16;
 			}
 
-			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 0, z1, rec.U1, rec.V2, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 1, z1, rec.U1, rec.V1, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 1, z2, rec.U2, rec.V1, col );
-			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 0, z2, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 0, z1, rec.U2, rec.V2, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 1, z1, rec.U2, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 1, z2, rec.U1, rec.V1, col );
+			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 0, z2, rec.U1, rec.V2, col );
 		}
 		
 		void FlushIfNotSame( int texIndex ) {

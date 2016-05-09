@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 	
 	/// <summary> Similar to a memory stream except that its underlying array 
 	/// cannot be resized and this class performs minimal validation checks. </summary>

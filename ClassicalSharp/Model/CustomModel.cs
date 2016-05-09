@@ -2,7 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Net;
+using ClassicalSharp.Network;
 using OpenTK;
 
 namespace ClassicalSharp.Model {

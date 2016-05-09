@@ -9,7 +9,7 @@ using Ionic.Zlib;
 using System.IO.Compression;
 #endif
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
@@ -27,7 +27,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
+			byte payload = cpe.sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
 		}
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Net {
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream gzippedMap;
 		
-		void HandleHandshake() {
+		internal void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
 			ServerName = reader.ReadCp437String();
 			ServerMotd = reader.ReadCp437String();
@@ -85,9 +85,9 @@ namespace ClassicalSharp.Net {
 			game.Events.RaiseHackPermissionsChanged();
 		}
 		
-		void HandlePing() { }
+		internal void HandlePing() { }
 		
-		void HandleLevelInit() {
+		internal void HandleLevelInit() {
 			if( gzipStream != null )
 				return;
 			game.World.Reset();
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Net {
 			receiveStart = DateTime.UtcNow;
 		}
 		
-		void HandleLevelDataChunk() {
+		internal void HandleLevelDataChunk() {
 			// Workaround for some servers that send LevelDataChunk before LevelInit
 			// due to their async packet sending behaviour.
 			if( gzipStream == null )
@@ -149,7 +149,7 @@ namespace ClassicalSharp.Net {
 			game.WorldEvents.RaiseMapLoading( progress );
 		}
 		
-		void HandleLevelFinalise() {
+		internal void HandleLevelFinalise() {
 			game.SetNewScreen( null );
 			game.activeScreen = prevScreen;
 			if( prevScreen != null && prevCursorVisible != game.CursorVisible )
@@ -175,7 +175,7 @@ namespace ClassicalSharp.Net {
 			GC.Collect();
 		}
 		
-		void HandleSetBlock() {
+		internal void HandleSetBlock() {
 			int x = reader.ReadInt16();
 			int y = reader.ReadInt16();
 			int z = reader.ReadInt16();
@@ -195,7 +195,7 @@ namespace ClassicalSharp.Net {
 		}
 		
 		bool[] needRemoveNames;
-		void HandleAddEntity() {
+		internal void HandleAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
 			name = Utils.RemoveEndPlus( name );
@@ -212,12 +212,12 @@ namespace ClassicalSharp.Net {
 			}
 		}
 		
-		void HandleEntityTeleport() {
+		internal void HandleEntityTeleport() {
 			byte entityId = reader.ReadUInt8();
 			ReadAbsoluteLocation( entityId, true );
 		}
 		
-		void HandleRelPosAndOrientationUpdate() {
+		internal void HandleRelPosAndOrientationUpdate() {
 			byte playerId = reader.ReadUInt8();
 			float x = reader.ReadInt8() / 32f;
 			float y = reader.ReadInt8() / 32f;
@@ -229,7 +229,7 @@ namespace ClassicalSharp.Net {
 			UpdateLocation( playerId, update, true );
 		}
 		
-		void HandleRelPositionUpdate() {
+		internal void HandleRelPositionUpdate() {
 			byte playerId = reader.ReadUInt8();
 			float x = reader.ReadInt8() / 32f;
 			float y = reader.ReadInt8() / 32f;
@@ -239,7 +239,7 @@ namespace ClassicalSharp.Net {
 			UpdateLocation( playerId, update, true );
 		}
 		
-		void HandleOrientationUpdate() {
+		internal void HandleOrientationUpdate() {
 			byte playerId = reader.ReadUInt8();
 			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
@@ -248,25 +248,25 @@ namespace ClassicalSharp.Net {
 			UpdateLocation( playerId, update, true );
 		}
 		
-		void HandleRemoveEntity() {
+		internal void HandleRemoveEntity() {
 			byte entityId = reader.ReadUInt8();
 			RemoveEntity( entityId );
 		}
 		
-		void HandleMessage() {
+		internal void HandleMessage() {
 			byte messageType = reader.ReadUInt8();
-			string text = reader.ReadChatString( ref messageType, useMessageTypes );
+			string text = reader.ReadChatString( ref messageType, cpe.useMessageTypes );
 			if( !text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase ) )
 				game.Chat.Add( text, (MessageType)messageType );
 		}
 		
-		void HandleKick() {
+		internal void HandleKick() {
 			string reason = reader.ReadCp437String();
 			game.Disconnect( "&eLost connection to the server", reason );
 			Dispose();
 		}
 		
-		void HandleSetPermission() {
+		internal void HandleSetPermission() {
 			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
 		}
 		

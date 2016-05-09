@@ -3,11 +3,11 @@ using System;
 using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
-		void HandleCpeDefineBlock() {
+		internal void HandleCpeDefineBlock() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeDefineBlock ); return;
 			}
@@ -31,7 +31,7 @@ namespace ClassicalSharp.Net {
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
-		void HandleCpeRemoveBlockDefinition() {
+		internal void HandleCpeRemoveBlockDefinition() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
 			}
@@ -40,11 +40,11 @@ namespace ClassicalSharp.Net {
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
-		void HandleCpeDefineBlockExt() {
+		internal void HandleCpeDefineBlockExt() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeDefineBlockExt ); return;
 			}
-			byte id = HandleCpeDefineBlockCommonStart( blockDefinitionsExtVer >= 2 );
+			byte id = HandleCpeDefineBlockCommonStart( cpe.blockDefsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Net {
 			return block;
 		}
 		
-		void HandleCpeDefineBlockCommonEnd( byte block ) {
+		internal void HandleCpeDefineBlockCommonEnd( byte block ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			SetBlockDraw( info, block, blockDraw );
@@ -109,7 +109,7 @@ namespace ClassicalSharp.Net {
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
-		void HandleDefineModel() {
+		internal void HandleDefineModel() {
 			int start = reader.index - 1;
 			byte id = reader.ReadUInt8();
 			CustomModel model = null;

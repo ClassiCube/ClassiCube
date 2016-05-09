@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Net;
+using ClassicalSharp.Network;
 using OpenTK;
 
 namespace ClassicalSharp.Map {

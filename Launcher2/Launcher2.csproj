@@ -69,7 +69,7 @@
     <Compile Include="Gui\Screens\ResourcesScreen.cs" />
     <Compile Include="Gui\Screens\ChooseModeScreen.cs" />
     <Compile Include="Gui\Screens\UpdatesScreen.cs" />
-    <Compile Include="Gui\TableWidget\LauncherTableWidget.Comparers.cs" />
+    <Compile Include="Gui\TableWidget\Comparers.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Drawing.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />

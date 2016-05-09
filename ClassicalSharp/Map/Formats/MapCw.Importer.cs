@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Net;
+using ClassicalSharp.Network;
 using OpenTK;
 using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.NbtTag>;
 

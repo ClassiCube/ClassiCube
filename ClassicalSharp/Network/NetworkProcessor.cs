@@ -9,12 +9,13 @@ using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
 		public NetworkProcessor( Game window ) {
 			game = window;
+			cpe = game.AddComponent( new CPESupport() );
 			SetupHandlers();
 		}
 		
@@ -24,7 +25,8 @@ namespace ClassicalSharp.Net {
 		bool receivedFirstPosition;
 		DateTime lastPacket;
 		Screen prevScreen;
-		bool prevCursorVisible, supportsCustomBlocks;
+		bool prevCursorVisible;
+		CPESupport cpe;
 		
 		public override void Connect( IPAddress address, int port ) {
 			
@@ -43,9 +45,6 @@ namespace ClassicalSharp.Net {
 			reader = new NetReader( stream );
 			writer = new NetWriter( stream );
 			gzippedMap = new FixedBufferStream( reader.buffer );
-			envMapAppearanceVer = 2;
-			blockDefinitionsExtVer = 2;
-			needD3Fix = false;
 			
 			Disconnected = false;
 			receivedFirstPosition = false;
@@ -84,7 +83,8 @@ namespace ClassicalSharp.Net {
 			while( (reader.size - reader.index) > 0 ) {
 				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
-				if( needD3Fix && lastOpcode == Opcode.CpeHackControl && (opcode == 0x00 || opcode == 0xFF) ) {
+				if( cpe.needD3Fix && lastOpcode == Opcode.CpeHackControl
+				   && (opcode == 0x00 || opcode == 0xFF) ) {
 					Utils.LogDebug( "Skipping invalid HackControl byte from D3 server." );
 					reader.Skip( 1 );
 					player.physics.jumpVel = 0.42f; // assume default jump height
@@ -192,7 +192,7 @@ namespace ClassicalSharp.Net {
 			Set( Opcode.CpeRemoveSelection, HandleCpeRemoveSelection, 2 );
 			Set( Opcode.CpeSetBlockPermission, HandleCpeSetBlockPermission, 4 );
 			Set( Opcode.CpeChangeModel, HandleCpeChangeModel, 66 );
-			Set( Opcode.CpeEnvSetMapApperance, HandleCpeEnvSetMapApperance, 69 );
+			Set( Opcode.CpeEnvSetMapApperance, HandleCpeEnvSetMapAppearance, 69 );
 			Set( Opcode.CpeEnvWeatherType, HandleCpeEnvWeatherType, 2 );
 			Set( Opcode.CpeHackControl, HandleCpeHackControl, 8 );
 			Set( Opcode.CpeExtAddEntity2, HandleCpeExtAddEntity2, 138 );

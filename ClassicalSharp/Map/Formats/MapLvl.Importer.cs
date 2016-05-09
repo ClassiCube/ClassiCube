@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Net;
+using ClassicalSharp.Network;
 
 namespace ClassicalSharp.Map {
 

@@ -1,7 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 
-namespace ClassicalSharp.Net {
+namespace ClassicalSharp.Network {
 	
 	public enum Opcode {
 		Handshake = 0,

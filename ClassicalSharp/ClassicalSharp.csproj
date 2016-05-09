@@ -183,6 +183,7 @@
     <Compile Include="Model\CustomModel.cs" />
     <Compile Include="Model\HumanModels.cs" />
     <Compile Include="Model\ModelBuilder.cs" />
+    <Compile Include="Network\CPESupport.cs" />
     <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
