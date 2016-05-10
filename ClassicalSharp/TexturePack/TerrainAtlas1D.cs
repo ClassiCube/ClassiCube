@@ -84,7 +84,7 @@ namespace ClassicalSharp.TexturePack {
 			return Utils.CeilDiv( totalElements, verElements );
 		}
 		
-		int GetMaxUsedRow( int[] textures ) {
+		int GetMaxUsedRow( byte[] textures ) {
 			int maxElem = 0;
 			for( int i = 0; i < textures.Length; i++ )
 				maxElem = Math.Max( maxElem, textures[i] );

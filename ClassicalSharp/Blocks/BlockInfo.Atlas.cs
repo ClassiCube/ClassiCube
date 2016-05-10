@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		internal int[] textures = new int[BlocksCount * Side.Sides];
+		internal byte[] textures = new byte[BlocksCount * Side.Sides];
 
 		void SetupTextures() {
 			// Row 1
@@ -67,23 +67,23 @@ namespace ClassicalSharp {
 		void SetAll( int textureId, Block blockId ) {
 			int index = (byte)blockId * Side.Sides;
 			for( int i = index; i < index + Side.Sides; i++ ) {
-				textures[i] = textureId;
+				textures[i] = (byte)textureId;
 			}
 		}
 		
 		internal void SetSide( int textureId, Block blockId ) {
 			int index = (byte)blockId * Side.Sides;
 			for( int i = index; i < index + Side.Bottom; i++ )
-				textures[i] = textureId;
+				textures[i] = (byte)textureId;
 		}
 		
 		internal void SetTopAndBottom( int textureId, Block blockId ) {
-			textures[(byte)blockId * Side.Sides + Side.Bottom] = textureId;
-			textures[(byte)blockId * Side.Sides + Side.Top] = textureId;
+			textures[(byte)blockId * Side.Sides + Side.Bottom] = (byte)textureId;
+			textures[(byte)blockId * Side.Sides + Side.Top] = (byte)textureId;
 		}
 		
 		internal void SetTex( int textureId, int face, Block blockId ) {
-			textures[(byte)blockId * Side.Sides + face] = textureId;
+			textures[(byte)blockId * Side.Sides + face] = (byte)textureId;
 		}
 
 		int texId;
