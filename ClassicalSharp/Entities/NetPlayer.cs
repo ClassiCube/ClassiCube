@@ -34,7 +34,8 @@ namespace ClassicalSharp.Entities {
 			PitchDegrees = Utils.LerpAngle( interp.oldState.pitch, interp.newState.pitch, t );
 			
 			anim.GetCurrentAnimState( t );
-			Model.Render( this );
+			if( Model.ShouldRender( this, game.Culling ) )
+				Model.Render( this );
 		}
 		
 		public override void RenderName() { DrawName(); }

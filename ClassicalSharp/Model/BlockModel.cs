@@ -57,6 +57,12 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
+		public override bool ShouldRender( Player p, FrustumCulling culling ) {
+			block = Utils.FastByte( p.ModelName );
+			CalcState( block );
+			return base.ShouldRender( p, culling );
+		}
+		
 		int lastTexId = -1;
 		protected override void DrawModel( Player p ) {
 			// TODO: using 'is' is ugly, but means we can avoid creating
@@ -71,8 +77,7 @@ namespace ClassicalSharp.Model {
 			}
 			
 			CalcState( block );
-			if( game.BlockInfo.IsAir[block] )
-				return;
+			if( game.BlockInfo.IsAir[block] ) return;
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
 			bool sprite = game.BlockInfo.IsSprite[block];

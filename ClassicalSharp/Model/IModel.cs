@@ -52,6 +52,15 @@ namespace ClassicalSharp.Model {
 		protected float cosYaw, sinYaw, cosHead, sinHead;
 		protected float uScale, vScale, scale;
 		
+		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
+		public virtual bool ShouldRender( Player p, FrustumCulling culling ) {
+			Vector3 pos = p.Position;
+			BoundingBox bb = PickingBounds;
+			float maxLen = Math.Max( bb.Width, Math.Max( bb.Height, bb.Length ) );
+			maxLen *= p.ModelScale;
+			return culling.SphereInFrustum( pos.X, pos.Y + maxLen / 2, pos.Z, maxLen );
+		}
+		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
 		public void Render( Player p ) {
 			index = 0;
