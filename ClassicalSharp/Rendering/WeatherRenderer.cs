@@ -34,7 +34,7 @@ namespace ClassicalSharp.Renderers {
 		Vector3I lastPos = new Vector3I( Int32.MinValue );
 		
 		public void Render( double deltaTime ) {
-			Weather weather = map.Weather;
+			Weather weather = map.Env.Weather;
 			if( weather == Weather.Sunny ) return;
 			if( heightmap == null ) InitHeightmap();			
 			
@@ -52,7 +52,7 @@ namespace ClassicalSharp.Renderers {
 			int index = 0;
 			graphics.AlphaTest = false;
 			graphics.DepthWrite = false;
-			FastColour col = game.World.Sunlight;
+			FastColour col = game.World.Env.Sunlight;
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
 					float rainY = GetRainHeight( pos.X + dx, pos.Z + dz );
@@ -136,7 +136,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		float GetRainHeight( int x, int z ) {
-			if( x < 0 || z < 0 || x >= width || z >= length ) return map.EdgeHeight;
+			if( x < 0 || z < 0 || x >= width || z >= length ) return map.Env.EdgeHeight;
 			int index = (x * length) + z;
 			int height = heightmap[index];
 			int y = height == short.MaxValue ? CalcHeightAt( x, maxY, z, index ) : height;
@@ -147,7 +147,7 @@ namespace ClassicalSharp.Renderers {
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
 			int mapIndex = ( maxY * length + z ) * width + x;
 			for( int y = maxY; y >= 0; y-- ) {
-				byte block = map.mapData[mapIndex];
+				byte block = map.blocks[mapIndex];
 				if( BlocksRain( block ) ) {
 					heightmap[index] = (short)y;
 					return y;
@@ -171,7 +171,7 @@ namespace ClassicalSharp.Renderers {
 			int index = (x * length) + z;
 			int height = heightmap[index];
 			if( height == short.MaxValue ) {
-				if( map.Weather == Weather.Sunny ) return;
+				if( map.Env.Weather == Weather.Sunny ) return;
 				// We have to calculate the entire column for visibility, because the old/new block info is
 				// useless if there is another block higher than block.y that stops rain.
 				CalcHeightAt( x, maxY, z, index );

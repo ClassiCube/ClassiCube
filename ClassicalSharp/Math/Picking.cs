@@ -113,8 +113,8 @@ namespace ClassicalSharp {
 		
 		const byte border = (byte)Block.Bedrock;
 		static byte GetBlock( World map, int x, int y, int z, Vector3I origin ) {
-			bool sides = map.SidesBlock != Block.Air;
-			int height = Math.Max( 1, map.SidesHeight );
+			bool sides = map.Env.SidesBlock != Block.Air;
+			int height = Math.Max( 1, map.Env.SidesHeight );
 			bool insideMap = map.IsValidPos( origin );
 			
 			// handling of blocks inside the map, above, and on borders

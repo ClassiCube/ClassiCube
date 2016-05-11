@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		byte tile;
 		BlockInfo info;
 		World map;
+		WorldEnv env;
 		Game game;
 		IGraphicsApi graphics;
 		const int chunkSize = 16, extChunkSize = 18;
@@ -66,7 +67,7 @@ namespace ClassicalSharp {
 		
 		bool ReadChunkData( int x1, int y1, int z1 ) {
 			bool allAir = true, allSolid = true;
-			fixed( byte* mapPtr = map.mapData ) {
+			fixed( byte* mapPtr = map.blocks ) {
 				
 				for( int yy = -1; yy < 17; yy++ ) {
 					int y = yy + y1;
@@ -307,10 +308,11 @@ namespace ClassicalSharp {
 		
 		public void OnNewMapLoaded() {
 			map = game.World;
+			env = game.World.Env;
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
-			clipLevel = Math.Max( 0, game.World.SidesHeight );
+			clipLevel = Math.Max( 0, game.World.Env.SidesHeight );
 			maxX = width - 1;
 			maxY = height - 1;
 			maxZ = length - 1;

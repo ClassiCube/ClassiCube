@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui {
 					game.BlockInfo.InitLightOffsets();
 					
 					byte[] blocks = importer.Load( fs, game, out width, out height, out length );
-					game.World.SetData( blocks, width, height, length );
+					game.World.SetNewMap( blocks, width, height, length );
 					game.WorldEvents.RaiseOnNewMapLoaded();
 					if( game.AllowServerTextures && game.World.TextureUrl != null )
 						game.Network.RetrieveTexturePack( game.World.TextureUrl );

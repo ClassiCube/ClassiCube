@@ -11,22 +11,22 @@ namespace ClassicalSharp.Renderers {
 		public override void Init( Game game ) {
 			base.Init( game );
 			graphics.Fog = false;
-			graphics.ClearColour( map.SkyCol );
+			graphics.ClearColour( map.Env.SkyCol );
 		}
 		
 		public override void Render( double deltaTime ) {
-			graphics.ClearColour( map.SkyCol );
+			graphics.ClearColour( map.Env.SkyCol );
 		}
 		
 		public override void OnNewMap( Game game ) { }
 		
 		public override void OnNewMapLoaded( Game game ) {
-			graphics.ClearColour( map.SkyCol );
+			graphics.ClearColour( map.Env.SkyCol );
 		}
 		
 		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.SkyColour ) {
-				graphics.ClearColour( map.SkyCol );
+				graphics.ClearColour( map.Env.SkyCol );
 			}
 		}
 	}

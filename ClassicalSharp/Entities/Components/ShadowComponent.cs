@@ -150,7 +150,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			if( index < 4 ) {
-				data[index].Block = (byte)game.World.EdgeBlock; data[index].Y = 0;
+				data[index].Block = (byte)game.World.Env.EdgeBlock; data[index].Y = 0;
 				CalcAlpha( Position.Y, ref data[index] );
 				index++;
 			}
@@ -159,10 +159,10 @@ namespace ClassicalSharp.Entities {
 		
 		byte GetShadowBlock( int x, int y, int z ) {
 			if( x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length ) {
-				if( y == game.World.EdgeHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.World.EdgeBlock] ? 0 : Block.Bedrock);
-				if( y == game.World.SidesHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.World.SidesBlock] ? 0 : Block.Bedrock);
+				if( y == game.World.Env.EdgeHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.World.Env.EdgeBlock] ? 0 : Block.Bedrock);
+				if( y == game.World.Env.SidesHeight - 1 )
+					return (byte)(game.BlockInfo.IsAir[(byte)game.World.Env.SidesBlock] ? 0 : Block.Bedrock);
 				return (byte)Block.Air;
 			}
 			return game.World.GetBlock( x, y, z );

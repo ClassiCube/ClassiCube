@@ -83,9 +83,9 @@ namespace ClassicalSharp.Particles {
 			if( game.World.IsValidPos( x, y, z ) )
 				return game.World.GetBlock( x, y, z );
 			
-			if( y >= game.World.EdgeHeight ) return (byte)Block.Air;
-			if( y >= game.World.SidesHeight ) return (byte)game.World.EdgeBlock;
-			return (byte)game.World.SidesBlock;
+			if( y >= game.World.Env.EdgeHeight ) return (byte)Block.Air;
+			if( y >= game.World.Env.SidesHeight ) return (byte)game.World.Env.EdgeBlock;
+			return (byte)game.World.Env.SidesBlock;
 		}
 		
 		static Vector3 FloorHor( Vector3 v ) {

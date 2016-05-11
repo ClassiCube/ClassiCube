@@ -20,41 +20,41 @@ namespace ClassicalSharp.Gui {
 			widgets = new Widget[] {
 				// Column 1
 				Make2( -1, -150, "Clouds col", OnWidgetClick,
-				     g => g.World.CloudsCol.ToRGBHexString(),
-				     (g, v) => g.World.SetCloudsColour( FastColour.Parse( v ) ) ),
+				     g => g.World.Env.CloudsCol.ToRGBHexString(),
+				     (g, v) => g.World.Env.SetCloudsColour( FastColour.Parse( v ) ) ),
 				
 				Make2( -1, -100, "Sky col", OnWidgetClick,
-				     g => g.World.SkyCol.ToRGBHexString(),
-				     (g, v) => g.World.SetSkyColour( FastColour.Parse( v ) ) ),
+				     g => g.World.Env.SkyCol.ToRGBHexString(),
+				     (g, v) => g.World.Env.SetSkyColour( FastColour.Parse( v ) ) ),
 				
 				Make2( -1, -50, "Fog col", OnWidgetClick,
-				     g => g.World.FogCol.ToRGBHexString(),
-				     (g, v) => g.World.SetFogColour( FastColour.Parse( v ) ) ),
+				     g => g.World.Env.FogCol.ToRGBHexString(),
+				     (g, v) => g.World.Env.SetFogColour( FastColour.Parse( v ) ) ),
 				
 				Make2( -1, 0, "Clouds speed", OnWidgetClick,
-				     g => g.World.CloudsSpeed.ToString( "F2" ),
-				     (g, v) => g.World.SetCloudsSpeed( Single.Parse( v ) ) ),
+				     g => g.World.Env.CloudsSpeed.ToString( "F2" ),
+				     (g, v) => g.World.Env.SetCloudsSpeed( Single.Parse( v ) ) ),
 				
 				Make2( -1, 50, "Clouds height", OnWidgetClick,
-				     g => g.World.CloudHeight.ToString(),
-				     (g, v) => g.World.SetCloudsLevel( Int32.Parse( v ) ) ),
+				     g => g.World.Env.CloudHeight.ToString(),
+				     (g, v) => g.World.Env.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
 				// Column 2
 				Make2( 1, -100, "Sunlight col", OnWidgetClick,
-				     g => g.World.Sunlight.ToRGBHexString(),
-				     (g, v) => g.World.SetSunlight( FastColour.Parse( v ) ) ),
+				     g => g.World.Env.Sunlight.ToRGBHexString(),
+				     (g, v) => g.World.Env.SetSunlight( FastColour.Parse( v ) ) ),
 				
 				Make2( 1, -50, "Shadow col", OnWidgetClick,
-				     g => g.World.Shadowlight.ToRGBHexString(),
-				     (g, v) => g.World.SetShadowlight( FastColour.Parse( v ) ) ),
+				     g => g.World.Env.Shadowlight.ToRGBHexString(),
+				     (g, v) => g.World.Env.SetShadowlight( FastColour.Parse( v ) ) ),
 				
 				Make2( 1, 0, "Weather", OnWidgetClick,
-				     g => g.World.Weather.ToString(),
-				     (g, v) => g.World.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
+				     g => g.World.Env.Weather.ToString(),
+				     (g, v) => g.World.Env.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
 				
 				Make2( 1, 50, "Water level", OnWidgetClick,
-				     g => g.World.EdgeHeight.ToString(),
-				     (g, v) => g.World.SetEdgeLevel( Int32.Parse( v ) ) ),
+				     g => g.World.Env.EdgeHeight.ToString(),
+				     (g, v) => g.World.Env.SetEdgeLevel( Int32.Parse( v ) ) ),
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
@@ -67,14 +67,14 @@ namespace ClassicalSharp.Gui {
 		void MakeDefaultValues() {
 			defaultIndex = widgets.Length - 3;			
 			defaultValues = new [] {
-				World.DefaultCloudsColour.ToRGBHexString(),
-				World.DefaultSkyColour.ToRGBHexString(),
-				World.DefaultFogColour.ToRGBHexString(),
+				WorldEnv.DefaultCloudsColour.ToRGBHexString(),
+				WorldEnv.DefaultSkyColour.ToRGBHexString(),
+				WorldEnv.DefaultFogColour.ToRGBHexString(),
 				(1).ToString(),
 				(game.World.Height + 2).ToString(),
 				
-				World.DefaultSunlight.ToRGBHexString(),
-				World.DefaultShadowlight.ToRGBHexString(),
+				WorldEnv.DefaultSunlight.ToRGBHexString(),
+				WorldEnv.DefaultShadowlight.ToRGBHexString(),
 				Weather.Sunny.ToString(),
 				(game.World.Height / 2).ToString(),
 			};

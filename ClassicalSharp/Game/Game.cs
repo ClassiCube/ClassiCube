@@ -420,7 +420,7 @@ namespace ClassicalSharp {
 		public void Disconnect( string title, string reason ) {
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
 			World.Reset();
-			World.mapData = null;
+			World.blocks = null;
 			Drawer2D.InitColours();
 			
 			for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )

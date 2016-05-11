@@ -69,7 +69,7 @@ namespace ClassicalSharp.Model {
 			// a string every single time held block changes.
 			if( p is FakePlayer ) {
 				Vector3I eyePos = Vector3I.Floor( game.LocalPlayer.EyePosition );
-				FastColour baseCol = game.World.IsLit( eyePos ) ? game.World.Sunlight : game.World.Shadowlight;
+				FastColour baseCol = game.World.IsLit( eyePos ) ? game.World.Env.Sunlight : game.World.Env.Shadowlight;
 				col = FastColour.Scale( baseCol, 0.8f );
 				block = ((FakePlayer)p).Block;
 			} else {

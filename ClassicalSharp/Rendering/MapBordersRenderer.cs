@@ -41,13 +41,13 @@ namespace ClassicalSharp.Renderers {
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
 			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			if( game.World.SidesBlock != Block.Air ) {
+			if( game.World.Env.SidesBlock != Block.Air ) {
 				graphics.BindVb( sidesVb );
 				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
 			}
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			bool underWater = camPos.Y < game.World.EdgeHeight;
+			bool underWater = camPos.Y < game.World.Env.EdgeHeight;
 			graphics.AlphaBlending = true;
 			if( underWater ) game.WeatherRenderer.Render( deltaTime );
 			
@@ -55,8 +55,8 @@ namespace ClassicalSharp.Renderers {
 			graphics.BindVb( edgesVb );			
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			float yVisible = Math.Min( 0, map.SidesHeight );
-			if( game.World.EdgeBlock != Block.Air && camPos.Y >= yVisible )
+			float yVisible = Math.Min( 0, map.Env.SidesHeight );
+			if( game.World.Env.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
 			if( !underWater ) game.WeatherRenderer.Render( deltaTime );
@@ -85,24 +85,24 @@ namespace ClassicalSharp.Renderers {
 			graphics.DeleteVb( edgesVb );
 			sidesVb = edgesVb = -1;
 			
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
 		}
 		
 		public void OnNewMapLoaded( Game game ) {
 			CalculateRects( game.ViewDistance );
-			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
-			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
+			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
+			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.EdgeBlock ) {
-				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
-				if( game.BlockInfo.BlocksLight[(byte)map.EdgeBlock] != fullColEdge )
+				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock );
+				if( game.BlockInfo.BlocksLight[(byte)map.Env.EdgeBlock] != fullColEdge )
 					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SidesBlock ) {
-				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
-				if( game.BlockInfo.BlocksLight[(byte)map.SidesBlock] != fullColSides )
+				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
+				if( game.BlockInfo.BlocksLight[(byte)map.Env.SidesBlock] != fullColSides )
 					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.EdgeLevel ) {
 				ResetSidesAndEdges( null, null );
@@ -113,8 +113,8 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetTextures( object sender, EventArgs e ) {
 			lastEdgeTexLoc = lastSideTexLoc = -1;
-			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.EdgeBlock );
-			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.SidesBlock );
+			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock );
+			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
@@ -123,8 +123,8 @@ namespace ClassicalSharp.Renderers {
 			graphics.DeleteVb( edgesVb );
 			
 			CalculateRects( game.ViewDistance );
-			RebuildSides( map.SidesHeight, legacy ? 128 : 65536 );
-			RebuildEdges( map.EdgeHeight, legacy ? 128 : 65536 );
+			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
+			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
 		void RebuildSides( int groundLevel, int axisSize ) {
@@ -138,8 +138,8 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColSides = game.BlockInfo.FullBright[(byte)game.World.SidesBlock];
-			FastColour col = fullColSides ? FastColour.White : map.Shadowlight;
+			fullColSides = game.BlockInfo.FullBright[(byte)game.World.Env.SidesBlock];
+			FastColour col = fullColSides ? FastColour.White : map.Env.Shadowlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, 0, ref vertices );
 			}
@@ -165,8 +165,8 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.EdgeBlock];
-			FastColour col = fullColEdge ? FastColour.White : map.Sunlight;
+			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.Env.EdgeBlock];
+			FastColour col = fullColEdge ? FastColour.White : map.Env.Sunlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, -0.1f/16f, ref vertices );
 			}

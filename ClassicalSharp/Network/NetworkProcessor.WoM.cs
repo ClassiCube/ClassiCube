@@ -34,18 +34,18 @@ namespace ClassicalSharp.Network {
 					string value = parts[1].TrimStart();
 					
 					if( key == "environment.cloud" ) {
-						FastColour col = ParseWomColour( value, World.DefaultCloudsColour );
-						game.World.SetCloudsColour( col );
+						FastColour col = ParseWomColour( value, WorldEnv.DefaultCloudsColour );
+						game.World.Env.SetCloudsColour( col );
 					} else if( key == "environment.sky" ) {
-						FastColour col = ParseWomColour( value, World.DefaultSkyColour );
-						game.World.SetSkyColour( col );
+						FastColour col = ParseWomColour( value, WorldEnv.DefaultSkyColour );
+						game.World.Env.SetSkyColour( col );
 					} else if( key == "environment.fog" ) {
-						FastColour col = ParseWomColour( value, World.DefaultFogColour );
-						game.World.SetFogColour( col );
+						FastColour col = ParseWomColour( value, WorldEnv.DefaultFogColour );
+						game.World.Env.SetFogColour( col );
 					} else if( key == "environment.level" ) {
 						int waterLevel = 0;
 						if( Int32.TryParse( value, out waterLevel ) )
-							game.World.SetEdgeLevel( waterLevel );
+							game.World.Env.SetEdgeLevel( waterLevel );
 					} else if( key == "user.detail" && !cpe.useMessageTypes ) {
 						game.Chat.Add( value, MessageType.Status2 );
 					}

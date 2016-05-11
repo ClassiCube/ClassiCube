@@ -238,15 +238,15 @@ namespace ClassicalSharp.Network {
 			FastColour col = new FastColour( red, green, blue );
 
 			if( variable == 0 ) {
-				game.World.SetSkyColour( invalid ? World.DefaultSkyColour : col );
+				game.World.Env.SetSkyColour( invalid ? WorldEnv.DefaultSkyColour : col );
 			} else if( variable == 1 ) {
-				game.World.SetCloudsColour( invalid ? World.DefaultCloudsColour : col );
+				game.World.Env.SetCloudsColour( invalid ? WorldEnv.DefaultCloudsColour : col );
 			} else if( variable == 2 ) {
-				game.World.SetFogColour( invalid ? World.DefaultFogColour : col );
+				game.World.Env.SetFogColour( invalid ? WorldEnv.DefaultFogColour : col );
 			} else if( variable == 3 ) {
-				game.World.SetShadowlight( invalid ? World.DefaultShadowlight : col );
+				game.World.Env.SetShadowlight( invalid ? WorldEnv.DefaultShadowlight : col );
 			} else if( variable == 4 ) {
-				game.World.SetSunlight( invalid ? World.DefaultSunlight : col );
+				game.World.Env.SetSunlight( invalid ? WorldEnv.DefaultSunlight : col );
 			}
 		}
 		
@@ -279,9 +279,9 @@ namespace ClassicalSharp.Network {
 		
 		internal void HandleCpeEnvSetMapAppearance() {
 			string url = reader.ReadAsciiString();
-			game.World.SetSidesBlock( (Block)reader.ReadUInt8() );
-			game.World.SetEdgeBlock( (Block)reader.ReadUInt8() );
-			game.World.SetEdgeLevel( reader.ReadInt16() );
+			game.World.Env.SetSidesBlock( (Block)reader.ReadUInt8() );
+			game.World.Env.SetEdgeBlock( (Block)reader.ReadUInt8() );
+			game.World.Env.SetEdgeLevel( reader.ReadInt16() );
 			if( !game.AllowServerTextures ) return;
 			
 			if( url == "" ) {
@@ -294,14 +294,14 @@ namespace ClassicalSharp.Network {
 		
 		internal void HandleCpeEnvSetMapAppearance2() {
 			HandleCpeEnvSetMapAppearance();
-			game.World.SetCloudsLevel( reader.ReadInt16() );
+			game.World.Env.SetCloudsLevel( reader.ReadInt16() );
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 			game.SetViewDistance( game.UserViewDistance, false );
 		}
 		
 		internal void HandleCpeEnvWeatherType() {
-			game.World.SetWeather( (Weather)reader.ReadUInt8() );
+			game.World.Env.SetWeather( (Weather)reader.ReadUInt8() );
 		}
 		
 		internal void HandleCpeHackControl() {

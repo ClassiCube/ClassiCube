@@ -179,6 +179,7 @@
     <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
     <Compile Include="Map\Formats\NbtFile.cs" />
+    <Compile Include="Map\WorldEnv.cs" />
     <Compile Include="Math\RayTracer.cs" />
     <Compile Include="Model\CustomModel.cs" />
     <Compile Include="Model\HumanModels.cs" />

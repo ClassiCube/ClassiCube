@@ -26,7 +26,7 @@ namespace ClassicalSharp.Particles {
 			Utils.CalcBillboardPoints( terrainSize, Position, ref game.View,
 			                          out p111, out p121, out p212, out p222 );
 			World map = game.World;
-			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Sunlight : map.Shadowlight;
+			FastColour col = map.IsLit( Vector3I.Floor( Position ) ) ? map.Env.Sunlight : map.Env.Shadowlight;
 			
 			vertices[index++] = new VertexP3fT2fC4b( p111, rec.U1, rec.V2, col );
 			vertices[index++] = new VertexP3fT2fC4b( p121, rec.U1, rec.V1, col );

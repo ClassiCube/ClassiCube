@@ -10,7 +10,7 @@ namespace ClassicalSharp.Map {
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
 			int mapIndex = (maxY * Length + z) * Width + x;
 			for( int y = maxY; y >= 0; y-- ) {
-				byte block = mapData[mapIndex];
+				byte block = blocks[mapIndex];
 				if( info.BlocksLight[block] ) {
 					int offset = (info.LightOffset[block] >> Side.Top) & 1;
 					heightmap[index] = (short)(y - offset);

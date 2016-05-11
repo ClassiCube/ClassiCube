@@ -162,7 +162,7 @@ namespace ClassicalSharp.Network {
 			
 			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
 			Utils.LogDebug( "map loading took:" + loadingMs );
-			game.World.SetData( map, mapWidth, mapHeight, mapLength );
+			game.World.SetNewMap( map, mapWidth, mapHeight, mapLength );
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			
 			map = null;

@@ -87,9 +87,9 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RenderClouds( double delta ) {
-			if( game.World.CloudHeight < -2000 ) return;
+			if( game.World.Env.CloudHeight < -2000 ) return;
 			double time = game.accumulator;
-			float offset = (float)( time / 2048f * 0.6f * map.CloudsSpeed );
+			float offset = (float)( time / 2048f * 0.6f * map.Env.CloudsSpeed );
 			graphics.SetMatrixMode( MatrixType.Texture );
 			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
 			graphics.LoadMatrix( ref matrix );
@@ -136,7 +136,7 @@ namespace ClassicalSharp.Renderers {
 			} else {
 				// Blend fog and sky together
 				float blend = (float)BlendFactor( game.ViewDistance );
-				adjFogCol = FastColour.Lerp( map.FogCol, map.SkyCol, blend );
+				adjFogCol = FastColour.Lerp( map.Env.FogCol, map.Env.SkyCol, blend );
 				graphics.SetFogMode( Fog.Linear );
 				graphics.SetFogEnd( game.ViewDistance );
 			}
@@ -163,7 +163,7 @@ namespace ClassicalSharp.Renderers {
 			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
-			DrawCloudsY( x1, z1, x2, z2, map.CloudHeight, axisSize, map.CloudsCol, vertices );
+			DrawCloudsY( x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol, vertices );
 			cloudsVb = graphics.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
 		}
 		
@@ -174,9 +174,9 @@ namespace ClassicalSharp.Renderers {
 			skyVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexP3fC4b[] vertices = new VertexP3fC4b[skyVertices];
-			int height = Math.Max( map.Height + 2 + 6, map.CloudHeight + 6);
+			int height = Math.Max( map.Height + 2 + 6, map.Env.CloudHeight + 6);
 			
-			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.SkyCol, vertices );
+			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.Env.SkyCol, vertices );
 			skyVb = graphics.CreateVb( vertices, VertexFormat.P3fC4b, skyVertices );
 		}
 		

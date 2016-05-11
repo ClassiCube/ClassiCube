@@ -100,7 +100,7 @@ namespace ClassicalSharp.Singleplayer {
 				game.Chat.Add( "&cFailed to generate the map." );
 			} else {
 				IMapGenerator gen = generator;
-				game.World.SetData( generatedMap, gen.Width, gen.Height, gen.Length );
+				game.World.SetNewMap( generatedMap, gen.Width, gen.Height, gen.Length );
 				generatedMap = null;
 				ResetPlayerPosition();
 				game.WorldEvents.RaiseOnNewMapLoaded();

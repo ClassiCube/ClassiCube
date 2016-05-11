@@ -27,9 +27,9 @@ namespace ClassicalSharp.Map {
 				nbt.Write( NbtTagType.Int16 );
 				nbt.Write( "Length" ); nbt.WriteInt16( (short)map.Length );
 				
-				WriteBlocks( nbt, map.mapData );
+				WriteBlocks( nbt, map.blocks );
 				
-				WriteBlockData( nbt, map.mapData );
+				WriteBlockData( nbt, map.blocks );
 				
 				nbt.Write( NbtTagType.List );
 				nbt.Write( "Entities" );

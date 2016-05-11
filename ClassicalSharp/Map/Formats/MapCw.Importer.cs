@@ -68,11 +68,11 @@ namespace ClassicalSharp.Map {
 				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
 			}
 			if( CheckKey( "EnvColors", 1, metadata ) ) {
-				map.SetSkyColour( GetColour( "Sky", World.DefaultSkyColour ) );
-				map.SetCloudsColour( GetColour( "Cloud", World.DefaultCloudsColour ) );
-				map.SetFogColour( GetColour( "Fog", World.DefaultFogColour ) );
-				map.SetSunlight( GetColour( "Sunlight", World.DefaultSunlight ) );
-				map.SetShadowlight( GetColour( "Ambient", World.DefaultShadowlight ) );
+				map.Env.SetSkyColour( GetColour( "Sky", WorldEnv.DefaultSkyColour ) );
+				map.Env.SetCloudsColour( GetColour( "Cloud", WorldEnv.DefaultCloudsColour ) );
+				map.Env.SetFogColour( GetColour( "Fog", WorldEnv.DefaultFogColour ) );
+				map.Env.SetSunlight( GetColour( "Sunlight", WorldEnv.DefaultSunlight ) );
+				map.Env.SetShadowlight( GetColour( "Ambient", WorldEnv.DefaultShadowlight ) );
 			}
 			if( CheckKey( "EnvMapAppearance", 1, metadata ) ) {
 				string url = null;
@@ -84,13 +84,13 @@ namespace ClassicalSharp.Map {
 				
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
-				map.SetSidesBlock( (Block)sidesBlock );
-				map.SetEdgeBlock( (Block)edgeBlock );
-				map.SetEdgeLevel( (short)curCpeExt["SideLevel"].Value );
+				map.Env.SetSidesBlock( (Block)sidesBlock );
+				map.Env.SetEdgeBlock( (Block)edgeBlock );
+				map.Env.SetEdgeLevel( (short)curCpeExt["SideLevel"].Value );
 			}
 			if( CheckKey( "EnvWeatherType", 1, metadata ) ) {
 				byte weather = (byte)curCpeExt["WeatherType"].Value;
-				map.SetWeather( (Weather)weather );
+				map.Env.SetWeather( (Weather)weather );
 			}
 			
 			if( game.AllowCustomBlocks && CheckKey( "BlockDefinitions", 1, metadata ) ) {

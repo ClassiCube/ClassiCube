@@ -134,7 +134,7 @@ namespace ClassicalSharp.Singleplayer {
 			int x = posIndex % width;
 			int y = posIndex / oneY; // posIndex / (width * length)
 			int z = (posIndex / width) % length;
-			byte block = map.mapData[posIndex];
+			byte block = map.blocks[posIndex];
 			
 			switch( block ) {
 				case (byte)Block.Dirt:
@@ -186,7 +186,7 @@ namespace ClassicalSharp.Singleplayer {
 			for( int i = 0; i < count; i++ ) {
 				int posIndex;
 				if( CheckItem( Lava, out posIndex ) ) {
-					byte block = map.mapData[posIndex];
+					byte block = map.blocks[posIndex];
 					if( !(block == (byte)Block.Lava || block == (byte)Block.StillLava) ) continue;
 					
 					int x = posIndex % width;
@@ -206,7 +206,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void PropagateLava( int posIndex, int x, int y, int z ) {
-			byte block = map.mapData[posIndex];
+			byte block = map.blocks[posIndex];
 			if( block == (byte)Block.Water || block == (byte)Block.StillWater ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
 			} else if( info.Collide[block] == CollideType.WalkThrough ) {
@@ -227,7 +227,7 @@ namespace ClassicalSharp.Singleplayer {
 			for( int i = 0; i < count; i++ ) {
 				int posIndex;
 				if( CheckItem( Water, out posIndex ) ) {
-					byte block = map.mapData[posIndex];
+					byte block = map.blocks[posIndex];
 					if( !(block == (byte)Block.Water || block == (byte)Block.StillWater) ) continue;
 					
 					int x = posIndex % width;
@@ -247,7 +247,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void PropagateWater( int posIndex, int x, int y, int z ) {
-			byte block = map.mapData[posIndex];
+			byte block = map.blocks[posIndex];
 			if( block == (byte)Block.Lava || block == (byte)Block.StillLava ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
 			} else if( info.Collide[block] == CollideType.WalkThrough && block != (byte)Block.Rope ) {
@@ -269,7 +269,7 @@ namespace ClassicalSharp.Singleplayer {
 			for( int i = 0; i < count; i++ ) {
 				int posIndex, flags;
 				if( CheckItem( Falling, 0x2, out posIndex, out flags ) ) {
-					byte block = map.mapData[posIndex];
+					byte block = map.blocks[posIndex];
 					if( !(block == (byte)Block.Sand || block == (byte)Block.Gravel ) ) continue;
 					
 					int x = posIndex % width;
@@ -281,7 +281,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void PropagateFalling( int posIndex, int x, int y, int z, byte block, int flags ) {
-			byte newBlock = map.mapData[posIndex - oneY];
+			byte newBlock = map.blocks[posIndex - oneY];
 			if( newBlock == 0 || info.IsLiquid[newBlock] ) {
 				uint newFlags = MakeFallingFlags( newBlock ) << tickShift;
 				Falling.Enqueue( newFlags | (uint)(posIndex - oneY) );
@@ -459,7 +459,7 @@ namespace ClassicalSharp.Singleplayer {
 				for( int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++ )
 					for( int xx = (x < 2 ? 0 : x - 2); xx <= (x > maxWaterX ? maxX : x + 2); xx++ )
 			{
-				byte block = map.mapData[(yy * length + zz) * width + xx];
+				byte block = map.blocks[(yy * length + zz) * width + xx];
 				if( block == (byte)Block.Sponge ) return true;
 			}
 			

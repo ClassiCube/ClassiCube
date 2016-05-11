@@ -82,7 +82,7 @@ namespace ClassicalSharp.Renderers {
 				Refresh();
 			} else if( e.Var == EnvVar.EdgeLevel ) {
 				int oldClip = builder.clipLevel;
-				builder.clipLevel = Math.Max( 0, game.World.SidesHeight );
+				builder.clipLevel = Math.Max( 0, game.World.Env.SidesHeight );
 				RefreshBorders( Math.Max( oldClip, builder.clipLevel ) );
 			}
 		}
