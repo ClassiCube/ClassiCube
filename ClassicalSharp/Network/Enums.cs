@@ -45,7 +45,9 @@ namespace ClassicalSharp.Network {
 		CpeDefineBlockExt = 37,
 		CpeBulkBlockUpdate = 38,
 		CpeSetTextColor = 39,
-		CpeDefineModel = 40,
+		CpeSetMapEnvUrl = 40,
+		CpeSetMapEnvProperty = 41,
+		CpeDefineModel = 42,
 	}
 }
 

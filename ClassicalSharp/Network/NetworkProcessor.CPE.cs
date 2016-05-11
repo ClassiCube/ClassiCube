@@ -57,7 +57,7 @@ namespace ClassicalSharp.Network {
 		
 		#region Reading
 		
-		internal void HandleCpeExtInfo() {
+		internal void HandleExtInfo() {
 			string appName = reader.ReadAsciiString();
 			game.Chat.Add( "Server software: " + appName );
 			if( Utils.CaselessStarts( appName, "D3 server" ) )
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Network {
 			SendCpeExtInfoReply();
 		}
 		
-		internal void HandleCpeExtEntry() {
+		internal void HandleExtEntry() {
 			string extName = reader.ReadAsciiString();
 			int extVersion = reader.ReadInt32();
 			Utils.LogDebug( "cpe ext: {0}, {1}", extName, extVersion );
@@ -99,11 +99,11 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeSetClickDistance() {
+		internal void HandleSetClickDistance() {
 			game.LocalPlayer.ReachDistance = reader.ReadInt16() / 32f;
 		}
 		
-		internal void HandleCpeCustomBlockSupportLevel() {
+		internal void HandleCustomBlockSupportLevel() {
 			byte supportLevel = reader.ReadUInt8();
 			MakeCustomBlockSupportLevel( 1 );
 			SendPacket();
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeHoldThis() {
+		internal void HandleHoldThis() {
 			byte blockType = reader.ReadUInt8();
 			bool canChange = reader.ReadUInt8() == 0;
 			game.Inventory.CanChangeHeldBlock = true;
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Network {
 			game.Inventory.CanChangeHeldBlock = canChange;
 		}
 		
-		internal void HandleCpeSetTextHotkey() {
+		internal void HandleSetTextHotkey() {
 			string label = reader.ReadAsciiString();
 			string action = reader.ReadCp437String();
 			int keyCode = reader.ReadInt32();
@@ -150,7 +150,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeExtAddPlayerName() {
+		internal void HandleExtAddPlayerName() {
 			short nameId = reader.ReadInt16();
 			string playerName = Utils.StripColours( reader.ReadAsciiString() );
 			playerName = Utils.RemoveEndPlus( playerName );
@@ -182,7 +182,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeExtAddEntity() {
+		internal void HandleExtAddEntity() {
 			byte entityId = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			displayName = Utils.RemoveEndPlus( displayName );
@@ -191,7 +191,7 @@ namespace ClassicalSharp.Network {
 			AddEntity( entityId, displayName, skinName, false );
 		}
 		
-		internal void HandleCpeExtRemovePlayerName() {
+		internal void HandleExtRemovePlayerName() {
 			short nameId = reader.ReadInt16();
 			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
 			if( nameId < 0 )
@@ -203,7 +203,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeMakeSelection() {
+		internal void HandleMakeSelection() {
 			byte selectionId = reader.ReadUInt8();
 			string label = reader.ReadAsciiString();
 			short startX = reader.ReadInt16();
@@ -224,12 +224,12 @@ namespace ClassicalSharp.Network {
 			game.SelectionManager.AddSelection( selectionId, p1, p2, col );
 		}
 		
-		internal void HandleCpeRemoveSelection() {
+		internal void HandleRemoveSelection() {
 			byte selectionId = reader.ReadUInt8();
 			game.SelectionManager.RemoveSelection( selectionId );
 		}
 		
-		internal void HandleCpeEnvColours() {
+		internal void HandleEnvColours() {
 			byte variable = reader.ReadUInt8();
 			short red = reader.ReadInt16();
 			short green = reader.ReadInt16();
@@ -250,7 +250,7 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void HandleCpeSetBlockPermission() {
+		internal void HandleSetBlockPermission() {
 			byte blockId = reader.ReadUInt8();
 			bool canPlace = reader.ReadUInt8() != 0;
 			bool canDelete = reader.ReadUInt8() != 0;
@@ -270,41 +270,33 @@ namespace ClassicalSharp.Network {
 			game.Events.RaiseBlockPermissionsChanged();
 		}
 		
-		internal void HandleCpeChangeModel() {
+		internal void HandleChangeModel() {
 			byte playerId = reader.ReadUInt8();
 			string modelName = reader.ReadAsciiString().ToLowerInvariant();
 			Player player = game.Players[playerId];
 			if( player != null ) player.SetModel( modelName );
 		}
 		
-		internal void HandleCpeEnvSetMapAppearance() {
-			string url = reader.ReadAsciiString();
+		internal void HandleEnvSetMapAppearance() {
+			HandleSetEnvMapUrl();
 			game.World.Env.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.World.Env.SetEdgeBlock( (Block)reader.ReadUInt8() );
 			game.World.Env.SetEdgeLevel( reader.ReadInt16() );
-			if( !game.AllowServerTextures ) return;
-			
-			if( url == "" ) {
-				ExtractDefault();
-			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
-				RetrieveTexturePack( url );
-			}
-			Utils.LogDebug( "Image url: " + url );
 		}
 		
-		internal void HandleCpeEnvSetMapAppearance2() {
-			HandleCpeEnvSetMapAppearance();
+		internal void HandleEnvSetMapAppearance2() {
+			HandleEnvSetMapAppearance();
 			game.World.Env.SetCloudsLevel( reader.ReadInt16() );
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 			game.SetViewDistance( game.UserViewDistance, false );
 		}
 		
-		internal void HandleCpeEnvWeatherType() {
+		internal void HandleEnvWeatherType() {
 			game.World.Env.SetWeather( (Weather)reader.ReadUInt8() );
 		}
 		
-		internal void HandleCpeHackControl() {
+		internal void HandleHackControl() {
 			LocalPlayer p = game.LocalPlayer;
 			p.Hacks.CanFly = reader.ReadUInt8() != 0;
 			p.Hacks.CanNoclip = reader.ReadUInt8() != 0;
@@ -320,7 +312,7 @@ namespace ClassicalSharp.Network {
 			game.Events.RaiseHackPermissionsChanged();
 		}
 		
-		internal void HandleCpeExtAddEntity2() {
+		internal void HandleExtAddEntity2() {
 			byte entityId = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			string skinName = reader.ReadAsciiString();
@@ -368,6 +360,27 @@ namespace ClassicalSharp.Network {
 			if( code == '%' || code == '&' ) return; // colour code signifiers cannot be used
 			game.Drawer2D.Colours[code] = col;
 			game.Events.RaiseColourCodesChanged();
+		}
+		
+		internal void HandleSetEnvMapUrl() {
+			string url = reader.ReadAsciiString();
+			if( !game.AllowServerTextures ) return;
+			
+			if( url == "" ) {
+				ExtractDefault();
+			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
+				RetrieveTexturePack( url );
+			}
+			Utils.LogDebug( "Image url: " + url );
+		}
+		
+		internal void HandleSetEnvMapProperty() {
+			byte type = reader.ReadUInt8();
+			int value = reader.ReadInt32();
+			
+			switch( type ) {
+					// TODO: Property list
+			}
 		}
 	}
 	#endregion

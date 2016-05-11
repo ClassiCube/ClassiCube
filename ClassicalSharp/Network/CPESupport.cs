@@ -29,9 +29,9 @@ namespace ClassicalSharp.Network {
 			network.ServerSupportsFullCP437 = false;
 
 			network.Set( Opcode.CpeEnvSetMapApperance,
-			            network.HandleCpeEnvSetMapAppearance, 69 );
+			            network.HandleEnvSetMapAppearance, 69 );
 			network.Set( Opcode.CpeDefineBlockExt,
-			            network.HandleCpeDefineBlockExt, 85 );
+			            network.HandleDefineBlockExt, 85 );
 		}
 		
 		/// <summary> Sets fields / updates network handles based on the server 
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Network {
 				envMapVer = version;
 				if( version == 1 ) return;
 				network.Set( Opcode.CpeEnvSetMapApperance,
-				            network.HandleCpeEnvSetMapAppearance2, 73 );
+				            network.HandleEnvSetMapAppearance2, 73 );
 			} else if( ext == "LongerMessages" ) {
 				network.ServerSupportsPartialMessages = true;
 			} else if( ext == "FullCP437" ) {
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Network {
 				blockDefsExtVer = version;
 				if( version == 1 ) return;
 				network.Set( Opcode.CpeDefineBlockExt,
-				            network.HandleCpeDefineBlockExt, 88 );
+				            network.HandleDefineBlockExt, 88 );
 			}
 		}
 		

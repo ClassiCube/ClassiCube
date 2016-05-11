@@ -7,11 +7,11 @@ namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor : INetworkProcessor {
 		
-		internal void HandleCpeDefineBlock() {
+		internal void HandleDefineBlock() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeDefineBlock ); return;
 			}
-			byte id = HandleCpeDefineBlockCommonStart( false );
+			byte id = HandleDefineBlockCommonStart( false );
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
 			if( shape == 0 ) {
@@ -22,7 +22,7 @@ namespace ClassicalSharp.Network {
 				info.MaxBB[id].Y = shape / 16f;
 			}
 			
-			HandleCpeDefineBlockCommonEnd( id );
+			HandleDefineBlockCommonEnd( id );
 			// Update sprite BoundingBox if necessary
 			if( info.IsSprite[id] ) {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
@@ -31,7 +31,7 @@ namespace ClassicalSharp.Network {
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
-		internal void HandleCpeRemoveBlockDefinition() {
+		internal void HandleRemoveBlockDefinition() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
 			}
@@ -40,11 +40,11 @@ namespace ClassicalSharp.Network {
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
-		internal void HandleCpeDefineBlockExt() {
+		internal void HandleDefineBlockExt() {
 			if( !game.AllowCustomBlocks ) {
 				SkipPacketData( Opcode.CpeDefineBlockExt ); return;
 			}
-			byte id = HandleCpeDefineBlockCommonStart( cpe.blockDefsExtVer >= 2 );
+			byte id = HandleDefineBlockCommonStart( cpe.blockDefsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
@@ -57,11 +57,11 @@ namespace ClassicalSharp.Network {
 			
 			info.MinBB[id] = min;
 			info.MaxBB[id] = max;
-			HandleCpeDefineBlockCommonEnd( id );
+			HandleDefineBlockCommonEnd( id );
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
-		byte HandleCpeDefineBlockCommonStart( bool uniqueSideTexs ) {
+		byte HandleDefineBlockCommonStart( bool uniqueSideTexs ) {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockInfo( block, false );
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Network {
 			return block;
 		}
 		
-		internal void HandleCpeDefineBlockCommonEnd( byte block ) {
+		internal void HandleDefineBlockCommonEnd( byte block ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			SetBlockDraw( info, block, blockDraw );

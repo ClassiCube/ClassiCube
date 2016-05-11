@@ -176,30 +176,30 @@ namespace ClassicalSharp.Network {
 			Set( Opcode.Kick, HandleKick, 65 );
 			Set( Opcode.SetPermission, HandleSetPermission, 2 );
 			
-			Set( Opcode.CpeExtInfo, HandleCpeExtInfo, 67 );
-			Set( Opcode.CpeExtEntry, HandleCpeExtEntry, 69 );
-			Set( Opcode.CpeSetClickDistance, HandleCpeSetClickDistance, 3 );
-			Set( Opcode.CpeCustomBlockSupportLevel, HandleCpeCustomBlockSupportLevel, 2 );
-			Set( Opcode.CpeHoldThis, HandleCpeHoldThis, 3 );
-			Set( Opcode.CpeSetTextHotkey, HandleCpeSetTextHotkey, 134 );
+			Set( Opcode.CpeExtInfo, HandleExtInfo, 67 );
+			Set( Opcode.CpeExtEntry, HandleExtEntry, 69 );
+			Set( Opcode.CpeSetClickDistance, HandleSetClickDistance, 3 );
+			Set( Opcode.CpeCustomBlockSupportLevel, HandleCustomBlockSupportLevel, 2 );
+			Set( Opcode.CpeHoldThis, HandleHoldThis, 3 );
+			Set( Opcode.CpeSetTextHotkey, HandleSetTextHotkey, 134 );
 			
-			Set( Opcode.CpeExtAddPlayerName, HandleCpeExtAddPlayerName, 196 );
-			Set( Opcode.CpeExtAddEntity, HandleCpeExtAddEntity, 130 );
-			Set( Opcode.CpeExtRemovePlayerName, HandleCpeExtRemovePlayerName, 3 );
+			Set( Opcode.CpeExtAddPlayerName, HandleExtAddPlayerName, 196 );
+			Set( Opcode.CpeExtAddEntity, HandleExtAddEntity, 130 );
+			Set( Opcode.CpeExtRemovePlayerName, HandleExtRemovePlayerName, 3 );
 			
-			Set( Opcode.CpeEnvColours, HandleCpeEnvColours, 8 );
-			Set( Opcode.CpeMakeSelection, HandleCpeMakeSelection, 86 );
-			Set( Opcode.CpeRemoveSelection, HandleCpeRemoveSelection, 2 );
-			Set( Opcode.CpeSetBlockPermission, HandleCpeSetBlockPermission, 4 );
-			Set( Opcode.CpeChangeModel, HandleCpeChangeModel, 66 );
-			Set( Opcode.CpeEnvSetMapApperance, HandleCpeEnvSetMapAppearance, 69 );
-			Set( Opcode.CpeEnvWeatherType, HandleCpeEnvWeatherType, 2 );
-			Set( Opcode.CpeHackControl, HandleCpeHackControl, 8 );
-			Set( Opcode.CpeExtAddEntity2, HandleCpeExtAddEntity2, 138 );
+			Set( Opcode.CpeEnvColours, HandleEnvColours, 8 );
+			Set( Opcode.CpeMakeSelection, HandleMakeSelection, 86 );
+			Set( Opcode.CpeRemoveSelection, HandleRemoveSelection, 2 );
+			Set( Opcode.CpeSetBlockPermission, HandleSetBlockPermission, 4 );
+			Set( Opcode.CpeChangeModel, HandleChangeModel, 66 );
+			Set( Opcode.CpeEnvSetMapApperance, HandleEnvSetMapAppearance, 69 );
+			Set( Opcode.CpeEnvWeatherType, HandleEnvWeatherType, 2 );
+			Set( Opcode.CpeHackControl, HandleHackControl, 8 );
+			Set( Opcode.CpeExtAddEntity2, HandleExtAddEntity2, 138 );
 			
-			Set( Opcode.CpeDefineBlock, HandleCpeDefineBlock, 80 );
-			Set( Opcode.CpeRemoveBlockDefinition, HandleCpeRemoveBlockDefinition, 2 );
-			Set( Opcode.CpeDefineBlockExt, HandleCpeDefineBlockExt, 85 );
+			Set( Opcode.CpeDefineBlock, HandleDefineBlock, 80 );
+			Set( Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2 );
+			Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
 			Set( Opcode.CpeBulkBlockUpdate, HandleBulkBlockUpdate, 1282 );
 			Set( Opcode.CpeSetTextColor, HandleSetTextColor, 6 );
 		}
