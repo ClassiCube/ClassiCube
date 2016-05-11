@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
@@ -111,6 +112,33 @@ namespace ClassicalSharp {
 		/// <param name="face"> Face of the given block, see TileSide constants. </param>
 		public int GetTextureLoc( byte block, int face ) {
 			return textures[block * Side.Sides + face];
+		}
+		
+		void GetTextureRegion( byte block, int side, out Vector2 min, out Vector2 max ) {
+			min = Vector2.Zero; max = Vector2.One;
+			Vector3 bbMin = MinBB[block], bbMax = MaxBB[block];		
+			switch( side ) {
+				case Side.Left:
+				case Side.Right:
+					min = new Vector2( bbMin.Z, bbMin.Y );
+					max = new Vector2( bbMax.Z, bbMax.Y ); break;
+				case Side.Front:
+				case Side.Back: 
+					min = new Vector2( bbMin.X, bbMin.Y );
+					max = new Vector2( bbMax.X, bbMax.Y ); break;
+				case Side.Top:
+				case Side.Bottom:
+					min = new Vector2( bbMin.X, bbMin.Z );
+					max = new Vector2( bbMax.X, bbMax.Z ); break;
+			}
+		}
+		
+		bool FaceOccluded( byte block, byte other, int side ) {
+			Vector2 bMin, bMax, oMin, oMax;
+			GetTextureRegion( block, side, out bMin, out bMax );
+			GetTextureRegion( other, side, out oMin, out oMax );
+			return bMin.X >= oMin.X && bMin.Y >= oMin.Y
+				&& bMax.X <= oMax.X && bMax.Y <= oMax.Y;
 		}
 	}
 }

@@ -1,10 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Drawing;
-using ClassicalSharp.GraphicsAPI;
-#if ANDROID
-using Android.Graphics;
-#endif
 
 namespace ClassicalSharp {
 	
@@ -24,17 +19,5 @@ namespace ClassicalSharp {
 		public const int Top = 5;
 		/// <summary> Number of sides on a cube. </summary>
 		public const int Sides = 6;
-		
-		public static int Opposite( int side ) {
-			switch( side ) {
-				case Left: return Right;
-				case Right: return Left;
-				case Front: return Back;
-				case Back: return Front;
-				case Bottom: return Top;
-				case Top: return Bottom;
-			}
-			return side;
-		}
 	}
 }

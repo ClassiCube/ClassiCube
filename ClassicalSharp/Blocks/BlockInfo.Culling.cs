@@ -46,48 +46,50 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void UpdateCulling( byte tile, byte neighbour ) {
-			bool hidden = IsHidden( tile, neighbour );
-			Vector3 tMin = MinBB[tile], tMax = MaxBB[tile];
-			Vector3 nMin = MinBB[neighbour], nMax = MaxBB[neighbour];
-			
-			if( IsSprite[tile] ) {
-				SetHidden( tile, neighbour, Side.Left, hidden );
-				SetHidden( tile, neighbour, Side.Right, hidden );
-				SetHidden( tile, neighbour, Side.Front, hidden );
-				SetHidden( tile, neighbour, Side.Back, hidden );
-				SetHidden( tile, neighbour, Side.Bottom, hidden && nMax.Y == 1 );
-				SetHidden( tile, neighbour, Side.Top, hidden && tMax.Y == 1 );
+		void UpdateCulling( byte block, byte other ) {
+			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
+			Vector3 oMin = MinBB[other], oMax = MaxBB[other];			
+			if( IsSprite[block] ) {
+				SetHidden( block, other, Side.Left, true );
+				SetHidden( block, other, Side.Right, true );
+				SetHidden( block, other, Side.Front, true );
+				SetHidden( block, other, Side.Back, true );
+				SetHidden( block, other, Side.Bottom, oMax.Y == 1 );
+				SetHidden( block, other, Side.Top, bMax.Y == 1 );
 			} else {
-				SetXStretch( tile, tMin.X == 0 && tMax.X == 1 );
-				SetZStretch( tile, tMin.Z == 0 && tMax.Z == 1 );
+				SetXStretch( block, bMin.X == 0 && bMax.X == 1 );
+				SetZStretch( block, bMin.Z == 0 && bMax.Z == 1 );
 				
-				SetHidden( tile, neighbour, Side.Left, hidden && nMax.X == 1 && tMin.X == 0 );
-				SetHidden( tile, neighbour, Side.Right, hidden && nMin.X == 0 && tMax.X == 1 );
-				SetHidden( tile, neighbour, Side.Front, hidden && nMax.Z == 1 && tMin.Z == 0 );
-				SetHidden( tile, neighbour, Side.Back, hidden && nMin.Z == 0 && tMax.Z == 1 );
-				SetHidden( tile, neighbour, Side.Bottom, hidden && nMax.Y == 1 && tMin.Y == 0 );
-				SetHidden( tile, neighbour, Side.Top, hidden && nMin.Y == 0 && tMax.Y == 1 );
+				SetHidden( block, other, Side.Left, oMax.X == 1 && bMin.X == 0 );
+				SetHidden( block, other, Side.Right, oMin.X == 0 && bMax.X == 1 );
+				SetHidden( block, other, Side.Front, oMax.Z == 1 && bMin.Z == 0 );
+				SetHidden( block, other, Side.Back, oMin.Z == 0 && bMax.Z == 1 );
+				SetHidden( block, other, Side.Bottom, oMax.Y == 1 && bMin.Y == 0 );
+				SetHidden( block, other, Side.Top, oMin.Y == 0 && bMax.Y == 1 );
 			}
 		}
 		
-		bool IsHidden( byte tile, byte neighbour ) {
+		bool IsHidden( byte block, byte other, int side ) {
 			// Sprite blocks can never hide faces.
-			if( IsSprite[tile] ) return false;
+			if( IsSprite[block] ) return false;
 			// All blocks (except for say leaves) cull with themselves.
-			if( tile == neighbour ) return CullWithNeighbours[tile];			
+			if( block == other ) return CullWithNeighbours[block];			
 			// An opaque neighbour (asides from lava) culls the face.
-			if( IsOpaque[neighbour] && !IsLiquid[neighbour] ) return true;
-
+			if( IsOpaque[other] && !IsLiquid[other] ) return true;
+			if( !IsTranslucent[block] || !IsTranslucent[other] ) return false;
+			
 			// e.g. for water / ice, don't need to draw water.
-			return IsTranslucent[tile] && IsTranslucent[neighbour] 
-				&& Collide[neighbour] == CollideType.Solid;
+			CollideType bType = Collide[block], oType = Collide[other];
+			bool canSkip = (bType == CollideType.Solid && oType == CollideType.Solid) 
+				|| bType != CollideType.Solid;
+			return canSkip && FaceOccluded( block, other, side );
 		}
 		
-		void SetHidden( byte tile, byte block, int tileSide, bool value ) {
+		void SetHidden( byte block, byte other, int side, bool value ) {
+			value = IsHidden( block, other, side ) && value;
 			int bit = value ? 1 : 0;
-			hidden[tile * BlocksCount + block] &= (byte)~(1 << tileSide);
-			hidden[tile * BlocksCount + block] |= (byte)(bit << tileSide);
+			hidden[block * BlocksCount + other] &= (byte)~(1 << side);
+			hidden[block * BlocksCount + other] |= (byte)(bit << side);
 		}
 		
 		/// <summary> Returns whether the face at the given face of the tile
