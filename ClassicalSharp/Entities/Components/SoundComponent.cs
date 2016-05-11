@@ -37,8 +37,8 @@ namespace ClassicalSharp.Entities {
 			if( p.curSwing < 0.999f ) return enoughDist;
 			
 			// have our legs just crossed over the '0' point?
-			float oldLegRot = (float)Math.Sin( p.anim.walkTimeO );
-			float newLegRot = (float)Math.Sin( p.anim.walkTimeN );
+			float oldLegRot = (float)Math.Cos( p.anim.walkTimeO );
+			float newLegRot = (float)Math.Cos( p.anim.walkTimeN );
 			return Math.Sign( oldLegRot ) != Math.Sign( newLegRot );
 		}
 		
@@ -76,14 +76,16 @@ namespace ClassicalSharp.Entities {
 			CollideType collide = game.BlockInfo.Collide[b];
 			if( newType != SoundType.None && collide != CollideType.Solid )
 				sndType = newType;
-			if( b != 0 ) anyNonAir = true;
+			if( !game.BlockInfo.IsAir[b] )
+				anyNonAir = true;
 			return false;
 		}
 		
 		bool CheckSoundSolid( byte b ) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
 			if( newType != SoundType.None ) sndType = newType;
-			if( b != 0 ) anyNonAir = true;
+			if( !game.BlockInfo.IsAir[b] )
+				anyNonAir = true;
 			return false;
 		}
 	}

@@ -273,6 +273,7 @@
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="TexturePack\EntryList.cs" />
     <Compile Include="TexturePack\Animations.cs" />
+    <Compile Include="TexturePack\Side.cs" />
     <Compile Include="TexturePack\TextureCache.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
