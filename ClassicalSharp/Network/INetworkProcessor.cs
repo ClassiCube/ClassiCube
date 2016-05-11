@@ -115,13 +115,6 @@ namespace ClassicalSharp {
 			game.World.TextureUrl = null;
 		}
 		
-		static bool Is304Status( WebException ex ) {
-			if( ex == null || ex.Status != WebExceptionStatus.ProtocolError )
-				return false;
-			HttpWebResponse response = (HttpWebResponse)ex.Response;
-			return response.StatusCode == HttpStatusCode.NotModified;
-		}
-		
 		protected void CheckAsyncResources() {
 			DownloadedItem item;
 			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
@@ -137,7 +130,7 @@ namespace ClassicalSharp {
 					if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
 					TextureCache.AddToCache( item.Url, bmp );
 					TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
-				} else if( Is304Status( item.WebEx ) ) {
+				} else if( item.ResponseCode == HttpStatusCode.NotModified ) {
 					Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
 					if( bmp == null ) {// Should never happen, but handle anyways.
 						ExtractDefault();
@@ -161,7 +154,7 @@ namespace ClassicalSharp {
 					extractor.Extract( (byte[])item.Data, game );
 					TextureCache.AddToCache( item.Url, (byte[])item.Data );
 					TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
-				} else if( Is304Status( item.WebEx ) ) {
+				} else if( item.ResponseCode == HttpStatusCode.NotModified ) {
 					byte[] data = TextureCache.GetDataFromCache( item.Url );
 					if( data == null ) { // Should never happen, but handle anyways.
 						ExtractDefault();

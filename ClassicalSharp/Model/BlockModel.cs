@@ -102,9 +102,9 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( lastTexId );
 			TransformVertices();
 			
-			if( sprite ) graphics.FaceCulling = true;
+			//if( sprite ) graphics.FaceCulling = true;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			if( sprite ) graphics.FaceCulling = false;
+			//if( sprite ) graphics.FaceCulling = false;
 		}
 		
 		void YQuad( float y, int side, float shade ) {

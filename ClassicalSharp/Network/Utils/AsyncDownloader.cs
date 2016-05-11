@@ -191,7 +191,7 @@ namespace ClassicalSharp.Network {
 			string url = request.Url;
 			Utils.LogDebug( "Downloading {0} from: {1}", request.Type, url );
 			object value = null;
-			WebException webEx = null;
+			HttpStatusCode status = HttpStatusCode.OK;
 			string etag = null;
 			
 			try {
@@ -204,14 +204,19 @@ namespace ClassicalSharp.Network {
 				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException || ex is IOException ) ) throw;
 				Utils.LogDebug( "Failed to download from: " + url );
 				
-				if( ex is WebException )
-					webEx = (WebException)ex;
+				if( ex is WebException ) {
+					WebException webEx = (WebException)ex;
+					if( webEx.Response != null ) {
+						status = ((HttpWebResponse)webEx.Response).StatusCode;
+						webEx.Response.Close();
+					}
+				}
 			}
 			value = CheckIsValidImage( value, url );
 
 			lock( downloadedLocker ) {
 				DownloadedItem oldItem;
-				DownloadedItem newItem = new DownloadedItem( value, request.TimeAdded, url, webEx, etag );
+				DownloadedItem newItem = new DownloadedItem( value, request.TimeAdded, url, status, etag );
 				
 				if( downloaded.TryGetValue( request.Identifier, out oldItem ) ) {
 					if( oldItem.TimeAdded > newItem.TimeAdded ) {
@@ -343,18 +348,18 @@ namespace ClassicalSharp.Network {
 		public string Url;
 		
 		/// <summary> Exception that occurred if this request failed, can be null. </summary>
-		public WebException WebEx;
+		public HttpStatusCode ResponseCode;
 		
 		/// <summary> Unique identifier assigned by the server to this item. </summary>
 		public string ETag;
 		
 		public DownloadedItem( object data, DateTime timeAdded, 
-		                      string url, WebException webEx, string etag ) {
+		                      string url, HttpStatusCode code, string etag ) {
 			Data = data;
 			TimeAdded = timeAdded;
 			TimeDownloaded = DateTime.UtcNow;
 			Url = url;
-			WebEx = webEx;
+			ResponseCode = code;
 			ETag = etag;
 		}
 	}
