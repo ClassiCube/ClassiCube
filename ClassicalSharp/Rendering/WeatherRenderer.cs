@@ -43,8 +43,10 @@ namespace ClassicalSharp.Renderers {
 			Vector3I pos = Vector3I.Floor( camPos );
 			bool moved = pos != lastPos;
 			lastPos = pos;
+			WorldEnv env = game.World.Env;
 			                              
-			float speed = weather == Weather.Rainy ? 1f : 0.20f;
+			float speed = weather == Weather.Rainy ? 
+				1.0f * env.RainSpeed : 0.2f * env.SnowSpeed;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;
@@ -61,7 +63,10 @@ namespace ClassicalSharp.Renderers {
 					
 					if( particles && (rainAcc >= 0.25 || moved) )
 						game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
-					col.A = (byte)Math.Max( 0, AlphaAt( dx * dx + dz * dz ) );
+					
+					float alpha = AlphaAt( dx * dx + dz * dz );
+					Utils.Clamp( ref alpha, 0, 0xFF );
+					col.A = (byte)alpha;
 					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
 				}
 			}
@@ -78,7 +83,8 @@ namespace ClassicalSharp.Renderers {
 		
 		float AlphaAt( float x ) {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
-			return 0.05f * x * x - 7 * x + 178;
+			float falloff = 0.05f * x * x - 7 * x;
+			return 178 + falloff * game.World.Env.WeatherFade;
 		}
 		
 		void MakeRainForSquare( int x, float y, float height, int z, FastColour col, ref int index ) {
