@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 				OptionsSet.Remove( key );
 			
 			while( (line = reader.ReadLine()) != null ) {
-				if( line.Length == 0 && line[0] == '#' ) continue;
+				if( line.Length == 0 || line[0] == '#' ) continue;
 				
 				int separatorIndex = line.IndexOf( '=' );
 				if( separatorIndex <= 0 ) continue;
