@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using ClassicalSharp.Events;
+using OpenTK;
 
 namespace ClassicalSharp.Map {
 	
@@ -121,6 +122,13 @@ namespace ClassicalSharp.Map {
 		public bool IsLit( Vector3I p ) {
 			if( !IsValidPos( p.X, p.Y, p.Z ) ) return true;
 			return p.Y > GetLightHeight( p.X, p.Z );
+		}
+		
+		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
+		public bool IsLit( Vector3 p ) {
+			int x = Utils.Floor( p.X ), y = Utils.Floor( p.Y ), z = Utils.Floor( p.Z );
+			if( !IsValidPos( x, y, z ) ) return true;
+			return y > GetLightHeight( x, z );
 		}
 		
 		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>

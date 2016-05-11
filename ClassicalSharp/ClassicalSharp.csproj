@@ -190,8 +190,6 @@
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
     <Compile Include="Particles\ParticleSpawner.cs" />
-    <Compile Include="Particles\RainParticle.cs" />
-    <Compile Include="Particles\TerrainParticle.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Game\ChatLog.cs" />
     <Compile Include="Game\Game.cs" />

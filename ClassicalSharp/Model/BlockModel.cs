@@ -68,9 +68,9 @@ namespace ClassicalSharp.Model {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if( p is FakePlayer ) {
-				Vector3I eyePos = Vector3I.Floor( game.LocalPlayer.EyePosition );
-				FastColour baseCol = game.World.IsLit( eyePos ) ? game.World.Env.Sunlight : game.World.Env.Shadowlight;
-				col = FastColour.Scale( baseCol, 0.8f );
+				col = game.World.IsLit( game.LocalPlayer.EyePosition ) 
+					? game.World.Env.Sunlight : game.World.Env.Shadowlight;
+				col = FastColour.Scale( col, 0.8f );
 				block = ((FakePlayer)p).Block;
 			} else {
 				block = Utils.FastByte( p.ModelName );
