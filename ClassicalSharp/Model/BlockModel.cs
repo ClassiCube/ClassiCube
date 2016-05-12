@@ -68,7 +68,7 @@ namespace ClassicalSharp.Model {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if( p is FakePlayer ) {
-				col = game.World.IsLit( game.LocalPlayer.EyePosition ) 
+				col = game.World.IsLit( game.LocalPlayer.EyePosition )
 					? game.World.Env.Sunlight : game.World.Env.Shadowlight;
 				col = FastColour.Scale( col, 0.8f );
 				block = ((FakePlayer)p).Block;
@@ -83,11 +83,15 @@ namespace ClassicalSharp.Model {
 			bool sprite = game.BlockInfo.IsSprite[block];
 			
 			if( sprite ) {
-				SpriteXQuad( Side.Right, false );
-				SpriteZQuad( Side.Back, false );
+				SpriteXQuad( Side.Right, false, false );
+				SpriteXQuad( Side.Right, false, true );
+				SpriteZQuad( Side.Back, false, false );
+				SpriteZQuad( Side.Back, false, true );
 				
-				SpriteZQuad( Side.Back, true );
-				SpriteXQuad( Side.Right, true );
+				SpriteZQuad( Side.Back, true, false );
+				SpriteZQuad( Side.Back, true, true );
+				SpriteXQuad( Side.Right, true, false );
+				SpriteXQuad( Side.Right, true, true );
 			} else {
 				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
 				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
@@ -102,9 +106,9 @@ namespace ClassicalSharp.Model {
 			graphics.BindTexture( lastTexId );
 			TransformVertices();
 			
-			//if( sprite ) graphics.FaceCulling = true;
+			if( sprite ) graphics.FaceCulling = true;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			//if( sprite ) graphics.FaceCulling = false;
+			if( sprite ) graphics.FaceCulling = false;
 		}
 		
 		void YQuad( float y, int side, float shade ) {
@@ -160,7 +164,7 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
 		}
 		
-		void SpriteZQuad( int side, bool firstPart ) {
+		void SpriteZQuad( int side, bool firstPart, bool mirror ) {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
@@ -168,11 +172,13 @@ namespace ClassicalSharp.Model {
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
 			FastColour col = bright ? FastColour.White : this.col;
 
-			float p1, p2;
-			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.
-				rec.U1 = 0.5f; p1 = -5.5f/16; p2 = 0.0f/16;
+			float p1 = 0, p2 = 0;
+			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.				
+				if( mirror ) { rec.U1 = 0.5f; p1 = -5.5f/16; } 
+				else { rec.U2 = 0.5f; p2 = -5.5f/16; }
 			} else {
-				rec.U2 = 0.5f; p1 = 0.0f/16; p2 = 5.5f/16;
+				if( mirror ) { rec.U2 = 0.5f; p2 = 5.5f/16; } 
+				else { rec.U1 = 0.5f; p1 = 5.5f/16; }
 			}
 			
 			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 0, p1, rec.U2, rec.V2, col );
@@ -181,7 +187,7 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 0, p2, rec.U1, rec.V2, col );
 		}
 
-		void SpriteXQuad( int side, bool firstPart ) {
+		void SpriteXQuad( int side, bool firstPart, bool mirror ) {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
@@ -189,13 +195,13 @@ namespace ClassicalSharp.Model {
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
 			FastColour col = bright ? FastColour.White : this.col;
 			
-			float x1, x2, z1, z2;
+			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if( firstPart ) {
-				rec.U1 = 0.5f; rec.U2 = 1f; x1 = -5.5f/16;
-				x2 = 0.0f/16; z1 = 5.5f/16; z2 = 0.0f/16;
+				if( mirror ) { rec.U2 = 0.5f; x2 = -5.5f/16; z2 = 5.5f/16; }
+				else { rec.U1 = 0.5f; x1 = -5.5f/16; z1 = 5.5f/16; }
 			} else {
-				rec.U1 = 0f; rec.U2 = 0.5f; x1 = 0.0f/16;
-				x2 = 5.5f/16; z1 = 0.0f/16; z2 = -5.5f/16;
+				if( mirror ) { rec.U1 = 0.5f; x1 = 5.5f/16; z1 = -5.5f/16; }
+				else { rec.U2 = 0.5f; x2 = 5.5f/16; z2 = -5.5f/16; }
 			}
 
 			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 0, z1, rec.U2, rec.V2, col );
