@@ -145,13 +145,11 @@ namespace ClassicalSharp.Gui {
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
 			AddPlayerInfo( new PlayerInfo( game.Players[e.Id] ), -1 );
-			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 		
 		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
 			AddPlayerInfo( new PlayerInfo( game.CpePlayersList[e.Id] ), -1 );
-			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 		

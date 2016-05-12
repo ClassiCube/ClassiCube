@@ -40,7 +40,6 @@ namespace ClassicalSharp.Gui {
 		void PlayerSpawned( object sender, IdEventArgs e ) {
 			Player player = game.Players[e.Id];
 			AddPlayerInfo( player );
-			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 

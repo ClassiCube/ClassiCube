@@ -23,7 +23,6 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			CreateInitialPlayerInfo();
-			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 		
@@ -114,7 +113,6 @@ namespace ClassicalSharp.Gui {
 			RemoveItemAt( info, i );
 			RemoveItemAt( textures, i );
 			namesCount--;
-			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortPlayerInfo();
 		}
 		
@@ -126,7 +124,9 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected void SortPlayerInfo() {
+			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			SortInfoList();
+			columns = Utils.CeilDiv( namesCount, namesPerColumn );
 			CalcMaxColumnHeight();
 			int y = game.Height / 2 - yHeight / 2;
 			int midCol = columns / 2;
