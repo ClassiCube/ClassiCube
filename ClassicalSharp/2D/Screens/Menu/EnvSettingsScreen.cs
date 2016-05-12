@@ -40,17 +40,21 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.World.Env.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
 				// Column 2
-				Make2( 1, -100, "Sunlight col", OnWidgetClick,
+				Make2( 1, -150, "Sunlight col", OnWidgetClick,
 				     g => g.World.Env.Sunlight.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetSunlight( FastColour.Parse( v ) ) ),
 				
-				Make2( 1, -50, "Shadow col", OnWidgetClick,
+				Make2( 1, -100, "Shadow col", OnWidgetClick,
 				     g => g.World.Env.Shadowlight.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetShadowlight( FastColour.Parse( v ) ) ),
 				
-				Make2( 1, 0, "Weather", OnWidgetClick,
+				Make2( 1, -50, "Weather", OnWidgetClick,
 				     g => g.World.Env.Weather.ToString(),
 				     (g, v) => g.World.Env.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
+				
+				Make2( 1, 0, "Rain/Snow speed", OnWidgetClick,
+				     g => g.World.Env.WeatherSpeed.ToString( "F2" ),
+				     (g, v) => g.World.Env.SetWeatherSpeed( Single.Parse( v ) ) ),
 				
 				Make2( 1, 50, "Water level", OnWidgetClick,
 				     g => g.World.Env.EdgeHeight.ToString(),
@@ -76,6 +80,7 @@ namespace ClassicalSharp.Gui {
 				WorldEnv.DefaultSunlight.ToRGBHexString(),
 				WorldEnv.DefaultShadowlight.ToRGBHexString(),
 				Weather.Sunny.ToString(),
+				(1).ToString(),
 				(game.World.Height / 2).ToString(),
 			};
 		}
@@ -91,6 +96,7 @@ namespace ClassicalSharp.Gui {
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new EnumValidator( typeof(Weather) ),
+				new RealValidator( -100, 100 ),
 				new IntegerValidator( -2048, 2048 ),
 			};
 		}
