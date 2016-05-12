@@ -69,6 +69,7 @@ namespace ClassicalSharp.Network {
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
+			"EnvMapAspect",
 		};
 	}
 }

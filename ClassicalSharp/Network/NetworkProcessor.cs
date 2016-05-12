@@ -202,6 +202,8 @@ namespace ClassicalSharp.Network {
 			Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
 			Set( Opcode.CpeBulkBlockUpdate, HandleBulkBlockUpdate, 1282 );
 			Set( Opcode.CpeSetTextColor, HandleSetTextColor, 6 );
+			Set( Opcode.CpeSetMapEnvUrl, HandleSetMapEnvUrl, 65 );
+			Set( Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6 );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

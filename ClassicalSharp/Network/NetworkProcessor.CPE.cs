@@ -278,7 +278,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleEnvSetMapAppearance() {
-			HandleSetEnvMapUrl();
+			HandleSetMapEnvUrl();
 			game.World.Env.SetSidesBlock( (Block)reader.ReadUInt8() );
 			game.World.Env.SetEdgeBlock( (Block)reader.ReadUInt8() );
 			game.World.Env.SetEdgeLevel( reader.ReadInt16() );
@@ -362,7 +362,7 @@ namespace ClassicalSharp.Network {
 			game.Events.RaiseColourCodesChanged();
 		}
 		
-		internal void HandleSetEnvMapUrl() {
+		internal void HandleSetMapEnvUrl() {
 			string url = reader.ReadAsciiString();
 			if( !game.AllowServerTextures ) return;
 			
@@ -374,7 +374,7 @@ namespace ClassicalSharp.Network {
 			Utils.LogDebug( "Image url: " + url );
 		}
 		
-		internal void HandleSetEnvMapProperty() {
+		internal void HandleSetMapEnvProperty() {
 			byte type = reader.ReadUInt8();
 			int value = reader.ReadInt32();
 			WorldEnv env = game.World.Env;
