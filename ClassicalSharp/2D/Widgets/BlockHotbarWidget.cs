@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void RenderHotbar() {
-			int texId = game.UseClassicGui ? game.GuiClassicTexId : game.GuiTexId;
+			int texId = game.UseClassicGui ? game.GuiClassicTex : game.GuiTex;
 			backTex.ID = texId;
 			backTex.Render( api );
 			

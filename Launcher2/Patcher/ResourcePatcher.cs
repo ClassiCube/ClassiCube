@@ -51,7 +51,8 @@ namespace Launcher {
 		Bitmap animBitmap;
 		
 		bool ShouldProcessZipEntry_Classic( string filename ) {
-			return filename == "gui/gui.png" || filename.StartsWith( "mob" ) || filename.IndexOf( '/' ) < 0;
+			return filename.StartsWith( "gui" ) 
+				|| filename.StartsWith( "mob" ) || filename.IndexOf( '/' ) < 0;
 		}
 		
 		StringComparison comp = StringComparison.OrdinalIgnoreCase;

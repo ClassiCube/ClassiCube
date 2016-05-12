@@ -536,9 +536,10 @@ namespace ClassicalSharp {
 			Graphics.DeleteIb( defaultIb );
 			Graphics.Dispose();
 			Drawer2D.DisposeInstance();
-			Graphics.DeleteTexture( ref CloudsTexId );
-			Graphics.DeleteTexture( ref GuiTexId );
-			Graphics.DeleteTexture( ref GuiClassicTexId );
+			Graphics.DeleteTexture( ref CloudsTex );
+			Graphics.DeleteTexture( ref GuiTex );
+			Graphics.DeleteTexture( ref GuiClassicTex );
+			Graphics.DeleteTexture( ref IconsTex );
 			foreach( WarningScreen screen in WarningOverlays )
 				screen.Dispose();
 			

@@ -52,11 +52,13 @@ namespace ClassicalSharp.TexturePack {
 					break;
 				case "clouds.png":
 				case "cloud.png":
-					game.UpdateTexture( ref game.CloudsTexId, data, false ); break;
+					game.UpdateTexture( ref game.CloudsTex, data, false ); break;
 				case "gui.png":
-					game.UpdateTexture( ref game.GuiTexId, data, false ); break;
+					game.UpdateTexture( ref game.GuiTex, data, false ); break;
 				case "gui_classic.png":
-					game.UpdateTexture( ref game.GuiClassicTexId, data, false ); break;
+					game.UpdateTexture( ref game.GuiClassicTex, data, false ); break;
+				case "icons.png":
+					game.UpdateTexture( ref game.IconsTex, data, false ); break;
 				case "particles.png":
 					game.UpdateTexture( ref game.ParticleManager.ParticlesTexId, 
 					              data, false ); break;

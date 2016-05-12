@@ -174,7 +174,7 @@ namespace ClassicalSharp {
 		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
-		internal int CloudsTexId, GuiTexId, GuiClassicTexId;
+		internal int CloudsTex, GuiTex, GuiClassicTex, IconsTex;
 		internal bool screenshotRequested;
 		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
 		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );
@@ -198,7 +198,9 @@ namespace ClassicalSharp {
 		
 		float MinWindowScale { get { return Math.Min( Width / 640f, Height / 480f ); } }
 		
-		float Scale( float value ) { return (float)Math.Round( value * 10, MidpointRounding.AwayFromZero ) / 10; }
+		public float Scale( float value ) { 
+			return (float)Math.Round( value * 10, MidpointRounding.AwayFromZero ) / 10; 
+		}
 		
 		string defTexturePack = "default.zip";
 		/// <summary> Gets or sets the path of the default texture pack that should be used by the client. </summary>

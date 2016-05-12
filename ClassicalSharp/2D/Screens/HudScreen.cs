@@ -52,15 +52,24 @@ namespace ClassicalSharp.Gui {
 		
 		public void RenderHotbar( double delta ) { hotbar.Render( delta ); }
 		
-		const int crosshairExtent = 15, crosshairWeight = 2;
+		const int chExtent = 16, chWeight = 2;
+		static TextureRec chRec = new TextureRec( 0, 0, 16/256f, 16/256f );
 		void DrawCrosshairs() {
-			int curCol = 150 + (int)( 50 * Math.Abs( Math.Sin( game.accumulator ) ) );
+			int cenX = game.Width / 2, cenY = game.Height / 2;
+			if( game.IconsTex > 0 ) {
+				api.Texturing = true;
+				int extent = (int)(chExtent * game.Scale( game.Height / 480f ) );
+				Texture chTex = new Texture( game.IconsTex, cenX - extent, 
+				                            cenY - extent, extent * 2, extent * 2, chRec );
+				chTex.Render( api );
+				api.Texturing = false;
+				return;
+			}
+			
+			int curCol = 150 + (int)(50 * Math.Abs( Math.Sin( game.accumulator ) ));
 			FastColour col = new FastColour( curCol, curCol, curCol );
-			float centreX = game.Width / 2, centreY = game.Height / 2;
-			api.Draw2DQuad( centreX - crosshairExtent, centreY - crosshairWeight,
-			                       crosshairExtent * 2, crosshairWeight * 2, col );
-			api.Draw2DQuad( centreX - crosshairWeight, centreY - crosshairExtent,
-			                       crosshairWeight * 2, crosshairExtent * 2, col );
+			api.Draw2DQuad( cenX - chExtent, cenY - chWeight, chExtent * 2, chWeight * 2, col );
+			api.Draw2DQuad( cenX - chWeight, cenY - chExtent, chWeight * 2, chExtent * 2, col );
 		}
 		
 		public override void Dispose() {
