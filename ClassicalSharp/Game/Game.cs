@@ -390,7 +390,7 @@ namespace ClassicalSharp {
 			
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string file = "screenshot_" + timestamp + ".png";
-			path = Path.Combine( "screenshots", file );
+			path = Path.Combine( path, file );
 			Graphics.TakeScreenshot( path, ClientSize.Width, ClientSize.Height );
 			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;
