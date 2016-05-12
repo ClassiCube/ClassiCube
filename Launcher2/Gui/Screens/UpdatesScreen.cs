@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using ClassicalSharp;
@@ -67,7 +68,7 @@ namespace Launcher {
 		
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
 			if( task.LatestDev == null || task.LatestStable == null ) return;
-			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;		
+			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;
 			stable = task.LatestStable; view.LastStable = stable.TimeBuilt;
 			Resize();
 		}
@@ -82,17 +83,24 @@ namespace Launcher {
 			widgets[view.relIndex + 1].OnClick = (x, y) => UpdateBuild( true, false );
 
 			widgets[view.devIndex].OnClick =  (x, y) => UpdateBuild( false, true );
-			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild( false, false );			
+			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild( false, false );
 			
-			widgets[view.backIndex].OnClick = 
+			widgets[view.backIndex].OnClick =
 				(x, y) => game.SetScreen( new MainScreen( game ) );
 		}
 		
 		void UpdateBuild( bool release, bool dx ) {
 			DateTime last = release ? view.LastStable : view.LastDev;
 			Build build = release ? stable : dev;
-			if( last == DateTime.MinValue || build.DirectXSize < 50000 
+			if( last == DateTime.MinValue || build.DirectXSize < 50000
 			   || build.OpenGLSize < 50000 ) return;
+			
+			view.gameOpen = CheckClientInstances();
+			view.SetWarning();
+			LauncherWidget widget = widgets[view.statusIndex];
+			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+			RedrawWidget( widgets[view.statusIndex] );
+			if( view.gameOpen ) return;
 			
 			string path = dx ? build.DirectXPath : build.OpenGLPath;
 			Utils.LogDebug( "Updating to: " + path );
@@ -100,6 +108,17 @@ namespace Launcher {
 			Patcher.Update( path );
 			game.ShouldExit = true;
 			game.ShouldUpdate = true;
+		}
+		
+		bool CheckClientInstances() {
+			Process[] processes = Process.GetProcesses();
+			for( int i = 0; i < processes.Length; i++ ) {
+				string name = processes[i].ProcessName;
+				if( Utils.CaselessEquals( name, "ClassicalSharp" )
+				   || Utils.CaselessEquals( name, "ClassicalSharp.exe" ) )
+				   return true;
+				}
+			return false;
 		}
 		
 		public override void Dispose() {

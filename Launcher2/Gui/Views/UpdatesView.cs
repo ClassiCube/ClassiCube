@@ -11,7 +11,8 @@ namespace Launcher {
 	public sealed class UpdatesView : IView {
 		
 		public DateTime LastStable, LastDev;
-		internal int backIndex, relIndex, devIndex;
+		internal int backIndex, relIndex, devIndex, statusIndex;
+		internal bool gameOpen;
 		
 		public UpdatesView( LauncherWindow game ) : base( game ) {
 			widgets = new LauncherWidget[13];
@@ -60,13 +61,20 @@ namespace Launcher {
 			MakeButtonAt( "Direct3D 9", 130, 35, titleFont, Anchor.Centre, -80, 55 );
 			MakeButtonAt( "OpenGL", 130, 35, titleFont, Anchor.Centre, 80, 55 );
 			
-			MakeLabelAt( "&eDirect3D 9 is recommended for Windows.",
+			MakeLabelAt( "&eDirect3D 9 is recommended for Windows",
 			            inputFont, Anchor.Centre, Anchor.Centre, 0, 105 );
-			MakeLabelAt( "&eThe client must be closed before updating.",
-			            inputFont, Anchor.Centre, Anchor.Centre, 0, 130 );
+			statusIndex = widgetIndex;
+			string text = gameOpen ? "&cThe game must be closed before updating" : "";
+			MakeLabelAt( text, inputFont, Anchor.Centre, Anchor.Centre, 0, 130 );
 			
 			backIndex = widgetIndex;
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 0, 170 );
+		}
+		
+		internal void SetWarning() {
+			string text = gameOpen ? "&cThe game must be closed before updating" : "";
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[statusIndex];
+			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 130 );
 		}
 		
 		string GetDateString( DateTime last ) {
