@@ -13,13 +13,16 @@ namespace ClassicalSharp.Gui {
 			this.font = font;
 		}
 		
+		protected int columnPadding = 5;
+		protected int elementOffset = 0;
+		
 		protected const int boundsSize = 10;
 		protected const int namesPerColumn = 20;
 		protected int namesCount = 0;
 		protected Texture[] textures;
 		protected int columns;
 		protected int xMin, xMax, yHeight;
-		protected static FastColour tableCol = new FastColour( 20, 20, 20, 220 );
+		protected static FastColour tableCol = new FastColour( 50, 50, 50, 205 );
 		
 		public override void Init() {
 			CreateInitialPlayerInfo();
@@ -69,7 +72,7 @@ namespace ClassicalSharp.Gui {
 			
 			for( ; i < maxIndex; i++ )
 				maxWidth = Math.Max( maxWidth, textures[i].Width );
-			return maxWidth + 5;
+			return maxWidth + columnPadding + elementOffset;
 		}
 		
 		protected int GetColumnHeight( int column ) {
@@ -89,10 +92,15 @@ namespace ClassicalSharp.Gui {
 			for( ; i < maxIndex; i++ ) {
 				Texture tex = textures[i];
 				tex.X1 = x; tex.Y1 = y;
+				
 				y += tex.Height + 1;
+				if( ShouldOffset( i ) ) 
+					tex.X1 += elementOffset;
 				textures[i] = tex;
 			}
 		}
+		
+		protected virtual bool ShouldOffset( int i ) { return true; }
 		
 		public override void MoveTo( int newX, int newY ) {
 			int diffX = newX - X; int diffY = newY - Y;
