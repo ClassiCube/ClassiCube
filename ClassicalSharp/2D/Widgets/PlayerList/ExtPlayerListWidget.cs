@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui {
 		
 		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {
 			textures = new Texture[512];
-			titleFont = new Font( game.FontName, font.Size, FontStyle.Italic );
+			titleFont = new Font( game.FontName, font.Size );
 			elementOffset = 10;
 		}
 		

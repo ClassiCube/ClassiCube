@@ -23,15 +23,13 @@ namespace ClassicalSharp.Gui {
 		int chatIndex;
 		int blockSize;
 		
-		Font chatFont, chatBoldFont, chatItalicFont, chatUnderlineFont, announcementFont;
+		Font chatFont, chatUrlFont, announcementFont;
 		public override void Init() {
 			float textScale = game.Drawer2D.UseBitmappedChat ? 1.25f : 1;
 			int fontSize = (int)(12 * game.GuiChatScale * textScale);
 			Utils.Clamp( ref fontSize, 8, 60 );
 			chatFont = new Font( game.FontName, fontSize );
-			chatBoldFont = new Font( game.FontName, fontSize, FontStyle.Bold );
-			chatItalicFont = new Font( game.FontName, fontSize, FontStyle.Italic );
-			chatUnderlineFont = new Font( game.FontName, fontSize, FontStyle.Underline );
+			chatUrlFont = new Font( game.FontName, fontSize, FontStyle.Underline );
 			
 			fontSize = (int)(14 * game.GuiChatScale);
 			Utils.Clamp( ref fontSize, 8, 60 );
@@ -51,24 +49,24 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void ConstructWidgets() {
-			textInput = new TextInputWidget( game, chatFont, chatBoldFont );
+			textInput = new TextInputWidget( game, chatFont );
 			textInput.YOffset = blockSize + 5;
-			status = new TextGroupWidget( game, 5, chatFont, chatUnderlineFont,
+			status = new TextGroupWidget( game, 5, chatFont, chatUrlFont,
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
 			status.SetUsePlaceHolder( 0, false );
 			status.SetUsePlaceHolder( 1, false );
-			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUnderlineFont,
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUrlFont,
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
 			bottomRight.YOffset = blockSize * 3 / 2;
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUnderlineFont,
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUrlFont,
 			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
 			normalChat.XOffset = 10;
 			normalChat.YOffset = blockSize * 2 + 15;
 			normalChat.Init();
 			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont,
-			                                   chatUnderlineFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
+			                                   chatUrlFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
 			clientStatus.XOffset = 10;
 			clientStatus.YOffset = blockSize * 2 + 15;
 			clientStatus.Init();
@@ -252,9 +250,7 @@ namespace ClassicalSharp.Gui {
 				game.chatInInputBuffer = null;
 			}
 			chatFont.Dispose();
-			chatItalicFont.Dispose();
-			chatBoldFont.Dispose();
-			chatUnderlineFont.Dispose();
+			chatUrlFont.Dispose();
 			announcementFont.Dispose();
 			
 			normalChat.Dispose();

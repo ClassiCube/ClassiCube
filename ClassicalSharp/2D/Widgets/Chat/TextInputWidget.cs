@@ -8,13 +8,13 @@ namespace ClassicalSharp.Gui {
 		
 		const int lines = 3;
 		internal AltTextInputWidget altText;
-		public TextInputWidget( Game game, Font font, Font boldFont ) : base( game ) {
+		public TextInputWidget( Game game, Font font ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
 			buffer = new WrappableStringBuffer( 64 * lines );
 			
-			DrawTextArgs args = new DrawTextArgs( "_", boldFont, true );
+			DrawTextArgs args = new DrawTextArgs( "_", font, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			caretTex.Width = (caretTex.Width * 3) / 4; 
 			defaultCaretWidth = caretTex.Width;

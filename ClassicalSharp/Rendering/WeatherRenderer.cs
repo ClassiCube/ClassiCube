@@ -45,8 +45,7 @@ namespace ClassicalSharp.Renderers {
 			lastPos = pos;
 			WorldEnv env = game.World.Env;
 			                              
-			float speed = weather == Weather.Rainy ? 
-				1.0f * env.RainSpeed : 0.2f * env.SnowSpeed;
+			float speed = (weather == Weather.Rainy ? 1.0f : 0.2f) * env.WeatherSpeed;
 			vOffset = -(float)game.accumulator * speed;
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;

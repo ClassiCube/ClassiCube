@@ -13,7 +13,6 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			INetworkProcessor network = game.Network;
 			extHelpY = 50;
 			
 			widgets = new Widget[] {	
@@ -49,7 +48,6 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void MakeValidators() {
-			INetworkProcessor network = game.Network;
 			validators = new MenuInputValidator[] {
 				new EnumValidator( typeof(FpsLimitMethod) ),
 				new IntegerValidator( 16, 4096 ),

@@ -377,9 +377,30 @@ namespace ClassicalSharp.Network {
 		internal void HandleSetEnvMapProperty() {
 			byte type = reader.ReadUInt8();
 			int value = reader.ReadInt32();
+			WorldEnv env = game.World.Env;
+			Utils.Clamp( ref value, short.MinValue, short.MaxValue );
 			
 			switch( type ) {
-					// TODO: Property list
+				case 0:
+					Utils.Clamp( ref value, byte.MinValue, byte.MaxValue );
+					env.SetSidesBlock( (Block)value ); break;
+				case 1:
+					Utils.Clamp( ref value, byte.MinValue, byte.MaxValue );
+					env.SetEdgeBlock( (Block)value ); break;
+				case 2:
+					env.SetEdgeLevel( value ); break;
+				case 3:
+					env.SetCloudsLevel( value ); break;
+				case 4:
+					game.MaxViewDistance = value <= 0 ? 32768 : value;
+					game.SetViewDistance( game.UserViewDistance, false ); break;
+				case 5:
+					env.SetCloudsSpeed( value / 256f ); break;
+				case 6:
+					env.SetWeatherSpeed( value / 256f ); break;
+				case 7:
+					Utils.Clamp( ref value, byte.MinValue, byte.MaxValue );
+					env.SetWeatherFade( value / 256f ); break;
 			}
 		}
 	}

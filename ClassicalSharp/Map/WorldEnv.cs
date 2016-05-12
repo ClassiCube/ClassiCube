@@ -28,11 +28,8 @@ namespace ClassicalSharp.Map {
 		/// <summary> Modifier of how fast clouds travel across the world, defaults to 1. </summary>
 		public float CloudsSpeed = 1;
 		
-		/// <summary> Modifier of how fast rain falls, defaults to 1. </summary>
-		public float RainSpeed = 1;
-		
-		/// <summary> Modifier of how fast snow falls, defaults to 1. </summary>
-		public float SnowSpeed = 1;
+		/// <summary> Modifier of how fast rain/snow falls, defaults to 1. </summary>
+		public float WeatherSpeed = 1;
 		
 		/// <summary> Modifier of how fast rain/snow fades, defaults to 1. </summary>
 		public float WeatherFade = 1;
@@ -76,8 +73,7 @@ namespace ClassicalSharp.Map {
 			EdgeBlock = Block.StillWater;
 			SidesBlock = Block.Bedrock;
 			CloudsSpeed = 1;
-			RainSpeed = 1;
-			SnowSpeed = 1;
+			WeatherSpeed = 1;
 			WeatherFade = 1;
 			
 			ResetLight();
@@ -128,13 +124,13 @@ namespace ClassicalSharp.Map {
 		/// event with variable 'CloudsSpeed'. </summary>
 		public void SetCloudsSpeed( float speed ) { Set( speed, ref CloudsSpeed, EnvVar.CloudsSpeed ); }
 		
-		/// <summary> Sets rain speed and raises EnvVariableChanged
-		/// event with variable 'RainSpeed'. </summary>
-		public void SetRainSpeed( float speed ) { Set( speed, ref RainSpeed, EnvVar.RainSpeed ); }
+		/// <summary> Sets weather speed, and raises EnvVariableChanged
+		/// event with variable 'WeatherSpeed'. </summary>
+		public void SetWeatherSpeed( float speed ) { Set( speed, ref WeatherSpeed, EnvVar.WeatherSpeed ); }
 		
-		/// <summary> Sets snow speed, and raises EnvVariableChanged
-		/// event with variable 'SnowSpeed'. </summary>
-		public void SetSnowSpeed( float speed ) { Set( speed, ref SnowSpeed, EnvVar.SnowSpeed ); }
+		/// <summary> Sets weather fade rate, and raises EnvVariableChanged
+		/// event with variable 'WeatherFade'. </summary>
+		public void SetWeatherFade( float rate ) { Set( rate, ref WeatherFade, EnvVar.WeatherFade ); }
 		
 		/// <summary> Sets height of the map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>

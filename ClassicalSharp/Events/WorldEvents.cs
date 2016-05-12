@@ -51,7 +51,7 @@ namespace ClassicalSharp.Events {
 		SunlightColour,
 		ShadowlightColour,
 		
-		RainSpeed,
-		SnowSpeed,
+		WeatherSpeed,
+		WeatherFade,
 	}
 }
