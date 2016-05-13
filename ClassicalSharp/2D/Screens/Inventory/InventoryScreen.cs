@@ -20,6 +20,7 @@ namespace ClassicalSharp.Gui {
 		float selBlockExpand;
 		readonly Font font;
 		StringBuffer buffer = new StringBuffer( 128 );
+		IsometricBlockDrawer drawer = new IsometricBlockDrawer();
 		
 		int TableX { get { return startX - 5 - 10; } }
 		int TableY { get { return startY - 5 - 30; } }
@@ -28,6 +29,9 @@ namespace ClassicalSharp.Gui {
 		
 		static FastColour normBackCol = new FastColour( 30, 30, 30, 200 );
 		static FastColour classicBackCol = new FastColour( 48, 48, 96, 192 );
+		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
+		int vb;
+		
 		public override void Render( double delta ) {
 			FastColour backCol = game.ClassicMode ? classicBackCol : normBackCol;
 			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
@@ -36,24 +40,24 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = true;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
-			IsometricBlockDrawer.lastTexId = -1;
+			drawer.BeginBatch( game, vertices, vb );
 			for( int i = 0; i < blocksTable.Length; i++ ) {
 				int x, y;
 				if( !GetCoords( i, out x, out y ) ) continue;
 				
 				// We want to always draw the selected block on top of others
 				if( i == selIndex ) continue;
-				IsometricBlockDrawer.Draw( game, (byte)blocksTable[i], blockSize * 0.7f / 2f,
-				                          x + blockSize / 2, y + blockSize / 2 );
+				drawer.DrawBatch( (byte)blocksTable[i], blockSize * 0.7f / 2f,
+				                 x + blockSize / 2, y + blockSize / 2 );
 			}
 			
 			if( selIndex != -1 ) {
 				int x, y;
 				GetCoords( selIndex, out x, out y );
-				IsometricBlockDrawer.lastTexId = -1;
-				IsometricBlockDrawer.Draw( game, (byte)blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
-				                          x + blockSize / 2, y + blockSize / 2 );
+				drawer.DrawBatch( (byte)blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
+				                 x + blockSize / 2, y + blockSize / 2 );
 			}
+			drawer.EndBatch();
 			
 			if( blockInfoTexture.IsValid )
 				blockInfoTexture.Render( api );
@@ -84,6 +88,7 @@ namespace ClassicalSharp.Gui {
 		public override void Dispose() {
 			font.Dispose();
 			api.DeleteTexture( ref blockInfoTexture );
+			api.DeleteDynamicVb( vb );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 			game.Keyboard.KeyRepeat = false;
 		}
@@ -103,6 +108,7 @@ namespace ClassicalSharp.Gui {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 			
 			RecreateBlockTable();
 			SetBlockTo( game.Inventory.HeldBlock );
@@ -132,7 +138,7 @@ namespace ClassicalSharp.Gui {
 			RecreateBlockInfoTexture();
 		}
 		
-		void UpdateBlockInfoString( Block block ) {		
+		void UpdateBlockInfoString( Block block ) {
 			int index = 0;
 			buffer.Clear();
 			buffer.Append( ref index, "&f" );
@@ -191,7 +197,7 @@ namespace ClassicalSharp.Gui {
 		
 		bool ShowTile( int tile ) {
 			bool hackBlocks = !game.ClassicMode || game.ClassicHacks;
-			if( !hackBlocks && (tile == (byte)Block.Bedrock || 
+			if( !hackBlocks && (tile == (byte)Block.Bedrock ||
 			                    tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
 				return false;
 			return tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid";

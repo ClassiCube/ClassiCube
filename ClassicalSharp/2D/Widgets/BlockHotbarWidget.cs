@@ -18,6 +18,7 @@ namespace ClassicalSharp.Gui {
 		Texture selTex, backTex;
 		float barHeight, selBlockSize, elemSize;
 		float barXOffset, borderSize;
+		IsometricBlockDrawer drawer = new IsometricBlockDrawer();
 		
 		public override void Init() {
 			float scale = 2 * game.GuiHotbarScale;
@@ -39,7 +40,8 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			api.Texturing = true;
 			RenderHotbar();
-			IsometricBlockDrawer.lastTexId = -1;
+			Model.ModelCache cache = game.ModelCache;
+			drawer.BeginBatch( game, cache.vertices, cache.vb );
 			
 			for( int i = 0; i < hotbarCount; i++ ) {
 				byte block = (byte)game.Inventory.Hotbar[i];
@@ -47,8 +49,9 @@ namespace ClassicalSharp.Gui {
 				int y = (int)(game.Height - barHeight / 2);
 				
 				float scale = (elemSize * 13.5f/16f) / 2f;
-				IsometricBlockDrawer.Draw( game, block, scale, x, y );
+				drawer.DrawBatch( block, scale, x, y );
 			}
+			drawer.EndBatch();
 			api.Texturing = false;
 		}
 		
