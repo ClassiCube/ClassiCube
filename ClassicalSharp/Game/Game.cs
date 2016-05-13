@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 			ETags.Load();
 			InputHandler = new InputHandler( this );
 			defaultIb = Graphics.MakeDefaultIb();
-			ParticleManager = new ParticleManager( this );
+			ParticleManager = AddComponent( new ParticleManager() );
 			LoadOptions();
 			LoadGuiOptions();
 			Chat = AddComponent( new Chat() );
@@ -516,14 +516,11 @@ namespace ClassicalSharp {
 		
 		public void Dispose() {
 			MapRenderer.Dispose();
-			MapBordersRenderer.Dispose();
-			EnvRenderer.Dispose();
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			TerrainAtlas.Dispose();
 			TerrainAtlas1D.Dispose();
 			ModelCache.Dispose();
-			ParticleManager.Dispose();
 			Players.Dispose();
 			WorldEvents.OnNewMap -= OnNewMapCore;
 			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
@@ -533,13 +530,14 @@ namespace ClassicalSharp {
 			
 			if( activeScreen != null )
 				activeScreen.Dispose();
-			Graphics.DeleteIb( defaultIb );
-			Graphics.Dispose();
+			Graphics.DeleteIb( defaultIb );		
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTex );
 			Graphics.DeleteTexture( ref GuiTex );
 			Graphics.DeleteTexture( ref GuiClassicTex );
 			Graphics.DeleteTexture( ref IconsTex );
+			Graphics.Dispose();
+			
 			foreach( WarningScreen screen in WarningOverlays )
 				screen.Dispose();
 			

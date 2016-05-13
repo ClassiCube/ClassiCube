@@ -120,6 +120,8 @@ namespace ClassicalSharp.Entities {
 			}
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			game.Events.TextureChanged -= TextureChanged;
+			if( ShadowComponent.shadowTex > 0 )
+				game.Graphics.DeleteTexture( ref ShadowComponent.shadowTex );
 		}
 		
 		public byte GetClosetPlayer( Player src ) {

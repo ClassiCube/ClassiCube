@@ -123,6 +123,7 @@ namespace ClassicalSharp.Gui {
 			posFont.Dispose();
 			fpsText.Dispose();
 			api.DeleteTexture( ref posTex );
+			hackStates.Dispose();
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
