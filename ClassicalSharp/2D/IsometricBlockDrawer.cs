@@ -84,63 +84,72 @@ namespace ClassicalSharp {
 			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
 			if( lastIndex != texIndex ) Flush();
+		
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			FastColour col = colNormal;
+			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
 			
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * (15.99f/16f);
 
-			vertices[index] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( minBB.Z ), rec.U2, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( minBB.Z ), rec.U1, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( maxBB.X ), y, Make( maxBB.Z ), rec.U1, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( minBB.X ), y, Make( maxBB.Z ), rec.U2, rec.V1, col );
-			Transform( ref vertices[index] );
+			v.X = Make( minBB.X ); v.Y = y; v.Z = Make( minBB.Z );
+			v.U = rec.U2; v.V = rec.V2; Transform( ref v );
+			v.X = Make( maxBB.X ); v.Y = y; v.Z = Make( minBB.Z );
+			v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = Make( maxBB.X ); v.Y = y; v.Z = Make( maxBB.Z );
+			v.U = rec.U1; v.V = rec.V1; Transform( ref v );
+			v.X = Make( minBB.X ); v.Y = y; v.Z = Make( maxBB.Z );
+			v.U = rec.U2; v.V = rec.V1; Transform( ref v );
 		}
 
 		void ZQuad( byte block, float z, int side ) {
 			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
 			if( lastIndex != texIndex ) Flush();
+			
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			FastColour col = fullBright ? colNormal : colZSide;
+			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
 			
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * (15.99f/16f);
 			
-			vertices[index] = new VertexP3fT2fC4b( Make( minBB.X ), Make( maxBB.Y ), z, rec.U2, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( minBB.X ), Make( minBB.Y ), z, rec.U2, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( maxBB.X ), Make( minBB.Y ), z, rec.U1, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( maxBB.X ), Make( maxBB.Y ), z, rec.U1, rec.V2, col );
-			Transform( ref vertices[index] );
+			v.X = Make( minBB.X ); v.Y = Make( maxBB.Y ); v.Z = z;
+			v.U = rec.U2; v.V = rec.V2; Transform( ref v );
+			v.X = Make( minBB.X ); v.Y = Make( minBB.Y ); v.Z = z;
+			v.U = rec.U2; v.V = rec.V1; Transform( ref v );
+			v.X = Make( maxBB.X ); v.Y = Make( minBB.Y ); v.Z = z;
+			v.U = rec.U1; v.V = rec.V1; Transform( ref v );
+			v.X = Make( maxBB.X ); v.Y = Make( maxBB.Y ); v.Z = z;
+			v.U = rec.U1; v.V = rec.V2; Transform( ref v );
 		}
 
 		void XQuad( byte block, float x, int side ) {
 			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
 			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
 			if( lastIndex != texIndex ) Flush();
+			
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			FastColour col = fullBright ? colNormal : colXSide;
+			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
 			
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.Z; rec.U2 = maxBB.Z;
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * (15.99f/16f);
 			
-			vertices[index] = new VertexP3fT2fC4b( x, Make( maxBB.Y ), Make( minBB.Z ), rec.U2, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( x, Make( minBB.Y ), Make( minBB.Z ), rec.U2, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( x, Make( minBB.Y ), Make( maxBB.Z ), rec.U1, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( x, Make( maxBB.Y ), Make( maxBB.Z ), rec.U1, rec.V2, col );
-			Transform( ref vertices[index] );
+			v.X = x; v.Y = Make( maxBB.Y ); v.Z = Make( minBB.Z );
+			v.U = rec.U2; v.V = rec.V2; Transform( ref v );
+			v.X = x; v.Y = Make( minBB.Y ); v.Z = Make( minBB.Z );
+			v.U = rec.U2; v.V = rec.V1; Transform( ref v );
+			v.X = x; v.Y = Make( minBB.Y ); v.Z = Make( maxBB.Z );
+			v.U = rec.U1; v.V = rec.V1; Transform( ref v );
+			v.X = x; v.Y = Make( maxBB.Y ); v.Z = Make( maxBB.Z );
+			v.U = rec.U1; v.V = rec.V2; Transform( ref v );
 		}
 		
 		void SpriteZQuad( byte block, int side, bool firstPart ) {
@@ -148,18 +157,21 @@ namespace ClassicalSharp {
 			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
 			if( lastIndex != texIndex ) Flush();
 			
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			FastColour col = colNormal;
+			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;	
+			
 			float x1 = firstPart ? -0.1f : 0.5f, x2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
-			vertices[index] = new VertexP3fT2fC4b( Make( x1 ), Make( 0.0f ), Make( 0.5f ), rec.U1, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( x1 ), Make( 1.1f ), Make( 0.5f ), rec.U1, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( x2 ), Make( 1.1f ), Make( 0.5f ), rec.U2, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( x2 ), Make( 0.0f ), Make( 0.5f ), rec.U2, rec.V2, col );
-			Transform( ref vertices[index] );
+			v.X = Make( x1 ); v.Y = Make( 0.0f ); v.Z = Make( 0.5f ); 
+			v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = Make( x1 ); v.Y = Make( 1.1f ); v.Z = Make( 0.5f ); 
+			v.U = rec.U1; v.V = rec.V1; Transform( ref v );
+			v.X = Make( x2 ); v.Y = Make( 1.1f ); v.Z = Make( 0.5f ); 
+			v.U = rec.U2; v.V = rec.V1; Transform( ref v );
+			v.X = Make( x2 ); v.Y = Make( 0.0f ); v.Z = Make( 0.5f ); 
+			v.U = rec.U2; v.V = rec.V2; Transform( ref v );
 		}
 
 		void SpriteXQuad( byte block, int side, bool firstPart ) {
@@ -167,21 +179,24 @@ namespace ClassicalSharp {
 			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
 			if( lastIndex != texIndex ) Flush();
 			
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			FastColour col = colNormal;
+			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
+			
 			float z1 = firstPart ? -0.1f : 0.5f, z2 = firstPart ? 0.5f : 1.1f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			
-			vertices[index] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 0.0f ), Make( z1 ), rec.U1, rec.V2, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 1.1f ), Make( z1 ), rec.U1, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 1.1f ), Make( z2 ), rec.U2, rec.V1, col );
-			Transform( ref vertices[index] );
-			vertices[index] = new VertexP3fT2fC4b( Make( 0.5f ), Make( 0.0f ), Make( z2 ), rec.U2, rec.V2, col );
-			Transform( ref vertices[index] );
+			v.X = Make( 0.5f ); v.Y = Make( 0.0f ); v.Z = Make( z1 ); 
+			v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = Make( 0.5f ); v.Y = Make( 1.1f ); v.Z = Make( z1 ); 
+			v.U = rec.U1; v.V = rec.V1; Transform( ref v );
+			v.X = Make( 0.5f ); v.Y = Make( 1.1f ); v.Z = Make( z2 ); 
+			v.U = rec.U2; v.V = rec.V1; Transform( ref v );
+			v.X = Make( 0.5f ); v.Y = Make( 0.0f ); v.Z = Make( z2 ); 
+			v.U = rec.U2; v.V = rec.V2; Transform( ref v );
 		}
 		
-		float Make( float value ) { return scale - (scale * value * 2); }
+		float Make( float value ) { return scale * (1 - value * 2); }
 		
 		int lastIndex, texIndex;
 		void Flush() {
@@ -204,7 +219,7 @@ namespace ClassicalSharp {
 			v.X -= 0.5f; v.Y -= 0.5f;
 			float t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
 			t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;      // Inlined RotX
-			index++;
+			vertices[index++] = v;
 		}
 	}
 }
