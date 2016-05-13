@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
+using ClassicalSharp.Map;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
 
@@ -42,12 +43,13 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		IGraphicsApi api;
 		
-		internal int _1DUsed = -1;		
+		internal int _1DUsed = -1;
 		internal ChunkInfo[] chunks, unsortedChunks;
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;
 		internal int[] totalUsed;
 		ChunkUpdater updater;
+		bool drawAllFaces = false, underWater = false;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
@@ -68,16 +70,16 @@ namespace ClassicalSharp.Renderers {
 			ChunkSorter.UpdateSortOrder( game, updater );
 			updater.UpdateChunks( deltaTime );
 			
-			RenderNormal();
+			RenderNormal( deltaTime );
 			game.MapBordersRenderer.Render( deltaTime );
-			RenderTranslucent();
+			RenderTranslucent( deltaTime );
 			game.Players.DrawShadows();
 		}
 		
 		
 		// Render solid and fully transparent to fill depth buffer.
 		// These blocks are treated as having an alpha value of either none or full.
-		void RenderNormal() {
+		void RenderNormal( double deltaTime ) {
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			api.Texturing = true;
@@ -91,6 +93,8 @@ namespace ClassicalSharp.Renderers {
 					pendingNormal[batch] = false;
 				}
 			}
+			
+			CheckWeather( deltaTime );
 			api.AlphaTest = false;
 			api.Texturing = false;
 			#if DEBUG_OCCLUSION
@@ -98,12 +102,23 @@ namespace ClassicalSharp.Renderers {
 			#endif
 		}
 		
-		// Render translucent(liquid) blocks. These 'blend' into other blocks.
-		void RenderTranslucent() {
+		void CheckWeather( double deltaTime ) {
+			WorldEnv env = game.World.Env;
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor( pos );
 			byte block = game.World.SafeGetBlock( coords );
 			drawAllFaces = game.BlockInfo.IsTranslucent[block];
+			underWater = drawAllFaces || pos.Y < env.EdgeHeight;
+			
+			// If we are under water, render weather before to blend properly
+			if( !underWater || env.Weather == Weather.Sunny ) return;
+			api.AlphaBlending = true;
+			game.WeatherRenderer.Render( deltaTime );
+			api.AlphaBlending = false;
+		}
+		
+		// Render translucent(liquid) blocks. These 'blend' into other blocks.
+		void RenderTranslucent( double deltaTime ) {
 			
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
@@ -131,8 +146,14 @@ namespace ClassicalSharp.Renderers {
 				api.BindTexture( texIds[batch] );
 				RenderTranslucentBatch( batch );
 			}
-			api.DepthWrite = true;
-			api.AlphaTest = false;
+			
+			api.DepthWrite = true;			
+			// If we weren't under water, render weather after to blend properly
+			if( !underWater && game.World.Env.Weather != Weather.Sunny ) {
+				api.AlphaTest = true;
+				game.WeatherRenderer.Render( deltaTime );
+				api.AlphaTest = false;
+			}
 			api.AlphaBlending = false;
 			api.Texturing = false;
 		}
@@ -155,7 +176,7 @@ namespace ClassicalSharp.Renderers {
 				if( part.IndicesCount > maxIndices )
 					DrawBigPart( info, ref part );
 				else
-					DrawPart( info, ref part );			
+					DrawPart( info, ref part );
 				
 				if( part.SpriteCount > 0 ) {
 					int groupCount = part.SpriteCount / 4;
@@ -242,11 +263,10 @@ namespace ClassicalSharp.Renderers {
 			} else if( drawBottom ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );			
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
 			}
 		}
 		
-		bool drawAllFaces = false;
 		void DrawTranslucentPart( ChunkInfo info, ref ChunkPartInfo part ) {
 			api.BindVb( part.VbId );
 			bool drawLeft = (drawAllFaces || info.DrawLeft) && part.LeftCount > 0;
@@ -277,7 +297,7 @@ namespace ClassicalSharp.Renderers {
 			} else if( drawBottom ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );			
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
 			}
 		}
 		
@@ -324,7 +344,7 @@ namespace ClassicalSharp.Renderers {
 			} else if( drawBottom ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
-				   ( part1Count = maxIndices - part.BottomIndex ) < part.BottomCount ) {					
+				   ( part1Count = maxIndices - part.BottomIndex ) < part.BottomCount ) {
 					api.DrawIndexedVb_TrisT2fC4b( part1Count, part.BottomIndex );
 					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount - part1Count, maxVertex, 0 );
 				} else {
@@ -338,7 +358,7 @@ namespace ClassicalSharp.Renderers {
 					api.DrawIndexedVb_TrisT2fC4b( part.TopCount - part1Count, maxVertex, 0 );
 				} else {
 					api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
-				}			
+				}
 			}
 		}
 	}

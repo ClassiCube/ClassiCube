@@ -255,14 +255,14 @@
     <Compile Include="Rendering\BlockHandRenderer.cs" />
     <Compile Include="Rendering\ChunkSorter.cs" />
     <Compile Include="Rendering\ChunkUpdater.cs" />
-    <Compile Include="Rendering\EnvRenderer.cs" />
+    <Compile Include="Rendering\Env\EnvRenderer.cs" />
+    <Compile Include="Rendering\Env\MapBordersRenderer.cs" />
+    <Compile Include="Rendering\Env\MinimalEnvRenderer.cs" />
+    <Compile Include="Rendering\Env\StandardEnvRenderer.cs" />
+    <Compile Include="Rendering\Env\WeatherRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
-    <Compile Include="Rendering\MinimalEnvRenderer.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />
-    <Compile Include="Rendering\MapBordersRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.cs" />
-    <Compile Include="Rendering\StandardEnvRenderer.cs" />
-    <Compile Include="Rendering\WeatherRenderer.cs" />
     <Compile Include="Selections\AxisLinesRenderer.cs" />
     <Compile Include="Selections\PickedPosRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
@@ -327,6 +327,7 @@
     <Folder Include="Network\Utils" />
     <Folder Include="Hotkeys" />
     <Folder Include="Audio" />
+    <Folder Include="Rendering\Env" />
     <Folder Include="TexturePack" />
     <Folder Include="Singleplayer" />
     <Folder Include="Utils" />

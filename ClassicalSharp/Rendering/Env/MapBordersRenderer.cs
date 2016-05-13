@@ -47,10 +47,7 @@ namespace ClassicalSharp.Renderers {
 			}
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			bool underWater = camPos.Y < game.World.Env.EdgeHeight;
-			graphics.AlphaBlending = true;
-			if( underWater ) game.WeatherRenderer.Render( deltaTime );
-			
+			graphics.AlphaBlending = true;			
 			graphics.BindTexture( edgeTexId );
 			graphics.BindVb( edgesVb );			
 			// Do not draw water when we cannot see it.
@@ -59,7 +56,6 @@ namespace ClassicalSharp.Renderers {
 			if( game.World.Env.EdgeBlock != Block.Air && camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
-			if( !underWater ) game.WeatherRenderer.Render( deltaTime );
 			graphics.AlphaBlending = false;
 			graphics.Texturing = false;
 			graphics.AlphaTest = false;
