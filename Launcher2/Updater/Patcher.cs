@@ -31,7 +31,7 @@ namespace Launcher.Updater {
 				string path = Path.Combine( Program.AppDirectory, "update.bat" );
 				File.WriteAllText( path, Scripts.BatchFile );
 				// First try for wine
-				info.FileName = "xterm"; info.Arguments = "-e \"cmd.exe /c update.bat\"";
+				info.FileName = "xterm"; info.Arguments = "-e \"wine cmd.exe /c update.bat\"";
 				try {
 					Process.Start( info );
 				} catch( Exception ) {
