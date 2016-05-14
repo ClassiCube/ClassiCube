@@ -24,22 +24,15 @@ namespace Launcher.Updater {
 		public static void LaunchUpdateScript() {
 			ProcessStartInfo info = new ProcessStartInfo();
 			info.CreateNoWindow = false;
-			info.UseShellExecute = false;
+			info.UseShellExecute = true;
 			info.WorkingDirectory = Program.AppDirectory;
 			
 			if( OpenTK.Configuration.RunningOnWindows ) {
 				string path = Path.Combine( Program.AppDirectory, "update.bat" );
 				File.WriteAllText( path, Scripts.BatchFile );
-				// First try for wine
-				info.FileName = "xterm"; info.Arguments = "-e \"wine cmd.exe /c update.bat\"";
-				try {
-					Process.Start( info );
-				} catch( Exception ) {
-					// Then try for normal Windows
-					info.FileName = "cmd.exe"; info.Arguments = "/c update.bat\"";
-					Process.Start( info );
-				}
-			} else {
+				info.FileName = "cmd"; info.Arguments = "/C start cmd /C update.bat";
+				Process.Start( info );
+ 			} else {
 				string path = Path.Combine( Program.AppDirectory, "update.sh" );
 				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );
 				const int flags = 0x7;// read | write | executable
@@ -48,7 +41,7 @@ namespace Launcher.Updater {
 					throw new InvalidOperationException( "chmod returned : " + code );
 				
 				//if( OpenTK.Configuration.RunningOnMacOS )
-				//	info = new ProcessStartInfo( "open -a Terminal ", 
+				//	info = new ProcessStartInfo( "open -a Terminal ",
 				//	                            '"' + path + '"');
 				//else
 				info.FileName = "xterm"; info.Arguments = '"' + path + '"';
