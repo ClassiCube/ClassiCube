@@ -9,8 +9,6 @@ using ClassicalSharp;
 namespace Launcher {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
-
-		const int skipSSLIndex = 11;
 		
 		public override void Tick() {
 			base.Tick();
@@ -62,9 +60,10 @@ namespace Launcher {
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
 			
-			LauncherBoolWidget skip = widgets[skipSSLIndex] as LauncherBoolWidget;
+			LauncherBoolWidget skip = widgets[view.sslIndex] as LauncherBoolWidget;
 			if( skip != null && skip.Value ) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+				Options.Set( "skip-ssl-check", true );
 			} else {
 				ServicePointManager.ServerCertificateValidationCallback = null;
 			}
@@ -118,13 +117,13 @@ namespace Launcher {
 		void SSLSkipValidationClick( int mouseX, int mouseY ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherBoolWidget widget = (LauncherBoolWidget)widgets[skipSSLIndex];
+				LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.sslIndex];
 				SetBool( !widget.Value );
 			}
 		}
 		
 		void SetBool( bool value ) {
-			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[skipSSLIndex];
+			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.sslIndex];
 			widget.Value = value;
 			widget.Redraw( game.Drawer );
 			Dirty = true;
