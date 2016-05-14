@@ -124,6 +124,7 @@ namespace ClassicalSharp {
 			Picking = AddComponent( new PickedPosRenderer() );
 			AudioPlayer = AddComponent( new AudioPlayer() );
 			AxisLinesRenderer = AddComponent( new AxisLinesRenderer() );
+			SkyboxRenderer = AddComponent( new SkyboxRenderer() );
 			
 			foreach( IGameComponent comp in Components )
 				comp.Init( this );
@@ -314,10 +315,12 @@ namespace ClassicalSharp {
 		}
 		
 		void Render3D( double delta, float t ) {
+			CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
+			if( SkyboxRenderer.ShouldRender )
+				SkyboxRenderer.Render( delta );
 			AxisLinesRenderer.Render( delta );
 			Players.RenderModels( Graphics, delta, t );
-			Players.RenderNames( Graphics, delta, t );
-			CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
+			Players.RenderNames( Graphics, delta, t );		
 			
 			ParticleManager.Render( delta, t );
 			Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary

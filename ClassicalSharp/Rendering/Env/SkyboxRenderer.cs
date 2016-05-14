@@ -14,7 +14,9 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		const int count = 6 * 4;
 		
-		public bool DoRender { get { return tex > 0; } }
+		public bool ShouldRender { 
+			get { return tex > 0 && !(game.EnvRenderer is MinimalEnvRenderer); }
+		}
 		
 		public void Init( Game game ) {
 			this.game = game;

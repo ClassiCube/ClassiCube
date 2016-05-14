@@ -111,6 +111,7 @@ namespace ClassicalSharp {
 		public BlockHandRenderer BlockHandRenderer;
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;
+		public SkyboxRenderer SkyboxRenderer;
 		
 		public List<IGameComponent> Components = new List<IGameComponent>();
 		

@@ -19,7 +19,12 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Render( double deltaTime ) {
 			if( skyVb == -1 || cloudsVb == -1 ) return;
-			
+			if( !game.SkyboxRenderer.ShouldRender )
+				RenderMainEnv( deltaTime );
+			UpdateFog();
+		}
+		
+		void RenderMainEnv( double deltaTime ) {
 			Vector3 pos = game.CurrentCameraPos;
 			float normalY = map.Height + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
@@ -35,9 +40,7 @@ namespace ClassicalSharp.Renderers {
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
 				graphics.PopMatrix();
 			}
-			
 			RenderClouds( deltaTime );
-			UpdateFog();
 		}
 		
 		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
