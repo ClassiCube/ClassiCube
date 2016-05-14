@@ -22,11 +22,23 @@ namespace Launcher.Updater {
 		}
 
 		public static void LaunchUpdateScript() {
-			ProcessStartInfo info;
+			ProcessStartInfo info = new ProcessStartInfo();
+			info.CreateNoWindow = false;
+			info.UseShellExecute = false;
+			info.WorkingDirectory = Program.AppDirectory;
+			
 			if( OpenTK.Configuration.RunningOnWindows ) {
 				string path = Path.Combine( Program.AppDirectory, "update.bat" );
 				File.WriteAllText( path, Scripts.BatchFile );
-				info = new ProcessStartInfo( "cmd.exe", "/c update.bat" );
+				// First try for wine
+				info.FileName = "xterm"; info.Arguments = "-e \"cmd.exe /c update.bat\"";
+				try {
+					Process.Start( info );
+				} catch( Exception ) {
+					// Then try for normal Windows
+					info.FileName = "cmd.exe"; info.Arguments = "/c update.bat\"";
+					Process.Start( info );
+				}
 			} else {
 				string path = Path.Combine( Program.AppDirectory, "update.sh" );
 				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );
@@ -39,12 +51,9 @@ namespace Launcher.Updater {
 				//	info = new ProcessStartInfo( "open -a Terminal ", 
 				//	                            '"' + path + '"');
 				//else
-				info = new ProcessStartInfo( "xterm", '"' + path + '"');
+				info.FileName = "xterm"; info.Arguments = '"' + path + '"';
+				Process.Start( info );
 			}
-			info.CreateNoWindow = false;
-			info.UseShellExecute = false;
-			info.WorkingDirectory = Program.AppDirectory;
-			Process.Start( info );
 		}
 
 		[DllImport( "libc", SetLastError = true )]

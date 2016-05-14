@@ -8,21 +8,21 @@ namespace OpenTK {
 		public static void Print( string text ) {
 			try {
 				Console.WriteLine( text );
-			} catch( NotSupportedException ) {
+			} catch( Exception ) {
 			} // raised by Mono sometimes when trying to write to console from the finalizer thread.
 		}
 		
 		public static void Print( object arg ) {
 			try {
 				Console.WriteLine( arg );
-			} catch( NotSupportedException ) {
+			} catch( Exception ) {
 			}
 		}
 		
 		public static void Print( string text, params object[] args ) {
 			try {
 				Console.WriteLine( text, args );
-			} catch( NotSupportedException ) {
+			} catch( Exception ) {
 			}
 		}
 	}
