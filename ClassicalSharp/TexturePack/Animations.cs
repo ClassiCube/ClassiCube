@@ -16,9 +16,10 @@ namespace ClassicalSharp.TexturePack {
 		
 		Game game;
 		IGraphicsApi api;
-		Bitmap bmp;
-		FastBitmap fastBmp;
+		Bitmap animBmp;
+		FastBitmap animsBuffer;
 		List<AnimationData> animations = new List<AnimationData>();
+		bool validated = false;
 		
 		public void Init( Game game ) {
 			this.game = game;
@@ -53,19 +54,20 @@ namespace ClassicalSharp.TexturePack {
 				game.Drawer2D.ConvertTo32Bpp( ref bmp );
 			
 			Clear();
-			this.bmp = bmp;
-			fastBmp = new FastBitmap( bmp, true, true );
+			this.animBmp = bmp;
+			animsBuffer = new FastBitmap( bmp, true, true );
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick( double delta ) {
 			if( animations.Count == 0 ) return;
-			if( fastBmp == null ) {
+			if( animsBuffer == null ) {
 				game.Chat.Add( "&cCurrent texture pack specifies it uses animations," );
 				game.Chat.Add( "&cbut is missing animations.png" );
 				animations.Clear();
 				return;
 			}
+			if( !validated ) ValidateAnimations();
 			
 			foreach( AnimationData anim in animations )
 				ApplyAnimation( anim );
@@ -135,8 +137,25 @@ namespace ClassicalSharp.TexturePack {
 			int size = data.FrameSize;
 			byte* temp = stackalloc byte[size * size * 4];
 			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
-			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, fastBmp, animPart, size );
+			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, animsBuffer, animPart, size );
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
+		}
+		
+		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
+		/// the list of defined animations. </summary>
+		public void Clear() {
+			animations.Clear();
+			
+			if( animBmp == null ) return;
+			animsBuffer.Dispose(); animsBuffer = null;
+			animBmp.Dispose(); animBmp = null;
+			validated = false;
+		}
+		
+		public void Dispose() {
+			Clear();
+			game.Events.TextureChanged -= TextureChanged;
+			game.Events.TexturePackChanged -= TexturePackChanged;
 		}
 		
 		class AnimationData {
@@ -148,20 +167,20 @@ namespace ClassicalSharp.TexturePack {
 			public int Tick, TickDelay;
 		}
 		
-		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
-		/// the list of defined animations. </summary>
-		public void Clear() {
-			animations.Clear();
-			
-			if( bmp == null ) return;
-			fastBmp.Dispose(); fastBmp = null;
-			bmp.Dispose(); bmp = null;
-		}
-		
-		public void Dispose() {
-			Clear();
-			game.Events.TextureChanged -= TextureChanged;
-			game.Events.TexturePackChanged -= TexturePackChanged;
+		const string format = "&cOne of the animation frames for tile ({0}, {1}) " +
+			"is at coordinates outside animations.png";
+		void ValidateAnimations() {
+			validated = true;
+			for( int i = animations.Count - 1; i >= 0; i-- ) {
+				AnimationData a = animations[i];
+				int maxY = a.FrameY + a.FrameSize;
+				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
+				if( maxX <= animsBuffer.Width && maxY <= animsBuffer.Height )
+					continue;
+				
+				game.Chat.Add( String.Format( format, a.TileX, a.TileY ) );
+				animations.RemoveAt( i );
+			}
 		}
 	}
 }
