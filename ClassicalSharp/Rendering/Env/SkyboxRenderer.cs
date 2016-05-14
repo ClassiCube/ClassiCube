@@ -1,7 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Drawing;
-using System.IO;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
@@ -102,16 +100,16 @@ namespace ClassicalSharp.Renderers {
 			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U1, rec.V1, FastColour.White );
 			// Render the top quad
 			rec = new TextureRec( 1/4f, 0/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U1, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U2, rec.V2, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U2, rec.V2, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U2, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U1, rec.V2, FastColour.White );
 			// Render the bottom quad
 			rec = new TextureRec( 2/4f, 0/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U1, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U2, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U2, rec.V2, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, FastColour.White );
 			vb = game.Graphics.CreateVb( start, VertexFormat.P3fT2fC4b, count );			
 		}
 	}
