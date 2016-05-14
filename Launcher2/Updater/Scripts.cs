@@ -21,7 +21,7 @@ sleep 1
 
 set root=%CD%
 echo Extracting files from CS_Update folder
-for /f ""tokens=*"" %%f in ('dir /b ""%root%\CS_Update""') do move ""%root%\CS_Update\%%f"" ""%root%\%%f""
+for /f %%f in ('dir /b ""%root%\CS_Update""') do move ""%root%\CS_Update\%%f"" ""%root%\%%f""
 rmdir ""%root%\CS_Update""
 
 echo Starting launcher again
