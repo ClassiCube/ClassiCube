@@ -15,16 +15,16 @@ namespace ClassicalSharp.Gui {
 			entries = new string[hotkeys.Hotkeys.Count];
 			for( int i = 0; i < entries.Length; i++ ) {
 				Hotkey hKey = hotkeys.Hotkeys[i];
-				entries[i] = hKey.BaseKey + " | " + MakeFlagsString( hKey.Flags );
+				entries[i] = hKey.BaseKey + " |" + MakeFlagsString( hKey.Flags );
 			}
 		}
 		
 		internal static string MakeFlagsString( byte flags ) {
-			if( flags == 0 ) return "None";
+			if( flags == 0 ) return " None";
 			
-			return ((flags & 1) == 0 ? " " : "Ctrl ") +
-				((flags & 2) == 0 ? " " : "Shift ") +
-				((flags & 4) == 0 ? " " : "Alt ");
+			return ((flags & 1) == 0 ? "" : " Ctrl") +
+				((flags & 2) == 0 ? "" : " Shift") +
+				((flags & 4) == 0 ? "" : " Alt");
 		}
 		
 		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {

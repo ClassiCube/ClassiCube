@@ -121,7 +121,7 @@ namespace ClassicalSharp {
 				if( item.Data != null ) {
 					Bitmap bmp = (Bitmap)item.Data;					
 					game.World.TextureUrl = item.Url;					
-					game.Animations.Clear();
+					game.Events.RaiseTexturePackChanged();
 					
 					if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
 						Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 					if( bmp == null ) {// Should never happen, but handle anyways.
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
-						game.Animations.Clear();
+						game.Events.RaiseTexturePackChanged();
 						if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
 					}
 					
@@ -148,7 +148,6 @@ namespace ClassicalSharp {
 			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
 				if( item.Data != null ) {
 					game.World.TextureUrl = item.Url;
-					game.Animations.Clear();
 					
 					TexturePackExtractor extractor = new TexturePackExtractor();
 					extractor.Extract( (byte[])item.Data, game );
@@ -159,7 +158,6 @@ namespace ClassicalSharp {
 					if( data == null ) { // Should never happen, but handle anyways.
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
-						game.Animations.Clear();
 						TexturePackExtractor extractor = new TexturePackExtractor();
 						extractor.Extract( data, game );
 					}

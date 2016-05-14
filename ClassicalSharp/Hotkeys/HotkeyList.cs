@@ -35,7 +35,7 @@ namespace ClassicalSharp.Hotkeys {
 				Hotkey hKey = Hotkeys[i];
 				if( hKey.BaseKey == baseKey && hKey.Flags == flags ) {
 					hKey.Text = text;
-					hKey.MoreInput = more;
+					hKey.StaysOpen = more;
 					Hotkeys[i] = hKey;
 					return true;
 				}
@@ -48,7 +48,7 @@ namespace ClassicalSharp.Hotkeys {
 			hotkey.BaseKey = baseKey;
 			hotkey.Flags = flags;
 			hotkey.Text = text;
-			hotkey.MoreInput = more;
+			hotkey.StaysOpen = more;
 			
 			Hotkeys.Add( hotkey );
 			// sort so that hotkeys with largest modifiers are first
@@ -67,7 +67,7 @@ namespace ClassicalSharp.Hotkeys {
 			foreach( Hotkey hKey in Hotkeys ) {
 				if( (hKey.Flags & flags) == hKey.Flags && hKey.BaseKey == key ) {
 					text = hKey.Text;
-					moreInput = hKey.MoreInput;
+					moreInput = hKey.StaysOpen;
 					return true;
 				}
 			}
@@ -127,7 +127,7 @@ namespace ClassicalSharp.Hotkeys {
 	public struct Hotkey {
 		public Key BaseKey;
 		public byte Flags; // ctrl 1, shift 2, alt 4
-		public bool MoreInput; // whether the user is able to enter further input
+		public bool StaysOpen; // whether the user is able to enter further input
 		public string Text; // contents to copy directly into the input bar
 	}
 }

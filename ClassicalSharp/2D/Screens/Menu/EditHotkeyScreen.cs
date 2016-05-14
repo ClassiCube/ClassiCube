@@ -8,8 +8,12 @@ namespace ClassicalSharp.Gui {
 	
 	public sealed class EditHotkeyScreen : MenuScreen {
 		
-		const int keyI = 0, modifyI = 1;
+		const int keyI = 0, modifyI = 1, actionI = 2;
 		HotkeyList hotkeys;
+		Hotkey curHotkey, origHotkey;
+		Widget focusWidget;
+		static FastColour grey = new FastColour( 150, 150, 150 );
+		
 		public EditHotkeyScreen( Game game, Hotkey original ) : base( game ) {
 			hotkeys = game.InputHandler.Hotkeys;
 			origHotkey = original;
@@ -20,8 +24,11 @@ namespace ClassicalSharp.Gui {
 			RenderMenuBounds();
 			api.Texturing = true;
 			RenderMenuWidgets( delta );
-			currentAction.Render( delta );
 			api.Texturing = false;
+			
+			float cX = game.Width / 2, cY = game.Height / 2;
+			api.Draw2DQuad( cX - 250, cY - 65, 500, 2, grey );
+			api.Draw2DQuad( cX - 250, cY + 45, 500, 2, grey );
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
@@ -33,13 +40,12 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool supressNextPress;
-		const int numButtons = 5;
 		public override bool HandlesKeyPress( char key ) {
 			if( supressNextPress ) {
 				supressNextPress = false;
 				return true;
 			}
-			return currentAction.HandlesKeyPress( key );
+			return widgets[actionI].HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -50,54 +56,46 @@ namespace ClassicalSharp.Gui {
 				FocusKeyDown( key );
 				return true;
 			}
-			return currentAction.HandlesKeyDown( key );
+			return widgets[actionI].HandlesKeyDown( key );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			return currentAction.HandlesKeyUp( key );
+			return widgets[actionI].HandlesKeyUp( key );
 		}
 		
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
 			base.Init();
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
-			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			string flags = HotkeyListScreen.MakeFlagsString( curHotkey.Flags );
+			if( curHotkey.Text == null ) curHotkey.Text = "";
+			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
 			
 			widgets = new Widget[] {
-				Make( -140, 45, "Key: " + curHotkey.BaseKey,
-				     250, 35, titleFont, BaseKeyClick ),
-				Make( 140, 45, "Modifiers: " + flags,
-				     250, 35, titleFont, ModifiersClick ),
-				Make( -10, 110, curHotkey.MoreInput ? "yes" : "no",
-				     50, 25, titleFont, LeaveOpenClick ),
-				Make( -120, 150, "Save changes",
-				     180, 35, titleFont, SaveChangesClick ),
-				Make( 120, 150, "Remove hotkey",
-				     180, 35, titleFont, RemoveHotkeyClick ),
-				ChatTextWidget.Create(
-					game, -150, 110, "Keep input bar open:",
-					Anchor.Centre, Anchor.Centre, titleFont ),
+				Make( 0, -150, "Key: " + curHotkey.BaseKey,
+				     301, 40, titleFont, BaseKeyClick ),
+				Make( 0, -100, "Modifiers:" + flags,
+				     301, 40, titleFont, ModifiersClick ),
+				
+				MenuInputWidget.Create(
+					game, 0, -35, 500, 30, curHotkey.Text,
+					Anchor.Centre, Anchor.Centre,
+					regularFont, titleFont, new StringValidator( 64 ) ),			
+				Make( -100, 10, "Input stays open: " + staysOpen,
+				     301, 40, titleFont, LeaveOpenClick ),
+				
+				Make( 0, 80, "Save changes",
+				     301, 40, titleFont, SaveChangesClick ),
+				Make( 0, 130, "Remove hotkey",
+				     301, 40, titleFont, RemoveHotkeyClick ),
 				
 				MakeBack( false, titleFont,
 				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
-			currentAction = MenuInputWidget.Create(
-				game, 0, 80, 600, 30, "", Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, new StringValidator( 64 ) );
-			
-			if( curHotkey.Text == null ) curHotkey.Text = "";
-			currentAction.SetText( curHotkey.Text );
-		}
-		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			currentAction.OnResize( oldWidth, oldHeight, width, height );
-			base.OnResize( oldWidth, oldHeight, width, height );
 		}
 		
 		public override void Dispose() {
 			game.Keyboard.KeyRepeat = false;
-			currentAction.Dispose();
 			focusWidget = null;
 			base.Dispose();
 		}
@@ -108,14 +106,12 @@ namespace ClassicalSharp.Gui {
 			                           Anchor.Centre, Anchor.Centre, font, LeftOnly( onClick ) );
 		}
 		
-		Hotkey curHotkey, origHotkey;
-		MenuInputWidget currentAction;
-		Widget focusWidget;
-		
 		void LeaveOpenClick( Game game, Widget widget ) {
 			LostFocus();
-			curHotkey.MoreInput = !curHotkey.MoreInput;
-			SetButton( widgets[2], curHotkey.MoreInput ? "yes" : "no" );
+			curHotkey.StaysOpen = !curHotkey.StaysOpen;
+			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
+			staysOpen = "Input stays open: " + staysOpen;
+			SetButton( widgets[3], staysOpen );
 		}
 		
 		void SaveChangesClick( Game game, Widget widget ) {
@@ -123,12 +119,13 @@ namespace ClassicalSharp.Gui {
 				hotkeys.RemoveHotkey( origHotkey.BaseKey, origHotkey.Flags );
 				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
 			}
+			MenuInputWidget input = (MenuInputWidget)widgets[actionI];
 			
 			if( curHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.AddHotkey( curHotkey.BaseKey, curHotkey.Flags,
-				                  currentAction.GetText(), curHotkey.MoreInput );
+				                  input.GetText(), curHotkey.StaysOpen );
 				hotkeys.UserAddedHotkey( curHotkey.BaseKey, curHotkey.Flags,
-				                        curHotkey.MoreInput, currentAction.GetText() );
+				                        curHotkey.StaysOpen, input.GetText() );
 			}
 			game.SetNewScreen( new HotkeyListScreen( game ) );
 		}
@@ -158,14 +155,14 @@ namespace ClassicalSharp.Gui {
 				curHotkey.BaseKey = key;
 				SetButton( widgets[keyI], "Key: " + curHotkey.BaseKey );
 				supressNextPress = true;
-			} else if( focusWidget == widgets[9] ) {
+			} else if( focusWidget == widgets[modifyI] ) {
 				if( key == Key.ControlLeft || key == Key.ControlRight ) curHotkey.Flags |= 1;
 				else if( key == Key.ShiftLeft || key == Key.ShiftRight ) curHotkey.Flags |= 2;
 				else if( key == Key.AltLeft || key == Key.AltRight ) curHotkey.Flags |= 4;
 				else curHotkey.Flags = 0;
 				
 				string flags = HotkeyListScreen.MakeFlagsString( curHotkey.Flags );
-				SetButton( widgets[modifyI], "Modifiers: " + flags );
+				SetButton( widgets[modifyI], "Modifiers:" + flags );
 				supressNextPress = true;
 			}
 			focusWidget = null;
@@ -178,7 +175,7 @@ namespace ClassicalSharp.Gui {
 				SetButton( widgets[keyI], "Key: " + curHotkey.BaseKey );
 			} else if( focusWidget == widgets[modifyI] ) {
 				string flags = HotkeyListScreen.MakeFlagsString( curHotkey.Flags );
-				SetButton( widgets[modifyI], "Modifiers: " + flags );
+				SetButton( widgets[modifyI], "Modifiers:" + flags );
 			}
 			focusWidget = null;
 			supressNextPress = false;

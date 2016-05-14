@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui {
 		MenuInputWidget inputWidget;
 		TextWidget descWidget;
 		const int overwriteIndex = 2;
-		FastColour grey = new FastColour( 150, 150, 150 );
+		static FastColour grey = new FastColour( 150, 150, 150 );
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
