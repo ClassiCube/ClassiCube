@@ -26,19 +26,13 @@ namespace ClassicalSharp.Gui {
 				}
 			}
 			
-			files = new string[count];
+			entries = new string[count];
 			for( int i = 0, j = 0; i < rawFiles.Length; i++ ) {
 				string file = rawFiles[i];
 				if( file == null ) continue;
-				files[j] = Path.GetFileName( file ); j++;
+				entries[j] = Path.GetFileName( file ); j++;
 			}
-			Array.Sort( files );
-		}
-		
-		public override void Init() {
-			base.Init();
-			buttons[buttons.Length - 1] =
-				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			Array.Sort( entries );
 		}
 		
 		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {

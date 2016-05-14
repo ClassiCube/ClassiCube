@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui {
 				                    Anchor.Centre, titleFont, SaveClassic ),
 				ButtonWidget.Create( game, -150, 120, 201, 40, "Save schematic", Anchor.Centre,
 				                    Anchor.Centre, titleFont, SaveSchematic ),
-				ChatTextWidget.Create( game, 110, 120, "&eCan be imported into MCedit", Anchor.Centre,
+				ChatTextWidget.Create( game, 110, 120, "&eCan be imported into MCEdit", Anchor.Centre,
 				                    Anchor.Centre, regularFont ),
 				null,
 				MakeBack( false, titleFont,

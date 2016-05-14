@@ -11,17 +11,11 @@ namespace ClassicalSharp.Gui {
 		public TexturePackScreen( Game game ) : base( game ) {
 			titleText = "Select a texture pack zip";
 			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
-			files = Directory.GetFiles( dir, "*.zip" );
+			entries = Directory.GetFiles( dir, "*.zip" );
 			
-			for( int i = 0; i < files.Length; i++ )
-				files[i] = Path.GetFileName( files[i] );
-			Array.Sort( files );
-		}
-		
-		public override void Init() {
-			base.Init();
-			buttons[buttons.Length - 1] =
-				MakeBack( false, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
+			for( int i = 0; i < entries.Length; i++ )
+				entries[i] = Path.GetFileName( entries[i] );
+			Array.Sort( entries );
 		}
 		
 		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {

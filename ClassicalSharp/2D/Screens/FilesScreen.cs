@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected Font textFont, arrowFont, titleFont;
-		protected string[] files;
+		protected string[] entries;
 		protected int currentIndex;
 		protected ButtonWidget[] buttons;
 		const int items = 5;
@@ -35,13 +35,14 @@ namespace ClassicalSharp.Gui {
 				
 				Make( -220, 0, "<", (g, w) => PageClick( false ) ),
 				Make( 220, 0, ">", (g, w) => PageClick( true ) ),
-				null,
+				MakeBack( false, titleFont, 
+				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 			UpdateArrows();
 		}
 		
 		string Get( int index ) {
-			return index < files.Length ? files[index] : "-----";
+			return index < entries.Length ? entries[index] : "-----";
 		}
 		
 		public override void Dispose() {
@@ -70,7 +71,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected void SetCurrentIndex( int index ) {			
-			if( index >= files.Length ) index -= items;
+			if( index >= entries.Length ) index -= items;
 			if( index < 0 ) index = 0;
 			currentIndex = index;
 			
@@ -84,7 +85,7 @@ namespace ClassicalSharp.Gui {
 			buttons[6].Disabled = false;
 			if( currentIndex < items )
 				buttons[5].Disabled = true;
-			if( currentIndex >= files.Length - items )
+			if( currentIndex >= entries.Length - items )
 				buttons[6].Disabled = true;
 		}
 		

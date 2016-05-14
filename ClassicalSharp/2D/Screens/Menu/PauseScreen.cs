@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui {
 				Make( -1, 0, "Select texture pack",
 				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
 				Make( -1, 50, "Hotkeys",
-				     (g, w) => g.SetNewScreen( new HotkeyScreen( g ) ) ),
+				     (g, w) => g.SetNewScreen( new HotkeyListScreen( g ) ) ),
 				
 				// Other
 				ButtonWidget.Create( game, 5, 5, 120, 40, "Quit game",
