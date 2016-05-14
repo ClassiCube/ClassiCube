@@ -113,7 +113,13 @@ namespace Launcher {
 		bool CheckClientInstances() {
 			Process[] processes = Process.GetProcesses();
 			for( int i = 0; i < processes.Length; i++ ) {
-				string name = processes[i].ProcessName;
+				string name = null;
+				try {
+					name = processes[i].ProcessName;
+				} catch {
+					continue;
+				}
+				
 				if( Utils.CaselessEquals( name, "ClassicalSharp" )
 				   || Utils.CaselessEquals( name, "ClassicalSharp.exe" ) )
 				   return true;
