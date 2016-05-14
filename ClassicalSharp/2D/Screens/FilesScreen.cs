@@ -14,6 +14,7 @@ namespace ClassicalSharp.Gui {
 		protected string[] files;
 		protected int currentIndex;
 		protected ButtonWidget[] buttons;
+		const int items = 5;
 		
 		TextWidget title;
 		protected string titleText;
@@ -36,6 +37,7 @@ namespace ClassicalSharp.Gui {
 				Make( 220, 0, ">", (g, w) => PageClick( true ) ),
 				null,
 			};
+			UpdateArrows();
 		}
 		
 		string Get( int index ) {
@@ -64,16 +66,26 @@ namespace ClassicalSharp.Gui {
 		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn );
 		
 		protected void PageClick( bool forward ) {
-			SetCurrentIndex( currentIndex + (forward ? 5 : -5) );
+			SetCurrentIndex( currentIndex + (forward ? items : -items) );
 		}
 		
-		protected void SetCurrentIndex( int index ) {
-			if( index >= files.Length ) index -= 5;
+		protected void SetCurrentIndex( int index ) {			
+			if( index >= files.Length ) index -= items;
 			if( index < 0 ) index = 0;
 			currentIndex = index;
 			
-			for( int i = 0; i < 5; i++ )
+			for( int i = 0; i < items; i++ )
 				buttons[i].SetText( Get( currentIndex + i ) );
+			UpdateArrows();
+		}
+		
+		protected void UpdateArrows() {
+			buttons[5].Disabled = false;
+			buttons[6].Disabled = false;
+			if( currentIndex < items )
+				buttons[5].Disabled = true;
+			if( currentIndex >= files.Length - items )
+				buttons[6].Disabled = true;
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
