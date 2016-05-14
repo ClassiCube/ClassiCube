@@ -9,6 +9,10 @@ namespace ClassicalSharp.Events {
 		public event EventHandler TerrainAtlasChanged;
 		internal void RaiseTerrainAtlasChanged() { Raise( TerrainAtlasChanged ); }
 		
+		/// <summary> Raised when the texture pack is changed. </summary>
+		public event EventHandler TexturePackChanged;
+		internal void RaiseTexturePackChanged() { Raise( TexturePackChanged ); }
+		
 		/// <summary> Raised when a texture is changed. (such as "terrain", "rain") </summary>
 		public event EventHandler<TextureEventArgs> TextureChanged;
 		internal void RaiseTextureChanged( string name, byte[] data ) {

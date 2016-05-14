@@ -23,6 +23,7 @@ namespace ClassicalSharp.TexturePack {
 		public void Init( Game game ) {
 			this.game = game;
 			api = game.Graphics;
+			game.Events.TexturePackChanged += TexturePackChanged;
 			game.Events.TextureChanged += TextureChanged;
 		}
 
@@ -30,6 +31,10 @@ namespace ClassicalSharp.TexturePack {
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
+		
+		void TexturePackChanged( object sender, EventArgs e ) {
+			animations.Clear();
+		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
 			if( e.Name == "animations.png" || e.Name == "animation.png" ) {
@@ -156,6 +161,7 @@ namespace ClassicalSharp.TexturePack {
 		public void Dispose() {
 			Clear();
 			game.Events.TextureChanged -= TextureChanged;
+			game.Events.TexturePackChanged -= TexturePackChanged;
 		}
 	}
 }

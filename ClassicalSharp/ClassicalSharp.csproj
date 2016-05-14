@@ -258,6 +258,7 @@
     <Compile Include="Rendering\Env\EnvRenderer.cs" />
     <Compile Include="Rendering\Env\MapBordersRenderer.cs" />
     <Compile Include="Rendering\Env\MinimalEnvRenderer.cs" />
+    <Compile Include="Rendering\Env\SkyboxRenderer.cs" />
     <Compile Include="Rendering\Env\StandardEnvRenderer.cs" />
     <Compile Include="Rendering\Env\WeatherRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />

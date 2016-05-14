@@ -26,7 +26,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void Extract( Stream stream, Game game ) {
 			this.game = game;
-			game.Animations.Clear();
+			game.Events.RaiseTexturePackChanged();
 			ZipReader reader = new ZipReader();
 			
 			reader.ShouldProcessZipEntry = (f) => true;
