@@ -27,8 +27,9 @@ namespace Launcher {
 				AllResourcesExist = false;
 			}
 			
-			for( int i = 0; i < musicFiles.Length; i++ ) {
-				string file = Path.Combine( audioPath, musicFiles[i] + ".ogg" );
+			string[] files = ResourceList.MusicFiles;
+			for( int i = 0; i < files.Length; i++ ) {
+				string file = Path.Combine( audioPath, files[i] + ".ogg" );
 				musicExists[i] = File.Exists( file );
 				if( !musicExists[i] ) {
 					DownloadSize += musicSizes[i] / 1024f;
@@ -38,11 +39,11 @@ namespace Launcher {
 			}
 			
 			if( !DigSoundsExist ) {
-				ResourcesCount += digSounds.Length;
+				ResourcesCount += ResourceList.DigSounds.Length;
 				DownloadSize += 173 / 1024f;
 			}
 			if( !StepSoundsExist ) {
-				ResourcesCount += stepSounds.Length;
+				ResourcesCount += ResourceList.StepSounds.Length;
 				DownloadSize += 244 / 1024f;
 			}
 		}
@@ -73,34 +74,24 @@ namespace Launcher {
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) { }
 		
 		bool CheckDigSoundsExist() {
+			string[] files = ResourceList.DigSounds;
 			string path = Path.Combine( Program.AppDirectory, "audio" );
-			for( int i = 0; i < digSounds.Length; i++ ) {
-				string file = "dig_" + digSounds[i].Substring( 1 ) + ".wav";
+			for( int i = 0; i < files.Length; i++ ) {
+				string file = "dig_" + files[i].Substring( 1 ) + ".wav";
 				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
 			}
 			return true;
 		}
 		
 		bool CheckStepSoundsExist() {
+			string[] files = ResourceList.StepSounds;
 			string path = Path.Combine( Program.AppDirectory, "audio" );
-			for( int i = 0; i < stepSounds.Length; i++ ) {
-				string file = "step_" + stepSounds[i].Substring( 1 ) + ".wav";
+			for( int i = 0; i < files.Length; i++ ) {
+				string file = "step_" + files[i].Substring( 1 ) + ".wav";
 				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
 			}
 			return true;
 		}
-		
-		internal static string[] digSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
-			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2",
-			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3",
-			"Asnow4", "Astone1", "Astone2", "Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
-		
-		internal static string[] stepSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
-			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1",
-			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2",
-			"Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
-		
-		internal static string[] musicFiles = new [] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };
 		static int[] musicSizes = new [] { 2472, 1931, 2181, 1926, 1714, 1879, 2499 };
 	}
 }

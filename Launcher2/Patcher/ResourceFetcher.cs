@@ -26,9 +26,9 @@ namespace Launcher {
 		public void DownloadItems( AsyncDownloader downloader, Action<string> setStatus ) {
 			this.downloader = downloader;
 			DownloadMusicFiles();
-			digPatcher = new SoundPatcher( ResourceChecker.digSounds, "dig_", "step_cloth1" );
+			digPatcher = new SoundPatcher( ResourceList.DigSounds, "dig_", "step_cloth1" );
 			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this, DigSoundsExist );
-			stepPatcher = new SoundPatcher( ResourceChecker.stepSounds, "step_", "classic jar" );
+			stepPatcher = new SoundPatcher( ResourceList.StepSounds, "step_", "classic jar" );
 			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this, StepSoundsExist );
 			
 			if( !defaultZipExists ) {
@@ -41,7 +41,7 @@ namespace Launcher {
 		}
 		
 		void DownloadMusicFiles() {
-			string[] files = ResourceChecker.musicFiles;
+			string[] files = ResourceList.MusicFiles;
 			for( int i = 0; i < files.Length; i++ ) {
 				if( musicExists[i] ) continue;
 				string baseUri = i < 3 ? musicUri : newMusicUri;
@@ -53,7 +53,7 @@ namespace Launcher {
 		void SetFirstStatus( Action<string> setStatus ) {
 			for( int i = 0; i < musicExists.Length; i++ ) {
 				if( musicExists[i] ) continue;
-				setStatus( MakeNext( ResourceChecker.musicFiles[i] ) );
+				setStatus( MakeNext( ResourceList.MusicFiles[i] ) );
 				return;
 			}
 			
@@ -124,7 +124,7 @@ namespace Launcher {
 		}
 		
 		bool CheckMusicFiles( Action<string> setStatus ) {
-			string[] files = ResourceChecker.musicFiles;
+			string[] files = ResourceList.MusicFiles;
 			for( int i = 0; i < files.Length; i++ ) {
 				string next = i < files.Length - 1 ? files[i + 1] : "dig_cloth1";
 				string name = files[i];

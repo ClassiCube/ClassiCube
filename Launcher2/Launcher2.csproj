@@ -94,6 +94,7 @@
     <Compile Include="Patcher\ResourceChecker.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
     <Compile Include="Patcher\ResourcePatcher.cs" />
+    <Compile Include="Patcher\ResourcesList.cs" />
     <Compile Include="Patcher\SoundPatcher.cs" />
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
