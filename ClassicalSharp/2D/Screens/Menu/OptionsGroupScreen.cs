@@ -75,11 +75,6 @@ namespace ClassicalSharp.Gui {
 			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
 		}
 		
-		ButtonWidget MakeOther( int x, int y, int width, string text, Anchor hAnchor, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, 40, text,
-			                           hAnchor, Anchor.BottomOrRight, titleFont, LeftOnly( onClick ) );
-		}
-		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape )
 				game.SetNewScreen( null );

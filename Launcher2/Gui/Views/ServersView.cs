@@ -69,7 +69,7 @@ namespace Launcher {
 			Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
 			
 			if( !game.ClassicBackground ) {
-				FastColour col = LauncherTableWidget.backGridCol;
+				FastColour col = LauncherTableView.backGridCol;
 				Drawer2DExt.FastClear( dst, rec, col );
 			} else {
 				game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );

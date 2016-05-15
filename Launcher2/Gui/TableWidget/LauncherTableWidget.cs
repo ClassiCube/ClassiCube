@@ -1,14 +1,23 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using ClassicalSharp;
 
 namespace Launcher {
 
+	internal struct TableEntry {
+		public string Hash, Name, Players, Uptime, Software;
+		public int Y, Height;
+	}
+	
 	public partial class LauncherTableWidget : LauncherWidget {
 		
+		LauncherTableView view;
 		public LauncherTableWidget( LauncherWindow window ) : base( window ) {
 			OnClick = HandleOnClick;
+			view = new LauncherTableView();
+			view.Init( window, this );
 		}
 		
 		public Action NeedRedraw;
@@ -57,17 +66,17 @@ namespace Launcher {
 			SetSelected( selHash );
 		}		
 		
-		void GetScrollbarCoords( out int y, out int height ) {
+		internal void GetScrollbarCoords( out int y, out int height ) {
 			if( Count == 0 ) { y = 0; height = 0; return; }
 			
 			float scale = Height / (float)Count;
 			y = (int)Math.Ceiling( CurrentIndex * scale );
-			height = (int)Math.Ceiling( (maxIndex - CurrentIndex) * scale );
+			height = (int)Math.Ceiling( (view.maxIndex - CurrentIndex) * scale );
 			height = Math.Min( y + height, Height ) - y;
 		}
 		
 		public void SetSelected( int index ) {
-			if( index >= maxIndex ) CurrentIndex = index + 1 - numEntries;
+			if( index >= view.maxIndex ) CurrentIndex = index + 1 - view.numEntries;
 			if( index < CurrentIndex ) CurrentIndex = index;
 			if( index >= Count ) index = Count - 1;
 			if( index < 0 ) index = 0;
@@ -90,8 +99,8 @@ namespace Launcher {
 		}
 		
 		public void ClampIndex() {
-			if( CurrentIndex > Count - numEntries )
-				CurrentIndex = Count - numEntries;
+			if( CurrentIndex > Count - view.numEntries )
+				CurrentIndex = Count - view.numEntries;
 			if( CurrentIndex < 0 )
 				CurrentIndex = 0;
 		}
@@ -105,6 +114,25 @@ namespace Launcher {
 			if( t.TotalMinutes >= 1 )
 				return (int)t.TotalMinutes + "m";
 			return (int)t.TotalSeconds + "s";
+		}
+		
+		
+		public int[] ColumnWidths = { 340, 65, 65, 140 };
+		public int[] DesiredColumnWidths = { 340, 65, 65, 140 };
+
+		public void SetDrawData( IDrawer2D drawer, Font font, Font titleFont,
+		                        Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+			CalculateOffset( x, y, horAnchor, verAnchor );
+			view.SetDrawData( drawer, font, titleFont );
+		}
+		
+		public void RecalculateDrawData() { view.RecalculateDrawData(); }
+		
+		public void RedrawData( IDrawer2D drawer ) { view.RedrawData( drawer ); }
+		
+		public override void Redraw( IDrawer2D drawer ) {
+			RecalculateDrawData();
+			RedrawData( drawer );
 		}
 	}
 }

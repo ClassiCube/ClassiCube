@@ -119,12 +119,7 @@ namespace ClassicalSharp.Singleplayer {
 			generator.GenerateAsync( game, width, height, length, seed );
 		}
 		
-		unsafe void MapSet( int width, int length, byte* ptr, int yStart, int yEnd, byte block ) {
-			int startIndex = yStart * length * width;
-			int endIndex = ( yEnd * length + (length - 1) ) * width + (width - 1);
-			MemUtils.memset( (IntPtr)ptr, block, startIndex, endIndex - startIndex + 1 );
-		}
-		
+
 		void ResetPlayerPosition() {
 			int x = game.World.Width / 2, z = game.World.Length / 2;
 			int y = game.World.GetLightHeight( x, z ) + 2;

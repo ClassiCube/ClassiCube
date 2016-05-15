@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 						tile = chunk[chunkIndex];
 						if( !info.IsAir[tile] ) {
 							int index = ((yy << 8) | (zz << 4) | xx) * Side.Sides;
-							RenderTile( chunkIndex, index, x, y, z );
+							RenderTile( index, x, y, z );
 						}
 						chunkIndex++;
 					}
@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 		}
 
 		Vector3 minBB, maxBB;
-		public void RenderTile( int chunkIndex, int index, int x, int y, int z ) {
+		public void RenderTile( int index, int x, int y, int z ) {
 			X = x; Y = y; Z = z;
 			
 			if( info.IsSprite[tile] ) {

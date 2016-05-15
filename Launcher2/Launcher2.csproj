@@ -70,8 +70,8 @@
     <Compile Include="Gui\Screens\ChooseModeScreen.cs" />
     <Compile Include="Gui\Screens\UpdatesScreen.cs" />
     <Compile Include="Gui\TableWidget\Comparers.cs" />
+    <Compile Include="Gui\TableWidget\LauncherTableView.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.cs" />
-    <Compile Include="Gui\TableWidget\LauncherTableWidget.Drawing.cs" />
     <Compile Include="Gui\TableWidget\LauncherTableWidget.Input.cs" />
     <Compile Include="Gui\Views\ChooseModeView.cs" />
     <Compile Include="Gui\Views\ColoursView.cs" />

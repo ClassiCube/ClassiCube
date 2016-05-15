@@ -87,7 +87,7 @@ namespace Launcher {
 				lastIndex = -10; return;
 			}
 			
-			if( mouseY >= headerStartY && mouseY < headerEndY ) {
+			if( mouseY >= view.headerStartY && mouseY < view.headerEndY ) {
 				SelectHeader( mouseX, mouseY );
 			} else {
 				GetSelectedServer( mouseX, mouseY );
@@ -119,7 +119,7 @@ namespace Launcher {
 			mouseY -= Y;
 			int y, height;
 			GetScrollbarCoords( out y, out height );
-			int delta = (maxIndex - CurrentIndex);
+			int delta = (view.maxIndex - CurrentIndex);
 			
 			if( mouseY < y ) {
 				CurrentIndex -= delta;
