@@ -75,9 +75,7 @@ namespace ClassicalSharp.Renderers {
 			if( index > 0 ) {
 				graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 				graphics.AlphaArgBlend = true;
-				graphics.FaceCulling = true;
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );				
-				graphics.FaceCulling = false;
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
 				graphics.AlphaArgBlend = false;
 			}
 			graphics.AlphaTest = true;
