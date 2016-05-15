@@ -20,7 +20,10 @@ namespace Launcher {
 		}
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
-		public void FetchFiles( string baseUrl, string altBaseUrl, ResourceFetcher fetcher ) {
+		public void FetchFiles( string baseUrl, string altBaseUrl, 
+		                       ResourceFetcher fetcher, bool allExist ) {
+			if( allExist ) { Done = true; return; }
+			
 			identifiers = new string[files.Length];
 			for( int i = 0; i < files.Length; i++ )
 				identifiers[i] = prefix + files[i].Substring( 1 );

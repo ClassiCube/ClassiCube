@@ -27,9 +27,10 @@ namespace Launcher {
 			this.downloader = downloader;
 			DownloadMusicFiles();
 			digPatcher = new SoundPatcher( ResourceChecker.digSounds, "dig_", "step_cloth1" );
-			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this );
+			digPatcher.FetchFiles( digSoundsUri, altDigSoundsUri, this, DigSoundsExist );
 			stepPatcher = new SoundPatcher( ResourceChecker.stepSounds, "step_", "classic jar" );
-			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this );
+			stepPatcher.FetchFiles( stepSoundsUri, altStepSoundsUri, this, StepSoundsExist );
+			
 			if( !defaultZipExists ) {
 				downloader.DownloadData( jarClassicUri, false, "classic_jar" );
 				downloader.DownloadData( jar162Uri, false, "162_jar" );
@@ -55,7 +56,10 @@ namespace Launcher {
 				setStatus( MakeNext( ResourceChecker.musicFiles[i] ) );
 				return;
 			}
-			setStatus( MakeNext( "dig_cloth1" ) );
+			
+			string next = !DigSoundsExist ? "dig_cloth1" :
+				(!StepSoundsExist ? "step_cloth1" : " classic jar");
+			setStatus( MakeNext( next ) );
 		}
 		
 		
@@ -141,13 +145,16 @@ namespace Launcher {
 			checker.CheckResourceExistence();
 			
 			AllResourcesExist = checker.AllResourcesExist;
+			DigSoundsExist = checker.DigSoundsExist;
+			StepSoundsExist = checker.StepSoundsExist;
+			
 			DownloadSize = checker.DownloadSize;
 			ResourcesCount = checker.ResourcesCount;
 			musicExists = checker.musicExists;
 			defaultZipExists = checker.defaultZipExists;
 		}
 		
-		public bool AllResourcesExist;
+		public bool AllResourcesExist, DigSoundsExist, StepSoundsExist;
 		public float DownloadSize;
 		public int ResourcesCount, CurrentResource;
 		bool[] musicExists = new bool[7];

@@ -11,7 +11,9 @@ namespace Launcher {
 			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
 			if( !Directory.Exists( audioPath ) )
 				Directory.CreateDirectory( audioPath );
-			AllResourcesExist = CheckSoundsExist();
+			DigSoundsExist = CheckDigSoundsExist();
+			StepSoundsExist = CheckStepSoundsExist();
+			AllResourcesExist = DigSoundsExist && StepSoundsExist;
 			
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string zipPath = Path.Combine( texDir, "default.zip" );
@@ -34,13 +36,18 @@ namespace Launcher {
 					AllResourcesExist = false;
 				}
 			}
-			ResourcesCount += digSounds.Length;
-			DownloadSize += 173 / 1024f;
-			ResourcesCount += stepSounds.Length;
-			DownloadSize += 244 / 1024f;
+			
+			if( !DigSoundsExist ) {
+				ResourcesCount += digSounds.Length;
+				DownloadSize += 173 / 1024f;
+			}
+			if( !StepSoundsExist ) {
+				ResourcesCount += stepSounds.Length;
+				DownloadSize += 244 / 1024f;
+			}
 		}
 		
-		public bool AllResourcesExist;
+		public bool AllResourcesExist, DigSoundsExist, StepSoundsExist;
 		public float DownloadSize;
 		public int ResourcesCount;
 		internal bool[] musicExists = new bool[7];
@@ -65,13 +72,17 @@ namespace Launcher {
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) { }
 		
-		bool CheckSoundsExist() {
+		bool CheckDigSoundsExist() {
 			string path = Path.Combine( Program.AppDirectory, "audio" );
 			for( int i = 0; i < digSounds.Length; i++ ) {
 				string file = "dig_" + digSounds[i].Substring( 1 ) + ".wav";
 				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
 			}
-			
+			return true;
+		}
+		
+		bool CheckStepSoundsExist() {
+			string path = Path.Combine( Program.AppDirectory, "audio" );
 			for( int i = 0; i < stepSounds.Length; i++ ) {
 				string file = "step_" + stepSounds[i].Substring( 1 ) + ".wav";
 				if( !File.Exists( Path.Combine( path, file ) ) ) return false;
