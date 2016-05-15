@@ -21,6 +21,7 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TextureChanged += TextureChanged;
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
+			game.WorldEvents.OnNewMap += OnNewMap;
 			MakeVb();
 		}
 		
@@ -38,8 +39,14 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			game.WorldEvents.OnNewMap -= OnNewMap;
 		}
 
+		void OnNewMap( object sender, EventArgs e ) {
+			game.Graphics.DeleteVb( vb );
+			MakeVb();
+		}
+		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var != EnvVar.CloudsColour ) return;
 			game.Graphics.DeleteVb( vb );
