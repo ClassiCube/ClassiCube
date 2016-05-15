@@ -16,6 +16,7 @@ namespace Launcher.Updater {
 		
 		public static void Update( string dir ) {
 			using( WebClient client = new WebClient() ) {
+				WebRequest.DefaultWebProxy = null;
 				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
 				MakeUpdatesFolder( zipData );
 			}
