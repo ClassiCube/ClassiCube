@@ -91,6 +91,7 @@
     <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\BinUnpacker.cs" />
+    <Compile Include="Patcher\ResourceChecker.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
     <Compile Include="Patcher\ResourcePatcher.cs" />
     <Compile Include="Patcher\SoundPatcher.cs" />
