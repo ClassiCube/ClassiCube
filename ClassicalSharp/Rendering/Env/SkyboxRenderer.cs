@@ -55,9 +55,10 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
 			Vector3 pos = game.CurrentCameraPos;
-			Matrix4 m = Matrix4.Identity;			
-			m *= Matrix4.RotateY( game.LocalPlayer.HeadYawRadians );
-			m *= Matrix4.RotateX( game.LocalPlayer.PitchRadians );
+			Matrix4 m = Matrix4.Identity;
+			Vector2 rotation = game.Camera.GetCameraOrientation();
+			m *= Matrix4.RotateY( rotation.X ); // yaw
+			m *= Matrix4.RotateX( rotation.Y ); // pitch
 			game.Graphics.LoadMatrix( ref m );
 			
 			game.Graphics.BindVb( vb );

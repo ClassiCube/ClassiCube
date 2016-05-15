@@ -18,6 +18,9 @@ namespace ClassicalSharp {
 		/// based on the entity's eye position. </summary>
 		public abstract Vector3 GetCameraPos( Vector3 eyePos );
 		
+		/// <summary> Calculates the yaw and pitch of the camera in radians. </summary>
+		public abstract Vector2 GetCameraOrientation();
+		
 		/// <summary> Whether this camera is using a third person perspective. </summary>
 		/// <remarks> This causes the local player to be renderered if true. </remarks>
 		public abstract bool IsThirdPerson { get; }
@@ -140,6 +143,10 @@ namespace ClassicalSharp {
 		public ThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
+		public override Vector2 GetCameraOrientation() {
+			return new Vector2( player.HeadYawRadians, player.PitchRadians );
+		}
+		
 		float dist = 3;
 		public override bool DoZoom( float deltaPrecise ) {
 			dist = Math.Max( dist - deltaPrecise, 2 );
@@ -173,6 +180,10 @@ namespace ClassicalSharp {
 		public ForwardThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
+		public override Vector2 GetCameraOrientation() {
+			return new Vector2( player.HeadYawRadians, -player.PitchRadians );
+		}
+		
 		float dist = 3;
 		public override bool DoZoom( float deltaPrecise ) {
 			dist = Math.Max( dist - deltaPrecise, 2 );
@@ -204,6 +215,10 @@ namespace ClassicalSharp {
 	public class FirstPersonCamera : PerspectiveCamera {
 		
 		public FirstPersonCamera( Game window ) : base( window ) {
+		}
+		
+		public override Vector2 GetCameraOrientation() {
+			return new Vector2( player.HeadYawRadians, player.PitchRadians );
 		}
 		
 		public override Matrix4 GetView( double delta ) {
