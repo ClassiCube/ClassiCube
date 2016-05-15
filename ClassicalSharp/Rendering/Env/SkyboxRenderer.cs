@@ -20,6 +20,7 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			game.Events.TextureChanged += TextureChanged;
 			game.Events.TexturePackChanged += TexturePackChanged;
+			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			MakeVb();
 		}
 		
@@ -36,6 +37,13 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DeleteVb( vb );
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
+			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+		}
+
+		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
+			if( e.Var != EnvVar.CloudsColour ) return;
+			game.Graphics.DeleteVb( vb );
+			MakeVb();
 		}
 		
 		void TexturePackChanged( object sender, EventArgs e ) {
@@ -74,43 +82,44 @@ namespace ClassicalSharp.Renderers {
 			IntPtr start = (IntPtr)vertices;
 			const float pos = 0.5f;
 			TextureRec rec;
+			FastColour col = game.World.Env.CloudsCol;
 			
 			// Render the front quad
 			rec = new TextureRec( 1/4f, 1/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U1, rec.V1, col );
 			// Render the left quad
 			rec = new TextureRec( 0/4f, 1/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U1, rec.V1, col );
 			// Render the back quad
 			rec = new TextureRec( 3/4f, 1/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U1, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U1, rec.V1, col );
 			// Render the right quad
 			rec = new TextureRec( 2/4f, 1/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U1, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U1, rec.V1, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U1, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U1, rec.V1, col );
 			// Render the top quad
 			rec = new TextureRec( 1/4f, 0/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U1, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U1, rec.V2, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos, -pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos,  pos,  pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos,  pos, rec.U1, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos,  pos, -pos, rec.U1, rec.V2, col );
 			// Render the bottom quad
 			rec = new TextureRec( 2/4f, 0/2f, 1/4f, 1/2f );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U2, rec.V2, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V1, FastColour.White );
-			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, FastColour.White );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos, -pos, rec.U2, rec.V2, col );
+			*vertices++ = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V1, col );
+			*vertices++ = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, col );
 			vb = game.Graphics.CreateVb( start, VertexFormat.P3fT2fC4b, count );			
 		}
 	}
