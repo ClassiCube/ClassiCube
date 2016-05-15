@@ -32,7 +32,7 @@ namespace Launcher {
 		}
 
 		internal int lastProgress = int.MinValue;
-		static readonly string format = "&eDownload size: {0} megabytes";
+		const string format = "&eDownload size: {0} megabytes";
 		internal bool useStatus;
 		
 		internal void UpdateStatus() {

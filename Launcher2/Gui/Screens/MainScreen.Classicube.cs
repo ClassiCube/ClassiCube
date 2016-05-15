@@ -13,7 +13,7 @@ namespace Launcher {
 		public override void Tick() {
 			base.Tick();
 			if( game.checkTask != null )
-				 game.checkTask.TaskTick( SuccessfulUpdateCheck, this );
+				 game.checkTask.TaskTick( SuccessfulUpdateCheck );
 			if( !signingIn ) return;
 			
 			ClassicubeSession session = game.Session;
@@ -139,7 +139,7 @@ namespace Launcher {
 			metadata["pass"] = Get( 1 );
 		}
 		
-		void LoadSavedInfo( IDrawer2D drawer ) {
+		void LoadSavedInfo() {
 			Dictionary<string, object> metadata;
 			// restore what user last typed into the various fields
 			if( game.ScreenMetadata.TryGetValue( "screen-CC", out metadata ) ) {

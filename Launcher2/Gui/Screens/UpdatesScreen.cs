@@ -53,7 +53,7 @@ namespace Launcher {
 		Build dev, stable;
 		public override void Tick() {;
 			if( checkTask.Done && checkTask.Exception == null ) return;
-			if( !checkTask.TaskTick( SuccessfulUpdateCheck, this ) ) {
+			if( !checkTask.TaskTick( SuccessfulUpdateCheck ) ) {
 				view.LastStable = DateTime.MaxValue;
 				view.LastDev = DateTime.MaxValue;
 				checkTask.Exception = null;

@@ -18,7 +18,7 @@ namespace Launcher {
 		
 		public int[] ColumnWidths = { 340, 65, 65, 140 };
 		public int[] DesiredColumnWidths = { 340, 65, 65, 140 };
-		int defaultInputHeight, defaultHeaderHeight;
+		int entryHeight, headerHeight;
 		
 		Font font, titleFont;
 		public void SetDrawData( IDrawer2D drawer, Font font, Font titleFont,
@@ -28,9 +28,9 @@ namespace Launcher {
 			this.titleFont = titleFont;
 			
 			DrawTextArgs args = new DrawTextArgs( "IMP", titleFont, true );
-			defaultHeaderHeight = drawer.MeasureSize( ref args ).Height;
+			headerHeight = drawer.MeasureSize( ref args ).Height;
 			args = new DrawTextArgs( "IMP", font, true );
-			defaultInputHeight = drawer.MeasureSize( ref args ).Height;
+			entryHeight = drawer.MeasureSize( ref args ).Height;
 		}
 		
 		public void RecalculateDrawData() {
@@ -42,24 +42,24 @@ namespace Launcher {
 			ResetEntries();
 			
 			int y = Y + 3;
-			y += defaultHeaderHeight + 2;
+			y += headerHeight + 2;
 			maxIndex = Count;
 			y += 5;
 
 			for( int i = CurrentIndex; i < Count; i++ ) {
-				if( y + defaultInputHeight > Y + Height ) {
+				if( y + entryHeight > Y + Height ) {
 					maxIndex = i; return;
 				}
 				
 				usedEntries[i].Y = y;
-				usedEntries[i].Height = defaultInputHeight;
-				y += defaultInputHeight + 2;
+				usedEntries[i].Height = entryHeight;
+				y += entryHeight + 2;
 			}
 		}
 		
 		public void RedrawData( IDrawer2D drawer ) {
 			int x = X + 5;
-			DrawGrid( drawer, font, titleFont );
+			DrawGrid( drawer );
 			x += DrawColumn( drawer, false, font, titleFont,
 			                "Name", ColumnWidths[0], x, e => e.Name ) + 5;
 			x += DrawColumn( drawer, true, font, titleFont,
@@ -89,7 +89,7 @@ namespace Launcher {
 				args = new DrawTextArgs( filter( usedEntries[i] ), font, true );
 				if( i == SelectedIndex && !separator ) {
 					int startY = y - 3;
-					int height = Math.Min( startY + (defaultInputHeight + 4), Y + Height ) - startY;
+					int height = Math.Min( startY + (entryHeight + 4), Y + Height ) - startY;
 					drawer.Clear( foreGridCol, X, startY, Width, height );
 				}
 				
@@ -108,7 +108,7 @@ namespace Launcher {
 			Size size = drawer.MeasureSize( ref args );
 			bool empty = args.Text == "";
 			if( empty )
-				size.Height = defaultInputHeight;
+				size.Height = entryHeight;
 			if( y + size.Height > Y + Height ) {
 				y = Y + Height + 2; return false;
 			}
@@ -132,16 +132,14 @@ namespace Launcher {
 		
 		int headerStartY, headerEndY;
 		int numEntries = 0;
-		void DrawGrid( IDrawer2D drawer, Font font, Font titleFont ) {
-			DrawTextArgs args = new DrawTextArgs( "I", titleFont, true );
-			Size size = drawer.MeasureSize( ref args );
+		void DrawGrid( IDrawer2D drawer ) {
 			if( !Window.ClassicBackground )
-				drawer.Clear( LauncherSkin.BackgroundCol, X, Y + size.Height + 5, Width, 2 );
+				drawer.Clear( LauncherSkin.BackgroundCol, X, Y + headerHeight + 5, Width, 2 );
 			headerStartY = Y;
 			
-			headerEndY = Y + size.Height + 5;
+			headerEndY = Y + headerHeight + 5;
 			int startY = headerEndY + 3;
-			numEntries = (Y + Height - startY) / (defaultInputHeight + 3);
+			numEntries = (Y + Height - startY) / (entryHeight + 3);
 		}
 		
 		int maxIndex;

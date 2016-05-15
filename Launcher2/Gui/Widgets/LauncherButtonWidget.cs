@@ -35,10 +35,8 @@ namespace Launcher {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
 			DrawBorder( drawer );
-			if( Window.ClassicBackground )
-				DrawClassic( drawer, xOffset, yOffset );
-			else
-				DrawNormal( drawer, xOffset, yOffset );
+			if( Window.ClassicBackground ) DrawClassic( drawer );
+			else DrawNormal( drawer );
 			
 			drawer.DrawText( ref args, X + xOffset / 2, Y + yOffset / 2 );
 		}
@@ -51,13 +49,13 @@ namespace Launcher {
 			drawer.Clear( backCol, X + Width - border, Y + 1, border, Height - 2 );
 		}
 		
-		void DrawNormal( IDrawer2D drawer, int xOffset, int yOffset ) {
+		void DrawNormal( IDrawer2D drawer ) {
 			if( Active ) return;
 			FastColour lineCol = LauncherSkin.ButtonHighlightCol;
 			drawer.Clear( lineCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
 		}
 		
-		void DrawClassic( IDrawer2D drawer, int xOffset, int yOffset ) {
+		void DrawClassic( IDrawer2D drawer ) {
 			FastColour highlightCol = Active ? new FastColour( 189, 198, 255 ) : new FastColour( 168, 168, 168 );
 			drawer.Clear( highlightCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
 			drawer.Clear( highlightCol, X + border, Y + border + 1, border, Height - (border * 2 + 1) );

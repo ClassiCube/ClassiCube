@@ -25,7 +25,7 @@ namespace Launcher {
 			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LoadSavedInfo( drawer );
+				LoadSavedInfo();
 			}
 		}
 		
