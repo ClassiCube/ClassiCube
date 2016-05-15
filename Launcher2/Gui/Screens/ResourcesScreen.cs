@@ -36,7 +36,7 @@ namespace Launcher {
 				failed = true;
 			
 			if( fetcher.Done ) {
-				if( !fetcher.defaultZipExists ) {
+				if( ResourceList.Files.Count > 0 ) {
 					ResourcePatcher patcher = new ResourcePatcher( fetcher );
 					patcher.Run();
 				}

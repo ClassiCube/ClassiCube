@@ -17,16 +17,36 @@ namespace Launcher {
 			
 			string texDir = Path.Combine( Program.AppDirectory, "texpacks" );
 			string zipPath = Path.Combine( texDir, "default.zip" );
-			defaultZipExists = File.Exists( zipPath );
-			if( defaultZipExists )
-				CheckClassicGuiPng( zipPath );
-			if( !defaultZipExists ) {
-				// classic.jar + 1.6.2.jar + terrain-patch.png + gui.png
-				DownloadSize += (291 + 4621 + 7 + 21) / 1024f;
-				ResourcesCount += 4;
-				AllResourcesExist = false;
-			}
+			bool defaultZipExists = File.Exists( zipPath );
+			if( File.Exists( zipPath ) )
+				CheckDefaultZip( zipPath );
 			
+			CheckTexturePack();
+			CheckMusic( audioPath );
+			CheckSounds();
+		}
+		
+		void CheckTexturePack() {
+			ushort flags = 0;
+			foreach( var entry in ResourceList.Files )
+				flags |= entry.Value;
+			if( flags != 0 ) AllResourcesExist = false;
+			
+			if( (flags & ResourceList.cMask) != 0 ) {
+				DownloadSize += 291/1024f; ResourcesCount++;
+			}
+			if( (flags & ResourceList.mMask) != 0 ) {
+				DownloadSize += 4621/1024f; ResourcesCount++;
+			}
+			if( (flags & ResourceList.tMask) != 0 ) {
+				DownloadSize += 7/1024f; ResourcesCount++;
+			}
+			if( (flags & ResourceList.gMask) != 0 ) {
+				DownloadSize += 21/1024f; ResourcesCount++;
+			}
+		}
+		
+		void CheckMusic( string audioPath ) {
 			string[] files = ResourceList.MusicFiles;
 			for( int i = 0; i < files.Length; i++ ) {
 				string file = Path.Combine( audioPath, files[i] + ".ogg" );
@@ -37,7 +57,9 @@ namespace Launcher {
 					AllResourcesExist = false;
 				}
 			}
-			
+		}
+		
+		void CheckSounds() {
 			if( !DigSoundsExist ) {
 				ResourcesCount += ResourceList.DigSounds.Length;
 				DownloadSize += 173 / 1024f;
@@ -52,22 +74,20 @@ namespace Launcher {
 		public float DownloadSize;
 		public int ResourcesCount;
 		internal bool[] musicExists = new bool[7];
-		internal bool classicGuiPngExists, defaultZipExists;
+		internal bool defaultZipExists;
 		
-		void CheckClassicGuiPng( string path ) {
+		void CheckDefaultZip( string path ) {
 			ZipReader reader = new ZipReader();
 			reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
 			reader.ProcessZipEntry = ProcessZipEntry;
 			
 			using( Stream src = new FileStream( path, FileMode.Open, FileAccess.Read ) )
 				reader.Extract( src );
-			if( !classicGuiPngExists )
-				defaultZipExists = false;
 		}
 
-		bool ShouldProcessZipEntry( string filename ) {
-			if( filename == "gui_classic.png" )
-				classicGuiPngExists = true;
+		bool ShouldProcessZipEntry( string filename ) {			
+			string name = ResourceList.GetFile( filename );
+			ResourceList.Files.Remove( name );
 			return false;
 		}
 		

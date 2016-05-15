@@ -49,11 +49,10 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		/// <summary> Sets the atlas bitmap that animation frames are contained within. </summary>
-		public void SetAtlas( Bitmap bmp ) {
+		void SetAtlas( Bitmap bmp ) {
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) )
 				game.Drawer2D.ConvertTo32Bpp( ref bmp );
 			
-			Clear();
 			this.animBmp = bmp;
 			animsBuffer = new FastBitmap( bmp, true, true );
 		}
