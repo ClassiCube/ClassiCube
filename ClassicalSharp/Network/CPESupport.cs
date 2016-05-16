@@ -14,13 +14,13 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix, supportsCustomBlocks;
+		internal bool needD3Fix;
 		
 		public void Reset( Game game ) {
 			ServerExtensionsCount = 0;
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
-			needD3Fix = false; supportsCustomBlocks = false;
+			needD3Fix = false; game.UseCPEBlocks = false;
 			
 			NetworkProcessor network = (NetworkProcessor)game.Network;
 			network.UsingExtPlayerList = false;

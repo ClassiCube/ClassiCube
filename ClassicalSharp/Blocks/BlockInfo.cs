@@ -51,10 +51,10 @@ namespace ClassicalSharp {
 		
 		public uint[] DefinedCustomBlocks = new uint[BlocksCount >> 5];
 		
-		public const byte MaxDefinedOriginalBlock = (byte)Block.Obsidian;
-		public const int OriginalBlocksCount = MaxDefinedOriginalBlock + 1;
-		public const byte MaxDefinedCpeBlock = (byte)Block.StoneBrick;
-		public const int CpeBlocksCount = MaxDefinedCpeBlock + 1;
+		public const byte MaxOriginalBlock = (byte)Block.Obsidian;
+		public const int OriginalCount = MaxOriginalBlock + 1;
+		public const byte MaxCpeBlock = (byte)Block.StoneBrick;
+		public const int CpeCount = MaxCpeBlock + 1;
 		public const byte MaxDefinedBlock = byte.MaxValue;
 		public const int BlocksCount = MaxDefinedBlock + 1;
 		
@@ -230,14 +230,14 @@ namespace ClassicalSharp {
 				MakeNormalNames();
 			
 			string value = Name[block];
-			if( block < CpeBlocksCount && value == "Invalid" )
+			if( block < CpeCount && value == "Invalid" )
 				return normalNames[block];
 			return value;
 		}
 		
 		static void MakeNormalNames() {
 			StringBuffer buffer = new StringBuffer( 64 );
-			normalNames = new string[CpeBlocksCount];
+			normalNames = new string[CpeCount];
 			
 			for( int i = 0; i < normalNames.Length; i++ ) {
 				string origName = Enum.GetName( typeof(Block), (byte)i );

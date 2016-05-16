@@ -69,7 +69,7 @@ namespace ClassicalSharp.Map {
 			
 		unsafe void ConvertPhysicsBlocks( byte[] blocks ) {
 			byte* conv = stackalloc byte[256];
-			int count = BlockInfo.CpeBlocksCount;
+			int count = BlockInfo.CpeCount;
 			for( int i = 0; i < count; i++ )
 				conv[i] = (byte)i;
 			for( int i = count; i < 256; i++ )

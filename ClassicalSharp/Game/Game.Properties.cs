@@ -117,6 +117,9 @@ namespace ClassicalSharp {
 		
 		public List<WarningScreen> WarningOverlays = new List<WarningScreen>();
 		
+		/// <summary> Whether x to stone brick tiles should be used. </summary>
+		public bool UseCPEBlocks = false;
+		
 		/// <summary> Account username of the player. </summary>
 		public string Username;
 		

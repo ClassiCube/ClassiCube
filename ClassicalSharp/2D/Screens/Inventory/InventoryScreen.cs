@@ -178,7 +178,7 @@ namespace ClassicalSharp.Gui {
 		
 		void RecreateBlockTable() {
 			int blocksCount = 0;
-			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalBlocksCount;
+			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalCount;
 			for( int tile = 1; tile < count; tile++ ) {
 				if( ShowTile( tile ) ) blocksCount++;
 			}
@@ -200,7 +200,8 @@ namespace ClassicalSharp.Gui {
 			if( !hackBlocks && (tile == (byte)Block.Bedrock ||
 			                    tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
 				return false;
-			return tile < BlockInfo.CpeBlocksCount || game.BlockInfo.Name[tile] != "Invalid";
+			int count = game.UseCPEBlocks ? BlockInfo.CpeCount : BlockInfo.OriginalCount;
+			return tile < count || game.BlockInfo.Name[tile] != "Invalid";
 		}
 	}
 }

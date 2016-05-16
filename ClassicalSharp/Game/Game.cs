@@ -432,7 +432,7 @@ namespace ClassicalSharp {
 			World.blocks = null;
 			Drawer2D.InitColours();
 			
-			for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
+			for( int tile = BlockInfo.CpeCount; tile < BlockInfo.BlocksCount; tile++ )
 				BlockInfo.ResetBlockInfo( (byte)tile, false );
 			BlockInfo.SetupCullingCache();
 			BlockInfo.InitLightOffsets();

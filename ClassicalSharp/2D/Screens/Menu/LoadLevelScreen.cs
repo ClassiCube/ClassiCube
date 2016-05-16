@@ -60,7 +60,7 @@ namespace ClassicalSharp.Gui {
 					int width, height, length;
 					game.World.Reset();
 					game.World.TextureUrl = null;
-					for( int tile = BlockInfo.CpeBlocksCount; tile < BlockInfo.BlocksCount; tile++ )
+					for( int tile = BlockInfo.CpeCount; tile < BlockInfo.BlocksCount; tile++ )
 						game.BlockInfo.ResetBlockInfo( (byte)tile, false );
 					game.BlockInfo.SetupCullingCache();
 					game.BlockInfo.InitLightOffsets();

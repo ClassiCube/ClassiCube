@@ -107,7 +107,7 @@ namespace ClassicalSharp.Network {
 			byte supportLevel = reader.ReadUInt8();
 			MakeCustomBlockSupportLevel( 1 );
 			SendPacket();
-			cpe.supportsCustomBlocks = true;
+			game.UseCPEBlocks = true;
 
 			if( supportLevel == 1 ) {
 				for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
@@ -257,8 +257,8 @@ namespace ClassicalSharp.Network {
 			Inventory inv = game.Inventory;
 			
 			if( blockId == 0 ) {
-				int count = cpe.supportsCustomBlocks ? BlockInfo.CpeBlocksCount
-					: BlockInfo.OriginalBlocksCount;
+				int count = game.UseCPEBlocks ? BlockInfo.CpeCount
+					: BlockInfo.OriginalCount;
 				for( int i = 1; i < count; i++ ) {
 					inv.CanPlace.SetNotOverridable( canPlace, i );
 					inv.CanDelete.SetNotOverridable( canDelete, i );
