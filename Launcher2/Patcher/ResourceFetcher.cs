@@ -79,11 +79,11 @@ namespace Launcher {
 			
 			if( !Download( "classic_jar", "classic jar", "1.6.2 jar", ref jarClassic, setStatus ) )
 				return false;
-			if( !Download( "162_jar", "1.6.2 jar", "terrain patch", ref jar162, setStatus ) )
+			if( !Download( "162_jar", "1.6.2 jar", "gui.png", ref jar162, setStatus ) )
 				return false;
-			if( !Download( "gui_patch", "gui.png patch", null, ref pngGuiPatch, setStatus ) )
+			if( !Download( "gui_patch", "gui.png patch", "terrain.png patch", ref pngGuiPatch, setStatus ) )
 				return false;
-			if( !Download( "terrain_patch", "terrain.png patch", "gui", ref pngTerrainPatch, setStatus ) )
+			if( !Download( "terrain_patch", "terrain.png patch", null, ref pngTerrainPatch, setStatus ) )
 				return false;
 
 			Done |= IsDone();

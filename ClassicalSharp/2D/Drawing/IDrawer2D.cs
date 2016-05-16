@@ -196,7 +196,6 @@ namespace ClassicalSharp {
 				
 				if( nextAnd >= 0 && nextAnd + 1 < value.Length ) {
 					if( !ValidColour( value[nextAnd + 1] ) ) {
-						code = 'f';
 						i--; // include character that isn't a valid colour code.
 					} else {
 						code = value[nextAnd + 1];
