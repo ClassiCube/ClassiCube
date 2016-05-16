@@ -14,7 +14,11 @@ namespace ClassicalSharp.Gui {
 		
 		Block[] blocksTable;
 		Texture blockInfoTexture;
-		const int blocksPerRow = 10, maxRows = 8;
+		const int maxRows = 8;
+		int blocksPerRow { 
+			get { return game.ClassicMode && !game.ClassicHacks ? 9 : 10; } 
+		}
+		
 		int selIndex, rows;
 		int startX, startY, blockSize;
 		float selBlockExpand;
@@ -179,8 +183,9 @@ namespace ClassicalSharp.Gui {
 		void RecreateBlockTable() {
 			int blocksCount = 0;
 			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalCount;
-			for( int tile = 1; tile < count; tile++ ) {
-				if( ShowTile( tile ) ) blocksCount++;
+			for( int i = 1; i < count; i++ ) {
+				Block block = game.Inventory.MapBlock( i );
+				if( Show( block ) ) blocksCount++;
 			}
 			
 			rows = Utils.CeilDiv( blocksCount, blocksPerRow );
@@ -189,19 +194,24 @@ namespace ClassicalSharp.Gui {
 			startY = game.Height / 2 - (rowsUsed * blockSize) / 2;
 			blocksTable = new Block[blocksCount];
 			
-			int tableIndex = 0;
-			for( int tile = 1; tile < count; tile++ ) {
-				if( ShowTile( tile ) ) blocksTable[tableIndex++] = (Block)tile;
+			int index = 0;
+			for( int i = 1; i < count; i++ ) {
+				Block block = game.Inventory.MapBlock( i );
+				if( Show( block ) )  blocksTable[index++] = block;
 			}
 		}
 		
-		bool ShowTile( int tile ) {
+		bool Show( Block block ) {
 			bool hackBlocks = !game.ClassicMode || game.ClassicHacks;
-			if( !hackBlocks && (tile == (byte)Block.Bedrock ||
-			                    tile >= (byte)Block.Water && tile <= (byte)Block.StillLava) )
+			if( !hackBlocks && IsHackBlock( block ) )
 				return false;
 			int count = game.UseCPEBlocks ? BlockInfo.CpeCount : BlockInfo.OriginalCount;
-			return tile < count || game.BlockInfo.Name[tile] != "Invalid";
+			return (byte)block < count || game.BlockInfo.Name[(byte)block] != "Invalid";
+		}
+		
+		bool IsHackBlock( Block block ) {
+			return block == Block.DoubleSlab || block == Block.Bedrock ||
+				block == Block.Grass || (block >= Block.Water && block <= Block.StillLava);
 		}
 	}
 }

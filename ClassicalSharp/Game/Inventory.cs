@@ -12,6 +12,7 @@ namespace ClassicalSharp {
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
 			Hotbar = new Block[9];
 			SetDefaultHotbar();
+			MakeMap();
 		}
 		
 		void SetDefaultHotbar() {
@@ -22,11 +23,10 @@ namespace ClassicalSharp {
 			Hotbar[8] = Block.Slab;
 		}
 
-		public void Ready( Game game ) { }			
+		public void Ready( Game game ) { }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
-		
 		public void Dispose() { }
 		
 		int hotbarIndex = 0;
@@ -35,9 +35,9 @@ namespace ClassicalSharp {
 		Game game;
 		
 		public InventoryPermissions CanPlace = new InventoryPermissions();
-		public InventoryPermissions CanDelete = new InventoryPermissions();			
+		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
-		/// <summary> Gets or sets the index of the held block. 
+		/// <summary> Gets or sets the index of the held block.
 		/// Fails if the server has forbidden up from changing the held block. </summary>
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
@@ -73,6 +73,46 @@ namespace ClassicalSharp {
 				Hotbar[hotbarIndex] = value;
 				game.Events.RaiseHeldBlockChanged();
 			}
+		}
+		
+		Block[] map = new Block[256];
+		public Block MapBlock( int i ) { return map[i]; }
+		
+		void MakeMap() {
+			for( int i = 0; i < map.Length; i++ )
+				map[i] = (Block)i;
+			if( !game.ClassicMode ) return;
+			
+			// First row
+			map[(byte)Block.Dirt] = Block.Cobblestone;
+			map[(byte)Block.Cobblestone] = Block.Brick;
+			map[(byte)Block.Wood] = Block.Dirt;
+			map[(byte)Block.Sapling] = Block.Wood;
+			map[(byte)Block.Sand] = Block.Log;
+			map[(byte)Block.Gravel] = Block.Leaves;
+			map[(byte)Block.GoldOre] = Block.Glass;
+			map[(byte)Block.IronOre] = Block.Slab;
+			map[(byte)Block.CoalOre] = Block.MossyRocks;
+			// Second row
+			map[(byte)Block.Log] = Block.Sapling;
+			for( int i = 0; i < 4; i++ )
+				map[(byte)Block.Leaves + i] = (Block)((byte)Block.Dandelion + i);
+			map[(byte)Block.Orange] = Block.Sand;
+			map[(byte)Block.Yellow] = Block.Gravel;
+			map[(byte)Block.Lime] = Block.Sponge;
+			// Third and fourth row
+			for( int i = 0; i < 16; i++ )
+				map[(byte)Block.Green + i] = (Block)((byte)Block.Red + i);
+			map[(byte)Block.Gold] = Block.CoalOre;
+			map[(byte)Block.Iron] = Block.IronOre;
+			// Fifth row
+			if( game.ClassicHacks )
+				map[(byte)Block.DoubleSlab] = Block.GoldOre;
+			map[(byte)Block.Slab] = game.ClassicHacks ? 
+				Block.DoubleSlab : Block.GoldOre;
+			map[(byte)Block.Brick] = Block.Iron;
+			map[(byte)Block.TNT] = Block.Gold;
+			map[(byte)Block.MossyRocks] = Block.TNT;
 		}
 	}
 	
