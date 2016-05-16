@@ -244,7 +244,7 @@
     <Compile Include="Commands\CommandManager.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
-    <Compile Include="Math\BoundingBox.cs" />
+    <Compile Include="Math\AABB.cs" />
     <Compile Include="Math\IntersectionUtils.cs" />
     <Compile Include="Math\PickedPos.cs" />
     <Compile Include="Math\Picking.cs" />

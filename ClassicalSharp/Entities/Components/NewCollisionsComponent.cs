@@ -11,7 +11,7 @@ namespace ClassicalSharp.Entities {
 		Game game;
 		Entity entity;
 		BlockInfo info;
-		static BoundingBox bb;
+		static AABB bb;
 		static RayTracer tracerP1Y1 = new RayTracer();
 		static RayTracer tracerP2Y1 = new RayTracer();
 		static RayTracer tracerP1Y2 = new RayTracer();

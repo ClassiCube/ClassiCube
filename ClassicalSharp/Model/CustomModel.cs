@@ -25,8 +25,8 @@ namespace ClassicalSharp.Model {
 		internal Vector3 collisonSize;
 		public override Vector3 CollisionSize { get { return collisonSize; } }
 		
-		internal BoundingBox pickingBounds;
-		public override BoundingBox PickingBounds { get { return pickingBounds; } }
+		internal AABB pickingBounds;
+		public override AABB PickingBounds { get { return pickingBounds; } }
 		
 		protected override void DrawModel( Player p ) {
 			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;

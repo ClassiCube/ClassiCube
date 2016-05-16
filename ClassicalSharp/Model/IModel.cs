@@ -46,7 +46,7 @@ namespace ClassicalSharp.Model {
 		
 		/// <summary> Bounding box that contains this model,
 		/// assuming that the model is not rotated at all.</summary>
-		public abstract BoundingBox PickingBounds { get; }
+		public abstract AABB PickingBounds { get; }
 		
 		protected Vector3 pos;
 		protected float cosYaw, sinYaw, cosHead, sinHead;
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Model {
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
 		public virtual bool ShouldRender( Player p, FrustumCulling culling ) {
 			Vector3 pos = p.Position;
-			BoundingBox bb = PickingBounds;
+			AABB bb = PickingBounds;
 			float maxLen = Math.Max( bb.Width, Math.Max( bb.Height, bb.Length ) );
 			maxLen *= p.ModelScale;
 			return culling.SphereInFrustum( pos.X, pos.Y + maxLen / 2, pos.Z, maxLen );

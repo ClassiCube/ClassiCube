@@ -128,7 +128,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor( pos );
 			byte block = game.World.SafeGetBlock( coords );
-			BoundingBox blockBB = new BoundingBox(
+			AABB blockBB = new AABB(
 				(Vector3)coords + info.MinBB[block],
 				(Vector3)coords + info.MaxBB[block] );
 			

@@ -10,19 +10,19 @@ namespace ClassicalSharp.Entities {
 	public abstract partial class Entity {
 		
 		/// <summary> Returns the bounding box that contains the model, assuming it is not rotated. </summary>
-		public BoundingBox PickingBounds {
-			get { UpdateModel(); BoundingBox bb = Model.PickingBounds;
+		public AABB PickingBounds {
+			get { UpdateModel(); AABB bb = Model.PickingBounds;
 				return bb.Scale( ModelScale ).Offset( Position );
 			}
 		}
 		
 		/// <summary> Bounding box of the model that collision detection
 		/// is performed with, in world coordinates.  </summary>
-		public virtual BoundingBox CollisionBounds {
+		public virtual AABB CollisionBounds {
 			get {
 				Vector3 pos = Position;
 				Vector3 size = CollisionSize;
-				return new BoundingBox( pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
+				return new AABB( pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
 				                       pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2 );
 			}
 		}
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// given bounding box satisfy the given condition. </summary>
-		public bool TouchesAny( BoundingBox bounds, Predicate<byte> condition ) {
+		public bool TouchesAny( AABB bounds, Predicate<byte> condition ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Entities {
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
 				
-				BoundingBox blockBB = new BoundingBox( min, max );
+				AABB blockBB = new AABB( min, max );
 				if( !blockBB.Intersects( bounds ) ) continue;
 				if( condition( block ) ) return true;
 			}
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are rope. </summary>
 		public bool TouchesAnyRope() {
-			BoundingBox bounds = CollisionBounds;
+			AABB bounds = CollisionBounds;
 			bounds.Max.Y += 0.5f/16f;
 			return TouchesAny( bounds, b => b == (byte)Block.Rope );
 		}
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Entities {
 		
 		// If liquid block above, leave height same
 		// otherwise reduce water BB height by 0.5 blocks
-		bool TouchesAnyLiquid( BoundingBox bounds, byte block1, byte block2 ) {
+		bool TouchesAnyLiquid( AABB bounds, byte block1, byte block2 ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			int height = game.World.Height;
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Entities {
 				//if( game.BlockInfo.Collide[above] != CollideType.SwimThrough )
 				//	max.Y -= 4/16f;
 				
-				BoundingBox blockBB = new BoundingBox( min, max );
+				AABB blockBB = new AABB( min, max );
 				if( !blockBB.Intersects( bounds ) ) continue;		
 				if( block == block1 || block == block2 ) return true;
 			}
@@ -105,14 +105,14 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
 		public bool TouchesAnyLava() {
-			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
+			AABB bounds = CollisionBounds.Expand( liqExpand );
 			return TouchesAnyLiquid( bounds, (byte)Block.Lava, (byte)Block.StillLava );
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
-			BoundingBox bounds = CollisionBounds.Expand( liqExpand );
+			AABB bounds = CollisionBounds.Expand( liqExpand );
 			return TouchesAnyLiquid( bounds, (byte)Block.Water, (byte)Block.StillWater );
 		}
 	}

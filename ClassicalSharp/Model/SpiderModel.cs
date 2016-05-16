@@ -37,8 +37,8 @@ namespace ClassicalSharp.Model {
 			get { return new Vector3( 15/16f, 12/16f, 15/16f ); }
 		}
 		
-		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -5/16f, 0, -11/16f, 5/16f, 12/16f, 15/16f ); }
+		public override AABB PickingBounds {
+			get { return new AABB( -5/16f, 0, -11/16f, 5/16f, 12/16f, 15/16f ); }
 		}
 		
 		const float quarterPi = (float)( Math.PI / 4 );

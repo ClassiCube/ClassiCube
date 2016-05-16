@@ -177,7 +177,7 @@ namespace ClassicalSharp.Entities {
 		static void CalcAlpha( float playerY, ref ShadowData data ) {
 			float y = data.Y;
 			if( (playerY - y) <= 6 ) {
-				data.A = (byte)(190 - 190 * (playerY - y) / 6);
+				data.A = (byte)(160 - 160 * (playerY - y) / 6);
 				data.Y += 1/64f; return;
 			}
 			

@@ -61,7 +61,7 @@ namespace ClassicalSharp.Entities {
 		void FindHighestFree( ref Vector3 spawn ) {
 			BlockInfo info = game.BlockInfo;
 			Vector3 size = entity.CollisionSize;
-			BoundingBox bb = entity.CollisionBounds;
+			AABB bb = entity.CollisionBounds;
 			Vector3I P = Vector3I.Floor( spawn );
 			int bbMax = Utils.Floor( size.Y );			
 			int minX = Utils.Floor( -size.X / 2 ), maxX = Utils.Floor( size.X / 2 );
@@ -78,7 +78,7 @@ namespace ClassicalSharp.Entities {
 					byte block = collisions.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
 					Vector3 min = info.MinBB[block] + (Vector3)coords;
 					Vector3 max = info.MaxBB[block] + (Vector3)coords;
-					if( !bb.Intersects( new BoundingBox( min, max ) ) ) continue;
+					if( !bb.Intersects( new AABB( min, max ) ) ) continue;
 					anyHit |= info.Collide[block] == CollideType.Solid;
 				}
 				

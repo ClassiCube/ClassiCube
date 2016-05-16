@@ -41,8 +41,8 @@ namespace ClassicalSharp.Model {
 			get { return new Vector3( 14/16f, 14/16f, 14/16f ); }
 		}
 		
-		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -5/16f, 0, -14/16f, 5/16f, 16/16f, 9/16f ); }
+		public override AABB PickingBounds {
+			get { return new AABB( -5/16f, 0, -14/16f, 5/16f, 16/16f, 9/16f ); }
 		}
 		
 		protected override void DrawModel( Player p ) {

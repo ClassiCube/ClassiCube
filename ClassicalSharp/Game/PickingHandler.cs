@@ -86,9 +86,9 @@ namespace ClassicalSharp {
 			if( !CannotPassThrough( newBlock ) ) return true;
 			if( IntersectsOtherPlayers( pos, newBlock ) ) return false;
 			
-			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[newBlock],
+			AABB blockBB = new AABB( pos + game.BlockInfo.MinBB[newBlock],
 			                                      pos + game.BlockInfo.MaxBB[newBlock] );
-			BoundingBox localBB = game.LocalPlayer.CollisionBounds;
+			AABB localBB = game.LocalPlayer.CollisionBounds;
 			
 			if( game.LocalPlayer.Hacks.Noclip || !localBB.Intersects( blockBB ) ) return true;
 			HacksComponent hacks = game.LocalPlayer.Hacks;
@@ -106,7 +106,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		bool PushbackPlace( PickedPos selected, BoundingBox blockBB ) {
+		bool PushbackPlace( PickedPos selected, AABB blockBB ) {
 			Vector3 newP = game.LocalPlayer.Position;
 			Vector3 oldP = game.LocalPlayer.Position;
 			
@@ -147,13 +147,13 @@ namespace ClassicalSharp {
 		}
 		
 		bool IntersectsOtherPlayers( Vector3 pos, byte newType ) {
-			BoundingBox blockBB = new BoundingBox( pos + game.BlockInfo.MinBB[newType],
+			AABB blockBB = new AABB( pos + game.BlockInfo.MinBB[newType],
 			                                      pos + game.BlockInfo.MaxBB[newType] );
 			
 			for( int id = 0; id < 255; id++ ) {
 				Player player = game.Players[id];
 				if( player == null ) continue;
-				BoundingBox bounds = player.CollisionBounds;
+				AABB bounds = player.CollisionBounds;
 				bounds.Min.Y += 1/32f; // when player is exactly standing on top of ground
 				if( bounds.Intersects( blockBB ) ) return true;
 			}

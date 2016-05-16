@@ -35,8 +35,8 @@ namespace ClassicalSharp.Model {
 			get { return new Vector3( 4/16f + 0.6f/16f, 20.1f/16f, 4/16f + 0.6f/16f ); }
 		}
 		
-		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( -4/16f, 0, -4/16f, 4/16f, 16/16f, 4/16f ); }
+		public override AABB PickingBounds {
+			get { return new AABB( -4/16f, 0, -4/16f, 4/16f, 16/16f, 4/16f ); }
 		}
 	}
 	
@@ -64,7 +64,7 @@ namespace ClassicalSharp.Model {
 			                         28.1f/16f * size, 8/16f * size + 0.6f/16f ); }
 		}
 		
-		public override BoundingBox PickingBounds {
+		public override AABB PickingBounds {
 			get { return base.PickingBounds.Scale( size ); }
 		}
 	}

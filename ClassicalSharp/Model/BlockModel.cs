@@ -36,8 +36,8 @@ namespace ClassicalSharp.Model {
 			get { return (maxBB - minBB) - new Vector3( adjust ); }
 		}
 		
-		public override BoundingBox PickingBounds {
-			get { return new BoundingBox( minBB, maxBB )
+		public override AABB PickingBounds {
+			get { return new AABB( minBB, maxBB )
 					.Offset( new Vector3( -0.5f ) ); }
 		}
 		

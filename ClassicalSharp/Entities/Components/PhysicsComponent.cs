@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 			bool touchWater = entity.TouchesAnyWater();
 			bool touchLava = entity.TouchesAnyLava();
 			if( touchWater || touchLava ) {
-				BoundingBox bounds = entity.CollisionBounds;
+				AABB bounds = entity.CollisionBounds;
 				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
 				int headY = Utils.Floor( bounds.Max.Y );
 				if( bodyY > headY ) bodyY = headY;
@@ -197,7 +197,7 @@ namespace ClassicalSharp.Entities {
 		
 		const float inf = float.PositiveInfinity;
 		float LowestSpeedModifier() {
-			BoundingBox bounds = entity.CollisionBounds;
+			AABB bounds = entity.CollisionBounds;
 			useLiquidGravity = false;
 			float baseModifier = LowestModifier( bounds, false );
 			bounds.Min.Y -= 0.5f/16f; // also check block standing on
@@ -207,7 +207,7 @@ namespace ClassicalSharp.Entities {
 			return baseModifier == inf ? solidModifier : baseModifier;
 		}
 		
-		float LowestModifier( BoundingBox bounds, bool checkSolid ) {
+		float LowestModifier( AABB bounds, bool checkSolid ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			float modifier = inf;
@@ -224,7 +224,7 @@ namespace ClassicalSharp.Entities {
 				
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				BoundingBox blockBB = new BoundingBox( min, max );
+				AABB blockBB = new AABB( min, max );
 				if( !blockBB.Intersects( bounds ) ) continue;
 				
 				modifier = Math.Min( modifier, info.SpeedMultiplier[block] );
