@@ -166,8 +166,9 @@ namespace ClassicalSharp.Gui {
 					.AppendNum( ref index, lastFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				
-				bool showSpeedMsg = (speeding || halfSpeeding) && hacks.MaxSpeedMultiplier > 1;
-				if( showSpeedMsg ) text.Append( ref index, "Speed ON   " );
+				bool speed = (speeding || halfSpeeding) && 
+					(hacks.CanSpeed || hacks.MaxSpeedMultiplier > 1);
+				if( speed ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
 				hackStates.SetText( text.GetString() );
 			}

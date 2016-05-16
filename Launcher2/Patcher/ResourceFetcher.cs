@@ -56,6 +56,10 @@ namespace Launcher {
 			}
 		}
 		
+		public void AddDownload( string url, string identifier ) {
+			downloader.DownloadData( url, false, identifier );
+		}
+		
 		void SetFirstStatus( Action<string> setStatus ) {
 			for( int i = 0; i < musicExists.Length; i++ ) {
 				if( musicExists[i] ) continue;
