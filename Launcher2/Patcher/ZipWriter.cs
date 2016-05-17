@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using ClassicalSharp.TexturePack;
 
-namespace Launcher {
+namespace Launcher.Patcher {
 	
 	public sealed class ZipWriter {
 		

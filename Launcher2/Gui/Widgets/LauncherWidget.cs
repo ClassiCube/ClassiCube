@@ -2,7 +2,7 @@
 using System;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 
 	public abstract class LauncherWidget {
 		

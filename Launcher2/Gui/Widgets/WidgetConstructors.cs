@@ -2,7 +2,7 @@
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 	
 	/// <summary> Helper methods to construct widgets. </summary>
 	public static class WidgetConstructors {

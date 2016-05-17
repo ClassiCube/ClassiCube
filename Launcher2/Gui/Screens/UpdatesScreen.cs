@@ -1,13 +1,14 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using ClassicalSharp;
+using Launcher.Gui.Views;
+using Launcher.Gui.Widgets;
 using Launcher.Updater;
+using Launcher.Web;
 using OpenTK.Input;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	// TODO: Download asynchronously
 	public sealed class UpdatesScreen : LauncherScreen {
@@ -104,8 +105,8 @@ namespace Launcher {
 			
 			string path = dx ? build.DirectXPath : build.OpenGLPath;
 			Utils.LogDebug( "Updating to: " + path );
-			Patcher.PatchTime = build.TimeBuilt;
-			Patcher.Update( path );
+			Applier.PatchTime = build.TimeBuilt;
+			Applier.FetchUpdate( path );
 			game.ShouldExit = true;
 			game.ShouldUpdate = true;
 		}

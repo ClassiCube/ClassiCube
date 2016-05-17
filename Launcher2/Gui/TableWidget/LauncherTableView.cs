@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 	
 	public sealed class LauncherTableView {
 		

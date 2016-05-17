@@ -2,9 +2,10 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher {
+namespace Launcher.Gui.Views {
 	
 	public abstract class IView {
 		protected internal LauncherWindow game;

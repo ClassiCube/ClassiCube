@@ -8,6 +8,9 @@ using System.Reflection;
 using System.Threading;
 using ClassicalSharp;
 using ClassicalSharp.Network;
+using Launcher.Gui.Screens;
+using Launcher.Patcher;
+using Launcher.Web;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
@@ -184,7 +187,7 @@ namespace Launcher {
 			}
 			
 			if( ShouldUpdate )
-				Updater.Patcher.LaunchUpdateScript();
+				Updater.Applier.ApplyUpdate();
 			if( Window.Exists )
 				Window.Close();
 		}

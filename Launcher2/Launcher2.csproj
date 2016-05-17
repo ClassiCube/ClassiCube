@@ -100,7 +100,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Updater\Scripts.cs" />
-    <Compile Include="Updater\Patcher.cs" />
+    <Compile Include="Updater\Applier.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\ClientStartData.cs" />
     <Compile Include="Utils\JSON.cs" />

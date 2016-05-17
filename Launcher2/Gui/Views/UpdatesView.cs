@@ -3,10 +3,11 @@ using System;
 using System.Drawing;
 using System.IO;
 using ClassicalSharp;
+using Launcher.Gui.Widgets;
 using Launcher.Updater;
 using OpenTK.Input;
 
-namespace Launcher {
+namespace Launcher.Gui.Views {
 	
 	public sealed class UpdatesView : IView {
 		

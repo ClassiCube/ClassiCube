@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using ClassicalSharp.TexturePack;
 
-namespace Launcher {
+namespace Launcher.Patcher {
 	
 	public sealed class ResourceChecker {
 
@@ -74,7 +74,6 @@ namespace Launcher {
 		public float DownloadSize;
 		public int ResourcesCount;
 		internal bool[] musicExists = new bool[7];
-		internal bool defaultZipExists;
 		
 		void CheckDefaultZip( string path ) {
 			ZipReader reader = new ZipReader();

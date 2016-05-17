@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace Launcher {
+namespace Launcher.Web {
 
 	/// <summary> Represents a task that performs a series of GET or POST requests asynchronously. </summary>
 	public abstract class IWebTask {

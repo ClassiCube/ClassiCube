@@ -2,8 +2,9 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Gui.Widgets;
 
-namespace Launcher {
+namespace Launcher.Gui.Views {
 	
 	public sealed class ChooseModeView : IView {
 

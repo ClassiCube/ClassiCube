@@ -2,9 +2,11 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Gui.Views;
+using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	public sealed class ColoursScreen : LauncherInputScreen {
 		

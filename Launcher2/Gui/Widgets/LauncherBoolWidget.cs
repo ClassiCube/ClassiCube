@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 
 	/// <summary> Widget that represents text can have modified by the user. </summary>
 	public sealed class LauncherBoolWidget : LauncherWidget {

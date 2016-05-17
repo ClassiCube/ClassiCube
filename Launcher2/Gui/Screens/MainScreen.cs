@@ -4,8 +4,11 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp;
+using Launcher.Gui.Views;
+using Launcher.Web;
+using Launcher.Gui.Widgets;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	public sealed partial class MainScreen : LauncherInputScreen {
 		

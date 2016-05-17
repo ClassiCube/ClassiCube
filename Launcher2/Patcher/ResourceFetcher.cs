@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using ClassicalSharp.Network;
 
-namespace Launcher {
+namespace Launcher.Patcher {
 	
 	public sealed class ResourceFetcher {
 		

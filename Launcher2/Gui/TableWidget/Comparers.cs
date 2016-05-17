@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 	
 	abstract class TableEntryComparer : IComparer<TableEntry> {
 		

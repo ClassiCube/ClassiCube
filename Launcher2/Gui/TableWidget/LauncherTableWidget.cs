@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Gui.Widgets {
 
 	internal struct TableEntry {
 		public string Hash, Name, Players, Uptime, Software;

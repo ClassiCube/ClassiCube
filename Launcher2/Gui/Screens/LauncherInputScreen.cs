@@ -2,10 +2,11 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Gui.Widgets;
 using OpenTK;
 using OpenTK.Input;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	public abstract class LauncherInputScreen : LauncherScreen {
 		

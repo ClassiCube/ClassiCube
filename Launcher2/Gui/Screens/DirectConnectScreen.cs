@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Net;
 using ClassicalSharp;
+using Launcher.Gui.Views;
+using Launcher.Gui.Widgets;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	public sealed class DirectConnectScreen : LauncherInputScreen {
 		

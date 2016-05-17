@@ -4,8 +4,9 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using ClassicalSharp;
+using Launcher.Gui.Widgets;
 
-namespace Launcher {
+namespace Launcher.Gui.Views {
 	
 	public sealed partial class MainView : IView {
 		

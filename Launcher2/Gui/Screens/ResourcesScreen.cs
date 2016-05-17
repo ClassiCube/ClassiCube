@@ -4,8 +4,10 @@ using System.Drawing;
 using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.Network;
+using Launcher.Gui.Views;
+using Launcher.Patcher;
 
-namespace Launcher {
+namespace Launcher.Gui.Screens {
 	
 	public sealed class ResourcesScreen : LauncherScreen {
 		
