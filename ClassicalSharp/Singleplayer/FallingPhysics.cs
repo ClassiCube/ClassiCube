@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
-using OpenTK;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -12,27 +11,30 @@ namespace ClassicalSharp.Singleplayer {
 		BlockInfo info;
 		int width, length, height, oneY;
 		
-		public FallingPhysics( Game game ) {
+		public FallingPhysics( Game game, Physics physics ) {
 			this.game = game;
 			map = game.World;
 			info = game.BlockInfo;
+			
+			physics.OnPlace[(byte)Block.Sand] = 
+				(index, b) => Falling.Enqueue( defFallingTick | (uint)index );
+			physics.OnPlace[(byte)Block.Gravel] = 
+				(index, b) => Falling.Enqueue( defFallingTick | (uint)index );
+			physics.OnActivate[(byte)Block.Sand] = ActivateFalling;
+			physics.OnActivate[(byte)Block.Gravel] = ActivateFalling;
 		}
 		
 		public void ResetMap() {
-			Falling.Clear();
+			Clear();
 			width = map.Width;
 			height = map.Height;
-			length = map.Length;	
+			length = map.Length;
 			oneY = width * length;
 		}
 		
 		public void Clear() { Falling.Clear(); }
 		
-		public void OnBlockPlace( int index, byte block ) {
-			Falling.Enqueue( defFallingTick | (uint)index );
-		}
-		
-		public void OnRandomTick( int index, byte block ) {
+		void ActivateFalling( int index, byte block ) {
 			if( index >= oneY ) PropagateFalling( index, block, 0 );
 		}
 		

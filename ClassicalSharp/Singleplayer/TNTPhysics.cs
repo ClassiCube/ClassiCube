@@ -1,6 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Collections.Generic;
 using ClassicalSharp.Map;
 using OpenTK;
 
@@ -11,14 +10,22 @@ namespace ClassicalSharp.Singleplayer {
 		World map;
 		Random rnd = new Random();
 		
-		public TNTPhysics( Game game ) {
+		public TNTPhysics( Game game, Physics physics ) {
 			this.game = game;
 			map = game.World;
+			physics.OnPlace[(byte)Block.TNT] = HandleTnt;
 		}
 		
 		Vector3[] rayDirs;
 		const float stepLen = 0.3f;
 		float[] hardness;
+		
+		void HandleTnt( int index, byte block ) {
+			int x = index % map.Width;
+			int z = (index / map.Width) % map.Length;
+			int y = (index / map.Width) / map.Length;
+			Explode( 4, x, y, z );
+		}
 		
 		// Algorithm source: http://minecraft.gamepedia.com/Explosion
 		public void Explode( float power, int x, int y, int z ) {

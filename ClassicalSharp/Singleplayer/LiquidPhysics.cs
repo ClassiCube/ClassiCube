@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
-using OpenTK;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -15,10 +14,18 @@ namespace ClassicalSharp.Singleplayer {
 		int width, length, height, oneY;
 		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;
 
-		public LiquidPhysics( Game game ) {
+		public LiquidPhysics( Game game, Physics physics ) {
 			this.game = game;
 			map = game.World;
 			info = game.BlockInfo;
+			
+			physics.OnPlace[(byte)Block.Lava] = 
+				(index, b) => Lava.Enqueue( defLavaTick | (uint)index );
+			physics.OnPlace[(byte)Block.Water] =
+				(index, b) => Water.Enqueue( defWaterTick | (uint)index );
+			physics.OnPlace[(byte)Block.Sponge] = PlaceSponge;		
+			physics.OnActivate[(byte)Block.Water] = ActivateWater;
+			physics.OnActivate[(byte)Block.Lava] = ActivateLava;
 		}
 		
 		public void Clear() { Lava.Clear(); Water.Clear(); }
@@ -35,10 +42,6 @@ namespace ClassicalSharp.Singleplayer {
 		Queue<uint> Lava = new Queue<uint>();
 		const uint defLavaTick = 30u << Physics.tickShift;
 		
-		public void PlaceLava( int index ) {
-			Lava.Enqueue( defLavaTick | (uint)index );
-		}
-		
 		public void TickLava() {
 			int count = Lava.Count;
 			for( int i = 0; i < count; i++ ) {
@@ -46,12 +49,12 @@ namespace ClassicalSharp.Singleplayer {
 				if( Physics.CheckItem( Lava, out index ) ) {
 					byte block = map.blocks[index];
 					if( !(block == (byte)Block.Lava || block == (byte)Block.StillLava) ) continue;
-					HandleLava( index );
+					ActivateLava( index, block );
 				}
 			}
 		}
 		
-		public void HandleLava( int index ) {
+		void ActivateLava( int index, byte block ) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -76,10 +79,6 @@ namespace ClassicalSharp.Singleplayer {
 		Queue<uint> Water = new Queue<uint>();
 		const uint defWaterTick = 5u << Physics.tickShift;
 		
-		public void PlaceWater( int index ) {
-			Water.Enqueue( defWaterTick | (uint)index );
-		}
-		
 		public void TickWater() {
 			int count = Water.Count;
 			for( int i = 0; i < count; i++ ) {
@@ -87,12 +86,12 @@ namespace ClassicalSharp.Singleplayer {
 				if( Physics.CheckItem( Water, out index ) ) {
 					byte block = map.blocks[index];
 					if( !(block == (byte)Block.Water || block == (byte)Block.StillWater) ) continue;
-					HandleWater( index );
+					ActivateWater( index, block );
 				}
 			}
 		}
 		
-		public void HandleWater( int index ) {
+		void ActivateWater( int index, byte block ) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -116,7 +115,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 
 		
-		public void PlaceSponge( int index ) {
+		void PlaceSponge( int index, byte block ) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -125,7 +124,7 @@ namespace ClassicalSharp.Singleplayer {
 				for( int zz = z - 2; zz <= z + 2; zz++ )
 					for( int xx = x - 2; xx <= x + 2; xx++ )
 			{
-				byte block = map.SafeGetBlock( xx, yy, zz );
+				block = map.SafeGetBlock( xx, yy, zz );
 				if( block == (byte)Block.Water || block == (byte)Block.StillWater )
 					game.UpdateBlock( xx, yy, zz, (byte)Block.Air );
 			}
