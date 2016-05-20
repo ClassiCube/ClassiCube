@@ -450,7 +450,7 @@ namespace ClassicalSharp.Singleplayer {
 			{
 				byte block = map.SafeGetBlock( xx, yy, zz );
 				if( block == (byte)Block.Water || block == (byte)Block.StillWater )
-					map.SetBlock( xx, yy, zz, (byte)Block.Air );
+					game.UpdateBlock( xx, yy, zz, (byte)Block.Air );
 			}
 		}
 		

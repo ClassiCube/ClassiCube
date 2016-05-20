@@ -106,7 +106,7 @@ namespace ClassicalSharp.Audio {
 		
 		Thread MakeThread( ThreadStart func, ref IAudioOutput output, string name ) {
 			output = GetPlatformOut();
-			output.Create( 5 );
+			output.Create( 10 );
 			
 			Thread thread = new Thread( func );
 			thread.Name = name;
