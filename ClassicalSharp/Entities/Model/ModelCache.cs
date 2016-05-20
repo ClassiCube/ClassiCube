@@ -15,7 +15,9 @@ namespace ClassicalSharp.Model {
 			this.game = window;
 			api = game.Graphics;
 		}
+		#if FALSE
 		public CustomModel[] CustomModels = new CustomModel[256];
+		#endif
 		
 		public void InitCache() {
 			vertices = new VertexP3fT2fC4b[24 * 12];

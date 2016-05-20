@@ -5,6 +5,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Network;
 using OpenTK;
 
+#if FALSE
 namespace ClassicalSharp.Model {
 
 	public class CustomModel : IModel {
@@ -87,3 +88,4 @@ namespace ClassicalSharp.Model {
 		}
 	}
 }
+#endif

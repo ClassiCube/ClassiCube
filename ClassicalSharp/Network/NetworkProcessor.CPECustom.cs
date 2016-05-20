@@ -109,6 +109,7 @@ namespace ClassicalSharp.Network {
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
+		#if FALSE
 		internal void HandleDefineModel() {
 			int start = reader.index - 1;
 			byte id = reader.ReadUInt8();
@@ -136,6 +137,7 @@ namespace ClassicalSharp.Network {
 			int total = packetSizes[(byte)Opcode.CpeDefineModel];
 			reader.Skip( total - (reader.index - start) );
 		}
+		#endif
 		
 		internal static SoundType[] stepSnds, breakSnds;
 		static NetworkProcessor() {
