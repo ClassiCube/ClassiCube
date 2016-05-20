@@ -87,8 +87,7 @@ namespace ClassicalSharp.Network {
 			return new String( characters, 0, length );
 		}
 		
-		internal string ReadChatString( ref byte messageType, bool useMessageTypes ) {
-			if( !useMessageTypes ) messageType = (byte)MessageType.Normal;
+		internal string ReadChatString( ref byte messageType ) {
 			int length = GetString( false, 64 );
 			
 			int offset = 0;

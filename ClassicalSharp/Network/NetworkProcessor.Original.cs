@@ -255,7 +255,13 @@ namespace ClassicalSharp.Network {
 		
 		internal void HandleMessage() {
 			byte messageType = reader.ReadUInt8();
-			string text = reader.ReadChatString( ref messageType, cpe.useMessageTypes );
+			string text = reader.ReadChatString( ref messageType );
+			// Original vanilla server uses player ids in message types, 255 for server messages.
+			if( !cpe.useMessageTypes ) {
+				if( messageType == 0xFF ) text = "&e" + text;
+				messageType = (byte)MessageType.Normal;
+			}
+			
 			if( !text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase ) )
 				game.Chat.Add( text, (MessageType)messageType );
 		}
