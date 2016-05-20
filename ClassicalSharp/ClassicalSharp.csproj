@@ -271,8 +271,10 @@
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\FallingPhysics.cs" />
+    <Compile Include="Singleplayer\FoilagePhysics.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
+    <Compile Include="Singleplayer\TNTPhysics.cs" />
     <Compile Include="TexturePack\EntryList.cs" />
     <Compile Include="TexturePack\Animations.cs" />
     <Compile Include="TexturePack\Side.cs" />

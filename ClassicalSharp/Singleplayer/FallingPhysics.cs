@@ -6,8 +6,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Singleplayer {
 
-	public class FallingPhysics {
-		
+	public class FallingPhysics {		
 		Game game;
 		World map;
 		BlockInfo info;
