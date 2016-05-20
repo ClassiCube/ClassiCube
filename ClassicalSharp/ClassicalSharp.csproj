@@ -270,6 +270,7 @@
     <Compile Include="Selections\SelectionBox.cs" />
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
+    <Compile Include="Singleplayer\FallingPhysics.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="TexturePack\EntryList.cs" />

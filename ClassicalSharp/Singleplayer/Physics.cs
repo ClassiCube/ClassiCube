@@ -15,9 +15,10 @@ namespace ClassicalSharp.Singleplayer {
 		int width, length, height, oneY;
 		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;
 		
-		const uint tickMask = 0xF8000000;
-		const uint posMask =  0x07FFFFFF;
-		const int tickShift = 27;
+		public const uint tickMask = 0xF8000000;
+		public const uint posMask =  0x07FFFFFF;
+		public const int tickShift = 27;
+		FallingPhysics falling;
 		
 		bool enabled = true;
 		public bool Enabled {
@@ -31,9 +32,10 @@ namespace ClassicalSharp.Singleplayer {
 			info = game.BlockInfo;
 			game.WorldEvents.OnNewMapLoaded += ResetMap;
 			enabled = Options.GetBool( OptionsKey.SingleplayerPhysics, true );
+			falling = new FallingPhysics( game );
 		}
 		
-		bool CheckItem( Queue<uint> queue, out int posIndex ) {
+		internal static bool CheckItem( Queue<uint> queue, out int posIndex ) {
 			uint packed = queue.Dequeue();
 			int tickDelay = (int)((packed & tickMask) >> tickShift);
 			posIndex = (int)(packed & posMask);
@@ -46,7 +48,7 @@ namespace ClassicalSharp.Singleplayer {
 			return true;
 		}
 		
-		bool CheckItem( Queue<uint> queue, int mask, out int posIndex, out int flags ) {
+		internal static bool CheckItem( Queue<uint> queue, int mask, out int posIndex, out int flags ) {
 			uint packed = queue.Dequeue();
 			flags = (int)((packed & tickMask) >> tickShift);
 			posIndex = (int)(packed & posMask);
@@ -69,7 +71,7 @@ namespace ClassicalSharp.Singleplayer {
 			//if( (tickCount % 5) == 0 ) {
 			TickLava();
 			TickWater();
-			TickFalling();
+			falling.Tick();
 			//}
 			tickCount++;
 			TickRandomBlocks();
@@ -84,7 +86,7 @@ namespace ClassicalSharp.Singleplayer {
 			} else if( block == (byte)Block.Water ) {
 				Water.Enqueue( defWaterTick | (uint)index );
 			} else if( block == (byte)Block.Sand || block == (byte)Block.Gravel ) {
-				Falling.Enqueue( defFallingTick | (uint)index );
+				falling.OnBlockPlace( index, block );
 			} else if( block == (byte)Block.TNT ) {
 				Explode( 4, x, y, z );
 			} else if( block == (byte)Block.Sapling ) {
@@ -95,7 +97,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void ResetMap( object sender, EventArgs e ) {
-			ClearQueuedEvents();
+			falling.ResetMap();
 			width = map.Width; maxX = width - 1; maxWaterX = maxX - 2;
 			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
 			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;			
@@ -105,7 +107,7 @@ namespace ClassicalSharp.Singleplayer {
 		void ClearQueuedEvents() {
 			Lava.Clear();
 			Water.Clear();
-			Falling.Clear();
+			falling.Clear();
 		}
 		
 		public void Dispose() {
@@ -162,7 +164,7 @@ namespace ClassicalSharp.Singleplayer {
 					
 				case (byte)Block.Sand:
 				case (byte)Block.Gravel:
-					if( y > 0 ) PropagateFalling( posIndex, x, y, z, block, 0 );
+					falling.OnRandomTick( posIndex, block );
 					break;
 					
 				case (byte)Block.Lava:
@@ -255,51 +257,6 @@ namespace ClassicalSharp.Singleplayer {
 				Water.Enqueue( defWaterTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Water );
 			}
-		}
-		
-		#endregion
-		
-		#region Sand/Gravel
-		
-		Queue<uint> Falling = new Queue<uint>();
-		const uint defFallingTick = 2u << tickShift;
-
-		void TickFalling() {
-			int count = Falling.Count;
-			for( int i = 0; i < count; i++ ) {
-				int posIndex, flags;
-				if( CheckItem( Falling, 0x2, out posIndex, out flags ) ) {
-					byte block = map.blocks[posIndex];
-					if( !(block == (byte)Block.Sand || block == (byte)Block.Gravel ) ) continue;
-					
-					int x = posIndex % width;
-					int y = posIndex / oneY; // posIndex / (width * length)
-					int z = (posIndex / width) % length;
-					if( y > 0 ) PropagateFalling( posIndex, x, y, z, block, flags );
-				}
-			}
-		}
-		
-		void PropagateFalling( int posIndex, int x, int y, int z, byte block, int flags ) {
-			byte newBlock = map.blocks[posIndex - oneY];
-			if( newBlock == 0 || info.IsLiquid[newBlock] ) {
-				uint newFlags = MakeFallingFlags( newBlock ) << tickShift;
-				Falling.Enqueue( newFlags | (uint)(posIndex - oneY) );
-				
-				game.UpdateBlock( x, y, z, oldBlock[flags >> 2] );
-				game.UpdateBlock( x, y - 1, z, block );
-			}
-		}
-		
-		static byte[] oldBlock = new byte[] { (byte)Block.Air, (byte)Block.StillWater,
-			(byte)Block.Water, (byte)Block.StillLava, (byte)Block.Lava };
-		static uint MakeFallingFlags( byte above ) {
-			byte flags = 2;
-			if( above == (byte)Block.StillWater ) flags |= 0x04; // 1
-			else if( above == (byte)Block.Water ) flags |= 0x08; // 2
-			else if( above == (byte)Block.StillLava ) flags |= 0x0C; // 3
-			else if( above == (byte)Block.Lava ) flags |= 0x10; // 4
-			return flags;
 		}
 		
 		#endregion
