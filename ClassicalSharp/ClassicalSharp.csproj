@@ -272,6 +272,7 @@
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\FallingPhysics.cs" />
     <Compile Include="Singleplayer\FoilagePhysics.cs" />
+    <Compile Include="Singleplayer\LiquidPhysics.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
     <Compile Include="Singleplayer\Server.cs" />
     <Compile Include="Singleplayer\TNTPhysics.cs" />
