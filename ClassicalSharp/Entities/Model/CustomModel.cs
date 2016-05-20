@@ -76,8 +76,10 @@ namespace ClassicalSharp.Model {
 		}
 		
 		struct CustomModelPart {
-			public RotateOrder Order;
+#pragma warning disable 0649
+            		public RotateOrder Order;
 			public RotateData RotX, RotY, RotZ;
+#pragma warning restore 0649
 		}
 		
 		struct RotateData {
