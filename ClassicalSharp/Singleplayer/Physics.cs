@@ -109,7 +109,6 @@ namespace ClassicalSharp.Singleplayer {
 		public void Dispose() {
 			game.WorldEvents.OnNewMapLoaded -= ResetMap;
 		}
-
 		
 		void TickRandomBlocks() {
 			int xMax = width - 1, yMax = height - 1, zMax = length - 1;

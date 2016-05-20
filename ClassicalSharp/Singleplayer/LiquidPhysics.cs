@@ -19,13 +19,16 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			info = game.BlockInfo;
 			
-			physics.OnPlace[(byte)Block.Lava] = 
+			physics.OnPlace[(byte)Block.Lava] =
 				(index, b) => Lava.Enqueue( defLavaTick | (uint)index );
 			physics.OnPlace[(byte)Block.Water] =
 				(index, b) => Water.Enqueue( defWaterTick | (uint)index );
-			physics.OnPlace[(byte)Block.Sponge] = PlaceSponge;		
+			physics.OnPlace[(byte)Block.Sponge] = PlaceSponge;
+			
 			physics.OnActivate[(byte)Block.Water] = ActivateWater;
+			physics.OnActivate[(byte)Block.StillWater] = ActivateWater;
 			physics.OnActivate[(byte)Block.Lava] = ActivateLava;
+			physics.OnActivate[(byte)Block.StillLava] = ActivateLava;
 		}
 		
 		public void Clear() { Lava.Clear(); Water.Clear(); }
@@ -34,7 +37,7 @@ namespace ClassicalSharp.Singleplayer {
 			Clear();
 			width = map.Width; maxX = width - 1; maxWaterX = maxX - 2;
 			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
-			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;			
+			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;
 			oneY = width * length;
 		}
 
@@ -108,7 +111,15 @@ namespace ClassicalSharp.Singleplayer {
 			if( block == (byte)Block.Lava || block == (byte)Block.StillLava ) {
 				game.UpdateBlock( x, y, z, (byte)Block.Stone );
 			} else if( info.Collide[block] == CollideType.WalkThrough && block != (byte)Block.Rope ) {
-				if( CheckIfSponge( x, y, z ) ) return;
+				// Sponge check
+				for( int yy = (y < 2 ? 0 : y - 2); yy <= (y > maxWaterY ? maxY : y + 2); yy++ )
+					for( int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++ )
+						for( int xx = (x < 2 ? 0 : x - 2); xx <= (x > maxWaterX ? maxX : x + 2); xx++ )
+				{
+					block = map.blocks[(yy * length + zz) * width + xx];
+					if( block == (byte)Block.Sponge ) return;
+				}
+				
 				Water.Enqueue( defWaterTick | (uint)posIndex );
 				game.UpdateBlock( x, y, z, (byte)Block.Water );
 			}
@@ -119,7 +130,7 @@ namespace ClassicalSharp.Singleplayer {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
-					
+			
 			for( int yy = y - 2; yy <= y + 2; yy++ )
 				for( int zz = z - 2; zz <= z + 2; zz++ )
 					for( int xx = x - 2; xx <= x + 2; xx++ )
@@ -128,18 +139,6 @@ namespace ClassicalSharp.Singleplayer {
 				if( block == (byte)Block.Water || block == (byte)Block.StillWater )
 					game.UpdateBlock( xx, yy, zz, (byte)Block.Air );
 			}
-		}
-		
-		bool CheckIfSponge( int x, int y, int z ) {
-			for( int yy = (y < 2 ? 0 : y - 2); yy <= (y > maxWaterY ? maxY : y + 2); yy++ )
-				for( int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++ )
-					for( int xx = (x < 2 ? 0 : x - 2); xx <= (x > maxWaterX ? maxX : x + 2); xx++ )
-			{
-				byte block = map.blocks[(yy * length + zz) * width + xx];
-				if( block == (byte)Block.Sponge ) return true;
-			}
-			
-			return false;
 		}
 	}
 }
