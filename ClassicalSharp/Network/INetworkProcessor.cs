@@ -23,9 +23,6 @@ namespace ClassicalSharp {
 		/// <summary> Informs the server of the client's current position and orientation. </summary>
 		public abstract void SendPosition( Vector3 pos, float yaw, float pitch );
 		
-		/// <summary> Informs the server that the client placed or deleted a block at the given coordinates. </summary>
-		public abstract void SendSetBlock( int x, int y, int z, bool place, byte block );
-		
 		/// <summary> Informs the server that using the given mouse button,
 		/// the client clicked on a particular block or entity. </summary>
 		public abstract void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos );

@@ -61,11 +61,6 @@ namespace ClassicalSharp.Singleplayer {
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
 		}
 		
-		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
-			if( place )
-				physics.OnBlockPlaced( x, y, z, block );
-		}
-		
 		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 		}
 		

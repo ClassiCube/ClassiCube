@@ -1,12 +1,17 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Events;
 using OpenTK;
 
 namespace ClassicalSharp.Particles {
 	
 	public partial class ParticleManager : IDisposable {
 		
-		public void BreakBlockEffect( Vector3I position, byte block ) {
+		void BreakBlockEffect( object sender, BlockChangedEventArgs e ) {
+			if( e.Block != 0 ) return;
+			Vector3I position = e.Coords;
+			byte block = e.OldBlock;
+			
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Left ), texIndex = 0;
 			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec( texLoc, 1, out texIndex );			

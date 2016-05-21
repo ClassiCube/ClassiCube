@@ -21,6 +21,7 @@ namespace ClassicalSharp.Particles {
 			this.game = game;
 			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
+			game.UserEvents.BlockChanged += BreakBlockEffect;
 		}
 		
 		public void Ready( Game game ) { }
@@ -120,6 +121,7 @@ namespace ClassicalSharp.Particles {
 			game.Graphics.DeleteDynamicVb( vb );
 			game.Graphics.DeleteTexture( ref ParticlesTexId );
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
+			game.UserEvents.BlockChanged -= BreakBlockEffect;
 		}
 		
 		void RemoveAt<T>( int index, T[] particles, ref int count ) where T : Particle {

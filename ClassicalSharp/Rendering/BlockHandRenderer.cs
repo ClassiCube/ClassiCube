@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using OpenTK;
@@ -28,6 +29,7 @@ namespace ClassicalSharp.Renderers {
 			fakeP = new FakePlayer( game );
 			lastType = (byte)game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
+			game.UserEvents.BlockChanged += BlockChanged;
 		}
 
 		public void Ready( Game game ) { }		
@@ -186,6 +188,12 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Dispose() {
 			game.Events.HeldBlockChanged -= HeldBlockChanged;
+			game.UserEvents.BlockChanged -= BlockChanged;
+		}
+		
+		void BlockChanged( object sender, BlockChangedEventArgs e ) {
+			if( e.Block == 0 ) return;
+			SetAnimationClick( false );
 		}
 	}
 	

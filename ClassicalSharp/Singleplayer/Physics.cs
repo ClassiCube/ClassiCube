@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
-using OpenTK;
+using ClassicalSharp.Events;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -35,6 +35,7 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			info = game.BlockInfo;
 			game.WorldEvents.OnNewMapLoaded += ResetMap;
+			game.UserEvents.BlockChanged += BlockChanged;
 			enabled = Options.GetBool( OptionsKey.SingleplayerPhysics, true );
 			
 			falling = new FallingPhysics( game, this );
@@ -85,11 +86,12 @@ namespace ClassicalSharp.Singleplayer {
 			TickRandomBlocks();
 		}
 		
-		public void OnBlockPlaced( int x, int y, int z, byte block ) {
-			if( !Enabled ) return;
-			int index = (y * length + z) * width + x;
-			Action<int, byte> place = OnPlace[block];
-			if( place != null ) place( index, block );
+		void BlockChanged( object sender, BlockChangedEventArgs e ) {
+			if( !Enabled || e.Block == 0 ) return;
+			Vector3I p = e.Coords;
+			int index = (p.Y * length + p.Z) * width + p.X;
+			Action<int, byte> place = OnPlace[e.Block];
+			if( place != null ) place( index, e.Block );
 		}
 		
 		void ResetMap( object sender, EventArgs e ) {
@@ -108,6 +110,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public void Dispose() {
 			game.WorldEvents.OnNewMapLoaded -= ResetMap;
+			game.UserEvents.BlockChanged -= BlockChanged;
 		}
 		
 		void TickRandomBlocks() {

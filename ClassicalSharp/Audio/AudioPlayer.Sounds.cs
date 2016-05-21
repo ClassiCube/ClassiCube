@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Threading;
+using ClassicalSharp.Events;
 using SharpWave;
 using SharpWave.Codecs;
 
@@ -31,7 +32,11 @@ namespace ClassicalSharp.Audio {
 			stepBoard.Init( "step_", files );
 		}
 
-		public void Tick( double delta ) {
+		void PlayBlockSound( object sender, BlockChangedEventArgs e ) {
+			if( e.Block == 0 )
+				PlayDigSound( game.BlockInfo.DigSounds[e.OldBlock] );
+			else
+				PlayDigSound( game.BlockInfo.StepSounds[e.Block] );
 		}
 		
 		public void PlayDigSound( SoundType type ) { PlaySound( type, digBoard ); }

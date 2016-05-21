@@ -377,7 +377,6 @@ namespace ClassicalSharp {
 				Players.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
-				AudioPlayer.Tick( ticksPeriod );
 				BlockHandRenderer.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;

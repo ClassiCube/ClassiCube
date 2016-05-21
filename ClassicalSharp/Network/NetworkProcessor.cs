@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
@@ -50,6 +51,7 @@ namespace ClassicalSharp.Network {
 			receivedFirstPosition = false;
 			lastPacket = DateTime.UtcNow;
 			game.WorldEvents.OnNewMap += OnNewMap;
+			game.UserEvents.BlockChanged += BlockChanged;
 			
 			MakeLoginPacket( game.Username, game.Mppass );
 			SendPacket();
@@ -58,6 +60,7 @@ namespace ClassicalSharp.Network {
 		
 		public override void Dispose() {
 			game.WorldEvents.OnNewMap -= OnNewMap;
+			game.UserEvents.BlockChanged -= BlockChanged;
 			socket.Close();
 			Disconnected = true;
 		}
@@ -204,6 +207,15 @@ namespace ClassicalSharp.Network {
 			Set( Opcode.CpeSetTextColor, HandleSetTextColor, 6 );
 			Set( Opcode.CpeSetMapEnvUrl, HandleSetMapEnvUrl, 65 );
 			Set( Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6 );
+		}
+		
+		void BlockChanged( object sender, BlockChangedEventArgs e ) {
+			Vector3I p = e.Coords;
+			byte block = (byte)game.Inventory.HeldBlock;
+			if( e.Block == 0 )
+				SendSetBlock( p.X, p.Y, p.Z, false, block );
+			else
+				SendSetBlock( p.X, p.Y, p.Z, true, e.Block );
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

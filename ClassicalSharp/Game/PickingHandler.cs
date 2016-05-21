@@ -59,10 +59,7 @@ namespace ClassicalSharp {
 				byte old = game.World.GetBlock( pos );
 				
 				if( !info.IsAir[old] && inv.CanDelete[old] ) {
-					game.ParticleManager.BreakBlockEffect( pos, old );
-					game.AudioPlayer.PlayDigSound( game.BlockInfo.DigSounds[old] );
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
-					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, false, (byte)inv.HeldBlock );
 					game.UserEvents.RaiseBlockChanged( pos, old, 0 );
 				}
 			} else if( right ) {
@@ -73,9 +70,6 @@ namespace ClassicalSharp {
 				
 				if( !game.CanPick( old ) && inv.CanPlace[block] && CheckIsFree( game.SelectedPos, block ) ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, block );
-					game.AudioPlayer.PlayDigSound( game.BlockInfo.StepSounds[block] );
-					game.Network.SendSetBlock( pos.X, pos.Y, pos.Z, true, block );
-					game.BlockHandRenderer.SetAnimationClick( false );
 					game.UserEvents.RaiseBlockChanged( pos, old, block );
 				}
 			}

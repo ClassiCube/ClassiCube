@@ -32,7 +32,7 @@ namespace ClassicalSharp.Network {
 			SendPacket();
 		}
 		
-		public override void SendSetBlock( int x, int y, int z, bool place, byte block ) {
+		void SendSetBlock( int x, int y, int z, bool place, byte block ) {
 			writer.WriteUInt8( (byte)Opcode.SetBlockClient );
 			writer.WriteInt16( (short)x );
 			writer.WriteInt16( (short)y );

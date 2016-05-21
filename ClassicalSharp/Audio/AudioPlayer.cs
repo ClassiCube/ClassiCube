@@ -24,6 +24,7 @@ namespace ClassicalSharp.Audio {
 			SetMusic( game.UseMusic );
 			game.UseSound = Options.GetBool( OptionsKey.UseSound, false );
 			SetSound( game.UseSound );
+			game.UserEvents.BlockChanged += PlayBlockSound;
 		}
 
 		public void Ready( Game game ) { }		
@@ -96,6 +97,7 @@ namespace ClassicalSharp.Audio {
 			DisposeMusic();
 			DisposeSound();
 			musicHandle.Close();
+			game.UserEvents.BlockChanged -= PlayBlockSound;
 		}
 		
 		void DisposeMusic() {
