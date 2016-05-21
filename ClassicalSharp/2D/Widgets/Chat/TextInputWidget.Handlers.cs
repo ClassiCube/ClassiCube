@@ -113,22 +113,22 @@ namespace ClassicalSharp.Gui {
 				Dispose();
 				Init();
 			} else if( !buffer.Empty && caretPos != 0 ) {
-				DeleteChar();
-				BackspaceColourCode();
+				if( !BackspaceColourCode())
+					DeleteChar();
 				Dispose();
 				Init();
 			}
 		}
 		
-		void BackspaceColourCode() {
+		bool BackspaceColourCode() {
 			// If text is XYZ%eH, backspaces to XYZ.
 			int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
-			if( index <= 0 ) return;
+			if( index <= 1 ) return false;		
 			
-			if( index == 0 || buffer.value[index - 1] != '%'
-			   || !game.Drawer2D.ValidColour( buffer.value[index] ) )
-				return;			
+			if( buffer.value[index - 1] != '%' || !game.Drawer2D.ValidColour( buffer.value[index] ) )
+				return false;	
 			DeleteChar(); DeleteChar();
+			return true;
 		}
 		
 		void DeleteChar() {
