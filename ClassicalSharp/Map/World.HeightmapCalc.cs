@@ -44,6 +44,11 @@ namespace ClassicalSharp.Map {
 					CalcHeightAt( x, y, z, index );
 				}
 			} else if( y == height && oldOffset == 0 ) {
+				// For a solid block on top of an upside down slab, they will both have the same light height.
+				// So we need to account for this particular case.
+				byte above = y == maxY ? (byte)0 : GetBlock( x, y + 1, z );
+				if( info.BlocksLight[above] ) return;
+				
 				if( nowBlocks )
 					heightmap[index] = (short)(y - newOffset);
 				else
