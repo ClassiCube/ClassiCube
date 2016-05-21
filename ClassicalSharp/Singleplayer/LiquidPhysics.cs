@@ -24,6 +24,7 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnPlace[(byte)Block.Water] =
 				(index, b) => Water.Enqueue( defWaterTick | (uint)index );
 			physics.OnPlace[(byte)Block.Sponge] = PlaceSponge;
+			physics.OnDelete[(byte)Block.Sponge] = DeleteSponge;
 			
 			physics.OnActivate[(byte)Block.Water] = ActivateWater;
 			physics.OnActivate[(byte)Block.StillWater] = ActivateWater;
@@ -138,6 +139,27 @@ namespace ClassicalSharp.Singleplayer {
 				block = map.SafeGetBlock( xx, yy, zz );
 				if( block == (byte)Block.Water || block == (byte)Block.StillWater )
 					game.UpdateBlock( xx, yy, zz, (byte)Block.Air );
+			}
+		}
+		
+		
+		void DeleteSponge( int index, byte block ) {
+			int x = index % width;
+			int y = index / oneY; // posIndex / (width * length)
+			int z = (index / width) % length;
+			
+			for( int yy = y - 3; yy <= y + 3; yy++ )
+				for( int zz = z - 3; zz <= z + 3; zz++ )
+					for( int xx = x - 3; xx <= x + 3; xx++ )
+			{
+				if( Math.Abs( yy - y ) == 3 || Math.Abs( zz - z ) == 2  || Math.Abs( xx - x ) == 3 ) {
+					if( !map.IsValidPos( x, y, z ) ) continue;
+					
+					index = xx + width * (zz + yy * length);
+					block = map.blocks[index];
+					if( block == (byte)Block.Water || block == (byte)Block.StillWater )
+						Water.Enqueue( (1u << Physics.tickShift) | (uint)index );
+				}
 			}
 		}
 	}

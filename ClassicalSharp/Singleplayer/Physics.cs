@@ -29,6 +29,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public Action<int, byte>[] OnActivate = new Action<int, byte>[256];
 		public Action<int, byte>[] OnPlace = new Action<int, byte>[256];
+		public Action<int, byte>[] OnDelete = new Action<int, byte>[256];
 		
 		public Physics( Game game ) {
 			this.game = game;
@@ -87,11 +88,17 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
-			if( !Enabled || e.Block == 0 ) return;
+			if( !Enabled ) return;
 			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
-			Action<int, byte> place = OnPlace[e.Block];
-			if( place != null ) place( index, e.Block );
+			
+			if( e.Block == 0 ) {
+				Action<int, byte> delete = OnDelete[e.OldBlock];
+				if( delete != null ) delete( index, e.OldBlock );
+			} else {
+				Action<int, byte> place = OnPlace[e.Block];
+				if( place != null ) place( index, e.Block );
+			}
 		}
 		
 		void ResetMap( object sender, EventArgs e ) {
