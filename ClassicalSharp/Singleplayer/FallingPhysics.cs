@@ -5,7 +5,7 @@ using ClassicalSharp.Map;
 
 namespace ClassicalSharp.Singleplayer {
 
-	public class FallingPhysics {		
+	public class FallingPhysics {
 		Game game;
 		World map;
 		BlockInfo info;
@@ -16,67 +16,41 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			info = game.BlockInfo;
 			
-			physics.OnPlace[(byte)Block.Sand] = 
-				(index, b) => Falling.Enqueue( defFallingTick | (uint)index );
-			physics.OnPlace[(byte)Block.Gravel] = 
-				(index, b) => Falling.Enqueue( defFallingTick | (uint)index );
-			physics.OnActivate[(byte)Block.Sand] = ActivateFalling;
-			physics.OnActivate[(byte)Block.Gravel] = ActivateFalling;
+			physics.OnPlace[(byte)Block.Sand] = DoFalling;
+			physics.OnPlace[(byte)Block.Gravel] = DoFalling;
+			physics.OnActivate[(byte)Block.Sand] = DoFalling;
+			physics.OnActivate[(byte)Block.Gravel] = DoFalling;
 		}
 		
 		public void ResetMap() {
-			Clear();
 			width = map.Width;
 			height = map.Height;
 			length = map.Length;
 			oneY = width * length;
 		}
-		
-		public void Clear() { Falling.Clear(); }
-		
-		void ActivateFalling( int index, byte block ) {
-			if( index >= oneY ) PropagateFalling( index, block, 0 );
-		}
-		
-		Queue<uint> Falling = new Queue<uint>();
-		const uint defFallingTick = 2u << Physics.tickShift;
 
-		public void Tick() {
-			int count = Falling.Count;
-			for( int i = 0; i < count; i++ ) {
-				int index, flags;
-				if( Physics.CheckItem( Falling, 0x2, out index, out flags ) ) {
-					byte block = map.blocks[index];
-					if( !(block == (byte)Block.Sand || block == (byte)Block.Gravel ) ) continue;
-					if( index >= oneY ) PropagateFalling( index, block, flags );
-				}
-			}
-		}
-		
-		void PropagateFalling( int index, byte block, int flags ) {
-			byte newBlock = map.blocks[index - oneY];
-			if( newBlock == 0 || info.IsLiquid[newBlock] ) {
-				int x = index % width;
-				int y = index / oneY; // posIndex / (width * length)
-				int z = (index / width) % length;
-					
-				uint newFlags = MakeFallingFlags( newBlock ) << Physics.tickShift;
-				Falling.Enqueue( newFlags | (uint)(index - oneY) );
-				
-				game.UpdateBlock( x, y, z, oldBlock[flags >> 2] );
-				game.UpdateBlock( x, y - 1, z, block );
-			}
-		}
-		
-		static byte[] oldBlock = new byte[] { (byte)Block.Air, (byte)Block.StillWater,
-			(byte)Block.Water, (byte)Block.StillLava, (byte)Block.Lava };
-		static uint MakeFallingFlags( byte above ) {
-			byte flags = 2;
-			if( above == (byte)Block.StillWater ) flags |= 0x04; // 1
-			else if( above == (byte)Block.Water ) flags |= 0x08; // 2
-			else if( above == (byte)Block.StillLava ) flags |= 0x0C; // 3
-			else if( above == (byte)Block.Lava ) flags |= 0x10; // 4
-			return flags;
+		void DoFalling( int index, byte block ) {
+			int found = -1, start = index;
+			// Find lowest air block
+			while( index >= oneY ) {
+				index -= oneY;
+				byte other = map.blocks[index];
+				if( other == 0 || info.IsLiquid[other] )
+					found = index;
+				else
+					break;
+			}			
+			if( found == -1 ) return;
+			
+			int x = start % width;
+			int y = start / oneY; // posIndex / (width * length)
+			int z = (start / width) % length;
+			game.UpdateBlock( x, y, z, 0 );
+			
+			x = found % width;
+			y = found / oneY; // posIndex / (width * length)
+			z = (found / width) % length;
+			game.UpdateBlock( x, y, z, block );
 		}
 	}
 }

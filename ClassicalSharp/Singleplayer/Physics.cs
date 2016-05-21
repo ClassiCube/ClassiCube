@@ -24,7 +24,7 @@ namespace ClassicalSharp.Singleplayer {
 		bool enabled = true;
 		public bool Enabled {
 			get { return enabled; }
-			set { enabled = value; ClearQueuedEvents(); }
+			set { enabled = value; liquid.Clear(); }
 		}
 		
 		public Action<int, byte>[] OnActivate = new Action<int, byte>[256];
@@ -58,22 +58,6 @@ namespace ClassicalSharp.Singleplayer {
 			return true;
 		}
 		
-		internal static bool CheckItem( Queue<uint> queue, int mask, out int posIndex, out int flags ) {
-			uint packed = queue.Dequeue();
-			flags = (int)((packed & tickMask) >> tickShift);
-			posIndex = (int)(packed & posMask);
-			int tickDelay = flags & mask;
-
-			if( tickDelay > 0 ) {
-				tickDelay--;
-				flags &= ~mask; // zero old tick delay bits
-				flags |= tickDelay; // then set them with new value
-				queue.Enqueue( (uint)posIndex | ((uint)flags << tickShift) );
-				return false;
-			}
-			return true;
-		}
-		
 		int tickCount = 0;
 		public void Tick() {
 			if( !Enabled || game.World.IsNotLoaded ) return;
@@ -81,7 +65,6 @@ namespace ClassicalSharp.Singleplayer {
 			//if( (tickCount % 5) == 0 ) {
 			liquid.TickLava();
 			liquid.TickWater();
-			falling.Tick();
 			//}
 			tickCount++;
 			TickRandomBlocks();
@@ -108,11 +91,6 @@ namespace ClassicalSharp.Singleplayer {
 			height = map.Height;
 			length = map.Length;
 			oneY = width * length;
-		}
-		
-		void ClearQueuedEvents() {
-			liquid.Clear();
-			falling.Clear();
 		}
 		
 		public void Dispose() {

@@ -152,7 +152,7 @@ namespace ClassicalSharp.Singleplayer {
 				for( int zz = z - 3; zz <= z + 3; zz++ )
 					for( int xx = x - 3; xx <= x + 3; xx++ )
 			{
-				if( Math.Abs( yy - y ) == 3 || Math.Abs( zz - z ) == 2  || Math.Abs( xx - x ) == 3 ) {
+				if( Math.Abs( yy - y ) == 3 || Math.Abs( zz - z ) == 3 || Math.Abs( xx - x ) == 3 ) {
 					if( !map.IsValidPos( x, y, z ) ) continue;
 					
 					index = xx + width * (zz + yy * length);
