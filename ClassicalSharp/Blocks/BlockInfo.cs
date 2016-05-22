@@ -90,6 +90,10 @@ namespace ClassicalSharp {
 			for( int i = 0; i < DigSounds.Length; i++ ) DigSounds[i] = SoundType.None;
 			for( int i = 0; i < StepSounds.Length; i++ ) StepSounds[i] = SoundType.None;
 			Init();
+			
+			// TODO: Make this part of TerrainAtlas2D maybe?
+			using( FastBitmap fastBmp = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
+				RecalculateSpriteBB( fastBmp );
 		}
 		
 		public void Init() {
