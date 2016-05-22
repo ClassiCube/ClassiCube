@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		
 		int curSoundBlock = (int)Block.Stone;
 		public void InitSounds() {
+			curSoundBlock = (int)Block.Stone;
 			SetSound( 1, SoundType.Stone ); SetSound( 1, SoundType.Grass ); SetSound( 1, SoundType.Gravel );
 			SetSound( 1, SoundType.Stone ); SetSound( 1, SoundType.Wood ); SetSound( 1, SoundType.Grass, SoundType.None );
 			SetSound( 1, SoundType.Stone ); SetSound( 4, SoundType.None ); SetSound( 1, SoundType.Sand );
