@@ -38,6 +38,10 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.LocalPlayer.Hacks.DoubleJump = v ),
 				
 				// Column 2
+				MakeBool( 1, -150, "Full block stepping", OptionsKey.FullBlockStep,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.FullBlockStep,
+				     (g, v) => g.LocalPlayer.Hacks.FullBlockStep = v ),
+				
 				MakeBool( 1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids,
 				         OnWidgetClick, g => g.ModifiableLiquids, (g, v) => g.ModifiableLiquids = v ),
 				
@@ -77,7 +81,8 @@ namespace ClassicalSharp.Gui {
 			bool noGlobalHacks = !p.Hacks.CanAnyHacks || !p.Hacks.Enabled;
 			widgets[3].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
 			widgets[4].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-			widgets[6].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
+			widgets[5].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[7].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
 		}
 		
 		public override void Dispose() {
@@ -96,6 +101,7 @@ namespace ClassicalSharp.Gui {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
+				new BooleanValidator(),
 				new IntegerValidator( 1, 150 ),				
 			};
 		}
@@ -110,16 +116,16 @@ namespace ClassicalSharp.Gui {
 				"&eSets how many blocks high you can jump up.",
 				"&eNote: You jump much higher when holding down the speed key binding.",
 			};
-			descriptions[5] = new [] {
+			descriptions[6] = new [] {
 				"&eIf modifiable liquids is set to true, then water/lava can",
 				"&ebe placed and deleted the same way as any other block.",
 			};
-			descriptions[6] = new [] {
+			descriptions[7] = new [] {
 				"&eWhen this is active, placing blocks that intersect your own position",
 				"&ecause the block to be placed, and you to be moved out of the way.",
 				"&fThis is mainly useful for quick pillaring/towering.",
 			};
-			descriptions[7] = new [] {
+			descriptions[8] = new [] {
 				"&eIf noclip sliding isn't used, you will immediately stop when",
 				"&eyou are in noclip mode and no movement keys are held down.",
 			};
