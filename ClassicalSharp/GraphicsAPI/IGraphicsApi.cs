@@ -333,13 +333,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			IntPtr ptr = (IntPtr)indices;
 			
 			for( int i = 0; i < maxIndices; i += 6 ) {
-				*indices++ = (ushort)(element + 0);
-				*indices++ = (ushort)(element + 1);
-				*indices++ = (ushort)(element + 2);
+				*indices = (ushort)(element + 0); indices++;
+				*indices = (ushort)(element + 1); indices++;
+				*indices = (ushort)(element + 2); indices++;
 				
-				*indices++ = (ushort)(element + 2);
-				*indices++ = (ushort)(element + 3);
-				*indices++ = (ushort)(element + 0);
+				*indices = (ushort)(element + 2); indices++;
+				*indices = (ushort)(element + 3); indices++;
+				*indices = (ushort)(element + 0); indices++;
 				element += 4;
 			}
 			return CreateIb( ptr, maxIndices );
