@@ -25,21 +25,24 @@ namespace ClassicalSharp.Entities {
 		/// should cause the player to be pushed back in the opposite direction of the placed block. </summary>
 		public bool PushbackPlacing;
 		
+		/// <summary> Whether the player should be able to step up whole blocks, instead of just slabs. </summary>
+		public bool FullBlockStep;
+		
 		/// <summary> Whether the player has allowed hacks usage as an option.
 		/// Note that all 'can use X' set by the server override this. </summary>
-		public bool Enabled = true;		
+		public bool Enabled = true;
 		/// <summary> Whether the player is allowed to use any type of hacks. </summary>
-		public bool CanAnyHacks = true;		
+		public bool CanAnyHacks = true;
 		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
-		public bool CanUseThirdPersonCamera = true;		
+		public bool CanUseThirdPersonCamera = true;
 		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
-		public bool CanSpeed = true;		
+		public bool CanSpeed = true;
 		/// <summary> Whether the player is allowed to fly in the world. </summary>
-		public bool CanFly = true;		
+		public bool CanFly = true;
 		/// <summary> Whether the player is allowed to teleport to their respawn coordinates. </summary>
-		public bool CanRespawn = true;		
+		public bool CanRespawn = true;
 		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
-		public bool CanNoclip = true;		
+		public bool CanNoclip = true;
 		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
 		public bool CanPushbackBlocks = true;		
 		/// <summary> Whether the player is allowed to see all entity name tags. </summary>

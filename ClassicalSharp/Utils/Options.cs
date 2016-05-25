@@ -31,6 +31,7 @@ namespace ClassicalSharp {
 		public const string NoclipSlide = "hacks-noclipslide";
 		public const string CameraClipping = "hacks-cameraclipping";
 		public const string DoubleJump = "hacks-doublejump";
+		public const string FullBlockStep = "hacks-fullblockstep";
 		
 		public const string TabAutocomplete = "gui-tab-autocomplete";
 		public const string ShowBlockInHand = "gui-blockinhand";

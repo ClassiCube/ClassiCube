@@ -51,12 +51,15 @@ namespace ClassicalSharp.Entities {
 			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
 			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
 			Hacks.Enabled = !game.ClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
+			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
 			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
 		}
 		
 		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
 		public override void Tick( double delta ) {
 			if( game.World.IsNotLoaded ) return;
+			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks 
+				&& Hacks.CanSpeed ? 1 : 0.5f;
 			
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
