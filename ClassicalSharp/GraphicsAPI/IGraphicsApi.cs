@@ -253,11 +253,22 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
-		public virtual void Draw2DQuad( float x, float y, float width, float height, FastColour col ) {
+		public virtual void Draw2DQuad( float x, float y, float width, float height, 
+		                               FastColour col ) {
 			quadVerts[0] = new VertexP3fC4b( x, y, 0, col );
 			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, col );
 			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, col );
 			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, col );
+			SetBatchFormat( VertexFormat.P3fC4b );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
+		}
+		
+		public virtual void Draw2DQuad( float x, float y, float width, float height, 
+		                               FastColour topCol, FastColour bottomCol ) {
+			quadVerts[0] = new VertexP3fC4b( x, y, 0, topCol );
+			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, topCol );
+			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, bottomCol );
+			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, bottomCol );
 			SetBatchFormat( VertexFormat.P3fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}

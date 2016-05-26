@@ -81,7 +81,6 @@ namespace ClassicalSharp {
 		void MakeMap() {
 			for( int i = 0; i < map.Length; i++ )
 				map[i] = (Block)i;
-			if( !game.ClassicMode ) return;
 			
 			// First row
 			map[(byte)Block.Dirt] = Block.Cobblestone;

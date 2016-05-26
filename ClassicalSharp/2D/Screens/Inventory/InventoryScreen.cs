@@ -31,14 +31,16 @@ namespace ClassicalSharp.Gui {
 		int TableWidth { get { return blocksPerRow * blockSize + 10 + 10; } }
 		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 30; } }
 		
-		static FastColour normBackCol = new FastColour( 30, 30, 30, 200 );
-		static FastColour classicBackCol = new FastColour( 48, 48, 96, 192 );
+		// These were sourced by taking a screenshot of vanilla
+		// Then using paint to extract the colour components
+		// Then using wolfram alpha to solve the glblendfunc equation
+		static FastColour topCol = new FastColour( 34, 34, 34, 168 );
+		static FastColour bottomCol = new FastColour( 57, 57, 104, 202 );
 		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
 		int vb;
 		
 		public override void Render( double delta ) {
-			FastColour backCol = game.ClassicMode ? classicBackCol : normBackCol;
-			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, backCol );
+			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, topCol, bottomCol );
 			if( rows > maxRows )
 				DrawScrollbar();
 			api.Texturing = true;
