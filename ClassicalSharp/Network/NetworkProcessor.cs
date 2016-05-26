@@ -79,8 +79,6 @@ namespace ClassicalSharp.Network {
 				game.Disconnect( "&eLost connection to the server", "I/O error when reading packets" );
 				Dispose();
 				return;
-			} catch {
-				throw;
 			}
 			
 			while( (reader.size - reader.index) > 0 ) {

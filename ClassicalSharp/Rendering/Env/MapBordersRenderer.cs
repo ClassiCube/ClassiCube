@@ -180,10 +180,10 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, z2 - z1, y2 - y1 );
-					*vertices++ = new VertexP3fT2fC4b( x, y1, z1, rec.U1, rec.V2, col );
-					*vertices++ = new VertexP3fT2fC4b( x, y2, z1, rec.U1, rec.V1, col );
-					*vertices++ = new VertexP3fT2fC4b( x, y2, z2, rec.U2, rec.V1, col );
-					*vertices++ = new VertexP3fT2fC4b( x, y1, z2, rec.U2, rec.V2, col );
+					*vertices = new VertexP3fT2fC4b( x, y1, z1, rec.U1, rec.V2, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x, y2, z1, rec.U1, rec.V1, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x, y2, z2, rec.U2, rec.V1, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x, y1, z2, rec.U2, rec.V2, col ); vertices++;
 				}
 			}
 		}
@@ -199,10 +199,10 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, y2 - y1 );
-					*vertices++ = new VertexP3fT2fC4b( x1, y1, z, rec.U1, rec.V2, col );
-					*vertices++ = new VertexP3fT2fC4b( x1, y2, z, rec.U1, rec.V1, col );
-					*vertices++ = new VertexP3fT2fC4b( x2, y2, z, rec.U2, rec.V1, col );
-					*vertices++ = new VertexP3fT2fC4b( x2, y1, z, rec.U2, rec.V2, col );
+					*vertices = new VertexP3fT2fC4b( x1, y1, z, rec.U1, rec.V2, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x1, y2, z, rec.U1, rec.V1, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x2, y2, z, rec.U2, rec.V1, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x2, y1, z, rec.U2, rec.V2, col ); vertices++;
 				}
 			}
 		}
@@ -218,10 +218,10 @@ namespace ClassicalSharp.Renderers {
 					if( z2 > endZ ) z2 = endZ;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, z2 - z1 );
-					*vertices++ = new VertexP3fT2fC4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col );
-					*vertices++ = new VertexP3fT2fC4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col );
-					*vertices++ = new VertexP3fT2fC4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col );
-					*vertices++ = new VertexP3fT2fC4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col );
+					*vertices = new VertexP3fT2fC4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col ); vertices++;
+					*vertices = new VertexP3fT2fC4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col ); vertices++;
 				}
 			}
 		}
