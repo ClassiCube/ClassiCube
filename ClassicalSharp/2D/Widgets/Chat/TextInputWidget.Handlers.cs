@@ -292,12 +292,18 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( altText.Active && altText.Bounds.Contains( mouseX, mouseY ) ) {
 				altText.HandlesMouseClick( mouseX, mouseY, button );
-				altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
-				altText.Y = altText.texture.Y1;
+				UpdateAltTextY();
 			} else if( button == MouseButton.Left ) {
 				SetCaretToCursor( mouseX, mouseY );
 			}
 			return true;
+		}
+		
+		void UpdateAltTextY() {
+			int blockSize = blockSize = (int)(23 * 2 * game.GuiHotbarScale);
+			int height = Math.Max( Height + YOffset, blockSize ) + YOffset;
+			altText.texture.Y1 = game.Height - (height + altText.texture.Height);
+			altText.Y = altText.texture.Y1;
 		}
 		
 		unsafe void SetCaretToCursor( int mouseX, int mouseY ) {

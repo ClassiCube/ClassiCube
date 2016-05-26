@@ -29,7 +29,9 @@ namespace ClassicalSharp.Gui {
 			altText.Init();
 		}
 		
-		public int RealHeight { get { return Height + altText.Height; } }
+		public int UsedHeight {
+			get { return altText.Height == 0 ? Height + 20 : (game.Height - altText.Y); } 
+		}
 		
 		Texture inputTex, caretTex, prefixTex;
 		int caretPos = -1, typingLogPos = 0;
@@ -39,7 +41,7 @@ namespace ClassicalSharp.Gui {
 		readonly Font font;
 
 		FastColour caretCol;
-		static FastColour backColour = new FastColour( 60, 60, 60, 200 );
+		static FastColour backColour = new FastColour( 30, 30, 30, 220 );
 		public override void Render( double delta ) {
 			api.Texturing = false;
 			int y = Y, x = X;
@@ -98,8 +100,7 @@ namespace ClassicalSharp.Gui {
 			}
 			
 			DrawString();
-			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
-			altText.Y = altText.texture.Y1;
+			UpdateAltTextY();
 			CalculateCaretData();
 		}
 		
@@ -196,9 +197,7 @@ namespace ClassicalSharp.Gui {
 			X = newX; Y = newY;
 			caretTex.Y1 += dy;
 			inputTex.Y1 += dy;
-			
-			altText.texture.Y1 = game.Height - (YOffset + Height + altText.texture.Height);
-			altText.Y = altText.texture.Y1;
+			UpdateAltTextY();
 		}
 		
 		public void SendTextInBufferAndReset() {

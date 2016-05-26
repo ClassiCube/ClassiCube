@@ -27,10 +27,10 @@ namespace ClassicalSharp.Gui {
 			bool showMinimal = game.ActiveScreen.BlocksWorld;
 			if( chat.HandlesAllInput )
 				chat.RenderBackground();
-			api.Texturing = true;
-			chat.Render( delta );
 			if( !showMinimal )
 				RenderHotbar( delta );
+			api.Texturing = true;
+			chat.Render( delta );
 			
 			//graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
 			//graphicsApi.BindTexture( game.TerrainAtlas.TexId );

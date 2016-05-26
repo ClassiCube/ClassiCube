@@ -15,7 +15,11 @@ namespace ClassicalSharp.Entities {
 			interp = new InterpolatedComponent( game, this );
 		}
 		
+		DateTime last;
 		public override void SetLocation( LocationUpdate update, bool interpolate ) {
+			DateTime now = DateTime.UtcNow;
+			Console.WriteLine( "{0} : {1}", ID, (now - last).TotalMilliseconds );
+			last = now;
 			interp.SetLocation( update, interpolate );
 		}
 		

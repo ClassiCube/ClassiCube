@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui {
 		
 		void ConstructWidgets() {
 			textInput = new TextInputWidget( game, chatFont );
-			textInput.YOffset = blockSize + 5;
+			textInput.YOffset = 5;
 			status = new TextGroupWidget( game, 5, chatFont, chatUrlFont,
 			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
 			status.Init();
@@ -63,12 +63,12 @@ namespace ClassicalSharp.Gui {
 			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUrlFont,
 			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
 			normalChat.XOffset = 10;
-			normalChat.YOffset = blockSize * 2 + 15;
+			normalChat.YOffset = blockSize + 15;
 			normalChat.Init();
 			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont,
 			                                   chatUrlFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
 			clientStatus.XOffset = 10;
-			clientStatus.YOffset = blockSize * 2 + 15;
+			clientStatus.YOffset = blockSize + 15;
 			clientStatus.Init();
 			announcement = ChatTextWidget.Create( game, 0, 0, null,
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
@@ -197,9 +197,9 @@ namespace ClassicalSharp.Gui {
 		
 		int inputOldHeight = -1;
 		void UpdateChatYOffset( bool force ) {
-			int height = textInput.RealHeight;
+			int height = textInput.UsedHeight;
 			if( force || height != inputOldHeight ) {
-				clientStatus.YOffset = height + blockSize + 15;
+				clientStatus.YOffset = Math.Max( blockSize + 15, height );
 				int y = game.Height - clientStatus.Height - clientStatus.YOffset;
 				clientStatus.MoveTo( clientStatus.X, y );
 				
@@ -277,7 +277,7 @@ namespace ClassicalSharp.Gui {
 			announcement.YOffset = -height / 4;
 			announcement.MoveTo( announcement.X, announcement.YOffset - announcement.Height / 2 );
 			blockSize = (int)(23 * 2 * game.GuiHotbarScale);
-			textInput.YOffset = blockSize + 5;
+			textInput.YOffset = 5;
 			bottomRight.YOffset = blockSize * 3 / 2;
 			
 			int inputY = game.Height - textInput.Height - textInput.YOffset;
