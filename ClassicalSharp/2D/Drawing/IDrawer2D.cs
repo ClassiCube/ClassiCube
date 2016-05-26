@@ -154,11 +154,11 @@ namespace ClassicalSharp {
 			}
 			
 			for( int i = 0; i <= 9; i++ ) {
-				Colours['0' + i] = FastColour.GetHexEncodedCol( i, 170, 85 );
+				Colours['0' + i] = FastColour.GetHexEncodedCol( i, 191, 64 );
 				BackColours['0' + i] = FastColour.GetHexEncodedCol( i, 42, 21 );
 			}
 			for( int i = 10; i <= 15; i++) {
-				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 170, 85 );
+				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 191, 64 );
 				Colours['A' + i - 10] = Colours['a' + i - 10];
 				BackColours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 42, 21 );
 				BackColours['A' + i - 10] = BackColours['a' + i - 10];

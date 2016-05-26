@@ -24,9 +24,9 @@ namespace ClassicalSharp {
 				GetTextParts( args.Text );
 			
 			float textX = x;
+			Paint backBrush = GetOrCreateBrush( FastColour.Black );
 			for( int i = 0; i < parts.Count; i++ ) {
-				TextPart part = parts[i];
-				Paint backBrush = GetOrCreateBrush( part.BackCol );
+				TextPart part = parts[i];				
 				Paint foreBrush = GetOrCreateBrush( part.ForeCol );
 				if( args.UseShadow )
 					c.DrawText( part.Text, textX + Offset, y + Offset, backBrush );

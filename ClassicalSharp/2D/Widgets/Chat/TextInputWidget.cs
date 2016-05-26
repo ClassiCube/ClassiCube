@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui {
 		readonly Font font;
 
 		FastColour caretCol;
-		static FastColour backColour = new FastColour( 30, 30, 30, 220 );
+		static FastColour backColour = new FastColour( 45, 45, 45, 220 );
 		public override void Render( double delta ) {
 			api.Texturing = false;
 			int y = Y, x = X;

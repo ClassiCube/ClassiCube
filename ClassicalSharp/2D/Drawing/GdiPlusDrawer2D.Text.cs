@@ -31,9 +31,9 @@ namespace ClassicalSharp {
 				GetTextParts( args.Text );
 			
 			float textX = x;
+			Brush backBrush = GetOrCreateBrush( FastColour.Black );
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
-				Brush backBrush = GetOrCreateBrush( part.BackCol );
 				Brush foreBrush = GetOrCreateBrush( part.ForeCol );
 				if( args.UseShadow )
 					g.DrawString( part.Text, args.Font, backBrush, textX + Offset, y + Offset, format );
