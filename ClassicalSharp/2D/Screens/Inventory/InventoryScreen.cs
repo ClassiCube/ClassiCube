@@ -43,6 +43,14 @@ namespace ClassicalSharp.Gui {
 			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, topCol, bottomCol );
 			if( rows > maxRows )
 				DrawScrollbar();
+			
+			/*if( selIndex != -1 ) {
+				int x, y;
+				GetCoords( selIndex, out x, out y );
+				float off = blockSize * 0.1f;
+				api.Draw2DQuad( x - off, y - off, blockSize + off * 2, 
+				               blockSize + off * 2, FastColour.Black );
+			}*/
 			api.Texturing = true;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
