@@ -122,7 +122,7 @@ namespace ClassicalSharp.Gui {
 			Key playerListKey = game.Mapping( KeyBinding.PlayerList );
 			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
 			if( key == playerListKey && handles ) {
-				if( playerList == null )
+				if( playerList == null && !game.Network.IsSinglePlayer )
 					CreatePlayerListWidget();
 				return true;
 			}
