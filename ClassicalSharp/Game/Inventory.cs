@@ -81,6 +81,7 @@ namespace ClassicalSharp {
 		void MakeMap() {
 			for( int i = 0; i < map.Length; i++ )
 				map[i] = (Block)i;
+			bool pure = game.ClassicMode && !game.ClassicHacks;
 			
 			// First row
 			map[(byte)Block.Dirt] = Block.Cobblestone;
@@ -105,10 +106,8 @@ namespace ClassicalSharp {
 			map[(byte)Block.Gold] = Block.CoalOre;
 			map[(byte)Block.Iron] = Block.IronOre;
 			// Fifth row
-			if( game.ClassicHacks )
-				map[(byte)Block.DoubleSlab] = Block.GoldOre;
-			map[(byte)Block.Slab] = game.ClassicHacks ? 
-				Block.DoubleSlab : Block.GoldOre;
+			if( !pure) map[(byte)Block.DoubleSlab] = Block.GoldOre;
+			map[(byte)Block.Slab] = pure ? Block.GoldOre : Block.DoubleSlab;
 			map[(byte)Block.Brick] = Block.Iron;
 			map[(byte)Block.TNT] = Block.Gold;
 			map[(byte)Block.MossyRocks] = Block.TNT;
