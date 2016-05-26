@@ -30,15 +30,15 @@ namespace ClassicalSharp {
 			if( !args.SkipPartsCheck )
 				GetTextParts( args.Text );
 			
-			Brush shadowBrush = GetOrCreateBrush( FastColour.Black );
 			float textX = x;
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
-				Brush textBrush = GetOrCreateBrush( part.TextColour );
+				Brush backBrush = GetOrCreateBrush( part.BackCol );
+				Brush foreBrush = GetOrCreateBrush( part.ForeCol );
 				if( args.UseShadow )
-					g.DrawString( part.Text, args.Font, shadowBrush, textX + Offset, y + Offset, format );
+					g.DrawString( part.Text, args.Font, backBrush, textX + Offset, y + Offset, format );
 				
-				g.DrawString( part.Text, args.Font, textBrush, textX, y, format );
+				g.DrawString( part.Text, args.Font, foreBrush, textX, y, format );
 				textX += g.MeasureString( part.Text, args.Font, Int32.MaxValue, format ).Width;
 			}
 		}
@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 			
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
-				Brush textBrush = GetOrCreateBrush( part.TextColour );
+				Brush textBrush = GetOrCreateBrush( part.ForeCol );
 				RectangleF rect = new RectangleF( textX + Offset, y + Offset, maxWidth, maxHeight );
 				if( args.UseShadow )
 					g.DrawString( part.Text, args.Font, shadowBrush, rect, format );

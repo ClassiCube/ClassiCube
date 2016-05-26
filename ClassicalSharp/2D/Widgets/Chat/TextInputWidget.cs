@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public int UsedHeight {
-			get { return altText.Height == 0 ? Height + 20 : (game.Height - altText.Y); } 
+			get { return altText.Height == 0 ? Height + 20 : (game.Height - altText.Y + 5); } 
 		}
 		
 		Texture inputTex, caretTex, prefixTex;

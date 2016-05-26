@@ -143,30 +143,37 @@ namespace ClassicalSharp {
 		}
 		
 		public FastColour[] Colours = new FastColour[256];
+		public FastColour[] BackColours = new FastColour[256];
 		
 		public IDrawer2D() { InitColours(); }
 		
 		public void InitColours() {
-			for( int i = 0; i < Colours.Length; i++ )
+			for( int i = 0; i < Colours.Length; i++ ) {
 				Colours[i] = default(FastColour);
+				BackColours[i] = default(FastColour);
+			}
 			
-			for( int i = 0; i <= 9; i++ )
-				Colours['0' + i] = FastColour.GetHexEncodedCol( i );
-			
+			for( int i = 0; i <= 9; i++ ) {
+				Colours['0' + i] = FastColour.GetHexEncodedCol( i, 170, 85 );
+				BackColours['0' + i] = FastColour.GetHexEncodedCol( i, 42, 21 );
+			}
 			for( int i = 10; i <= 15; i++) {
-				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i );
-				Colours['A' + i - 10] = FastColour.GetHexEncodedCol( i );
+				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 170, 85 );
+				Colours['A' + i - 10] = Colours['a' + i - 10];
+				BackColours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 42, 21 );
+				BackColours['A' + i - 10] = BackColours['a' + i - 10];
 			}
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );
 		protected struct TextPart {
 			public string Text;
-			public FastColour TextColour;
+			public FastColour ForeCol, BackCol;
 			
-			public TextPart( string text, FastColour col ) {
+			public TextPart( string text, FastColour fore, FastColour back ) {
 				Text = text;
-				TextColour = col;
+				ForeCol = fore;
+				BackCol = back;
 			}
 		}
 		
@@ -174,7 +181,7 @@ namespace ClassicalSharp {
 			parts.Clear();
 			if( String.IsNullOrEmpty( value ) ) {
 			} else if( value.IndexOf( '&' ) == -1 ) {
-				parts.Add( new TextPart( value, FastColour.White ) );
+				parts.Add( new TextPart( value, Colours['f'], BackColours['f'] ) );
 			} else {
 				SplitText( value );
 			}
@@ -189,8 +196,7 @@ namespace ClassicalSharp {
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					FastColour col = Colours[code];
-					parts.Add( new TextPart( part, col ) );
+					parts.Add( new TextPart( part, Colours[code], BackColours[code] ) );
 				}
 				i += partLength + 1;
 				

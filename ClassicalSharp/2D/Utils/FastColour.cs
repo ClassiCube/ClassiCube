@@ -55,11 +55,11 @@ namespace ClassicalSharp {
 			                      (byte)Utils.Lerp( a.B, b.B, t ) );
 		}
 		
-		public static FastColour GetHexEncodedCol( int hex ) {
+		public static FastColour GetHexEncodedCol( int hex, int lo, int hi ) {
 			return new FastColour(
-				191 * ((hex >> 2) & 1) + 64 * (hex >> 3),
-				191 * ((hex >> 1) & 1) + 64 * (hex >> 3),
-				191 * ((hex >> 0) & 1) + 64 * (hex >> 3) );
+				lo * ((hex >> 2) & 1) + hi * (hex >> 3),
+				lo * ((hex >> 1) & 1) + hi * (hex >> 3),
+				lo * ((hex >> 0) & 1) + hi * (hex >> 3) );
 		}
 		
 		public const float ShadeX = 0.6f, ShadeZ = 0.8f, ShadeYBottom = 0.5f;
