@@ -61,8 +61,10 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart( FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol ) {
-			FastColour col = shadowCol ? BackColours['f'] : Colours['f'];
+			FastColour col = Colours['f'];
+			if( shadowCol ) col = FastColour.Scale( col, 1/4f );
 			FastColour lastCol = col;
+			
 			int xMul = args.Font.Style == FontStyle.Italic ? 1 : 0;
 			int runCount = 0, lastY = -1;
 			string text = args.Text;
@@ -73,7 +75,8 @@ namespace ClassicalSharp {
 				char c = text[i];
 				bool code = c == '&' && i < text.Length - 1;
 				if( code && ValidColour( text[i + 1] ) ) {
-					col = shadowCol ? BackColours[text[i + 1]] : Colours[text[i + 1]];
+					col = Colours[text[i + 1]];
+					if( shadowCol ) col = FastColour.Scale( col, 1/4f );
 					i++; continue; // Skip over the colour code.
 				}
 				int coords = ConvertToCP437( c );

@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 			Paint backBrush = GetOrCreateBrush( FastColour.Black );
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];				
-				Paint foreBrush = GetOrCreateBrush( part.ForeCol );
+				Paint foreBrush = GetOrCreateBrush( part.Col );
 				if( args.UseShadow )
 					c.DrawText( part.Text, textX + Offset, y + Offset, backBrush );
 				
@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 			SizeF total = SizeF.Empty;
 			for( int i = 0; i < parts.Count; i++ ) {
 				TextPart part = parts[i];
-				Paint textBrush = GetOrCreateBrush( part.ForeCol );
+				Paint textBrush = GetOrCreateBrush( part.Col );
 				total.Width += textBrush.MeasureText( part.Text );
 			}
 			total.Height = PtToPx( args.Font.Size );

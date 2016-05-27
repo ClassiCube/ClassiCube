@@ -360,7 +360,6 @@ namespace ClassicalSharp.Network {
 			if( code == '%' || code == '&' ) return; // colour code signifiers cannot be used
 			
 			game.Drawer2D.Colours[code] = col;
-			game.Drawer2D.BackColours[code] = FastColour.Black;
 			game.Events.RaiseColourCodesChanged();
 		}
 		

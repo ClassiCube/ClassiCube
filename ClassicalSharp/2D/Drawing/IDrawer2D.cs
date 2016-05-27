@@ -143,37 +143,29 @@ namespace ClassicalSharp {
 		}
 		
 		public FastColour[] Colours = new FastColour[256];
-		public FastColour[] BackColours = new FastColour[256];
 		
 		public IDrawer2D() { InitColours(); }
 		
 		public void InitColours() {
-			for( int i = 0; i < Colours.Length; i++ ) {
+			for( int i = 0; i < Colours.Length; i++ )
 				Colours[i] = default(FastColour);
-				BackColours[i] = default(FastColour);
-			}
 			
-			for( int i = 0; i <= 9; i++ ) {
+			for( int i = 0; i <= 9; i++ )
 				Colours['0' + i] = FastColour.GetHexEncodedCol( i, 191, 64 );
-				BackColours['0' + i] = FastColour.GetHexEncodedCol( i, 47, 16 );
-			}
 			for( int i = 10; i <= 15; i++) {
 				Colours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 191, 64 );
 				Colours['A' + i - 10] = Colours['a' + i - 10];
-				BackColours['a' + i - 10] = FastColour.GetHexEncodedCol( i, 47, 16 );
-				BackColours['A' + i - 10] = BackColours['a' + i - 10];
 			}
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>( 64 );
 		protected struct TextPart {
 			public string Text;
-			public FastColour ForeCol, BackCol;
+			public FastColour Col;
 			
-			public TextPart( string text, FastColour fore, FastColour back ) {
+			public TextPart( string text, FastColour col ) {
 				Text = text;
-				ForeCol = fore;
-				BackCol = back;
+				Col = col;
 			}
 		}
 		
@@ -181,7 +173,7 @@ namespace ClassicalSharp {
 			parts.Clear();
 			if( String.IsNullOrEmpty( value ) ) {
 			} else if( value.IndexOf( '&' ) == -1 ) {
-				parts.Add( new TextPart( value, Colours['f'], BackColours['f'] ) );
+				parts.Add( new TextPart( value, Colours['f'] ) );
 			} else {
 				SplitText( value );
 			}
@@ -196,7 +188,7 @@ namespace ClassicalSharp {
 				
 				if( partLength > 0 ) {
 					string part = value.Substring( i, partLength );
-					parts.Add( new TextPart( part, Colours[code], BackColours[code] ) );
+					parts.Add( new TextPart( part, Colours[code] ) );
 				}
 				i += partLength + 1;
 				
