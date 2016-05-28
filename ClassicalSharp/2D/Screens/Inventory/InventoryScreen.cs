@@ -212,8 +212,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		bool Show( Block block ) {
-			bool hackBlocks = !game.ClassicMode || game.ClassicHacks;
-			if( !hackBlocks && IsHackBlock( block ) )
+			if( game.PureClassic && IsHackBlock( block ) )
 				return false;
 			int count = game.UseCPEBlocks ? BlockInfo.CpeCount : BlockInfo.OriginalCount;
 			return (byte)block < count || game.BlockInfo.Name[(byte)block] != "Invalid";

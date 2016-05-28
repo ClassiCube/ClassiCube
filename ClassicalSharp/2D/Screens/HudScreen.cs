@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui {
 			if( game.HideGui ) return;
 			
 			bool showMinimal = game.ActiveScreen.BlocksWorld;
-			if( chat.HandlesAllInput )
+			if( chat.HandlesAllInput && !game.PureClassic )
 				chat.RenderBackground();
 			if( !showMinimal )
 				RenderHotbar( delta );

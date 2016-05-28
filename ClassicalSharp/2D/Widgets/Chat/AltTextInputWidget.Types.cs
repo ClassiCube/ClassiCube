@@ -96,7 +96,7 @@ namespace ClassicalSharp.Gui {
 			for( int i = 0; i < elements.Length; i++ ) {
 				args.Text = elements[i].Title;
 				FastColour col = i == selectedIndex ? new FastColour( 30, 30, 30, 200 ) :
-					new FastColour( 60, 60, 60, 200 );
+					new FastColour( 0, 0, 0, 127 );;
 				Size size = elements[i].TitleSize;
 				
 				drawer.Clear( col, x, 0, size.Width, size.Height );

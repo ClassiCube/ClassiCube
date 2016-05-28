@@ -165,6 +165,8 @@ namespace ClassicalSharp {
 		
 		public bool UseClassicGui, UseClassicTabList, UseClassicOptions, ClassicMode, ClassicHacks;
 		
+		public bool PureClassic { get { return ClassicMode && !ClassicHacks; } }
+		
 		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		
 		public string FontName = "Arial";

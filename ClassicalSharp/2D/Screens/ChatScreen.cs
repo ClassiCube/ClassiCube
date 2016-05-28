@@ -181,7 +181,7 @@ namespace ClassicalSharp.Gui {
 			}
 		}
 		
-		static FastColour backColour = new FastColour( 60, 60, 60, 180 );
+		static FastColour backColour = new FastColour( 0, 0, 0, 127 );
 		public void RenderBackground() {
 			int minIndex = Math.Min( 0, game.Chat.Log.Count - chatLines );
 			int height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
