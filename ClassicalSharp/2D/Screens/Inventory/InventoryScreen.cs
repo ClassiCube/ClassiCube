@@ -36,21 +36,23 @@ namespace ClassicalSharp.Gui {
 		// Then using wolfram alpha to solve the glblendfunc equation
 		static FastColour topCol = new FastColour( 34, 34, 34, 168 );
 		static FastColour bottomCol = new FastColour( 57, 57, 104, 202 );
+		static FastColour topSelCol = new FastColour( 255, 255, 255, 142 );
+		static FastColour bottomSelCol = new FastColour( 255, 255, 255, 192 );
+		
 		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
 		int vb;
-		
 		public override void Render( double delta ) {
 			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, topCol, bottomCol );
 			if( rows > maxRows )
 				DrawScrollbar();
 			
-			/*if( selIndex != -1 ) {
+			if( selIndex != -1 && game.ClassicMode ) {
 				int x, y;
 				GetCoords( selIndex, out x, out y );
 				float off = blockSize * 0.1f;
 				api.Draw2DQuad( x - off, y - off, blockSize + off * 2, 
-				               blockSize + off * 2, FastColour.Black );
-			}*/
+				               blockSize + off * 2, topSelCol, bottomSelCol );
+			}
 			api.Texturing = true;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
