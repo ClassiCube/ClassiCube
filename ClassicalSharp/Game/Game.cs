@@ -421,6 +421,8 @@ namespace ClassicalSharp {
 			if( activeScreen != null )
 				activeScreen.OnResize( width, height, Width, Height );
 			hudScreen.OnResize( width, height, Width, Height );
+			foreach( Screen overlay in WarningOverlays )
+				overlay.OnResize( width, height, Width, Height );
 			width = Width;
 			height = Height;
 		}
