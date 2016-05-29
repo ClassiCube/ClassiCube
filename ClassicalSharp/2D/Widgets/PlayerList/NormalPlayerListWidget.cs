@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		PlayerInfo[] info = new PlayerInfo[256];
-		class PlayerInfo {
+		protected class PlayerInfo {
 			
 			public string Name, ColouredName;
 			public byte Id;
@@ -59,10 +59,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void AddPlayerInfo( PlayerInfo pInfo, int index ) {
-			DrawTextArgs args = new DrawTextArgs( pInfo.ColouredName, font, false );
-			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );
-			
+			Texture tex = DrawName( pInfo );			
 			if( index < 0 ) {
 				info[namesCount] = pInfo;
 				textures[namesCount] = tex;
@@ -71,6 +68,13 @@ namespace ClassicalSharp.Gui {
 				info[index] = pInfo;
 				textures[index] = tex;
 			}
+		}
+		
+		protected virtual Texture DrawName( PlayerInfo pInfo ) {
+			DrawTextArgs args = new DrawTextArgs( pInfo.ColouredName, font, false );
+			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );
+			return tex;
 		}
 		
 		void TabEntryAdded( object sender, IdEventArgs e ) {

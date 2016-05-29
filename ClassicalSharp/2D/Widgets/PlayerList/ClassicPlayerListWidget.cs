@@ -30,8 +30,8 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Render( double delta ) {
 			api.Texturing = false;
-			int offset = overview.Height;
-			int height = namesPerColumn * (elemHeight + 1) + boundsSize * 2 + offset;
+			int offset = overview.Height + 10;
+			int height = Math.Max( 300, Height );
 			api.Draw2DQuad( X, Y - offset, Width, height, lightTableCol );
 			
 			api.Texturing = true;
@@ -54,6 +54,16 @@ namespace ClassicalSharp.Gui {
 			                                 Anchor.Centre, Anchor.Centre, font );
 			
 			base.Init();
+		}
+		
+		protected override Texture DrawName( PlayerInfo pInfo ) {
+			string name = pInfo.ColouredName;
+			if( game.PureClassic ) name = Utils.StripColours( name );
+			
+			DrawTextArgs args = new DrawTextArgs( name, font, false );
+			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );
+			return tex;
 		}
 		
 		public override void Dispose() {
