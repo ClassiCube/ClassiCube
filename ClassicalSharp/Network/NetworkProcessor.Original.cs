@@ -249,16 +249,16 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleMessage() {
-			byte messageType = reader.ReadUInt8();
-			string text = reader.ReadChatString( ref messageType );
+			byte type = reader.ReadUInt8();
 			// Original vanilla server uses player ids in message types, 255 for server messages.
-			if( !cpe.useMessageTypes ) {
-				if( messageType == 0xFF ) text = "&e" + text;
-				messageType = (byte)MessageType.Normal;
-			}
+			bool prepend = !cpe.useMessageTypes && type == 0xFF;
+			
+			if( !cpe.useMessageTypes ) type = (byte)MessageType.Normal;
+			string text = reader.ReadChatString( ref type );
+			if( prepend ) text = "&e" + text;
 			
 			if( !text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase ) )
-				game.Chat.Add( text, (MessageType)messageType );
+				game.Chat.Add( text, (MessageType)type );
 		}
 		
 		internal void HandleKick() {
