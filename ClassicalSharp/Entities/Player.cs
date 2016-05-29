@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 		void ParseScale( string scale ) {
 			if( scale == null ) return;
 			float value;
-			if( !float.TryParse( scale, out value ) || float.IsNaN( value ) ) 
+			if( !float.TryParse( scale, out value ) || float.IsNaN( value ) )
 				return;
 			
 			Utils.Clamp( ref value, 0.25f, Model.MaxScale );
@@ -61,8 +61,24 @@ namespace ClassicalSharp.Entities {
 		
 		protected void MakeNameTexture() {
 			using( Font font = new Font( game.FontName, 24 ) ) {
-				DrawTextArgs args = new DrawTextArgs( DisplayName, font, true );
-				nameTex = game.Drawer2D.MakeBitmappedTextTexture( ref args, 0, 0 );
+				DrawTextArgs args = new DrawTextArgs( DisplayName, font, false );
+				Size size = game.Drawer2D.MeasureBitmappedSize( ref args );
+				if( size == Size.Empty ) { nameTex = new Texture( -1, 0, 0, 0, 0, 1, 1 ); return; }
+				size.Width += 3; size.Height += 3;
+				
+				using( IDrawer2D drawer = game.Drawer2D )
+					using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
+				{
+					drawer.SetBitmap( bmp );
+					args.Text = "&\xFF" + Utils.StripColours( args.Text );
+					game.Drawer2D.Colours['\xFF'] = new FastColour( 80, 80, 80 );
+					game.Drawer2D.DrawBitmappedText( ref args, 3, 3 );
+					game.Drawer2D.Colours['\xFF'] = default(FastColour);
+					
+					args.Text = DisplayName;
+					game.Drawer2D.DrawBitmappedText( ref args, 0, 0 );
+					nameTex = game.Drawer2D.Make2DTexture( bmp, size, 0, 0 );
+				}
 			}
 		}
 		
@@ -165,7 +181,7 @@ namespace ClassicalSharp.Entities {
 			
 			Bitmap scaled = Platform.CreateBmp( width, height );
 			using( FastBitmap src = new FastBitmap( bmp, true, true ) )
-				using( FastBitmap dst = new FastBitmap( scaled, true, false ) ) 
+				using( FastBitmap dst = new FastBitmap( scaled, true, false ) )
 			{
 				for( int y = 0; y < src.Height; y++ )
 					FastBitmap.CopyRow( y, y, src, dst, src.Width );
