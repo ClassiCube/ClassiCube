@@ -165,6 +165,7 @@
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
+    <Compile Include="Entities\TabList.cs" />
     <Compile Include="Events\EntityEvents.cs" />
     <Compile Include="Events\Events.cs" />
     <Compile Include="Events\UserEvents.cs" />

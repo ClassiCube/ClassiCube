@@ -311,10 +311,10 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleExtAddEntity2() {
-			byte entityId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			string skinName = reader.ReadAsciiString();
-			AddEntity( entityId, displayName, skinName, true );
+			AddEntity( id, displayName, skinName, true );
 		}
 		
 		const int bulkCount = 256;

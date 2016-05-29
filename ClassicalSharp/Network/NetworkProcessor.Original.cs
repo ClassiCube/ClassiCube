@@ -213,7 +213,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleRelPosAndOrientationUpdate() {
-			byte playerId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			float x = reader.ReadInt8() / 32f;
 			float y = reader.ReadInt8() / 32f;
 			float z = reader.ReadInt8() / 32f;
@@ -221,31 +221,31 @@ namespace ClassicalSharp.Network {
 			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, yaw, pitch, true );
-			UpdateLocation( playerId, update, true );
+			UpdateLocation( id, update, true );
 		}
 		
 		internal void HandleRelPositionUpdate() {
-			byte playerId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			float x = reader.ReadInt8() / 32f;
 			float y = reader.ReadInt8() / 32f;
 			float z = reader.ReadInt8() / 32f;
 			
 			LocationUpdate update = LocationUpdate.MakePos( x, y, z, true );
-			UpdateLocation( playerId, update, true );
+			UpdateLocation( id, update, true );
 		}
 		
 		internal void HandleOrientationUpdate() {
-			byte playerId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			float yaw = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			float pitch = (float)Utils.PackedToDegrees( reader.ReadUInt8() );
 			
 			LocationUpdate update = LocationUpdate.MakeOri( yaw, pitch );
-			UpdateLocation( playerId, update, true );
+			UpdateLocation( id, update, true );
 		}
 		
 		internal void HandleRemoveEntity() {
-			byte entityId = reader.ReadUInt8();
-			RemoveEntity( entityId );
+			byte id = reader.ReadUInt8();
+			RemoveEntity( id );
 		}
 		
 		internal void HandleMessage() {
@@ -271,16 +271,16 @@ namespace ClassicalSharp.Network {
 			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
 		}
 		
-		void AddEntity( byte entityId, string displayName, string skinName, bool readPosition ) {
+		void AddEntity( byte id, string displayName, string skinName, bool readPosition ) {
 			skinName = Utils.StripColours( skinName );
-			if( entityId != 0xFF ) {
-				Player oldPlayer = game.Entities[entityId];
+			if( id != 0xFF ) {
+				Player oldPlayer = game.Entities[id];
 				if( oldPlayer != null ) {
-					game.EntityEvents.RaiseRemoved( entityId );
+					game.EntityEvents.RaiseRemoved( id );
 					oldPlayer.Despawn();
 				}
-				game.Entities[entityId] = new NetPlayer( displayName, skinName, game, entityId );
-				game.EntityEvents.RaiseAdded( entityId );
+				game.Entities[id] = new NetPlayer( displayName, skinName, game, id );
+				game.EntityEvents.RaiseAdded( id );
 			} else {
 				// Server is only allowed to change our own name colours.
 				if( Utils.StripColours( displayName ) != game.Username )
@@ -290,12 +290,12 @@ namespace ClassicalSharp.Network {
 				game.LocalPlayer.UpdateName();
 			}
 			
-			string identifier = game.Entities[entityId].SkinIdentifier;
+			string identifier = game.Entities[id].SkinIdentifier;
 			game.AsyncDownloader.DownloadSkin( identifier, skinName );
 			if( !readPosition ) return;
 			
-			ReadAbsoluteLocation( entityId, false );
-			if( entityId == 0xFF ) {
+			ReadAbsoluteLocation( id, false );
+			if( id == 0xFF ) {
 				LocalPlayer p = game.LocalPlayer;
 				p.Spawn = p.Position;
 				p.SpawnYaw = p.HeadYawDegrees;

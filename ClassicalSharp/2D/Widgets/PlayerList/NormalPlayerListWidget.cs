@@ -7,48 +7,22 @@ using ClassicalSharp.Events;
 
 namespace ClassicalSharp.Gui {
 	
-	public sealed class NormalPlayerListWidget : PlayerListWidget {
+	public class NormalPlayerListWidget : PlayerListWidget {
 		
 		public NormalPlayerListWidget( Game game, Font font ) : base( game, font ) {
 			textures = new Texture[256];
 		}
 		
-		PlayerInfo[] info = new PlayerInfo[256];		
+		PlayerInfo[] info = new PlayerInfo[256];
 		class PlayerInfo {
 			
-			public string Name;
-			public byte PlayerId;
+			public string Name, ColouredName;
+			public byte Id;
 			
-			public PlayerInfo( Player p ) {
-				Name = Utils.StripColours( p.DisplayName );
-				PlayerId = p.ID;
-			}
-		}
-		
-		public override void Init() {
-			base.Init();
-			game.EntityEvents.Added += PlayerSpawned;
-			game.EntityEvents.Removed += PlayerDespawned;
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			game.EntityEvents.Added -= PlayerSpawned;
-			game.EntityEvents.Removed -= PlayerDespawned;
-		}
-		
-		void PlayerSpawned( object sender, IdEventArgs e ) {
-			Player player = game.Entities[e.Id];
-			AddPlayerInfo( player );
-			SortPlayerInfo();
-		}
-
-		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < EntityList.MaxCount; i++ ) {
-				Player player = game.Entities[i];
-				if( player != null ) {
-					AddPlayerInfo( player );
-				}
+			public PlayerInfo( TabListEntry p ) {
+				ColouredName = p.PlayerName;
+				Name = Utils.StripColours( p.PlayerName );
+				Id = p.NameId;
 			}
 		}
 		
@@ -61,20 +35,66 @@ namespace ClassicalSharp.Gui {
 			return null;
 		}
 		
-		void AddPlayerInfo( Player player ) {
-			DrawTextArgs args = new DrawTextArgs( player.DisplayName, font, true );
+		public override void Init() {
+			base.Init();
+			game.EntityEvents.TabListEntryAdded += TabEntryAdded;
+			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
+			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.EntityEvents.TabListEntryAdded -= TabEntryAdded;
+			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
+			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
+		}
+
+		protected override void CreateInitialPlayerInfo() {
+			TabListEntry[] entries = game.TabList.Entries;
+			for( int i = 0; i < entries.Length; i++ ) {
+				TabListEntry e = entries[i];
+				if( e != null )
+					AddPlayerInfo( new PlayerInfo( e ), -1 );
+			}
+		}
+		
+		void AddPlayerInfo( PlayerInfo pInfo, int index ) {
+			DrawTextArgs args = new DrawTextArgs( pInfo.ColouredName, font, false );
 			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );
 			
-			info[namesCount] = new PlayerInfo( player );
-			textures[namesCount] = tex;
-			namesCount++;
+			if( index < 0 ) {
+				info[namesCount] = pInfo;
+				textures[namesCount] = tex;
+				namesCount++;
+			} else {
+				info[index] = pInfo;
+				textures[index] = tex;
+			}
 		}
 		
-		void PlayerDespawned( object sender, IdEventArgs e ) {
+		void TabEntryAdded( object sender, IdEventArgs e ) {
+			AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), -1 );
+			SortPlayerInfo();
+		}
+		
+		void TabEntryChanged( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.PlayerId == e.Id ) {
+				if( pInfo.Id != e.Id ) continue;
+				
+				Texture tex = textures[i];
+				api.DeleteTexture( ref tex );
+				AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), i );
+				SortPlayerInfo();
+				return;
+			}
+		}
+		
+		void TabEntryRemoved( object sender, IdEventArgs e ) {
+			for( int i = 0; i < namesCount; i++ ) {
+				PlayerInfo pInfo = info[i];
+				if( pInfo.Id == e.Id ) {
 					RemoveInfoAt( info, i );
 					return;
 				}
