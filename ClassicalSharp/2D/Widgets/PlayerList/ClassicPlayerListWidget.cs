@@ -40,9 +40,11 @@ namespace ClassicalSharp.Gui {
 			overview.Render( delta );
 			
 			for( int i = 0; i < namesCount; i++ ) {
-				Texture texture = textures[i];
-				if( texture.IsValid )
-					texture.Render( api );
+				Texture tex = textures[i];
+				int texY = tex.Y1;
+				tex.Y1 -= 10;
+				if( tex.IsValid ) tex.Render( api );
+				tex.Y1 = texY;
 			}
 		}
 		

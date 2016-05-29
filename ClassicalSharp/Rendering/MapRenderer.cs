@@ -106,9 +106,11 @@ namespace ClassicalSharp.Renderers {
 			WorldEnv env = game.World.Env;
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor( pos );
+			
 			byte block = game.World.SafeGetBlock( coords );
 			drawAllFaces = game.BlockInfo.IsTranslucent[block];
-			underWater = drawAllFaces || pos.Y < env.EdgeHeight;
+			bool outside = !game.World.IsValidPos( Vector3I.Floor( pos ) );
+			underWater = drawAllFaces || (pos.Y < env.EdgeHeight && outside);
 			
 			// If we are under water, render weather before to blend properly
 			if( !underWater || env.Weather == Weather.Sunny ) return;
@@ -147,7 +149,7 @@ namespace ClassicalSharp.Renderers {
 				RenderTranslucentBatch( batch );
 			}
 			
-			api.DepthWrite = true;			
+			api.DepthWrite = true;
 			// If we weren't under water, render weather after to blend properly
 			if( !underWater && game.World.Env.Weather != Weather.Sunny ) {
 				api.AlphaTest = true;
