@@ -38,14 +38,14 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void PlayerSpawned( object sender, IdEventArgs e ) {
-			Player player = game.Players[e.Id];
+			Player player = game.Entities[e.Id];
 			AddPlayerInfo( player );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
 			for( int i = 0; i < EntityList.MaxCount; i++ ) {
-				Player player = game.Players[i];
+				Player player = game.Entities[i];
 				if( player != null ) {
 					AddPlayerInfo( player );
 				}

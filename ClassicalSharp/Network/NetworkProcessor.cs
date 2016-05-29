@@ -218,13 +218,8 @@ namespace ClassicalSharp.Network {
 		
 		void OnNewMap( object sender, EventArgs e ) {
 			// wipe all existing entity states
-			for( int i = 0; i < 256; i++ ) {
-				if( game.CpePlayersList[i] != null ) {
-					game.EntityEvents.RaiseCpeListInfoRemoved( (byte)i );
-					game.CpePlayersList[i] = null;
-				}
+			for( int i = 0; i < 256; i++ )
 				RemoveEntity( (byte)i );
-			}
 		}
 		
 		double testAcc = 0;

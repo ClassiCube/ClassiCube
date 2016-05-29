@@ -24,13 +24,7 @@ namespace ClassicalSharp.Gui {
 			public string Name, ColouredName;
 			public byte Id;
 			
-			public PlayerInfo( Player p ) {
-				ColouredName = p.DisplayName;
-				Name = Utils.StripColours( p.DisplayName );
-				Id = p.ID;
-			}
-			
-			public PlayerInfo( CpeListInfo p ) {
+			public PlayerInfo( TabListEntry p ) {
 				ColouredName = p.PlayerName;
 				Name = Utils.StripColours( p.PlayerName );
 				Id = p.NameId;
@@ -49,7 +43,7 @@ namespace ClassicalSharp.Gui {
 		protected override void OnSort() {
 			int width = 0, centreX = game.Width / 2;
 			for( int col = 0; col < columns; col++)
-			    width += GetColumnWidth( col );
+				width += GetColumnWidth( col );
 			if( width < 480 ) width = 480;
 			
 			xMin = centreX - width / 2;
@@ -84,47 +78,29 @@ namespace ClassicalSharp.Gui {
 			DrawTextArgs measureArgs = new DrawTextArgs( "ABC", font, false );
 			
 			elemHeight = game.Drawer2D.MeasureChatSize( ref measureArgs ).Height;
-			overview = ChatTextWidget.Create( game, 0, 0, "Connected players:", 
+			overview = ChatTextWidget.Create( game, 0, 0, "Connected players:",
 			                                 Anchor.Centre, Anchor.Centre, font );
 			
 			base.Init();
-			if( !extList ) {
-				game.EntityEvents.Added += PlayerSpawned;
-				game.EntityEvents.Removed += PlayerDespawned;
-			} else {
-				game.EntityEvents.CpeListInfoAdded += PlayerListInfoAdded;
-				game.EntityEvents.CpeListInfoRemoved += PlayerDespawned;
-				game.EntityEvents.CpeListInfoChanged += PlayerListInfoChanged;
-			}
+			game.EntityEvents.TabListEntryAdded += TabyEntryAdded;
+			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
+			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
 			overview.Dispose();
-			if( !extList ) {
-				game.EntityEvents.Added -= PlayerSpawned;
-				game.EntityEvents.Removed -= PlayerDespawned;
-			} else {
-				game.EntityEvents.CpeListInfoAdded -= PlayerListInfoAdded;
-				game.EntityEvents.CpeListInfoChanged -= PlayerListInfoChanged;
-				game.EntityEvents.CpeListInfoRemoved -= PlayerDespawned;
-			}
+			game.EntityEvents.TabListEntryAdded -= TabyEntryAdded;
+			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
+			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < EntityList.MaxCount; i++ ) {
-				PlayerInfo info = null;
-				if( extList ) {
-					CpeListInfo player = game.CpePlayersList[i];
-					if( player != null )
-						info = new PlayerInfo( player );
-				} else {
-					Player player = game.Players[i];
-					if( player != null )
-						info = new PlayerInfo( player );
-				}
-				if( info != null )
-					AddPlayerInfo( info, -1 );
+			TabListEntry[] entries = game.TabList.Entries;
+			for( int i = 0; i < entries.Length; i++ ) {
+				TabListEntry e = entries[i];
+				if( e != null )
+					AddPlayerInfo( new PlayerInfo( e ), -1 );
 			}
 		}
 		
@@ -143,30 +119,25 @@ namespace ClassicalSharp.Gui {
 			}
 		}
 		
-		void PlayerSpawned( object sender, IdEventArgs e ) {
-			AddPlayerInfo( new PlayerInfo( game.Players[e.Id] ), -1 );
+		void TabyEntryAdded( object sender, IdEventArgs e ) {
+			AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), -1 );
 			SortPlayerInfo();
 		}
 		
-		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
-			AddPlayerInfo( new PlayerInfo( game.CpePlayersList[e.Id] ), -1 );
-			SortPlayerInfo();
-		}
-		
-		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
+		void TabEntryChanged( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.Id != e.Id ) continue;
 				
 				Texture tex = textures[i];
 				api.DeleteTexture( ref tex );
-				AddPlayerInfo( new PlayerInfo( game.CpePlayersList[e.Id] ), i );
+				AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), i );
 				SortPlayerInfo();
 				return;
 			}
 		}
 		
-		void PlayerDespawned( object sender, IdEventArgs e ) {
+		void TabEntryRemoved( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( pInfo.Id == e.Id ) {

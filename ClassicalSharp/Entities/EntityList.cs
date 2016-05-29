@@ -10,7 +10,7 @@ namespace ClassicalSharp.Entities {
 	
 	public enum EntityShadow { None, SnapToBlock, Circle, CircleAll, }
 	
-	public class EntityList : IDisposable {
+	public sealed class EntityList : IDisposable {
 		
 		public const int MaxCount = 256;
 		public Player[] Players = new Player[MaxCount];

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 
 namespace ClassicalSharp.Gui {
@@ -24,7 +25,7 @@ namespace ClassicalSharp.Gui {
 			public byte NameId;
 			public bool IsGroup = false;
 			
-			public PlayerInfo( CpeListInfo p ) {
+			public PlayerInfo( TabListEntry p ) {
 				ListName = Utils.StripColours( p.ListName );
 				PlayerName = Utils.StripColours( p.PlayerName );
 				NameId = p.NameId;
@@ -60,33 +61,33 @@ namespace ClassicalSharp.Gui {
 		Font titleFont;
 		public override void Init() {
 			base.Init();
-			game.EntityEvents.CpeListInfoAdded += PlayerListInfoAdded;
-			game.EntityEvents.CpeListInfoRemoved += PlayerListInfoRemoved;
-			game.EntityEvents.CpeListInfoChanged += PlayerListInfoChanged;
+			game.EntityEvents.TabListEntryAdded += TabEntryAdded;
+			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
+			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.EntityEvents.CpeListInfoAdded -= PlayerListInfoAdded;
-			game.EntityEvents.CpeListInfoChanged -= PlayerListInfoChanged;
-			game.EntityEvents.CpeListInfoRemoved -= PlayerListInfoRemoved;
+			game.EntityEvents.TabListEntryAdded -= TabEntryAdded;
+			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
+			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
 			titleFont.Dispose();
 		}
 		
-		void PlayerListInfoChanged( object sender, IdEventArgs e ) {
+		void TabEntryChanged( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
 					api.DeleteTexture( ref tex );
-					AddPlayerInfo( game.CpePlayersList[e.Id], i );
+					AddPlayerInfo( game.TabList.Entries[e.Id], i );
 					SortPlayerInfo();
 					return;
 				}
 			}
 		}
 
-		void PlayerListInfoRemoved( object sender, IdEventArgs e ) {
+		void TabEntryRemoved( object sender, IdEventArgs e ) {
 			for( int i = 0; i < namesCount; i++ ) {
 				PlayerInfo pInfo = info[i];
 				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
@@ -96,17 +97,16 @@ namespace ClassicalSharp.Gui {
 			}
 		}
 
-		void PlayerListInfoAdded( object sender, IdEventArgs e ) {
-			AddPlayerInfo( game.CpePlayersList[e.Id], -1 );
+		void TabEntryAdded( object sender, IdEventArgs e ) {
+			AddPlayerInfo( game.TabList.Entries[e.Id], -1 );
 			SortPlayerInfo();
 		}
 
 		protected override void CreateInitialPlayerInfo() {
-			for( int i = 0; i < game.CpePlayersList.Length; i++ ) {
-				CpeListInfo player = game.CpePlayersList[i];
-				if( player != null ) {
-					AddPlayerInfo( player, -1 );
-				}
+			TabListEntry[] entries = game.TabList.Entries;
+			for( int i = 0; i < entries.Length; i++ ) {
+				TabListEntry e = entries[i];
+				if( e != null ) AddPlayerInfo( e, -1 );
 			}
 		}
 		
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Gui {
 			return null;
 		}
 		
-		void AddPlayerInfo( CpeListInfo player, int index ) {
+		void AddPlayerInfo( TabListEntry player, int index ) {
 			DrawTextArgs args = new DrawTextArgs( player.ListName, font, true );
 			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );

@@ -73,7 +73,7 @@ namespace ClassicalSharp.Renderers {
 			RenderNormal( deltaTime );
 			game.MapBordersRenderer.Render( deltaTime );
 			RenderTranslucent( deltaTime );
-			game.Players.DrawShadows();
+			game.Entities.DrawShadows();
 		}
 		
 		

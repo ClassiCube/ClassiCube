@@ -17,7 +17,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		internal void Draw() {
-			EntityShadow mode = game.Players.ShadowMode;
+			EntityShadow mode = game.Entities.ShadowMode;
 			Vector3 Position = entity.Position;
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min( (int)Position.Y, game.World.Height - 1 );

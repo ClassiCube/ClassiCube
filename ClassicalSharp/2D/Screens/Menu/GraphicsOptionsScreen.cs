@@ -28,15 +28,15 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
 				Make2( 1, -50, "Names", OnWidgetClick,
-				     g => g.Players.NamesMode.ToString(),
+				     g => g.Entities.NamesMode.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
-				     	g.Players.NamesMode = (NameMode)raw;
+				     	g.Entities.NamesMode = (NameMode)raw;
 				     	Options.Set( OptionsKey.NamesMode, v ); } ),
 				
 				Make2( 1, 0, "Shadows", OnWidgetClick,
-				     g => g.Players.ShadowMode.ToString(),
+				     g => g.Entities.ShadowMode.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(EntityShadow), v );
-				     	g.Players.ShadowMode = (EntityShadow)raw;
+				     	g.Entities.ShadowMode = (EntityShadow)raw;
 				     	Options.Set( OptionsKey.EntityShadow, v ); } ),
 				
 				MakeBack( false, titleFont,

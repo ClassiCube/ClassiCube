@@ -151,7 +151,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleExtAddPlayerName() {
-			short nameId = reader.ReadInt16();
+			short id = reader.ReadInt16();
 			string playerName = Utils.StripColours( reader.ReadAsciiString() );
 			playerName = Utils.RemoveEndPlus( playerName );
 			string listName = reader.ReadAsciiString();
@@ -160,46 +160,44 @@ namespace ClassicalSharp.Network {
 			byte groupRank = reader.ReadUInt8();
 			
 			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if( nameId < 0 )
-				nameId += 256;
-			if( nameId >= 0 && nameId <= 255 )
-				AddCpeInfo( (byte)nameId, playerName, listName, groupName, groupRank );
+			if( id < 0 ) id += 256;
+			if( id >= 0 && id <= 255 )
+				AddTablistEntry( (byte)id, playerName, listName, groupName, groupRank );
 		}
 		
-		void AddCpeInfo( byte nameId, string playerName, string listName, string groupName, byte groupRank ) {
-			CpeListInfo oldInfo = game.CpePlayersList[nameId];
-			CpeListInfo info = new CpeListInfo( (byte)nameId, playerName, listName, groupName, groupRank );
-			game.CpePlayersList[nameId] = info;
+		void AddTablistEntry( byte id, string playerName, string listName, string groupName, byte groupRank ) {
+			TabListEntry oldInfo = game.TabList.Entries[id];
+			TabListEntry info = new TabListEntry( (byte)id, playerName, listName, groupName, groupRank );
+			game.TabList.Entries[id] = info;
 			
 			if( oldInfo != null ) {
-				// Only redraw the CPE player list info if something changed.
+				// Only redraw the tab list if something changed.
 				if( info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
 				   info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank ) {
-					game.EntityEvents.RaiseCpeListInfoChanged( (byte)nameId );
+					game.EntityEvents.RaiseTabListEntryChanged( id );
 				}
 			} else {
-				game.EntityEvents.RaiseCpeListInfoAdded( (byte)nameId );
+				game.EntityEvents.RaiseTabEntryAdded( id );
 			}
 		}
 		
 		internal void HandleExtAddEntity() {
-			byte entityId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			displayName = Utils.RemoveEndPlus( displayName );
 			string skinName = reader.ReadAsciiString();
 			skinName = Utils.RemoveEndPlus( skinName );
-			AddEntity( entityId, displayName, skinName, false );
+			AddEntity( id, displayName, skinName, false );
 		}
 		
 		internal void HandleExtRemovePlayerName() {
-			short nameId = reader.ReadInt16();
+			short id = reader.ReadInt16();
 			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if( nameId < 0 )
-				nameId += 256;
+			if( id < 0 ) id += 256;
 			
-			if( nameId >= 0 && nameId <= 255 ) {
-				game.EntityEvents.RaiseCpeListInfoRemoved( (byte)nameId );
-				game.CpePlayersList[nameId] = null;
+			if( id >= 0 && id <= 255 ) {
+				game.EntityEvents.RaiseTabEntryRemoved( (byte)id );
+				game.TabList.Entries[id] = null;
 			}
 		}
 		
@@ -273,7 +271,7 @@ namespace ClassicalSharp.Network {
 		internal void HandleChangeModel() {
 			byte playerId = reader.ReadUInt8();
 			string modelName = reader.ReadAsciiString().ToLowerInvariant();
-			Player player = game.Players[playerId];
+			Player player = game.Entities[playerId];
 			if( player != null ) player.SetModel( modelName );
 		}
 		

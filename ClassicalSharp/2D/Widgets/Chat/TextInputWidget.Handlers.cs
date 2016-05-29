@@ -57,14 +57,11 @@ namespace ClassicalSharp.Gui {
 			List<string> matches = new List<string>();
 			game.Chat.Add( null, MessageType.ClientStatus5 );
 			
-			bool extList = game.Network.UsingExtPlayerList;
-			CpeListInfo[] info = game.CpePlayersList;
-			Player[] players = game.Players.Players;
+			TabListEntry[] entries = game.TabList.Entries;
 			for( int i = 0; i < EntityList.MaxCount; i++ ) {
-				if( extList && info[i] == null ) continue;
-				if( !extList && players[i] == null ) continue;
+				if( entries[i] == null ) continue;
 				
-				string rawName = extList ? info[i].PlayerName : players[i].DisplayName;
+				string rawName = entries[i].PlayerName;
 				string name = Utils.StripColours( rawName );
 				if( name.StartsWith( part, StringComparison.OrdinalIgnoreCase ) )
 					matches.Add( name );

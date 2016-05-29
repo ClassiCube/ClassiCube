@@ -4,7 +4,7 @@ using System;
 namespace ClassicalSharp.Events {
 	
 	/// <summary> Contains events related to the spawning/despawning of entities, 
-	/// and the creation/removal of CPE player list entries. </summary>
+	/// and the creation/removal of tab list entries. </summary>
 	public sealed class EntityEvents : OtherEvents {
 		
 		IdEventArgs idArgs = new IdEventArgs();
@@ -17,17 +17,17 @@ namespace ClassicalSharp.Events {
 		public event EventHandler<IdEventArgs> Removed;
 		internal void RaiseRemoved( byte id ) { idArgs.Id = id; Raise( Removed, idArgs ); }
 		
-		/// <summary> Raised when a new CPE player list entry is created. </summary>
-		public event EventHandler<IdEventArgs> CpeListInfoAdded;
-		internal void RaiseCpeListInfoAdded( byte id ) { idArgs.Id = id; Raise( CpeListInfoAdded, idArgs ); }
+		/// <summary> Raised when a tab list entry is created. </summary>
+		public event EventHandler<IdEventArgs> TabListEntryAdded;
+		internal void RaiseTabEntryAdded( byte id ) { idArgs.Id = id; Raise( TabListEntryAdded, idArgs ); }
 		
-		/// <summary> Raised when a CPE player list entry is modified. </summary>
-		public event EventHandler<IdEventArgs> CpeListInfoChanged;
-		internal void RaiseCpeListInfoChanged( byte id ) { idArgs.Id = id; Raise( CpeListInfoChanged, idArgs ); }
+		/// <summary> Raised when a tab list entry is modified. </summary>
+		public event EventHandler<IdEventArgs> TabListEntryChanged;
+		internal void RaiseTabListEntryChanged( byte id ) { idArgs.Id = id; Raise( TabListEntryChanged, idArgs ); }
 		
-		/// <summary> Raised when a CPE player list entry is removed. </summary>
-		public event EventHandler<IdEventArgs> CpeListInfoRemoved;
-		internal void RaiseCpeListInfoRemoved( byte id ) { idArgs.Id = id; Raise( CpeListInfoRemoved, idArgs ); }
+		/// <summary> Raised when a tab list entry is removed. </summary>
+		public event EventHandler<IdEventArgs> TabListEntryRemoved;
+		internal void RaiseTabEntryRemoved( byte id ) { idArgs.Id = id; Raise( TabListEntryRemoved, idArgs ); }
 	}
 	
 	public sealed class IdEventArgs : EventArgs {

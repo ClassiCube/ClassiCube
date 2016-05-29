@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			
 			if( game.Network.UsingPlayerClick && !game.ActiveScreen.HandlesAllInput ) {
-				byte targetId = game.Players.GetClosetPlayer( game.LocalPlayer );
+				byte targetId = game.Entities.GetClosetPlayer( game.LocalPlayer );
 				input.ButtonStateChanged( MouseButton.Left, left, targetId );
 				input.ButtonStateChanged( MouseButton.Right, right, targetId );
 				input.ButtonStateChanged( MouseButton.Middle, middle, targetId );
@@ -145,7 +145,7 @@ namespace ClassicalSharp {
 			                                      pos + game.BlockInfo.MaxBB[newType] );
 			
 			for( int id = 0; id < 255; id++ ) {
-				Player player = game.Players[id];
+				Player player = game.Entities[id];
 				if( player == null ) continue;
 				AABB bounds = player.CollisionBounds;
 				bounds.Min.Y += 1/32f; // when player is exactly standing on top of ground

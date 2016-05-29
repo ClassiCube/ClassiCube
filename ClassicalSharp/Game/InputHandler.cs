@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 				picking.lastClick = DateTime.UtcNow;
 			
 			if( game.Network.UsingPlayerClick ) {
-				byte targetId = game.Players.GetClosetPlayer( game.LocalPlayer );
+				byte targetId = game.Entities.GetClosetPlayer( game.LocalPlayer );
 				ButtonStateChanged( MouseButton.Left, false, targetId );
 				ButtonStateChanged( MouseButton.Right, false, targetId );
 				ButtonStateChanged( MouseButton.Middle, false, targetId );
@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
 			if( !game.ActiveScreen.HandlesMouseUp( e.X, e.Y, e.Button ) ) {
 				if( game.Network.UsingPlayerClick && e.Button <= MouseButton.Middle ) {
-					byte targetId = game.Players.GetClosetPlayer( game.LocalPlayer );
+					byte targetId = game.Entities.GetClosetPlayer( game.LocalPlayer );
 					ButtonStateChanged( e.Button, false, targetId );
 				}
 			}
