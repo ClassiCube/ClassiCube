@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		static readonly Vector3 centre = new Vector3( 0.5f, 0, 0.5f );
 		internal void RecalculateBB( int block, FastBitmap fastBmp ) {
 			int elemSize = fastBmp.Width / 16;
-			int texId = GetTextureLoc( (byte)block, Side.Top );
+			int texId = GetTextureLoc( (byte)block, Side.Right );
 			int texX = texId & 0x0F, texY = texId >> 4;
 			
 			float topY = GetSpriteBB_TopY( elemSize, texX, texY, fastBmp );
