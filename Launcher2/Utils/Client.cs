@@ -29,29 +29,39 @@ namespace Launcher {
 		
 		static bool StartImpl( ClientStartData data, bool classicubeSkins,
 		                      string args, ref bool shouldExit ) {
-			Process process = null;
 			string path = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			if( !File.Exists( path ) )
 				return false;
 			
 			CheckSettings( data, classicubeSkins, out shouldExit );
+			try {
+				StartProcess( path, args );
+			} catch( Win32Exception ex ) {
+				if( (uint)ex.ErrorCode != 0x80004005 )
+					throw; // HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassicalSharp.exe'
+				shouldExit = false;
+				return false;
+			}
+			return true;
+		}
+		
+		static void StartProcess( string path, string args ) {
 			if( Configuration.RunningOnMono ) {
 				// We also need to handle the case of running Mono through wine
 				if( Configuration.RunningOnWindows ) {
 					try {
-						process = Process.Start( "mono", "\"" + path + "\" " + args );
+						Process.Start( "mono", "\"" + path + "\" " + args );
 					} catch( Win32Exception ex ) {
 						if( !((uint)ex.ErrorCode == 0x80070002 || (uint)ex.ErrorCode == 0x80004005) )
 							throw; // File not found HRESULT, HRESULT thrown when running on wine
-						process = Process.Start( path, args );
+						Process.Start( path, args );
 					}
 				} else {
-					process = Process.Start( "mono", "\"" + path + "\" " + args );
+					Process.Start( "mono", "\"" + path + "\" " + args );
 				}			
 			} else {
-				process = Process.Start( path, args );
+				Process.Start( path, args );
 			}
-			return true;
 		}
 		
 		internal static void CheckSettings( ClientStartData data, bool classiCubeSkins, out bool shouldExit ) {
