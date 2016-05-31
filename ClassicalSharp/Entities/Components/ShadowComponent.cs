@@ -15,6 +15,7 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			this.entity = entity;
 		}
+		float radius = 7f;
 		
 		internal void Draw() {
 			EntityShadow mode = game.Entities.ShadowMode;
@@ -22,6 +23,7 @@ namespace ClassicalSharp.Entities {
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min( (int)Position.Y, game.World.Height - 1 );
 			int index = 0, vb = 0;
+			radius = 7f * Math.Min( entity.ModelScale, 1 );
 			
 			VertexP3fT2fC4b[] verts = null;
 			int posCount = 0, dataCount = 0;
@@ -41,19 +43,19 @@ namespace ClassicalSharp.Entities {
 			} else {
 				vb = game.ModelCache.vb; verts = game.ModelCache.vertices;
 				
-				float x = posX - 7/16f, z = posZ - 7/16f;
+				float x = posX - radius/16f, z = posZ - radius/16f;
 				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
 					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				x = Math.Max( posX - 7/16f, Utils.Floor( posX + 7/16f ) );
+				x = Math.Max( posX - radius/16f, Utils.Floor( posX + radius/16f ) );
 				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
 					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				z = Math.Max( posZ - 7/16f, Utils.Floor( posZ + 7/16f ) );
+				z = Math.Max( posZ - radius/16f, Utils.Floor( posZ + radius/16f ) );
 				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
 					DrawCircle( verts, ref index, data, dataCount, x, z );
 				
-				x = posX - 7/16f;
+				x = posX - radius/16f;
 				if( GetBlocks( coords, ref posCount, x, z, posY, data, ref dataCount ) && data[0].A > 0 )
 					DrawCircle( verts, ref index, data, dataCount, x, z );
 			}
@@ -96,20 +98,19 @@ namespace ClassicalSharp.Entities {
 		}
 		void DrawCoords( VertexP3fT2fC4b[] verts, ref int index, ShadowData data, 
 		                float x1, float z1, float x2, float z2 ) {
-			Vector3 centre = entity.Position;
-			BlockInfo info = game.BlockInfo;
+			Vector3 cen = entity.Position;
 			
 			if( lequal( x2, x1 ) || lequal( z2, z1 ) ) return;
-			float u1 = (x1 - centre.X) * 16/14f + 0.5f;
-			float v1 = (z1 - centre.Z) * 16/14f + 0.5f;
-			float u2 = (x2 - centre.X) * 16/14f + 0.5f;
-			float v2 = (z2 - centre.Z) * 16/14f + 0.5f;
+			float u1 = (x1 - cen.X) * 16/(radius * 2) + 0.5f;
+			float v1 = (z1 - cen.Z) * 16/(radius * 2) + 0.5f;
+			float u2 = (x2 - cen.X) * 16/(radius * 2) + 0.5f;
+			float v2 = (z2 - cen.Z) * 16/(radius * 2) + 0.5f;
 			if( u2 <= 0 || v2 <= 0 || u1 >= 1 || v1 >= 1 ) return;
 			
-			x1 = Math.Max( x1, centre.X - 7/16f ); u1 = Math.Max( u1, 0 );
-			z1 = Math.Max( z1, centre.Z - 7/16f ); v1 = Math.Max( v1, 0 );
-			x2 = Math.Min( x2, centre.X + 7/16f ); u2 = Math.Min( u2, 1 );
-			z2 = Math.Min( z2, centre.Z + 7/16f ); v2 = Math.Min( v2, 1 );
+			x1 = Math.Max( x1, cen.X - radius/16f ); u1 = Math.Max( u1, 0 );
+			z1 = Math.Max( z1, cen.Z - radius/16f ); v1 = Math.Max( v1, 0 );
+			x2 = Math.Min( x2, cen.X + radius/16f ); u2 = Math.Min( u2, 1 );
+			z2 = Math.Min( z2, cen.Z + radius/16f ); v2 = Math.Min( v2, 1 );
 			
 			FastColour col = FastColour.White; col.A = data.A;
 			verts[index++] = new VertexP3fT2fC4b( x1, data.Y, z1, u1, v1, col );
