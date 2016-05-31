@@ -14,7 +14,7 @@ namespace ClassicalSharp.Generator {
 		int waterLevel, oneY;
 		byte[] blocks;
 		short[] heightmap;
-		Random rnd;
+		JavaRandom rnd;
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Generator {
 			oneY = width * length;
 			waterLevel = height / 2;
 			blocks = new byte[width * height * length];
-			rnd = new Random( seed );
+			rnd = new JavaRandom( seed );
 			
 			CreateHeightmap();			
 			CreateStrata();
@@ -108,10 +108,10 @@ namespace ClassicalSharp.Generator {
 				double caveY = rnd.Next( height );
 				double caveZ = rnd.Next( length );
 				
-				int caveLen = (int)(rnd.NextDouble() * rnd.NextDouble() * 200);
-				double theta = rnd.NextDouble() * 2 * Math.PI, deltaTheta = 0;
-				double phi = rnd.NextDouble() * 2 * Math.PI, deltaPhi = 0;
-				double caveRadius = rnd.NextDouble() * rnd.NextDouble();
+				int caveLen = (int)(rnd.NextFloat() * rnd.NextFloat() * 200);
+				double theta = rnd.NextFloat() * 2 * Math.PI, deltaTheta = 0;
+				double phi = rnd.NextFloat() * 2 * Math.PI, deltaPhi = 0;
+				double caveRadius = rnd.NextFloat() * rnd.NextFloat();
 				
 				for( int j = 0; j < caveLen; j++ ) {
 					caveX += Math.Sin( theta ) * Math.Cos( phi );
@@ -119,10 +119,10 @@ namespace ClassicalSharp.Generator {
 					caveZ += Math.Sin( phi );
 					
 					theta = theta + deltaTheta * 0.2;
-					deltaTheta = deltaTheta * 0.9 + rnd.NextDouble() - rnd.NextDouble();
+					deltaTheta = deltaTheta * 0.9 + rnd.NextFloat() - rnd.NextFloat();
 					phi = phi / 2 + deltaPhi / 4;
-					deltaPhi = deltaPhi * 0.75 + rnd.NextDouble() - rnd.NextDouble();
-					if( rnd.NextDouble() < 0.25 ) continue;
+					deltaPhi = deltaPhi * 0.75 + rnd.NextFloat() - rnd.NextFloat();
+					if( rnd.NextFloat() < 0.25 ) continue;
 					
 					int cenX = (int)(caveX + (rnd.Next( 4 ) - 2) * 0.2);
 					int cenY = (int)(caveY + (rnd.Next( 4 ) - 2) * 0.2);
@@ -145,9 +145,9 @@ namespace ClassicalSharp.Generator {
 				double veinY = rnd.Next( height );
 				double veinZ = rnd.Next( length );
 				
-				int veinLen = (int)(rnd.NextDouble() * rnd.NextDouble() * 75 * abundance);
-				double theta = rnd.NextDouble() * 2 * Math.PI, deltaTheta = 0;
-				double phi = rnd.NextDouble() * 2 * Math.PI, deltaPhi = 0;
+				int veinLen = (int)(rnd.NextFloat() * rnd.NextFloat() * 75 * abundance);
+				double theta = rnd.NextFloat() * 2 * Math.PI, deltaTheta = 0;
+				double phi = rnd.NextFloat() * 2 * Math.PI, deltaPhi = 0;
 				
 				for( int j = 0; j < veinLen; j++ ) {
 					veinX += Math.Sin( theta ) * Math.Cos( phi );
@@ -155,9 +155,9 @@ namespace ClassicalSharp.Generator {
 					veinZ += Math.Sin( phi );
 					
 					theta = deltaTheta * 0.2;
-					deltaTheta = deltaTheta * 0.9 + rnd.NextDouble() - rnd.NextDouble();
+					deltaTheta = deltaTheta * 0.9 + rnd.NextFloat() - rnd.NextFloat();
 					phi = phi / 2 + deltaPhi / 4;
-					deltaPhi = deltaPhi * 0.9 + rnd.NextDouble() - rnd.NextDouble();
+					deltaPhi = deltaPhi * 0.9 + rnd.NextFloat() - rnd.NextFloat();
 					
 					float radius = abundance * (float)Math.Sin( j * Math.PI / veinLen ) + 1;
 					FillOblateSpheroid( (int)veinX, (int)veinY, (int)veinZ, radius, block );
@@ -195,7 +195,7 @@ namespace ClassicalSharp.Generator {
 			for( int i = 0; i < numSources; i++ ) {
 				CurrentProgress = (float)i / numSources;
 				int x = rnd.Next( width ), z = rnd.Next( length );
-				int y = waterLevel - rnd.Next( 1, 3 );
+				int y = waterLevel - (rnd.Next( 2 ) + 1);
 				FloodFill( (y * length + z) * width + x, (byte)Block.Water );
 			}
 		}
@@ -207,7 +207,7 @@ namespace ClassicalSharp.Generator {
 			for( int i = 0; i < numSources; i++ ) {
 				CurrentProgress = (float)i / numSources;
 				int x = rnd.Next( width ), z = rnd.Next( length );
-				int y = (int)((waterLevel - 3) * rnd.NextDouble() * rnd.NextDouble());
+				int y = (int)((waterLevel - 3) * rnd.NextFloat() * rnd.NextFloat());
 				FloodFill( (y * length + z) * width + x, (byte)Block.Lava );
 			}
 		}
@@ -244,7 +244,7 @@ namespace ClassicalSharp.Generator {
 			
 			for( int i = 0; i < numPatches; i++ ) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)((byte)Block.Dandelion + rnd.Next( 0, 2 ) );
+				byte type = (byte)((byte)Block.Dandelion + rnd.Next( 2 ) );
 				int patchX = rnd.Next( width ), patchZ = rnd.Next( length );
 				for( int j = 0; j < 10; j++ ) {
 					int flowerX = patchX, flowerZ = patchZ;
@@ -269,7 +269,7 @@ namespace ClassicalSharp.Generator {
 			
 			for( int i = 0; i < numPatches; i++ ) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)((byte)Block.BrownMushroom + rnd.Next( 0, 2 ) );
+				byte type = (byte)((byte)Block.BrownMushroom + rnd.Next( 2 ) );
 				int patchX = rnd.Next( width );
 				int patchY = rnd.Next( height );
 				int patchZ = rnd.Next( length );
@@ -307,7 +307,7 @@ namespace ClassicalSharp.Generator {
 						treeX += rnd.Next( 6 ) - rnd.Next( 6 );
 						treeZ += rnd.Next( 6 ) - rnd.Next( 6 );
 						if( treeX < 0 || treeZ < 0 || treeX >= width ||
-						   treeZ >= length || rnd.NextDouble() >= 0.25 )
+						   treeZ >= length || rnd.NextFloat() >= 0.25 )
 							continue;
 						
 						int treeY = heightmap[treeZ * width + treeX] + 1;
@@ -359,7 +359,7 @@ namespace ClassicalSharp.Generator {
 				index = (y * length + z) * width + x;
 				
 				if( Math.Abs( xx ) == 2 && Math.Abs( zz ) == 2 ) {
-					if( rnd.NextDouble() >= 0.5 )
+					if( rnd.NextFloat() >= 0.5 )
 						blocks[index] = (byte)Block.Leaves;
 				} else {
 					blocks[index] = (byte)Block.Leaves;
@@ -377,7 +377,7 @@ namespace ClassicalSharp.Generator {
 
 				if( xx == 0 || zz == 0 ) {
 					blocks[index] = (byte)Block.Leaves;
-				} else if( y == bottomY && rnd.NextDouble() >= 0.5 ) {
+				} else if( y == bottomY && rnd.NextFloat() >= 0.5 ) {
 					blocks[index] = (byte)Block.Leaves;
 				}
 			}

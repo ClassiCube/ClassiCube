@@ -52,7 +52,7 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		sealed class FastIntStack {		
+		sealed class FastIntStack {
 			public int[] Values;
 			public int Size;
 			
@@ -73,6 +73,41 @@ namespace ClassicalSharp.Generator {
 				}
 				Values[Size++] = item;
 			}
+		}
+	}
+	
+	// Based on https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
+	public sealed class JavaRandom {
+		
+		long seed;
+		const long value = 0x5DEECE66DL;
+		const long mask = (1L << 48) - 1;
+		
+		public JavaRandom( int seed ) {
+			this.seed = (seed ^ value) & mask;
+		}
+		
+		int Raw( int bits ) {
+			seed = (seed * value + 0xBL) & mask;
+			return (int)((ulong)seed >> (48 - bits));
+		}
+		
+		public int Next() { return Raw( 32 ); }
+		
+		public int Next( int n ) {
+			if( (n & -n) == n )  // i.e., n is a power of 2
+				return (int)((n * (long)Raw( 31 )) >> 31);
+
+			int bits, val;
+			do {
+				bits = Raw( 31 );
+				val = bits % n;
+			} while( bits - val + (n - 1) < 0 );
+			return val;
+		}
+		
+		public float NextFloat() {
+			return Raw( 24 ) / ((float)(1 << 24));
 		}
 	}
 }
