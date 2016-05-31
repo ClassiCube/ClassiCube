@@ -7,7 +7,8 @@ namespace ClassicalSharp.Gui {
 	public sealed class ClassicPlayerListWidget : NormalPlayerListWidget {
 		
 		ChatTextWidget overview;
-		static FastColour lightTableCol = new FastColour( 20, 20, 20, 180 );
+		protected static FastColour topCol = new FastColour( 0, 0, 0, 180 );
+		protected static FastColour bottomCol = new FastColour( 50, 50, 50, 205 );
 		public ClassicPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
@@ -31,7 +32,7 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = false;
 			int offset = overview.Height + 10;
 			int height = Math.Max( 300, Height );
-			api.Draw2DQuad( X, Y - offset, Width, height, lightTableCol );
+			api.Draw2DQuad( X, Y - offset, Width, height, topCol, bottomCol );
 			
 			api.Texturing = true;
 			overview.MoveTo( game.Width / 2 - overview.Width / 2,

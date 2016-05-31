@@ -94,6 +94,8 @@ namespace ClassicalSharp.Generator {
 		
 		public int Next() { return Raw( 32 ); }
 		
+		public int Next( int min, int max ) { return min + Next( max - min ); }
+		
 		public int Next( int n ) {
 			if( (n & -n) == n )  // i.e., n is a power of 2
 				return (int)((n * (long)Raw( 31 )) >> 31);

@@ -195,7 +195,7 @@ namespace ClassicalSharp.Generator {
 			for( int i = 0; i < numSources; i++ ) {
 				CurrentProgress = (float)i / numSources;
 				int x = rnd.Next( width ), z = rnd.Next( length );
-				int y = waterLevel - (rnd.Next( 2 ) + 1);
+				int y = waterLevel - rnd.Next( 1, 3 );
 				FloodFill( (y * length + z) * width + x, (byte)Block.Water );
 			}
 		}

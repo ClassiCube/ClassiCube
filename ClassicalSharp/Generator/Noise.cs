@@ -20,7 +20,7 @@ namespace ClassicalSharp.Generator {
 				p[i] = (byte)i;
 			
 			for( int i = 0; i < 256; i++ ) {
-				int j = (rnd.Next( 256 - i ) + i); // [i, 256)
+				int j = rnd.Next( i, 256 );
 				byte temp = p[i]; p[i] = p[j]; p[j] = temp;
 			}
 			for( int i = 0; i < 256; i++ )
