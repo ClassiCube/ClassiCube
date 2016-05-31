@@ -55,7 +55,6 @@ namespace ClassicalSharp.Entities {
 			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
 		}
 		
-		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
 		public override void Tick( double delta ) {
 			if( game.World.IsNotLoaded ) return;
 			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks 

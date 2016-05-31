@@ -6,7 +6,6 @@ namespace ClassicalSharp.Gui {
 	
 	public sealed class ClassicPlayerListWidget : NormalPlayerListWidget {
 		
-		int elemHeight;
 		ChatTextWidget overview;
 		static FastColour lightTableCol = new FastColour( 20, 20, 20, 180 );
 		public ClassicPlayerListWidget( Game game, Font font ) : base( game, font ) {
@@ -49,12 +48,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			DrawTextArgs measureArgs = new DrawTextArgs( "ABC", font, false );
-			
-			elemHeight = game.Drawer2D.MeasureChatSize( ref measureArgs ).Height;
 			overview = ChatTextWidget.Create( game, 0, 0, "Connected players:",
-			                                 Anchor.Centre, Anchor.Centre, font );
-			
+			                                 Anchor.Centre, Anchor.Centre, font );			
 			base.Init();
 		}
 		

@@ -297,7 +297,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void UpdateAltTextY() {
-			int blockSize = blockSize = (int)(23 * 2 * game.GuiHotbarScale);
+			int blockSize = (int)(23 * 2 * game.GuiHotbarScale);
 			int height = Math.Max( Height + YOffset, blockSize ) + YOffset;
 			altText.texture.Y1 = game.Height - (height + altText.texture.Height);
 			altText.Y = altText.texture.Y1;
