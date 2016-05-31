@@ -41,29 +41,29 @@ namespace Launcher.Gui.Views {
 			MakeLabelAt( "&fChoose game mode", titleFont, Anchor.Centre, Anchor.Centre, 0, -135 );
 			
 			nIndex = widgetIndex;
-			MakeButtonAt( "Normal", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
-			MakeLabelAt( "&eEnables custom blocks, env settings,",
+			MakeButtonAt( "Enhanced", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
+			MakeLabelAt( "&eEnables custom blocks, changing env",
 			             inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
-			MakeLabelAt( "&elonger messages, and more",
+			MakeLabelAt( "&esettings, longer messages, and more",
 			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 + 12 );
+
+			clHaxIndex = widgetIndex;
+			MakeButtonAt( "Classic +hax", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0 );
+			MakeLabelAt( "&eSame as Classic mode, except that",
+			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
+			MakeLabelAt( "&ehacks (noclip/fly/speed) are enabled",
+			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );	
 			
 			clIndex = widgetIndex;
-			MakeButtonAt( "Classic", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0 );
+			MakeButtonAt( "Classic", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72 );
 			MakeLabelAt( "&eOnly uses blocks and features from",
-			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
-			MakeLabelAt( "&ethe original minecraft classic",
-			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );
-			
-			clHaxIndex = widgetIndex;
-			MakeButtonAt( "Classic +hax", 145, 35, titleFont, Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72 );
-			MakeLabelAt( "&eSame as Classic mode, except that",
 			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 - 12 );
-			MakeLabelAt( "&ehacks (noclip/fly/speed) are enabled",
-			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );			
+			MakeLabelAt( "&ethe original minecraft classic",
+			            inputFont, Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );
 			
 			if( FirstTime ) {
 				backIndex = -1;
-				MakeLabelAt( "&eClick &fNormal &eif you are unsure which mode to choose.",
+				MakeLabelAt( "&eClick &fEnhanced &eif you are unsure which mode to choose.",
 				            inputFont, Anchor.Centre, Anchor.Centre, 0, 160 );
 			} else {
 				backIndex = widgetIndex;

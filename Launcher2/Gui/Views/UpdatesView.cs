@@ -4,8 +4,6 @@ using System.Drawing;
 using System.IO;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
-using Launcher.Updater;
-using OpenTK.Input;
 
 namespace Launcher.Gui.Views {
 	
