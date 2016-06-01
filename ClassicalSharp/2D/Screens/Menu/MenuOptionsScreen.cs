@@ -104,15 +104,13 @@ namespace ClassicalSharp.Gui {
 		
 		protected virtual void InputClosed() { }
 		
-		protected ButtonWidget Make( int dir, int y, string text, ClickHandler onClick,
-		                                   Func<Game, string> getter, Action<Game, string> setter ) {
+		protected ButtonWidget MakeTitle( int dir, int y, string text, ClickHandler onClick ) {
 			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
-			widget.GetValue = getter; widget.SetValue = setter;
 			return widget;
 		}
 		
-		protected ButtonWidget Make2( int dir, int y, string text, ClickHandler onClick,
+		protected ButtonWidget MakeOpt( int dir, int y, string text, ClickHandler onClick,
 		                                    Func<Game, string> getter, Action<Game, string> setter ) {
 			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, 
 			                                          text + ": " + getter( game ),

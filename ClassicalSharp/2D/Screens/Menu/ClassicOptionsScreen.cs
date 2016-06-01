@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui {
 				MakeBool( -1, -100, "Invert mouse", OptionsKey.InvertMouse,
 				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v ),
 				
-				Make2( -1, -50, "View distance", OnWidgetClick,
+				MakeOpt( -1, -50, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui {
 				MakeBool( 1, -50, "View bobbing", OptionsKey.ViewBobbing,
 				     OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v ),
 				
-				Make2( 1, 0, "FPS mode", OnWidgetClick,
+				MakeOpt( 1, 0, "FPS mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
 				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
 				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
@@ -65,10 +65,10 @@ namespace ClassicalSharp.Gui {
 		
 		Widget MakeControlsWidget() {
 			if( !game.ClassicHacks )
-				return Make( 0, 110, "Controls", LeftOnly(
-					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ), null, null );
-			return Make( 0, 110, "Controls", LeftOnly(
-				(g, w) => g.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) ) ), null, null );
+				return MakeTitle( 0, 110, "Controls", LeftOnly(
+					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ) );
+			return MakeTitle( 0, 110, "Controls", LeftOnly(
+				(g, w) => g.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) ) ) );
 		}
 		
 		void MakeValidators() {

@@ -19,44 +19,44 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {
 				// Column 1
-				Make2( -1, -150, "Clouds col", OnWidgetClick,
+				MakeOpt( -1, -150, "Clouds col", OnWidgetClick,
 				     g => g.World.Env.CloudsCol.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetCloudsColour( FastColour.Parse( v ) ) ),
 				
-				Make2( -1, -100, "Sky col", OnWidgetClick,
+				MakeOpt( -1, -100, "Sky col", OnWidgetClick,
 				     g => g.World.Env.SkyCol.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetSkyColour( FastColour.Parse( v ) ) ),
 				
-				Make2( -1, -50, "Fog col", OnWidgetClick,
+				MakeOpt( -1, -50, "Fog col", OnWidgetClick,
 				     g => g.World.Env.FogCol.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetFogColour( FastColour.Parse( v ) ) ),
 				
-				Make2( -1, 0, "Clouds speed", OnWidgetClick,
+				MakeOpt( -1, 0, "Clouds speed", OnWidgetClick,
 				     g => g.World.Env.CloudsSpeed.ToString( "F2" ),
 				     (g, v) => g.World.Env.SetCloudsSpeed( Single.Parse( v ) ) ),
 				
-				Make2( -1, 50, "Clouds height", OnWidgetClick,
+				MakeOpt( -1, 50, "Clouds height", OnWidgetClick,
 				     g => g.World.Env.CloudHeight.ToString(),
 				     (g, v) => g.World.Env.SetCloudsLevel( Int32.Parse( v ) ) ),
 				
 				// Column 2
-				Make2( 1, -150, "Sunlight col", OnWidgetClick,
+				MakeOpt( 1, -150, "Sunlight col", OnWidgetClick,
 				     g => g.World.Env.Sunlight.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetSunlight( FastColour.Parse( v ) ) ),
 				
-				Make2( 1, -100, "Shadow col", OnWidgetClick,
+				MakeOpt( 1, -100, "Shadow col", OnWidgetClick,
 				     g => g.World.Env.Shadowlight.ToRGBHexString(),
 				     (g, v) => g.World.Env.SetShadowlight( FastColour.Parse( v ) ) ),
 				
-				Make2( 1, -50, "Weather", OnWidgetClick,
+				MakeOpt( 1, -50, "Weather", OnWidgetClick,
 				     g => g.World.Env.Weather.ToString(),
 				     (g, v) => g.World.Env.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
 				
-				Make2( 1, 0, "Rain/Snow speed", OnWidgetClick,
+				MakeOpt( 1, 0, "Rain/Snow speed", OnWidgetClick,
 				     g => g.World.Env.WeatherSpeed.ToString( "F2" ),
 				     (g, v) => g.World.Env.SetWeatherSpeed( Single.Parse( v ) ) ),
 				
-				Make2( 1, 50, "Water level", OnWidgetClick,
+				MakeOpt( 1, 50, "Water level", OnWidgetClick,
 				     g => g.World.Env.EdgeHeight.ToString(),
 				     (g, v) => g.World.Env.SetEdgeLevel( Int32.Parse( v ) ) ),
 				

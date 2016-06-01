@@ -17,7 +17,7 @@ namespace ClassicalSharp.Gui {
 			widgets = new Widget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
-					Make2( -1, -100, "Click distance", OnWidgetClick,
+					MakeOpt( -1, -100, "Click distance", OnWidgetClick,
 					     g => g.LocalPlayer.ReachDistance.ToString(),
 					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
 				
@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui {
 				MakeBool( 1, 0, "Invert mouse", OptionsKey.InvertMouse,
 				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v ),
 				
-				Make2( 1, 50, "Mouse sensitivity", OnWidgetClick,
+				MakeOpt( 1, 50, "Mouse sensitivity", OnWidgetClick,
 				     g => g.MouseSensitivity.ToString(),
 				     (g, v) => { g.MouseSensitivity = Int32.Parse( v );
 				     	Options.Set( OptionsKey.Sensitivity, v ); } ),

@@ -102,7 +102,6 @@
     <Compile Include="Updater\Scripts.cs" />
     <Compile Include="Updater\Applier.cs" />
     <Compile Include="Utils\Client.cs" />
-    <Compile Include="Utils\ClientStartData.cs" />
     <Compile Include="Utils\JSON.cs" />
     <Compile Include="Utils\LauncherSkin.cs" />
     <Compile Include="Utils\Secure.cs" />

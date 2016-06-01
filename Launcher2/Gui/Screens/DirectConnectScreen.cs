@@ -112,10 +112,10 @@ namespace Launcher.Gui.Screens {
 			if( !Options.Load() )
 				return;
 			
-			Options.Set( "launcher-dc-username", data.RealUsername );
+			Options.Set( "launcher-dc-username", data.Username );
 			Options.Set( "launcher-dc-ip", data.Ip );
 			Options.Set( "launcher-dc-port", data.Port );
-			Options.Set( "launcher-dc-mppass", Secure.Encode( data.Mppass, data.RealUsername ) );
+			Options.Set( "launcher-dc-mppass", Secure.Encode( data.Mppass, data.Username ) );
 			Options.Set( "launcher-dc-ccskins", ccSkins );
 			Options.Save();
 		}

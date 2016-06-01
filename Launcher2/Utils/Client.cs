@@ -64,7 +64,7 @@ namespace Launcher {
 			}
 		}
 		
-		internal static void CheckSettings( ClientStartData data, bool classiCubeSkins, out bool shouldExit ) {
+		internal static void CheckSettings( ClientStartData data, bool ccSkins, out bool shouldExit ) {
 			shouldExit = false;
 			// Make sure if the client has changed some settings in the meantime, we keep the changes
 			if( !Options.Load() )
@@ -72,12 +72,23 @@ namespace Launcher {
 			shouldExit = Options.GetBool( OptionsKey.AutoCloseLauncher, false );
 			if( data == null ) return;
 			
-			Options.Set( "launcher-username", data.RealUsername );
+			Options.Set( "launcher-username", data.Username );
 			Options.Set( "launcher-ip", data.Ip );
 			Options.Set( "launcher-port", data.Port );
-			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.RealUsername ) );
-			Options.Set( "launcher-ccskins", classiCubeSkins );		
+			Options.Set( "launcher-mppass", Secure.Encode( data.Mppass, data.Username ) );
+			Options.Set( "launcher-ccskins", ccSkins );		
 			Options.Save();
+		}
+	}
+	
+	public class ClientStartData {
+		public string Username, Mppass, Ip, Port;
+		
+		public ClientStartData( string user, string mppass, string ip, string port ) {
+			Username = user;
+			Mppass = mppass;
+			Ip = ip;
+			Port = port;
 		}
 	}
 }

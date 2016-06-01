@@ -70,6 +70,7 @@ namespace ClassicalSharp.Gui {
 			string flags = HotkeyListScreen.MakeFlagsString( curHotkey.Flags );
 			if( curHotkey.Text == null ) curHotkey.Text = "";
 			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
+			bool existed = origHotkey.BaseKey != Key.Unknown;
 			
 			widgets = new Widget[] {
 				Make( 0, -150, "Key: " + curHotkey.BaseKey,
@@ -84,9 +85,9 @@ namespace ClassicalSharp.Gui {
 				Make( -100, 10, "Input stays open: " + staysOpen,
 				     301, 40, titleFont, LeaveOpenClick ),
 				
-				Make( 0, 80, "Save changes",
+				Make( 0, 80, existed ? "Save changes" : "Add hotkey",
 				     301, 40, titleFont, SaveChangesClick ),
-				Make( 0, 130, "Remove hotkey",
+				Make( 0, 130, existed ? "Remove hotkey" : "Cancel",
 				     301, 40, titleFont, RemoveHotkeyClick ),
 				
 				MakeBack( false, titleFont,
