@@ -24,23 +24,14 @@ namespace ClassicalSharp.Entities {
 			KeyMap keys = game.InputHandler.Keys;
 			
 			if( key == keys[KeyBinding.Respawn] && Hacks.CanRespawn ) {
-				Vector3 spawn = p.Spawn;
-				if( game.World.IsValidPos( Vector3I.Floor( spawn ) ) )
-					FindHighestFree( ref spawn );
-				
-				spawn.Y += 1/16f;
-				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
-				entity.SetLocation( update, false );
+				DoRespawn();
 			} else if( key == keys[KeyBinding.SetSpawn] && Hacks.CanRespawn ) {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor( p.Spawn.X ) + 0.5f;
 				p.Spawn.Z = Utils.Floor( p.Spawn.Z ) + 0.5f;
 				p.SpawnYaw = entity.YawDegrees;
-				p.SpawnPitch = entity.PitchDegrees;
-				
-				Vector3 spawn = p.Spawn; spawn.Y += 1/16f;
-				LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
-				entity.SetLocation( update, false );
+				p.SpawnPitch = entity.PitchDegrees;				
+				DoRespawn();
 			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {
 				Hacks.Flying = !Hacks.Flying;
 			} else if( key == keys[KeyBinding.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
@@ -60,13 +51,24 @@ namespace ClassicalSharp.Entities {
 			return true;
 		}
 		
+		void DoRespawn() {
+			LocalPlayer p = (LocalPlayer)entity;
+			Vector3 spawn = p.Spawn;
+			if( game.World.IsValidPos( Vector3I.Floor( spawn ) ) )
+				FindHighestFree( ref spawn );
+			
+			spawn.Y += 1/16f;
+			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
+			entity.SetLocation( update, false );
+		}
+		
 		void FindHighestFree( ref Vector3 spawn ) {
 			BlockInfo info = game.BlockInfo;
 			Vector3 size = entity.CollisionSize;
 			AABB bb = AABB.Make( spawn, size );
 			
 			Vector3I P = Vector3I.Floor( spawn );
-			int bbMax = Utils.Floor( size.Y );			
+			int bbMax = Utils.Floor( size.Y );
 			int minX = Utils.Floor( P.X - size.X / 2 ), maxX = Utils.Floor( P.X + size.X / 2 );
 			int minZ = Utils.Floor( P.Z - size.Z / 2 ), maxZ = Utils.Floor( P.Z + size.Z / 2 );
 			
@@ -75,7 +77,7 @@ namespace ClassicalSharp.Entities {
 				bool intersectAny = false;
 				for( int yy = 0; yy <= bbMax; yy++ )
 					for( int z = minZ; z <= maxZ; z++ )
-						for ( int x = minX; x <= maxX; x++ )							
+						for ( int x = minX; x <= maxX; x++ )
 				{
 					Vector3I coords = new Vector3I( x, y + yy, z );
 					byte block = collisions.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
