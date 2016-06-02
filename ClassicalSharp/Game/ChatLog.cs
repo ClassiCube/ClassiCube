@@ -76,16 +76,38 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
-			if( writer != null ) {
-				writer.Dispose();
-				writer = null;
+			if( writer == null ) return;
+			writer.Dispose();
+			writer = null;
+		}
+		
+		#region Chat logger
+		string logName;
+		
+		public void SetLogName( string name ) {
+			if( logName != null ) return;
+			StringBuffer buffer = new StringBuffer( name.Length );
+			int len = 0;
+			
+			for( int i = 0; i < name.Length; i++ ) {
+				if( Allowed( name[i] ) )
+					buffer.Append( ref len, name[i] );
 			}
+			logName = buffer.ToString();
+		}
+		
+		static bool Allowed( char c ) {
+			return c == '[' || c == ']' || c == '(' || c == ')' ||
+				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || 
+				(c >= 'A' && c <= 'Z');
 		}
 		
 		DateTime last;
 		StreamWriter writer = null;
 		void LogChatToFile( string text ) {
+			if( logName == null ) return;
 			DateTime now = DateTime.Now;
+			
 			if( now.Day != last.Day || now.Month != last.Month || now.Year != last.Year ) {
 				Dispose();
 				OpenChatFile( now );
@@ -97,11 +119,8 @@ namespace ClassicalSharp {
 			if( 32 + text.Length > logBuffer.capacity )
 				logBuffer = new StringBuffer( 32 + text.Length );
 			int index = 0;
-			logBuffer.Clear() // [yyyy-MM-dd HH:mm:ss] text
-				.Append( ref index, '[' ).AppendPaddedNum( ref index, 4, now.Year )
-				.Append( ref index, '-' ).AppendPaddedNum( ref index, 2, now.Month )
-				.Append( ref index, '-' ).AppendPaddedNum( ref index, 2, now.Day )
-				.Append( ref index, ' ' ).AppendPaddedNum( ref index, 2, now.Hour )
+			logBuffer.Clear() // [HH:mm:ss] text
+				.Append( ref index, '[' ).AppendPaddedNum( ref index, 2, now.Hour )
 				.Append( ref index, ':' ).AppendPaddedNum( ref index, 2, now.Minute )
 				.Append( ref index, ':' ).AppendPaddedNum( ref index, 2, now.Second )
 				.Append( ref index, "] " ).AppendColourless( ref index, text )
@@ -117,8 +136,8 @@ namespace ClassicalSharp {
 			string date = now.ToString( "yyyy-MM-dd" );
 			// Ensure multiple instances do not end up overwriting each other's log entries.
 			for( int i = 0; i < 20; i++ ) {
-				string id = i == 0 ? "" : "  _" + i;
-				string fileName = "chat-" + date + id + ".log";
+				string id = i == 0 ? "" : " _" + i;
+				string fileName = date + " " + logName + id + ".log";
 				string path = Path.Combine( basePath, fileName );
 				
 				FileStream stream = null;
@@ -139,6 +158,7 @@ namespace ClassicalSharp {
 			ErrorHandler.LogError( "creating chat log",
 			                      "Failed to open or create a chat log file after 20 tries, giving up." );
 		}
+		#endregion
 	}
 	
 	public struct ChatLine {

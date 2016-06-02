@@ -78,6 +78,7 @@ namespace ClassicalSharp.Network {
 			ServerName = reader.ReadCp437String();
 			ServerMotd = reader.ReadCp437String();
 			receivedFirstPosition = false;
+			game.Chat.SetLogName( ServerName );
 			
 			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );
 			game.LocalPlayer.Hacks.ParseHackFlags( ServerName, ServerMotd );
