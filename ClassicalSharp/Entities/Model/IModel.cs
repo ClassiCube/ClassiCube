@@ -40,6 +40,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> The maximum scale the entity can have (for collisions and rendering). </summary>
 		public virtual float MaxScale { get { return 2; } }
 		
+		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
+		public virtual float ShadowScale { get { return 1; } }
+		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
 		public abstract Vector3 CollisionSize { get; }

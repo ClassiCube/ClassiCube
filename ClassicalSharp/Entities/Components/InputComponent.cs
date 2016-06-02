@@ -57,7 +57,7 @@ namespace ClassicalSharp.Entities {
 			if( game.World.IsValidPos( Vector3I.Floor( spawn ) ) )
 				FindHighestFree( ref spawn );
 			
-			spawn.Y += 1/16f;
+			spawn.Y += 2/16f;
 			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 			entity.SetLocation( update, false );
 		}
