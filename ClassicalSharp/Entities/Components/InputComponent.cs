@@ -33,6 +33,8 @@ namespace ClassicalSharp.Entities {
 				entity.SetLocation( update, false );
 			} else if( key == keys[KeyBinding.SetSpawn] && Hacks.CanRespawn ) {
 				p.Spawn = entity.Position;
+				p.Spawn.X = Utils.Floor( p.Spawn.X ) + 0.5f;
+				p.Spawn.Z = Utils.Floor( p.Spawn.Z ) + 0.5f;
 				p.SpawnYaw = entity.YawDegrees;
 				p.SpawnPitch = entity.PitchDegrees;
 				
@@ -61,33 +63,35 @@ namespace ClassicalSharp.Entities {
 		void FindHighestFree( ref Vector3 spawn ) {
 			BlockInfo info = game.BlockInfo;
 			Vector3 size = entity.CollisionSize;
-			AABB bb = entity.CollisionBounds;
+			AABB bb = AABB.Make( spawn, size );
+			
 			Vector3I P = Vector3I.Floor( spawn );
 			int bbMax = Utils.Floor( size.Y );			
-			int minX = Utils.Floor( -size.X / 2 ), maxX = Utils.Floor( size.X / 2 );
-			int minZ = Utils.Floor( -size.Z / 2 ), maxZ = Utils.Floor( size.Z / 2 );
+			int minX = Utils.Floor( P.X - size.X / 2 ), maxX = Utils.Floor( P.X + size.X / 2 );
+			int minZ = Utils.Floor( P.Z - size.Z / 2 ), maxZ = Utils.Floor( P.Z + size.Z / 2 );
 			
 			// Spawn player at highest valid position.
 			for( int y = P.Y; y <= game.World.Height; y++ ) {
-				bool anyHit = false;
+				bool intersectAny = false;
 				for( int yy = 0; yy <= bbMax; yy++ )
-					for( int zz = minZ; zz <= maxZ; zz++ )
-						for ( int xx = minX; xx <= maxX; xx++ )							
+					for( int z = minZ; z <= maxZ; z++ )
+						for ( int x = minX; x <= maxX; x++ )							
 				{
-					Vector3I coords = new Vector3I( P.X + xx, y + yy, P.Z + zz );
+					Vector3I coords = new Vector3I( x, y + yy, z );
 					byte block = collisions.GetPhysicsBlockId( coords.X, coords.Y, coords.Z );
 					Vector3 min = info.MinBB[block] + (Vector3)coords;
 					Vector3 max = info.MaxBB[block] + (Vector3)coords;
 					if( !bb.Intersects( new AABB( min, max ) ) ) continue;
-					anyHit |= info.Collide[block] == CollideType.Solid;
+					intersectAny |= info.Collide[block] == CollideType.Solid;
 				}
 				
-				if( !anyHit ) {
+				if( !intersectAny ) {
 					byte block = collisions.GetPhysicsBlockId( P.X, y, P.Z );
 					float height = info.Collide[block] == CollideType.Solid ? info.MaxBB[block].Y : 0;
 					spawn.Y = y + height + Entity.Adjustment;
 					return;
 				}
+				bb.Min.Y += 1; bb.Max.Y += 1;
 			}
 		}
 	}

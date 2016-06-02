@@ -19,12 +19,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Bounding box of the model that collision detection
 		/// is performed with, in world coordinates.  </summary>
 		public virtual AABB CollisionBounds {
-			get {
-				Vector3 pos = Position;
-				Vector3 size = CollisionSize;
-				return new AABB( pos.X - size.X / 2, pos.Y, pos.Z - size.Z / 2,
-				                       pos.X + size.X / 2, pos.Y + size.Y, pos.Z + size.Z / 2 );
-			}
+			get { return AABB.Make( Position, CollisionSize ); }
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the
