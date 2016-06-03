@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui {
 		protected string[] entries;
 		protected int currentIndex;
 		protected ButtonWidget[] buttons;
-		const int items = 5;
+		protected const int items = 5;
 		
 		TextWidget title;
 		protected string titleText;

@@ -12,11 +12,15 @@ namespace ClassicalSharp.Gui {
 		public HotkeyListScreen( Game game ) : base( game ) {
 			titleText = "Modify hotkeys";
 			HotkeyList hotkeys = game.InputHandler.Hotkeys;
-			entries = new string[hotkeys.Hotkeys.Count];
-			for( int i = 0; i < entries.Length; i++ ) {
+			int count = hotkeys.Hotkeys.Count;
+			entries = new string[hotkeys.Hotkeys.Count + items];
+			
+			for( int i = 0; i < count; i++ ) {
 				Hotkey hKey = hotkeys.Hotkeys[i];
 				entries[i] = hKey.BaseKey + " |" + MakeFlagsString( hKey.Flags );
 			}
+			for( int i = 0; i < items; i++ )
+				entries[count + i] = "-----";
 		}
 		
 		internal static string MakeFlagsString( byte flags ) {

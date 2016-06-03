@@ -230,7 +230,7 @@ namespace ClassicalSharp.Network {
 			
 			if( !socket.Connected || (socket.Poll( 1000, SelectMode.SelectRead ) && socket.Available == 0 ) ) {
 				game.Disconnect( "&eDisconnected from the server",
-				                "I/O connection timed out." );
+				                "Connection timed out" );
 				Dispose();
 			}
 		}
