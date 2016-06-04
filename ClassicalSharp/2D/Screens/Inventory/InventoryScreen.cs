@@ -162,11 +162,11 @@ namespace ClassicalSharp.Gui {
 			buffer.Append( ref index, value );
 			if( game.ClassicMode ) return;
 			
-			buffer.Append( ref index, " (ID: " );
+			buffer.Append( ref index, " (ID " );
 			buffer.AppendNum( ref index, (byte)block );
-			buffer.Append( ref index, ", place: " );
+			buffer.Append( ref index, "&f, place " );
 			buffer.Append( ref index, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
-			buffer.Append( ref index, "&f, delete: " );
+			buffer.Append( ref index, "&f, delete " );
 			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f)" );
 		}

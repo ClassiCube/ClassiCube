@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp.Renderers {
@@ -88,7 +89,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
-			if( renderer._1DUsed == -1 ) {				
+			if( renderer._1DUsed == -1 ) {
 				renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
 			} else {
 				bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
@@ -96,7 +97,7 @@ namespace ClassicalSharp.Renderers {
 			}
 			
 			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
-			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;			
+			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			RecalcBooleans( true );
 		}
 		
@@ -218,6 +219,7 @@ namespace ClassicalSharp.Renderers {
 			return (value + 0x0F) & ~0x0F;
 		}
 		
+		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
 			int cx = x >> 4, bX = x & 0x0F;
 			int cy = y >> 4, bY = y & 0x0F;
@@ -229,25 +231,52 @@ namespace ClassicalSharp.Renderers {
 			int oldCy = oldHeight < 0 ? 0 : oldHeight >> 4;
 			int minCy = Math.Min( oldCy, newCy ), maxCy = Math.Max( oldCy, newCy );
 			ResetColumn( cx, cy, cz, minCy, maxCy );
+			World world = game.World;
 			
-			if( bX == 0 && cx > 0 && NeedsUpdate( block, x - 1, y, z ) )
-				ResetColumn( cx - 1, cy, cz, minCy, maxCy );
-			if( bY == 0 && cy > 0 && NeedsUpdate( block, x, y - 1, z ) )
+			if( bX == 0 && cx > 0 )
+				ResetNeighbour( x - 1, y, z, block, cx - 1, cy, cz, minCy, maxCy );
+			if( bY == 0 && cy > 0 && Needs( block, world.GetBlock( x, y - 1, z ) ) )
 				ResetChunk( cx, cy - 1, cz );
-			if( bZ == 0 && cz > 0 && NeedsUpdate( block, x, y, z - 1 ) )
-				ResetColumn( cx, cy, cz - 1, minCy, maxCy );
+			if( bZ == 0 && cz > 0 )
+				ResetNeighbour( x, y, z - 1, block, cx, cy, cz - 1, minCy, maxCy );
 			
-			if( bX == 15 && cx < chunksX - 1 && NeedsUpdate( block, x + 1, y, z ) )
-				ResetColumn( cx + 1, cy, cz, minCy, maxCy );
-			if( bY == 15 && cy < chunksY - 1 && NeedsUpdate( block, x, y + 1, z ) )
+			if( bX == 15 && cx < chunksX - 1 )
+				ResetNeighbour( x + 1, y, z, block, cx + 1, cy, cz, minCy, maxCy );
+			if( bY == 15 && cy < chunksY - 1 && Needs( block, world.GetBlock( x, y + 1, z ) ) )
 				ResetChunk( cx, cy + 1, cz );
-			if( bZ == 15 && cz < chunksZ - 1 && NeedsUpdate( block, x, y, z + 1 ) )
-				ResetColumn( cx, cy, cz + 1, minCy, maxCy );
+			if( bZ == 15 && cz < chunksZ - 1 )
+				ResetNeighbour( x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy );
 		}
 		
-		bool NeedsUpdate( byte b1, int x2, int y2, int z2 ) {
-			byte b2 = game.World.GetBlock( x2, y2, z2 );
-			return !info.IsOpaque[b1] || !info.IsAir[b2];
+		bool Needs( byte block, byte other ) { return !info.IsOpaque[block] || !info.IsAir[other]; }
+		
+		// TODO: when I'm less tired, we only need to do opaue check for direct neighbour. Blocks below only need air check.
+		void ResetNeighbour( int x, int y, int z, byte block,
+		                    int cx, int cy, int cz, int minCy, int maxCy ) {
+			World world = game.World;
+			if( minCy == maxCy ) {
+				int index = x + world.Width * (z + y * world.Length);
+				ResetNeighourChunk( cx, cy, cz, block, y, index );
+			} else {
+				for( cy = maxCy; cy >= minCy; cy-- ) {
+					y = (cy << 4) + 15;
+					int index = x + world.Width * (z + y * world.Length);
+					ResetNeighourChunk( cx, cy, cz, block, y, index );
+				}
+			}
+		}
+		
+		void ResetNeighourChunk( int cx, int cy, int cz, byte block, int y, int index ) {
+			World world = game.World;
+			int minY = cy << 4;
+			
+			// Update if any blocks in the chunk are affected by light change
+			for( ; y >= minY; y--) {
+				if( Needs( block, world.blocks[index] ) ) {
+					ResetChunk( cx, cy, cz ); return;
+				}
+				index -= world.Width * world.Length;
+			}
 		}
 		
 		void ResetColumn( int cx, int cy, int cz, int minCy, int maxCy ) {
@@ -262,8 +291,9 @@ namespace ClassicalSharp.Renderers {
 		void ResetChunk( int cx, int cy, int cz ) {
 			if( cx < 0 || cy < 0 || cz < 0 ||
 			   cx >= chunksX || cy >= chunksY || cz >= chunksZ ) return;
-			DeleteChunk( renderer.unsortedChunks[cx + chunksX * ( cy + cz * chunksY )], true );
+			DeleteChunk( renderer.unsortedChunks[cx + chunksX * (cy + cz * chunksY)], true );
 		}
+		
 
 		int chunksTarget = 4;
 		const double targetTime = (1.0 / 30) + 0.01;

@@ -98,8 +98,8 @@ namespace ClassicalSharp.Map {
 			int prevRunCount = 0;
 			for( int y = maxY; y >= 0; y-- ) {
 				if( elemsLeft <= 0 ) return true;
-				int mapIndex = ( y * Length + z1 ) * Width + x1;
-				int heightmapIndex = z1 * Width + x1;
+				int mapIndex = x1 + Width * (z1 + y * Length);
+				int heightmapIndex = x1 + z1 * Width;
 				
 				for( int z = 0; z < zCount; z++ ) {
 					int baseIndex = mapIndex;
