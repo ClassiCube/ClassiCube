@@ -7,8 +7,8 @@ namespace ClassicalSharp.Gui {
 	public sealed class ClassicPlayerListWidget : NormalPlayerListWidget {
 		
 		ChatTextWidget overview;
-		protected static FastColour topCol = new FastColour( 0, 0, 0, 180 );
-		protected static FastColour bottomCol = new FastColour( 50, 50, 50, 205 );
+		static FastColour topCol = new FastColour( 0, 0, 0, 180 );
+		static FastColour bottomCol = new FastColour( 50, 50, 50, 205 );
 		public ClassicPlayerListWidget( Game game, Font font ) : base( game, font ) {
 		}
 		
