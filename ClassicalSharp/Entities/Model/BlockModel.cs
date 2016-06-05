@@ -57,10 +57,16 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		public override bool ShouldRender( Player p, FrustumCulling culling ) {
+		public override bool ShouldRender( Entity p, FrustumCulling culling ) {
 			block = Utils.FastByte( p.ModelName );
 			CalcState( block );
 			return base.ShouldRender( p, culling );
+		}
+		
+		public override float RenderDistance( Entity p ) {
+			block = Utils.FastByte( p.ModelName );
+			CalcState( block );
+			return base.RenderDistance( p );
 		}
 		
 		int lastTexId = -1;

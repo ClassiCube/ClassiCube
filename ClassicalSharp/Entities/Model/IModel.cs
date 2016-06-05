@@ -56,12 +56,31 @@ namespace ClassicalSharp.Model {
 		protected float uScale, vScale, scale;
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
-		public virtual bool ShouldRender( Player p, FrustumCulling culling ) {
+		public virtual bool ShouldRender( Entity p, FrustumCulling culling ) {
 			Vector3 pos = p.Position;
 			AABB bb = PickingBounds;
-			float maxLen = Math.Max( bb.Width, Math.Max( bb.Height, bb.Length ) );
-			maxLen *= p.ModelScale;
-			return culling.SphereInFrustum( pos.X, pos.Y + maxLen / 2, pos.Z, maxLen );
+			float maxLen = Math.Max( bb.Width, Math.Max( bb.Height, bb.Length ) ) * p.ModelScale;
+			pos.Y += bb.Height / 2; // centre Y coordinate
+			return culling.SphereInFrustum( pos.X, pos.Y, pos.Z, maxLen );
+		}
+		
+		/// <summary> Returns the closest distance of the given entity to the camera. </summary>
+		public virtual float RenderDistance( Entity p ) {
+			Vector3 pos = p.Position;
+			AABB bb = PickingBounds;
+			pos.Y += bb.Height / 2; // centre Y coordinate
+			
+			Vector3 cPos = game.CurrentCameraPos;
+			float dx = MinDist( cPos.X - pos.X, bb.Width / 2 );
+			float dy = MinDist( cPos.Y - pos.Y, bb.Height / 2 );
+			float dz = MinDist( cPos.Z - pos.Z, bb.Length / 2 );
+			return dx * dx + dy * dy + dz * dz;
+		}
+		
+		static float MinDist( float dist, float extent ) {
+			// Compare min coord, centre coord, and max coord
+			float dMin = Math.Abs( dist - extent ), dMax = Math.Abs( dist + extent );
+			return Math.Min( Math.Abs( dist ), Math.Min( dMin, dMax ) );
 		}
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
