@@ -28,8 +28,8 @@ namespace ClassicalSharp.Gui {
 		
 		int TableX { get { return startX - 5 - 10; } }
 		int TableY { get { return startY - 5 - 30; } }
-		int TableWidth { get { return blocksPerRow * blockSize + 10 + 10; } }
-		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 30; } }
+		int TableWidth { get { return blocksPerRow * blockSize + 10 + 20; } }
+		int TableHeight { get { return Math.Min( rows, maxRows ) * blockSize + 10 + 40; } }
 		
 		// These were sourced by taking a screenshot of vanilla
 		// Then using paint to extract the colour components
