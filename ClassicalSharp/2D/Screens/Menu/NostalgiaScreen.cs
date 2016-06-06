@@ -64,6 +64,11 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = false;
 		}
 		
+		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+			base.OnResize( oldWidth, oldHeight, width, height );
+			infoWidget.OnResize( oldWidth, oldHeight, width, height );
+		}
+		
 		public override void Dispose() {
 			base.Dispose();
 			infoWidget.Dispose();
