@@ -250,31 +250,31 @@ namespace ClassicalSharp.Renderers {
 		
 		bool Needs( byte block, byte other ) { return !info.IsOpaque[block] || !info.IsAir[other]; }
 		
-		// TODO: when I'm less tired, we only need to do opaue check for direct neighbour. Blocks below only need air check.
 		void ResetNeighbour( int x, int y, int z, byte block,
 		                    int cx, int cy, int cz, int minCy, int maxCy ) {
 			World world = game.World;
 			if( minCy == maxCy ) {
 				int index = x + world.Width * (z + y * world.Length);
-				ResetNeighourChunk( cx, cy, cz, block, y, index );
+				ResetNeighourChunk( cx, cy, cz, block, y, index, y );
 			} else {
 				for( cy = maxCy; cy >= minCy; cy-- ) {
-					y = (cy << 4) + 15;
-					int index = x + world.Width * (z + y * world.Length);
-					ResetNeighourChunk( cx, cy, cz, block, y, index );
+					int maxY = (cy << 4) + 15;
+					int index = x + world.Width * (z + maxY * world.Length);
+					ResetNeighourChunk( cx, cy, cz, block, maxY, index, y );
 				}
 			}
 		}
 		
-		void ResetNeighourChunk( int cx, int cy, int cz, byte block, int y, int index ) {
+		void ResetNeighourChunk( int cx, int cy, int cz, byte block, 
+		                        int y, int index, int nY ) {
 			World world = game.World;
 			int minY = cy << 4;
 			
 			// Update if any blocks in the chunk are affected by light change
 			for( ; y >= minY; y--) {
-				if( Needs( block, world.blocks[index] ) ) {
-					ResetChunk( cx, cy, cz ); return;
-				}
+				byte other = world.blocks[index];
+				bool affected = y == nY ? Needs( block, other ) : !info.IsAir[other];
+				if( affected ) { ResetChunk( cx, cy, cz ); return; }
 				index -= world.Width * world.Length;
 			}
 		}
