@@ -21,6 +21,9 @@ namespace ClassicalSharp {
 		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
 		public bool UseBitmappedChat = false;
 		
+		/// <summary> Whether the shadows behind text (that uses shadows) is fully black. </summary>
+		public bool BlackTextShadows;
+		
 		/// <summary> Sets the underlying bitmap that drawing operations will be performed on. </summary>
 		public abstract void SetBitmap( Bitmap bmp );
 		

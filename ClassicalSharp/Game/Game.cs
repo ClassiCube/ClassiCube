@@ -82,6 +82,7 @@ namespace ClassicalSharp {
 			AsyncDownloader = AddComponent( new AsyncDownloader() );
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
+			Drawer2D.BlackTextShadows = Options.GetBool( OptionsKey.BlackTextShadows, false );
 			
 			TerrainAtlas1D = new TerrainAtlas1D( Graphics );
 			TerrainAtlas = new TerrainAtlas2D( Graphics, Drawer2D );

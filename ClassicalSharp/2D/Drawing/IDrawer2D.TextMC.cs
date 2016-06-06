@@ -62,7 +62,8 @@ namespace ClassicalSharp {
 		
 		void DrawPart( FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol ) {
 			FastColour col = Colours['f'];
-			if( shadowCol ) col = FastColour.Scale( col, 1/4f );
+			if( shadowCol )
+				col = BlackTextShadows ? FastColour.Black : FastColour.Scale( col, 0.25f );
 			FastColour lastCol = col;
 			
 			int xMul = args.Font.Style == FontStyle.Italic ? 1 : 0;
@@ -76,7 +77,8 @@ namespace ClassicalSharp {
 				bool code = c == '&' && i < text.Length - 1;
 				if( code && ValidColour( text[i + 1] ) ) {
 					col = Colours[text[i + 1]];
-					if( shadowCol ) col = FastColour.Scale( col, 1/4f );
+					if( shadowCol )
+						col = BlackTextShadows ? FastColour.Black : FastColour.Scale( col, 0.25f );
 					i++; continue; // Skip over the colour code.
 				}
 				int coords = ConvertToCP437( c );
@@ -120,11 +122,11 @@ namespace ClassicalSharp {
 				if( dstY >= dst.Height ) return;
 				
 				int* dstRow = dst.GetRowPtr( dstY );
-				int xOffset = xMul * ((textHeight - 1 - yy) / italicSize);			
+				int xOffset = xMul * ((textHeight - 1 - yy) / italicSize);
 				for( int i = 0; i < runCount; i++ ) {
 					int srcX = (coords[i] & 0x0F) * boxSize;
 					int srcWidth = widths[coords[i]], dstWidth = dstWidths[i];
-			
+					
 					for( int xx = 0; xx < dstWidth; xx++ ) {
 						int fontX = srcX + xx * srcWidth / dstWidth;
 						int src = fontRow[fontX];
@@ -225,16 +227,16 @@ namespace ClassicalSharp {
 			return Utils.CeilDiv( value * point, boxSize );
 		}
 		
-		/// <summary> Rounds the given font size up to the nearest whole 
+		/// <summary> Rounds the given font size up to the nearest whole
 		/// multiple of the size of a character in default.png. </summary>
-		protected int AdjTextSize( int point ) { 
-			return point; //Utils.CeilDiv( point, boxSize ) * boxSize; 
+		protected int AdjTextSize( int point ) {
+			return point; //Utils.CeilDiv( point, boxSize ) * boxSize;
 		}
 		
-		/// <summary> Returns the height of the bounding box that 
+		/// <summary> Returns the height of the bounding box that
 		/// contains both the given font size in addition to padding. </summary>
-		protected static int CellSize( int point ) { 
-			return Utils.CeilDiv( point * 3, 2 ); 
+		protected static int CellSize( int point ) {
+			return Utils.CeilDiv( point * 3, 2 );
 		}
 		
 		protected void DisposeBitmappedText() {

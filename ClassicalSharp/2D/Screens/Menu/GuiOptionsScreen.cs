@@ -13,8 +13,9 @@ namespace ClassicalSharp.Gui {
 			
 			widgets = new Widget[] {
 				// Column 1
-				MakeBool( -1, -150, "Block in hand", OptionsKey.ShowBlockInHand,
-				     OnWidgetClick, g => g.ShowBlockInHand, (g, v) => g.ShowBlockInHand = v ),
+				MakeBool( -1, -150, "Black text shadows", OptionsKey.BlackTextShadows,
+				     OnWidgetClick, g => g.Drawer2D.BlackTextShadows,
+				     (g, v) => { g.Drawer2D.BlackTextShadows =v; HandleFontChange(); } ),		
 				
 				MakeBool( -1, -100, "Show FPS", OptionsKey.ShowFPS,
 				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v ),
@@ -56,7 +57,7 @@ namespace ClassicalSharp.Gui {
 				
 				MakeBool( 1, 0, "Use font", OptionsKey.ArialChatFont,
 				     OnWidgetClick, g => !g.Drawer2D.UseBitmappedChat,
-				     (g, v) => { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); } ),		
+				     (g, v) => { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); } ),
 				
 				MakeOpt( 1, 50, "Font", OnWidgetClick,
 				     g => g.FontName,
