@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui {
 				// Column 1
 				MakeBool( -1, -150, "Black text shadows", OptionsKey.BlackTextShadows,
 				     OnWidgetClick, g => g.Drawer2D.BlackTextShadows,
-				     (g, v) => { g.Drawer2D.BlackTextShadows =v; HandleFontChange(); } ),		
+				     (g, v) => { g.Drawer2D.BlackTextShadows = v; HandleFontChange(); } ),		
 				
 				MakeBool( -1, -100, "Show FPS", OptionsKey.ShowFPS,
 				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v ),

@@ -27,8 +27,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override bool HandlesMouseScroll( int delta ) {
-			bool bounds = Contains( TableX, TableY, TableWidth, TableHeight,
-			                       game.Mouse.X, game.Mouse.Y );
+			bool bounds = Contains( TableX - scrollbarWidth, TableY, TableWidth + scrollbarWidth, 
+			                       TableHeight, game.Mouse.X, game.Mouse.Y );
 			bool hotbar = game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight );
 			if( !bounds || hotbar ) return false;
 			
