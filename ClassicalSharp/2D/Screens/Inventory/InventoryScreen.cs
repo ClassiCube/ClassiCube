@@ -77,7 +77,6 @@ namespace ClassicalSharp.Gui {
 			
 			if( blockInfoTexture.IsValid )
 				blockInfoTexture.Render( api );
-			game.hudScreen.RenderHotbar( delta );
 			api.Texturing = false;
 		}
 		

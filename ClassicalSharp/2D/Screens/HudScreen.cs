@@ -27,9 +27,9 @@ namespace ClassicalSharp.Gui {
 			bool showMinimal = game.ActiveScreen.BlocksWorld;
 			if( chat.HandlesAllInput && !game.PureClassic )
 				chat.RenderBackground();
-			if( !showMinimal )
-				RenderHotbar( delta );
+			
 			api.Texturing = true;
+			if( !showMinimal ) hotbar.Render( delta );			
 			chat.Render( delta );
 			
 			//graphicsApi.BeginVbBatch( VertexFormat.Pos3fTex2fCol4b );
@@ -49,8 +49,6 @@ namespace ClassicalSharp.Gui {
 			if( playerList == null && !showMinimal )
 				DrawCrosshairs();
 		}
-		
-		public void RenderHotbar( double delta ) { hotbar.Render( delta ); }
 		
 		const int chExtent = 16, chWeight = 2;
 		static TextureRec chRec = new TextureRec( 0, 0, 16/256f, 16/256f );

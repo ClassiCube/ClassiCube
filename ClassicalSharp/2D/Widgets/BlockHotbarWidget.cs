@@ -38,7 +38,6 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Render( double delta ) {
-			api.Texturing = true;
 			RenderHotbar();
 			Model.ModelCache cache = game.ModelCache;
 			drawer.BeginBatch( game, cache.vertices, cache.vb );
@@ -52,7 +51,6 @@ namespace ClassicalSharp.Gui {
 				drawer.DrawBatch( block, scale, x, y );
 			}
 			drawer.EndBatch();
-			api.Texturing = false;
 		}
 		
 		void RenderHotbar() {
