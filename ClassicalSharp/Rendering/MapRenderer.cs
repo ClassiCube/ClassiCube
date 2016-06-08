@@ -74,7 +74,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderTranslucent( double deltaTime ) {
 			if( chunks == null ) return;
-			game.MapBordersRenderer.Render( deltaTime );
 			RenderTranslucentChunks( deltaTime );
 		}
 		
@@ -122,8 +121,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
-		void RenderTranslucentChunks( double deltaTime ) {
-			
+		void RenderTranslucentChunks( double deltaTime ) {			
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );

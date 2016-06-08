@@ -328,8 +328,11 @@ namespace ClassicalSharp {
 			Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
 			EnvRenderer.Render( delta );		
 			MapRenderer.Render( delta );
+			MapBordersRenderer.RenderSides( delta );
+			
 			if( SelectedPos.Valid && !HideGui )
 				Picking.Render( delta, SelectedPos );
+			MapBordersRenderer.RenderEdges( delta );
 			MapRenderer.RenderTranslucent( delta );
 			
 			Entities.DrawShadows();

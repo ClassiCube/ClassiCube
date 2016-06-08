@@ -35,25 +35,38 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TerrainAtlasChanged += ResetTextures;
 		}
 		
-		public void Render( double deltaTime ) {
-			if( sidesVb == -1 || edgesVb == -1 ) return;
+		public void RenderSides( double delta ) {
+			if( sidesVb == -1 ) return;
+			Block block = game.World.Env.SidesBlock;
+			if( game.BlockInfo.IsAir[(byte)block] ) return;
+			
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
 			graphics.BindTexture( sideTexId );
 			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			if( game.World.Env.SidesBlock != Block.Air ) {
-				graphics.BindVb( sidesVb );
-				graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
-			}
+			graphics.BindVb( sidesVb );
+			graphics.DrawIndexedVb_TrisT2fC4b( sidesVertices * 6 / 4, 0 );
+			graphics.Texturing = false;
+			graphics.AlphaTest = false;
+		}
+		
+		public void RenderEdges( double delta ) {
+			if( edgesVb == -1 ) return;
+			Block block = game.World.Env.EdgeBlock;
+			if( game.BlockInfo.IsAir[(byte)block] ) return;
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			graphics.AlphaBlending = true;			
+			graphics.AlphaBlending = true;
+			graphics.Texturing = true;
+			graphics.AlphaTest = true;
+			
 			graphics.BindTexture( edgeTexId );
-			graphics.BindVb( edgesVb );			
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			graphics.BindVb( edgesVb );
 			// Do not draw water when we cannot see it.
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			float yVisible = Math.Min( 0, map.Env.SidesHeight );
-			if( game.World.Env.EdgeBlock != Block.Air && camPos.Y >= yVisible )
+			if( camPos.Y >= yVisible )
 				graphics.DrawIndexedVb_TrisT2fC4b( edgesVertices * 6 / 4, 0 );
 			
 			graphics.AlphaBlending = false;
@@ -73,7 +86,7 @@ namespace ClassicalSharp.Renderers {
 			sidesVb = edgesVb = -1;
 		}
 
-		public void Ready( Game game ) { }			
+		public void Ready( Game game ) { }
 		public void Reset( Game game ) { OnNewMap( game ); }
 		
 		public void OnNewMap( Game game ) {
