@@ -36,7 +36,7 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double deltaTime ) {
 			Weather weather = map.Env.Weather;
 			if( weather == Weather.Sunny ) return;
-			if( heightmap == null ) InitHeightmap();			
+			if( heightmap == null ) InitHeightmap();
 			
 			graphics.BindTexture( weather == Weather.Rainy ? RainTexId : SnowTexId );
 			Vector3 camPos = game.CurrentCameraPos;
@@ -44,15 +44,13 @@ namespace ClassicalSharp.Renderers {
 			bool moved = pos != lastPos;
 			lastPos = pos;
 			WorldEnv env = game.World.Env;
-			                              
+			
 			float speed = (weather == Weather.Rainy ? 1.0f : 0.2f) * env.WeatherSpeed;
 			vOffset = (float)game.accumulator * speed;
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;
 
 			int index = 0;
-			graphics.AlphaTest = false;
-			graphics.DepthWrite = false;
 			FastColour col = game.World.Env.Sunlight;
 			for( int dx = -extent; dx <= extent; dx++ ) {
 				for( int dz = -extent; dz <= extent; dz++ ) {
@@ -71,13 +69,16 @@ namespace ClassicalSharp.Renderers {
 			}
 			if( particles && (rainAcc >= 0.25 || moved) )
 				rainAcc = 0;
+			if( index == 0 ) return;
 			
-			if( index > 0 ) {
-				graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-				graphics.AlphaArgBlend = true;
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
-				graphics.AlphaArgBlend = false;
-			}
+			graphics.AlphaTest = false;
+			graphics.DepthWrite = false;
+			graphics.AlphaArgBlend = true;
+			
+			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
+			
+			graphics.AlphaArgBlend = false;
 			graphics.AlphaTest = true;
 			graphics.DepthWrite = true;
 		}
@@ -105,7 +106,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		int length, width, maxY, oneY;
-		public void Ready( Game game ) { }	
+		public void Ready( Game game ) { }
 		public void Reset( Game game ) { OnNewMap( game ); }
 		
 		public void OnNewMap( Game game ) {

@@ -37,16 +37,13 @@ namespace ClassicalSharp.Renderers {
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 			
 			graphics.AlphaBlending = true;
-			if( dist < 4 * 4 )
-				DrawLines( p1, p2, 1/128f );
-			else if( dist < 8 * 8 )
-				DrawLines( p1, p2, 1/96f );
-			else if( dist < 16 * 16 )
-				DrawLines( p1, p2, 1/64f );
-			else if( dist < 32 * 32 )
-				DrawLines( p1, p2, 1/32f );
-			else
-				DrawLines( p1, p2, 1/16f );
+			float size = 1/16f;
+			if( dist < 4 * 4 ) size = 1/128f;
+			else if( dist < 8 * 8 ) size = 1/96f;
+			else if( dist < 16 * 16 ) size = 1/64f;
+			else if( dist < 32 * 32 ) size = 1/32f;
+
+			DrawLines( p1, p2, size );
 			graphics.AlphaBlending = false;
 		}
 		
