@@ -326,10 +326,13 @@ namespace ClassicalSharp {
 			
 			ParticleManager.Render( delta, t );
 			Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-			EnvRenderer.Render( delta );
+			EnvRenderer.Render( delta );		
+			MapRenderer.Render( delta );
 			if( SelectedPos.Valid && !HideGui )
 				Picking.Render( delta, SelectedPos );
-			MapRenderer.Render( delta );
+			MapRenderer.RenderTranslucent( delta );
+			
+			Entities.DrawShadows();
 			SelectionManager.Render( delta );
 			Entities.RenderHoveredNames( Graphics, delta, t );
 			
