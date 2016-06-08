@@ -22,7 +22,7 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
-		FastColour col = new FastColour( 0, 0, 0, 150 );
+		FastColour col = new FastColour( 20, 20, 20, 150 );
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];
@@ -32,16 +32,19 @@ namespace ClassicalSharp.Renderers {
 			Vector3 camPos = game.CurrentCameraPos;
 			float dist = (camPos - pickedPos.Min).LengthSquared;
 			
-			float offset = dist < 8 * 8 ? 0.01f : 0.01f;
+			float offset = 0.01f;
+			if( dist < 4 * 4 ) offset = 0.00625f;
+			if( dist < 2 * 2 ) offset = 0.00500f;
 			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
 			
 			graphics.AlphaBlending = true;
 			float size = 1/16f;
+			if( dist < 32 * 32 ) size = 1/32f;
+			if( dist < 16 * 16 ) size = 1/64f;
+			if( dist < 8 * 8 ) size = 1/96f;
 			if( dist < 4 * 4 ) size = 1/128f;
-			else if( dist < 8 * 8 ) size = 1/96f;
-			else if( dist < 16 * 16 ) size = 1/64f;
-			else if( dist < 32 * 32 ) size = 1/32f;
+			if( dist < 2 * 2 ) size = 1/192f;
 
 			DrawLines( p1, p2, size );
 			graphics.AlphaBlending = false;
