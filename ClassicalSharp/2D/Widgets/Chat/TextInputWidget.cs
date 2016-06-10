@@ -50,6 +50,9 @@ namespace ClassicalSharp.Gui {
 				if( i > 0 && sizes[i].Height == 0 ) break;
 				bool caretAtEnd = caretTex.Y1 == y && (indexX == LineLength || caretPos == -1);				
 				int drawWidth = sizes[i].Width + (caretAtEnd ? caretTex.Width : 0);
+				// Cover whole window width to match original classic behaviour
+				if( game.PureClassic )
+					drawWidth = Math.Max( drawWidth, game.Width - X * 4 );
 				
 				api.Draw2DQuad( x, y, drawWidth + 10, defaultHeight, backColour );
 				y += sizes[i].Height;				
