@@ -19,14 +19,15 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			btnWidth = 301; btnHeight = 40;
-			btnDistance = 48;
-			widgets = new Widget[left.Length + right.Length + 3];
+			widgets = new Widget[left.Length + right.Length + 4];
 			SetBinds( left, leftDescs, right, rightDescs );
+			if( game.ClassicHacks ) {
+				title = "Normal controls";
+				rightPage = (g, w) => g.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) );
+			} else {
+				btnWidth = 301; btnHeight = 40; btnDistance = 48;
+			}
 			MakeWidgets( -180 );
-			
-			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) );
 		}
 	}
 	
@@ -34,26 +35,19 @@ namespace ClassicalSharp.Gui {
 		
 		public ClassicHacksKeyBindingsScreen( Game game ) : base( game ) { }
 		
-		static KeyBind[] left = { KeyBind.Forward, KeyBind.Back,
-			KeyBind.Left, KeyBind.Right, KeyBind.Jump,
-			KeyBind.Respawn, KeyBind.SetSpawn, KeyBind.OpenChat };
-		static KeyBind[] right = { KeyBind.OpenInventory,
-			KeyBind.ViewDistance, KeyBind.Speed, KeyBind.NoClip,
-			KeyBind.Fly, KeyBind.FlyUp, KeyBind.FlyDown };
+		static KeyBind[] left = { KeyBind.Speed, KeyBind.NoClip, KeyBind.HalfSpeed };
+		static KeyBind[] right = { KeyBind.Fly, KeyBind.FlyUp, KeyBind.FlyDown };
 		
-		static string[] leftDescs = { "Forward", "Back", "Left", "Right", "Jump",
-			"Load loc", "Save loc", "Chat" };
-		static string[] rightDescs = { "Build", "Toggle fog", "Speed", "Noclip",
-			"Fly", "Fly up", "Fly down"	};
+		static string[] leftDescs = { "Speed", "Noclip", "Half speed" };
+		static string[] rightDescs = { "Fly", "Fly up", "Fly down"	};
 		
 		public override void Init() {
 			base.Init();
-			widgets = new Widget[left.Length + right.Length + 3];
+			widgets = new Widget[left.Length + right.Length + 4];
 			SetBinds( left, leftDescs, right, rightDescs );
-			MakeWidgets( -220 );
-			
-			widgets[index++] = MakeBack( false, titleFont,
-			                            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) );
+			leftPage = (g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) );
+			title = "Hacks controls";
+			MakeWidgets( -135 );
 		}
 	}
 	
@@ -69,60 +63,62 @@ namespace ClassicalSharp.Gui {
 		
 		static string[] leftDescs = { "Forward", "Back", "Left", "Right", "Jump",
 			"Respawn" };
-		static string[] rightDescs = { "Set spawn", "Chat", "Inventory", 
+		static string[] rightDescs = { "Set spawn", "Chat", "Inventory",
 			"View distance", "Send chat", "Player list" };
 		
 		public override void Init() {
 			base.Init();
 			widgets = new Widget[left.Length + right.Length + 4];
 			SetBinds( left, leftDescs, right, rightDescs );
+			title = "Normal controls";
+			rightPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
 			MakeWidgets( -180 );
-			
-			widgets[index++] = MakeBack( "Back to menu", 5, titleFont,
-			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
-			widgets[index++] = ButtonWidget.Create(
-				game, 0, 170, 300, 35, "Advanced key bindings",
-				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
-		}
-		
-		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
-			game.SetNewScreen( new AdvancedKeyBindingsScreen( game ) );
 		}
 	}
 	
-	public sealed class AdvancedKeyBindingsScreen : KeyBindingsScreen {
+	public sealed class HacksKeyBindingsScreen : KeyBindingsScreen {
 		
-		public AdvancedKeyBindingsScreen( Game game ) : base( game ) { }
+		public HacksKeyBindingsScreen( Game game ) : base( game ) { }
 		
 		static KeyBind[] left = { KeyBind.Speed, KeyBind.NoClip,
-			KeyBind.Fly, KeyBind.FlyUp, KeyBind.FlyDown,
-			KeyBind.ExtendedInput, KeyBind.HideFps };
-		static KeyBind[] right = { KeyBind.Screenshot, KeyBind.Fullscreen,
-			KeyBind.ThirdPersonCamera, KeyBind.HideGui,
-			KeyBind.ShowAxisLines, KeyBind.ZoomScrolling, KeyBind.HalfSpeed };
+			KeyBind.HalfSpeed };
+		static KeyBind[] right = { KeyBind.Fly, KeyBind.FlyUp,
+			KeyBind.FlyDown, KeyBind.ThirdPersonCamera };
 		
-		static string[] leftDescs = { "Speed", "Noclip", "Fly", "Fly up", "Fly down",
-			"Show ext input", "Hide FPS" };
-		static string[] rightDescs = { "Take screenshot", "Fullscreen", "Third person",
-			"Hide gui", "Show axis lines", "Zoom scrolling", "Half speed" };
+		static string[] leftDescs = { "Speed", "Noclip", "Half speed" };
+		static string[] rightDescs = { "Fly", "Fly up", "Fly down", "Third person" };
 		
 		public override void Init() {
 			base.Init();
 			widgets = new Widget[left.Length + right.Length + 4];
+			title = "Hacks controls";
 			SetBinds( left, leftDescs, right, rightDescs );
-			MakeWidgets( -180 );
-			
-			widgets[index++] = MakeBack( "Back to menu", 5, titleFont,
-			                            (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) );
-			widgets[index++] = ButtonWidget.Create(
-				game, 0, 170, 300, 35, "Mouse key bindings",
-				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
+			leftPage = (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) );
+			rightPage = (g, w) => g.SetNewScreen( new OtherKeyBindingsScreen( g ) );
+			MakeWidgets( -90 );
 		}
+	}
+	
+	public sealed class OtherKeyBindingsScreen : KeyBindingsScreen {
 		
-		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
-			game.SetNewScreen( new MouseKeyBindingsScreen( game ) );
+		public OtherKeyBindingsScreen( Game game ) : base( game ) { }
+		
+		static KeyBind[] left = { KeyBind.ExtendedInput,
+			KeyBind.HideFps, KeyBind.HideGui };
+		static KeyBind[] right = { KeyBind.Screenshot,
+			KeyBind.Fullscreen,KeyBind.ShowAxisLines };
+		
+		static string[] leftDescs = { "Show ext input", "Hide FPS", "Hide gui" };
+		static string[] rightDescs = { "Screenshot", "Fullscreen", "Show axis lines" };
+		
+		public override void Init() {
+			base.Init();
+			widgets = new Widget[left.Length + right.Length + 4];
+			title = "Other controls";
+			SetBinds( left, leftDescs, right, rightDescs );
+			leftPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
+			rightPage = (g, w) => g.SetNewScreen( new MouseKeyBindingsScreen( g ) );
+			MakeWidgets( -90 );
 		}
 	}
 	
@@ -138,21 +134,12 @@ namespace ClassicalSharp.Gui {
 			base.Init();
 			widgets = new Widget[binds.Length + 5];
 			SetBinds( binds, descs, null, null );
-			MakeWidgets( -180 );
-			
-			widgets[index++] = MakeBack( "Back to menu", 5, titleFont,
-			                            (g, w) => g.SetNewScreen( new PauseScreen( g ) ) );
-			widgets[index++] = ButtonWidget.Create(
-				game, 0, 170, 300, 35, "Normal key bindings",
-				Anchor.Centre, Anchor.Centre, titleFont, NextClick );
+			leftPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
+			MakeWidgets( -90 );
+
 			widgets[index++] = ChatTextWidget.Create(
-				game, 0, -40, "&eRight click to remove the key binding",
+				game, 0, 50, "&eRight click to remove the key binding",
 				Anchor.Centre, Anchor.Centre, regularFont );
-		}
-		
-		void NextClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
-			game.SetNewScreen( new NormalKeyBindingsScreen( game ) );
 		}
 	}
 }

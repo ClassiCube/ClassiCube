@@ -71,6 +71,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
+			if( action == null ) return (g, w, btn) => {};
 			return (g, w, btn) => {
 				if( btn != MouseButton.Left ) return;
 				action( g, w );

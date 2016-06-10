@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 		static void RunMultiplayer( string[] args, bool nullContext, int width, int height ) {
 			IPAddress ip = null;
 			if( !IPAddress.TryParse( args[2], out ip ) ) {
-				Utils.LogDebug( "Invalid IP \"" + args[2] + '"' );
+				Utils.LogDebug( "Invalid IP \"" + args[2] + '"' ); return;
 			}
 
 			int port = 0;

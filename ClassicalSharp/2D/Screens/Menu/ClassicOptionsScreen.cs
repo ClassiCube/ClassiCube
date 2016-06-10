@@ -55,20 +55,13 @@ namespace ClassicalSharp.Gui {
 				         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
 					     	g.LocalPlayer.CheckHacksConsistency(); } ),
 				
-				MakeControlsWidget(),
+				MakeTitle( 0, 110, "Controls", LeftOnly(
+					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ) ),
 				
 				MakeBack( "Done", 25, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
 				null, null,
 			};
 			MakeValidators();
-		}
-		
-		Widget MakeControlsWidget() {
-			if( !game.ClassicHacks )
-				return MakeTitle( 0, 110, "Controls", LeftOnly(
-					(g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ) );
-			return MakeTitle( 0, 110, "Controls", LeftOnly(
-				(g, w) => g.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) ) ) );
 		}
 		
 		void MakeValidators() {
