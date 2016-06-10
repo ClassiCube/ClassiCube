@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui {
 			} else {
 				btnWidth = 301; btnHeight = 40; btnDistance = 48;
 			}
-			MakeWidgets( -180 );
+			MakeWidgets( -140 );
 		}
 	}
 	
@@ -47,7 +47,7 @@ namespace ClassicalSharp.Gui {
 			SetBinds( left, leftDescs, right, rightDescs );
 			leftPage = (g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) );
 			title = "Hacks controls";
-			MakeWidgets( -135 );
+			MakeWidgets( -95 );
 		}
 	}
 	
@@ -56,15 +56,12 @@ namespace ClassicalSharp.Gui {
 		public NormalKeyBindingsScreen( Game game ) : base( game ) { }
 		
 		static KeyBind[] left = { KeyBind.Forward, KeyBind.Back,
-			KeyBind.Left, KeyBind.Right, KeyBind.Jump, KeyBind.Respawn };
-		static KeyBind[] right = { KeyBind.SetSpawn, KeyBind.OpenChat,
-			KeyBind.OpenInventory, KeyBind.ViewDistance, KeyBind.SendChat,
-			KeyBind.PlayerList };
+			KeyBind.Jump, KeyBind.OpenChat, KeyBind.SetSpawn, KeyBind.PlayerList };
+		static KeyBind[] right = { KeyBind.Left, KeyBind.Right, 
+			KeyBind.OpenInventory, KeyBind.ViewDistance, KeyBind.Respawn, KeyBind.SendChat };
 		
-		static string[] leftDescs = { "Forward", "Back", "Left", "Right", "Jump",
-			"Respawn" };
-		static string[] rightDescs = { "Set spawn", "Chat", "Inventory",
-			"View distance", "Send chat", "Player list" };
+		static string[] leftDescs = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list" };
+		static string[] rightDescs = { "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 		
 		public override void Init() {
 			base.Init();
@@ -72,7 +69,7 @@ namespace ClassicalSharp.Gui {
 			SetBinds( left, leftDescs, right, rightDescs );
 			title = "Normal controls";
 			rightPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
-			MakeWidgets( -180 );
+			MakeWidgets( -140 );
 		}
 	}
 	
@@ -95,7 +92,7 @@ namespace ClassicalSharp.Gui {
 			SetBinds( left, leftDescs, right, rightDescs );
 			leftPage = (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) );
 			rightPage = (g, w) => g.SetNewScreen( new OtherKeyBindingsScreen( g ) );
-			MakeWidgets( -90 );
+			MakeWidgets( -50 );
 		}
 	}
 	
@@ -118,7 +115,7 @@ namespace ClassicalSharp.Gui {
 			SetBinds( left, leftDescs, right, rightDescs );
 			leftPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
 			rightPage = (g, w) => g.SetNewScreen( new MouseKeyBindingsScreen( g ) );
-			MakeWidgets( -90 );
+			MakeWidgets( -50 );
 		}
 	}
 	
@@ -133,12 +130,13 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			base.Init();
 			widgets = new Widget[binds.Length + 5];
+			title = "Mouse key bindings";
 			SetBinds( binds, descs, null, null );
 			leftPage = (g, w) => g.SetNewScreen( new HacksKeyBindingsScreen( g ) );
-			MakeWidgets( -90 );
+			MakeWidgets( -50 );
 
 			widgets[index++] = ChatTextWidget.Create(
-				game, 0, 50, "&eRight click to remove the key binding",
+				game, 0, 80, "&eRight click to remove the key binding",
 				Anchor.Centre, Anchor.Centre, regularFont );
 		}
 	}
