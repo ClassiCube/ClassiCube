@@ -23,21 +23,21 @@ namespace ClassicalSharp.Entities {
 			LocalPlayer p = (LocalPlayer)entity;
 			KeyMap keys = game.InputHandler.Keys;
 			
-			if( key == keys[KeyBinding.Respawn] && Hacks.CanRespawn ) {
+			if( key == keys[KeyBind.Respawn] && Hacks.CanRespawn ) {
 				DoRespawn();
-			} else if( key == keys[KeyBinding.SetSpawn] && Hacks.CanRespawn ) {
+			} else if( key == keys[KeyBind.SetSpawn] && Hacks.CanRespawn ) {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor( p.Spawn.X ) + 0.5f;
 				p.Spawn.Z = Utils.Floor( p.Spawn.Z ) + 0.5f;
 				p.SpawnYaw = entity.YawDegrees;
 				p.SpawnPitch = entity.PitchDegrees;				
 				DoRespawn();
-			} else if( key == keys[KeyBinding.Fly] && Hacks.CanFly && Hacks.Enabled ) {
+			} else if( key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled ) {
 				Hacks.Flying = !Hacks.Flying;
-			} else if( key == keys[KeyBinding.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
+			} else if( key == keys[KeyBind.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
 				if( Hacks.Noclip ) entity.Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
-			} else if( key == keys[KeyBinding.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip) ) {
+			} else if( key == keys[KeyBind.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip) ) {
 				if( !physics.firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
 					physics.DoNormalJump();
 					physics.firstJump = true;

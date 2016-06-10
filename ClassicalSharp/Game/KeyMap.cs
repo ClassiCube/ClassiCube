@@ -4,7 +4,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
-	public enum KeyBinding {
+	public enum KeyBind {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
 		OpenInventory, ViewDistance, SendChat, PauseOrExit, PlayerList, 
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
@@ -14,12 +14,12 @@ namespace ClassicalSharp {
 	
 	public class KeyMap {
 		
-		public Key this[KeyBinding key] {
+		public Key this[KeyBind key] {
 			get { return keys[(int)key]; }
 			set { keys[(int)key] = value; SaveKeyBindings(); }
 		}
 		
-		public Key GetDefault( KeyBinding key ) {
+		public Key GetDefault( KeyBind key ) {
 			return defaultKeys[(int)key];
 		}
 		
@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadKeyBindings() {
-			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
+			string[] names = KeyBind.GetNames( typeof( KeyBind ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
 				Key mapping = Options.GetEnum( key, keys[i] );
@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 		}
 		
 		void SaveKeyBindings() {
-			string[] names = KeyBinding.GetNames( typeof( KeyBinding ) );
+			string[] names = KeyBind.GetNames( typeof( KeyBind ) );
 			for( int i = 0; i < names.Length; i++ ) {
 				Options.Set( "key-" + names[i], keys[i] );
 			}

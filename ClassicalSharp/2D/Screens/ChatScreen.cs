@@ -331,14 +331,14 @@ namespace ClassicalSharp.Gui {
 			suppressNextPress = false;
 
 			if( HandlesAllInput ) { // text input bar
-				if( key == game.Mapping( KeyBinding.SendChat ) || key == Key.KeypadEnter
-				   || key == game.Mapping( KeyBinding.PauseOrExit ) ) {
+				if( key == game.Mapping( KeyBind.SendChat ) || key == Key.KeypadEnter
+				   || key == game.Mapping( KeyBind.PauseOrExit ) ) {
 					HandlesAllInput = false;
 					game.CursorVisible = false;
 					game.Camera.RegrabMouse();
 					game.Keyboard.KeyRepeat = false;
 					
-					if( key == game.Mapping( KeyBinding.PauseOrExit ) )
+					if( key == game.Mapping( KeyBind.PauseOrExit ) )
 						textInput.Clear();
 					textInput.SendTextInBufferAndReset();
 					
@@ -356,7 +356,7 @@ namespace ClassicalSharp.Gui {
 				return key < Key.F1 || key > Key.F35;
 			}
 
-			if( key == game.Mapping( KeyBinding.OpenChat ) ) {
+			if( key == game.Mapping( KeyBind.OpenChat ) ) {
 				OpenTextInputBar( "" );
 			} else if( key == Key.Slash ) {
 				OpenTextInputBar( "/" );

@@ -304,7 +304,7 @@ namespace ClassicalSharp {
 		
 		void CheckZoomFov() {
 			bool allowZoom = activeScreen == null && !hudScreen.HandlesAllInput;
-			if( allowZoom && IsKeyDown( KeyBinding.ZoomScrolling ) )
+			if( allowZoom && IsKeyDown( KeyBind.ZoomScrolling ) )
 				InputHandler.SetFOV( ZoomFov, false );
 		}
 		
@@ -526,11 +526,11 @@ namespace ClassicalSharp {
 		
 		public bool IsKeyDown( Key key ) { return InputHandler.IsKeyDown( key ); }
 		
-		public bool IsKeyDown( KeyBinding binding ) { return InputHandler.IsKeyDown( binding ); }
+		public bool IsKeyDown( KeyBind binding ) { return InputHandler.IsKeyDown( binding ); }
 		
 		public bool IsMousePressed( MouseButton button ) { return InputHandler.IsMousePressed( button ); }
 		
-		public Key Mapping( KeyBinding mapping ) { return InputHandler.Keys[mapping]; }
+		public Key Mapping( KeyBind mapping ) { return InputHandler.Keys[mapping]; }
 		
 		public void Dispose() {
 			MapRenderer.Dispose();

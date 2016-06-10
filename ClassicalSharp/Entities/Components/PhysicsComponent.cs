@@ -155,7 +155,7 @@ namespace ClassicalSharp.Entities {
 		void MoveFlying( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			AdjHeadingVelocity( zMoving, xMoving, factor );
 			float yVel = (float)Math.Sqrt( entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z );
-			// make vertical speed the same as vertical speed.
+			// make horizontal speed the same as vertical speed.
 			if( (xMoving != 0 || zMoving != 0) && yVel > 0.001f ) {
 				entity.Velocity.Y = 0;
 				yMul = 1;

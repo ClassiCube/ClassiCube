@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Returns whether the key associated with the given key binding is currently held down. </summary>
-		public bool IsKeyDown( KeyBinding binding ) {
+		public bool IsKeyDown( KeyBind binding ) {
 			Key key = Keys[binding];
 			return game.Keyboard[key];
 		}
@@ -49,9 +49,9 @@ namespace ClassicalSharp {
 			if( down ) return true;
 			
 			// Key --> mouse mappings
-			if( button == MouseButton.Left && IsKeyDown( KeyBinding.MouseLeft ) ) return true;
-			if( button == MouseButton.Middle && IsKeyDown( KeyBinding.MouseMiddle ) ) return true;
-			if( button == MouseButton.Right && IsKeyDown( KeyBinding.MouseRight ) ) return true;
+			if( button == MouseButton.Left && IsKeyDown( KeyBind.MouseLeft ) ) return true;
+			if( button == MouseButton.Middle && IsKeyDown( KeyBind.MouseMiddle ) ) return true;
+			if( button == MouseButton.Right && IsKeyDown( KeyBind.MouseRight ) ) return true;
 			return false;
 		}
 		
@@ -148,7 +148,7 @@ namespace ClassicalSharp {
 			if( SimulateMouse( key, false ) ) return;
 			
 			if( !game.ActiveScreen.HandlesKeyUp( key ) ) {
-				if( key == Keys[KeyBinding.ZoomScrolling] )
+				if( key == Keys[KeyBind.ZoomScrolling] )
 					SetFOV( game.DefaultFov, false );
 			}
 		}
@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 			
 			if( IsShutdown( key ) ) {
 				game.Exit();
-			} else if( key == Keys[KeyBinding.Screenshot] ) {
+			} else if( key == Keys[KeyBind.Screenshot] ) {
 				game.screenshotRequested = true;
 			} else if( !game.ActiveScreen.HandlesKeyDown( key ) ) {
 				if( !HandleBuiltinKey( key ) && !game.LocalPlayer.HandleKeyDown( key ) )
@@ -191,8 +191,8 @@ namespace ClassicalSharp {
 		
 		MouseButtonEventArgs simArgs = new MouseButtonEventArgs();
 		bool SimulateMouse( Key key, bool pressed ) {
-			Key left = Keys[KeyBinding.MouseLeft], middle = Keys[KeyBinding.MouseMiddle],
-			right = Keys[KeyBinding.MouseRight];
+			Key left = Keys[KeyBind.MouseLeft], middle = Keys[KeyBind.MouseMiddle],
+			right = Keys[KeyBind.MouseRight];
 			
 			if( !(key == left || key == middle || key == right ) )
 				return false;
@@ -208,29 +208,29 @@ namespace ClassicalSharp {
 		}
 		
 		bool HandleBuiltinKey( Key key ) {
-			if( key == Keys[KeyBinding.HideGui] ) {
+			if( key == Keys[KeyBind.HideGui] ) {
 				game.HideGui = !game.HideGui;
-			} else if( key == Keys[KeyBinding.HideFps] ) {
+			} else if( key == Keys[KeyBind.HideFps] ) {
 				game.ShowFPS = !game.ShowFPS;
-			} else if( key == Keys[KeyBinding.Fullscreen] ) {
+			} else if( key == Keys[KeyBind.Fullscreen] ) {
 				WindowState state = game.window.WindowState;
 				if( state != WindowState.Minimized ) {
 					game.window.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
-			} else if( key == Keys[KeyBinding.ShowAxisLines] ) {
+			} else if( key == Keys[KeyBind.ShowAxisLines] ) {
 				game.ShowAxisLines = !game.ShowAxisLines;
-			} else if( key == Keys[KeyBinding.ThirdPersonCamera] ) {
+			} else if( key == Keys[KeyBind.ThirdPersonCamera] ) {
 				game.CycleCamera();
-			} else if( key == Keys[KeyBinding.ViewDistance] ) {
+			} else if( key == Keys[KeyBind.ViewDistance] ) {
 				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {
 					CycleDistanceBackwards();
 				} else {
 					CycleDistanceForwards();
 				}
-			} else if( key == Keys[KeyBinding.PauseOrExit] && !game.World.IsNotLoaded ) {
+			} else if( key == Keys[KeyBind.PauseOrExit] && !game.World.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
-			} else if( key == Keys[KeyBinding.OpenInventory] ) {
+			} else if( key == Keys[KeyBind.OpenInventory] ) {
 				game.SetNewScreen( new InventoryScreen( game ) );
 			} else if( key == Key.F9 ) {
 				game.ShowClock = !game.ShowClock;
@@ -262,7 +262,7 @@ namespace ClassicalSharp {
 		
 		float fovIndex = -1;
 		bool DoFovZoom( float deltaPrecise ) {
-			if( !game.IsKeyDown( KeyBinding.ZoomScrolling ) ) return false;
+			if( !game.IsKeyDown( KeyBind.ZoomScrolling ) ) return false;
 			LocalPlayer p = game.LocalPlayer;
 			if( !p.Hacks.Enabled || !p.Hacks.CanAnyHacks || !p.Hacks.CanUseThirdPersonCamera )
 				return false;

@@ -36,7 +36,7 @@ namespace ClassicalSharp.Gui {
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
 			else if( game.Network.ServerSupportsFullCP437 &&
-			        key == game.InputHandler.Keys[KeyBinding.ExtendedInput] )
+			        key == game.InputHandler.Keys[KeyBind.ExtendedInput] )
 				altText.SetActive( !altText.Active );
 			else if( clipboardDown && !OtherKey( key ) ) return false;
 			

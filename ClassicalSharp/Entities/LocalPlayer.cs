@@ -97,16 +97,16 @@ namespace ClassicalSharp.Entities {
 			if( game.ActiveScreen.HandlesAllInput ) {
 				physics.jumping = Hacks.Speeding = Hacks.FlyingUp = Hacks.FlyingDown = false;
 			} else {
-				if( game.IsKeyDown( KeyBinding.Forward ) ) xMoving -= 0.98f;
-				if( game.IsKeyDown( KeyBinding.Back ) ) xMoving += 0.98f;
-				if( game.IsKeyDown( KeyBinding.Left ) ) zMoving -= 0.98f;
-				if( game.IsKeyDown( KeyBinding.Right ) ) zMoving += 0.98f;
+				if( game.IsKeyDown( KeyBind.Forward ) ) xMoving -= 0.98f;
+				if( game.IsKeyDown( KeyBind.Back ) ) xMoving += 0.98f;
+				if( game.IsKeyDown( KeyBind.Left ) ) zMoving -= 0.98f;
+				if( game.IsKeyDown( KeyBind.Right ) ) zMoving += 0.98f;
 
-				physics.jumping = game.IsKeyDown( KeyBinding.Jump );
-				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.Speed );
-				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBinding.HalfSpeed );
-				Hacks.FlyingUp = game.IsKeyDown( KeyBinding.FlyUp );
-				Hacks.FlyingDown = game.IsKeyDown( KeyBinding.FlyDown );
+				physics.jumping = game.IsKeyDown( KeyBind.Jump );
+				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown( KeyBind.Speed );
+				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBind.HalfSpeed );
+				Hacks.FlyingUp = game.IsKeyDown( KeyBind.FlyUp );
+				Hacks.FlyingDown = game.IsKeyDown( KeyBind.FlyDown );
 			}
 		}
 		

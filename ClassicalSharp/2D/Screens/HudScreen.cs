@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui {
 			if( playerList != null && game.ActiveScreen == this ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
-				if( !game.IsKeyDown( KeyBinding.PlayerList ) ) {
+				if( !game.IsKeyDown( KeyBind.PlayerList ) ) {
 					playerList.Dispose();
 					playerList = null;
 				}
@@ -113,7 +113,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
-			Key playerListKey = game.Mapping( KeyBinding.PlayerList );
+			Key playerListKey = game.Mapping( KeyBind.PlayerList );
 			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
 			if( key == playerListKey && handles ) {
 				if( playerList == null && !game.Network.IsSinglePlayer )
@@ -139,7 +139,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( key == game.Mapping( KeyBinding.PlayerList ) ) {
+			if( key == game.Mapping( KeyBind.PlayerList ) ) {
 				if( playerList != null ) {
 					playerList.Dispose();
 					playerList = null;
