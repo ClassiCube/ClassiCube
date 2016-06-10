@@ -5,10 +5,10 @@ using OpenTK.Input;
 namespace ClassicalSharp {
 	
 	public enum KeyBind {
-		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, OpenChat,
-		OpenInventory, ViewDistance, SendChat, PauseOrExit, PlayerList, 
-		Speed, NoClip, Fly, FlyUp, FlyDown, ExtendedInput, HideFps,
-		Screenshot, Fullscreen, ThirdPersonCamera, HideGui, ShowAxisLines,
+		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, Chat,
+		Inventory, ToggleFog, SendChat, PauseOrExit, PlayerList, 
+		Speed, NoClip, Fly, FlyUp, FlyDown, ExtInput, HideFps,
+		Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
 		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight,
 	}
 	
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		}
 		
 		public KeyMap() {
-			// See comment in Game() constructor
+			// See comment in Inventory() constructor for why this is necessary.
 			keys = new Key[30];
 			keys[0] = Key.W; keys[1] = Key.S; keys[2] = Key.A; keys[3] = Key.D;
 			keys[4] = Key.Space; keys[5] = Key.R; keys[6] = Key.Enter; keys[7] = Key.T;

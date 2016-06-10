@@ -356,7 +356,7 @@ namespace ClassicalSharp.Gui {
 				return key < Key.F1 || key > Key.F35;
 			}
 
-			if( key == game.Mapping( KeyBind.OpenChat ) ) {
+			if( key == game.Mapping( KeyBind.Chat ) ) {
 				OpenTextInputBar( "" );
 			} else if( key == Key.Slash ) {
 				OpenTextInputBar( "/" );

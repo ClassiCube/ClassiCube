@@ -218,11 +218,11 @@ namespace ClassicalSharp {
 					game.window.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
-			} else if( key == Keys[KeyBind.ShowAxisLines] ) {
+			} else if( key == Keys[KeyBind.AxisLines] ) {
 				game.ShowAxisLines = !game.ShowAxisLines;
-			} else if( key == Keys[KeyBind.ThirdPersonCamera] ) {
+			} else if( key == Keys[KeyBind.ThirdPerson] ) {
 				game.CycleCamera();
-			} else if( key == Keys[KeyBind.ViewDistance] ) {
+			} else if( key == Keys[KeyBind.ToggleFog] ) {
 				if( game.IsKeyDown( Key.ShiftLeft ) || game.IsKeyDown( Key.ShiftRight ) ) {
 					CycleDistanceBackwards();
 				} else {
@@ -230,7 +230,7 @@ namespace ClassicalSharp {
 				}
 			} else if( key == Keys[KeyBind.PauseOrExit] && !game.World.IsNotLoaded ) {
 				game.SetNewScreen( new PauseScreen( game ) );
-			} else if( key == Keys[KeyBind.OpenInventory] ) {
+			} else if( key == Keys[KeyBind.Inventory] ) {
 				game.SetNewScreen( new InventoryScreen( game ) );
 			} else if( key == Key.F9 ) {
 				game.ShowClock = !game.ShowClock;

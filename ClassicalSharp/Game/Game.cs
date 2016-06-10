@@ -602,6 +602,4 @@ namespace ClassicalSharp {
 			this.skinServer = skinServer;
 		}
 	}
-
-	
 }

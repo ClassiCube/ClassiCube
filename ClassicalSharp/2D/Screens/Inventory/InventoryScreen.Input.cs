@@ -55,7 +55,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == game.Mapping( KeyBind.PauseOrExit ) ||
-			   key == game.Mapping( KeyBind.OpenInventory ) ) {
+			   key == game.Mapping( KeyBind.Inventory ) ) {
 				game.SetNewScreen( null );
 			} else if( key == Key.Enter && selIndex != -1 ) {
 				game.Inventory.HeldBlock = blocksTable[selIndex];

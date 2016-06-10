@@ -20,8 +20,8 @@ namespace ClassicalSharp.Gui {
 		Font keyFont;
 		TextWidget statusWidget;
 		static string[] keyNames;
-		string[] leftDesc, rightDesc;
-		KeyBind[] left, right;
+		protected string[] leftDesc, rightDesc;
+		protected KeyBind[] left, right;
 		
 		protected int btnDistance = 45, btnWidth = 260, btnHeight = 35;
 		protected string title = "Controls";
@@ -36,12 +36,6 @@ namespace ClassicalSharp.Gui {
 			regularFont = new Font( game.FontName, 16, FontStyle.Italic );
 			statusWidget = ChatTextWidget.Create( game, 0, 130, "",
 			                                     Anchor.Centre, Anchor.Centre, regularFont );
-		}
-		
-		protected void SetBinds( KeyBind[] left, string[] leftDesc,
-		                        KeyBind[] right, string[] rightDesc ) {
-			this.left = left; this.leftDesc = leftDesc;
-			this.right = right; this.rightDesc = rightDesc;
 		}
 
 		protected void MakeWidgets( int y ) {

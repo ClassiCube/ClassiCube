@@ -422,7 +422,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void InitFields() {
-			// See comment in Game() constructor for why this is necessary.			
+			// See comment in Inventory() constructor for why this is necessary.
 			blendFuncs = new BlendingFactor[6];
 			blendFuncs[0] = BlendingFactor.Zero; blendFuncs[1] = BlendingFactor.One;
 			blendFuncs[2] = BlendingFactor.SrcAlpha; blendFuncs[3] = BlendingFactor.OneMinusSrcAlpha;
