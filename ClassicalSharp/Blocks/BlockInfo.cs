@@ -97,14 +97,14 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			for( int tile = 1; tile < BlocksCount; tile++ ) {
-				MaxBB[tile].Y = 1;
-				BlocksLight[tile] = true;
-				IsOpaque[tile] = true;
-				IsOpaqueY[tile] = true;
-				Collide[tile] = CollideType.Solid;
-				SpeedMultiplier[tile] = 1;
-				CullWithNeighbours[tile] = true;
+			for( int block = 1; block < BlocksCount; block++ ) {
+				MaxBB[block].Y = 1;
+				BlocksLight[block] = true;
+				IsOpaque[block] = true;
+				IsOpaqueY[block] = true;
+				Collide[block] = CollideType.Solid;
+				SpeedMultiplier[block] = 1;
+				CullWithNeighbours[block] = true;
 			}
 			for( int block = 0; block < BlocksCount; block++ )
 				Name[block] = "Invalid";
@@ -151,9 +151,9 @@ namespace ClassicalSharp {
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
-			for( int tile = Block.Stone; tile <= Block.Obsidian; tile++ ) {
-				canPlace[tile] = true;
-				canDelete[tile] = true;
+			for( int block = Block.Stone; block <= BlockInfo.MaxOriginalBlock; block++ ) {
+				canPlace[block] = true;
+				canDelete[block] = true;
 			}
 			canPlace[Block.Lava] = false;
 			canPlace[Block.Water] = false;

@@ -73,9 +73,9 @@ namespace ClassicalSharp {
 		
 		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte tile = chunk[chunkIndex];
-			return tile == initialTile && !info.IsFaceHidden( tile, chunk[chunkIndex + offsets[face]], face )
-				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, tile ) );
+			byte rawBlock = chunk[chunkIndex];
+			return rawBlock == initialTile && !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
+				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
 		}
 		
 		bool IsLit( int x, int y, int z, int face, byte type ) {
@@ -154,16 +154,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void AddSpriteVertices( byte tile ) {
-			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, Side.Left ) );
+		void AddSpriteVertices( byte block ) {
+			int i = atlas.Get1DIndex( info.GetTextureLoc( block, Side.Left ) );
 			DrawInfo part = drawInfoNormal[i];
 			part.spriteCount += 6 * 4;
 			part.iCount += 6 * 4;
 		}
 		
-		unsafe void AddVertices( byte tile, int count, int face ) {
-			int i = atlas.Get1DIndex( info.GetTextureLoc( tile, face ) );
-			DrawInfo part = info.IsTranslucent[tile] ? drawInfoTranslucent[i] : drawInfoNormal[i];
+		unsafe void AddVertices( byte block, int count, int face ) {
+			int i = atlas.Get1DIndex( info.GetTextureLoc( block, face ) );
+			DrawInfo part = info.IsTranslucent[block] ? drawInfoTranslucent[i] : drawInfoNormal[i];
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.vCount;
@@ -172,7 +172,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawLeftFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Left];
+			int texId = info.textures[curBlock * Side.Sides + Side.Left];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Left) & 1;
@@ -191,7 +191,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawRightFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Right];
+			int texId = info.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Right) & 1;
@@ -210,7 +210,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawFrontFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Front];
+			int texId = info.textures[curBlock * Side.Sides + Side.Front];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Front) & 1;
@@ -229,7 +229,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBackFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Back];
+			int texId = info.textures[curBlock * Side.Sides + Side.Back];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Back) & 1;
@@ -248,7 +248,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBottomFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Bottom];
+			int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Bottom) & 1;
@@ -266,7 +266,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawTopFace( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Top];
+			int texId = info.textures[curBlock * Side.Sides + Side.Top];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Top) & 1;
@@ -284,7 +284,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawSprite( int count ) {
-			int texId = info.textures[tile * Side.Sides + Side.Right];
+			int texId = info.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float blockHeight = 1;

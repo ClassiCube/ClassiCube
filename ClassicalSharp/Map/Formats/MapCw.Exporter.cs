@@ -113,9 +113,9 @@ namespace ClassicalSharp.Map {
 			
 			nbt.WriteCpeExtCompound( "BlockDefinitions", 1 );
 			uint[] flags = game.BlockInfo.DefinedCustomBlocks;
-			for( int tile = 1; tile < 256; tile++ ) {
-				if( (flags[tile >> 5] & (1u << (tile & 0x1F))) != 0 )
-					WriteBlockDefinitionCompound( (byte)tile );
+			for( int block = 1; block < 256; block++ ) {
+				if( (flags[block >> 5] & (1u << (block & 0x1F))) != 0 )
+					WriteBlockDefinitionCompound( (byte)block );
 			}
 			nbt.Write( NbtTagType.End );
 			

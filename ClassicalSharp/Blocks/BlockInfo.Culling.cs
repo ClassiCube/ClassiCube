@@ -15,34 +15,34 @@ namespace ClassicalSharp {
 
 		internal void SetupCullingCache() {
 			IsAir[0] = true;
-			for( int tile = 1; tile < BlocksCount; tile++ )
-				CheckOpaque( tile );
-			for( int tile = 0; tile < CanStretch.Length; tile++ )
-				CanStretch[tile] = true;
+			for( int block = 1; block < BlocksCount; block++ )
+				CheckOpaque( block );
+			for( int block = 0; block < CanStretch.Length; block++ )
+				CanStretch[block] = true;
 			
-			for( int tileI = 1; tileI < BlocksCount; tileI++ ) {
+			for( int blockI = 1; blockI < BlocksCount; blockI++ ) {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
-					byte tile = (byte)tileI, neighbour = (byte)neighbourI;
-					UpdateCulling( tile, neighbour );
+					byte block = (byte)blockI, neighbour = (byte)neighbourI;
+					UpdateCulling( block, neighbour );
 				}
 			}
 		}
 		
-		internal void SetupCullingCache( byte tile ) {
+		internal void SetupCullingCache( byte block ) {
 			IsAir[0] = true;
-			CheckOpaque( tile );
-			CanStretch[tile] = true;
+			CheckOpaque( block );
+			CanStretch[block] = true;
 			
 			for( int other = 1; other < BlocksCount; other++ ) {
-				UpdateCulling( tile, (byte)other );
-				UpdateCulling( (byte)other, tile );
+				UpdateCulling( block, (byte)other );
+				UpdateCulling( (byte)other, block );
 			}
 		}
 		
-		void CheckOpaque( int tile ) {
-			if( MinBB[tile] != Vector3.Zero || MaxBB[tile] != Vector3.One ) {
-				IsOpaque[tile] = false;
-				IsTransparent[tile] = true;
+		void CheckOpaque( int block ) {
+			if( MinBB[block] != Vector3.Zero || MaxBB[block] != Vector3.One ) {
+				IsOpaque[block] = false;
+				IsTransparent[block] = true;
 			}
 		}
 		
@@ -98,22 +98,22 @@ namespace ClassicalSharp {
 			hidden[block * BlocksCount + other] |= (byte)(bit << side);
 		}
 		
-		/// <summary> Returns whether the face at the given face of the tile
-		/// should be drawn with the neighbour 'block' present on the other side of the face. </summary>
-		public bool IsFaceHidden( byte tile, byte block, int tileSide ) {
-			return (hidden[tile * BlocksCount + block] & (1 << tileSide)) != 0;
+		/// <summary> Returns whether the face at the given face of the block
+		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
+		public bool IsFaceHidden( byte block, byte other, int tileSide ) {
+			return (hidden[block * BlocksCount + other] & (1 << tileSide)) != 0;
 		}
 		
-		void SetXStretch( byte tile, bool stretch ) {
-			CanStretch[tile * Side.Sides + Side.Front] = stretch;
-			CanStretch[tile * Side.Sides + Side.Back] = stretch;
-			CanStretch[tile * Side.Sides + Side.Top] = stretch;
-			CanStretch[tile * Side.Sides + Side.Bottom] = stretch;
+		void SetXStretch( byte block, bool stretch ) {
+			CanStretch[block * Side.Sides + Side.Front] = stretch;
+			CanStretch[block * Side.Sides + Side.Back] = stretch;
+			CanStretch[block * Side.Sides + Side.Top] = stretch;
+			CanStretch[block * Side.Sides + Side.Bottom] = stretch;
 		}
 		
-		void SetZStretch( byte tile, bool stretch ) {
-			CanStretch[tile * Side.Sides + Side.Left] = stretch;
-			CanStretch[tile * Side.Sides + Side.Right] = stretch;
+		void SetZStretch( byte block, bool stretch ) {
+			CanStretch[block * Side.Sides + Side.Left] = stretch;
+			CanStretch[block * Side.Sides + Side.Right] = stretch;
 		}
 	}
 }

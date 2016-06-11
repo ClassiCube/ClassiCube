@@ -3,7 +3,7 @@ using System;
 
 namespace ClassicalSharp {
 	
-	/// <summary> Integer constants for the six tile sides of a block. </summary>
+	/// <summary> Integer constants for the six sides of a block. </summary>
 	public static class Side {
 		/// <summary> Face X = 0. </summary>
 		public const int Left = 0;
