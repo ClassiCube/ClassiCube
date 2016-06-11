@@ -37,8 +37,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderSides( double delta ) {
 			if( sidesVb == -1 ) return;
-			Block block = game.World.Env.SidesBlock;
-			if( game.BlockInfo.IsAir[(byte)block] ) return;
+			byte block = game.World.Env.SidesBlock;
+			if( game.BlockInfo.IsAir[block] ) return;
 			
 			graphics.Texturing = true;
 			graphics.AlphaTest = true;
@@ -52,8 +52,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderEdges( double delta ) {
 			if( edgesVb == -1 ) return;
-			Block block = game.World.Env.EdgeBlock;
-			if( game.BlockInfo.IsAir[(byte)block] ) return;
+			byte block = game.World.Env.EdgeBlock;
+			if( game.BlockInfo.IsAir[block] ) return;
 			
 			Vector3 camPos = game.CurrentCameraPos;
 			graphics.AlphaBlending = true;
@@ -107,11 +107,11 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.EdgeBlock ) {
 				MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock );
-				if( game.BlockInfo.BlocksLight[(byte)map.Env.EdgeBlock] != fullColEdge )
+				if( game.BlockInfo.BlocksLight[map.Env.EdgeBlock] != fullColEdge )
 					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SidesBlock ) {
 				MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
-				if( game.BlockInfo.BlocksLight[(byte)map.Env.SidesBlock] != fullColSides )
+				if( game.BlockInfo.BlocksLight[map.Env.SidesBlock] != fullColSides )
 					ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.EdgeLevel ) {
 				ResetSidesAndEdges( null, null );
@@ -147,7 +147,7 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[sidesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColSides = game.BlockInfo.FullBright[(byte)game.World.Env.SidesBlock];
+			fullColSides = game.BlockInfo.FullBright[game.World.Env.SidesBlock];
 			FastColour col = fullColSides ? FastColour.White : map.Env.Shadowlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, 0, ref vertices );
@@ -174,7 +174,7 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[edgesVertices];
 			IntPtr ptr = (IntPtr)vertices;
 			
-			fullColEdge = game.BlockInfo.FullBright[(byte)game.World.Env.EdgeBlock];
+			fullColEdge = game.BlockInfo.FullBright[game.World.Env.EdgeBlock];
 			FastColour col = fullColEdge ? FastColour.White : map.Env.Sunlight;
 			foreach( Rectangle rec in rects ) {
 				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, -0.1f/16f, ref vertices );
@@ -250,13 +250,12 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
-		void MakeTexture( ref int texId, ref int lastTexLoc, Block block ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( (byte)block, Side.Top );
-			if( texLoc != lastTexLoc ) {
-				lastTexLoc = texLoc;
-				game.Graphics.DeleteTexture( ref texId );
-				texId = game.TerrainAtlas.LoadTextureElement( texLoc );
-			}
+		void MakeTexture( ref int texId, ref int lastTexLoc, byte block ) {
+			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Top );
+			if( texLoc == lastTexLoc ) return;
+			lastTexLoc = texLoc;
+			game.Graphics.DeleteTexture( ref texId );
+			texId = game.TerrainAtlas.LoadTextureElement( texLoc );
 		}
 	}
 }

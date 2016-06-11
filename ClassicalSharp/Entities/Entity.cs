@@ -77,17 +77,17 @@ namespace ClassicalSharp.Entities {
 		}
 
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
-		public Block BlockUnderFeet {
+		public byte BlockUnderFeet {
 			get { return GetBlock( new Vector3( Position.X, Position.Y - 0.01f, Position.Z ) ); }
 		}
 		
 		/// <summary> Gets the block at player's eye position. </summary>
-		public Block BlockAtHead {
+		public byte BlockAtHead {
 			get { return GetBlock( EyePosition ); }
 		}
 		
-		protected Block GetBlock( Vector3 coords ) {
-			return (Block)game.World.SafeGetBlock( Vector3I.Floor( coords ) );
+		protected byte GetBlock( Vector3 coords ) {
+			return game.World.SafeGetBlock( Vector3I.Floor( coords ) );
 		}
 	}
 }

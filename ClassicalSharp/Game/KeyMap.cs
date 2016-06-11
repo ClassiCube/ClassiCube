@@ -45,7 +45,8 @@ namespace ClassicalSharp {
 		}
 		
 		public KeyMap() {
-			// See comment in Inventory() constructor for why this is necessary.
+			// We can't use enum array initaliser because this causes problems when building with mono
+			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
 			keys = new Key[30];
 			keys[0] = Key.W; keys[1] = Key.S; keys[2] = Key.A; keys[3] = Key.D;
 			keys[4] = Key.Space; keys[5] = Key.R; keys[6] = Key.Enter; keys[7] = Key.T;

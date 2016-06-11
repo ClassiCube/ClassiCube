@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			// See comment in Inventory() constructor for why this is necessary.
+			// See comment in KeyMap() constructor for why this is necessary.
 			left = new KeyBind[5];
 			left[0] = KeyBind.Forward; left[1] = KeyBind.Back; left[2] = KeyBind.Jump;
 			left[3] = KeyBind.Chat; left[4] = KeyBind.SetSpawn;

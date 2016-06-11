@@ -56,7 +56,7 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAnyRope() {
 			AABB bounds = CollisionBounds;
 			bounds.Max.Y += 0.5f/16f;
-			return TouchesAny( bounds, b => b == (byte)Block.Rope );
+			return TouchesAny( bounds, b => b == Block.Rope );
 		}
 		
 		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
@@ -79,8 +79,8 @@ namespace ClassicalSharp.Entities {
 			{
 				if( !game.World.IsValidPos( x, y, z ) ) continue;
 				byte block = game.World.GetBlock( x, y, z );
-				byte below = (y - 1) < 0 ? (byte)0 : game.World.GetBlock( x, y - 1, z );
-				byte above = (y + 1) >= height ? (byte)0 : game.World.GetBlock( x, y + 1, z );
+				byte below = (y - 1) < 0 ? Block.Air : game.World.GetBlock( x, y - 1, z );
+				byte above = (y + 1) >= height ? Block.Air : game.World.GetBlock( x, y + 1, z );
 				
 				// TODO: use recording to find right constants when I have more time
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
@@ -101,14 +101,14 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are lava or still lava. </summary>
 		public bool TouchesAnyLava() {
 			AABB bounds = CollisionBounds.Expand( liqExpand );
-			return TouchesAnyLiquid( bounds, (byte)Block.Lava, (byte)Block.StillLava );
+			return TouchesAnyLiquid( bounds, Block.Lava, Block.StillLava );
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = CollisionBounds.Expand( liqExpand );
-			return TouchesAnyLiquid( bounds, (byte)Block.Water, (byte)Block.StillWater );
+			return TouchesAnyLiquid( bounds, Block.Water, Block.StillWater );
 		}
 	}
 }

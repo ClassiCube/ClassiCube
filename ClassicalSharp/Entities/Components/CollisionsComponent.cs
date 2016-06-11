@@ -27,9 +27,9 @@ namespace ClassicalSharp.Entities {
 		
 		public byte GetPhysicsBlockId( int x, int y, int z ) {
 			if( x < 0 || x >= game.World.Width || z < 0 ||
-			   z >= game.World.Length || y < 0 ) return (byte)Block.Bedrock;
+			   z >= game.World.Length || y < 0 ) return Block.Bedrock;
 			
-			if( y >= game.World.Height ) return (byte)Block.Air;
+			if( y >= game.World.Height ) return Block.Air;
 			return game.World.GetBlock( x, y, z );
 		}
 		

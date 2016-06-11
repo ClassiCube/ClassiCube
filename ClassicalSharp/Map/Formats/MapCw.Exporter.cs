@@ -93,9 +93,9 @@ namespace ClassicalSharp.Map {
 			
 			nbt.WriteCpeExtCompound( "EnvMapAppearance", 1 );
 			nbt.Write( NbtTagType.Int8 );
-			nbt.Write( "SideBlock" ); nbt.WriteUInt8( (byte)map.Env.SidesBlock );
+			nbt.Write( "SideBlock" ); nbt.WriteUInt8( map.Env.SidesBlock );
 			nbt.Write( NbtTagType.Int8 );
-			nbt.Write( "EdgeBlock" ); nbt.WriteUInt8( (byte)map.Env.EdgeBlock );
+			nbt.Write( "EdgeBlock" ); nbt.WriteUInt8( map.Env.EdgeBlock );
 			nbt.Write( NbtTagType.Int16 );
 			nbt.Write( "SideLevel" ); nbt.WriteInt16( (short)map.Env.EdgeHeight );
 			nbt.Write( NbtTagType.String );

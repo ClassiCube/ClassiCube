@@ -4,73 +4,80 @@ using System;
 namespace ClassicalSharp {
 	
 	/// <summary> Enumeration of all blocks in Minecraft Classic, including CPE ones. </summary>
-	public enum Block : byte {
-		Air = 0,
-		Stone = 1,
-		Grass = 2,
-		Dirt = 3,
-		Cobblestone = 4,
-		Wood = 5,
-		Sapling = 6,
-		Bedrock = 7,
-		Water = 8,
-		StillWater = 9,
-		Lava = 10,
-		StillLava = 11,
-		Sand = 12,
-		Gravel = 13,
-		GoldOre = 14,
-		IronOre = 15,
-		CoalOre = 16,
-		Log = 17,
-		Leaves = 18,
-		Sponge = 19,
-		Glass = 20,
-		Red = 21,
-		Orange = 22,
-		Yellow = 23,
-		Lime = 24,
-		Green = 25,
-		Teal = 26,
-		Aqua = 27,
-		Cyan = 28,
-		Blue = 29,
-		Indigo = 30,
-		Violet = 31,
-		Magenta = 32,
-		Pink = 33,
-		Black = 34,
-		Gray = 35,
-		White = 36,
-		Dandelion = 37,
-		Rose = 38,
-		BrownMushroom = 39,
-		RedMushroom = 40,
-		Gold = 41,
-		Iron = 42,
-		DoubleSlab = 43,
-		Slab = 44,
-		Brick = 45,
-		TNT = 46,
-		Bookshelf = 47,
-		MossyRocks = 48,
-		Obsidian = 49,
+	public static class Block {
 		
-		CobblestoneSlab = 50,
-		Rope = 51,
-		Sandstone = 52,
-		Snow = 53,
-		Fire = 54,
-		LightPink = 55,
-		ForestGreen = 56,
-		Brown = 57,
-		DeepBlue = 58,
-		Turquoise = 59,
-		Ice = 60,
-		CeramicTile = 61,
-		Magma = 62,
-		Pillar = 63,
-		Crate = 64,
-		StoneBrick = 65,
+		public const byte Air = 0;
+		public const byte Stone = 1;
+		public const byte Grass = 2;
+		public const byte Dirt = 3;
+		public const byte Cobblestone = 4;
+		public const byte Wood = 5;
+		public const byte Sapling = 6;
+		public const byte Bedrock = 7;
+		public const byte Water = 8;
+		public const byte StillWater = 9;
+		public const byte Lava = 10;
+		public const byte StillLava = 11;
+		public const byte Sand = 12;
+		public const byte Gravel = 13;
+		public const byte GoldOre = 14;
+		public const byte IronOre = 15;
+		public const byte CoalOre = 16;
+		public const byte Log = 17;
+		public const byte Leaves = 18;
+		public const byte Sponge = 19;
+		public const byte Glass = 20;
+		public const byte Red = 21;
+		public const byte Orange = 22;
+		public const byte Yellow = 23;
+		public const byte Lime = 24;
+		public const byte Green = 25;
+		public const byte Teal = 26;
+		public const byte Aqua = 27;
+		public const byte Cyan = 28;
+		public const byte Blue = 29;
+		public const byte Indigo = 30;
+		public const byte Violet = 31;
+		public const byte Magenta = 32;
+		public const byte Pink = 33;
+		public const byte Black = 34;
+		public const byte Gray = 35;
+		public const byte White = 36;
+		public const byte Dandelion = 37;
+		public const byte Rose = 38;
+		public const byte BrownMushroom = 39;
+		public const byte RedMushroom = 40;
+		public const byte Gold = 41;
+		public const byte Iron = 42;
+		public const byte DoubleSlab = 43;
+		public const byte Slab = 44;
+		public const byte Brick = 45;
+		public const byte TNT = 46;
+		public const byte Bookshelf = 47;
+		public const byte MossyRocks = 48;
+		public const byte Obsidian = 49;
+		
+		public const byte CobblestoneSlab = 50;
+		public const byte Rope = 51;
+		public const byte Sandstone = 52;
+		public const byte Snow = 53;
+		public const byte Fire = 54;
+		public const byte LightPink = 55;
+		public const byte ForestGreen = 56;
+		public const byte Brown = 57;
+		public const byte DeepBlue = 58;
+		public const byte Turquoise = 59;
+		public const byte Ice = 60;
+		public const byte CeramicTile = 61;
+		public const byte Magma = 62;
+		public const byte Pillar = 63;
+		public const byte Crate = 64;
+		public const byte StoneBrick = 65;
+		
+		public const string Names = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
+			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
+            " Teal Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom" +
+			" Gold Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone" +
+			" Snow Fire LightPink ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";
 	}
 }

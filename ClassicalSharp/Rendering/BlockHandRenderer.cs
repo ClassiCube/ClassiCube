@@ -27,7 +27,7 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			block = new BlockModel( game );
 			fakeP = new FakePlayer( game );
-			lastType = (byte)game.Inventory.HeldBlock;
+			lastType = game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 			game.UserEvents.BlockChanged += BlockChanged;
 		}
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Renderers {
 
 			Vector3 last = fakeP.Position;
 			fakeP.Position = Vector3.Zero;
-			type = (byte)game.Inventory.HeldBlock;
+			type = game.Inventory.HeldBlock;
 			if( playAnimation ) DoAnimation( delta, last );
 			PerformViewBobbing( t );
 			SetupMatrices();
@@ -124,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 			animSpeed = Math.PI / period;
 			
 			if( updateLastType )
-				lastType = (byte)game.Inventory.HeldBlock;
+				lastType = game.Inventory.HeldBlock;
 			fakeP.Position = Vector3.Zero;
 		}
 		

@@ -84,8 +84,8 @@ namespace ClassicalSharp.Map {
 				
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
 				byte edgeBlock = (byte)curCpeExt["EdgeBlock"].Value;
-				map.Env.SetSidesBlock( (Block)sidesBlock );
-				map.Env.SetEdgeBlock( (Block)edgeBlock );
+				map.Env.SetSidesBlock( sidesBlock );
+				map.Env.SetEdgeBlock( edgeBlock );
 				map.Env.SetEdgeLevel( (short)curCpeExt["SideLevel"].Value );
 			}
 			if( CheckKey( "EnvWeatherType", 1, metadata ) ) {
@@ -138,12 +138,12 @@ namespace ClassicalSharp.Map {
 			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
 			byte[] data = (byte[])compound["Textures"].Value;
-			info.SetTex( data[0], Side.Top, (Block)id );
-			info.SetTex( data[1], Side.Bottom, (Block)id );
-			info.SetTex( data[2], Side.Left, (Block)id );
-			info.SetTex( data[3], Side.Right, (Block)id );
-			info.SetTex( data[4], Side.Front, (Block)id );
-			info.SetTex( data[5], Side.Back, (Block)id );
+			info.SetTex( data[0], Side.Top, id );
+			info.SetTex( data[1], Side.Bottom, id );
+			info.SetTex( data[2], Side.Left, id );
+			info.SetTex( data[3], Side.Right, id );
+			info.SetTex( data[4], Side.Front, id );
+			info.SetTex( data[5], Side.Back, id );
 			
 			info.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
 			byte soundId = (byte)compound["WalkSound"].Value;

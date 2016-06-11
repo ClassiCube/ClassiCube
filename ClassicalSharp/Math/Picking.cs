@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
 		
-		const byte border = (byte)Block.Bedrock;
+		const byte border = Block.Bedrock;
 		static byte GetBlock( World map, int x, int y, int z, Vector3I origin ) {
 			bool sides = map.Env.SidesBlock != Block.Air;
 			int height = Math.Max( 1, map.Env.SidesHeight );

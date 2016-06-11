@@ -8,19 +8,9 @@ namespace ClassicalSharp {
 		
 		public void Init( Game game ) {
 			this.game = game;
-			// We can't use enum array initaliser because this causes problems when building with mono
-			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
-			Hotbar = new Block[9];
-			SetDefaultHotbar();
+			Hotbar = new byte[] { Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood,
+				Block.Log, Block.Leaves, Block.Grass, Block.Slab };
 			MakeMap();
-		}
-		
-		void SetDefaultHotbar() {
-			Hotbar[0] = Block.Stone; Hotbar[1] = Block.Cobblestone;
-			Hotbar[2] = Block.Brick; Hotbar[3] = Block.Dirt;
-			Hotbar[4] = Block.Wood; Hotbar[5] = Block.Log;
-			Hotbar[6] = Block.Leaves; Hotbar[7] = Block.Grass;
-			Hotbar[8] = Block.Slab;
 		}
 
 		public void Ready( Game game ) { }
@@ -31,7 +21,7 @@ namespace ClassicalSharp {
 		
 		int hotbarIndex = 0;
 		public bool CanChangeHeldBlock = true;
-		public Block[] Hotbar;
+		public byte[] Hotbar;
 		Game game;
 		
 		public InventoryPermissions CanPlace = new InventoryPermissions();
@@ -53,7 +43,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Gets or sets the block currently held by the player.
 		/// Fails if the server has forbidden up from changing the held block. </summary>
-		public Block HeldBlock {
+		public byte HeldBlock {
 			get { return Hotbar[hotbarIndex]; }
 			set {
 				if( !CanChangeHeldBlock ) {
@@ -62,7 +52,7 @@ namespace ClassicalSharp {
 				}
 				for( int i = 0; i < Hotbar.Length; i++ ) {
 					if( Hotbar[i] == value ) {
-						Block held = Hotbar[hotbarIndex];
+						byte held = Hotbar[hotbarIndex];
 						Hotbar[hotbarIndex] = Hotbar[i];
 						Hotbar[i] = held;
 						
@@ -75,42 +65,42 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		Block[] map = new Block[256];
-		public Block MapBlock( int i ) { return map[i]; }
+		byte[] map = new byte[256];
+		public byte MapBlock( int i ) { return map[i]; }
 		
 		void MakeMap() {
 			for( int i = 0; i < map.Length; i++ )
-				map[i] = (Block)i;
+				map[i] = (byte)i;
 			if( !game.ClassicMode ) return;
 			
 			// First row
-			map[(byte)Block.Dirt] = Block.Cobblestone;
-			map[(byte)Block.Cobblestone] = Block.Brick;
-			map[(byte)Block.Wood] = Block.Dirt;
-			map[(byte)Block.Sapling] = Block.Wood;
-			map[(byte)Block.Sand] = Block.Log;
-			map[(byte)Block.Gravel] = Block.Leaves;
-			map[(byte)Block.GoldOre] = Block.Glass;
-			map[(byte)Block.IronOre] = Block.Slab;
-			map[(byte)Block.CoalOre] = Block.MossyRocks;
+			map[Block.Dirt] = Block.Cobblestone;
+			map[Block.Cobblestone] = Block.Brick;
+			map[Block.Wood] = Block.Dirt;
+			map[Block.Sapling] = Block.Wood;
+			map[Block.Sand] = Block.Log;
+			map[Block.Gravel] = Block.Leaves;
+			map[Block.GoldOre] = Block.Glass;
+			map[Block.IronOre] = Block.Slab;
+			map[Block.CoalOre] = Block.MossyRocks;
 			// Second row
-			map[(byte)Block.Log] = Block.Sapling;
+			map[Block.Log] = Block.Sapling;
 			for( int i = 0; i < 4; i++ )
-				map[(byte)Block.Leaves + i] = (Block)((byte)Block.Dandelion + i);
-			map[(byte)Block.Orange] = Block.Sand;
-			map[(byte)Block.Yellow] = Block.Gravel;
-			map[(byte)Block.Lime] = Block.Sponge;
+				map[Block.Leaves + i] = (byte)(Block.Dandelion + i);
+			map[Block.Orange] = Block.Sand;
+			map[Block.Yellow] = Block.Gravel;
+			map[Block.Lime] = Block.Sponge;
 			// Third and fourth row
 			for( int i = 0; i < 16; i++ )
-				map[(byte)Block.Green + i] = (Block)((byte)Block.Red + i);
-			map[(byte)Block.Gold] = Block.CoalOre;
-			map[(byte)Block.Iron] = Block.IronOre;
+				map[Block.Green + i] = (byte)(Block.Red + i);
+			map[Block.Gold] = Block.CoalOre;
+			map[Block.Iron] = Block.IronOre;
 			// Fifth row
-			if( !game.PureClassic ) map[(byte)Block.DoubleSlab] = Block.GoldOre;
-			map[(byte)Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
-			map[(byte)Block.Brick] = Block.Iron;
-			map[(byte)Block.TNT] = Block.Gold;
-			map[(byte)Block.MossyRocks] = Block.TNT;
+			if( !game.PureClassic ) map[Block.DoubleSlab] = Block.GoldOre;
+			map[Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
+			map[Block.Brick] = Block.Iron;
+			map[Block.TNT] = Block.Gold;
+			map[Block.MossyRocks] = Block.TNT;
 		}
 	}
 	

@@ -88,14 +88,14 @@ namespace ClassicalSharp.Map {
 		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( int x, int y, int z ) {
 			return IsValidPos( x, y, z ) ?
-				blocks[(y * Length + z) * Width + x] : (byte)0;
+				blocks[(y * Length + z) * Width + x] : Block.Air;
 		}
 		
 		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
 		public byte SafeGetBlock( Vector3I p ) {
 			return IsValidPos( p.X, p.Y, p.Z ) ?
-				blocks[(p.Y * Length + p.Z) * Width + p.X] : (byte)0;
+				blocks[(p.Y * Length + p.Z) * Width + p.X] : Block.Air;
 		}
 		
 		/// <summary> Returns whether the given world coordinates are contained

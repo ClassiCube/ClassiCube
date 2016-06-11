@@ -51,9 +51,9 @@ namespace ClassicalSharp {
 		
 		public uint[] DefinedCustomBlocks = new uint[BlocksCount >> 5];
 		
-		public const byte MaxOriginalBlock = (byte)Block.Obsidian;
+		public const byte MaxOriginalBlock = Block.Obsidian;
 		public const int OriginalCount = MaxOriginalBlock + 1;
-		public const byte MaxCpeBlock = (byte)Block.StoneBrick;
+		public const byte MaxCpeBlock = Block.StoneBrick;
 		public const int CpeCount = MaxCpeBlock + 1;
 		public const byte MaxDefinedBlock = byte.MaxValue;
 		public const int BlocksCount = MaxDefinedBlock + 1;
@@ -108,18 +108,19 @@ namespace ClassicalSharp {
 			}
 			for( int block = 0; block < BlocksCount; block++ )
 				Name[block] = "Invalid";
+			MakeNormalNames();
 			
-			FogDensity[(byte)Block.StillWater] = 0.1f;
-			FogColour[(byte)Block.StillWater] = new FastColour( 5, 5, 51 );
-			FogDensity[(byte)Block.Water] = 0.1f;
-			FogColour[(byte)Block.Water] = new FastColour( 5, 5, 51 );
-			FogDensity[(byte)Block.StillLava] = 2f;
-			FogColour[(byte)Block.StillLava] = new FastColour( 153, 25, 0 );
-			FogDensity[(byte)Block.Lava] = 2f;
-			FogColour[(byte)Block.Lava] = new FastColour( 153, 25, 0 );
-			Collide[(byte)Block.Snow] = CollideType.WalkThrough;
+			FogDensity[Block.StillWater] = 0.1f;
+			FogColour[Block.StillWater] = new FastColour( 5, 5, 51 );
+			FogDensity[Block.Water] = 0.1f;
+			FogColour[Block.Water] = new FastColour( 5, 5, 51 );
+			FogDensity[Block.StillLava] = 2f;
+			FogColour[Block.StillLava] = new FastColour( 153, 25, 0 );
+			FogDensity[Block.Lava] = 2f;
+			FogColour[Block.Lava] = new FastColour( 153, 25, 0 );
+			Collide[Block.Snow] = CollideType.WalkThrough;
 			SpeedMultiplier[0] = 1f;
-			CullWithNeighbours[(byte)Block.Leaves] = false;
+			CullWithNeighbours[Block.Leaves] = false;
 			SetupTextures();
 			
 			SetBlockHeight( Block.Slab, 8/16f );
@@ -139,9 +140,9 @@ namespace ClassicalSharp {
 			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
 			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
 			
-			IsOpaqueY[(byte)Block.Slab] = true;
-			IsOpaqueY[(byte)Block.CobblestoneSlab] = true;
-			IsOpaqueY[(byte)Block.Snow] = true;
+			IsOpaqueY[Block.Slab] = true;
+			IsOpaqueY[Block.CobblestoneSlab] = true;
+			IsOpaqueY[Block.Snow] = true;
 
 			InitBoundingBoxes();
 			InitSounds();
@@ -150,56 +151,56 @@ namespace ClassicalSharp {
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
-			for( int tile = (int)Block.Stone; tile <= (int)Block.Obsidian; tile++ ) {
+			for( int tile = Block.Stone; tile <= Block.Obsidian; tile++ ) {
 				canPlace[tile] = true;
 				canDelete[tile] = true;
 			}
-			canPlace[(int)Block.Lava] = false;
-			canPlace[(int)Block.Water] = false;
-			canPlace[(int)Block.StillLava] = false;
-			canPlace[(int)Block.StillWater] = false;
-			canPlace[(int)Block.Bedrock] = false;
+			canPlace[Block.Lava] = false;
+			canPlace[Block.Water] = false;
+			canPlace[Block.StillLava] = false;
+			canPlace[Block.StillWater] = false;
+			canPlace[Block.Bedrock] = false;
 			
-			canDelete[(int)Block.Bedrock] = false;
-			canDelete[(int)Block.Lava] = false;
-			canDelete[(int)Block.Water] = false;
-			canDelete[(int)Block.StillWater] = false;
-			canDelete[(int)Block.StillLava] = false;
+			canDelete[Block.Bedrock] = false;
+			canDelete[Block.Lava] = false;
+			canDelete[Block.Water] = false;
+			canDelete[Block.StillWater] = false;
+			canDelete[Block.StillLava] = false;
 		}
 		
-		void MarkTransparent( Block id, bool blocks ) {
-			IsTransparent[(int)id] = true;
-			BlocksLight[(int)id] = blocks;
-			IsOpaque[(int)id] = false;
-			IsOpaqueY[(int)id] = false;
+		void MarkTransparent( byte id, bool blocks ) {
+			IsTransparent[id] = true;
+			BlocksLight[id] = blocks;
+			IsOpaque[id] = false;
+			IsOpaqueY[id] = false;
 		}
 		
-		void MarkSprite( Block id ) {
-			IsSprite[(int)id] = true;
-			IsTransparent[(int)id] = true;
-			BlocksLight[(int)id] = false;
-			IsOpaque[(int)id] = false;
-			IsOpaqueY[(int)id] = false;
-			Collide[(int)id] = CollideType.WalkThrough;
+		void MarkSprite( byte id ) {
+			IsSprite[id] = true;
+			IsTransparent[id] = true;
+			BlocksLight[id] = false;
+			IsOpaque[id] = false;
+			IsOpaqueY[id] = false;
+			Collide[id] = CollideType.WalkThrough;
 		}
 		
-		void MarkTranslucent( Block id ) {
-			IsTranslucent[(int)id] = true;
-			IsOpaque[(int)id] = false;
-			IsOpaqueY[(int)id] = false;
+		void MarkTranslucent( byte id ) {
+			IsTranslucent[id] = true;
+			IsOpaque[id] = false;
+			IsOpaqueY[id] = false;
 		}
 		
-		void SetIsLiquid( Block id ) {
-			IsLiquid[(int)id] = true;
-			Collide[(int)id] = CollideType.SwimThrough;
+		void SetIsLiquid( byte id ) {
+			IsLiquid[id] = true;
+			Collide[id] = CollideType.SwimThrough;
 		}
 		
-		void SetBlockHeight( Block id, float height ) {
-			MaxBB[(int)id].Y = height;
+		void SetBlockHeight( byte id, float height ) {
+			MaxBB[id].Y = height;
 		}
 		
-		void SetFullBright( Block id, bool emits ) {
-			FullBright[(int)id] = emits;
+		void SetFullBright( byte id, bool emits ) {
+			FullBright[id] = emits;
 		}
 		
 		public void ResetBlockInfo( byte id, bool updateCulling ) {
@@ -219,7 +220,7 @@ namespace ClassicalSharp {
 			FogDensity[id] = 0;
 			Collide[id] = CollideType.Solid;
 			SpeedMultiplier[id] = 1;
-			SetAll( 0, (Block)id );
+			SetAll( 0, id );
 			if( updateCulling )
 				SetupCullingCache( id );
 			MinBB[id] = Vector3.Zero;
@@ -228,34 +229,28 @@ namespace ClassicalSharp {
 			DigSounds[id] = SoundType.None;
 		}
 		
-		internal static string[] normalNames = null;
-		public string GetBlockName( byte block ) {
-			if( normalNames == null )
-				MakeNormalNames();
-			
-			string value = Name[block];
-			if( block < CpeCount && value == "Invalid" )
-				return normalNames[block];
-			return value;
-		}
-		
-		static void MakeNormalNames() {
+		void MakeNormalNames() {
 			StringBuffer buffer = new StringBuffer( 64 );
-			normalNames = new string[CpeCount];
+			int start = 0;
+			string value = Block.Names;
 			
-			for( int i = 0; i < normalNames.Length; i++ ) {
-				string origName = Enum.GetName( typeof(Block), (byte)i );
+			for( int i = 0; i < BlockInfo.CpeCount; i++ ) {
+				int next = value.IndexOf( ' ', start );
+				if( next == -1 ) next = value.Length;
+				
 				buffer.Clear();
 				int index = 0;
-				SplitUppercase( buffer, origName, ref index );
-				normalNames[i] = buffer.ToString();
+				SplitUppercase( buffer, value, start, next - start, ref index );
+				Name[i] = buffer.ToString();
+				start = next + 1;
 			}
 		}
 		
-		static void SplitUppercase( StringBuffer buffer, string value, ref int index ) {
-			for( int i = 0; i < value.Length; i++ ) {
+		static void SplitUppercase( StringBuffer buffer, string value,
+		                           int start, int len, ref int index ) {
+			for( int i = start; i < start + len; i++ ) {
 				char c = value[i];
-				bool upper = Char.IsUpper( c ) && i > 0;
+				bool upper = Char.IsUpper( c ) && i > start;
 				bool nextLower = i < value.Length - 1 && !Char.IsUpper( value[i + 1] );
 				
 				if( upper && nextLower ) {

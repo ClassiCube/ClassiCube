@@ -30,9 +30,9 @@ namespace ClassicalSharp.Generator {
 			CreateHeightmap();			
 			CreateStrata();
 			CarveCaves();
-			CarveOreVeins( 0.9f, "coal ore", (byte)Block.CoalOre );
-			CarveOreVeins( 0.7f, "iron ore", (byte)Block.IronOre );
-			CarveOreVeins( 0.5f, "gold ore", (byte)Block.GoldOre );
+			CarveOreVeins( 0.9f, "coal ore", Block.CoalOre );
+			CarveOreVeins( 0.7f, "iron ore", Block.IronOre );
+			CarveOreVeins( 0.5f, "gold ore", Block.GoldOre );
 			
 			FloodFillWaterBorders();
 			FloodFillWater();
@@ -84,12 +84,12 @@ namespace ClassicalSharp.Generator {
 					int stoneHeight = dirtHeight + dirtThickness;
 					int mapIndex = z * width + x;
 					
-					blocks[mapIndex] = (byte)Block.Lava;
+					blocks[mapIndex] = Block.Lava;
 					mapIndex += oneY;
 					for( int y = 1; y < height; y++ ) {
 						byte type = 0;
-						if( y <= stoneHeight ) type = (byte)Block.Stone;
-						else if( y <= dirtHeight ) type = (byte)Block.Dirt;
+						if( y <= stoneHeight ) type = Block.Stone;
+						else if( y <= dirtHeight ) type = Block.Dirt;
 						
 						blocks[mapIndex] = type;
 						mapIndex += oneY;
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Generator {
 					double radius = (height - cenY) / (double)height;
 					radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
 					radius = radius + Math.Sin( j * Math.PI / caveLen );
-					FillOblateSpheroid( cenX, cenY, cenZ, (float)radius, (byte)Block.Air );
+					FillOblateSpheroid( cenX, cenY, cenZ, (float)radius, Block.Air );
 				}
 			}
 		}
@@ -173,8 +173,8 @@ namespace ClassicalSharp.Generator {
 			
 			for( int x = 0; x < width; x++ ) {
 				CurrentProgress = 0 + ((float)x / width) * 0.5f;
-				FloodFill( index1, (byte)Block.Water );
-				FloodFill( index2, (byte)Block.Water );
+				FloodFill( index1, Block.Water );
+				FloodFill( index2, Block.Water );
 				index1++; index2++;
 			}
 			
@@ -182,8 +182,8 @@ namespace ClassicalSharp.Generator {
 			index2 = (waterY * length + 0) * width + (width - 1);
 			for( int z = 0; z < length; z++ ) {
 				CurrentProgress = 0.5f + ((float)z / length) * 0.5f;
-				FloodFill( index1, (byte)Block.Water );
-				FloodFill( index2, (byte)Block.Water );
+				FloodFill( index1, Block.Water );
+				FloodFill( index2, Block.Water );
 				index1 += width; index2 += width;
 			}
 		}
@@ -196,7 +196,7 @@ namespace ClassicalSharp.Generator {
 				CurrentProgress = (float)i / numSources;
 				int x = rnd.Next( width ), z = rnd.Next( length );
 				int y = waterLevel - rnd.Next( 1, 3 );
-				FloodFill( (y * length + z) * width + x, (byte)Block.Water );
+				FloodFill( (y * length + z) * width + x, Block.Water );
 			}
 		}
 		
@@ -208,7 +208,7 @@ namespace ClassicalSharp.Generator {
 				CurrentProgress = (float)i / numSources;
 				int x = rnd.Next( width ), z = rnd.Next( length );
 				int y = (int)((waterLevel - 3) * rnd.NextFloat() * rnd.NextFloat());
-				FloodFill( (y * length + z) * width + x, (byte)Block.Lava );
+				FloodFill( (y * length + z) * width + x, Block.Lava );
 			}
 		}
 		
@@ -227,12 +227,11 @@ namespace ClassicalSharp.Generator {
 					if( y >= height ) continue;
 					
 					int index = (y * length + z) * width + x;
-					byte blockAbove = y >= (height - 1) ? (byte)0 : blocks[index + oneY];
-					if( blockAbove == (byte)Block.Water && gravel ) {
-						blocks[index] = (byte)Block.Gravel;
-					} else if( blockAbove == 0 ) {
-						blocks[index] = (y <= waterLevel && sand) ?
-							(byte)Block.Sand : (byte)Block.Grass;
+					byte blockAbove = y >= (height - 1) ? Block.Air : blocks[index + oneY];
+					if( blockAbove == Block.Water && gravel ) {
+						blocks[index] = Block.Gravel;
+					} else if( blockAbove == Block.Air ) {
+						blocks[index] = (y <= waterLevel && sand) ? Block.Sand : Block.Grass;
 					}
 				}
 			}
@@ -244,7 +243,7 @@ namespace ClassicalSharp.Generator {
 			
 			for( int i = 0; i < numPatches; i++ ) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)((byte)Block.Dandelion + rnd.Next( 2 ) );
+				byte type = (byte)(Block.Dandelion + rnd.Next( 2 ));
 				int patchX = rnd.Next( width ), patchZ = rnd.Next( length );
 				for( int j = 0; j < 10; j++ ) {
 					int flowerX = patchX, flowerZ = patchZ;
@@ -256,7 +255,7 @@ namespace ClassicalSharp.Generator {
 						
 						int flowerY = heightmap[flowerZ * width + flowerX] + 1;
 						int index = (flowerY * length + flowerZ) * width + flowerX;
-						if( blocks[index] == 0 && blocks[index - oneY] == (byte)Block.Grass )
+						if( blocks[index] == Block.Air && blocks[index - oneY] == Block.Grass )
 							blocks[index] = type;
 					}
 				}
@@ -269,7 +268,7 @@ namespace ClassicalSharp.Generator {
 			
 			for( int i = 0; i < numPatches; i++ ) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)((byte)Block.BrownMushroom + rnd.Next( 2 ) );
+				byte type = (byte)(Block.BrownMushroom + rnd.Next( 2 ));
 				int patchX = rnd.Next( width );
 				int patchY = rnd.Next( height );
 				int patchZ = rnd.Next( length );
@@ -286,7 +285,7 @@ namespace ClassicalSharp.Generator {
 							continue;
 						
 						int index = (mushY * length + mushZ) * width + mushX;
-						if( blocks[index] == 0 && blocks[index - oneY] == (byte)Block.Stone )
+						if( blocks[index] == Block.Air && blocks[index - oneY] == Block.Stone )
 							blocks[index] = type;
 					}
 				}
@@ -360,9 +359,9 @@ namespace ClassicalSharp.Generator {
 				
 				if( Math.Abs( xx ) == 2 && Math.Abs( zz ) == 2 ) {
 					if( rnd.NextFloat() >= 0.5 )
-						blocks[index] = (byte)Block.Leaves;
+						blocks[index] = Block.Leaves;
 				} else {
-					blocks[index] = (byte)Block.Leaves;
+					blocks[index] = Block.Leaves;
 				}
 			}
 			
@@ -376,16 +375,16 @@ namespace ClassicalSharp.Generator {
 				index = (y * length + z) * width + x;
 
 				if( xx == 0 || zz == 0 ) {
-					blocks[index] = (byte)Block.Leaves;
+					blocks[index] = Block.Leaves;
 				} else if( y == bottomY && rnd.NextFloat() >= 0.5 ) {
-					blocks[index] = (byte)Block.Leaves;
+					blocks[index] = Block.Leaves;
 				}
 			}
 			
 			// then place trunk
 			index = (treeY * length + treeZ ) * width + treeX;
 			for( int y = 0; y < height - 1; y++ ) {
-				blocks[index] = (byte)Block.Log;
+				blocks[index] = Block.Log;
 				index += oneY;
 			}
 		}

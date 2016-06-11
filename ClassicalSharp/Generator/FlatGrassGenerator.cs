@@ -16,10 +16,10 @@ namespace ClassicalSharp.Generator {
 			
 			fixed( byte* ptr = map ) {
 				CurrentState = "Setting dirt blocks";
-				MapSet( ptr, 0, height / 2 - 2, (byte)Block.Dirt );
+				MapSet( ptr, 0, height / 2 - 2, Block.Dirt );
 				
 				CurrentState = "Setting grass blocks";
-				MapSet( ptr, height / 2 - 1, height / 2 - 1, (byte)Block.Grass );
+				MapSet( ptr, height / 2 - 1, height / 2 - 1, Block.Grass );
 			}
 			return map;
 		}

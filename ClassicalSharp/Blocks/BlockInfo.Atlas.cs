@@ -65,46 +65,46 @@ namespace ClassicalSharp {
 			SetAll( Block.Magma );
 		}
 		
-		void SetAll( int textureId, Block blockId ) {
-			int index = (byte)blockId * Side.Sides;
+		void SetAll( int textureId, byte blockId ) {
+			int index = blockId * Side.Sides;
 			for( int i = index; i < index + Side.Sides; i++ ) {
 				textures[i] = (byte)textureId;
 			}
 		}
 		
-		internal void SetSide( int textureId, Block blockId ) {
-			int index = (byte)blockId * Side.Sides;
+		internal void SetSide( int textureId, byte blockId ) {
+			int index = blockId * Side.Sides;
 			for( int i = index; i < index + Side.Bottom; i++ )
 				textures[i] = (byte)textureId;
 		}
 		
-		internal void SetTopAndBottom( int textureId, Block blockId ) {
-			textures[(byte)blockId * Side.Sides + Side.Bottom] = (byte)textureId;
-			textures[(byte)blockId * Side.Sides + Side.Top] = (byte)textureId;
+		internal void SetTopAndBottom( int textureId, byte blockId ) {
+			textures[blockId * Side.Sides + Side.Bottom] = (byte)textureId;
+			textures[blockId * Side.Sides + Side.Top] = (byte)textureId;
 		}
 		
-		internal void SetTex( int textureId, int face, Block blockId ) {
-			textures[(byte)blockId * Side.Sides + face] = (byte)textureId;
+		internal void SetTex( int textureId, int face, byte blockId ) {
+			textures[blockId * Side.Sides + face] = (byte)textureId;
 		}
 
 		int texId;
-		void SetAll( Block blockId ) {
+		void SetAll( byte blockId ) {
 			SetAll( texId, blockId ); texId++;
 		}
 		
-		void SetSide( Block blockId ) {
+		void SetSide( byte blockId ) {
 			SetSide( texId, blockId ); texId++;
 		}
 		
-		void SetTopAndBottom( Block blockId ) {
+		void SetTopAndBottom( byte blockId ) {
 			SetTopAndBottom( texId, blockId ); texId++;
 		}
 		
-		void SetTop( Block blockId ) {
+		void SetTop( byte blockId ) {
 			SetTex( texId, Side.Top, blockId ); texId++;
 		}
 		
-		void SetBottom( Block blockId ) {
+		void SetBottom( byte blockId ) {
 			SetTex( texId, Side.Bottom, blockId ); texId++;
 		}
 		

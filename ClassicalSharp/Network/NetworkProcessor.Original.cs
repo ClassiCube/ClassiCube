@@ -27,7 +27,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public override void SendPosition( Vector3 pos, float yaw, float pitch ) {
-			byte payload = cpe.sendHeldBlock ? (byte)game.Inventory.HeldBlock : (byte)0xFF;
+			byte payload = cpe.sendHeldBlock ? game.Inventory.HeldBlock : (byte)0xFF;
 			MakePositionPacket( pos, yaw, pitch, payload );
 			SendPacket();
 		}

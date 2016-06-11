@@ -16,10 +16,10 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			info = game.BlockInfo;
 			
-			physics.OnPlace[(byte)Block.Sand] = DoFalling;
-			physics.OnPlace[(byte)Block.Gravel] = DoFalling;
-			physics.OnActivate[(byte)Block.Sand] = DoFalling;
-			physics.OnActivate[(byte)Block.Gravel] = DoFalling;
+			physics.OnPlace[Block.Sand] = DoFalling;
+			physics.OnPlace[Block.Gravel] = DoFalling;
+			physics.OnActivate[Block.Sand] = DoFalling;
+			physics.OnActivate[Block.Gravel] = DoFalling;
 		}
 		
 		public void ResetMap() {

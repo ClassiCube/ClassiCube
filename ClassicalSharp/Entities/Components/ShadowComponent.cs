@@ -161,10 +161,10 @@ namespace ClassicalSharp.Entities {
 		byte GetShadowBlock( int x, int y, int z ) {
 			if( x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length ) {
 				if( y == game.World.Env.EdgeHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.World.Env.EdgeBlock] ? 0 : Block.Bedrock);
+					return game.BlockInfo.IsAir[game.World.Env.EdgeBlock] ? Block.Air : Block.Bedrock;
 				if( y == game.World.Env.SidesHeight - 1 )
-					return (byte)(game.BlockInfo.IsAir[(byte)game.World.Env.SidesBlock] ? 0 : Block.Bedrock);
-				return (byte)Block.Air;
+					return game.BlockInfo.IsAir[game.World.Env.SidesBlock] ? Block.Air : Block.Bedrock;
+				return Block.Air;
 			}
 			return game.World.GetBlock( x, y, z );
 		}

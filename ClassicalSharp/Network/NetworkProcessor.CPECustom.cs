@@ -74,16 +74,16 @@ namespace ClassicalSharp.Network {
 			}
 			
 			info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
-			info.SetTex( reader.ReadUInt8(), Side.Top, (Block)block );
+			info.SetTex( reader.ReadUInt8(), Side.Top, block );
 			if( uniqueSideTexs ) {
-				info.SetTex( reader.ReadUInt8(), Side.Left, (Block)block );
-				info.SetTex( reader.ReadUInt8(), Side.Right, (Block)block );
-				info.SetTex( reader.ReadUInt8(), Side.Front, (Block)block );
-				info.SetTex( reader.ReadUInt8(), Side.Back, (Block)block );
+				info.SetTex( reader.ReadUInt8(), Side.Left, block );
+				info.SetTex( reader.ReadUInt8(), Side.Right, block );
+				info.SetTex( reader.ReadUInt8(), Side.Front, block );
+				info.SetTex( reader.ReadUInt8(), Side.Back, block );
 			} else {
-				info.SetSide( reader.ReadUInt8(), (Block)block );
+				info.SetSide( reader.ReadUInt8(), block );
 			}
-			info.SetTex( reader.ReadUInt8(), Side.Bottom, (Block)block );
+			info.SetTex( reader.ReadUInt8(), Side.Bottom, block );
 			
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
 			byte sound = reader.ReadUInt8();

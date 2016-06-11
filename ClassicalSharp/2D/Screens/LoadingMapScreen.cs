@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui {
 			int drawnY = 0, height = game.Height;
 			FastColour col = new FastColour( 64, 64, 64 );
 			
-			int texLoc = game.BlockInfo.GetTextureLoc( (byte)Block.Dirt, Side.Top );
+			int texLoc = game.BlockInfo.GetTextureLoc( Block.Dirt, Side.Top );
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;
 			TextureRec tex = atlas.GetTexRec( texLoc, 1, out atlasIndex );
 			tex.U2 = (float)game.Width / 64;

@@ -206,7 +206,7 @@ namespace ClassicalSharp.Network {
 		
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
 			Vector3I p = e.Coords;
-			byte block = (byte)game.Inventory.HeldBlock;
+			byte block = game.Inventory.HeldBlock;
 			if( e.Block == 0 )
 				SendSetBlock( p.X, p.Y, p.Z, false, block );
 			else

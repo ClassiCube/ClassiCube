@@ -120,13 +120,13 @@ namespace ClassicalSharp.Entities {
 		public void SetUserType( byte value ) {
 			UserType = value;
 			Inventory inv = game.Inventory;
-			inv.CanPlace[(int)Block.Bedrock] = value == 0x64;
-			inv.CanDelete[(int)Block.Bedrock] = value == 0x64;
+			inv.CanPlace[Block.Bedrock] = value == 0x64;
+			inv.CanDelete[Block.Bedrock] = value == 0x64;
 
-			inv.CanPlace[(int)Block.Water] = value == 0x64;
-			inv.CanPlace[(int)Block.StillWater] = value == 0x64;
-			inv.CanPlace[(int)Block.Lava] = value == 0x64;
-			inv.CanPlace[(int)Block.StillLava] = value == 0x64;
+			inv.CanPlace[Block.Water] = value == 0x64;
+			inv.CanPlace[Block.StillWater] = value == 0x64;
+			inv.CanPlace[Block.Lava] = value == 0x64;
+			inv.CanPlace[Block.StillLava] = value == 0x64;
 			CanSeeAllNames = value == 0x64;
 		}
 		

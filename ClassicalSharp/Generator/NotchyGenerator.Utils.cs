@@ -26,7 +26,7 @@ namespace ClassicalSharp.Generator {
 				int dx = xx - x, dy = yy - y, dz = zz - z;
 				if( (dx * dx + 2 * dy * dy + dz * dz) < radiusSq ) {
 					int index = (yy * length + zz) * width + xx;
-					if( blocks[index] == (byte)Block.Stone )
+					if( blocks[index] == Block.Stone )
 						blocks[index] = block;
 				}
 			}

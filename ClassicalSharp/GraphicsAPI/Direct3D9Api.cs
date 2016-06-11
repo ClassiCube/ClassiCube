@@ -591,7 +591,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void InitFields() {
-			// See comment in Inventory() constructor for why this is necessary.
+			// See comment in KeyMap() constructor for why this is necessary.
 			modeMappings = new PrimitiveType[2];
 			modeMappings[0] = PrimitiveType.TriangleList; modeMappings[1] = PrimitiveType.LineList;
 			depthFormats = new Format[6];

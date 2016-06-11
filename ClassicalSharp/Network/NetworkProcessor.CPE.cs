@@ -110,7 +110,7 @@ namespace ClassicalSharp.Network {
 			game.UseCPEBlocks = true;
 
 			if( supportLevel == 1 ) {
-				for( int i = (int)Block.CobblestoneSlab; i <= (int)Block.StoneBrick; i++ ) {
+				for( int i = BlockInfo.MaxOriginalBlock + 1; i <= BlockInfo.MaxCpeBlock; i++ ) {
 					game.Inventory.CanPlace[i] = true;
 					game.Inventory.CanDelete[i] = true;
 				}
@@ -125,7 +125,7 @@ namespace ClassicalSharp.Network {
 			byte blockType = reader.ReadUInt8();
 			bool canChange = reader.ReadUInt8() == 0;
 			game.Inventory.CanChangeHeldBlock = true;
-			game.Inventory.HeldBlock = (Block)blockType;
+			game.Inventory.HeldBlock = blockType;
 			game.Inventory.CanChangeHeldBlock = canChange;
 		}
 		
@@ -277,8 +277,8 @@ namespace ClassicalSharp.Network {
 		
 		internal void HandleEnvSetMapAppearance() {
 			HandleSetMapEnvUrl();
-			game.World.Env.SetSidesBlock( (Block)reader.ReadUInt8() );
-			game.World.Env.SetEdgeBlock( (Block)reader.ReadUInt8() );
+			game.World.Env.SetSidesBlock( reader.ReadUInt8() );
+			game.World.Env.SetEdgeBlock( reader.ReadUInt8() );
 			game.World.Env.SetEdgeLevel( reader.ReadInt16() );
 		}
 		
@@ -382,10 +382,10 @@ namespace ClassicalSharp.Network {
 			switch( type ) {
 				case 0:
 					Utils.Clamp( ref value, byte.MinValue, byte.MaxValue );
-					env.SetSidesBlock( (Block)value ); break;
+					env.SetSidesBlock( (byte)value ); break;
 				case 1:
 					Utils.Clamp( ref value, byte.MinValue, byte.MaxValue );
-					env.SetEdgeBlock( (Block)value ); break;
+					env.SetEdgeBlock( (byte)value ); break;
 				case 2:
 					env.SetEdgeLevel( value ); break;
 				case 3:

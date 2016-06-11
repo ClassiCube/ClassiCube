@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 			font = new Font( game.FontName, 16 );
 		}
 		
-		Block[] blocksTable;
+		byte[] blocksTable;
 		Texture blockInfoTexture;
 		const int maxRows = 8;
 		int blocksPerRow { 
@@ -63,14 +63,14 @@ namespace ClassicalSharp.Gui {
 				
 				// We want to always draw the selected block on top of others
 				if( i == selIndex ) continue;
-				drawer.DrawBatch( (byte)blocksTable[i], blockSize * 0.7f / 2f,
+				drawer.DrawBatch( blocksTable[i], blockSize * 0.7f / 2f,
 				                 x + blockSize / 2, y + blockSize / 2 );
 			}
 			
 			if( selIndex != -1 ) {
 				int x, y;
 				GetCoords( selIndex, out x, out y );
-				drawer.DrawBatch( (byte)blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
+				drawer.DrawBatch( blocksTable[selIndex], (blockSize + selBlockExpand) * 0.7f / 2,
 				                 x + blockSize / 2, y + blockSize / 2 );
 			}
 			drawer.EndBatch();
@@ -130,8 +130,8 @@ namespace ClassicalSharp.Gui {
 			game.Keyboard.KeyRepeat = true;
 		}
 		
-		public void SetBlockTo( Block block ) {
-			selIndex = Array.IndexOf<Block>( blocksTable, block );
+		public void SetBlockTo( byte block ) {
+			selIndex = Array.IndexOf<byte>( blocksTable, block );
 			scrollY = (selIndex / blocksPerRow) - (maxRows - 1);
 			ClampScrollY();
 			MoveCursorToSelected();
@@ -153,20 +153,20 @@ namespace ClassicalSharp.Gui {
 			RecreateBlockInfoTexture();
 		}
 		
-		void UpdateBlockInfoString( Block block ) {
+		void UpdateBlockInfoString( byte block ) {
 			int index = 0;
 			buffer.Clear();
 			buffer.Append( ref index, "&f" );
-			string value = game.BlockInfo.GetBlockName( (byte)block );
+			string value = game.BlockInfo.Name[block];
 			buffer.Append( ref index, value );
 			if( game.ClassicMode ) return;
 			
 			buffer.Append( ref index, " (ID " );
-			buffer.AppendNum( ref index, (byte)block );
+			buffer.AppendNum( ref index, block );
 			buffer.Append( ref index, "&f, place " );
-			buffer.Append( ref index, game.Inventory.CanPlace[(int)block] ? "&aYes" : "&cNo" );
+			buffer.Append( ref index, game.Inventory.CanPlace[block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f, delete " );
-			buffer.Append( ref index, game.Inventory.CanDelete[(int)block] ? "&aYes" : "&cNo" );
+			buffer.Append( ref index, game.Inventory.CanDelete[block] ? "&aYes" : "&cNo" );
 			buffer.Append( ref index, "&f)" );
 		}
 		
@@ -178,7 +178,7 @@ namespace ClassicalSharp.Gui {
 			api.DeleteTexture( ref blockInfoTexture );
 			if( selIndex == -1 ) return;
 			
-			Block block = blocksTable[selIndex];
+			byte block = blocksTable[selIndex];
 			UpdateBlockInfoString( block );
 			string value = buffer.GetString();
 			
@@ -195,7 +195,7 @@ namespace ClassicalSharp.Gui {
 			int blocksCount = 0;
 			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalCount;
 			for( int i = 1; i < count; i++ ) {
-				Block block = game.Inventory.MapBlock( i );
+				byte block = game.Inventory.MapBlock( i );
 				if( Show( block ) ) blocksCount++;
 			}
 			
@@ -203,23 +203,23 @@ namespace ClassicalSharp.Gui {
 			int rowsUsed = Math.Min( maxRows, rows );
 			startX = game.Width / 2 - (blockSize * blocksPerRow) / 2;
 			startY = game.Height / 2 - (rowsUsed * blockSize) / 2;
-			blocksTable = new Block[blocksCount];
+			blocksTable = new byte[blocksCount];
 			
 			int index = 0;
 			for( int i = 1; i < count; i++ ) {
-				Block block = game.Inventory.MapBlock( i );
+				byte block = game.Inventory.MapBlock( i );
 				if( Show( block ) )  blocksTable[index++] = block;
 			}
 		}
 		
-		bool Show( Block block ) {
+		bool Show( byte block ) {
 			if( game.PureClassic && IsHackBlock( block ) )
 				return false;
 			int count = game.UseCPEBlocks ? BlockInfo.CpeCount : BlockInfo.OriginalCount;
-			return (byte)block < count || game.BlockInfo.Name[(byte)block] != "Invalid";
+			return block < count || game.BlockInfo.Name[block] != "Invalid";
 		}
 		
-		bool IsHackBlock( Block block ) {
+		bool IsHackBlock( byte block ) {
 			return block == Block.DoubleSlab || block == Block.Bedrock ||
 				block == Block.Grass || (block >= Block.Water && block <= Block.StillLava);
 		}

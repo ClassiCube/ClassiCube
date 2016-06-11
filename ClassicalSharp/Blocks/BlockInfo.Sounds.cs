@@ -11,9 +11,9 @@ namespace ClassicalSharp {
 		
 		public SoundType[] StepSounds = new SoundType[BlocksCount];
 		
-		int curSoundBlock = (int)Block.Stone;
+		int curSoundBlock = Block.Stone;
 		public void InitSounds() {
-			curSoundBlock = (int)Block.Stone;
+			curSoundBlock = Block.Stone;
 			SetSound( 1, SoundType.Stone ); SetSound( 1, SoundType.Grass ); SetSound( 1, SoundType.Gravel );
 			SetSound( 1, SoundType.Stone ); SetSound( 1, SoundType.Wood ); SetSound( 1, SoundType.Grass, SoundType.None );
 			SetSound( 1, SoundType.Stone ); SetSound( 4, SoundType.None ); SetSound( 1, SoundType.Sand );
@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 			SetSound( 5, SoundType.Cloth ); SetSound( 4, SoundType.Stone ); SetSound( 1, SoundType.Wood );
 			SetSound( 1, SoundType.Stone );
 			
-			curSoundBlock = (int)Block.Fire;
+			curSoundBlock = Block.Fire;
 			SetSound( 1, SoundType.Wood, SoundType.None );
 		}
 		

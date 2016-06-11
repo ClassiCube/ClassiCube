@@ -13,7 +13,7 @@ namespace ClassicalSharp.Singleplayer {
 		public TNTPhysics( Game game, Physics physics ) {
 			this.game = game;
 			map = game.World;
-			physics.OnPlace[(byte)Block.TNT] = HandleTnt;
+			physics.OnPlace[Block.TNT] = HandleTnt;
 		}
 		
 		Vector3[] rayDirs;

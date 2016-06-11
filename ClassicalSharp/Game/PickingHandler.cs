@@ -47,11 +47,11 @@ namespace ClassicalSharp {
 				
 				if( !info.IsAir[old] && (inv.CanPlace[old] || inv.CanDelete[old]) ) {
 					for( int i = 0; i < inv.Hotbar.Length; i++ ) {
-						if( inv.Hotbar[i] == (Block)old ) {
+						if( inv.Hotbar[i] == old ) {
 							inv.HeldBlockIndex = i; return;
 						}
 					}
-					inv.HeldBlock = (Block)old;
+					inv.HeldBlock = old;
 				}
 			} else if( left ) {
 				Vector3I pos = game.SelectedPos.BlockPos;
