@@ -221,7 +221,7 @@ namespace ClassicalSharp.Gui {
 		
 		bool IsHackBlock( byte block ) {
 			return block == Block.DoubleSlab || block == Block.Bedrock ||
-				block == Block.Grass || (block >= Block.Water && block <= Block.StillLava);
+				block == Block.Grass || game.BlockInfo.IsLiquid[block];
 		}
 	}
 }

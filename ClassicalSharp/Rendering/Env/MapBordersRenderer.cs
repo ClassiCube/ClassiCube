@@ -136,53 +136,56 @@ namespace ClassicalSharp.Renderers {
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
-		void RebuildSides( int groundLevel, int axisSize ) {
-			sidesVertices = 0;
-			foreach( Rectangle rec in rects ) {
-				sidesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YQuads outside
-			}
-			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
-			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( groundLevel ), axisSize ); // ZQuads
-			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( groundLevel ), axisSize ); // XQuads
-			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[sidesVertices];
-			IntPtr ptr = (IntPtr)vertices;
+		void RebuildSides( int y, int axisSize ) {
+			float yOffset = 0;
+			byte block = game.World.Env.EdgeBlock;
+			if( game.BlockInfo.IsLiquid[block] ) yOffset = -1.5f/16;
 			
-			fullColSides = game.BlockInfo.FullBright[game.World.Env.SidesBlock];
+			sidesVertices = 0;
+			foreach( Rectangle r in rects )
+				sidesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YQuads outside
+			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
+			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( y ), axisSize ); // ZQuads
+			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( y ), axisSize ); // XQuads
+			VertexP3fT2fC4b* v = stackalloc VertexP3fT2fC4b[sidesVertices];
+			IntPtr ptr = (IntPtr)v;
+			
+			fullColSides = game.BlockInfo.FullBright[block];
 			FastColour col = fullColSides ? FastColour.White : map.Env.Shadowlight;
-			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, groundLevel, axisSize, col, 0, ref vertices );
-			}
+			foreach( Rectangle r in rects )
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, yOffset, ref v );
+			
 			// Work properly for when ground level is below 0
-			int y1 = 0, y2 = groundLevel;
-			if( groundLevel < 0 ) {
-				y1 = groundLevel;
-				y2 = 0;
-			}
-			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, 0, ref vertices );
-			DrawZ( 0, 0, map.Width, y1, y2, axisSize, col, ref vertices );
-			DrawZ( map.Length, 0, map.Width, y1, y2, axisSize, col, ref vertices );
-			DrawX( 0, 0, map.Length, y1, y2, axisSize, col, ref vertices );
-			DrawX( map.Width, 0, map.Length, y1, y2, axisSize, col, ref vertices );
+			int y1 = 0, y2 = y;
+			if( y < 0 ) { y1 = y; y2 = 0; }
+			DrawY( 0, 0, map.Width, map.Length, 0, axisSize, col, 0, 0, ref v );
+			DrawZ( 0, 0, map.Width, y1, y2, axisSize, col, ref v );
+			DrawZ( map.Length, 0, map.Width, y1, y2, axisSize, col, ref v );
+			DrawX( 0, 0, map.Length, y1, y2, axisSize, col, ref v );
+			DrawX( map.Width, 0, map.Length, y1, y2, axisSize, col, ref v );
 			sidesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, sidesVertices );
 		}
 		
-		void RebuildEdges( int waterLevel, int axisSize ) {
+		void RebuildEdges( int y, int axisSize ) {
+			float yOffset = -0.1f/16;
+			byte block = game.World.Env.EdgeBlock;
+			if( game.BlockInfo.IsLiquid[block] ) yOffset = -1.5f/16;
+
 			edgesVertices = 0;
-			foreach( Rectangle rec in rects ) {
-				edgesVertices += Utils.CountVertices( rec.Width, rec.Height, axisSize ); // YPlanes outside
-			}
-			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[edgesVertices];
-			IntPtr ptr = (IntPtr)vertices;
+			foreach( Rectangle r in rects )
+				edgesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YPlanes outside
+			VertexP3fT2fC4b* v = stackalloc VertexP3fT2fC4b[edgesVertices];
+			IntPtr ptr = (IntPtr)v;
 			
-			fullColEdge = game.BlockInfo.FullBright[game.World.Env.EdgeBlock];
+			fullColEdge = game.BlockInfo.FullBright[block];
 			FastColour col = fullColEdge ? FastColour.White : map.Env.Sunlight;
-			foreach( Rectangle rec in rects ) {
-				DrawY( rec.X, rec.Y, rec.X + rec.Width, rec.Y + rec.Height, waterLevel, axisSize, col, -0.1f/16f, ref vertices );
-			}
+			foreach( Rectangle r in rects )
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, yOffset, ref v );
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
 		}
 		
-		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, FastColour col, ref VertexP3fT2fC4b* vertices ) {
+		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 
+		           FastColour col, ref VertexP3fT2fC4b* v ) {
 			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
 				z2 = z1 + axisSize;
@@ -193,15 +196,16 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, z2 - z1, y2 - y1 );
-					*vertices = new VertexP3fT2fC4b( x, y1, z1, rec.U1, rec.V2, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x, y2, z1, rec.U1, rec.V1, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x, y2, z2, rec.U2, rec.V1, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x, y1, z2, rec.U2, rec.V2, col ); vertices++;
+					*v = new VertexP3fT2fC4b( x, y1, z1, rec.U1, rec.V2, col ); v++;
+					*v = new VertexP3fT2fC4b( x, y2, z1, rec.U1, rec.V1, col ); v++;
+					*v = new VertexP3fT2fC4b( x, y2, z2, rec.U2, rec.V1, col ); v++;
+					*v = new VertexP3fT2fC4b( x, y1, z2, rec.U2, rec.V2, col ); v++;
 				}
 			}
 		}
 		
-		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, FastColour col, ref VertexP3fT2fC4b* vertices ) {
+		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, 
+		           FastColour col, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endY = y2, startY = y1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -212,15 +216,16 @@ namespace ClassicalSharp.Renderers {
 					if( y2 > endY ) y2 = endY;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, y2 - y1 );
-					*vertices = new VertexP3fT2fC4b( x1, y1, z, rec.U1, rec.V2, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x1, y2, z, rec.U1, rec.V1, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x2, y2, z, rec.U2, rec.V1, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x2, y1, z, rec.U2, rec.V2, col ); vertices++;
+					*v = new VertexP3fT2fC4b( x1, y1, z, rec.U1, rec.V2, col ); v++;
+					*v = new VertexP3fT2fC4b( x1, y2, z, rec.U1, rec.V1, col ); v++;
+					*v = new VertexP3fT2fC4b( x2, y2, z, rec.U2, rec.V1, col ); v++;
+					*v = new VertexP3fT2fC4b( x2, y1, z, rec.U2, rec.V2, col ); v++;
 				}
 			}
 		}
 		
-		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, FastColour col, float offset, ref VertexP3fT2fC4b* vertices ) {
+		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, 
+		           FastColour col, float offset, float yOffset, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -231,10 +236,10 @@ namespace ClassicalSharp.Renderers {
 					if( z2 > endZ ) z2 = endZ;
 					
 					TextureRec rec = new TextureRec( 0, 0, x2 - x1, z2 - z1 );
-					*vertices = new VertexP3fT2fC4b( x1 + offset, y + offset, z1 + offset, rec.U1, rec.V1, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x1 + offset, y + offset, z2 + offset, rec.U1, rec.V2, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x2 + offset, y + offset, z2 + offset, rec.U2, rec.V2, col ); vertices++;
-					*vertices = new VertexP3fT2fC4b( x2 + offset, y + offset, z1 + offset, rec.U2, rec.V1, col ); vertices++;
+					*v = new VertexP3fT2fC4b( x1 + offset, y + yOffset, z1 + offset, rec.U1, rec.V1, col ); v++;
+					*v = new VertexP3fT2fC4b( x1 + offset, y + yOffset, z2 + offset, rec.U1, rec.V2, col ); v++;
+					*v = new VertexP3fT2fC4b( x2 + offset, y + yOffset, z2 + offset, rec.U2, rec.V2, col ); v++;
+					*v = new VertexP3fT2fC4b( x2 + offset, y + yOffset, z1 + offset, rec.U2, rec.V1, col ); v++;
 				}
 			}
 		}

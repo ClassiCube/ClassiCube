@@ -152,6 +152,9 @@ namespace ClassicalSharp {
 				x1 -= 0.1f/16; x2 -= 0.1f/16f; z1 -= 0.1f/16f; z2 -= 0.1f/16f;
 				y1 -= 0.1f/16; y2 -= 0.1f/16f;
 			}
+			if( tile >= Block.Water && tile <= Block.StillLava ) {
+				y1 -= 1.5f/16; y2 -= 1.5f/16;
+			}
 			this.minBB = min; this.maxBB = max;
 			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			

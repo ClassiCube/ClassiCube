@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		/// Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
 		/// or not being able to find a suitable candiate within the given reach distance. </summary>
 		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
-			tracer.SetRayData( origin, dir );			
+			tracer.SetRayData( origin, dir );
 			World map = game.World;
 			BlockInfo info = game.BlockInfo;
 			float reachSquared = reach * reach;
@@ -25,6 +25,7 @@ namespace ClassicalSharp {
 				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
+				if( info.IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
@@ -69,6 +70,7 @@ namespace ClassicalSharp {
 				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
+				if( info.IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
@@ -119,22 +121,22 @@ namespace ClassicalSharp {
 			
 			// handling of blocks inside the map, above, and on borders
 			if( x >= 0 && z >= 0 && x < map.Width && z < map.Length ) {
-				if( y >= map.Height ) return 0;				
+				if( y >= map.Height ) return 0;
 				if( sides && y == -1 && insideMap ) return border;
 				if( sides && y == 0 && origin.Y < 0 ) return border;
 				
 				if( sides && x == 0 && y >= 0 && y < height && origin.X < 0 ) return border;
 				if( sides && z == 0 && y >= 0 && y < height && origin.Z < 0 ) return border;
-				if( sides && x == (map.Width - 1) && y >= 0 && y < height && origin.X >= map.Width ) 
+				if( sides && x == (map.Width - 1) && y >= 0 && y < height && origin.X >= map.Width )
 					return border;
-				if( sides && z == (map.Length - 1) && y >= 0 && y < height && origin.Z >= map.Length ) 
+				if( sides && z == (map.Length - 1) && y >= 0 && y < height && origin.Z >= map.Length )
 					return border;
 				if( y >= 0 ) return map.GetBlock( x, y, z );
 			}
 			
 			// pick blocks on the map boundaries (when inside the map)
 			if( !sides || !insideMap ) return 0;
-			if( y == 0 && origin.Y < 0 ) return border;	
+			if( y == 0 && origin.Y < 0 ) return border;
 			bool validX = (x == -1 || x == map.Width) && (z >= 0 && z < map.Length);
 			bool validZ = (z == -1 || z == map.Length) && (x >= 0 && x < map.Width);
 			if( y >= 0 && y < height && (validX || validZ) ) return border;

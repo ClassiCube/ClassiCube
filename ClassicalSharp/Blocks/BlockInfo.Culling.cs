@@ -73,7 +73,13 @@ namespace ClassicalSharp {
 			// Sprite blocks can never hide faces.
 			if( IsSprite[block] ) return false;
 			// All blocks (except for say leaves) cull with themselves.
-			if( block == other ) return CullWithNeighbours[block];			
+			if( block == other ) return CullWithNeighbours[block];
+			
+			// Special case for water/lava being offset
+			if( IsLiquid[block] && side == Side.Top && 
+			   (!IsTranslucent[other] || Collide[other] != CollideType.Solid))
+				return false;
+			
 			// An opaque neighbour (asides from lava) culls the face.
 			if( IsOpaque[other] && !IsLiquid[other] ) return true;
 			if( !IsTranslucent[block] || !IsTranslucent[other] ) return false;

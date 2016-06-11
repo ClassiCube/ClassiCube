@@ -24,19 +24,20 @@ namespace ClassicalSharp {
 		}
 		
 		internal void InitLightOffsets() {
-			for( int tile = 0; tile < BlocksCount; tile++ ) {
+			for( int block = 0; block < BlocksCount; block++ ) {
 				int flags = 0xFF;
-				Vector3 min = MinBB[tile], max = MaxBB[tile];
+				Vector3 min = MinBB[block], max = MaxBB[block];
+				
 				if( min.X != 0 ) flags &= ~(1 << Side.Left);
 				if( max.X != 1 ) flags &= ~(1 << Side.Right);
 				if( min.Z != 0 ) flags &= ~(1 << Side.Front);
 				if( max.Z != 1 ) flags &= ~(1 << Side.Back);
 				
-				if( (min.Y != 0 && max.Y == 1) && !IsAir[tile] ) {
+				if( (min.Y != 0 && max.Y == 1) && !IsAir[block] ) {
 					flags &= ~(1 << Side.Top);
 					flags &= ~(1 << Side.Bottom);
 				}
-				LightOffset[tile] = (byte)flags;
+				LightOffset[block] = (byte)flags;
 			}
 		}
 		
