@@ -1,0 +1,3 @@
+*.csproj eol=crlf
+*.sln eol=crlf
+*.cs eol=crlf
