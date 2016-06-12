@@ -52,7 +52,7 @@ namespace Launcher.Gui.Screens {
 		public override void Resize() {
 			MakeWidgets();
 			view.DrawAll();
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		void CheckCurrentProgress() {
@@ -70,7 +70,7 @@ namespace Launcher.Gui.Screens {
 		void SetFetchStatus( int progress ) {
 			if( progress >= 0 && progress <= 100 ) {
 				view.DrawProgressBox( progress );
-				Dirty = true;
+				game.Dirty = true;
 			}
 		}
 		
@@ -105,7 +105,7 @@ namespace Launcher.Gui.Screens {
 			
 			if( view.lastProgress >= 0 && view.lastProgress <= 100 ) {
 				view.DrawProgressBox( view.lastProgress );
-				Dirty = true;
+				game.Dirty = true;
 			}
 		}
 		
@@ -130,7 +130,7 @@ namespace Launcher.Gui.Screens {
 		void SetStatus( string text ) {
 			view.useStatus = true;
 			view.RedrawStatus( text );
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		public override void Dispose() {

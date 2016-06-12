@@ -32,6 +32,9 @@ namespace Launcher {
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
 		public bool Dirty;
 		
+		/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
+		public Rectangle DirtyArea;
+		
 		/// <summary> Currently active logged in session with classicube.net. </summary>
 		public ClassicubeSession Session = new ClassicubeSession();
 		
@@ -180,8 +183,7 @@ namespace Launcher {
 				}
 				
 				Screen.Tick();
-				if( Dirty || Screen.Dirty )
-					Display();
+				if( Dirty ) Display();
 				Thread.Sleep( 1 );
 			}
 			
@@ -199,8 +201,12 @@ namespace Launcher {
 		void Display() {
 			Screen.OnDisplay();
 			Dirty = false;
-			Screen.Dirty = false;
-			platformDrawer.Redraw( Framebuffer );
+			
+			if( DirtyArea.Width > 0 )
+				platformDrawer.Redraw( Framebuffer, DirtyArea );
+			else
+				platformDrawer.Redraw( Framebuffer );
+			DirtyArea = Rectangle.Empty;
 		}
 		
 		Key lastKey;

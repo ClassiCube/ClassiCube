@@ -11,7 +11,6 @@ namespace Launcher.Gui.Screens {
 		protected internal LauncherWindow game;
 		protected internal IDrawer2D drawer;
 		
-		public bool Dirty;
 		protected int widgetIndex;
 		protected bool mouseMoved = false;
 		static bool supressMove = true;
@@ -88,7 +87,7 @@ namespace Launcher.Gui.Screens {
 				drawer.SetBitmap( game.Framebuffer );
 				widget.Redraw( drawer );
 			}
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		protected LauncherWidget lastClicked;

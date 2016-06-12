@@ -42,9 +42,12 @@ namespace Launcher.Gui.Screens {
 				drawer.SetBitmap( game.Framebuffer );
 				lastInput.SetDrawData( drawer, lastInput.Text );
 				lastInput.Redraw( drawer );
+				
+				Rectangle r = lastInput.MeasureCaret( drawer, inputFont );				
 				if( caretShow )
-					lastInput.DrawCaret( drawer, inputFont );
-				Dirty = true;
+					drawer.Clear( FastColour.White, r.X, r.Y, r.Width, r.Height );
+				// TODO: only redraw dirty caret region
+				game.Dirty = true;
 			}
 			lastCaretFlash = caretShow;
 		}
@@ -121,7 +124,7 @@ namespace Launcher.Gui.Screens {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				lastInput.Redraw( drawer );
-				Dirty = true;
+				game.Dirty = true;
 			}
 		}
 		
@@ -161,7 +164,7 @@ namespace Launcher.Gui.Screens {
 				input.Redraw( drawer );
 			}
 			lastInput = input;
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		protected override void WidgetUnclicked( LauncherWidget widget ) {
@@ -170,7 +173,7 @@ namespace Launcher.Gui.Screens {
 			input.Active = false;
 			RedrawWidget( input );
 			lastInput = null;
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		protected void SetupInputHandlers() {

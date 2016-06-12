@@ -184,24 +184,24 @@ namespace Launcher.Gui.Widgets {
 			return true;
 		}
 		
-		public void DrawCaret( IDrawer2D drawer, Font font ) {
+		public Rectangle MeasureCaret( IDrawer2D drawer, Font font ) {
 			string text = Text;
 			if( Password )
-				text = new String( '*', text.Length );
-			
+				text = new String( '*', text.Length );			
+			Rectangle r = new Rectangle( X + 5, Y + Height - 5, 0, 2 );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			
 			if( CaretPos == -1 ) {
 				Size size = drawer.MeasureSize( ref args );
-				drawer.Clear( FastColour.White, X + 5 + size.Width,
-				             Y + Height - 5, 10, 2 );
+				r.X += size.Width; r.Width = 10;
 			} else {
 				args.Text = text.Substring( 0, CaretPos );
 				int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
 				args.Text = new String( text[CaretPos], 1 );
 				int charWidth = drawer.MeasureChatSize( ref args ).Width;
-				
-				drawer.Clear( FastColour.White, X + 5 + trimmedWidth, Y + Height - 5, charWidth, 2 );
+				r.X += trimmedWidth; r.Width = charWidth;
 			}
+			return r;
 		}
 		
 		public void AdvanceCursorPos( int dir ) {

@@ -93,7 +93,7 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Resize() {
 			view.DrawAll();
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		void SetupWidgetHandlers() {
@@ -122,7 +122,7 @@ namespace Launcher.Gui.Screens {
 				drawer.SetBitmap( game.Framebuffer );
 				Set( view.hashIndex, hash );
 			}
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		void ConnectToServer( int mouseX, int mouseY ) {
@@ -165,7 +165,7 @@ namespace Launcher.Gui.Screens {
 		public override void OnDisplay() {
 			if( pendingRedraw ) {
 				view.RedrawTable();
-				Dirty = true;
+				game.Dirty = true;
 			}
 			pendingRedraw = false;
 		}
@@ -175,7 +175,7 @@ namespace Launcher.Gui.Screens {
 			table.ClampIndex();
 			table.RecalculateDrawData();
 			pendingRedraw = true;
-			Dirty = true;
+			game.Dirty = true;
 		}
 	}
 }

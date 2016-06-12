@@ -54,7 +54,7 @@ namespace Launcher.Gui.Screens {
 
 		public override void Resize() {
 			view.DrawAll();
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		void ModeClick( bool classic, bool classicHacks ) {

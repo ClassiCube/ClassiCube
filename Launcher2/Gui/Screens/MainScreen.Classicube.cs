@@ -44,7 +44,7 @@ namespace Launcher.Gui.Screens {
 			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
 			RedrawWidget( widget );
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		bool HasServers {
@@ -128,7 +128,7 @@ namespace Launcher.Gui.Screens {
 			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.sslIndex];
 			widget.Value = value;
 			widget.Redraw( game.Drawer );
-			Dirty = true;
+			game.Dirty = true;
 		}
 		
 		void StoreFields() {
