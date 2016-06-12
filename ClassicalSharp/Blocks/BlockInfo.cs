@@ -248,10 +248,11 @@ namespace ClassicalSharp {
 		
 		static void SplitUppercase( StringBuffer buffer, string value,
 		                           int start, int len, ref int index ) {
-			for( int i = start; i < start + len; i++ ) {
+			int end = start + len;
+			for( int i = start; i < end; i++ ) {
 				char c = value[i];
 				bool upper = Char.IsUpper( c ) && i > start;
-				bool nextLower = i < value.Length - 1 && !Char.IsUpper( value[i + 1] );
+				bool nextLower = i < end - 1 && !Char.IsUpper( value[i + 1] );
 				
 				if( upper && nextLower ) {
 					buffer.Append( ref index, ' ' );

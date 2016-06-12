@@ -61,7 +61,6 @@ namespace ClassicalSharp.Entities {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 			entity.SetLocation( update, false );
 			entity.Velocity = Vector3.Zero;
-			entity.Velocity.Y = -PhysicsComponent.Gravity;
 		}
 		
 		void FindHighestFree( ref Vector3 spawn ) {
