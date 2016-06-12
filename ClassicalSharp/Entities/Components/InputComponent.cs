@@ -19,7 +19,7 @@ namespace ClassicalSharp.Entities {
 			this.entity = entity;
 		}
 		
-		internal bool HandleKeyDown( Key key ) {
+		internal bool Handles( Key key ) {
 			LocalPlayer p = (LocalPlayer)entity;
 			KeyMap keys = game.InputHandler.Keys;
 			
@@ -60,6 +60,8 @@ namespace ClassicalSharp.Entities {
 			spawn.Y += 2/16f;
 			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 			entity.SetLocation( update, false );
+			entity.Velocity = Vector3.Zero;
+			entity.Velocity.Y = -PhysicsComponent.Gravity;
 		}
 		
 		void FindHighestFree( ref Vector3 spawn ) {

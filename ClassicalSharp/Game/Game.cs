@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 			
 			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
 			World = new World( this );
-			LocalPlayer = new LocalPlayer( this );
+			LocalPlayer = AddComponent( new LocalPlayer( this ) );
 			Entities[255] = LocalPlayer;
 			width = Width;
 			height = Height;

@@ -7,7 +7,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Entities {
 	
-	public partial class LocalPlayer : Player {
+	public partial class LocalPlayer : Player, IGameComponent {
 		
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 Spawn;
@@ -45,19 +45,11 @@ namespace ClassicalSharp.Entities {
 			physics.hacks = Hacks; input.Hacks = Hacks;
 			physics.collisions = collisions; input.collisions = collisions;
 			input.physics = physics;
-			
-			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
-			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
-			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
-			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
-			Hacks.Enabled = !game.ClassicMode && Options.GetBool( OptionsKey.HacksEnabled, true );
-			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
-			if( game.ClassicMode && game.ClassicHacks ) Hacks.Enabled = true;
 		}
 		
 		public override void Tick( double delta ) {
 			if( game.World.IsNotLoaded ) return;
-			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks 
+			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks
 				&& Hacks.CanSpeed ? 1 : 0.5f;
 			
 			float xMoving = 0, zMoving = 0;
@@ -74,7 +66,7 @@ namespace ClassicalSharp.Entities {
 			Position = lastPos;
 			anim.UpdateAnimState( lastPos, nextPos, delta );
 			
-			CheckSkin();			
+			CheckSkin();
 			sound.Tick( wasOnGround );
 			UpdateCurrentBodyYaw();
 		}
@@ -176,6 +168,25 @@ namespace ClassicalSharp.Entities {
 			count--;
 		}
 		
-		internal bool HandleKeyDown( Key key ) { return input.HandleKeyDown( key ); }
+		public void Init( Game game ) {
+			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
+			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
+			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
+			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
+			Hacks.Enabled = !game.PureClassic && Options.GetBool( OptionsKey.HacksEnabled, true );
+			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
+		}
+		
+		public void Ready( Game game ) { }
+		public void OnNewMapLoaded( Game game ) { }
+		public void Dispose() { }
+		public void OnNewMap( Game game ) { }
+		
+		public void Reset( Game game ) {
+			ReachDistance = 5;
+			Velocity = Vector3.Zero;
+			physics.jumpVel = 0.42f;
+			physics.serverJumpVel = 0.42f;
+		}
 	}
 }
