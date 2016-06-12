@@ -61,6 +61,11 @@ namespace ClassicalSharp.Entities {
 			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, p.SpawnYaw, p.SpawnPitch, false );
 			entity.SetLocation( update, false );
 			entity.Velocity = Vector3.Zero;
+			
+			// Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before
+			AABB bb = entity.CollisionBounds;
+			bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
+			entity.onGround = entity.TouchesAny( bb, b => game.BlockInfo.Collide[b] == CollideType.Solid );
 		}
 		
 		void FindHighestFree( ref Vector3 spawn ) {
