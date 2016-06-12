@@ -75,10 +75,13 @@ namespace Launcher {
 			LoadFont();
 			logoFont = new Font( FontName, 32, FontStyle.Regular );
 			string path = Assembly.GetExecutingAssembly().Location;
-			Window.Icon = Icon.ExtractAssociatedIcon( path );			
+			Window.Icon = Icon.ExtractAssociatedIcon( path );
 			//Minimised = Window.WindowState == WindowState.Minimized;
-			                                         
-			if( Configuration.RunningOnWindows )
+			
+			PlatformID platform = Environment.OSVersion.Platform;
+			if( platform == PlatformID.Win32Windows )
+				platformDrawer = new WinOldPlatformDrawer();
+			else if( Configuration.RunningOnWindows )
 				platformDrawer = new WinPlatformDrawer();
 			else if( Configuration.RunningOnX11 )
 				platformDrawer = new X11PlatformDrawer();
@@ -144,7 +147,7 @@ namespace Launcher {
 			return true;
 		}
 		
-		public void Run() {			
+		public void Run() {
 			Window = new NativeWindow( 640, 400, Program.AppName, 0,
 			                          GraphicsMode.Default, DisplayDevice.Default );
 			Window.Visible = true;
@@ -170,7 +173,7 @@ namespace Launcher {
 				Window.ProcessEvents();
 				if( !Window.Exists ) break;
 				if( ShouldExit ) {
-					if( Screen != null ) 
+					if( Screen != null )
 						Screen.Dispose();
 					break;
 				}
@@ -194,7 +197,7 @@ namespace Launcher {
 		
 		void Display() {
 			Screen.OnDisplay();
-			Dirty = false;			
+			Dirty = false;
 			Screen.Dirty = false;
 			platformDrawer.Display( Window.WindowInfo, Framebuffer );
 		}
@@ -210,7 +213,7 @@ namespace Launcher {
 			Window.Resize -= Resize;
 			Window.FocusedChanged -= FocusedChanged;
 			Window.WindowStateChanged -= Resize;
-			Window.Keyboard.KeyDown -= KeyDown;			
+			Window.Keyboard.KeyDown -= KeyDown;
 			logoFont.Dispose();
 		}
 		
