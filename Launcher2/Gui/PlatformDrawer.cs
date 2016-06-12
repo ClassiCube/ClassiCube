@@ -6,23 +6,28 @@ using System.Security;
 using ClassicalSharp;
 using OpenTK.Platform;
 using OpenTK.Platform.X11;
-using OSX = OpenTK.Platform.MacOS.Carbon;
 using OSStatus = OpenTK.Platform.MacOS.OSStatus;
+using OSX = OpenTK.Platform.MacOS.Carbon;
 
 namespace Launcher {
 	
 	/// <summary> Platform specific class used to transfer a bitmap directly to the screen. </summary>
 	public abstract class PlatformDrawer {
 		
-		public abstract void Init( IWindowInfo info );
+		internal IWindowInfo info;
+		public abstract void Init();
 		
-		public virtual Bitmap CreateFrameBuffer( int width, int height ) {
+		public virtual Bitmap CreateFrameBuffer( int width, int height ) { 
 			return new Bitmap( width, height );
 		}
 		
-		public abstract void Resize( IWindowInfo info );
+		public abstract void Resize();
 		
-		public abstract void Display( IWindowInfo info, Bitmap framebuffer );
+		public abstract void Redraw( Bitmap framebuffer );
+		
+		public virtual void Redraw( Bitmap framebuffer, Rectangle rec ) { 
+			Redraw( framebuffer ); 
+		}
 	}
 	
 	public sealed class WinPlatformDrawer : PlatformDrawer {
@@ -68,7 +73,7 @@ namespace Launcher {
 		}
 		
 		IntPtr dc, srcDC, srcHB;
-		public override void Init( IWindowInfo info ) {
+		public override void Init() {
 			dc = GetDC( info.WinHandle );
 			srcDC = CreateCompatibleDC( dc );
 		}
@@ -90,7 +95,7 @@ namespace Launcher {
 			                  System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer );
 		}
 		
-		public override void Resize( IWindowInfo info ) {
+		public override void Resize() {
 			if( dc != IntPtr.Zero ) {
 				ReleaseDC( info.WinHandle, dc );
 				DeleteObject( srcDC );
@@ -99,9 +104,15 @@ namespace Launcher {
 			srcDC = CreateCompatibleDC( dc );
 		}
 		
-		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Redraw( Bitmap framebuffer ) {
 			IntPtr oldSrc = SelectObject( srcDC, srcHB );
 			int success = BitBlt( dc, 0, 0, framebuffer.Width, framebuffer.Height, srcDC, 0, 0, SRCCOPY );
+			SelectObject( srcDC, oldSrc );
+		}
+		
+		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
+			IntPtr oldSrc = SelectObject( srcDC, srcHB );
+			int success = BitBlt( dc, rec.X, rec.Y, rec.Width, rec.Height, srcDC, rec.X, rec.Y, SRCCOPY );
 			SelectObject( srcDC, oldSrc );
 		}
 	}
@@ -109,34 +120,37 @@ namespace Launcher {
 	public sealed class WinOldPlatformDrawer : PlatformDrawer {
 		
 		Graphics g;
-		public override void Init( IWindowInfo info ) {
+		public override void Init() {
 			g = Graphics.FromHwnd( info.WinHandle );
 		}
 		
-		public override void Resize( IWindowInfo info ) {
+		public override void Resize() {
 			if( g != null )
 				g.Dispose();
 			g = Graphics.FromHwnd( info.WinHandle );
 		}
 		
-		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Redraw( Bitmap framebuffer ) {
 			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
+		}
+		
+		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
+			g.DrawImage( framebuffer, rec.X, rec.Y, rec.Width, rec.Height );
 		}
 	}
 	
 	public sealed class OSXPlatformDrawer : PlatformDrawer {
 		
 		IntPtr windowPort;
-		public override void Init( IWindowInfo info ) {
+		public override void Init() {
 			windowPort = OSX.API.GetWindowPort( info.WinHandle );
 		}
 		
-		public override void Resize( IWindowInfo info ) {
+		public override void Resize() {
 			windowPort = OSX.API.GetWindowPort( info.WinHandle );
 		}
 		
-		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
-			
+		public override void Redraw( Bitmap framebuffer ) {			
 			using( FastBitmap bmp = new FastBitmap( framebuffer, true, true ) ) {
 				IntPtr scan0 = bmp.Scan0;
 				int size = bmp.Width * bmp.Height * 4;
@@ -169,25 +183,24 @@ namespace Launcher {
 	public unsafe sealed class X11PlatformDrawer : PlatformDrawer {
 		
 		IntPtr gc;
-		public override void Init( IWindowInfo info ) {
+		public override void Init() {
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
 		}
 		
-		public override void Resize( IWindowInfo info ) {
+		public override void Resize() {
 			if( gc != IntPtr.Zero ) API.XFreeGC( API.DefaultDisplay, gc );
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
 		}
 		
-		public override void Display( IWindowInfo info, Bitmap framebuffer ) {
+		public override void Redraw( Bitmap framebuffer ) {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
 			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
-				int depth = x11Info.VisualInfo.Depth;
-				switch( depth ) {
+				switch( x11Info.VisualInfo.Depth ) {
 					case 32: DrawDirect( fastBmp, 32, x11Info ); break;
 					case 24: DrawDirect( fastBmp, 24, x11Info ); break;
 					//case 16: Draw16Bits( fastBmp, x11Info ); break;
 					//case 15: Draw15Bits( fastBmp, x11Info ); break;
-					default: throw new NotSupportedException("Unsupported bits per pixel: " + depth );
+					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth );
 				}
 			}
 		}
@@ -198,6 +211,26 @@ namespace Launcher {
 			                                bmp.Width, bmp.Height, 32, 0 );
 			API.XPutImage( API.DefaultDisplay, x11Info.WindowHandle, gc, image,
 			              0, 0, 0, 0, bmp.Width, bmp.Height );
+			API.XFree( image );
+		}
+		
+		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
+			X11WindowInfo x11Info = (X11WindowInfo)info;
+			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
+				switch( x11Info.VisualInfo.Depth ) {
+					case 32: DrawDirect( fastBmp, 32, x11Info ); break;
+					case 24: DrawDirect( fastBmp, 24, x11Info ); break;
+					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth );
+				}
+			}
+		}
+		
+		void DrawDirect( FastBitmap bmp, uint bits, X11WindowInfo x11Info, Rectangle rec ) {
+			IntPtr image = API.XCreateImage( API.DefaultDisplay, x11Info.VisualInfo.Visual,
+			                                bits, ImageFormat.ZPixmap, 0, bmp.Scan0,
+			                                bmp.Width, bmp.Height, 32, 0 );
+			API.XPutImage( API.DefaultDisplay, x11Info.WindowHandle, gc, image,
+			              rec.X, rec.Y, rec.X, rec.Y, bmp.Width, bmp.Height );
 			API.XFree( image );
 		}
 		

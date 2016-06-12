@@ -107,7 +107,7 @@ namespace Launcher {
 		}
 
 		void Resize( object sender, EventArgs e ) {
-			platformDrawer.Resize( Window.WindowInfo );
+			platformDrawer.Resize();
 			MakeBackground();
 			Screen.Resize();
 		}
@@ -154,7 +154,8 @@ namespace Launcher {
 			Drawer = new GdiPlusDrawer2D( null );
 			Init();
 			TryLoadTexturePack();
-			platformDrawer.Init( Window.WindowInfo );
+			platformDrawer.info = Window.WindowInfo;
+			platformDrawer.Init();
 			
 			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
 			BinUnpacker.Unpack( audioPath, "dig" );
@@ -199,7 +200,7 @@ namespace Launcher {
 			Screen.OnDisplay();
 			Dirty = false;
 			Screen.Dirty = false;
-			platformDrawer.Display( Window.WindowInfo, Framebuffer );
+			platformDrawer.Redraw( Framebuffer );
 		}
 		
 		Key lastKey;
