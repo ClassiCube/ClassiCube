@@ -135,7 +135,7 @@ namespace Launcher {
 		}
 		
 		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
-			g.DrawImage( framebuffer, rec.X, rec.Y, rec.Width, rec.Height );
+			g.DrawImage( framebuffer, rec, rec, GraphicsUnit.Pixel );
 		}
 	}
 	
@@ -218,8 +218,8 @@ namespace Launcher {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
 			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
 				switch( x11Info.VisualInfo.Depth ) {
-					case 32: DrawDirect( fastBmp, 32, x11Info ); break;
-					case 24: DrawDirect( fastBmp, 24, x11Info ); break;
+					case 32: DrawDirect( fastBmp, 32, x11Info, rec ); break;
+					case 24: DrawDirect( fastBmp, 24, x11Info, rec ); break;
 					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth );
 				}
 			}

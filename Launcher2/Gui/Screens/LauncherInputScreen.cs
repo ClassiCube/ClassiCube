@@ -32,6 +32,7 @@ namespace Launcher.Gui.Screens {
 		
 		DateTime widgetOpenTime;
 		bool lastCaretFlash = false;
+		Rectangle lastRec;
 		public override void Tick() {
 			double elapsed = (DateTime.UtcNow - widgetOpenTime).TotalSeconds;
 			bool caretShow = (elapsed % 1) < 0.5;
@@ -43,10 +44,12 @@ namespace Launcher.Gui.Screens {
 				lastInput.SetDrawData( drawer, lastInput.Text );
 				lastInput.Redraw( drawer );
 				
-				Rectangle r = lastInput.MeasureCaret( drawer, inputFont );				
-				if( caretShow )
+				Rectangle r = lastInput.MeasureCaret( drawer, inputFont );
+				if( caretShow ) 
 					drawer.Clear( FastColour.White, r.X, r.Y, r.Width, r.Height );
-				// TODO: only redraw dirty caret region
+				
+				if( lastRec == r ) game.DirtyArea = r;
+				lastRec = r;
 				game.Dirty = true;
 			}
 			lastCaretFlash = caretShow;
