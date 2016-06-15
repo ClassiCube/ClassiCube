@@ -181,19 +181,22 @@ namespace ClassicalSharp.Renderers {
 					DrawPart( info, ref part );
 				
 				if( part.SpriteCount > 0 ) {
-					int groupCount = part.SpriteCount / 4;
+					int count = part.SpriteCount / 4; // 4 per sprite
 					api.FaceCulling = true;
-					if( info.DrawRight || info.DrawFront )
-						api.DrawIndexedVb_TrisT2fC4b( groupCount, 0 );
-					if( info.DrawLeft || info.DrawBack )
-						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount );
-					if( info.DrawLeft || info.DrawFront )
-						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount * 2 );
-					if( info.DrawRight || info.DrawBack )
-						api.DrawIndexedVb_TrisT2fC4b( groupCount, groupCount * 3 );
+					if( info.DrawRight || info.DrawFront ) {
+						api.DrawIndexedVb_TrisT2fC4b( count, 0 ); game.Vertices += count;
+					}
+					if( info.DrawLeft || info.DrawBack ) {
+						api.DrawIndexedVb_TrisT2fC4b( count, count ); game.Vertices += count;
+					}
+					if( info.DrawLeft || info.DrawFront ) {
+						api.DrawIndexedVb_TrisT2fC4b( count, count * 2 ); game.Vertices += count;
+					}
+					if( info.DrawRight || info.DrawBack ) {
+						api.DrawIndexedVb_TrisT2fC4b( count, count * 3 ); game.Vertices += count;
+					}
 					api.FaceCulling = false;
 				}
-				game.Vertices += part.IndicesCount;
 			}
 		}
 
@@ -208,8 +211,7 @@ namespace ClassicalSharp.Renderers {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				
 				if( part.IndicesCount == 0 ) continue;
-				DrawTranslucentPart( info, ref part );
-				game.Vertices += part.IndicesCount;
+				DrawTranslucentPart( info, ref part, 1 );
 			}
 		}
 		
@@ -225,7 +227,7 @@ namespace ClassicalSharp.Renderers {
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
 				usedTranslucent[batch] = true;
-				DrawTranslucentPart( info, ref part );
+				DrawTranslucentPart( info, ref part, 0 );
 			}
 		}
 		
@@ -242,34 +244,43 @@ namespace ClassicalSharp.Renderers {
 				api.FaceCulling = true;
 				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
 				api.FaceCulling = false;
+				game.Vertices += part.LeftCount + part.RightCount;
 			} else if( drawLeft ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
+				game.Vertices += part.LeftCount;
 			} else if( drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex ); 
+				game.Vertices += part.RightCount;
 			}
 			
 			if( drawFront && drawBack ) {
 				api.FaceCulling = true;
 				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
 				api.FaceCulling = false;
+				 game.Vertices += part.FrontCount + part.BackCount;
 			} else if( drawFront ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
+				game.Vertices += part.FrontCount;
 			} else if( drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex ); 
+				game.Vertices += part.BackCount;
 			}
 			
 			if( drawBottom && drawTop ) {
 				api.FaceCulling = true;
 				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
 				api.FaceCulling = false;
+				 game.Vertices += part.BottomCount + part.TopCount;
 			} else if( drawBottom ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex ); 
+				game.Vertices += part.BottomCount;
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex ); 
+				game.Vertices += part.TopCount;
 			}
 		}
 		
-		void DrawTranslucentPart( ChunkInfo info, ref ChunkPartInfo part ) {
+		void DrawTranslucentPart( ChunkInfo info, ref ChunkPartInfo part, int m ) {
 			api.BindVb( part.VbId );
 			bool drawLeft = (drawAllFaces || info.DrawLeft) && part.LeftCount > 0;
 			bool drawRight = (drawAllFaces || info.DrawRight) && part.RightCount > 0;
@@ -279,27 +290,36 @@ namespace ClassicalSharp.Renderers {
 			bool drawBack = (drawAllFaces || info.DrawBack) && part.BackCount > 0;
 			
 			if( drawLeft && drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex ); 
+				game.Vertices += m * (part.LeftCount + part.RightCount);
 			} else if( drawLeft ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
+				game.Vertices += m * part.LeftCount;
 			} else if( drawRight ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
+				game.Vertices += m * part.RightCount;
 			}
 			
 			if( drawFront && drawBack ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
+				game.Vertices += m * (part.FrontCount + part.BackCount);
 			} else if( drawFront ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
+				game.Vertices += m * part.FrontCount;
 			} else if( drawBack ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
+				game.Vertices += m * part.BackCount;
 			}
 			
 			if( drawBottom && drawTop ) {
 				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
+				game.Vertices += m * (part.BottomCount + part.TopCount);
 			} else if( drawBottom ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex ); 
+				game.Vertices += m * part.BottomCount;
 			} else if( drawTop ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex ); 
+				game.Vertices += m * part.TopCount;
 			}
 		}
 		
@@ -316,20 +336,26 @@ namespace ClassicalSharp.Renderers {
 				api.FaceCulling = true;
 				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex );
 				api.FaceCulling = false;
+				game.Vertices += part.LeftCount + part.RightCount;
 			} else if( drawLeft ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.LeftCount, part.LeftIndex ); 
+				game.Vertices += part.LeftCount;
 			} else if( drawRight ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.RightCount, part.RightIndex ); 
+				game.Vertices += part.RightCount;
 			}
 			
 			if( drawFront && drawBack ) {
 				api.FaceCulling = true;
 				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount + part.BackCount, part.FrontIndex );
 				api.FaceCulling = false;
+				game.Vertices += part.FrontCount + part.BackCount;
 			} else if( drawFront ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.FrontCount, part.FrontIndex ); 
+				game.Vertices += part.FrontCount;
 			} else if( drawBack ) {
-				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex );
+				api.DrawIndexedVb_TrisT2fC4b( part.BackCount, part.BackIndex ); 
+				game.Vertices += part.BackCount;
 			}
 			
 			// Special handling for top and bottom as these can go over 65536 vertices and we need to adjust the indices in this case.
@@ -343,6 +369,7 @@ namespace ClassicalSharp.Renderers {
 					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount + part.TopCount, part.BottomIndex );
 				}
 				api.FaceCulling = false;
+				game.Vertices += part.TopCount + part.BottomCount;
 			} else if( drawBottom ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
@@ -352,6 +379,7 @@ namespace ClassicalSharp.Renderers {
 				} else {
 					api.DrawIndexedVb_TrisT2fC4b( part.BottomCount, part.BottomIndex );
 				}
+				game.Vertices += part.BottomCount;
 			} else if( drawTop ) {
 				int part1Count;
 				if( part.IndicesCount > maxIndices &&
@@ -361,6 +389,7 @@ namespace ClassicalSharp.Renderers {
 				} else {
 					api.DrawIndexedVb_TrisT2fC4b( part.TopCount, part.TopIndex );
 				}
+				game.Vertices += part.TopCount;
 			}
 		}
 	}
