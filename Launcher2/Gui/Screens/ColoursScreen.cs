@@ -60,19 +60,19 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void AdjustSelectedColour( int delta ) {
-			if( lastInput == null ) return;
-			int index = Array.IndexOf<LauncherWidget>( widgets, lastInput );
+			if( curInput == null ) return;
+			int index = Array.IndexOf<LauncherWidget>( widgets, curInput );
 			if( index >= 15 ) return;
 			
 			byte col;
-			if( !Byte.TryParse( lastInput.Text, out col ) )  return;
+			if( !Byte.TryParse( curInput.Text, out col ) )  return;
 			int newCol = col + delta;
 			
 			Utils.Clamp( ref newCol, 0, 255 );
-			lastInput.Text = newCol.ToString();
-			if( lastInput.CaretPos >= lastInput.Text.Length )
-				lastInput.CaretPos = -1;
-			TextChanged( lastInput );
+			curInput.Text = newCol.ToString();
+			if( curInput.CaretPos >= curInput.Text.Length )
+				curInput.CaretPos = -1;
+			TextChanged( curInput );
 		}
 		
 		void ResetColours() {

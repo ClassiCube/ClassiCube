@@ -72,7 +72,7 @@ namespace Launcher.Gui.Screens {
 		
 		protected override void RedrawLastInput() {
 			base.RedrawLastInput();
-			if( lastInput != widgets[view.hashIndex] )
+			if( curInput != widgets[view.hashIndex] )
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
 			table.SetSelected( widgets[view.hashIndex].Text );
@@ -88,7 +88,7 @@ namespace Launcher.Gui.Screens {
 			Resize();
 			selectedWidget = widgets[view.searchIndex];
 			InputClick( 0, 0 );
-			lastClicked = lastInput;
+			lastClicked = curInput;
 		}
 		
 		public override void Resize() {
@@ -110,10 +110,10 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void FilterList() {
-			if( lastInput != widgets[view.searchIndex] )
+			if( curInput != widgets[view.searchIndex] )
 				return;
 			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
-			table.FilterEntries( lastInput.Text );
+			table.FilterEntries( curInput.Text );
 			MarkPendingRedraw();
 		}
 
