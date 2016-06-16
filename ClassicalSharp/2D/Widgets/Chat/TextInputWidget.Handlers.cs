@@ -237,11 +237,12 @@ namespace ClassicalSharp.Gui {
 			CalculateCaretData();
 		}
 		
+		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		bool OtherKey( Key key ) {
 			if( key == Key.V && buffer.Length < TotalChars ) {
 				string text = null;
 				try {
-					text = game.window.ClipboardText;
+					text = game.window.ClipboardText.Trim( trimChars );					
 				} catch( Exception ex ) {
 					ErrorHandler.LogError( "Paste from clipboard", ex );
 					const string warning = "&cError while trying to paste from clipboard.";

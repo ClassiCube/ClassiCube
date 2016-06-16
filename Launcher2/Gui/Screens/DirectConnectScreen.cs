@@ -169,7 +169,7 @@ namespace Launcher.Gui.Screens {
 				mppass = "(none)";
 			
 			ClientStartData data = new ClientStartData( user, mppass, ip, port );
-			if( user.ToLowerInvariant() == "rand()" || user.ToLowerInvariant() == "random()") {
+			if( Utils.CaselessEquals( user, "rand()" ) || Utils.CaselessEquals( user, "random()" ) ) {
 				rnd.NextBytes( rndBytes );
 				data.Username = Convert.ToBase64String( rndBytes ).TrimEnd( '=' );
 			}

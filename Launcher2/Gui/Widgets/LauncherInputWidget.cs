@@ -167,11 +167,12 @@ namespace Launcher.Gui.Widgets {
 			if( !String.IsNullOrEmpty( Text ) )
 				Clipboard.SetText( Text );
 		}
+		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		
 		/// <summary> Sets the currently entered text to the contents of the system clipboard. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool CopyFromClipboard() {
-			string text = Clipboard.GetText();
+			string text = Clipboard.GetText().Trim( trimChars );
 			if( String.IsNullOrEmpty( text ) || Text.Length >= MaxTextLength ) return false;
 			
 			if( ClipboardFilter != null )

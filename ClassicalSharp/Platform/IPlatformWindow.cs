@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 				if ( OpenTK.Configuration.RunningOnMacOS )
 					return GetClipboardText();
 				else
-					return Clipboard.GetText();				
+					return Clipboard.GetText();
 			}
 			set {
 				if ( OpenTK.Configuration.RunningOnMacOS )
