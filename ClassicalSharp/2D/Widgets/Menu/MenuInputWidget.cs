@@ -35,7 +35,6 @@ namespace ClassicalSharp.Gui {
 		Color backColour = Color.FromArgb( 200, 30, 30, 30 );
 		readonly Font font, boldFont;
 		StringBuffer chatInputText;
-		public int XOffset = 0, YOffset = 0;
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		public MenuInputValidator Validator;
 		

@@ -40,6 +40,12 @@ namespace ClassicalSharp.Gui {
 		/// <summary> Specifies the vertical reference point for when the widget is resized. </summary>
 		public Anchor VerticalAnchor;
 		
+		/// <summary> Horizontal offset from the reference point in window space. </summary>
+		public int XOffset = 0;
+		
+		/// <summary> Vertical offset from the reference point in window space. </summary>
+		public int YOffset = 0;
+		
 		/// <summary> Width and height of widget in window space. </summary>
 		public Size Size { get { return new Size( Width, Height ); } }
 		
@@ -58,9 +64,9 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			int deltaX = CalcDelta( width, oldWidth, HorizontalAnchor );
-			int deltaY = CalcDelta( height, oldHeight, VerticalAnchor );
-			MoveTo( X + deltaX, Y + deltaY );
+			int x = CalcOffset( width, Width, XOffset, HorizontalAnchor );
+			int y = CalcOffset( height, Height, YOffset, VerticalAnchor );
+			MoveTo( x, y );
 		}
 	}
 }

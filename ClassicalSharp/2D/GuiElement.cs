@@ -47,10 +47,6 @@ namespace ClassicalSharp.Gui {
 		
 		public virtual bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return false; }
 		
-		protected static int CalcDelta( int newVal, int oldVal, Anchor mode ) {
-			return CalcOffset( newVal, oldVal, 0, mode );
-		}
-		
 		protected static int CalcOffset( int axisSize, int elemSize, int offset, Anchor mode ) {
 			if( mode == Anchor.LeftOrTop ) return offset;
 			if( mode == Anchor.BottomOrRight) return axisSize - elemSize - offset;

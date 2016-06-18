@@ -28,7 +28,6 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		Texture texture;
-		public int XOffset = 0, YOffset = 0;
 		public int DesiredMaxWidth, DesiredMaxHeight;
 		int defaultHeight;
 		internal Font font;

@@ -22,7 +22,6 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected Texture texture;
-		public int XOffset = 0, YOffset = 0;
 		protected int defaultHeight;
 		protected internal Font font;
 		

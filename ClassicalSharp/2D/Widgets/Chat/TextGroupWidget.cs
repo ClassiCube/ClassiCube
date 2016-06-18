@@ -21,7 +21,6 @@ namespace ClassicalSharp.Gui {
 		string[] lines;
 		LinkData[] linkData;
 		int ElementsCount, defaultHeight;
-		public int XOffset = 0, YOffset = 0;
 		readonly Font font, underlineFont;
 		
 		public override void Init() {
