@@ -50,15 +50,19 @@ namespace ClassicalSharp.Gui {
 			api.DeleteTexture( ref texture );
 			Text = text;
 			if( String.IsNullOrEmpty( text ) ) {
-				texture = new Texture();
-				Height = defaultHeight;
+				texture = default(Texture);
+				Width = 0; Height = defaultHeight;
 			} else {
-				MakeTexture( text );
-				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
-				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );
-				Height = texture.Height;
+				DrawTextArgs args = new DrawTextArgs( text, font, true );
+				texture = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
+				Width = Math.Max( texture.Width, DesiredMaxWidth );
+				Height = Math.Max( texture.Height, DesiredMaxHeight );
+				
+				X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
+				Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );				
+				texture.X1 = X + (Width / 2 - texture.Width / 2);
+				texture.Y1 = Y + (Height / 2 - texture.Height / 2);
 			}
-			Width = texture.Width;
 		}
 		
 		static FastColour normCol = new FastColour( 224, 224, 224 ),
@@ -90,24 +94,5 @@ namespace ClassicalSharp.Gui {
 		
 		public Func<Game, string> GetValue;
 		public Action<Game, string> SetValue;
-		
-		void MakeTexture( string text ) {
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			Size size = game.Drawer2D.MeasureChatSize( ref args );
-			
-			int xOffset = Math.Max( size.Width, DesiredMaxWidth ) - size.Width;
-			size.Width = Math.Max( size.Width, DesiredMaxWidth );
-			int yOffset = Math.Max( size.Height, DesiredMaxHeight ) - size.Height;
-			size.Height = Math.Max( size.Height, DesiredMaxHeight );
-			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
-				using( IDrawer2D drawer = game.Drawer2D )
-			{
-				drawer.SetBitmap( bmp );
-				args.SkipPartsCheck = true;
-				drawer.DrawChatText( ref args, xOffset / 2, yOffset / 2 );
-				texture = drawer.Make2DTexture( bmp, size, 0, 0 );
-			}
-		}
 	}
 }

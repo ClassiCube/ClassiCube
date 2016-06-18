@@ -124,10 +124,10 @@ namespace ClassicalSharp.Gui {
 					const string format = "&eFailed to change \"{0}\". &c({1})";
 					statusWidget.SetText( String.Format( format, desc, reason ) );
 				} else {
-					const string format = "&e\"{0}\" changed from &7{1} &eto &7{2}&e.";
+					const string format = "&e\"{0}\" changed from &7{1} &eto &7{2}&e.";					
 					statusWidget.SetText( String.Format( format, desc, oldKey, key ) );
-					string text = desc + ": " + keyNames[(int)key];
 					
+					string text = desc + ": " + keyNames[(int)key];
 					curWidget.SetText( text );
 					map[mapping] = key;
 				}

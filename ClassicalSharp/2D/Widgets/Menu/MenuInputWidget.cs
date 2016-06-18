@@ -93,15 +93,14 @@ namespace ClassicalSharp.Gui {
 					drawer.DrawChatText( ref args, hintX, yOffset );
 				chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 			}
+			Width = size.Width; Height = size.Height;
 			
-			X = CalcOffset( game.Width, size.Width, XOffset, HorizontalAnchor );
-			Y = CalcOffset( game.Height, size.Height, YOffset, VerticalAnchor );
+			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
+			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 			chatCaretTexture.X1 = chatInputTexture.X1 = X;
 			chatCaretTexture.X1 += textSize.Width;
 			chatCaretTexture.Y1 = chatInputTexture.Y1 = Y;
 			chatCaretTexture.Y1 = (Y + size.Height) - chatCaretTexture.Height;
-			Width = size.Width;
-			Height = size.Height;
 		}
 		
 		public string GetText() {

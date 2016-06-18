@@ -171,8 +171,8 @@ namespace ClassicalSharp.Renderers {
 				for( int y = 0; y < height; y += 16 )
 					for( int x = 0; x < width; x += 16 )
 			{
-				renderer.chunks[index] = new ChunkInfo( x, y, z );
-				renderer.unsortedChunks[index] = renderer.chunks[index];
+				renderer.unsortedChunks[index] = new ChunkInfo( x, y, z );
+				renderer.chunks[index] = renderer.unsortedChunks[index];				
 				index++;
 			}
 		}
@@ -183,8 +183,7 @@ namespace ClassicalSharp.Renderers {
 				for( int y = 0; y < height; y += 16 )
 					for( int x = 0; x < width; x += 16 )
 			{
-				renderer.chunks[index].Reset( x, y, z );
-				renderer.unsortedChunks[index] = renderer.chunks[index];
+				renderer.unsortedChunks[index].Reset( x, y, z );
 				index++;
 			}
 		}

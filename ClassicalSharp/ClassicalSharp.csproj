@@ -186,6 +186,9 @@
     <Compile Include="Entities\Model\CustomModel.cs" />
     <Compile Include="Entities\Model\HumanModels.cs" />
     <Compile Include="Entities\Model\ModelBuilder.cs" />
+    <Compile Include="Mesh\ChunkMeshBuilder.cs" />
+    <Compile Include="Mesh\ChunkMeshBuilder.FloodFill.cs" />
+    <Compile Include="Mesh\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Network\CPESupport.cs" />
     <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
@@ -210,9 +213,6 @@
     <Compile Include="Ionic.Zlib\Inflate.cs" />
     <Compile Include="Ionic.Zlib\InfTree.cs" />
     <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
-    <Compile Include="Map\ChunkMeshBuilder.cs" />
-    <Compile Include="Map\ChunkMeshBuilder.FloodFill.cs" />
-    <Compile Include="Map\ChunkMeshBuilderTex2Col4.cs" />
     <Compile Include="Map\Formats\IMapFormat.cs" />
     <Compile Include="Map\Formats\MapCw.Exporter.cs" />
     <Compile Include="Map\Formats\MapCw.Importer.cs" />
@@ -322,6 +322,7 @@
     <Folder Include="Entities\Components" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
+    <Folder Include="Mesh" />
     <Folder Include="Platform" />
     <Folder Include="Particles" />
     <Folder Include="GraphicsAPI" />

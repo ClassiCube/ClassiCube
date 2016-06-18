@@ -30,18 +30,17 @@ namespace ClassicalSharp.Gui {
 			api.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
-				Height = defaultHeight;
+				Width = 0; Height = defaultHeight;
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, font, true );
 				texture = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
 				if( ReducePadding )
 					game.Drawer2D.ReducePadding( ref texture, Utils.Floor( font.Size ) );
+				Width = texture.Width; Height = texture.Height;
 
-				X = texture.X1 = CalcOffset( game.Width, texture.Width, XOffset, HorizontalAnchor );
-				Y = texture.Y1 = CalcOffset( game.Height, texture.Height, YOffset, VerticalAnchor );
-				Height = texture.Height;
+				X = texture.X1 = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
+				Y = texture.Y1 = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 			}
-			Width = texture.Width;
 		}
 	}
 }

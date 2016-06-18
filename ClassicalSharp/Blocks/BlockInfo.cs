@@ -140,6 +140,8 @@ namespace ClassicalSharp {
 			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
 			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
 			
+			IsTranslucent[Block.Lava] = true;
+			IsTranslucent[Block.StillLava] = true;
 			IsOpaqueY[Block.Slab] = true;
 			IsOpaqueY[Block.CobblestoneSlab] = true;
 			IsOpaqueY[Block.Snow] = true;
