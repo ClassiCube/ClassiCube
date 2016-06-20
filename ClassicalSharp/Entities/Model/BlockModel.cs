@@ -13,7 +13,6 @@ namespace ClassicalSharp.Model {
 		byte block = (byte)Block.Air;
 		float height;
 		TerrainAtlas1D atlas;
-		const float adjust = 0.75f/16f;
 		bool bright;
 		Vector3 minBB, maxBB;
 		
@@ -32,13 +31,14 @@ namespace ClassicalSharp.Model {
 			return block == 0 ? 1 : (minY + maxY) / 2;
 		}
 		
+		static Vector3 colShrink = new Vector3( 0.75f/16, 0.75f/16, 0.75f/16 );
 		public override Vector3 CollisionSize {
-			get { return (maxBB - minBB) - new Vector3( adjust ); }
+			get { return (maxBB - minBB) - colShrink; } // to fit slightly inside
 		}
 		
+		static Vector3 offset = new Vector3( -0.5f, -0.5f, -0.5f );
 		public override AABB PickingBounds {
-			get { return new AABB( minBB, maxBB )
-					.Offset( new Vector3( -0.5f ) ); }
+			get { return new AABB( minBB, maxBB ).Offset( offset ); }
 		}
 		
 		public void CalcState( byte block ) {

@@ -94,7 +94,7 @@ namespace ClassicalSharp.Renderers {
 			double time = game.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * map.Env.CloudsSpeed );
 			graphics.SetMatrixMode( MatrixType.Texture );
-			Matrix4 matrix = Matrix4.Translate( offset, 0, 0 );
+			Matrix4 matrix = Matrix4.Identity; matrix.Row3.X = offset; // translate X axis
 			graphics.LoadMatrix( ref matrix );
 			graphics.SetMatrixMode( MatrixType.Modelview );
 			

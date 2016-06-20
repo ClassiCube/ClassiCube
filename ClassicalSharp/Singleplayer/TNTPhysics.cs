@@ -71,24 +71,29 @@ namespace ClassicalSharp.Singleplayer {
 			// Y bottom and top planes
 			for( float x = -1; x <= 1.001f; x += 2f/15) {
 				for( float z = -1; z <= 1.001f; z += 2f/15) {
-					rayDirs[index++] = Vector3.Normalize( x, -1, z );
-					rayDirs[index++] = Vector3.Normalize( x, +1, z );
+					rayDirs[index++] = Normalise( x, -1, z );
+					rayDirs[index++] = Normalise( x, +1, z );
 				}
 			}
 			// Z planes
 			for( float y = -1 + 2f/15; y <= 1.001f - 2f/15; y += 2f/15) {
 				for( float x = -1; x <= 1.001f; x += 2f/15) {
-					rayDirs[index++] = Vector3.Normalize( x, y, -1 );
-					rayDirs[index++] = Vector3.Normalize( x, y, +1 );
+					rayDirs[index++] = Normalise( x, y, -1 );
+					rayDirs[index++] = Normalise( x, y, +1 );
 				}
 			}
 			// X planes
 			for( float y = -1 + 2f/15; y <= 1.001f - 2f/15; y += 2f/15) {
 				for( float z = -1 + 2f/15; z <= 1.001f- 2f/15; z += 2f/15) {
-					rayDirs[index++] = Vector3.Normalize( -1, y, z );
-					rayDirs[index++] = Vector3.Normalize( +1, y, z );
+					rayDirs[index++] = Normalise( -1, y, z );
+					rayDirs[index++] = Normalise( +1, y, z );
 				}
 			}
+		}
+		
+		static Vector3 Normalise( float x, float y, float z ) {
+			float scale = 1f / (float)Math.Sqrt( x * x + y * y + z * z );
+			return new Vector3( x * scale, y * scale, z * scale );
 		}
 	}
 }

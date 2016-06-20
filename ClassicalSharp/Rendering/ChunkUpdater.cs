@@ -108,7 +108,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ProjectionChanged( object sender, EventArgs e ) {
-			lastCamPos = new Vector3( float.MaxValue );
+			lastCamPos = Utils.MaxPos();
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {
@@ -124,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ViewDistanceChanged( object sender, EventArgs e ) {
-			lastCamPos = new Vector3( float.MaxValue );
+			lastCamPos = Utils.MaxPos();
 			lastYaw = float.MaxValue;
 			lastPitch = float.MaxValue;
 		}
@@ -160,7 +160,7 @@ namespace ClassicalSharp.Renderers {
 			distances = new int[renderer.chunks.Length];
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
-			lastCamPos = new Vector3( float.MaxValue );
+			lastCamPos = Utils.MaxPos();
 			lastYaw = float.MaxValue;
 			lastPitch = float.MaxValue;
 		}

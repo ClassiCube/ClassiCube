@@ -21,8 +21,8 @@ namespace ClassicalSharp.Selections {
 		public void Render( double delta, VertexP3fC4b[] vertices, VertexP3fC4b[] lineVertices,
 		                  ref int index, ref int lineIndex ) {
 			float offset = MinDist < 32 * 32 ? 1/32f : 1/16f;
-			Vector3 p1 = (Vector3)Min - new Vector3( offset );
-			Vector3 p2 = (Vector3)Max + new Vector3( offset );			
+			Vector3 p1 = (Vector3)Min - new Vector3( offset, offset, offset );
+			Vector3 p2 = (Vector3)Max + new Vector3( offset, offset, offset );		
 			FastColour col = Colour;
 			
 			YQuad( vertices, ref index, p1.X, p1.Z, p2.X, p2.Z, p1.Y, col ); // bottom

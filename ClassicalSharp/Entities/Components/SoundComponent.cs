@@ -16,13 +16,14 @@ namespace ClassicalSharp.Entities {
 			p = (LocalPlayer)entity;
 			checkSoundNonSolid = CheckSoundNonSolid;
 			checkSoundSolid = CheckSoundSolid;
+			lastSoundPos = Utils.MaxPos();
 		}
 		
-		Vector3 lastSoundPos = new Vector3( float.PositiveInfinity );
+		Vector3 lastSoundPos;
 		public void Tick( bool wasOnGround ) {
 			Vector3 soundPos = p.nextPos;
 			GetSound();
-			if( !anyNonAir ) soundPos = new Vector3( -100000 );
+			if( !anyNonAir ) soundPos = Utils.MaxPos();
 			
 			if( p.onGround && (DoPlaySound( soundPos ) || !wasOnGround) ) {
 				game.AudioPlayer.PlayStepSound( sndType );
