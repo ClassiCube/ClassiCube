@@ -276,6 +276,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
 		internal int texVb;
 		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
+			int index = 0;
+			Make2DQuad( ref tex, col, texVerts, ref index );
+			SetBatchFormat( VertexFormat.P3fT2fC4b );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+		}
+		
+		public static void Make2DQuad( ref Texture tex, FastColour col,
+		                              VertexP3fT2fC4b[] vertices, ref int index ) {
 			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
@@ -283,25 +291,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			texVerts[0] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
-			texVerts[1] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
-			texVerts[2] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
-			texVerts[3] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
-			SetBatchFormat( VertexFormat.P3fT2fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
-		}
-		
-		public static void Make2DQuad( TextureRec xy, TextureRec uv,
-		                              VertexP3fT2fC4b[] vertices, ref int index ) {
-			float x1 = xy.U1, y1 = xy.V1, x2 = xy.U2, y2 = xy.V2;
-			#if USE_DX
-			x1 -= 0.5f; x2 -= 0.5f;
-			y1 -= 0.5f; y2 -= 0.5f;
-			#endif
-			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, uv.U1, uv.V1, FastColour.White );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, uv.U2, uv.V1, FastColour.White );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, uv.U2, uv.V2, FastColour.White );
-			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, uv.U1, uv.V2, FastColour.White );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state

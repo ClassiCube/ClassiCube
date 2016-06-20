@@ -46,24 +46,14 @@ namespace ClassicalSharp.Gui {
 			
 			int texLoc = game.BlockInfo.GetTextureLoc( Block.Dirt, Side.Top );
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;
-			TextureRec tex = atlas.GetTexRec( texLoc, 1, out atlasIndex );
+			Texture tex = new Texture( 0, 0, 0, game.Width, 64, 
+			                          atlas.GetTexRec( texLoc, 1, out atlasIndex ) );
 			tex.U2 = (float)game.Width / 64;
 			bool bound = false;
 			
 			while( drawnY < height ) {
-				float x1 = 0, x2 = game.Width;
-				float y1 = drawnY, y2 = drawnY + 64;
-				#if USE_DX
-				// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
-				// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
-				x1 -= 0.5f; x2 -= 0.5f;
-				y1 -= 0.5f; y2 -= 0.5f;
-				#endif
-				
-				vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
-				vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
-				vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
-				vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
+				tex.Y1 = drawnY;
+				IGraphicsApi.Make2DQuad( ref tex, col, vertices, ref index );
 				if( index >= vertices.Length )
 					DrawBackgroundVertices( ref index, atlasIndex, ref bound );
 				drawnY += 64;

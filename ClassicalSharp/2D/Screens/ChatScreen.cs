@@ -58,7 +58,7 @@ namespace ClassicalSharp.Gui {
 			status.SetUsePlaceHolder( 1, false );
 			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUrlFont,
 			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
-			bottomRight.YOffset = blockSize * 3 / 2;
+			bottomRight.YOffset = blockSize + 15;
 			bottomRight.Init();
 			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUrlFont,
 			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
