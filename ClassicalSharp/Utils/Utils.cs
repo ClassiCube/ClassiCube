@@ -25,10 +25,8 @@ namespace ClassicalSharp {
 	
 	public static class Utils {
 		
-		/// <summary> Creates a vector with all components at float.MaxValue </summary>
-		public static Vector3 MaxPos() {
-			return new Vector3( float.MaxValue, float.MaxValue, float.MaxValue );
-		}
+		/// <summary> Creates a vector with all components at 1E25. </summary>
+		public static Vector3 MaxPos() { return new Vector3( 1E25f, 1E25f, 1E25f ); }
 		
 		/// <summary> Clamps that specified value such that min ≤ value ≤ max </summary>
 		public static void Clamp( ref float value, float min, float max ) {

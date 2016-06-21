@@ -42,12 +42,10 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 			} else {
 				Command cmd = game.CommandManager.GetMatchingCommand( cmdName );
-				if( cmd != null ) {
-					string[] help = cmd.Help;
-					for( int i = 0; i < help.Length; i++ ) {
-						game.Chat.Add( help[i] );
-					}
-				}
+				if( cmd == null ) return;
+				string[] help = cmd.Help;
+				for( int i = 0; i < help.Length; i++ )
+					game.Chat.Add( help[i] );
 			}
 		}
 	}

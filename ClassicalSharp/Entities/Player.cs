@@ -94,10 +94,11 @@ namespace ClassicalSharp.Entities {
 			IGraphicsApi api = game.Graphics;
 			api.BindTexture( nameTex.ID );
 			Vector3 pos = Position; pos.Y += Model.NameYOffset * ModelScale;
+			float scale = Math.Min( 1, Model.NameScale * ModelScale ) / 70f;
 			
 			Vector3 p111, p121, p212, p222;
 			FastColour col = FastColour.White;
-			Vector2 size = new Vector2( nameTex.Width / 70f, nameTex.Height / 70f );
+			Vector2 size = new Vector2( nameTex.Width * scale, nameTex.Height * scale );
 			Utils.CalcBillboardPoints( size, pos, ref game.View, out p111, out p121, out p212, out p222 );
 			api.texVerts[0] = new VertexP3fT2fC4b( p111, nameTex.U1, nameTex.V2, col );
 			api.texVerts[1] = new VertexP3fT2fC4b( p121, nameTex.U1, nameTex.V1, col );

@@ -16,7 +16,7 @@ namespace ClassicalSharp.Entities {
 			p = (LocalPlayer)entity;
 			checkSoundNonSolid = CheckSoundNonSolid;
 			checkSoundSolid = CheckSoundSolid;
-			lastSoundPos = Utils.MaxPos();
+			lastSoundPos = -Utils.MaxPos();
 		}
 		
 		Vector3 lastSoundPos;

@@ -43,6 +43,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
 		public virtual float ShadowScale { get { return 1; } }
 		
+		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
+		public virtual float NameScale { get { return 1; } }
+		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
 		public abstract Vector3 CollisionSize { get; }

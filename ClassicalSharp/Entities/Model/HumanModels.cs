@@ -29,7 +29,7 @@ namespace ClassicalSharp.Model {
 		
 		public override float ShadowScale { get { return 0.5f; } }
 		
-		public override float NameYOffset { get { return 1.3875f; } }
+		public override float NameYOffset { get { return 20.2f/16; } }
 		
 		public override float GetEyeY( Entity entity ) { return 14/16f; }
 		
@@ -56,8 +56,10 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override float MaxScale { get { return 1; } }
+		
+		public override float NameScale { get { return 2; } }
 
-		public override float NameYOffset { get { return 2 * size + 0.1375f; } }
+		public override float NameYOffset { get { return 2 * size + 2.2f/16; } }
 		
 		public override float GetEyeY( Entity entity ) { return base.GetEyeY( entity ) * size; }
 		
