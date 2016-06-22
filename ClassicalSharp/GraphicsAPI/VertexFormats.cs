@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> 3 floats for position (X, Y, Z),<br/>
 	/// 4 bytes for colour (R, G, B, A) </summary>

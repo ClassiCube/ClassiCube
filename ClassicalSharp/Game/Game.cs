@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 		
 		public void Run() { window.Run(); }
 		
-		public void Exit() { window.Exit(); }		
+		public void Exit() { window.Exit(); }
 		
 		internal void OnLoad() {
 			Mouse = window.Mouse;
@@ -60,9 +60,9 @@ namespace ClassicalSharp {
 			#endif
 			Graphics.MakeGraphicsInfo();
 			
-			Options.Load();			
+			Options.Load();
 			Entities = new EntityList( this );
-			AcceptedUrls.Load(); 
+			AcceptedUrls.Load();
 			DeniedUrls.Load();
 			ETags.Load();
 			InputHandler = new InputHandler( this );
@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
 			SimpleArmsAnim = Options.GetBool( OptionsKey.SimpleArmsAnim, false );
 			
-			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );		
+			ViewBobbing = Options.GetBool( OptionsKey.ViewBobbing, false );
 			FpsLimitMethod method = Options.GetEnum( OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync );
 			SetFpsLimitMethod( method );
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
@@ -236,11 +236,11 @@ namespace ClassicalSharp {
 		public bool ReplaceComponent<T>( ref T old, T obj ) where T : IGameComponent {
 			for( int i = 0; i < Components.Count; i++ ) {
 				if( !object.ReferenceEquals( Components[i], old ) ) continue;
-				old.Dispose(); 
+				old.Dispose();
 				
 				Components[i] = obj;
 				old = obj;
-				obj.Init( this );				
+				obj.Init( this );
 				return true;
 			}
 			
@@ -284,7 +284,7 @@ namespace ClassicalSharp {
 			
 			CheckScheduledTasks( delta );
 			float t = (float)( ticksAccumulator / ticksPeriod );
-			LocalPlayer.SetInterpPosition( t );		
+			LocalPlayer.SetInterpPosition( t );
 			Graphics.Clear();
 			UpdateViewMatrix( delta );
 			
@@ -322,18 +322,27 @@ namespace ClassicalSharp {
 				SkyboxRenderer.Render( delta );
 			AxisLinesRenderer.Render( delta );
 			Entities.RenderModels( Graphics, delta, t );
-			Entities.RenderNames( Graphics, delta, t );		
+			Entities.RenderNames( Graphics, delta, t );
 			
 			ParticleManager.Render( delta, t );
 			Camera.GetPickedBlock( SelectedPos ); // TODO: only pick when necessary
-			EnvRenderer.Render( delta );		
+			EnvRenderer.Render( delta );
 			MapRenderer.Render( delta );
 			MapBordersRenderer.RenderSides( delta );
 			
 			if( SelectedPos.Valid && !HideGui )
 				Picking.Render( delta, SelectedPos );
-			MapBordersRenderer.RenderEdges( delta );
-			MapRenderer.RenderTranslucent( delta );
+			
+			// Render water over translucent blocks when underwater for proper alpha blending
+			Vector3 pos = LocalPlayer.Position;
+			if( CurrentCameraPos.Y < World.Env.EdgeHeight 
+			   && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length) ) {
+				MapRenderer.RenderTranslucent( delta );
+				MapBordersRenderer.RenderEdges( delta );
+			} else {
+			    MapBordersRenderer.RenderEdges( delta );
+				MapRenderer.RenderTranslucent( delta );		
+			}
 			
 			Entities.DrawShadows();
 			SelectionManager.Render( delta );
@@ -548,7 +557,7 @@ namespace ClassicalSharp {
 			
 			if( activeScreen != null )
 				activeScreen.Dispose();
-			Graphics.DeleteIb( defaultIb );		
+			Graphics.DeleteIb( defaultIb );
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTex );
 			Graphics.DeleteTexture( ref GuiTex );

@@ -137,10 +137,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RebuildSides( int y, int axisSize ) {
-			float yOffset = 0;
-			byte block = game.World.Env.EdgeBlock;
-			if( game.BlockInfo.IsLiquid[block] ) yOffset = -1.5f/16;
-			
+			byte block = game.World.Env.SidesBlock;
 			sidesVertices = 0;
 			foreach( Rectangle r in rects )
 				sidesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YQuads outside
@@ -153,7 +150,7 @@ namespace ClassicalSharp.Renderers {
 			fullColSides = game.BlockInfo.FullBright[block];
 			FastColour col = fullColSides ? FastColour.White : map.Env.Shadowlight;
 			foreach( Rectangle r in rects )
-				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, yOffset, ref v );
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset( block ), ref v );
 			
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = y;
@@ -167,10 +164,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RebuildEdges( int y, int axisSize ) {
-			float yOffset = -0.1f/16;
 			byte block = game.World.Env.EdgeBlock;
-			if( game.BlockInfo.IsLiquid[block] ) yOffset = -1.5f/16;
-
 			edgesVertices = 0;
 			foreach( Rectangle r in rects )
 				edgesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YPlanes outside
@@ -180,8 +174,18 @@ namespace ClassicalSharp.Renderers {
 			fullColEdge = game.BlockInfo.FullBright[block];
 			FastColour col = fullColEdge ? FastColour.White : map.Env.Sunlight;
 			foreach( Rectangle r in rects )
-				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, yOffset, ref v );
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, YOffset( block ), ref v );
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
+		}
+		
+		float YOffset( byte block ) {
+			BlockInfo info = game.BlockInfo;
+			float offset = 0;
+			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid )
+				offset -= 0.1f/16;
+			if( info.IsLiquid[block] )
+			   offset -= 1.5f/16;
+			 return offset;
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 
