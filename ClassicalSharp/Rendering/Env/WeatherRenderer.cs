@@ -122,11 +122,10 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
-			if( e.Name == "snow.png" ) {
-				game.UpdateTexture( ref SnowTexId, e.Data, false );
-			} else if( e.Name == "rain.png" ) {
-				game.UpdateTexture( ref RainTexId, e.Data, false );
-			}
+			if( e.Name == "snow.png" )
+				game.UpdateTexture( ref SnowTexId, e.Name, e.Data, false );
+			else if( e.Name == "rain.png" )
+				game.UpdateTexture( ref RainTexId, e.Name, e.Data, false );
 		}
 		
 		public void Dispose() {

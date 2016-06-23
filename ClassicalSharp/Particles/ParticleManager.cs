@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Particles {
@@ -22,6 +23,7 @@ namespace ClassicalSharp.Particles {
 			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.UserEvents.BlockChanged += BreakBlockEffect;
+			game.Events.TextureChanged += TextureChanged;
 		}
 		
 		public void Ready( Game game ) { }
@@ -32,6 +34,11 @@ namespace ClassicalSharp.Particles {
 		void TerrainAtlasChanged( object sender, EventArgs e ) {
 			terrain1DCount = new int[game.TerrainAtlas1D.TexIds.Length];
 			terrain1DIndices = new int[game.TerrainAtlas1D.TexIds.Length];
+		}
+		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			if( e.Name == "particles.png" )
+				game.UpdateTexture( ref ParticlesTexId, e.Name, e.Data, false );
 		}
 		
 		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[0];
@@ -120,8 +127,9 @@ namespace ClassicalSharp.Particles {
 		public void Dispose() {
 			game.Graphics.DeleteDynamicVb( vb );
 			game.Graphics.DeleteTexture( ref ParticlesTexId );
-			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 			game.UserEvents.BlockChanged -= BreakBlockEffect;
+			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;			
+			game.Events.TextureChanged -= TextureChanged;
 		}
 		
 		void RemoveAt<T>( int index, T[] particles, ref int count ) where T : Particle {

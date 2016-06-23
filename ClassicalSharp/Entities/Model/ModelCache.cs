@@ -85,23 +85,23 @@ namespace ClassicalSharp.Model {
 		void TextureChanged( object sender, TextureEventArgs e ) {
 			switch( e.Name ) {
 				case "chicken.png":
-					game.UpdateTexture( ref ChickenTexId, e.Data, false ); break;
+					game.UpdateTexture( ref ChickenTexId, e.Name, e.Data, false ); break;
 				case "creeper.png":
-					game.UpdateTexture( ref CreeperTexId, e.Data, false ); break;
+					game.UpdateTexture( ref CreeperTexId, e.Name, e.Data, false ); break;
 				case "pig.png":
-					game.UpdateTexture( ref PigTexId, e.Data, false ); break;
+					game.UpdateTexture( ref PigTexId, e.Name, e.Data, false ); break;
 				case "sheep.png":
-					game.UpdateTexture( ref SheepTexId, e.Data, false ); break;
+					game.UpdateTexture( ref SheepTexId, e.Name, e.Data, false ); break;
 				case "skeleton.png":
-					game.UpdateTexture( ref SkeletonTexId, e.Data, false ); break;
+					game.UpdateTexture( ref SkeletonTexId, e.Name, e.Data, false ); break;
 				case "spider.png":
-					game.UpdateTexture( ref SpiderTexId, e.Data, false ); break;
+					game.UpdateTexture( ref SpiderTexId, e.Name, e.Data, false ); break;
 				case "zombie.png":
-					game.UpdateTexture( ref ZombieTexId, e.Data, false ); break;
+					game.UpdateTexture( ref ZombieTexId, e.Name, e.Data, false ); break;
 				case "sheep_fur.png":
-					game.UpdateTexture( ref SheepFurTexId, e.Data, false ); break;
+					game.UpdateTexture( ref SheepFurTexId, e.Name, e.Data, false ); break;
 				case "char.png":
-					game.UpdateTexture( ref HumanoidTexId, e.Data, true ); break;
+					game.UpdateTexture( ref HumanoidTexId, e.Name, e.Data, true ); break;
 			}
 		}
 	}

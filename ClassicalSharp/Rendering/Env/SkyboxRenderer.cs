@@ -59,7 +59,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
 			if( e.Name == "skybox.png" )
-				game.UpdateTexture( ref tex, e.Data, false );
+				game.UpdateTexture( ref tex, e.Name, e.Data, false );
 		}
 		
 		
