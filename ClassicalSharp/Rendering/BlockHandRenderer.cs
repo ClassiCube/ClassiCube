@@ -49,6 +49,7 @@ namespace ClassicalSharp.Renderers {
 			if( playAnimation ) DoAnimation( delta, last );
 			PerformViewBobbing( t );
 			
+			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref heldBlockProj );
 			bool translucent = game.BlockInfo.IsTranslucent[type];
@@ -71,9 +72,19 @@ namespace ClassicalSharp.Renderers {
 			else game.Graphics.AlphaTest = false;
 		}
 		
-		static Vector3 offset = new Vector3( 0.56f, -0.72f, -0.72f );
+		static Vector3 nOffset = new Vector3( 0.56f, -0.72f, -0.72f );
+		internal static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );
+		
+		void SetMatrix() {
+			Player p = game.LocalPlayer;
+			Vector3 eyePos = p.EyePosition;
+			Matrix4 m = Matrix4.LookAt( eyePos, eyePos + -Vector3.UnitZ, Vector3.UnitY );
+			game.Graphics.LoadMatrix( ref m );
+		}
+		
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
+			Vector3 offset = game.BlockInfo.IsSprite[type] ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			fakeP.Position = p.EyePosition + animPosition;
 			fakeP.Position += offset;
@@ -88,11 +99,11 @@ namespace ClassicalSharp.Renderers {
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
 		void DoAnimation( double delta, Vector3 last ) {
 			if( swingAnimation || !leftAnimation ) {
-				animPosition.Y = -1.2f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.Y = -0.4f * (float)Math.Sin( animTime * animSpeed );
 				if( swingAnimation ) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
-					if( fakeP.Position.Y > last.Y )
+					if( animPosition.Y > last.Y )
 						lastType = type;
 					type = lastType;
 				}
