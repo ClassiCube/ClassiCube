@@ -100,12 +100,12 @@ namespace ClassicalSharp.Model {
 				SpriteXQuad( Side.Right, true, true );
 			} else {
 				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
-				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
 				ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
-				
+				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );				
+								
+				XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
 				ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
 				YQuad( height, Side.Top, 1.0f );
-				XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
 			}
 			
 			if( index == 0 ) return;

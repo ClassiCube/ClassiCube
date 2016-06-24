@@ -156,7 +156,7 @@ namespace ClassicalSharp {
 		public FrustumCulling Culling;
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
-		public Matrix4 View, Projection, HeldBlockProjection;
+		public Matrix4 View, Projection;
 		
 		/// <summary> How sensitive the client is to changes in the player's mouse position. </summary>
 		public int MouseSensitivity = 30;

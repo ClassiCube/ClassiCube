@@ -423,7 +423,7 @@ namespace ClassicalSharp {
 		
 		public void UpdateProjection() {
 			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
-			Matrix4 projection = Camera.GetProjection( out HeldBlockProjection );
+			Matrix4 projection = Camera.GetProjection();
 			Projection = projection;
 			
 			Graphics.SetMatrixMode( MatrixType.Projection );

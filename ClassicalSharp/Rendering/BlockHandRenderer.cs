@@ -22,6 +22,8 @@ namespace ClassicalSharp.Renderers {
 		Matrix4 normalMat, spriteMat;
 		byte lastMatrixType;
 		float lastMatrixAngleX;
+		Vector3 animPosition;
+		Matrix4 heldBlockProj;
 		
 		public void Init( Game game ) {
 			this.game = game;
@@ -30,36 +32,33 @@ namespace ClassicalSharp.Renderers {
 			lastType = game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 			game.UserEvents.BlockChanged += BlockChanged;
+			game.Events.ProjectionChanged += ProjectionChanged;
 		}
 
-		public void Ready( Game game ) { }		
+		public void Ready( Game game ) { }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
 		public void Render( double delta, float t ) {
-			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
+			//if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
-			Vector3 last = fakeP.Position;
-			fakeP.Position = Vector3.Zero;
+			Vector3 last = animPosition;
+			animPosition = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
 			if( playAnimation ) DoAnimation( delta, last );
 			PerformViewBobbing( t );
-			SetupMatrices();
 			
-			if( game.BlockInfo.IsSprite[type] )
-				game.Graphics.LoadMatrix( ref spriteMat );
-			else
-				game.Graphics.LoadMatrix( ref normalMat );
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
-			game.Graphics.LoadMatrix( ref game.HeldBlockProjection );
+			game.Graphics.LoadMatrix( ref heldBlockProj );
 			bool translucent = game.BlockInfo.IsTranslucent[type];
 			
 			game.Graphics.Texturing = true;
 			game.Graphics.DepthTest = false;
 			if( translucent ) game.Graphics.AlphaBlending = true;
 			else game.Graphics.AlphaTest = true;
-			fakeP.Block = type;
+			
+			SetPos();
 			block.Render( fakeP );
 			
 			game.Graphics.LoadMatrix( ref game.Projection );
@@ -72,10 +71,24 @@ namespace ClassicalSharp.Renderers {
 			else game.Graphics.AlphaTest = false;
 		}
 		
+		static Vector3 offset = new Vector3( 0.56f, -0.72f, -0.72f );
+		void SetPos() {
+			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
+			Player p = game.LocalPlayer;
+			fakeP.Position = p.EyePosition + animPosition;
+			fakeP.Position += offset;
+			fakeP.ModelScale = 0.4f;
+			
+			fakeP.HeadYawDegrees = 45f;
+			fakeP.YawDegrees = 45f;
+			fakeP.PitchDegrees = 0;
+			fakeP.Block = type;
+		}
+		
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
 		void DoAnimation( double delta, Vector3 last ) {
 			if( swingAnimation || !leftAnimation ) {
-				fakeP.Position.Y = -1.2f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.Y = -1.2f * (float)Math.Sin( animTime * animSpeed );
 				if( swingAnimation ) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
@@ -85,8 +98,8 @@ namespace ClassicalSharp.Renderers {
 				}
 			} else {
 				//fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
-				fakeP.Position.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
-				fakeP.Position.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
+				animPosition.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
 				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
 			}
 			animTime += delta;
@@ -94,38 +107,17 @@ namespace ClassicalSharp.Renderers {
 				ResetAnimationState( true, 0.25 );
 		}
 		
-		void SetupMatrices() {
-			if( type == lastMatrixType && lastMatrixAngleX == angleX )
-				return;
-			Matrix4 m = Matrix4.Identity;
-			m = m * Matrix4.Scale( 0.6f );
-			m = m * Matrix4.RotateY( 45 * Utils.Deg2Rad );
-			m = m * Matrix4.RotateX( angleX * Utils.Deg2Rad );
-			
-			Vector3 minBB = game.BlockInfo.MinBB[type];
-			Vector3 maxBB = game.BlockInfo.MaxBB[type];
-			float height = (maxBB.Y - minBB.Y);
-			if( game.BlockInfo.IsSprite[type] )
-				height = 1;
-			
-			float offset = (1 - height) * 0.4f;
-			normalMat = m * Matrix4.Translate( 0.85f, -1.35f + offset, -1.5f );
-			spriteMat = m * Matrix4.Translate( 0.85f, -1.05f + offset, -1.5f );
-			lastMatrixType = type;
-			lastMatrixAngleX = angleX;
-		}
-		
 		void ResetAnimationState( bool updateLastType, double period ) {
 			animTime = 0;
 			playAnimation = false;
-			fakeP.Position = Vector3.Zero;
+			animPosition = Vector3.Zero;
 			angleX = 0;
 			animPeriod = period;
 			animSpeed = Math.PI / period;
 			
 			if( updateLastType )
 				lastType = game.Inventory.HeldBlock;
-			fakeP.Position = Vector3.Zero;
+			animPosition = Vector3.Zero;
 		}
 		
 		/// <summary> Sets the current animation state of the held block.<br/>
@@ -156,10 +148,10 @@ namespace ClassicalSharp.Renderers {
 			float verAngle = 0.2f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
 			
 			if( horAngle > 0 )
-				fakeP.Position.X += horAngle;
+				animPosition.X += horAngle;
 			else
-				fakeP.Position.Z += horAngle;
-			fakeP.Position.Y -= verAngle;
+				animPosition.Z += horAngle;
+			animPosition.Y -= verAngle;
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
@@ -186,9 +178,17 @@ namespace ClassicalSharp.Renderers {
 			stop = true;
 		}
 		
+		void ProjectionChanged( object sender, EventArgs e ) {
+			float aspectRatio = (float)game.Width / game.Height;
+			float zNear = game.Graphics.MinZNear;
+			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView( 70 * Utils.Deg2Rad,
+			                                                     aspectRatio, zNear, game.ViewDistance );
+		}
+		
 		public void Dispose() {
 			game.Events.HeldBlockChanged -= HeldBlockChanged;
 			game.UserEvents.BlockChanged -= BlockChanged;
+			game.Events.ProjectionChanged -= ProjectionChanged;
 		}
 		
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
