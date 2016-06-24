@@ -50,12 +50,16 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		protected ButtonWidget MakeBack( bool toGame, Font font, Action<Game, Widget> onClick ) {
-			return MakeBack( toGame ? "Back to game" : "Back to menu", 25, font, onClick );
+			return MakeBack( 201, toGame ? "Back to game" : "Back to menu", 25, font, onClick );
 		}
 		
 		protected ButtonWidget MakeBack( string text, int y, Font font, Action<Game, Widget> onClick ) {
+			return MakeBack( 201, text, y, font, onClick );
+		}
+		
+		protected ButtonWidget MakeBack( int width, string text, int y, Font font, Action<Game, Widget> onClick ) {
 			return ButtonWidget.Create(
-				game, 0, y, 201, 40, text,
+				game, 0, y, width, 40, text,
 				Anchor.Centre, Anchor.BottomOrRight, font, LeftOnly( onClick ) );
 		}
 	}

@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
 			data = Bitmap.LockBits( rec, ImageLockMode.ReadWrite, format );
 			Scan0 = data.Scan0;
-			scan0Byte = (byte*)Scan0;			
+			scan0Byte = (byte*)Scan0;
 			Stride = data.Stride;
 			Width = data.Width;
 			Height = data.Height;
