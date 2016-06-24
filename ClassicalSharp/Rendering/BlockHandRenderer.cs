@@ -12,23 +12,20 @@ namespace ClassicalSharp.Renderers {
 		
 		Game game;
 		BlockModel block;
-		FakePlayer fakeP;
+		FakePlayer held;
 		bool playAnimation, leftAnimation, swingAnimation;
-		float angleX = 0;
+		float angleY = 0;
 		
 		double animTime;
 		byte type, lastType;
-		
-		Matrix4 normalMat, spriteMat;
-		byte lastMatrixType;
-		float lastMatrixAngleX;
 		Vector3 animPosition;
 		Matrix4 heldBlockProj;
 		
 		public void Init( Game game ) {
 			this.game = game;
 			block = new BlockModel( game );
-			fakeP = new FakePlayer( game );
+			block.NoShade = true;
+			held = new FakePlayer( game );
 			lastType = game.Inventory.HeldBlock;
 			game.Events.HeldBlockChanged += HeldBlockChanged;
 			game.UserEvents.BlockChanged += BlockChanged;
@@ -41,7 +38,7 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMapLoaded( Game game ) { }
 		
 		public void Render( double delta, float t ) {
-			//if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
+			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
 			Vector3 last = animPosition;
 			animPosition = Vector3.Zero;
@@ -55,19 +52,17 @@ namespace ClassicalSharp.Renderers {
 			bool translucent = game.BlockInfo.IsTranslucent[type];
 			
 			game.Graphics.Texturing = true;
-			game.Graphics.DepthTest = false;
 			if( translucent ) game.Graphics.AlphaBlending = true;
 			else game.Graphics.AlphaTest = true;
 			
 			SetPos();
-			block.Render( fakeP );
+			block.Render( held );
 			
 			game.Graphics.LoadMatrix( ref game.Projection );
 			game.Graphics.SetMatrixMode( MatrixType.Modelview );
 			game.Graphics.LoadMatrix( ref game.View );
 			
 			game.Graphics.Texturing = false;
-			game.Graphics.DepthTest = true;
 			if( translucent ) game.Graphics.AlphaBlending = false;
 			else game.Graphics.AlphaTest = false;
 		}
@@ -78,7 +73,7 @@ namespace ClassicalSharp.Renderers {
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
 			Vector3 eyePos = p.EyePosition;
-			Matrix4 m = Matrix4.LookAt( eyePos, eyePos + -Vector3.UnitZ, Vector3.UnitY );
+			Matrix4 m = Matrix4.LookAt( eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY );
 			game.Graphics.LoadMatrix( ref m );
 		}
 		
@@ -87,20 +82,21 @@ namespace ClassicalSharp.Renderers {
 			BlockInfo info = game.BlockInfo;
 			Vector3 offset = info.IsSprite[type] ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
-			fakeP.ModelScale = 0.4f;
+			held.ModelScale = 0.4f;
 			
-			fakeP.Position = p.EyePosition + animPosition;
-			fakeP.Position += offset;
+			held.Position = p.EyePosition + animPosition;
+			held.Position += offset;
 			if( !info.IsSprite[type] ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
-				fakeP.Position.Y += 0.2f * (1 - height);
+				held.Position.Y += 0.2f * (1 - height);
 			}
-			fakeP.Position.Y += p.anim.bobYOffset;
+			if( game.ViewBobbing )
+				held.Position.Y += p.anim.bobYOffset;
 			
-			fakeP.HeadYawDegrees = 45f;
-			fakeP.YawDegrees = 45f;
-			fakeP.PitchDegrees = 0;
-			fakeP.Block = type;
+			held.HeadYawDegrees = -45f + angleY;
+			held.YawDegrees = -45f + angleY;
+			held.PitchDegrees = 0;
+			held.Block = type;
 		}
 		
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
@@ -118,7 +114,7 @@ namespace ClassicalSharp.Renderers {
 				animPosition.X = -0.325f * (float)Math.Sin( animTime * animSpeed );
 				animPosition.Y = 0.2f * (float)Math.Sin( animTime * animSpeed * 2 );
 				animPosition.Z = -0.325f * (float)Math.Sin( animTime * animSpeed );
-				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
+				angleY = -90 + 90 * (float)Math.Sin( animTime * animSpeed / 2 );
 			}
 			animTime += delta;
 			if( animTime > animPeriod )
@@ -129,7 +125,7 @@ namespace ClassicalSharp.Renderers {
 			animTime = 0;
 			playAnimation = false;
 			animPosition = Vector3.Zero;
-			angleX = 0;
+			angleY = 0;
 			animPeriod = period;
 			animSpeed = Math.PI / period;
 			
@@ -141,7 +137,7 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		public void SetAnimationClick( bool left ) {
-			ResetAnimationState( true, 2.25 );
+			ResetAnimationState( true, 3.25 );
 			swingAnimation = false;
 			leftAnimation = left;
 			playAnimation = true;
