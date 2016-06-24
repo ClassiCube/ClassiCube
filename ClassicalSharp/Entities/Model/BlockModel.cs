@@ -122,7 +122,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
 			FlushIfNotSame( texIndex );
-			FastColour col = bright ? FastColour.White : FastColour.Scale( this.col, shade );
+			FastColour col = bright ? FastColour.White : (NoShade ? this.col : FastColour.Scale( this.col, shade ) );
 			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;

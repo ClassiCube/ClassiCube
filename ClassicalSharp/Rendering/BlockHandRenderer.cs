@@ -54,6 +54,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.Texturing = true;
 			if( translucent ) game.Graphics.AlphaBlending = true;
 			else game.Graphics.AlphaTest = true;
+			game.Graphics.DepthTest = false;
 			
 			SetPos();
 			block.Render( held );
@@ -65,10 +66,11 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.Texturing = false;
 			if( translucent ) game.Graphics.AlphaBlending = false;
 			else game.Graphics.AlphaTest = false;
+			game.Graphics.DepthTest = true;
 		}
 		
 		static Vector3 nOffset = new Vector3( 0.56f, -0.72f, -0.72f );
-		internal static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );
+		static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );
 		
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
@@ -90,8 +92,6 @@ namespace ClassicalSharp.Renderers {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
-			if( game.ViewBobbing )
-				held.Position.Y += p.anim.bobYOffset;
 			
 			held.HeadYawDegrees = -45f + angleY;
 			held.YawDegrees = -45f + angleY;
@@ -124,6 +124,7 @@ namespace ClassicalSharp.Renderers {
 		void ResetAnimationState( bool updateLastType, double period ) {
 			animTime = 0;
 			playAnimation = false;
+			swingAnimation = false;
 			animPosition = Vector3.Zero;
 			angleY = 0;
 			animPeriod = period;
@@ -137,13 +138,14 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		public void SetAnimationClick( bool left ) {
-			ResetAnimationState( true, 3.25 );
+			ResetAnimationState( true, 5.25 );
 			swingAnimation = false;
 			leftAnimation = left;
 			playAnimation = true;
 		}
 		
 		public void SetAnimationSwitchBlock() {
+			if( swingAnimation ) return;
 			ResetAnimationState( false, 0.3 );
 			swingAnimation = true;
 			playAnimation = true;
@@ -158,13 +160,11 @@ namespace ClassicalSharp.Renderers {
 			double horTime = Math.Sin( bobTime ) * p.curSwing;
 			// (0.5 + 0.5cos(2x)) is smoother than abs(cos(x)) at endpoints
 			double verTime = Math.Cos( bobTime * 2 );
-			float horAngle = 0.2f * (float)horTime;
-			float verAngle = 0.2f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
+			float horAngle = 0.025f * (float)horTime;
+			float verAngle = 0.025f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
 			
-			if( horAngle > 0 )
-				animPosition.X += horAngle;
-			else
-				animPosition.Z += horAngle;
+			animPosition.X += horAngle;
+			animPosition.Z -= Math.Abs( horAngle );
 			animPosition.Y -= verAngle;
 		}
 		
