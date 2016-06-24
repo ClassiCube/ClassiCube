@@ -84,11 +84,18 @@ namespace ClassicalSharp.Renderers {
 		
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
-			Vector3 offset = game.BlockInfo.IsSprite[type] ? sOffset : nOffset;
+			BlockInfo info = game.BlockInfo;
+			Vector3 offset = info.IsSprite[type] ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
+			fakeP.ModelScale = 0.4f;
+			
 			fakeP.Position = p.EyePosition + animPosition;
 			fakeP.Position += offset;
-			fakeP.ModelScale = 0.4f;
+			if( !info.IsSprite[type] ) {
+				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
+				fakeP.Position.Y += 0.2f * (1 - height);
+			}
+			fakeP.Position.Y += p.anim.bobYOffset;
 			
 			fakeP.HeadYawDegrees = 45f;
 			fakeP.YawDegrees = 45f;
@@ -108,9 +115,9 @@ namespace ClassicalSharp.Renderers {
 					type = lastType;
 				}
 			} else {
-				//fakePlayer.Position.X = 0.2f * (float)Math.Sin( animTime * animSpeed );
-				animPosition.Y = 0.3f * (float)Math.Sin( animTime * animSpeed * 2 );
-				animPosition.Z = -0.7f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.X = -0.325f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.Y = 0.2f * (float)Math.Sin( animTime * animSpeed * 2 );
+				animPosition.Z = -0.325f * (float)Math.Sin( animTime * animSpeed );
 				angleX = 20 * (float)Math.Sin( animTime * animSpeed * 2 );
 			}
 			animTime += delta;
@@ -134,7 +141,7 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		public void SetAnimationClick( bool left ) {
-			ResetAnimationState( true, 0.25 );
+			ResetAnimationState( true, 2.25 );
 			swingAnimation = false;
 			leftAnimation = left;
 			playAnimation = true;
