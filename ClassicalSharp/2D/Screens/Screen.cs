@@ -22,12 +22,5 @@ namespace ClassicalSharp.Gui {
 		
 		/// <summary> Whether the normal in-game hud should be drawn over the top of this screen. </summary>
 		public virtual bool RenderHudAfter { get { return false; } }
-		
-		/// <summary> Causes the screen to recreate all of its contained widgets. </summary>
-		/// <remarks> Typically used when bitmap font changes. </remarks>
-		public virtual void Recreate() {
-			Dispose();
-			Init();
-		}
 	}
 }

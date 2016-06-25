@@ -50,8 +50,9 @@ namespace ClassicalSharp.Events {
 		internal void RaiseHackPermissionsChanged() { Raise( HackPermissionsChanged ); }
 		
 		/// <summary> Raised when the colour codes usable by the player changes. </summary>
-		public event EventHandler ColourCodesChanged;
-		internal void RaiseColourCodesChanged() { Raise( ColourCodesChanged ); }
+		public event EventHandler<ColourCodeEventArgs> ColourCodeChanged;
+		internal void RaiseColourCodeChanged( char code ) {
+			colArgs.Code = code; Raise( ColourCodeChanged, colArgs ); }
 		
 		/// <summary> Raised when the projection matrix changes. </summary>
 		public event EventHandler ProjectionChanged;
@@ -59,6 +60,7 @@ namespace ClassicalSharp.Events {
 	
 		ChatEventArgs chatArgs = new ChatEventArgs();
 		TextureEventArgs texArgs = new TextureEventArgs();
+		ColourCodeEventArgs colArgs = new ColourCodeEventArgs();
 		protected void Raise( EventHandler handler ) {
 			if( handler != null )
 				handler( this, EventArgs.Empty );
@@ -78,6 +80,12 @@ namespace ClassicalSharp.Events {
 		/// <summary> Raw text of the message (including colour codes), 
 		/// with code page 437 indices converted to their unicode representations. </summary>
 		public string Text;
+	}
+	
+	public sealed class ColourCodeEventArgs : EventArgs {
+		
+		/// <summary> ASCII colour code that was changed. </summary>
+		public char Code;
 	}
 	
 	public sealed class TextureEventArgs : EventArgs {

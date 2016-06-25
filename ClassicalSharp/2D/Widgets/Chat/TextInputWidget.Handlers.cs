@@ -108,13 +108,11 @@ namespace ClassicalSharp.Gui {
 				
 				if( buffer.value[caretPos] != ' ' )
 					buffer.InsertAt( caretPos, ' ' );
-				Dispose();
-				Init();
+				Recreate();
 			} else if( !buffer.Empty && caretPos != 0 ) {
 				if( !BackspaceColourCode())
 					DeleteChar();
-				Dispose();
-				Init();
+				Recreate();
 			}
 		}
 		
@@ -142,8 +140,7 @@ namespace ClassicalSharp.Gui {
 			if( !buffer.Empty && caretPos != -1 ) {
 				buffer.DeleteAt( caretPos );
 				if( caretPos >= buffer.Length ) caretPos = -1;
-				Dispose();
-				Init();
+				Recreate();
 			}
 		}
 		
@@ -198,8 +195,7 @@ namespace ClassicalSharp.Gui {
 				buffer.Clear();
 				buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
 				caretPos = -1;
-				Dispose();
-				Init();
+				Recreate();
 			}
 		}
 		
@@ -222,8 +218,7 @@ namespace ClassicalSharp.Gui {
 					buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
 				caretPos = -1;
-				Dispose();
-				Init();
+				Recreate();
 			}
 		}
 		

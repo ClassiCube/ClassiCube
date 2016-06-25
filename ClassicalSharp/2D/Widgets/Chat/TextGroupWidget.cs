@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui {
 		
 		public Texture[] Textures;
 		public bool[] PlaceholderHeight;
-		string[] lines;
+		internal string[] lines;
 		LinkData[] linkData;
 		int ElementsCount, defaultHeight;
 		readonly Font font, underlineFont;

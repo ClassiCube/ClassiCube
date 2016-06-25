@@ -278,8 +278,7 @@ namespace ClassicalSharp.Gui {
 				caretPos += text.Length;
 				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
-			Dispose();
-			Init();
+			Recreate();
 		}
 		
 		public void AppendChar( char c ) {
@@ -292,8 +291,7 @@ namespace ClassicalSharp.Gui {
 				caretPos++;
 				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
-			Dispose();
-			Init();
+			Recreate();
 		}
 	}
 }

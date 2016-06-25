@@ -150,7 +150,7 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		public void SetAnimationClick( bool left ) {
-			ResetAnimationState( true, 8.25 );
+			ResetAnimationState( true, 0.25 );
 			swingAnimation = false;
 			leftAnimation = left;
 			playAnimation = true;

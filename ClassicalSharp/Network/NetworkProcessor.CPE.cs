@@ -358,7 +358,7 @@ namespace ClassicalSharp.Network {
 			if( code == '%' || code == '&' ) return; // colour code signifiers cannot be used
 			
 			game.Drawer2D.Colours[code] = col;
-			game.Events.RaiseColourCodesChanged();
+			game.Events.RaiseColourCodeChanged( (char)code );
 		}
 		
 		internal void HandleSetMapEnvUrl() {

@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui {
 			
 			game.Events.ChatReceived += ChatReceived;
 			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Events.ColourCodesChanged += ColourCodesChanged;
+			game.Events.ColourCodeChanged += ColourCodeChanged;
 		}
 		
 		void ConstructWidgets() {
@@ -210,10 +210,24 @@ namespace ClassicalSharp.Gui {
 			}
 		}
 
-		void ColourCodesChanged( object sender, EventArgs e ) {
+		void ColourCodeChanged( object sender, ColourCodeEventArgs e ) {
 			textInput.altText.UpdateColours();
-			UpdateChatYOffset( true );
-			textInput.MoveTo( textInput.X, textInput.Y );
+			Recreate( normalChat, e.Code ); Recreate( status, e.Code );
+			Recreate( bottomRight, e.Code ); Recreate( clientStatus, e.Code );
+			textInput.Recreate();
+		}
+		
+		void Recreate( TextGroupWidget group, char code ) {
+			for( int i = 0; i < group.lines.Length; i++ ) {
+				string line = group.lines[i];
+				if( line == null ) continue;
+				
+				for( int j = 0; j < line.Length - 1; j++ ) {
+					if( line[j] == '&' && line[j + 1] == code ) {
+						group.SetText( i, line ); break;
+					}
+				}
+			}
 		}
 
 		void ChatReceived( object sender, ChatEventArgs e ) {
@@ -262,13 +276,12 @@ namespace ClassicalSharp.Gui {
 			
 			game.Events.ChatReceived -= ChatReceived;
 			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Events.ColourCodesChanged -= ColourCodesChanged;
+			game.Events.ColourCodeChanged -= ColourCodeChanged;
 		}
 		
 		void ChatFontChanged( object sender, EventArgs e ) {
 			if( !game.Drawer2D.UseBitmappedChat ) return;
-			Dispose();
-			Init();
+			Recreate();
 			UpdateChatYOffset( true );
 		}
 		
