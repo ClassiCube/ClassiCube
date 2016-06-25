@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 		public UserEvents UserEvents = new UserEvents();
 		public InputHandler InputHandler;
 		public Chat Chat;
-		public BlockHandRenderer BlockHandRenderer;
+		public HeldBlockRenderer HeldBlockRenderer;
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;
 		public SkyboxRenderer SkyboxRenderer;
@@ -156,7 +156,7 @@ namespace ClassicalSharp {
 		public FrustumCulling Culling;
 		int width, height;
 		public AsyncDownloader AsyncDownloader;
-		public Matrix4 View, Projection, HeldBlockProjection;
+		public Matrix4 View, Projection;
 		
 		/// <summary> How sensitive the client is to changes in the player's mouse position. </summary>
 		public int MouseSensitivity = 30;

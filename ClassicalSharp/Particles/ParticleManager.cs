@@ -69,7 +69,7 @@ namespace ClassicalSharp.Particles {
 			int drawCount = Math.Min( count, maxParticles * 4 );
 			if( drawCount == 0 ) return;
 			
-			graphics.SetDynamicVbData( DrawMode.Triangles, vb, vertices, drawCount );
+			graphics.SetDynamicVbData( vb, vertices, drawCount );
 			int offset = 0;
 			for( int i = 0; i < terrain1DCount.Length; i++ ) {
 				int partCount = terrain1DCount[i];
