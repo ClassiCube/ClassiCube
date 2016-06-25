@@ -248,7 +248,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
 		
-		public override void SetDynamicVbData<T>( DrawMode mode, int vb, T[] vertices, int count ) {
+		public override void SetDynamicVbData<T>( int vb, T[] vertices, int count ) {
 			int size = count * batchStride;
 			DataBuffer buffer = dynamicvBuffers[vb];
 			buffer.SetData( vertices, size, LockFlags.Discard );

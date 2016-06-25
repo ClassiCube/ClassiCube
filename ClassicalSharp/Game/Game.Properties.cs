@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 		public UserEvents UserEvents = new UserEvents();
 		public InputHandler InputHandler;
 		public Chat Chat;
-		public BlockHandRenderer BlockHandRenderer;
+		public HeldBlockRenderer HeldBlockRenderer;
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;
 		public SkyboxRenderer SkyboxRenderer;

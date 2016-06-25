@@ -8,7 +8,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Renderers {
 	
-	public class BlockHandRenderer : IGameComponent {
+	public class HeldBlockRenderer : IGameComponent {
 		
 		Game game;
 		BlockModel block;
@@ -43,6 +43,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 last = animPosition;
 			animPosition = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
+			block.CosX = 1; block.SinX = 0;
 			if( playAnimation ) DoAnimation( delta, last );
 			PerformViewBobbing( t );
 			
@@ -101,8 +102,9 @@ namespace ClassicalSharp.Renderers {
 		
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
 		void DoAnimation( double delta, Vector3 last ) {
+			double angle = animTime * animSpeed;
 			if( swingAnimation || !leftAnimation ) {
-				animPosition.Y = -0.4f * (float)Math.Sin( animTime * animSpeed );
+				animPosition.Y = -0.4f * (float)Math.Sin( angle );
 				if( swingAnimation ) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
@@ -110,11 +112,18 @@ namespace ClassicalSharp.Renderers {
 						lastType = type;
 					type = lastType;
 				}
-			} else {
-				animPosition.X = -0.325f * (float)Math.Sin( animTime * animSpeed );
-				animPosition.Y = 0.2f * (float)Math.Sin( animTime * animSpeed * 2 );
-				animPosition.Z = -0.325f * (float)Math.Sin( animTime * animSpeed );
-				angleY = -90 + 90 * (float)Math.Sin( animTime * animSpeed / 2 );
+			} else {			
+				animPosition.X = -0.325f * (float)Math.Sin( angle );
+				animPosition.Y = 0.2f * (float)Math.Sin( angle * 2 );
+				animPosition.Z = -0.325f * (float)Math.Sin( angle );
+				angleY = -90 + 90 * (float)Math.Sin( angle / 2 );
+				
+				// For first cycle, do not rotate at all.
+				// For second cycle, rotate the block from 0-->15 then back to 15-->0.
+				float rotX = Math.Max(0, (float)angle - 90 * Utils.Deg2Rad );				
+				if( rotX >= 45 * Utils.Deg2Rad ) rotX = 90 * Utils.Deg2Rad - rotX;
+				rotX /= 3;
+				block.CosX = (float)Math.Cos( -rotX ); block.SinX = (float)Math.Sin( -rotX );
 			}
 			animTime += delta;
 			if( animTime > animPeriod )
@@ -138,7 +147,7 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		public void SetAnimationClick( bool left ) {
-			ResetAnimationState( true, 5.25 );
+			ResetAnimationState( true, 8.25 );
 			swingAnimation = false;
 			leftAnimation = left;
 			playAnimation = true;

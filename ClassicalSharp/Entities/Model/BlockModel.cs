@@ -16,6 +16,7 @@ namespace ClassicalSharp.Model {
 		bool bright;
 		Vector3 minBB, maxBB;
 		public bool NoShade = false;
+		public float CosX = 1, SinX = 0;
 		
 		public BlockModel( Game game ) : base( game ) { }
 		
@@ -75,9 +76,18 @@ namespace ClassicalSharp.Model {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if( p is FakePlayer ) {
-				col = game.World.IsLit( game.LocalPlayer.EyePosition )
+				Player realP = game.LocalPlayer;
+				col = game.World.IsLit( realP.EyePosition )
 					? game.World.Env.Sunlight : game.World.Env.Shadowlight;
-				col = FastColour.Scale( col, 0.8f );
+				
+				// Adjust pitch so angle when looking straight down is 0.
+				float adjPitch = realP.PitchDegrees - 90;
+				if( adjPitch < 0 ) adjPitch += 360;
+				
+				// Adjust colour so held block is brighter when looking straght up
+				float t = Math.Abs( adjPitch - 180 ) / 180;
+				float colScale = Utils.Lerp( 0.9f, 0.7f, t);
+				col = FastColour.Scale( col, colScale );
 				block = ((FakePlayer)p).Block;
 			} else {
 				block = Utils.FastByte( p.ModelName );
@@ -234,7 +244,9 @@ namespace ClassicalSharp.Model {
 		void TransformVertices() {
 			for( int i = 0; i < index; i++ ) {
 				VertexP3fT2fC4b v = cache.vertices[i];
-				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
+				float t = 0;
+				t = CosX * v.Y + SinX * v.Z; v.Z = -SinX * v.Y + CosX * v.Z; v.Y = t;        // Inlined RotX
+				t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
 				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				cache.vertices[i] = v;

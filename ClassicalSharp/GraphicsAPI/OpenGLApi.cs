@@ -246,7 +246,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
-		public override void SetDynamicVbData<T>( DrawMode mode, int id, T[] vertices, int count ) {
+		public override void SetDynamicVbData<T>( int id, T[] vertices, int count ) {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
 			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
 		}

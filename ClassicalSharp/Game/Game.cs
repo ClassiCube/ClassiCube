@@ -113,7 +113,7 @@ namespace ClassicalSharp {
 			CommandManager = AddComponent( new CommandManager() );
 			SelectionManager = AddComponent( new SelectionManager() );
 			WeatherRenderer = AddComponent( new WeatherRenderer() );
-			BlockHandRenderer = AddComponent( new BlockHandRenderer() );
+			HeldBlockRenderer = AddComponent( new HeldBlockRenderer() );
 			
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc( CompareFunc.LessEqual );
@@ -353,7 +353,7 @@ namespace ClassicalSharp {
 			bool right = IsMousePressed( MouseButton.Right );
 			InputHandler.PickBlocks( true, left, middle, right );
 			if( !HideGui )
-				BlockHandRenderer.Render( delta, t );
+				HeldBlockRenderer.Render( delta, t );
 		}
 		
 		void RenderGui( double delta ) {
@@ -394,7 +394,7 @@ namespace ClassicalSharp {
 				Entities.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
-				BlockHandRenderer.Tick( ticksPeriod );
+				HeldBlockRenderer.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
