@@ -120,6 +120,7 @@ namespace ClassicalSharp {
 			bobbingHor = (p.anim.bobbingHor * 0.3f) * p.anim.bobStrength;
 			bobbingVer = (p.anim.bobbingVer * 0.6f) * p.anim.bobStrength;
 			
+			if( !velTilt ) return;
 			float vel = Utils.Lerp( p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t );
 			tiltM = tiltM * Matrix4.RotateX( (-vel * 0.05f) * p.anim.velTiltStrength );
 		}
