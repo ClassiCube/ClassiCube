@@ -90,7 +90,7 @@ namespace ClassicalSharp.Model {
 		public void Render( Player p ) {
 			index = 0;
 			pos = p.Position;
-			if( Bobbing ) pos.Y += p.anim.bobYOffset;
+			if( Bobbing ) pos.Y += p.anim.bobbingVer;
 			World map = game.World;
 			col = game.World.IsLit( p.EyePosition ) ? map.Env.Sunlight : map.Env.Shadowlight;
 			uScale = 1 / 64f; vScale = 1 / 32f;

@@ -173,7 +173,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Binds and updates the data of the current dynamic vertex buffer's data.<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void SetDynamicVbData<T>( DrawMode mode, int vb, T[] vertices, int count ) where T : struct;
+		public abstract void SetDynamicVbData<T>( int vb, T[] vertices, int count ) where T : struct;
 		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer. </summary>
 		public abstract void DrawVb( DrawMode mode, int startVertex, int verticesCount );
