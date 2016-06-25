@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 	   
 		public abstract Matrix4 GetProjection();
 	   
-		public abstract Matrix4 GetView( double delta );
+		public abstract Matrix4 GetView( double delta, float t );
 	   
 		/// <summary> Calculates the location of the camera's position in the world
 		/// based on the entity's eye position. </summary>
@@ -112,6 +112,14 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 	   
+		protected void CalcVelocityTilt(double delta, float t) {
+			LocalPlayer p = game.LocalPlayer;
+			float tiltAmount = (-p.Velocity.Y - 0.08F);
+			float tiltAmount2 = 0;
+			tiltAmount2 = Utils.Lerp(p.OldVelocity.Y, player.Velocity.Y, t);
+			
+			tiltM = tiltM * Matrix4.RotateX( (float)(-tiltAmount2 * 0.05F) );
+		}
 		protected void CalcViewBobbing( double delta ) {
 			LocalPlayer p = game.LocalPlayer;
 			tiltM = Matrix4.RotateZ( -p.anim.tiltX * p.anim.intensity );
@@ -137,7 +145,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 	   
-		public override Matrix4 GetView( double delta ) {
+		public override Matrix4 GetView( double delta, float t ) {
 			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
@@ -174,7 +182,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 	   
-		public override Matrix4 GetView( double delta ) {
+		public override Matrix4 GetView( double delta, float t ) {
 			CalcViewBobbing( delta );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
@@ -205,8 +213,9 @@ namespace ClassicalSharp {
 			return new Vector2( player.HeadYawRadians, player.PitchRadians );
 		}
 	   
-		public override Matrix4 GetView( double delta ) {
+		public override Matrix4 GetView( double delta, float t ) {
 			CalcViewBobbing( delta );
+			CalcVelocityTilt( delta, t );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			Vector3 cameraDir = Utils.GetDirVector( player.HeadYawRadians,

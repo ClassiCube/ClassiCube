@@ -286,7 +286,7 @@ namespace ClassicalSharp {
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
 			Graphics.Clear();
-			UpdateViewMatrix( delta );
+			UpdateViewMatrix( delta, t );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
 			if( World.IsNotLoaded ) visible = false;
@@ -308,9 +308,9 @@ namespace ClassicalSharp {
 				InputHandler.SetFOV( ZoomFov, false );
 		}
 		
-		void UpdateViewMatrix( double delta ) {
+		void UpdateViewMatrix( double delta, float t ) {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView( delta );
+			Matrix4 modelView = Camera.GetView( delta, t );
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );

@@ -51,7 +51,7 @@ namespace ClassicalSharp.Entities {
 			if( game.World.IsNotLoaded ) return;
 			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks
 				&& Hacks.CanSpeed ? 1 : 0.5f;
-			
+			OldVelocity = Velocity;
 			float xMoving = 0, zMoving = 0;
 			lastPos = Position = nextPos;
 			lastYaw = nextYaw;
