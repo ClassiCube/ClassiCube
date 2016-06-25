@@ -45,7 +45,6 @@ namespace ClassicalSharp.Renderers {
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
 			if( playAnimation ) DoAnimation( delta, last );
-			PerformViewBobbing( t );
 			
 			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
@@ -71,31 +70,34 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		static Vector3 nOffset = new Vector3( 0.56f, -0.72f, -0.72f );
-		static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );
-		
+		static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );		
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
 			Vector3 eyePos = p.EyePosition;
-			Matrix4 m = Matrix4.LookAt( eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY );
+			Matrix4 m = Matrix4.LookAt( eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY ) * game.Camera.tiltM;
 			game.Graphics.LoadMatrix( ref m );
 		}
-		
+	   
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
 			BlockInfo info = game.BlockInfo;
 			Vector3 offset = info.IsSprite[type] ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			held.ModelScale = 0.4f;
-			
+		   
 			held.Position = p.EyePosition + animPosition;
 			held.Position += offset;
 			if( !info.IsSprite[type] ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
-			
-			held.HeadYawDegrees = -45f + angleY;
-			held.YawDegrees = -45f + angleY;
+		   
+			held.Position.X -= game.Camera.bobbingHor;
+			held.Position.Y -= game.Camera.bobbingVer;
+			held.Position.Z -= game.Camera.bobbingHor;
+			   
+			held.HeadYawDegrees = -45 + angleY;
+			held.YawDegrees = -45 + angleY;
 			held.PitchDegrees = 0;
 			held.Block = type;
 		}
@@ -160,52 +162,15 @@ namespace ClassicalSharp.Renderers {
 			playAnimation = true;
 		}
 		
-		float bobTimeO, bobTimeN;
-		void PerformViewBobbing( float t ) {
-			if( !game.ViewBobbing ) return;
-			LocalPlayer p = game.LocalPlayer;
-			float bobTime = Utils.Lerp( bobTimeO, bobTimeN, t );
-			
-			double horTime = Math.Sin( bobTime ) * p.curSwing;
-			// (0.5 + 0.5cos(2x)) is smoother than abs(cos(x)) at endpoints
-			double verTime = Math.Cos( bobTime * 2 );
-			float horAngle = 0.025f * (float)horTime;
-			float verAngle = 0.025f * (float)(0.5 + 0.5 * verTime) * p.curSwing;
-			
-			animPosition.X += horAngle;
-			animPosition.Z -= Math.Abs( horAngle );
-			animPosition.Y -= verAngle;
-		}
-		
 		void HeldBlockChanged( object sender, EventArgs e ) {
 			SetAnimationSwitchBlock();
-		}
-		
-		bool stop = false;
-		public void Tick( double delta ) {
-			Player p = game.LocalPlayer;
-			float bobTimeDelta = p.anim.walkTimeN - p.anim.walkTimeO;
-			bobTimeO = bobTimeN;
-
-			if( game.LocalPlayer.onGround ) stop = false;
-			if( stop ) return;
-			bobTimeN += bobTimeDelta;
-			if( game.LocalPlayer.onGround ) return;
-
-			// Keep returning the held block back to centre position.
-			if( Math.Sign( Math.Sin( bobTimeO ) ) == Math.Sign( Math.Sin( bobTimeN ) ) )
-				return;
-			// Stop bob time at next periodic '0' angle.
-			double left = Math.PI - (bobTimeO % Math.PI);
-			bobTimeN = (float)(bobTimeO + left);
-			stop = true;
 		}
 		
 		void ProjectionChanged( object sender, EventArgs e ) {
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
 			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView( 70 * Utils.Deg2Rad,
-			                                                     aspectRatio, zNear, game.ViewDistance );
+																 aspectRatio, zNear, game.ViewDistance );
 		}
 		
 		public void Dispose() {

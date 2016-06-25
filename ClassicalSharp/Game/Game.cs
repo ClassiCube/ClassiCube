@@ -394,7 +394,6 @@ namespace ClassicalSharp {
 				Entities.Tick( ticksPeriod );
 				ParticleManager.Tick( ticksPeriod );
 				Animations.Tick( ticksPeriod );
-				HeldBlockRenderer.Tick( ticksPeriod );
 				ticksThisFrame++;
 				ticksAccumulator -= ticksPeriod;
 			}
