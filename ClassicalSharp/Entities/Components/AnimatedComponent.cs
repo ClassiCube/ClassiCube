@@ -17,7 +17,7 @@ namespace ClassicalSharp.Entities {
 	   
 		public float legXRot, armXRot, armZRot;
 		public float bobbingHor, bobbingVer, tiltX, tiltY;
-		public float walkTime, swing, intensity = 1;
+		public float walkTime, swing, bobStrength = 1;
 		
 		internal float walkTimeO, walkTimeN, swingO, swingN;
 		internal float leftXRot, leftZRot, rightXRot, rightZRot;
@@ -63,10 +63,10 @@ namespace ClassicalSharp.Entities {
 			bobbingVer = (float)(Math.Abs( Math.Sin( walkTime ) ) * swing * (2.5f/16f));
 			
 			if( !game.ViewBobbing || !entity.onGround )
-				intensity *= 0.9f;
+				bobStrength *= 0.9f;
 			else
-				intensity += 0.1f;
-			Utils.Clamp( ref intensity, 0, 1 );
+				bobStrength += 0.1f;
+			Utils.Clamp( ref bobStrength, 0, 1 );
  
 			tiltX = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
 			tiltY = (float)Math.Sin( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
