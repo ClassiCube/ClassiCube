@@ -97,16 +97,17 @@ namespace ClassicalSharp.Gui {
 		
 		void BackspaceKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 )
-					caretPos = buffer.Length - 1;
+				if( caretPos == -1 ) caretPos = buffer.Length - 1;
 				int len = buffer.GetBackLength( caretPos );
-				caretPos -= len;
+				if( len == 0 ) return;
 				
+				caretPos -= len;		
 				if( caretPos < 0 ) caretPos = 0;
-				if( caretPos != 0 ) caretPos++; // Don't remove space.
 				for( int i = 0; i <= len; i++ )
 					buffer.DeleteAt( caretPos );
 				
+				if( buffer.value[caretPos] != ' ' )
+					buffer.InsertAt( caretPos, ' ' );
 				Dispose();
 				Init();
 			} else if( !buffer.Empty && caretPos != 0 ) {

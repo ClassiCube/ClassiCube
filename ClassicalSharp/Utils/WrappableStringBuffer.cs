@@ -116,15 +116,15 @@ namespace ClassicalSharp {
 			if( index <= 0 ) return 0;
 			int start = index;
 			
-			bool lookingSpace = !Char.IsLetterOrDigit( value[index] );
+			bool lookingSpace = value[index] == ' ';
 			// go back to the end of the previous word
 			if( lookingSpace ) {
-				while( index > 0 && !Char.IsLetterOrDigit( value[index] ) )
+				while( index > 0 && value[index] == ' ' )
 					index--;
 			}
 			
 			// go back to the start of the current word
-			while( index > 0 && Char.IsLetterOrDigit( value[index] ) )
+			while( index > 0 && value[index] != ' ' )
 				index--;
 			return (start - index);
 		}
@@ -133,15 +133,15 @@ namespace ClassicalSharp {
 			if( index == -1 ) return 0;
 			int start = index;
 			
-			bool lookingLetter = Char.IsLetterOrDigit( value[index] );
+			bool lookingLetter = value[index] != ' ';
 			// go forward to the end of the current word
 			if( lookingLetter ) {
-				while( index < Length && Char.IsLetterOrDigit( value[index] ) )
+				while( index < Length && value[index] != ' ')
 					index++;
 			}
 			
 			// go forward to the start of the next word
-			while( index < Length && !Char.IsLetterOrDigit( value[index] ) )
+			while( index < Length && value[index] == ' ' )
 				index++;
 			return index - start;
 		}
