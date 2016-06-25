@@ -17,7 +17,7 @@ namespace ClassicalSharp.Entities {
 	   
 		public float legXRot, armXRot, armZRot;
 		public float bobbingHor, bobbingVer, tiltX, tiltY;
-		public float walkTime, swing, bobStrength = 1;
+		public float walkTime, swing, bobStrength = 1, velTiltStrength = 1;
 		
 		internal float walkTimeO, walkTimeN, swingO, swingN;
 		internal float leftXRot, leftZRot, rightXRot, rightZRot;
@@ -67,6 +67,12 @@ namespace ClassicalSharp.Entities {
 			else
 				bobStrength += 0.1f;
 			Utils.Clamp( ref bobStrength, 0, 1 );
+
+			if( game.LocalPlayer.Hacks.Noclip || game.LocalPlayer.Hacks.Flying )
+				velTiltStrength *= 0.9f;
+			else
+				velTiltStrength += 0.1f;
+			Utils.Clamp( ref velTiltStrength, 0, 1 );
  
 			tiltX = (float)Math.Cos( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
 			tiltY = (float)Math.Sin( walkTime ) * swing * (0.15f * Utils.Deg2Rad);
