@@ -74,6 +74,7 @@ namespace ClassicalSharp.Renderers {
 			Vector2 rotation = game.Camera.GetCameraOrientation();
 			m *= Matrix4.RotateY( rotation.X ); // yaw
 			m *= Matrix4.RotateX( rotation.Y ); // pitch
+			m = m * game.Camera.tiltM;
 			game.Graphics.LoadMatrix( ref m );
 			
 			game.Graphics.BindVb( vb );
