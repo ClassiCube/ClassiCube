@@ -139,7 +139,7 @@ namespace ClassicalSharp.Gui {
 				return 2;
 			}
 			
-			prevFlags = 0;
+			prevFlags = LinkFlags.NewLink;
 			int nextHttp = line.IndexOf( "http://", start );
 			int nextHttps = line.IndexOf( "https://", start );
 			return nextHttp == -1 ? nextHttps : nextHttp;
