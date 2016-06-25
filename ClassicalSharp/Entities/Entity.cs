@@ -21,6 +21,7 @@ namespace ClassicalSharp.Entities {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
+		public Vector3 OldVelocity;
 		public float HeadYawDegrees, YawDegrees, PitchDegrees;
 		
 		protected Game game;
