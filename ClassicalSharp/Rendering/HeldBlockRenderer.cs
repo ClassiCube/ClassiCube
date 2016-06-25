@@ -44,8 +44,8 @@ namespace ClassicalSharp.Renderers {
 			animPosition = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
-			if( playAnimation ) DoAnimation( delta, last );
-			
+			block.SwitchOrder = false;			
+			if( playAnimation ) DoAnimation( delta, last );			
 			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref heldBlockProj );
@@ -118,11 +118,12 @@ namespace ClassicalSharp.Renderers {
 				animPosition.X = -0.325f * (float)Math.Sin( angle );
 				animPosition.Y = 0.2f * (float)Math.Sin( angle * 2 );
 				animPosition.Z = -0.325f * (float)Math.Sin( angle );
-				angleY = -90 + 90 * (float)Math.Sin( angle / 2 );
+				angleY = 90 * (float)Math.Sin( angle );
+				block.SwitchOrder = angleY >= 45;
 				
 				// For first cycle, do not rotate at all.
 				// For second cycle, rotate the block from 0-->15 then back to 15-->0.
-				float rotX = Math.Max(0, (float)angle - 90 * Utils.Deg2Rad );				
+				float rotX = Math.Max( 0, (float)angle - 90 * Utils.Deg2Rad );				
 				if( rotX >= 45 * Utils.Deg2Rad ) rotX = 90 * Utils.Deg2Rad - rotX;
 				rotX /= 3;
 				block.CosX = (float)Math.Cos( -rotX ); block.SinX = (float)Math.Sin( -rotX );

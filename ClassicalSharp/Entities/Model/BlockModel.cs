@@ -15,7 +15,7 @@ namespace ClassicalSharp.Model {
 		TerrainAtlas1D atlas;
 		bool bright;
 		Vector3 minBB, maxBB;
-		public bool NoShade = false;
+		public bool NoShade = false, SwitchOrder = false;
 		public float CosX = 1, SinX = 0;
 		
 		public BlockModel( Game game ) : base( game ) { }
@@ -112,10 +112,17 @@ namespace ClassicalSharp.Model {
 			} else {
 				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
 				ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
-				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );				
-								
-				XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
-				ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
+				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
+				
+				// Needed for held block, which renders without depth testing
+				if( SwitchOrder ) {
+					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
+					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );				
+				} else {
+					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
+					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
+				}
+				
 				YQuad( height, Side.Top, 1.0f );
 			}
 			
@@ -190,11 +197,11 @@ namespace ClassicalSharp.Model {
 			FastColour col = bright ? FastColour.White : this.col;
 
 			float p1 = 0, p2 = 0;
-			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.				
-				if( mirror ) { rec.U1 = 0.5f; p1 = -5.5f/16; } 
+			if( firstPart ) { // Need to break into two quads for when drawing a sprite model in hand.
+				if( mirror ) { rec.U1 = 0.5f; p1 = -5.5f/16; }
 				else { rec.U2 = 0.5f; p2 = -5.5f/16; }
 			} else {
-				if( mirror ) { rec.U2 = 0.5f; p2 = 5.5f/16; } 
+				if( mirror ) { rec.U2 = 0.5f; p2 = 5.5f/16; }
 				else { rec.U1 = 0.5f; p1 = 5.5f/16; }
 			}
 			

@@ -122,7 +122,6 @@ namespace ClassicalSharp {
 			
 			if( !velTilt || p.Hacks.Noclip || p.Hacks.Flying ) return;
 			float vel = Utils.Lerp( p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t );
-			Utils.Clamp( ref vel, -1, 1 );
 			tiltM = tiltM * Matrix4.RotateX( -vel * 0.05f );
 		}
 	}
