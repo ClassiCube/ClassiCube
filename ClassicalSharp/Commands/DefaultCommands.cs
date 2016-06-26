@@ -80,7 +80,7 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				game.Chat.Add( "&e/client info: &cYou didn't specify a property." );
+				game.Chat.Add( "&e/client: &cYou didn't specify a property." );
 			} else if( Utils.CaselessEquals( property, "pos" ) ) {
 				game.Chat.Add( "Feet: " + game.LocalPlayer.Position );
 				game.Chat.Add( "Eye: " + game.LocalPlayer.EyePosition );
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add( "map height: " + game.World.Height );
 				game.Chat.Add( "map length: " + game.World.Length );
 			} else {
-				game.Chat.Add( "&e/client info: Unrecognised property: \"&f" + property + "&e\"." );
+				game.Chat.Add( "&e/client: Unrecognised property: \"&f" + property + "&e\"." );
 			}
 		}
 	}
@@ -120,31 +120,11 @@ namespace ClassicalSharp.Commands {
 		public override void Execute( CommandReader reader ) {
 			string property = reader.Next();
 			if( property == null ) {
-				game.Chat.Add( "&e/client rendertype: &cYou didn't specify a new render type." );
-			} else if( Utils.CaselessEquals( property, "legacyfast" ) ) {
-				SetNewRenderType( true, true );
-				game.Chat.Add( "&e/client rendertype: &fRender type is now fast legacy." );
-			} else if( Utils.CaselessEquals( property, "legacy" ) ) {
-				SetNewRenderType( true, false );
-				game.Chat.Add( "&e/client rendertype: &fRender type is now legacy." );
-			} else if( Utils.CaselessEquals( property, "normal" ) ) {
-				SetNewRenderType( false, false );
-				game.Chat.Add( "&e/client rendertype: &fRender type is now normal." );
-			} else if( Utils.CaselessEquals( property, "normalfast" ) ) {
-				SetNewRenderType( false, true );
-				game.Chat.Add( "&e/client rendertype: &fRender type is now normalfast." );
-			}
-		}
-		
-		void SetNewRenderType( bool legacy, bool minimal ) {
-			game.MapBordersRenderer.UseLegacyMode( legacy );
-			if( minimal ) {
-				game.ReplaceComponent( ref game.EnvRenderer, new MinimalEnvRenderer() );
+				game.Chat.Add( "&e/client: &cYou didn't specify a new render type." );
+			} else if( game.SetRenderType( property ) ) {
+				game.Chat.Add( "&e/client: &fRender type is now " + property + "." );
 			} else {
-				if( !(game.EnvRenderer is StandardEnvRenderer) ) {
-					game.ReplaceComponent( ref game.EnvRenderer, new StandardEnvRenderer() );
-				}
-				((StandardEnvRenderer)game.EnvRenderer).UseLegacyMode( legacy );
+				game.Chat.Add( "&e/client: &cUnrecognised render type &f\"" + property + "\"&c." );
 			}
 		}
 	}

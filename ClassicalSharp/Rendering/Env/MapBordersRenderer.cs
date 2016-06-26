@@ -18,7 +18,8 @@ namespace ClassicalSharp.Renderers {
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices;
-		bool legacy, fullColSides, fullColEdge;
+		internal bool legacy;
+		bool fullColSides, fullColEdge;
 		
 		public void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;

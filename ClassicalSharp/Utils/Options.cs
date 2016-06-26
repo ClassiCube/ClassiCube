@@ -22,6 +22,7 @@ namespace ClassicalSharp {
 		public const string AutoCloseLauncher = "autocloselauncher";
 		public const string ViewBobbing = "viewbobbing";
 		public const string EntityShadow = "entityshadow";
+		public const string RenderType = "normal";
 		
 		public const string HacksEnabled = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";		

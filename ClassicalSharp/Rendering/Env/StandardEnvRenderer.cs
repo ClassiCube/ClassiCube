@@ -9,7 +9,7 @@ namespace ClassicalSharp.Renderers {
 	public unsafe class StandardEnvRenderer : EnvRenderer {
 		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
-		bool legacy;
+		internal bool legacy;
 		
 		public void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;

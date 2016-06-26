@@ -95,9 +95,12 @@ namespace ClassicalSharp {
 			Entities[255] = LocalPlayer;
 			width = Width;
 			height = Height;
+			
 			MapRenderer = new MapRenderer( this );
-			MapBordersRenderer = AddComponent( new MapBordersRenderer() );
-			EnvRenderer = AddComponent( new StandardEnvRenderer() );
+			string renType = Options.Get( OptionsKey.RenderType ) ?? "normal";
+			if( !SetRenderType( renType ) )
+				SetRenderType( "normal" );
+			
 			if( IPAddress == null ) {
 				Network = new Singleplayer.SinglePlayerServer( this );
 			} else {
@@ -592,7 +595,7 @@ namespace ClassicalSharp {
 				if( bmp.Width > maxSize || bmp.Height > maxSize ) {
 					Chat.Add( "&cUnable to use " + file + " from the texture pack." );
 					Chat.Add( "&c Its size is (" + bmp.Width + "," + bmp.Height
-						+ "), your GPU supports (" + maxSize + "," + maxSize + ") at most." );
+					         + "), your GPU supports (" + maxSize + "," + maxSize + ") at most." );
 					return false;
 				}
 				
@@ -607,6 +610,45 @@ namespace ClassicalSharp {
 					texId = Graphics.CreateTexture( bmp );
 				}
 				return true;
+			}
+		}
+		
+		public bool SetRenderType( string type ) {
+			if( Utils.CaselessEquals( type, "legacyfast" ) ) {
+				SetNewRenderType( true, true );
+			} else if( Utils.CaselessEquals( type, "legacy" ) ) {
+				SetNewRenderType( true, false );
+			} else if( Utils.CaselessEquals( type, "normal" ) ) {
+				SetNewRenderType( false, false );
+			} else if( Utils.CaselessEquals( type, "normalfast" ) ) {
+				SetNewRenderType( false, true );
+			} else {
+				return false;
+			}
+			Options.Set( OptionsKey.RenderType, type );
+			return true;
+		}
+		
+		void SetNewRenderType( bool legacy, bool minimal ) {
+			if( MapBordersRenderer == null ) {
+				MapBordersRenderer = AddComponent( new MapBordersRenderer() );
+				MapBordersRenderer.legacy = legacy;
+			} else {
+				MapBordersRenderer.UseLegacyMode( legacy );
+			}
+			
+			if( minimal ) {
+				if( EnvRenderer == null )
+					EnvRenderer = AddComponent( new MinimalEnvRenderer() );
+				else
+					ReplaceComponent( ref EnvRenderer, new MinimalEnvRenderer() );
+			} else if( EnvRenderer == null ) {
+				EnvRenderer = AddComponent( new StandardEnvRenderer() );
+				((StandardEnvRenderer)EnvRenderer).legacy = legacy;
+			} else {
+				if( !(EnvRenderer is StandardEnvRenderer) )
+					ReplaceComponent( ref EnvRenderer, new StandardEnvRenderer() );
+				((StandardEnvRenderer)EnvRenderer).UseLegacyMode( legacy );
 			}
 		}
 		
