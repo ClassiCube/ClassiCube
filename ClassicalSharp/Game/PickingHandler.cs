@@ -75,27 +75,31 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool CheckIsFree( PickedPos selected, byte newBlock ) {
+		bool CheckIsFree( PickedPos selected, byte block ) {
 			Vector3 pos = (Vector3)selected.TranslatedPos;
-			if( !CannotPassThrough( newBlock ) ) return true;
-			if( IntersectsOtherPlayers( pos, newBlock ) ) return false;
+			BlockInfo info = game.BlockInfo;
+			LocalPlayer p = game.LocalPlayer;
 			
-			AABB blockBB = new AABB( pos + game.BlockInfo.MinBB[newBlock],
-			                                      pos + game.BlockInfo.MaxBB[newBlock] );
-			AABB localBB = game.LocalPlayer.CollisionBounds;
+			if( info.Collide[block] != CollideType.Solid ) return true;
+			if( IntersectsOtherPlayers( pos, block ) ) return false;
 			
-			if( game.LocalPlayer.Hacks.Noclip || !localBB.Intersects( blockBB ) ) return true;
-			HacksComponent hacks = game.LocalPlayer.Hacks;
-			if( hacks.CanPushbackBlocks && hacks.PushbackPlacing && hacks.Enabled )
+			AABB blockBB = new AABB( pos + info.MinBB[block], pos + info.MaxBB[block] );
+			// NOTE: We need to also test against nextPos here, because otherwise
+			// we can fall through the block as collision is performed against nextPos
+			AABB localBB = AABB.Make( p.Position, p.CollisionSize );
+			localBB.Min.Y = Math.Min( p.nextPos.Y, localBB.Min.Y );
+			
+			if( p.Hacks.Noclip || !localBB.Intersects( blockBB ) ) return true;
+			if( p.Hacks.CanPushbackBlocks && p.Hacks.PushbackPlacing && p.Hacks.Enabled )
 				return PushbackPlace( selected, blockBB );
 			
 			localBB.Min.Y += 0.25f + Entity.Adjustment;
 			if( localBB.Intersects( blockBB ) ) return false;
 			
 			// Push player up if they are jumping and trying to place a block underneath them.
-			Vector3 p = game.LocalPlayer.Position;
-			p.Y = pos.Y + game.BlockInfo.MaxBB[newBlock].Y + Entity.Adjustment;
-			LocationUpdate update = LocationUpdate.MakePos( p, false );
+			Vector3 next = game.LocalPlayer.nextPos;
+			next.Y = pos.Y + game.BlockInfo.MaxBB[block].Y + Entity.Adjustment;
+			LocationUpdate update = LocationUpdate.MakePos( next, false );
 			game.LocalPlayer.SetLocation( update, false );
 			return true;
 		}
