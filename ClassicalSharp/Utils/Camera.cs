@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 		
-		protected void CalcViewBobbing( double delta, float t, bool velTilt ) {
+		protected void CalcViewBobbing( double delta, float t, float velTiltScale ) {
 			LocalPlayer p = game.LocalPlayer;
 			tiltM = Matrix4.RotateZ( -p.anim.tiltX * p.anim.bobStrength );
 			tiltM = tiltM * Matrix4.RotateX( Math.Abs( p.anim.tiltY ) * 3 * p.anim.bobStrength );
@@ -120,9 +120,8 @@ namespace ClassicalSharp {
 			bobbingHor = (p.anim.bobbingHor * 0.3f) * p.anim.bobStrength;
 			bobbingVer = (p.anim.bobbingVer * 0.6f) * p.anim.bobStrength;
 			
-			if( !velTilt ) return;
 			float vel = Utils.Lerp( p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t );
-			tiltM = tiltM * Matrix4.RotateX( (-vel * 0.05f) * p.anim.velTiltStrength );
+			tiltM = tiltM * Matrix4.RotateX( -vel * 0.05f * p.anim.velTiltStrength / velTiltScale );
 		}
 	}
 	
@@ -142,7 +141,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, false );
+			CalcViewBobbing( delta, t, dist );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			
@@ -179,7 +178,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, false );
+			CalcViewBobbing( delta, t, dist );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			
@@ -210,7 +209,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, true );
+			CalcViewBobbing( delta, t, 1 );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			Vector3 cameraDir = Utils.GetDirVector( player.HeadYawRadians,

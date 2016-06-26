@@ -22,7 +22,7 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
-		FastColour col = new FastColour( 20, 20, 20, 150 );
+		FastColour col = new FastColour( 0, 0, 0, 102 );
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];
