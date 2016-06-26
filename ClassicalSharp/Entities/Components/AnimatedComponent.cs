@@ -16,7 +16,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public float legXRot, armXRot, armZRot;
-		public float bobbingHor, bobbingVer, tiltX, tiltY;
+		public float bobbingHor, bobbingVer, bobbingModel, tiltX, tiltY;
 		public float walkTime, swing, bobStrength = 1, velTiltStrength = 1;
 		
 		internal float walkTimeO, walkTimeN, swingO, swingN;
@@ -60,6 +60,7 @@ namespace ClassicalSharp.Entities {
 			
 			bobbingHor = (float)(Math.Cos( walkTime ) * swing * (2.5f/16f));
 			bobbingVer = (float)(Math.Abs( Math.Sin( walkTime ) ) * swing * (2.5f/16f));
+			bobbingModel = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (4.0f/16f));
 			
 			DoTilt( ref bobStrength, !game.ViewBobbing || !entity.onGround );
 			if( entity is LocalPlayer ) {
@@ -75,7 +76,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		static void DoTilt( ref float tilt, bool reduce ) {
-			if( reduce ) tilt *= 0.9f;
+			if( reduce ) tilt *= 0.8f;
 			else tilt += 0.1f;
 			Utils.Clamp( ref tilt, 0, 1 );
 		}
