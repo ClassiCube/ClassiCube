@@ -18,7 +18,10 @@ namespace ClassicalSharp.Audio {
 		public void Init( Game game ) {
 			this.game = game;
 			string path = Path.Combine( Program.AppDirectory, "audio" );
-			files = Directory.GetFiles( path );
+			if( Directory.Exists( path ) )
+				files = Directory.GetFiles( path );
+			else
+				files = new string[0];
 			
 			game.UseMusic = Options.GetBool( OptionsKey.UseMusic, false );
 			SetMusic( game.UseMusic );
@@ -59,6 +62,7 @@ namespace ClassicalSharp.Audio {
 		
 		EventWaitHandle musicHandle = new EventWaitHandle( false, EventResetMode.AutoReset );
 		void DoMusicThread() {
+			if( musicFiles.Length == 0 ) return;
 			Random rnd = new Random();
 			while( !disposingMusic ) {
 				string file = musicFiles[rnd.Next( 0, musicFiles.Length )];
