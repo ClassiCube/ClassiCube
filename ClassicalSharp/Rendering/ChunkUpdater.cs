@@ -361,7 +361,7 @@ namespace ClassicalSharp.Renderers {
 							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 						if( info.Visible && !info.Empty ) { render[j] = info; j++; }
 					}
-				} else {
+				} else if ( info.Visible ) {
 					render[j] = info; j++;
 				}
 			}
