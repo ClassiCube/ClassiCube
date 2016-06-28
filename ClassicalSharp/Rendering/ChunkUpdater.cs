@@ -155,9 +155,13 @@ namespace ClassicalSharp.Renderers {
 			chunksY = height >> 4;
 			chunksZ = length >> 4;
 			
-			renderer.chunks = new ChunkInfo[chunksX * chunksY * chunksZ];
-			renderer.unsortedChunks = new ChunkInfo[chunksX * chunksY * chunksZ];
-			distances = new int[renderer.chunks.Length];
+			int count = chunksX * chunksY * chunksZ;
+			if( renderer.chunks == null || renderer.chunks.Length != count ) {
+				renderer.chunks = new ChunkInfo[count];
+				renderer.unsortedChunks = new ChunkInfo[count];
+				renderer.renderChunks = new ChunkInfo[count];
+				distances = new int[count];
+			}			
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
 			lastCamPos = Utils.MaxPos();
@@ -171,8 +175,10 @@ namespace ClassicalSharp.Renderers {
 				for( int y = 0; y < height; y += 16 )
 					for( int x = 0; x < width; x += 16 )
 			{
-				renderer.unsortedChunks[index] = new ChunkInfo( x, y, z );
-				renderer.chunks[index] = renderer.unsortedChunks[index];				
+				renderer.chunks[index] = new ChunkInfo( x, y, z );
+				renderer.unsortedChunks[index] = renderer.chunks[index];
+				renderer.renderChunks[index] = renderer.chunks[index];
+				distances[index] = 0;
 				index++;
 			}
 		}
@@ -264,7 +270,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void ResetNeighourChunk( int cx, int cy, int cz, byte block, 
+		void ResetNeighourChunk( int cx, int cy, int cz, byte block,
 		                        int y, int index, int nY ) {
 			World world = game.World;
 			int minY = cy << 4;
@@ -296,21 +302,19 @@ namespace ClassicalSharp.Renderers {
 
 		int chunksTarget = 4;
 		const double targetTime = (1.0 / 30) + 0.01;
-		public void UpdateChunks( double deltaTime ) {
+		public void UpdateChunks( double delta ) {
 			int chunkUpdates = 0;
 			int viewDist = Utils.AdjViewDist( game.ViewDistance < 16 ? 16 : game.ViewDistance );
 			int adjViewDistSqr = (viewDist + 24) * (viewDist + 24);
-			chunksTarget += deltaTime < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
+			chunksTarget += delta < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
 			bool samePos = cameraPos == lastCamPos && p.HeadYawDegrees == lastYaw
 				&& p.PitchDegrees == lastPitch;
-			if( samePos )
-				UpdateChunksStill( deltaTime, ref chunkUpdates, adjViewDistSqr );
-			else
-				UpdateChunksAndVisibility( deltaTime, ref chunkUpdates, adjViewDistSqr );
+			renderer.renderCount = samePos ? UpdateChunksStill( delta, ref chunkUpdates, adjViewDistSqr ) :
+				UpdateChunksAndVisibility( delta, ref chunkUpdates, adjViewDistSqr );
 			
 			lastCamPos = cameraPos;
 			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
@@ -320,8 +324,9 @@ namespace ClassicalSharp.Renderers {
 		Vector3 lastCamPos;
 		float lastYaw, lastPitch;
 		
-		void UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdats, int adjViewDistSqr ) {
-			ChunkInfo[] chunks = renderer.chunks;
+		int UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdats, int adjViewDistSqr ) {
+			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
+			int j = 0;
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
@@ -334,11 +339,14 @@ namespace ClassicalSharp.Renderers {
 				}
 				info.Visible = inRange &&
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
+				if( info.Visible && !info.Empty ) { render[j] = info; j++; }
 			}
+			return j;
 		}
 		
-		void UpdateChunksStill( double deltaTime, ref int chunkUpdates, int adjViewDistSqr ) {
-			ChunkInfo[] chunks = renderer.chunks;
+		int UpdateChunksStill( double deltaTime, ref int chunkUpdates, int adjViewDistSqr ) {
+			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
+			int j = 0;
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
@@ -351,9 +359,13 @@ namespace ClassicalSharp.Renderers {
 						// only need to update the visibility of chunks in range.
 						info.Visible = inRange &&
 							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
+						if( info.Visible && !info.Empty ) { render[j] = info; j++; }
 					}
+				} else {
+					render[j] = info; j++;
 				}
 			}
+			return j;
 		}
 		
 		void BuildChunk( ChunkInfo info, ref int chunkUpdates ) {

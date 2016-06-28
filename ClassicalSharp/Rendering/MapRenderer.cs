@@ -44,7 +44,8 @@ namespace ClassicalSharp.Renderers {
 		IGraphicsApi api;
 		
 		internal int _1DUsed = -1;
-		internal ChunkInfo[] chunks, unsortedChunks;
+		internal int renderCount = 0;
+		internal ChunkInfo[] chunks, renderChunks, unsortedChunks;
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;
 		internal int[] totalUsed;
@@ -164,13 +165,9 @@ namespace ClassicalSharp.Renderers {
 		const int maxVertex = 65536;
 		const int maxIndices = maxVertex / 4 * 6;
 		void RenderNormalBatch( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				#if OCCLUSION
-				if( info.NormalParts == null || !info.Visible || info.Occluded ) continue;
-				#else
-				if( info.NormalParts == null || !info.Visible ) continue;
-				#endif
+			for( int i = 0; i < renderCount; i++ ) {
+				ChunkInfo info = renderChunks[i];
+				if( info.NormalParts == null ) continue;
 
 				ChunkPartInfo part = info.NormalParts[batch];
 				if( part.IndicesCount == 0 ) continue;
@@ -201,13 +198,9 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void RenderTranslucentBatch( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				#if OCCLUSION
-				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
-				#else
-				if( info.TranslucentParts == null || !info.Visible ) continue;
-				#endif
+			for( int i = 0; i < renderCount; i++ ) {
+				ChunkInfo info = renderChunks[i];
+				if( info.TranslucentParts == null ) continue;
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				
 				if( part.IndicesCount == 0 ) continue;
@@ -216,13 +209,9 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RenderTranslucentBatchDepthPass( int batch ) {
-			for( int i = 0; i < chunks.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				#if OCCLUSION
-				if( info.TranslucentParts == null || !info.Visible || info.Occluded ) continue;
-				#else
-				if( info.TranslucentParts == null || !info.Visible ) continue;
-				#endif
+			for( int i = 0; i < renderCount; i++ ) {
+				ChunkInfo info = renderChunks[i];
+				if( info.TranslucentParts == null ) continue;
 
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if( part.IndicesCount == 0 ) continue;
