@@ -20,6 +20,7 @@ namespace ClassicalSharp.Singleplayer {
 		TNTPhysics tnt;
 		FoilagePhysics foilage;
 		LiquidPhysics liquid;
+		OtherPhysics other;
 		
 		bool enabled = true;
 		public bool Enabled {
@@ -43,6 +44,7 @@ namespace ClassicalSharp.Singleplayer {
 			tnt = new TNTPhysics( game, this );
 			foilage = new FoilagePhysics( game, this );
 			liquid = new LiquidPhysics( game, this );
+			other = new OtherPhysics( game, this );
 		}
 		
 		internal static bool CheckItem( Queue<uint> queue, out int posIndex ) {
