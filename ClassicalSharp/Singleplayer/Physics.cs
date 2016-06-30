@@ -76,14 +76,29 @@ namespace ClassicalSharp.Singleplayer {
 			if( !Enabled ) return;
 			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
+			byte block = e.Block;
+			
+			if( block == Block.Air && IsEdgeWater( p.X, p.Y, p.Z ) ) { 
+				block = Block.StillWater; 
+				game.UpdateBlock( p.X, p.Y, p.Z, Block.StillWater );
+			}
 			
 			if( e.Block == 0 ) {
 				Action<int, byte> delete = OnDelete[e.OldBlock];
 				if( delete != null ) delete( index, e.OldBlock );
 			} else {
-				Action<int, byte> place = OnPlace[e.Block];
-				if( place != null ) place( index, e.Block );
+				Action<int, byte> place = OnPlace[block];
+				if( place != null ) place( index, block );
 			}
+		}
+		
+		bool IsEdgeWater( int x, int y, int z ) {
+			WorldEnv env = map.Env;
+			if( !(env.EdgeBlock == Block.Water || env.EdgeBlock == Block.StillWater) )
+				return false;
+			
+			return y >= env.SidesHeight && y < env.EdgeHeight 
+				&& (x == 0 || z == 0 || x == (map.Width - 1) || z == (map.Length - 1) );
 		}
 		
 		void ResetMap( object sender, EventArgs e ) {
