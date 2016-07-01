@@ -79,8 +79,6 @@ namespace ClassicalSharp.TexturePack {
 			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
 			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;
-			
-			Utils.LogDebug( "Used atlases: " + Utils.CeilDiv( totalElements, verElements ) );
 			return Utils.CeilDiv( totalElements, verElements );
 		}
 		

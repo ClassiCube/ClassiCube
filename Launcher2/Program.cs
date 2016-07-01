@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.IO;
+using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher {
@@ -15,10 +16,15 @@ namespace Launcher {
 		
 		[STAThread]
 		static void Main( string[] args ) {
+			if( !File.Exists( "ClassicalSharp.exe" ) ) {
+				MessageBox.Show( "ClassicalSharp.exe needs to be in the same folder as the launcher.", "Missing file" );
+				return;
+			}
+			
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;			
 			string logPath = Path.Combine( AppDirectory, "launcher.log" );
 			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-			ErrorHandler.InstallHandler( logPath );
+			ErrorHandler2.InstallHandler( logPath );
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
 		}
