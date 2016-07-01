@@ -81,7 +81,7 @@ namespace ClassicalSharp.Audio {
 				if( disposingMusic ) break;
 				
 				int delay = 2000 * 60 + rnd.Next( 0, 5000 * 60 );
-				musicHandle.WaitOne( delay );
+				musicHandle.WaitOne( delay, false );
 			}
 		}
 		
