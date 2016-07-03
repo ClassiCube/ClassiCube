@@ -116,11 +116,16 @@ namespace ClassicalSharp.TexturePack {
 			data.TileX = tileX; data.TileY = tileY;
 			data.FrameX = frameX; data.FrameY = frameY;
 			data.FrameSize = frameSize; data.StatesCount = statesNum;
+			
+			// NOTE: Lava animation hardcoded for default.zip
+			if( tileX == 14 && tileY == 1 && IsDefaultZip() )
+				tickDelay = 0;
 			data.TickDelay = tickDelay;
 			animations.Add( data );
 		}
 		
 		FastBitmap animPart = new FastBitmap();
+		LavaAnimation lavaAnim = new LavaAnimation();
 		unsafe void ApplyAnimation( AnimationData data ) {
 			data.Tick--;
 			if( data.Tick >= 0 ) return;
@@ -136,8 +141,20 @@ namespace ClassicalSharp.TexturePack {
 			int size = data.FrameSize;
 			byte* temp = stackalloc byte[size * size * 4];
 			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
-			FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 0, 0, animsBuffer, animPart, size );
+			
+			// NOTE: Lava animation hardcoded for default.zip
+			if( texId == 30 && IsDefaultZip() )
+				lavaAnim.Tick( animPart );
+			else
+				FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 
+				                       0, 0, animsBuffer, animPart, size );
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
+		}
+		
+		bool IsDefaultZip() {
+			if( game.World.TextureUrl != null ) return false;
+			string texPack = Options.Get( OptionsKey.DefaultTexturePack );
+			return texPack == null || texPack == "default.zip";
 		}
 		
 		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
