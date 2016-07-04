@@ -263,9 +263,9 @@ namespace ClassicalSharp {
 		internal static byte FastByte( string s ) {
 			int sum = 0;
 			switch( s.Length ) {
-				case 1: sum = (s[0] - '0'); break;
-				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
-				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
+					case 1: sum = (s[0] - '0'); break;
+					case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
+					case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
 			}
 			return (byte)sum;
 		}
@@ -308,13 +308,9 @@ namespace ClassicalSharp {
 				return SkinType.Type64x32;
 			} else if( bmp.Width == bmp.Height ) {
 				// Minecraft alex skins have this particular pixel with alpha of 0.
-				if( bmp.Width == 64 ) {
-					int scale = bmp.Width / 64;
-					bool isNormal = bmp.GetPixel( 54 * scale, 20 * scale ).A >= 127;
-					return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
-				} else {
-					return SkinType.Type64x64;
-				}
+				int scale = bmp.Width / 64;
+				bool isNormal = bmp.GetPixel( 54 * scale, 20 * scale ).A >= 127;
+				return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
 			} else {
 				throw new NotSupportedException( "unsupported skin dimensions: " + bmp.Width + ", " + bmp.Height );
 			}
