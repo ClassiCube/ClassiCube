@@ -199,11 +199,12 @@ namespace ClassicalSharp.Network {
 		internal void HandleAddEntity() {
 			byte id = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
-			name = Utils.RemoveEndPlus( name );
-			AddEntity( id, name, name, true );
-			// Also workaround for LegendCraft as it declares it supports ExtPlayerList but
-			// doesn't send ExtAddPlayerName packets.
+			string skin = name;
+			CheckName( id, ref name, ref skin );
 			
+			AddEntity( id, name, skin, true );
+			// Also workaround for LegendCraft as it declares it supports ExtPlayerList but
+			// doesn't send ExtAddPlayerName packets.			
 			AddTablistEntry( id, name, name, "Players", 0 );
 			needRemoveNames[id >> 3] |= (byte)(1 << (id & 0x7));
 		}
@@ -273,7 +274,6 @@ namespace ClassicalSharp.Network {
 		}
 		
 		void AddEntity( byte id, string displayName, string skinName, bool readPosition ) {
-			skinName = Utils.StripColours( skinName );
 			if( id != 0xFF ) {
 				Player oldPlayer = game.Entities[id];
 				if( oldPlayer != null ) {
@@ -283,9 +283,6 @@ namespace ClassicalSharp.Network {
 				game.Entities[id] = new NetPlayer( displayName, skinName, game, id );
 				game.EntityEvents.RaiseAdded( id );
 			} else {
-				// Server is only allowed to change our own name colours.
-				if( Utils.StripColours( displayName ) != game.Username )
-					displayName = game.Username;
 				game.LocalPlayer.DisplayName = displayName;
 				game.LocalPlayer.SkinName = skinName;
 				game.LocalPlayer.UpdateName();

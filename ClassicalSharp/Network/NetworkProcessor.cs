@@ -231,5 +231,18 @@ namespace ClassicalSharp.Network {
 				Dispose();
 			}
 		}
+		
+		void CheckName( byte id, ref string displayName, ref string skinName ) {
+			displayName = Utils.RemoveEndPlus( displayName );
+			skinName = Utils.RemoveEndPlus( skinName );
+			skinName = Utils.StripColours( skinName );
+			
+			// Server is only allowed to change our own name colours.
+			if( id != 0xFF ) return;			
+			if( Utils.StripColours( displayName ) != game.Username )
+				displayName = game.Username;
+			if( skinName == "" )
+				skinName = game.Username;
+		}
 	}
 }

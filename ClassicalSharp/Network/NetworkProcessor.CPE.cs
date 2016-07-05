@@ -184,9 +184,8 @@ namespace ClassicalSharp.Network {
 		internal void HandleExtAddEntity() {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
-			displayName = Utils.RemoveEndPlus( displayName );
-			string skinName = reader.ReadAsciiString();
-			skinName = Utils.RemoveEndPlus( skinName );
+			string skinName = reader.ReadAsciiString();	
+			CheckName( id, ref displayName, ref skinName );
 			AddEntity( id, displayName, skinName, false );
 		}
 		
@@ -314,6 +313,7 @@ namespace ClassicalSharp.Network {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadAsciiString();
 			string skinName = reader.ReadAsciiString();
+			CheckName( id, ref displayName, ref skinName );
 			AddEntity( id, displayName, skinName, true );
 		}
 		
