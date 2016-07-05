@@ -54,6 +54,7 @@ namespace ClassicalSharp.Gui {
 			Size bodySize = CalculateContentSize( e, sizes, out elementSize );
 			int titleWidth = MeasureTitles( font ), titleHeight = elements[0].TitleSize.Height;
 			Size size = new Size( Math.Max( bodySize.Width, titleWidth ), bodySize.Height + titleHeight );
+			game.Graphics.DeleteTexture( ref texture );
 			
 			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) )
 				using( IDrawer2D drawer = game.Drawer2D )
@@ -72,7 +73,6 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			mouseX -= X; mouseY -= Y;
 			if( IntersectsHeader( mouseX, mouseY ) ) {
-				Dispose();
 				Redraw();
 			} else {
 				IntersectsBody( mouseX, mouseY );

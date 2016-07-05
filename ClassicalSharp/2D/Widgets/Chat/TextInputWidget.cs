@@ -193,6 +193,7 @@ namespace ClassicalSharp.Gui {
 			Dispose();
 			api.DeleteTexture( ref caretTex );
 			api.DeleteTexture( ref prefixTex );
+			altText.Dispose();
 		}
 
 		public override void MoveTo( int newX, int newY ) {
