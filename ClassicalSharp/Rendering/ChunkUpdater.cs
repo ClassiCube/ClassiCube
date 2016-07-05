@@ -263,7 +263,7 @@ namespace ClassicalSharp.Renderers {
 				ResetNeighourChunk( cx, cy, cz, block, y, index, y );
 			} else {
 				for( cy = maxCy; cy >= minCy; cy-- ) {
-					int maxY = (cy << 4) + 15;
+					int maxY = Math.Min( world.Height - 1, (cy << 4) + 15 );
 					int index = x + world.Width * (z + maxY * world.Length);
 					ResetNeighourChunk( cx, cy, cz, block, maxY, index, y );
 				}
