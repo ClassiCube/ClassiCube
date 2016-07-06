@@ -161,7 +161,7 @@ namespace ClassicalSharp.Gui {
 			int[] metadata = (int[])Metadata;
 			for( int i = 0; i < normalChat.Textures.Length; i++ ) {
 				Texture texture = normalChat.Textures[i];
-				if( !texture.IsValid ) continue;
+				if( !texture.IsValid || metadata[i] == -1 ) continue;
 				
 				DateTime received = game.Chat.Log[metadata[i]].Received;
 				if( (now - received).TotalSeconds <= 10 )

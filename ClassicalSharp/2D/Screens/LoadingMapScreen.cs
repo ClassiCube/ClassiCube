@@ -118,8 +118,6 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesAllInput { get { return true; } }
 		
-		public override bool HidesHud { get { return false; } }
-		
 		public override bool RenderHudAfter { get { return true; } }
 		
 		public override bool HandlesKeyDown( Key key ) {

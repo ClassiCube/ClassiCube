@@ -287,7 +287,7 @@ namespace ClassicalSharp {
 			int texId = info.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			float blockHeight = 1;
+			const float blockHeight = 1;
 			
 			float u1 = 0, u2 = 1 * 15.99f/16f;
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;

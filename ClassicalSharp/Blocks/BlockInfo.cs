@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < textures.Length; i++ ) textures[i] = 0;
 			// Reset culling
 			for( int i = 0; i < hidden.Length; i++ ) hidden[i] = 0;
-			for( int i = 0; i < CanStretch.Length; i++ ) CanStretch[i] = false;
+			for( int i = 0; i < CanStretch.Length; i++ ) CanStretch[i] = 0;
 			for( int i = 0; i < IsAir.Length; i++ ) IsAir[i] = false;
 			// Reset bounds
 			for( int i = 0; i < MinBB.Length; i++ ) MinBB[i] = Vector3.Zero;

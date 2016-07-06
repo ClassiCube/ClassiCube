@@ -288,7 +288,8 @@ namespace ClassicalSharp {
 			CheckScheduledTasks( delta );
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
-			Graphics.Clear();
+			if( !SkipClear )
+				Graphics.Clear();
 			UpdateViewMatrix( delta, t );
 			
 			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
@@ -361,7 +362,9 @@ namespace ClassicalSharp {
 		
 		void RenderGui( double delta ) {
 			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
-			fpsScreen.Render( delta );
+			if( activeScreen == null || !activeScreen.HidesHud )
+				fpsScreen.Render( delta );
+			
 			if( activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudAfter )
 				hudScreen.Render( delta );
 			if( activeScreen != null )
@@ -369,7 +372,7 @@ namespace ClassicalSharp {
 			if( activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter )
 				hudScreen.Render( delta );
 			
-			if( WarningOverlays.Count > 0)
+			if( WarningOverlays.Count > 0 )
 				WarningOverlays[0].Render( delta );
 			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 		}
@@ -447,7 +450,11 @@ namespace ClassicalSharp {
 		}
 		
 		public void Disconnect( string title, string reason ) {
+			foreach( WarningScreen screen in WarningOverlays )
+				screen.Dispose();
+			WarningOverlays.Clear();
 			SetNewScreen( new ErrorScreen( this, title, reason ) );
+			
 			World.Reset();
 			World.blocks = null;
 			Drawer2D.InitColours();

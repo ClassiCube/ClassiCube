@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 		
 		public byte[] hidden = new byte[BlocksCount * BlocksCount];
 		
-		public bool[] CanStretch = new bool[BlocksCount * Side.Sides];
+		public byte[] CanStretch = new byte[BlocksCount];
 		
 		public bool[] IsAir = new bool[BlocksCount];
 
@@ -17,8 +17,8 @@ namespace ClassicalSharp {
 			IsAir[0] = true;
 			for( int block = 1; block < BlocksCount; block++ )
 				CheckOpaque( block );
-			for( int block = 0; block < CanStretch.Length; block++ )
-				CanStretch[block] = true;
+			for( int block = 0; block < BlocksCount; block++ )
+				CanStretch[block] = 0x3F;
 			
 			for( int blockI = 1; blockI < BlocksCount; blockI++ ) {
 				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 		internal void SetupCullingCache( byte block ) {
 			IsAir[0] = true;
 			CheckOpaque( block );
-			CanStretch[block] = true;
+			CanStretch[block] = 0x3F;
 			
 			for( int other = 1; other < BlocksCount; other++ ) {
 				UpdateCulling( block, (byte)other );
@@ -105,15 +105,15 @@ namespace ClassicalSharp {
 		}
 		
 		void SetXStretch( byte block, bool stretch ) {
-			CanStretch[block * Side.Sides + Side.Front] = stretch;
-			CanStretch[block * Side.Sides + Side.Back] = stretch;
-			CanStretch[block * Side.Sides + Side.Top] = stretch;
-			CanStretch[block * Side.Sides + Side.Bottom] = stretch;
+			const byte mask = 0x3C;
+			CanStretch[block] &= 0xC3; // ~0x3C
+			CanStretch[block] |= (stretch ? mask : (byte)0);
 		}
 		
 		void SetZStretch( byte block, bool stretch ) {
-			CanStretch[block * Side.Sides + Side.Left] = stretch;
-			CanStretch[block * Side.Sides + Side.Right] = stretch;
+			const byte mask = 0x03;
+			CanStretch[block] &= 0xFC; // ~0x03
+			CanStretch[block] |= (stretch ? mask : (byte)0);
 		}
 	}
 }

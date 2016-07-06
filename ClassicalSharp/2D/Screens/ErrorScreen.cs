@@ -20,6 +20,11 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Render( double delta ) {
+			// NOTE: We need to make sure that both the front and back buffers have
+			// definitely been drawn over, so we redraw the background multiple times.
+			if( drawnBackground < 5 ) 
+				DrawBackground();
+			
 			UpdateReconnectState();
 			api.Texturing = true;
 			for( int i = 0; i < widgets.Length; i++ )
@@ -42,7 +47,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Init() {
-			api.ClearColour( new FastColour( 65, 31, 31 ) );
+			game.SkipClear = true;
 			widgets = new Widget[] {
 				ChatTextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
 				ChatTextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),
@@ -65,6 +70,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void Dispose() {
+			game.SkipClear = false;
 			titleFont.Dispose();
 			messageFont.Dispose();
 			for( int i = 0; i < widgets.Length; i++ )
@@ -74,6 +80,7 @@ namespace ClassicalSharp.Gui {
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			for( int i = 0; i < widgets.Length; i++ )
 				widgets[i].OnResize( oldWidth, oldHeight, width, height );
+			drawnBackground = 0;
 		}
 		
 		public override bool BlocksWorld { get { return true; } }
@@ -99,5 +106,12 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesMouseScroll( int delta )  { return true; }
 		
 		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return true; }
+		
+		int drawnBackground;
+		readonly FastColour top = new FastColour( 64, 32, 32 ), bottom = new FastColour( 80, 16, 16 );
+		void DrawBackground() {
+			drawnBackground++;
+			api.Draw2DQuad( 0, 0, game.Width, game.Height, top, bottom );
+		}
 	}
 }

@@ -193,24 +193,23 @@ namespace ClassicalSharp {
 						cIndex++;
 						byte rawBlock = chunk[cIndex];
 						if( info.IsAir[rawBlock] ) continue;
-						int countIndex = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
+						int index = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
 						if( info.IsSprite[rawBlock] ) {
-							countIndex += Side.Top;
-							if( counts[countIndex] != 0 ) {
+							index += Side.Top;
+							if( counts[index] != 0 ) {
 								X = x; Y = y; Z = z;
 								AddSpriteVertices( rawBlock );
-								counts[countIndex] = 1;
+								counts[index] = 1;
 							}
 						} else {
 							X = x; Y = y; Z = z;
 							fullBright = info.FullBright[rawBlock];
-							int tileIdx = rawBlock * BlockInfo.BlocksCount;
+							int tileIdx = rawBlock << 8;
 							// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 							
-							int index = countIndex + Side.Left;
 							if( counts[index] == 0 || (x == 0 && Y < clipLevel) ||
 							   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0 ) ) {
 								counts[index] = 0;
@@ -219,7 +218,7 @@ namespace ClassicalSharp {
 								AddVertices( rawBlock, count, Side.Left ); counts[index] = (byte)count;
 							}
 							
-							index = countIndex + Side.Right;
+							index++;
 							if( counts[index] == 0 || (x == maxX && Y < clipLevel) ||
 							   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0 ) ) {
 								counts[index] = 0;
@@ -228,7 +227,7 @@ namespace ClassicalSharp {
 								AddVertices( rawBlock, count, Side.Right ); counts[index] = (byte)count;
 							}
 							
-							index = countIndex + Side.Front;
+							index++;
 							if( counts[index] == 0 || (z == 0 && Y < clipLevel) ||
 							   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0 ) ) {
 								counts[index] = 0;
@@ -237,7 +236,7 @@ namespace ClassicalSharp {
 								AddVertices( rawBlock, count, Side.Front ); counts[index] = (byte)count;
 							}
 							
-							index = countIndex + Side.Back;
+							index++;
 							if( counts[index] == 0 || (z == maxZ && Y < clipLevel) ||
 							   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0 ) ) {
 								counts[index] = 0;
@@ -246,7 +245,7 @@ namespace ClassicalSharp {
 								AddVertices( rawBlock, count, Side.Back ); counts[index] = (byte)count;
 							}
 							
-							index = countIndex + Side.Bottom;
+							index++;
 							if( counts[index] == 0 || y == 0 || 
 							   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0 ) {
 								counts[index] = 0;
@@ -255,15 +254,14 @@ namespace ClassicalSharp {
 								AddVertices( rawBlock, count, Side.Bottom ); counts[index] = (byte)count;
 							}
 							
-							index = countIndex + Side.Top;
+							index++;
 							if( counts[index] == 0 || 
 							   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0 ) {
 								counts[index] = 0;
 							} else {
 								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Top );
 								AddVertices( rawBlock, count, Side.Top ); counts[index] = (byte)count;
-							}
-							
+							}						
 						}
 					}
 				}
@@ -276,7 +274,7 @@ namespace ClassicalSharp {
 			chunkIndex++;
 			countIndex += Side.Sides;
 			int max = chunkSize - xx;
-			bool stretchTile = info.CanStretch[block * Side.Sides + face];
+			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
 			
 			while( count < max && x < width && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;
@@ -294,7 +292,7 @@ namespace ClassicalSharp {
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * Side.Sides;
 			int max = chunkSize - zz;
-			bool stretchTile = info.CanStretch[block * Side.Sides + face];
+			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
 			
 			while( count < max && z < length && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
 				counts[countIndex] = 0;

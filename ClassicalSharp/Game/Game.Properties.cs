@@ -85,6 +85,8 @@ namespace ClassicalSharp {
 		
 		public bool ShowClock = false;
 		
+		public bool SkipClear = false;
+		
 		public MapRenderer MapRenderer;
 		public MapBordersRenderer MapBordersRenderer;
 		public EnvRenderer EnvRenderer;
