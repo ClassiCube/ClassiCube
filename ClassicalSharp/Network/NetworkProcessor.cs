@@ -225,9 +225,8 @@ namespace ClassicalSharp.Network {
 			if( testAcc < 1 ) return;
 			testAcc = 0;
 			
-			if( !socket.Connected || (socket.Poll( 1000, SelectMode.SelectRead ) && socket.Available == 0 ) ) {
-				game.Disconnect( "&eDisconnected from the server",
-				                "Connection timed out" );
+			if( !socket.Connected || ( socket.Poll( 1000, SelectMode.SelectRead ) && socket.Available == 0 ) ) {
+				game.Disconnect( "&eDisconnected from the server", "Connection timed out" );
 				Dispose();
 			}
 		}

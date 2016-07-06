@@ -77,7 +77,6 @@ namespace ClassicalSharp.Network {
 			byte protocolVer = reader.ReadUInt8();
 			ServerName = reader.ReadCp437String();
 			ServerMotd = reader.ReadCp437String();
-			receivedFirstPosition = false;
 			game.Chat.SetLogName( ServerName );
 			
 			game.LocalPlayer.Hacks.SetUserType( reader.ReadUInt8() );

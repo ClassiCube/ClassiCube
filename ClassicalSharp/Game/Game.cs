@@ -288,7 +288,7 @@ namespace ClassicalSharp {
 			CheckScheduledTasks( delta );
 			float t = (float)( ticksAccumulator / ticksPeriod );
 			LocalPlayer.SetInterpPosition( t );
-			if( !SkipClear )
+			if( !SkipClear || SkyboxRenderer.ShouldRender )
 				Graphics.Clear();
 			UpdateViewMatrix( delta, t );
 			
