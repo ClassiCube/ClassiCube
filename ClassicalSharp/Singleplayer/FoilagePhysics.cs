@@ -14,14 +14,14 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			
 			physics.OnPlace[Block.Sapling] = HandleSapling;
-			physics.OnActivate[Block.Sapling] = HandleSapling;
-			physics.OnActivate[Block.Dirt] = HandleDirt;
-			physics.OnActivate[Block.Grass] = HandleGrass;
+			physics.OnRandomTick[Block.Sapling] = HandleSapling;
+			physics.OnRandomTick[Block.Dirt] = HandleDirt;
+			physics.OnRandomTick[Block.Grass] = HandleGrass;
 			
-			physics.OnActivate[Block.Dandelion] = HandleFlower;
-			physics.OnActivate[Block.Rose] = HandleFlower;
-			physics.OnActivate[Block.RedMushroom] = HandleFlower;
-			physics.OnActivate[Block.BrownMushroom] = HandleFlower;
+			physics.OnRandomTick[Block.Dandelion] = HandleFlower;
+			physics.OnRandomTick[Block.Rose] = HandleFlower;
+			physics.OnRandomTick[Block.RedMushroom] = HandleFlower;
+			physics.OnRandomTick[Block.BrownMushroom] = HandleFlower;
 		}
 		
 		void HandleSapling( int index, byte block ) {

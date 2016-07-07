@@ -29,6 +29,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public Action<int, byte>[] OnActivate = new Action<int, byte>[256];
+		public Action<int, byte>[] OnRandomTick = new Action<int, byte>[256];
 		public Action<int, byte>[] OnPlace = new Action<int, byte>[256];
 		public Action<int, byte>[] OnDelete = new Action<int, byte>[256];
 		
@@ -90,6 +91,19 @@ namespace ClassicalSharp.Singleplayer {
 				Action<int, byte> place = OnPlace[block];
 				if( place != null ) place( index, block );
 			}
+			
+			if( p.X > 0 ) Activate( index - 1 );
+			if( p.X < map.Width - 1 ) Activate( index + 1 );
+			if( p.Z > 0 ) Activate( index - map.Width );
+			if( p.Z < map.Length - 1 ) Activate( index + map.Width );
+			if( p.Y > 0 ) Activate( index - oneY );
+			if( p.Y < map.Height - 1 ) Activate( index + oneY );
+		}
+		
+		void Activate( int index ) {
+			byte block = map.blocks[index];
+			Action<int, byte> activate = OnActivate[block];
+			if( activate != null ) activate( index, block );
 		}
 		
 		bool IsEdgeWater( int x, int y, int z ) {
@@ -128,18 +142,18 @@ namespace ClassicalSharp.Singleplayer {
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next( lo, hi );
 				byte block = map.blocks[index];
-				Action<int, byte> activate = OnActivate[block];
-				if( activate != null ) activate( index, block );
+				Action<int, byte> tick = OnRandomTick[block];
+				if( tick != null ) tick( index, block );
 				
 				index = rnd.Next( lo, hi );
 				block = map.blocks[index];
-				activate = OnActivate[block];
-				if( activate != null ) activate( index, block );
+				tick = OnRandomTick[block];
+				if( tick != null ) tick( index, block );
 				
 				index = rnd.Next( lo, hi );
 				block = map.blocks[index];
-				activate = OnActivate[block];
-				if( activate != null ) activate( index, block );
+				tick = OnRandomTick[block];
+				if( tick != null ) tick( index, block );
 			}
 		}
 	}

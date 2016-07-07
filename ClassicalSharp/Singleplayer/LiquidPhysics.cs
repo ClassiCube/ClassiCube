@@ -26,10 +26,15 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnPlace[Block.Sponge] = PlaceSponge;
 			physics.OnDelete[Block.Sponge] = DeleteSponge;
 			
-			physics.OnActivate[Block.Water] = ActivateWater;
-			physics.OnActivate[Block.StillWater] = ActivateWater;
-			physics.OnActivate[Block.Lava] = ActivateLava;
-			physics.OnActivate[Block.StillLava] = ActivateLava;
+			physics.OnActivate[Block.Water] = physics.OnPlace[Block.Water];
+			physics.OnActivate[Block.StillWater] = physics.OnPlace[Block.Water];
+			physics.OnActivate[Block.Lava] = physics.OnPlace[Block.Lava];
+			physics.OnActivate[Block.StillLava] = physics.OnPlace[Block.Lava];
+			
+			physics.OnRandomTick[Block.Water] = ActivateWater;
+			physics.OnRandomTick[Block.StillWater] = ActivateWater;
+			physics.OnRandomTick[Block.Lava] = ActivateLava;
+			physics.OnRandomTick[Block.StillLava] = ActivateLava;
 		}
 		
 		public void Clear() { Lava.Clear(); Water.Clear(); }

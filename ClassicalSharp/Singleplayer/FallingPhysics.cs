@@ -20,6 +20,8 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnPlace[Block.Gravel] = DoFalling;
 			physics.OnActivate[Block.Sand] = DoFalling;
 			physics.OnActivate[Block.Gravel] = DoFalling;
+			physics.OnRandomTick[Block.Sand] = DoFalling;
+			physics.OnRandomTick[Block.Gravel] = DoFalling;
 		}
 		
 		public void ResetMap() {
