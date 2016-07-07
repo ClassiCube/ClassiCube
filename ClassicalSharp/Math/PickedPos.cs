@@ -29,7 +29,7 @@ namespace ClassicalSharp {
 		public CpeBlockFace BlockFace;
 		
 		/// <summary> Block type of this selected block. </summary>
-		public byte BlockType;
+		public byte Block;
 		
 		/// <summary> Mark this as having a selected block, and 
 		/// calculates the closest block face of the selected position. </summary>
@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			Max = max;
 			BlockPos = new Vector3I( x, y, z );
 			Valid = true;
-			BlockType = block;
+			Block = block;
 			IntersectPoint = intersect;
 			
 			Vector3I normal = Vector3I.Zero;
@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 			Valid = false;
 			BlockPos = TranslatedPos = Vector3I.MinusOne;
 			BlockFace = (CpeBlockFace)255;
-			BlockType = 0;
+			Block = 0;
 		}
 		
 		void TestAxis( float dAxis, ref float dist, Vector3I nAxis, ref Vector3I normal, 

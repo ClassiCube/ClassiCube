@@ -334,8 +334,10 @@ namespace ClassicalSharp {
 			MapRenderer.Render( delta );
 			MapBordersRenderer.RenderSides( delta );
 			
-			if( SelectedPos.Valid && !HideGui )
-				Picking.Render( delta, SelectedPos );
+			if( SelectedPos.Valid && !HideGui ) {
+				Picking.UpdateState( SelectedPos );
+				Picking.Render( delta );
+			}
 			
 			// Render water over translucent blocks when underwater for proper alpha blending
 			Vector3 pos = LocalPlayer.Position;
@@ -347,6 +349,11 @@ namespace ClassicalSharp {
 				MapBordersRenderer.RenderEdges( delta );
 				MapRenderer.RenderTranslucent( delta );
 			}
+			
+			// Need to render again over top of translucent block, as the selection outline
+			// is drawn without writing to the depth buffer
+			if( SelectedPos.Valid && !HideGui && BlockInfo.IsTranslucent[SelectedPos.Block] )
+				Picking.Render( delta );
 			
 			Entities.DrawShadows();
 			SelectionManager.Render( delta );

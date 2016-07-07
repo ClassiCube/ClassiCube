@@ -62,7 +62,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public unsafe void Tick( double delta ) {
-			if( useLavaAnim ) DrawAnimation( null, 30, 16 );
+			if( useLavaAnim ) DrawAnimation( null, 30, LavaAnimation.Size );
 			
 			if( animations.Count == 0 ) return;			
 			if( animsBuffer == null ) {

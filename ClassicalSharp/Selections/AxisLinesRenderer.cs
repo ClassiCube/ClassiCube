@@ -25,8 +25,7 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		public void Render( double delta ) {
-			if( !game.ShowAxisLines ) 
-				return;
+			if( !game.ShowAxisLines ) return;
 			if( vertices == null ) {
 				vertices = new VertexP3fC4b[12];
 				vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );

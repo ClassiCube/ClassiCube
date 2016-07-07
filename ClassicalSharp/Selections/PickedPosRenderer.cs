@@ -7,13 +7,13 @@ namespace ClassicalSharp.Renderers {
 	
 	public sealed class PickedPosRenderer : IGameComponent {
 		
-		IGraphicsApi graphics;
+		IGraphicsApi api;
 		Game game;
 		int vb;
 		
 		public void Init( Game game ) {
-			graphics = game.Graphics;
-			vb = graphics.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
+			api = game.Graphics;
+			vb = api.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;
 		}
 
@@ -21,7 +21,7 @@ namespace ClassicalSharp.Renderers {
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
-		public void Dispose() { graphics.DeleteDynamicVb( vb ); }
+		public void Dispose() { api.DeleteDynamicVb( vb ); }
 		
 		FastColour col = new FastColour( 0, 0, 0, 102 );
 		int index;
@@ -49,12 +49,14 @@ namespace ClassicalSharp.Renderers {
 			DrawLines( p1, p2, size );
 		}
 		
-		public void Render( double delta, PickedPos pickedPos ) {
-			UpdateState( pickedPos );
-			graphics.AlphaBlending = true;
-			graphics.SetBatchFormat( VertexFormat.P3fC4b );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
-			graphics.AlphaBlending = false;
+		public void Render( double delta ) {
+			api.AlphaBlending = true;
+			api.DepthWrite = false;
+			
+			api.SetBatchFormat( VertexFormat.P3fC4b );
+			api.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
+			api.AlphaBlending = false;
+			api.DepthWrite = true;
 		}
 		
 		void DrawLines( Vector3 p1, Vector3 p2, float size ) {
