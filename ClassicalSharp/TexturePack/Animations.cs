@@ -19,7 +19,7 @@ namespace ClassicalSharp.TexturePack {
 		Bitmap animBmp;
 		FastBitmap animsBuffer;
 		List<AnimationData> animations = new List<AnimationData>();
-		bool validated = false;
+		bool validated = false, useLavaAnim = false;
 		
 		public void Init( Game game ) {
 			this.game = game;
@@ -35,6 +35,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void TexturePackChanged( object sender, EventArgs e ) {
 			animations.Clear();
+			useLavaAnim = IsDefaultZip();
 		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
@@ -45,6 +46,8 @@ namespace ClassicalSharp.TexturePack {
 				MemoryStream stream = new MemoryStream( e.Data );
 				StreamReader reader = new StreamReader( stream );
 				ReadAnimationsDescription( reader );
+			} else if( e.Name == "uselavaanim" ) {
+				useLavaAnim = true;
 			}
 		}
 		
@@ -58,7 +61,7 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
-		public void Tick( double delta ) {
+		public unsafe void Tick( double delta ) {
 			if( animations.Count == 0 ) return;
 			if( animsBuffer == null ) {
 				game.Chat.Add( "&cCurrent texture pack specifies it uses animations," );
@@ -68,8 +71,10 @@ namespace ClassicalSharp.TexturePack {
 			}
 			if( !validated ) ValidateAnimations();
 			
+			
 			foreach( AnimationData anim in animations )
 				ApplyAnimation( anim );
+			if( useLavaAnim ) DrawAnimation( null, 30, 16 );
 		}
 		
 		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
@@ -117,9 +122,6 @@ namespace ClassicalSharp.TexturePack {
 			data.FrameX = frameX; data.FrameY = frameY;
 			data.FrameSize = frameSize; data.StatesCount = statesNum;
 			
-			// NOTE: Lava animation hardcoded for default.zip
-			if( tileX == 14 && tileY == 1 && IsDefaultZip() )
-				tickDelay = 0;
 			data.TickDelay = tickDelay;
 			animations.Add( data );
 		}
@@ -129,25 +131,27 @@ namespace ClassicalSharp.TexturePack {
 		unsafe void ApplyAnimation( AnimationData data ) {
 			data.Tick--;
 			if( data.Tick >= 0 ) return;
-			data.CurrentState++;
-			data.CurrentState %= data.StatesCount;
+			data.State++;
+			data.State %= data.StatesCount;
 			data.Tick = data.TickDelay;
 			
-			TerrainAtlas1D atlas = game.TerrainAtlas1D;
-			int texId = ( data.TileY << 4 ) | data.TileX;
+			int texId = (data.TileY << 4) | data.TileX;
+			if( texId == 30 && useLavaAnim ) return;
+			DrawAnimation( data, texId, data.FrameSize );
+		}
+		
+		unsafe void DrawAnimation( AnimationData data, int texId, int size ) {
+			TerrainAtlas1D atlas = game.TerrainAtlas1D;			
 			int index = atlas.Get1DIndex( texId );
-			int rowNum = atlas.Get1DRowId( texId );
-			
-			int size = data.FrameSize;
+			int rowNum = atlas.Get1DRowId( texId );			
 			byte* temp = stackalloc byte[size * size * 4];
 			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
 			
-			// NOTE: Lava animation hardcoded for default.zip
-			if( texId == 30 && IsDefaultZip() )
+			if( data == null )
 				lavaAnim.Tick( animPart );
 			else
-				FastBitmap.MovePortion( data.FrameX + data.CurrentState * size, data.FrameY, 
-				                       0, 0, animsBuffer, animPart, size );
+				FastBitmap.MovePortion( data.FrameX + data.State * size, 
+				                       data.FrameY, 0, 0, animsBuffer, animPart, size );
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
 		}
 		
@@ -178,7 +182,7 @@ namespace ClassicalSharp.TexturePack {
 			public int TileX, TileY; // Tile (not pixel) coordinates in terrain.png
 			public int FrameX, FrameY; // Top left pixel coordinates of start frame in animatons.png
 			public int FrameSize; // Size of each frame in pixel coordinates
-			public int CurrentState; // Current animation frame index
+			public int State; // Current animation frame index
 			public int StatesCount; // Total number of animation frames
 			public int Tick, TickDelay;
 		}

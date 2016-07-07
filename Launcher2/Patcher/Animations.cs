@@ -18,6 +18,7 @@ namespace Launcher.Patcher {
 # - Tick delay is the number of ticks a frame doesn't change. For instance, a value of 0
 #     means that the frame would be changed every tick, while a value of 2 would mean 
 #    'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.
+# NOTE: If a file called 'uselavaanim' is in the texture pack, ClassicalSharp 0.99.2 onwards will use its built-in dynamic generation for the lava texture animation.
 
 # still water
 14 0 0 0 16 32 2

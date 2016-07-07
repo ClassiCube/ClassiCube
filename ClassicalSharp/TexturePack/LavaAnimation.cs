@@ -7,7 +7,7 @@ using ClassicalSharp;
 
 namespace ClassicalSharp {
 	public unsafe class LavaAnimation {
-		const int size = 16;
+		public const int size = 16;
 		float[] flameHeat = new float[size * size];
 		float[] potHeat = new float[size * size];
 		float[] soupHeat = new float[size * size];
@@ -26,9 +26,11 @@ namespace ClassicalSharp {
 				for( int x = 0; x < size; x++ )
 			{
 				float localSoupHeat = 0;
+				int xOffset = (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
+				int yOffset = (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
 				for( int i = 0; i < 9; i++ ) {
-					int xx = x + (i % 3 - 1) + (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
-					int yy = y + (i / 3 - 1) + (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
+					int xx = x + (i % 3 - 1) + xOffset;
+					int yy = y + (i / 3 - 1) + yOffset;
 					localSoupHeat += soupHeat[Index( xx, yy )];
 				}
 				
