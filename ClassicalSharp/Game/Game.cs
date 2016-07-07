@@ -460,7 +460,6 @@ namespace ClassicalSharp {
 			foreach( WarningScreen screen in WarningOverlays )
 				screen.Dispose();
 			WarningOverlays.Clear();
-			SetNewScreen( new ErrorScreen( this, title, reason ) );
 			
 			World.Reset();
 			World.blocks = null;
@@ -470,6 +469,9 @@ namespace ClassicalSharp {
 				BlockInfo.ResetBlockInfo( (byte)block, false );
 			BlockInfo.SetupCullingCache();
 			BlockInfo.InitLightOffsets();
+			
+			Network.ExtractDefault();
+			SetNewScreen( new ErrorScreen( this, title, reason ) );
 			GC.Collect();
 		}
 		

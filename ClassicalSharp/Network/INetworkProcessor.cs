@@ -106,7 +106,7 @@ namespace ClassicalSharp {
 				                                   lastModified, etag );
 		}
 		
-		protected void ExtractDefault() {
+		protected internal void ExtractDefault() {
 			TexturePackExtractor extractor = new TexturePackExtractor();
 			extractor.Extract( game.DefaultTexturePack, game );
 			game.World.TextureUrl = null;
@@ -132,11 +132,10 @@ namespace ClassicalSharp {
 					if( bmp == null ) {// Should never happen, but handle anyways.
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
+						game.World.TextureUrl = item.Url;
 						game.Events.RaiseTexturePackChanged();
 						if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
 					}
-					
-					if( bmp != null ) game.World.TextureUrl = item.Url;
 				} else {
 					ExtractDefault();
 				}
@@ -155,11 +154,10 @@ namespace ClassicalSharp {
 					if( data == null ) { // Should never happen, but handle anyways.
 						ExtractDefault();
 					} else if( item.Url != game.World.TextureUrl ) {
+						game.World.TextureUrl = item.Url;
 						TexturePackExtractor extractor = new TexturePackExtractor();
 						extractor.Extract( data, game );
 					}
-					
-					if( data != null ) game.World.TextureUrl = item.Url;
 				} else {
 					ExtractDefault();
 				}
