@@ -48,7 +48,10 @@ namespace ClassicalSharp {
 		
 		void UpdateCulling( byte block, byte other ) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
-			Vector3 oMin = MinBB[other], oMax = MaxBB[other];			
+			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
+			if( IsLiquid[block] ) { bMin.Y -= 1.5f/16; bMax.Y -= 1.5f/16; }
+			if( IsLiquid[other] ) { oMin.Y -= 1.5f/16; oMax.Y -= 1.5f/16; }
+			
 			if( IsSprite[block] ) {
 				SetHidden( block, other, Side.Left, true );
 				SetHidden( block, other, Side.Right, true );
@@ -59,13 +62,16 @@ namespace ClassicalSharp {
 			} else {
 				SetXStretch( block, bMin.X == 0 && bMax.X == 1 );
 				SetZStretch( block, bMin.Z == 0 && bMax.Z == 1 );
+				bool bothLiquid = IsLiquid[block] && IsLiquid[other];
 				
 				SetHidden( block, other, Side.Left, oMax.X == 1 && bMin.X == 0 );
 				SetHidden( block, other, Side.Right, oMin.X == 0 && bMax.X == 1 );
 				SetHidden( block, other, Side.Front, oMax.Z == 1 && bMin.Z == 0 );
 				SetHidden( block, other, Side.Back, oMin.Z == 0 && bMax.Z == 1 );
-				SetHidden( block, other, Side.Bottom, oMax.Y == 1 && bMin.Y == 0 );
-				SetHidden( block, other, Side.Top, oMin.Y == 0 && bMax.Y == 1 );
+				SetHidden( block, other, Side.Bottom, 
+				          bothLiquid || (oMax.Y == 1 && bMin.Y == 0) );
+				SetHidden( block, other, Side.Top, 
+				          bothLiquid || (oMin.Y == 0 && bMax.Y == 1) );
 			}
 		}
 		
@@ -74,11 +80,6 @@ namespace ClassicalSharp {
 			if( IsSprite[block] ) return false;
 			// All blocks (except for say leaves) cull with themselves.
 			if( block == other ) return CullWithNeighbours[block];
-			
-			// Special case for water/lava being offset
-			if( IsLiquid[block] && side == Side.Top && 
-			   (!IsTranslucent[other] || Collide[other] != CollideType.Solid))
-				return false;
 			
 			// An opaque neighbour (asides from lava) culls the face.
 			if( IsOpaque[other] && !IsLiquid[other] ) return true;

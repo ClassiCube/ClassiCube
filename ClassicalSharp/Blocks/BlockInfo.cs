@@ -18,8 +18,8 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
 		public bool[] IsOpaque = new bool[BlocksCount];
 		
-		/// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
-		public bool[] IsOpaqueY = new bool[BlocksCount];
+		// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
+		//public bool[] IsOpaqueY = new bool[BlocksCount];
 		
 		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
 		public bool[] IsSprite = new bool[BlocksCount];
@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < IsTransparent.Length; i++ ) IsTransparent[i] = false;
 			for( int i = 0; i < IsTranslucent.Length; i++ ) IsTranslucent[i] = false;
 			for( int i = 0; i < IsOpaque.Length; i++ ) IsOpaque[i] = false;
-			for( int i = 0; i < IsOpaqueY.Length; i++ ) IsOpaqueY[i] = false;
+			//for( int i = 0; i < IsOpaqueY.Length; i++ ) IsOpaqueY[i] = false;
 			for( int i = 0; i < IsSprite.Length; i++ ) IsSprite[i] = false;
 			for( int i = 0; i < IsLiquid.Length; i++ ) IsLiquid[i] = false;
 			for( int i = 0; i < BlocksLight.Length; i++ ) BlocksLight[i] = false;
@@ -101,7 +101,7 @@ namespace ClassicalSharp {
 				MaxBB[block].Y = 1;
 				BlocksLight[block] = true;
 				IsOpaque[block] = true;
-				IsOpaqueY[block] = true;
+				//IsOpaqueY[block] = true;
 				Collide[block] = CollideType.Solid;
 				SpeedMultiplier[block] = 1;
 				CullWithNeighbours[block] = true;
@@ -139,12 +139,6 @@ namespace ClassicalSharp {
 			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );
 			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
 			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
-			
-			IsTranslucent[Block.Lava] = true;
-			IsTranslucent[Block.StillLava] = true;
-			IsOpaqueY[Block.Slab] = true;
-			IsOpaqueY[Block.CobblestoneSlab] = true;
-			IsOpaqueY[Block.Snow] = true;
 
 			InitBoundingBoxes();
 			InitSounds();
@@ -174,7 +168,7 @@ namespace ClassicalSharp {
 			IsTransparent[id] = true;
 			BlocksLight[id] = blocks;
 			IsOpaque[id] = false;
-			IsOpaqueY[id] = false;
+			//IsOpaqueY[id] = false;
 		}
 		
 		void MarkSprite( byte id ) {
@@ -182,14 +176,14 @@ namespace ClassicalSharp {
 			IsTransparent[id] = true;
 			BlocksLight[id] = false;
 			IsOpaque[id] = false;
-			IsOpaqueY[id] = false;
+			//IsOpaqueY[id] = false;
 			Collide[id] = CollideType.WalkThrough;
 		}
 		
 		void MarkTranslucent( byte id ) {
 			IsTranslucent[id] = true;
 			IsOpaque[id] = false;
-			IsOpaqueY[id] = false;
+			//IsOpaqueY[id] = false;
 		}
 		
 		void SetIsLiquid( byte id ) {

@@ -148,13 +148,17 @@ namespace ClassicalSharp {
 			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
 			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
 			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
-			if( isTranslucent && info.Collide[curBlock] != CollideType.Solid ) {
-				x1 -= 0.1f/16; x2 -= 0.1f/16f; z1 -= 0.1f/16f; z2 -= 0.1f/16f;
+
+			if( curBlock >= Block.Water && curBlock <= Block.StillLava ) {
+				x1 -= 0.1f/16; x2 -= 0.1f/16f; 
+				z1 -= 0.1f/16f; z2 -= 0.1f/16f;
+				y1 -= 1.5f/16; y2 -= 1.5f/16;
+			} else if( isTranslucent && info.Collide[curBlock] != CollideType.Solid ) {
+				x1 += 0.1f/16; x2 += 0.1f/16f; 
+				z1 += 0.1f/16f; z2 += 0.1f/16f;
 				y1 -= 0.1f/16; y2 -= 0.1f/16f;
 			}
-			if( curBlock >= Block.Water && curBlock <= Block.StillLava ) {
-				y1 -= 1.5f/16; y2 -= 1.5f/16;
-			}
+			
 			this.minBB = min; this.maxBB = max;
 			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
