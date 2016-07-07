@@ -13,7 +13,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		BlockModel block;
 		FakePlayer held;
-		bool playAnimation, leftAnimation, swingAnimation;
+		bool doAnim, digAnim, swingAnim;
 		float angleY = 0;
 		
 		double animTime;
@@ -45,7 +45,7 @@ namespace ClassicalSharp.Renderers {
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
 			block.SwitchOrder = false;			
-			if( playAnimation ) DoAnimation( delta, last );			
+			if( doAnim ) DoAnimation( delta, last );			
 			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref heldBlockProj );
@@ -105,9 +105,9 @@ namespace ClassicalSharp.Renderers {
 		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
 		void DoAnimation( double delta, Vector3 last ) {
 			double angle = animTime * animSpeed;
-			if( swingAnimation || !leftAnimation ) {
+			if( swingAnim || !digAnim ) {
 				animPosition.Y = -0.4f * (float)Math.Sin( angle );
-				if( swingAnimation ) {
+				if( swingAnim ) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
 					if( animPosition.Y > last.Y )
@@ -135,8 +135,8 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetAnimationState( bool updateLastType, double period ) {
 			animTime = 0;
-			playAnimation = false;
-			swingAnimation = false;
+			doAnim = false;
+			swingAnim = false;
 			animPosition = Vector3.Zero;
 			angleY = 0;
 			animPeriod = period;
@@ -149,22 +149,30 @@ namespace ClassicalSharp.Renderers {
 		
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
-		public void SetAnimationClick( bool left ) {
+		public void SetClickAnim( bool dig ) {
 			ResetAnimationState( true, 0.25 );
-			swingAnimation = false;
-			leftAnimation = left;
-			playAnimation = true;
+			swingAnim = false;
+			digAnim = dig;
+			doAnim = true;
+			// Start place animation at bottom of cycle
+			if( !dig ) animTime = 0.25 / 2;
 		}
 		
-		public void SetAnimationSwitchBlock() {
-			if( swingAnimation ) return;
-			ResetAnimationState( false, 0.3 );
-			swingAnimation = true;
-			playAnimation = true;
+		public void SetSwitchBlockAnim() {
+			if( swingAnim ) {
+				// Like graph -sin(x) : x=0.5 and x=2.5 have same y values 
+				// but increasing x causes y to change in opposite directions
+				if( animTime > animPeriod * 0.5 )
+					animTime = animPeriod - animTime;
+			} else {
+				ResetAnimationState( false, 0.25 );
+				doAnim = true;
+				swingAnim = true;
+			}		
 		}
 		
 		void HeldBlockChanged( object sender, EventArgs e ) {
-			SetAnimationSwitchBlock();
+			SetSwitchBlockAnim();
 		}
 		
 		void ProjectionChanged( object sender, EventArgs e ) {
@@ -182,7 +190,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
 			if( e.Block == 0 ) return;
-			SetAnimationClick( false );
+			SetClickAnim( false );
 		}
 	}
 	
