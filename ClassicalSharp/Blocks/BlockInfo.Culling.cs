@@ -49,8 +49,8 @@ namespace ClassicalSharp {
 		void UpdateCulling( byte block, byte other ) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
-			if( IsLiquid[block] ) { bMin.Y -= 1.5f/16; bMax.Y -= 1.5f/16; }
-			if( IsLiquid[other] ) { oMin.Y -= 1.5f/16; oMax.Y -= 1.5f/16; }
+			if( IsLiquid[block] ) { bMax.Y -= 1.5f/16; }
+			if( IsLiquid[other] ) { oMax.Y -= 1.5f/16; }
 			
 			if( IsSprite[block] ) {
 				SetHidden( block, other, Side.Left, true );

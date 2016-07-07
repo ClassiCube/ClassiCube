@@ -120,7 +120,6 @@ namespace ClassicalSharp.Renderers {
 			renderer.chunks = null;
 			renderer.unsortedChunks = null;
 			chunkPos = new Vector3I( int.MaxValue, int.MaxValue, int.MaxValue );
-			builder.OnNewMap();
 		}
 		
 		void ViewDistanceChanged( object sender, EventArgs e ) {

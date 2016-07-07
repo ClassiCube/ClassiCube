@@ -3,12 +3,13 @@ using System;
 using System.Runtime.InteropServices;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.TexturePack;
+using OpenTK;
 
 namespace ClassicalSharp {
 	
 	public unsafe partial class ChunkMeshBuilder {
 		
-		DrawInfo[] drawInfoNormal, drawInfoTranslucent;
+		DrawInfo[] normalParts, translucentParts;
 		TerrainAtlas1D atlas;
 		int arraysCount = 0;
 		bool fullBright;
@@ -18,13 +19,13 @@ namespace ClassicalSharp {
 			int newArraysCount = game.TerrainAtlas1D.TexIds.Length;
 			if( arraysCount == newArraysCount ) return;
 			arraysCount = newArraysCount;
-			Array.Resize( ref drawInfoNormal, arraysCount );
-			Array.Resize( ref drawInfoTranslucent, arraysCount );
+			Array.Resize( ref normalParts, arraysCount );
+			Array.Resize( ref translucentParts, arraysCount );
 			
-			for( int i = 0; i < drawInfoNormal.Length; i++ ) {
-				if( drawInfoNormal[i] != null ) continue;
-				drawInfoNormal[i] = new DrawInfo();
-				drawInfoTranslucent[i] = new DrawInfo();
+			for( int i = 0; i < normalParts.Length; i++ ) {
+				if( normalParts[i] != null ) continue;
+				normalParts[i] = new DrawInfo();
+				translucentParts[i] = new DrawInfo();
 			}
 		}
 		
@@ -71,55 +72,51 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
-		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte rawBlock = chunk[chunkIndex];
-			return rawBlock == initialTile && !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
-				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
-		}
-		
-		bool IsLit( int x, int y, int z, int face, byte type ) {
-			int offset = (info.LightOffset[type] >> face) & 1;
-			switch( face ) {
-				case Side.Left:
-					return x < offset || y > map.heightmap[(z * width) + (x - offset)];
-				case Side.Right:
-					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
-				case Side.Front:
-					return z < offset || y > map.heightmap[((z - offset) * width) + x];
-				case Side.Back:
-					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
-				case Side.Bottom:
-					return y <= 0 || (y - 1 - offset) >= (map.heightmap[(z * width) + x]);
-				case Side.Top:
-					return y >= maxY || (y - offset) >= (map.heightmap[(z * width) + x]);
+		Vector3 minBB, maxBB;
+		public void RenderTile( int index, int x, int y, int z ) {
+			X = x; Y = y; Z = z;
+			
+			if( info.IsSprite[curBlock] ) {
+				fullBright = info.FullBright[curBlock];
+				int count = counts[index + Side.Top];
+				if( count != 0 )
+					DrawSprite( count );
+				return;
 			}
-			return true;
-		}
-		
-		void SetPartInfo( DrawInfo part, int i, ref ChunkPartInfo[] parts ) {
-			if( part.iCount == 0 ) return;
 			
-			ChunkPartInfo info;
-			int vertCount = (part.iCount / 6 * 4) + 2;
-			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, vertCount );
-			info.IndicesCount = part.iCount;
-			info.LeftCount = (ushort)part.vCount.left; info.RightCount = (ushort)part.vCount.right;
-			info.FrontCount = (ushort)part.vCount.front; info.BackCount = (ushort)part.vCount.back;
-			info.BottomCount = (ushort)part.vCount.bottom; info.TopCount = (ushort)part.vCount.top;
-			info.SpriteCount = part.spriteCount;
+			int leftCount = counts[index++], rightCount = counts[index++],
+			frontCount = counts[index++], backCount = counts[index++],
+			bottomCount = counts[index++], topCount = counts[index++];
+			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
+			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
-			info.LeftIndex = info.SpriteCount;
-			info.RightIndex = info.LeftIndex + info.LeftCount;
-			info.FrontIndex = info.RightIndex + info.RightCount;
-			info.BackIndex = info.FrontIndex + info.FrontCount;
-			info.BottomIndex = info.BackIndex + info.BackCount;
-			info.TopIndex = info.BottomIndex + info.BottomCount;
+			fullBright = info.FullBright[curBlock];
+			isTranslucent = info.IsTranslucent[curBlock];
+			lightFlags = info.LightOffset[curBlock];
 			
-			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
-			if( parts == null )
-				parts = new ChunkPartInfo[arraysCount];
-			parts[i] = info;
+			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
+			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
+			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
+
+			if( curBlock >= Block.Water && curBlock <= Block.StillLava ) {
+				x1 -= 0.1f/16; x2 -= 0.1f/16f; 
+				z1 -= 0.1f/16f; z2 -= 0.1f/16f;
+				y1 -= 1.5f/16; y2 -= 1.5f/16;
+			} else if( isTranslucent && info.Collide[curBlock] != CollideType.Solid ) {
+				x1 += 0.1f/16; x2 += 0.1f/16f; 
+				z1 += 0.1f/16f; z2 += 0.1f/16f;
+				y1 -= 0.1f/16; y2 -= 0.1f/16f;
+			}
+			
+			this.minBB = min; this.maxBB = max;
+			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
+			
+			if( leftCount != 0 ) DrawLeftFace( leftCount );
+			if( rightCount != 0 ) DrawRightFace( rightCount );
+			if( frontCount != 0 ) DrawFrontFace( frontCount );
+			if( backCount != 0 ) DrawBackFace( backCount );
+			if( bottomCount != 0 ) DrawBottomFace( bottomCount );
+			if( topCount != 0 ) DrawTopFace( topCount );
 		}
 		
 		bool isTranslucent;
@@ -132,38 +129,38 @@ namespace ClassicalSharp {
 			elementsPerAtlas1D = atlas.elementsPerAtlas1D;
 			arraysCount = atlas.TexIds.Length;
 			
-			if( drawInfoNormal == null ) {
-				drawInfoNormal = new DrawInfo[arraysCount];
-				drawInfoTranslucent = new DrawInfo[arraysCount];
-				for( int i = 0; i < drawInfoNormal.Length; i++ ) {
-					drawInfoNormal[i] = new DrawInfo();
-					drawInfoTranslucent[i] = new DrawInfo();
+			if( normalParts == null ) {
+				normalParts = new DrawInfo[arraysCount];
+				translucentParts = new DrawInfo[arraysCount];
+				for( int i = 0; i < normalParts.Length; i++ ) {
+					normalParts[i] = new DrawInfo();
+					translucentParts[i] = new DrawInfo();
 				}
 			} else {
-				for( int i = 0; i < drawInfoNormal.Length; i++ ) {
-					drawInfoNormal[i].ResetState();
-					drawInfoTranslucent[i].ResetState();
+				for( int i = 0; i < normalParts.Length; i++ ) {
+					normalParts[i].ResetState();
+					translucentParts[i].ResetState();
 				}
 			}
 		}
 		
 		void PostStretchTiles( int x1, int y1, int z1 ) {
-			for( int i = 0; i < drawInfoNormal.Length; i++ ) {
-				drawInfoNormal[i].ExpandToCapacity();
-				drawInfoTranslucent[i].ExpandToCapacity();
+			for( int i = 0; i < normalParts.Length; i++ ) {
+				normalParts[i].ExpandToCapacity();
+				translucentParts[i].ExpandToCapacity();
 			}
 		}
 		
 		void AddSpriteVertices( byte block ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( block, Side.Left ) );
-			DrawInfo part = drawInfoNormal[i];
+			DrawInfo part = normalParts[i];
 			part.spriteCount += 6 * 4;
 			part.iCount += 6 * 4;
 		}
 		
 		unsafe void AddVertices( byte block, int count, int face ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( block, face ) );
-			DrawInfo part = info.IsTranslucent[block] ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = info.IsTranslucent[block] ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.vCount;
@@ -180,7 +177,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White :
 				X >= offset ? (Y > map.heightmap[(Z * width) + (X - offset)] ? env.SunlightXSide : env.ShadowlightXSide) : env.SunlightXSide;
 			
@@ -199,7 +196,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White :
 				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? env.SunlightXSide : env.ShadowlightXSide) : env.SunlightXSide;
 			
@@ -218,7 +215,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? env.SunlightZSide : env.ShadowlightZSide) : env.SunlightZSide;
 			
@@ -237,7 +234,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White :
 				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? env.SunlightZSide : env.ShadowlightZSide) : env.SunlightZSide;
 			
@@ -256,7 +253,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - 1 - offset) >= map.heightmap[(Z * width) + X] ? env.SunlightYBottom : env.ShadowlightYBottom);
 			
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
@@ -274,7 +271,7 @@ namespace ClassicalSharp {
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? drawInfoTranslucent[i] : drawInfoNormal[i];
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? env.Sunlight : env.Shadowlight);
 
 			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col );
@@ -291,7 +288,7 @@ namespace ClassicalSharp {
 			
 			float u1 = 0, u2 = 1 * 15.99f/16f;
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
-			DrawInfo part = drawInfoNormal[i];
+			DrawInfo part = normalParts[i];
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? env.Sunlight : env.Shadowlight);
 			
 			// Draw Z axis

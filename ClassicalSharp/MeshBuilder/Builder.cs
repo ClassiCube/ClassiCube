@@ -108,13 +108,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] normalParts,
-		                        ref ChunkPartInfo[] translucentParts ) {
+		public void GetDrawInfo( int x, int y, int z, ref ChunkPartInfo[] nParts, ref ChunkPartInfo[] tParts ) {
 			if( !BuildChunk( x, y, z ) ) return;
 			
 			for( int i = 0; i < arraysCount; i++ ) {
-				SetPartInfo( drawInfoNormal[i], i, ref normalParts );
-				SetPartInfo( drawInfoTranslucent[i], i, ref translucentParts );
+				SetPartInfo( normalParts[i], i, ref nParts );
+				SetPartInfo( translucentParts[i], i, ref tParts );
 			}
 			#if OCCLUSION
 			//  , ref byte occlusionFlags
@@ -122,52 +121,30 @@ namespace ClassicalSharp {
 				occlusionFlags = (byte)ComputeOcclusion();
 			#endif
 		}
-
-		Vector3 minBB, maxBB;
-		public void RenderTile( int index, int x, int y, int z ) {
-			X = x; Y = y; Z = z;
+		
+		void SetPartInfo( DrawInfo part, int i, ref ChunkPartInfo[] parts ) {
+			if( part.iCount == 0 ) return;
 			
-			if( info.IsSprite[curBlock] ) {
-				fullBright = info.FullBright[curBlock];
-				int count = counts[index + Side.Top];
-				if( count != 0 )
-					DrawSprite( count );
-				return;
-			}
+			ChunkPartInfo info;
+			int vertCount = (part.iCount / 6 * 4) + 2;
+			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, vertCount );
+			info.IndicesCount = part.iCount;
+			info.LeftCount = (ushort)part.vCount.left; info.RightCount = (ushort)part.vCount.right;
+			info.FrontCount = (ushort)part.vCount.front; info.BackCount = (ushort)part.vCount.back;
+			info.BottomCount = (ushort)part.vCount.bottom; info.TopCount = (ushort)part.vCount.top;
+			info.SpriteCount = part.spriteCount;
 			
-			int leftCount = counts[index++], rightCount = counts[index++],
-			frontCount = counts[index++], backCount = counts[index++],
-			bottomCount = counts[index++], topCount = counts[index++];
-			if( leftCount == 0 && rightCount == 0 && frontCount == 0 &&
-			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
+			info.LeftIndex = info.SpriteCount;
+			info.RightIndex = info.LeftIndex + info.LeftCount;
+			info.FrontIndex = info.RightIndex + info.RightCount;
+			info.BackIndex = info.FrontIndex + info.FrontCount;
+			info.BottomIndex = info.BackIndex + info.BackCount;
+			info.TopIndex = info.BottomIndex + info.BottomCount;
 			
-			fullBright = info.FullBright[curBlock];
-			isTranslucent = info.IsTranslucent[curBlock];
-			lightFlags = info.LightOffset[curBlock];
-			
-			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
-			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
-			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
-
-			if( curBlock >= Block.Water && curBlock <= Block.StillLava ) {
-				x1 -= 0.1f/16; x2 -= 0.1f/16f; 
-				z1 -= 0.1f/16f; z2 -= 0.1f/16f;
-				y1 -= 1.5f/16; y2 -= 1.5f/16;
-			} else if( isTranslucent && info.Collide[curBlock] != CollideType.Solid ) {
-				x1 += 0.1f/16; x2 += 0.1f/16f; 
-				z1 += 0.1f/16f; z2 += 0.1f/16f;
-				y1 -= 0.1f/16; y2 -= 0.1f/16f;
-			}
-			
-			this.minBB = min; this.maxBB = max;
-			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
-			
-			if( leftCount != 0 ) DrawLeftFace( leftCount );
-			if( rightCount != 0 ) DrawRightFace( rightCount );
-			if( frontCount != 0 ) DrawFrontFace( frontCount );
-			if( backCount != 0 ) DrawBackFace( backCount );
-			if( bottomCount != 0 ) DrawBottomFace( bottomCount );
-			if( topCount != 0 ) DrawTopFace( topCount );
+			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
+			if( parts == null )
+				parts = new ChunkPartInfo[arraysCount];
+			parts[i] = info;
 		}
 		
 		void Stretch( int x1, int y1, int z1 ) {
@@ -262,14 +239,37 @@ namespace ClassicalSharp {
 							if( counts[index] == 0 || 
 							   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0 ) {
 								counts[index] = 0;
-							} else {
+							} else if( rawBlock < Block.Water || rawBlock > Block.StillLava ) {
 								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Top );
 								AddVertices( rawBlock, count, Side.Top ); counts[index] = (byte)count;
+							} else {
+								int count = StretchXLiquid( xx, index, X, Y, Z, cIndex, rawBlock );
+								if( count > 0 ) AddVertices( rawBlock, count, Side.Top );
+								counts[index] = (byte)count;
 							}						
 						}
 					}
 				}
 			}
+		}
+		
+		int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
+			if( OccludedLiquid( chunkIndex ) ) return 0;			
+			int count = 1;
+			x++;
+			chunkIndex++;
+			countIndex += Side.Sides;
+			int max = chunkSize - xx;			
+			
+			while( count < max && x < width && CanStretch( block, chunkIndex, x, y, z, Side.Top ) 
+			      && !OccludedLiquid( chunkIndex ) ) {
+				counts[countIndex] = 0;
+				count++;
+				x++;
+				chunkIndex++;
+				countIndex += Side.Sides;
+			}
+			return count;
 		}
 		
 		int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
@@ -308,7 +308,36 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		public void OnNewMap() {
+		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
+		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+			byte rawBlock = chunk[chunkIndex];
+			return rawBlock == initialTile && !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
+				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
+		}
+		
+		bool OccludedLiquid( int chunkIndex ) {
+			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] && 
+				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] && 
+				!info.IsAir[chunk[chunkIndex + 324 + 18]];
+		}
+		
+		bool IsLit( int x, int y, int z, int face, byte type ) {
+			int offset = (info.LightOffset[type] >> face) & 1;
+			switch( face ) {
+				case Side.Left:
+					return x < offset || y > map.heightmap[(z * width) + (x - offset)];
+				case Side.Right:
+					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
+				case Side.Front:
+					return z < offset || y > map.heightmap[((z - offset) * width) + x];
+				case Side.Back:
+					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
+				case Side.Bottom:
+					return y <= 0 || (y - 1 - offset) >= (map.heightmap[(z * width) + x]);
+				case Side.Top:
+					return y >= maxY || (y - offset) >= (map.heightmap[(z * width) + x]);
+			}
+			return true;
 		}
 		
 		public void OnNewMapLoaded() {
