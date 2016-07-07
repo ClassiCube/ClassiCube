@@ -62,19 +62,19 @@ namespace ClassicalSharp.TexturePack {
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public unsafe void Tick( double delta ) {
-			if( animations.Count == 0 ) return;
+			if( useLavaAnim ) DrawAnimation( null, 30, 16 );
+			
+			if( animations.Count == 0 ) return;			
 			if( animsBuffer == null ) {
 				game.Chat.Add( "&cCurrent texture pack specifies it uses animations," );
 				game.Chat.Add( "&cbut is missing animations.png" );
 				animations.Clear();
 				return;
 			}
-			if( !validated ) ValidateAnimations();
-			
+			if( !validated ) ValidateAnimations();			
 			
 			foreach( AnimationData anim in animations )
 				ApplyAnimation( anim );
-			if( useLavaAnim ) DrawAnimation( null, 30, 16 );
 		}
 		
 		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
@@ -148,7 +148,7 @@ namespace ClassicalSharp.TexturePack {
 			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
 			
 			if( data == null )
-				lavaAnim.Tick( animPart );
+				lavaAnim.Tick( (int*)temp );
 			else
 				FastBitmap.MovePortion( data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size );

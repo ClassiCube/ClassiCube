@@ -118,7 +118,6 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,
 		/// bedrock, water and lava blocks on servers that don't support CPE block permissions. </summary>
 		public void SetUserType( byte value ) {
-			value = 0x64;
 			UserType = value;
 			Inventory inv = game.Inventory;
 			inv.CanPlace[Block.Bedrock] = value == 0x64;

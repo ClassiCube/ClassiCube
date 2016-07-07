@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		float[] soupHeat = new float[size * size];
 		JavaRandom rnd = null;
 		
-		public void Tick( FastBitmap output ) {
+		public unsafe void Tick( int* output ) {
 			if( rnd == null )
 				rnd = new JavaRandom( new Random().Next() );
 			Step();
@@ -49,19 +49,16 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void Output( FastBitmap output ) {
+		void Output( int* ptr ) {
 			int index = 0;
-			for( int y = 0; y < size; y++ ) {
-				int* row = output.GetRowPtr( y );
-				for( int x = 0; x < size; x++ ) {
-					float col = 2 * soupHeat[index];
-					Utils.Clamp( ref col, 0, 1 );
-					float r = col * 100 + 155;
-					float g = col * col * 255;
-					float b = col * col * col * col * 128;
-					row[x] = 255 << 24 | (byte)r << 16 | (byte)g << 8 | (byte)b;
-					index++;
-				}
+			for( int i = 0; i < soupHeat.Length; i++) {
+				float col = 2 * soupHeat[i];
+				Utils.Clamp( ref col, 0, 1 );
+				float r = col * 100 + 155;
+				float g = col * col * 255;
+				float b = col * col * col * col * 128;
+				*ptr = 255 << 24 | (byte)r << 16 | (byte)g << 8 | (byte)b;
+				ptr++;
 			}
 		}
 		
