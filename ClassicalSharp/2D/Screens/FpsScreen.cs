@@ -37,37 +37,33 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = false;
 		}
 		
-		double accumulator, maxDelta;
-		int fpsCount, totalSeconds;
+		double accumulator;
+		int frames, totalSeconds;
 		int oldMinutes = -1;
 		
 		void UpdateFPS( double delta ) {
-			fpsCount++;
-			maxDelta = Math.Max( maxDelta, delta );
+			frames++;
 			accumulator += delta;
 			if( accumulator < 1 ) return;
 			
 			int index = 0;
 			totalSeconds++;
-			int FPS = (int)(fpsCount / accumulator);
+			int fps = (int)(frames / accumulator);
+			
+			text.Clear()
+				.AppendNum( ref index, fps ).Append( ref index, " fps, " );
 			if( game.ClassicMode ) {
-				text.Clear()
-					.AppendNum( ref index, FPS ).Append( ref index, " fps, " )
-					.AppendNum( ref index, game.ChunkUpdates ).Append( ref index, " chunk updates" );
+				text.AppendNum( ref index, game.ChunkUpdates ).Append( ref index, " chunk updates" );
 			} else {
-				text.Clear()
-					.AppendNum( ref index, FPS ).Append( ref index, " fps (" )
-					.AppendNum( ref index, (int)(1f / maxDelta) ).Append( ref index, " min), " )
-					.AppendNum( ref index, game.ChunkUpdates ).Append( ref index, " chunks/s, " )
+				text.AppendNum( ref index, game.ChunkUpdates ).Append( ref index, " chunks/s, " )
 					.AppendNum( ref index, game.Vertices ).Append( ref index, " vertices" );
 			}
 			
 			CheckClock();
 			string textString = text.GetString();
 			fpsText.SetText( textString );
-			maxDelta = 0;
 			accumulator = 0;
-			fpsCount = 0;
+			frames = 0;
 			game.ChunkUpdates = 0;
 		}
 		
@@ -166,7 +162,7 @@ namespace ClassicalSharp.Gui {
 					.AppendNum( ref index, lastFov ).Append( ref index, "  " );
 				if( fly ) text.Append( ref index, "Fly ON   " );
 				
-				bool speed = (speeding || halfSpeeding) && 
+				bool speed = (speeding || halfSpeeding) &&
 					(hacks.CanSpeed || hacks.MaxSpeedMultiplier > 1);
 				if( speed ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
@@ -217,7 +213,7 @@ namespace ClassicalSharp.Gui {
 			Texture tex = posTex;
 			tex.X1 = curX; tex.Width = (short)width;
 			tex.U1 = (baseWidth + charIndex * 16) / texWidth;
-			tex.U2 = tex.U1 + width / texWidth;			
+			tex.U2 = tex.U1 + width / texWidth;
 			curX += width;
 			IGraphicsApi.Make2DQuad( ref tex, FastColour.White, game.ModelCache.vertices, ref index );
 		}

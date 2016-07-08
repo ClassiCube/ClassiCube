@@ -254,6 +254,7 @@
     <Compile Include="Platform\Platform.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\HeldBlockAnimation.cs" />
     <Compile Include="Rendering\HeldBlockRenderer.cs" />
     <Compile Include="Rendering\ChunkSorter.cs" />
     <Compile Include="Rendering\ChunkUpdater.cs" />

@@ -10,26 +10,23 @@ namespace ClassicalSharp.Renderers {
 	
 	public class HeldBlockRenderer : IGameComponent {
 		
-		Game game;
-		BlockModel block;
-		FakePlayer held;
-		bool doAnim, digAnim, swingAnim;
-		float angleY = 0;
+		internal byte type;
+		internal BlockModel block;
+		internal HeldBlockAnimation anim;
 		
-		double animTime;
-		byte type, lastType;
-		Vector3 animPosition;
-		Matrix4 heldBlockProj;
+		Game game;		
+		FakePlayer held;
+		Matrix4 heldBlockProj;		
 		
 		public void Init( Game game ) {
 			this.game = game;
 			block = new BlockModel( game );
 			block.NoShade = true;
 			held = new FakePlayer( game );
-			lastType = game.Inventory.HeldBlock;
-			game.Events.HeldBlockChanged += HeldBlockChanged;
-			game.UserEvents.BlockChanged += BlockChanged;
 			game.Events.ProjectionChanged += ProjectionChanged;
+			
+			anim = new HeldBlockAnimation();
+			anim.Init( game, this );
 		}
 
 		public void Ready( Game game ) { }
@@ -40,12 +37,13 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double delta, float t ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
-			Vector3 last = animPosition;
-			animPosition = Vector3.Zero;
+			Vector3 last = anim.animPosition;
+			anim.animPosition = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
 			block.SwitchOrder = false;			
-			if( doAnim ) DoAnimation( delta, last );			
+			if( anim.doAnim ) anim.Update( delta, last );
+			
 			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref heldBlockProj );
@@ -85,7 +83,7 @@ namespace ClassicalSharp.Renderers {
 			Player p = game.LocalPlayer;
 			held.ModelScale = 0.4f;
 		   
-			held.Position = p.EyePosition + animPosition;
+			held.Position = p.EyePosition + anim.animPosition;
 			held.Position += offset;
 			if( !info.IsSprite[type] ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
@@ -96,83 +94,10 @@ namespace ClassicalSharp.Renderers {
 			held.Position.Y -= game.Camera.bobbingVer;
 			held.Position.Z -= game.Camera.bobbingHor;
 			   
-			held.HeadYawDegrees = -45 + angleY;
-			held.YawDegrees = -45 + angleY;
+			held.HeadYawDegrees = -45 + anim.angleY;
+			held.YawDegrees = -45 + anim.angleY;
 			held.PitchDegrees = 0;
 			held.Block = type;
-		}
-		
-		double animPeriod = 0.25, animSpeed = Math.PI / 0.25;
-		void DoAnimation( double delta, Vector3 last ) {
-			double angle = animTime * animSpeed;
-			if( swingAnim || !digAnim ) {
-				animPosition.Y = -0.4f * (float)Math.Sin( angle );
-				if( swingAnim ) {
-					// i.e. the block has gone to bottom of screen and is now returning back up
-					// at this point we switch over to the new held block.
-					if( animPosition.Y > last.Y )
-						lastType = type;
-					type = lastType;
-				}
-			} else {			
-				animPosition.X = -0.325f * (float)Math.Sin( angle );
-				animPosition.Y = 0.2f * (float)Math.Sin( angle * 2 );
-				animPosition.Z = -0.325f * (float)Math.Sin( angle );
-				angleY = 90 * (float)Math.Sin( angle );
-				block.SwitchOrder = angleY >= 45;
-				
-				// For first cycle, do not rotate at all.
-				// For second cycle, rotate the block from 0-->15 then back to 15-->0.
-				float rotX = Math.Max( 0, (float)angle - 90 * Utils.Deg2Rad );				
-				if( rotX >= 45 * Utils.Deg2Rad ) rotX = 90 * Utils.Deg2Rad - rotX;
-				rotX /= 3;
-				block.CosX = (float)Math.Cos( -rotX ); block.SinX = (float)Math.Sin( -rotX );
-			}
-			animTime += delta;
-			if( animTime > animPeriod )
-				ResetAnimationState( true, 0.25 );
-		}
-		
-		void ResetAnimationState( bool updateLastType, double period ) {
-			animTime = 0;
-			doAnim = false;
-			swingAnim = false;
-			animPosition = Vector3.Zero;
-			angleY = 0;
-			animPeriod = period;
-			animSpeed = Math.PI / period;
-			
-			if( updateLastType )
-				lastType = game.Inventory.HeldBlock;
-			animPosition = Vector3.Zero;
-		}
-		
-		/// <summary> Sets the current animation state of the held block.<br/>
-		/// true = left mouse pressed, false = right mouse pressed. </summary>
-		public void SetClickAnim( bool dig ) {
-			ResetAnimationState( true, 0.25 );
-			swingAnim = false;
-			digAnim = dig;
-			doAnim = true;
-			// Start place animation at bottom of cycle
-			if( !dig ) animTime = 0.25 / 2;
-		}
-		
-		public void SetSwitchBlockAnim() {
-			if( swingAnim ) {
-				// Like graph -sin(x) : x=0.5 and x=2.5 have same y values 
-				// but increasing x causes y to change in opposite directions
-				if( animTime > animPeriod * 0.5 )
-					animTime = animPeriod - animTime;
-			} else {
-				ResetAnimationState( false, 0.25 );
-				doAnim = true;
-				swingAnim = true;
-			}		
-		}
-		
-		void HeldBlockChanged( object sender, EventArgs e ) {
-			SetSwitchBlockAnim();
 		}
 		
 		void ProjectionChanged( object sender, EventArgs e ) {
@@ -183,14 +108,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
-			game.Events.HeldBlockChanged -= HeldBlockChanged;
-			game.UserEvents.BlockChanged -= BlockChanged;
 			game.Events.ProjectionChanged -= ProjectionChanged;
-		}
-		
-		void BlockChanged( object sender, BlockChangedEventArgs e ) {
-			if( e.Block == 0 ) return;
-			SetClickAnim( false );
+			anim.Dispose();
 		}
 	}
 	

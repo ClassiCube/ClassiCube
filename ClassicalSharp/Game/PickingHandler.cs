@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 			   inv.HeldBlock == Block.Air ) return;
 			
 			// always play delete animations, even if we aren't picking a block.
-			if( left ) game.HeldBlockRenderer.SetClickAnim( true );
+			if( left ) game.HeldBlockRenderer.anim.SetClickAnim( true );
 			if( !game.SelectedPos.Valid ) return;
 			BlockInfo info = game.BlockInfo;
 			
