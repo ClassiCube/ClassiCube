@@ -100,14 +100,16 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
 		public bool TouchesAnyLava() {
-			AABB bounds = CollisionBounds.Expand( liqExpand );
+			// NOTE: Original classic client uses offset (so you can only climb up
+			// alternating liquid-solid elevators on two sides) 
+			AABB bounds = CollisionBounds.Offset( liqExpand );
 			return TouchesAnyLiquid( bounds, Block.Lava, Block.StillLava );
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
-			AABB bounds = CollisionBounds.Expand( liqExpand );
+			AABB bounds = CollisionBounds.Offset( liqExpand );
 			return TouchesAnyLiquid( bounds, Block.Water, Block.StillWater );
 		}
 	}
