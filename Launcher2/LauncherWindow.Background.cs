@@ -91,7 +91,7 @@ namespace Launcher {
 				Framebuffer = platformDrawer.CreateFrameBuffer( Width, Height );
 			}
 			
-			if( ClassicBackground ) {
+			if( ClassicBackground && terrainPixels != null ) {
 				using( FastBitmap dst = new FastBitmap( Framebuffer, true, false ) ) {
 					ClearTile( 0, 0, Width, 48, tileSize, dst );
 					ClearTile( 0, 48, Width, Height - 48, 0, dst );
@@ -108,7 +108,7 @@ namespace Launcher {
 			using( IDrawer2D drawer = Drawer ) {
 				drawer.SetBitmap( Framebuffer );
 
-				drawer.UseBitmappedChat = useBitmappedFont || ClassicBackground;
+				drawer.UseBitmappedChat = (useBitmappedFont || ClassicBackground) && fontPng;
 				DrawTextArgs args = new DrawTextArgs( "&eClassical&fSharp", logoFont, false );
 				Size size = drawer.MeasureChatSize( ref args );
 				int xStart = Width / 2 - size.Width / 2;
@@ -127,7 +127,7 @@ namespace Launcher {
 		}
 		
 		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
-			if( ClassicBackground ) {
+			if( ClassicBackground && terrainPixels != null ) {
 				ClearTile( x, y, width, height, 0, dst );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;

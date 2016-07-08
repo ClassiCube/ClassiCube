@@ -113,6 +113,8 @@ namespace ClassicalSharp {
 		}
 		
 		protected void CalcViewBobbing( double delta, float t, float velTiltScale ) {
+			if( !game.ViewBobbing ) { tiltM = Matrix4.Identity; return; }
+			
 			LocalPlayer p = game.LocalPlayer;
 			tiltM = Matrix4.RotateZ( -p.anim.tiltX * p.anim.bobStrength );
 			tiltM = tiltM * Matrix4.RotateX( Math.Abs( p.anim.tiltY ) * 3 * p.anim.bobStrength );
