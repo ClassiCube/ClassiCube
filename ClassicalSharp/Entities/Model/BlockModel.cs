@@ -98,33 +98,7 @@ namespace ClassicalSharp.Model {
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
 			bool sprite = game.BlockInfo.IsSprite[block];
-			
-			if( sprite ) {
-				SpriteXQuad( Side.Right, false, false );
-				SpriteXQuad( Side.Right, false, true );
-				SpriteZQuad( Side.Back, false, false );
-				SpriteZQuad( Side.Back, false, true );
-				
-				SpriteZQuad( Side.Back, true, false );
-				SpriteZQuad( Side.Back, true, true );
-				SpriteXQuad( Side.Right, true, false );
-				SpriteXQuad( Side.Right, true, true );
-			} else {
-				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
-				ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
-				XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
-				
-				// Needed for held block, which renders without depth testing
-				if( SwitchOrder ) {
-					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
-					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );				
-				} else {
-					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
-					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
-				}
-				
-				YQuad( height, Side.Top, 1.0f );
-			}
+			DrawParts( sprite );
 			
 			if( index == 0 ) return;
 			graphics.BindTexture( lastTexId );
@@ -133,6 +107,67 @@ namespace ClassicalSharp.Model {
 			if( sprite ) graphics.FaceCulling = true;
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
 			if( sprite ) graphics.FaceCulling = false;
+		}
+		
+		void FlushIfNotSame( int texIndex ) {
+			int texId = game.TerrainAtlas1D.TexIds[texIndex];
+			if( texId == lastTexId ) return;
+			
+			if( lastTexId != -1 ) {
+				graphics.BindTexture( lastTexId );
+				TransformVertices();
+				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb,
+				                                cache.vertices, index, index * 6 / 4 );
+			}
+			lastTexId = texId;
+			index = 0;
+		}
+		
+		void TransformVertices() {
+			for( int i = 0; i < index; i++ ) {
+				VertexP3fT2fC4b v = cache.vertices[i];
+				float t = 0;
+				t = CosX * v.Y + SinX * v.Z; v.Z = -SinX * v.Y + CosX * v.Z; v.Y = t;        // Inlined RotX
+				t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
+				v.X *= scale; v.Y *= scale; v.Z *= scale;
+				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
+				cache.vertices[i] = v;
+			}
+		}
+		
+		void DrawParts( bool sprite ) {
+			// SwitchOrder is needed for held block, which renders without depth testing
+			if( sprite ) {
+				if( SwitchOrder ) {
+					SpriteZQuad( Side.Back, false );
+					SpriteXQuad( Side.Right, false );
+				} else {
+					SpriteXQuad( Side.Right, false );
+					SpriteZQuad( Side.Back, false );
+				}
+				
+				if( SwitchOrder ) {
+					SpriteXQuad( Side.Right, true );
+					SpriteZQuad( Side.Back, true );
+				} else {
+					SpriteZQuad( Side.Back, true );
+					SpriteXQuad( Side.Right, true );
+				}
+			} else {
+				YQuad( 0, Side.Bottom, FastColour.ShadeYBottom );
+				if( SwitchOrder ) {
+					XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
+					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );					
+					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
+					ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
+				} else {
+					ZQuad( minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ );
+					XQuad( maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX );
+					ZQuad( maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ );
+					XQuad( minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX );
+				}
+				YQuad( height, Side.Top, 1.0f );
+			}
 		}
 		
 		void YQuad( float y, int side, float shade ) {
@@ -188,6 +223,12 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b( x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col );
 		}
 		
+		
+		void SpriteZQuad( int side, bool firstPart ) {
+			SpriteZQuad( side, firstPart, false );
+			SpriteZQuad( side, firstPart, true );
+		}
+		
 		void SpriteZQuad( int side, bool firstPart, bool mirror ) {
 			int texId = game.BlockInfo.GetTextureLoc( block, side ), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec( texId, 1, out texIndex );
@@ -209,6 +250,11 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b( p1, 1, p1, rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 1, p2, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( p2, 0, p2, rec.U1, rec.V2, col );
+		}
+		
+		void SpriteXQuad( int side, bool firstPart ) {
+			SpriteXQuad( side, firstPart, false );
+			SpriteXQuad( side, firstPart, true );
 		}
 
 		void SpriteXQuad( int side, bool firstPart, bool mirror ) {
@@ -232,32 +278,6 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b( x1, 1, z1, rec.U2, rec.V1, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 1, z2, rec.U1, rec.V1, col );
 			cache.vertices[index++] = new VertexP3fT2fC4b( x2, 0, z2, rec.U1, rec.V2, col );
-		}
-		
-		void FlushIfNotSame( int texIndex ) {
-			int texId = game.TerrainAtlas1D.TexIds[texIndex];
-			if( texId == lastTexId ) return;
-			
-			if( lastTexId != -1 ) {
-				graphics.BindTexture( lastTexId );
-				TransformVertices();
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb,
-				                                cache.vertices, index, index * 6 / 4 );
-			}
-			lastTexId = texId;
-			index = 0;
-		}
-		
-		void TransformVertices() {
-			for( int i = 0; i < index; i++ ) {
-				VertexP3fT2fC4b v = cache.vertices[i];
-				float t = 0;
-				t = CosX * v.Y + SinX * v.Z; v.Z = -SinX * v.Y + CosX * v.Z; v.Y = t;        // Inlined RotX
-				t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
-				v.X *= scale; v.Y *= scale; v.Z *= scale;
-				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-				cache.vertices[i] = v;
-			}
 		}
 	}
 }

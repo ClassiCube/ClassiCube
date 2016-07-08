@@ -37,8 +37,8 @@ namespace ClassicalSharp.Renderers {
 		public void Render( double delta, float t ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
-			Vector3 last = anim.animPosition;
-			anim.animPosition = Vector3.Zero;
+			Vector3 last = anim.pos;
+			anim.pos = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
 			block.SwitchOrder = false;			
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Renderers {
 			Player p = game.LocalPlayer;
 			held.ModelScale = 0.4f;
 		   
-			held.Position = p.EyePosition + anim.animPosition;
+			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
 			if( !info.IsSprite[type] ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
