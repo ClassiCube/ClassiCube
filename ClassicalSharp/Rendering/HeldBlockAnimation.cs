@@ -35,7 +35,7 @@ namespace ClassicalSharp.Renderers {
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		internal void SetClickAnim( bool dig ) {
 			// TODO: timing still not quite right, rotate2 still not quite right
-			ResetAnimationState( true, dig ? 15 : 0.25 );
+			ResetAnimationState( true, dig ? 0.35 : 0.25 );
 			swingAnim = false;
 			digAnim = dig;
 			doAnim = true;
