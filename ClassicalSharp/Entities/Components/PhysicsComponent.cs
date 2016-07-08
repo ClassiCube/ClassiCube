@@ -99,7 +99,6 @@ namespace ClassicalSharp.Entities {
 		normalDrag = new Vector3( 0.91f, 0.98f, 0.91f ),
 		airDrag = new Vector3( 0.6f, 1f, 0.6f );
 		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
-		internal const float Gravity = normalGrav;
 		
 		public void PhysicsTick( float xMoving, float zMoving ) {
 			if( hacks.Noclip ) entity.onGround = false;

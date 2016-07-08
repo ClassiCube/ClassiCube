@@ -31,21 +31,7 @@ namespace ClassicalSharp.Entities {
 			
 			if( y >= game.World.Height ) return Block.Air;
 			return game.World.GetBlock( x, y, z );
-		}
-		
-		bool GetBoundingBox( byte block, int x, int y, int z, ref AABB box ) {
-			if( info.Collide[block] != CollideType.Solid ) return false;
-			Add( x, y, z, ref info.MinBB[block], ref box.Min );
-			Add( x, y, z, ref info.MaxBB[block], ref box.Max );
-			return true;
-		}
-		
-		static void Add( int x, int y, int z, ref Vector3 offset, ref Vector3 target ) {
-			target.X = x + offset.X;
-			target.Y = y + offset.Y;
-			target.Z = z + offset.Z;
-		}
-		
+		}		
 		
 		// TODO: test for corner cases, and refactor this.	
 		internal void MoveAndWallSlide() {
@@ -85,15 +71,21 @@ namespace ClassicalSharp.Entities {
 				for( int z = min.Z; z <= max.Z; z++ )
 					for( int x = min.X; x <= max.X; x++ )
 			{
-				byte blockId = GetPhysicsBlockId( x, y, z );
-				if( !GetBoundingBox( blockId, x, y, z, ref blockBB ) ) continue;
+				byte block = GetPhysicsBlockId( x, y, z );
+				if( info.Collide[block] != CollideType.Solid ) continue;
+				
+				blockBB.Min = info.MinBB[block];
+				blockBB.Min.X += x; blockBB.Min.Y += y; blockBB.Min.Z += z;
+				blockBB.Max = info.MaxBB[block];
+				blockBB.Max.X += x; blockBB.Max.Y += y; blockBB.Max.Z += z;
+				
 				if( !entityExtentBB.Intersects( blockBB ) ) continue; // necessary for non whole blocks. (slabs)
 				
 				float tx = 0, ty = 0, tz = 0;
 				CalcTime( ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz );
 				if( tx > 1 || ty > 1 || tz > 1 ) continue;
 				float tSquared = tx * tx + ty * ty + tz * tz;
-				stateCache[count++] = new State( x, y, z, blockId, tSquared );
+				stateCache[count++] = new State( x, y, z, block, tSquared );
 			}
 		}
 		
