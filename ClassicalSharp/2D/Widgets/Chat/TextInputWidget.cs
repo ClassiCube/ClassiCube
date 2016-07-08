@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui {
 			
 			DrawTextArgs args = new DrawTextArgs( "_", font, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-			caretTex.Width = (caretTex.Width * 3) / 4; 
+			caretTex.Width = (short)((caretTex.Width * 3) / 4);
 			defaultCaretWidth = caretTex.Width;
 			
 			args = new DrawTextArgs( "> ", font, true );
@@ -35,7 +35,6 @@ namespace ClassicalSharp.Gui {
 		
 		Texture inputTex, caretTex, prefixTex;
 		int caretPos = -1, typingLogPos = 0;
-		public int YOffset;
 		int defaultCaretWidth, defaultWidth, defaultHeight;
 		internal WrappableStringBuffer buffer;
 		readonly Font font;
@@ -115,7 +114,7 @@ namespace ClassicalSharp.Gui {
 			if( indexX == LineLength ) {
 				caretTex.X1 = 10 + sizes[indexY].Width;
 				caretCol = FastColour.Yellow;
-				caretTex.Width = defaultCaretWidth;
+				caretTex.Width = (short)defaultCaretWidth;
 			} else {
 				args.Text = parts[indexY].Substring( 0, indexX );
 				Size trimmedSize = game.Drawer2D.MeasureChatSize( ref args );
@@ -125,8 +124,9 @@ namespace ClassicalSharp.Gui {
 				
 				string line = parts[indexY];
 				args.Text = indexX < line.Length ? new String( line[indexX], 1 ) : "";
-				caretTex.Width = indexX < line.Length ? 
+				int caretWidth = indexX < line.Length ? 
 					game.Drawer2D.MeasureChatSize( ref args ).Width : defaultCaretWidth;
+				caretTex.Width = (short)caretWidth;
 			}
 			caretTex.Y1 = sizes[0].Height * indexY + Y;
 			CalcCaretColour();

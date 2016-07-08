@@ -101,13 +101,17 @@ namespace ClassicalSharp.Gui {
 				int len = buffer.GetBackLength( caretPos );
 				if( len == 0 ) return;
 				
-				caretPos -= len;		
+				caretPos -= len;
 				if( caretPos < 0 ) caretPos = 0;
 				for( int i = 0; i <= len; i++ )
 					buffer.DeleteAt( caretPos );
 				
-				if( buffer.value[caretPos] != ' ' )
+				if( caretPos >= buffer.Length ) caretPos = -1;
+				if( caretPos == -1 &&  buffer.Length > 0 ) {
+				    buffer.value[buffer.Length] = ' ';
+				} else if( caretPos >= 0 && buffer.value[caretPos] != ' ' ) {
 					buffer.InsertAt( caretPos, ' ' );
+				}
 				Recreate();
 			} else if( !buffer.Empty && caretPos != 0 ) {
 				if( !BackspaceColourCode())
@@ -119,10 +123,10 @@ namespace ClassicalSharp.Gui {
 		bool BackspaceColourCode() {
 			// If text is XYZ%eH, backspaces to XYZ.
 			int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
-			if( index <= 1 ) return false;		
+			if( index <= 1 ) return false;
 			
 			if( buffer.value[index - 1] != '%' || !game.Drawer2D.ValidColour( buffer.value[index] ) )
-				return false;	
+				return false;
 			DeleteChar(); DeleteChar();
 			return true;
 		}
@@ -238,7 +242,7 @@ namespace ClassicalSharp.Gui {
 			if( key == Key.V && buffer.Length < TotalChars ) {
 				string text = null;
 				try {
-					text = game.window.ClipboardText.Trim( trimChars );					
+					text = game.window.ClipboardText.Trim( trimChars );
 				} catch( Exception ex ) {
 					ErrorHandler.LogError( "Paste from clipboard", ex );
 					const string warning = "&cError while trying to paste from clipboard.";

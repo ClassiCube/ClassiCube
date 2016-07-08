@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui {
 		void DrawPosition() {
 			int index = 0;
 			Texture tex = posTex;
-			tex.X1 = 2; tex.Width = baseWidth;
+			tex.X1 = 2; tex.Width = (short)baseWidth;
 			IGraphicsApi.Make2DQuad( ref tex, FastColour.White, game.ModelCache.vertices, ref index );
 			
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
@@ -206,7 +206,7 @@ namespace ClassicalSharp.Gui {
 					                            Utils.Floor( font.Size ) );
 					
 					posTex.U2 = (float)baseWidth / bmp.Width;
-					posTex.Width = baseWidth;
+					posTex.Width = (short)baseWidth;
 					texWidth = bmp.Width;
 				}
 			}
@@ -215,7 +215,7 @@ namespace ClassicalSharp.Gui {
 		void AddChar( int charIndex, ref int index ) {
 			int width = widths[charIndex];
 			Texture tex = posTex;
-			tex.X1 = curX; tex.Width = width;
+			tex.X1 = curX; tex.Width = (short)width;
 			tex.U1 = (baseWidth + charIndex * 16) / texWidth;
 			tex.U2 = tex.U1 + width / texWidth;			
 			curX += width;

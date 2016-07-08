@@ -243,7 +243,7 @@ namespace ClassicalSharp {
 			int padding = (tex.Height - point) / scale;
 			float vAdj = (float)padding / Utils.NextPowerOf2( tex.Height );
 			tex.V1 += vAdj; tex.V2 -= vAdj;
-			tex.Height -= padding * 2;
+			tex.Height -= (short)(padding * 2);
 		}
 
 		public void ReducePadding( ref int height, int point, int scale ) {

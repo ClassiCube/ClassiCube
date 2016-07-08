@@ -69,8 +69,8 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void MoveTo( int newX, int newY ) {
-			int diffX = newX - X, diffY = newY - Y;
-			texture.X1 += diffX; texture.Y1 += diffY;
+			int dx = newX - X, dy = newY - Y;
+			texture.X1 += dx; texture.Y1 += dy;
 			X = newX; Y = newY;
 		}
 	}

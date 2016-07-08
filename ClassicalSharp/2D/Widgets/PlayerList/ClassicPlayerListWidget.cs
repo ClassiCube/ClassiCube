@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui {
 			
 			for( int i = 0; i < namesCount; i++ ) {
 				Texture tex = textures[i];
-				int texY = tex.Y1;
+				int texY = tex.Y;
 				tex.Y1 -= 10;
 				if( tex.IsValid ) tex.Render( api );
 				tex.Y1 = texY;

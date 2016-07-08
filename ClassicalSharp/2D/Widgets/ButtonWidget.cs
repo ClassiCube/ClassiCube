@@ -74,7 +74,7 @@ namespace ClassicalSharp.Gui {
 			
 			backTex.ID = game.UseClassicGui ? game.GuiClassicTex : game.GuiTex;
 			backTex.X1 = X; backTex.Y1 = Y;
-			backTex.Width = Width; backTex.Height = Height;
+			backTex.Width = (short)Width; backTex.Height = (short)Height;
 			
 			backTex.Render( api );
 			FastColour col = Disabled ? disabledCol : (Active ? activeCol : normCol);

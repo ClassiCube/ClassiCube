@@ -284,7 +284,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public static void Make2DQuad( ref Texture tex, FastColour col,
 		                              VertexP3fT2fC4b[] vertices, ref int index ) {
-			float x1 = tex.X1, y1 = tex.Y1, x2 = tex.X2, y2 = tex.Y2;
+			float x1 = tex.X, y1 = tex.Y, x2 = tex.X + tex.Width, y2 = tex.Y + tex.Height;
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
 			// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
