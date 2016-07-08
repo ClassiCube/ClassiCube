@@ -34,7 +34,8 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Sets the current animation state of the held block.<br/>
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		internal void SetClickAnim( bool dig ) {
-			ResetAnimationState( true, dig ? 0.3 : 0.25 );
+			// TODO: timing still not quite right, rotate2 still not quite right
+			ResetAnimationState( true, dig ? 15 : 0.25 );
 			swingAnim = false;
 			digAnim = dig;
 			doAnim = true;
@@ -71,8 +72,8 @@ namespace ClassicalSharp.Renderers {
 					held.type = lastType;
 				}
 			} else {
-				if( time >= period * 0.25 ) PlaceSecondCycle();
-				else PlaceFirstCycle();
+				if( time >= period * 0.25 ) DigSecondCycle();
+				else DigFirstCycle();
 			}
 			time += delta;
 			if( time > period )
@@ -84,7 +85,7 @@ namespace ClassicalSharp.Renderers {
 		// https://dl.dropboxusercontent.com/u/12694594/slowBreakRotate1.gif
 		// https://dl.dropboxusercontent.com/u/12694594/slowBreakRotate2.gif
 		// https://dl.dropboxusercontent.com/u/12694594/slowBreakFull.gif
-		void PlaceFirstCycle() {
+		void DigFirstCycle() {			
 			double angle = time * speed;
 			pos.X = -0.325f * (float)Math.Sin( angle * 2 );
 			pos.Y = 0.20f * (float)Math.Sin( angle * 2 * 2 );
@@ -94,7 +95,7 @@ namespace ClassicalSharp.Renderers {
 			held.block.SwitchOrder = angleY <= -30;
 		}
 		
-		void PlaceSecondCycle() {
+		void DigSecondCycle() {
 			// Need to adjust angle so it starts at same point and of first cycle
 			// And finishes cycle at original position
 			double endFirst = period * 0.25;
@@ -106,7 +107,7 @@ namespace ClassicalSharp.Renderers {
 			
 			// For second cycle, rotate the block from 0-->15 then back to 15-->0.
 			float rotX = Math.Max( 0, (float)angle - 90 * Utils.Deg2Rad );
-			if( rotX >= 45 * Utils.Deg2Rad ) rotX = 90 * Utils.Deg2Rad - rotX;		
+			if( rotX >= 45 * Utils.Deg2Rad ) rotX = 90 * Utils.Deg2Rad - rotX;
 			held.block.CosX = (float)Math.Cos( rotX * 0.33333 );
 			held.block.SinX = (float)Math.Sin( rotX * 0.33333 );
 			

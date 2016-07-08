@@ -8,7 +8,7 @@ namespace Launcher {
 
 	internal static class Program {
 		
-		public const string AppName = "ClassicalSharp Launcher 0.99.1";
+		public const string AppName = "ClassicalSharp Launcher 0.99.2";
 		
 		public static string AppDirectory;
 		
