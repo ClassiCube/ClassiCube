@@ -37,7 +37,7 @@ namespace ClassicalSharp.Singleplayer {
 			while( index >= oneY ) {
 				index -= oneY;
 				byte other = map.blocks[index];
-				if( other == 0 || info.IsLiquid[other] )
+				if( other == Block.Air || (other >= Block.Water && other <= Block.StillLava) )
 					found = index;
 				else
 					break;

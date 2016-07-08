@@ -69,7 +69,7 @@ namespace ClassicalSharp.Particles {
 		
 		bool CanPassThrough( Game game, byte block ) {
 			return game.BlockInfo.IsAir[block] || game.BlockInfo.IsSprite[block] 
-				|| (throughLiquids && game.BlockInfo.IsLiquid[block]);
+				|| (throughLiquids && game.BlockInfo.IsLiquid( block ) );
 		}
 		
 		bool CollideHor( Game game, byte block ) {

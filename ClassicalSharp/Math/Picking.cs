@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				if( info.IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
+				if( info.IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 				byte block = GetBlock( map, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				if( info.IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
+				if( info.IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );

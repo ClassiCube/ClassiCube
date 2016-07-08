@@ -24,8 +24,8 @@ namespace ClassicalSharp {
 		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
 		public bool[] IsSprite = new bool[BlocksCount];
 		
-		/// <summary> Gets whether the given block id is a liquid. (e.g. water and lava) </summary>
-		public bool[] IsLiquid = new bool[BlocksCount];
+		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
+		public bool IsLiquid( byte block ) { return block >= Block.Water && block <= Block.StillLava; }
 		
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
 		public bool[] BlocksLight = new bool[BlocksCount];
@@ -65,7 +65,6 @@ namespace ClassicalSharp {
 			for( int i = 0; i < IsOpaque.Length; i++ ) IsOpaque[i] = false;
 			//for( int i = 0; i < IsOpaqueY.Length; i++ ) IsOpaqueY[i] = false;
 			for( int i = 0; i < IsSprite.Length; i++ ) IsSprite[i] = false;
-			for( int i = 0; i < IsLiquid.Length; i++ ) IsLiquid[i] = false;
 			for( int i = 0; i < BlocksLight.Length; i++ ) BlocksLight[i] = false;
 			for( int i = 0; i < FullBright.Length; i++ ) FullBright[i] = false;
 			for( int i = 0; i < Name.Length; i++ ) Name[i] = "Invalid";
@@ -187,7 +186,6 @@ namespace ClassicalSharp {
 		}
 		
 		void SetIsLiquid( byte id ) {
-			IsLiquid[id] = true;
 			Collide[id] = CollideType.SwimThrough;
 		}
 		
@@ -205,7 +203,6 @@ namespace ClassicalSharp {
 			IsTranslucent[id] = false;
 			IsOpaque[id] = true;
 			IsSprite[id] = false;
-			IsLiquid[id] = false;
 			BlocksLight[id] = true;
 			FullBright[id] = false;
 			CullWithNeighbours[id] = true;

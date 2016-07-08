@@ -184,7 +184,7 @@ namespace ClassicalSharp.Renderers {
 			float offset = 0;
 			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid )
 				offset -= 0.1f/16;
-			if( info.IsLiquid[block] )
+			if( info.IsLiquid( block ) )
 			   offset -= 1.5f/16;
 			 return offset;
 		}

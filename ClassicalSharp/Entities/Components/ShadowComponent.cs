@@ -138,7 +138,7 @@ namespace ClassicalSharp.Entities {
 			while( posY >= 0 && index < 4 ) {
 				byte block = GetShadowBlock( blockX, posY, blockZ );
 				posY--;
-				if( info.IsAir[block] || info.IsSprite[block] || info.IsLiquid[block] ) continue;				
+				if( info.IsAir[block] || info.IsSprite[block] || info.IsLiquid( block ) ) continue;
 				float blockY = posY + 1 + info.MaxBB[block].Y;
 				if( blockY >= Position.Y + 0.01f ) continue;
 				

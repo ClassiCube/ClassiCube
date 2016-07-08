@@ -49,8 +49,8 @@ namespace ClassicalSharp {
 		void UpdateCulling( byte block, byte other ) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
-			if( IsLiquid[block] ) { bMax.Y -= 1.5f/16; }
-			if( IsLiquid[other] ) { oMax.Y -= 1.5f/16; }
+			if( IsLiquid( block ) ) bMax.Y -= 1.5f/16;
+			if( IsLiquid( other ) ) oMax.Y -= 1.5f/16;
 			
 			if( IsSprite[block] ) {
 				SetHidden( block, other, Side.Left, true );
@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 			} else {
 				SetXStretch( block, bMin.X == 0 && bMax.X == 1 );
 				SetZStretch( block, bMin.Z == 0 && bMax.Z == 1 );
-				bool bothLiquid = IsLiquid[block] && IsLiquid[other];
+				bool bothLiquid = IsLiquid( block ) && IsLiquid( other );
 				
 				SetHidden( block, other, Side.Left, oMax.X == 1 && bMin.X == 0 );
 				SetHidden( block, other, Side.Right, oMin.X == 0 && bMax.X == 1 );
@@ -78,11 +78,17 @@ namespace ClassicalSharp {
 		bool IsHidden( byte block, byte other, int side ) {
 			// Sprite blocks can never hide faces.
 			if( IsSprite[block] ) return false;
+			
+			// NOTE: Water is always culled by lava
+			if( (block == Block.Water || block == Block.StillWater)
+			   && (other == Block.Lava || other == Block.StillLava) )
+				return true;
+			
 			// All blocks (except for say leaves) cull with themselves.
 			if( block == other ) return CullWithNeighbours[block];
 			
 			// An opaque neighbour (asides from lava) culls the face.
-			if( IsOpaque[other] && !IsLiquid[other] ) return true;
+			if( IsOpaque[other] && !IsLiquid( other ) ) return true;
 			if( !IsTranslucent[block] || !IsTranslucent[other] ) return false;
 			
 			// e.g. for water / ice, don't need to draw water.

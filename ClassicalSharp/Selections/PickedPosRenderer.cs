@@ -28,16 +28,25 @@ namespace ClassicalSharp.Renderers {
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];
 		
-		public void UpdateState( PickedPos pickedPos ) {
+		public void UpdateState( PickedPos selected ) {
 			index = 0;
 			Vector3 camPos = game.CurrentCameraPos;
-			float dist = (camPos - pickedPos.Min).LengthSquared;
+			float dist = (camPos - selected.Min).LengthSquared;
 			
 			float offset = 0.01f;
 			if( dist < 4 * 4 ) offset = 0.00625f;
 			if( dist < 2 * 2 ) offset = 0.00500f;
-			Vector3 p1 = pickedPos.Min - new Vector3( offset, offset, offset );
-			Vector3 p2 = pickedPos.Max + new Vector3( offset, offset, offset );
+			
+			Vector3 p1 = selected.Min - new Vector3( offset, offset, offset );
+			Vector3 p2 = selected.Max + new Vector3( offset, offset, offset );
+			BlockInfo info = game.BlockInfo;
+			if( info.IsLiquid( selected.Block ) ) {
+				p1.X -= 0.1f/16; p2.X -= 0.1f/16;
+				p1.Z -= 0.1f/16; p2.Z -= 0.1f/16;
+			} else if( info.IsTranslucent[selected.Block] && info.Collide[selected.Block] != CollideType.Solid ) {
+				p1.X += 0.1f/16; p2.X += 0.1f/16;
+				p1.Z += 0.1f/16; p2.Z += 0.1f/16;
+			}
 			
 			float size = 1/16f;
 			if( dist < 32 * 32 ) size = 1/32f;

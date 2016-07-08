@@ -122,13 +122,13 @@ namespace ClassicalSharp {
 				case Side.Right:
 					min = new Vector2( bbMin.Z, bbMin.Y );
 					max = new Vector2( bbMax.Z, bbMax.Y );
-					if( IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
+					if( IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 					break;
 				case Side.Front:
 				case Side.Back: 
 					min = new Vector2( bbMin.X, bbMin.Y );
 					max = new Vector2( bbMax.X, bbMax.Y );
-					if( IsLiquid[block] ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
+					if( IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 					break;
 				case Side.Top:
 				case Side.Bottom:
