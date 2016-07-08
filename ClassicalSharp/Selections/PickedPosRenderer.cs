@@ -60,12 +60,11 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Render( double delta ) {
 			api.AlphaBlending = true;
-			api.DepthWrite = false;
-			
+			api.DepthWrite = false;			
 			api.SetBatchFormat( VertexFormat.P3fC4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
-			api.AlphaBlending = false;
 			api.DepthWrite = true;
+			api.AlphaBlending = false;	
 		}
 		
 		void DrawLines( Vector3 p1, Vector3 p2, float size ) {

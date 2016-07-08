@@ -31,7 +31,7 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			api.Texturing = false;
 			int offset = overview.Height + 10;
-			int height = Math.Max( 300, Height );
+			int height = Math.Max( 300, Height + overview.Height );
 			api.Draw2DQuad( X, Y - offset, Width, height, topCol, bottomCol );
 			
 			api.Texturing = true;

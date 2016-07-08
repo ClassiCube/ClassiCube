@@ -286,7 +286,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			const float blockHeight = 1;
 			
-			float u1 = 0, u2 = 1 * 15.99f/16f;
+			const float u1 = 0, u2 = 15.99f/16f;
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
 			DrawInfo part = normalParts[i];
 			FastColour col = fullBright ? FastColour.White : (Y > map.heightmap[(Z * width) + X] ? env.Sunlight : env.Shadowlight);

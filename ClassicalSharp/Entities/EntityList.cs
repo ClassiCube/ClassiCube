@@ -156,18 +156,22 @@ namespace ClassicalSharp.Entities {
 		public void DrawShadows() {
 			if( ShadowMode == EntityShadow.None ) return;
 			ShadowComponent.boundShadowTex = false;
-			game.Graphics.AlphaArgBlend = true;
-			game.Graphics.DepthWrite = false;
-			game.Graphics.AlphaBlending = true;
-			game.Graphics.Texturing = true;
+			IGraphicsApi api = game.Graphics;
 			
+			api.AlphaArgBlend = true;
+			api.DepthWrite = false;
+			api.AlphaBlending = true;
+			api.Texturing = true;
+			
+			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			Players[255].shadow.Draw();
 			if( ShadowMode == EntityShadow.CircleAll )
 				DrawOtherShadows();
-			game.Graphics.AlphaArgBlend = false;
-			game.Graphics.DepthWrite = true;
-			game.Graphics.AlphaBlending = false;
-			game.Graphics.Texturing = false;
+			
+			api.AlphaArgBlend = false;
+			api.DepthWrite = true;
+			api.AlphaBlending = false;
+			api.Texturing = false;
 		}
 		
 		void DrawOtherShadows() {
