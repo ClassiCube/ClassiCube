@@ -171,6 +171,7 @@ namespace ClassicalSharp {
 			SetFpsLimitMethod( method );
 			ViewDistance = Options.GetInt( OptionsKey.ViewDist, 16, 4096, 512 );
 			UserViewDistance = ViewDistance;
+			SmoothLighting = Options.GetBool( OptionsKey.SmoothLighting, false );
 			
 			DefaultFov = Options.GetInt( OptionsKey.FieldOfView, 1, 150, 70 );
 			Fov = DefaultFov;
