@@ -38,16 +38,12 @@ namespace ClassicalSharp {
 			//part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
 			//part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col );
 			//part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col );
-			int offsetX = -1;
-			int offsetY = -1;
 			
-			int a0_0 = Count( Lit( X +offsetX, Y +offsetY, Z +1 ), Lit( X +offsetX, Y +1 +offsetY, Z +1 ), Lit( X +offsetX, Y +1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
-			
-			int a0_1 = Count( Lit( X +offsetX, Y +offsetY, Z -1 ), Lit( X +offsetX, Y +1 +offsetY, Z -1 ), Lit( X +offsetX, Y +1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
-
-			int a1_1 = Count( Lit( X +offsetX, Y +offsetY, Z -1 ), Lit( X +offsetX, Y -1 +offsetY, Z -1 ), Lit( X +offsetX, Y -1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
-			
-			int a1_0 = Count( Lit( X +offsetX, Y -1 +offsetY, Z ), Lit( X +offsetX, Y -1 +offsetY, Z +1 ), Lit( X +offsetX, Y +offsetY, Z +1 ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
+			const int ox = -1, oy = -1;			
+			int a0_0 = Lit( X + ox, Y + oy, Z + 1 ) + Lit( X + ox, Y + 1 + oy, Z + 1 ) + Lit( X + ox, Y + 1 + oy, Z ) + Lit( X + ox, Y + oy, Z );			
+			int a0_1 = Lit( X + ox, Y + oy, Z - 1 ) + Lit( X + ox, Y + 1 + oy, Z - 1 ) + Lit( X + ox, Y + 1 + oy, Z ) + Lit( X + ox, Y + oy, Z );
+			int a1_1 = Lit( X + ox, Y + oy, Z - 1 ) + Lit( X + ox, Y - 1 + oy, Z - 1 ) + Lit( X + ox, Y - 1 + oy, Z ) + Lit( X + ox, Y + oy, Z );			
+			int a1_0 = Lit( X + ox, Y - 1 + oy, Z ) + Lit( X + ox, Y - 1 + oy, Z + 1 ) + Lit( X + ox, Y + oy, Z + 1 ) + Lit( X + ox, Y + oy, Z );
 			
 			FastColour col0_0 = fullBright ? FastColour.White : MakeXSide( a0_0 ), col1_0 = fullBright ? FastColour.White : MakeXSide( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : MakeXSide( a1_1 ), col0_1 = fullBright ? FastColour.White : MakeXSide( a0_1 );
@@ -82,16 +78,12 @@ namespace ClassicalSharp {
 			//part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col );
 			//part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col );
 			//part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col );
-			int offsetX = +1;
-			int offsetY = -1;
-
-			int a0_1 = Count( Lit( X +offsetX, Y +offsetY, Z +1 ), Lit( X +offsetX, Y +1 +offsetY, Z +1 ), Lit( X +offsetX, Y +1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
 			
-			int a0_0 = Count( Lit( X +offsetX, Y +offsetY, Z -1 ), Lit( X +offsetX, Y +1 +offsetY, Z -1 ), Lit( X +offsetX, Y +1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
-
-			int a1_0 = Count( Lit( X +offsetX, Y +offsetY, Z -1 ), Lit( X +offsetX, Y -1 +offsetY, Z -1 ), Lit( X +offsetX, Y -1 +offsetY, Z ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
-			
-			int a1_1 = Count( Lit( X +offsetX, Y -1 +offsetY, Z ), Lit( X +offsetX, Y -1 +offsetY, Z +1 ), Lit( X +offsetX, Y +offsetY, Z +1 ) ) + (Lit( X +offsetX, Y +offsetY, Z ) ? 1 : 0);
+			const int ox = +1, oy = -1;
+			int a0_1 = Lit( X + ox, Y + oy, Z + 1 ) + Lit( X + ox, Y + 1 + oy, Z + 1 ) + Lit( X +ox, Y +1 + oy, Z ) + Lit( X + ox, Y + oy, Z );
+			int a0_0 = Lit( X + ox, Y + oy, Z - 1 ) + Lit( X + ox, Y + 1 + oy, Z - 1 ) + Lit( X +ox, Y +1 + oy, Z ) + Lit( X + ox, Y + oy, Z );
+			int a1_0 = Lit( X + ox, Y + oy, Z - 1 ) + Lit( X + ox, Y - 1 + oy, Z - 1 ) + Lit( X +ox, Y -1 + oy, Z ) + Lit( X + ox, Y + oy, Z );	
+			int a1_1 = Lit( X + ox, Y - 1 + oy, Z ) + Lit( X + ox, Y - 1 + oy, Z + 1 ) + Lit( X +ox, Y + oy, Z +1 ) + Lit( X + ox, Y + oy, Z );
 			
 			FastColour col0_0 = fullBright ? FastColour.White : MakeXSide( a0_0 ), col1_0 = fullBright ? FastColour.White : MakeXSide( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : MakeXSide( a1_1 ), col0_1 = fullBright ? FastColour.White : MakeXSide( a0_1 );
@@ -126,22 +118,17 @@ namespace ClassicalSharp {
 			//part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col );
 			//part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col );
 			//part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col );
-			int offsetZ = -1;
-			int offsetY = -1;
 			
-			int a1_0 = Count( Lit( X + 1, Y +offsetY, Z +offsetZ ), Lit( X +1, Y + 1 +offsetY, Z +offsetZ), Lit( X, Y + 1 +offsetY, Z +offsetZ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a1_1 = Count( Lit( X, Y + 1 +offsetY, Z +offsetZ ), Lit( X -1, Y + 1 +offsetY, Z +offsetZ ), Lit( X -1, Y +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a0_1 = Count( Lit( X -1, Y +offsetY, Z +offsetZ ), Lit( X -1, Y -1 +offsetY, Z +offsetZ ), Lit( X, Y -1 +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a0_0 = Count( Lit( X, Y-1 +offsetY, Z +offsetZ ), Lit( X +1, Y -1 +offsetY, Z +offsetZ ), Lit( X + 1, Y +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
+			const int oz = -1, oy = -1;		
+			int a1_0 = Lit( X + 1, Y + oy, Z + oz ) + Lit( X + 1, Y + 1 + oy, Z + oz ) + Lit( X, Y + 1 + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );	
+			int a1_1 = Lit( X, Y + 1 + oy, Z + oz ) + Lit( X - 1, Y + 1 + oy, Z + oz ) + Lit( X - 1, Y + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );
+			int a0_1 = Lit( X - 1, Y + oy, Z + oz ) + Lit( X - 1, Y - 1 + oy, Z + oz ) + Lit( X, Y - 1 + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );
+			int a0_0 = Lit( X, Y - 1 + oy, Z + oz ) + Lit( X + 1, Y - 1 + oy, Z + oz ) + Lit( X + 1, Y + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );
 			
 			FastColour col0_0 = fullBright ? FastColour.White : MakeZSide( a0_0 ), col1_0 = fullBright ? FastColour.White : MakeZSide( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : MakeZSide( a1_1 ), col0_1 = fullBright ? FastColour.White : MakeZSide( a0_1 );
 			
 			if( a0_0 + a1_1 > a0_1 + a1_0 ) {
-				
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col0_0 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_1 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col1_1 );
@@ -172,17 +159,11 @@ namespace ClassicalSharp {
 			//part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
 			//part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
 			
-			int offsetZ = +1;
-			int offsetY = -1;
-
-
-			int a0_0 = Count( Lit( X + 1, Y +offsetY, Z +offsetZ ), Lit( X +1, Y + 1 +offsetY, Z +offsetZ), Lit( X, Y + 1 +offsetY, Z +offsetZ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a0_1 = Count( Lit( X, Y + 1 +offsetY, Z +offsetZ ), Lit( X -1, Y + 1 +offsetY, Z +offsetZ ), Lit( X -1, Y +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a1_1 = Count( Lit( X -1, Y +offsetY, Z +offsetZ ), Lit( X -1, Y -1 +offsetY, Z +offsetZ ), Lit( X, Y -1 +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
-			
-			int a1_0 = Count( Lit( X, Y-1 +offsetY, Z +offsetZ ), Lit( X +1, Y -1 +offsetY, Z +offsetZ ), Lit( X + 1, Y +offsetY, Z +offsetZ ) ) + (Lit( X, Y +offsetY, Z +offsetZ ) ? 1 : 0);
+			const int oz = +1, oy = -1;
+			int a0_0 = Lit( X + 1, Y + oy, Z +oz ) + Lit( X + 1, Y + 1 + oy, Z + oz ) + Lit( X, Y + 1 + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );	
+			int a0_1 = Lit( X, Y + 1 + oy, Z +oz ) + Lit( X - 1, Y + 1 + oy, Z + oz ) + Lit( X - 1, Y + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );	
+			int a1_1 = Lit( X - 1, Y + oy, Z +oz ) + Lit( X - 1, Y - 1 + oy, Z + oz ) + Lit( X, Y - 1 + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );
+			int a1_0 = Lit( X, Y - 1 + oy, Z +oz ) + Lit( X + 1, Y - 1 + oy, Z + oz ) + Lit( X + 1, Y + oy, Z + oz ) + Lit( X, Y + oy, Z + oz );
 			
 			FastColour col0_0 = fullBright ? FastColour.White : MakeZSide( a0_0 ), col1_0 = fullBright ? FastColour.White : MakeZSide( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : MakeZSide( a1_1 ), col0_1 = fullBright ? FastColour.White : MakeZSide( a0_1 );
@@ -218,11 +199,11 @@ namespace ClassicalSharp {
 			//part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v1, col );
 			//part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v1, col );
 			
-			int offsetY = -1;
-			int a1_1 = Count( Lit( X +1, Y +offsetY, Z ), Lit( X +1, Y +offsetY, Z -1 ), Lit( X, Y +offsetY, Z -1 ) ) + (Lit( X, Y +offsetY, Z ) ? 1 : 0);
-			int a0_1 = Count( Lit( X , Y +offsetY, Z -1 ), Lit( X -1, Y +offsetY, Z -1  ), Lit( X -1, Y +offsetY, Z  ) ) + (Lit( X, Y +offsetY, Z ) ? 1 : 0);
-			int a0_0 = Count( Lit( X -1, Y +offsetY, Z ), Lit( X -1, Y +offsetY, Z +1 ), Lit( X, Y +offsetY, Z +1 ) ) + (Lit( X, Y +offsetY, Z ) ? 1 : 0);
-			int a1_0 = Count( Lit( X , Y +offsetY, Z +1 ), Lit( X +1, Y +offsetY, Z +1 ), Lit( X+1, Y +offsetY, Z  ) ) + (Lit( X, Y +offsetY, Z ) ? 1 : 0);
+			const int oy = -1;
+			int a1_1 = Lit( X + 1, Y + oy, Z ) + Lit( X + 1, Y + oy, Z - 1 ) + Lit( X, Y + oy, Z - 1 ) + Lit( X, Y + oy, Z );
+			int a0_1 = Lit( X, Y + oy, Z - 1 ) + Lit( X - 1, Y + oy, Z - 1 ) + Lit( X - 1, Y + oy, Z ) + Lit( X, Y + oy, Z );
+			int a0_0 = Lit( X - 1, Y + oy, Z ) + Lit( X - 1, Y + oy, Z + 1 ) + Lit( X, Y + oy, Z + 1 ) + Lit( X, Y + oy, Z );
+			int a1_0 = Lit( X, Y + oy, Z + 1 ) + Lit( X + 1, Y + oy, Z + 1 ) + Lit( X + 1, Y + oy, Z ) + Lit( X, Y + oy, Z );
 			
 			FastColour col0_0 = fullBright ? FastColour.White : MakeYSide( a0_0 ), col1_0 = fullBright ? FastColour.White : MakeYSide( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : MakeYSide( a1_1 ), col0_1 = fullBright ? FastColour.White : MakeYSide( a0_1 );
@@ -245,17 +226,17 @@ namespace ClassicalSharp {
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Top) & 1;
-			const float blockHeight = 1;
+
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? env.Sunlight : env.Shadowlight);
 			
-			int a0_0 = Count( Lit( X - 1, Y, Z ), Lit( X - 1, Y, Z - 1 ), Lit( X, Y, Z - 1 ) ) + (Lit( X, Y, Z ) ? 1 : 0);
-			int a1_0 = Count( Lit( X + 1, Y, Z ), Lit( X + 1, Y, Z - 1 ), Lit( X, Y, Z - 1 ) ) + (Lit( X, Y, Z ) ? 1 : 0);
-			int a0_1 = Count( Lit( X - 1, Y, Z ), Lit( X - 1, Y, Z + 1 ), Lit( X, Y, Z + 1 ) ) + (Lit( X, Y, Z ) ? 1 : 0);
-			int a1_1 = Count( Lit( X + 1, Y, Z ), Lit( X + 1, Y, Z + 1 ), Lit( X, Y, Z + 1 ) ) + (Lit( X, Y, Z ) ? 1 : 0);
+			int a0_0 = Lit( X - 1, Y, Z ) + Lit( X - 1, Y, Z - 1 ) + Lit( X, Y, Z - 1 ) + Lit( X, Y, Z );
+			int a1_0 = Lit( X + 1, Y, Z ) + Lit( X + 1, Y, Z - 1 ) + Lit( X, Y, Z - 1 ) + Lit( X, Y, Z );
+			int a0_1 = Lit( X - 1, Y, Z ) + Lit( X - 1, Y, Z + 1 ) + Lit( X, Y, Z + 1 ) + Lit( X, Y, Z );
+			int a1_1 = Lit( X + 1, Y, Z ) + Lit( X + 1, Y, Z + 1 ) + Lit( X, Y, Z + 1 ) + Lit( X, Y, Z );
 			FastColour col0_0 = fullBright ? FastColour.White : Make( a0_0 ), col1_0 = fullBright ? FastColour.White : Make( a1_0 );
 			FastColour col1_1 = fullBright ? FastColour.White : Make( a1_1 ), col0_1 = fullBright ? FastColour.White : Make( a0_1 );
 			
@@ -271,31 +252,19 @@ namespace ClassicalSharp {
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v2, col1_1 );
 			}
 		}		
-
-		int Count( bool side1, bool corner, bool side2 ) {
-			///if( side1 && side2 ) return 3;
-			return ((side1 ? 1 : 0) + (side2 ? 1 : 0) + (corner ? 1 : 0));
-		}
 		
-		FastColour Make( int count ) {
-			return Lerp( env. Shadowlight, env.Sunlight, count / 4f );
-		}
-		FastColour MakeZSide( int count ) {
-			return Lerp( env.ShadowlightZSide, env.SunlightZSide, count / 4f );
-		}
-		FastColour MakeXSide( int count ) {
-			return Lerp( env.ShadowlightXSide, env.SunlightXSide, count / 4f );
-		}
-		FastColour MakeYSide( int count ) {
-			return Lerp( env.ShadowlightYBottom, env.SunlightYBottom, count / 4f );
-		}
+		FastColour Make( int count ) { return Lerp( env. Shadowlight, env.Sunlight, count / 4f ); }
+		FastColour MakeZSide( int count ) { return Lerp( env.ShadowlightZSide, env.SunlightZSide, count / 4f ); }
+		FastColour MakeXSide( int count ) { return Lerp( env.ShadowlightXSide, env.SunlightXSide, count / 4f ); }
+		FastColour MakeYSide( int count ) { return Lerp( env.ShadowlightYBottom, env.SunlightYBottom, count / 4f ); }
 		
 		static FastColour Lerp( FastColour a, FastColour b, float t ) {
 			return new FastColour((byte)Utils.Lerp( a.R, b.R, t ),(byte)Utils.Lerp( a.G, b.G, t ),(byte)Utils.Lerp( a.B, b.B, t ) );
 		}
 		
-		bool Lit( int x, int y, int z ) {
-			return fullBright || y >= maxY || x < 0 || z < 0 || x >= width || z >= length || y > map.heightmap[( z * width ) + x];
+		int Lit( int x, int y, int z ) {
+			return (fullBright || y >= maxY || x < 0 || z < 0 
+			        || x >= width || z >= length || y > map.heightmap[( z * width ) + x]) ? 1 : 0;
 		}
 	}
 }
