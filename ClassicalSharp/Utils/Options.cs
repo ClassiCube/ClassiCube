@@ -23,6 +23,7 @@ namespace ClassicalSharp {
 		public const string ViewBobbing = "viewbobbing";
 		public const string EntityShadow = "entityshadow";
 		public const string RenderType = "normal";
+		public const string SmoothLighting = "gfx-smoothlighting";
 		
 		public const string HacksEnabled = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";		

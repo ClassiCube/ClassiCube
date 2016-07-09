@@ -9,21 +9,21 @@ namespace ClassicalSharp {
 	
 	/// <summary> Class responsible for converting a 16x16x16 into an optimised mesh of vertices. </summary>
 	/// <remarks> This class is heavily optimised and as such may suffer from slightly unreadable code. </remarks>
-	public unsafe partial class ChunkMeshBuilder {
+	public unsafe abstract partial class ChunkMeshBuilder {
 		
-		int X, Y, Z;
-		float x1, y1, z1, x2, y2, z2;
-		byte curBlock;
-		BlockInfo info;
-		World map;
-		WorldEnv env;
-		Game game;
-		IGraphicsApi graphics;
-		const int chunkSize = 16, extChunkSize = 18;
-		const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
-		const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
+		protected int X, Y, Z;
+		protected float x1, y1, z1, x2, y2, z2;
+		protected byte curBlock;
+		protected BlockInfo info;
+		protected World map;
+		protected WorldEnv env;
+		protected Game game;
+		protected IGraphicsApi graphics;
+		protected const int chunkSize = 16, extChunkSize = 18;
+		protected const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
+		protected const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
 		
-		public ChunkMeshBuilder( Game game ) {
+		public void Init( Game game ) {
 			this.game = game;
 			graphics = game.Graphics;
 			info = game.BlockInfo;
@@ -31,8 +31,8 @@ namespace ClassicalSharp {
 		}
 		
 		internal int width, length, height, clipLevel;
-		int maxX, maxY, maxZ;
-		byte* chunk, counts;
+		protected int maxX, maxY, maxZ;
+		protected byte* chunk, counts;
 		
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
@@ -253,75 +253,26 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
-			if( OccludedLiquid( chunkIndex ) ) return 0;			
-			int count = 1;
-			x++;
-			chunkIndex++;
-			countIndex += Side.Sides;
-			int max = chunkSize - xx;			
-			
-			while( count < max && x < width && CanStretch( block, chunkIndex, x, y, z, Side.Top ) 
-			      && !OccludedLiquid( chunkIndex ) ) {
-				counts[countIndex] = 0;
-				count++;
-				x++;
-				chunkIndex++;
-				countIndex += Side.Sides;
-			}
-			return count;
-		}
+		protected abstract int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block );
 		
-		int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
-			int count = 1;
-			x++;
-			chunkIndex++;
-			countIndex += Side.Sides;
-			int max = chunkSize - xx;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
-			
-			while( count < max && x < width && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
-				counts[countIndex] = 0;
-				count++;
-				x++;
-				chunkIndex++;
-				countIndex += Side.Sides;
-			}
-			return count;
-		}
+		protected abstract int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face );
 		
-		int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
-			int count = 1;
-			z++;
-			chunkIndex += extChunkSize;
-			countIndex += chunkSize * Side.Sides;
-			int max = chunkSize - zz;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
-			
-			while( count < max && z < length && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
-				counts[countIndex] = 0;
-				count++;
-				z++;
-				chunkIndex += extChunkSize;
-				countIndex += chunkSize * Side.Sides;
-			}
-			return count;
-		}
+		protected abstract int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face );
 		
 		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
-		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+		protected bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
 			byte rawBlock = chunk[chunkIndex];
 			return rawBlock == initialTile && !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
 				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
 		}
 		
-		bool OccludedLiquid( int chunkIndex ) {
+		protected bool OccludedLiquid( int chunkIndex ) {
 			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] && 
 				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] && 
 				!info.IsAir[chunk[chunkIndex + 324 + 18]];
 		}
 		
-		bool IsLit( int x, int y, int z, int face, byte type ) {
+		protected bool IsLit( int x, int y, int z, int face, byte type ) {
 			int offset = (info.LightOffset[type] >> face) & 1;
 			switch( face ) {
 				case Side.Left:

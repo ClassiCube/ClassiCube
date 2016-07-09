@@ -13,7 +13,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			extHelpY = 50;
+			extHelpY = 100;
 			
 			widgets = new Widget[] {	
 				
@@ -26,6 +26,9 @@ namespace ClassicalSharp.Gui {
 				MakeOpt( -1, 0, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
+				
+				MakeBool( -1, 50, "Smooth lighting", OptionsKey.SmoothLighting,
+				     OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting ),
 				
 				MakeOpt( 1, -50, "Names", OnWidgetClick,
 				     g => g.Entities.NamesMode.ToString(),
@@ -47,10 +50,17 @@ namespace ClassicalSharp.Gui {
 			MakeDescriptions();
 		}
 		
+		void SetSmoothLighting( Game g, bool v ) {
+			g.SmoothLighting = v;
+			g.MapRenderer.updater.InitMeshBuilder();
+			g.MapRenderer.Refresh();
+		}
+		
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
 				new EnumValidator( typeof(FpsLimitMethod) ),
 				new IntegerValidator( 16, 4096 ),
+				new BooleanValidator(),
 				new EnumValidator( typeof(NameMode) ),
 				new EnumValidator( typeof(EntityShadow) ),
 			};
@@ -64,14 +74,14 @@ namespace ClassicalSharp.Gui {
 				"&eNoLimit: &fRenders as many frames as possible each second.",
 				"&cUsing NoLimit mode is discouraged for general usage.",
 			};
-			descriptions[2] = new[] {
+			descriptions[3] = new[] {
 				"&eNoNames: &fNo player names are drawn.",
 				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
 				"&eAll: &fAll player names are drawn normally.",
 				"&eAllAndHovered: &fName of the targeted player is drawn see-through.",
 				"&f      All other player names are drawn normally.",
 			};			
-			descriptions[3] = new[] {
+			descriptions[4] = new[] {
 				"&eNone: &fNo entity shadows are drawn.",
 				"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
 				"&eCircle: &fA circular shadow is shown across the blocks you are above.",

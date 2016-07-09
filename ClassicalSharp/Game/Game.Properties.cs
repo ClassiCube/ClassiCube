@@ -170,6 +170,8 @@ namespace ClassicalSharp {
 		
 		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		
+		public bool SmoothLighting;
+		
 		public string FontName = "Arial";
 		
 		public int ChatLines = 12;

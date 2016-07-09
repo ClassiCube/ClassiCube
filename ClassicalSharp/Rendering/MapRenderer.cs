@@ -49,7 +49,7 @@ namespace ClassicalSharp.Renderers {
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;
 		internal int[] totalUsed;
-		ChunkUpdater updater;
+		internal ChunkUpdater updater;
 		bool drawAllFaces = false, underWater = false;
 		
 		public MapRenderer( Game game ) {

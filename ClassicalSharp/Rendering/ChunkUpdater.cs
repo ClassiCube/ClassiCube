@@ -13,7 +13,6 @@ namespace ClassicalSharp.Renderers {
 	public sealed class ChunkUpdater : IDisposable {
 		
 		Game game;
-		IGraphicsApi api;
 		ChunkMeshBuilder builder;
 		BlockInfo info;
 		
@@ -27,9 +26,7 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			this.renderer = renderer;
 			info = game.BlockInfo;
-			
-			builder = new ChunkMeshBuilder( game );
-			api = game.Graphics;
+			InitMeshBuilder();
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.WorldEvents.OnNewMap += OnNewMap;
@@ -38,6 +35,18 @@ namespace ClassicalSharp.Renderers {
 			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged += ViewDistanceChanged;
 			game.Events.ProjectionChanged += ProjectionChanged;
+		}
+		
+		public void InitMeshBuilder() {
+			if( builder != null ) builder.Dispose();
+			
+			if( game.SmoothLighting )
+				builder = new SmoothLightingMeshBuilder();
+			else
+				builder = new NormalMeshBuilder();
+			
+			builder.Init( game );
+			builder.OnNewMapLoaded();
 		}
 		
 		public void Dispose() {
@@ -215,7 +224,7 @@ namespace ClassicalSharp.Renderers {
 			if( parts == null ) return;
 			
 			for( int i = 0; i < parts.Length; i++ )
-				api.DeleteVb( parts[i].VbId );
+				game.Graphics.DeleteVb( parts[i].VbId );
 			parts = null;
 		}
 		
