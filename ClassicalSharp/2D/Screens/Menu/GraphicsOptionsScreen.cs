@@ -74,6 +74,9 @@ namespace ClassicalSharp.Gui {
 				"&eNoLimit: &fRenders as many frames as possible each second.",
 				"&cUsing NoLimit mode is discouraged for general usage.",
 			};
+			descriptions[2] = new[] {
+				"&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.",
+			};
 			descriptions[3] = new[] {
 				"&eNoNames: &fNo player names are drawn.",
 				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
