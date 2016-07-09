@@ -11,7 +11,6 @@ namespace ClassicalSharp.Entities {
 		
 		public Entity( Game game ) {
 			this.game = game;
-			info = game.BlockInfo;
 		}
 		
 		public IModel Model;
@@ -25,9 +24,9 @@ namespace ClassicalSharp.Entities {
 		public float HeadYawDegrees, YawDegrees, PitchDegrees;
 		
 		protected Game game;
-		protected BlockInfo info;
 		protected internal bool onGround;
 		internal float StepSize;
+		internal int tickCount;
 		
 		/// <summary> Rotation of the entity's head horizontally (i.e. looking north or east) </summary>
 		public float HeadYawRadians {

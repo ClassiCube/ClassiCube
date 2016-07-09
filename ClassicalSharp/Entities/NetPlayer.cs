@@ -7,7 +7,6 @@ namespace ClassicalSharp.Entities {
 	public sealed class NetPlayer : Player {
 		
 		InterpolatedComponent interp;
-		int tickCount;
 		public NetPlayer( string displayName, string skinName, Game game, byte id ) : base( game ) {
 			DisplayName = displayName;
 			SkinName = skinName;
@@ -22,7 +21,6 @@ namespace ClassicalSharp.Entities {
 		public override void Tick( double delta ) {
 			CheckSkin();
 			tickCount++;
-			interp.tickCount = tickCount;
 			interp.UpdateCurrentState();
 			anim.UpdateAnimState( interp.oldState.pos, interp.newState.pos, delta );
 		}

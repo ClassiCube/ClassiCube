@@ -8,17 +8,14 @@ namespace ClassicalSharp.Entities {
 	/// <summary> Entity component that performs interpolation of position and model head yaw over time. </summary>
 	public sealed class InterpolatedComponent {
 		
-		Game game;
 		Entity entity;
 		public InterpolatedComponent( Game game, Entity entity ) {
-			this.game = game;
 			this.entity = entity;
 		}
 		
 		// Last known position and orientation sent by the server.
 		internal Vector3 serverPos;
 		internal float serverYaw, serverPitch;
-		internal int tickCount;
 		
 		public void SetLocation( LocationUpdate update, bool interpolate ) {
 			Vector3 lastPos = serverPos;
@@ -32,7 +29,7 @@ namespace ClassicalSharp.Entities {
 			
 			if( !interpolate ) {
 				stateCount = 0;
-				newState = oldState = new State( tickCount, serverPos, serverYaw, serverPitch );
+				newState = oldState = new State( entity.tickCount, serverPos, serverYaw, serverPitch );
 				yawStateCount = 0;
 				newYaw = oldYaw = serverYaw;
 			} else {
@@ -40,8 +37,8 @@ namespace ClassicalSharp.Entities {
 				Vector3 midPos = Vector3.Lerp( lastPos, serverPos, 0.5f );
 				float midYaw = Utils.LerpAngle( lastYaw, serverYaw, 0.5f );
 				float midPitch = Utils.LerpAngle( lastPitch, serverPitch, 0.5f );
-				AddState( new State( tickCount, midPos, midYaw, midPitch ) );
-				AddState( new State( tickCount, serverPos, serverYaw, serverPitch ) );
+				AddState( new State( entity.tickCount, midPos, midYaw, midPitch ) );
+				AddState( new State( entity.tickCount, serverPos, serverYaw, serverPitch ) );
 				for( int i = 0; i < 3; i++ )
 					AddYaw( Utils.LerpAngle( lastYaw, serverYaw, (i + 1) / 3f ) );
 			}

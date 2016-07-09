@@ -33,6 +33,7 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAny( AABB bounds, Predicate<byte> condition ) {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
+			BlockInfo info = game.BlockInfo;
 			
 			// Order loops so that we minimise cache misses
 			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
@@ -71,6 +72,7 @@ namespace ClassicalSharp.Entities {
 			Vector3I bbMin = Vector3I.Floor( bounds.Min );
 			Vector3I bbMax = Vector3I.Floor( bounds.Max );
 			int height = game.World.Height;
+			BlockInfo info = game.BlockInfo;
 			
 			// Order loops so that we minimise cache misses
 			for( int y = bbMin.Y; y <= bbMax.Y; y++ )
