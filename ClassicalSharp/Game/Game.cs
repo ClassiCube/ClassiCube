@@ -93,8 +93,7 @@ namespace ClassicalSharp {
 			World = new World( this );
 			LocalPlayer = AddComponent( new LocalPlayer( this ) );
 			Entities[255] = LocalPlayer;
-			width = Width;
-			height = Height;
+			Width = window.Width; Height = window.Height;
 			
 			MapRenderer = new MapRenderer( this );
 			string renType = Options.Get( OptionsKey.RenderType ) ?? "normal";
@@ -428,7 +427,7 @@ namespace ClassicalSharp {
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string file = "screenshot_" + timestamp + ".png";
 			path = Path.Combine( path, file );
-			Graphics.TakeScreenshot( path, ClientSize.Width, ClientSize.Height );
+			Graphics.TakeScreenshot( path, Width, Height );
 			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;
 		}
@@ -445,15 +444,16 @@ namespace ClassicalSharp {
 		}
 		
 		internal void OnResize() {
+			int oWidth = window.Width, oHeight = window.Height;
+			Width = window.Width; Height = window.Height;			
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
+			
 			if( activeScreen != null )
-				activeScreen.OnResize( width, height, Width, Height );
-			hudScreen.OnResize( width, height, Width, Height );
+				activeScreen.OnResize( oWidth, oHeight, Width, Height );
+			hudScreen.OnResize( oWidth, oHeight, Width, Height );
 			foreach( Screen overlay in WarningOverlays )
-				overlay.OnResize( width, height, Width, Height );
-			width = Width;
-			height = Height;
+				overlay.OnResize( oWidth, oHeight, Width, Height );
 		}
 		
 		public void Disconnect( string title, string reason ) {

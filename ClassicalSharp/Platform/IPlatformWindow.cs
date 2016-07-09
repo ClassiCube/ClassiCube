@@ -16,8 +16,6 @@ namespace ClassicalSharp {
 		
 		int Height { get; }
 		
-		Size ClientSize { get; }
-		
 		bool VSync { get; set; }
 		
 		bool Exists { get; }
