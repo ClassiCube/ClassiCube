@@ -28,7 +28,8 @@ namespace ClassicalSharp.Renderers {
 			this.renderer = renderer;
 			info = game.BlockInfo;
 			
-			builder = new ChunkMeshBuilder( game );
+			builder = new SmoothLightingMeshBuilder();
+			builder.Init( game );
 			api = game.Graphics;
 			
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;

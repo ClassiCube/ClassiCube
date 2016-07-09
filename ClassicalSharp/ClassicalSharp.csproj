@@ -188,6 +188,8 @@
     <Compile Include="Entities\Model\ModelBuilder.cs" />
     <Compile Include="MeshBuilder\Builder.cs" />
     <Compile Include="MeshBuilder\FloodFill.cs" />
+    <Compile Include="MeshBuilder\NormalBuilder.cs" />
+    <Compile Include="MeshBuilder\SmoothLightingBuilder.cs" />
     <Compile Include="MeshBuilder\TileDrawer.cs" />
     <Compile Include="Network\CPESupport.cs" />
     <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
