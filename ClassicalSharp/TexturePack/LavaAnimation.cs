@@ -31,12 +31,13 @@ namespace ClassicalSharp {
 				for( int j = 0; j < 9; j++ ) {
 					int xx = x + (j % 3 - 1) + xOffset;
 					int yy = y + (j / 3 - 1) + yOffset;
-					localSoupHeat += soupHeat[Index( xx, yy )];
+					localSoupHeat += soupHeat[(yy & 0xF) << 4 | (xx & 0xF)];
 				}
 				
-				float localPotHeat =
-					potHeat[Index( x, y )] + potHeat[Index( x, y + 1 )] +
-					potHeat[Index( x + 1, y )] + potHeat[Index( x + 1, y + 1 )];
+				float localPotHeat = potHeat[i]
+					+ potHeat[y << 4 | ((x + 1) & 0xF)] + // x + 1, y
+					+ potHeat[((y + 1) & 0xF) << 4 | x] + // x, y + 1
+					+ potHeat[((y + 1) & 0xF) << 4 | ((x + 1) & 0xF)];
 				
 				soupHeat[i] = localSoupHeat / 10 + localPotHeat / 4 * 0.8f;
 				potHeat[i] += flameHeat[i] * 0.01f;
@@ -61,10 +62,6 @@ namespace ClassicalSharp {
 				*ptr = 255 << 24 | (byte)r << 16 | (byte)g << 8 | (byte)b;
 				ptr++;
 			}
-		}
-		
-		static int Index( int x, int y ) {
-			return (y & 0xF) << 4 | (x & 0xF);
 		}
 	}
 }
