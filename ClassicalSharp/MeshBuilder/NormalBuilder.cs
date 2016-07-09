@@ -62,5 +62,117 @@ namespace ClassicalSharp {
 			}
 			return count;
 		}
+		
+		protected override void DrawLeftFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Left];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Left) & 1;
+			
+			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White :
+				X >= offset ? (Y > map.heightmap[(Z * width) + (X - offset)] ? env.SunlightXSide : env.ShadowlightXSide) : env.SunlightXSide;
+			
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col );
+		}
+
+		protected override void DrawRightFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Right];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Right) & 1;
+			
+			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White :
+				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? env.SunlightXSide : env.ShadowlightXSide) : env.SunlightXSide;
+			
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col );
+		}
+
+		protected override void DrawFrontFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Front];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Front) & 1;
+			
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White :
+				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? env.SunlightZSide : env.ShadowlightZSide) : env.SunlightZSide;
+			
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col );
+		}
+		
+		protected override void DrawBackFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Back];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Back) & 1;
+			
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * invVerElementSize;
+			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White :
+				Z <= (maxZ - offset) ? (Y > map.heightmap[((Z + offset) * width) + X] ? env.SunlightZSide : env.ShadowlightZSide) : env.SunlightZSide;
+			
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
+		}
+		
+		protected override void DrawBottomFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Bottom) & 1;
+			
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * invVerElementSize;
+			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White : ((Y - 1 - offset) >= map.heightmap[(Z * width) + X] ? env.SunlightYBottom : env.ShadowlightYBottom);
+			
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v1, col );
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v1, col );
+		}
+
+		protected override void DrawTopFace( int count ) {
+			int texId = info.textures[curBlock * Side.Sides + Side.Top];
+			int i = texId / elementsPerAtlas1D;
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int offset = (lightFlags >> Side.Top) & 1;
+			
+			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * invVerElementSize;
+			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
+			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+			FastColour col = fullBright ? FastColour.White : ((Y - offset) >= map.heightmap[(Z * width) + X] ? env.Sunlight : env.Shadowlight);
+
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v2, col );
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v2, col );
+		}
 	}
 }
