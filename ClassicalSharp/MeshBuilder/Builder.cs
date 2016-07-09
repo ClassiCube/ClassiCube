@@ -254,7 +254,8 @@ namespace ClassicalSharp {
 		}
 		
 		int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
-			if( OccludedLiquid( chunkIndex ) ) return 0;			
+			if( OccludedLiquid( chunkIndex ) ) return 0;	
+			return 1;			
 			int count = 1;
 			x++;
 			chunkIndex++;
@@ -273,6 +274,7 @@ namespace ClassicalSharp {
 		}
 		
 		int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
+			return 1;
 			int count = 1;
 			x++;
 			chunkIndex++;
@@ -291,6 +293,7 @@ namespace ClassicalSharp {
 		}
 		
 		int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
+			return 1;
 			int count = 1;
 			z++;
 			chunkIndex += extChunkSize;
