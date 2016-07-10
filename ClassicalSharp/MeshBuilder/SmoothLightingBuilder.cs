@@ -32,25 +32,24 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			const int oy = -1;
-			int a0_0 = Lit( X - 1, Y + oy, Z + 1 ) + Lit( X - 1, Y + 1 + oy, Z + 1 ) + Lit( X - 1, Y + 1 + oy, Z ) + Lit( X - 1, Y + oy, Z );
-			int a0_1 = Lit( X - 1, Y + oy, Z - 1 ) + Lit( X - 1, Y + 1 + oy, Z - 1 ) + Lit( X - 1, Y + 1 + oy, Z ) + Lit( X - 1, Y + oy, Z );
-			int a1_1 = Lit( X - 1, Y + oy, Z - 1 ) + Lit( X - 1, Y - 1 + oy, Z - 1 ) + Lit( X - 1, Y - 1 + oy, Z ) + Lit( X - 1, Y + oy, Z );
-			int a1_0 = Lit( X - 1, Y - 1 + oy, Z ) + Lit( X - 1, Y - 1 + oy, Z + 1 ) + Lit( X - 1, Y + oy, Z + 1 ) + Lit( X - 1, Y + oy, Z );
+			int F = ComputeLightFlags( X, Y, Z );
+			int aY0_Z0 = ((F >> xM1yM1zM1) & 1) + ((F >> xM1yCCzM1) & 1) + ((F >> xM1yM1zCC) & 1) + ((F >> xM1yCCzCC) & 1);
+			int aY0_Z1 = ((F >> xM1yM1zP1) & 1) + ((F >> xM1yCCzP1) & 1) + ((F >> xM1yM1zCC) & 1) + ((F >> xM1yCCzCC) & 1);
+			int aY1_Z0 = ((F >> xM1yP1zM1) & 1) + ((F >> xM1yCCzM1) & 1) + ((F >> xM1yP1zCC) & 1) + ((F >> xM1yCCzCC) & 1);
+			int aY1_Z1 = ((F >> xM1yP1zP1) & 1) + ((F >> xM1yCCzP1) & 1) + ((F >> xM1yP1zCC) & 1) + ((F >> xM1yCCzCC) & 1);
+			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z0 );
+			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z1 );
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide( a0_0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide( a1_0 );
-			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( a1_1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( a0_1 );
-			
-			if( a0_0 + a1_1 > a0_1 + a1_0 ) {
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2, u2, v1, col0_0 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1 + (count - 1), u1, v1, col0_1 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1 + (count - 1), u1, v2, col1_1 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2, u2, v2, col1_0 );
+			if( aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0 ) {
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col1_1 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col1_0 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col0_0 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col0_1 );
 			} else {
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2, u2, v1, col0_0 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1 + (count - 1), u1, v1, col0_1 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1 + (count - 1), u1, v2, col1_1 );
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2, u2, v2, col1_0 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col1_1 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col1_0 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col0_0 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col0_1 );
 			}
 		}
 
@@ -65,24 +64,24 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			const int oy = -1;
-			int a0_1 = Lit( X + 1, Y + oy, Z + 1 ) + Lit( X + 1, Y + 1 + oy, Z + 1 ) + Lit( X + 1, Y + 1 + oy, Z ) + Lit( X + 1, Y + oy, Z );
-			int a0_0 = Lit( X + 1, Y + oy, Z - 1 ) + Lit( X + 1, Y + 1 + oy, Z - 1 ) + Lit( X + 1, Y + 1 + oy, Z ) + Lit( X + 1, Y + oy, Z );
-			int a1_0 = Lit( X + 1, Y + oy, Z - 1 ) + Lit( X + 1, Y - 1 + oy, Z - 1 ) + Lit( X + 1, Y - 1 + oy, Z ) + Lit( X + 1, Y + oy, Z );
-			int a1_1 = Lit( X + 1, Y - 1 + oy, Z ) + Lit( X + 1, Y - 1 + oy, Z + 1 ) + Lit( X + 1, Y + oy, Z + 1 ) + Lit( X + 1, Y + oy, Z );
-			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide( a0_0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide( a1_0 );
-			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( a1_1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( a0_1 );
+			int F = ComputeLightFlags( X, Y, Z );
+			int aY0_Z0 = ((F >> xP1yM1zM1) & 1) + ((F >> xP1yCCzM1) & 1) + ((F >> xP1yM1zCC) & 1) + ((F >> xP1yCCzCC) & 1);
+			int aY0_Z1 = ((F >> xP1yM1zP1) & 1) + ((F >> xP1yCCzP1) & 1) + ((F >> xP1yM1zCC) & 1) + ((F >> xP1yCCzCC) & 1);
+			int aY1_Z0 = ((F >> xP1yP1zM1) & 1) + ((F >> xP1yCCzM1) & 1) + ((F >> xP1yP1zCC) & 1) + ((F >> xP1yCCzCC) & 1);
+			int aY1_Z1 = ((F >> xP1yP1zP1) & 1) + ((F >> xP1yCCzP1) & 1) + ((F >> xP1yP1zCC) & 1) + ((F >> xP1yCCzCC) & 1);
+			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z0 );
+			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z1 );
 			
-			if( a0_0 + a1_1 > a0_1 + a1_0 ) {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col0_0 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col0_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col1_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col1_0 );
+			if( aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0 ) {
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col1_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
 			} else {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col0_0 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col0_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col1_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col1_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col1_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
 			}
 		}
 
@@ -97,25 +96,24 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			const int oy = -1;
-			int a1_0 = Lit( X + 1, Y + oy, Z - 1 ) + Lit( X + 1, Y + 1 + oy, Z - 1 ) + Lit( X, Y + 1 + oy, Z - 1 ) + Lit( X, Y + oy, Z - 1 );
-			int a1_1 = Lit( X, Y + 1 + oy, Z - 1 ) + Lit( X - 1, Y + 1 + oy, Z - 1 ) + Lit( X - 1, Y + oy, Z - 1 ) + Lit( X, Y + oy, Z - 1 );
-			int a0_1 = Lit( X - 1, Y + oy, Z - 1 ) + Lit( X - 1, Y - 1 + oy, Z - 1 ) + Lit( X, Y - 1 + oy, Z - 1 ) + Lit( X, Y + oy, Z - 1 );
-			int a0_0 = Lit( X, Y - 1 + oy, Z - 1 ) + Lit( X + 1, Y - 1 + oy, Z - 1 ) + Lit( X + 1, Y + oy, Z - 1 ) + Lit( X, Y + oy, Z - 1 );
+			int F = ComputeLightFlags( X, Y, Z );
+			int aX0_Y0 = ((F >> xM1yM1zM1) & 1) + ((F >> xM1yCCzM1) & 1) + ((F >> xCCyM1zM1) & 1) + ((F >> xCCyCCzM1) & 1);
+			int aX0_Y1 = ((F >> xM1yP1zM1) & 1) + ((F >> xM1yCCzM1) & 1) + ((F >> xCCyP1zM1) & 1) + ((F >> xCCyCCzM1) & 1);
+			int aX1_Y0 = ((F >> xP1yM1zM1) & 1) + ((F >> xP1yCCzM1) & 1) + ((F >> xCCyM1zM1) & 1) + ((F >> xCCyCCzM1) & 1);
+			int aX1_Y1 = ((F >> xP1yP1zM1) & 1) + ((F >> xP1yCCzM1) & 1) + ((F >> xCCyP1zM1) & 1) + ((F >> xCCyCCzM1) & 1);
+			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide( aX1_Y0 );
+			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX1_Y1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y1 );
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide( a0_0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide( a1_0 );
-			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide( a1_1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( a0_1 );
-			
-			if( a0_0 + a1_1 > a0_1 + a1_0 ) {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col0_0 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col1_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_0 );
+			if( aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0 ) {
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
 			} else {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col0_0 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col1_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
 			}
 		}
 		
@@ -130,24 +128,23 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			const int oy = -1;
-			int a0_0 = Lit( X + 1, Y + oy, Z + 1 ) + Lit( X + 1, Y + 1 + oy, Z + 1 ) + Lit( X, Y + 1 + oy, Z + 1 ) + Lit( X, Y + oy, Z + 1 );
-			int a0_1 = Lit( X, Y + 1 + oy, Z + 1 ) + Lit( X - 1, Y + 1 + oy, Z + 1 ) + Lit( X - 1, Y + oy, Z + 1 ) + Lit( X, Y + oy, Z + 1 );
-			int a1_1 = Lit( X - 1, Y + oy, Z + 1 ) + Lit( X - 1, Y - 1 + oy, Z + 1 ) + Lit( X, Y - 1 + oy, Z + 1 ) + Lit( X, Y + oy, Z + 1 );
-			int a1_0 = Lit( X, Y - 1 + oy, Z + 1 ) + Lit( X + 1, Y - 1 + oy, Z + 1 ) + Lit( X + 1, Y + oy, Z + 1 ) + Lit( X, Y + oy, Z + 1 );
+			int F = ComputeLightFlags( X, Y, Z );
+			int aX0_Y0 = ((F >> xM1yM1zP1) & 1) + ((F >> xM1yCCzP1) & 1) + ((F >> xCCyM1zP1) & 1) + ((F >> xCCyCCzP1) & 1);
+			int aX1_Y0 = ((F >> xP1yM1zP1) & 1) + ((F >> xP1yCCzP1) & 1) + ((F >> xCCyM1zP1) & 1) + ((F >> xCCyCCzP1) & 1);
+			int aX0_Y1 = ((F >> xM1yP1zP1) & 1) + ((F >> xM1yCCzP1) & 1) + ((F >> xCCyP1zP1) & 1) + ((F >> xCCyCCzP1) & 1);
+			int aX1_Y1 = ((F >> xP1yP1zP1) & 1) + ((F >> xP1yCCzP1) & 1) + ((F >> xCCyP1zP1) & 1) + ((F >> xCCyCCzP1) & 1);
+			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX1_Y1 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide( aX1_Y0 );
+			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y0 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y1 );
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide( a0_0 ), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide( a1_0 );
-			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide( a1_1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( a0_1 );
-			
-			if( a0_0 + a1_1 > a0_1 + a1_0 ) {
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col0_0 );
+			if( aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0 ) {
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col1_1 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col0_1 );
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col1_1 );
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col0_0 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col1_0 );
 			} else {
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col0_0 );
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col1_1 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col0_1 );
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col1_1 );
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col0_0 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col1_0 );
 			}
 		}
@@ -163,10 +160,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int aX0_Z0 = Lit( X - 1, Y - 1, Z ) + Lit( X - 1, Y - 1, Z - 1 ) + Lit( X, Y - 1, Z - 1 ) + Lit( X, Y - 1, Z );
-			int aX0_Z1 = Lit( X - 1, Y - 1, Z ) + Lit( X - 1, Y - 1, Z + 1 ) + Lit( X, Y - 1, Z + 1 ) + Lit( X, Y - 1, Z );
-			int aX1_Z0 = Lit( X + 1, Y - 1, Z ) + Lit( X + 1, Y - 1, Z - 1 ) + Lit( X, Y - 1, Z - 1 ) + Lit( X, Y - 1, Z );
-			int aX1_Z1 = Lit( X + 1, Y - 1, Z ) + Lit( X + 1, Y - 1, Z + 1 ) + Lit( X, Y - 1, Z + 1 ) + Lit( X, Y - 1, Z );
+			int F = ComputeLightFlags( X, Y, Z );
+			int aX0_Z0 = ((F >> xM1yM1zM1) & 1) + ((F >> xM1yM1zCC) & 1) + ((F >> xCCyM1zM1) & 1) + ((F >> xCCyM1zCC) & 1);
+			int aX1_Z0 = ((F >> xP1yM1zM1) & 1) + ((F >> xP1yM1zCC) & 1) + ((F >> xCCyM1zM1) & 1) + ((F >> xCCyM1zCC) & 1);
+			int aX0_Z1 = ((F >> xM1yM1zP1) & 1) + ((F >> xM1yM1zCC) & 1) + ((F >> xCCyM1zP1) & 1) + ((F >> xCCyM1zCC) & 1);
+			int aX1_Z1 = ((F >> xP1yM1zP1) & 1) + ((F >> xP1yM1zCC) & 1) + ((F >> xCCyM1zP1) & 1) + ((F >> xCCyM1zCC) & 1);
 			int col0_1 = fullBright ? FastColour.WhitePacked : MakeYSide( aX0_Z1 ), col1_1 = fullBright ? FastColour.WhitePacked : MakeYSide( aX1_Z1 );
 			int col1_0 = fullBright ? FastColour.WhitePacked : MakeYSide( aX1_Z0 ), col0_0 = fullBright ? FastColour.WhitePacked : MakeYSide( aX0_Z0 );
 			
@@ -194,11 +192,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z );		
-			int aX0_Z0 = ((F >> xMyCzM) & 1) + ((F >> xMyCzC) & 1) + ((F >> xCyCzM) & 1) + ((F >> xCyCzC) & 1);
-			int aX1_Z0 = ((F >> xPyCzM) & 1) + ((F >> xPyCzC) & 1) + ((F >> xCyCzM) & 1) + ((F >> xCyCzC) & 1);
-			int aX0_Z1 = ((F >> xMyCzP) & 1) + ((F >> xMyCzC) & 1) + ((F >> xCyCzP) & 1) + ((F >> xCyCzC) & 1);
-			int aX1_Z1 = ((F >> xPyCzP) & 1) + ((F >> xPyCzC) & 1) + ((F >> xCyCzP) & 1) + ((F >> xCyCzC) & 1);
+			int F = ComputeLightFlags( X, Y, Z );
+			int aX0_Z0 = ((F >> xM1yCCzM1) & 1) + ((F >> xM1yCCzCC) & 1) + ((F >> xCCyCCzM1) & 1) + ((F >> xCCyCCzCC) & 1);
+			int aX1_Z0 = ((F >> xP1yCCzM1) & 1) + ((F >> xP1yCCzCC) & 1) + ((F >> xCCyCCzM1) & 1) + ((F >> xCCyCCzCC) & 1);
+			int aX0_Z1 = ((F >> xM1yCCzP1) & 1) + ((F >> xM1yCCzCC) & 1) + ((F >> xCCyCCzP1) & 1) + ((F >> xCCyCCzCC) & 1);
+			int aX1_Z1 = ((F >> xP1yCCzP1) & 1) + ((F >> xP1yCCzCC) & 1) + ((F >> xCCyCCzP1) & 1) + ((F >> xCCyCCzCC) & 1);
 			int col0_0 = fullBright ? FastColour.WhitePacked : Make( aX0_Z0 ), col1_0 = fullBright ? FastColour.WhitePacked : Make( aX1_Z0 );
 			int col1_1 = fullBright ? FastColour.WhitePacked : Make( aX1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : Make( aX0_Z1 );
 			
@@ -231,55 +229,55 @@ namespace ClassicalSharp {
 		#region Light computation
 		
 		int ComputeLightFlags( int x, int y, int z ) {
-			if( fullBright ) return (1 << xPyPzP) - 1; // all faces fully bright
+			if( fullBright ) return (1 << xP1yP1zP1) - 1; // all faces fully bright
 			
 			return
 				// Layer Y - 1 light flags
-				Lit( x - 1, y - 1, z - 1 ) << xMyMzM |
-				Lit( x - 1, y - 1, z )     << xMyMzC |
-				Lit( x - 1, y - 1, z + 1 ) << xMyMzP |
-				Lit( x, y - 1, z - 1 )     << xCyMzM |
-				Lit( x, y - 1, z )         << xCyMzC |
-				Lit( x, y - 1, z + 1 )     << xCyMzP |
-				Lit( x + 1, y - 1, z - 1 ) << xPyMzM |
-				Lit( x + 1, y - 1, z )     << xPyMzC |
-				Lit( x + 1, y - 1, z + 1 ) << xPyMzP |
+				Lit( x - 1, y - 1, z - 1 ) << xM1yM1zM1 |
+				Lit( x - 1, y - 1, z )     << xM1yM1zCC |
+				Lit( x - 1, y - 1, z + 1 ) << xM1yM1zP1 |
+				Lit( x, y - 1, z - 1 )     << xCCyM1zM1 |
+				Lit( x, y - 1, z )         << xCCyM1zCC |
+				Lit( x, y - 1, z + 1 )     << xCCyM1zP1 |
+				Lit( x + 1, y - 1, z - 1 ) << xP1yM1zM1 |
+				Lit( x + 1, y - 1, z )     << xP1yM1zCC |
+				Lit( x + 1, y - 1, z + 1 ) << xP1yM1zP1 |
 				// Layer Y light flags
-				Lit( x - 1, y, z - 1 )     << xMyCzM |
-				Lit( x - 1, y, z )         << xMyCzC |
-				Lit( x - 1, y, z + 1 )     << xMyCzP |
-				Lit( x, y, z - 1 )         << xCyCzM |
-				Lit( x, y, z )             << xCyCzC |
-				Lit( x, y, z + 1 )         << xCyCzP |
-				Lit( x + 1, y, z - 1 )     << xPyCzM |
-				Lit( x + 1, y, z )         << xPyCzC |
-				Lit( x + 1, y, z + 1 )     << xPyCzP |
+				Lit( x - 1, y, z - 1 )     << xM1yCCzM1 |
+				Lit( x - 1, y, z )         << xM1yCCzCC |
+				Lit( x - 1, y, z + 1 )     << xM1yCCzP1 |
+				Lit( x, y, z - 1 )         << xCCyCCzM1 |
+				Lit( x, y, z )             << xCCyCCzCC |
+				Lit( x, y, z + 1 )         << xCCyCCzP1 |
+				Lit( x + 1, y, z - 1 )     << xP1yCCzM1 |
+				Lit( x + 1, y, z )         << xP1yCCzCC |
+				Lit( x + 1, y, z + 1 )     << xP1yCCzP1 |
 				// Layer Y + 1 light flags
-				Lit( x - 1, y + 1, z - 1 ) << xMyPzM |
-				Lit( x - 1, y + 1, z )     << xMyPzC |
-				Lit( x - 1, y + 1, z + 1 ) << xMyPzP |
-				Lit( x, y + 1, z - 1 )     << xCyPzM |
-				Lit( x, y, z - 1 )         << xCyPzC |
-				Lit( x, y + 1, z + 1 )     << xCyPzP |
-				Lit( x + 1, y + 1, z - 1 ) << xPyPzM |
-				Lit( x + 1, y + 1, z )     << xPyPzC |
-				Lit( x + 1, y + 1, z + 1 ) << xPyPzP ;
+				Lit( x - 1, y + 1, z - 1 ) << xM1yP1zM1 |
+				Lit( x - 1, y + 1, z )     << xM1yP1zCC |
+				Lit( x - 1, y + 1, z + 1 ) << xM1yP1zP1 |
+				Lit( x, y + 1, z - 1 )     << xCCyP1zM1 |
+				Lit( x, y, z - 1 )         << xCCyP1zCC |
+				Lit( x, y + 1, z + 1 )     << xCCyP1zP1 |
+				Lit( x + 1, y + 1, z - 1 ) << xP1yP1zM1 |
+				Lit( x + 1, y + 1, z )     << xP1yP1zCC |
+				Lit( x + 1, y + 1, z + 1 ) << xP1yP1zP1 ;
 		}
 		
-		const int xMyMzM = 0,  xMyMzC = 1,  xMyMzP = 2;
-		const int xCyMzM = 3,  xCyMzC = 4,  xCyMzP = 5;
-		const int xPyMzM = 6,  xPyMzC = 7,  xPyMzP = 8;
+		const int xM1yM1zM1 = 0,  xM1yM1zCC = 1,  xM1yM1zP1 = 2;
+		const int xCCyM1zM1 = 3,  xCCyM1zCC = 4,  xCCyM1zP1 = 5;
+		const int xP1yM1zM1 = 6,  xP1yM1zCC = 7,  xP1yM1zP1 = 8;
 
-		const int xMyCzM = 9,  xMyCzC = 10, xMyCzP = 11;
-		const int xCyCzM = 12, xCyCzC = 13, xCyCzP = 14;
-		const int xPyCzM = 15, xPyCzC = 16, xPyCzP = 17;
+		const int xM1yCCzM1 = 9,  xM1yCCzCC = 10, xM1yCCzP1 = 11;
+		const int xCCyCCzM1 = 12, xCCyCCzCC = 13, xCCyCCzP1 = 14;
+		const int xP1yCCzM1 = 15, xP1yCCzCC = 16, xP1yCCzP1 = 17;
 
-		const int xMyPzM = 18, xMyPzC = 19, xMyPzP = 20;
-		const int xCyPzM = 21, xCyPzC = 22, xCyPzP = 23;
-		const int xPyPzM = 24, xPyPzC = 25, xPyPzP = 26;		
+		const int xM1yP1zM1 = 18, xM1yP1zCC = 19, xM1yP1zP1 = 20;
+		const int xCCyP1zM1 = 21, xCCyP1zCC = 22, xCCyP1zP1 = 23;
+		const int xP1yP1zM1 = 24, xP1yP1zCC = 25, xP1yP1zP1 = 26;
 		
 		int Lit( int x, int y, int z ) {
-			if( fullBright || x < 0 || y < 0 || z < 0 
+			if( x < 0 || y < 0 || z < 0
 			   || x >= width || y >= height || z >= length ) return 1;
 			
 			byte block = map.GetBlock( x, y, z );
