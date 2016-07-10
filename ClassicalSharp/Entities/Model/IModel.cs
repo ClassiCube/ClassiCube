@@ -96,10 +96,11 @@ namespace ClassicalSharp.Model {
 			uScale = 1 / 64f; vScale = 1 / 32f;
 			scale = p.ModelScale;
 			
-			cols[0] = col;
-			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom );
-			cols[2] = FastColour.Scale( col, FastColour.ShadeZ ); cols[3] = cols[2];
-			cols[4] = FastColour.Scale( col, FastColour.ShadeX ); cols[5] = cols[4];
+			cols[0] = col.Pack();
+			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom ).Pack();
+			cols[2] = FastColour.Scale( col, FastColour.ShadeZ ).Pack(); cols[3] = cols[2];
+			cols[4] = FastColour.Scale( col, FastColour.ShadeX ).Pack(); cols[5] = cols[4];
+			otherCol = FastColour.Scale( col, 0.7f ).Pack();
 			
 			cosYaw = (float)Math.Cos( p.YawDegrees * Utils.Deg2Rad );
 			sinYaw = (float)Math.Sin( p.YawDegrees * Utils.Deg2Rad );
@@ -115,7 +116,8 @@ namespace ClassicalSharp.Model {
 		public virtual void Dispose() { }
 		
 		protected FastColour col;
-		protected FastColour[] cols = new FastColour[6];
+		protected int[] cols = new int[6];
+		protected int otherCol;
 		protected internal ModelVertex[] vertices;
 		protected internal int index;
 		
@@ -142,11 +144,8 @@ namespace ClassicalSharp.Model {
 				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
 				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-				
-				FastColour col = part.Count == boxVertices ? 
-					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
+				vertex.Colour = part.Count == boxVertices ? cols[i >> 2] : otherCol;
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i & 3;
@@ -199,11 +198,8 @@ namespace ClassicalSharp.Model {
 				}
 				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-				
-				FastColour col = part.Count == boxVertices ? 
-					cols[i >> 2] : FastColour.Scale( this.col, 0.7f );
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.R = col.R; vertex.G = col.G; vertex.B = col.B; vertex.A = 255;
+				vertex.Colour = part.Count == boxVertices ? cols[i >> 2] : otherCol;
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i & 3;

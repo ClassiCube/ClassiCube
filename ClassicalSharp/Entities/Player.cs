@@ -97,13 +97,13 @@ namespace ClassicalSharp.Entities {
 			float scale = Math.Min( 1, Model.NameScale * ModelScale ) / 70f;
 			
 			Vector3 p111, p121, p212, p222;
-			FastColour col = FastColour.White;
+			int col = FastColour.WhitePacked;
 			Vector2 size = new Vector2( nameTex.Width * scale, nameTex.Height * scale );
 			Utils.CalcBillboardPoints( size, pos, ref game.View, out p111, out p121, out p212, out p222 );
-			api.texVerts[0] = new VertexP3fT2fC4b( p111, nameTex.U1, nameTex.V2, col );
-			api.texVerts[1] = new VertexP3fT2fC4b( p121, nameTex.U1, nameTex.V1, col );
-			api.texVerts[2] = new VertexP3fT2fC4b( p222, nameTex.U2, nameTex.V1, col );
-			api.texVerts[3] = new VertexP3fT2fC4b( p212, nameTex.U2, nameTex.V2, col );
+			api.texVerts[0] = new VertexP3fT2fC4b( ref p111, nameTex.U1, nameTex.V2, col );
+			api.texVerts[1] = new VertexP3fT2fC4b( ref p121, nameTex.U1, nameTex.V1, col );
+			api.texVerts[2] = new VertexP3fT2fC4b( ref p222, nameTex.U2, nameTex.V1, col );
+			api.texVerts[3] = new VertexP3fT2fC4b( ref p212, nameTex.U2, nameTex.V2, col );
 			
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );

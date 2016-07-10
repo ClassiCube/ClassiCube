@@ -149,7 +149,7 @@ namespace ClassicalSharp.Renderers {
 			IntPtr ptr = (IntPtr)v;
 			
 			fullColSides = game.BlockInfo.FullBright[block];
-			FastColour col = fullColSides ? FastColour.White : map.Env.Shadowlight;
+			int col = fullColSides ? FastColour.WhitePacked : map.Env.Shadow;
 			foreach( Rectangle r in rects )
 				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset( block ), ref v );
 			
@@ -173,7 +173,7 @@ namespace ClassicalSharp.Renderers {
 			IntPtr ptr = (IntPtr)v;
 			
 			fullColEdge = game.BlockInfo.FullBright[block];
-			FastColour col = fullColEdge ? FastColour.White : map.Env.Sunlight;
+			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
 			foreach( Rectangle r in rects )
 				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, YOffset( block ), ref v );
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
@@ -190,7 +190,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 
-		           FastColour col, ref VertexP3fT2fC4b* v ) {
+		           int col, ref VertexP3fT2fC4b* v ) {
 			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
 				z2 = z1 + axisSize;
@@ -210,7 +210,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, 
-		           FastColour col, ref VertexP3fT2fC4b* v ) {
+		           int col, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endY = y2, startY = y1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;
@@ -230,7 +230,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, 
-		           FastColour col, float offset, float yOffset, ref VertexP3fT2fC4b* v ) {
+		           int col, float offset, float yOffset, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {
 				x2 = x1 + axisSize;

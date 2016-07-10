@@ -40,19 +40,19 @@ namespace ClassicalSharp {
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Scale( FastColour value, float t ) {
-			FastColour result = value;
-			result.R = (byte)(value.R * t);
-			result.G = (byte)(value.G * t);
-			result.B = (byte)(value.B * t);
-			return result;
+			value.R = (byte)(value.R * t);
+			value.G = (byte)(value.G * t);
+			value.B = (byte)(value.B * t);
+			return value;
 		}
 		
 		/// <summary> Linearly interpolates the RGB components of the two colours
 		/// by the specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Lerp( FastColour a, FastColour b, float t ) {
-			return new FastColour( (byte)Utils.Lerp( a.R, b.R, t ),
-			                      (byte)Utils.Lerp( a.G, b.G, t ),
-			                      (byte)Utils.Lerp( a.B, b.B, t ) );
+			a.R = (byte)Utils.Lerp( a.R, b.R, t );
+			a.G = (byte)Utils.Lerp( a.G, b.G, t );
+			a.B = (byte)Utils.Lerp( a.B, b.B, t );
+			return a;
 		}
 		
 		public static FastColour GetHexEncodedCol( int hex, int lo, int hi ) {
@@ -63,11 +63,10 @@ namespace ClassicalSharp {
 		}
 		
 		public const float ShadeX = 0.6f, ShadeZ = 0.8f, ShadeYBottom = 0.5f;
-		public static void GetShaded( FastColour normal, ref FastColour xSide,
-		                             ref FastColour zSide, ref FastColour yBottom ) {
-			xSide = FastColour.Scale( normal, ShadeX );
-			zSide = FastColour.Scale( normal, ShadeZ );
-			yBottom = FastColour.Scale( normal, ShadeYBottom );
+		public static void GetShaded( FastColour normal, out int xSide, out int zSide, out int yBottom ) {
+			xSide = FastColour.Scale( normal, ShadeX ).Pack();
+			zSide = FastColour.Scale( normal, ShadeZ ).Pack();
+			yBottom = FastColour.Scale( normal, ShadeYBottom ).Pack();
 		}
 		
 		public Color ToColor() {
@@ -80,13 +79,12 @@ namespace ClassicalSharp {
 			return A << 24 | R << 16 | G << 8 | B;
 		}
 		
-		public override string ToString() {
-			return R + ", " + G + ", " + B + " : " + A;
-		}
-		
-		/// <summary> Convers this instance into a hex colour code of the form RRGGBB. </summary>
-		public string ToRGBHexString() {
-			return Utils.ToHexString( new byte[] { R, G, B } );
+		public int Pack() {
+			#if !USE_DX
+			return A << 24 | B << 16 | G << 8 | R;
+			#else
+			return A << 24 | R << 16 | G << 8 | B;
+			#endif
 		}
 		
 		public override bool Equals( object obj ) {
@@ -102,6 +100,16 @@ namespace ClassicalSharp {
 		public override int GetHashCode() {
 			return A << 24 | R << 16 | G << 8 | B;
 		}
+		
+		/// <summary> Convers this instance into a hex colour code of the form RRGGBB. </summary>
+		public string ToRGBHexString() {
+			return Utils.ToHexString( new byte[] { R, G, B } );
+		}
+		
+		public override string ToString() {
+			return R + ", " + G + ", " + B + " : " + A;
+		}
+		
 
 		public static bool operator == ( FastColour left, FastColour right ) {
 			return left.Equals( right );
@@ -119,11 +127,15 @@ namespace ClassicalSharp {
 			return Color.FromArgb( col.A, col.R, col.G, col.B );
 		}
 		
+		
 		public static FastColour Red = new FastColour( 255, 0, 0 );
 		public static FastColour Green = new FastColour( 0, 255, 0 );
 		public static FastColour Blue = new FastColour( 0, 0, 255 );
+		
 		public static FastColour White = new FastColour( 255, 255, 255 );
 		public static FastColour Black = new FastColour( 0, 0, 0 );
+		public const int WhitePacked = unchecked((int)0xFFFFFFFF);
+		public const int BlackPacked = unchecked((int)0xFF000000);
 
 		public static FastColour Yellow = new FastColour( 255, 255, 0 );
 		public static FastColour Magenta = new FastColour( 255, 0, 255 );

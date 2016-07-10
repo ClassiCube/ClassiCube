@@ -255,20 +255,23 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal int quadVb;
 		public virtual void Draw2DQuad( float x, float y, float width, float height, 
 		                               FastColour col ) {
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, col );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, col );
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, col );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, col );
+			int c = col.Pack();
+			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
+			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
+			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
+			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
 			SetBatchFormat( VertexFormat.P3fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
 		
 		public virtual void Draw2DQuad( float x, float y, float width, float height, 
 		                               FastColour topCol, FastColour bottomCol ) {
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, topCol );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, topCol );
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, bottomCol );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, bottomCol );
+			int c = topCol.Pack();
+			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
+			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
+			c = bottomCol.Pack();
+			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
+			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
 			SetBatchFormat( VertexFormat.P3fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
 		}
@@ -291,10 +294,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
+			int c = col.Pack();
+			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, c );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, c );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, c );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, c );
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state

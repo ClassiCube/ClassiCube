@@ -64,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 					float alpha = AlphaAt( dx * dx + dz * dz );
 					Utils.Clamp( ref alpha, 0, 0xFF );
 					col.A = (byte)alpha;
-					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col, ref index );
+					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col.Pack(), ref index );
 				}
 			}
 			if( particles && (rainAcc >= 0.25 || moved) )
@@ -89,7 +89,7 @@ namespace ClassicalSharp.Renderers {
 			return 178 + falloff * game.World.Env.WeatherFade;
 		}
 		
-		void MakeRainForSquare( int x, float y, float height, int z, FastColour col, ref int index ) {
+		void MakeRainForSquare( int x, float y, float height, int z, int col, ref int index ) {
 			float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
 			float v1 = y / 6f + worldV;
 			float v2 = (y + height) / 6f + worldV;

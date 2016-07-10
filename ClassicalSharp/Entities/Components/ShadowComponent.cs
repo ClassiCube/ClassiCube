@@ -70,8 +70,9 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
 		}
 		
+		const byte c = 255; // avoids 'ambiguous match' compile errors.
 		void DraqSquareShadow( VertexP3fT2fC4b[] verts, ref int index, float y, byte alpha, float x, float z ) {
-			FastColour col = FastColour.White; col.A = alpha;
+			int col = new FastColour( c, c, c, alpha ).ToArgb();
 			TextureRec rec = new TextureRec( 63/128f, 63/128f, 1/128f, 1/128f );
 			verts[index++] = new VertexP3fT2fC4b( x, y, z, rec.U1, rec.V1, col );
 			verts[index++] = new VertexP3fT2fC4b( x + 1, y, z, rec.U2, rec.V1, col );
@@ -112,7 +113,7 @@ namespace ClassicalSharp.Entities {
 			x2 = Math.Min( x2, cen.X + radius/16f ); u2 = Math.Min( u2, 1 );
 			z2 = Math.Min( z2, cen.Z + radius/16f ); v2 = Math.Min( v2, 1 );
 			
-			FastColour col = FastColour.White; col.A = data.A;
+			int col = new FastColour( c, c, c, data.A ).ToArgb();
 			verts[index++] = new VertexP3fT2fC4b( x1, data.Y, z1, u1, v1, col );
 			verts[index++] = new VertexP3fT2fC4b( x2, data.Y, z1, u2, v1, col );
 			verts[index++] = new VertexP3fT2fC4b( x2, data.Y, z2, u2, v2, col );

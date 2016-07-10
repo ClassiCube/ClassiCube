@@ -24,12 +24,12 @@ namespace ClassicalSharp.Particles {
 			Utils.CalcBillboardPoints( size, Position, ref game.View,
 			                          out p111, out p121, out p212, out p222 );
 			World map = game.World;
-			FastColour col = map.IsLit( Position ) ? map.Env.Sunlight : map.Env.Shadowlight;
+			int col = map.IsLit( Position ) ? map.Env.Sun : map.Env.Shadow;
 			
-			vertices[index++] = new VertexP3fT2fC4b( p111, rec.U1, rec.V2, col );
-			vertices[index++] = new VertexP3fT2fC4b( p121, rec.U1, rec.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( p222, rec.U2, rec.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( p212, rec.U2, rec.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( ref p111, rec.U1, rec.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( ref p121, rec.U1, rec.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( ref p222, rec.U2, rec.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( ref p212, rec.U2, rec.V2, col );
 		}
 		
 		public virtual bool Tick( Game game, double delta ) {

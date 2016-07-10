@@ -27,12 +27,10 @@ namespace ClassicalSharp {
 			this.vb = vb;
 		}
 		
-		static FastColour colNormal, colXSide, colZSide, colYBottom;
+		static int colNormal = FastColour.WhitePacked, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
 		static IsometricBlockDrawer() {
-			colNormal = FastColour.White;
-			FastColour.GetShaded( colNormal, ref colXSide, ref colZSide, ref colYBottom );
-			
+			FastColour.GetShaded( FastColour.White, out colXSide, out colZSide, out colYBottom );
 			cosX = (float)Math.Cos( 26.565f * Utils.Deg2Rad );
 			sinX = (float)Math.Sin( 26.565f * Utils.Deg2Rad );
 			cosY = (float)Math.Cos( -45f * Utils.Deg2Rad );
@@ -86,8 +84,7 @@ namespace ClassicalSharp {
 			if( lastIndex != texIndex ) Flush();
 		
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			FastColour col = colNormal;
-			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
+			v.Colour = colNormal;
 			
 			TextureRec rec;
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
@@ -110,8 +107,7 @@ namespace ClassicalSharp {
 			if( lastIndex != texIndex ) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			FastColour col = fullBright ? colNormal : colZSide;
-			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
+			v.Colour = fullBright ? colNormal : colZSide;
 
 			TextureRec rec;			
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
@@ -134,8 +130,7 @@ namespace ClassicalSharp {
 			if( lastIndex != texIndex ) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			FastColour col = fullBright ? colNormal : colXSide;
-			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
+			v.Colour = fullBright ? colNormal : colXSide;
 			
 			TextureRec rec;
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
@@ -158,8 +153,7 @@ namespace ClassicalSharp {
 			if( lastIndex != texIndex ) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			FastColour col = colNormal;
-			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;	
+			v.Colour = colNormal;
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
@@ -178,8 +172,7 @@ namespace ClassicalSharp {
 			if( lastIndex != texIndex ) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			FastColour col = colNormal;
-			v.A = col.A; v.R = col.R; v.G = col.G; v.B = col.B;
+			v.Colour = colNormal;
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);

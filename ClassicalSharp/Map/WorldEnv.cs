@@ -36,12 +36,12 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
-		public FastColour SunlightXSide, SunlightZSide, SunlightYBottom;
+		public int Sun, SunXSide, SunZSide, SunYBottom;
 		public static readonly FastColour DefaultSunlight = new FastColour( 0xFF, 0xFF, 0xFF );
 		
 		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
-		public FastColour ShadowlightXSide, ShadowlightZSide, ShadowlightYBottom;
+		public int Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
 		public static readonly FastColour DefaultShadowlight = new FastColour( 0x9B, 0x9B, 0x9B );
 		
 		/// <summary> Current weather for this particular map. </summary>
@@ -84,12 +84,15 @@ namespace ClassicalSharp.Map {
 		}
 		
 		void ResetLight() {
+			Shadow = Shadowlight.Pack();
 			Shadowlight = DefaultShadowlight;
-			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
-			                     ref ShadowlightZSide, ref ShadowlightYBottom );
+			FastColour.GetShaded( Shadowlight, out ShadowXSide,
+			                     out ShadowZSide, out ShadowYBottom );
+			
+			Sun = Sunlight.Pack();
 			Sunlight = DefaultSunlight;
-			FastColour.GetShaded( Sunlight, ref SunlightXSide,
-			                     ref SunlightZSide, ref SunlightYBottom );
+			FastColour.GetShaded( Sunlight, out SunXSide,
+			                     out SunZSide, out SunYBottom );
 		}
 		
 		/// <summary> Sets sides block to the given block, and raises
@@ -151,22 +154,22 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets sunlight colour, and raises
 		/// EnvVariableChanged event with variable 'SunlightColour'. </summary>
 		public void SetSunlight( FastColour col ) {
-			if( col == Sunlight ) return;
-			Sunlight = col;
-			Set( col, ref Sunlight, EnvVar.SunlightColour );
-			FastColour.GetShaded( Sunlight, ref SunlightXSide,
-			                     ref SunlightZSide, ref SunlightYBottom );
+			if( !Set( col, ref Sunlight, EnvVar.SunlightColour ) ) return;
+			
+			FastColour.GetShaded( Sunlight, out SunXSide,
+			                     out SunZSide, out SunYBottom );
+			Sun = Sunlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.SunlightColour );
 		}
 		
 		/// <summary> Sets current shadowlight colour, and raises
 		/// EnvVariableChanged event with variable 'ShadowlightColour'. </summary>
 		public void SetShadowlight( FastColour col ) {
-			if( col == Shadowlight ) return;
-			Shadowlight = col;
-			Set( col, ref Shadowlight, EnvVar.ShadowlightColour );
-			FastColour.GetShaded( Shadowlight, ref ShadowlightXSide,
-			                     ref ShadowlightZSide, ref ShadowlightYBottom );
+			if( !Set( col, ref Shadowlight, EnvVar.ShadowlightColour ) ) return;
+			
+			FastColour.GetShaded( Shadowlight, out ShadowXSide,
+			                     out ShadowZSide, out ShadowYBottom );			
+			Shadow = Shadowlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
 		}
 		
@@ -178,10 +181,11 @@ namespace ClassicalSharp.Map {
 			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.Weather );
 		}
 		
-		void Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
-			if( value.Equals( target ) ) return;
+		bool Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
+			if( value.Equals( target ) ) return false;
 			target = value;
 			game.WorldEvents.RaiseEnvVariableChanged( var );
+			return true;
 		}
 	}
 }

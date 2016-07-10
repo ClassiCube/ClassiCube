@@ -15,6 +15,7 @@ namespace ClassicalSharp.Renderers {
 			api = game.Graphics;
 			vb = api.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;
+			col = new FastColour( 0, 0, 0, 102 ).Pack();
 		}
 
 		public void Ready( Game game ) { }
@@ -23,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMapLoaded( Game game ) { }
 		public void Dispose() { api.DeleteDynamicVb( vb ); }
 		
-		FastColour col = new FastColour( 0, 0, 0, 102 );
+		int col;
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];

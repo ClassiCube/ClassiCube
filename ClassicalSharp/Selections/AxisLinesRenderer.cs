@@ -45,17 +45,19 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		void VerQuad( ref int index, float x1, float y1, float z1, float x2, float y2, float z2, FastColour col ) {
-			vertices[index++] = new VertexP3fC4b( x1, y1, z1, col );
-			vertices[index++] = new VertexP3fC4b( x1, y2, z1, col );
-			vertices[index++] = new VertexP3fC4b( x2, y2, z2, col );
-			vertices[index++] = new VertexP3fC4b( x2, y1, z2, col );
+			int c = col.Pack();
+			vertices[index++] = new VertexP3fC4b( x1, y1, z1, c );
+			vertices[index++] = new VertexP3fC4b( x1, y2, z1, c );
+			vertices[index++] = new VertexP3fC4b( x2, y2, z2, c );
+			vertices[index++] = new VertexP3fC4b( x2, y1, z2, c );
 		}
 		
 		void HorQuad( ref int index, float x1, float z1, float x2, float z2, float y, FastColour col ) {
-			vertices[index++] = new VertexP3fC4b( x1, y, z1, col );
-			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
-			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
-			vertices[index++] = new VertexP3fC4b( x2, y, z1, col );
+			int c = col.Pack();
+			vertices[index++] = new VertexP3fC4b( x1, y, z1, c );
+			vertices[index++] = new VertexP3fC4b( x1, y, z2, c );
+			vertices[index++] = new VertexP3fC4b( x2, y, z2, c );
+			vertices[index++] = new VertexP3fC4b( x2, y, z1, c );
 		}
 	}
 }

@@ -166,7 +166,7 @@ namespace ClassicalSharp.Renderers {
 			cloudVertices = Utils.CountVertices( x2 - x1, z2 - z1, axisSize );
 			
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
-			DrawCloudsY( x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol, vertices );
+			DrawCloudsY( x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol.Pack(), vertices );
 			cloudsVb = graphics.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
 		}
 		
@@ -179,11 +179,11 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fC4b[] vertices = new VertexP3fC4b[skyVertices];
 			int height = Math.Max( map.Height + 2 + 6, map.Env.CloudHeight + 6);
 			
-			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.Env.SkyCol, vertices );
+			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.Env.SkyCol.Pack(), vertices );
 			skyVb = graphics.CreateVb( vertices, VertexFormat.P3fC4b, skyVertices );
 		}
 		
-		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexP3fC4b[] vertices ) {
+		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fC4b[] vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			int i = 0;
 			
@@ -203,7 +203,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, FastColour col, VertexP3fT2fC4b[] vertices ) {
+		void DrawCloudsY( int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fT2fC4b[] vertices ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
 			float offset = Utils.CeilDiv( -x1, 2048 );

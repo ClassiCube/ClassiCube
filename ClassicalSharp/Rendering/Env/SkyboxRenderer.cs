@@ -90,7 +90,7 @@ namespace ClassicalSharp.Renderers {
 			IntPtr start = (IntPtr)vertices;
 			const float pos = 0.5f;
 			TextureRec rec;
-			FastColour col = game.World.Env.CloudsCol;
+			int col = game.World.Env.CloudsCol.Pack();
 			
 			// Render the front quad
 			rec = new TextureRec( 1/4f, 1/2f, 1/4f, 1/2f );

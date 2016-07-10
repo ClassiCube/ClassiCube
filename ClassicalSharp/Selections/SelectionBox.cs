@@ -23,7 +23,7 @@ namespace ClassicalSharp.Selections {
 			float offset = MinDist < 32 * 32 ? 1/32f : 1/16f;
 			Vector3 p1 = (Vector3)Min - new Vector3( offset, offset, offset );
 			Vector3 p2 = (Vector3)Max + new Vector3( offset, offset, offset );		
-			FastColour col = Colour;
+			int col = Colour.Pack();
 			
 			YQuad( vertices, ref index, p1.X, p1.Z, p2.X, p2.Z, p1.Y, col ); // bottom
 			YQuad( vertices, ref index, p1.X, p1.Z, p2.X, p2.Z, p2.Y, col ); // top
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Selections {
 			ZQuad( vertices, ref index, p1.Z, p1.Y, p2.Z, p2.Y, p1.X, col );
 			ZQuad( vertices, ref index, p1.Z, p1.Y, p2.Z, p2.Y, p2.X, col );
 			
-			col = new FastColour( (byte)~col.R, (byte)~col.G, (byte)~col.B );
+			col = new FastColour( (byte)~Colour.R, (byte)~Colour.G, (byte)~Colour.B ).Pack();
 			// bottom face
 			Line( lineVertices, ref lineIndex, p1.X, p1.Y, p1.Z, p2.X, p1.Y, p1.Z, col );
 			Line( lineVertices, ref lineIndex, p2.X, p1.Y, p1.Z, p2.X, p1.Y, p2.Z, col );
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		static void ZQuad( VertexP3fC4b[] vertices, ref int index, float z1, float y1, 
-		                  float z2, float y2, float x, FastColour col ) {
+		                  float z2, float y2, float x, int col ) {
 			vertices[index++] = new VertexP3fC4b( x, y1, z1, col );
 			vertices[index++] = new VertexP3fC4b( x, y2, z1, col );
 			vertices[index++] = new VertexP3fC4b( x, y2, z2, col );
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		static void XQuad( VertexP3fC4b[] vertices, ref int index, float x1, float y1, 
-		                  float x2, float y2, float z, FastColour col ) {
+		                  float x2, float y2, float z, int col ) {
 			vertices[index++] = new VertexP3fC4b( x1, y1, z, col );
 			vertices[index++] = new VertexP3fC4b( x1, y2, z, col );
 			vertices[index++] = new VertexP3fC4b( x2, y2, z, col );
@@ -67,7 +67,7 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		static void YQuad( VertexP3fC4b[] vertices, ref int index, float x1, float z1, 
-		                  float x2, float z2, float y, FastColour col ) {
+		                  float x2, float z2, float y, int col ) {
 			vertices[index++] = new VertexP3fC4b( x1, y, z1, col );
 			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
 			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Selections {
 		}
 		
 		static void Line( VertexP3fC4b[] vertices, ref int index, float x1, float y1, float z1, 
-		          float x2, float y2, float z2, FastColour col ) {
+		          float x2, float y2, float z2, int col ) {
 			vertices[index++] = new VertexP3fC4b( x1, y1, z1, col );
 			vertices[index++] = new VertexP3fC4b( x2, y2, z2, col );
 		}
