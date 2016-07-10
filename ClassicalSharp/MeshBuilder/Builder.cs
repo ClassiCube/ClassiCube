@@ -32,15 +32,22 @@ namespace ClassicalSharp {
 		
 		internal int width, length, height, clipLevel;
 		protected int maxX, maxY, maxZ;
+		protected int cIndex;
 		protected byte* chunk, counts;
+		protected int* bitFlags;
+		protected bool useBitFlags;
 		
 		bool BuildChunk( int x1, int y1, int z1 ) {
 			PreStretchTiles( x1, y1, z1 );
 			byte* chunkPtr = stackalloc byte[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
+			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
+				
 			MemUtils.memset( (IntPtr)chunkPtr, 0, 0, extChunkSize3 );
 			if( ReadChunkData( x1, y1, z1 ) ) return false;
 			MemUtils.memset( (IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides );
+			if( useBitFlags )
+				MemUtils.memset( (IntPtr)bitsPtr, 0xFF, 0, extChunkSize3 * 4 );
 			
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );
@@ -56,7 +63,9 @@ namespace ClassicalSharp {
 						curBlock = chunk[chunkIndex];
 						if( !info.IsAir[curBlock] ) {
 							int index = ((yy << 8) | (zz << 4) | xx) * Side.Sides;
-							RenderTile( index, x, y, z );
+							X = x; Y = y; Z = z;
+							cIndex = chunkIndex;
+							RenderTile( index );
 						}
 						chunkIndex++;
 					}

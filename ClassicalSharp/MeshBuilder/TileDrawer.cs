@@ -77,14 +77,11 @@ namespace ClassicalSharp {
 			}
 		}		
 
-		public void RenderTile( int index, int x, int y, int z ) {
-			X = x; Y = y; Z = z;
-			
+		void RenderTile( int index ) {
 			if( info.IsSprite[curBlock] ) {
 				fullBright = info.FullBright[curBlock];
 				int count = counts[index + Side.Top];
-				if( count != 0 )
-					DrawSprite( count );
+				if( count != 0 ) DrawSprite( count );
 				return;
 			}
 			
@@ -99,8 +96,8 @@ namespace ClassicalSharp {
 			lightFlags = info.LightOffset[curBlock];
 			
 			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
-			x1 = x + min.X; y1 = y + min.Y; z1 = z + min.Z;
-			x2 = x + max.X; y2 = y + max.Y; z2 = z + max.Z;
+			x1 = X + min.X; y1 = Y + min.Y; z1 = Z + min.Z;
+			x2 = X + max.X; y2 = Y + max.Y; z2 = Z + max.Z;
 
 			if( curBlock >= Block.Water && curBlock <= Block.StillLava ) {
 				x1 -= 0.1f/16; x2 -= 0.1f/16f; 
