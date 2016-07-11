@@ -16,8 +16,8 @@ namespace Launcher.Updater {
 		public static DateTime PatchTime;
 		
 		public static void FetchUpdate( string dir ) {
+			WebRequest.DefaultWebProxy = null;
 			using( WebClient client = new WebClient() ) {
-				WebRequest.DefaultWebProxy = null;
 				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
 				MakeUpdatesFolder( zipData );
 			}

@@ -43,6 +43,7 @@ namespace Launcher.Web {
 		protected CookieContainer cookies = new CookieContainer();
 		
 		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
+			WebRequest.DefaultWebProxy = null;
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
 			request.UserAgent = Program.AppName;
 			request.ReadWriteTimeout = 90 * 1000;
@@ -51,8 +52,6 @@ namespace Launcher.Web {
 			request.KeepAlive = true;
 			request.CookieContainer = cookies;
 			
-			// On my machine, these reduce minecraft server list download time from 40 seconds to 4.
-			request.Proxy = null;
 			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			if( data != null ) {
 				request.Method = "POST";
