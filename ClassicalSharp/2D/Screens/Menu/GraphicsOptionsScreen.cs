@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui {
 				     g => g.ViewDistance.ToString(),
 				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
 				
-				MakeBool( -1, 50, "Smooth lighting", OptionsKey.SmoothLighting,
+				MakeBool( -1, 50, "Advanced lighting", OptionsKey.SmoothLighting,
 				     OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting ),
 				
 				MakeOpt( 1, -50, "Names", OnWidgetClick,

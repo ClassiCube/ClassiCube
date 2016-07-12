@@ -47,10 +47,10 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z1 );
 			
 			if( aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0 ) {
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col1_1 );
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col1_0 );
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col0_0 );
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y1, z2 + (count - 1), u2, v2, col0_1 );
+				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col1_1 );
 			} else {
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z2 + (count - 1), u2, v1, col1_1 );
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col1_0 );
@@ -84,10 +84,10 @@ namespace ClassicalSharp {
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
 			} else {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col1_1 );
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
 			}
 		}
 
@@ -116,10 +116,10 @@ namespace ClassicalSharp {
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
 			} else {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_0 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
 			}
 		}
 		
@@ -143,10 +143,10 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y0 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y1 );
 			
 			if( aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0 ) {
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col1_1 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col0_1 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col0_0 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col1_0 );
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col1_1 );
 			} else {
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v1, col1_1 );
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v1, col0_1 );
@@ -180,10 +180,10 @@ namespace ClassicalSharp {
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v1, col0_0 );
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v1, col1_0 );
 			} else {
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col1_1 );
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col0_1 );
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v1, col0_0 );
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v1, col1_0 );
+				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col1_1 );
 			}
 		}
 
@@ -207,15 +207,15 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : Make( aX1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : Make( aX0_Z1 );
 			
 			if( aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0 ) {
+				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_0 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col0_0 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v2, col0_1 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v2, col1_1 );
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_0 );
 			} else {
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_0 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col0_0 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x1, y2, z2, u1, v2, col0_1 );
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z2, u2, v2, col1_1 );
+				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_0 );
 			}
 		}
 		
@@ -225,12 +225,20 @@ namespace ClassicalSharp {
 		int MakeYSide( int count ) { return Lerp( env.ShadowYBottom, env.SunYBottom, count / 4f ); }
 		
 		static int Lerp( int a, int b, float t ) {
+			if (eq(t, 0f)) return FastColour.Black.Pack();
+			if (eq(t, 0.25f)) return FastColour.Red.Pack();
+			if (eq(t, 0.5f)) return FastColour.Green.Pack();
+			if (eq(t,  0.75f)) return FastColour.Blue.Pack();
+			return FastColour.Yellow.Pack();
+			
 			int c = FastColour.BlackPacked;
 			c |= (byte)Utils.Lerp( (a & 0xFF0000) >> 16, (b & 0xFF0000) >> 16, t ) << 16;
 			c |= (byte)Utils.Lerp( (a & 0x00FF00) >> 8, (b & 0x00FF00) >> 8, t ) << 8;
 			c |= (byte)Utils.Lerp( a & 0x0000FF, b & 0x0000FF, t );
 			return c;
 		}
+		
+		static bool eq(float a, float b) { return Math.Abs(a - b) < 0.0001f; }
 		
 		#region Light computation
 		
