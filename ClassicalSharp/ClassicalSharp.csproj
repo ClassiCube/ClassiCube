@@ -45,7 +45,6 @@
     <DefineConstants>TRACE;</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
-    <StartArguments>UnknownShadow200 681d38fa1eb2b9ef4796bc11c4c63f17 172.250.199.120 25565</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_D3D' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -190,7 +189,7 @@
     <Compile Include="MeshBuilder\Builder.cs" />
     <Compile Include="MeshBuilder\FloodFill.cs" />
     <Compile Include="MeshBuilder\NormalBuilder.cs" />
-    <Compile Include="MeshBuilder\SmoothLightingBuilder.cs" />
+    <Compile Include="MeshBuilder\AdvLightingBuilder.cs" />
     <Compile Include="MeshBuilder\TileDrawer.cs" />
     <Compile Include="Network\CPESupport.cs" />
     <Compile Include="Network\NetworkProcessor.CPECustom.cs" />

@@ -21,6 +21,7 @@ namespace ClassicalSharp {
 			for( int y = 0; y < Size; y++ )
 				for( int x = 0; x < Size; x++ )
 			{
+				// Calculate the colour at this coordinate in the heatmap
 				float lSoupHeat = 0;
 				int xOffset = x + (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
 				int yOffset = y + (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
@@ -42,42 +43,8 @@ namespace ClassicalSharp {
 				
 				if( rnd.NextFloat() <= 0.005f )
 					flameHeat[i] = 1.5f;
-				i++;
-			}
-		}
-		
-		void Step() {
-			int i = 0;
-			for( int y = 0; y < Size; y++ )
-				for( int x = 0; x < Size; x++ )
-			{
-				float lSoupHeat = 0;
-				int xOffset = x + (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
-				int yOffset = y + (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
-				for( int j = 0; j < 9; j++ ) {
-					int xx = xOffset + (j % 3 - 1);
-					int yy = yOffset + (j / 3 - 1);
-					lSoupHeat += soupHeat[(yy & 0xF) << 4 | (xx & 0xF)];
-				}
 				
-				float lPotHeat = potHeat[i]                           // x, y
-					+ potHeat[y << 4 | ((x + 1) & 0xF)            ] + // x + 1, y
-					+ potHeat[((y + 1) & 0xF) << 4 | x            ] + // x, y + 1
-					+ potHeat[((y + 1) & 0xF) << 4 | ((x + 1) & 0xF)];// x + 1, y + 1
-				
-				soupHeat[i] = lSoupHeat / 10 + lPotHeat / 4 * 0.8f;
-				potHeat[i] += flameHeat[i] * 0.01f;
-				if( potHeat[i] < 0 ) potHeat[i] = 0;
-				flameHeat[i] -= 0.06f;
-				
-				if( rnd.NextFloat() <= 0.005f )
-					flameHeat[i] = 1.5f;
-				i++;
-			}
-		}
-		
-		void Output( int* ptr ) {
-			for( int i = 0; i < soupHeat.Length; i++) {
+				// Output the pixel
 				float col = 2 * soupHeat[i];
 				col = col < 0 ? 0 : col;
 				col = col > 1 ? 1 : col;
@@ -86,7 +53,8 @@ namespace ClassicalSharp {
 				float g = col * col * 255;
 				float b = col * col * col * col * 128;
 				*ptr = 255 << 24 | (byte)r << 16 | (byte)g << 8 | (byte)b;
-				ptr++;
+				
+				ptr++; i++;
 			}
 		}
 	}

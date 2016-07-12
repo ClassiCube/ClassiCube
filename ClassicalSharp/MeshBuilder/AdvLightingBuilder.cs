@@ -6,7 +6,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	public unsafe sealed class SmoothLightingMeshBuilder : ChunkMeshBuilder {
+	public unsafe sealed class AdvLightingMeshBuilder : ChunkMeshBuilder {
 		
 		protected override int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
 			if( OccludedLiquid( chunkIndex ) ) return 0;
