@@ -8,24 +8,81 @@ namespace ClassicalSharp {
 
 	public unsafe sealed class AdvLightingMeshBuilder : ChunkMeshBuilder {
 		
+		int initBitFlags;
 		protected override int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
 			if( OccludedLiquid( chunkIndex ) ) return 0;
-			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
-			return 1;
+			initBitFlags = ComputeLightFlags( x, y, z, chunkIndex );
+			bitFlags[chunkIndex] = initBitFlags;
+			
+			int count = 1;
+			x++;
+			chunkIndex++;
+			countIndex += Side.Sides;
+			int max = chunkSize - xx;
+			
+			while( count < max && x < width && CanStretch( block, chunkIndex, x, y, z, Side.Top )
+			      && !OccludedLiquid( chunkIndex ) ) {
+				counts[countIndex] = 0;
+				count++;
+				x++;
+				chunkIndex++;
+				countIndex += Side.Sides;
+			}
+			return count;
 		}
 		
 		protected override int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
-			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
-			return 1;
+			initBitFlags = ComputeLightFlags( x, y, z, chunkIndex );
+			bitFlags[chunkIndex] = initBitFlags;
+			
+			int count = 1;
+			x++;
+			chunkIndex++;
+			countIndex += Side.Sides;
+			int max = chunkSize - xx;
+			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			
+			while( count < max && x < width && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
+				counts[countIndex] = 0;
+				count++;
+				x++;
+				chunkIndex++;
+				countIndex += Side.Sides;
+			}
+			return count;
 		}
 		
 		protected override int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
-			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
-			return 1;
+			initBitFlags = ComputeLightFlags( x, y, z, chunkIndex );
+			bitFlags[chunkIndex] = initBitFlags;
+			
+			int count = 1;
+			z++;
+			chunkIndex += extChunkSize;
+			countIndex += chunkSize * Side.Sides;
+			int max = chunkSize - zz;
+			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			
+			while( count < max && z < length && stretchTile && CanStretch( block, chunkIndex, x, y, z, face ) ) {
+				counts[countIndex] = 0;
+				count++;
+				z++;
+				chunkIndex += extChunkSize;
+				countIndex += chunkSize * Side.Sides;
+			}
+			return count;
 		}
+		
+		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+			byte rawBlock = chunk[chunkIndex];
+			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
+			return rawBlock == initialTile 
+				&& !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
+				&& (initBitFlags == bitFlags[chunkIndex]
+				    // Check that this face is either fully bright or fully in shadow
+				    && (initBitFlags == 0 || (initBitFlags & masks[face]) == masks[face]));
+		}
+		
 		
 		protected override void DrawLeftFace( int count ) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Left];
@@ -225,20 +282,12 @@ namespace ClassicalSharp {
 		int MakeYSide( int count ) { return Lerp( env.ShadowYBottom, env.SunYBottom, count / 4f ); }
 		
 		static int Lerp( int a, int b, float t ) {
-			if (eq(t, 0f)) return FastColour.Black.Pack();
-			if (eq(t, 0.25f)) return FastColour.Red.Pack();
-			if (eq(t, 0.5f)) return FastColour.Green.Pack();
-			if (eq(t,  0.75f)) return FastColour.Blue.Pack();
-			return FastColour.Yellow.Pack();
-			
 			int c = FastColour.BlackPacked;
 			c |= (byte)Utils.Lerp( (a & 0xFF0000) >> 16, (b & 0xFF0000) >> 16, t ) << 16;
 			c |= (byte)Utils.Lerp( (a & 0x00FF00) >> 8, (b & 0x00FF00) >> 8, t ) << 8;
 			c |= (byte)Utils.Lerp( a & 0x0000FF, b & 0x0000FF, t );
 			return c;
 		}
-		
-		static bool eq(float a, float b) { return Math.Abs(a - b) < 0.0001f; }
 		
 		#region Light computation
 		
@@ -291,6 +340,33 @@ namespace ClassicalSharp {
 			if( info.FullBright[chunk[cIndex - 324]] ) flags |= 1;
 			return flags;
 		}
+		
+		static int[] masks = {
+			// Left face
+			(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
+			(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |
+			(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1),
+			// Right face
+			(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1) |
+			(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1) |
+			(1 << xP1_yCC_zM1) | (1 << xP1_yCC_zCC) | (1 << xP1_yCC_zP1),
+			// Front face
+			(1 << xM1_yM1_zM1) | (1 << xCC_yM1_zM1) | (1 << xP1_yM1_zM1) |
+			(1 << xM1_yCC_zM1) | (1 << xCC_yCC_zM1) | (1 << xP1_yCC_zM1) |
+			(1 << xM1_yP1_zM1) | (1 << xCC_yP1_zM1) | (1 << xP1_yP1_zM1),
+			// Back face
+			(1 << xM1_yM1_zP1) | (1 << xCC_yM1_zP1) | (1 << xP1_yM1_zP1) |
+			(1 << xM1_yCC_zP1) | (1 << xCC_yCC_zP1) | (1 << xP1_yCC_zP1) |
+			(1 << xM1_yP1_zP1) | (1 << xCC_yP1_zP1) | (1 << xP1_yP1_zP1),
+			// Bottom face
+			(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
+			(1 << xCC_yM1_zM1) | (1 << xCC_yM1_zCC) | (1 << xCC_yM1_zP1) |
+			(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1),
+			// Top face
+			(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1) |
+			(1 << xCC_yP1_zM1) | (1 << xCC_yP1_zCC) | (1 << xCC_yP1_zP1) |
+			(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1),
+		};
 		
 		#endregion
 	}

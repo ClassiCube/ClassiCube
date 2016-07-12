@@ -9,14 +9,14 @@ namespace ClassicalSharp {
 	public unsafe sealed class NormalMeshBuilder : ChunkMeshBuilder {
 		
 		protected override int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
-			if( OccludedLiquid( chunkIndex ) ) return 0;			
+			if( OccludedLiquid( chunkIndex ) ) return 0;
 			int count = 1;
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
 			int max = chunkSize - xx;
 			
-			while( count < max && x < width && CanStretch( block, chunkIndex, x, y, z, Side.Top ) 
+			while( count < max && x < width && CanStretch( block, chunkIndex, x, y, z, Side.Top )
 			      && !OccludedLiquid( chunkIndex ) ) {
 				counts[countIndex] = 0;
 				count++;
@@ -62,6 +62,14 @@ namespace ClassicalSharp {
 			}
 			return count;
 		}
+		
+		bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
+			byte rawBlock = chunk[chunkIndex];
+			return rawBlock == initialTile 
+				&& !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
+				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
+		}
+		
 		
 		protected override void DrawLeftFace( int count ) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Left];

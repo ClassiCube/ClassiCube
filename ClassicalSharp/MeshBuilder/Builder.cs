@@ -266,13 +266,8 @@ namespace ClassicalSharp {
 		
 		protected abstract int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face );
 		
-		int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
-		protected bool CanStretch( byte initialTile, int chunkIndex, int x, int y, int z, int face ) {
-			byte rawBlock = chunk[chunkIndex];
-			return rawBlock == initialTile && !info.IsFaceHidden( rawBlock, chunk[chunkIndex + offsets[face]], face )
-				&& (fullBright || IsLit( X, Y, Z, face, initialTile ) == IsLit( x, y, z, face, rawBlock ) );
-		}
-		
+		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
+	
 		protected bool OccludedLiquid( int chunkIndex ) {
 			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] && 
 				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] && 
