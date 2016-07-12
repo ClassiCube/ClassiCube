@@ -11,19 +11,19 @@ namespace ClassicalSharp {
 		protected override int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
 			if( OccludedLiquid( chunkIndex ) ) return 0;
 			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
+			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
 			return 1;
 		}
 		
 		protected override int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
 			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
+			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
 			return 1;
 		}
 		
 		protected override int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
 			lightFlags = info.LightOffset[block];
-			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
+			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z, chunkIndex );
 			return 1;
 		}
 		
@@ -234,19 +234,19 @@ namespace ClassicalSharp {
 		
 		#region Light computation
 		
-		int ComputeLightFlags( int x, int y, int z ) {
+		int ComputeLightFlags( int x, int y, int z, int cIndex ) {
 			if( fullBright ) return (1 << xP1_yP1_zP1) - 1; // all faces fully bright
 
 			return
-				Lit( x - 1, y, z - 1 ) << xM1_yM1_zM1 |
-				Lit( x - 1, y, z )     << xM1_yM1_zCC |
-				Lit( x - 1, y, z + 1 ) << xM1_yM1_zP1 |
-				Lit( x, y, z - 1 )     << xCC_yM1_zM1 |
-				Lit( x, y, z )         << xCC_yM1_zCC |
-				Lit( x, y, z + 1 )     << xCC_yM1_zP1 |
-				Lit( x + 1, y, z - 1 ) << xP1_yM1_zM1 |
-				Lit( x + 1, y, z )     << xP1_yM1_zCC |
-				Lit( x + 1, y, z + 1 ) << xP1_yM1_zP1 ;
+				Lit( x - 1, y, z - 1, cIndex - 1 - 18 ) << xM1_yM1_zM1 |
+				Lit( x - 1, y, z,     cIndex - 1 )      << xM1_yM1_zCC |
+				Lit( x - 1, y, z + 1, cIndex - 1 + 18 ) << xM1_yM1_zP1 |
+				Lit( x, y, z - 1,     cIndex + 0 - 18 ) << xCC_yM1_zM1 |
+				Lit( x, y, z,         cIndex + 0 )      << xCC_yM1_zCC |
+				Lit( x, y, z + 1 ,    cIndex + 0 + 18 ) << xCC_yM1_zP1 |
+				Lit( x + 1, y, z - 1, cIndex + 1 - 18 ) << xP1_yM1_zM1 |
+				Lit( x + 1, y, z,     cIndex + 1 )      << xP1_yM1_zCC |
+				Lit( x + 1, y, z + 1, cIndex + 1 + 18 ) << xP1_yM1_zP1 ;
 		}
 		
 		const int xM1_yM1_zM1 = 0,  xM1_yCC_zM1 = 1,  xM1_yP1_zM1 = 2;
@@ -261,25 +261,26 @@ namespace ClassicalSharp {
 		const int xCC_yM1_zP1 = 21, xCC_yCC_zP1 = 22, xCC_yP1_zP1 = 23;
 		const int xP1_yM1_zP1 = 24, xP1_yCC_zP1 = 25, xP1_yP1_zP1 = 26;
 		
-		int Lit( int x, int y, int z ) {
+		int Lit( int x, int y, int z, int cIndex ) {
 			if( x < 0 || y < 0 || z < 0
 			   || x >= width || y >= height || z >= length ) return 7;
 			int flags = 0;
-			byte block = map.GetBlock( x, y, z );
+			byte block = chunk[cIndex];
+			int lightHeight = map.heightmap[(z * width) + x];
 
 			// Use fact Light(Y.Bottom) == Light((Y - 1).Top)
 			int offset = (lightFlags >> Side.Bottom) & 1;
-			flags |= ((y - offset) > map.heightmap[(z * width) + x] ? 1 : 0);
+			flags |= ((y - offset) > lightHeight ? 1 : 0);
 			// Light is same for all the horizontal faces
-			flags |= (y > map.heightmap[(z * width) + x] ? 2 : 0);
+			flags |= (y > lightHeight ? 2 : 0);
 			// Use fact Light((Y + 1).Bottom) == Light(Y.Top)
 			offset = (lightFlags >> Side.Top) & 1;
-			flags |= ((y - offset) >= map.heightmap[(z * width) + x] ? 4 : 0);			
+			flags |= ((y - offset) >= lightHeight ? 4 : 0);
 			
 			// Dynamic lighting
-			if( info.FullBright[block] ) flags |= 7;
-			if( y < maxY && info.FullBright[map.GetBlock( x, y + 1, z )] ) flags |= 4;
-			if( y > 0 && info.FullBright[map.GetBlock( x, y - 1, z )] ) flags |= 1;
+			if( info.FullBright[block] )               flags |= 7;
+			if( info.FullBright[chunk[cIndex + 324]] ) flags |= 4;
+			if( info.FullBright[chunk[cIndex - 324]] ) flags |= 1;
 			return flags;
 		}
 		
