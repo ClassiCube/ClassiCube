@@ -46,8 +46,6 @@ namespace ClassicalSharp {
 			MemUtils.memset( (IntPtr)chunkPtr, 0, 0, extChunkSize3 );
 			if( ReadChunkData( x1, y1, z1 ) ) return false;
 			MemUtils.memset( (IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides );
-			if( useBitFlags )
-				MemUtils.memset( (IntPtr)bitsPtr, 0xFF, 0, extChunkSize3 * 4 );
 			
 			Stretch( x1, y1, z1 );
 			PostStretchTiles( x1, y1, z1 );

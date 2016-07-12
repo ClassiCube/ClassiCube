@@ -149,7 +149,7 @@ namespace ClassicalSharp {
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked : ((Y - 1 - offset) >= map.heightmap[(Z * width) + X] ? env.SunYBottom : env.ShadowYBottom);
+			int col = fullBright ? FastColour.WhitePacked : ((Y - offset) > map.heightmap[(Z * width) + X] ? env.SunYBottom : env.ShadowYBottom);
 			
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z2, u2, v2, col );
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b( x1, y1, z2, u1, v2, col );
