@@ -10,17 +10,19 @@ namespace ClassicalSharp {
 		
 		protected override int StretchXLiquid( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block ) {
 			if( OccludedLiquid( chunkIndex ) ) return 0;
+			lightFlags = info.LightOffset[block];
 			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
 			return 1;
 		}
 		
 		protected override int StretchX( int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
+			lightFlags = info.LightOffset[block];
 			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
-			// TODO: why failure calculating here?
 			return 1;
 		}
 		
 		protected override int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face ) {
+			lightFlags = info.LightOffset[block];
 			bitFlags[chunkIndex] = ComputeLightFlags( x, y, z );
 			return 1;
 		}
@@ -36,7 +38,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aY0_Z0 = ((F >> xM1_yM1_zM1) & 1) + ((F >> xM1_yCC_zM1) & 1) + ((F >> xM1_yM1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
 			int aY0_Z1 = ((F >> xM1_yM1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xM1_yM1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
 			int aY1_Z0 = ((F >> xM1_yP1_zM1) & 1) + ((F >> xM1_yCC_zM1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
@@ -68,7 +70,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aY0_Z0 = ((F >> xP1_yM1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xP1_yM1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
 			int aY0_Z1 = ((F >> xP1_yM1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xP1_yM1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
 			int aY1_Z0 = ((F >> xP1_yP1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
@@ -100,7 +102,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aX0_Y0 = ((F >> xM1_yM1_zM1) & 1) + ((F >> xM1_yCC_zM1) & 1) + ((F >> xCC_yM1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
 			int aX0_Y1 = ((F >> xM1_yP1_zM1) & 1) + ((F >> xM1_yCC_zM1) & 1) + ((F >> xCC_yP1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
 			int aX1_Y0 = ((F >> xP1_yM1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xCC_yM1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
@@ -132,7 +134,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aX0_Y0 = ((F >> xM1_yM1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
 			int aX1_Y0 = ((F >> xP1_yM1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
 			int aX0_Y1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
@@ -164,7 +166,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aX0_Z0 = ((F >> xM1_yM1_zM1) & 1) + ((F >> xM1_yM1_zCC) & 1) + ((F >> xCC_yM1_zM1) & 1) + ((F >> xCC_yM1_zCC) & 1);
 			int aX1_Z0 = ((F >> xP1_yM1_zM1) & 1) + ((F >> xP1_yM1_zCC) & 1) + ((F >> xCC_yM1_zM1) & 1) + ((F >> xCC_yM1_zCC) & 1);
 			int aX0_Z1 = ((F >> xM1_yM1_zP1) & 1) + ((F >> xM1_yM1_zCC) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yM1_zCC) & 1);
@@ -196,7 +198,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
-			int F = ComputeLightFlags( X, Y, Z ); //bitFlags[cIndex];
+			int F = bitFlags[cIndex];
 			int aX0_Z0 = ((F >> xM1_yP1_zM1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xCC_yP1_zM1) & 1) + ((F >> xCC_yP1_zCC) & 1);
 			int aX1_Z0 = ((F >> xP1_yP1_zM1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xCC_yP1_zM1) & 1) + ((F >> xCC_yP1_zCC) & 1);
 			int aX0_Z1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yP1_zCC) & 1);
@@ -234,7 +236,7 @@ namespace ClassicalSharp {
 		
 		int ComputeLightFlags( int x, int y, int z ) {
 			if( fullBright ) return (1 << xP1_yP1_zP1) - 1; // all faces fully bright
-			
+
 			return
 				Lit( x - 1, y, z - 1 ) << xM1_yM1_zM1 |
 				Lit( x - 1, y, z )     << xM1_yM1_zCC |
@@ -261,7 +263,7 @@ namespace ClassicalSharp {
 		
 		int Lit( int x, int y, int z ) {
 			if( x < 0 || y < 0 || z < 0
-			   || x >= width || y >= height || z >= length ) return 7;			
+			   || x >= width || y >= height || z >= length ) return 7;
 			int flags = 0;
 			byte block = map.GetBlock( x, y, z );
 
@@ -269,7 +271,7 @@ namespace ClassicalSharp {
 			int offset = (lightFlags >> Side.Bottom) & 1;
 			flags |= ((y - offset) > map.heightmap[(z * width) + x] ? 1 : 0);
 			// Light is same for all the horizontal faces
-			flags |= (y > map.heightmap[(z * width) + x] ? 2 : 0);			
+			flags |= (y > map.heightmap[(z * width) + x] ? 2 : 0);
 			// Use fact Light((Y + 1).Bottom) == Light(Y.Top)
 			offset = (lightFlags >> Side.Top) & 1;
 			flags |= ((y - offset) >= map.heightmap[(z * width) + x] ? 4 : 0);
