@@ -41,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 			if( builder != null ) builder.Dispose();
 			
 			if( game.SmoothLighting )
-				builder = new SmoothLightingMeshBuilder();
+				builder = new AdvLightingMeshBuilder();
 			else
 				builder = new NormalMeshBuilder();
 			

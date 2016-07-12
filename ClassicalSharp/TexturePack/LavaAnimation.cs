@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		float[] soupHeat = new float[Size * Size];
 		JavaRandom rnd = null;
 		
-		public unsafe void Tick( int* output ) {
+		public unsafe void Tick( int* ptr ) {
 			if( rnd == null )
 				rnd = new JavaRandom( new Random().Next() );
 			
