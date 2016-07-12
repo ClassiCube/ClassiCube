@@ -241,6 +241,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// and is repeatedly invoked until the context can be retrieved. </summary>
 		public Action<double> LostContextFunction;
 		
+		/// <summary> Event invoked when a lost context is retrieves again. </summary>
+		public event EventHandler ContextRetrieved;
+		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
 			texVb = CreateDynamicVb( VertexFormat.P3fT2fC4b, 4 );
@@ -351,6 +354,11 @@ namespace ClassicalSharp.GraphicsAPI {
 				element += 4;
 			}
 			return CreateIb( ptr, maxIndices );
+		}
+		
+		protected void RaiseContextRetrieved() {
+			if( ContextRetrieved != null ) 
+				ContextRetrieved( null, null );
 		}
 	}
 

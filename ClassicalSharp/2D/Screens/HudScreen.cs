@@ -29,7 +29,7 @@ namespace ClassicalSharp.Gui {
 				chat.RenderBackground();
 			
 			api.Texturing = true;
-			if( !showMinimal ) hotbar.Render( delta );			
+			if( !showMinimal ) hotbar.Render( delta );
 			chat.Render( delta );
 			
 			if( playerList != null && game.ActiveScreen == this ) {
@@ -41,9 +41,9 @@ namespace ClassicalSharp.Gui {
 				}
 			}
 			
-			api.Texturing = false;
 			if( playerList == null && !showMinimal )
 				DrawCrosshairs();
+			api.Texturing = false;
 		}
 		
 		const int chExtent = 16, chWeight = 2;
@@ -51,15 +51,14 @@ namespace ClassicalSharp.Gui {
 		void DrawCrosshairs() {
 			int cenX = game.Width / 2, cenY = game.Height / 2;
 			if( game.IconsTex > 0 ) {
-				api.Texturing = true;
 				int extent = (int)(chExtent * game.Scale( game.Height / 480f ) );
-				Texture chTex = new Texture( game.IconsTex, cenX - extent, 
+				Texture chTex = new Texture( game.IconsTex, cenX - extent,
 				                            cenY - extent, extent * 2, extent * 2, chRec );
 				chTex.Render( api );
-				api.Texturing = false;
 				return;
 			}
 			
+			api.Texturing = false;
 			int curCol = 150 + (int)(50 * Math.Abs( Math.Sin( game.accumulator ) ));
 			FastColour col = new FastColour( curCol, curCol, curCol );
 			api.Draw2DQuad( cenX - chExtent, cenY - chWeight, chExtent * 2, chWeight * 2, col );
@@ -84,7 +83,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			PlayerListWidget widget = playerList;		
+			PlayerListWidget widget = playerList;
 			game.RefreshHud();
 			if( widget != null )
 				CreatePlayerListWidget();

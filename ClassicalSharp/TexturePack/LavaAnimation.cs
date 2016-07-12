@@ -16,8 +16,34 @@ namespace ClassicalSharp {
 		public unsafe void Tick( int* output ) {
 			if( rnd == null )
 				rnd = new JavaRandom( new Random().Next() );
-			Step();
-			Output( output );
+			
+			int i = 0;
+			for( int y = 0; y < Size; y++ )
+				for( int x = 0; x < Size; x++ )
+			{
+				float lSoupHeat = 0;
+				int xOffset = x + (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
+				int yOffset = y + (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
+				for( int j = 0; j < 9; j++ ) {
+					int xx = xOffset + (j % 3 - 1);
+					int yy = yOffset + (j / 3 - 1);
+					lSoupHeat += soupHeat[(yy & 0xF) << 4 | (xx & 0xF)];
+				}
+				
+				float lPotHeat = potHeat[i]                           // x    , y
+					+ potHeat[y << 4 | ((x + 1) & 0xF)            ] + // x + 1, y
+					+ potHeat[((y + 1) & 0xF) << 4 | x            ] + // x    , y + 1
+					+ potHeat[((y + 1) & 0xF) << 4 | ((x + 1) & 0xF)];// x + 1, y + 1
+				
+				soupHeat[i] = lSoupHeat / 10 + lPotHeat / 4 * 0.8f;
+				potHeat[i] += flameHeat[i] * 0.01f;
+				if( potHeat[i] < 0 ) potHeat[i] = 0;
+				flameHeat[i] -= 0.06f;
+				
+				if( rnd.NextFloat() <= 0.005f )
+					flameHeat[i] = 1.5f;
+				i++;
+			}
 		}
 		
 		void Step() {
@@ -25,21 +51,21 @@ namespace ClassicalSharp {
 			for( int y = 0; y < Size; y++ )
 				for( int x = 0; x < Size; x++ )
 			{
-				float localSoupHeat = 0;
-				int xOffset = (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
-				int yOffset = (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
+				float lSoupHeat = 0;
+				int xOffset = x + (int)(1.2 * Math.Sin( y * 22.5 * Utils.Deg2Rad ));
+				int yOffset = y + (int)(1.2 * Math.Sin( x * 22.5 * Utils.Deg2Rad ));
 				for( int j = 0; j < 9; j++ ) {
-					int xx = x + (j % 3 - 1) + xOffset;
-					int yy = y + (j / 3 - 1) + yOffset;
-					localSoupHeat += soupHeat[(yy & 0xF) << 4 | (xx & 0xF)];
+					int xx = xOffset + (j % 3 - 1);
+					int yy = yOffset + (j / 3 - 1);
+					lSoupHeat += soupHeat[(yy & 0xF) << 4 | (xx & 0xF)];
 				}
 				
-				float localPotHeat = potHeat[i]
-					+ potHeat[y << 4 | ((x + 1) & 0xF)] + // x + 1, y
-					+ potHeat[((y + 1) & 0xF) << 4 | x] + // x, y + 1
-					+ potHeat[((y + 1) & 0xF) << 4 | ((x + 1) & 0xF)];
+				float lPotHeat = potHeat[i]                           // x, y
+					+ potHeat[y << 4 | ((x + 1) & 0xF)            ] + // x + 1, y
+					+ potHeat[((y + 1) & 0xF) << 4 | x            ] + // x, y + 1
+					+ potHeat[((y + 1) & 0xF) << 4 | ((x + 1) & 0xF)];// x + 1, y + 1
 				
-				soupHeat[i] = localSoupHeat / 10 + localPotHeat / 4 * 0.8f;
+				soupHeat[i] = lSoupHeat / 10 + lPotHeat / 4 * 0.8f;
 				potHeat[i] += flameHeat[i] * 0.01f;
 				if( potHeat[i] < 0 ) potHeat[i] = 0;
 				flameHeat[i] -= 0.06f;

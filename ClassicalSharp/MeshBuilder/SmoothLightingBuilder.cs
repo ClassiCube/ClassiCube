@@ -274,7 +274,12 @@ namespace ClassicalSharp {
 			flags |= (y > map.heightmap[(z * width) + x] ? 2 : 0);
 			// Use fact Light((Y + 1).Bottom) == Light(Y.Top)
 			offset = (lightFlags >> Side.Top) & 1;
-			flags |= ((y - offset) >= map.heightmap[(z * width) + x] ? 4 : 0);
+			flags |= ((y - offset) >= map.heightmap[(z * width) + x] ? 4 : 0);			
+			
+			// Dynamic lighting
+			if( info.FullBright[block] ) flags |= 7;
+			if( y < maxY && info.FullBright[map.GetBlock( x, y + 1, z )] ) flags |= 4;
+			if( y > 0 && info.FullBright[map.GetBlock( x, y - 1, z )] ) flags |= 1;
 			return flags;
 		}
 		

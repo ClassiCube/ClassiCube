@@ -453,9 +453,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			PresentParameters args = GetPresentArgs( game.Width, game.Height );
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
-				if( buffer != null ) {
-					buffer.Dispose();
-				}
+				if( buffer != null ) buffer.Dispose();
 			}
 			
 			while( (uint)device.Reset( args ) == (uint)Direct3DError.DeviceLost )
@@ -463,15 +461,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			SetDefaultRenderStates();
 			RestoreRenderStates();
+			
 			for( int i = 0; i < dynamicvBuffers.Length; i++ ) {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
-				if( buffer != null ) {
-					dynamicvBuffers[i] = device.CreateDynamicVertexBuffer( buffer.MaxSize, buffer.Format );
-					dynamicvBuffers[i].Format = buffer.Format;
-					dynamicvBuffers[i].MaxSize = buffer.MaxSize;
-					buffer = dynamicvBuffers[i];
-				}
+				if( buffer == null ) continue;
+				
+				dynamicvBuffers[i] = device.CreateDynamicVertexBuffer( buffer.MaxSize, buffer.Format );
+				dynamicvBuffers[i].Format = buffer.Format;
+				dynamicvBuffers[i].MaxSize = buffer.MaxSize;
+				buffer = dynamicvBuffers[i];
 			}
+			RaiseContextRetrieved();
 		}
 		
 		void SetDefaultRenderStates() {
