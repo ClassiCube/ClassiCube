@@ -2,6 +2,9 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.TexturePack {
 	
@@ -63,7 +66,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void Make1DTexture( int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index ) {
 			int elemSize = atlas2D.elementSize;
-			using( Bitmap atlas1d = new Bitmap( atlas2D.elementSize, atlas1DHeight ) )
+			using( Bitmap atlas1d = Platform.CreateBmp( atlas2D.elementSize, atlas1DHeight ) )
 				using( FastBitmap dst = new FastBitmap( atlas1d, true, false ) )
 			{
 				for( int index1D = 0; index1D < elementsPerAtlas1D; index1D++ ) {

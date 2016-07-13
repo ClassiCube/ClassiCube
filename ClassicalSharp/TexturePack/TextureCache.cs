@@ -5,8 +5,6 @@ using System.IO;
 using System.Text;
 #if ANDROID
 using Android.Graphics;
-#else
-using System.Drawing.Imaging;
 #endif
 
 namespace ClassicalSharp.TexturePack {

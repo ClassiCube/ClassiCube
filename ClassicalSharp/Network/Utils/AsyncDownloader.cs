@@ -6,6 +6,9 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.Network {
 	

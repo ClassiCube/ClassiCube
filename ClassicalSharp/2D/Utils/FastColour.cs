@@ -1,6 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+#if ANDROID
+using AndroidColor = Android.Graphics.Color;
+#endif
 
 namespace ClassicalSharp {
 	
@@ -126,7 +129,12 @@ namespace ClassicalSharp {
 		public static implicit operator Color( FastColour col ) {
 			return Color.FromArgb( col.A, col.R, col.G, col.B );
 		}
-		
+
+		#if ANDROID
+		public static implicit operator AndroidColor( FastColour col ) {
+			return AndroidColor.Argb( col.A, col.R, col.G, col.B );
+		}
+		#endif
 		
 		public static FastColour Red = new FastColour( 255, 0, 0 );
 		public static FastColour Green = new FastColour( 0, 255, 0 );

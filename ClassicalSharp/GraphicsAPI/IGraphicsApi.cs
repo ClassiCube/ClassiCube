@@ -20,6 +20,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool Texturing { set; }
 		
 		internal float MinZNear = 0.1f;
+		readonly FastBitmap bmpBuffer = new FastBitmap();
 		
 		/// <summary> Creates a new native texture with the specified dimensions and using the
 		/// image data encapsulated by the Bitmap instance. </summary>
@@ -28,19 +29,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
 		public int CreateTexture( Bitmap bmp ) {
 			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
-				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}",
-				                             bmp.PixelFormat );
+				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}", bmp.PixelFormat );
 				ErrorHandler.LogError( "IGraphicsApi.CreateTexture()",
 				                      Environment.NewLine + line2 +
 				                      Environment.NewLine + Environment.StackTrace );
 				return -1;
-			} else {
-				Rectangle rec = new Rectangle( 0, 0, bmp.Width, bmp.Height );
-				BitmapData data = bmp.LockBits( rec, ImageLockMode.ReadOnly, bmp.PixelFormat );
-				int texId = CreateTexture( data.Width, data.Height, data.Scan0 );
-				bmp.UnlockBits( data );
-				return texId;
 			}
+			bmpBuffer.SetData( bmp, false, true );
+			return CreateTexture( bmpBuffer );
 		}
 		
 		/// <summary> Creates a new native texture with the specified dimensions and FastBitmap instance
@@ -48,8 +44,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions are powers of two,
 		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
 		public int CreateTexture( FastBitmap bmp ) {
-			if( !bmp.IsLocked )
-				bmp.LockBits();
+			if( !bmp.IsLocked ) bmp.LockBits();
 			int texId = CreateTexture( bmp.Width, bmp.Height, bmp.Scan0 );
 			bmp.UnlockBits();
 			return texId;

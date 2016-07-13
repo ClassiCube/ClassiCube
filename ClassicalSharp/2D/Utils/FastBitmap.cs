@@ -25,8 +25,7 @@ namespace ClassicalSharp {
 		
 		public void SetData( Bitmap bmp, bool lockBits, bool readOnly ) {
 			Bitmap = bmp;
-			if( lockBits )
-				LockBits();
+			if( lockBits ) LockBits();
 			ReadOnly = readOnly;
 		}
 		
@@ -112,6 +111,9 @@ namespace ClassicalSharp {
 		#else
 		
 		public void LockBits() {
+			// ====
+			// TODO: Use Bitmap.LockPixels, need to cast the pointer though
+			// ====
 			if( Bitmap == null ) throw new InvalidOperationException( "Underlying bitmap is null." );
 			if( data != null ) return;
 

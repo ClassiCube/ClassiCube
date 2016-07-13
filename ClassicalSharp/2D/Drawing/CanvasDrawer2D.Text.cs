@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 					c.DrawText( part.Text, textX + Offset, y + Offset, backBrush );
 				
 				c.DrawText( part.Text, textX, y, foreBrush );
-				textX += textBrush.MeasureText( part.Text );
+				textX += foreBrush.MeasureText( part.Text );
 			}
 		}
 		
@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 		public override void DrawBitmappedText( ref DrawTextArgs args, int x, int y ) {
 			using( bitmapWrapper ) {
 				bitmapWrapper.SetData( curBmp, true, false );
-				DrawBitmappedTextImpl( bitmapWrapper, ref args, x, y );
+				DrawBitmapTextImpl( bitmapWrapper, ref args, x, y );
 			}
 		}
 		

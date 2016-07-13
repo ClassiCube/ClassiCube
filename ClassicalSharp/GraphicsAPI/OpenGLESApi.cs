@@ -382,7 +382,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					}
 				}
 				using( FileStream fs = File.Create( output ) )
-					Utils.WriteBmp( fs, bmp );
+					Platform.WriteBmp( bmp, fs );
 			}
 		}
 		

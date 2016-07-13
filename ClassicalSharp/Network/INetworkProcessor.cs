@@ -7,6 +7,9 @@ using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 using OpenTK;
 using OpenTK.Input;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp {
 	
