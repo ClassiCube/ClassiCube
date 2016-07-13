@@ -118,16 +118,17 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,
 		/// bedrock, water and lava blocks on servers that don't support CPE block permissions. </summary>
 		public void SetUserType( byte value ) {
+			bool isOp = value >= 100 && value <= 127;
 			UserType = value;
 			Inventory inv = game.Inventory;
-			inv.CanPlace[Block.Bedrock] = value == 0x64;
-			inv.CanDelete[Block.Bedrock] = value == 0x64;
+			inv.CanPlace[Block.Bedrock] = isOp;
+			inv.CanDelete[Block.Bedrock] = isOp;
 
-			inv.CanPlace[Block.Water] = value == 0x64;
-			inv.CanPlace[Block.StillWater] = value == 0x64;
-			inv.CanPlace[Block.Lava] = value == 0x64;
-			inv.CanPlace[Block.StillLava] = value == 0x64;
-			CanSeeAllNames = value == 0x64;
+			inv.CanPlace[Block.Water] = isOp;
+			inv.CanPlace[Block.StillWater] = isOp;
+			inv.CanPlace[Block.Lava] = isOp;
+			inv.CanPlace[Block.StillLava] = isOp;
+			CanSeeAllNames = isOp;
 		}
 		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
