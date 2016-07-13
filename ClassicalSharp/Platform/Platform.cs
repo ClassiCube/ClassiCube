@@ -35,5 +35,15 @@ namespace ClassicalSharp {
 			bmp.Compress( Bitmap.CompressFormat.Png, 100, dst );
 			#endif
 		}
+		
+		public static bool Is32Bpp( Bitmap bmp ) {
+			#if !ANDROID
+			PixelFormat format = bmp.PixelFormat;
+			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb; 
+			#else
+			Bitmap.Config config = bmp.GetConfig();
+			return config != null && config == Bitmap.Config.Argb8888;
+			#endif
+		}
 	}
 }

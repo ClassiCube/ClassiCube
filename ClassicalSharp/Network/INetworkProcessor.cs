@@ -123,7 +123,7 @@ namespace ClassicalSharp {
 					game.World.TextureUrl = item.Url;					
 					game.Events.RaiseTexturePackChanged();
 					
-					if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+					if( !Platform.Is32Bpp( bmp ) ) {
 						Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
 						game.Drawer2D.ConvertTo32Bpp( ref bmp );
 					}

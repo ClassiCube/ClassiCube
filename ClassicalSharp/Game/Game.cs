@@ -620,7 +620,7 @@ namespace ClassicalSharp {
 				if( setSkinType )
 					DefaultPlayerSkinType = Utils.GetSkinType( bmp );
 				
-				if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
+				if( !Platform.Is32Bpp( bmp ) ) {
 					using( Bitmap bmp32 = Drawer2D.ConvertTo32Bpp( bmp ) )
 						texId = Graphics.CreateTexture( bmp32 );
 				} else {

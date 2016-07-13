@@ -28,8 +28,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// are powers of two, because otherwise they will not display properly on certain graphics cards.	<br/>
 		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
 		public int CreateTexture( Bitmap bmp ) {
-			if( !FastBitmap.CheckFormat( bmp.PixelFormat ) ) {
-				string line2 = String.Format( "input bitmap was not 32bpp, it was {0}", bmp.PixelFormat );
+			if( !Platform.Is32Bpp( bmp ) ) {
+				string line2 = String.Format( "input bitmap was not 32bpp" );
 				ErrorHandler.LogError( "IGraphicsApi.CreateTexture()",
 				                      Environment.NewLine + line2 +
 				                      Environment.NewLine + Environment.StackTrace );

@@ -53,10 +53,6 @@ namespace ClassicalSharp {
 		public int Stride;
 		public int Width, Height;
 		
-		public static bool CheckFormat( PixelFormat format ) {
-			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb;
-		}
-		
 		/// <summary> Returns a pointer to the start of the y'th scanline. </summary>
 		public int* GetRowPtr( int y ) {
 			return (int*)(scan0Byte + (y * Stride));
@@ -86,7 +82,7 @@ namespace ClassicalSharp {
 			if( data != null ) return;
 			
 			PixelFormat format = Bitmap.PixelFormat;
-			if( !CheckFormat( format ) )
+			if( !Platform.Is32Bpp( Bitmap ) )
 				throw new NotSupportedException( "Unsupported bitmap pixel format: " + format );
 			
 			Rectangle rec = new Rectangle( 0, 0, Bitmap.Width, Bitmap.Height );
