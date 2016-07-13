@@ -1,8 +1,12 @@
 // ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using OpenTK;
+#if ANDROID
+using Android.Graphics;
+#else
+using System.Drawing.Imaging;
+#endif
 
 namespace ClassicalSharp.GraphicsAPI {
 	

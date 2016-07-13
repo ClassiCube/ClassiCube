@@ -1,10 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 #if ANDROID
 using Android.Graphics;
 using Java.Nio;
+#else
+using System.Drawing.Imaging;
 #endif
 
 namespace ClassicalSharp {
@@ -40,7 +41,11 @@ namespace ClassicalSharp {
 		
 		public Bitmap Bitmap;
 		public bool ReadOnly;
+		#if !ANDROID
 		BitmapData data;
+		#else
+		ByteBuffer data;
+		#endif
 		byte* scan0Byte;
 		
 		public bool IsLocked { get { return data != null; } }

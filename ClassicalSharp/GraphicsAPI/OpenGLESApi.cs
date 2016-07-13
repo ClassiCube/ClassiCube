@@ -213,7 +213,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
 		}
 		
-		public override void SetDynamicVbData<T>( DrawMode mode, int id, T[] vertices, int count ) {
+		public override void SetDynamicVbData<T>( int id, T[] vertices, int count ) {
 			GL.BindBuffer( All.ArrayBuffer, id );
 			GL.BufferSubData( All.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
 		}
@@ -335,18 +335,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#endregion
 		
-		public override void BeginFrame( AndroidGameView game ) {
+		public override void BeginFrame( Game game ) {
 		}
 		
-		public override void EndFrame( AndroidGameView game ) {
-			game.SwapBuffers();
+		public override void EndFrame( Game game ) {
+			game.window.SwapBuffers();
 		}
 		
-		public override void SetVSync( AndroidGameView game, bool value ) {
+		public override void SetVSync( Game game, bool value ) {
 			//game.VSync = value; TODO: vsync
 		}
 		
-		bool isIntelRenderer;
 		protected override void MakeApiInfo() {
 			string vendor = GL.GetString( All.Vendor );
 			string renderer = GL.GetString( All.Renderer );
@@ -362,18 +361,10 @@ namespace ClassicalSharp.GraphicsAPI {
 				"Max 2D texture dimensions: " + MaxTextureDimensions,
 				"Depth buffer bits: " + depthBits,
 			};
-			isIntelRenderer = renderer.Contains( "Intel" );
 		}
 		
-		public override void WarnIfNecessary( Chat chat ) {
-			if( !isIntelRenderer ) return;
-			
-			chat.Add( "&cIntel graphics cards are known to have issues with the OpenGL build." );
-			chat.Add( "&cVSync may not work, and you may see disappearing clouds and map edges." );
-			chat.Add( "    " );
-			chat.Add( "&cFor Windows, try downloading the Direct3D 9 build as it doesn't have" );
-			chat.Add( "&cthese problems. Alternatively, the disappearing graphics can be" );
-			chat.Add( "&cpartially fixed by typing \"/client render legacy\" into chat." );
+		public override bool WarnIfNecessary( Chat chat ) {
+			return false;
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
@@ -395,7 +386,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override void OnWindowResize( AndroidGameView game ) {
+		public override void OnWindowResize( Game game ) {
 			GL.Viewport( 0, 0, game.Width, game.Height );
 		}
 		
