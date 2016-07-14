@@ -251,6 +251,7 @@
     <Compile Include="Math\IntersectionUtils.cs" />
     <Compile Include="Math\PickedPos.cs" />
     <Compile Include="Math\Picking.cs" />
+    <Compile Include="Platform\DesktopWindow.cs" />
     <Compile Include="Platform\Font.cs" />
     <Compile Include="Platform\IPlatformWindow.cs" />
     <Compile Include="Platform\Platform.cs" />

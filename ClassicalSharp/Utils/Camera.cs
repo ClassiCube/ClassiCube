@@ -170,7 +170,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector2 GetCameraOrientation() {
-			return new Vector2( player.HeadYawRadians, -player.PitchRadians );
+			return new Vector2( -player.HeadYawRadians, -player.PitchRadians );
 		}
 		
 		float dist = 3;

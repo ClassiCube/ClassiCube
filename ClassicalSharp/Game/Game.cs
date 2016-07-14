@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 			foreach( IGameComponent comp in Components )
 				comp.Ready( this );
 			
-			LoadIcon();
+			window.LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			if( Graphics.WarnIfNecessary( Chat ) ) {
 				MapBordersRenderer.UseLegacyMode( true );
@@ -208,17 +208,6 @@ namespace ClassicalSharp {
 			} catch( Exception ) {
 				FontName = "Arial";
 				Options.Set( OptionsKey.FontName, "Arial" );
-			}
-		}
-		
-		void LoadIcon() {
-			string launcherPath = PathIO.Combine( Program.AppDirectory, "Launcher2.exe" );
-			if( File.Exists( launcherPath ) ) {
-				window.Icon = Icon.ExtractAssociatedIcon( launcherPath ); return;
-			}
-			launcherPath = PathIO.Combine( Program.AppDirectory, "Launcher.exe" );
-			if( File.Exists( launcherPath ) ) {
-				window.Icon = Icon.ExtractAssociatedIcon( launcherPath );
 			}
 		}
 		
