@@ -22,6 +22,7 @@ using OpenTK.Input;
 #if ANDROID
 using Android.Graphics;
 #endif
+using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
 
 namespace ClassicalSharp {
 
@@ -211,11 +212,11 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadIcon() {
-			string launcherPath = Path.Combine( Program.AppDirectory, "Launcher2.exe" );
+			string launcherPath = PathIO.Combine( Program.AppDirectory, "Launcher2.exe" );
 			if( File.Exists( launcherPath ) ) {
 				window.Icon = Icon.ExtractAssociatedIcon( launcherPath ); return;
 			}
-			launcherPath = Path.Combine( Program.AppDirectory, "Launcher.exe" );
+			launcherPath = PathIO.Combine( Program.AppDirectory, "Launcher.exe" );
 			if( File.Exists( launcherPath ) ) {
 				window.Icon = Icon.ExtractAssociatedIcon( launcherPath );
 			}
@@ -421,13 +422,13 @@ namespace ClassicalSharp {
 		}
 		
 		void TakeScreenshot() {
-			string path = Path.Combine( Program.AppDirectory, "screenshots" );
+			string path = PathIO.Combine( Program.AppDirectory, "screenshots" );
 			if( !Directory.Exists( path ) )
 				Directory.CreateDirectory( path );
 			
 			string timestamp = DateTime.Now.ToString( "dd-MM-yyyy-HH-mm-ss" );
 			string file = "screenshot_" + timestamp + ".png";
-			path = Path.Combine( path, file );
+			path = PathIO.Combine( path, file );
 			Graphics.TakeScreenshot( path, Width, Height );
 			Chat.Add( "&eTaken screenshot as: " + file );
 			screenshotRequested = false;

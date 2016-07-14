@@ -3,6 +3,9 @@ using System;
 using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.Gui {
 	

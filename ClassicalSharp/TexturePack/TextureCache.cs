@@ -6,6 +6,7 @@ using System.Text;
 #if ANDROID
 using Android.Graphics;
 #endif
+using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
 
 namespace ClassicalSharp.TexturePack {
 	
@@ -62,7 +63,7 @@ namespace ClassicalSharp.TexturePack {
 		public static void AddToCache( string url, Bitmap bmp ) {
 			string path = MakePath( url );
 			try {
-				string basePath = Path.Combine( Program.AppDirectory, Folder );
+				string basePath = PathIO.Combine( Program.AppDirectory, Folder );
 				if( !Directory.Exists( basePath ) )
 					Directory.CreateDirectory( basePath );
 				
@@ -77,7 +78,7 @@ namespace ClassicalSharp.TexturePack {
 		public static void AddToCache( string url, byte[] data ) {
 			string path = MakePath( url );
 			try {
-				string basePath = Path.Combine( Program.AppDirectory, Folder );
+				string basePath = PathIO.Combine( Program.AppDirectory, Folder );
 				if( !Directory.Exists( basePath ) )
 					Directory.CreateDirectory( basePath );
 				
@@ -119,8 +120,8 @@ namespace ClassicalSharp.TexturePack {
 		static string MakePath( string url ) {
 			byte[] utf8 = Encoding.UTF8.GetBytes( url );
 			uint crc32 = CRC32( utf8 );
-			string basePath = Path.Combine( Program.AppDirectory, Folder );
-			return Path.Combine( basePath, crc32.ToString() );
+			string basePath = PathIO.Combine( Program.AppDirectory, Folder );
+			return PathIO.Combine( basePath, crc32.ToString() );
 		}
 		
 		static uint CRC32( byte[] data ) {

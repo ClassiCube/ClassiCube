@@ -40,6 +40,11 @@ namespace ClassicalSharp {
 			if( value > max ) value = max;
 		}
 		
+		public static Vector3 Mul( Vector3 a, Vector3 scale ) {
+			a.X *= scale.X; a.Y *= scale.Y; a.Z *= scale.Z;
+			return a;
+		}
+		
 		/// <summary> Returns the next highest power of 2 that is ≥ to the given value. </summary>
 		public static int NextPowerOf2( int value ) {
 			int next = 1;
@@ -309,8 +314,13 @@ namespace ClassicalSharp {
 			} else if( bmp.Width == bmp.Height ) {
 				// Minecraft alex skins have this particular pixel with alpha of 0.
 				int scale = bmp.Width / 64;
-				bool isNormal = bmp.GetPixel( 54 * scale, 20 * scale ).A >= 127;
-				return isNormal ? SkinType.Type64x64 : SkinType.Type64x64Slim;
+				
+				#if !ANDROID
+				int alpha = bmp.GetPixel( 54 * scale, 20 * scale ).A;
+				#else
+				int alpha = AndroidColor.GetAlphaComponent( bmp.GetPixel( 54 * scale, 20 * scale ) );
+				#endif
+				return alpha >= 127 ? SkinType.Type64x64 : SkinType.Type64x64Slim;
 			} else {
 				throw new NotSupportedException( "unsupported skin dimensions: " + bmp.Width + ", " + bmp.Height );
 			}

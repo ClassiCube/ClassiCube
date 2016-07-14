@@ -34,7 +34,9 @@ namespace ClassicalSharp.Renderers {
 			if( skyY == normalY ) {
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
 			} else {
-				Matrix4 m = Matrix4.Translate( 0, skyY - normalY, 0 );
+				Matrix4 m = Matrix4.Identity;
+				m.Row3.Y = skyY - normalY; // Y translation matrix
+				
 				graphics.PushMatrix();
 				graphics.MultiplyMatrix( ref m );
 				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );

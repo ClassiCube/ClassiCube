@@ -2,6 +2,9 @@
 using System;
 using System.Drawing;
 using OpenTK.Input;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.Gui {
 	
@@ -32,7 +35,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		Texture chatInputTexture, chatCaretTexture;
-		Color backColour = Color.FromArgb( 200, 30, 30, 30 );
+		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
 		readonly Font font, boldFont;
 		StringBuffer chatInputText;
 		public int DesiredMaxWidth, DesiredMaxHeight;
@@ -79,7 +82,7 @@ namespace ClassicalSharp.Gui {
 				using( IDrawer2D drawer = game.Drawer2D )
 			{
 				drawer.SetBitmap( bmp );
-				drawer.DrawRect( backColour, 0, 0, size.Width, size.Height );
+				drawer.DrawRect( backCol, 0, 0, size.Width, size.Height );
 				drawer.DrawChatText( ref args, 3, yOffset );
 				
 				args.Text = Validator.Range;

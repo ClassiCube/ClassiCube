@@ -3,6 +3,9 @@ using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.Entities {
 
@@ -199,7 +202,7 @@ namespace ClassicalSharp.Entities {
 		static void CheckShadowTexture( IGraphicsApi graphics ) {
 			if( shadowTex != -1 ) return;
 			const int size = 128, half = size / 2;
-			using( Bitmap bmp = new Bitmap( size, size ) )
+			using( Bitmap bmp = Platform.CreateBmp( size, size ) )
 				using( FastBitmap fastBmp = new FastBitmap( bmp, true, false ) )
 			{
 				int inPix = new FastColour( 0, 0, 0, 200 ).ToArgb();

@@ -7,6 +7,7 @@ using ClassicalSharp.Model;
 #if ANDROID
 using Android.Graphics;
 #endif
+using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
 
 namespace ClassicalSharp.TexturePack {
 	

@@ -111,7 +111,10 @@ namespace ClassicalSharp.Entities {
 				CalcTime( ref entity.Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz );
 				if( tx > 1 || ty > 1 || tz > 1 )
 					Utils.LogDebug( "t > 1 in physics calculation.. this shouldn't have happened." );
-				AABB finalBB = entityBB.Offset( entity.Velocity * new Vector3( tx, ty, tz ) );
+				
+				Vector3 v = entity.Velocity;
+				v.X *= tx; v.Y *= ty; v.Z *= tz;
+				AABB finalBB = entityBB.Offset( v );
 				
 				// if we have hit the bottom of a block, we need to change the axis we test first.
 				if( !hitYMin ) {

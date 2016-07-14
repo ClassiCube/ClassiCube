@@ -136,7 +136,7 @@ namespace ClassicalSharp.Entities {
 						entity.Velocity.Z *= scale;
 					}
 				} else if( entity.onGround || hacks.Flying ) {
-					entity.Velocity *= airDrag; // air drag or ground friction
+					entity.Velocity = Utils.Mul( entity.Velocity, airDrag ); // air drag or ground friction
 				}
 			}
 			
@@ -177,7 +177,7 @@ namespace ClassicalSharp.Entities {
 			entity.Position += entity.Velocity;
 			
 			entity.Velocity.Y /= yMul;
-			entity.Velocity *= drag;
+			entity.Velocity = Utils.Mul( entity.Velocity, drag );
 			entity.Velocity.Y -= gravity;
 		}
 

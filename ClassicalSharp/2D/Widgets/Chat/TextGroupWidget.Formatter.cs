@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+#if ANDROID
+using Android.Graphics;
+#endif
 
 namespace ClassicalSharp.Gui {
 	
