@@ -81,7 +81,7 @@ namespace ClassicalSharp.Gui {
 			if( span.TotalDays > 1 ) {
 				format = "&eBeen playing for {2} day" + Q( span.Days ) + ", {1} hour" +
 					Q( span.Hours ) + ", {0} min" + Q( span.Minutes );
-			} else if( span.TotalHours > 1 ) {
+			} else if( span.TotalHours >= 1 ) {
 				format = "&eBeen playing for {1} hour" + Q( span.Hours ) + ", {0} min" +
 					Q( span.Minutes );
 			} else {
