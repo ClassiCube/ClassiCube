@@ -471,7 +471,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				dynamicvBuffers[i].MaxSize = buffer.MaxSize;
 				buffer = dynamicvBuffers[i];
 			}
-			RaiseContextRetrieved();
+			RaiseContextRecreated();
 		}
 		
 		void SetDefaultRenderStates() {

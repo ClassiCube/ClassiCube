@@ -22,6 +22,18 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal float MinZNear = 0.1f;
 		readonly FastBitmap bmpBuffer = new FastBitmap();
 		
+		/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
+		public event EventHandler ContextRecreated;
+		
+		protected void RaiseContextRecreated() {
+			if( ContextRecreated != null ) ContextRecreated( null, null );
+		}
+		
+		/// <summary> Delegate that is invoked when the current context is lost,
+		/// and is repeatedly invoked until the context can be retrieved. </summary>
+		public Action<double> LostContextFunction;
+		
+		
 		/// <summary> Creates a new native texture with the specified dimensions and using the
 		/// image data encapsulated by the Bitmap instance. </summary>
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions of the bitmap
@@ -211,15 +223,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
 		public abstract void TakeScreenshot( string output, int width, int height );
 		
-		protected abstract void MakeApiInfo();
-		
-		public string[] ApiInfo;
-		
-		public void MakeGraphicsInfo() {
-			MakeApiInfo();
-			ErrorHandler.AdditionalInfo = ApiInfo;
-		}
-		
 		/// <summary> Adds a warning to chat if this graphics API has problems with the current user's GPU. </summary>
 		public virtual bool WarnIfNecessary( Chat chat ) { return false; }
 		
@@ -235,13 +238,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Raised when the dimensions of the game's window have changed. </summary>
 		public abstract void OnWindowResize( Game game );
+
 		
-		/// <summary> Delegate that is invoked when the current context is lost,
-		/// and is repeatedly invoked until the context can be retrieved. </summary>
-		public Action<double> LostContextFunction;
+				
+		protected abstract void MakeApiInfo();
 		
-		/// <summary> Event invoked when a lost context is retrieves again. </summary>
-		public event EventHandler ContextRetrieved;
+		public string[] ApiInfo;
+		
+		public void MakeGraphicsInfo() {
+			MakeApiInfo();
+			ErrorHandler.AdditionalInfo = ApiInfo;
+		}
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
@@ -353,11 +360,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				element += 4;
 			}
 			return CreateIb( ptr, maxIndices );
-		}
-		
-		protected void RaiseContextRetrieved() {
-			if( ContextRetrieved != null ) 
-				ContextRetrieved( null, null );
 		}
 	}
 
