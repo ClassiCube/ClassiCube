@@ -279,20 +279,14 @@ namespace ClassicalSharp {
 		public static void CalcBillboardPoints( Vector2 size, Vector3 position, ref Matrix4 view, out Vector3 p111,
 		                                       out Vector3 p121, out Vector3 p212, out Vector3 p222 ) {
 			Vector3 centre = position; centre.Y += size.Y / 2;
-			Vector3 right = new Vector3( view.Row0.X, view.Row1.X, view.Row2.X );
-			Vector3 up = new Vector3( view.Row0.Y, view.Row1.Y, view.Row2.Y );
+			Vector3 a = new Vector3( view.Row0.X * size.X, view.Row1.X * size.X, view.Row2.X * size.X ); // right * size.X
+			Vector3 b = new Vector3( view.Row0.Y * size.Y, view.Row1.Y * size.Y, view.Row2.Y * size.Y ); // up * size.Y
 			
-			p111 = Transform( -0.5f, -0.5f, ref size, ref centre, ref up, ref right );
-			p121 = Transform( -0.5f, 0.5f, ref size, ref centre, ref up, ref right );
-			p212 = Transform( 0.5f, -0.5f, ref size, ref centre, ref up, ref right );
-			p222 = Transform( 0.5f, 0.5f, ref size, ref centre, ref up, ref right );
-		}
-		
-		static Vector3 Transform( float x, float y, ref Vector2 size,
-		                         ref Vector3 centre, ref Vector3 up, ref Vector3 right ) {
-			return centre + right * x * size.X + up * y * size.Y;
-		}
-		
+			p111 = centre + a * -0.5f + b * -0.5f;
+			p121 = centre + a * -0.5f + b *  0.5f;
+			p212 = centre + a *  0.5f + b * -0.5f;
+			p222 = centre + a *  0.5f + b *  0.5f;
+		}	
 		
 		/// <summary> Linearly interpolates between a given angle range, adjusting if necessary. </summary>
 		public static float LerpAngle( float leftAngle, float rightAngle, float t ) {

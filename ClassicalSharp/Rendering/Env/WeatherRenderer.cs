@@ -52,20 +52,46 @@ namespace ClassicalSharp.Renderers {
 
 			int index = 0;
 			FastColour col = game.World.Env.Sunlight;
-			for( int dx = -extent; dx <= extent; dx++ ) {
-				for( int dz = -extent; dz <= extent; dz++ ) {
-					float rainY = GetRainHeight( pos.X + dx, pos.Z + dz );
-					float height = Math.Max( game.World.Height, pos.Y + 64 ) - rainY;
-					if( height <= 0 ) continue;
-					
-					if( particles && (rainAcc >= 0.25 || moved) )
-						game.ParticleManager.AddRainParticle( new Vector3( pos.X + dx, rainY, pos.Z + dz ) );
-					
-					float alpha = AlphaAt( dx * dx + dz * dz );
-					Utils.Clamp( ref alpha, 0, 0xFF );
-					col.A = (byte)alpha;
-					MakeRainForSquare( pos.X + dx, rainY, height, pos.Z + dz, col.Pack(), ref index );
-				}
+			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
+			
+			for( int dx = -extent; dx <= extent; dx++ )
+				for( int dz = -extent; dz <= extent; dz++ )
+			{
+				int x = pos.X + dx, z = pos.Z + dz;
+				float y = GetRainHeight( x, z );
+				float height = Math.Max( game.World.Height, pos.Y + 64 ) - y;
+				if( height <= 0 ) continue;
+				
+				if( particles && (rainAcc >= 0.25 || moved) )
+					game.ParticleManager.AddRainParticle( new Vector3( x, y, z ) );
+				
+				float alpha = AlphaAt( dx * dx + dz * dz );
+				Utils.Clamp( ref alpha, 0, 0xFF );
+				col.A = (byte)alpha;
+				
+				
+				// NOTE: Making vertex is inlined since this is called millions of times.
+				v.Colour = col.Pack();
+				float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
+				float v1 = y / 6f + worldV, v2 = (y + height) / 6f + worldV;
+				
+				v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; vertices[index++] = v;
+				// (x, y, z)                  (0, v1)
+				v.Y = y + height; v.V = v2; 				  vertices[index++] = v;
+				// (x, y + height, z)         (0, v2)
+				v.X = x + 1; v.Z = z + 1; v.U = 1; 			  vertices[index++] = v;
+				// (x + 1, y + height, z + 1) (1, v2)
+				v.Y = y; v.V = v1; 							  vertices[index++] = v;
+				// (x + 1, y, z + 1)          (1, v1)
+								
+				v.Z = z;									  vertices[index++] = v;
+				// (x + 1, y, z)              (1, v1)
+				v.Y = y + height; v.V = v2; 				  vertices[index++] = v;
+				// (x + 1, y + height, z)     (1, v2)
+				v.X = x; v.Z = z + 1; v.U = 0;				  vertices[index++] = v;
+				// (x, y + height, z + 1)     (0, v2)
+				v.Y = y; v.V = v1; 							  vertices[index++] = v;
+				// (x y, z + 1)               (0, v1)
 			}
 			if( particles && (rainAcc >= 0.25 || moved) )
 				rainAcc = 0;
@@ -87,22 +113,6 @@ namespace ClassicalSharp.Renderers {
 			// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
 			float falloff = 0.05f * x * x - 7 * x;
 			return 178 + falloff * game.World.Env.WeatherFade;
-		}
-		
-		void MakeRainForSquare( int x, float y, float height, int z, int col, ref int index ) {
-			float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
-			float v1 = y / 6f + worldV;
-			float v2 = (y + height) / 6f + worldV;
-			
-			vertices[index++] = new VertexP3fT2fC4b( x, y, z, 0, v1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x, y + height, z, 0, v2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x + 1, y + height, z + 1, 1, v2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x + 1, y, z + 1, 1, v1, col );
-			
-			vertices[index++] = new VertexP3fT2fC4b( x + 1, y, z, 1, v1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x + 1, y + height, z, 1, v2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x, y + height, z + 1, 0, v2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x, y, z + 1, 0, v1, col );
 		}
 
 		int length, width, maxY, oneY;
