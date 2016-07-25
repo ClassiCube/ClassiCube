@@ -34,42 +34,42 @@ namespace ClassicalSharp.Gui {
 		void MakeNormal() {
 			widgets = new Widget[] {
 				Make( -1, -50, "Options",
-				     (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				Make( 1, -50, "Generate level",
-					     (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),	
+					     (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),	
 				Make( 1, 0, "Load level",
-					     (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),
+					     (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				Make( 1, 50, "Save level",
-				     (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				Make( -1, 0, "Select texture pack",
-				     (g, w) => g.SetNewScreen( new TexturePackScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new TexturePackScreen( g ) ) ),
 				Make( -1, 50, "Hotkeys",
-				     (g, w) => g.SetNewScreen( new HotkeyListScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new HotkeyListScreen( g ) ) ),
 				
 				// Other
 				ButtonWidget.Create( game, 5, 5, 120, 40, "Quit game",
 				                    Anchor.BottomOrRight, Anchor.BottomOrRight, 
 				                    titleFont, LeftOnly( (g, w) => g.Exit() ) ),
-				MakeBack( true, titleFont, (g, w) => g.SetNewScreen( null ) ),
+				MakeBack( true, titleFont, (g, w) => g.Gui.SetNewScreen( null ) ),
 			};
 		}
 		
 		void MakeClassic() {
 			widgets = new Widget[] {
 				MakeClassic( 0, -100, "Options",
-				            (g, w) => g.SetNewScreen( new ClassicOptionsScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new ClassicOptionsScreen( g ) ) ),				
 				MakeClassic( 0, -50, "Generate level",
-				            (g, w) => g.SetNewScreen( new GenLevelScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),				
 				MakeClassic( 0, 0, "Load level",
-				            (g, w) => g.SetNewScreen( new LoadLevelScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),				
 				MakeClassic( 0, 50, "Save level",
-				            (g, w) => g.SetNewScreen( new SaveLevelScreen( g ) ) ),
+				            (g, w) => g.Gui.SetNewScreen( new SaveLevelScreen( g ) ) ),
 
-				MakeBack( 401, "Back to game", 22, titleFont, (g, w) => g.SetNewScreen( null ) ),
+				MakeBack( 401, "Back to game", 22, titleFont, (g, w) => g.Gui.SetNewScreen( null ) ),
 				
 				game.ClassicMode ? null :
 					MakeClassic( 0, 150, "Nostalgia options",
-					            (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+					            (g, w) => g.Gui.SetNewScreen( new NostalgiaScreen( g ) ) ),
 			};
 		}
 		
@@ -90,7 +90,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape )
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 			return key < Key.F1 || key > Key.F35;
 		}
 		

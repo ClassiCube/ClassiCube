@@ -122,16 +122,16 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Tab ) return true;
-			return game.hudScreen.HandlesKeyDown( key );
+			return game.Gui.hudScreen.HandlesKeyDown( key );
 		}
 		
 		public override bool HandlesKeyPress( char key )  {
-			return game.hudScreen.HandlesKeyPress( key );
+			return game.Gui.hudScreen.HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
 			if( key == Key.Tab ) return true;
-			return game.hudScreen.HandlesKeyUp( key );
+			return game.Gui.hudScreen.HandlesKeyUp( key );
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) { return true; }

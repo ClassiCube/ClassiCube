@@ -36,7 +36,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( draggingMouse || game.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
+			if( draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
 				return true;
 			if( button == MouseButton.Left && mouseX >= TableX - scrollbarWidth && mouseX < TableX ) {
 				ScrollbarClick( mouseY );
@@ -48,7 +48,7 @@ namespace ClassicalSharp.Gui {
 				
 				bool hotbar = game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight );
 				if( !hotbar )
-					game.SetNewScreen( null );
+					game.Gui.SetNewScreen( null );
 			}
 			return true;
 		}
@@ -56,10 +56,10 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == game.Mapping( KeyBind.PauseOrExit ) ||
 			   key == game.Mapping( KeyBind.Inventory ) ) {
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 			} else if( key == Key.Enter && selIndex != -1 ) {
 				game.Inventory.HeldBlock = blocksTable[selIndex];
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 			} else if( (key == Key.Left || key == Key.Keypad4) && selIndex != -1 ) {
 				ArrowKeyMove( -1 );
 			} else if( (key == Key.Right || key == Key.Keypad6) && selIndex != -1 ) {

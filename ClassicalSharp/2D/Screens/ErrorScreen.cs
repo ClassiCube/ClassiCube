@@ -112,7 +112,7 @@ namespace ClassicalSharp.Gui {
 				comp.Reset( game );
 			game.BlockInfo.Reset( game );
 			
-			game.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );
+			game.Gui.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );
 			game.Network.Connect( game.IPAddress, game.Port );
 		}
 		

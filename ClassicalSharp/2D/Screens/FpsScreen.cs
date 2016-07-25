@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui {
 			
 			api.Texturing = true;
 			fpsText.Render( delta );
-			if( !game.ClassicMode && game.activeScreen == null ) {
+			if( !game.ClassicMode && game.Gui.activeScreen == null ) {
 				UpdateHackState( false );
 				DrawPosition();
 				hackStates.Render( delta );

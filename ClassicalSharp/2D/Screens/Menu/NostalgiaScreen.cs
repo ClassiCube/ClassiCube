@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui {
 				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v ),
 				
 				MakeBack( false, titleFont,
-				     (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 				null, null,
 			};
 			

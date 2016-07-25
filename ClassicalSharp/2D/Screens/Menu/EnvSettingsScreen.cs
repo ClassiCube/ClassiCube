@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui {
 				     (g, v) => g.World.Env.SetEdgeLevel( Int32.Parse( v ) ) ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null, null,
 			};
 			MakeDefaultValues();

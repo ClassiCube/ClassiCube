@@ -37,7 +37,7 @@ namespace ClassicalSharp.Gui {
 			Hotkey original = default(Hotkey);
 			if( text != "-----" ) 
 				original = Parse( text );
-			game.SetNewScreen( new EditHotkeyScreen( game, original ) );
+			game.Gui.SetNewScreen( new EditHotkeyScreen( game, original ) );
 		}
 		
 		Hotkey Parse( string text ) {			

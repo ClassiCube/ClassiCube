@@ -81,7 +81,7 @@ namespace ClassicalSharp.Singleplayer {
 			} else {
 				string state = generator.CurrentState;
 				float progress = generator.CurrentProgress;
-				LoadingMapScreen screen = ((LoadingMapScreen)game.ActiveScreen);
+				LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.ActiveScreen);
 				
 				screen.SetProgress( progress );
 				if( state != lastState ) {
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void EndGeneration() {
-			game.SetNewScreen( null );
+			game.Gui.SetNewScreen( null );
 			if( generatedMap == null ) {
 				game.Chat.Add( "&cFailed to generate the map." );
 			} else {
@@ -112,7 +112,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.World.Reset();
 			GC.Collect();
 			this.generator = generator;
-			game.SetNewScreen( new LoadingMapScreen( game, "Generating level", "Generating.." ) );
+			game.Gui.SetNewScreen( new LoadingMapScreen( game, "Generating level", "Generating.." ) );
 			generator.GenerateAsync( game, width, height, length, seed );
 		}
 		

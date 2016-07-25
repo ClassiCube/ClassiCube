@@ -51,7 +51,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 				return true;
 			} else if( (key == Key.Enter || key == Key.KeypadEnter)
 			          && inputWidget != null ) {

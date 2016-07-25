@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui {
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
-			bool showMinimal = game.ActiveScreen.BlocksWorld;
+			bool showMinimal = game.Gui.ActiveScreen.BlocksWorld;
 			if( chat.HandlesAllInput && !game.PureClassic )
 				chat.RenderBackground();
 			
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui {
 			if( !showMinimal ) hotbar.Render( delta );
 			chat.Render( delta );
 			
-			if( playerList != null && game.ActiveScreen == this ) {
+			if( playerList != null && game.Gui.ActiveScreen == this ) {
 				playerList.Render( delta );
 				// NOTE: Should usually be caught by KeyUp, but just in case.
 				if( !game.IsKeyDown( KeyBind.PlayerList ) ) {
@@ -50,9 +50,9 @@ namespace ClassicalSharp.Gui {
 		static TextureRec chRec = new TextureRec( 0, 0, 15/256f, 15/256f );
 		void DrawCrosshairs() {
 			int cenX = game.Width / 2, cenY = game.Height / 2;
-			if( game.IconsTex > 0 ) {
+			if( game.Gui.IconsTex > 0 ) {
 				int extent = (int)(chExtent * game.Scale( game.Height / 480f ) );
-				Texture chTex = new Texture( game.IconsTex, cenX - extent,
+				Texture chTex = new Texture( game.Gui.IconsTex, cenX - extent,
 				                            cenY - extent, extent * 2, extent * 2, chRec );
 				chTex.Render( api );
 				return;
@@ -84,7 +84,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
 			PlayerListWidget widget = playerList;
-			game.RefreshHud();
+			game.Gui.RefreshHud();
 			if( widget != null )
 				CreatePlayerListWidget();
 		}

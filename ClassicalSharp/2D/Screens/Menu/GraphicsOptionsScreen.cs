@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui {
 				     	Options.Set( OptionsKey.EntityShadow, v ); } ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};
 			MakeValidators();

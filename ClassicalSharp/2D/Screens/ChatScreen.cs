@@ -404,7 +404,7 @@ namespace ClassicalSharp.Gui {
 			string url = Utils.StripColours( text );
 			
 			if( Utils.IsUrlPrefix( url, 0 ) ) {
-				game.ShowWarning( new WarningScreen(
+				game.Gui.ShowWarning( new WarningScreen(
 					game, url, false, false, "Are you sure you want to go to this url?",
 					OpenUrl, AppendUrl, null, url,
 					"Be careful - urls from strangers may link to websites that",

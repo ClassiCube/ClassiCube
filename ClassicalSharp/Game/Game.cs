@@ -113,6 +113,8 @@ namespace ClassicalSharp {
 			forwardThirdPersonCam = new ForwardThirdPersonCamera( this );
 			Camera = firstPersonCam;
 			UpdateProjection();
+			
+			Gui = AddComponent( new GuiInterface( this ) );
 			CommandManager = AddComponent( new CommandManager() );
 			SelectionManager = AddComponent( new SelectionManager() );
 			WeatherRenderer = AddComponent( new WeatherRenderer() );
@@ -123,8 +125,6 @@ namespace ClassicalSharp {
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc( BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha );
 			Graphics.AlphaTestFunc( CompareFunc.Greater, 0.5f );
-			fpsScreen = AddComponent( new FpsScreen( this ) );
-			hudScreen = AddComponent( new HudScreen( this ) );
 			Culling = new FrustumCulling();
 			Picking = AddComponent( new PickedPosRenderer() );
 			AudioPlayer = AddComponent( new AudioPlayer() );
@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 				MapBordersRenderer.UseLegacyMode( true );
 				((StandardEnvRenderer)EnvRenderer).UseLegacyMode( true );
 			}
-			SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
+			Gui.SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );
 		}
 		
@@ -256,12 +256,6 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
-		/// <summary> Gets the screen that the user is currently interacting with. </summary>
-		public Screen ActiveScreen {
-			get { return WarningOverlays.Count > 0 ? WarningOverlays[0]
-					: activeScreen == null ? hudScreen : activeScreen; }
-		}
-		
 		Stopwatch frameTimer = new Stopwatch();
 		internal void RenderFrame( double delta ) {
 			frameTimer.Reset();
@@ -271,8 +265,8 @@ namespace ClassicalSharp {
 			Graphics.BindIb( defaultIb );
 			accumulator += delta;
 			Vertices = 0;
-			if( !Focused && !ActiveScreen.HandlesAllInput )
-				SetNewScreen( new PauseScreen( this ) );
+			if( !Focused && !Gui.ActiveScreen.HandlesAllInput )
+				Gui.SetNewScreen( new PauseScreen( this ) );
 			CheckZoomFov();
 			
 			CheckScheduledTasks( delta );
@@ -282,14 +276,14 @@ namespace ClassicalSharp {
 				Graphics.Clear();
 			UpdateViewMatrix( delta, t );
 			
-			bool visible = activeScreen == null || !activeScreen.BlocksWorld;
+			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
 			if( World.IsNotLoaded ) visible = false;
 			if( visible )
 				Render3D( delta, t );
 			else
 				SelectedPos.SetAsInvalid();
 			
-			RenderGui( delta );
+			Gui.Render( delta );
 			if( screenshotRequested )
 				TakeScreenshot();
 			Graphics.EndFrame( this );
@@ -297,7 +291,7 @@ namespace ClassicalSharp {
 		}
 		
 		void CheckZoomFov() {
-			bool allowZoom = activeScreen == null && !hudScreen.HandlesAllInput;
+			bool allowZoom = Gui.activeScreen == null && !Gui.hudScreen.HandlesAllInput;
 			if( allowZoom && IsKeyDown( KeyBind.ZoomScrolling ) )
 				InputHandler.SetFOV( ZoomFov, false );
 		}
@@ -355,23 +349,6 @@ namespace ClassicalSharp {
 			InputHandler.PickBlocks( true, left, middle, right );
 			if( !HideGui )
 				HeldBlockRenderer.Render( delta, t );
-		}
-		
-		void RenderGui( double delta ) {
-			Graphics.Mode2D( Width, Height, EnvRenderer is StandardEnvRenderer );
-			if( activeScreen == null || !activeScreen.HidesHud )
-				fpsScreen.Render( delta );
-			
-			if( activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudAfter )
-				hudScreen.Render( delta );
-			if( activeScreen != null )
-				activeScreen.Render( delta );
-			if( activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter )
-				hudScreen.Render( delta );
-			
-			if( WarningOverlays.Count > 0 )
-				WarningOverlays[0].Render( delta );
-			Graphics.Mode3D( EnvRenderer is StandardEnvRenderer );
 		}
 		
 		const int ticksFrequency = 20;
@@ -439,19 +416,11 @@ namespace ClassicalSharp {
 			Width = window.Width; Height = window.Height;			
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
-			
-			if( activeScreen != null )
-				activeScreen.OnResize( oWidth, oHeight, Width, Height );
-			hudScreen.OnResize( oWidth, oHeight, Width, Height );
-			foreach( Screen overlay in WarningOverlays )
-				overlay.OnResize( oWidth, oHeight, Width, Height );
+			Gui.OnResize( oWidth, oHeight );
 		}
 		
 		public void Disconnect( string title, string reason ) {
-			foreach( WarningScreen screen in WarningOverlays )
-				screen.Dispose();
-			WarningOverlays.Clear();
-			
+			Gui.Reset( this );
 			World.Reset();
 			World.blocks = null;
 			Drawer2D.InitColours();
@@ -462,40 +431,9 @@ namespace ClassicalSharp {
 			BlockInfo.InitLightOffsets();
 			
 			Network.ExtractDefault();
-			SetNewScreen( new ErrorScreen( this, title, reason ) );
+			Gui.SetNewScreen( new ErrorScreen( this, title, reason ) );
 			GC.Collect();
-		}
-		
-		internal Screen activeScreen;
-		
-		public void SetNewScreen( Screen screen ) { SetNewScreen( screen, true ); }
-		
-		public void SetNewScreen( Screen screen, bool disposeOld ) {
-			InputHandler.ScreenChanged( activeScreen, screen );
-			if( activeScreen != null && disposeOld )
-				activeScreen.Dispose();
-			
-			if( screen == null ) {
-				hudScreen.GainFocus();
-			} else if( activeScreen == null ) {
-				hudScreen.LoseFocus();
-			}
-			
-			if( screen != null )
-				screen.Init();
-			activeScreen = screen;
-		}
-		
-		public void RefreshHud() { hudScreen.Recreate(); }
-		
-		public void ShowWarning( WarningScreen screen ) {
-			bool cursorVis = CursorVisible;
-			if( WarningOverlays.Count == 0 ) CursorVisible = true;
-			WarningOverlays.Add( screen );
-			if( WarningOverlays.Count == 1 ) CursorVisible = cursorVis;
-			// Save cursor visibility state
-			screen.Init();
-		}
+		}		
 		
 		public void CycleCamera() {
 			if( ClassicMode ) return;
@@ -552,8 +490,6 @@ namespace ClassicalSharp {
 		
 		public void Dispose() {
 			MapRenderer.Dispose();
-			SetNewScreen( null );
-			fpsScreen.Dispose();
 			TerrainAtlas.Dispose();
 			TerrainAtlas1D.Dispose();
 			ModelCache.Dispose();
@@ -564,18 +500,10 @@ namespace ClassicalSharp {
 			foreach( IGameComponent comp in Components )
 				comp.Dispose();
 			
-			if( activeScreen != null )
-				activeScreen.Dispose();
 			Graphics.DeleteIb( defaultIb );
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTex );
-			Graphics.DeleteTexture( ref GuiTex );
-			Graphics.DeleteTexture( ref GuiClassicTex );
-			Graphics.DeleteTexture( ref IconsTex );
 			Graphics.Dispose();
-			
-			foreach( WarningScreen screen in WarningOverlays )
-				screen.Dispose();
 			
 			if( Options.HasChanged ) {
 				Options.Load();

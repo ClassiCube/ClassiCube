@@ -171,6 +171,7 @@
     <Compile Include="Events\UserEvents.cs" />
     <Compile Include="Events\WorldEvents.cs" />
     <Compile Include="Game\Game.Properties.cs" />
+    <Compile Include="Game\GuiInterface.cs" />
     <Compile Include="Game\PickingHandler.cs" />
     <Compile Include="Generator\FlatGrassGenerator.cs" />
     <Compile Include="Generator\IMapGenerator.cs" />

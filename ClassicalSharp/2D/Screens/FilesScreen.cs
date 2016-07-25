@@ -36,7 +36,7 @@ namespace ClassicalSharp.Gui {
 				Make( -220, 0, "<", (g, w) => PageClick( false ) ),
 				Make( 220, 0, ">", (g, w) => PageClick( true ) ),
 				MakeBack( false, titleFont, 
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 			UpdateArrows();
 		}
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 			} else if( key == Key.Left ) {
 				PageClick( false );
 			} else if( key == Key.Right ) {

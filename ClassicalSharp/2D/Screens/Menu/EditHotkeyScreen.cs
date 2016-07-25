@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 				return true;
 			} else if( focusWidget != null ) {
 				FocusKeyDown( key );
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui {
 				     301, 40, titleFont, RemoveHotkeyClick ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
 		
@@ -128,7 +128,7 @@ namespace ClassicalSharp.Gui {
 				hotkeys.UserAddedHotkey( curHotkey.BaseKey, curHotkey.Flags,
 				                        curHotkey.StaysOpen, input.GetText() );
 			}
-			game.SetNewScreen( new HotkeyListScreen( game ) );
+			game.Gui.SetNewScreen( new HotkeyListScreen( game ) );
 		}
 		
 		void RemoveHotkeyClick( Game game, Widget widget ) {
@@ -136,7 +136,7 @@ namespace ClassicalSharp.Gui {
 				hotkeys.RemoveHotkey( origHotkey.BaseKey, origHotkey.Flags );
 				hotkeys.UserRemovedHotkey( origHotkey.BaseKey, origHotkey.Flags );
 			}
-			game.SetNewScreen( new HotkeyListScreen( game ) );
+			game.Gui.SetNewScreen( new HotkeyListScreen( game ) );
 		}
 		
 		void BaseKeyClick( Game game, Widget widget ) {

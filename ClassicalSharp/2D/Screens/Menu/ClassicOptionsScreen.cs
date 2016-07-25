@@ -57,9 +57,9 @@ namespace ClassicalSharp.Gui {
 				
 				ButtonWidget.Create( game, 0, 95, 401, 41, "Controls", Anchor.Centre,
 				                    Anchor.BottomOrRight, titleFont, 
-				                    LeftOnly( (g, w) => g.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ) ),
+				                    LeftOnly( (g, w) => g.Gui.SetNewScreen( new ClassicKeyBindingsScreen( g ) ) ) ),
 				
-				MakeBack( 401, "Done", 22, titleFont, (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				MakeBack( 401, "Done", 22, titleFont, (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 				null, null,
 			};
 			MakeValidators();

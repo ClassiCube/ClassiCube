@@ -24,14 +24,14 @@ namespace ClassicalSharp.Gui {
 				     g => g.HotbarScale.ToString( "F1" ),
 				     (g, v) => { g.HotbarScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.HotbarScale, v );
-				     	g.RefreshHud();
+				     	g.Gui.RefreshHud();
 				     } ),
 				
 				MakeOpt( -1, 0, "Inventory scale", OnWidgetClick,
 				     g => g.InventoryScale.ToString( "F1" ),
 				     (g, v) => { g.InventoryScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.InventoryScale, v );
-				     	g.RefreshHud();
+				     	g.Gui.RefreshHud();
 				     } ),
 				
 				MakeBool( -1, 50, "Tab auto-complete", OptionsKey.TabAutocomplete, 
@@ -45,14 +45,14 @@ namespace ClassicalSharp.Gui {
 				     g => g.ChatScale.ToString( "F1" ),
 				     (g, v) => { g.ChatScale = Single.Parse( v );
 				     	Options.Set( OptionsKey.ChatScale, v );
-				     	g.RefreshHud();
+				     	g.Gui.RefreshHud();
 				     } ),
 
 				MakeOpt( 1, -50, "Chat lines", OnWidgetClick,
 				     g => g.ChatLines.ToString(),
 				     (g, v) => { g.ChatLines = Int32.Parse( v );
 				     	Options.Set( OptionsKey.ChatLines, v );
-				     	g.RefreshHud();
+				     	g.Gui.RefreshHud();
 				     } ),
 				
 				MakeBool( 1, 0, "Use font", OptionsKey.ArialChatFont,
@@ -67,7 +67,7 @@ namespace ClassicalSharp.Gui {
 				     } ),
 				
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				null, null,
 			};			
 			MakeValidators();
@@ -79,7 +79,7 @@ namespace ClassicalSharp.Gui {
 			game.Events.RaiseChatFontChanged();
 			base.Dispose();
 			base.Init();
-			game.RefreshHud();
+			game.Gui.RefreshHud();
 			
 			for( int i = 0; i < widgets.Length; i++) {
 				if( widgets[i] == null || !(widgets[i] is ButtonWidget)) {

@@ -91,12 +91,12 @@ namespace ClassicalSharp.Network {
 			if( gzipStream != null )
 				return;
 			game.World.Reset();
-			prevScreen = game.activeScreen;
+			prevScreen = game.Gui.activeScreen;
 			if( prevScreen is LoadingMapScreen )
 				prevScreen = null;
 			prevCursorVisible = game.CursorVisible;
 			
-			game.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ), false );
+			game.Gui.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ), false );
 			if( ServerMotd.Contains( "cfg=" ) ) {
 				ReadWomConfigurationAsync();
 			}
@@ -150,8 +150,8 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleLevelFinalise() {
-			game.SetNewScreen( null );
-			game.activeScreen = prevScreen;
+			game.Gui.SetNewScreen( null );
+			game.Gui.activeScreen = prevScreen;
 			if( prevScreen != null && prevCursorVisible != game.CursorVisible )
 				game.CursorVisible = prevCursorVisible;
 			prevScreen = null;

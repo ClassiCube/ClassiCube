@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui {
 			Texture backTex = Active ? selectedTex : shadowTex;
 			if( Disabled ) backTex = disabledTex;
 			
-			backTex.ID = game.UseClassicGui ? game.GuiClassicTex : game.GuiTex;
+			backTex.ID = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
 			backTex.X1 = X; backTex.Y1 = Y;
 			backTex.Width = (short)Width; backTex.Height = (short)Height;
 			

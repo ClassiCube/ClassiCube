@@ -58,11 +58,11 @@ namespace ClassicalSharp.TexturePack {
 				case "cloud.png":
 					game.UpdateTexture( ref game.CloudsTex, name, data, false ); break;
 				case "gui.png":
-					game.UpdateTexture( ref game.GuiTex, name, data, false ); break;
+					game.UpdateTexture( ref game.Gui.GuiTex, name, data, false ); break;
 				case "gui_classic.png":
-					game.UpdateTexture( ref game.GuiClassicTex, name, data, false ); break;
+					game.UpdateTexture( ref game.Gui.GuiClassicTex, name, data, false ); break;
 				case "icons.png":
-					game.UpdateTexture( ref game.IconsTex, name, data, false ); break;
+					game.UpdateTexture( ref game.Gui.IconsTex, name, data, false ); break;
 				case "default.png":
 					SetFontBitmap( game, stream ); break;
 			}		

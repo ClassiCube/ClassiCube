@@ -33,22 +33,22 @@ namespace ClassicalSharp.Gui {
 		void MakeNormal() {
 			widgets = new Widget[] {
 				Make( -1, -100, "Misc options",
-				     (g, w) => g.SetNewScreen( new MiscOptionsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new MiscOptionsScreen( g ) ) ),
 				Make( -1, -50, "Gui options",
-				     (g, w) => g.SetNewScreen( new GuiOptionsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new GuiOptionsScreen( g ) ) ),
 				Make( -1, 0, "Graphics options",
-				     (g, w) => g.SetNewScreen( new GraphicsOptionsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new GraphicsOptionsScreen( g ) ) ),
 				Make( -1, 50, "Controls",
-				     (g, w) => g.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new NormalKeyBindingsScreen( g ) ) ),
 				Make( 1, -50, "Hacks settings",
-				     (g, w) => g.SetNewScreen( new HacksSettingsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new HacksSettingsScreen( g ) ) ),
 				Make( 1, 0, "Env settings",
-				     (g, w) => g.SetNewScreen( new EnvSettingsScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new EnvSettingsScreen( g ) ) ),
 				Make( 1, 50, "Nostalgia options",
-				     (g, w) => g.SetNewScreen( new NostalgiaScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new NostalgiaScreen( g ) ) ),
 				
 				MakeBack( false, titleFont, 
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
 		
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape )
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 			return key < Key.F1 || key > Key.F35;
 		}
 		

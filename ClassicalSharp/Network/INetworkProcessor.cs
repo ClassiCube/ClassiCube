@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 				if( url.StartsWith( "https://" ) ) address = url.Substring( 8 );
 				if( url.StartsWith( "http://" ) ) address = url.Substring( 7 );
 				
-				game.ShowWarning( new WarningScreen(
+				game.Gui.ShowWarning( new WarningScreen(
 					game, "CL_" + url, true, true, "Do you want to download the server's texture pack?",
 					DownloadTexturePack, null, WarningScreenTick,
 					"Texture pack url:", address,

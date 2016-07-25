@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void RenderHotbar() {
-			int texId = game.UseClassicGui ? game.GuiClassicTex : game.GuiTex;
+			int texId = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
 			backTex.ID = texId;
 			backTex.Render( api );
 			
@@ -98,7 +98,7 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button != MouseButton.Left || !Bounds.Contains( mouseX, mouseY ) )
 			   return false;
-			InventoryScreen screen = game.ActiveScreen as InventoryScreen;
+			InventoryScreen screen = game.Gui.ActiveScreen as InventoryScreen;
 			if( screen == null ) return false;
 			
 			for( int i = 0; i < hotbarCount; i++ ) {

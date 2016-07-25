@@ -40,7 +40,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.Escape ) {
-				game.SetNewScreen( null );
+				game.Gui.SetNewScreen( null );
 				return true;
 			}
 			return selectedWidget == null ? (key < Key.F1 || key > Key.F35) :
@@ -76,7 +76,7 @@ namespace ClassicalSharp.Gui {
 				ButtonWidget.Create( game, 120, 100, 201, 40, "Vanilla", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenNotchyClick ),
 				MakeBack( false, titleFont,
-				         (g, w) => g.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
 		}
 		
