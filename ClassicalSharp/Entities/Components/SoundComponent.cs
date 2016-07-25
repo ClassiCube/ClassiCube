@@ -47,7 +47,7 @@ namespace ClassicalSharp.Entities {
 		SoundType sndType = SoundType.None;
 		void GetSound() {
 			Vector3 pos = p.nextPos;
-			AABB bounds = p.CollisionBounds;
+			AABB bounds = p.Bounds;
 			sndType = SoundType.None;
 			anyNonAir = false;
 			

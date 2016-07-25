@@ -36,7 +36,7 @@ namespace ClassicalSharp.Entities {
 		// TODO: test for corner cases, and refactor this.	
 		internal void MoveAndWallSlide() {
 			if( entity.Velocity == Vector3.Zero ) return;
-			Vector3 size = entity.CollisionSize;
+			Vector3 size = entity.Size;
 			AABB entityBB, entityExtentBB;
 			int count = 0;
 			FindReachableBlocks( ref count, out entityBB, out entityExtentBB );
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Entities {
 		void FindReachableBlocks( ref int count, out AABB entityBB, 
 		                         out AABB entityExtentBB ) {
 			Vector3 vel = entity.Velocity;
-			entityBB = entity.CollisionBounds;
+			entityBB = entity.Bounds;
 			
 			// Exact maximum extent the entity can reach, and the equivalent map coordinates.
 			entityExtentBB = new AABB(

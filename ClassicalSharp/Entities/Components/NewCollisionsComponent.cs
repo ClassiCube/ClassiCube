@@ -34,7 +34,7 @@ namespace ClassicalSharp.Entities {
 				minX[i] = int.MaxValue; minY[i] = int.MaxValue;
 				maxX[i] = int.MinValue; maxY[i] = int.MinValue;
 			}
-			bb = entity.CollisionBounds;
+			bb = entity.Bounds;
 			int count = 0;
 			
 			// First raytrace out from the origin to find approximate blocks

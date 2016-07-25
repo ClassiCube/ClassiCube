@@ -63,7 +63,7 @@ namespace ClassicalSharp.Entities {
 			using( Font font = new Font( game.FontName, 24 ) ) {
 				DrawTextArgs args = new DrawTextArgs( DisplayName, font, false );
 				Size size = game.Drawer2D.MeasureBitmappedSize( ref args );
-				if( size == Size.Empty ) { nameTex = new Texture( -1, 0, 0, 0, 0, 1, 1 ); return; }
+				if( size.Width == 0 ) { nameTex = new Texture( -1, 0, 0, 0, 0, 1, 1 ); return; }
 				size.Width += 3; size.Height += 3;
 				
 				using( IDrawer2D drawer = game.Drawer2D )

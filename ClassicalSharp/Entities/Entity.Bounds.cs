@@ -18,14 +18,14 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Bounding box of the model that collision detection
 		/// is performed with, in world coordinates.  </summary>
-		public virtual AABB CollisionBounds {
-			get { return AABB.Make( Position, CollisionSize ); }
+		public virtual AABB Bounds {
+			get { return AABB.Make( Position, Size ); }
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity satisfy the given condition. </summary>
 		public bool TouchesAny( Predicate<byte> condition ) {
-			return TouchesAny( CollisionBounds, condition );
+			return TouchesAny( Bounds, condition );
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are rope. </summary>
 		public bool TouchesAnyRope() {
-			AABB bounds = CollisionBounds;
+			AABB bounds = Bounds;
 			bounds.Max.Y += 0.5f/16f;
 			return TouchesAny( bounds, b => b == Block.Rope );
 		}
@@ -104,14 +104,14 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAnyLava() {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides) 
-			AABB bounds = CollisionBounds.Offset( liqExpand );
+			AABB bounds = Bounds.Offset( liqExpand );
 			return TouchesAnyLiquid( bounds, Block.Lava, Block.StillLava );
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
-			AABB bounds = CollisionBounds.Offset( liqExpand );
+			AABB bounds = Bounds.Offset( liqExpand );
 			return TouchesAnyLiquid( bounds, Block.Water, Block.StillWater );
 		}
 	}

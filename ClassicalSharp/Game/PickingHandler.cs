@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			AABB blockBB = new AABB( pos + info.MinBB[block], pos + info.MaxBB[block] );
 			// NOTE: We need to also test against nextPos here, because otherwise
 			// we can fall through the block as collision is performed against nextPos
-			AABB localBB = AABB.Make( p.Position, p.CollisionSize );
+			AABB localBB = AABB.Make( p.Position, p.Size );
 			localBB.Min.Y = Math.Min( p.nextPos.Y, localBB.Min.Y );
 			
 			if( p.Hacks.Noclip || !localBB.Intersects( blockBB ) ) return true;
@@ -120,7 +120,7 @@ namespace ClassicalSharp {
 			else if( selected.BlockFace == CpeBlockFace.YMax )
 				newP.Y = blockBB.Min.Y + 1 + Entity.Adjustment;
 			else if( selected.BlockFace == CpeBlockFace.YMin )
-				newP.Y = blockBB.Min.Y - game.LocalPlayer.CollisionSize.Y - Entity.Adjustment;
+				newP.Y = blockBB.Min.Y - game.LocalPlayer.Size.Y - Entity.Adjustment;
 			
 			Vector3I newLoc = Vector3I.Floor( newP );
 			bool validPos = newLoc.X >= 0 && newLoc.Y >= 0 && newLoc.Z >= 0 &&
@@ -151,7 +151,7 @@ namespace ClassicalSharp {
 			for( int id = 0; id < 255; id++ ) {
 				Player player = game.Entities[id];
 				if( player == null ) continue;
-				AABB bounds = player.CollisionBounds;
+				AABB bounds = player.Bounds;
 				bounds.Min.Y += 1/32f; // when player is exactly standing on top of ground
 				if( bounds.Intersects( blockBB ) ) return true;
 			}

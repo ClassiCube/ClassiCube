@@ -25,7 +25,7 @@ namespace ClassicalSharp.Entities {
 		
 		public void UpdateVelocityState( float xMoving, float zMoving ) {
 			if( !hacks.NoclipSlide && (hacks.Noclip && xMoving == 0 && zMoving == 0) )
-				entity.Velocity = Vector3.Zero;			
+				entity.Velocity = Vector3.Zero;
 			if( hacks.Flying || hacks.Noclip ) {
 				entity.Velocity.Y = 0; // eliminate the effect of gravity
 				int dir = (hacks.FlyingUp || jumping) ? 1 : (hacks.FlyingDown ? -1 : 0);
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 			bool touchWater = entity.TouchesAnyWater();
 			bool touchLava = entity.TouchesAnyLava();
 			if( touchWater || touchLava ) {
-				AABB bounds = entity.CollisionBounds;
+				AABB bounds = entity.Bounds;
 				int feetY = Utils.Floor( bounds.Min.Y ), bodyY = feetY + 1;
 				int headY = Utils.Floor( bounds.Max.Y );
 				if( bodyY > headY ) bodyY = headY;
@@ -183,21 +183,18 @@ namespace ClassicalSharp.Entities {
 
 		float GetBaseMultiply( bool canSpeed ) {
 			float multiply = 0;
-			if( hacks.Flying || hacks.Noclip ) {
-				if( hacks.Speeding && canSpeed ) multiply += hacks.SpeedMultiplier * 8;
-				if( hacks.HalfSpeeding && canSpeed ) multiply += hacks.SpeedMultiplier * 8 / 2;
-				if( multiply == 0 ) multiply = 8f;
-			} else {
-				if( hacks.Speeding && canSpeed ) multiply += hacks.SpeedMultiplier;
-				if( hacks.HalfSpeeding && canSpeed ) multiply += hacks.SpeedMultiplier / 2;
-				if( multiply == 0 ) multiply = 1;
-			}
+			float speed = (hacks.Flying || hacks.Noclip) ? 8 : 1;
+			
+			
+			if( hacks.Speeding && canSpeed ) multiply += speed * hacks.SpeedMultiplier;
+			if( hacks.HalfSpeeding && canSpeed ) multiply += speed * hacks.SpeedMultiplier / 2;
+			if( multiply == 0 ) multiply = speed;
 			return hacks.CanSpeed ? multiply : Math.Min( multiply, hacks.MaxSpeedMultiplier );
 		}
 		
 		const float inf = float.PositiveInfinity;
 		float LowestSpeedModifier() {
-			AABB bounds = entity.CollisionBounds;
+			AABB bounds = entity.Bounds;
 			useLiquidGravity = false;
 			float baseModifier = LowestModifier( bounds, false );
 			bounds.Min.Y -= 0.5f/16f; // also check block standing on
@@ -260,6 +257,31 @@ namespace ClassicalSharp.Entities {
 			// (0.98^t) * (-49u - 196) - 4t + 50u + 196
 			double a = Math.Exp( -0.0202027 * t ); //~0.98^t
 			return a * ( -49 * u - 196 ) - 4 * t + 50 * u + 196;
+		}
+		
+		public void DoEntityPush( ref float xMoving, ref float zMoving ) {
+			if( !game.ClassicMode || hacks.Flying || hacks.Noclip ) return;
+			return;
+			// TODO: Fix
+			
+			for( int id = 0; id < 255; id++ ) {
+				Entity other = game.Entities[id];
+				if( other == null ) continue;
+				
+				float dx = other.Position.X - entity.Position.X;
+				float dy = other.Position.Y - entity.Position.Y;
+				float dz = other.Position.Z - entity.Position.Z;
+				float dist = dx * dx + dy * dy + dz * dz;
+				if( dist < 0.0001f || dist > 0.5f ) continue;
+				
+				double yaw = Math.Atan2( dz, dx ) - Math.PI / 2;
+				Vector3 dir = Utils.GetDirVector( yaw, 0 );
+				Console.WriteLine( "Yaw: " + yaw * Utils.Rad2Deg );
+				Console.WriteLine( dir );
+				Console.WriteLine( entity.Position );
+				xMoving = -dir.X;
+				zMoving = -dir.Z;
+			}
 		}
 	}
 }
