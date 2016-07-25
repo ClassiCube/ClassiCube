@@ -81,10 +81,10 @@ namespace ClassicalSharp.Gui {
 			return key < Key.F1 || key > Key.F35;
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			if( descWidget != null )
-				descWidget.OnResize( oldWidth, oldHeight, width, height );
-			base.OnResize( oldWidth, oldHeight, width, height );
+				descWidget.OnResize( width, height );
+			base.OnResize( width, height );
 		}
 		
 		public override void Dispose() {

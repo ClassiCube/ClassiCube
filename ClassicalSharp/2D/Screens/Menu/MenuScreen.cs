@@ -38,10 +38,10 @@ namespace ClassicalSharp.Gui {
 				regularFont.Dispose();
 		}
 
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;
-				widgets[i].OnResize( oldWidth, oldHeight, width, height );
+				widgets[i].OnResize( width, height );
 			}
 		}
 		

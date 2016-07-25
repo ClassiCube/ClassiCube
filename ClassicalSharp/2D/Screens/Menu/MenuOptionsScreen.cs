@@ -68,10 +68,10 @@ namespace ClassicalSharp.Gui {
 			return inputWidget.HandlesKeyUp( key );
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {			
-			base.OnResize( oldWidth, oldHeight, width, height );
+		public override void OnResize( int width, int height ) {			
+			base.OnResize( width, height );
 			if( extendedHelp == null ) return;
-			extendedHelp.OnResize( oldWidth, oldHeight, width, height );
+			extendedHelp.OnResize( width, height );
 		}
 		
 		public override void Dispose() {

@@ -82,7 +82,7 @@ namespace ClassicalSharp.Gui {
 			game.CursorVisible = true;
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			PlayerListWidget widget = playerList;
 			game.Gui.RefreshHud();
 			if( widget != null )

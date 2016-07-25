@@ -108,10 +108,9 @@ namespace ClassicalSharp.Gui {
 			game.WorldEvents.MapLoading -= MapLoading;
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			int dx = (width - oldWidth) / 2;
-			messageWidget.OnResize( oldWidth, oldHeight, width, height );
-			titleWidget.OnResize( oldWidth, oldHeight, width, height );
+		public override void OnResize( int width, int height ) {
+			messageWidget.OnResize( width, height );
+			titleWidget.OnResize( width, height );
 		}
 		
 		public override bool BlocksWorld { get { return true; } }

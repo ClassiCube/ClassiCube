@@ -37,7 +37,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		/// <summary> Called when the game window is resized. </summary>
-		public abstract void OnResize( int oldWidth, int oldHeight, int width, int height );
+		public abstract void OnResize( int width, int height );
 		
 		public virtual bool HandlesKeyDown( Key key ) { return false; }
 		

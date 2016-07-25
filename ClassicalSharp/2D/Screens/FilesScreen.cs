@@ -112,10 +112,10 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesAllInput { get { return true; } }
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < buttons.Length; i++ )
-				buttons[i].OnResize( oldWidth, oldHeight, width, height );
-			title.OnResize( oldWidth, oldHeight, width, height );
+				buttons[i].OnResize( width, height );
+			title.OnResize( width, height );
 		}
 		
 		public override void Render( double delta ) {

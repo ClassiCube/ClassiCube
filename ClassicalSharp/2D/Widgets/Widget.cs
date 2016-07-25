@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui {
 			X = newX; Y = newY;
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			int x = CalcOffset( width, Width, XOffset, HorizontalAnchor );
 			int y = CalcOffset( height, Height, YOffset, VerticalAnchor );
 			MoveTo( x, y );

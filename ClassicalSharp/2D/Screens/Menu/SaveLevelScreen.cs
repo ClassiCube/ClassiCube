@@ -73,9 +73,9 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			inputWidget.OnResize( oldWidth, oldHeight, width, height );
-			base.OnResize( oldWidth, oldHeight, width, height );
+		public override void OnResize( int width, int height ) {
+			inputWidget.OnResize( width, height );
+			base.OnResize( width, height );
 		}
 		
 		public override void Dispose() {

@@ -51,9 +51,9 @@ namespace ClassicalSharp.Gui {
 				widgets[i].Dispose();
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < widgets.Length; i++ )
-				widgets[i].OnResize( oldWidth, oldHeight, width, height );
+				widgets[i].OnResize( width, height );
 			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 		}
 		

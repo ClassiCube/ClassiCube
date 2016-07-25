@@ -117,12 +117,12 @@ namespace ClassicalSharp {
 			api.Mode3D( game.EnvRenderer is StandardEnvRenderer );
 		}
 		
-		internal void OnResize( int oWidth, int oHeight ) {
+		internal void OnResize() {
 			if( activeScreen != null )
-				activeScreen.OnResize( oWidth, oHeight, game.Width, game.Height );
-			hudScreen.OnResize( oWidth, oHeight, game.Width, game.Height );
+				activeScreen.OnResize( game.Width, game.Height );
+			hudScreen.OnResize( game.Width, game.Height );
 			foreach( Screen overlay in overlays )
-				overlay.OnResize( oWidth, oHeight, game.Width, game.Height );
+				overlay.OnResize( game.Width, game.Height );
 		}
 	}
 }

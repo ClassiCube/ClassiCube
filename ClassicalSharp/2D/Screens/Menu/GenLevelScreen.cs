@@ -99,12 +99,12 @@ namespace ClassicalSharp.Gui {
 			return widget;
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < inputs.Length; i++ )
-				inputs[i].OnResize( oldWidth, oldHeight, width, height );
+				inputs[i].OnResize( width, height );
 			for( int i = 0; i < labels.Length; i++ )
-				labels[i].OnResize( oldWidth, oldHeight, width, height );
-			base.OnResize( oldWidth, oldHeight, width, height );
+				labels[i].OnResize( width, height );
+			base.OnResize( width, height );
 		}
 		
 		public override void Dispose() {

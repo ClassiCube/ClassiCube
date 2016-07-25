@@ -128,7 +128,7 @@ namespace ClassicalSharp.Gui {
 		
 		void ChatFontChanged( object sender, EventArgs e ) { Recreate(); }
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
+		public override void OnResize( int width, int height ) {
 		}
 		
 		void DrawPosition() {

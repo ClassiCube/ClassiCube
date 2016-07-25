@@ -140,9 +140,9 @@ namespace ClassicalSharp.Gui {
 			return index < a.Length ? a[index] : b[index - a.Length];
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			base.OnResize( oldWidth, oldHeight, width, height );
-			statusWidget.OnResize( oldWidth, oldHeight, width, height );
+		public override void OnResize( int width, int height ) {
+			base.OnResize( width, height );
+			statusWidget.OnResize( width, height );
 		}
 		
 		public override void Dispose() {

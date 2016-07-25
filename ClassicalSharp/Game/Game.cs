@@ -412,11 +412,10 @@ namespace ClassicalSharp {
 		}
 		
 		internal void OnResize() {
-			int oWidth = Width, oHeight = Height;
 			Width = window.Width; Height = window.Height;
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
-			Gui.OnResize( oWidth, oHeight );
+			Gui.OnResize();
 		}
 		
 		public void Disconnect( string title, string reason ) {

@@ -82,10 +82,10 @@ namespace ClassicalSharp.Gui {
 				renderFrame( this );
 		}
 		
-		public override void OnResize( int oldWidth, int oldHeight, int width, int height ) {
-			base.OnResize( oldWidth, oldHeight, width, height );
+		public override void OnResize( int width, int height ) {
+			base.OnResize( width, height );
 			for( int i = 0; i < labels.Length; i++ )
-				labels[i].OnResize( oldWidth, oldHeight, width, height );
+				labels[i].OnResize( width, height );
 		}
 		
 		public override void Dispose() {
