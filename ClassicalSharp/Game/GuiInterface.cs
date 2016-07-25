@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Renderers;
@@ -35,6 +36,7 @@ namespace ClassicalSharp {
 		public void Init( Game game ) {
 			this.game = game;
 			api = game.Graphics;
+			game.Events.TextureChanged += TextureChanged;
 		}
 		
 		public void Reset( Game game ) {
@@ -44,6 +46,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Dispose() {
+			game.Events.TextureChanged -= TextureChanged;
 			SetNewScreen( null );
 			fpsScreen.Dispose();
 			
@@ -56,6 +59,16 @@ namespace ClassicalSharp {
 			foreach( WarningScreen screen in overlays )
 				screen.Dispose();
 		}
+		
+		void TextureChanged( object sender, TextureEventArgs e ) {
+			if( e.Name == "gui.png" )
+				game.UpdateTexture( ref GuiTex, e.Name, e.Data, false );
+			else if( e.Name == "gui_classic.png" )
+				game.UpdateTexture( ref GuiClassicTex, e.Name, e.Data, false );
+			else if( e.Name == "icons.png" )
+				game.UpdateTexture( ref IconsTex, e.Name, e.Data, false );
+		}
+		
 		
 		public void SetNewScreen( Screen screen ) { SetNewScreen( screen, true ); }
 		
@@ -104,7 +117,7 @@ namespace ClassicalSharp {
 			api.Mode3D( game.EnvRenderer is StandardEnvRenderer );
 		}
 		
-		internal void OnResize( int oWidth, int oHeight ) {			
+		internal void OnResize( int oWidth, int oHeight ) {
 			if( activeScreen != null )
 				activeScreen.OnResize( oWidth, oHeight, game.Width, game.Height );
 			hudScreen.OnResize( oWidth, oHeight, game.Width, game.Height );

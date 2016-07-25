@@ -39,9 +39,6 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
-			MemoryStream stream = new MemoryStream( data );
-			ModelCache cache = game.ModelCache;
-			
 			// Ignore directories: convert x/name to name and x\name to name.
 			string name = filename.ToLower();
 			int i = name.LastIndexOf( '\\' );
@@ -51,28 +48,25 @@ namespace ClassicalSharp.TexturePack {
 			
 			switch( name ) {
 				case "terrain.png":
+					MemoryStream stream = new MemoryStream( data );
 					Bitmap atlas = Platform.ReadBmp( stream );
 					if( !game.ChangeTerrainAtlas( atlas ) ) atlas.Dispose();
 					break;
 				case "clouds.png":
 				case "cloud.png":
 					game.UpdateTexture( ref game.CloudsTex, name, data, false ); break;
-				case "gui.png":
-					game.UpdateTexture( ref game.Gui.GuiTex, name, data, false ); break;
-				case "gui_classic.png":
-					game.UpdateTexture( ref game.Gui.GuiClassicTex, name, data, false ); break;
-				case "icons.png":
-					game.UpdateTexture( ref game.Gui.IconsTex, name, data, false ); break;
 				case "default.png":
-					SetFontBitmap( game, stream ); break;
+					SetFontBitmap( game, data ); break;
 			}		
 			game.Events.RaiseTextureChanged( name, data );
 		}
 		
-		void SetFontBitmap( Game game, Stream stream ) {
+		void SetFontBitmap( Game game, byte[] data ) {
+			MemoryStream stream = new MemoryStream( data );
 			Bitmap bmp = Platform.ReadBmp( stream );
 			if( !Platform.Is32Bpp( bmp ) )
 				game.Drawer2D.ConvertTo32Bpp( ref bmp );
+			
 			game.Drawer2D.SetFontBitmap( bmp );
 			game.Events.RaiseChatFontChanged();
 		}

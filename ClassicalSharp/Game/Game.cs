@@ -412,8 +412,8 @@ namespace ClassicalSharp {
 		}
 		
 		internal void OnResize() {
-			int oWidth = window.Width, oHeight = window.Height;
-			Width = window.Width; Height = window.Height;			
+			int oWidth = Width, oHeight = Height;
+			Width = window.Width; Height = window.Height;
 			Graphics.OnWindowResize( this );
 			UpdateProjection();
 			Gui.OnResize( oWidth, oHeight );
