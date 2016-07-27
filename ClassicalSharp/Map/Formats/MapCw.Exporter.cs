@@ -173,7 +173,8 @@ namespace ClassicalSharp.Map {
 			FastColour col = info.FogColour[id];
 			nbt.Write( NbtTagType.Int8Array );
 			nbt.Write( "Fog" ); nbt.WriteInt32( 4 );
-			nbt.WriteUInt8( (byte)(128 * info.FogDensity[id] - 1) );
+			byte fog = (byte)(128 * info.FogDensity[id] - 1);
+			nbt.WriteUInt8( info.FogDensity[id] == 0 ? (byte)0 : fog );
 			nbt.WriteUInt8( col.R ); nbt.WriteUInt8( col.G ); nbt.WriteUInt8( col.B );
 			
 			Vector3 min = info.MinBB[id], max = info.MaxBB[id];

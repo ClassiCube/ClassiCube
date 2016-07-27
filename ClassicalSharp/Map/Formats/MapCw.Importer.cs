@@ -155,6 +155,8 @@ namespace ClassicalSharp.Map {
 			
 			data = (byte[])compound["Fog"].Value;
 			info.FogDensity[id] = (data[0] + 1) / 128f;
+			// Fix for older ClassicalSharp versions which saved wrong fog density value
+			if( data[0] == 0xFF ) info.FogDensity[id] = 0;
 			info.FogColour[id] = new FastColour( data[1], data[2], data[3] );
 
 			data = (byte[])compound["Coords"].Value;
