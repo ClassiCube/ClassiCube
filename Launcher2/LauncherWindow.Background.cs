@@ -84,7 +84,7 @@ namespace Launcher {
 			}
 		}
 		
-		public void MakeBackground() {
+		public void RedrawBackground() {
 			if( Framebuffer == null || (Framebuffer.Width != Width || Framebuffer.Height != Height) ) {
 				if( Framebuffer != null )
 					Framebuffer.Dispose();

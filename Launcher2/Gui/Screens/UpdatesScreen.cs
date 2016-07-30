@@ -65,6 +65,7 @@ namespace Launcher.Gui.Screens {
 			if( task.LatestDev == null || task.LatestStable == null ) return;
 			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;
 			stable = task.LatestStable; view.LastStable = stable.TimeBuilt;
+			game.RedrawBackground();
 			Resize();
 		}
 		
@@ -77,6 +78,7 @@ namespace Launcher.Gui.Screens {
 			game.ClearArea( w.X, w.Y, w.Width, w.Height );
 			w = widgets[view.relIndex - 1];
 			game.ClearArea( w.X, w.Y, w.Width, w.Height );
+			game.RedrawBackground();
 			Resize();
 		}
 		

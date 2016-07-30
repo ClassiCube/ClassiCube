@@ -34,7 +34,7 @@ namespace Launcher.Gui.Screens {
 			}
 			
 			signingIn = false;
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 		}
 
@@ -73,7 +73,7 @@ namespace Launcher.Gui.Screens {
 			}
 			
 			game.Session.LoginAsync( Get( 0 ), Get( 1 ) );
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 			SetStatus( "&eSigning in.." );
 			signingIn = true;

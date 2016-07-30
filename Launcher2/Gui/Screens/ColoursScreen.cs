@@ -78,7 +78,7 @@ namespace Launcher.Gui.Screens {
 		void ResetColours() {
 			LauncherSkin.ResetToDefault();
 			view.MakeAllRGBTriplets( true );
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 		}
 		
@@ -92,7 +92,7 @@ namespace Launcher.Gui.Screens {
 			else if( index < 15 ) changed |= Parse( 12, ref LauncherSkin.ButtonForeActiveCol );
 			
 			if( !changed ) return;
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 		}
 		

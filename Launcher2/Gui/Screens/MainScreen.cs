@@ -45,14 +45,14 @@ namespace Launcher.Gui.Screens {
 			bool update = new Version( latestVer ) > new Version( currentVer );
 			
 			view.updateText = update ? "&aNew release available" : "&eUp to date     ";
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 			SelectWidget( selectedWidget );
 		}
 		
 		void FailedUpdateCheck( UpdateCheckTask task ) {
 			view.updateText = "&cUpdate check failed    ";
-			game.MakeBackground();
+			game.RedrawBackground();
 			Resize();
 			SelectWidget( selectedWidget );
 		}
