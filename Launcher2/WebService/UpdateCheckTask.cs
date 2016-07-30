@@ -39,6 +39,9 @@ namespace Launcher.Web {
 				CheckUpdates();
 			} catch( WebException ex ) {
 				Finish( false, ex, null ); return;
+			} catch( Exception ex ) {
+				ErrorHandler2.LogError( "UpdateCheckTask.CheckUpdates", ex );
+				Finish( false, null, "&cUpdate check failed" ); return;
 			}
 			Finish( true, null, null );
 		}
@@ -75,15 +78,6 @@ namespace Launcher.Web {
 			if( obj.ContainsKey( "version" ) )
 				build.Version = (string)obj["version"];
 			return build;
-		}
-		
-		public bool TaskTick( Action<UpdateCheckTask> taskSuccess ) {
-			if( Working ) return true;			
-			if( Exception != null )
-				return false;
-			else
-				taskSuccess( this );
-			return true;
 		}
 	}
 }

@@ -39,14 +39,19 @@ namespace Launcher.Gui.Screens {
 		
 		bool updateDone;
 		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
-			if( updateDone ) return;
 			string latestVer = game.checkTask.LatestStable.Version.Substring( 1 );
 			int spaceIndex = Program.AppName.LastIndexOf( ' ' );
 			string currentVer = Program.AppName.Substring( spaceIndex + 1 );
 			bool update = new Version( latestVer ) > new Version( currentVer );
 			
 			view.updateText = update ? "&aNew release available" : "&eUp to date     ";
-			updateDone = true;
+			game.MakeBackground();
+			Resize();
+			SelectWidget( selectedWidget );
+		}
+		
+		void FailedUpdateCheck( UpdateCheckTask task ) {
+			view.updateText = "&cUpdate check failed    ";
 			game.MakeBackground();
 			Resize();
 			SelectWidget( selectedWidget );

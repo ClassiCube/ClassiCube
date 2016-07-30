@@ -25,8 +25,9 @@ namespace Launcher.Gui.Screens {
 		UpdateCheckTask checkTask;
 		public override void Init() {
 			view.Init();
-			if( game.checkTask != null && game.checkTask.Done )
+			if( game.checkTask != null && game.checkTask.Done && game.checkTask.Success )
 				SuccessfulUpdateCheck( game.checkTask );
+			
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
 			
@@ -52,18 +53,11 @@ namespace Launcher.Gui.Screens {
 		}
 
 		Build dev, stable;
-		public override void Tick() {;
-			if( checkTask.Done && checkTask.Exception == null ) return;
-			if( !checkTask.TaskTick( SuccessfulUpdateCheck ) ) {
-				view.LastStable = DateTime.MaxValue;
-				view.LastDev = DateTime.MaxValue;
-				checkTask.Exception = null;
-				
-				LauncherWidget w = widgets[view.devIndex - 1];
-				game.ClearArea( w.X, w.Y, w.Width, w.Height );
-				w = widgets[view.relIndex - 1];
-				game.ClearArea( w.X, w.Y, w.Width, w.Height );
-				Resize();
+		public override void Tick() {
+			if( checkTask != null && checkTask.Done ) {				
+				if( checkTask.Success ) SuccessfulUpdateCheck( checkTask );
+				else FailedUpdateCheck( checkTask );
+				checkTask = null;
 			}
 		}
 		
@@ -71,6 +65,18 @@ namespace Launcher.Gui.Screens {
 			if( task.LatestDev == null || task.LatestStable == null ) return;
 			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;
 			stable = task.LatestStable; view.LastStable = stable.TimeBuilt;
+			Resize();
+		}
+		
+		void FailedUpdateCheck( UpdateCheckTask task ) {
+			view.LastStable = DateTime.MaxValue;
+			view.LastDev = DateTime.MaxValue;
+			task.Exception = null;
+			
+			LauncherWidget w = widgets[view.devIndex - 1];
+			game.ClearArea( w.X, w.Y, w.Width, w.Height );
+			w = widgets[view.relIndex - 1];
+			game.ClearArea( w.X, w.Y, w.Width, w.Height );
 			Resize();
 		}
 		
@@ -123,8 +129,8 @@ namespace Launcher.Gui.Screens {
 				
 				if( Utils.CaselessEquals( name, "ClassicalSharp" )
 				   || Utils.CaselessEquals( name, "ClassicalSharp.exe" ) )
-				   return true;
-				}
+					return true;
+			}
 			return false;
 		}
 		

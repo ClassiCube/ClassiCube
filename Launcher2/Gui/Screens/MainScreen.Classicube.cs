@@ -1,8 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Net;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
@@ -14,26 +12,30 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Tick() {
 			base.Tick();
-			if( game.checkTask != null )
-				 game.checkTask.TaskTick( SuccessfulUpdateCheck );
-			if( !signingIn ) return;
+			if( game.checkTask != null && game.checkTask.Done && !updateDone ) {
+				bool success = game.checkTask.Success;
+				if( success ) SuccessfulUpdateCheck( game.checkTask );
+				else FailedUpdateCheck( game.checkTask );
+				updateDone = true;
+			}
 			
+			if( !signingIn ) return;		
 			ClassicubeSession session = game.Session;
 			string status = session.Status;
 			if( status != lastStatus )
 				SetStatus( status );
 			
-			if( !session.Working ) {
-				if( session.Exception != null ) {
-					DisplayWebException( session.Exception, session.Status );
-				} else if( HasServers ) {
-					game.SetScreen( new ServersScreen( game ) );
-					return;
-				}
-				signingIn = false;
-				game.MakeBackground();
-				Resize();
+			if( session.Working ) return;			
+			if( session.Exception != null ) {
+				DisplayWebException( session.Exception, session.Status );
+			} else if( HasServers ) {
+				game.SetScreen( new ServersScreen( game ) );
+				return;
 			}
+			
+			signingIn = false;
+			game.MakeBackground();
+			Resize();
 		}
 
 		string lastStatus;
