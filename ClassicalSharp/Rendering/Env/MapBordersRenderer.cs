@@ -117,7 +117,9 @@ namespace ClassicalSharp.Renderers {
 			} else if( e.Var == EnvVar.EdgeLevel ) {
 				ResetSidesAndEdges( null, null );
 			} else if( e.Var == EnvVar.SunlightColour ) {
-				ResetSidesAndEdges( null, null );
+				ResetEdges();
+			} else if( e.Var == EnvVar.ShadowlightColour ) {
+				ResetSides();
 			}
 		}
 		
@@ -128,12 +130,20 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
+			CalculateRects( game.ViewDistance );
+			ResetSides();
+			ResetEdges();
+		}
+		
+		void ResetSides() {
 			if( game.World.IsNotLoaded ) return;
 			graphics.DeleteVb( sidesVb );
+			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );	
+		}
+		
+		void ResetEdges() {
+			if( game.World.IsNotLoaded ) return;
 			graphics.DeleteVb( edgesVb );
-			
-			CalculateRects( game.ViewDistance );
-			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
