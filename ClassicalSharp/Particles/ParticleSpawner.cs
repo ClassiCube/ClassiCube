@@ -49,7 +49,10 @@ namespace ClassicalSharp.Particles {
 				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
 				p.ResetState( pos, velocity, life );
 				p.rec = rec;
-				p.texLoc = texLoc;
+				
+				p.flags = (byte)texLoc;
+				if( game.BlockInfo.FullBright[block] )
+					p.flags |= 0x100;
 			}
 		}
 		
