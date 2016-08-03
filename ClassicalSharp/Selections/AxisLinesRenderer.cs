@@ -10,19 +10,14 @@ namespace ClassicalSharp.Selections {
 		VertexP3fC4b[] vertices;
 		int vb;
 		Game game;
+		const float size = 1/32f;
 		
-		public void Init( Game game ) {
-			this.game = game;
-		}
-
+		public void Init( Game game ) { this.game = game; }
 		public void Ready( Game game ) { }			
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
-		
-		public void Dispose() {
-			game.Graphics.DeleteDynamicVb( vb );
-		}
+		public void OnNewMapLoaded( Game game ) { }		
+		public void Dispose() { game.Graphics.DeleteDynamicVb( vb ); }
 		
 		public void Render( double delta ) {
 			if( !game.ShowAxisLines ) return;
@@ -30,34 +25,20 @@ namespace ClassicalSharp.Selections {
 				vertices = new VertexP3fC4b[12];
 				vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
 			}
-			game.Graphics.Texturing = false;			
-			Vector3 pos = game.LocalPlayer.Position; pos.Y += 0.05f;
+			game.Graphics.Texturing = false;
+			Vector3 P = game.LocalPlayer.Position; P.Y += 0.05f;
 			int index = 0;
-			const float size = 1/32f;
 			
-			HorQuad( ref index, pos.X, pos.Z - size, pos.X + 3, pos.Z + size, pos.Y, FastColour.Red );
-			HorQuad( ref index, pos.X - size, pos.Z, pos.X + size, pos.Z + 3, pos.Y, FastColour.Blue );
+			SelectionBox.HorQuad( vertices, ref index, FastColour.Red.Pack(), 
+			                   P.X, P.Z - size, P.X + 3, P.Z + size, P.Y );
+			SelectionBox.HorQuad( vertices, ref index, FastColour.Blue.Pack(),
+			                   P.X - size, P.Z, P.X + size, P.Z + 3, P.Y );
 			if( game.Camera.IsThirdPerson )
-				VerQuad( ref index, pos.X - size, pos.Y, pos.Z + size, pos.X + size, pos.Y + 3, pos.Z - size, FastColour.Green );
+				SelectionBox.VerQuad( vertices, ref index, FastColour.Green.Pack(),
+				                     P.X - size, P.Y, P.Z + size, P.X + size, P.Y + 3, P.Z - size );
 			
 			game.Graphics.SetBatchFormat( VertexFormat.P3fC4b );
 			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
-		}
-		
-		void VerQuad( ref int index, float x1, float y1, float z1, float x2, float y2, float z2, FastColour col ) {
-			int c = col.Pack();
-			vertices[index++] = new VertexP3fC4b( x1, y1, z1, c );
-			vertices[index++] = new VertexP3fC4b( x1, y2, z1, c );
-			vertices[index++] = new VertexP3fC4b( x2, y2, z2, c );
-			vertices[index++] = new VertexP3fC4b( x2, y1, z2, c );
-		}
-		
-		void HorQuad( ref int index, float x1, float z1, float x2, float z2, float y, FastColour col ) {
-			int c = col.Pack();
-			vertices[index++] = new VertexP3fC4b( x1, y, z1, c );
-			vertices[index++] = new VertexP3fC4b( x1, y, z2, c );
-			vertices[index++] = new VertexP3fC4b( x2, y, z2, c );
-			vertices[index++] = new VertexP3fC4b( x2, y, z1, c );
 		}
 	}
 }
