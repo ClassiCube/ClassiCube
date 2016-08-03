@@ -44,8 +44,7 @@ namespace ClassicalSharp.Model {
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawModel( Player p ) {
-			int texId = p.MobTextureId <= 0 ? cache.SpiderTexId : p.MobTextureId;
-			graphics.BindTexture( texId );
+			graphics.BindTexture( GetTexture( p.MobTextureId ) );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 			
 			DrawPart( Link );

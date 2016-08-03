@@ -1,6 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
@@ -85,8 +84,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawModel( Player p ) {
-			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;
-			graphics.BindTexture( texId );
+			graphics.BindTexture( GetTexture( p.TextureId ) );
 			graphics.AlphaTest = false;
 			
 			SkinType skinType = p.SkinType;

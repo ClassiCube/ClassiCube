@@ -9,14 +9,14 @@ namespace ClassicalSharp.Model {
 
 	/// <summary> Contains a set of quads and/or boxes that describe a 3D object as well as
 	/// the bounding boxes that contain the entire set of quads and/or boxes. </summary>
-	public abstract class IModel : IDisposable {
-		
+	public abstract class IModel : IDisposable {	
 		protected Game game;
 		protected ModelCache cache;
 		protected IGraphicsApi graphics;
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
+		internal CachedModel data;
 
 		public IModel( Game game ) {
 			this.game = game;
@@ -119,7 +119,12 @@ namespace ClassicalSharp.Model {
 		protected int[] cols = new int[6];
 		protected int otherCol;
 		protected internal ModelVertex[] vertices;
-		protected internal int index;
+		protected internal int index, texIndex;
+		
+		protected int GetTexture( int defTex ) {
+			return defTex <= 0 ? cache.Textures[texIndex].TexID : defTex;
+		}
+		
 		
 		protected BoxDesc MakeBoxBounds( int x1, int y1, int z1, int x2, int y2, int z2 ) {
 			return ModelBuilder.MakeBoxBounds( x1, y1, z1, x2, y2, z2 );

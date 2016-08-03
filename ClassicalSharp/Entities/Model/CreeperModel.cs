@@ -47,8 +47,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawModel( Player p ) {
-			int texId = p.MobTextureId <= 0 ? cache.CreeperTexId : p.MobTextureId;
-			graphics.BindTexture( texId );
+			graphics.BindTexture( GetTexture( p.MobTextureId ) );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 
 			DrawPart( Torso );

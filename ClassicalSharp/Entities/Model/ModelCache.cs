@@ -1,7 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
-using System.IO;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 
@@ -15,94 +14,125 @@ namespace ClassicalSharp.Model {
 			this.game = window;
 			api = game.Graphics;
 		}
+		
 		#if FALSE
 		public CustomModel[] CustomModels = new CustomModel[256];
 		#endif
-		
+		public List<CachedModel> Models = new List<CachedModel>();
+		public List<CachedTexture> Textures = new List<CachedTexture>();
+		internal int vb;
+		internal VertexP3fT2fC4b[] vertices;
+
+
 		public void InitCache() {
 			vertices = new VertexP3fT2fC4b[24 * 12];
 			vb = api.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
-			IModel model = new HumanoidModel( game );
-			model.CreateParts();
-			cache["humanoid"] = model;
-			cache["human"] = cache["humanoid"];
+			RegisterDefaultModels();
 			game.Events.TextureChanged += TextureChanged;
 		}
 		
-		internal int vb;
-		internal VertexP3fT2fC4b[] vertices;
-		Dictionary<string, IModel> cache = new Dictionary<string, IModel>();
-		internal int ChickenTexId, CreeperTexId, PigTexId, SheepTexId,
-		SkeletonTexId, SpiderTexId, ZombieTexId, SheepFurTexId, HumanoidTexId;
+		public void RegisterModel( string modelName, string texName, IModel instance ) {
+			CachedModel model = new CachedModel();
+			model.Name = modelName;
+			model.Instance = instance;
+			Models.Add( model );
+			
+			instance.data = model;
+			instance.texIndex = GetTextureIndex( texName );		
+		}
+		
+		public void RegisterTextures( params string[] texNames ) {
+			for( int i = 0; i < texNames.Length; i++ ) {
+				CachedTexture texture = new CachedTexture();
+				texture.Name = texNames[i];
+				Textures.Add( texture );
+			}
+		}
+		
+		public int GetTextureIndex( string texName ) {
+			for( int i = 0; i < Textures.Count; i++ ) {
+				if( Textures[i].Name == texName ) return i;
+			}
+			return -1;
+		}
+
 		
 		public IModel GetModel( string modelName ) {
-			if( modelName == "block" ) return cache["humanoid"];
-			IModel model;
+			if( modelName == "block" ) return Models[0].Instance;
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) )
 				modelName = "block";
-			
-			if( !cache.TryGetValue( modelName, out model ) ) {
-				model = InitModel( modelName );
-				if( model != null ) model.CreateParts();
-				else model = cache["humanoid"]; // fallback to default
-				cache[modelName] = model;
+
+			for( int i = 0; i < Models.Count; i++ ) {
+				CachedModel m = Models[i];
+				if( m.Name != modelName ) continue;			
+				
+				InitModel( ref m );
+				return m.Instance;
 			}
-			return model;
-		}
-		
-		IModel InitModel( string modelName ) {
-			if( modelName == "chicken" ) return new ChickenModel( game );
-			else if( modelName == "creeper" ) return new CreeperModel( game );
-			else if( modelName == "pig" ) return new PigModel( game );
-			else if( modelName == "sheep" ) return new SheepModel( game );
-			else if( modelName == "skeleton" ) return new SkeletonModel( game );
-			else if( modelName == "spider" ) return new SpiderModel( game );
-			else if( modelName == "zombie" ) return new ZombieModel( game );
-			else if( modelName == "block" ) return new BlockModel( game );
-			else if( modelName == "chibi" ) return new ChibiModel( game );
-			else if( modelName == "giant" ) return new GiantModel( game );
-			return null;
+			return Models[0].Instance;
 		}
 		
 		public void Dispose() {
-			foreach( var entry in cache )
-				entry.Value.Dispose();
-			api.DeleteDynamicVb( vb );
 			game.Events.TextureChanged -= TextureChanged;
+			for( int i = 0; i < Models.Count; i++ )
+				Models[i].Instance.Dispose();
 			
-			api.DeleteTexture( ref ChickenTexId );
-			api.DeleteTexture( ref CreeperTexId );
-			api.DeleteTexture( ref PigTexId );
-			api.DeleteTexture( ref SheepTexId );
-			api.DeleteTexture( ref SkeletonTexId );
-			api.DeleteTexture( ref SpiderTexId );
-			api.DeleteTexture( ref ZombieTexId );
-			api.DeleteTexture( ref SheepFurTexId );
-			api.DeleteTexture( ref HumanoidTexId );
+			for( int i = 0; i < Textures.Count; i++ ) {
+				CachedTexture tex = Textures[i];
+				api.DeleteTexture( ref tex.TexID );
+				Textures[i] = tex;
+			}
+			api.DeleteDynamicVb( vb );
 		}
 		
+		void InitModel( ref CachedModel m ) {
+			if( m.Initalised ) return;
+			m.Instance.CreateParts();
+			m.Initalised = true;
+		}
+		
+		void RegisterDefaultModels() {
+			RegisterTextures( "char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png", 
+			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png" );
+			
+			RegisterModel( "humanoid", "char.png", new HumanoidModel( game ) );
+			CachedModel human = Models[0];
+			InitModel( ref human );
+			Models[0] = human;
+			
+			RegisterModel( "chicken", "chicken.png", new ChickenModel( game ) );
+			RegisterModel( "creeper", "creeper.png", new CreeperModel( game ) );
+			RegisterModel( "pig", "pig.png", new PigModel( game ) );
+			RegisterModel( "sheep", "sheep.png", new SheepModel( game ) );
+			RegisterModel( "skeleton", "skeleton.png", new SkeletonModel( game ) );
+			RegisterModel( "spider", "spider.png", new SpiderModel( game ) );
+			RegisterModel( "zombie", "zombie.png", new ZombieModel( game ) );
+			
+			RegisterModel( "block", null, new BlockModel( game ) );
+			RegisterModel( "chibi", "char.png", new ChibiModel( game ) );
+			RegisterModel( "giant", "char.png", new GiantModel( game ) );
+		}
+
 		void TextureChanged( object sender, TextureEventArgs e ) {
-			switch( e.Name ) {
-				case "chicken.png":
-					game.UpdateTexture( ref ChickenTexId, e.Name, e.Data, false ); break;
-				case "creeper.png":
-					game.UpdateTexture( ref CreeperTexId, e.Name, e.Data, false ); break;
-				case "pig.png":
-					game.UpdateTexture( ref PigTexId, e.Name, e.Data, false ); break;
-				case "sheep.png":
-					game.UpdateTexture( ref SheepTexId, e.Name, e.Data, false ); break;
-				case "skeleton.png":
-					game.UpdateTexture( ref SkeletonTexId, e.Name, e.Data, false ); break;
-				case "spider.png":
-					game.UpdateTexture( ref SpiderTexId, e.Name, e.Data, false ); break;
-				case "zombie.png":
-					game.UpdateTexture( ref ZombieTexId, e.Name, e.Data, false ); break;
-				case "sheep_fur.png":
-					game.UpdateTexture( ref SheepFurTexId, e.Name, e.Data, false ); break;
-				case "char.png":
-					game.UpdateTexture( ref HumanoidTexId, e.Name, e.Data, true ); break;
+			for( int i = 0; i < Textures.Count; i++ ) {
+				CachedTexture tex = Textures[i];
+				if( tex.Name != e.Name ) continue;
+				
+				game.UpdateTexture( ref tex.TexID, e.Name, e.Data, e.Name == "char.png" );
+				Textures[i] = tex; break;
 			}
 		}
+	}
+	
+	public struct CachedModel {
+		public string Name;
+		public IModel Instance;
+		public bool Initalised;
+	}
+	
+	public struct CachedTexture {
+		public string Name;
+		public int TexID;
 	}
 }
