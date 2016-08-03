@@ -31,7 +31,7 @@ namespace ClassicalSharp.Model {
 			game.Events.TextureChanged += TextureChanged;
 		}
 		
-		public void RegisterModel( string modelName, string texName, IModel instance ) {
+		public void Register( string modelName, string texName, IModel instance ) {
 			CachedModel model = new CachedModel();
 			model.Name = modelName;
 			model.Instance = instance;
@@ -57,7 +57,7 @@ namespace ClassicalSharp.Model {
 		}
 
 		
-		public IModel GetModel( string modelName ) {
+		public IModel Get( string modelName ) {
 			if( modelName == "block" ) return Models[0].Instance;
 			byte blockId;
 			if( Byte.TryParse( modelName, out blockId ) )
@@ -96,22 +96,22 @@ namespace ClassicalSharp.Model {
 			RegisterTextures( "char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png", 
 			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png" );
 			
-			RegisterModel( "humanoid", "char.png", new HumanoidModel( game ) );
+			Register( "humanoid", "char.png", new HumanoidModel( game ) );
 			CachedModel human = Models[0];
 			InitModel( ref human );
 			Models[0] = human;
 			
-			RegisterModel( "chicken", "chicken.png", new ChickenModel( game ) );
-			RegisterModel( "creeper", "creeper.png", new CreeperModel( game ) );
-			RegisterModel( "pig", "pig.png", new PigModel( game ) );
-			RegisterModel( "sheep", "sheep.png", new SheepModel( game ) );
-			RegisterModel( "skeleton", "skeleton.png", new SkeletonModel( game ) );
-			RegisterModel( "spider", "spider.png", new SpiderModel( game ) );
-			RegisterModel( "zombie", "zombie.png", new ZombieModel( game ) );
+			Register( "chicken", "chicken.png", new ChickenModel( game ) );
+			Register( "creeper", "creeper.png", new CreeperModel( game ) );
+			Register( "pig", "pig.png", new PigModel( game ) );
+			Register( "sheep", "sheep.png", new SheepModel( game ) );
+			Register( "skeleton", "skeleton.png", new SkeletonModel( game ) );
+			Register( "spider", "spider.png", new SpiderModel( game ) );
+			Register( "zombie", "zombie.png", new ZombieModel( game ) );
 			
-			RegisterModel( "block", null, new BlockModel( game ) );
-			RegisterModel( "chibi", "char.png", new ChibiModel( game ) );
-			RegisterModel( "giant", "char.png", new GiantModel( game ) );
+			Register( "block", null, new BlockModel( game ) );
+			Register( "chibi", "char.png", new ChibiModel( game ) );
+			Register( "giant", "char.png", new GiantModel( game ) );
 		}
 
 		void TextureChanged( object sender, TextureEventArgs e ) {

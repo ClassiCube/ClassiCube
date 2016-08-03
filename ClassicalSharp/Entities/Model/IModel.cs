@@ -9,20 +9,14 @@ namespace ClassicalSharp.Model {
 
 	/// <summary> Contains a set of quads and/or boxes that describe a 3D object as well as
 	/// the bounding boxes that contain the entire set of quads and/or boxes. </summary>
-	public abstract class IModel : IDisposable {	
+	public abstract class IModel : IDisposable {
 		protected Game game;
-		protected ModelCache cache;
-		protected IGraphicsApi graphics;
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
 		internal CachedModel data;
 
-		public IModel( Game game ) {
-			this.game = game;
-			graphics = game.Graphics;
-			cache = game.ModelCache;
-		}
+		public IModel( Game game ) { this.game = game; }
 		
 		internal abstract void CreateParts();
 		
@@ -107,11 +101,18 @@ namespace ClassicalSharp.Model {
 			cosHead = (float)Math.Cos( p.HeadYawDegrees * Utils.Deg2Rad );
 			sinHead = (float)Math.Sin( p.HeadYawDegrees * Utils.Deg2Rad );
 
-			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			game.Graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			DrawModel( p );
 		}
 		
 		protected abstract void DrawModel( Player p );
+		
+		protected void UpdateVB() {
+			ModelCache cache = game.ModelCache;
+			game.Graphics.UpdateDynamicIndexedVb(
+				DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			index = 0;
+		}
 		
 		public virtual void Dispose() { }
 		
@@ -121,8 +122,8 @@ namespace ClassicalSharp.Model {
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;
 		
-		protected int GetTexture( int defTex ) {
-			return defTex <= 0 ? cache.Textures[texIndex].TexID : defTex;
+		protected int GetTexture( int pTex ) {
+			return pTex > 0 ? pTex : game.ModelCache.Textures[texIndex].TexID;
 		}
 		
 		
@@ -144,6 +145,8 @@ namespace ClassicalSharp.Model {
 		
 		protected void DrawPart( ModelPart part ) {
 			VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
+			VertexP3fT2fC4b[] finVertices = game.ModelCache.vertices;
+			
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
 				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
@@ -156,7 +159,7 @@ namespace ClassicalSharp.Model {
 				int quadI = i & 3;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * uScale;
-				cache.vertices[index++] = vertex;
+				finVertices[index++] = vertex;
 			}
 		}
 		
@@ -174,6 +177,7 @@ namespace ClassicalSharp.Model {
 			float cosZ = (float)Math.Cos( -angleZ ), sinZ = (float)Math.Sin( -angleZ );
 			float x = part.RotX, y = part.RotY, z = part.RotZ;
 			VertexP3fT2fC4b vertex = default( VertexP3fT2fC4b );
+			VertexP3fT2fC4b[] finVertices = game.ModelCache.vertices;
 			
 			for( int i = 0; i < part.Count; i++ ) {
 				ModelVertex v = vertices[part.Offset + i];
@@ -210,7 +214,7 @@ namespace ClassicalSharp.Model {
 				int quadI = i & 3;
 				if( quadI == 0 || quadI == 3 ) vertex.V -= 0.01f * vScale;
 				if( quadI == 2 || quadI == 3 ) vertex.U -= 0.01f * vScale;
-				cache.vertices[index++] = vertex;
+				finVertices[index++] = vertex;
 			}
 		}
 		

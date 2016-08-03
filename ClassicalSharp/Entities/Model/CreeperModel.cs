@@ -47,7 +47,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawModel( Player p ) {
-			graphics.BindTexture( GetTexture( p.MobTextureId ) );
+			game.Graphics.BindTexture( GetTexture( p.MobTextureId ) );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 
 			DrawPart( Torso );
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( -p.anim.legXRot, 0, 0, RightLegFront );
 			DrawRotate( -p.anim.legXRot, 0, 0, LeftLegBack );
 			DrawRotate( p.anim.legXRot, 0, 0, RightLegBack );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			UpdateVB();
 		}
 		
 		ModelPart Head, Torso, LeftLegFront, RightLegFront, LeftLegBack, RightLegBack;

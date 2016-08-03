@@ -17,8 +17,11 @@ namespace ClassicalSharp.Model {
 		Vector3 minBB, maxBB;
 		public bool NoShade = false, SwitchOrder = false;
 		public float CosX = 1, SinX = 0;
+		ModelCache cache;
 		
-		public BlockModel( Game game ) : base( game ) { }
+		public BlockModel( Game game ) : base( game ) {
+			cache = game.ModelCache;
+		}
 		
 		internal override void CreateParts() { }
 		
@@ -101,15 +104,16 @@ namespace ClassicalSharp.Model {
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
 			bool sprite = game.BlockInfo.IsSprite[block];
-			DrawParts( sprite );
-			
+			DrawParts( sprite );			
 			if( index == 0 ) return;
-			graphics.BindTexture( lastTexId );
+			
+			IGraphicsApi api = game.Graphics;
+			api.BindTexture( lastTexId );
 			TransformVertices();
 			
-			if( sprite ) graphics.FaceCulling = true;
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
-			if( sprite ) graphics.FaceCulling = false;
+			if( sprite ) api.FaceCulling = true;
+			UpdateVB();
+			if( sprite ) api.FaceCulling = false;
 		}
 		
 		void FlushIfNotSame( int texIndex ) {
@@ -117,10 +121,9 @@ namespace ClassicalSharp.Model {
 			if( texId == lastTexId ) return;
 			
 			if( lastTexId != -1 ) {
-				graphics.BindTexture( lastTexId );
+				game.Graphics.BindTexture( lastTexId );
 				TransformVertices();
-				graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb,
-				                                cache.vertices, index, index * 6 / 4 );
+				UpdateVB();
 			}
 			lastTexId = texId;
 			index = 0;

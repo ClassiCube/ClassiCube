@@ -35,7 +35,7 @@ namespace ClassicalSharp.Entities {
 			string scale = sep == -1 ? null : model.Substring( sep + 1 );
 			ModelName = sep == -1 ? model : model.Substring( 0, sep );
 			
-			Model = game.ModelCache.GetModel( ModelName );
+			Model = game.ModelCache.Get( ModelName );
 			lastModelChange = DateTime.UtcNow;
 			MobTextureId = -1;
 			ParseScale( scale );

@@ -44,7 +44,7 @@ namespace ClassicalSharp.Model {
 		const float quarterPi = (float)( Math.PI / 4 );
 		const float eighthPi = (float)( Math.PI / 8 );
 		protected override void DrawModel( Player p ) {
-			graphics.BindTexture( GetTexture( p.MobTextureId ) );
+			game.Graphics.BindTexture( GetTexture( p.MobTextureId ) );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 			
 			DrawPart( Link );
@@ -63,7 +63,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate( rotX, eighthPi - rotY, -eighthPi - rotZ, RightLeg );
 			DrawRotate( -rotX, quarterPi - rotY, -eighthPi - rotZ, RightLeg );
 			Rotate = RotateOrder.ZYX;
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			UpdateVB();
 		}		
 		ModelPart Head, Link, End, LeftLeg, RightLeg;
 	}
