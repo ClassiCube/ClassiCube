@@ -75,7 +75,8 @@ namespace ClassicalSharp.Gui {
 		
 		public void GainFocus() {
 			game.CursorVisible = false;
-			game.Camera.RegrabMouse();
+			if( game.Focused )
+				game.Camera.RegrabMouse();
 		}
 		
 		public void LoseFocus() {
