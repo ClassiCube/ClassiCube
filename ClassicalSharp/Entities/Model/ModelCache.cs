@@ -38,7 +38,7 @@ namespace ClassicalSharp.Model {
 			Models.Add( model );
 			
 			instance.data = model;
-			instance.texIndex = GetTextureIndex( texName );		
+			instance.texIndex = GetTextureIndex( texName );
 		}
 		
 		public void RegisterTextures( params string[] texNames ) {
@@ -65,9 +65,11 @@ namespace ClassicalSharp.Model {
 
 			for( int i = 0; i < Models.Count; i++ ) {
 				CachedModel m = Models[i];
-				if( m.Name != modelName ) continue;			
+				if( m.Name != modelName ) continue;
+				if( m.Initalised ) return m.Instance;
 				
 				InitModel( ref m );
+				Models[i] = m;
 				return m.Instance;
 			}
 			return Models[0].Instance;
@@ -87,13 +89,12 @@ namespace ClassicalSharp.Model {
 		}
 		
 		void InitModel( ref CachedModel m ) {
-			if( m.Initalised ) return;
 			m.Instance.CreateParts();
 			m.Initalised = true;
 		}
 		
 		void RegisterDefaultModels() {
-			RegisterTextures( "char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png", 
+			RegisterTextures( "char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png",
 			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png" );
 			
 			Register( "humanoid", "char.png", new HumanoidModel( game ) );
