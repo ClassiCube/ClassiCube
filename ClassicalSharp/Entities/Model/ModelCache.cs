@@ -25,7 +25,7 @@ namespace ClassicalSharp.Model {
 
 
 		public void InitCache() {
-			vertices = new VertexP3fT2fC4b[24 * 12];
+			vertices = new VertexP3fT2fC4b[24 * 17];
 			vb = api.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 			RegisterDefaultModels();
 			game.Events.TextureChanged += TextureChanged;
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Model {
 		
 		void RegisterDefaultModels() {
 			RegisterTextures( "char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png",
-			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png" );
+			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png", "pony.png" );
 			
 			Register( "humanoid", "char.png", new HumanoidModel( game ) );
 			CachedModel human = Models[0];
@@ -105,6 +105,7 @@ namespace ClassicalSharp.Model {
 			Register( "chicken", "chicken.png", new ChickenModel( game ) );
 			Register( "creeper", "creeper.png", new CreeperModel( game ) );
 			Register( "pig", "pig.png", new PigModel( game ) );
+			Register( "pony", "pony.png", new PonyModel( game ) );
 			Register( "sheep", "sheep.png", new SheepModel( game ) );
 			Register( "skeleton", "skeleton.png", new SkeletonModel( game ) );
 			Register( "spider", "spider.png", new SpiderModel( game ) );

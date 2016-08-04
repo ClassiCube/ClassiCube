@@ -164,6 +164,7 @@
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
+    <Compile Include="Entities\Model\PonyModel.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\TabList.cs" />
     <Compile Include="Events\EntityEvents.cs" />
