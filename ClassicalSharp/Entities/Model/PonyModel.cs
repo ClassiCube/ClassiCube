@@ -97,19 +97,23 @@ namespace ClassicalSharp.Model {
                 headTilt *= 0.5f;
             else
                 headTilt = -180 + headTilt * 0.5f; // -360 + (360 + headTilt) * 0.5f
+            
+            game.Graphics.AlphaTest = false;
             DrawHeadRotate( headTilt * Utils.Deg2Rad, 0, 0, Head );
+            DrawPart( Torso );
+            UpdateVB();
+			game.Graphics.AlphaTest = true;
+			index = 0;
 			DrawHeadRotate( headTilt * Utils.Deg2Rad, 0, 0, Hat );
             DrawHeadRotate( headTilt * Utils.Deg2Rad -0.4F, 0, 0, Horn );
             DrawHeadRotate( headTilt * Utils.Deg2Rad, 0, 0, LeftEar );
             DrawHeadRotate( headTilt * Utils.Deg2Rad, 0, 0, RightEar );
             DrawHeadRotate( headTilt * Utils.Deg2Rad, 0, 0, Snout );
-            
-            DrawPart( Torso );
             DrawPart( LeftWing ); //political
             DrawPart( RightWing ); //political
             DrawRotate( -0.4F, 0, 0, Neck );
-            float tailTilt = 0.05F;
-            float tailRoll = 0.1F;
+            const float tailTilt = 0.05F;
+            const float tailRoll = 0.1F;
             DrawRotate( 0, 0, 0, Tail );
             DrawRotate( 0,  tailTilt, -tailRoll, Tail );
             DrawRotate( 0, -tailTilt, tailRoll, Tail );
