@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 		public override float GetEyeY( Entity entity ) { return 21/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3( 8/16f + 0.6f/16f, 28.1f/16f, 8/16f + 0.6f/16f ); }
+			get { return new Vector3( 8/16f + 0.6f/16f, 26.1f/16f, 8/16f + 0.6f/16f ); }
 		}
 		
 		public override AABB PickingBounds {
