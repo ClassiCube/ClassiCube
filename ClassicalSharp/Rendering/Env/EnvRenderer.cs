@@ -19,6 +19,8 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 		}
 		
+		public virtual void UseLegacyMode( bool legacy ) { }
+		
 		public void Ready( Game game ) { }			
 		public virtual void Reset( Game game ) { OnNewMap( game ); }
 		

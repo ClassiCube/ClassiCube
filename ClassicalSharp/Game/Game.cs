@@ -141,7 +141,7 @@ namespace ClassicalSharp {
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			if( Graphics.WarnIfNecessary( Chat ) ) {
 				MapBordersRenderer.UseLegacyMode( true );
-				((StandardEnvRenderer)EnvRenderer).UseLegacyMode( true );
+				EnvRenderer.UseLegacyMode( true );
 			}
 			Gui.SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
 			Network.Connect( IPAddress, Port );

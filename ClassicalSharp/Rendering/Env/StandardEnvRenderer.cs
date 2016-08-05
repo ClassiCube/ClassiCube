@@ -11,7 +11,7 @@ namespace ClassicalSharp.Renderers {
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
 		internal bool legacy;
 		
-		public void UseLegacyMode( bool legacy ) {
+		public override void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
 			ResetSky();
 			ResetClouds();
