@@ -78,19 +78,18 @@ namespace ClassicalSharp {
 		
 		public override Size MeasureSize( ref DrawTextArgs args ) {
 			GetTextParts( args.Text );
-			if( parts.Count == 0 ) return Size.Empty;
+			int count = parts.Count;
+			if( count == 0 ) return Size.Empty;
 			
-			SizeF total = SizeF.Empty;
-			for( int i = 0; i < parts.Count; i++ ) {
+			float width = 0, height = 0;
+			for( int i = 0; i < count; i++ ) {
 				SizeF size = measuringGraphics.MeasureString( parts[i].Text, args.Font, Int32.MaxValue, format );
-				total.Height = Math.Max( total.Height, size.Height );
-				total.Width += size.Width;
+				height = Math.Max( height, size.Height );
+				width += size.Width;
 			}
 			
-			if( args.UseShadow ) {
-				total.Width += Offset; total.Height += Offset;
-			}
-			return Size.Ceiling( total );
+			if( args.UseShadow ) { width += Offset; height += Offset; }
+			return new Size( (int)Math.Ceiling( width ), (int)Math.Ceiling( height ) );
 		}
 		
 		public override Size MeasureBitmappedSize( ref DrawTextArgs args ) {

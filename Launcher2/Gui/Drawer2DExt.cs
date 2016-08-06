@@ -4,10 +4,9 @@ using System.Drawing;
 using ClassicalSharp;
 
 namespace Launcher {
-
-	public static class Drawer2DExt {
+	public unsafe static class Drawer2DExt {
 		
-		public unsafe static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
+		public static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
 		                                           Rectangle srcRect, Rectangle dstRect, byte scaleA, byte scaleB ) {
 			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
 			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
@@ -34,7 +33,7 @@ namespace Launcher {
 			}
 		}
 		
-		public unsafe static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
+		public static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
 		                                          Rectangle srcRect, Rectangle dstRect ) {
 			int srcX = srcRect.X, srcWidth = srcRect.Width, srcHeight = srcRect.Height;
 			int dstX, dstY, dstWidth, dstHeight;
@@ -51,7 +50,7 @@ namespace Launcher {
 			}
 		}
 		
-		public unsafe static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
+		public static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;
@@ -74,7 +73,7 @@ namespace Launcher {
 			}
 		}
 		
-		public unsafe static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
+		public static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;

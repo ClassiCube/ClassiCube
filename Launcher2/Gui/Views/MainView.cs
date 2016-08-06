@@ -43,7 +43,7 @@ namespace Launcher.Gui.Views {
 		void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput( Get( 0 ), 280, Anchor.Centre, Anchor.Centre,
-			          false, 0, -120, 32, "&7Username.." );
+			          false, 0, -120, 16, "&7Username.." );
 			MakeInput( Get( 1 ), 280, Anchor.Centre, Anchor.Centre,
 			          true, 0, -70, 64, "&7Password.." );
 			loginIndex = widgetIndex;

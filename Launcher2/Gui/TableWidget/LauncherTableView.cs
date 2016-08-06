@@ -117,6 +117,7 @@ namespace Launcher.Gui.Widgets {
 			if( !empty ) {
 				size.Width = Math.Min( maxWidth, size.Width );
 				args.SkipPartsCheck = false;
+				//Drawer2DExt.DrawClippedText( ref args, drawer, x, y, maxWidth );
 				drawer.DrawClippedText( ref args, x, y, maxWidth, 30 );
 			}
 			y += size.Height + 2;
