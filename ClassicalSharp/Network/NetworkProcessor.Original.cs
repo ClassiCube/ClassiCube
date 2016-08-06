@@ -66,7 +66,7 @@ namespace ClassicalSharp.Network {
 		
 		#region Reading
 		
-		DateTime receiveStart;
+		DateTime mapReceiveStart;
 		DeflateStream gzipStream;
 		GZipHeaderReader gzipHeader;
 		int mapSizeIndex, mapIndex;
@@ -88,8 +88,7 @@ namespace ClassicalSharp.Network {
 		internal void HandlePing() { }
 		
 		internal void HandleLevelInit() {
-			if( gzipStream != null )
-				return;
+			if( gzipStream != null ) return;
 			game.World.Reset();
 			prevScreen = game.Gui.activeScreen;
 			if( prevScreen is LoadingMapScreen )
@@ -117,7 +116,8 @@ namespace ClassicalSharp.Network {
 			
 			mapSizeIndex = 0;
 			mapIndex = 0;
-			receiveStart = DateTime.UtcNow;
+			mapReceiveStart = DateTime.UtcNow;
+			task.Interval = 1.0 / 60;
 		}
 		
 		internal void HandleLevelDataChunk() {
@@ -150,6 +150,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void HandleLevelFinalise() {
+			task.Interval = 1.0 / 20;
 			game.Gui.SetNewScreen( null );
 			game.Gui.activeScreen = prevScreen;
 			if( prevScreen != null && prevCursorVisible != game.CursorVisible )
@@ -160,8 +161,8 @@ namespace ClassicalSharp.Network {
 			int mapHeight = reader.ReadInt16();
 			int mapLength = reader.ReadInt16();
 			
-			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
-			game.Chat.Add( "&cmap loading took:&f " + loadingMs + " ms" );
+			double loadingMs = (DateTime.UtcNow - mapReceiveStart).TotalMilliseconds;
+			Utils.LogDebug( "map loading took: " + loadingMs );
 			game.World.SetNewMap( map, mapWidth, mapHeight, mapLength );
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			
