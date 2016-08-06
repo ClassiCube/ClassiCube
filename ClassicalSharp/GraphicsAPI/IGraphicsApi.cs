@@ -31,7 +31,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>
-		public Action<double> LostContextFunction;
+		public Action<ScheduledTask> LostContextFunction;
 		
 		
 		/// <summary> Creates a new native texture with the specified dimensions and using the

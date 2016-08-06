@@ -33,10 +33,10 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
-		public void Tick( double delta ) {
+		public void Tick( ScheduledTask task ) {			
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] == null ) continue;
-				Players[i].Tick( delta );
+				Players[i].Tick( task.Interval );
 			}
 		}
 		
@@ -55,9 +55,8 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Renders the names of all player entities contained in this list.<br/>
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
 		/// not currently being looked at by the user. </summary>
-		public void RenderNames( IGraphicsApi api, double delta, float t ) {
-			if( NamesMode == NameMode.NoNames )
-				return;
+		public void RenderNames( IGraphicsApi api, double delta ) {
+			if( NamesMode == NameMode.NoNames ) return;
 			api.Texturing = true;
 			api.AlphaTest = true;
 			LocalPlayer localP = game.LocalPlayer;
@@ -81,7 +80,7 @@ namespace ClassicalSharp.Entities {
 			api.AlphaTest = false;
 		}
 		
-		public void RenderHoveredNames( IGraphicsApi api, double delta, float t ) {
+		public void RenderHoveredNames( IGraphicsApi api, double delta ) {
 			if( NamesMode == NameMode.NoNames || NamesMode == NameMode.All )
 				return;
 			api.Texturing = true;

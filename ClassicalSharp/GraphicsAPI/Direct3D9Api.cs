@@ -427,14 +427,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void LoopUntilRetrieved() {
+			ScheduledTask task = new ScheduledTask();
+			task.Interval = 1.0 / 20;
+			task.Callback = LostContextFunction;
+			
 			while( true ) {
 				Thread.Sleep( 50 );
 				uint code = (uint)device.TestCooperativeLevel();
 				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
-					Utils.LogDebug( "Retrieved Direct3D device again." );
-					return;
+					Utils.LogDebug( "Retrieved Direct3D device again." ); return;
 				}
-				LostContextFunction( 1 / 20.0 );
+				task.Callback( task );
 			}
 		}
 		

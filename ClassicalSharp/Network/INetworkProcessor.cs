@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		/// the client clicked on a particular block or entity. </summary>
 		public abstract void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos );
 		
-		public abstract void Tick( double delta );
+		public abstract void Tick( ScheduledTask task );
 		
 		public abstract void Dispose();
 		

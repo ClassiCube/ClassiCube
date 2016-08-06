@@ -34,7 +34,7 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
-		public void Render( double delta, float t ) {
+		public void Render( double delta ) {
 			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
 
 			Vector3 last = anim.pos;

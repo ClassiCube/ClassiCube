@@ -45,8 +45,8 @@ namespace ClassicalSharp.Singleplayer {
 		char lastCol = '\0';
 		public override void SendChat( string text, bool partial ) {
 			if( !String.IsNullOrEmpty( text ) )
-				AddChat( text );			
-			if( !partial ) lastCol = '\0'; 
+				AddChat( text );
+			if( !partial ) lastCol = '\0';
 		}
 		
 		void AddChat( string text ) {
@@ -69,26 +69,22 @@ namespace ClassicalSharp.Singleplayer {
 			physics.Dispose();
 		}
 		
-		public override void Tick( double delta ) {
+		public override void Tick( ScheduledTask task ) {
 			if( Disconnected ) return;
 			physics.Tick();
 			CheckAsyncResources();
 			
-			if( generator == null )
-				return;
-			if( generator.Done ) {
-				EndGeneration();
-			} else {
-				string state = generator.CurrentState;
-				float progress = generator.CurrentProgress;
-				LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.ActiveScreen);
-				
-				screen.SetProgress( progress );
-				if( state != lastState ) {
-					lastState = state;
-					screen.SetMessage( state );
-				}
-			}
+			if( generator == null ) return;
+			if( generator.Done ) { EndGeneration(); return; }
+			
+			string state = generator.CurrentState;
+			float progress = generator.CurrentProgress;
+			LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.ActiveScreen);
+			
+			screen.SetProgress( progress );
+			if( state == lastState ) return;
+			lastState = state;
+			screen.SetMessage( state );
 		}
 		
 		void EndGeneration() {

@@ -127,7 +127,8 @@ namespace ClassicalSharp.Network {
 		
 		/// <summary> Removes older entries that were downloaded a certain time ago
 		/// but were never removed from the downloaded queue. </summary>
-		public void PurgeOldEntries( int seconds ) {
+		public void PurgeOldEntriesTask( ScheduledTask task ) {
+			const int seconds = 10;
 			lock( downloadedLocker ) {
 				DateTime now = DateTime.UtcNow;
 				List<string> itemsToRemove = new List<string>( downloaded.Count );

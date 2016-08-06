@@ -41,6 +41,12 @@ namespace ClassicalSharp {
 		void OnNewMapLoaded( Game game );
 	}
 	
+	/// <summary> Represents a task that runs on the main thread every certain interval. </summary>
+	public class ScheduledTask {
+		public double Accumulator, Interval;
+		public Action<ScheduledTask> Callback;
+	}
+	
 	public partial class Game {
 		
 		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
@@ -115,6 +121,7 @@ namespace ClassicalSharp {
 		public SkyboxRenderer SkyboxRenderer;
 		
 		public List<IGameComponent> Components = new List<IGameComponent>();
+		public List<ScheduledTask> Tasks = new List<ScheduledTask>();
 
 		/// <summary> Whether x to stone brick tiles should be used. </summary>
 		public bool UseCPEBlocks = false;

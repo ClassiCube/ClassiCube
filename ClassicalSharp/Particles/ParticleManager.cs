@@ -109,9 +109,9 @@ namespace ClassicalSharp.Particles {
 			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount, drawCount * 6 / 4 );
 		}
 		
-		public void Tick( double delta ) {
-			TickParticles( terrainParticles, ref terrainCount, delta );
-			TickParticles( rainParticles, ref rainCount, delta );
+		public void Tick( ScheduledTask task ) {
+			TickParticles( terrainParticles, ref terrainCount, task.Interval );
+			TickParticles( rainParticles, ref rainCount, task.Interval );
 		}
 		
 		void TickParticles( Particle[] particles, ref int count, double delta ) {

@@ -161,7 +161,7 @@ namespace ClassicalSharp.Network {
 			int mapLength = reader.ReadInt16();
 			
 			double loadingMs = ( DateTime.UtcNow - receiveStart ).TotalMilliseconds;
-			Utils.LogDebug( "map loading took:" + loadingMs );
+			game.Chat.Add( "&cmap loading took:&f " + loadingMs + " ms" );
 			game.World.SetNewMap( map, mapWidth, mapHeight, mapLength );
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			
