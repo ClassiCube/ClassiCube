@@ -132,9 +132,6 @@ namespace ClassicalSharp {
 		void LoadOptions() {
 			ClassicMode = Options.GetBool( "mode-classic", false );
 			ClassicHacks = Options.GetBool( OptionsKey.AllowClassicHacks, false );
-			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true );
-			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
-			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
 			AllowCustomBlocks = Options.GetBool( OptionsKey.AllowCustomBlocks, true );
 			UseCPE = Options.GetBool( OptionsKey.UseCPE, true );
 			SimpleArmsAnim = Options.GetBool( OptionsKey.SimpleArmsAnim, false );
@@ -171,6 +168,10 @@ namespace ClassicalSharp {
 			HotbarScale = Options.GetFloat( OptionsKey.HotbarScale, 0.25f, 5f, 1f );
 			ChatScale = Options.GetFloat( OptionsKey.ChatScale, 0.35f, 5f, 1f );
 			ShowFPS = Options.GetBool( OptionsKey.ShowFPS, true );
+
+			UseClassicGui = Options.GetBool( OptionsKey.UseClassicGui, true ) || ClassicMode;
+			UseClassicTabList = Options.GetBool( OptionsKey.UseClassicTabList, false );
+			UseClassicOptions = Options.GetBool( OptionsKey.UseClassicOptions, false );
 			
 			TabAutocomplete = Options.GetBool( OptionsKey.TabAutocomplete, false );
 			FontName = Options.Get( OptionsKey.FontName ) ?? "Arial";

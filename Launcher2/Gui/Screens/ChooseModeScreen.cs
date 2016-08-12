@@ -70,7 +70,6 @@ namespace Launcher.Gui.Screens {
 			Options.Set( "nostalgia-servertextures", !classic );
 			Options.Set( "nostalgia-classictablist", classic );
 			Options.Set( "nostalgia-classicoptions", classic );
-			Options.Set( "nostalgia-classicgui", true );
 			Options.Save();
 			
 			game.SetScreen( new MainScreen( game ) );

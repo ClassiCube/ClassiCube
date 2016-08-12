@@ -100,5 +100,33 @@ namespace Launcher {
 			if( dstWidth < 0 || dstHeight < 0 ) return false;
 			return true;
 		}
+		
+		
+				
+		public static void DrawClippedText( ref DrawTextArgs args, IDrawer2D drawer,
+		                                   int x, int y, int maxWidth ) {
+			Size size = drawer.MeasureSize( ref args );
+			// No clipping necessary
+			if( size.Width <= maxWidth ) { drawer.DrawText( ref args, x, y ); return; }			
+			DrawTextArgs copy = args;
+			copy.SkipPartsCheck = true;
+			
+			char[] chars = new char[args.Text.Length + 2];
+			for( int i = 0; i < args.Text.Length; i++ )
+				chars[i] = args.Text[i];
+			chars[args.Text.Length] = '.';
+			chars[args.Text.Length + 1] = '.';
+			
+			for( int len = args.Text.Length; len > 0; len-- ) {
+				chars[len] = '.';
+				if( chars[len - 1] == ' ' ) continue;
+				
+				copy.Text = new string( chars, 0, len + 2 );
+				size = drawer.MeasureSize( ref copy );
+				if( size.Width > maxWidth ) continue;
+					
+				drawer.DrawText( ref copy, x, y ); return;
+			}
+		}
 	}
 }
