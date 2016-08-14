@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HidesHud { get { return true; } }
 		
-		public override bool HandlesKeyDown( Key key ) { return true; }
+		public override bool HandlesKeyDown( Key key ) { return key < Key.F1 || key > Key.F35; }
 		
 		public override bool HandlesKeyPress( char key ) { return true; }
 		
