@@ -8,10 +8,10 @@ namespace ClassicalSharp.Network {
 		
 		public byte[] buffer = new byte[131];
 		public int index = 0;
-		public NetworkStream Stream;
+		Socket socket;
 		
-		public NetWriter( NetworkStream stream ) {
-			Stream = stream;
+		public NetWriter( Socket socket ) {
+			this.socket = socket;
 		}
 		
 		public void WriteString( string value ) {
@@ -54,7 +54,9 @@ namespace ClassicalSharp.Network {
 		}
 
 		public void Send() {
-			Stream.Write( buffer, 0, index );
+			int offset = 0;
+			while( offset < index )
+				offset += socket.Send( buffer, offset, index - offset, SocketFlags.None );
 			index = 0;
 		}
 	}

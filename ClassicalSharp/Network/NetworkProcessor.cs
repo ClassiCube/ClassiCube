@@ -43,9 +43,8 @@ namespace ClassicalSharp.Network {
 				return;
 			}
 			
-			NetworkStream stream = new NetworkStream( socket, true );
-			reader = new NetReader( stream );
-			writer = new NetWriter( stream );
+			reader = new NetReader( socket );
+			writer = new NetWriter( socket );
 			gzippedMap = new FixedBufferStream( reader.buffer );
 			
 			Disconnected = false;
