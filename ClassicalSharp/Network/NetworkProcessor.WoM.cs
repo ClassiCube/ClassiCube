@@ -63,16 +63,17 @@ namespace ClassicalSharp.Network {
 			sendWomId = true;
 		}
 		
+		const int fullAlpha = 0xFF << 24;
 		static FastColour ParseWomColour( string value, FastColour defaultCol ) {
 			int argb;
-			return Int32.TryParse( value, out argb ) ? new FastColour( argb ) : defaultCol;
+			return Int32.TryParse( value, out argb ) ? new FastColour( argb | fullAlpha ) : defaultCol;
 		}
 		
 		static string ReadLine(ref int start, string value) {
 			if (start == -1) return null;
 			for (int i = start; i < value.Length; i++) {
 				char c = value[i];
-				if (c != '\r' && c != '\n')) continue;
+				if (c != '\r' && c != '\n') continue;
 				
 				string line = value.Substring(start, i - start);
 				start = i + 1;
