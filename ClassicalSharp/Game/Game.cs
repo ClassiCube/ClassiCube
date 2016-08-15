@@ -52,13 +52,13 @@ namespace ClassicalSharp {
 		public void Exit() { window.Exit(); }
 		
 		void OnNewMapCore( object sender, EventArgs e ) {
-			foreach( IGameComponent comp in Components )
-				comp.OnNewMap( this );
+			for( int i = 0; i < Components.Count; i++ )
+				Components[i].OnNewMap( this );
 		}
 		
 		void OnNewMapLoadedCore( object sender, EventArgs e ) {
-			foreach( IGameComponent comp in Components )
-				comp.OnNewMapLoaded( this );
+			for( int i = 0; i < Components.Count; i++ )
+				Components[i].OnNewMapLoaded( this );
 		}
 		
 		public T AddComponent<T>( T obj ) where T : IGameComponent {
@@ -321,8 +321,8 @@ namespace ClassicalSharp {
 			WorldEvents.OnNewMap -= OnNewMapCore;
 			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
 			
-			foreach( IGameComponent comp in Components )
-				comp.Dispose();
+			for( int i = 0; i < Components.Count; i++ )
+				Components[i].Dispose();
 			
 			Graphics.DeleteIb( defaultIb );
 			Drawer2D.DisposeInstance();

@@ -57,8 +57,8 @@ namespace ClassicalSharp.TexturePack {
 				using( Stream fs = File.Create( Path.Combine( path, file ) ) )
 					using( StreamWriter writer = new StreamWriter( fs ) )
 				{
-					foreach( string value in Entries )
-						writer.WriteLine( value );
+					for( int i = 0; i < Entries.Count; i++ )
+						writer.WriteLine( Entries[i] );
 				}
 				return true;
 			} catch( IOException ex ) {

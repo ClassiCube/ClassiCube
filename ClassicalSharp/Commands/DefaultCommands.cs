@@ -41,7 +41,7 @@ namespace ClassicalSharp.Commands {
 				game.CommandManager.PrintDefinedCommands( game );
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 			} else {
-				Command cmd = game.CommandManager.GetMatchingCommand( cmdName );
+				Command cmd = game.CommandManager.GetMatch( cmdName );
 				if( cmd == null ) return;
 				string[] help = cmd.Help;
 				for( int i = 0; i < help.Length; i++ )
@@ -62,8 +62,9 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			foreach( string line in game.Graphics.ApiInfo )
-				game.Chat.Add( "&a" + line );
+			string[] lines = game.Graphics.ApiInfo;
+			for( int i = 0; i < lines.Length; i++ )
+				game.Chat.Add( "&a" + lines[i] );
 		}
 	}
 	

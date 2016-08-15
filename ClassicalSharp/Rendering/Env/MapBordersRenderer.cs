@@ -150,8 +150,10 @@ namespace ClassicalSharp.Renderers {
 		void RebuildSides( int y, int axisSize ) {
 			byte block = game.World.Env.SidesBlock;
 			sidesVertices = 0;
-			foreach( Rectangle r in rects )
+			for( int i = 0; i < rects.Length; i++ ) {
+				Rectangle r = rects[i];
 				sidesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YQuads outside
+			}			
 			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
 			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( y ), axisSize ); // ZQuads
 			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( y ), axisSize ); // XQuads
@@ -160,8 +162,10 @@ namespace ClassicalSharp.Renderers {
 			
 			fullColSides = game.BlockInfo.FullBright[block];
 			int col = fullColSides ? FastColour.WhitePacked : map.Env.Shadow;
-			foreach( Rectangle r in rects )
+			for( int i = 0; i < rects.Length; i++ ) {
+				Rectangle r = rects[i];
 				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset( block ), ref v );
+			}
 			
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = y;
@@ -177,15 +181,19 @@ namespace ClassicalSharp.Renderers {
 		void RebuildEdges( int y, int axisSize ) {
 			byte block = game.World.Env.EdgeBlock;
 			edgesVertices = 0;
-			foreach( Rectangle r in rects )
+			for( int i = 0; i < rects.Length; i++ ) {
+				Rectangle r = rects[i];
 				edgesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YPlanes outside
+			}
 			VertexP3fT2fC4b* v = stackalloc VertexP3fT2fC4b[edgesVertices];
 			IntPtr ptr = (IntPtr)v;
 			
 			fullColEdge = game.BlockInfo.FullBright[block];
 			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
-			foreach( Rectangle r in rects )
+			for( int i = 0; i < rects.Length; i++ ) {
+				Rectangle r = rects[i];
 				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, YOffset( block ), ref v );
+			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
 		}
 		

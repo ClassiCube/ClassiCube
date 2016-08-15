@@ -40,8 +40,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void Reset( Game game ) {
-			foreach( WarningScreen screen in overlays )
-				screen.Dispose();
+			for( int i = 0; i < overlays.Count; i++ )
+				overlays[i].Dispose();
 			overlays.Clear();
 		}
 		
@@ -56,8 +56,8 @@ namespace ClassicalSharp {
 			api.DeleteTexture( ref GuiClassicTex );
 			api.DeleteTexture( ref IconsTex );			
 			
-			foreach( WarningScreen screen in overlays )
-				screen.Dispose();
+			for( int i = 0; i < overlays.Count; i++ )
+				overlays[i].Dispose();
 		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
@@ -121,8 +121,9 @@ namespace ClassicalSharp {
 			if( activeScreen != null )
 				activeScreen.OnResize( game.Width, game.Height );
 			hudScreen.OnResize( game.Width, game.Height );
-			foreach( Screen overlay in overlays )
-				overlay.OnResize( game.Width, game.Height );
+			
+			for( int i = 0; i < overlays.Count; i++ )
+				overlays[i].OnResize( game.Width, game.Height );
 		}
 	}
 }

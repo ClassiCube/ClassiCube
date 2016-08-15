@@ -108,8 +108,8 @@ namespace ClassicalSharp.Gui {
 		void ReconnectClick( Game g, Widget w, MouseButton mouseBtn ) {
 			if( mouseBtn != MouseButton.Left ) return;
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
-			foreach( IGameComponent comp in game.Components )
-				comp.Reset( game );
+			for( int i = 0; i < game.Components.Count; i++ )
+				game.Components[i].Reset( game );
 			game.BlockInfo.Reset( game );
 			
 			game.Gui.SetNewScreen( new LoadingMapScreen( game, connectString, "Waiting for handshake" ) );

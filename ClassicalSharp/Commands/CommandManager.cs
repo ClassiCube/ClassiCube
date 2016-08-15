@@ -15,7 +15,7 @@ namespace ClassicalSharp.Commands {
 		protected Game game;
 		public List<Command> RegisteredCommands = new List<Command>();
 		public void Init( Game game ) {
-			this.game = game;			
+			this.game = game;
 			Register( new CommandsCommand() );
 			Register( new GpuInfoCommand() );
 			Register( new HelpCommand() );
@@ -28,39 +28,37 @@ namespace ClassicalSharp.Commands {
 			}
 		}
 
-		public void Ready( Game game ) { }			
+		public void Ready( Game game ) { }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
 		public void Register( Command command ) {
 			command.game = game;
-			foreach( Command cmd in RegisteredCommands ) {
-				if( Utils.CaselessEquals( cmd.Name, command.Name ) ) {
+			for( int i = 0; i < RegisteredCommands.Count; i++ ) {
+				Command cmd = RegisteredCommands[i];
+				if( Utils.CaselessEquals( cmd.Name, command.Name ) )
 					throw new InvalidOperationException( "Another command already has name : " + command.Name );
-				}
 			}
 			RegisteredCommands.Add( command );
 		}
 		
-		public Command GetMatchingCommand( string commandName ) {
-			bool matchFound = false;
-			Command matchingCommand = null;
-			foreach( Command cmd in RegisteredCommands ) {
-				if( Utils.CaselessStarts( cmd.Name, commandName ) ) {
-					if( matchFound ) {
-						game.Chat.Add( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
-						return null;
-					}
-					matchFound = true;
-					matchingCommand = cmd;
+		public Command GetMatch( string commandName ) {
+			Command match = null;
+			for( int i = 0; i < RegisteredCommands.Count; i++ ) {
+				Command cmd = RegisteredCommands[i];
+				if( !Utils.CaselessStarts( cmd.Name, commandName ) ) continue;
+				
+				if( match != null ) {
+					game.Chat.Add( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
+					return null;
 				}
+				match = cmd;
 			}
 			
-			if( matchingCommand == null ) {
+			if( match == null )
 				game.Chat.Add( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
-			}
-			return matchingCommand;
+			return match;
 		}
 		
 		public void Execute( string text ) {
@@ -72,7 +70,7 @@ namespace ClassicalSharp.Commands {
 				return;
 			}
 			string commandName = reader.Next();
-			Command cmd = GetMatchingCommand( commandName );
+			Command cmd = GetMatch( commandName );
 			if( cmd != null ) {
 				cmd.Execute( reader );
 			}
@@ -81,8 +79,10 @@ namespace ClassicalSharp.Commands {
 		public void PrintDefinedCommands( Game game ) {
 			List<string> lines = new List<string>();
 			StringBuilder buffer = new StringBuilder( 64 );
-			foreach( Command cmd in RegisteredCommands ) {
+			for( int i = 0; i < RegisteredCommands.Count; i++ ) {
+				Command cmd = RegisteredCommands[i];
 				string name = cmd.Name;
+				
 				if( buffer.Length + name.Length > 64 ) {
 					lines.Add( buffer.ToString() );
 					buffer.Length = 0;
@@ -90,11 +90,11 @@ namespace ClassicalSharp.Commands {
 				buffer.Append( name );
 				buffer.Append( ", " );
 			}
+			
 			if( buffer.Length > 0 )
-				lines.Add( buffer.ToString() );
-			foreach( string part in lines ) {
-				game.Chat.Add( part );
-			}
+				lines.Add( buffer.ToString() );			
+			for( int i = 0; i < lines.Count; i++ )
+				game.Chat.Add( lines[i] );
 		}
 		
 		public void Dispose() {

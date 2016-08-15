@@ -81,7 +81,8 @@ namespace ClassicalSharp.Gui {
 				sb.AppendNum( ref index, matches.Count );
 				sb.Append( ref index, " matching names: " );
 				
-				foreach( string match in matches ) {
+				for( int i = 0; i < matches.Count; i++) {
+					string match = matches[i];
 					if( (match.Length + 1 + sb.Length) > LineLength ) break;
 					sb.Append( ref index, match );
 					sb.Append( ref index, ' ' );

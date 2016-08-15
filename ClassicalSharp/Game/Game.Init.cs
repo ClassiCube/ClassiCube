@@ -103,11 +103,11 @@ namespace ClassicalSharp {
 			AxisLinesRenderer = AddComponent( new AxisLinesRenderer() );
 			SkyboxRenderer = AddComponent( new SkyboxRenderer() );
 			
-			foreach( IGameComponent comp in Components )
-				comp.Init( this );
+			for( int i = 0; i < Components.Count; i++ )
+				Components[i].Init( this );
 			ExtractInitialTexturePack();
-			foreach( IGameComponent comp in Components )
-				comp.Ready( this );
+			for( int i = 0; i < Components.Count; i++ )
+				Components[i].Ready( this );
 			InitScheduledTasks();
 			
 			window.LoadIcon();

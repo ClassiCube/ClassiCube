@@ -88,16 +88,17 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 
-		static char[] trimChars = new char[] { ' ' };
 		public static string GetETagFromCache( string url, EntryList tags ) {
 			byte[] utf8 = Encoding.UTF8.GetBytes( url );
 			string crc32 = CRC32( utf8 ).ToString();
 			
-			foreach( string entry in tags.Entries ) {
-				if( !entry.StartsWith( crc32 ) ) continue;				
-				string[] parts = entry.Split( trimChars, 2 );
-				if( parts.Length == 1 ) continue;
-				return parts[1];
+			for( int i = 0; i < tags.Entries.Count; i++ ) {
+				string entry = tags.Entries[i];
+				if( !entry.StartsWith( crc32 ) ) continue;	
+				
+				int sepIndex = entry.IndexOf( ' ' );
+				if( sepIndex == -1 ) continue;
+				return entry.Substring( sepIndex + 1 );
 			}
 			return null;
 		}

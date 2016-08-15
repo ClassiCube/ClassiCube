@@ -166,6 +166,9 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void MoveNormal( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+			if(entity.BlockUnderFeet == 8 || entity.BlockUnderFeet == 9 || entity.BlockUnderFeet == 10 || entity.BlockUnderFeet == 11) {
+				entity.Velocity.Y += 2; entity.Velocity.Y = 0;
+			}
 			AdjHeadingVelocity( zMoving, xMoving, factor );
 			Move( xMoving, zMoving, factor, drag, gravity, yMul );
 		}

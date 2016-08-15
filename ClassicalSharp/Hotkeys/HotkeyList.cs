@@ -64,7 +64,8 @@ namespace ClassicalSharp.Hotkeys {
 			if( keyboard[Key.ShiftLeft] || keyboard[Key.ShiftRight] ) flags |= 2;
 			if( keyboard[Key.AltLeft] || keyboard[Key.AltRight] ) flags |= 4;
 			
-			foreach( Hotkey hKey in Hotkeys ) {
+			for( int i = 0; i < Hotkeys.Count; i++ ) {
+				Hotkey hKey = Hotkeys[i];
 				if( (hKey.Flags & flags) == hKey.Flags && hKey.BaseKey == key ) {
 					text = hKey.Text;
 					moreInput = hKey.StaysOpen;

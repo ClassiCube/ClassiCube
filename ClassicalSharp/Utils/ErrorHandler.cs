@@ -37,9 +37,9 @@ namespace ClassicalSharp {
 			Exception ex = (Exception)e.ExceptionObject;
 			bool wroteToCrashLog = true;
 			try {
-				using( StreamWriter writer = new StreamWriter( logFile, true ) ) {
-					writer.WriteLine( "=== crash occurred ===" );
-					writer.WriteLine( "Time: " + DateTime.Now );
+				using( StreamWriter w = new StreamWriter( logFile, true ) ) {
+					w.WriteLine( "=== crash occurred ===" );
+					w.WriteLine( "Time: " + DateTime.Now );
 					
 					string platform = Configuration.RunningOnMono ? "Mono " : ".NET ";
 					platform += Environment.Version;
@@ -48,18 +48,18 @@ namespace ClassicalSharp {
 					if( Configuration.RunningOnMacOS ) platform += ", OSX - ";
 					if( Configuration.RunningOnLinux ) platform += ", Linux - ";
 					platform += Environment.OSVersion.Version.ToString();
-					writer.WriteLine( "Running on: " + platform );
+					w.WriteLine( "Running on: " + platform );
 					
 					while( ex != null ) {
-						writer.WriteLine( Format( ex ) );
-						writer.WriteLine();
+						w.WriteLine( Format( ex ) );
+						w.WriteLine();
 						ex = ex.InnerException;
 					}
 					
 					if( AdditionalInfo != null ) {
-						foreach( string l in AdditionalInfo )
-							writer.WriteLine( l );
-						writer.WriteLine();
+						for( int i = 0; i < AdditionalInfo.Length; i++)
+							w.WriteLine( AdditionalInfo[i] );
+						w.WriteLine();
 					}
 				}
 			} catch( Exception ) {
