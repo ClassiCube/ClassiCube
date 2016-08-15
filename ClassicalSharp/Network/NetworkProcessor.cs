@@ -67,7 +67,7 @@ namespace ClassicalSharp.Network {
 		
 		public override void Tick( ScheduledTask task ) {
 			if( Disconnected ) return;
-			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 20 )
+			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 30 )
 				CheckDisconnection( task.Interval );
 			if( Disconnected ) return;
 			

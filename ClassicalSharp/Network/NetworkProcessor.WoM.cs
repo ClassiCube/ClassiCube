@@ -2,10 +2,7 @@
 // This class was partially based on information from http://files.worldofminecraft.com/texturing/
 // NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015
 using System;
-using System.Drawing;
-using System.IO;
 using ClassicalSharp.Map;
-using ClassicalSharp.Network;
 
 namespace ClassicalSharp.Network {
 
@@ -24,39 +21,39 @@ namespace ClassicalSharp.Network {
 		}
 		
 		void ParseWomConfig( string page ) {
-			using( StringReader reader = new StringReader( page ) ) {
-				string line;
-				while( ( line = reader.ReadLine() ) != null ) {
-					Utils.LogDebug( line );
-					string[] parts = line.Split( new [] { '=' }, 2 );
-					if( parts.Length < 2 ) continue;
-					string key = parts[0].TrimEnd();
-					string value = parts[1].TrimStart();
-					
-					if( key == "environment.cloud" ) {
-						FastColour col = ParseWomColour( value, WorldEnv.DefaultCloudsColour );
-						game.World.Env.SetCloudsColour( col );
-					} else if( key == "environment.sky" ) {
-						FastColour col = ParseWomColour( value, WorldEnv.DefaultSkyColour );
-						game.World.Env.SetSkyColour( col );
-					} else if( key == "environment.fog" ) {
-						FastColour col = ParseWomColour( value, WorldEnv.DefaultFogColour );
-						game.World.Env.SetFogColour( col );
-					} else if( key == "environment.level" ) {
-						int waterLevel = 0;
-						if( Int32.TryParse( value, out waterLevel ) )
-							game.World.Env.SetEdgeLevel( waterLevel );
-					} else if( key == "user.detail" && !cpe.useMessageTypes ) {
-						game.Chat.Add( value, MessageType.Status2 );
-					}
+			string line;
+			int start = 0;
+			while( (line = ReadLine( ref start, page )) != null ) {
+				Utils.LogDebug( line );
+				int sepIndex = line.IndexOf('=');
+				if( sepIndex == -1 ) continue;
+				string key = line.Substring(0, sepIndex).TrimEnd();
+				string value = line.Substring(sepIndex + 1).TrimStart();
+				
+				if( key == "environment.cloud" ) {
+					FastColour col = ParseWomColour( value, WorldEnv.DefaultCloudsColour );
+					game.World.Env.SetCloudsColour( col );
+				} else if( key == "environment.sky" ) {
+					FastColour col = ParseWomColour( value, WorldEnv.DefaultSkyColour );
+					game.World.Env.SetSkyColour( col );
+				} else if( key == "environment.fog" ) {
+					FastColour col = ParseWomColour( value, WorldEnv.DefaultFogColour );
+					game.World.Env.SetFogColour( col );
+				} else if( key == "environment.level" ) {
+					int waterLevel = 0;
+					if( Int32.TryParse( value, out waterLevel ) )
+						game.World.Env.SetEdgeLevel( waterLevel );
+				} else if( key == "user.detail" && !cpe.useMessageTypes ) {
+					game.Chat.Add( value, MessageType.Status2 );
 				}
 			}
 		}
 		
-		void ReadWomConfigurationAsync() {
+		void ReadWomConfigAsync() {
 			string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
 			string url = "http://" + host;
 			url = url.Replace( "$U", game.Username );
+			
 			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
 			// different world, the environment settings from the last world are not loaded in the
 			// new world if the async 'get request' didn't complete before the new world was loaded.
@@ -69,6 +66,24 @@ namespace ClassicalSharp.Network {
 		static FastColour ParseWomColour( string value, FastColour defaultCol ) {
 			int argb;
 			return Int32.TryParse( value, out argb ) ? new FastColour( argb ) : defaultCol;
+		}
+		
+		static string ReadLine(ref int start, string value) {
+			if (start == -1) return null;
+			for (int i = start; i < value.Length; i++) {
+				char c = value[i];
+				if (c != '\r' && c != '\n')) continue;
+				
+				string line = value.Substring(start, i - start);
+				start = i + 1;
+				if (c == '\r' && start < value.Length && value[start] == '\n')
+					start++;
+				return line;
+			}
+			
+			string last = value.Substring(start);
+			start = -1;
+			return last;
 		}
 	}
 }

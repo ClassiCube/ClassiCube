@@ -96,9 +96,8 @@ namespace ClassicalSharp.Network {
 			prevCursorVisible = game.CursorVisible;
 			
 			game.Gui.SetNewScreen( new LoadingMapScreen( game, ServerName, ServerMotd ), false );
-			if( ServerMotd.Contains( "cfg=" ) ) {
-				ReadWomConfigurationAsync();
-			}
+			if( ServerMotd.Contains( "cfg=" ) && !game.PureClassic )
+				ReadWomConfigAsync();
 			receivedFirstPosition = false;
 			gzipHeader = new GZipHeaderReader();
 			
