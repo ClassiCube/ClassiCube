@@ -132,17 +132,15 @@ namespace ClassicalSharp.TexturePack {
 				return reader.ReadBytes( uncompressedSize );
 			} else if( compressionMethod == 8 ) { // Deflate
 				byte[] data = new byte[uncompressedSize];
-				byte[] compressedData = reader.ReadBytes( compressedSize );
-				MemoryStream stream = new MemoryStream( compressedData );
 				int index = 0, read = 0;
-				DeflateStream inflater = new DeflateStream( stream, CompressionMode.Decompress );
 				
-				while( index < uncompressedSize &&
-				      (read = inflater.Read( data, index, data.Length - index)) > 0 ) {
-					index += read;
+				using( DeflateStream ds = new DeflateStream( reader.BaseStream, CompressionMode.Decompress, true ) ) {
+					while( index < uncompressedSize ) {
+						read = ds.Read( data, index, data.Length - index);
+						if( read == 0 ) break;
+						index += read;
+					}
 				}
-				
-				inflater.Dispose();
 				return data;
 			} else {
 				Utils.LogDebug( "Unsupported .zip entry compression method: " + compressionMethod );
