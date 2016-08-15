@@ -25,6 +25,8 @@ namespace ClassicalSharp {
 	
 	public static class Utils {
 		
+		public const int StringLength = 64;
+		
 		/// <summary> Creates a vector with all components at 1E25. </summary>
 		public static Vector3 MaxPos() { return new Vector3( 1E25f, 1E25f, 1E25f ); }
 		
@@ -268,9 +270,9 @@ namespace ClassicalSharp {
 		internal static byte FastByte( string s ) {
 			int sum = 0;
 			switch( s.Length ) {
-					case 1: sum = (s[0] - '0'); break;
-					case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
-					case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
+				case 1: sum = (s[0] - '0'); break;
+				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
+				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
 			}
 			return (byte)sum;
 		}

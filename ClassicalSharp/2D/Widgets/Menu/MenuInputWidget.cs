@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui {
 			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
 			this.boldFont = boldFont;
-			chatInputText = new StringBuffer( 64 );
+			chatInputText = new StringBuffer( Utils.StringLength );
 		}
 		
 		public static MenuInputWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( chatInputText.Length < 64 && !IsInvalidChar( key ) ) {
+			if( chatInputText.Length < Utils.StringLength && !IsInvalidChar( key ) ) {
 				if( !Validator.IsValidChar( key ) ) return true;
 				chatInputText.Append( chatInputText.Length, key );
 				

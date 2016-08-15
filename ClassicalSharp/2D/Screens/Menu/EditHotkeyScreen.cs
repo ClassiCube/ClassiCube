@@ -81,7 +81,7 @@ namespace ClassicalSharp.Gui {
 				MenuInputWidget.Create(
 					game, 0, -35, 500, 30, curHotkey.Text,
 					Anchor.Centre, Anchor.Centre,
-					regularFont, titleFont, new StringValidator( 64 ) ),			
+					regularFont, titleFont, new StringValidator( Utils.StringLength ) ),			
 				Make( -100, 10, "Input stays open: " + staysOpen,
 				     301, 40, titleFont, LeaveOpenClick ),
 				

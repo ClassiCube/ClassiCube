@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < len; i++ )
 				wrap[i] = value[i];
 			
-			for( int i = len; i < capacity; i++ )
+			for( int i = len; i < Capacity; i++ )
 				wrap[i] = '\0';
 			value = wrap;
 		}

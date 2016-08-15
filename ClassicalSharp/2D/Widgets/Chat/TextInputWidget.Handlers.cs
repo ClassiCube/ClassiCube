@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui {
 				if( caretPos != -1 ) caretPos -= len;
 				AppendText( matches[0] );
 			} else if( matches.Count > 1 ) {
-				StringBuffer sb = new StringBuffer( 64 );
+				StringBuffer sb = new StringBuffer( Utils.StringLength );
 				int index = 0;
 				sb.Append( ref index, "&e" );
 				sb.AppendNum( ref index, matches.Count );
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Gui {
 				
 				for( int i = 0; i < matches.Count; i++) {
 					string match = matches[i];
-					if( (match.Length + 1 + sb.Length) > LineLength ) break;
+					if( (sb.Length + match.Length + 1) > sb.Capacity ) break;
 					sb.Append( ref index, match );
 					sb.Append( ref index, ' ' );
 				}

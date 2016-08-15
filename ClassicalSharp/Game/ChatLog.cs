@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 			last = now;
 			if( writer == null ) return;
 			
-			if( 32 + text.Length > logBuffer.capacity )
+			if( 32 + text.Length > logBuffer.Capacity )
 				logBuffer = new StringBuffer( 32 + text.Length );
 			int index = 0;
 			logBuffer.Clear() // [HH:mm:ss] text

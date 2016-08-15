@@ -15,7 +15,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public void WriteString( string value ) {
-			int count = Math.Min( value.Length, 64 );
+			int count = Math.Min( value.Length, Utils.StringLength );
 			for( int i = 0; i < count; i++ ) {
 				char c = value[i];
 				int cpIndex = 0;
@@ -31,10 +31,10 @@ namespace ClassicalSharp.Network {
 					buffer[index + i] = (byte)'?';
 				}
 			}
-			for( int i = value.Length; i < 64; i++ ) {
+			
+			for( int i = value.Length; i < Utils.StringLength; i++ )
 				buffer[index + i] = (byte)' ';
-			}
-			index += 64;
+			index += Utils.StringLength;
 		}
 		
 		public void WriteUInt8( byte value ) {

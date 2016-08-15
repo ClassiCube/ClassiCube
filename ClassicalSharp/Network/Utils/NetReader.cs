@@ -73,12 +73,12 @@ namespace ClassicalSharp.Network {
 		}
 
 		public string ReadCp437String() {
-			int length = GetString( false, 64 );
+			int length = GetString( false, Utils.StringLength );
 			return new String( characters, 0, length );
 		}
 		
 		public string ReadAsciiString() {
-			int length = GetString( true, 64 );
+			int length = GetString( true, Utils.StringLength );
 			return new String( characters, 0, length );
 		}
 		
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal string ReadChatString( ref byte messageType ) {
-			int length = GetString( false, 64 );
+			int length = GetString( false, Utils.StringLength );
 			
 			int offset = 0;
 			if( length >= womDetail.Length && IsWomDetailString() ) {
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Network {
 			return new String( characters, offset, length );
 		}
 		
-		static char[] characters = new char[64];
+		static char[] characters = new char[Utils.StringLength];
 		const string womDetail = "^detail.user=";		
 		static bool IsWomDetailString() {
 			for( int i = 0; i < womDetail.Length; i++ ) {

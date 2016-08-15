@@ -6,10 +6,10 @@ namespace ClassicalSharp {
 	public class StringBuffer {
 		
 		public char[] value;
-		public int capacity;
+		public int Capacity;
 		
 		public StringBuffer( int capacity ) {
-			this.capacity = capacity;
+			this.Capacity = capacity;
 			value = new char[capacity];
 		}
 		
@@ -72,19 +72,19 @@ namespace ClassicalSharp {
 		}
 		
 		public StringBuffer Clear() {
-			for( int i = 0; i < capacity; i++ )
+			for( int i = 0; i < Capacity; i++ )
 				value[i] = '\0';
 			return this;
 		}
 		
 		public void DeleteAt( int index ) {
-			for( int i = index; i < capacity - 1; i++ )
+			for( int i = index; i < Capacity - 1; i++ )
 				value[i] = value[i + 1];
-			value[capacity - 1] = '\0';
+			value[Capacity - 1] = '\0';
 		}
 		
 		public void InsertAt( int index, char c ) {
-			for( int i = capacity - 1; i > index; i-- )
+			for( int i = Capacity - 1; i > index; i-- )
 				value[i] = value[i - 1];
 			value[index] = c;
 		}
@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		
 		public bool Empty {
 			get {
-				for( int i = 0; i < capacity; i++ ) {
+				for( int i = 0; i < Capacity; i++ ) {
 					if( value[i] != '\0' )
 						return false;
 				}
@@ -106,8 +106,8 @@ namespace ClassicalSharp {
 		
 		public int Length {
 			get {
-				int len = capacity;
-				for( int i = capacity - 1; i >= 0; i-- ) {
+				int len = Capacity;
+				for( int i = Capacity - 1; i >= 0; i-- ) {
 					if( value[i] != '\0' )
 						break;
 					len--;

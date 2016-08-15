@@ -1,7 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ClassicalSharp.Commands {
 	
@@ -77,24 +76,24 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public void PrintDefinedCommands( Game game ) {
-			List<string> lines = new List<string>();
-			StringBuilder buffer = new StringBuilder( 64 );
+			StringBuffer sb = new StringBuffer( Utils.StringLength );
+			int index = 0;
+			
 			for( int i = 0; i < RegisteredCommands.Count; i++ ) {
 				Command cmd = RegisteredCommands[i];
 				string name = cmd.Name;
 				
-				if( buffer.Length + name.Length > 64 ) {
-					lines.Add( buffer.ToString() );
-					buffer.Length = 0;
+				if( (sb.Length + name.Length + 2) > sb.Capacity ) {
+					game.Chat.Add( sb.ToString() );
+					sb.Clear();
+					index = 0;
 				}
-				buffer.Append( name );
-				buffer.Append( ", " );
+				sb.Append( ref index, name );
+				sb.Append( ref index, ", " );
 			}
 			
-			if( buffer.Length > 0 )
-				lines.Add( buffer.ToString() );			
-			for( int i = 0; i < lines.Count; i++ )
-				game.Chat.Add( lines[i] );
+			if( sb.Length > 0 )
+				game.Chat.Add( sb.ToString() );
 		}
 		
 		public void Dispose() {

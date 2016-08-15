@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
-			buffer = new WrappableStringBuffer( 64 * lines );
+			buffer = new WrappableStringBuffer( Utils.StringLength * lines );
 			
 			DrawTextArgs args = new DrawTextArgs( "_", font, true );
 			caretTex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
@@ -234,9 +234,9 @@ namespace ClassicalSharp.Gui {
 		
 		void SendWithPartial( string allText ) {
 			// don't automatically word wrap the message.
-			while( allText.Length > 64 ) {
-				game.Chat.Send( allText.Substring( 0, 64 ), true );
-				allText = allText.Substring( 64 );
+			while( allText.Length > Utils.StringLength ) {
+				game.Chat.Send( allText.Substring( 0, Utils.StringLength ), true );
+				allText = allText.Substring( Utils.StringLength );
 			}
 			game.Chat.Send( allText, false );
 		}
