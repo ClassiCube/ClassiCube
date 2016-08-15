@@ -163,13 +163,13 @@ namespace ClassicalSharp {
 		static void LoadFrom( StreamReader reader ) {
 			string line;
 			// remove all the unchanged options
-			List<string> toRemoveKeys = new List<string>();
+			List<string> toRemove = new List<string>();
 			foreach( KeyValuePair<string, string> kvp in OptionsSet ) {
 				if( !OptionsChanged.ContainsKey( kvp.Key ) )
-				   toRemoveKeys.Add( kvp.Key );
+				   toRemove.Add( kvp.Key );
 			}
-			foreach( string key in toRemoveKeys )
-				OptionsSet.Remove( key );
+			for( int i = 0; i < toRemove.Count; i++ )
+				OptionsSet.Remove( toRemove[i] );
 			
 			while( (line = reader.ReadLine()) != null ) {
 				if( line.Length == 0 || line[0] == '#' ) continue;
