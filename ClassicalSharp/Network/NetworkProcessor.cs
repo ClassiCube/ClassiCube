@@ -76,7 +76,7 @@ namespace ClassicalSharp.Network {
 			
 			try {
 				reader.ReadPendingData();
-			} catch( IOException ex ) {
+			} catch( SocketException ex ) {
 				ErrorHandler.LogError( "reading packets", ex );
 				game.Disconnect( "&eLost connection to the server", "I/O error when reading packets" );
 				Dispose();
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Network {
 			}
 			try {
 				writer.Send();
-			} catch( IOException ) {
+			} catch( SocketException ) {
 				// NOTE: Not immediately disconnecting, as otherwise we sometimes miss out on kick messages
 				writer.index = 0;
 			}
