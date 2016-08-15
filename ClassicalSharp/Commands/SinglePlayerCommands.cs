@@ -24,7 +24,7 @@ namespace ClassicalSharp.Commands {
 			if( String.IsNullOrEmpty( name ) ) {
 				game.Chat.Add( "&e/client model: &cYou didn't specify a model name." );
 			} else {
-				game.LocalPlayer.SetModel( name );
+				game.LocalPlayer.SetModel( Utils.ToLower( name ) );
 			}
 		}
 	}

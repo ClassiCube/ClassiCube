@@ -40,7 +40,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
 			// Ignore directories: convert x/name to name and x\name to name.
-			string name = filename.ToLower();
+			string name = Utils.ToLower( filename );
 			int i = name.LastIndexOf( '\\' );
 			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
 			i = name.LastIndexOf( '/' );

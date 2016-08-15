@@ -174,13 +174,13 @@ namespace ClassicalSharp {
 			while( (line = reader.ReadLine()) != null ) {
 				if( line.Length == 0 || line[0] == '#' ) continue;
 				
-				int separatorIndex = line.IndexOf( '=' );
-				if( separatorIndex <= 0 ) continue;
-				string key = line.Substring( 0, separatorIndex ).ToLower();
+				int sepIndex = line.IndexOf( '=' );
+				if( sepIndex <= 0 ) continue;
+				string key = Utils.ToLower( line.Substring( 0, sepIndex ) );
 				
-				separatorIndex++;
-				if( separatorIndex == line.Length ) continue;
-				string value = line.Substring( separatorIndex, line.Length - separatorIndex );
+				sepIndex++;
+				if( sepIndex == line.Length ) continue;
+				string value = line.Substring( sepIndex, line.Length - sepIndex );
 				if( !OptionsChanged.ContainsKey( key ) )
 					OptionsSet[key] = value;
 			}

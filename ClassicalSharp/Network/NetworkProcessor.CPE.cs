@@ -269,7 +269,7 @@ namespace ClassicalSharp.Network {
 		
 		internal void HandleChangeModel() {
 			byte playerId = reader.ReadUInt8();
-			string modelName = reader.ReadAsciiString().ToLowerInvariant();
+			string modelName = Utils.ToLower( reader.ReadAsciiString() );
 			Player player = game.Entities[playerId];
 			if( player != null ) player.SetModel( modelName );
 		}

@@ -23,7 +23,7 @@ namespace ClassicalSharp.Audio {
 				if( !name.StartsWith( group, comp )) continue;
 				
 				// Convert dig_grass1.wav to grass
-				name = name.Substring( group.Length ).ToLower();
+				name = Utils.ToLower( name.Substring( group.Length ) );
 				name = name.Substring( 0, name.Length - 1 );
 				
 				List<Sound> sounds = null;
