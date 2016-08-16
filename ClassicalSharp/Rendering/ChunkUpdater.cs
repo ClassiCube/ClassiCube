@@ -107,12 +107,12 @@ namespace ClassicalSharp.Renderers {
 			
 			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
-			RecalcBooleans( true );
+			ResetUsedFlags();
 		}
 		
 		void BlockDefinitionChanged( object sender, EventArgs e ) {
 			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow( game.TerrainAtlas, info );
-			RecalcBooleans( true );
+			ResetUsedFlags();
 			Refresh();
 		}
 		
@@ -137,16 +137,17 @@ namespace ClassicalSharp.Renderers {
 			lastPitch = float.MaxValue;
 		}
 		
-		internal void RecalcBooleans( bool sizeChanged ) {
-			int used = renderer._1DUsed;
-			if( sizeChanged ) {
-				renderer.usedTranslucent = new bool[used];
-				renderer.usedNormal = new bool[used];
-				renderer.pendingTranslucent = new bool[used];
-				renderer.pendingNormal = new bool[used];
+		internal void ResetUsedFlags() {
+			int count = renderer._1DUsed;
+			bool[] used = renderer.usedTranslucent;
+			if( used == null || count > used.Length ) {
+				renderer.usedTranslucent = new bool[count];
+				renderer.usedNormal = new bool[count];
+				renderer.pendingTranslucent = new bool[count];
+				renderer.pendingNormal = new bool[count];
 			}
 			
-			for( int i = 0; i < used; i++ ) {
+			for( int i = 0; i < count; i++ ) {
 				renderer.pendingTranslucent[i] = true;
 				renderer.usedTranslucent[i] = false;
 				renderer.pendingNormal[i] = true;
@@ -327,7 +328,7 @@ namespace ClassicalSharp.Renderers {
 			lastCamPos = cameraPos;
 			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
 			if( !samePos || chunkUpdates != 0 )
-				RecalcBooleans( false );
+				ResetUsedFlags();
 		}
 		Vector3 lastCamPos;
 		float lastYaw, lastPitch;

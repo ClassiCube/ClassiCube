@@ -44,7 +44,7 @@ namespace ClassicalSharp.Renderers {
 				info.DrawBottom = !(dY1 <= 0 && dY2 <= 0);
 				info.DrawTop = !(dY1 >= 0 && dY2 >= 0);
 			}
-			updater.RecalcBooleans( false );
+			updater.ResetUsedFlags();
 			//SimpleOcclusionCulling();
 		}
 		
