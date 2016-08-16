@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui {
 			UpdateReconnectState( delta );
 			// NOTE: We need to make sure that both the front and back buffers have
 			// definitely been drawn over, so we redraw the background multiple times.
-			if( DateTime.UtcNow < clearTime ) 
+			if( DateTime.UtcNow < clearTime )
 				Redraw( delta );
 		}
 		
@@ -32,11 +32,11 @@ namespace ClassicalSharp.Gui {
 			widgets = new Widget[] {
 				ChatTextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
 				ChatTextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),
-				ButtonWidget.Create( game, 0, 80, 301, 40, "Try to reconnect.. " + delay, 
+				ButtonWidget.Create( game, 0, 80, 301, 40, "Try to reconnect.. " + delay,
 				                    Anchor.Centre, Anchor.Centre, titleFont, ReconnectClick ),
 			};
 			
-			game.Graphics.ContextRecreated += ContextRecreated;			
+			game.Graphics.ContextRecreated += ContextRecreated;
 			initTime = DateTime.UtcNow;
 			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 			lastSecsLeft = delay;
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui {
 
 		public override void Dispose() {
 			game.SkipClear = false;
-			game.Graphics.ContextRecreated -= ContextRecreated;	
+			game.Graphics.ContextRecreated -= ContextRecreated;
 			titleFont.Dispose();
 			messageFont.Dispose();
 			for( int i = 0; i < widgets.Length; i++ )
@@ -79,21 +79,25 @@ namespace ClassicalSharp.Gui {
 		
 		public override bool HandlesMouseScroll( int delta )  { return true; }
 		
-		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return true; }		
+		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return true; }
 		
 		
 		int lastSecsLeft;
 		const int delay = 5;
+		bool lastActive = false;
 		void UpdateReconnectState( double delta ) {
 			ButtonWidget btn = (ButtonWidget)widgets[2];
 			double elapsed = (DateTime.UtcNow - initTime).TotalSeconds;
-			int scsLeft = Math.Max( 0, (int)(delay - elapsed) );			
-			if( lastSecsLeft == scsLeft ) return;
+			int secsLeft = Math.Max( 0, (int)(delay - elapsed) );
+			if( lastSecsLeft == secsLeft && btn.Active == lastActive ) return;
 			
-			string suffix = scsLeft == 0 ? "" : ".. " + scsLeft;
-			btn.SetText( "Try to reconnect" + suffix );
-			btn.Disabled = scsLeft != 0;
+			if( secsLeft == 0 ) btn.SetText( "Try to reconnect" );
+			else btn.SetText( "Try to reconnect.. " + secsLeft );
+			btn.Disabled = secsLeft != 0;
+			
 			Redraw( delta );
+			lastSecsLeft = secsLeft;
+			lastActive = btn.Active;
 		}
 		
 		readonly FastColour top = new FastColour( 64, 32, 32 ), bottom = new FastColour( 80, 16, 16 );
@@ -102,7 +106,7 @@ namespace ClassicalSharp.Gui {
 			api.Texturing = true;
 			for( int i = 0; i < widgets.Length; i++ )
 				widgets[i].Render( delta );
-			api.Texturing = false;	
+			api.Texturing = false;
 		}
 		
 		void ReconnectClick( Game g, Widget w, MouseButton mouseBtn ) {
