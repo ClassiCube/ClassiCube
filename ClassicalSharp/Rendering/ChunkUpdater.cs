@@ -170,7 +170,7 @@ namespace ClassicalSharp.Renderers {
 				renderer.unsortedChunks = new ChunkInfo[count];
 				renderer.renderChunks = new ChunkInfo[count];
 				distances = new int[count];
-			}			
+			}
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
 			lastCamPos = Utils.MaxPos();
@@ -216,13 +216,15 @@ namespace ClassicalSharp.Renderers {
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
 			#endif
-			DeleteData( ref info.NormalParts, decUsed );
-			DeleteData( ref info.TranslucentParts, decUsed );
+			
+			if( info.NormalParts != null )
+				DeleteData( ref info.NormalParts, decUsed );
+			if( info.TranslucentParts != null )
+				DeleteData( ref info.TranslucentParts, decUsed );
 		}
 		
 		void DeleteData( ref ChunkPartInfo[] parts, bool decUsed ) {
 			if( decUsed ) DecrementUsed( parts );
-			if( parts == null ) return;
 			
 			for( int i = 0; i < parts.Length; i++ )
 				game.Graphics.DeleteVb( parts[i].VbId );
@@ -235,9 +237,7 @@ namespace ClassicalSharp.Renderers {
 		
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {
-			int cx = x >> 4, bX = x & 0x0F;
-			int cy = y >> 4, bY = y & 0x0F;
-			int cz = z >> 4, bZ = z & 0x0F;
+			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 			
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
@@ -247,6 +247,7 @@ namespace ClassicalSharp.Renderers {
 			ResetColumn( cx, cy, cz, minCy, maxCy );
 			World world = game.World;
 			
+			int bX = x & 0x0F, bY = y & 0x0F, bZ = z & 0x0F;			
 			if( bX == 0 && cx > 0 )
 				ResetNeighbour( x - 1, y, z, block, cx - 1, cy, cz, minCy, maxCy );
 			if( bY == 0 && cy > 0 && Needs( block, world.GetBlock( x, y - 1, z ) ) )
@@ -385,14 +386,15 @@ namespace ClassicalSharp.Renderers {
 			if( info.NormalParts == null && info.TranslucentParts == null ) {
 				info.Empty = true;
 			} else {
-				IncrementUsed( info.NormalParts );
-				IncrementUsed( info.TranslucentParts );
+				if( info.NormalParts != null )
+					IncrementUsed( info.NormalParts );
+				if (info.TranslucentParts != null )
+					IncrementUsed( info.TranslucentParts );
 			}
 			chunkUpdates++;
 		}
 		
 		void IncrementUsed( ChunkPartInfo[] parts ) {
-			if( parts == null ) return;
 			for( int i = 0; i < parts.Length; i++ ) {
 				if( parts[i].IndicesCount == 0 ) continue;
 				renderer.totalUsed[i]++;
@@ -400,7 +402,6 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DecrementUsed( ChunkPartInfo[] parts ) {
-			if( parts == null ) return;
 			for( int i = 0; i < parts.Length; i++ ) {
 				if( parts[i].IndicesCount == 0 ) continue;
 				renderer.totalUsed[i]--;

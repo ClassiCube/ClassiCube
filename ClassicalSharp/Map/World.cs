@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using ClassicalSharp.Events;
+using ClassicalSharp.Renderers;
 using OpenTK;
 
 namespace ClassicalSharp.Map {
@@ -23,7 +24,7 @@ namespace ClassicalSharp.Map {
 		public Guid Uuid;
 		
 		/// <summary> Whether this map is empty. </summary>
-		public bool IsNotLoaded { get { return Width == 0 && Height == 0 && Length == 0; } }
+		public bool IsNotLoaded = true;
 		
 		/// <summary> Current terrain.png or texture pack url of this map. </summary>
 		public string TextureUrl = null;
@@ -38,6 +39,8 @@ namespace ClassicalSharp.Map {
 		public void Reset() {
 			Env.Reset();
 			Width = Height = Length = 0;
+			IsNotLoaded = true;
+			
 			Uuid = Guid.NewGuid();
 			game.WorldEvents.RaiseOnNewMap();
 		}	
@@ -48,6 +51,8 @@ namespace ClassicalSharp.Map {
 			this.Width = width;
 			this.Height = height;
 			this.Length = length;
+			IsNotLoaded = width == 0 || length == 0 || height == 0;
+			
 			if( Env.EdgeHeight == -1 ) Env.EdgeHeight = height / 2;
 			maxY = height - 1;
 			oneY = length * width;
@@ -65,7 +70,10 @@ namespace ClassicalSharp.Map {
 			byte oldBlock = blocks[index];
 			blocks[index] = blockId;
 			UpdateHeight( x, y, z, oldBlock, blockId );
-			game.WeatherRenderer.UpdateHeight( x, y, z, oldBlock, blockId );
+			
+			WeatherRenderer weather = game.WeatherRenderer;
+			if( weather.heightmap != null && !IsNotLoaded )
+				weather.UpdateHeight( x, y, z, oldBlock, blockId );
 		}
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
