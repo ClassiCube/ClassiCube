@@ -98,6 +98,7 @@ namespace ClassicalSharp.Gui {
 			Redraw( delta );
 			lastSecsLeft = secsLeft;
 			lastActive = btn.Active;
+			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 		}
 		
 		readonly FastColour top = new FastColour( 64, 32, 32 ), bottom = new FastColour( 80, 16, 16 );
