@@ -308,7 +308,7 @@ namespace Ionic.Zlib
 							int tl = 0;
 							int td = 0;
 							inftree.InflateTreesDynamic(257 + (table & 0x1f), 1 + ((table >> 5) & 0x1f), blens, 
-							                            ref bl, ref bd, ref tl, ref td, hufts, codec);
+							                            ref bl, ref bd, ref tl, ref td, hufts);
 							codes.Init(bl, bd, hufts, tl, hufts, td);
 						}
 						mode = InflateBlockMode.CODES;
@@ -318,9 +318,7 @@ namespace Ionic.Zlib
 						UpdateState( bits, bitsNum, availIn, nextIn, q );
 
 						r = codes.Process(this, r);
-						if( r != RCode.StreamEnd ) {
-							return Flush(r);
-						}
+						if (r != RCode.StreamEnd) return Flush(r);
 
 						r = RCode.Okay;
 						nextIn = codec.NextIn;
@@ -330,8 +328,7 @@ namespace Ionic.Zlib
 						q = writeAt;
 						m = q < readAt ? readAt - q - 1 : end - q;
 
-						if (last == 0)
-						{
+						if (last == 0) {
 							mode = InflateBlockMode.TYPE;
 							break;
 						}
@@ -350,7 +347,7 @@ namespace Ionic.Zlib
 						goto case InflateBlockMode.DONE;
 
 					case InflateBlockMode.DONE:
-						return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+						return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, RCode.StreamEnd );
 
 					default:
 						throw new InvalidOperationException( "Invalid inflate block mode: " + mode );

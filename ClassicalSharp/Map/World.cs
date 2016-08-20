@@ -52,6 +52,8 @@ namespace ClassicalSharp.Map {
 			this.Height = height;
 			this.Length = length;
 			IsNotLoaded = width == 0 || length == 0 || height == 0;
+			if( blocks.Length != (width * height * length) )
+				throw new InvalidOperationException( "Blocks array length does not match volume of map." );
 			
 			if( Env.EdgeHeight == -1 ) Env.EdgeHeight = height / 2;
 			maxY = height - 1;

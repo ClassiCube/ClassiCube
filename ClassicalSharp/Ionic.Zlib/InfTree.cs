@@ -238,7 +238,7 @@ namespace Ionic.Zlib {
 		}
 		
 		internal void InflateTreesDynamic(int nl, int nd, int[] c, ref int bl, ref int bd, 
-		                                  ref int tl, ref int td, int[] hp, ZlibCodec z) {
+		                                  ref int tl, ref int td, int[] hp) {
 			// build literal/length tree
 			ResetWorkArea( 288 );
 			hn = 0;
