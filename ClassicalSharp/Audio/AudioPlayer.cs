@@ -76,6 +76,9 @@ namespace ClassicalSharp.Audio {
 					} catch( InvalidOperationException ex) {
 						HandleMusicError( ex );
 						return;
+					} catch( Exception ex ) {
+						ErrorHandler.LogError( "AudioPlayer.DoMusicThread()", ex );
+						game.Chat.Add( "&cError while trying to play music file " + Path.GetFileName( file ) );
 					}
 				}
 				if( disposingMusic ) break;
