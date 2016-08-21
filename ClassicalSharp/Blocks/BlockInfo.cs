@@ -146,7 +146,7 @@ namespace ClassicalSharp {
 		}
 
 		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
-			for( int block = Block.Stone; block <= BlockInfo.MaxOriginalBlock; block++ ) {
+			for( int block = Block.Stone; block <= BlockInfo.MaxDefinedBlock; block++ ) {
 				canPlace[block] = true;
 				canDelete[block] = true;
 			}

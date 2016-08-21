@@ -110,10 +110,6 @@ namespace ClassicalSharp.Network {
 			game.UseCPEBlocks = true;
 
 			if( supportLevel == 1 ) {
-				for( int i = BlockInfo.MaxOriginalBlock + 1; i <= BlockInfo.MaxCpeBlock; i++ ) {
-					game.Inventory.CanPlace[i] = true;
-					game.Inventory.CanDelete[i] = true;
-				}
 				game.Events.RaiseBlockPermissionsChanged();
 			} else {
 				Utils.LogDebug( "Server's block support level is {0}, this client only supports level 1.", supportLevel );
