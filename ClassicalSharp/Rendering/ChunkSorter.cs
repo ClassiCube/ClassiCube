@@ -12,26 +12,19 @@ namespace ClassicalSharp.Renderers {
 			Vector3I newChunkPos = Vector3I.Floor( cameraPos );
 			newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
 			newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;
-			newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;			
+			newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;
 			if( newChunkPos == updater.chunkPos ) return;
 			
 			ChunkInfo[] chunks = game.MapRenderer.chunks;
-			int[] distances = updater.distances;		
-			updater.chunkPos = newChunkPos;
-			
-			for( int i = 0; i < distances.Length; i++ ) {
-				ChunkInfo info = chunks[i];
-				distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ, 
-				                                     updater.chunkPos.X, updater.chunkPos.Y, updater.chunkPos.Z );
-			}
-
-			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
-			if( distances.Length > 1 )
-				QuickSort( distances, chunks, 0, chunks.Length - 1 );
-			
+			int[] distances = updater.distances;
 			Vector3I pPos = newChunkPos;
+			updater.chunkPos = pPos;
+			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
+				distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ,
+				                                     pPos.X, pPos.Y, pPos.Z );
+				
 				int dX1 = (info.CentreX - 8) - pPos.X, dX2 = (info.CentreX + 8) - pPos.X;
 				int dY1 = (info.CentreY - 8) - pPos.Y, dY2 = (info.CentreY + 8) - pPos.Y;
 				int dZ1 = (info.CentreZ - 8) - pPos.Z, dZ2 = (info.CentreZ + 8) - pPos.Z;
@@ -44,6 +37,10 @@ namespace ClassicalSharp.Renderers {
 				info.DrawBottom = !(dY1 <= 0 && dY2 <= 0);
 				info.DrawTop = !(dY1 >= 0 && dY2 >= 0);
 			}
+
+			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
+			if( distances.Length > 1 )
+				QuickSort( distances, chunks, 0, chunks.Length - 1 );
 			updater.ResetUsedFlags();
 			//SimpleOcclusionCulling();
 		}
