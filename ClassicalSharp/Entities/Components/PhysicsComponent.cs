@@ -13,7 +13,8 @@ namespace ClassicalSharp.Entities {
 		Entity entity;
 		Game game;
 		BlockInfo info;
-		internal float jumpVel = 0.42f, serverJumpVel = 0.42f;
+		
+		internal float jumpVel = 0.42f, userJumpVel = 0.42f, serverJumpVel = 0.42f;
 		internal HacksComponent hacks;
 		internal CollisionsComponent collisions;
 		
@@ -233,7 +234,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Calculates the jump velocity required such that when a client presses
 		/// the jump binding they will be able to jump up to the given height. </summary>
-		internal void CalculateJumpVelocity( float jumpHeight ) {
+		internal void CalculateJumpVelocity( bool userVel, float jumpHeight ) {
 			jumpVel = 0;
 			if( jumpHeight >= 256 ) jumpVel = 10.0f;
 			if( jumpHeight >= 512 ) jumpVel = 16.5f;
@@ -241,6 +242,7 @@ namespace ClassicalSharp.Entities {
 			
 			while( GetMaxHeight( jumpVel ) <= jumpHeight )
 				jumpVel += 0.001f;
+			if( userVel ) userJumpVel = jumpVel;
 		}
 		
 		public static double GetMaxHeight( float u ) {

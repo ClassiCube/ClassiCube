@@ -106,7 +106,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
 			Hacks.CheckHacksConsistency();
-			if( !Hacks.Enabled || !Hacks.CanAnyHacks || !Hacks.CanSpeed )
+			if( !Hacks.CanJumpHigher )
 				physics.jumpVel = physics.serverJumpVel;
 		}
 		
