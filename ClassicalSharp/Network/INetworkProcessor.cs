@@ -98,8 +98,8 @@ namespace ClassicalSharp {
 		
 		void DownloadTexturePack( string url ) {
 			if( game.DeniedUrls.HasEntry( url ) ) return;
-			DateTime lastModified = TextureCache.GetLastModifiedFromCache( url );
-			string etag = TextureCache.GetETagFromCache( url, game.ETags );
+			DateTime lastModified = TextureCache.GetLastModified( url, game.LastModified );
+			string etag = TextureCache.GetETag( url, game.ETags );
 
 			if( url.Contains( ".zip" ) )
 				game.AsyncDownloader.DownloadData( url, true, "texturePack",
@@ -134,10 +134,12 @@ namespace ClassicalSharp {
 					game.Drawer2D.ConvertTo32Bpp( ref bmp );
 				}
 				if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
-				TextureCache.AddToCache( item.Url, bmp );
-				TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
+				
+				TextureCache.Add( item.Url, bmp );
+				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
+				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
 			} else {
-				Bitmap bmp = TextureCache.GetBitmapFromCache( item.Url );
+				Bitmap bmp = TextureCache.GetBitmap( item.Url );
 				if( bmp == null ) { // e.g. 404 errors
 					ExtractDefault();
 				} else if( item.Url != game.World.TextureUrl ) {
@@ -154,10 +156,11 @@ namespace ClassicalSharp {
 				
 				TexturePackExtractor extractor = new TexturePackExtractor();
 				extractor.Extract( (byte[])item.Data, game );
-				TextureCache.AddToCache( item.Url, (byte[])item.Data );
-				TextureCache.AddETagToCache( item.Url, item.ETag, game.ETags );
+				TextureCache.Add( item.Url, (byte[])item.Data );
+				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
+				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
 			} else {
-				byte[] data = TextureCache.GetDataFromCache( item.Url );
+				byte[] data = TextureCache.GetData( item.Url );
 				if( data == null ) { // e.g. 404 errors
 					ExtractDefault();
 				} else if( item.Url != game.World.TextureUrl ) {
