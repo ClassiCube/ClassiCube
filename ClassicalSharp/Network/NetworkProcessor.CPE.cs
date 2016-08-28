@@ -299,8 +299,10 @@ namespace ClassicalSharp.Network {
 			p.CheckHacksConsistency();
 			
 			float jumpHeight = reader.ReadInt16() / 32f;
-			if( jumpHeight < 0 ) p.physics.jumpVel = 0.42f;
-			else p.physics.CalculateJumpVelocity( jumpHeight );
+			if( jumpHeight < 0 ) 
+				p.physics.jumpVel = p.Hacks.CanJumpHigher ? p.physics.userJumpVel : 0.42f;
+			else 
+				p.physics.CalculateJumpVelocity( false, jumpHeight );
 			p.physics.serverJumpVel = p.physics.jumpVel;
 			game.Events.RaiseHackPermissionsChanged();
 		}
