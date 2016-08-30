@@ -109,18 +109,19 @@ namespace ClassicalSharp {
 			Vector3 oldP = game.LocalPlayer.Position;
 			
 			// Offset position by the closest face
-			if( selected.BlockFace == CpeBlockFace.XMax )
+			if( selected.BlockFace == CpeBlockFace.XMax ) {
 				newP.X = blockBB.Max.X + 0.5f;
-			else if( selected.BlockFace == CpeBlockFace.ZMax )
+			} else if( selected.BlockFace == CpeBlockFace.ZMax ) {
 				newP.Z = blockBB.Max.Z + 0.5f;
-			else if( selected.BlockFace == CpeBlockFace.XMin )
+			} else if( selected.BlockFace == CpeBlockFace.XMin ) {
 				newP.X = blockBB.Min.X - 0.5f;
-			else if( selected.BlockFace == CpeBlockFace.ZMin )
+			} else if( selected.BlockFace == CpeBlockFace.ZMin ) {
 				newP.Z = blockBB.Min.Z - 0.5f;
-			else if( selected.BlockFace == CpeBlockFace.YMax )
+			} else if( selected.BlockFace == CpeBlockFace.YMax ) {
 				newP.Y = blockBB.Min.Y + 1 + Entity.Adjustment;
-			else if( selected.BlockFace == CpeBlockFace.YMin )
+			} else if( selected.BlockFace == CpeBlockFace.YMin ) {
 				newP.Y = blockBB.Min.Y - game.LocalPlayer.Size.Y - Entity.Adjustment;
+			}
 			
 			Vector3I newLoc = Vector3I.Floor( newP );
 			bool validPos = newLoc.X >= 0 && newLoc.Y >= 0 && newLoc.Z >= 0 &&

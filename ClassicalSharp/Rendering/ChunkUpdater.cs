@@ -57,7 +57,7 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.OnNewMap -= OnNewMap;
 			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
-			game.WorldEvents.BlockDefinitionChanged -= BlockDefinitionChanged;
+			game.Events.BlockDefinitionChanged -= BlockDefinitionChanged;
 			game.Events.ViewDistanceChanged -= ViewDistanceChanged;
 			game.Events.ProjectionChanged -= ProjectionChanged;
 			builder.Dispose();
@@ -388,7 +388,7 @@ namespace ClassicalSharp.Renderers {
 			} else {
 				if( info.NormalParts != null )
 					IncrementUsed( info.NormalParts );
-				if (info.TranslucentParts != null )
+				if ( info.TranslucentParts != null )
 					IncrementUsed( info.TranslucentParts );
 			}
 			chunkUpdates++;

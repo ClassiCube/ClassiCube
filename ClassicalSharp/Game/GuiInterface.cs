@@ -61,12 +61,13 @@ namespace ClassicalSharp {
 		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
-			if( e.Name == "gui.png" )
+			if( e.Name == "gui.png" ) {
 				game.UpdateTexture( ref GuiTex, e.Name, e.Data, false );
-			else if( e.Name == "gui_classic.png" )
+			} else if( e.Name == "gui_classic.png" ) {
 				game.UpdateTexture( ref GuiClassicTex, e.Name, e.Data, false );
-			else if( e.Name == "icons.png" )
+			} else if( e.Name == "icons.png" ) {
 				game.UpdateTexture( ref IconsTex, e.Name, e.Data, false );
+			}
 		}
 		
 		

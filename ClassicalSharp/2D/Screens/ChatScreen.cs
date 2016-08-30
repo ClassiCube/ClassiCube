@@ -147,13 +147,14 @@ namespace ClassicalSharp.Gui {
 		void SetFetchStatus( int progress ) {
 			lastDownload.Clear();
 			int index = 0;
-			if( progress == -2 ) 
+			if( progress == -2 ) {
 				lastDownload.Append( ref index, "&eRetrieving texture pack.." );
-			else if( progress == -1 ) 
+			} else if( progress == -1 ) {
 				lastDownload.Append( ref index, "&eDownloading texture pack" );
-			else if( progress >= 0 && progress <= 100 ) 
+			} else if( progress >= 0 && progress <= 100 ) {
 				lastDownload.Append( ref index, "&eDownloading texture pack (&7" )
 					.AppendNum( ref index, progress ).Append( ref index, "&e%)" );
+			}
 			status.SetText( 1, lastDownload.ToString() );
 		}
 		

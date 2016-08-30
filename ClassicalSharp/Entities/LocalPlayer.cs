@@ -106,8 +106,9 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
 			Hacks.CheckHacksConsistency();
-			if( !Hacks.CanJumpHigher )
+			if( !Hacks.CanJumpHigher ) {
 				physics.jumpVel = physics.serverJumpVel;
+			}
 		}
 		
 		internal Vector3 lastPos, nextPos;

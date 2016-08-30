@@ -37,18 +37,17 @@ namespace ClassicalSharp.Generator {
 			stack.Push( startIndex );
 			while( stack.Size > 0 ) {
 				int index = stack.Pop();
-				if( blocks[index] == 0 ) {
-					blocks[index] = block;
-					
-					int x = index % width;
-					int y = index / oneY;
-					int z = (index / width) % length;
-					if( x > 0 ) stack.Push( index - 1 );
-					if( x < width - 1 ) stack.Push( index + 1 );
-					if( z > 0 ) stack.Push( index - width );
-					if( z < length - 1 ) stack.Push( index + width );
-					if( y > 0 ) stack.Push( index - oneY );
-				}
+				if( blocks[index] != 0 ) continue;				
+				blocks[index] = block;
+				
+				int x = index % width;
+				int y = index / oneY;
+				int z = (index / width) % length;
+				if( x > 0 ) stack.Push( index - 1 );
+				if( x < width - 1 ) stack.Push( index + 1 );
+				if( z > 0 ) stack.Push( index - width );
+				if( z < length - 1 ) stack.Push( index + width );
+				if( y > 0 ) stack.Push( index - oneY );
 			}
 		}
 		
