@@ -38,6 +38,8 @@ namespace ClassicalSharp {
 			AcceptedUrls.Load();
 			DeniedUrls.Load();
 			ETags.Load();
+			LastModified.Load();
+			
 			InputHandler = new InputHandler( this );
 			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = AddComponent( new ParticleManager() );

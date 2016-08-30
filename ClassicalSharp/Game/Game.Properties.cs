@@ -192,6 +192,7 @@ namespace ClassicalSharp {
 		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
 		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );
 		internal EntryList ETags = new EntryList( "etags.txt" );
+		internal EntryList LastModified = new EntryList( "lastmodified.txt" );
 		
 		
 		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
