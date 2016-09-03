@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Right) & 1;
 			
-			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
+			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -136,15 +136,15 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY1_Z1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide( aY0_Z1 );
 			
 			if( aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0 ) {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col1_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u1, v1, col1_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u2, v1, col1_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u2, v2, col0_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u1, v2, col0_0 );
 			} else {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col1_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col0_1 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col0_0 );
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col1_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u2, v1, col1_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u2, v2, col0_1 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u1, v2, col0_0 );
+				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u1, v1, col1_0 );
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Front) & 1;
 			
-			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -168,15 +168,15 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX1_Y1 ), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide( aX0_Y1 );
 			
 			if( aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0 ) {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_0 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v2, col1_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col0_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col0_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_1 );
 			} else {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col0_0 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col0_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col1_1 );
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col1_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col0_0 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col0_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col1_1 );
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v2, col1_0 );
 			}
 		}
 		
