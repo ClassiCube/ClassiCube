@@ -3,7 +3,7 @@ using System;
 
 namespace ClassicalSharp.Events {
 
-	public class WorldEvents : OtherEvents {
+	public class WorldEvents : EventsBase {
 		
 		/// <summary> Raised when the player joins and begins loading a new world. </summary>
 		public event EventHandler OnNewMap;

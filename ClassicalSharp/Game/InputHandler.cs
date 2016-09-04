@@ -183,10 +183,11 @@ namespace ClassicalSharp {
 			bool more;
 			if( !Hotkeys.IsHotkey( key, game.Keyboard, out text, out more ) ) return;
 			
-			if( !more )
+			if( !more ) {
 				game.Network.SendChat( text, false );
-			else if( game.Gui.activeScreen == null )
+			} else if( game.Gui.activeScreen == null ) {
 				game.Gui.hudScreen.OpenTextInputBar( text );
+			}
 		}
 		
 		MouseButtonEventArgs simArgs = new MouseButtonEventArgs();

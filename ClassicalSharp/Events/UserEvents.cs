@@ -3,7 +3,7 @@ using System;
 
 namespace ClassicalSharp.Events {
 
-	public class UserEvents {
+	public class UserEvents : EventsBase {
 		
 		/// <summary> Raised when the user changes a block in the world. </summary>
 		public event EventHandler<BlockChangedEventArgs> BlockChanged;
@@ -13,15 +13,6 @@ namespace ClassicalSharp.Events {
 		}
 	
 		BlockChangedEventArgs blockArgs = new BlockChangedEventArgs();
-		protected void Raise( EventHandler handler ) {
-			if( handler != null )
-				handler( this, EventArgs.Empty );
-		}
-		
-		protected void Raise<T>( EventHandler<T> handler, T args ) where T : EventArgs {
-			if( handler != null )
-				handler( this, args );
-		}
 	}
 	
 	public sealed class BlockChangedEventArgs : EventArgs {

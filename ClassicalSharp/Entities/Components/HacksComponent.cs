@@ -111,10 +111,11 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		static void ParseFlag( Action<bool> action, string joined, string flag ) {
-			if( joined.Contains( "+" + flag ) )
+			if( joined.Contains( "+" + flag ) ) {
 				action( true );
-			else if( joined.Contains( "-" + flag ) )
+			} else if( joined.Contains( "-" + flag ) ) {
 				action( false );
+			}
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,

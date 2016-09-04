@@ -57,10 +57,11 @@ namespace ClassicalSharp.Audio {
 			chunk.BytesUsed = snd.Data.Length;
 			chunk.Data = snd.Data;
 			
-			if( snd.Channels == 1 )
+			if( snd.Channels == 1 ) {
 				PlayCurrentSound( monoOutputs );
-			else if( snd.Channels == 2 )
+			} else if( snd.Channels == 2 ) {
 				PlayCurrentSound( stereoOutputs );
+			}
 		}
 		
 		IAudioOutput firstSoundOut;

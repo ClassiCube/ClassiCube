@@ -3,7 +3,20 @@ using System;
 
 namespace ClassicalSharp.Events {
 
-	public class OtherEvents {			
+	public abstract class EventsBase {
+
+		protected void Raise( EventHandler handler ) {
+			if( handler == null ) return;
+			handler( this, EventArgs.Empty );
+		}
+		
+		protected void Raise<T>( EventHandler<T> handler, T args ) where T : EventArgs {
+			if( handler == null ) return;
+			handler( this, args );
+		}
+	}
+	
+	public class OtherEvents : EventsBase {
 		
 		/// <summary> Raised when the terrain atlas ("terrain.png") is changed. </summary>
 		public event EventHandler TerrainAtlasChanged;
@@ -61,15 +74,6 @@ namespace ClassicalSharp.Events {
 		ChatEventArgs chatArgs = new ChatEventArgs();
 		TextureEventArgs texArgs = new TextureEventArgs();
 		ColourCodeEventArgs colArgs = new ColourCodeEventArgs();
-		protected void Raise( EventHandler handler ) {
-			if( handler != null )
-				handler( this, EventArgs.Empty );
-		}
-		
-		protected void Raise<T>( EventHandler<T> handler, T args ) where T : EventArgs {
-			if( handler != null )
-				handler( this, args );
-		}
 	}
 	
 	public sealed class ChatEventArgs : EventArgs {

@@ -5,7 +5,7 @@ namespace ClassicalSharp.Events {
 	
 	/// <summary> Contains events related to the spawning/despawning of entities, 
 	/// and the creation/removal of tab list entries. </summary>
-	public sealed class EntityEvents : OtherEvents {
+	public sealed class EntityEvents : EventsBase {
 		
 		IdEventArgs idArgs = new IdEventArgs();
 		

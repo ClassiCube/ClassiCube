@@ -162,8 +162,7 @@ namespace ClassicalSharp.Gui {
 				count += 2;
 			}
 			
-			if( lastEnd < line.Length )
-				count++;
+			if( lastEnd < line.Length ) count++;
 			return count;
 		}
 		

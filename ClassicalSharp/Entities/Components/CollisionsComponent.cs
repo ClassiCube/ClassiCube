@@ -118,34 +118,36 @@ namespace ClassicalSharp.Entities {
 				
 				// if we have hit the bottom of a block, we need to change the axis we test first.
 				if( !hitYMin ) {
-					if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
+					if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {
 						ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
+					} else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y ) {
 						ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-					else if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
+					} else if( finalBB.Min.X + Adjustment >= blockBB.Max.X ) {
 						ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
+					} else if( finalBB.Max.X - Adjustment <= blockBB.Min.X ) {
 						ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
+					} else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z ) {
 						ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-					else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
+					} else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z ) {
 						ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
+					}
 					continue;
 				}
 				
 				// if flying or falling, test the horizontal axes first.
-				if( finalBB.Min.X + Adjustment >= blockBB.Max.X )
+				if( finalBB.Min.X + Adjustment >= blockBB.Max.X ) {
 					ClipXMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.X - Adjustment <= blockBB.Min.X )
+				} else if( finalBB.Max.X - Adjustment <= blockBB.Min.X ) {
 					ClipXMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z )
+				} else if( finalBB.Min.Z + Adjustment >= blockBB.Max.Z ) {
 					ClipZMax( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z )
+				} else if( finalBB.Max.Z - Adjustment <= blockBB.Min.Z ) {
 					ClipZMin( ref blockBB, ref entityBB, wasOn, finalBB, ref entityExtentBB, ref size );
-				else if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y )
+				} else if( finalBB.Min.Y + Adjustment >= blockBB.Max.Y ) {
 					ClipYMax( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
-				else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y )
+				} else if( finalBB.Max.Y - Adjustment <= blockBB.Min.Y ) {
 					ClipYMin( ref blockBB, ref entityBB, ref entityExtentBB, ref size );
+				}
 			}
 		}
 		

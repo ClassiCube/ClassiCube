@@ -67,8 +67,9 @@ namespace ClassicalSharp.Network {
 		
 		public override void Tick( ScheduledTask task ) {
 			if( Disconnected ) return;
-			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 30 )
+			if( (DateTime.UtcNow - lastPacket).TotalSeconds >= 30 ) {
 				CheckDisconnection( task.Interval );
+			}
 			if( Disconnected ) return;
 			
 			LocalPlayer player = game.LocalPlayer;
@@ -209,10 +210,12 @@ namespace ClassicalSharp.Network {
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
 			Vector3I p = e.Coords;
 			byte block = game.Inventory.HeldBlock;
-			if( e.Block == 0 )
+			
+			if( e.Block == 0 ) {
 				SendSetBlock( p.X, p.Y, p.Z, false, block );
-			else
+			} else {
 				SendSetBlock( p.X, p.Y, p.Z, true, e.Block );
+			}
 		}
 		
 		void OnNewMap( object sender, EventArgs e ) {

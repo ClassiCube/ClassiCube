@@ -61,8 +61,8 @@ namespace ClassicalSharp.Map {
 					int bx = i & 0xF, by = (i >> 8) & 0xF, bz = (i >> 4) & 0xF;
 					int index = baseIndex + (by * length + bz) * width + bx;
 					
-					if( blocks[index] == customTile )
-						blocks[index] = chunk[i];
+					if( blocks[index] != customTile ) continue;
+					blocks[index] = chunk[i];
 				}
 			}
 		}

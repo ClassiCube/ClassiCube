@@ -41,10 +41,11 @@ namespace ClassicalSharp.Gui {
 			if( button == MouseButton.Left && mouseX >= TableX - scrollbarWidth && mouseX < TableX ) {
 				ScrollbarClick( mouseY );
 			} else if( button == MouseButton.Left ) {
-				if( selIndex != -1 )
+				if( selIndex != -1 ) {
 					game.Inventory.HeldBlock = blocksTable[selIndex];
-				else if( Contains( TableX, TableY, TableWidth, TableHeight, mouseX, mouseY ) )
+				} else if( Contains( TableX, TableY, TableWidth, TableHeight, mouseX, mouseY ) ) {
 					return true;
+				}
 				
 				bool hotbar = game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight );
 				if( !hotbar )
