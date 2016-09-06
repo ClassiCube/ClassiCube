@@ -96,17 +96,17 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Right) & 1;
 			
-			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
+			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				X <= (maxX - offset) ? (Y > map.heightmap[(Z * width) + (X + offset)] ? env.SunXSide : env.ShadowXSide) : env.SunXSide;
 			
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u1, v1, col );
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u1, v2, col );
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y2, z2 + (count - 1), u2, v1, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z2 + (count - 1), u2, v2, col );
+			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b( x2, y1, z1, u1, v2, col );
 		}
 
 		protected override void DrawFrontFace( int count ) {
@@ -115,17 +115,17 @@ namespace ClassicalSharp {
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Front) & 1;
 			
-			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
+			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				Z >= offset ? (Y > map.heightmap[((Z - offset) * width) + X] ? env.SunZSide : env.ShadowZSide) : env.SunZSide;
 			
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u1, v2, col );
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u2, v2, col );
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u2, v1, col );
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y1, z1, u2, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y1, z1, u1, v2, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x1, y2, z1, u1, v1, col );
+			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b( x2 + (count - 1), y2, z1, u2, v1, col );
 		}
 		
 		protected override void DrawBackFace( int count ) {
