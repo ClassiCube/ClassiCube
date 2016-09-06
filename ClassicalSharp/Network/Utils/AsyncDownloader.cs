@@ -234,8 +234,7 @@ namespace ClassicalSharp.Network {
 					}
 
 					Bitmap oldBmp = oldItem.Data as Bitmap;
-					if( oldBmp != null )
-						oldBmp.Dispose();
+					if( oldBmp != null ) oldBmp.Dispose();
 				}
 				downloaded[request.Identifier] = newItem;
 			}

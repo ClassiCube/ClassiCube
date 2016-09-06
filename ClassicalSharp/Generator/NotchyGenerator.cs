@@ -87,11 +87,11 @@ namespace ClassicalSharp.Generator {
 					blocks[mapIndex] = Block.Lava;
 					mapIndex += oneY;
 					for( int y = 1; y < height; y++ ) {
-						byte type = 0;
-						if( y <= stoneHeight ) type = Block.Stone;
-						else if( y <= dirtHeight ) type = Block.Dirt;
+						byte block = 0;
+						if( y <= stoneHeight ) block = Block.Stone;
+						else if( y <= dirtHeight ) block = Block.Dirt;
 						
-						blocks[mapIndex] = type;
+						blocks[mapIndex] = block;
 						mapIndex += oneY;
 					}
 				}

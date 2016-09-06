@@ -97,8 +97,7 @@ namespace ClassicalSharp {
 		public bool Empty {
 			get {
 				for( int i = 0; i < Capacity; i++ ) {
-					if( value[i] != '\0' )
-						return false;
+					if( value[i] != '\0' ) return false;
 				}
 				return true;
 			}
@@ -108,8 +107,7 @@ namespace ClassicalSharp {
 			get {
 				int len = Capacity;
 				for( int i = Capacity - 1; i >= 0; i-- ) {
-					if( value[i] != '\0' )
-						break;
+					if( value[i] != '\0' ) break;
 					len--;
 				}
 				return len;

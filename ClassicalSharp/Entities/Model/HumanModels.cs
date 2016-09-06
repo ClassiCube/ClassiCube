@@ -10,19 +10,14 @@ namespace ClassicalSharp.Model {
 		
 		public ChibiModel( Game window ) : base( window ) { }
 		
+		const float size = 0.5f;
 		protected override void MakeDescriptions() {
+			base.MakeDescriptions();
 			head = MakeBoxBounds( -4, 12, -4, 4, 20, 4 ).RotOrigin( 0, 13, 0 );
-			torso = MakeBoxBounds( -4, -6, -2, 4, 6, 2 )
-				.SetModelBounds( -2, 6, -1, 2, 12, 1 );
-			lLeg = MakeBoxBounds( -2, -6, -2, 2, 6, 2 ).RotOrigin( 0, 6, 0 )
-				.SetModelBounds( -2, 0, -1, 0, 6, 1 );
-			rLeg = MakeBoxBounds( -2, -6, -2, 2, 6, 2 ).RotOrigin( 0, 6, 0 )
-				.SetModelBounds( 0, 0, -1, 2, 6, 1 );
-			lArm = MakeBoxBounds( -2, -6, -2, 2, 6, 2 ).RotOrigin( -3, 11, 0 )
-				.SetModelBounds( -4, 6, -1, -2, 12, 1 );
-			rArm = MakeBoxBounds( -2, -6, -2, 2, 6, 2 ).RotOrigin( 3, 11, 0 )
-				.SetModelBounds( 2, 6, -1, 4, 12, 1 );
-			offset = 0.5f * 0.5f;
+			torso = torso.Scale( size );
+			lLeg = lLeg.Scale( size ); rLeg = rLeg.Scale( size );
+			lArm = lArm.Scale( size ); rArm = rArm.Scale( size );
+			offset = 0.5f * size;
 		}
 
 		public override float MaxScale { get { return 3; } }
