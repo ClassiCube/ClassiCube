@@ -34,8 +34,8 @@ namespace ClassicalSharp {
 			text = text.TrimEnd( trimChars );
 			if( String.IsNullOrEmpty( text ) ) return;
 			
-			if( CommandManager.IsCommandPrefix( text ) ) {
-				game.CommandManager.Execute( text );
+			if( game.CommandList.IsCommandPrefix( text ) ) {
+				game.CommandList.Execute( text );
 				return;
 			}
 			game.Network.SendChat( text, partial );

@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			UpdateProjection();
 			
 			Gui = AddComponent( new GuiInterface( this ) );
-			CommandManager = AddComponent( new CommandManager() );
+			CommandList = AddComponent( new CommandList() );
 			SelectionManager = AddComponent( new SelectionManager() );
 			WeatherRenderer = AddComponent( new WeatherRenderer() );
 			HeldBlockRenderer = AddComponent( new HeldBlockRenderer() );

@@ -101,7 +101,7 @@ namespace ClassicalSharp {
 		public IDrawer2D Drawer2D;
 		public GuiInterface Gui;
 		
-		public CommandManager CommandManager;
+		public CommandList CommandList;
 		public SelectionManager SelectionManager;
 		public ParticleManager ParticleManager;
 		public PickedPosRenderer Picking;

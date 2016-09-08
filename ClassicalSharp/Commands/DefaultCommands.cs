@@ -19,7 +19,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute( CommandReader reader ) {
-			game.CommandManager.PrintDefinedCommands( game );
+			game.CommandList.PrintDefinedCommands( game );
 		}
 	}
 	
@@ -38,10 +38,10 @@ namespace ClassicalSharp.Commands {
 			string cmdName = reader.Next();
 			if( cmdName == null ) {
 				game.Chat.Add( "&eList of client commands:" );
-				game.CommandManager.PrintDefinedCommands( game );
+				game.CommandList.PrintDefinedCommands( game );
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 			} else {
-				Command cmd = game.CommandManager.GetMatch( cmdName );
+				Command cmd = game.CommandList.GetMatch( cmdName );
 				if( cmd == null ) return;
 				string[] help = cmd.Help;
 				for( int i = 0; i < help.Length; i++ )

@@ -4,11 +4,15 @@ using System.Collections.Generic;
 
 namespace ClassicalSharp.Commands {
 	
-	public class CommandManager : IGameComponent {
+	public class CommandList : IGameComponent {
 		
-		public static bool IsCommandPrefix( string input ) {
-			return Utils.CaselessStarts( input, "/client " ) ||
-				Utils.CaselessEquals( input, "/client" );
+		const string prefix = "/client";
+		public bool IsCommandPrefix( string input ) {
+			if( game.Network.IsSinglePlayer && Utils.CaselessStarts( input, "/" ) )
+				return true;
+			
+			return Utils.CaselessStarts( input, prefix + " " ) 
+				|| Utils.CaselessEquals( input, prefix );
 		}
 		
 		protected Game game;
@@ -21,10 +25,9 @@ namespace ClassicalSharp.Commands {
 			Register( new InfoCommand() );
 			Register( new RenderTypeCommand() );
 			
-			if( game.Network.IsSinglePlayer ) {
-				Register( new ModelCommand() );
-				Register( new CuboidCommand() );
-			}
+			if( !game.Network.IsSinglePlayer ) return;
+			Register( new ModelCommand() );
+			Register( new CuboidCommand() );
 		}
 
 		public void Ready( Game game ) { }
@@ -42,37 +45,41 @@ namespace ClassicalSharp.Commands {
 			RegisteredCommands.Add( command );
 		}
 		
-		public Command GetMatch( string commandName ) {
+		public Command GetMatch( string cmdName ) {
 			Command match = null;
 			for( int i = 0; i < RegisteredCommands.Count; i++ ) {
 				Command cmd = RegisteredCommands[i];
-				if( !Utils.CaselessStarts( cmd.Name, commandName ) ) continue;
+				if( !Utils.CaselessStarts( cmd.Name, cmdName ) ) continue;
 				
 				if( match != null ) {
-					game.Chat.Add( "&e/client: Multiple commands found that start with: \"&f" + commandName + "&e\"." );
+					game.Chat.Add( "&e/client: Multiple commands found that start with: \"&f" + cmdName + "&e\"." );
 					return null;
 				}
 				match = cmd;
 			}
 			
 			if( match == null )
-				game.Chat.Add( "&e/client: Unrecognised command: \"&f" + commandName + "&e\"." );
+				game.Chat.Add( "&e/client: Unrecognised command: \"&f" + cmdName + "&e\"." );
 			return match;
 		}
 		
 		public void Execute( string text ) {
+			if( Utils.CaselessStarts( text, prefix ) ) {
+				text = text.Substring( prefix.Length ).TrimStart( ' ' );
+				text = "/" + text;
+			}			
+			
 			CommandReader reader = new CommandReader( text );
-			if( reader.TotalArgs == 0 ) {
+			string cmdName = reader.Next();
+			if( cmdName == null ) {
 				game.Chat.Add( "&eList of client commands:" );
 				PrintDefinedCommands( game );
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 				return;
-			}
-			string commandName = reader.Next();
-			Command cmd = GetMatch( commandName );
-			if( cmd != null ) {
-				cmd.Execute( reader );
-			}
+			}			
+						
+			Command cmd = GetMatch( cmdName );
+			if( cmd != null ) cmd.Execute( reader );
 		}
 		
 		public void PrintDefinedCommands( Game game ) {

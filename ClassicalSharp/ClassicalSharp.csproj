@@ -246,7 +246,7 @@
     <Compile Include="Network\Utils\FixedBufferStream.cs" />
     <Compile Include="Network\Utils\GZipHeaderReader.cs" />
     <Compile Include="Network\NetworkProcessor.WoM.cs" />
-    <Compile Include="Commands\CommandManager.cs" />
+    <Compile Include="Commands\CommandList.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
     <Compile Include="Math\AABB.cs" />
