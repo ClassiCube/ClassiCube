@@ -78,50 +78,49 @@ namespace ClassicalSharp.Hotkeys {
 			return false;
 		}
 		
+		const string prefix = "hotkey-";
 		public void LoadSavedHotkeys() {
 			foreach( var pair in Options.OptionsSet ) {
-				if( Utils.CaselessStarts( pair.Key, "hotkey-" ) ) {
-					// First retrieve the parts from 
-					const int startIndex = 7;
-					int keySplit = pair.Key.IndexOf( '&', startIndex );
-					if( keySplit < 0 ) {
-						Utils.LogDebug( "Hotkey {0} has an invalid key", pair.Key );
-						continue;
-					}
-					string strKey = pair.Key.Substring( startIndex, keySplit - startIndex );
-					string strFlags = pair.Key.Substring( keySplit + 1, pair.Key.Length - keySplit - 1 );
-					
-					int valueSplit = pair.Value.IndexOf( '&', 0 );
-					if( valueSplit < 0 ) {
-						Utils.LogDebug( "Hotkey {0} has an invalid value", pair.Key );
-						continue;
-					}
-					string strMoreInput = pair.Value.Substring( 0, valueSplit - 0 );
-					string strText = pair.Value.Substring( valueSplit + 1, pair.Value.Length - valueSplit - 1 );
-					
-					// Then try to parse the key and value
-					Key key; byte flags; bool moreInput;
-					if( !Utils.TryParseEnum( strKey, Key.Unknown, out key ) ||
-					   !Byte.TryParse( strFlags, out flags ) ||
-					   !Boolean.TryParse( strMoreInput, out moreInput ) ||
-					   strText.Length == 0 ) {
-						Utils.LogDebug( "Hotkey {0} has invalid arguments", pair.Key );
-						continue;
-					}
-					AddHotkey( key, flags, strText, moreInput );
+				if( !Utils.CaselessStarts( pair.Key, prefix ) ) continue;
+				
+				int keySplit = pair.Key.IndexOf( '&', prefix.Length );
+				if( keySplit < 0 ) {
+					Utils.LogDebug( "Hotkey {0} has an invalid key", pair.Key );
+					continue;
 				}
+				string strKey = pair.Key.Substring( prefix.Length, keySplit - prefix.Length );
+				string strFlags = pair.Key.Substring( keySplit + 1, pair.Key.Length - keySplit - 1 );
+				
+				int valueSplit = pair.Value.IndexOf( '&', 0 );
+				if( valueSplit < 0 ) {
+					Utils.LogDebug( "Hotkey {0} has an invalid value", pair.Key );
+					continue;
+				}
+				string strMoreInput = pair.Value.Substring( 0, valueSplit - 0 );
+				string strText = pair.Value.Substring( valueSplit + 1, pair.Value.Length - valueSplit - 1 );
+				
+				// Then try to parse the key and value
+				Key key; byte flags; bool moreInput;
+				if( !Utils.TryParseEnum( strKey, Key.Unknown, out key ) ||
+				   !Byte.TryParse( strFlags, out flags ) ||
+				   !Boolean.TryParse( strMoreInput, out moreInput ) ||
+				   strText.Length == 0 ) {
+					Utils.LogDebug( "Hotkey {0} has invalid arguments", pair.Key );
+					continue;
+				}
+				AddHotkey( key, flags, strText, moreInput );
 			}
 		}
 		
 		public void UserRemovedHotkey( Key baseKey, byte flags ) {
 			string key = "hotkey-" + baseKey + "&" + flags;
-			Options.Set( key, null );
+			Options.Set<string>( key, null );
 		}
 		
 		public void UserAddedHotkey( Key baseKey, byte flags, bool moreInput, string text ) {
 			string key = "hotkey-" + baseKey + "&" + flags;
 			string value = moreInput + "&" + text;
-			Options.Set( key, value );
+			Options.Set<string>( key, value );
 		}
 	}
 	

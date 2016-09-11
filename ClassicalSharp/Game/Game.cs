@@ -329,10 +329,9 @@ namespace ClassicalSharp {
 			Graphics.DeleteTexture( ref CloudsTex );
 			Graphics.Dispose();
 			
-			if( Options.HasChanged ) {
-				Options.Load();
-				Options.Save();
-			}
+			if( Options.OptionsChanged.Count == 0 ) return;
+			Options.Load();
+			Options.Save();
 		}
 		
 		internal bool CanPick( byte block ) {

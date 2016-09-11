@@ -64,10 +64,8 @@ namespace ClassicalSharp {
 	public static class Options {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
-		public static Dictionary<string, bool> OptionsChanged = new Dictionary<string, bool>();
-		public static bool HasChanged { get { return OptionsChanged.Count > 0; } }
-		
-		const string OptionsFile = "options.txt";
+		public static List<string> OptionsChanged = new List<string>();		
+		const string Filename = "options.txt";
 		
 		static bool TryGetValue( string key, out string value ) {
 			if( OptionsSet.TryGetValue( key, out value ) ) return true;
@@ -122,19 +120,16 @@ namespace ClassicalSharp {
 			return mapping;
 		}
 		
-		public static void Set( string key, string value ) {
-			key = key.ToLower();
-			if( value != null )
-				OptionsSet[key] = value;
-			else
-				OptionsSet.Remove( key );
-			OptionsChanged[key] = true;
-		}
-		
 		public static void Set<T>( string key, T value ) {
 			key = key.ToLower();
-			OptionsSet[key] = value.ToString();
-			OptionsChanged[key] = true;
+			if( value != null ) {
+				OptionsSet[key] = value.ToString();
+			} else {
+				OptionsSet.Remove( key );
+			}
+			
+			if( !OptionsChanged.Contains( key ) )
+				OptionsChanged.Add( key );
 		}
 		
 		public static bool Load() {
@@ -147,7 +142,7 @@ namespace ClassicalSharp {
 				Program.CleanupMainDirectory();			   
 			
 			try {
-				string path = Path.Combine( Program.AppDirectory, OptionsFile );
+				string path = Path.Combine( Program.AppDirectory, Filename );
 				using( Stream fs = File.OpenRead( path ) )
 					using( StreamReader reader = new StreamReader( fs, false ) )
 						LoadFrom( reader );
@@ -165,7 +160,7 @@ namespace ClassicalSharp {
 			// remove all the unchanged options
 			List<string> toRemove = new List<string>();
 			foreach( KeyValuePair<string, string> kvp in OptionsSet ) {
-				if( !OptionsChanged.ContainsKey( kvp.Key ) )
+				if( !OptionsChanged.Contains( kvp.Key ) )
 				   toRemove.Add( kvp.Key );
 			}
 			for( int i = 0; i < toRemove.Count; i++ )
@@ -181,17 +176,20 @@ namespace ClassicalSharp {
 				sepIndex++;
 				if( sepIndex == line.Length ) continue;
 				string value = line.Substring( sepIndex, line.Length - sepIndex );
-				if( !OptionsChanged.ContainsKey( key ) )
+				if( !OptionsChanged.Contains( key ) )
 					OptionsSet[key] = value;
 			}
 		}
 		
 		public static bool Save() {
 			try {
-				string path = Path.Combine( Program.AppDirectory, OptionsFile );
+				string path = Path.Combine( Program.AppDirectory, Filename );
 				using( Stream fs = File.Create( path ) )
-					using( StreamWriter writer = new StreamWriter( fs ) )
-						SaveTo( writer );
+					using( StreamWriter writer = new StreamWriter( fs ) ) 
+				{
+					SaveTo( writer );
+				}
+				
 				OptionsChanged.Clear();
 				return true;
 			} catch( IOException ex ) {
