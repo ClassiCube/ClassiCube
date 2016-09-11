@@ -563,8 +563,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			d3d.Dispose();
 		}
 
-		protected override void MakeApiInfo() {
-			string adapter =  d3d.Adapters[0].Details.Description;
+		internal override void MakeApiInfo() {
+			string adapter = d3d.Adapters[0].Details.Description;
 			float texMem = (uint)device.AvailableTextureMemory / 1024f / 1024f;
 			
 			ApiInfo = new string[] {

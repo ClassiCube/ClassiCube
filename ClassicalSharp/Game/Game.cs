@@ -8,6 +8,7 @@ using System.Threading;
 using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Map;
@@ -28,21 +29,27 @@ namespace ClassicalSharp {
 
 	public partial class Game : IDisposable {
 		
-		void LoadAtlas( Bitmap bmp ) {
+		// For FileStreams we need to keep it open for lifetime of the image
+		Stream lastAtlas;
+		void LoadAtlas( Bitmap bmp, Stream data ) {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
+			if( lastAtlas != null ) lastAtlas.Dispose();
+			
 			TerrainAtlas.UpdateState( BlockInfo, bmp );
 			TerrainAtlas1D.UpdateState( TerrainAtlas );
+			lastAtlas = data;
 		}
 		
-		public bool ChangeTerrainAtlas( Bitmap atlas ) {
+		public bool ChangeTerrainAtlas( Bitmap atlas, Stream data ) {
 			bool pow2 = Utils.IsPowerOf2( atlas.Width ) && Utils.IsPowerOf2( atlas.Height );
 			if( !pow2 || atlas.Width != atlas.Height ) {
 				Chat.Add( "&cCurrent texture pack has an invalid terrain.png" );
 				Chat.Add( "&cWidth and length must be the same, and also powers of two." );
 				return false;
 			}
-			LoadAtlas( atlas );
+			
+			LoadAtlas( atlas, data );
 			Events.RaiseTerrainAtlasChanged();
 			return true;
 		}
@@ -199,12 +206,12 @@ namespace ClassicalSharp {
 				
 				while( task.Accumulator >= task.Interval ) {
 					task.Callback( task );
-					task.Accumulator -= task.Interval;					
+					task.Accumulator -= task.Interval;
 				}
 			}
 		}
 		
-		public ScheduledTask AddScheduledTask( double interval, 
+		public ScheduledTask AddScheduledTask( double interval,
 		                                      Action<ScheduledTask> callback ) {
 			ScheduledTask task = new ScheduledTask();
 			task.Interval = interval; task.Callback = callback;
@@ -254,10 +261,10 @@ namespace ClassicalSharp {
 			BlockInfo.SetupCullingCache();
 			BlockInfo.InitLightOffsets();
 			
-			Network.ExtractDefault();
+			TexturePackExtractor.ExtractDefault( this );
 			Gui.SetNewScreen( new ErrorScreen( this, title, reason ) );
 			GC.Collect();
-		}		
+		}
 		
 		public void CycleCamera() {
 			if( ClassicMode ) return;
@@ -320,6 +327,7 @@ namespace ClassicalSharp {
 			Entities.Dispose();
 			WorldEvents.OnNewMap -= OnNewMapCore;
 			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
+			Events.TextureChanged -= TextureChangedCore;
 			
 			for( int i = 0; i < Components.Count; i++ )
 				Components[i].Dispose();
@@ -328,6 +336,7 @@ namespace ClassicalSharp {
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTex );
 			Graphics.Dispose();
+			if( lastAtlas != null ) lastAtlas.Dispose();
 			
 			if( Options.OptionsChanged.Count == 0 ) return;
 			Options.Load();
@@ -409,6 +418,27 @@ namespace ClassicalSharp {
 				((StandardEnvRenderer)EnvRenderer).UseLegacyMode( legacy );
 			}
 		}
+		
+		void TextureChangedCore( object sender, TextureEventArgs e ) {
+			byte[] data = e.Data;
+			if( e.Name == "terrain.png" ) {
+				MemoryStream stream = new MemoryStream( data );
+				Bitmap atlas = Platform.ReadBmp( stream );
+				if( ChangeTerrainAtlas( atlas, null ) ) return;
+				atlas.Dispose();
+			} else if( e.Name == "cloud.png" || e.Name == "clouds.png" ) {
+				UpdateTexture( ref CloudsTex, e.Name, data, false );
+			} else if( e.Name == "default.png" ) {
+				MemoryStream stream = new MemoryStream( data );
+				Bitmap bmp = Platform.ReadBmp( stream );
+				if( !Platform.Is32Bpp( bmp ) )
+					Drawer2D.ConvertTo32Bpp( ref bmp );
+				
+				Drawer2D.SetFontBitmap( bmp );
+				Events.RaiseChatFontChanged();
+			}
+		}
+		
 		
 		public Game( string username, string mppass, string skinServer,
 		            bool nullContext, int width, int height ) {

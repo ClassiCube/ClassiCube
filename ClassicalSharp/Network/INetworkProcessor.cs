@@ -110,68 +110,13 @@ namespace ClassicalSharp {
 				                                   lastModified, etag );
 		}
 		
-		protected internal void ExtractDefault() {
-			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( game.DefaultTexturePack, game );
-			game.World.TextureUrl = null;
-		}
-		
 		protected void CheckAsyncResources() {
 			DownloadedItem item;
-			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) )
-				ExtractTerrainPng( item );
-			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) )
-				ExtractTexturePack( item );
-		}
-		
-		void ExtractTerrainPng( DownloadedItem item ) {
-			if( item.Data != null ) {
-				Bitmap bmp = (Bitmap)item.Data;
-				game.World.TextureUrl = item.Url;
-				game.Events.RaiseTexturePackChanged();
-				
-				if( !Platform.Is32Bpp( bmp ) ) {
-					Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
-					game.Drawer2D.ConvertTo32Bpp( ref bmp );
-				}
-				if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
-				
-				TextureCache.Add( item.Url, bmp );
-				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
-				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
-			} else {
-				Bitmap bmp = TextureCache.GetBitmap( item.Url );
-				if( bmp == null ) { // e.g. 404 errors
-					ExtractDefault();
-				} else if( item.Url != game.World.TextureUrl ) {
-					game.World.TextureUrl = item.Url;
-					game.Events.RaiseTexturePackChanged();
-					if( !game.ChangeTerrainAtlas( bmp ) ) { bmp.Dispose(); return; }
-				}
+			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) ) {
+				TexturePackExtractor.ExtractTerrainPng( game, item );
 			}
-		}
-		
-		void ExtractTexturePack( DownloadedItem item ) {
-			if( item.Data != null ) {
-				game.World.TextureUrl = item.Url;
-				byte[] data = (byte[])item.Data;
-				TexturePackExtractor extractor = new TexturePackExtractor();				
-				using( Stream ms = new MemoryStream( data ) ) {
-					extractor.Extract( ms, game );
-				}
-				
-				TextureCache.Add( item.Url, data );
-				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
-				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
-			} else {
-				FileStream data = TextureCache.GetStream( item.Url );
-				if( data == null ) { // e.g. 404 errors
-					ExtractDefault();
-				} else if( item.Url != game.World.TextureUrl ) {
-					game.World.TextureUrl = item.Url;
-					TexturePackExtractor extractor = new TexturePackExtractor();
-					extractor.Extract( data, game );
-				}
+			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) ) {
+				TexturePackExtractor.ExtractTexturePack( game, item );
 			}
 		}
 		#endregion

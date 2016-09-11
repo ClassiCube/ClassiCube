@@ -17,24 +17,7 @@ namespace ClassicalSharp.TexturePack {
 		public static bool HasUrl( string url ) {
 			return File.Exists( MakePath( url ) );
 		}
-		
-		/// <summary> Gets the bitmap associated with the url from the cache, returning null if the bitmap
-		/// for the url was not found in the cache or the bitmap in the cache was corrupted. </summary>
-		public static Bitmap GetBitmap( string url ) {
-			string path = MakePath( url );
-			if( !File.Exists( path ) ) return null;
-			
-			try {
-				return new Bitmap( path );
-			} catch( ArgumentException ex ) {
-				ErrorHandler.LogError( "Cache.GetBitmap", ex );
-				return null;
-			} catch( IOException ex ) {
-				ErrorHandler.LogError( "Cache.GetBitmap", ex );
-				return null;
-			}
-		}
-		
+
 		/// <summary> Gets the stream of data associated with the url from the cache, returning null if the
 		/// data for the url was not found in the cache. </summary>
 		public static FileStream GetStream( string url ) {

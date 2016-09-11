@@ -346,7 +346,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			//game.VSync = value; TODO: vsync
 		}
 		
-		protected override void MakeApiInfo() {
+		internal override void MakeApiInfo() {
 			string vendor = GL.GetString( All.Vendor );
 			string renderer = GL.GetString( All.Renderer );
 			string version = GL.GetString( All.Version );

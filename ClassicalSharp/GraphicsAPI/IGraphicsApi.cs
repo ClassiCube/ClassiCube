@@ -238,17 +238,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Raised when the dimensions of the game's window have changed. </summary>
 		public abstract void OnWindowResize( Game game );
-
-		
 				
-		protected abstract void MakeApiInfo();
-		
+		internal abstract void MakeApiInfo();		
 		public string[] ApiInfo;
 		
-		public void MakeGraphicsInfo() {
-			MakeApiInfo();
-			ErrorHandler.AdditionalInfo = ApiInfo;
-		}
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );

@@ -364,7 +364,7 @@ namespace ClassicalSharp.Network {
 			if( !game.AllowServerTextures ) return;
 			
 			if( url == "" ) {
-				ExtractDefault();
+				TexturePackExtractor.ExtractDefault( game );
 			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
 				RetrieveTexturePack( url );
 			}

@@ -26,12 +26,15 @@ namespace ClassicalSharp {
 		internal void OnLoad() {
 			Mouse = window.Mouse;
 			Keyboard = window.Keyboard;
-			#if !USE_DX
+			#if ANDROID
+			Graphics = new OpenGLESApi();
+			#elif !USE_DX
 			Graphics = new OpenGLApi();
 			#else
 			Graphics = new Direct3D9Api( this );
 			#endif
-			Graphics.MakeGraphicsInfo();
+			Graphics.MakeApiInfo();
+			ErrorHandler.AdditionalInfo = Graphics.ApiInfo;
 			
 			Options.Load();
 			Entities = new EntityList( this );
@@ -49,13 +52,20 @@ namespace ClassicalSharp {
 			Chat = AddComponent( new Chat() );
 			WorldEvents.OnNewMap += OnNewMapCore;
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
+			Events.TextureChanged += TextureChangedCore;
 			
 			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ModelCache = new ModelCache( this );
 			ModelCache.InitCache();
 			AsyncDownloader = AddComponent( new AsyncDownloader() );
+			
+			#if ANDROID
+			Drawer2D = new CanvasDrawer2D( Graphics );
+			#else
 			Drawer2D = new GdiPlusDrawer2D( Graphics );
+			#endif
+			
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool( OptionsKey.ArialChatFont, false );
 			Drawer2D.BlackTextShadows = Options.GetBool( OptionsKey.BlackTextShadows, false );
 			

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
+using ClassicalSharp.Network;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -40,30 +41,86 @@ namespace ClassicalSharp.TexturePack {
 			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
 			i = name.LastIndexOf( '/' );
 			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
-			
-			switch( name ) {
-				case "terrain.png":
-					MemoryStream stream = new MemoryStream( data );
-					Bitmap atlas = Platform.ReadBmp( stream );
-					if( !game.ChangeTerrainAtlas( atlas ) ) atlas.Dispose();
-					break;
-				case "clouds.png":
-				case "cloud.png":
-					game.UpdateTexture( ref game.CloudsTex, name, data, false ); break;
-				case "default.png":
-					SetFontBitmap( game, data ); break;
-			}		
 			game.Events.RaiseTextureChanged( name, data );
 		}
 		
-		void SetFontBitmap( Game game, byte[] data ) {
-			MemoryStream stream = new MemoryStream( data );
-			Bitmap bmp = Platform.ReadBmp( stream );
-			if( !Platform.Is32Bpp( bmp ) )
-				game.Drawer2D.ConvertTo32Bpp( ref bmp );
-			
-			game.Drawer2D.SetFontBitmap( bmp );
-			game.Events.RaiseChatFontChanged();
+		
+		internal static void ExtractTerrainPng( Game game, DownloadedItem item ) {
+			if( item.Data != null ) {
+				Bitmap bmp = (Bitmap)item.Data;
+				game.World.TextureUrl = item.Url;
+				game.Events.RaiseTexturePackChanged();
+				
+				if( !Platform.Is32Bpp( bmp ) ) {
+					Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
+					game.Drawer2D.ConvertTo32Bpp( ref bmp );
+				}
+				if( !game.ChangeTerrainAtlas( bmp, null ) ) { bmp.Dispose(); return; }
+				
+				TextureCache.Add( item.Url, bmp );
+				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
+				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
+			} else {
+				FileStream data = TextureCache.GetStream( item.Url );
+				if( data == null ) { // e.g. 404 errors
+					ExtractDefault( game );
+				} else if( item.Url != game.World.TextureUrl ) {
+					Bitmap bmp = GetBitmap( data );
+					if( bmp == null ) { data.Dispose(); return; }
+					
+					game.World.TextureUrl = item.Url;
+					game.Events.RaiseTexturePackChanged();
+					if( game.ChangeTerrainAtlas( bmp, data ) ) return;	
+					
+					bmp.Dispose(); 
+					data.Dispose();
+				} else {
+					data.Dispose();
+				}
+			}
+		}
+		
+		internal static void ExtractTexturePack( Game game, DownloadedItem item ) {
+			if( item.Data != null ) {
+				game.World.TextureUrl = item.Url;
+				byte[] data = (byte[])item.Data;
+				TexturePackExtractor extractor = new TexturePackExtractor();
+				using( Stream ms = new MemoryStream( data ) ) {
+					extractor.Extract( ms, game );
+				}
+				
+				TextureCache.Add( item.Url, data );
+				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
+				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
+			} else {
+				FileStream data = TextureCache.GetStream( item.Url );
+				if( data == null ) { // e.g. 404 errors
+					ExtractDefault( game );
+				} else if( item.Url != game.World.TextureUrl ) {
+					game.World.TextureUrl = item.Url;
+					TexturePackExtractor extractor = new TexturePackExtractor();
+					extractor.Extract( data, game );
+				}
+			}
+		}
+		
+		
+		internal static void ExtractDefault( Game game ) {
+			TexturePackExtractor extractor = new TexturePackExtractor();
+			extractor.Extract( game.DefaultTexturePack, game );
+			game.World.TextureUrl = null;
+		}
+
+		static Bitmap GetBitmap( FileStream fs ) {
+			try {
+				return Platform.ReadBmp( fs );
+			} catch( ArgumentException ex ) {
+				ErrorHandler.LogError( "Cache.GetBitmap", ex );
+				return null;
+			} catch( IOException ex ) {
+				ErrorHandler.LogError( "Cache.GetBitmap", ex );
+				return null;
+			}
 		}
 	}
 }
