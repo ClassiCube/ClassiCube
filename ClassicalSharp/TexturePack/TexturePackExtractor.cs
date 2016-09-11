@@ -17,18 +17,13 @@ namespace ClassicalSharp.TexturePack {
 		public const string Dir = "texpacks";
 		Game game;
 		public void Extract( string path, Game game ) {
-			path = Path.Combine( Dir, path );
-			path = Path.Combine( Program.AppDirectory, path );
-			using( Stream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) )
+			path = PathIO.Combine( Dir, path );
+			path = PathIO.Combine( Program.AppDirectory, path );
+			using( Stream fs = File.OpenRead( path ) )
 				Extract( fs, game );
 		}
 		
-		public void Extract( byte[] data, Game game ) {
-			using( Stream fs = new MemoryStream( data ) )
-				Extract( fs, game );
-		}
-		
-		void Extract( Stream stream, Game game ) {
+		public void Extract( Stream stream, Game game ) {
 			this.game = game;
 			game.Events.RaiseTexturePackChanged();
 			ZipReader reader = new ZipReader();

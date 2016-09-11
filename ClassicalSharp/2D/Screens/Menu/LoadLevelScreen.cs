@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui {
 			}
 			
 			try {
-				using( FileStream fs = new FileStream( path, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
+				using( FileStream fs = File.OpenRead( path ) ) {
 					int width, height, length;
 					game.World.Reset();
 					game.World.TextureUrl = null;

@@ -6,6 +6,7 @@ using OpenTK;
 using OpenTK.Input;
 #if ANDROID
 using Android.Graphics;
+using AndroidColor = Android.Graphics.Color;
 #endif
 
 namespace ClassicalSharp {

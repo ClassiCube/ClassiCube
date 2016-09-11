@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
@@ -118,7 +119,7 @@ namespace ClassicalSharp {
 		protected void CheckAsyncResources() {
 			DownloadedItem item;
 			if( game.AsyncDownloader.TryGetItem( "terrain", out item ) )
-				ExtractTerrainPng( item );		
+				ExtractTerrainPng( item );
 			if( game.AsyncDownloader.TryGetItem( "texturePack", out item ) )
 				ExtractTexturePack( item );
 		}
@@ -153,14 +154,17 @@ namespace ClassicalSharp {
 		void ExtractTexturePack( DownloadedItem item ) {
 			if( item.Data != null ) {
 				game.World.TextureUrl = item.Url;
+				byte[] data = (byte[])item.Data;
+				TexturePackExtractor extractor = new TexturePackExtractor();				
+				using( Stream ms = new MemoryStream( data ) ) {
+					extractor.Extract( ms, game );
+				}
 				
-				TexturePackExtractor extractor = new TexturePackExtractor();
-				extractor.Extract( (byte[])item.Data, game );
-				TextureCache.Add( item.Url, (byte[])item.Data );
+				TextureCache.Add( item.Url, data );
 				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
 				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
 			} else {
-				byte[] data = TextureCache.GetData( item.Url );
+				FileStream data = TextureCache.GetStream( item.Url );
 				if( data == null ) { // e.g. 404 errors
 					ExtractDefault();
 				} else if( item.Url != game.World.TextureUrl ) {

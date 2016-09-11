@@ -35,14 +35,14 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 		
-		/// <summary> Gets the data associated with the url from the cache, returning null if the
+		/// <summary> Gets the stream of data associated with the url from the cache, returning null if the
 		/// data for the url was not found in the cache. </summary>
-		public static byte[] GetData( string url ) {
+		public static FileStream GetStream( string url ) {
 			string path = MakePath( url );
 			if( !File.Exists( path ) ) return null;
 			
 			try {
-				return File.ReadAllBytes( path );
+				return File.OpenRead( path );
 			} catch( IOException ex ) {
 				ErrorHandler.LogError( "Cache.GetData", ex );
 				return null;
