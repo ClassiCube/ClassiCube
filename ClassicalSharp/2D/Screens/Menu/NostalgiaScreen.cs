@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui {
 				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v ),
 				
 				MakeBack( false, titleFont,
-				     (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
+				         (g, w) => g.Gui.SetNewScreen( PreviousScreen() ) ),
 				null, null,
 			};
 			
@@ -55,6 +55,11 @@ namespace ClassicalSharp.Gui {
 			};
 			infoWidget = ChatTextWidget.Create( game, 0, 100, "&eButtons on the right require a client restart", 
 			                               Anchor.Centre, Anchor.Centre, regularFont );
+		}
+		
+		Screen PreviousScreen() {
+			if( game.UseClassicOptions ) return new PauseScreen( game );
+			return new OptionsGroupScreen( game );
 		}
 		
 		public override void Render( double delta ) {
