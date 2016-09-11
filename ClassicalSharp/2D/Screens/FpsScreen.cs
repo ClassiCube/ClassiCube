@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui {
 			}
 			
 			CheckClock();
-			string textString = text.GetString();
+			string textString = text.ToString();
 			fpsText.SetText( textString );
 			accumulator = 0;
 			frames = 0;
@@ -104,8 +104,7 @@ namespace ClassicalSharp.Gui {
 			fpsText.ReducePadding = true;
 			fpsText.Init();
 			
-			string msg = text.Length > 0 ? text.GetString() :
-				"FPS: no data yet";
+			string msg = text.Length > 0 ? text.ToString() : "FPS: no data yet";
 			fpsText.SetText( msg );
 			MakePosTextWidget();
 			
@@ -169,7 +168,7 @@ namespace ClassicalSharp.Gui {
 					(hacks.CanSpeed || hacks.MaxSpeedMultiplier > 1);
 				if( speed ) text.Append( ref index, "Speed ON   " );
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
-				hackStates.SetText( text.GetString() );
+				hackStates.SetText( text.ToString() );
 			}
 		}
 

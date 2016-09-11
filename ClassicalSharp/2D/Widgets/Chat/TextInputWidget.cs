@@ -223,7 +223,8 @@ namespace ClassicalSharp.Gui {
 		
 		void SendInBuffer() {
 			if( buffer.Empty ) return;
-			string allText = buffer.GetString();
+			// Don't want trailing spaces in output message
+			string allText = new String( buffer.value, 0, buffer.TextLength );
 			game.Chat.InputLog.Add( allText );
 			
 			if( game.Server.SupportsPartialMessages )

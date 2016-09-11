@@ -180,7 +180,7 @@ namespace ClassicalSharp.Gui {
 			
 			byte block = blocksTable[selIndex];
 			UpdateBlockInfoString( block );
-			string value = buffer.GetString();
+			string value = buffer.ToString();
 			
 			DrawTextArgs args = new DrawTextArgs( value, font, true );
 			Size size = game.Drawer2D.MeasureChatSize( ref args );

@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui {
 		public override void Init() {
 			DrawTextArgs caretArgs = new DrawTextArgs( "_", boldFont, false );
 			chatCaretTexture = game.Drawer2D.MakeChatTextTexture( ref caretArgs, 0, 0 );
-			SetText( chatInputText.GetString() );
+			SetText( chatInputText.ToString() );
 		}
 		
 		int yOffset;
@@ -105,9 +105,7 @@ namespace ClassicalSharp.Gui {
 			chatCaretTexture.Y1 = (Y + size.Height) - chatCaretTexture.Height;
 		}
 		
-		public string GetText() {
-			return chatInputText.GetString();
-		}
+		public string GetText() { return chatInputText.ToString(); }
 
 		public override void Dispose() {
 			api.DeleteTexture( ref chatCaretTexture );
@@ -134,7 +132,7 @@ namespace ClassicalSharp.Gui {
 				if( !Validator.IsValidChar( key ) ) return true;
 				chatInputText.Append( chatInputText.Length, key );
 				
-				if( !Validator.IsValidString( chatInputText.GetString() ) ) {
+				if( !Validator.IsValidString( chatInputText.ToString() ) ) {
 					chatInputText.DeleteAt( chatInputText.Length - 1 );
 					return true;
 				}

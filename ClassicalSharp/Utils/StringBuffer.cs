@@ -114,12 +114,15 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public string GetString() {
-			return new String( value, 0, Length );
-		}
-		
-		public string GetSubstring( int length ) {
-			return new String( value, 0, length );
+		public int TextLength {
+			get {
+				int len = Capacity;
+				for( int i = Capacity - 1; i >= 0; i-- ) {
+					if( value[i] != '\0' && value[i] != ' ') break;
+					len--;
+				}
+				return len;
+			}
 		}
 		
 		public override string ToString() {
