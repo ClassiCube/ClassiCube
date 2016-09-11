@@ -8,7 +8,7 @@ namespace ClassicalSharp.Commands {
 		
 		const string prefix = "/client";
 		public bool IsCommandPrefix( string input ) {
-			if( game.Network.IsSinglePlayer && Utils.CaselessStarts( input, "/" ) )
+			if( game.Server.IsSinglePlayer && Utils.CaselessStarts( input, "/" ) )
 				return true;
 			
 			return Utils.CaselessStarts( input, prefix + " " ) 
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Commands {
 			Register( new InfoCommand() );
 			Register( new RenderTypeCommand() );
 			
-			if( !game.Network.IsSinglePlayer ) return;
+			if( !game.Server.IsSinglePlayer ) return;
 			Register( new ModelCommand() );
 			Register( new CuboidCommand() );
 		}

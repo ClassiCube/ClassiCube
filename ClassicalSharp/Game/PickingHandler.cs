@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 			lastClick = now;
 			Inventory inv = game.Inventory;
 			
-			if( game.Network.UsingPlayerClick && !game.Gui.ActiveScreen.HandlesAllInput ) {
+			if( game.Server.UsingPlayerClick && !game.Gui.ActiveScreen.HandlesAllInput ) {
 				byte targetId = game.Entities.GetClosetPlayer( game.LocalPlayer );
 				input.ButtonStateChanged( MouseButton.Left, left, targetId );
 				input.ButtonStateChanged( MouseButton.Right, right, targetId );

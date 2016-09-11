@@ -74,7 +74,7 @@ namespace ClassicalSharp.Gui {
 		int indexX, indexY;
 		bool shownWarning;
 		
-		int LineLength { get { return game.Network.ServerSupportsPartialMessages ? 64 : 62; } }
+		int LineLength { get { return game.Server.SupportsPartialMessages ? 64 : 62; } }
 		int TotalChars { get { return LineLength * lines; } }
 		
 		public override void Init() {
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Gui {
 			}
 			if( sizes[0].Height == 0 ) sizes[0].Height = defaultHeight;
 			
-			bool supports = game.Network.ServerSupportsPartialMessages;
+			bool supports = game.Server.SupportsPartialMessages;
 			if( buffer.Length > LineLength && !shownWarning && !supports ) {
 				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
 				shownWarning = true;
@@ -226,7 +226,7 @@ namespace ClassicalSharp.Gui {
 			string allText = buffer.GetString();
 			game.Chat.InputLog.Add( allText );
 			
-			if( game.Network.ServerSupportsPartialMessages )
+			if( game.Server.SupportsPartialMessages )
 				SendWithPartial( allText );
 			else
 				SendNormal();

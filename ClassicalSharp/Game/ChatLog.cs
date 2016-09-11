@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 				game.CommandList.Execute( text );
 				return;
 			}
-			game.Network.SendChat( text, partial );
+			game.Server.SendChat( text, partial );
 		}
 		
 		static char[] trimChars = new [] { ' ', '\0' };

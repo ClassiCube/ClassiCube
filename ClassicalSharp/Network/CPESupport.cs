@@ -22,11 +22,11 @@ namespace ClassicalSharp.Network {
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; game.UseCPEBlocks = false;
 			
-			NetworkProcessor network = (NetworkProcessor)game.Network;
+			NetworkProcessor network = (NetworkProcessor)game.Server;
 			network.UsingExtPlayerList = false;
 			network.UsingPlayerClick = false;
-			network.ServerSupportsPartialMessages = false;
-			network.ServerSupportsFullCP437 = false;
+			network.SupportsPartialMessages = false;
+			network.SupportsFullCP437 = false;
 
 			network.Set( Opcode.CpeEnvSetMapApperance,
 			            network.HandleEnvSetMapAppearance, 69 );
@@ -53,9 +53,9 @@ namespace ClassicalSharp.Network {
 				network.Set( Opcode.CpeEnvSetMapApperance,
 				            network.HandleEnvSetMapAppearance2, 73 );
 			} else if( ext == "LongerMessages" ) {
-				network.ServerSupportsPartialMessages = true;
+				network.SupportsPartialMessages = true;
 			} else if( ext == "FullCP437" ) {
-				network.ServerSupportsFullCP437 = true;
+				network.SupportsFullCP437 = true;
 			} else if( ext == "BlockDefinitionsExt" ) {
 				blockDefsExtVer = version;
 				if( version == 1 ) return;

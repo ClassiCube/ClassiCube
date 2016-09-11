@@ -237,7 +237,7 @@
     <Compile Include="Entities\Model\SpiderModel.cs" />
     <Compile Include="Entities\Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
-    <Compile Include="Network\INetworkProcessor.cs" />
+    <Compile Include="Network\IServerConnection.cs" />
     <Compile Include="Network\NetworkProcessor.CPE.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
     <Compile Include="Network\NetworkProcessor.Original.cs" />

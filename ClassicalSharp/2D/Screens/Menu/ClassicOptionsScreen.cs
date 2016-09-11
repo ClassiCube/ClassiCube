@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 		
 		public override void Init() {
 			base.Init();
-			INetworkProcessor network = game.Network;
+			IServerConnection network = game.Server;
 			
 			widgets = new Widget[] {
 				// Column 1
@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void MakeValidators() {
-			INetworkProcessor network = game.Network;
+			IServerConnection network = game.Server;
 			validators = new MenuInputValidator[] {
 				new BooleanValidator(),
 				new BooleanValidator(),

@@ -116,7 +116,7 @@ namespace ClassicalSharp.Gui {
 			Key playerListKey = game.Mapping( KeyBind.PlayerList );
 			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
 			if( key == playerListKey && handles ) {
-				if( playerList == null && !game.Network.IsSinglePlayer )
+				if( playerList == null && !game.Server.IsSinglePlayer )
 					CreatePlayerListWidget();
 				return true;
 			}
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Gui {
 		void CreatePlayerListWidget() {
 			if( game.UseClassicTabList ) {
 				playerList = new ClassicPlayerListWidget( game, playerFont );
-			} else if( game.Network.UsingExtPlayerList ) {
+			} else if( game.Server.UsingExtPlayerList ) {
 				playerList = new ExtPlayerListWidget( game, playerFont );
 			} else {
 				playerList = new NormalPlayerListWidget( game, playerFont );

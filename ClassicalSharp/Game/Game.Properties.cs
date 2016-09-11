@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 		public World World;
 		
 		/// <summary> Represents a connection to a multiplayer or a singleplayer server. </summary>
-		public INetworkProcessor Network;
+		public IServerConnection Server;
 		
 		/// <summary> List of all entities in the current map, including the player. </summary>
 		public EntityList Entities;

@@ -10,7 +10,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Network {
 
-	public partial class NetworkProcessor : INetworkProcessor {
+	public partial class NetworkProcessor : IServerConnection {
 		
 		#region Writing
 		

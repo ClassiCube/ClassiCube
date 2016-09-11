@@ -10,7 +10,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Singleplayer {
 
-	public sealed class SinglePlayerServer : INetworkProcessor {
+	public sealed class SinglePlayerServer : IServerConnection {
 		
 		internal Physics physics;
 		internal byte[] generatedMap;
@@ -20,8 +20,8 @@ namespace ClassicalSharp.Singleplayer {
 		public SinglePlayerServer( Game window ) {
 			game = window;
 			physics = new Physics( game );
-			ServerSupportsFullCP437 = !game.ClassicMode;
-			ServerSupportsPartialMessages = true;
+			SupportsFullCP437 = !game.ClassicMode;
+			SupportsPartialMessages = true;
 		}
 		
 		public override bool IsSinglePlayer { get { return true; } }

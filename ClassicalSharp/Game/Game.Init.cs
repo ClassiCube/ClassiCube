@@ -86,11 +86,11 @@ namespace ClassicalSharp {
 				SetRenderType( "normal" );
 			
 			if( IPAddress == null ) {
-				Network = new Singleplayer.SinglePlayerServer( this );
+				Server = new Singleplayer.SinglePlayerServer( this );
 			} else {
-				Network = new Network.NetworkProcessor( this );
+				Server = new Network.NetworkProcessor( this );
 			}
-			Graphics.LostContextFunction = Network.Tick;
+			Graphics.LostContextFunction = Server.Tick;
 			
 			firstPersonCam = new FirstPersonCamera( this );
 			thirdPersonCam = new ThirdPersonCamera( this );
@@ -129,7 +129,7 @@ namespace ClassicalSharp {
 				EnvRenderer.UseLegacyMode( true );
 			}
 			Gui.SetNewScreen( new LoadingMapScreen( this, connectString, "Waiting for handshake" ) );
-			Network.Connect( IPAddress, Port );
+			Server.Connect( IPAddress, Port );
 		}
 		
 		void ExtractInitialTexturePack() {
@@ -201,7 +201,7 @@ namespace ClassicalSharp {
 		void InitScheduledTasks() {
 			const double defTicks = 1.0 / 20, camTicks = 1.0 / 60;
 			AddScheduledTask( 30, AsyncDownloader.PurgeOldEntriesTask );
-			AddScheduledTask( defTicks, Network.Tick );
+			AddScheduledTask( defTicks, Server.Tick );
 			entTask = AddScheduledTask( defTicks, Entities.Tick );
 			
 			AddScheduledTask( defTicks, ParticleManager.Tick );

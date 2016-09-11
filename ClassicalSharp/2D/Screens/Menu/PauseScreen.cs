@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui {
 				MakeClassic();
 			else 
 				MakeNormal();			
-			if( !game.Network.IsSinglePlayer ) {
+			if( !game.Server.IsSinglePlayer ) {
 				widgets[1].Disabled = true;
 				widgets[2].Disabled = true;
 			}

@@ -15,7 +15,7 @@ using Android.Graphics;
 namespace ClassicalSharp {
 	
 	/// <summary> Represents a connection to either a multiplayer server, or an internal single player server. </summary>
-	public abstract class INetworkProcessor {
+	public abstract class IServerConnection {
 		
 		public abstract bool IsSinglePlayer { get; }
 		
@@ -48,10 +48,10 @@ namespace ClassicalSharp {
 		public bool UsingPlayerClick;
 		
 		/// <summary> Whether the server can handle partial message packets or not. </summary>
-		public bool ServerSupportsPartialMessages;
+		public bool SupportsPartialMessages;
 		
 		/// <summary> Whether the server supports receiving all code page 437 characters from this client. </summary>
-		public bool ServerSupportsFullCP437;
+		public bool SupportsFullCP437;
 		
 		
 		#region Texture pack / terrain.png

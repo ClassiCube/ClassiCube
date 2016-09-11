@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace ClassicalSharp.Network {
 
-	public partial class NetworkProcessor : INetworkProcessor {
+	public partial class NetworkProcessor : IServerConnection {
 		
 		internal void HandleDefineBlock() {
 			if( !game.AllowCustomBlocks ) {

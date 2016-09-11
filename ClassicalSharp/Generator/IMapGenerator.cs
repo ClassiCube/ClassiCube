@@ -23,7 +23,7 @@ namespace ClassicalSharp.Generator {
 			Width = width; Height = height; Length = length;
 			Thread thread = new Thread(
 				() => {
-					SinglePlayerServer server = (SinglePlayerServer)game.Network;
+					SinglePlayerServer server = (SinglePlayerServer)game.Server;
 					try {
 						server.generatedMap = Generate( width, height, length, seed );
 					} catch( Exception ex ) {

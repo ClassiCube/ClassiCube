@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui {
 					game.World.SetNewMap( blocks, width, height, length );
 					game.WorldEvents.RaiseOnNewMapLoaded();
 					if( game.AllowServerTextures && game.World.TextureUrl != null )
-						game.Network.RetrieveTexturePack( game.World.TextureUrl );
+						game.Server.RetrieveTexturePack( game.World.TextureUrl );
 					
 					LocalPlayer p = game.LocalPlayer;
 					LocationUpdate update = LocationUpdate.MakePosAndOri( p.Spawn, p.SpawnYaw, p.SpawnPitch, false );

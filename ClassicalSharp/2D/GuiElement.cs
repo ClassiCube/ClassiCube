@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui {
 			
 			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
 				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
-			bool supportsCP437 = game.Network.ServerSupportsFullCP437;
+			bool supportsCP437 = game.Server.SupportsFullCP437;
 			return supportsCP437 && isCP437;
 		}
 		

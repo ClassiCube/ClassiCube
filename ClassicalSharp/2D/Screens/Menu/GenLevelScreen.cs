@@ -136,7 +136,7 @@ namespace ClassicalSharp.Gui {
 		}
 		
 		void GenerateMap( IMapGenerator gen ) {
-			SinglePlayerServer server = (SinglePlayerServer)game.Network;
+			SinglePlayerServer server = (SinglePlayerServer)game.Server;
 			int width = GetInt( 0 ), height = GetInt( 1 );
 			int length = GetInt( 2 ), seed = GetSeedInt( 3 );
 			

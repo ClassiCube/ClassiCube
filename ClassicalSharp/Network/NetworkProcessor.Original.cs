@@ -11,13 +11,13 @@ using System.IO.Compression;
 
 namespace ClassicalSharp.Network {
 
-	public partial class NetworkProcessor : INetworkProcessor {
+	public partial class NetworkProcessor : IServerConnection {
 		
 		#region Writing
 
 		public override void SendChat( string text, bool partial ) {
 			if( String.IsNullOrEmpty( text ) ) return;
-			byte payload = !ServerSupportsPartialMessages ? (byte)0xFF:
+			byte payload = !SupportsPartialMessages ? (byte)0xFF:
 				partial ? (byte)1 : (byte)0;
 			
 			writer.WriteUInt8( (byte)Opcode.Message );
