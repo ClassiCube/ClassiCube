@@ -22,16 +22,16 @@ namespace ClassicalSharp.Gui {
 		/// <summary> Invoked when this widget is clicked on. Can be null. </summary>
 		public ClickHandler OnClick;
 		
-		/// <summary> Horizontal coordinate of top left corner in window space. </summary>
+		/// <summary> Horizontal coordinate of top left corner in pixels. </summary>
 		public int X;
 		
-		/// <summary> Vertical coordinate of top left corner in window space. </summary>
+		/// <summary> Vertical coordinate of top left corner in pixels. </summary>
 		public int Y;
 		
-		/// <summary> Horizontal length of widget's bounds in window space. </summary>
+		/// <summary> Horizontal length of widget's bounds in pixels. </summary>
 		public int Width;
 		
-		/// <summary> Vertical length of widget's bounds in window space. </summary>
+		/// <summary> Vertical length of widget's bounds in pixels. </summary>
 		public int Height;
 		
 		/// <summary> Specifies the horizontal reference point for when the widget is resized. </summary>
@@ -40,25 +40,25 @@ namespace ClassicalSharp.Gui {
 		/// <summary> Specifies the vertical reference point for when the widget is resized. </summary>
 		public Anchor VerticalAnchor;
 		
-		/// <summary> Horizontal offset from the reference point in window space. </summary>
+		/// <summary> Horizontal offset from the reference point in pixels. </summary>
 		public int XOffset = 0;
 		
-		/// <summary> Vertical offset from the reference point in window space. </summary>
+		/// <summary> Vertical offset from the reference point in pixels. </summary>
 		public int YOffset = 0;
 		
-		/// <summary> Width and height of widget in window space. </summary>
+		/// <summary> Width and height of widget in pixels. </summary>
 		public Size Size { get { return new Size( Width, Height ); } }
 		
-		/// <summary> Coordinate of top left corner of widget's bounds in window space. </summary>
+		/// <summary> Coordinate of top left corner of widget's bounds in pixels. </summary>
 		public Point TopLeft { get { return new Point( X, Y ); } }
 		
-		/// <summary> Coordinate of bottom right corner of widget's bounds in window space. </summary>
+		/// <summary> Coordinate of bottom right corner of widget's bounds in pixels. </summary>
 		public Point BottomRight { get { return new Point( X + Width, Y + Height ); } }
 		
-		/// <summary> Specifies the boundaries of the widget in window space. </summary>
+		/// <summary> Specifies the boundaries of the widget in pixels. </summary>
 		public Rectangle Bounds { get { return new Rectangle( X, Y, Width, Height ); } }
 		
-		/// <summary> Moves the widget to the specified window space coordinates. </summary>
+		/// <summary> Moves the widget to the specified pixel coordinates. </summary>
 		public virtual void MoveTo( int newX, int newY ) {
 			X = newX; Y = newY;
 		}

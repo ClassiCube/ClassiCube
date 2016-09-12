@@ -19,7 +19,8 @@ namespace Launcher.Gui.Widgets {
 			Size size = drawer.MeasureSize( ref args );
 			Width = size.Width; Height = size.Height;
 			
-			CalculateOffset( x, y, horAnchor, verAnchor );
+			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
+				.CalculatePosition();
 			Text = text;
 			this.font = font;
 		}

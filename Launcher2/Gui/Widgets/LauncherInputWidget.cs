@@ -43,7 +43,8 @@ namespace Launcher.Gui.Widgets {
 		                   Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
 			Width = width; Height = height;
-			CalculateOffset( x, y, horAnchor, verAnchor );
+			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
+				.CalculatePosition();
 			
 			Text = text;
 			if( Password ) text = new String( '*', text.Length );
