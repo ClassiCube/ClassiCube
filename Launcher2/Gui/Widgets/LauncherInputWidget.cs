@@ -20,23 +20,12 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Whether all characters should be rendered as *. </summary>
 		public bool Password;
 		
-		/// <summary> Maximum number of characters that the 'Text' field can contain. </summary>
-		public int MaxTextLength = 32;
-		
-		/// <summary> Filter applied to text received from the clipboard. Can be null. </summary>
-		public Func<string, string> ClipboardFilter;
-		
-		/// <summary> Delegate invoked when the text changes. </summary>
-		public Action<LauncherInputWidget> TextChanged;
-		
-		/// <summary> Delegate that only lets certain characters be entered. </summary>
-		public Func<char, bool> TextFilter;
-		
-		public int CaretPos = -1;
+		public LauncherInputText Chars;
 		
 		Font font, hintFont;
 		int textHeight;
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
+			Chars = new LauncherInputText( this );
 		}
 
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, Font hintFont,
@@ -100,92 +89,6 @@ namespace Launcher.Gui.Widgets {
 			}
 		}
 		
-		/// <summary> Appends a character to the end of the currently entered text. </summary>
-		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool AppendChar( char c ) {
-			if( TextFilter != null && !TextFilter( c ) )
-				return false;
-			if( c >= ' ' && c <= '~' && c != '&' && Text.Length < MaxTextLength ) {
-				if( CaretPos == -1 ) {
-					Text += c;
-				} else {
-					Text = Text.Insert( CaretPos, new String( c, 1 ) );
-					CaretPos++;
-				}
-				if( TextChanged != null ) TextChanged( this );
-				return true;
-			}
-			return false;
-		}
-		
-		/// <summary> Removes the character preceding the caret in the currently entered text. </summary>
-		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool BackspaceChar() {
-			if( Text.Length == 0 ) return false;
-			
-			if( CaretPos == -1 ) {
-				Text = Text.Substring( 0, Text.Length - 1 );
-			} else {
-				if( CaretPos == 0 ) return false;
-				Text = Text.Remove( CaretPos - 1, 1 );
-				CaretPos--;
-				if( CaretPos == -1 ) CaretPos = 0;
-			}
-			
-			if( TextChanged != null ) TextChanged( this );
-			if( CaretPos >= Text.Length )
-				CaretPos = -1;
-			return true;
-		}
-		
-		/// <summary> Removes the haracter at the caret in the currently entered text. </summary>
-		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool DeleteChar() {
-			if( Text.Length == 0 || CaretPos == -1 ) return false;
-			
-			Text = Text.Remove( CaretPos, 1 );
-			if( CaretPos == -1 ) CaretPos = 0;
-			
-			if( TextChanged != null ) TextChanged( this );
-			if( CaretPos >= Text.Length )
-				CaretPos = -1;
-			return true;
-		}
-		
-		/// <summary> Resets the currently entered text to an empty string </summary>
-		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool ClearText() {
-			if( Text.Length == 0 ) return false;
-			
-			Text = "";
-			if( TextChanged != null ) TextChanged( this );
-			CaretPos = -1;
-			return true;
-		}
-		
-		/// <summary> Copies the contents of the currently entered text to the system clipboard. </summary>
-		public void CopyToClipboard() {
-			if( !String.IsNullOrEmpty( Text ) )
-				Clipboard.SetText( Text );
-		}
-		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
-		
-		/// <summary> Sets the currently entered text to the contents of the system clipboard. </summary>
-		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool CopyFromClipboard() {
-			string text = Clipboard.GetText().Trim( trimChars );
-			if( String.IsNullOrEmpty( text ) || Text.Length >= MaxTextLength ) return false;
-			
-			if( ClipboardFilter != null )
-				text = ClipboardFilter( text );
-			if( Text.Length + text.Length > MaxTextLength ) {
-				text = text.Substring( 0, MaxTextLength - Text.Length );
-			}
-			Text += text;
-			if( TextChanged != null ) TextChanged( this );
-			return true;
-		}
-		
 		public Rectangle MeasureCaret( IDrawer2D drawer, Font font ) {
 			string text = Text;
 			if( Password )
@@ -193,28 +96,28 @@ namespace Launcher.Gui.Widgets {
 			Rectangle r = new Rectangle( X + 5, Y + Height - 5, 0, 2 );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			
-			if( CaretPos == -1 ) {
+			if( Chars.CaretPos == -1 ) {
 				Size size = drawer.MeasureSize( ref args );
 				r.X += size.Width; r.Width = 10;
 			} else {
-				args.Text = text.Substring( 0, CaretPos );
+				args.Text = text.Substring( 0, Chars.CaretPos );
 				int trimmedWidth = drawer.MeasureChatSize( ref args ).Width;
-				args.Text = new String( text[CaretPos], 1 );
+				args.Text = new String( text[Chars.CaretPos], 1 );
 				int charWidth = drawer.MeasureChatSize( ref args ).Width;
 				r.X += trimmedWidth; r.Width = charWidth;
 			}
 			return r;
 		}
 		
-		public void AdvanceCursorPos( int dir ) {
-			if( (CaretPos == 0 && dir == -1) || (CaretPos == -1 && dir == 1) )
-				return;
-			if( CaretPos == -1 && dir == -1 )
-				CaretPos = Text.Length;
+		public void AdvanceCursorPos( bool forwards ) {
+			if( forwards && Chars.CaretPos == -1 ) return;
+			if( !forwards && Chars.CaretPos == 0 ) return;
+			if( Chars.CaretPos == -1 && !forwards ) // caret after text
+				Chars.CaretPos = Text.Length;
 			
-			CaretPos += dir;
-			if( CaretPos < 0 || CaretPos >= Text.Length )
-				CaretPos = -1;
+			Chars.CaretPos += (forwards ? 1 : -1);
+			if( Chars.CaretPos < 0 || Chars.CaretPos >= Text.Length )
+				Chars.CaretPos = -1;
 		}
 		
 		public void SetCaretToCursor( int mouseX, int mouseY, IDrawer2D drawer, Font font ) {
@@ -226,7 +129,7 @@ namespace Launcher.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			Size size = drawer.MeasureSize( ref args );
 			if( mouseX >= size.Width ) {
-				CaretPos = -1; return;
+				Chars.CaretPos = -1; return;
 			}
 			
 			for( int i = 0; i < Text.Length; i++ ) {
@@ -235,7 +138,7 @@ namespace Launcher.Gui.Widgets {
 				args.Text = new String( text[i], 1 );
 				int charWidth = drawer.MeasureChatSize( ref args ).Width;
 				if( mouseX >= trimmedWidth && mouseX < trimmedWidth + charWidth ) {
-					CaretPos = i; return;
+					Chars.CaretPos = i; return;
 				}
 			}
 		}

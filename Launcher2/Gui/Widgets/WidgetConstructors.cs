@@ -68,7 +68,7 @@ namespace Launcher.Gui.Widgets {
 				widget = new LauncherInputWidget( game );
 				widget.OnClick = onClick;
 				widget.Password = password;
-				widget.MaxTextLength = maxChars;
+				widget.Chars.MaxChars = maxChars;
 				widget.HintText = hint;
 				widgets[widgetIndex] = widget;
 			}

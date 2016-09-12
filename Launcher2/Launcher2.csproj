@@ -82,6 +82,7 @@
     <Compile Include="Gui\Views\ServersView.cs" />
     <Compile Include="Gui\Views\UpdatesView.cs" />
     <Compile Include="Gui\Widgets\LauncherBoolWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherInputText.cs" />
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />

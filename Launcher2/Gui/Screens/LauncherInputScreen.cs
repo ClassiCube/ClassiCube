@@ -70,25 +70,25 @@ namespace Launcher.Gui.Screens {
 				return;
 			}
 			
-			if( e.Key == Key.BackSpace && curInput.BackspaceChar() ) {
+			if( e.Key == Key.BackSpace && curInput.Chars.Backspace() ) {
 				RedrawLastInput();
 				OnRemovedChar();
-			} else if( e.Key == Key.Delete && curInput.DeleteChar() ) {
+			} else if( e.Key == Key.Delete && curInput.Chars.Delete() ) {
 				RedrawLastInput();
 				OnRemovedChar();
 			} else if( e.Key == Key.C && ControlDown ) {
-				curInput.CopyToClipboard();
+				curInput.Chars.CopyToClipboard();
 			} else if( e.Key == Key.V && ControlDown ) {
-				if( curInput.CopyFromClipboard() )
+				if( curInput.Chars.CopyFromClipboard() )
 					RedrawLastInput();
 			} else if( e.Key == Key.Escape ) {
-				if( curInput.ClearText() )
+				if( curInput.Chars.Clear() )
 					RedrawLastInput();
 			} else if( e.Key == Key.Left ) {
-				curInput.AdvanceCursorPos( -1 );
+				curInput.AdvanceCursorPos( false );
 				RedrawLastInput();
 			} else if( e.Key == Key.Right ) {
-				curInput.AdvanceCursorPos( +1 );
+				curInput.AdvanceCursorPos( true );
 				RedrawLastInput();
 			}
 		}
@@ -106,7 +106,7 @@ namespace Launcher.Gui.Screens {
 		}
 
 		protected void KeyPress( object sender, KeyPressEventArgs e ) {
-			if( curInput != null && curInput.AppendChar( e.KeyChar ) ) {
+			if( curInput != null && curInput.Chars.Append( e.KeyChar ) ) {
 				RedrawLastInput();
 				OnAddedChar();
 			}

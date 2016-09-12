@@ -97,8 +97,9 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetupWidgetHandlers() {
-			((LauncherInputWidget)widgets[view.hashIndex])
-				.ClipboardFilter = HashFilter;
+			LauncherInputWidget hashWidget = (LauncherInputWidget)widgets[view.hashIndex];
+			hashWidget.Chars.ClipboardFilter = HashFilter;
+			
 			widgets[view.backIndex].OnClick =
 				(x, y) => game.SetScreen( new MainScreen( game ) );
 			widgets[view.connectIndex].OnClick = ConnectToServer;

@@ -139,7 +139,7 @@ namespace Launcher.Gui.Screens {
 					
 					if( widgets[i] is LauncherInputWidget ) {
 						MouseButtonDown( null, pressArgs );
-						((LauncherInputWidget)widgets[i]).CaretPos = -1;
+						((LauncherInputWidget)widgets[i]).Chars.CaretPos = -1;
 					}
 					break;
 				}

@@ -27,7 +27,7 @@ namespace Launcher.Gui.Screens {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherInputWidget input = widgets[i] as LauncherInputWidget;
 				if( input == null ) continue;
-				input.TextChanged = TextChanged;
+				input.Chars.TextChanged = TextChanged;
 			}
 			Resize();
 		}
@@ -70,8 +70,8 @@ namespace Launcher.Gui.Screens {
 			
 			Utils.Clamp( ref newCol, 0, 255 );
 			curInput.Text = newCol.ToString();
-			if( curInput.CaretPos >= curInput.Text.Length )
-				curInput.CaretPos = -1;
+			if( curInput.Chars.CaretPos >= curInput.Text.Length )
+				curInput.Chars.CaretPos = -1;
 			TextChanged( curInput );
 		}
 		
