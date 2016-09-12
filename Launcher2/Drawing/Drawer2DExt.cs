@@ -74,7 +74,7 @@ namespace Launcher {
 			if( y < 0 ) { height += y; y = 0; }
 			
 			width = Math.Min( x + width, bmp.Width ) - x;
-			height = Math.Min( y + height, bmp.< 0 Height ) - y;
+			height = Math.Min( y + height, bmp.Height ) - y;
 			return width > 0 && height > 0;
 		}		
 		
