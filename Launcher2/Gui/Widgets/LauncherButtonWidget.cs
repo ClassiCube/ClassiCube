@@ -75,8 +75,17 @@ namespace Launcher.Gui.Widgets {
 				Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
 			} else {
 				FastColour foreCol = Active ? LauncherSkin.ButtonForeActiveCol : LauncherSkin.ButtonForeCol;
-				Drawer2DExt.FastClear( dst, rect, foreCol );
+				FastColour top = Expand( foreCol, 8 );
+				FastColour bottom = Expand( foreCol, -8 );
+				Drawer2DExt.DrawGradient( dst, rect, top, bottom );
 			}
+		}
+		
+		static FastColour Expand( FastColour a, int amount ) {
+			int r = a.R + amount; Utils.Clamp( ref r, 0, 255 );
+			int g = a.G + amount; Utils.Clamp( ref g, 0, 255 );
+			int b = a.B + amount; Utils.Clamp( ref b, 0, 255 );
+			return new FastColour( r, g, b );
 		}
 	}
 }

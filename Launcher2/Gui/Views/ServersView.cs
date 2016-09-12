@@ -71,7 +71,7 @@ namespace Launcher.Gui.Views {
 			
 			if( !game.ClassicBackground ) {
 				FastColour col = LauncherTableView.backGridCol;
-				Drawer2DExt.FastClear( dst, rec, col );
+				Drawer2DExt.Clear( dst, rec, col );
 			} else {
 				game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
 			}

@@ -7,7 +7,7 @@ namespace Launcher {
 	public unsafe static class Drawer2DExt {
 		
 		public static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
-		                                           Rectangle srcRect, Rectangle dstRect, byte scaleA, byte scaleB ) {
+		                                    Rectangle srcRect, Rectangle dstRect, byte scaleA, byte scaleB ) {
 			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
 			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
 			int srcX = srcRect.X, dstX = dstRect.X;
@@ -34,7 +34,7 @@ namespace Launcher {
 		}
 		
 		public static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
-		                                          Rectangle srcRect, Rectangle dstRect ) {
+		                                   Rectangle srcRect, Rectangle dstRect ) {
 			int srcX = srcRect.X, srcWidth = srcRect.Width, srcHeight = srcRect.Height;
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
@@ -50,7 +50,8 @@ namespace Launcher {
 			}
 		}
 		
-		public static void DrawNoise( FastBitmap dst, Rectangle dstRect, FastColour col, int variation ) {
+		public static void DrawNoise( FastBitmap dst, Rectangle dstRect,
+		                             FastColour col, int variation ) {
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;
@@ -73,7 +74,8 @@ namespace Launcher {
 			}
 		}
 		
-		public static void FastClear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
+		public static void Clear( FastBitmap dst, Rectangle dstRect,
+		                         FastColour col ) {
 			int dstX, dstY, dstWidth, dstHeight;
 			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
 				return;
@@ -85,6 +87,28 @@ namespace Launcher {
 					row[dstX + xx] = pixel;
 			}
 		}
+		
+		public static void DrawGradient( FastBitmap dst, Rectangle dstRect,
+		                                FastColour a, FastColour b ) {
+			int dstX, dstY, dstWidth, dstHeight;
+			if( !CheckCoords( dst, dstRect, out dstX, out dstY, out dstWidth, out dstHeight ) )
+				return;
+			FastColour c = a;
+			
+			for( int yy = 0; yy < dstHeight; yy++ ) {
+				int* row = dst.GetRowPtr( dstY + yy );
+				float t = (float)yy / dstHeight;
+				
+				c.R = (byte)Utils.Lerp( a.R, b.R, t );
+				c.G = (byte)Utils.Lerp( a.G, b.G, t );
+				c.B = (byte)Utils.Lerp( a.B, b.B, t );
+				int pixel = c.ToArgb();
+				
+				for( int xx = 0; xx < dstWidth; xx++ )
+					row[dstX + xx] = pixel;
+			}
+		}
+		
 		
 		static bool CheckCoords( FastBitmap dst, Rectangle dstRect, out int dstX,
 		                        out int dstY, out int dstWidth, out int dstHeight ) {
@@ -102,12 +126,12 @@ namespace Launcher {
 		}
 		
 		
-				
+		
 		public static void DrawClippedText( ref DrawTextArgs args, IDrawer2D drawer,
 		                                   int x, int y, int maxWidth ) {
 			Size size = drawer.MeasureSize( ref args );
 			// No clipping necessary
-			if( size.Width <= maxWidth ) { drawer.DrawText( ref args, x, y ); return; }			
+			if( size.Width <= maxWidth ) { drawer.DrawText( ref args, x, y ); return; }
 			DrawTextArgs copy = args;
 			copy.SkipPartsCheck = true;
 			
@@ -124,7 +148,7 @@ namespace Launcher {
 				copy.Text = new string( chars, 0, len + 2 );
 				size = drawer.MeasureSize( ref copy );
 				if( size.Width > maxWidth ) continue;
-					
+				
 				drawer.DrawText( ref copy, x, y ); return;
 			}
 		}
