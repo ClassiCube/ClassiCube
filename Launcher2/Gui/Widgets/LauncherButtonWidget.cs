@@ -73,12 +73,11 @@ namespace Launcher.Gui.Widgets {
 			Rectangle rect = new Rectangle( X + border, Y + border, Width - border * 2, Height - border * 2 );
 			if( Window.ClassicBackground ) {
 				FastColour foreCol = Active ? new FastColour( 126, 136, 191 ) : new FastColour( 111, 111, 111 );
-				Drawer2DExt.DrawNoise( dst, rect, foreCol, 8 );
+				Gradient.Noise( dst, rect, foreCol, 8 );
 			} else {
 				FastColour foreCol = Active ? LauncherSkin.ButtonForeActiveCol : LauncherSkin.ButtonForeCol;
-				FastColour top = Expand( foreCol, 8 );
-				FastColour bottom = Expand( foreCol, -8 );
-				Drawer2DExt.DrawGradient( dst, rect, top, bottom );
+				FastColour top = Expand( foreCol, 8 ), bottom = Expand( foreCol, -8 );
+				Gradient.Vertical( dst, rect, top, bottom );
 			}
 		}
 		

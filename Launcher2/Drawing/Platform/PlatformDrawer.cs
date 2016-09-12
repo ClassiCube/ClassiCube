@@ -26,6 +26,8 @@ namespace Launcher {
 		public abstract void Redraw( Bitmap framebuffer );
 		
 		/// <summary> Redraws a portion of the framebuffer to the window. </summary>
+		/// <remarks> This is only a hint, the entire framebuffer may still be
+		/// redrawn on some platforms. </remarks>
 		public virtual void Redraw( Bitmap framebuffer, Rectangle rec ) { 
 			Redraw( framebuffer ); 
 		}

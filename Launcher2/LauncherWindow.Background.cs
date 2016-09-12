@@ -131,7 +131,7 @@ namespace Launcher {
 				ClearTile( x, y, width, height, 0, dst );
 			} else {
 				FastColour col = LauncherSkin.BackgroundCol;
-				Drawer2DExt.DrawNoise( dst, new Rectangle( x, y, width, height ), col, 6 );
+				Gradient.Noise( dst, new Rectangle( x, y, width, height ), col, 6 );
 			}
 		}
 		
