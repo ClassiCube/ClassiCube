@@ -114,13 +114,13 @@ namespace ClassicalSharp.Hotkeys {
 		
 		public void UserRemovedHotkey( Key baseKey, byte flags ) {
 			string key = "hotkey-" + baseKey + "&" + flags;
-			Options.Set<string>( key, null );
+			Options.Set( key, null );
 		}
 		
 		public void UserAddedHotkey( Key baseKey, byte flags, bool moreInput, string text ) {
 			string key = "hotkey-" + baseKey + "&" + flags;
 			string value = moreInput + "&" + text;
-			Options.Set<string>( key, value );
+			Options.Set( key, value );
 		}
 	}
 	

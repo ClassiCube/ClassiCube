@@ -40,7 +40,7 @@ namespace Launcher {
 			
 			for( int yy = 0; yy < height; yy++ ) {
 				int* row = dst.GetRowPtr( y + yy );
-				float t = (float)yy / height;
+				float t = (float)yy / (height - 1); // so last row has b as its colour
 				
 				c.R = (byte)Utils.Lerp( a.R, b.R, t );
 				c.G = (byte)Utils.Lerp( a.G, b.G, t );

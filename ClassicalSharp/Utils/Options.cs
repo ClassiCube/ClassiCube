@@ -12,9 +12,9 @@ namespace ClassicalSharp {
 		
 		public const string ViewDist = "viewdist";
 		public const string DefaultTexturePack = "defaulttexpack";
-		public const string SingleplayerPhysics = "singleplayerphysics";		
+		public const string SingleplayerPhysics = "singleplayerphysics";
 		public const string UseMusic = "usemusic";
-		public const string UseSound = "usesound";		
+		public const string UseSound = "usesound";
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
@@ -26,10 +26,10 @@ namespace ClassicalSharp {
 		public const string SmoothLighting = "gfx-smoothlighting";
 		
 		public const string HacksEnabled = "hacks-hacksenabled";
-		public const string FieldOfView = "hacks-fov";		
+		public const string FieldOfView = "hacks-fov";
 		public const string Speed = "hacks-speedmultiplier";
 		public const string ModifiableLiquids = "hacks-liquidsbreakable";
-		public const string PushbackPlacing = "hacks-pushbackplacing";	
+		public const string PushbackPlacing = "hacks-pushbackplacing";
 		public const string NoclipSlide = "hacks-noclipslide";
 		public const string CameraClipping = "hacks-cameraclipping";
 		public const string DoubleJump = "hacks-doublejump";
@@ -64,14 +64,14 @@ namespace ClassicalSharp {
 	public static class Options {
 		
 		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
-		public static List<string> OptionsChanged = new List<string>();		
+		public static List<string> OptionsChanged = new List<string>();
 		const string Filename = "options.txt";
 		
 		static bool TryGetValue( string key, out string value ) {
 			if( OptionsSet.TryGetValue( key, out value ) ) return true;
 			int index = key.IndexOf( '-' );
 			
-			if( index == -1 ) return false;		
+			if( index == -1 ) return false;
 			return OptionsSet.TryGetValue( key.Substring( index + 1 ), out value );
 		}
 		
@@ -120,6 +120,18 @@ namespace ClassicalSharp {
 			return mapping;
 		}
 		
+		public static void Set( string key, string value ) {
+			key = key.ToLower();
+			if( value != null ) {
+				OptionsSet[key] = value;
+			} else {
+				OptionsSet.Remove( key );
+			}
+			
+			if( !OptionsChanged.Contains( key ) )
+				OptionsChanged.Add( key );
+		}
+		
 		public static void Set<T>( string key, T value ) {
 			key = key.ToLower();
 			if( value != null ) {
@@ -139,7 +151,7 @@ namespace ClassicalSharp {
 			string defZip = Path.Combine( Program.AppDirectory, "default.zip" );
 			string texDir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
 			if( File.Exists( defZip ) || !Directory.Exists( texDir ) )
-				Program.CleanupMainDirectory();			   
+				Program.CleanupMainDirectory();
 			
 			try {
 				string path = Path.Combine( Program.AppDirectory, Filename );
@@ -161,7 +173,7 @@ namespace ClassicalSharp {
 			List<string> toRemove = new List<string>();
 			foreach( KeyValuePair<string, string> kvp in OptionsSet ) {
 				if( !OptionsChanged.Contains( kvp.Key ) )
-				   toRemove.Add( kvp.Key );
+					toRemove.Add( kvp.Key );
 			}
 			for( int i = 0; i < toRemove.Count; i++ )
 				OptionsSet.Remove( toRemove[i] );
@@ -185,7 +197,7 @@ namespace ClassicalSharp {
 			try {
 				string path = Path.Combine( Program.AppDirectory, Filename );
 				using( Stream fs = File.Create( path ) )
-					using( StreamWriter writer = new StreamWriter( fs ) ) 
+					using( StreamWriter writer = new StreamWriter( fs ) )
 				{
 					SaveTo( writer );
 				}
