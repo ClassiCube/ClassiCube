@@ -65,7 +65,7 @@ namespace Launcher {
 
 		static List<object> ParseArray( string json, ref int index, ref bool success ) {
 			List<object> array = new List<object>();
-			NextToken( json, ref index ); // [
+			NextToken( json, ref index ); // eat the [
 
 			while( true ) {
 				int token = LookAhead( json, index );

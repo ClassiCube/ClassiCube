@@ -58,7 +58,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Gui\Drawer2DExt.cs" />
-    <Compile Include="Gui\PlatformDrawer.cs" />
+    <Compile Include="Gui\Drawer\OSXDrawer.cs" />
+    <Compile Include="Gui\Drawer\PlatformDrawer.cs" />
+    <Compile Include="Gui\Drawer\WindowsDrawer.cs" />
+    <Compile Include="Gui\Drawer\X11Drawer.cs" />
     <Compile Include="Gui\Screens\ServersScreen.cs" />
     <Compile Include="Gui\Screens\ColoursScreen.cs" />
     <Compile Include="Gui\Screens\DirectConnectScreen.cs" />
@@ -124,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Gui" />
+    <Folder Include="Gui\Drawer" />
     <Folder Include="Gui\Views" />
     <Folder Include="Gui\TableWidget" />
     <Folder Include="Gui\Screens" />
