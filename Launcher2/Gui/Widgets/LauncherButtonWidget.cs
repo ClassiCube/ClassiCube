@@ -9,7 +9,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public bool Shadow = true;
 		public bool Active = false;
-		const int border = 2;
+		const int border = 1;
 		Size textSize;
 		Font font;
 		
@@ -44,22 +44,22 @@ namespace Launcher.Gui.Widgets {
 		
 		void DrawBorder( IDrawer2D drawer ) {
 			FastColour backCol = Window.ClassicBackground ? FastColour.Black : LauncherSkin.ButtonBorderCol;
-			drawer.Clear( backCol, X + 1, Y, Width - 2, border );
-			drawer.Clear( backCol, X + 1, Y + Height - border, Width - 2, border );
-			drawer.Clear( backCol, X, Y + 1, border, Height - 2 );
-			drawer.Clear( backCol, X + Width - border, Y + 1, border, Height - 2 );
+			drawer.Clear( backCol, X + border, Y, Width - border * 2, border );
+			drawer.Clear( backCol, X + border, Y + Height - border, Width - border * 2, border );
+			drawer.Clear( backCol, X, Y + border, border, Height - border * 2 );
+			drawer.Clear( backCol, X + Width - border, Y + border, border, Height - border * 2 );
 		}
 		
 		void DrawNormal( IDrawer2D drawer ) {
 			if( Active ) return;
 			FastColour lineCol = LauncherSkin.ButtonHighlightCol;
-			drawer.Clear( lineCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
+			drawer.Clear( lineCol, X + border * 2, Y + border, Width - border * 4, border );
 		}
 		
 		void DrawClassic( IDrawer2D drawer ) {
 			FastColour highlightCol = Active ? new FastColour( 189, 198, 255 ) : new FastColour( 168, 168, 168 );
-			drawer.Clear( highlightCol, X + border + 1, Y + border, Width - (border * 2 + 1), border );
-			drawer.Clear( highlightCol, X + border, Y + border + 1, border, Height - (border * 2 + 1) );
+			drawer.Clear( highlightCol, X + border * 2, Y + border, Width - border * 4, border );
+			drawer.Clear( highlightCol, X + border, Y + border * 2, border, Height - border * 4 );
 		}
 		
 		public void RedrawBackground() {
