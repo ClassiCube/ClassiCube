@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui {
 		public override bool HandlesKeyPress( char key ) {
 			if( game.HideGui ) return true;
 			
-			if( IsValidInputChar( key ) && key != '&' ) {
+			if( IsValidInputChar( key ) ) {
 				AppendChar( key );
 				return true;
 			}
