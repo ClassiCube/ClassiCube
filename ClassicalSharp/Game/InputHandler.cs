@@ -220,7 +220,7 @@ namespace ClassicalSharp {
 						WindowState.Normal : WindowState.Fullscreen;
 				}
 			} else if( key == Keys[KeyBind.AxisLines] ) {
-				game.ShowAxisLines = !game.ShowAxisLines;
+				ToggleAxisLines();
 			} else if( key == Keys[KeyBind.ThirdPerson] ) {
 				game.CycleCamera();
 			} else if( key == Keys[KeyBind.ToggleFog] ) {
@@ -239,6 +239,16 @@ namespace ClassicalSharp {
 				return false;
 			}
 			return true;
+		}
+		
+		void ToggleAxisLines() {
+			game.ShowAxisLines = !game.ShowAxisLines;
+			Key key = Keys[KeyBind.AxisLines];
+			if( game.ShowAxisLines ) {
+				game.Chat.Add( "  &eAxis lines now show (&4X&e, &2Y&e, &1Z&e). Press &a" + key + " &eto disable." );
+			} else {
+				game.Chat.Add( "  &eAxis lines no longer show. Press &a" + key + " &eto re-enable." );
+			}
 		}
 		
 		void CycleDistanceForwards() {
