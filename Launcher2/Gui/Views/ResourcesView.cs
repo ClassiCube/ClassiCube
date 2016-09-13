@@ -66,7 +66,7 @@ namespace Launcher.Gui.Views {
 		const int progWidth = 200, progHalf = 5;
 		internal void DrawProgressBox( int progress ) {
 			progress = (progWidth * progress) / 100;
-			using( FastBitmap bmp = new FastBitmap( game.Framebuffer, true, false ) ) {
+			using( FastBitmap bmp = game.LockBits() ) {
 				Rectangle r = new Rectangle( game.Width / 2 - progWidth / 2,
 				                            game.Height / 2 + 10, progWidth, progHalf );
 				DrawBoxBounds( bmp, r );

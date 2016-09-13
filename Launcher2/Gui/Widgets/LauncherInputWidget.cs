@@ -1,7 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
@@ -29,7 +28,7 @@ namespace Launcher.Gui.Widgets {
 		}
 
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, Font hintFont,
-		                   Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
+		                        Anchor horAnchor, Anchor verAnchor, int width, int height, int x, int y ) {
 			ButtonWidth = width; ButtonHeight = height;
 			Width = width; Height = height;
 			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
@@ -53,7 +52,7 @@ namespace Launcher.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			Size size = drawer.MeasureSize( ref args );
 			Width = Math.Max( ButtonWidth, size.Width + 15 );
-			textHeight = size.Height;		
+			textHeight = size.Height;
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
@@ -67,7 +66,12 @@ namespace Launcher.Gui.Widgets {
 			args.SkipPartsCheck = true;
 			if( Window.Minimised ) return;
 			
-			DrawBorders( drawer );
+			using( FastBitmap bmp = Window.LockBits() ) {
+				DrawOuterBorder( bmp );
+				DrawInnerBorder( bmp );
+				Clear( bmp, FastColour.White, X + 2, Y + 2, Width - 4, Height - 4 );
+				BlendBoxTop( bmp );
+			}
 			DrawText( drawer, args );
 		}
 		
@@ -75,24 +79,39 @@ namespace Launcher.Gui.Widgets {
 		static FastColour borderOut = new FastColour( 97, 81, 110 );
 		const int border = 1;
 		
-		void DrawBorders( IDrawer2D drawer ) {
+		void DrawOuterBorder( FastBitmap bmp ) {
 			FastColour col = borderOut;
 			if( Active ) {
-				drawer.Clear( col, X, Y, Width, border );
-				drawer.Clear( col, X, Y + Height - border, Width, border );
-				drawer.Clear( col, X, Y, border, Height );
-				drawer.Clear( col, X + Width - border, Y, border, Height );
+				Clear( bmp, col, X, Y, Width, border );
+				Clear( bmp, col, X, Y + Height - border, Width, border );
+				Clear( bmp, col, X, Y, border, Height );
+				Clear( bmp, col, X + Width - border, Y, border, Height );
 			} else {
-				//Window.ResetArea( X, Y, Width,
+				Window.ResetArea( X, Y, Width, border, bmp );
+				Window.ResetArea( X, Y + Height - border, Width, border, bmp );
+				Window.ResetArea( X, Y, border, Height, bmp );
+				Window.ResetArea( X + Width - border, Y, border, Height, bmp );
 			}
-			
-			col = borderIn;
-			drawer.Clear( col, X + border, Y + border, Width - border * 2, border );
-			drawer.Clear( col, X + border, Y + Height - border * 2, Width - border * 2, border );
-			drawer.Clear( col, X + border, Y + border, border, Height - border * 2 );
-			drawer.Clear( col, X + Width - border * 2, Y + border, border, Height - border * 2 );
-			
-			drawer.Clear( FastColour.White, X + 2, Y + 2, Width - 4, Height - 4 );
+		}
+		
+		void DrawInnerBorder( FastBitmap bmp ) {
+			FastColour col = borderIn;
+			Clear( bmp, col, X + border, Y + border, Width - border * 2, border );
+			Clear( bmp, col, X + border, Y + Height - border * 2, Width - border * 2, border );
+			Clear( bmp, col, X + border, Y + border, border, Height - border * 2 );
+			Clear( bmp, col, X + Width - border * 2, Y + border, border, Height - border * 2 );
+		}
+		
+		void BlendBoxTop( FastBitmap bmp ) {
+			Rectangle r = new Rectangle( X + border, Y, Width - border * 2, border );
+			r.Y += border; Gradient.Blend( bmp, r, FastColour.Black, 75 );
+			r.Y += border; Gradient.Blend( bmp, r, FastColour.Black, 50 );
+			r.Y += border; Gradient.Blend( bmp, r, FastColour.Black, 25 );
+		}
+		
+		void Clear( FastBitmap bmp, FastColour col, 
+		           int x, int y, int width, int height ) {
+			Drawer2DExt.Clear( bmp, new Rectangle( x, y, width, height ), col );
 		}
 		
 		void DrawText( IDrawer2D drawer, DrawTextArgs args ) {
@@ -114,7 +133,7 @@ namespace Launcher.Gui.Widgets {
 		public Rectangle MeasureCaret( IDrawer2D drawer, Font font ) {
 			string text = Text;
 			if( Password )
-				text = new String( '*', text.Length );			
+				text = new String( '*', text.Length );
 			Rectangle r = new Rectangle( X + 5, Y + Height - 5, 0, 2 );
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			

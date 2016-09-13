@@ -50,14 +50,14 @@ namespace Launcher {
 			}
 		}
 		
-		public static void Clear( FastBitmap dst, Rectangle dstRect, FastColour col ) {
+		public static void Clear( FastBitmap bmp, Rectangle rect, FastColour col ) {
 			int x, y, width, height;
-			if( !ClampCoords( dst, dstRect, out x, out y, out width, out height ) )
+			if( !ClampCoords( bmp, rect, out x, out y, out width, out height ) )
 				return;
 			int pixel = col.ToArgb();
 			
 			for( int yy = 0; yy < height; yy++ ) {
-				int* row = dst.GetRowPtr( y + yy );
+				int* row = bmp.GetRowPtr( y + yy );
 				for( int xx = 0; xx < width; xx++ )
 					row[x + xx] = pixel;
 			}

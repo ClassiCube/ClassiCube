@@ -92,9 +92,9 @@ namespace Launcher {
 			}
 			
 			if( ClassicBackground && terrainPixels != null ) {
-				using( FastBitmap dst = new FastBitmap( Framebuffer, true, false ) ) {
-					ClearTile( 0, 0, Width, 48, tileSize, dst );
-					ClearTile( 0, 48, Width, Height - 48, 0, dst );
+				using( FastBitmap bmp = LockBits() ) {
+					ClearTile( 0, 0, Width, 48, tileSize, bmp );
+					ClearTile( 0, 48, Width, Height - 48, 0, bmp );
 				}
 			} else {
 				ResetArea( 0, 0, Width, Height );

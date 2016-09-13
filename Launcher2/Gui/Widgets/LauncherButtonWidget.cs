@@ -64,7 +64,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public void RedrawBackground() {
 			if( Window.Minimised ) return;
-			using( FastBitmap dst = new FastBitmap( Window.Framebuffer, true, false ) )
+			using( FastBitmap dst = Window.LockBits() )
 				RedrawBackground( dst );
 		}
 		
