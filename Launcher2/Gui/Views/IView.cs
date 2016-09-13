@@ -41,12 +41,12 @@ namespace Launcher.Gui.Views {
 			}
 			if( buttons == 0 ) return;
 			
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) ) {
+			using( FastBitmap bmp = game.LockBits() ) {
 				for( int i = 0; i < widgets.Length; i++ ) {
 					if( widgets[i] == null ) continue;
 					LauncherButtonWidget button = widgets[i] as LauncherButtonWidget;
 					if( button != null )
-						button.RedrawBackground( dst );
+						button.RedrawBackground( bmp );
 				}
 			}
 		}

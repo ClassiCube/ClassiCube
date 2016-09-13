@@ -75,9 +75,9 @@ namespace Launcher.Gui.Screens {
 			task.Exception = null;
 			
 			LauncherWidget w = widgets[view.devIndex - 1];
-			game.ClearArea( w.X, w.Y, w.Width, w.Height );
+			game.ResetArea( w.X, w.Y, w.Width, w.Height );
 			w = widgets[view.relIndex - 1];
-			game.ClearArea( w.X, w.Y, w.Width, w.Height );
+			game.ResetArea( w.X, w.Y, w.Width, w.Height );
 			game.RedrawBackground();
 			Resize();
 		}
@@ -107,7 +107,7 @@ namespace Launcher.Gui.Screens {
 			view.gameOpen = CheckClientInstances();
 			view.SetWarning();
 			LauncherWidget widget = widgets[view.statusIndex];
-			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			RedrawWidget( widgets[view.statusIndex] );
 			if( view.gameOpen ) return;
 			

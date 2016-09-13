@@ -234,5 +234,9 @@ namespace Launcher {
 			if( !OpenTK.Configuration.RunningOnMacOS ) return false;
 			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
 		}
+		
+		public FastBitmap LockBits() {
+			return new FastBitmap( Framebuffer, true, false );
+		}
 	}
 }

@@ -97,7 +97,7 @@ namespace Launcher {
 					ClearTile( 0, 48, Width, Height - 48, 0, dst );
 				}
 			} else {
-				ClearArea( 0, 0, Width, Height );
+				ResetArea( 0, 0, Width, Height );
 			}
 			
 			DrawTitle();
@@ -121,12 +121,14 @@ namespace Launcher {
 			}
 		}
 		
-		public void ClearArea( int x, int y, int width, int height ) {
-			using( FastBitmap dst = new FastBitmap( Framebuffer, true, false ) )
-				ClearArea( x, y, width, height, dst );
+		/// <summary> Redraws the specified region with the background pixels. </summary>
+		public void ResetArea( int x, int y, int width, int height ) {
+			using( FastBitmap dst = LockBits() )
+				ResetArea( x, y, width, height, dst );
 		}
 		
-		public void ClearArea( int x, int y, int width, int height, FastBitmap dst ) {
+		/// <summary> Redraws the specified region with the background pixels. </summary>
+		public void ResetArea( int x, int y, int width, int height, FastBitmap dst ) {
 			if( ClassicBackground && terrainPixels != null ) {
 				ClearTile( x, y, width, height, 0, dst );
 			} else {

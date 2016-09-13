@@ -59,9 +59,9 @@ namespace Launcher.Gui.Views {
 		}
 		
 		void DrawBackground() {
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) ) {
-				game.ClearArea( 0, 0, game.Width, tableY, dst );
-				DrawTableBackground( dst );
+			using( FastBitmap bmp = game.LockBits() ) {
+				game.ResetArea( 0, 0, game.Width, tableY, bmp );
+				DrawTableBackground( bmp );
 			}
 		}
 		
@@ -73,7 +73,7 @@ namespace Launcher.Gui.Views {
 				FastColour col = LauncherTableView.backGridCol;
 				Drawer2DExt.Clear( dst, rec, col );
 			} else {
-				game.ClearArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
+				game.ResetArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
 			}
 		}
 		
@@ -101,7 +101,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		internal void RedrawTable() {
-			using( FastBitmap dst = new FastBitmap( game.Framebuffer, true, false ) )
+			using( FastBitmap dst = game.LockBits() )
 				DrawTableBackground( dst );
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			table.ClampIndex();

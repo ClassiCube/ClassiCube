@@ -43,7 +43,7 @@ namespace Launcher.Gui.Screens {
 			lastStatus = text;
 			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
 			
-			game.ClearArea( widget.X, widget.Y, widget.Width, widget.Height );
+			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
 			RedrawWidget( widget );
 			game.Dirty = true;

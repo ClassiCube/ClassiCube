@@ -59,21 +59,43 @@ namespace Launcher.Gui.Widgets {
 		public override void Redraw( IDrawer2D drawer ) {
 			string text = Text;
 			if( Password ) text = new String( '*', text.Length );
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
+			DrawTextArgs args = new DrawTextArgs( "&0" + text, font, false );
 			
 			Size size = drawer.MeasureSize( ref args );
 			Width = Math.Max( ButtonWidth, size.Width + 15 );
-			textHeight = size.Height;	
-			args.SkipPartsCheck = true;			
+			textHeight = size.Height;
+			args.SkipPartsCheck = true;
 			if( Window.Minimised ) return;
 			
-			FastColour col = Active ? new FastColour( 240, 240, 240 ) : new FastColour( 180, 180, 180 );
-			drawer.Clear( col, X + 1, Y, Width - 2, 2 );
-			drawer.Clear( col, X + 1, Y + Height - 2, Width - 2, 2 );
-			drawer.Clear( col, X, Y + 1, 2, Height - 2 );
-			drawer.Clear( col, X + Width - 2, Y + 1, 2, Height - 2 );
-			drawer.Clear( FastColour.Black, X + 2, Y + 2, Width - 4, Height - 4 );
+			DrawBorders( drawer );
+			DrawText( drawer, args );
+		}
+		
+		static FastColour borderIn = new FastColour( 165, 142, 168 );
+		static FastColour borderOut = new FastColour( 97, 81, 110 );
+		const int border = 1;
+		
+		void DrawBorders( IDrawer2D drawer ) {
+			FastColour col = borderOut;
+			if( Active ) {
+				drawer.Clear( col, X, Y, Width, border );
+				drawer.Clear( col, X, Y + Height - border, Width, border );
+				drawer.Clear( col, X, Y, border, Height );
+				drawer.Clear( col, X + Width - border, Y, border, Height );
+			} else {
+				//Window.ResetArea( X, Y, Width,
+			}
 			
+			col = borderIn;
+			drawer.Clear( col, X + border, Y + border, Width - border * 2, border );
+			drawer.Clear( col, X + border, Y + Height - border * 2, Width - border * 2, border );
+			drawer.Clear( col, X + border, Y + border, border, Height - border * 2 );
+			drawer.Clear( col, X + Width - border * 2, Y + border, border, Height - border * 2 );
+			
+			drawer.Clear( FastColour.White, X + 2, Y + 2, Width - 4, Height - 4 );
+		}
+		
+		void DrawText( IDrawer2D drawer, DrawTextArgs args ) {
 			if( Text.Length != 0 || HintText == null ) {
 				int y = Y + 2 + (Height - textHeight) / 2;
 				drawer.DrawText( ref args, X + 5, y );

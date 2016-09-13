@@ -20,7 +20,7 @@ namespace Launcher.Gui.Views {
 		
 		const int boxWidth = 190 * 2, boxHeight = 70 * 2;
 		public override void DrawAll() {
-			using( FastBitmap bmp = new FastBitmap( game.Framebuffer, true, false ) ) {
+			using( FastBitmap bmp = game.LockBits() ) {
 				drawer.SetBitmap( game.Framebuffer );
 				Rectangle r = new Rectangle( 0, 0, bmp.Width, bmp.Height );
 				Drawer2DExt.Clear( bmp, r, clearCol );

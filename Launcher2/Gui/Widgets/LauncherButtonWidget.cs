@@ -78,6 +78,7 @@ namespace Launcher.Gui.Widgets {
 				FastColour foreCol = Active ? LauncherSkin.ButtonForeActiveCol : LauncherSkin.ButtonForeCol;
 				FastColour top = Expand( foreCol, 8 ), bottom = Expand( foreCol, -8 );
 				Gradient.Vertical( dst, rect, top, bottom );
+
 			}
 		}
 		
