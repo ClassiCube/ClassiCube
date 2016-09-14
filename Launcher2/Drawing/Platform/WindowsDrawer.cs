@@ -80,15 +80,9 @@ namespace Launcher {
 			srcDC = CreateCompatibleDC( dc );
 		}
 		
-		public override void Redraw( Bitmap framebuffer ) {
+		public override void Redraw( Bitmap framebuffer, Rectangle r ) {
 			IntPtr oldSrc = SelectObject( srcDC, srcHB );
-			int success = BitBlt( dc, 0, 0, framebuffer.Width, framebuffer.Height, srcDC, 0, 0, SRCCOPY );
-			SelectObject( srcDC, oldSrc );
-		}
-		
-		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
-			IntPtr oldSrc = SelectObject( srcDC, srcHB );
-			int success = BitBlt( dc, rec.X, rec.Y, rec.Width, rec.Height, srcDC, rec.X, rec.Y, SRCCOPY );
+			int success = BitBlt( dc, r.X, r.Y, r.Width, r.Height, srcDC, r.X, r.Y, SRCCOPY );
 			SelectObject( srcDC, oldSrc );
 		}
 	}
@@ -106,12 +100,8 @@ namespace Launcher {
 			g = Graphics.FromHwnd( info.WinHandle );
 		}
 		
-		public override void Redraw( Bitmap framebuffer ) {
-			g.DrawImage( framebuffer, 0, 0, framebuffer.Width, framebuffer.Height );
-		}
-		
-		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
-			g.DrawImage( framebuffer, rec, rec, GraphicsUnit.Pixel );
+		public override void Redraw( Bitmap framebuffer, Rectangle r ) {
+			g.DrawImage( framebuffer, r, r, GraphicsUnit.Pixel );
 		}
 	}
 }

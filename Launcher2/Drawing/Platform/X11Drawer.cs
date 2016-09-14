@@ -18,12 +18,12 @@ namespace Launcher {
 			gc = API.XCreateGC( API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null );
 		}
 		
-		public override void Redraw( Bitmap framebuffer ) {
+		public override void Redraw( Bitmap framebuffer, Rectangle r ) {
 			X11WindowInfo x11Info = (X11WindowInfo)info;
-			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
+			using( FastBitmap bmp = new FastBitmap( framebuffer, true, true ) ) {
 				switch( x11Info.VisualInfo.Depth ) {
-					case 32: DrawDirect( fastBmp, 32, x11Info ); break;
-					case 24: DrawDirect( fastBmp, 24, x11Info ); break;
+					case 32: DrawDirect( bmp, 32, x11Info, r ); break;
+					case 24: DrawDirect( bmp, 24, x11Info, r ); break;
 					//case 16: Draw16Bits( fastBmp, x11Info ); break;
 					//case 15: Draw15Bits( fastBmp, x11Info ); break;
 					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth );
@@ -31,32 +31,12 @@ namespace Launcher {
 			}
 		}
 		
-		void DrawDirect( FastBitmap bmp, uint bits, X11WindowInfo x11Info ) {
+		void DrawDirect( FastBitmap bmp, uint bits, X11WindowInfo x11Info, Rectangle r ) {
 			IntPtr image = API.XCreateImage( API.DefaultDisplay, x11Info.VisualInfo.Visual,
 			                                bits, ImageFormat.ZPixmap, 0, bmp.Scan0,
 			                                bmp.Width, bmp.Height, 32, 0 );
 			API.XPutImage( API.DefaultDisplay, x11Info.WindowHandle, gc, image,
-			              0, 0, 0, 0, bmp.Width, bmp.Height );
-			API.XFree( image );
-		}
-		
-		public override void Redraw( Bitmap framebuffer, Rectangle rec ) {
-			X11WindowInfo x11Info = (X11WindowInfo)info;
-			using( FastBitmap fastBmp = new FastBitmap( framebuffer, true, true ) ) {
-				switch( x11Info.VisualInfo.Depth ) {
-					case 32: DrawDirect( fastBmp, 32, x11Info, rec ); break;
-					case 24: DrawDirect( fastBmp, 24, x11Info, rec ); break;
-					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth );
-				}
-			}
-		}
-		
-		void DrawDirect( FastBitmap bmp, uint bits, X11WindowInfo x11Info, Rectangle rec ) {
-			IntPtr image = API.XCreateImage( API.DefaultDisplay, x11Info.VisualInfo.Visual,
-			                                bits, ImageFormat.ZPixmap, 0, bmp.Scan0,
-			                                bmp.Width, bmp.Height, 32, 0 );
-			API.XPutImage( API.DefaultDisplay, x11Info.WindowHandle, gc, image,
-			              rec.X, rec.Y, rec.X, rec.Y, bmp.Width, bmp.Height );
+			              r.X, r.Y, r.X, r.Y, r.Width, r.Height );
 			API.XFree( image );
 		}
 		
