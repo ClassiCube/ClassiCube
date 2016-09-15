@@ -91,9 +91,10 @@ namespace ClassicalSharp.Renderers {
 			if( e.Var == EnvVar.SunlightColour || e.Var == EnvVar.ShadowlightColour ) {
 				Refresh();
 			} else if( e.Var == EnvVar.EdgeLevel ) {
-				int oldClip = builder.clipLevel;
-				builder.clipLevel = Math.Max( 0, game.World.Env.SidesHeight );
-				RefreshBorders( Math.Max( oldClip, builder.clipLevel ) );
+				int oldClip = builder.edgeLevel;
+				builder.sidesLevel = Math.Max( 0, game.World.Env.SidesHeight );
+				builder.edgeLevel = Math.Max( 0, game.World.Env.EdgeHeight );
+				RefreshBorders( Math.Max( oldClip, builder.edgeLevel ) );
 			}
 		}
 
