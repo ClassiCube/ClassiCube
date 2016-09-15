@@ -10,15 +10,13 @@ namespace ClassicalSharp.Network.Protocols {
 		public CPEProtocolBlockDefs( Game game ) : base( game ) { }
 		
 		public override void Init() {
+			if( !game.UseCPE || !game.AllowCustomBlocks ) return;
 			net.Set( Opcode.CpeDefineBlock, HandleDefineBlock, 80 );
 			net.Set( Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2 );
 			net.Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
 		}
 		
 		internal void HandleDefineBlock() {
-			if( !game.AllowCustomBlocks ) {
-				net.SkipPacketData( Opcode.CpeDefineBlock ); return;
-			}
 			byte id = HandleDefineBlockCommonStart( reader, false );
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
@@ -40,9 +38,6 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleRemoveBlockDefinition() {
-			if( !game.AllowCustomBlocks ) {
-				net.SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
-			}
 			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
 			game.Events.RaiseBlockDefinitionChanged();
