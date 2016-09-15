@@ -1,17 +1,25 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using ClassicalSharp.Model;
 using OpenTK;
 
-namespace ClassicalSharp.Network {
+namespace ClassicalSharp.Network.Protocols {
 
-	public partial class NetworkProcessor : IServerConnection {
+	/// <summary> Implements the packets for BlockDefinitions extension in CPE. </summary>
+	public sealed class CPEProtocolBlockDefs : IProtocol {
+		
+		public CPEProtocolBlockDefs( Game game ) : base( game ) { }
+		
+		public override void Init() {
+			net.Set( Opcode.CpeDefineBlock, HandleDefineBlock, 80 );
+			net.Set( Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2 );
+			net.Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
+		}
 		
 		internal void HandleDefineBlock() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( Opcode.CpeDefineBlock ); return;
+				net.SkipPacketData( Opcode.CpeDefineBlock ); return;
 			}
-			byte id = HandleDefineBlockCommonStart( false );
+			byte id = HandleDefineBlockCommonStart( reader, false );
 			BlockInfo info = game.BlockInfo;
 			byte shape = reader.ReadUInt8();
 			if( shape == 0 ) {
@@ -22,7 +30,7 @@ namespace ClassicalSharp.Network {
 				info.MaxBB[id].Y = shape / 16f;
 			}
 			
-			HandleDefineBlockCommonEnd( id );
+			HandleDefineBlockCommonEnd( reader, id );
 			// Update sprite BoundingBox if necessary
 			if( info.IsSprite[id] ) {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
@@ -31,20 +39,21 @@ namespace ClassicalSharp.Network {
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
-		internal void HandleRemoveBlockDefinition() {
+		void HandleRemoveBlockDefinition() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
+				net.SkipPacketData( Opcode.CpeRemoveBlockDefinition ); return;
 			}
 			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
 			game.BlockInfo.InitLightOffsets();
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
-		internal void HandleDefineBlockExt() {
+		void HandleDefineBlockExt() {
 			if( !game.AllowCustomBlocks ) {
-				SkipPacketData( Opcode.CpeDefineBlockExt ); return;
+				net.SkipPacketData( Opcode.CpeDefineBlockExt ); return;
 			}
-			byte id = HandleDefineBlockCommonStart( cpe.blockDefsExtVer >= 2 );
+			byte id = HandleDefineBlockCommonStart( reader, 
+			                                       net.cpeData.blockDefsExtVer >= 2 );
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
@@ -57,11 +66,11 @@ namespace ClassicalSharp.Network {
 			
 			info.MinBB[id] = min;
 			info.MaxBB[id] = max;
-			HandleDefineBlockCommonEnd( id );
+			HandleDefineBlockCommonEnd( reader, id );
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
-		byte HandleDefineBlockCommonStart( bool uniqueSideTexs ) {
+		byte HandleDefineBlockCommonStart( NetReader reader, bool uniqueSideTexs ) {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockInfo( block, false );
@@ -95,7 +104,7 @@ namespace ClassicalSharp.Network {
 			return block;
 		}
 		
-		internal void HandleDefineBlockCommonEnd( byte block ) {
+		void HandleDefineBlockCommonEnd( NetReader reader, byte block ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			SetBlockDraw( info, block, blockDraw );
@@ -110,7 +119,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		#if FALSE
-		internal void HandleDefineModel() {
+		void HandleDefineModel() {
 			int start = reader.index - 1;
 			byte id = reader.ReadUInt8();
 			CustomModel model = null;
@@ -140,7 +149,7 @@ namespace ClassicalSharp.Network {
 		#endif
 		
 		internal static SoundType[] stepSnds, breakSnds;
-		static NetworkProcessor() {
+		static CPEProtocolBlockDefs() {
 			stepSnds = new SoundType[10];
 			breakSnds = new SoundType[10];
 			stepSnds[0] = SoundType.None; breakSnds[0] = SoundType.None;

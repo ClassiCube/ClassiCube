@@ -245,7 +245,7 @@ namespace ClassicalSharp {
 			game.ShowAxisLines = !game.ShowAxisLines;
 			Key key = Keys[KeyBind.AxisLines];
 			if( game.ShowAxisLines ) {
-				game.Chat.Add( "  &eAxis lines now show (&4X&e, &2Y&e, &1Z&e). Press &a" + key + " &eto disable." );
+				game.Chat.Add( "  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show. Press &a" + key + " &eto disable." );
 			} else {
 				game.Chat.Add( "  &eAxis lines no longer show. Press &a" + key + " &eto re-enable." );
 			}

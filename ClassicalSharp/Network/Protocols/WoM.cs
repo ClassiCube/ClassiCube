@@ -4,19 +4,46 @@
 using System;
 using ClassicalSharp.Map;
 
-namespace ClassicalSharp.Network {
+namespace ClassicalSharp.Network.Protocols {
 
-	public partial class NetworkProcessor {
+	/// <summary> Implements the WoM http environment protocol. </summary>
+	public sealed class WoMProtocol : IProtocol {
+		
+		public WoMProtocol( Game game ) : base( game ) { }
 		
 		string womEnvIdentifier = "womenv_0";
 		int womCounter = 0;
-		bool sendWomId = false, sentWomId = false;
-		
-		void CheckForWomEnvironment() {
+		internal bool sendWomId = false, sentWomId = false;
+
+		public override void Tick() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
 			if( item != null && item.Data != null ) {
 				ParseWomConfig( (string)item.Data );
+			}
+		}
+		
+		internal void CheckMotd() {
+			int index = net.ServerMotd.IndexOf( "cfg=" );
+			if( game.PureClassic || index == -1 ) return;
+			
+			string host = net.ServerMotd.Substring( index + 4 ); // "cfg=".Length
+			string url = "http://" + host;
+			url = url.Replace( "$U", game.Username );
+			
+			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
+			// different world, the environment settings from the last world are not loaded in the
+			// new world if the async 'get request' didn't complete before the new world was loaded.
+			womCounter++;
+			womEnvIdentifier = "womenv_" + womCounter;
+			game.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
+			sendWomId = true;
+		}
+		
+		internal void CheckSendWomID() {
+			if( sendWomId && !sentWomId ) {
+				net.SendChat( "/womid WoMClient-2.0.7", false );
+				sentWomId = true;
 			}
 		}
 		
@@ -43,24 +70,10 @@ namespace ClassicalSharp.Network {
 					int waterLevel = 0;
 					if( Int32.TryParse( value, out waterLevel ) )
 						game.World.Env.SetEdgeLevel( waterLevel );
-				} else if( key == "user.detail" && !cpe.useMessageTypes ) {
+				} else if( key == "user.detail" && !net.cpeData.useMessageTypes ) {
 					game.Chat.Add( value, MessageType.Status2 );
 				}
 			}
-		}
-		
-		void ReadWomConfigAsync() {
-			string host = ServerMotd.Substring( ServerMotd.IndexOf( "cfg=" ) + 4 );
-			string url = "http://" + host;
-			url = url.Replace( "$U", game.Username );
-			
-			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
-			// different world, the environment settings from the last world are not loaded in the
-			// new world if the async 'get request' didn't complete before the new world was loaded.
-			womCounter++;
-			womEnvIdentifier = "womenv_" + womCounter;
-			game.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
-			sendWomId = true;
 		}
 		
 		const int fullAlpha = 0xFF << 24;
@@ -78,7 +91,7 @@ namespace ClassicalSharp.Network {
 				string line = value.Substring(start, i - start);
 				start = i + 1;
 				if (c == '\r' && start < value.Length && value[start] == '\n')
-					start++;
+					start++; // we stop at the \r, so make sure to skip following \n
 				return line;
 			}
 			

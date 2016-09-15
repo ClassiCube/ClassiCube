@@ -33,11 +33,11 @@ namespace ClassicalSharp.Model {
 			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;
 		}
 		
-		internal void ReadSetupPacket( NetReader reader ) {
+		internal void ReadSetupPacket() {
 			
 		}
 		
-		internal void ReadMetadataPacket( NetReader reader ) {
+		internal void ReadMetadataPacket() {
 			collisonSize = ReadS16Vec3( reader );
 			pickingBounds.Min = ReadS16Vec3( reader );
 			pickingBounds.Max = ReadS16Vec3( reader );
@@ -46,14 +46,14 @@ namespace ClassicalSharp.Model {
 			bobbing = reader.ReadUInt8() != 0;
 		}
 		
-		internal void ReadDefinePartPacket( NetReader reader ) {
+		internal void ReadDefinePartPacket() {
 			ushort partId = reader.ReadUInt16();
 			byte type = reader.ReadUInt8();
 			Vector3 min = ReadS16Vec3( reader );
 			Vector3 max = ReadS16Vec3( reader );
 		}
 		
-		internal void ReadRotationPacket( NetReader reader ) {
+		internal void ReadRotationPacket() {
 			ushort partId = reader.ReadUInt16();
 			byte order = reader.ReadUInt8();
 			RotateData rotX = ReadRotateData( reader );

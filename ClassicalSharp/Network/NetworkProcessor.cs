@@ -9,6 +9,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
+using ClassicalSharp.Network.Protocols;
 
 namespace ClassicalSharp.Network {
 
@@ -16,22 +17,28 @@ namespace ClassicalSharp.Network {
 		
 		public NetworkProcessor( Game window ) {
 			game = window;
-			cpe = game.AddComponent( new CPESupport() );
-			SetupHandlers();
+			cpeData = game.AddComponent( new CPESupport() );
 		}
 		
 		public override bool IsSinglePlayer { get { return false; } }
 		
 		Socket socket;
-		bool receivedFirstPosition;
 		DateTime lastPacket;
-		Screen prevScreen;
-		bool prevCursorVisible;
-		CPESupport cpe;
-		ScheduledTask task;
+		Opcode lastOpcode;
+		internal NetReader reader;
+		internal NetWriter writer;
+		
+		internal ClassicProtocol classic;
+		internal CPEProtocol cpe;
+		internal CPEProtocolBlockDefs cpeBlockDefs;
+		internal WoMProtocol wom;
+
+		internal CPESupport cpeData;
+		internal ScheduledTask task;
+		internal bool receivedFirstPosition;
+		internal byte[] needRemoveNames = new byte[256 >> 3];
 		
 		public override void Connect( IPAddress address, int port ) {
-			
 			socket = new Socket( address.AddressFamily, SocketType.Stream, ProtocolType.Tcp );
 			try {
 				socket.Connect( address, port );
@@ -45,16 +52,23 @@ namespace ClassicalSharp.Network {
 			
 			reader = new NetReader( socket );
 			writer = new NetWriter( socket );
-			gzippedMap = new FixedBufferStream( reader.buffer );
+			
+			classic = new ClassicProtocol( game );
+			classic.Init();
+			cpe = new CPEProtocol( game );
+			cpe.Init();
+			cpeBlockDefs = new CPEProtocolBlockDefs( game );
+			cpeBlockDefs.Init();
+			wom = new WoMProtocol( game );
+			wom.Init();
 			
 			Disconnected = false;
 			receivedFirstPosition = false;
 			lastPacket = DateTime.UtcNow;
 			game.WorldEvents.OnNewMap += OnNewMap;
 			game.UserEvents.BlockChanged += BlockChanged;
-			
-			MakeLoginPacket( game.Username, game.Mppass );
-			SendPacket();
+
+			classic.SendLogin( game.Username, game.Mppass );
 			lastPacket = DateTime.UtcNow;
 		}
 		
@@ -87,8 +101,7 @@ namespace ClassicalSharp.Network {
 			while( (reader.size - reader.index) > 0 ) {
 				byte opcode = reader.buffer[reader.index];
 				// Workaround for older D3 servers which wrote one byte too many for HackControl packets.
-				if( cpe.needD3Fix && lastOpcode == Opcode.CpeHackControl
-				   && (opcode == 0x00 || opcode == 0xFF) ) {
+				if( cpeData.needD3Fix && lastOpcode == Opcode.CpeHackControl && (opcode == 0x00 || opcode == 0xFF) ) {
 					Utils.LogDebug( "Skipping invalid HackControl byte from D3 server." );
 					reader.Skip( 1 );
 					player.physics.jumpVel = 0.42f; // assume default jump height
@@ -112,7 +125,7 @@ namespace ClassicalSharp.Network {
 				SendPosition( player.Position, player.HeadYawDegrees, player.PitchDegrees );
 			}
 			CheckAsyncResources();
-			CheckForWomEnvironment();
+			wom.Tick();
 		}
 		
 		/// <summary> Sets the incoming packet handler for the given packet id. </summary>
@@ -122,8 +135,7 @@ namespace ClassicalSharp.Network {
 			maxHandledPacket = Math.Max( (byte)opcode, maxHandledPacket );
 		}
 		
-		NetWriter writer;
-		void SendPacket() {
+		internal void SendPacket() {
 			if( Disconnected ) {
 				writer.index = 0;
 				return;
@@ -136,9 +148,6 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		NetReader reader;
-		Opcode lastOpcode;
-		
 		void ReadPacket( byte opcode ) {
 			reader.Skip( 1 ); // remove opcode
 			lastOpcode = (Opcode)opcode;
@@ -150,71 +159,35 @@ namespace ClassicalSharp.Network {
 			handler();
 		}
 		
-		void SkipPacketData( Opcode opcode ) {
+		internal void SkipPacketData( Opcode opcode ) {
 			reader.Skip( packetSizes[(byte)opcode] - 1 );
 		}
 		
-		Action[] handlers = new Action[256];
-		ushort[] packetSizes = new ushort[256];
-		int maxHandledPacket = 0;
-		
-		void SetupHandlers() {
-			Set( Opcode.Handshake, HandleHandshake, 131 );
-			Set( Opcode.Ping, HandlePing, 1 );
-			Set( Opcode.LevelInit, HandleLevelInit, 1 );
-			Set( Opcode.LevelDataChunk, HandleLevelDataChunk, 1028 );
-			Set( Opcode.LevelFinalise, HandleLevelFinalise, 7 );
-			Set( Opcode.SetBlock, HandleSetBlock, 8 );
+		internal void ResetProtocols() {
+			UsingExtPlayerList = false;
+			UsingPlayerClick = false;
+			SupportsPartialMessages = false;
+			SupportsFullCP437 = false;
 			
-			Set( Opcode.AddEntity, HandleAddEntity, 74 );
-			Set( Opcode.EntityTeleport, HandleEntityTeleport, 10 );
-			Set( Opcode.RelPosAndOrientationUpdate, HandleRelPosAndOrientationUpdate, 7 );
-			Set( Opcode.RelPosUpdate, HandleRelPositionUpdate, 5 );
-			Set( Opcode.OrientationUpdate, HandleOrientationUpdate, 4 );
-			Set( Opcode.RemoveEntity, HandleRemoveEntity, 2 );
+			for( int i = 0; i < handlers.Length; i++ )
+				handlers[i] = null;
 			
-			Set( Opcode.Message, HandleMessage, 66 );
-			Set( Opcode.Kick, HandleKick, 65 );
-			Set( Opcode.SetPermission, HandleSetPermission, 2 );
-			
-			Set( Opcode.CpeExtInfo, HandleExtInfo, 67 );
-			Set( Opcode.CpeExtEntry, HandleExtEntry, 69 );
-			Set( Opcode.CpeSetClickDistance, HandleSetClickDistance, 3 );
-			Set( Opcode.CpeCustomBlockSupportLevel, HandleCustomBlockSupportLevel, 2 );
-			Set( Opcode.CpeHoldThis, HandleHoldThis, 3 );
-			Set( Opcode.CpeSetTextHotkey, HandleSetTextHotkey, 134 );
-			
-			Set( Opcode.CpeExtAddPlayerName, HandleExtAddPlayerName, 196 );
-			Set( Opcode.CpeExtAddEntity, HandleExtAddEntity, 130 );
-			Set( Opcode.CpeExtRemovePlayerName, HandleExtRemovePlayerName, 3 );
-			
-			Set( Opcode.CpeEnvColours, HandleEnvColours, 8 );
-			Set( Opcode.CpeMakeSelection, HandleMakeSelection, 86 );
-			Set( Opcode.CpeRemoveSelection, HandleRemoveSelection, 2 );
-			Set( Opcode.CpeSetBlockPermission, HandleSetBlockPermission, 4 );
-			Set( Opcode.CpeChangeModel, HandleChangeModel, 66 );
-			Set( Opcode.CpeEnvSetMapApperance, HandleEnvSetMapAppearance, 69 );
-			Set( Opcode.CpeEnvWeatherType, HandleEnvWeatherType, 2 );
-			Set( Opcode.CpeHackControl, HandleHackControl, 8 );
-			Set( Opcode.CpeExtAddEntity2, HandleExtAddEntity2, 138 );
-			
-			Set( Opcode.CpeDefineBlock, HandleDefineBlock, 80 );
-			Set( Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2 );
-			Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
-			Set( Opcode.CpeBulkBlockUpdate, HandleBulkBlockUpdate, 1282 );
-			Set( Opcode.CpeSetTextColor, HandleSetTextColor, 6 );
-			Set( Opcode.CpeSetMapEnvUrl, HandleSetMapEnvUrl, 65 );
-			Set( Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6 );
+			packetSizes[(byte)Opcode.CpeEnvSetMapApperance] = 69;
+			packetSizes[(byte)Opcode.CpeDefineBlockExt] = 85;
 		}
+		
+		internal Action[] handlers = new Action[256];
+		internal ushort[] packetSizes = new ushort[256];
+		int maxHandledPacket = 0;
 		
 		void BlockChanged( object sender, BlockChangedEventArgs e ) {
 			Vector3I p = e.Coords;
 			byte block = game.Inventory.HeldBlock;
 			
 			if( e.Block == 0 ) {
-				SendSetBlock( p.X, p.Y, p.Z, false, block );
+				classic.SendSetBlock( p.X, p.Y, p.Z, false, block );
 			} else {
-				SendSetBlock( p.X, p.Y, p.Z, true, e.Block );
+				classic.SendSetBlock( p.X, p.Y, p.Z, true, e.Block );
 			}
 		}
 		
@@ -234,19 +207,6 @@ namespace ClassicalSharp.Network {
 				game.Disconnect( "&eDisconnected from the server", "Connection timed out" );
 				Dispose();
 			}
-		}
-		
-		void CheckName( byte id, ref string displayName, ref string skinName ) {
-			displayName = Utils.RemoveEndPlus( displayName );
-			skinName = Utils.RemoveEndPlus( skinName );
-			skinName = Utils.StripColours( skinName );
-			
-			// Server is only allowed to change our own name colours.
-			if( id != 0xFF ) return;			
-			if( Utils.StripColours( displayName ) != game.Username )
-				displayName = game.Username;
-			if( skinName == "" )
-				skinName = game.Username;
 		}
 	}
 }

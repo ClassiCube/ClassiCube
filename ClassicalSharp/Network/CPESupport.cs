@@ -22,21 +22,13 @@ namespace ClassicalSharp.Network {
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; game.UseCPEBlocks = false;
 			
-			NetworkProcessor network = (NetworkProcessor)game.Server;
-			network.UsingExtPlayerList = false;
-			network.UsingPlayerClick = false;
-			network.SupportsPartialMessages = false;
-			network.SupportsFullCP437 = false;
-
-			network.Set( Opcode.CpeEnvSetMapApperance,
-			            network.HandleEnvSetMapAppearance, 69 );
-			network.Set( Opcode.CpeDefineBlockExt,
-			            network.HandleDefineBlockExt, 85 );
+			NetworkProcessor net = (NetworkProcessor)game.Server;
+			net.ResetProtocols();
 		}
 		
 		/// <summary> Sets fields / updates network handles based on the server 
 		/// indicating it supports the given CPE extension. </summary>
-		public void HandleEntry( string ext, int version, NetworkProcessor network ) {
+		public void HandleEntry( string ext, int version, NetworkProcessor net ) {
 			ServerExtensionsCount--;
 			
 			if( ext == "HeldBlock" ) {
@@ -44,23 +36,21 @@ namespace ClassicalSharp.Network {
 			} else if( ext == "MessageTypes" ) {
 				useMessageTypes = true;
 			} else if( ext == "ExtPlayerList" ) {
-				network.UsingExtPlayerList = true;
+				net.UsingExtPlayerList = true;
 			} else if( ext == "PlayerClick" ) {
-				network.UsingPlayerClick = true;
+				net.UsingPlayerClick = true;
 			} else if( ext == "EnvMapAppearance" ) {
 				envMapVer = version;
 				if( version == 1 ) return;
-				network.Set( Opcode.CpeEnvSetMapApperance,
-				            network.HandleEnvSetMapAppearance2, 73 );
+				net.packetSizes[(byte)Opcode.CpeEnvSetMapApperance] = 73;
 			} else if( ext == "LongerMessages" ) {
-				network.SupportsPartialMessages = true;
+				net.SupportsPartialMessages = true;
 			} else if( ext == "FullCP437" ) {
-				network.SupportsFullCP437 = true;
+				net.SupportsFullCP437 = true;
 			} else if( ext == "BlockDefinitionsExt" ) {
 				blockDefsExtVer = version;
 				if( version == 1 ) return;
-				network.Set( Opcode.CpeDefineBlockExt,
-				            network.HandleDefineBlockExt, 88 );
+				net.packetSizes[(byte)Opcode.CpeDefineBlockExt] = 88;
 			}
 		}
 		
