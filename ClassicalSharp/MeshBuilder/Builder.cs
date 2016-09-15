@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		internal int width, length, height, clipLevel;
+		internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ;
 		protected int cIndex;
 		protected byte* chunk, counts;
@@ -79,11 +79,11 @@ namespace ClassicalSharp {
 				for( int yy = -1; yy < 17; yy++ ) {
 					int y = yy + y1;
 					if( y < 0 ) continue;
-					if( y > maxY ) break;
+					if( y >= height ) break;
 					for( int zz = -1; zz < 17; zz++ ) {
 						int z = zz + z1;
 						if( z < 0 ) continue;
-						if( z > maxZ ) break;
+						if( z >= length ) break;
 						
 						int index = (y * length + z) * width + (x1 - 1 - 1);
 						int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1) - 1;
@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 							index++;
 							chunkIndex++;
 							if( x < 0 ) continue;
-							if( x > maxX ) break;
+							if( x >= width ) break;
 							
 							byte rawBlock = mapPtr[index];
 							if( rawBlock == Block.StillWater ) rawBlock = Block.Water;
@@ -198,7 +198,7 @@ namespace ClassicalSharp {
 							int tileIdx = rawBlock << 8;
 							// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 							
-							if( counts[index] == 0 || (x == 0 && Y < clipLevel) ||
+							if( counts[index] == 0 || (x == 0 && Y < sidesLevel) ||
 							   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0 ) ) {
 								counts[index] = 0;
 							} else {
@@ -207,7 +207,7 @@ namespace ClassicalSharp {
 							}
 							
 							index++;
-							if( counts[index] == 0 || (x == maxX && Y < clipLevel) ||
+							if( counts[index] == 0 || (x == maxX && Y < sidesLevel) ||
 							   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0 ) ) {
 								counts[index] = 0;
 							} else {
@@ -216,7 +216,7 @@ namespace ClassicalSharp {
 							}
 							
 							index++;
-							if( counts[index] == 0 || (z == 0 && Y < clipLevel) ||
+							if( counts[index] == 0 || (z == 0 && Y < sidesLevel) ||
 							   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0 ) ) {
 								counts[index] = 0;
 							} else {
@@ -225,7 +225,7 @@ namespace ClassicalSharp {
 							}
 							
 							index++;
-							if( counts[index] == 0 || (z == maxZ && Y < clipLevel) ||
+							if( counts[index] == 0 || (z == maxZ && Y < sidesLevel) ||
 							   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0 ) ) {
 								counts[index] = 0;
 							} else {
@@ -296,13 +296,11 @@ namespace ClassicalSharp {
 		public void OnNewMapLoaded() {
 			map = game.World;
 			env = game.World.Env;
-			width = map.Width;
-			height = map.Height;
-			length = map.Length;
-			clipLevel = Math.Max( 0, game.World.Env.SidesHeight );
-			maxX = width - 1;
-			maxY = height - 1;
-			maxZ = length - 1;
+			width = map.Width; height = map.Height; length = map.Length;
+			maxX = width - 1; maxY = height - 1; maxZ = length - 1;
+			
+			sidesLevel = Math.Max( 0, game.World.Env.SidesHeight );
+			edgeLevel = Math.Max( 0, game.World.Env.EdgeHeight );
 		}
 	}
 	

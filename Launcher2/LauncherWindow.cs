@@ -204,10 +204,11 @@ namespace Launcher {
 			Screen.OnDisplay();
 			Dirty = false;
 			
-			if( !fullRedraw && DirtyArea.Width > 0 )
-				platformDrawer.Redraw( Framebuffer, DirtyArea );
-			else
-				platformDrawer.Redraw( Framebuffer );
+			Rectangle rec = new Rectangle( 0, 0, Framebuffer.Width, Framebuffer.Height );
+			if( !fullRedraw && DirtyArea.Width > 0 ) {
+				rec = DirtyArea;
+			}
+			platformDrawer.Redraw( Framebuffer, rec );
 			DirtyArea = Rectangle.Empty;
 			fullRedraw = false;
 		}

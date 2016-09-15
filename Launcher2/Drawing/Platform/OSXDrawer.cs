@@ -18,7 +18,7 @@ namespace Launcher {
 			windowPort = OSX.API.GetWindowPort( info.WinHandle );
 		}
 		
-		public override void Redraw( Bitmap framebuffer ) {			
+		public override void Redraw( Bitmap framebuffer, Rectangle r ) {			
 			using( FastBitmap bmp = new FastBitmap( framebuffer, true, true ) ) {
 				IntPtr scan0 = bmp.Scan0;
 				int size = bmp.Width * bmp.Height * 4;
@@ -32,6 +32,7 @@ namespace Launcher {
 				OSStatus err = OSX.API.QDBeginCGContext( windowPort, ref context );
 				OSX.API.CheckReturn( err );
 				
+				// TODO: only redraw changed region
 				OSX.HIRect rect = new OSX.HIRect();
 				rect.Origin.X = 0; rect.Origin.Y = 0;
 				rect.Size.X = bmp.Width; rect.Size.Y = bmp.Height;
