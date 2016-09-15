@@ -13,7 +13,7 @@ namespace Launcher.Gui.Screens {
 	public sealed partial class MainScreen : LauncherInputScreen {
 		
 		MainView view;
-		public MainScreen( LauncherWindow game ) : base( game, true ) {
+		public MainScreen( LauncherWindow game ) : base( game ) {
 			enterIndex = 2;
 			view = new MainView( game );
 			widgets = view.widgets;

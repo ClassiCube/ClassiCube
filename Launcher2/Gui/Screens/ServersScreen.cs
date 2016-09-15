@@ -13,7 +13,7 @@ namespace Launcher.Gui.Screens {
 		const int tableX = 10, tableY = 50;
 		ServersView view;
 		
-		public ServersScreen( LauncherWindow game ) : base( game, true ) {
+		public ServersScreen( LauncherWindow game ) : base( game ) {
 			enterIndex = 3;
 			view = new ServersView( game );
 			widgets = view.widgets;

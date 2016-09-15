@@ -130,7 +130,7 @@ namespace Launcher.Gui.Widgets {
 			}
 		}
 		
-		public Rectangle MeasureCaret( IDrawer2D drawer, Font font ) {
+		public Rectangle MeasureCaret( IDrawer2D drawer ) {
 			string text = Text;
 			if( Password )
 				text = new String( '*', text.Length );
@@ -161,7 +161,7 @@ namespace Launcher.Gui.Widgets {
 				Chars.CaretPos = -1;
 		}
 		
-		public void SetCaretToCursor( int mouseX, int mouseY, IDrawer2D drawer, Font font ) {
+		public void SetCaretToCursor( int mouseX, int mouseY, IDrawer2D drawer ) {
 			string text = Text;
 			if( Password )
 				text = new String( '*', text.Length );
