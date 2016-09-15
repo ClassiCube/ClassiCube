@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Network;
+using ClassicalSharp.Network.Protocols;
 using OpenTK;
 using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.NbtTag>;
 
@@ -147,11 +148,11 @@ namespace ClassicalSharp.Map {
 			
 			info.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
 			byte soundId = (byte)compound["WalkSound"].Value;
-			info.DigSounds[id] = NetworkProcessor.breakSnds[soundId];
-			info.StepSounds[id] = NetworkProcessor.stepSnds[soundId];
+			info.DigSounds[id] = CPEProtocolBlockDefs.breakSnds[soundId];
+			info.StepSounds[id] = CPEProtocolBlockDefs.stepSnds[soundId];
 			info.FullBright[id] = (byte)compound["FullBright"].Value != 0;
 			info.IsSprite[id] = (byte)compound["Shape"].Value == 0;
-			NetworkProcessor.SetBlockDraw( info, id, (byte)compound["BlockDraw"].Value );
+			CPEProtocolBlockDefs.SetBlockDraw( info, id, (byte)compound["BlockDraw"].Value );
 			
 			data = (byte[])compound["Fog"].Value;
 			info.FogDensity[id] = (data[0] + 1) / 128f;

@@ -64,6 +64,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
 			game.Events.ViewDistanceChanged += ResetAllEnv;
+			game.SetViewDistance(game.UserViewDistance, false);
 		}
 		
 		public override void OnNewMap( Game game ) {
@@ -114,51 +115,33 @@ namespace ClassicalSharp.Renderers {
 			graphics.SetMatrixMode( MatrixType.Modelview );
 		}
 		
-		double BlendFactor( int x ) {
-			//return -0.05 + 0.22 * Math.Log( Math.Pow( x, 0.25 ) );
-			double blend = -0.13 + 0.28 * Math.Log( Math.Pow( x, 0.25 ) );
-			if( blend < 0 ) blend = 0;
-			if( blend > 1 ) blend = 1;
-			return blend;
-		}
-		
 		void UpdateFog() {
 			if( map.IsNotLoaded ) return;
-			FastColour adjFogCol = FastColour.White;
-			BlockInfo info = game.BlockInfo;
+			FastColour fogCol = FastColour.White;
+			float fogDensity = 0;
+			byte block = BlockOn( out fogDensity, out fogCol );
 			
-			Vector3 pos = game.CurrentCameraPos;
-			Vector3I coords = Vector3I.Floor( pos );
-			byte block = game.World.SafeGetBlock( coords );
-			AABB blockBB = new AABB(
-				(Vector3)coords + info.MinBB[block],
-				(Vector3)coords + info.MaxBB[block] );
-			
-			if( blockBB.Contains( pos ) && info.FogDensity[block] != 0 ) {
+			if( fogDensity != 0 ) {
 				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( info.FogDensity[block] );
-				adjFogCol = info.FogColour[block];
+				graphics.SetFogDensity( fogDensity );
 			} else {
-				// Blend fog and sky together
-				float blend = (float)BlendFactor( game.ViewDistance );
-				adjFogCol = FastColour.Lerp( map.Env.FogCol, map.Env.SkyCol, blend );
 				graphics.SetFogMode( Fog.Linear );
 				graphics.SetFogEnd( game.ViewDistance );
 			}
-			graphics.ClearColour( adjFogCol );
-			graphics.SetFogColour( adjFogCol );
+			graphics.ClearColour( fogCol );
+			graphics.SetFogColour( fogCol );
 		}
 		
 		void ResetClouds() {
 			if( map.IsNotLoaded ) return;
 			graphics.DeleteVb( cloudsVb );
-			ResetClouds( game.ViewDistance, legacy ? 128 : 65536 );
+			ResetClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
 			if( map.IsNotLoaded ) return;
 			graphics.DeleteVb( skyVb );
-			ResetSky( game.ViewDistance, legacy ? 128 : 65536 );
+			ResetSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetClouds( int extent, int axisSize ) {

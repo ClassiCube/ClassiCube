@@ -63,7 +63,7 @@
     <DebugType>None</DebugType>
     <Optimize>True</Optimize>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <DefineConstants>TRACE;USE_DX</DefineConstants>
+    <DefineConstants>TRACE;USE_DX;</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
   </PropertyGroup>
@@ -194,7 +194,11 @@
     <Compile Include="MeshBuilder\AdvLightingBuilder.cs" />
     <Compile Include="MeshBuilder\TileDrawer.cs" />
     <Compile Include="Network\CPESupport.cs" />
-    <Compile Include="Network\NetworkProcessor.CPECustom.cs" />
+    <Compile Include="Network\Protocols\BlockDefs.cs" />
+    <Compile Include="Network\Protocols\Classic.cs" />
+    <Compile Include="Network\Protocols\CPE.cs" />
+    <Compile Include="Network\Protocols\IProtocol.cs" />
+    <Compile Include="Network\Protocols\WoM.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
@@ -238,14 +242,12 @@
     <Compile Include="Entities\Model\ZombieModel.cs" />
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\IServerConnection.cs" />
-    <Compile Include="Network\NetworkProcessor.CPE.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
-    <Compile Include="Network\NetworkProcessor.Original.cs" />
+    <Compile Include="Network\NetworkProcessor.Helpers.cs" />
     <Compile Include="Network\Utils\AsyncDownloader.cs" />
     <Compile Include="Network\Utils\NetReader.cs" />
     <Compile Include="Network\Utils\FixedBufferStream.cs" />
     <Compile Include="Network\Utils\GZipHeaderReader.cs" />
-    <Compile Include="Network\NetworkProcessor.WoM.cs" />
     <Compile Include="Commands\CommandList.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
@@ -332,6 +334,7 @@
     <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="MeshBuilder" />
+    <Folder Include="Network\Protocols" />
     <Folder Include="Platform" />
     <Folder Include="Particles" />
     <Folder Include="GraphicsAPI" />

@@ -100,7 +100,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void OnNewMapLoaded( Game game ) {
-			CalculateRects( game.ViewDistance );
+			CalculateRects( (int)game.ViewDistance );
 			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
-			CalculateRects( game.ViewDistance );
+			CalculateRects( (int)game.ViewDistance );
 			ResetSides();
 			ResetEdges();
 		}
@@ -192,19 +192,24 @@ namespace ClassicalSharp.Renderers {
 			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
 			for( int i = 0; i < rects.Length; i++ ) {
 				Rectangle r = rects[i];
-				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, -0.1f/16, YOffset( block ), ref v );
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 
+				      HorOffset( block ), YOffset( block ), ref v );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
+		}
+
+		float HorOffset( byte block ) {
+			BlockInfo info = game.BlockInfo;
+			if( info.IsLiquid( block ) ) return -0.1f/16;
+			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid ) return 0.1f/16;
+			 return 0;
 		}
 		
 		float YOffset( byte block ) {
 			BlockInfo info = game.BlockInfo;
-			float offset = 0;
-			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid )
-				offset -= 0.1f/16;
-			if( info.IsLiquid( block ) )
-			   offset -= 1.5f/16;
-			 return offset;
+			if( info.IsLiquid( block ) ) return -1.5f/16;
+			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid ) return -0.1f/16;
+			 return 0;
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 

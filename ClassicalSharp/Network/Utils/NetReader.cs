@@ -4,7 +4,7 @@ using System.Net.Sockets;
 
 namespace ClassicalSharp.Network {
 
-	internal class NetReader {
+	public class NetReader {
 		
 		public byte[] buffer = new byte[4096 * 5];
 		public int index = 0, size = 0;

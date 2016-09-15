@@ -1,4 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+#if !ANDROID
 using System;
 using System.Drawing;
 using ClassicalSharp.Hotkeys;
@@ -187,3 +188,4 @@ namespace ClassicalSharp.Gui {
 		}
 	}
 }
+#endif

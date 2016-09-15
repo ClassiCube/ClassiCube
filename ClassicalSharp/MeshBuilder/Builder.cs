@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 			byte* chunkPtr = stackalloc byte[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
-				
+			
 			MemUtils.memset( (IntPtr)chunkPtr, 0, 0, extChunkSize3 );
 			if( ReadChunkData( x1, y1, z1 ) ) return false;
 			MemUtils.memset( (IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides );
@@ -159,7 +159,7 @@ namespace ClassicalSharp {
 			int yMax = Math.Min( height, y1 + chunkSize );
 			int zMax = Math.Min( length, z1 + chunkSize );
 			#if OCCLUSION
-			int flags = ComputeOcclusion();			
+			int flags = ComputeOcclusion();
 			#endif
 			#if DEBUG_OCCLUSION
 			FastColour col = new FastColour( 60, 60, 60, 255 );
@@ -175,85 +175,89 @@ namespace ClassicalSharp {
 			
 			for( int y = y1, yy = 0; y < yMax; y++, yy++ ) {
 				for( int z = z1, zz = 0; z < zMax; z++, zz++ ) {
-					
 					int cIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1);
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						cIndex++;
-						byte rawBlock = chunk[cIndex];
-						if( info.IsAir[rawBlock] ) continue;
+						byte b = chunk[cIndex];
+						if( info.IsAir[b] ) continue;
 						int index = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
-						if( info.IsSprite[rawBlock] ) {
+						if( info.IsSprite[b] ) {
 							index += Side.Top;
 							if( counts[index] != 0 ) {
 								X = x; Y = y; Z = z;
-								AddSpriteVertices( rawBlock );
+								AddSpriteVertices( b );
 								counts[index] = 1;
 							}
+							continue;
+						}
+						
+						X = x; Y = y; Z = z;
+						fullBright = info.FullBright[b];
+						int tileIdx = b << 8;
+						// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
+						
+						if (counts[index] == 0 || 
+						   (x == 0 && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0)) {
+							counts[index] = 0;
 						} else {
-							X = x; Y = y; Z = z;
-							fullBright = info.FullBright[rawBlock];
-							int tileIdx = rawBlock << 8;
-							// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
-							
-							if( counts[index] == 0 || (x == 0 && Y < sidesLevel) ||
-							   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0 ) ) {
-								counts[index] = 0;
-							} else {
-								int count = StretchZ( zz, index, X, Y, Z, cIndex, rawBlock, Side.Left );
-								AddVertices( rawBlock, count, Side.Left ); counts[index] = (byte)count;
-							}
-							
-							index++;
-							if( counts[index] == 0 || (x == maxX && Y < sidesLevel) ||
-							   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0 ) ) {
-								counts[index] = 0;
-							} else {
-								int count = StretchZ( zz, index, X, Y, Z, cIndex, rawBlock, Side.Right );
-								AddVertices( rawBlock, count, Side.Right ); counts[index] = (byte)count;
-							}
-							
-							index++;
-							if( counts[index] == 0 || (z == 0 && Y < sidesLevel) ||
-							   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0 ) ) {
-								counts[index] = 0;
-							} else {
-								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Front );
-								AddVertices( rawBlock, count, Side.Front ); counts[index] = (byte)count;
-							}
-							
-							index++;
-							if( counts[index] == 0 || (z == maxZ && Y < sidesLevel) ||
-							   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0 ) ) {
-								counts[index] = 0;
-							} else {
-								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Back );
-								AddVertices( rawBlock, count, Side.Back ); counts[index] = (byte)count;
-							}
-							
-							index++;
-							if( counts[index] == 0 || y == 0 || 
-							   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0 ) {
-								counts[index] = 0;
-							} else {
-								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Bottom );
-								AddVertices( rawBlock, count, Side.Bottom ); counts[index] = (byte)count;
-							}
-							
-							index++;
-							if( counts[index] == 0 || 
-							   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0 ) {
-								counts[index] = 0;
-							} else if( rawBlock < Block.Water || rawBlock > Block.StillLava ) {
-								int count = StretchX( xx, index, X, Y, Z, cIndex, rawBlock, Side.Top );
-								AddVertices( rawBlock, count, Side.Top ); counts[index] = (byte)count;
-							} else {
-								int count = StretchXLiquid( xx, index, X, Y, Z, cIndex, rawBlock );
-								if( count > 0 ) AddVertices( rawBlock, count, Side.Top );
-								counts[index] = (byte)count;
-							}						
+							int count = StretchZ( zz, index, X, Y, Z, cIndex, b, Side.Left );
+							AddVertices( b, count, Side.Left ); counts[index] = (byte)count;
+						}
+						
+						index++;
+						if (counts[index] == 0 || 
+						   (x == maxX && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0)) {
+							counts[index] = 0;
+						} else {
+							int count = StretchZ( zz, index, X, Y, Z, cIndex, b, Side.Right );
+							AddVertices( b, count, Side.Right ); counts[index] = (byte)count;
+						}
+						
+						index++;
+						if (counts[index] == 0 || 
+						   (z == 0 && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0)) {
+							counts[index] = 0;
+						} else {
+							int count = StretchX( xx, index, X, Y, Z, cIndex, b, Side.Front );
+							AddVertices( b, count, Side.Front ); counts[index] = (byte)count;
+						}
+						
+						index++;
+						if (counts[index] == 0 || 
+						   (z == maxZ && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0)) {
+							counts[index] = 0;
+						} else {
+							int count = StretchX( xx, index, X, Y, Z, cIndex, b, Side.Back );
+							AddVertices( b, count, Side.Back ); counts[index] = (byte)count;
+						}
+						
+						index++;
+						if (counts[index] == 0 || y == 0 ||
+						   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
+							counts[index] = 0;
+						} else {
+							int count = StretchX( xx, index, X, Y, Z, cIndex, b, Side.Bottom );
+							AddVertices( b, count, Side.Bottom ); counts[index] = (byte)count;
+						}
+						
+						index++;
+						if (counts[index] == 0 ||
+						   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0) {
+							counts[index] = 0;
+						} else if( b < Block.Water || b > Block.StillLava ) {
+							int count = StretchX( xx, index, X, Y, Z, cIndex, b, Side.Top );
+							AddVertices( b, count, Side.Top ); counts[index] = (byte)count;
+						} else {
+							int count = StretchXLiquid( xx, index, X, Y, Z, cIndex, b );
+							if( count > 0 ) AddVertices( b, count, Side.Top );
+							counts[index] = (byte)count;
 						}
 					}
 				}
@@ -267,10 +271,10 @@ namespace ClassicalSharp {
 		protected abstract int StretchZ( int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face );
 		
 		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
-	
+		
 		protected bool OccludedLiquid( int chunkIndex ) {
-			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] && 
-				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] && 
+			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] &&
+				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] &&
 				!info.IsAir[chunk[chunkIndex + 324 + 18]];
 		}
 		

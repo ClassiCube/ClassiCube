@@ -1,4 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+#if !ANDROID
 using System;
 using System.Collections.Generic;
 using OpenTK.Input;
@@ -131,3 +132,4 @@ namespace ClassicalSharp.Hotkeys {
 		public string Text; // contents to copy directly into the input bar
 	}
 }
+#endif

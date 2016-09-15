@@ -89,11 +89,10 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		public void SetViewDistance( int distance, bool save ) {
+		public void SetViewDistance( float distance, bool save ) {
+			distance = Math.Min( distance, MaxViewDistance );
+			if( distance == ViewDistance ) return;
 			ViewDistance = distance;
-			if( ViewDistance > MaxViewDistance )
-				ViewDistance = MaxViewDistance;
-			Utils.LogDebug( "setting view distance to: {0} ({1})", distance, ViewDistance );
 			
 			if( save ) {
 				UserViewDistance = distance;
