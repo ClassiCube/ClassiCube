@@ -95,6 +95,7 @@ namespace ClassicalSharp.Network.Protocols {
 			int keyCode = reader.ReadInt32();
 			byte keyMods = reader.ReadUInt8();
 			
+			#if !ANDROID
 			if( keyCode < 0 || keyCode > 255 ) return;
 			Key key = LwjglToKey.Map[keyCode];
 			if( key == Key.Unknown ) return;
@@ -108,6 +109,7 @@ namespace ClassicalSharp.Network.Protocols {
 			} else { // more input needed by user
 				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, true );
 			}
+			#endif
 		}
 		
 		void HandleExtAddPlayerName() {

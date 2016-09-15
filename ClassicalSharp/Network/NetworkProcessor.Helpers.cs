@@ -20,8 +20,7 @@ namespace ClassicalSharp.Network {
 		public override void SendPlayerClick( MouseButton button, bool buttonDown, byte targetId, PickedPos pos ) {
 			cpe.SendPlayerClick( button, buttonDown, targetId, pos );
 		}
-		
-		#region Helpers
+
 		
 		internal void CheckName( byte id, ref string displayName, ref string skinName ) {
 			displayName = Utils.RemoveEndPlus( displayName );
@@ -104,6 +103,5 @@ namespace ClassicalSharp.Network {
 				player.SetLocation( update, interpolate );
 			}
 		}
-		#endregion
 	}
 }
