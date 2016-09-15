@@ -199,12 +199,11 @@ namespace ClassicalSharp.Renderers {
 		
 		float YOffset( byte block ) {
 			BlockInfo info = game.BlockInfo;
-			float offset = 0;
-			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid )
-				offset -= 0.1f/16;
 			if( info.IsLiquid( block ) )
-			   offset -= 1.5f/16;
-			 return offset;
+			   return -1.5f/16;
+			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid )
+				return -0.1f/16;
+			 return 0;
 		}
 		
 		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 
