@@ -100,7 +100,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void OnNewMapLoaded( Game game ) {
-			CalculateRects( game.ViewDistance );
+			CalculateRects( (int)game.ViewDistance );
 			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
-			CalculateRects( game.ViewDistance );
+			CalculateRects( (int)game.ViewDistance );
 			ResetSides();
 			ResetEdges();
 		}

@@ -64,6 +64,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
 			game.Events.ViewDistanceChanged += ResetAllEnv;
+			game.SetViewDistance(game.UserViewDistance, false);
 		}
 		
 		public override void OnNewMap( Game game ) {
@@ -134,13 +135,13 @@ namespace ClassicalSharp.Renderers {
 		void ResetClouds() {
 			if( map.IsNotLoaded ) return;
 			graphics.DeleteVb( cloudsVb );
-			ResetClouds( game.ViewDistance, legacy ? 128 : 65536 );
+			ResetClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
 			if( map.IsNotLoaded ) return;
 			graphics.DeleteVb( skyVb );
-			ResetSky( game.ViewDistance, legacy ? 128 : 65536 );
+			ResetSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetClouds( int extent, int axisSize ) {

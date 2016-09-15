@@ -125,7 +125,7 @@ namespace ClassicalSharp {
 			Console.WriteLine( String.Format( text, args ) );
 		}
 		
-		public static int AdjViewDist( int value ) {
+		public static int AdjViewDist( float value ) {
 			return (int)(1.4142135 * value);
 		}
 		

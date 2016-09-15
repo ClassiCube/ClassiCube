@@ -59,7 +59,7 @@ namespace ClassicalSharp.Renderers {
 			return block;
 		}
 		
-		double BlendFactor( int x ) {
+		double BlendFactor( float x ) {
 			//return -0.05 + 0.22 * Math.Log( Math.Pow( x, 0.25 ) );
 			double blend = -0.13 + 0.28 * Math.Log( Math.Pow( x, 0.25 ) );
 			if( blend < 0 ) blend = 0;
