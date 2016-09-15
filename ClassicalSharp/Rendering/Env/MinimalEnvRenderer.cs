@@ -15,19 +15,15 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void Render( double deltaTime ) {
-			graphics.ClearColour( map.Env.SkyCol );
+			if( map.IsNotLoaded ) return;
+			FastColour fogCol = FastColour.White;
+			float fogDensity = 0;
+			byte block = BlockOn( out fogDensity, out fogCol );
+			graphics.ClearColour( fogCol );
 		}
 		
-		public override void OnNewMap( Game game ) { }
-		
-		public override void OnNewMapLoaded( Game game ) {
-			graphics.ClearColour( map.Env.SkyCol );
-		}
-		
-		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
-			if( e.Var == EnvVar.SkyColour ) {
-				graphics.ClearColour( map.Env.SkyCol );
-			}
-		}
+		public override void OnNewMap( Game game ) { }		
+		public override void OnNewMapLoaded( Game game ) { }		
+		protected override void EnvVariableChanged( object sender, EnvVarEventArgs e ) { }
 	}
 }
