@@ -229,7 +229,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected int PaddedWidth( int point, int value ) {
-			return Utils.CeilDiv( value * point, boxSize ) + Utils.CeilDiv( point, 16 );
+			return Utils.CeilDiv( value * point, boxSize ) + Utils.CeilDiv( point, 8 );
 		}
 		
 		/// <summary> Rounds the given font size up to the nearest whole
