@@ -13,7 +13,7 @@ namespace Launcher.Gui.Screens {
 		
 		Font booleanFont;
 		DirectConnectView view;
-		public DirectConnectScreen( LauncherWindow game ) : base( game, true ) {
+		public DirectConnectScreen( LauncherWindow game ) : base( game ) {
 			booleanFont = new Font( game.FontName, 22, FontStyle.Regular );
 			enterIndex = 3;
 			view = new DirectConnectView( game );
@@ -44,7 +44,7 @@ namespace Launcher.Gui.Screens {
 		void SetStatus( string text ) {
 			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
-			widget.SetDrawData( drawer, text, inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
+			widget.SetDrawData( drawer, text );
 			RedrawWidget( widget );
 		}
 		

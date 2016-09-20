@@ -50,7 +50,7 @@ namespace Launcher.Gui.Views {
 			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -110, 50 );
 			backIndex = widgetIndex;
 			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 125, 50 );
-			MakeLabelAt( "", titleFont, Anchor.Centre, Anchor.Centre, 0, 100 );
+			MakeLabelAt( "", inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
 			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
 			ccSkinsIndex = widgetIndex;
 			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont, true, 30, 30, -110, 130 );

@@ -14,15 +14,19 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public void SetDrawData( IDrawer2D drawer, string text, Font font,
-		                   Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+		                        Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y );
+			this.font = font;
+			SetDrawData( drawer, text );
+		}
+		
+		public void SetDrawData( IDrawer2D drawer, string text) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			Size size = drawer.MeasureSize( ref args );
 			Width = size.Width; Height = size.Height;
 			
-			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
-				.CalculatePosition();
+			CalculatePosition();
 			Text = text;
-			this.font = font;
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {

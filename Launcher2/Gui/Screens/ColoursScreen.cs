@@ -11,7 +11,7 @@ namespace Launcher.Gui.Screens {
 	public sealed class ColoursScreen : LauncherInputScreen {
 		
 		ColoursView view;
-		public ColoursScreen( LauncherWindow game ) : base( game, true ) {
+		public ColoursScreen( LauncherWindow game ) : base( game ) {
 			enterIndex = 6;
 			view = new ColoursView( game );
 			widgets = view.widgets;

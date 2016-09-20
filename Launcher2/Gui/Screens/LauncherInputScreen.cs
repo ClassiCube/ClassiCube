@@ -10,14 +10,8 @@ namespace Launcher.Gui.Screens {
 	
 	public abstract class LauncherInputScreen : LauncherScreen {
 		
-		protected Font titleFont, inputFont, inputHintFont;
 		protected int enterIndex = -1;
-		public LauncherInputScreen( LauncherWindow game, bool makeFonts ) : base( game ) {
-			if( !makeFonts ) return;
-			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
-			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
-		}
+		public LauncherInputScreen( LauncherWindow game ) : base( game ) { }
 		
 		public override void Init() {
 			game.Window.Mouse.Move += MouseMove;
@@ -44,7 +38,7 @@ namespace Launcher.Gui.Screens {
 				curInput.SetDrawData( drawer, curInput.Text );
 				curInput.Redraw( drawer );
 				
-				Rectangle r = curInput.MeasureCaret( drawer, inputFont );
+				Rectangle r = curInput.MeasureCaret( drawer );
 				if( caretShow ) {
 					drawer.Clear( FastColour.Black, r.X, r.Y, r.Width, r.Height );
 				}
@@ -156,7 +150,7 @@ namespace Launcher.Gui.Screens {
 				input.Active = true;
 				widgetOpenTime = DateTime.UtcNow;
 				lastCaretFlash = false;
-				input.SetCaretToCursor( mouseX, mouseY, drawer, inputFont );
+				input.SetCaretToCursor( mouseX, mouseY, drawer );
 				input.Redraw( drawer );
 			}
 			curInput = input;
@@ -189,10 +183,6 @@ namespace Launcher.Gui.Screens {
 			game.Window.Keyboard.KeyDown -= KeyDown;
 			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Keyboard.KeyRepeat = false;
-			
-			titleFont.Dispose();
-			inputFont.Dispose();
-			inputHintFont.Dispose();
 		}
 	}
 }
