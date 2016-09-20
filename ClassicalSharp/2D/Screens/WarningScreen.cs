@@ -65,7 +65,8 @@ namespace ClassicalSharp.Gui {
 		TextWidget[] labels;
 		
 		void CloseScreen() {
-			game.Gui.overlays.RemoveAt( 0 );
+			if( game.Gui.overlays.Count > 0 )
+				game.Gui.overlays.RemoveAt( 0 );
 			if( game.Gui.overlays.Count == 0 )
 				game.CursorVisible = game.realVisible;
 		}
