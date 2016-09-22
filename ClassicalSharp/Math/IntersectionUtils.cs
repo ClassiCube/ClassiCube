@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 			
 			t0 = tmin;
 			t1 = tmax;
-			return true;
+			return t0 >= 0;
 		}
 	}
 }
