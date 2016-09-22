@@ -34,13 +34,13 @@ namespace ClassicalSharp {
 					+ potHeat[((y + 1) & mask) << shift | x] +              // x    , y + 1
 					+ potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];// x + 1, y + 1
 				
-				soupHeat[i] = lSoupHeat / 10 + lPotHeat / 4 * 0.8f;
-				potHeat[i] += flameHeat[i] * 0.01f;
+				soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 0.2f;
+				potHeat[i] += flameHeat[i];
 				if( potHeat[i] < 0 ) potHeat[i] = 0;
-				flameHeat[i] -= 0.06f;
+				flameHeat[i] -= 0.06f * 0.01f;
 				
 				if( rnd.NextFloat() <= 0.005f )
-					flameHeat[i] = 1.5f;
+					flameHeat[i] = 1.5f * 0.01f;
 				
 				// Output the pixel
 				float col = 2 * soupHeat[i];
@@ -57,7 +57,7 @@ namespace ClassicalSharp {
 		}
 		
 		int CheckSize( int size ) {
-			if( potHeat == null || potHeat.Length != size * size ) {
+			if( potHeat == null || potHeat.Length < size * size ) {
 				flameHeat = new float[size * size];
 				potHeat = new float[size * size];
 				soupHeat = new float[size * size];
