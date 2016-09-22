@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		}
 
 		public void Ready( Game game ) { }			
-		public void Reset( Game game ) { }
+		public void Reset( Game game ) { logName = null; }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		

@@ -62,7 +62,10 @@ namespace ClassicalSharp.TexturePack {
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public unsafe void Tick( ScheduledTask task ) {
-			if( useLavaAnim ) DrawAnimation( null, 30, LavaAnimation.Size );
+			if( useLavaAnim ) {
+				int size = Math.Min( game.TerrainAtlas.elementSize, 64 );
+				DrawAnimation( null, 30, size );
+			}
 			
 			if( animations.Count == 0 ) return;			
 			if( animsBuffer == null ) {
@@ -147,11 +150,12 @@ namespace ClassicalSharp.TexturePack {
 			byte* temp = stackalloc byte[size * size * 4];
 			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
 			
-			if( data == null )
-				lavaAnim.Tick( (int*)temp );
-			else
+			if( data == null ) {
+				lavaAnim.Tick( (int*)temp, size );
+			} else {
 				FastBitmap.MovePortion( data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size );
+			}
 			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
 		}
 		

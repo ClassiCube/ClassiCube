@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 			}
 			
 			AtlasBitmap = bmp;
-			elementSize = bmp.Width >> 4;
+			elementSize = bmp.Width / ElementsPerRow;
 			using( FastBitmap fastBmp = new FastBitmap( bmp, true, true ) )
 				info.RecalculateSpriteBB( fastBmp );
 		}
@@ -43,8 +43,8 @@ namespace ClassicalSharp {
 				using( Bitmap bmp = Platform.CreateBmp( size, size ) )
 					using( FastBitmap dst = new FastBitmap( bmp, true, false ) )
 			{
-				FastBitmap.MovePortion( (index & 0x0F) * size, (index >> 4) * 
-				                       size, 0, 0, atlas, dst, size );
+				int x = index % ElementsPerRow, y = index / ElementsPerRow;
+				FastBitmap.MovePortion( x * size, y * size, 0, 0, atlas, dst, size );
 				return graphics.CreateTexture( dst );
 			}
 		}
