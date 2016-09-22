@@ -29,12 +29,6 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Other function licenses
 =======================
 
-Ray-triangle intersection algorithm comes from:
-"Fast, Minimum Storage Ray/Triangle Intersection, Möller & Trumbore. Journal of Graphics Tools, 1997."
-C source at http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/raytri/raytri.c, according to Möller's code page,
-(http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/code/), the code is public domain.
-
-
 Ray-box intersection algorithm comes from:
 "An efficient and robust ray-box intersection algorithm", Williams, Barrus, Morley & Shirley, Journal of Graphics Tools, 2005"
 C++ source at http://www.cs.utah.edu/~awilliam/box/ does not appear to have an attached license.
