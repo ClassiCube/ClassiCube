@@ -64,14 +64,14 @@ namespace ClassicalSharp.Entities {
 		void CalcRayDirection() {
 			Vector3 dir = entity.Velocity;
 			Vector3 P = new Vector3( bb.Min.X, bb.Min.Y, bb.Max.Z );
-			tracerP1Y1.SetRayData( P, dir );
+			tracerP1Y1.SetVectors( P, dir );
 			P.Y = bb.Max.Y;
-			tracerP1Y1.SetRayData( P, dir );
+			tracerP1Y1.SetVectors( P, dir );
 			
 			P = new Vector3( bb.Max.X, bb.Min.Y, bb.Min.Z );
-			tracerP2Y1.SetRayData( P, dir );
+			tracerP2Y1.SetVectors( P, dir );
 			P.Y = bb.Max.Y;
-			tracerP2Y2.SetRayData( P, dir );
+			tracerP2Y2.SetVectors( P, dir );
 		}
 	}
 }

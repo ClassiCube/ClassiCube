@@ -15,10 +15,17 @@ namespace ClassicalSharp {
 	public sealed class RayTracer {
 		
 		public int X, Y, Z;
+		public Vector3 Origin, Dir;
+		// Block data
+		public Vector3 Min, Max;
+		public byte Block;
+		
 		Vector3I step, cellBoundary;
 		Vector3 tMax, tDelta;
 		
-		public void SetRayData( Vector3 origin, Vector3 dir ) {
+		public void SetVectors( Vector3 origin, Vector3 dir ) {
+			Origin = origin; Dir = dir;
+			
 			Vector3I start = Vector3I.Floor( origin ); // Rounds the position's X, Y and Z down to the nearest integer values.
 			// The cell in which the ray starts.
 			X = start.X; Y = start.Y; Z = start.Z;

@@ -4,115 +4,96 @@ using ClassicalSharp.Map;
 using OpenTK;
 
 namespace ClassicalSharp {
-
-	public static class Picking {
+	public static class Picking {	
 		
-		static RayTracer tracer = new RayTracer();
+		static RayTracer t = new RayTracer();
 		
 		/// <summary> Determines the picked block based on the given origin and direction vector.<br/>
 		/// Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
 		/// or not being able to find a suitable candiate within the given reach distance. </summary>
-		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
-			tracer.SetRayData( origin, dir );
-			World map = game.World;
+		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir,
+		                                        float reach, PickedPos pos ) {
+			RayTrace( game, origin, dir, reach, pos, false );
+		}
+		
+		static bool PickBlock( Game game, PickedPos pos ) {
+			if( !game.CanPick( t.Block ) ) return false;
+			
+			// This cell falls on the path of the ray. Now perform an additional bounding box test,
+			// since some blocks do not occupy a whole cell.
+			float t0, t1;
+			if( !Intersection.RayIntersectsBox( t.Origin, t.Dir, t.Min, t.Max, out t0, out t1 ) )
+				return false;
+			Vector3 I = t.Origin + t.Dir * t0;
+			pos.SetAsValid( t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I );
+			return true;
+		}
+		
+		public static void ClipCameraPos( Game game, Vector3 origin, Vector3 dir,
+		                                 float reach, PickedPos pos ) {
+			if( !game.CameraClipping ) {
+				pos.SetAsInvalid();
+				pos.Intersect = origin + dir * reach;
+				return;
+			}
+			RayTrace( game, origin, dir, reach, pos, true );
+		}
+		
+		static bool CameraClip( Game game, PickedPos pos ) {
 			BlockInfo info = game.BlockInfo;
-			float reachSquared = reach * reach;
-			int iterations = 0;
+			if( info.IsAir[t.Block] || info.Collide[t.Block] != CollideType.Solid )
+				return false;
+			
+			float t0, t1;
+			const float adjust = 0.1f;
+			if( !Intersection.RayIntersectsBox( t.Origin, t.Dir, t.Min, t.Max, out t0, out t1 ) )
+				return false;
+			Vector3 I = t.Origin + t.Dir * t0;
+			pos.SetAsValid( t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I );
+			
+			switch (pos.BlockFace) {
+				case BlockFace.XMin: pos.Intersect.X -= adjust; break;
+				case BlockFace.XMax: pos.Intersect.X += adjust; break;
+				case BlockFace.YMin: pos.Intersect.Y -= adjust; break;
+				case BlockFace.YMax: pos.Intersect.Y += adjust; break;
+				case BlockFace.ZMin: pos.Intersect.Z -= adjust; break;
+				case BlockFace.ZMax: pos.Intersect.Z += adjust; break;
+			}
+			return true;
+		}
+
+
+		static bool RayTrace( Game game, Vector3 origin, Vector3 dir, float reach,
+		                     PickedPos pos, bool clipMode ) {
+			t.SetVectors( origin, dir );
+			BlockInfo info = game.BlockInfo;
+			float reachSq = reach * reach;
 			Vector3I pOrigin = Vector3I.Floor( origin );
 
-			while( iterations < 10000 ) {
-				int x = tracer.X, y = tracer.Y, z = tracer.Z;
-				byte block = GetBlock( map, x, y, z, pOrigin );
-				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
-				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				if( info.IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
+			for( int i = 0; i < 10000; i++ ) {
+				int x = t.X, y = t.Y, z = t.Z;
+				t.Block = GetBlock( game.World, x, y, z, pOrigin );
+				Vector3 min = new Vector3( x, y, z ) + info.MinBB[t.Block];
+				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[t.Block];
+				if( info.IsLiquid( t.Block ) ) {
+					min.Y -= 1.5f/16; max.Y -= 1.5f/16;
+				}
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
 				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
+				if( dx * dx + dy * dy + dz * dz > reachSq ) { pos.SetAsInvalid(); return false; }
 				
-				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
-					pickedPos.SetAsInvalid(); return;
-				}
-				
-				if( game.CanPick( block ) ) {
-					// This cell falls on the path of the ray. Now perform an additional bounding box test,
-					// since some blocks do not occupy a whole cell.
-					float t0, t1;
-					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-						Vector3 intersect = origin + dir * t0;
-						pickedPos.SetAsValid( x, y, z, min, max, block, intersect );
-						return;
-					}
-				}
-				tracer.Step();
-				iterations++;
+				t.Min = min; t.Max = max;
+				bool intersect = clipMode ? CameraClip( game, pos ) : PickBlock( game, pos );
+				if( intersect ) return true;
+				t.Step();
 			}
+			
 			throw new InvalidOperationException( "did over 10000 iterations in CalculatePickedBlock(). " +
 			                                    "Something has gone wrong. (dir: " + dir + ")" );
 		}
-		
-		public static void ClipCameraPos( Game game, Vector3 origin, Vector3 dir, float reach, PickedPos pickedPos ) {
-			if( !game.CameraClipping ) {
-				pickedPos.SetAsInvalid();
-				pickedPos.IntersectPoint = origin + dir * reach;
-				return;
-			}
-			tracer.SetRayData( origin, dir );
-			World map = game.World;
-			BlockInfo info = game.BlockInfo;
-			float reachSquared = reach * reach;
-			int iterations = 0;
-			Vector3I pOrigin = Vector3I.Floor( origin );
 
-			while( iterations < 10000 ) {
-				int x = tracer.X, y = tracer.Y, z = tracer.Z;
-				byte block = GetBlock( map, x, y, z, pOrigin );
-				Vector3 min = new Vector3( x, y, z ) + info.MinBB[block];
-				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[block];
-				if( info.IsLiquid( block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
-				
-				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
-				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
-				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
-				
-				if( dx * dx + dy * dy + dz * dz > reachSquared ) {
-					pickedPos.SetAsInvalid();
-					pickedPos.IntersectPoint = origin + dir * reach;
-					return;
-				}
-				
-				if( info.Collide[block] == CollideType.Solid && !info.IsAir[block] ) {
-					float t0, t1;
-					const float adjust = 0.1f;
-					if( Intersection.RayIntersectsBox( origin, dir, min, max, out t0, out t1 ) ) {
-						Vector3 intersect = origin + dir * t0;
-						pickedPos.SetAsValid( x, y, z, min, max, block, intersect );
-						
-						switch( pickedPos.BlockFace) {
-							case CpeBlockFace.XMin:
-								pickedPos.IntersectPoint.X -= adjust; break;
-							case CpeBlockFace.XMax:
-								pickedPos.IntersectPoint.X += adjust; break;
-							case CpeBlockFace.YMin:
-								pickedPos.IntersectPoint.Y -= adjust; break;
-							case CpeBlockFace.YMax:
-								pickedPos.IntersectPoint.Y += adjust; break;
-							case CpeBlockFace.ZMin:
-								pickedPos.IntersectPoint.Z -= adjust; break;
-							case CpeBlockFace.ZMax:
-								pickedPos.IntersectPoint.Z += adjust; break;
-						}
-						return;
-					}
-				}
-				tracer.Step();
-				iterations++;
-			}
-			throw new InvalidOperationException( "did over 10000 iterations in ClipCameraPos(). " +
-			                                    "Something has gone wrong. (dir: " + dir + ")" );
-		}
-		
 		const byte border = Block.Bedrock;
 		static byte GetBlock( World map, int x, int y, int z, Vector3I origin ) {
 			bool sides = map.Env.SidesBlock != Block.Air;

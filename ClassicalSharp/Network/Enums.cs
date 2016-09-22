@@ -73,5 +73,5 @@ namespace ClassicalSharp {
 		ClientClock = 262,
 	}
 	
-	public enum CpeBlockFace { XMax, XMin, YMax, YMin, ZMax, ZMin, }
+	public enum BlockFace { XMax, XMin, YMax, YMin, ZMax, ZMin, }
 }
