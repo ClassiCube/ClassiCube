@@ -34,26 +34,18 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Redraws the contents of this widget. </summary>
 		public abstract void Redraw( IDrawer2D drawer );
 		
-		
-		public void UpdateLocation( Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			SetAnchors( horAnchor, verAnchor );
-			SetOffsets( x, y );
+
+		/// <summary> Sets the reference points for when this widget is resized,
+		/// and the offsets from the reference points (anchors) in pixels. </summary>
+		/// <remarks> Updates the position of the widget. </remarks>
+		public void SetLocation( Anchor horAnchor, Anchor verAnchor, 
+		                        int xOffset, int yOffset ) {
+			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
+			XOffset = xOffset; YOffset = yOffset;
 			CalculatePosition();
 		}
 		
-		/// <summary> Sets the reference points for when this widget is resized. </summary>
-		public void SetAnchors( Anchor horAnchor, Anchor verAnchor ) {
-			HorizontalAnchor = horAnchor;
-			VerticalAnchor = verAnchor;
-		}
-		
-		/// <summary> Sets the offsets from the reference points (anchors) in pixels. </summary>
-		public void SetOffsets( int xOffset, int yOffset ) {
-			XOffset = xOffset;
-			YOffset = yOffset;
-		}
-		
-		/// <summary> Calculates the position of this widget in the window, 
+		/// <summary> Calculates the position of this widget in the window,
 		/// based on its anchor points and offset from the anchor points. </summary>
 		public void CalculatePosition() {
 			X = CalcPos( HorizontalAnchor, XOffset, Width, Window.Width );
@@ -61,11 +53,11 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		static int CalcPos( Anchor anchor, int offset, int size, int axisLen ) {
-			if( anchor == Anchor.LeftOrTop ) 
+			if( anchor == Anchor.LeftOrTop )
 				return offset;
-			if( anchor == Anchor.Centre ) 
+			if( anchor == Anchor.Centre )
 				return offset + axisLen / 2 - size / 2;
-			if( anchor == Anchor.BottomOrRight ) 
+			if( anchor == Anchor.BottomOrRight )
 				return offset + axisLen - size;
 			return 0;
 		}

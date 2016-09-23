@@ -39,40 +39,40 @@ namespace Launcher.Gui.Views {
 			widgetIndex = 0;
 			int middle = game.Width / 2;
 			Makers.Label( this, "&fChoose game mode", titleFont )
-				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -135 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -135 );
 			
 			nIndex = widgetIndex;
 			Makers.Button( this, "Enhanced", 145, 35, titleFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
 			Makers.Label( this, "&eEnables custom blocks, changing env", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
 			Makers.Label( this, "&esettings, longer messages, and more", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 + 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 + 12 );
 
 			clHaxIndex = widgetIndex;
 			Makers.Button( this, "Classic +hax", 145, 35, titleFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0 );
 			Makers.Label( this, "&eSame as Classic mode, except that", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
 			Makers.Label( this, "&ehacks (noclip/fly/speed) are enabled", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );
 			
 			clIndex = widgetIndex;
 			Makers.Button( this, "Classic", 145, 35, titleFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72 );
 			Makers.Label( this, "&eOnly uses blocks and features from", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 - 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 - 12 );
 			Makers.Label( this, "&ethe original minecraft classic", inputFont )
-				.UpdateLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );
+				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );
 			
 			if( FirstTime ) {
 				backIndex = -1;
 				Makers.Label( this, "&eClick &fEnhanced &eif you are unsure which mode to choose.", inputFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 160 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 160 );
 			} else {
 				backIndex = widgetIndex;
 				Makers.Button( this, "Back", 80, 35, titleFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 175 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 175 );
 			}
 		}
 	}

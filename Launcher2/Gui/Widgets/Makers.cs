@@ -70,5 +70,21 @@ namespace Launcher.Gui.Widgets {
 			view.widgetIndex++;
 			return widget;
 		}
+		
+		public static LauncherWidget Slider( IView view, int width, int height,
+		                                    int progress, FastColour progressCol ) {
+			LauncherSliderWidget widget;
+			if( view.widgets[view.widgetIndex] != null ) {
+				widget = (LauncherSliderWidget)view.widgets[view.widgetIndex];
+			} else {
+				widget = new LauncherSliderWidget( view.game, width, height );
+				widget.Progress = progress;
+				widget.ProgressColour = progressCol;
+				view.widgets[view.widgetIndex] = widget;
+			}
+			
+			view.widgetIndex++;
+			return widget;
+		}
 	}
 }

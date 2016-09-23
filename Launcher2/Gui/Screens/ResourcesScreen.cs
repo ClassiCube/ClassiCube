@@ -94,16 +94,16 @@ namespace Launcher.Gui.Screens {
 			
 			if( fetcher == null ) {
 				Makers.Label( view, mainText, infoFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -40 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -40 );
 				Makers.Button( view, "Yes", 70, 35, textFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, -70, 45 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, -70, 45 );
 				widgets[widgetIndex - 1].OnClick = DownloadResources;
 				
 				Makers.Button( view, "No", 70, 35, textFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 70, 45 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 70, 45 );
 			} else {
 				Makers.Button( view, "Cancel", 120, 35, textFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 45 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 45 );
 			}
 			widgets[widgetIndex - 1].OnClick = (x, y) => GotoNextMenu();
 			

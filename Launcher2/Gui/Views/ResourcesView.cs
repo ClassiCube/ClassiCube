@@ -46,12 +46,12 @@ namespace Launcher.Gui.Views {
 			widgetIndex = 0;
 			if( useStatus ) {
 				Makers.Label( this, widgets[0].Text, statusFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -10 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -10 );
 			} else {
 				float dataSize = game.fetcher.DownloadSize;
 				string text = String.Format( format, dataSize.ToString( "F2" ) );
 				Makers.Label( this, text, statusFont )
-					.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 10 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 10 );
 			}
 		}
 		
@@ -61,7 +61,7 @@ namespace Launcher.Gui.Views {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
 				widget.SetDrawData( drawer, text );
-				widget.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -10 );
+				widget.SetLocation( Anchor.Centre, Anchor.Centre, 0, -10 );
 				widget.Redraw( drawer );
 			}
 		}
