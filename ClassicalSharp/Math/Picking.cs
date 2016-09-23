@@ -13,7 +13,9 @@ namespace ClassicalSharp {
 		/// or not being able to find a suitable candiate within the given reach distance. </summary>
 		public static void CalculatePickedBlock( Game game, Vector3 origin, Vector3 dir,
 		                                        float reach, PickedPos pos ) {
-			RayTrace( game, origin, dir, reach, pos, false );
+			if( !RayTrace( game, origin, dir, reach, pos, false ) ) {
+				pos.SetAsInvalid();
+			}
 		}
 		
 		static bool PickBlock( Game game, PickedPos pos ) {
@@ -31,12 +33,10 @@ namespace ClassicalSharp {
 		
 		public static void ClipCameraPos( Game game, Vector3 origin, Vector3 dir,
 		                                 float reach, PickedPos pos ) {
-			if( !game.CameraClipping ) {
+			if( !game.CameraClipping || !RayTrace( game, origin, dir, reach, pos, true ) ) {
 				pos.SetAsInvalid();
 				pos.Intersect = origin + dir * reach;
-				return;
 			}
-			RayTrace( game, origin, dir, reach, pos, true );
 		}
 		
 		static bool CameraClip( Game game, PickedPos pos ) {
@@ -75,14 +75,12 @@ namespace ClassicalSharp {
 				t.Block = GetBlock( game.World, x, y, z, pOrigin );
 				Vector3 min = new Vector3( x, y, z ) + info.MinBB[t.Block];
 				Vector3 max = new Vector3( x, y, z ) + info.MaxBB[t.Block];
-				if( info.IsLiquid( t.Block ) ) {
-					min.Y -= 1.5f/16; max.Y -= 1.5f/16;
-				}
+				if( info.IsLiquid( t.Block ) ) { min.Y -= 1.5f/16; max.Y -= 1.5f/16; }
 				
 				float dx = Math.Min( Math.Abs( origin.X - min.X ), Math.Abs( origin.X - max.X ) );
 				float dy = Math.Min( Math.Abs( origin.Y - min.Y ), Math.Abs( origin.Y - max.Y ) );
 				float dz = Math.Min( Math.Abs( origin.Z - min.Z ), Math.Abs( origin.Z - max.Z ) );
-				if( dx * dx + dy * dy + dz * dz > reachSq ) { pos.SetAsInvalid(); return false; }
+				if( dx * dx + dy * dy + dz * dz > reachSq ) return false;
 				
 				t.Min = min; t.Max = max;
 				bool intersect = clipMode ? CameraClip( game, pos ) : PickBlock( game, pos );
