@@ -34,18 +34,29 @@ namespace Launcher.Gui.Views {
 		void UpdateWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
-			Makers.Label( this, "Background", inputFont, Anchor.Centre, Anchor.Centre, -60, -100 );
-			Makers.Label( this, "Button border", inputFont, Anchor.Centre, Anchor.Centre, -70, -60 );
-			Makers.Label( this, "Button highlight", inputFont, Anchor.Centre, Anchor.Centre, -80, -20 );
-			Makers.Label( this, "Button", inputFont, Anchor.Centre, Anchor.Centre, -40, 20 );
-			Makers.Label( this, "Active button", inputFont, Anchor.Centre, Anchor.Centre, -70, 60 );
-			Makers.Label( this, "Red", titleFont, Anchor.Centre, Anchor.Centre, 30, -130 );
-			Makers.Label( this, "Green", titleFont, Anchor.Centre, Anchor.Centre, 95, -130 );
-			Makers.Label( this, "Blue", titleFont, Anchor.Centre, Anchor.Centre, 160, -130 );
+			Makers.Label( this, "Background", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -60, -100 );
+			Makers.Label( this, "Button border", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -70, -60 );
+			Makers.Label( this, "Button highlight", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -80, -20 );
+			Makers.Label( this, "Button", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -40, 20 );
+			Makers.Label( this, "Active button", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -70, 60 );
+			
+			Makers.Label( this, "Red", titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 30, -130 );
+			Makers.Label( this, "Green", titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 95, -130 );
+			Makers.Label( this, "Blue", titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 160, -130 );
 			
 			defIndex = widgetIndex;
-			Makers.Button( this, "Default colours", 160, 35, titleFont, Anchor.Centre, Anchor.Centre, 0, 120 );
-			Makers.Button( this, "Back", 80, 35, titleFont, Anchor.Centre, Anchor.Centre, 0, 170 );
+			Makers.Button( this, "Default colours", 160, 35, titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 120 );
+			Makers.Button( this, "Back", 80, 35, titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 170 );
 		}
 		
 		public void MakeAllRGBTriplets( bool force ) {
@@ -58,12 +69,12 @@ namespace Launcher.Gui.Views {
 		}
 		
 		void MakeRGBTriplet( FastColour defCol, bool force, int y ) {
-			MakeInput( GetCol( defCol.R, force ), 55, 
-			          Anchor.Centre, Anchor.Centre, false, 30, y, 3, null );
-			MakeInput( GetCol( defCol.G, force ), 55, 
-			          Anchor.Centre, Anchor.Centre, false, 95, y, 3, null );
-			MakeInput( GetCol( defCol.B, force ), 55, 
-			          Anchor.Centre, Anchor.Centre, false, 160, y, 3, null );
+			MakeInput( GetCol( defCol.R, force ), 55, false, 3, null )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 30, y );
+			MakeInput( GetCol( defCol.G, force ), 55, false, 3, null )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 95, y );
+			MakeInput( GetCol( defCol.B, force ), 55, false, 3, null )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 160, y );
 		}
 		
 		string GetCol( byte col, bool force ) {

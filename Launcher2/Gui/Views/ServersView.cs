@@ -41,15 +41,15 @@ namespace Launcher.Gui.Views {
 		
 		void MakeWidgets() {
 			widgetIndex = 0;
-			MakeInput( Get( 0 ), 475, Anchor.LeftOrTop, Anchor.LeftOrTop,
-			          false, 10, 10, 32, "&7Search servers.." );
-			MakeInput( Get( 1 ), 475, Anchor.LeftOrTop, Anchor.BottomOrRight,
-			          false, 10, -10, 32, "&7classicube.net/server/play/..." );
+			MakeInput( Get( 0 ), 475, false, 32, "&7Search servers.." )
+				.UpdateLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10 );
+			MakeInput( Get( 1 ), 475, false, 32, "&7classicube.net/server/play/..." )
+				.UpdateLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
 			
-			Makers.Button( this, "Back", 110, 30, titleFont,
-			              Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10 );
-			Makers.Button( this, "Connect", 110, 30, titleFont,
-			              Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10 );
+			Makers.Button( this, "Back", 110, 30, titleFont )
+				.UpdateLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10 );
+			Makers.Button( this, "Connect", 110, 30, titleFont )
+				.UpdateLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10 );
 			MakeTableWidget();
 		}
 		

@@ -39,19 +39,24 @@ namespace Launcher.Gui.Views {
 		void MakeWidgets() {
 			widgetIndex = 0;
 			
-			MakeInput( Get( 0 ), 330, Anchor.Centre, Anchor.Centre,
-			          false, 0, -100, 32, "&7Username.." );
-			MakeInput( Get( 1 ), 330, Anchor.Centre, Anchor.Centre,
-			          false, 0, -50, 64, "&7IP address:Port number.." );
-			MakeInput( Get( 2 ), 330, Anchor.Centre, Anchor.Centre,
-			          false, 0, 0, 32, "&7Mppass.." );
+			MakeInput( Get( 0 ), 330, false, 32, "&7Username.." )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -100 );
+			MakeInput( Get( 1 ), 330, false, 64, "&7IP address:Port number.." )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -50 );
+			MakeInput( Get( 2 ), 330, false, 32, "&7Mppass.." )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 0 );
 			
 			connectIndex = widgetIndex;
-			Makers.Button( this, "Connect", 110, 35, titleFont, Anchor.Centre, Anchor.Centre, -110, 50 );
+			Makers.Button( this, "Connect", 110, 35, titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -110, 50 );
+			
 			backIndex = widgetIndex;
-			Makers.Button( this, "Back", 80, 35, titleFont, Anchor.Centre, Anchor.Centre, 125, 50 );
-			Makers.Label( this, "", inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
-			Makers.Label( this, "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
+			Makers.Button( this, "Back", 80, 35, titleFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 125, 50 );
+			Makers.Label( this, "", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 100 );
+			Makers.Label( this, "Use classicube.net for skins", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 30, 130 );
 			
 			ccSkinsIndex = widgetIndex;
 			Makers.Boolean( this, booleanFont, true, 30 )

@@ -58,10 +58,10 @@ namespace Launcher.Gui.Views {
 			}
 		}
 
-		protected void MakeInput( string text, int width, Anchor horAnchor, Anchor verAnchor,
-		                         bool password, int x, int y, int maxChars, string hint ) {
-			Makers.Input( this, text, width, horAnchor, verAnchor,
-			             inputFont, inputHintFont, password, x, y, maxChars, hint );
+		protected LauncherWidget MakeInput( string text, int width,
+		                                   bool password, int maxChars, string hint ) {
+			return Makers.Input( this, text, width, inputFont,
+			                    inputHintFont, password, maxChars, hint );
 		}
 	}
 }

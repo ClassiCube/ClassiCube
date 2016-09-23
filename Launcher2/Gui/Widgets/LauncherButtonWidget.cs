@@ -16,10 +16,9 @@ namespace Launcher.Gui.Widgets {
 		public LauncherButtonWidget( LauncherWindow window ) : base( window ) {
 		}
 		
-		public void SetDrawData( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
-		                        Anchor verAnchor, int width, int height, int x, int y ) {
+		public void SetDrawData( IDrawer2D drawer, string text, Font font, int width, int height ) {
 			Width = width; Height = height;
-			UpdateLocation( horAnchor, verAnchor, x, y );
+			CalculatePosition();
 			this.font = font;
 
 			Text = text;

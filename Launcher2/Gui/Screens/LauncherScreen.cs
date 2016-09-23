@@ -45,8 +45,12 @@ namespace Launcher.Gui.Screens {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
 				if( widget == null ) continue;
+				int width = widget.Width, height = widget.Height;
+				if( widgets[i] is LauncherInputWidget )
+					width = ((LauncherInputWidget)widgets[i]).RealWidth;
+				
 				if( e.X >= widget.X && e.Y >= widget.Y &&
-				   e.X < widget.X + widget.Width && e.Y < widget.Y + widget.Height ) {
+				   e.X < widget.X + width && e.Y < widget.Y + height ) {
 					if( selectedWidget == widget ) return;
 					
 					if( selectedWidget != null )
@@ -123,7 +127,10 @@ namespace Launcher.Gui.Screens {
 				
 				if( widgets[i] is LauncherInputWidget || widgets[i] is LauncherButtonWidget ) {
 					LauncherWidget widget = widgets[i];
-					moveArgs.X = widget.X + widget.Width / 2;
+					int width = widget.Width;
+					if( widgets[i] is LauncherInputWidget )
+						width = ((LauncherInputWidget)widgets[i]).RealWidth;
+					moveArgs.X = widget.X + width / 2;
 					moveArgs.Y = widget.Y + widget.Height / 2;
 					
 					pressArgs.Button = MouseButton.Left;

@@ -9,18 +9,11 @@ namespace Launcher.Gui.Widgets {
 	public sealed class LauncherLabelWidget : LauncherWidget {
 		
 		Font font;
-		public LauncherLabelWidget( LauncherWindow window, string text ) : base( window ) {
-			Text = text;
-		}
-		
-		public void SetDrawData( IDrawer2D drawer, string text, Font font,
-		                        Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			UpdateLocation( horAnchor, verAnchor, x, y );
+		public LauncherLabelWidget( LauncherWindow window, Font font ) : base( window ) {
 			this.font = font;
-			SetDrawData( drawer, text );
 		}
 		
-		public void SetDrawData( IDrawer2D drawer, string text) {
+		public void SetDrawData( IDrawer2D drawer, string text ) {
 			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			Size size = drawer.MeasureSize( ref args );
 			Width = size.Width; Height = size.Height;

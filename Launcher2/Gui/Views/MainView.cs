@@ -42,42 +42,44 @@ namespace Launcher.Gui.Views {
 		internal string updateText = "&eChecking for updates..";
 		void MakeWidgets() {
 			widgetIndex = 0;
-			MakeInput( Get( 0 ), 280, Anchor.Centre, Anchor.Centre,
-			          false, 0, -120, 16, "&7Username.." );
-			MakeInput( Get( 1 ), 280, Anchor.Centre, Anchor.Centre,
-			          true, 0, -70, 64, "&7Password.." );
+			MakeInput( Get( 0 ), 280, false, 16, "&7Username.." )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
+			MakeInput( Get( 1 ), 280, true, 64, "&7Password.." )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, -70 );
+			
 			loginIndex = widgetIndex;
-			Makers.Button( this, "Sign in", 100, buttonHeight, buttonFont,
-			              Anchor.Centre, Anchor.Centre, -90, -20 );
-			Makers.Label( this, Get( 3 ), inputFont, Anchor.Centre, Anchor.Centre, 0, 20 );
+			Makers.Button( this, "Sign in", 100, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -90, -20 );
+			Makers.Label( this, Get( 3 ), inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 20 );
 			
 			resIndex = widgetIndex;
-			Makers.Button( this, "Resume", 100, buttonHeight, buttonFont,
-			              Anchor.Centre, Anchor.Centre, 90, -20 );
+			Makers.Button( this, "Resume", 100, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 90, -20 );
 			dcIndex = widgetIndex;
-			Makers.Button( this, "Direct connect", 200, buttonHeight, buttonFont,
-			              Anchor.Centre, Anchor.Centre, 0, 60 );
+			Makers.Button( this, "Direct connect", 200, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 60 );
 			spIndex = widgetIndex;
-			Makers.Button( this, "Singleplayer", 200, buttonHeight, buttonFont,
-			              Anchor.Centre, Anchor.Centre, 0, 110 );
+			Makers.Button( this, "Singleplayer", 200, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 0, 110 );
 			
 			colIndex = widgetIndex;
 			if( !game.ClassicBackground ) {
-				Makers.Button( this, "Colours", 110, buttonHeight, buttonFont,
-				              Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
+				Makers.Button( this, "Colours", 110, buttonHeight, buttonFont )
+					.UpdateLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
 			} else {
 				widgets[widgetIndex++] = null;
 			}
 			
 			updatesIndex = widgetIndex;
-			Makers.Button( this, "Updates", 110, buttonHeight, buttonFont,
-			              Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10 );
+			Makers.Button( this, "Updates", 110, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10 );
 			modeIndex = widgetIndex;
-			Makers.Button( this, "Choose mode", 200, buttonHeight, buttonFont,
-			              Anchor.Centre, Anchor.BottomOrRight, 0, -10 );
+			Makers.Button( this, "Choose mode", 200, buttonHeight, buttonFont )
+				.UpdateLocation( Anchor.Centre, Anchor.BottomOrRight, 0, -10 );
 			
-			Makers.Label( this, updateText, updateFont, Anchor.BottomOrRight,
-			             Anchor.BottomOrRight, -10, -50 );
+			Makers.Label( this, updateText, updateFont )
+				.UpdateLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -50 );
 			
 			sslIndex = widgetIndex;
 			if( widgets[widgetIndex] != null )
@@ -87,7 +89,8 @@ namespace Launcher.Gui.Views {
 		internal void MakeSslWidgets() {
 			Makers.Boolean( this, inputFont, true, 30 )
 				.UpdateLocation( Anchor.Centre, Anchor.Centre, 160, -20 );
-			Makers.Label( this, "Skip SSL check", inputFont, Anchor.Centre, Anchor.Centre, 250, -20 );
+			Makers.Label( this, "Skip SSL check", inputFont )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, 250, -20 );
 		}
 		
 		string Get( int index ) {

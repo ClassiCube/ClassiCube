@@ -108,8 +108,8 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected virtual void RedrawLastInput() {
-			if( curInput.Width > curInput.ButtonWidth )
-				game.ResetArea( curInput.X, curInput.Y, curInput.Width, curInput.Height );
+			if( curInput.RealWidth > curInput.ButtonWidth )
+				game.ResetArea( curInput.X, curInput.Y, curInput.RealWidth, curInput.Height );
 			
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

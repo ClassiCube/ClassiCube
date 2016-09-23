@@ -8,8 +8,7 @@ namespace Launcher.Gui.Widgets {
 	/// <summary> Helper methods to construct widgets. </summary>
 	public static class Makers {
 		
-		public static void Button( IView view, string text, int width, int height, Font font, 
-		                          Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+		public static LauncherWidget Button( IView view, string text, int width, int height, Font font ) {
 			LauncherButtonWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (LauncherButtonWidget)view.widgets[view.widgetIndex];
@@ -20,22 +19,23 @@ namespace Launcher.Gui.Widgets {
 			}
 			
 			widget.Active = false;
-			widget.SetDrawData( view.game.Drawer, text, font, horAnchor, verAnchor, width, height, x, y );
+			widget.SetDrawData( view.game.Drawer, text, font, width, height );
 			view.widgetIndex++;
+			return widget;
 		}
 		
-		public static void Label( IView view, string text, Font font, 
-		                         Anchor horAnchor, Anchor verAnchor, int x, int y ) {
+		public static LauncherWidget Label( IView view, string text, Font font ) {
 			LauncherLabelWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (LauncherLabelWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherLabelWidget( view.game, text );
+				widget = new LauncherLabelWidget( view.game, font );
 				view.widgets[view.widgetIndex] = widget;
 			}
 			
-			widget.SetDrawData( view.game.Drawer, text, font, horAnchor, verAnchor, x, y );
+			widget.SetDrawData( view.game.Drawer, text );
 			view.widgetIndex++;
+			return widget;
 		}
 		
 		public static LauncherWidget Boolean( IView view, Font font, bool initValue, int size ) {
@@ -52,9 +52,8 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static void Input( IView view, string text, int width, Anchor horAnchor, 
-		                         Anchor verAnchor, Font inputFont, Font inputHintFont,
-		                         bool password, int x, int y, int maxChars, string hint ) {
+		public static LauncherWidget Input( IView view, string text, int width, Font inputFont, 
+		                                   Font inputHintFont, bool password, int maxChars, string hint ) {
 			LauncherInputWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (LauncherInputWidget)view.widgets[view.widgetIndex];
@@ -66,9 +65,10 @@ namespace Launcher.Gui.Widgets {
 				view.widgets[view.widgetIndex] = widget;
 			}
 			
-			widget.SetDrawData( view.game.Drawer, text, inputFont, inputHintFont,
-			                   horAnchor, verAnchor, width, 30, x, y );
+			widget.SetDrawData( view.game.Drawer, text, 
+			                   inputFont, inputHintFont, width, 30 );
 			view.widgetIndex++;
+			return widget;
 		}
 	}
 }
