@@ -5,7 +5,7 @@ using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
 
-	/// <summary> Widget that represents text that cannot be modified by the user. </summary>
+	/// <summary> Represents text that cannot be modified by the user. </summary>
 	public sealed class LauncherLabelWidget : LauncherWidget {
 		
 		Font font;

@@ -26,7 +26,7 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			game.Events.TextureChanged += TextureChanged;
-			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.AllAndHovered );
+			NamesMode = Options.GetEnum( OptionsKey.NamesMode, NameMode.HoveredOnly );
 			if( game.ClassicMode ) NamesMode = NameMode.HoveredOnly;
 			ShadowMode = Options.GetEnum( OptionsKey.EntityShadow, EntityShadow.None );
 			if( game.ClassicMode ) ShadowMode = EntityShadow.None;

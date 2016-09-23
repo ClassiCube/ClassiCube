@@ -5,7 +5,7 @@ using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
 
-	/// <summary> Widget that represents text can have modified by the user. </summary>
+	/// <summary> Represents a state that can be toggled by the user. </summary>
 	public sealed class LauncherBoolWidget : LauncherWidget {
 		
 		public int BoxWidth, BoxHeight;

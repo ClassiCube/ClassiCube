@@ -5,7 +5,7 @@ using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
 
-	/// <summary> Widget that represents text can have modified by the user. </summary>
+	/// <summary> Represents text that can have modified by the user. </summary>
 	public sealed class LauncherInputWidget : LauncherWidget {
 		
 		public int ButtonWidth, ButtonHeight;

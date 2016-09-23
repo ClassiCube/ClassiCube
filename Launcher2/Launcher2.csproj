@@ -90,6 +90,7 @@
     <Compile Include="Gui\Widgets\LauncherButtonWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherInputWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />
+    <Compile Include="Gui\Widgets\LauncherSliderWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
     <Compile Include="Gui\Widgets\WidgetConstructors.cs" />
     <Compile Include="LauncherWindow.Background.cs" />
