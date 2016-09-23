@@ -145,17 +145,5 @@ namespace Launcher.Gui.Screens {
 				}
 			}
 		}
-		
-		protected void MakeButtonAt( string text, int width, int height, Font font,
-		                            Anchor verAnchor, int x, int y, Action<int, int> onClick ) {
-			WidgetConstructors.MakeButtonAt( game, widgets, ref widgetIndex,
-			                                text, width, height, font, Anchor.Centre,
-			                                verAnchor, x, y, onClick );
-		}
-		
-		protected void MakeLabelAt( string text, Font font, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			WidgetConstructors.MakeLabelAt( game, widgets, ref widgetIndex,
-			                               text, font, horAnchor, verAnchor, x, y );
-		}
 	}
 }

@@ -14,11 +14,6 @@ namespace Launcher.Gui.Widgets {
 		public LauncherSliderWidget( LauncherWindow window, int width, int height ) : base( window ) {
 			Width = width; Height = height;
 		}
-
-		public void SetDrawData( IDrawer2D drawer, Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
-				.CalculatePosition();
-		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
 			if( Window.Minimised ) return;

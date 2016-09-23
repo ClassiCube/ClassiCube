@@ -19,8 +19,7 @@ namespace Launcher.Gui.Widgets {
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, Anchor horAnchor,
 		                        Anchor verAnchor, int width, int height, int x, int y ) {
 			Width = width; Height = height;
-			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
-				.CalculatePosition();
+			UpdateLocation( horAnchor, verAnchor, x, y );
 			this.font = font;
 
 			Text = text;

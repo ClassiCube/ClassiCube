@@ -92,7 +92,7 @@
     <Compile Include="Gui\Widgets\LauncherLabelWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherSliderWidget.cs" />
     <Compile Include="Gui\Widgets\LauncherWidget.cs" />
-    <Compile Include="Gui\Widgets\WidgetConstructors.cs" />
+    <Compile Include="Gui\Widgets\Makers.cs" />
     <Compile Include="LauncherWindow.Background.cs" />
     <Compile Include="LauncherWindow.cs" />
     <Compile Include="Patcher\Animations.cs" />

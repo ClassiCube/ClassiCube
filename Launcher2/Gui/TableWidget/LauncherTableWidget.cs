@@ -122,8 +122,7 @@ namespace Launcher.Gui.Widgets {
 
 		public void SetDrawData( IDrawer2D drawer, Font font, Font titleFont,
 		                        Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y )
-				.CalculatePosition();
+			UpdateLocation( horAnchor, verAnchor, x, y );
 			view.SetDrawData( drawer, font, titleFont );
 		}
 		

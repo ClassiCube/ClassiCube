@@ -46,10 +46,10 @@ namespace Launcher.Gui.Views {
 			MakeInput( Get( 1 ), 475, Anchor.LeftOrTop, Anchor.BottomOrRight,
 			          false, 10, -10, 32, "&7classicube.net/server/play/..." );
 			
-			MakeButtonAt( "Back", 110, 30, titleFont, 
-			             Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10 );
-			MakeButtonAt( "Connect", 110, 30, titleFont,
-			             Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10 );
+			Makers.Button( this, "Back", 110, 30, titleFont,
+			              Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10 );
+			Makers.Button( this, "Connect", 110, 30, titleFont,
+			              Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10 );
 			MakeTableWidget();
 		}
 		
@@ -84,7 +84,7 @@ namespace Launcher.Gui.Views {
 				widget = (LauncherTableWidget)widgets[tableIndex];
 			} else {
 				widget = new LauncherTableWidget( game );
-				widget.SetEntries( game.Session.Servers );				
+				widget.SetEntries( game.Session.Servers );
 				widget.SetDrawData( drawer, tableFont, inputFont,
 				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
 				widget.SortDefault();

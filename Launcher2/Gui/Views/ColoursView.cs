@@ -34,18 +34,18 @@ namespace Launcher.Gui.Views {
 		void UpdateWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
-			MakeLabelAt( "Background", inputFont, Anchor.Centre, Anchor.Centre, -60, -100 );
-			MakeLabelAt( "Button border", inputFont, Anchor.Centre, Anchor.Centre, -70, -60 );
-			MakeLabelAt( "Button highlight", inputFont, Anchor.Centre, Anchor.Centre, -80, -20 );
-			MakeLabelAt( "Button", inputFont, Anchor.Centre, Anchor.Centre, -40, 20 );
-			MakeLabelAt( "Active button", inputFont, Anchor.Centre, Anchor.Centre, -70, 60 );
-			MakeLabelAt( "Red", titleFont, Anchor.Centre, Anchor.Centre, 30, -130 );
-			MakeLabelAt( "Green", titleFont, Anchor.Centre, Anchor.Centre, 95, -130 );
-			MakeLabelAt( "Blue", titleFont, Anchor.Centre, Anchor.Centre, 160, -130 );
+			Makers.Label( this, "Background", inputFont, Anchor.Centre, Anchor.Centre, -60, -100 );
+			Makers.Label( this, "Button border", inputFont, Anchor.Centre, Anchor.Centre, -70, -60 );
+			Makers.Label( this, "Button highlight", inputFont, Anchor.Centre, Anchor.Centre, -80, -20 );
+			Makers.Label( this, "Button", inputFont, Anchor.Centre, Anchor.Centre, -40, 20 );
+			Makers.Label( this, "Active button", inputFont, Anchor.Centre, Anchor.Centre, -70, 60 );
+			Makers.Label( this, "Red", titleFont, Anchor.Centre, Anchor.Centre, 30, -130 );
+			Makers.Label( this, "Green", titleFont, Anchor.Centre, Anchor.Centre, 95, -130 );
+			Makers.Label( this, "Blue", titleFont, Anchor.Centre, Anchor.Centre, 160, -130 );
 			
 			defIndex = widgetIndex;
-			MakeButtonAt( "Default colours", 160, 35, titleFont, Anchor.Centre, 0, 120 );
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 0, 170 );
+			Makers.Button( this, "Default colours", 160, 35, titleFont, Anchor.Centre, Anchor.Centre, 0, 120 );
+			Makers.Button( this, "Back", 80, 35, titleFont, Anchor.Centre, Anchor.Centre, 0, 170 );
 		}
 		
 		public void MakeAllRGBTriplets( bool force ) {

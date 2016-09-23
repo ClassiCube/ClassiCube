@@ -15,7 +15,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public void SetDrawData( IDrawer2D drawer, string text, Font font,
 		                        Anchor horAnchor, Anchor verAnchor, int x, int y ) {
-			SetAnchors( horAnchor, verAnchor ).SetOffsets( x, y );
+			UpdateLocation( horAnchor, verAnchor, x, y );
 			this.font = font;
 			SetDrawData( drawer, text );
 		}

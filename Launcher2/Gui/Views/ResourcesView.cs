@@ -45,11 +45,11 @@ namespace Launcher.Gui.Views {
 		internal void UpdateStatus() {
 			widgetIndex = 0;
 			if( useStatus ) {
-				MakeLabelAt( widgets[0].Text, statusFont, Anchor.Centre, Anchor.Centre, 0, -10 );
+				Makers.Label( this, widgets[0].Text, statusFont, Anchor.Centre, Anchor.Centre, 0, -10 );
 			} else {
 				float dataSize = game.fetcher.DownloadSize;
 				string text = String.Format( format, dataSize.ToString( "F2" ) );
-				MakeLabelAt( text, statusFont, Anchor.Centre, Anchor.Centre, 0, 10 );
+				Makers.Label( this, text, statusFont, Anchor.Centre, Anchor.Centre, 0, 10 );
 			}
 		}
 		

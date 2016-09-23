@@ -47,13 +47,15 @@ namespace Launcher.Gui.Views {
 			          false, 0, 0, 32, "&7Mppass.." );
 			
 			connectIndex = widgetIndex;
-			MakeButtonAt( "Connect", 110, 35, titleFont, Anchor.Centre, -110, 50 );
+			Makers.Button( this, "Connect", 110, 35, titleFont, Anchor.Centre, Anchor.Centre, -110, 50 );
 			backIndex = widgetIndex;
-			MakeButtonAt( "Back", 80, 35, titleFont, Anchor.Centre, 125, 50 );
-			MakeLabelAt( "", inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
-			MakeLabelAt( "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
+			Makers.Button( this, "Back", 80, 35, titleFont, Anchor.Centre, Anchor.Centre, 125, 50 );
+			Makers.Label( this, "", inputFont, Anchor.Centre, Anchor.Centre, 0, 100 );
+			Makers.Label( this, "Use classicube.net for skins", inputFont, Anchor.Centre, Anchor.Centre, 30, 130 );
+			
 			ccSkinsIndex = widgetIndex;
-			MakeBooleanAt( Anchor.Centre, Anchor.Centre, booleanFont, true, 30, 30, -110, 130 );
+			Makers.Boolean( this, booleanFont, true, 30 )
+				.UpdateLocation( Anchor.Centre, Anchor.Centre, -110, 130 );
 		}
 		
 		string Get( int index ) {

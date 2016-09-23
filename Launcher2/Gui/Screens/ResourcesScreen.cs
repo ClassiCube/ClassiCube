@@ -5,6 +5,7 @@ using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.Network;
 using Launcher.Gui.Views;
+using Launcher.Gui.Widgets;
 using Launcher.Patcher;
 
 namespace Launcher.Gui.Screens {
@@ -92,16 +93,14 @@ namespace Launcher.Gui.Screens {
 			}
 			
 			if( fetcher == null ) {
-				MakeLabelAt( mainText, infoFont, Anchor.Centre, Anchor.Centre, 0, -40 );
-				MakeButtonAt( "Yes", 70, 35, textFont, Anchor.Centre,
-				             -70, 45, DownloadResources );
-				
-				MakeButtonAt( "No", 70, 35, textFont, Anchor.Centre,
-				             70, 45, (x, y) => GotoNextMenu() );
+				Makers.Label( view, mainText, infoFont, Anchor.Centre, Anchor.Centre, 0, -40 );
+				Makers.Button( view, "Yes", 70, 35, textFont, Anchor.Centre, Anchor.Centre, -70, 45 );
+				widgets[widgetIndex - 1].OnClick = DownloadResources;				
+				Makers.Button( view, "No", 70, 35, textFont, Anchor.Centre, Anchor.Centre, 70, 45 );
 			} else {
-				MakeButtonAt( "Cancel", 120, 35, textFont, Anchor.Centre,
-				             0, 45, (x, y) => GotoNextMenu() );
+				Makers.Button( view, "Cancel", 120, 35, textFont, Anchor.Centre, Anchor.Centre, 0, 45);
 			}
+			widgets[widgetIndex - 1].OnClick = (x, y) => GotoNextMenu();
 			
 			if( view.lastProgress >= 0 && view.lastProgress <= 100 ) {
 				view.DrawProgressBox( view.lastProgress );
