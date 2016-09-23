@@ -8,6 +8,7 @@ namespace Launcher.Gui.Widgets {
 	/// <summary> Represents a slider bar that may or may not be modifiable by the user. </summary>
 	public sealed class LauncherSliderWidget : LauncherWidget {
 		
+		public bool Visible;
 		public int Progress;
 		public FastColour ProgressColour;
 		
@@ -16,7 +17,7 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
-			if( Window.Minimised ) return;
+			if( Window.Minimised || !Visible ) return;
 			using( FastBitmap bmp = Window.LockBits() ) {
 				Rectangle r = new Rectangle( X, Y, Width, Height );
 				DrawBoxBounds( bmp, r );

@@ -81,9 +81,7 @@ namespace Launcher.Gui.Screens {
 		static readonly string mainText = "Some required resources weren't found" +
 			Environment.NewLine + "Okay to download them?";		
 		void MakeWidgets() {
-			widgetIndex = 0;
-			view.UpdateStatus();
-			widgetIndex = 1;
+			view.SetStatus();
 
 			// Clear the entire previous widgets state.
 			for( int i = 1; i < widgets.Length; i++ ) {
@@ -97,7 +95,7 @@ namespace Launcher.Gui.Screens {
 					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -40 );
 				Makers.Button( view, "Yes", 70, 35, textFont )
 					.SetLocation( Anchor.Centre, Anchor.Centre, -70, 45 );
-				widgets[widgetIndex - 1].OnClick = DownloadResources;
+				widgets[view.widgetIndex - 1].OnClick = DownloadResources;
 				
 				Makers.Button( view, "No", 70, 35, textFont )
 					.SetLocation( Anchor.Centre, Anchor.Centre, 70, 45 );
@@ -105,13 +103,18 @@ namespace Launcher.Gui.Screens {
 				Makers.Button( view, "Cancel", 120, 35, textFont )
 					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 45 );
 			}
-			widgets[widgetIndex - 1].OnClick = (x, y) => GotoNextMenu();
+			widgets[view.widgetIndex - 1].OnClick = (x, y) => GotoNextMenu();
 			
+			view.sliderIndex = view.widgetIndex;
+			Makers.Slider( view, 200, 10, 0, progFront )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 15 );
 			if( view.lastProgress >= 0 && view.lastProgress <= 100 ) {
 				view.DrawProgressBox( view.lastProgress );
 				game.Dirty = true;
 			}
 		}
+		
+		static FastColour progFront = new FastColour( 0, 220, 0 );
 		
 		void DownloadResources( int mouseX, int mouseY ) {
 			if( game.Downloader == null )

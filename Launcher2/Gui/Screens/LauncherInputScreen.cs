@@ -122,8 +122,6 @@ namespace Launcher.Gui.Screens {
 		
 		protected virtual void OnRemovedChar() { }
 		
-		protected string Get() { return Get( widgetIndex ); }
-		
 		protected string Get( int index ) {
 			LauncherWidget widget = widgets[index];
 			return widget == null ? "" : widget.Text;

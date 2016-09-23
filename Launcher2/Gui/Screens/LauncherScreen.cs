@@ -10,8 +10,7 @@ namespace Launcher.Gui.Screens {
 	public abstract class LauncherScreen {
 		protected internal LauncherWindow game;
 		protected internal IDrawer2D drawer;
-		
-		protected int widgetIndex;
+
 		protected bool mouseMoved = false;
 		static bool supressMove = true;
 		
