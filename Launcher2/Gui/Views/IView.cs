@@ -24,7 +24,15 @@ namespace Launcher.Gui.Views {
 		public abstract void Init();
 		
 		/// <summary> Function called to redraw all widgets in this view. </summary>
-		public abstract void DrawAll();
+		public virtual void DrawAll() {
+			MakeWidgets();
+			RedrawAllButtonBackgrounds();
+			
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				RedrawAll();
+			}
+		}
 		
 		/// <summary> Cleans up all native resources held by this view. </summary>
 		public virtual void Dispose() {
@@ -32,6 +40,9 @@ namespace Launcher.Gui.Views {
 			if( inputFont != null ) inputFont.Dispose();
 			if( inputHintFont != null ) inputHintFont.Dispose();
 		}
+		
+		/// <summary> Creates or updates all the widgets for this view. </summary>
+		protected abstract void MakeWidgets();
 		
 		protected void RedrawAllButtonBackgrounds() {
 			int buttons = 0;

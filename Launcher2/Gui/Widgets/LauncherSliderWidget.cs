@@ -8,7 +8,6 @@ namespace Launcher.Gui.Widgets {
 	/// <summary> Represents a slider bar that may or may not be modifiable by the user. </summary>
 	public sealed class LauncherSliderWidget : LauncherWidget {
 		
-		public bool Visible;
 		public int Progress;
 		public FastColour ProgressColour;
 		

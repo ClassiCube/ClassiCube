@@ -38,7 +38,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		const string dateFormat = "dd-MM-yyyy HH:mm";
-		void MakeWidgets() {
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			

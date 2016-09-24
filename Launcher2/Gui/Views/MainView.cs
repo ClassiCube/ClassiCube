@@ -1,8 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using System.IO;
-using System.Net;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
@@ -29,18 +27,20 @@ namespace Launcher.Gui.Views {
 			MakeWidgets();
 		}
 		
-		public override void DrawAll() {
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
+		string Get( int index ) {
+			LauncherWidget widget = widgets[index];
+			return widget == null ? "" : widget.Text;
 		}
 		
+		public override void Dispose() {
+			buttonFont.Dispose();
+			updateFont.Dispose();
+			base.Dispose();
+		}
+
+		
 		internal string updateText = "&eChecking for updates..";
-		void MakeWidgets() {
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput( Get( 0 ), 280, false, 16, "&7Username.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
@@ -53,6 +53,7 @@ namespace Launcher.Gui.Views {
 			Makers.Label( this, Get( 3 ), inputFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 20 );
 			
+			
 			resIndex = widgetIndex;
 			Makers.Button( this, "Resume", 100, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 90, -20 );
@@ -63,45 +64,32 @@ namespace Launcher.Gui.Views {
 			Makers.Button( this, "Singleplayer", 200, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 110 );
 			
-			colIndex = widgetIndex;
-			if( !game.ClassicBackground ) {
-				Makers.Button( this, "Colours", 110, buttonHeight, buttonFont )
-					.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
-			} else {
-				widgets[widgetIndex++] = null;
-			}
 			
-			updatesIndex = widgetIndex;
-			Makers.Button( this, "Updates", 110, buttonHeight, buttonFont )
-				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10 );
+			colIndex = widgetIndex;
+			Makers.Button( this, "Colours", 110, buttonHeight, buttonFont )
+				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
+			if( game.ClassicBackground )
+				widgets[widgetIndex - 1].Visible = false;
+
 			modeIndex = widgetIndex;
 			Makers.Button( this, "Choose mode", 200, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.BottomOrRight, 0, -10 );
 			
+			updatesIndex = widgetIndex;
+			Makers.Button( this, "Updates", 110, buttonHeight, buttonFont )
+				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10 );			
 			Makers.Label( this, updateText, updateFont )
 				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -50 );
 			
+			
 			sslIndex = widgetIndex;
-			if( widgets[widgetIndex] != null )
-				MakeSslWidgets();
-		}
-		
-		internal void MakeSslWidgets() {
+			bool sslVisible = widgets[sslIndex] != null && widgets[sslIndex].Visible;
 			Makers.Boolean( this, inputFont, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 160, -20 );
 			Makers.Label( this, "Skip SSL check", inputFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 250, -20 );
-		}
-		
-		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : widget.Text;
-		}
-		
-		public override void Dispose() {
-			buttonFont.Dispose();
-			updateFont.Dispose();
-			base.Dispose();
+			widgets[sslIndex].Visible = sslVisible;
+			widgets[sslIndex + 1].Visible = sslVisible;
 		}
 	}
 }

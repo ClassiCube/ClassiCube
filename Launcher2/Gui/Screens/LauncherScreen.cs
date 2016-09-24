@@ -43,7 +43,7 @@ namespace Launcher.Gui.Screens {
 			
 			for( int i = 0; i < widgets.Length; i++ ) {
 				LauncherWidget widget = widgets[i];
-				if( widget == null ) continue;
+				if( widget == null || !widget.Visible ) continue;
 				int width = widget.Width, height = widget.Height;
 				if( widgets[i] is LauncherInputWidget )
 					width = ((LauncherInputWidget)widgets[i]).RealWidth;
@@ -123,6 +123,7 @@ namespace Launcher.Gui.Screens {
 			for( int j = 0; j < widgets.Length * 2; j++ ) {
 				int i = (j * dir + index) % widgets.Length;
 				if( i < 0 ) i += widgets.Length;
+				if( widgets[i] == null || !widgets[i].Visible ) continue;
 				
 				if( widgets[i] is LauncherInputWidget || widgets[i] is LauncherButtonWidget ) {
 					LauncherWidget widget = widgets[i];

@@ -59,7 +59,7 @@ namespace Launcher.Gui.Widgets {
 			RealWidth = Math.Max( ButtonWidth, size.Width + 20 );
 			textHeight = size.Height;
 			args.SkipPartsCheck = true;
-			if( Window.Minimised ) return;
+			if( Window.Minimised || !Visible ) return;
 			
 			using( FastBitmap bmp = Window.LockBits() ) {
 				DrawOuterBorder( bmp );

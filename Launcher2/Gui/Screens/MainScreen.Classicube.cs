@@ -19,13 +19,13 @@ namespace Launcher.Gui.Screens {
 				updateDone = true;
 			}
 			
-			if( !signingIn ) return;		
+			if( !signingIn ) return;
 			ClassicubeSession session = game.Session;
 			string status = session.Status;
 			if( status != lastStatus )
 				SetStatus( status );
 			
-			if( session.Working ) return;			
+			if( session.Working ) return;
 			if( session.Exception != null ) {
 				DisplayWebException( session.Exception, session.Status );
 			} else if( HasServers ) {
@@ -102,19 +102,23 @@ namespace Launcher.Gui.Screens {
 			} else if( sslCertError ) {
 				string text = "&eFailed to validate SSL certificate";
 				SetStatus( text );
-				using( drawer ) {
-					drawer.SetBitmap( game.Framebuffer );
-					view.widgetIndex = view.sslIndex;
-					view.MakeSslWidgets();
-					
-					widgets[view.sslIndex].OnClick = SSLSkipValidationClick;
-					widgets[view.sslIndex].Redraw( drawer );
-					widgets[view.sslIndex + 1].Redraw( drawer );
-				}
+				ShowSSLErrorWidgets();
 			} else {
 				string text = "&eFailed to " + action + ":" +
 					Environment.NewLine + ex.Status;
 				SetStatus( text );
+			}
+		}
+		
+		void ShowSSLErrorWidgets() {
+			using( drawer ) {
+				drawer.SetBitmap( game.Framebuffer );
+				widgets[view.sslIndex].Visible = true;
+				widgets[view.sslIndex + 1].Visible = true;
+				
+				widgets[view.sslIndex].OnClick = SSLSkipValidationClick;
+				widgets[view.sslIndex].Redraw( drawer );
+				widgets[view.sslIndex + 1].Redraw( drawer );
 			}
 		}
 		

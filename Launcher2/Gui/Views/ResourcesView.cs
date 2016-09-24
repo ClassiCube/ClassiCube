@@ -79,5 +79,7 @@ namespace Launcher.Gui.Views {
 		
 		static FastColour backCol = new FastColour( 120, 85, 151 );
 		static FastColour clearCol = new FastColour( 12, 12, 12 );
+		
+		protected override void MakeWidgets() { }
 	}
 }

@@ -23,7 +23,7 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public override void Redraw( IDrawer2D drawer ) {
-			if( Window.Minimised ) return;
+			if( Window.Minimised || !Visible ) return;
 			DrawTextArgs args = new DrawTextArgs( Text, font, true );
 			drawer.DrawText( ref args, X, Y );
 		}

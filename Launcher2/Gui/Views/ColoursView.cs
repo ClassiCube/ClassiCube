@@ -13,25 +13,16 @@ namespace Launcher.Gui.Views {
 			widgets = new LauncherWidget[25];
 		}
 		internal int defIndex;
-
-		public override void DrawAll() {
-			UpdateWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
-		}
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
 			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
-			UpdateWidgets();
+			MakeWidgets();
 		}
 		
-		void UpdateWidgets() {
+		
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
 			Makers.Label( this, "Background", inputFont )

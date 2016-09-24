@@ -30,16 +30,10 @@ namespace Launcher.Gui.Views {
 			DrawBackground();
 			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
 			if( table != null ) table.ClampIndex();
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
+			base.DrawAll();
 		}
 		
-		void MakeWidgets() {
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput( Get( 0 ), 475, false, 32, "&7Search servers.." )
 				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10 );

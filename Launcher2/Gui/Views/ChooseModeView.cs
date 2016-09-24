@@ -18,11 +18,11 @@ namespace Launcher.Gui.Views {
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
-			UpdateWidgets();
+			MakeWidgets();
 		}
 
 		public override void DrawAll() {
-			UpdateWidgets();
+			MakeWidgets();
 			RedrawAllButtonBackgrounds();
 			
 			using( drawer ) {
@@ -35,7 +35,7 @@ namespace Launcher.Gui.Views {
 			}
 		}
 		
-		void UpdateWidgets() {
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			int middle = game.Width / 2;
 			Makers.Label( this, "&fChoose game mode", titleFont )

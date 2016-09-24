@@ -9,7 +9,6 @@ namespace Launcher.Gui.Widgets {
 		
 		public int X, Y, Width, Height;
 		public LauncherWindow Window;
-		public Action<int, int> OnClick;
 		
 		/// <summary> The text associated with this widget. </summary>
 		public string Text;
@@ -26,6 +25,10 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Vertical offset from the reference point in pixels. </summary>
 		public int YOffset = 0;
 		
+		/// <summary> Whether this widget should be rendered and interactable with. </summary>
+		public bool Visible = true;
+		
+		public Action<int, int> OnClick;
 		
 		public LauncherWidget( LauncherWindow window ) {
 			Window = window;

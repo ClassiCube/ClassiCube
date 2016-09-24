@@ -1,9 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Net;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
@@ -26,17 +23,18 @@ namespace Launcher.Gui.Views {
 			MakeWidgets();
 		}
 		
-		public override void DrawAll() {
-			MakeWidgets();
-			RedrawAllButtonBackgrounds();
-			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				RedrawAll();
-			}
+		string Get( int index ) {
+			LauncherWidget widget = widgets[index];
+			return widget == null ? "" : widget.Text;
 		}
 		
-		void MakeWidgets() {
+		public override void Dispose() {
+			base.Dispose();
+			booleanFont.Dispose();
+		}
+
+		
+		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			
 			MakeInput( Get( 0 ), 330, false, 32, "&7Username.." )
@@ -61,16 +59,6 @@ namespace Launcher.Gui.Views {
 			ccSkinsIndex = widgetIndex;
 			Makers.Boolean( this, booleanFont, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 130 );
-		}
-		
-		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
-			return widget == null ? "" : widget.Text;
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			booleanFont.Dispose();
 		}
 	}
 }

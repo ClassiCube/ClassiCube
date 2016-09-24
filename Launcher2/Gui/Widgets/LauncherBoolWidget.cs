@@ -19,7 +19,7 @@ namespace Launcher.Gui.Widgets {
 		}
 
 		public override void Redraw( IDrawer2D drawer ) {
-			if( Window.Minimised ) return;
+			if( Window.Minimised || !Visible ) return;
 			drawer.DrawRect( FastColour.Black, X, Y, Width, Height );
 			if( Value ) {
 				DrawTextArgs args = new DrawTextArgs( "X", font, false );
