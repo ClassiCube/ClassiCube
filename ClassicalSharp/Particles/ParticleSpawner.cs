@@ -27,32 +27,54 @@ namespace ClassicalSharp.Particles {
 			if( minU < 12 && maxU > 12 ) maxUsedU = 12;
 			if( minV < 12 && maxV > 12 ) maxUsedV = 12;
 			
-			for( int i = 0; i < 30; i++ ) {
-				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
-				double velZ = rnd.NextDouble() * 0.8 - 0.4;
-				double velY = rnd.NextDouble() + 0.2;
-				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
-				
-				double xOffset = rnd.NextDouble() - 0.5; // [-0.5, 0.5]
-				double yOffset = (rnd.NextDouble() - 0.125) * maxBB.Y;
-				double zOffset = rnd.NextDouble() - 0.5;
-				Vector3 pos = startPos + new Vector3( 0.5f + (float)xOffset,
-				                                     (float)yOffset, 0.5f + (float)zOffset );
-				
-				TextureRec rec = baseRec;
-				rec.U1 = baseRec.U1 + rnd.Next( minU, maxUsedU ) * uScale;
-				rec.V1 = baseRec.V1 + rnd.Next( minV, maxUsedV ) * vScale;
-				rec.U2 = Math.Min( baseRec.U1 + maxU * uScale, rec.U1 + 4 * uScale ) - 0.01f * uScale;
-				rec.V2 = Math.Min( baseRec.V1 + maxV * vScale, rec.V1 + 4 * vScale ) - 0.01f * vScale;
-				double life = 0.3 + rnd.NextDouble() * 0.7;
-				
-				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
-				p.ResetState( pos, velocity, life );
-				p.rec = rec;
-				
-				p.flags = (byte)texLoc;
-				if( game.BlockInfo.FullBright[block] )
-					p.flags |= 0x100;
+			float rowParticle = 4;
+			float rowOffset = 1 / rowParticle;
+			float rowOffsetOffset = rowOffset / 2;
+			
+			for( int x = 0; x < rowParticle; x++ ) {
+				for( int y = 0; y < rowParticle; y++ ) {
+					for( int z = 0; z < rowParticle; z++ ) {
+						double xOffset = 0;
+						xOffset = xOffset + (rowOffset * x);
+						if( xOffset > 1) { xOffset = 0; }
+						
+						double yOffset = 0f;
+						yOffset = yOffset + (rowOffset * y);
+						if( yOffset > 1) { yOffset = 0; }
+						
+						double zOffset = 0f;
+						zOffset = zOffset + (rowOffset * z);
+						if( zOffset > 1) { zOffset = 0; }
+						
+						Vector3 localPos = new Vector3( rowOffsetOffset + (float)xOffset, (rowOffset / rowParticle) + (float)yOffset, rowOffsetOffset + (float)zOffset );
+						if ( localPos.X < minBB.X || localPos.X > maxBB.X ||
+						     localPos.Y < minBB.Y || localPos.Y > maxBB.Y ||
+						     localPos.Z < minBB.Z || localPos.Z > maxBB.Z ) { continue; }
+						
+						Vector3 pos = startPos + localPos;
+
+						float lessAmount = 1f;
+						double velX = -0.5 + rowOffsetOffset + xOffset + rnd.NextDouble() * 0.4 - 0.2;
+						double velZ = -0.5 + rowOffsetOffset + zOffset + rnd.NextDouble() * 0.4 - 0.2;
+						double velY = -0.5 + (rowOffsetOffset + (yOffset + 0.5) + rnd.NextDouble() * 0.4 - 0.2);
+						Vector3 velocity = new Vector3( (float)velX * lessAmount, (float)velY * lessAmount, (float)velZ * lessAmount );
+						
+						TextureRec rec = baseRec;
+						rec.U1 = baseRec.U1 + rnd.Next( minU, maxUsedU ) * uScale;
+						rec.V1 = baseRec.V1 + rnd.Next( minV, maxUsedV ) * vScale;
+						rec.U2 = Math.Min( baseRec.U1 + maxU * uScale, rec.U1 + 4 * uScale ) - 0.01f * uScale;
+						rec.V2 = Math.Min( baseRec.V1 + maxV * vScale, rec.V1 + 4 * vScale ) - 0.01f * vScale;
+						double life = 0.3 + rnd.NextDouble() * 1.2;
+						
+						TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
+						p.ResetState( pos, velocity, life );
+						p.rec = rec;
+						
+						p.flags = (byte)texLoc;
+						if( game.BlockInfo.FullBright[block] )
+							p.flags |= 0x100;
+					}
+				}
 			}
 		}
 		
