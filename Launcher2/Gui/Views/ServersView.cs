@@ -20,7 +20,7 @@ namespace Launcher.Gui.Views {
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 			tableFont = new Font( game.FontName, 11, FontStyle.Regular );
 			MakeWidgets();
@@ -79,7 +79,7 @@ namespace Launcher.Gui.Views {
 			} else {
 				widget = new LauncherTableWidget( game );
 				widget.SetEntries( game.Session.Servers );
-				widget.SetDrawData( drawer, tableFont, inputFont,
+				widget.SetDrawData( drawer, tableFont, textFont,
 				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
 				widget.SortDefault();
 				widgets[widgetIndex] = widget;

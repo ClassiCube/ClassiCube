@@ -9,7 +9,7 @@ namespace Launcher.Gui.Views {
 	public sealed partial class MainView : IView {
 		
 		Font buttonFont, updateFont;
-		internal int loginIndex, resIndex, dcIndex, spIndex, colIndex;
+		internal int loginIndex, resIndex, dcIndex, spIndex, colIndex, statusIndex;
 		internal int updatesIndex, modeIndex, sslIndex;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
@@ -19,7 +19,7 @@ namespace Launcher.Gui.Views {
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 			
 			buttonFont = new Font( game.FontName, 16, FontStyle.Bold );
@@ -50,7 +50,8 @@ namespace Launcher.Gui.Views {
 			loginIndex = widgetIndex;
 			Makers.Button( this, "Sign in", 100, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -90, -20 );
-			Makers.Label( this, Get( 3 ), inputFont )
+			statusIndex = widgetIndex;
+			Makers.Label( this, Get( statusIndex ), textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 20 );
 			
 			
@@ -84,9 +85,9 @@ namespace Launcher.Gui.Views {
 			
 			sslIndex = widgetIndex;
 			bool sslVisible = widgets[sslIndex] != null && widgets[sslIndex].Visible;
-			Makers.Boolean( this, inputFont, true, 30 )
+			Makers.Boolean( this, textFont, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 160, -20 );
-			Makers.Label( this, "Skip SSL check", inputFont )
+			Makers.Label( this, "Skip SSL check", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 250, -20 );
 			widgets[sslIndex].Visible = sslVisible;
 			widgets[sslIndex + 1].Visible = sslVisible;

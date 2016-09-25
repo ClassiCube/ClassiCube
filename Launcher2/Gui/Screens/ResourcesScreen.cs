@@ -12,22 +12,25 @@ namespace Launcher.Gui.Screens {
 	
 	public sealed class ResourcesScreen : LauncherScreen {
 		
-		Font infoFont;
+		ResourceFetcher fetcher;
 		ResourcesView view;
 		public ResourcesScreen( LauncherWindow game ) : base( game ) {
 			game.Window.Mouse.Move += MouseMove;
 			game.Window.Mouse.ButtonDown += MouseButtonDown;
-			
-			textFont = new Font( game.FontName, 16, FontStyle.Bold );
-			infoFont = new Font( game.FontName, 14, FontStyle.Regular );
 			view = new ResourcesView( game );
 			widgets = view.widgets;
 		}
 
 		public override void Init() {
 			view.Init();
-			MakeWidgets();
+			SetWidgetHandlers();
 			Resize();
+		}
+						
+		void SetWidgetHandlers() {
+			widgets[view.yesIndex].OnClick = DownloadResources;
+			widgets[view.noIndex].OnClick = (x, y) => GotoNextMenu();
+			widgets[view.cancelIndex].OnClick = (x, y) => GotoNextMenu();		
 		}
 		
 		bool failed;
@@ -51,7 +54,6 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Resize() {
-			MakeWidgets();
 			view.DrawAll();
 			game.Dirty = true;
 		}
@@ -75,47 +77,6 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 		
-		ResourceFetcher fetcher;
-		Font textFont;
-
-		static readonly string mainText = "Some required resources weren't found" +
-			Environment.NewLine + "Okay to download them?";		
-		void MakeWidgets() {
-			view.SetStatus();
-
-			// Clear the entire previous widgets state.
-			for( int i = 1; i < widgets.Length; i++ ) {
-				widgets[i] = null;
-				selectedWidget = null;
-				lastClicked = null;
-			}
-			
-			if( fetcher == null ) {
-				Makers.Label( view, mainText, infoFont )
-					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -40 );
-				Makers.Button( view, "Yes", 70, 35, textFont )
-					.SetLocation( Anchor.Centre, Anchor.Centre, -70, 45 );
-				widgets[view.widgetIndex - 1].OnClick = DownloadResources;
-				
-				Makers.Button( view, "No", 70, 35, textFont )
-					.SetLocation( Anchor.Centre, Anchor.Centre, 70, 45 );
-			} else {
-				Makers.Button( view, "Cancel", 120, 35, textFont )
-					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 45 );
-			}
-			widgets[view.widgetIndex - 1].OnClick = (x, y) => GotoNextMenu();
-			
-			view.sliderIndex = view.widgetIndex;
-			Makers.Slider( view, 200, 10, 0, progFront )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 15 );
-			if( view.lastProgress >= 0 && view.lastProgress <= 100 ) {
-				view.DrawProgressBox( view.lastProgress );
-				game.Dirty = true;
-			}
-		}
-		
-		static FastColour progFront = new FastColour( 0, 220, 0 );
-		
 		void DownloadResources( int mouseX, int mouseY ) {
 			if( game.Downloader == null )
 				game.Downloader = new AsyncDownloader( "null" );
@@ -124,18 +85,25 @@ namespace Launcher.Gui.Screens {
 			fetcher = game.fetcher;
 			fetcher.DownloadItems( game.Downloader, SetStatus );
 			selectedWidget = null;
+			
+			widgets[view.yesIndex].Visible = false;
+			widgets[view.noIndex].Visible = false;
+			widgets[view.textIndex].Visible = false;
+			widgets[view.cancelIndex].Visible = true;
+			widgets[view.sliderIndex].Visible = true;
 			Resize();
 		}
 		
 		void GotoNextMenu() {
-			if( File.Exists( "options.txt" ) )
+			if( File.Exists( "options.txt" ) ) {
 				game.SetScreen( new MainScreen( game ) );
-			else
+			} else {
 				game.SetScreen( new ChooseModeScreen( game, true ) );
+			}
 		}
 		
 		void SetStatus( string text ) {
-			view.useStatus = true;
+			view.downloadingItems = true;
 			view.RedrawStatus( text );
 			game.Dirty = true;
 		}
@@ -144,8 +112,6 @@ namespace Launcher.Gui.Screens {
 			game.Window.Mouse.Move -= MouseMove;
 			game.Window.Mouse.ButtonDown -= MouseButtonDown;
 			view.Dispose();
-			textFont.Dispose();
-			infoFont.Dispose();
 		}
 	}
 }

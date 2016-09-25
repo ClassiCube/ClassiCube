@@ -41,7 +41,7 @@ namespace Launcher.Gui.Screens {
 		string lastStatus;
 		void SetStatus( string text ) {
 			lastStatus = text;
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[3];
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[view.statusIndex];
 			
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text );

@@ -52,7 +52,7 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static LauncherWidget Input( IView view, string text, int width, Font inputFont, 
+		public static LauncherWidget Input( IView view, string text, int width, Font inputFont,
 		                                   Font inputHintFont, bool password, int maxChars, string hint ) {
 			LauncherInputWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
@@ -65,7 +65,7 @@ namespace Launcher.Gui.Widgets {
 				view.widgets[view.widgetIndex] = widget;
 			}
 			
-			widget.SetDrawData( view.game.Drawer, text, 
+			widget.SetDrawData( view.game.Drawer, text,
 			                   inputFont, inputHintFont, width, 30 );
 			view.widgetIndex++;
 			return widget;
@@ -78,11 +78,11 @@ namespace Launcher.Gui.Widgets {
 				widget = (LauncherSliderWidget)view.widgets[view.widgetIndex];
 			} else {
 				widget = new LauncherSliderWidget( view.game, width, height );
-				widget.Progress = progress;
-				widget.ProgressColour = progressCol;
 				view.widgets[view.widgetIndex] = widget;
 			}
-			
+
+			widget.Progress = progress;
+			widget.ProgressColour = progressCol;
 			view.widgetIndex++;
 			return widget;
 		}

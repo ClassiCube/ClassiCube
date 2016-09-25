@@ -42,7 +42,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetStatus( string text ) {
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[5];
+			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[view.statusIndex];
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text );
 			RedrawWidget( widget );

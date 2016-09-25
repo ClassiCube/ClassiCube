@@ -13,7 +13,7 @@ namespace Launcher.Gui.Views {
 		
 		internal int widgetIndex;
 		internal LauncherWidget[] widgets;
-		protected Font titleFont, inputFont, inputHintFont;
+		protected Font titleFont, textFont, inputHintFont;
 		
 		public IView( LauncherWindow game ) {
 			this.game = game;
@@ -37,7 +37,7 @@ namespace Launcher.Gui.Views {
 		/// <summary> Cleans up all native resources held by this view. </summary>
 		public virtual void Dispose() {
 			if( titleFont != null ) titleFont.Dispose();
-			if( inputFont != null ) inputFont.Dispose();
+			if( textFont != null ) textFont.Dispose();
 			if( inputHintFont != null ) inputHintFont.Dispose();
 		}
 		
@@ -71,7 +71,7 @@ namespace Launcher.Gui.Views {
 
 		protected LauncherWidget MakeInput( string text, int width,
 		                                   bool password, int maxChars, string hint ) {
-			return Makers.Input( this, text, width, inputFont,
+			return Makers.Input( this, text, width, textFont,
 			                    inputHintFont, password, maxChars, hint );
 		}
 	}

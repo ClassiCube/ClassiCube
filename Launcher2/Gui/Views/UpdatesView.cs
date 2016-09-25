@@ -19,7 +19,7 @@ namespace Launcher.Gui.Views {
 
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			MakeWidgets();
 		}
 		
@@ -42,16 +42,16 @@ namespace Launcher.Gui.Views {
 			widgetIndex = 0;
 			string exePath = Path.Combine( Program.AppDirectory, "ClassicalSharp.exe" );
 			
-			Makers.Label( this, "Your build:", inputFont )
+			Makers.Label( this, "Your build:", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -55, -120 );
 			string yourBuild = File.GetLastWriteTime( exePath ).ToString( dateFormat );
-			Makers.Label( this, yourBuild, inputFont )
+			Makers.Label( this, yourBuild, textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 70, -120 );
 			
-			Makers.Label( this, "Latest release:", inputFont )
+			Makers.Label( this, "Latest release:", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -70, -75 );
 			string latestStable = GetDateString( LastStable );
-			Makers.Label( this, latestStable, inputFont )
+			Makers.Label( this, latestStable, textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 70, -75 );
 			relIndex = widgetIndex;
 			Makers.Button( this, "Direct3D 9", 130, 35, titleFont )
@@ -59,10 +59,10 @@ namespace Launcher.Gui.Views {
 			Makers.Button( this, "OpenGL", 130, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 80, -40 );
 			
-			Makers.Label( this, "Latest dev build:", inputFont )
+			Makers.Label( this, "Latest dev build:", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -80, 20 );
 			string latestDev = GetDateString( LastDev );
-			Makers.Label( this, latestDev, inputFont )
+			Makers.Label( this, latestDev, textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 70, 20 );
 			devIndex = widgetIndex;
 			Makers.Button( this, "Direct3D 9", 130, 35, titleFont )
@@ -70,11 +70,11 @@ namespace Launcher.Gui.Views {
 			Makers.Button( this, "OpenGL", 130, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 80, 55 );
 			
-			Makers.Label( this, "&eDirect3D 9 is recommended for Windows", inputFont )
+			Makers.Label( this, "&eDirect3D 9 is recommended for Windows", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 105 );
 			statusIndex = widgetIndex;
 			string text = gameOpen ? "&cThe game must be closed before updating" : "";
-			Makers.Label( this, text, inputFont )
+			Makers.Label( this, text, textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 130 );
 			
 			backIndex = widgetIndex;

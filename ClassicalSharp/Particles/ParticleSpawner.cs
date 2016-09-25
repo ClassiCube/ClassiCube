@@ -12,7 +12,7 @@ namespace ClassicalSharp.Particles {
 			Vector3I position = e.Coords;
 			byte block = e.OldBlock;
 			
-			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
+			Vector3 worldPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Left ), texIndex = 0;
 			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec( texLoc, 1, out texIndex );
 			float uScale = (1/16f), vScale = (1/16f) * game.TerrainAtlas1D.invElementSize;
@@ -36,7 +36,7 @@ namespace ClassicalSharp.Particles {
 					for( int z = 0; z < gridSize; z++ )
 			{
 				float cellX = (float)x / gridSize, cellY = (float)y / gridSize, cellZ = (float)z / gridSize;
-				Vector3 cell = new Vector3( cellCentre + cellX, cellCentre + cellY, cellCentre + cellZ );
+				Vector3 cell = new Vector3( cellCentre + cellX, cellCentre / 2 + cellY, cellCentre + cellZ );
 				if ( cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
 				    || cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z ) continue;
 				
@@ -53,7 +53,7 @@ namespace ClassicalSharp.Particles {
 				double life = 0.3 + rnd.NextDouble() * 1.2;
 				
 				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
-				p.ResetState( startPos + cell, velocity, life );
+				p.ResetState( worldPos + cell, velocity, life );
 				p.rec = rec;
 				
 				p.flags = (byte)texLoc;

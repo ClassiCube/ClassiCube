@@ -16,7 +16,7 @@ namespace Launcher.Gui.Views {
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 			MakeWidgets();
 		}
@@ -25,15 +25,15 @@ namespace Launcher.Gui.Views {
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
-			Makers.Label( this, "Background", inputFont )
+			Makers.Label( this, "Background", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -60, -100 );
-			Makers.Label( this, "Button border", inputFont )
+			Makers.Label( this, "Button border", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -70, -60 );
-			Makers.Label( this, "Button highlight", inputFont )
+			Makers.Label( this, "Button highlight", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -80, -20 );
-			Makers.Label( this, "Button", inputFont )
+			Makers.Label( this, "Button", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -40, 20 );
-			Makers.Label( this, "Active button", inputFont )
+			Makers.Label( this, "Active button", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -70, 60 );
 			
 			Makers.Label( this, "Red", titleFont )

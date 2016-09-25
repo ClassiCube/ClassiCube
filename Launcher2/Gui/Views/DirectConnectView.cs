@@ -8,7 +8,7 @@ namespace Launcher.Gui.Views {
 	
 	public sealed class DirectConnectView : IView {
 		
-		internal int connectIndex, backIndex, ccSkinsIndex;
+		internal int connectIndex, backIndex, ccSkinsIndex, statusIndex;
 		Font booleanFont;
 
 		public DirectConnectView( LauncherWindow game ) : base( game ) {
@@ -18,7 +18,7 @@ namespace Launcher.Gui.Views {
 		public override void Init() {
 			booleanFont = new Font( game.FontName, 22, FontStyle.Regular );
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
 			MakeWidgets();
 		}
@@ -51,9 +51,10 @@ namespace Launcher.Gui.Views {
 			backIndex = widgetIndex;
 			Makers.Button( this, "Back", 80, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 125, 50 );
-			Makers.Label( this, "", inputFont )
+			statusIndex = widgetIndex;
+			Makers.Label( this, "", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 100 );
-			Makers.Label( this, "Use classicube.net for skins", inputFont )
+			Makers.Label( this, "Use classicube.net for skins", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 30, 130 );
 			
 			ccSkinsIndex = widgetIndex;

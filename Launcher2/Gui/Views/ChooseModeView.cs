@@ -17,7 +17,7 @@ namespace Launcher.Gui.Views {
 
 		public override void Init() {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			inputFont = new Font( game.FontName, 14, FontStyle.Regular );
+			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			MakeWidgets();
 		}
 
@@ -44,30 +44,30 @@ namespace Launcher.Gui.Views {
 			nIndex = widgetIndex;
 			Makers.Button( this, "Enhanced", 145, 35, titleFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
-			Makers.Label( this, "&eEnables custom blocks, changing env", inputFont )
+			Makers.Label( this, "&eEnables custom blocks, changing env", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
-			Makers.Label( this, "&esettings, longer messages, and more", inputFont )
+			Makers.Label( this, "&esettings, longer messages, and more", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 + 12 );
 
 			clHaxIndex = widgetIndex;
 			Makers.Button( this, "Classic +hax", 145, 35, titleFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 0 );
-			Makers.Label( this, "&eSame as Classic mode, except that", inputFont )
+			Makers.Label( this, "&eSame as Classic mode, except that", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 - 12 );
-			Makers.Label( this, "&ehacks (noclip/fly/speed) are enabled", inputFont )
+			Makers.Label( this, "&ehacks (noclip/fly/speed) are enabled", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 0 + 12 );
 			
 			clIndex = widgetIndex;
 			Makers.Button( this, "Classic", 145, 35, titleFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, 72 );
-			Makers.Label( this, "&eOnly uses blocks and features from", inputFont )
+			Makers.Label( this, "&eOnly uses blocks and features from", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 - 12 );
-			Makers.Label( this, "&ethe original minecraft classic", inputFont )
+			Makers.Label( this, "&ethe original minecraft classic", textFont )
 				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, 72 + 12 );
 			
 			if( FirstTime ) {
 				backIndex = -1;
-				Makers.Label( this, "&eClick &fEnhanced &eif you are unsure which mode to choose.", inputFont )
+				Makers.Label( this, "&eClick &fEnhanced &eif you are unsure which mode to choose.", textFont )
 					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 160 );
 			} else {
 				backIndex = widgetIndex;
