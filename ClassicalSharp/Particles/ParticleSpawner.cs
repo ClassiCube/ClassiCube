@@ -14,7 +14,7 @@ namespace ClassicalSharp.Particles {
 			
 			Vector3 startPos = new Vector3( position.X, position.Y, position.Z );
 			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Left ), texIndex = 0;
-			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec( texLoc, 1, out texIndex );			
+			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec( texLoc, 1, out texIndex );
 			float uScale = (1/16f), vScale = (1/16f) * game.TerrainAtlas1D.invElementSize;
 			
 			Vector3 minBB = game.BlockInfo.MinBB[block];
@@ -27,59 +27,43 @@ namespace ClassicalSharp.Particles {
 			if( minU < 12 && maxU > 12 ) maxUsedU = 12;
 			if( minV < 12 && maxV > 12 ) maxUsedV = 12;
 			
-			float rowParticle = 4;
-			float rowOffset = 1 / rowParticle;
-			float rowOffsetOffset = rowOffset / 2;
+			const int gridSize = 4;
+			// gridOffset gives the centre of the cell on a grid
+			const float cellCentre = (1f / gridSize) * 0.5f;
 			
-			for( int x = 0; x < rowParticle; x++ ) {
-				for( int y = 0; y < rowParticle; y++ ) {
-					for( int z = 0; z < rowParticle; z++ ) {
-						double xOffset = 0;
-						xOffset = xOffset + (rowOffset * x);
-						if( xOffset > 1) { xOffset = 0; }
-						
-						double yOffset = 0f;
-						yOffset = yOffset + (rowOffset * y);
-						if( yOffset > 1) { yOffset = 0; }
-						
-						double zOffset = 0f;
-						zOffset = zOffset + (rowOffset * z);
-						if( zOffset > 1) { zOffset = 0; }
-						
-						Vector3 localPos = new Vector3( rowOffsetOffset + (float)xOffset, (rowOffset / rowParticle) + (float)yOffset, rowOffsetOffset + (float)zOffset );
-						if ( localPos.X < minBB.X || localPos.X > maxBB.X ||
-						     localPos.Y < minBB.Y || localPos.Y > maxBB.Y ||
-						     localPos.Z < minBB.Z || localPos.Z > maxBB.Z ) { continue; }
-						
-						Vector3 pos = startPos + localPos;
-
-						float lessAmount = 1f;
-						double velX = -0.5 + rowOffsetOffset + xOffset + rnd.NextDouble() * 0.4 - 0.2;
-						double velZ = -0.5 + rowOffsetOffset + zOffset + rnd.NextDouble() * 0.4 - 0.2;
-						double velY = -0.5 + (rowOffsetOffset + (yOffset + 0.5) + rnd.NextDouble() * 0.4 - 0.2);
-						Vector3 velocity = new Vector3( (float)velX * lessAmount, (float)velY * lessAmount, (float)velZ * lessAmount );
-						
-						TextureRec rec = baseRec;
-						rec.U1 = baseRec.U1 + rnd.Next( minU, maxUsedU ) * uScale;
-						rec.V1 = baseRec.V1 + rnd.Next( minV, maxUsedV ) * vScale;
-						rec.U2 = Math.Min( baseRec.U1 + maxU * uScale, rec.U1 + 4 * uScale ) - 0.01f * uScale;
-						rec.V2 = Math.Min( baseRec.V1 + maxV * vScale, rec.V1 + 4 * vScale ) - 0.01f * vScale;
-						double life = 0.3 + rnd.NextDouble() * 1.2;
-						
-						TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
-						p.ResetState( pos, velocity, life );
-						p.rec = rec;
-						
-						p.flags = (byte)texLoc;
-						if( game.BlockInfo.FullBright[block] )
-							p.flags |= 0x100;
-					}
-				}
+			for( int x = 0; x < gridSize; x++ )
+				for( int y = 0; y < gridSize; y++ )
+					for( int z = 0; z < gridSize; z++ )
+			{
+				float cellX = (float)x / gridSize, cellY = (float)y / gridSize, cellZ = (float)z / gridSize;
+				Vector3 cell = new Vector3( cellCentre + cellX, cellCentre + cellY, cellCentre + cellZ );
+				if ( cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y 
+				    || cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z ) continue;
+				
+				double velX = cellCentre + (cellX - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2); // centre random offset around [-0.2, 0.2]
+				double velY = cellCentre + (cellY - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2);
+				double velZ = cellCentre + (cellZ - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2);
+				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
+				
+				TextureRec rec = baseRec;
+				rec.U1 = baseRec.U1 + rnd.Next( minU, maxUsedU ) * uScale;
+				rec.V1 = baseRec.V1 + rnd.Next( minV, maxUsedV ) * vScale;
+				rec.U2 = Math.Min( baseRec.U1 + maxU * uScale, rec.U1 + 4 * uScale ) - 0.01f * uScale;
+				rec.V2 = Math.Min( baseRec.V1 + maxV * vScale, rec.V1 + 4 * vScale ) - 0.01f * vScale;
+				double life = 0.3 + rnd.NextDouble() * 1.2;
+				
+				TerrainParticle p = AddParticle( terrainParticles, ref terrainCount, false );
+				p.ResetState( startPos + cell, velocity, life );
+				p.rec = rec;
+				
+				p.flags = (byte)texLoc;
+				if( game.BlockInfo.FullBright[block] )
+					p.flags |= 0x100;
 			}
 		}
 		
 		public void AddRainParticle( Vector3 pos ) {
-			Vector3 startPos = pos;			
+			Vector3 startPos = pos;
 			for( int i = 0; i < 2; i++ ) {
 				double velX = rnd.NextDouble() * 0.8 - 0.4; // [-0.4, 0.4]
 				double velZ = rnd.NextDouble() * 0.8 - 0.4;
@@ -90,7 +74,7 @@ namespace ClassicalSharp.Particles {
 				double yOffset = rnd.NextDouble() * 0.1 + 0.01;
 				double zOffset = rnd.NextDouble() - 0.5;
 				pos = startPos + new Vector3( 0.5f + (float)xOffset,
-				                                     (float)yOffset, 0.5f + (float)zOffset );
+				                             (float)yOffset, 0.5f + (float)zOffset );
 				double life = 40;
 				RainParticle p = AddParticle( rainParticles, ref rainCount, true );
 				p.ResetState( pos, velocity, life );
@@ -110,6 +94,6 @@ namespace ClassicalSharp.Particles {
 			T newT = rain ? (T)(object)new RainParticle() : (T)(object)new TerrainParticle();
 			particles[count - 1] = newT;
 			return newT;
-		}	
+		}
 	}
 }
