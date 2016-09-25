@@ -86,7 +86,7 @@ namespace ClassicalSharp.Particles {
 			World map = game.World;
 			bool fullBright = (flags & 0x100) != 0;
 			int col = fullBright ? FastColour.WhitePacked
-				: (map.IsLit( Position ) ? map.Env.Sun : map.Env.Shadow);
+				: (map.IsLit( Position ) ? map.Env.SunZSide : map.Env.ShadowZSide);
 			DoRender( game, ref terrainSize, ref rec, col, vertices, ref index );
 		}
 	}
