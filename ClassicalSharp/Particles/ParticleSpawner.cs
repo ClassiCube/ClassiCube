@@ -37,11 +37,11 @@ namespace ClassicalSharp.Particles {
 			{
 				float cellX = (float)x / gridSize, cellY = (float)y / gridSize, cellZ = (float)z / gridSize;
 				Vector3 cell = new Vector3( cellCentre + cellX, cellCentre + cellY, cellCentre + cellZ );
-				if ( cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y 
+				if ( cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
 				    || cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z ) continue;
 				
 				double velX = cellCentre + (cellX - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2); // centre random offset around [-0.2, 0.2]
-				double velY = cellCentre + (cellY - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2);
+				double velY = cellCentre + (cellY - 0.0f) + (rnd.NextDouble() * 0.4 - 0.2);
 				double velZ = cellCentre + (cellZ - 0.5f) + (rnd.NextDouble() * 0.4 - 0.2);
 				Vector3 velocity = new Vector3( (float)velX, (float)velY, (float)velZ );
 				
