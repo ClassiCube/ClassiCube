@@ -34,7 +34,7 @@ namespace ClassicalSharp.TexturePack {
 		public void OnNewMapLoaded( Game game ) { }
 		
 		void TexturePackChanged( object sender, EventArgs e ) {
-			animations.Clear();
+			Clear();
 			useLavaAnim = IsDefaultZip();
 		}
 		
@@ -55,7 +55,6 @@ namespace ClassicalSharp.TexturePack {
 		void SetAtlas( Bitmap bmp ) {
 			if( !Platform.Is32Bpp( bmp ) )
 				game.Drawer2D.ConvertTo32Bpp( ref bmp );
-			
 			this.animBmp = bmp;
 			animsBuffer = new FastBitmap( bmp, true, true );
 		}
