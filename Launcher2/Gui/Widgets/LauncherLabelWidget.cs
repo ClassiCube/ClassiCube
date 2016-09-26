@@ -8,6 +8,9 @@ namespace Launcher.Gui.Widgets {
 	/// <summary> Represents text that cannot be modified by the user. </summary>
 	public sealed class LauncherLabelWidget : LauncherWidget {
 		
+		/// <summary> Whether text should be drawn in a darker manner when this widget is not active. </summary>
+		public bool DarkenWhenInactive;
+		
 		Font font;
 		public LauncherLabelWidget( LauncherWindow window, Font font ) : base( window ) {
 			this.font = font;
@@ -24,7 +27,11 @@ namespace Launcher.Gui.Widgets {
 		
 		public override void Redraw( IDrawer2D drawer ) {
 			if( Window.Minimised || !Visible ) return;
-			DrawTextArgs args = new DrawTextArgs( Text, font, true );
+			string text = Text;
+			if( DarkenWhenInactive && !Active )
+				text = "&7" + text;
+			
+			DrawTextArgs args = new DrawTextArgs( text, font, true );
 			drawer.DrawText( ref args, X, Y );
 		}
 	}

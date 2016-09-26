@@ -28,6 +28,9 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Whether this widget should be rendered and interactable with. </summary>
 		public bool Visible = true;
 		
+		/// <summary> Whether this widget is the active widget selected by the user. </summary>
+		public bool Active = false;
+		
 		public Action<int, int> OnClick;
 		
 		public LauncherWidget( LauncherWindow window ) {

@@ -67,24 +67,31 @@ namespace Launcher.Gui.Screens {
 		
 		/// <summary> Called when the user has moved their mouse away from a previously selected widget. </summary>
 		protected virtual void UnselectWidget( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = false;
-				button.RedrawBackground();
-				RedrawWidget( button );
-			}
+			if( widget != null ) widget.Active = false;
+			ChangedActiveState( widget );
 		}
 		
 		/// <summary> Called when user has moved their mouse over a given widget. </summary>
 		protected virtual void SelectWidget( LauncherWidget widget ) {
+			if( widget != null ) widget.Active = true;
+			ChangedActiveState( widget );
+		}
+		
+		void ChangedActiveState( LauncherWidget widget ) {
 			LauncherButtonWidget button = widget as LauncherButtonWidget;
-			if( button != null ) {
-				button.Active = true;
+			if( button != null )  {
 				button.RedrawBackground();
 				RedrawWidget( button );
 			}
+			
+			LauncherLabelWidget label = widget as LauncherLabelWidget;
+			if( label != null && label.DarkenWhenInactive ) {
+				game.ResetArea( label.X, label.Y, label.Width, label.Height );
+				RedrawWidget( label );
+			}
 		}
 		
+		/// <summary>Redraws the given widget and marks the window as needing to be redrawn. </summary>
 		protected void RedrawWidget( LauncherWidget widget ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );

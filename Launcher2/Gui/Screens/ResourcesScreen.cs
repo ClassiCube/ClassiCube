@@ -1,11 +1,8 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Drawing;
 using System.IO;
-using ClassicalSharp;
 using ClassicalSharp.Network;
 using Launcher.Gui.Views;
-using Launcher.Gui.Widgets;
 using Launcher.Patcher;
 
 namespace Launcher.Gui.Screens {
@@ -26,11 +23,11 @@ namespace Launcher.Gui.Screens {
 			SetWidgetHandlers();
 			Resize();
 		}
-						
+		
 		void SetWidgetHandlers() {
 			widgets[view.yesIndex].OnClick = DownloadResources;
 			widgets[view.noIndex].OnClick = (x, y) => GotoNextMenu();
-			widgets[view.cancelIndex].OnClick = (x, y) => GotoNextMenu();		
+			widgets[view.cancelIndex].OnClick = (x, y) => GotoNextMenu();
 		}
 		
 		bool failed;
@@ -41,16 +38,16 @@ namespace Launcher.Gui.Screens {
 			if( !fetcher.Check( SetStatus ) )
 				failed = true;
 			
-			if( fetcher.Done ) {
-				if( ResourceList.Files.Count > 0 ) {
-					ResourcePatcher patcher = new ResourcePatcher( fetcher );
-					patcher.Run();
-				}
-				fetcher = null;
-				GC.Collect();
-				game.TryLoadTexturePack();
-				GotoNextMenu();
+			if( !fetcher.Done ) return;
+			if( ResourceList.Files.Count > 0 ) {
+				ResourcePatcher patcher = new ResourcePatcher( fetcher );
+				patcher.Run();
 			}
+			
+			fetcher = null;
+			GC.Collect();
+			game.TryLoadTexturePack();
+			GotoNextMenu();
 		}
 		
 		public override void Resize() {
@@ -60,9 +57,7 @@ namespace Launcher.Gui.Screens {
 		
 		void CheckCurrentProgress() {
 			Request item = fetcher.downloader.CurrentItem;
-			if( item == null ) {
-				view.lastProgress = int.MinValue; return;
-			}
+			if( item == null ) { view.lastProgress = int.MinValue; return; }
 			
 			int progress = fetcher.downloader.CurrentItemProgress;
 			if( progress == view.lastProgress ) return;

@@ -25,6 +25,7 @@ namespace Launcher.Gui.Views {
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeAllRGBTriplets( false );
+			int start = widgetIndex;
 			Makers.Label( this, "Background", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -60, -100 );
 			Makers.Label( this, "Button border", textFont )
@@ -35,6 +36,9 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, -40, 20 );
 			Makers.Label( this, "Active button", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -70, 60 );
+			
+			//for( int i = start; i < widgetIndex; i++ )
+			//	((LauncherLabelWidget)widgets[i]).DarkenWhenInactive = true;
 			
 			Makers.Label( this, "Red", titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 30, -130 );

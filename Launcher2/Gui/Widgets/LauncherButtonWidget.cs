@@ -8,7 +8,6 @@ namespace Launcher.Gui.Widgets {
 	public sealed class LauncherButtonWidget : LauncherWidget {
 		
 		public bool Shadow = true;
-		public bool Active = false;
 		const int border = 1;
 		Size textSize;
 		Font font;
