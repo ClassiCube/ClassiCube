@@ -5,12 +5,11 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed class ColoursView : IView {
 		
 		public ColoursView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[25];
+			widgets = new Widget[25];
 		}
 		internal int defIndex;
 		
@@ -74,7 +73,7 @@ namespace Launcher.Gui.Views {
 		
 		string GetCol( byte col, bool force ) {
 			if( force ) return col.ToString();
-			LauncherWidget widget = widgets[widgetIndex];
+			Widget widget = widgets[widgetIndex];
 			return widget == null ? col.ToString() : widget.Text;
 		}
 	}

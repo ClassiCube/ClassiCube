@@ -2,11 +2,11 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed class ServersView : IView {
 		
 		internal int searchIndex = 0, hashIndex = 1;
@@ -15,7 +15,7 @@ namespace Launcher.Gui.Views {
 		const int tableX = 10, tableY = 50;
 		
 		public ServersView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[7];
+			widgets = new Widget[7];
 		}
 		
 		public override void Init() {
@@ -28,7 +28,7 @@ namespace Launcher.Gui.Views {
 		
 		public override void DrawAll() {
 			DrawBackground();
-			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			TableWidget table = (TableWidget)widgets[tableIndex];
 			if( table != null ) table.ClampIndex();
 			base.DrawAll();
 		}
@@ -48,7 +48,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
+			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
@@ -64,7 +64,7 @@ namespace Launcher.Gui.Views {
 			Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
 			
 			if( !game.ClassicBackground ) {
-				FastColour col = LauncherTableView.backGridCol;
+				FastColour col = TableView.backGridCol;
 				Drawer2DExt.Clear( dst, rec, col );
 			} else {
 				game.ResetArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
@@ -73,11 +73,11 @@ namespace Launcher.Gui.Views {
 		
 		void MakeTableWidget() {
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
-			LauncherTableWidget widget;
+			TableWidget widget;
 			if( widgets[tableIndex] != null ) {
-				widget = (LauncherTableWidget)widgets[tableIndex];
+				widget = (TableWidget)widgets[tableIndex];
 			} else {
-				widget = new LauncherTableWidget( game );
+				widget = new TableWidget( game );
 				widget.SetEntries( game.Session.Servers );
 				widget.SetDrawData( drawer, tableFont, textFont,
 				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
@@ -97,7 +97,7 @@ namespace Launcher.Gui.Views {
 		internal void RedrawTable() {
 			using( FastBitmap dst = game.LockBits() )
 				DrawTableBackground( dst );
-			LauncherTableWidget table = (LauncherTableWidget)widgets[tableIndex];
+			TableWidget table = (TableWidget)widgets[tableIndex];
 			table.ClampIndex();
 			
 			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );

@@ -3,17 +3,16 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Views;
 
-namespace Launcher.Gui.Widgets {
-	
+namespace Launcher.Gui.Widgets {	
 	/// <summary> Helper methods to construct widgets. </summary>
 	public static class Makers {
 		
-		public static LauncherWidget Button( IView view, string text, int width, int height, Font font ) {
-			LauncherButtonWidget widget;
+		public static Widget Button( IView view, string text, int width, int height, Font font ) {
+			ButtonWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
-				widget = (LauncherButtonWidget)view.widgets[view.widgetIndex];
+				widget = (ButtonWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherButtonWidget( view.game );
+				widget = new ButtonWidget( view.game );
 				widget.Text = text;
 				view.widgets[view.widgetIndex] = widget;
 			}
@@ -24,12 +23,12 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static LauncherWidget Label( IView view, string text, Font font ) {
-			LauncherLabelWidget widget;
+		public static Widget Label( IView view, string text, Font font ) {
+			LabelWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
-				widget = (LauncherLabelWidget)view.widgets[view.widgetIndex];
+				widget = (LabelWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherLabelWidget( view.game, font );
+				widget = new LabelWidget( view.game, font );
 				view.widgets[view.widgetIndex] = widget;
 			}
 			
@@ -38,12 +37,12 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static LauncherWidget Boolean( IView view, Font font, bool initValue, int size ) {
-			LauncherBoolWidget widget;
+		public static Widget Checkbox( IView view, Font font, bool initValue, int size ) {
+			CheckboxWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
-				widget = (LauncherBoolWidget)view.widgets[view.widgetIndex];
+				widget = (CheckboxWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherBoolWidget( view.game, font, size, size );
+				widget = new CheckboxWidget( view.game, font, size, size );
 				widget.Value = initValue;
 				view.widgets[view.widgetIndex] = widget;
 			}
@@ -52,8 +51,8 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static LauncherWidget Input( IView view, string text, int width, Font inputFont,
-		                                   Font inputHintFont, bool password, int maxChars, string hint ) {
+		public static Widget Input( IView view, string text, int width, Font inputFont,
+		                           Font inputHintFont, bool password, int maxChars, string hint ) {
 			LauncherInputWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (LauncherInputWidget)view.widgets[view.widgetIndex];
@@ -71,13 +70,13 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static LauncherWidget Slider( IView view, int width, int height,
-		                                    int progress, FastColour progressCol ) {
-			LauncherSliderWidget widget;
+		public static Widget Slider( IView view, int width, int height,
+		                            int progress, FastColour progressCol ) {
+			SliderWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
-				widget = (LauncherSliderWidget)view.widgets[view.widgetIndex];
+				widget = (SliderWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherSliderWidget( view.game, width, height );
+				widget = new SliderWidget( view.game, width, height );
 				view.widgets[view.widgetIndex] = widget;
 			}
 

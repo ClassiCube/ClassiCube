@@ -5,7 +5,7 @@ using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
 
-	public partial class LauncherTableWidget : LauncherWidget {
+	public partial class TableWidget : Widget {
 
 		DefaultComparer defComp = new DefaultComparer();
 		NameComparer nameComp = new NameComparer();

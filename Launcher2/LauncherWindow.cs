@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using ClassicalSharp;
 using ClassicalSharp.Network;
+using Launcher.Drawing;
 using Launcher.Gui.Screens;
 using Launcher.Patcher;
 using Launcher.Web;
@@ -27,7 +28,7 @@ namespace Launcher {
 		public IDrawer2D Drawer;
 		
 		/// <summary> Currently active screen. </summary>
-		public LauncherScreen Screen;
+		public Screen Screen;
 		
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
 		public bool Dirty;
@@ -117,7 +118,7 @@ namespace Launcher {
 			fullRedraw = true;
 		}
 		
-		public void SetScreen( LauncherScreen screen ) {
+		public void SetScreen( Screen screen ) {
 			if( this.Screen != null )
 				this.Screen.Dispose();
 			

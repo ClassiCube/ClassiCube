@@ -2,15 +2,15 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed class ResourcesView : IView {
 		
 		Font statusFont;
 		public ResourcesView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[6];
+			widgets = new Widget[6];
 		}
 
 		public override void Init() {
@@ -47,7 +47,7 @@ namespace Launcher.Gui.Views {
 		internal bool downloadingItems;
 		
 		internal void RedrawStatus( string text ) {
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[0];
+			LabelWidget widget = (LabelWidget)widgets[0];
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				drawer.Clear( backCol, widget.X, widget.Y, widget.Width, widget.Height );
@@ -58,7 +58,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		internal void DrawProgressBox( int progress ) {
-			LauncherSliderWidget slider = (LauncherSliderWidget)widgets[sliderIndex];
+			SliderWidget slider = (SliderWidget)widgets[sliderIndex];
 			slider.Visible = true;
 			slider.Progress = progress;
 			slider.Redraw( drawer );

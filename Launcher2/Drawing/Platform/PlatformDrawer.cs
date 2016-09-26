@@ -3,8 +3,7 @@ using System;
 using System.Drawing;
 using OpenTK.Platform;
 
-namespace Launcher {
-	
+namespace Launcher.Drawing {	
 	/// <summary> Per-platform class used to transfer a framebuffer directly to the native window. </summary>
 	public abstract class PlatformDrawer {
 		

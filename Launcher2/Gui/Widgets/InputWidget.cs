@@ -2,31 +2,28 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Represents text that can have modified by the user. </summary>
-	public sealed class LauncherInputWidget : LauncherWidget {
+	public sealed class LauncherInputWidget : Widget {
 		
 		public int ButtonWidth, ButtonHeight;
 		
 		/// <summary> Text displayed when the user has not entered anything in the text field. </summary>
 		public string HintText;
 		
-		/// <summary> Whether the input widget currently is focused through a mouse click or tab. </summary>
-		public bool Active;
-		
 		/// <summary> Whether all characters should be rendered as *. </summary>
 		public bool Password;
 		
-		public LauncherInputText Chars;
+		public InputText Chars;
 		
 		public int RealWidth;
 		
 		Font font, hintFont;
 		int textHeight;
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
-			Chars = new LauncherInputText( this );
+			Chars = new InputText( this );
 		}
 
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, 

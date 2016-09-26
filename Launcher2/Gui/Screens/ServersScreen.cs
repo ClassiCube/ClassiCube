@@ -6,9 +6,8 @@ using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed class ServersScreen : LauncherInputScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed class ServersScreen : InputScreen {
 		
 		const int tableX = 10, tableY = 50;
 		ServersView view;
@@ -21,7 +20,7 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Tick() {
 			base.Tick();
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if( !game.Window.Mouse[MouseButton.Left] ) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
@@ -32,13 +31,13 @@ namespace Launcher.Gui.Screens {
 		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
 			base.MouseMove( sender, e );
 			if( selectedWidget != null && selectedWidget == widgets[view.tableIndex] ) {
-				LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+				TableWidget table = (TableWidget)widgets[view.tableIndex];
 				table.MouseMove( e.X, e.Y, e.XDelta, e.YDelta );
 			}
 		}
 		
 		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.DraggingColumn = -1;
 			table.DraggingScrollbar = false;
 			table.mouseOffset = 0;
@@ -49,7 +48,7 @@ namespace Launcher.Gui.Screens {
 		protected override void OnRemovedChar() { FilterList(); }
 		
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if( e.Key == Key.Enter ) {
 				string curServer = Get( view.hashIndex ) ?? "";
 				if( table.Count >= 1 && curServer == "" ) {
@@ -74,7 +73,7 @@ namespace Launcher.Gui.Screens {
 			base.RedrawLastInput();
 			if( curInput != widgets[view.hashIndex] )
 				return;
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.SetSelected( widgets[view.hashIndex].Text );
 			MarkPendingRedraw();
 		}
@@ -104,7 +103,7 @@ namespace Launcher.Gui.Screens {
 				(x, y) => game.SetScreen( new MainScreen( game ) );
 			widgets[view.connectIndex].OnClick = ConnectToServer;
 			
-			LauncherTableWidget widget = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget widget = (TableWidget)widgets[view.tableIndex];
 			widget.NeedRedraw = MarkPendingRedraw;
 			widget.SelectedChanged = SelectedChanged;
 			SetupInputHandlers();
@@ -113,7 +112,7 @@ namespace Launcher.Gui.Screens {
 		void FilterList() {
 			if( curInput != widgets[view.searchIndex] )
 				return;
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.FilterEntries( curInput.Text );
 			MarkPendingRedraw();
 		}
@@ -127,12 +126,12 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void ConnectToServer( int mouseX, int mouseY ) {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			game.ConnectToServer( table.servers, Get( view.hashIndex ) );
 		}
 		
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.CurrentIndex -= e.Delta;
 			MarkPendingRedraw();
 		}
@@ -155,7 +154,7 @@ namespace Launcher.Gui.Screens {
 			base.Dispose();
 			view.Dispose();
 			
-			LauncherTableWidget table = widgets[view.tableIndex] as LauncherTableWidget;
+			TableWidget table = widgets[view.tableIndex] as TableWidget;
 			if( table != null ) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
@@ -172,7 +171,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void MarkPendingRedraw() {
-			LauncherTableWidget table = (LauncherTableWidget)widgets[view.tableIndex];
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.ClampIndex();
 			table.RecalculateDrawData();
 			pendingRedraw = true;

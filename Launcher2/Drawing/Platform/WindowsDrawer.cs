@@ -4,8 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Launcher {
-	
+namespace Launcher.Drawing {
 	public sealed class WinPlatformDrawer : PlatformDrawer {
 		
 		const uint SRCCOPY = 0xCC0020;

@@ -6,7 +6,6 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
 namespace Launcher.Gui.Views {
-	
 	public sealed class UpdatesView : IView {
 		
 		public DateTime LastStable, LastDev;
@@ -14,7 +13,7 @@ namespace Launcher.Gui.Views {
 		internal bool gameOpen;
 		
 		public UpdatesView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[13];
+			widgets = new Widget[13];
 		}
 
 		public override void Init() {
@@ -84,7 +83,7 @@ namespace Launcher.Gui.Views {
 		
 		internal void SetWarning() {
 			string text = gameOpen ? "&cThe game must be closed before updating" : "";
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[statusIndex];
+			LabelWidget widget = (LabelWidget)widgets[statusIndex];
 			widget.SetDrawData( drawer, text );
 			widget.SetLocation( Anchor.Centre, Anchor.Centre, 0, 130 );
 		}

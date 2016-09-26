@@ -5,7 +5,7 @@ using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
 	
-	public sealed class LauncherTableView {
+	public sealed class TableView {
 		
 		internal static FastColour backGridCol = new FastColour( 20, 20, 10 ),
 		foreGridCol = new FastColour( 40, 40, 40 );
@@ -15,10 +15,10 @@ namespace Launcher.Gui.Widgets {
 		internal int numEntries, maxIndex;
 		
 		LauncherWindow window;
-		LauncherTableWidget table;
+		TableWidget table;
 		Font font, titleFont;
 		
-		public void Init( LauncherWindow window, LauncherTableWidget table ) {
+		public void Init( LauncherWindow window, TableWidget table ) {
 			this.window = window;
 			this.table = table;
 		}

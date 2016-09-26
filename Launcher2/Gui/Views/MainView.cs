@@ -4,8 +4,7 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed partial class MainView : IView {
 		
 		Font buttonFont, updateFont;
@@ -14,7 +13,7 @@ namespace Launcher.Gui.Views {
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
 		public MainView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[16];
+			widgets = new Widget[16];
 		}
 		
 		public override void Init() {
@@ -28,7 +27,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
+			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
@@ -85,7 +84,7 @@ namespace Launcher.Gui.Views {
 			
 			sslIndex = widgetIndex;
 			bool sslVisible = widgets[sslIndex] != null && widgets[sslIndex].Visible;
-			Makers.Boolean( this, textFont, true, 30 )
+			Makers.Checkbox( this, textFont, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 160, -20 );
 			Makers.Label( this, "Skip SSL check", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 250, -20 );

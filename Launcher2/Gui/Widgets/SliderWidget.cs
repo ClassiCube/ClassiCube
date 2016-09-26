@@ -2,16 +2,16 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Represents a slider bar that may or may not be modifiable by the user. </summary>
-	public sealed class LauncherSliderWidget : LauncherWidget {
+	public sealed class SliderWidget : Widget {
 		
 		public int Progress;
 		public FastColour ProgressColour;
 		
-		public LauncherSliderWidget( LauncherWindow window, int width, int height ) : base( window ) {
+		public SliderWidget( LauncherWindow window, int width, int height ) : base( window ) {
 			Width = width; Height = height;
 		}
 		

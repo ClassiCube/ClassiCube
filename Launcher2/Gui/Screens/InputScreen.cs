@@ -6,12 +6,11 @@ using Launcher.Gui.Widgets;
 using OpenTK;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
-	public abstract class LauncherInputScreen : LauncherScreen {
+namespace Launcher.Gui.Screens {	
+	public abstract class InputScreen : Screen {
 		
 		protected int enterIndex = -1;
-		public LauncherInputScreen( LauncherWindow game ) : base( game ) { }
+		public InputScreen( LauncherWindow game ) : base( game ) { }
 		
 		public override void Init() {
 			game.Window.Mouse.Move += MouseMove;
@@ -52,7 +51,7 @@ namespace Launcher.Gui.Screens {
 		
 		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( e.Key == Key.Enter && enterIndex >= 0 ) {
-				LauncherWidget widget = (selectedWidget != null && mouseMoved) ?
+				Widget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
 				if( widget.OnClick != null )
 					widget.OnClick( 0, 0 );
@@ -123,7 +122,7 @@ namespace Launcher.Gui.Screens {
 		protected virtual void OnRemovedChar() { }
 		
 		protected string Get( int index ) {
-			LauncherWidget widget = widgets[index];
+			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
@@ -155,7 +154,7 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
-		protected override void WidgetUnclicked( LauncherWidget widget ) {
+		protected override void WidgetUnclicked( Widget widget ) {
 			LauncherInputWidget input = widget as LauncherInputWidget;
 			if( input == null ) return;
 			input.Active = false;

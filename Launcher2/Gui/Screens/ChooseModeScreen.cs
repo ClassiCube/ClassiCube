@@ -5,9 +5,8 @@ using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed class ChooseModeScreen : LauncherScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed class ChooseModeScreen : Screen {
 		
 		ChooseModeView view;
 		public ChooseModeScreen( LauncherWindow game, bool firstTime ) : base( game ) {
@@ -41,7 +40,7 @@ namespace Launcher.Gui.Screens {
 			if( e.Key == Key.Tab ) {
 				HandleTab();
 			} else if( e.Key == Key.Enter ) {
-				LauncherWidget widget = selectedWidget;
+				Widget widget = selectedWidget;
 				if( widget != null && widget.OnClick != null )
 					widget.OnClick( 0, 0 );
 			}

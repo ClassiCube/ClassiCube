@@ -7,9 +7,8 @@ using ClassicalSharp;
 using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed class DirectConnectScreen : LauncherInputScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed class DirectConnectScreen : InputScreen {
 		
 		Font booleanFont;
 		DirectConnectView view;
@@ -42,14 +41,14 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetStatus( string text ) {
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[view.statusIndex];
+			LabelWidget widget = (LabelWidget)widgets[view.statusIndex];
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text );
 			RedrawWidget( widget );
 		}
 		
 		void UseClassicubeSkinsClick( int mouseX, int mouseY ) {
-			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.ccSkinsIndex];
+			CheckboxWidget widget = (CheckboxWidget)widgets[view.ccSkinsIndex];
 			widget.Value = !widget.Value;
 			RedrawWidget( widget );
 		}
@@ -83,7 +82,7 @@ namespace Launcher.Gui.Screens {
 			metadata["user"] = Get( 0 );
 			metadata["address"] = Get( 1 );
 			metadata["mppass"] = Get( 2 );
-			metadata["skins"] = ((LauncherBoolWidget)widgets[view.ccSkinsIndex]).Value;
+			metadata["skins"] = ((CheckboxWidget)widgets[view.ccSkinsIndex]).Value;
 		}
 		
 		void LoadFromOptions() {
@@ -125,7 +124,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetBool( bool value ) {
-			((LauncherBoolWidget)widgets[view.ccSkinsIndex]).Value = value;
+			((CheckboxWidget)widgets[view.ccSkinsIndex]).Value = value;
 		}
 		
 		void StartClient( int mouseX, int mouseY ) {
@@ -140,7 +139,7 @@ namespace Launcher.Gui.Screens {
 			ClientStartData data = GetStartData( Get( 0 ), Get( 2 ), ipPart, portPart );
 			if( data == null ) return;
 			
-			bool ccSkins = ((LauncherBoolWidget)widgets[view.ccSkinsIndex]).Value;
+			bool ccSkins = ((CheckboxWidget)widgets[view.ccSkinsIndex]).Value;
 			SaveToOptions( data, ccSkins );
 			Client.Start( data, ccSkins, ref game.ShouldExit );
 		}

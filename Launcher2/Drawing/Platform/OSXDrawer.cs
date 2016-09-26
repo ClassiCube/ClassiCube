@@ -5,8 +5,7 @@ using ClassicalSharp;
 using OSStatus = OpenTK.Platform.MacOS.OSStatus;
 using OSX = OpenTK.Platform.MacOS.Carbon;
 
-namespace Launcher {
-	
+namespace Launcher.Drawing {	
 	public sealed class OSXPlatformDrawer : PlatformDrawer {
 		
 		IntPtr windowPort;

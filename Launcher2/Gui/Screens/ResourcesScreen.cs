@@ -5,9 +5,8 @@ using ClassicalSharp.Network;
 using Launcher.Gui.Views;
 using Launcher.Patcher;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed class ResourcesScreen : LauncherScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed class ResourcesScreen : Screen {
 		
 		ResourceFetcher fetcher;
 		ResourcesView view;

@@ -2,17 +2,17 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 
 namespace Launcher.Gui.Widgets {
-
-	public sealed class LauncherButtonWidget : LauncherWidget {
+	public sealed class ButtonWidget : Widget {
 		
 		public bool Shadow = true;
 		const int border = 1;
 		Size textSize;
 		Font font;
 		
-		public LauncherButtonWidget( LauncherWindow window ) : base( window ) {
+		public ButtonWidget( LauncherWindow window ) : base( window ) {
 		}
 		
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, int width, int height ) {

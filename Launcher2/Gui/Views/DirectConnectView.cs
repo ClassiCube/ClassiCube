@@ -4,15 +4,14 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed class DirectConnectView : IView {
 		
 		internal int connectIndex, backIndex, ccSkinsIndex, statusIndex;
 		Font booleanFont;
 
 		public DirectConnectView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[8];
+			widgets = new Widget[8];
 		}
 
 		public override void Init() {
@@ -24,7 +23,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		string Get( int index ) {
-			LauncherWidget widget = widgets[index];
+			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
@@ -58,7 +57,7 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 30, 130 );
 			
 			ccSkinsIndex = widgetIndex;
-			Makers.Boolean( this, booleanFont, true, 30 )
+			Makers.Checkbox( this, booleanFont, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 130 );
 		}
 	}

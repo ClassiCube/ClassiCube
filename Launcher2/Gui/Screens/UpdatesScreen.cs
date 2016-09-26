@@ -8,10 +8,9 @@ using Launcher.Updater;
 using Launcher.Web;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
+namespace Launcher.Gui.Screens {	
 	// TODO: Download asynchronously
-	public sealed class UpdatesScreen : LauncherScreen {
+	public sealed class UpdatesScreen : Screen {
 		
 		UpdatesView view;
 		public UpdatesScreen( LauncherWindow game ) : base( game ) {
@@ -41,7 +40,7 @@ namespace Launcher.Gui.Screens {
 			if( e.Key == Key.Tab ) {
 				HandleTab();
 			} else if( e.Key == Key.Enter ) {
-				LauncherWidget widget = selectedWidget;
+				Widget widget = selectedWidget;
 				if( widget != null && widget.OnClick != null )
 					widget.OnClick( 0, 0 );
 			}
@@ -74,7 +73,7 @@ namespace Launcher.Gui.Screens {
 			view.LastDev = DateTime.MaxValue;
 			task.Exception = null;
 			
-			LauncherWidget w = widgets[view.devIndex - 1];
+			Widget w = widgets[view.devIndex - 1];
 			game.ResetArea( w.X, w.Y, w.Width, w.Height );
 			w = widgets[view.relIndex - 1];
 			game.ResetArea( w.X, w.Y, w.Width, w.Height );
@@ -106,7 +105,7 @@ namespace Launcher.Gui.Screens {
 			
 			view.gameOpen = CheckClientInstances();
 			view.SetWarning();
-			LauncherWidget widget = widgets[view.statusIndex];
+			Widget widget = widgets[view.statusIndex];
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			RedrawWidget( widgets[view.statusIndex] );
 			if( view.gameOpen ) return;

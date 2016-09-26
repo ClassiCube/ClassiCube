@@ -6,9 +6,8 @@ using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed class ColoursScreen : LauncherInputScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed class ColoursScreen : InputScreen {
 		
 		ColoursView view;
 		public ColoursScreen( LauncherWindow game ) : base( game ) {
@@ -61,7 +60,7 @@ namespace Launcher.Gui.Screens {
 		
 		void AdjustSelectedColour( int delta ) {
 			if( curInput == null ) return;
-			int index = Array.IndexOf<LauncherWidget>( widgets, curInput );
+			int index = Array.IndexOf<Widget>( widgets, curInput );
 			if( index >= 15 ) return;
 			
 			byte col;
@@ -84,7 +83,7 @@ namespace Launcher.Gui.Screens {
 		
 		void TextChanged( LauncherInputWidget widget ) {
 			bool changed = false;
-			int index = Array.IndexOf<LauncherWidget>( widgets, widget );
+			int index = Array.IndexOf<Widget>( widgets, widget );
 			if( index < 3 ) changed |= Parse( 0, ref LauncherSkin.BackgroundCol );
 			else if( index < 6 ) changed |= Parse( 3, ref LauncherSkin.ButtonBorderCol );
 			else if( index < 9 ) changed |= Parse( 6, ref LauncherSkin.ButtonHighlightCol );

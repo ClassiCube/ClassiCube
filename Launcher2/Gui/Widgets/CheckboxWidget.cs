@@ -4,15 +4,14 @@ using System.Drawing;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Represents a state that can be toggled by the user. </summary>
-	public sealed class LauncherBoolWidget : LauncherWidget {
+	public sealed class CheckboxWidget : Widget {
 		
 		public int BoxWidth, BoxHeight;
 		public bool Value;
 		Font font;
 		
-		public LauncherBoolWidget( LauncherWindow window, Font font, int width, int height ) : base( window ) {
+		public CheckboxWidget( LauncherWindow window, Font font, int width, int height ) : base( window ) {
 			BoxWidth = width; BoxHeight = height;
 			Width = width; Height = height;
 			this.font = font;

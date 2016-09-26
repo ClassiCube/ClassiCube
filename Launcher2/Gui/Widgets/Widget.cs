@@ -3,9 +3,8 @@ using System;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Represents a graphical element/control. </summary>
-	public abstract class LauncherWidget {
+	public abstract class Widget {
 		
 		public int X, Y, Width, Height;
 		public LauncherWindow Window;
@@ -33,7 +32,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public Action<int, int> OnClick;
 		
-		public LauncherWidget( LauncherWindow window ) {
+		public Widget( LauncherWindow window ) {
 			Window = window;
 		}
 		

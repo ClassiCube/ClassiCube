@@ -5,16 +5,15 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {
-	
-	public abstract class LauncherScreen {
+namespace Launcher.Gui.Screens {	
+	public abstract class Screen {
 		protected internal LauncherWindow game;
 		protected internal IDrawer2D drawer;
 
 		protected bool mouseMoved = false;
 		static bool supressMove = true;
 		
-		public LauncherScreen( LauncherWindow game ) {
+		public Screen( LauncherWindow game ) {
 			this.game = game;
 			drawer = game.Drawer;
 		}
@@ -35,14 +34,14 @@ namespace Launcher.Gui.Screens {
 		/// are about to be transferred to the window. </summary>
 		public virtual void OnDisplay() { }
 		
-		protected LauncherWidget selectedWidget;
-		protected LauncherWidget[] widgets;
+		protected Widget selectedWidget;
+		protected Widget[] widgets;
 		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
 			if( supressMove ) { supressMove = false; return; }
 			mouseMoved = true;
 			
 			for( int i = 0; i < widgets.Length; i++ ) {
-				LauncherWidget widget = widgets[i];
+				Widget widget = widgets[i];
 				if( widget == null || !widget.Visible ) continue;
 				int width = widget.Width, height = widget.Height;
 				if( widgets[i] is LauncherInputWidget )
@@ -66,25 +65,25 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		/// <summary> Called when the user has moved their mouse away from a previously selected widget. </summary>
-		protected virtual void UnselectWidget( LauncherWidget widget ) {
+		protected virtual void UnselectWidget( Widget widget ) {
 			if( widget != null ) widget.Active = false;
 			ChangedActiveState( widget );
 		}
 		
 		/// <summary> Called when user has moved their mouse over a given widget. </summary>
-		protected virtual void SelectWidget( LauncherWidget widget ) {
+		protected virtual void SelectWidget( Widget widget ) {
 			if( widget != null ) widget.Active = true;
 			ChangedActiveState( widget );
 		}
 		
-		void ChangedActiveState( LauncherWidget widget ) {
-			LauncherButtonWidget button = widget as LauncherButtonWidget;
+		void ChangedActiveState( Widget widget ) {
+			ButtonWidget button = widget as ButtonWidget;
 			if( button != null )  {
 				button.RedrawBackground();
 				RedrawWidget( button );
 			}
 			
-			LauncherLabelWidget label = widget as LauncherLabelWidget;
+			LabelWidget label = widget as LabelWidget;
 			if( label != null && label.DarkenWhenInactive ) {
 				game.ResetArea( label.X, label.Y, label.Width, label.Height );
 				RedrawWidget( label );
@@ -92,7 +91,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		/// <summary>Redraws the given widget and marks the window as needing to be redrawn. </summary>
-		protected void RedrawWidget( LauncherWidget widget ) {
+		protected void RedrawWidget( Widget widget ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				widget.Redraw( drawer );
@@ -100,7 +99,7 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
-		protected LauncherWidget lastClicked;
+		protected Widget lastClicked;
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( e.Button != MouseButton.Left ) return;
 			
@@ -111,7 +110,7 @@ namespace Launcher.Gui.Screens {
 			lastClicked = selectedWidget;
 		}
 		
-		protected virtual void WidgetUnclicked( LauncherWidget widget ) {
+		protected virtual void WidgetUnclicked( Widget widget ) {
 		}
 		
 		protected bool tabDown = false;
@@ -121,7 +120,7 @@ namespace Launcher.Gui.Screens {
 			if( tabDown ) return;
 			tabDown = true;
 			int index = lastClicked == null ? -1 :
-				Array.IndexOf<LauncherWidget>( widgets, lastClicked );
+				Array.IndexOf<Widget>( widgets, lastClicked );
 			int dir = (game.Window.Keyboard[Key.ShiftLeft]
 			           || game.Window.Keyboard[Key.ShiftRight]) ? -1 : 1;
 			index += dir;
@@ -132,8 +131,8 @@ namespace Launcher.Gui.Screens {
 				if( i < 0 ) i += widgets.Length;
 				if( widgets[i] == null || !widgets[i].Visible ) continue;
 				
-				if( widgets[i] is LauncherInputWidget || widgets[i] is LauncherButtonWidget ) {
-					LauncherWidget widget = widgets[i];
+				if( widgets[i] is LauncherInputWidget || widgets[i] is ButtonWidget ) {
+					Widget widget = widgets[i];
 					int width = widget.Width;
 					if( widgets[i] is LauncherInputWidget )
 						width = ((LauncherInputWidget)widgets[i]).RealWidth;

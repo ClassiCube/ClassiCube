@@ -5,14 +5,13 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public abstract class IView {
 		protected internal LauncherWindow game;
 		protected internal IDrawer2D drawer;
 		
 		internal int widgetIndex;
-		internal LauncherWidget[] widgets;
+		internal Widget[] widgets;
 		protected Font titleFont, textFont, inputHintFont;
 		
 		public IView( LauncherWindow game ) {
@@ -47,7 +46,7 @@ namespace Launcher.Gui.Views {
 		protected void RedrawAllButtonBackgrounds() {
 			int buttons = 0;
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is LauncherButtonWidget) ) continue;
+				if( widgets[i] == null || !(widgets[i] is ButtonWidget) ) continue;
 				buttons++;
 			}
 			if( buttons == 0 ) return;
@@ -55,7 +54,7 @@ namespace Launcher.Gui.Views {
 			using( FastBitmap bmp = game.LockBits() ) {
 				for( int i = 0; i < widgets.Length; i++ ) {
 					if( widgets[i] == null ) continue;
-					LauncherButtonWidget button = widgets[i] as LauncherButtonWidget;
+					ButtonWidget button = widgets[i] as ButtonWidget;
 					if( button != null )
 						button.RedrawBackground( bmp );
 				}
@@ -69,7 +68,7 @@ namespace Launcher.Gui.Views {
 			}
 		}
 
-		protected LauncherWidget MakeInput( string text, int width,
+		protected Widget MakeInput( string text, int width,
 		                                   bool password, int maxChars, string hint ) {
 			return Makers.Input( this, text, width, textFont,
 			                    inputHintFont, password, maxChars, hint );

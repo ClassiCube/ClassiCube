@@ -4,15 +4,14 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {
-	
+namespace Launcher.Gui.Views {	
 	public sealed class ChooseModeView : IView {
 
 		public bool FirstTime = true;
 		internal int backIndex = -1, nIndex, clIndex, clHaxIndex;
 		
 		public ChooseModeView( LauncherWindow game ) : base( game ) {
-			widgets = new LauncherWidget[14];
+			widgets = new Widget[14];
 		}
 
 		public override void Init() {

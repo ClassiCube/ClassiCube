@@ -11,12 +11,12 @@ namespace Launcher.Gui.Widgets {
 		public int Y, Height;
 	}
 	
-	public partial class LauncherTableWidget : LauncherWidget {
+	public partial class TableWidget : Widget {
 		
-		LauncherTableView view;
-		public LauncherTableWidget( LauncherWindow window ) : base( window ) {
+		TableView view;
+		public TableWidget( LauncherWindow window ) : base( window ) {
 			OnClick = HandleOnClick;
-			view = new LauncherTableView();
+			view = new TableView();
 			view.Init( window, this );
 		}
 		

@@ -5,9 +5,8 @@ using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Widget that represents text can have modified by the user. </summary>
-	public sealed class LauncherInputText {
+	public sealed class InputText {
 		
 		/// <summary> Maximum number of characters that the 'Text' field can contain. </summary>
 		public int MaxChars = 32;
@@ -26,7 +25,7 @@ namespace Launcher.Gui.Widgets {
 		public int CaretPos = -1;
 		
 		LauncherInputWidget input;
-		public LauncherInputText( LauncherInputWidget input ) {
+		public InputText( LauncherInputWidget input ) {
 			this.input = input;
 		}
 		

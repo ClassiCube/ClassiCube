@@ -6,9 +6,8 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 using Launcher.Web;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed partial class MainScreen : LauncherInputScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed partial class MainScreen : InputScreen {
 		
 		public override void Tick() {
 			base.Tick();
@@ -41,7 +40,7 @@ namespace Launcher.Gui.Screens {
 		string lastStatus;
 		void SetStatus( string text ) {
 			lastStatus = text;
-			LauncherLabelWidget widget = (LauncherLabelWidget)widgets[view.statusIndex];
+			LabelWidget widget = (LabelWidget)widgets[view.statusIndex];
 			
 			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
 			widget.SetDrawData( drawer, text );
@@ -64,7 +63,7 @@ namespace Launcher.Gui.Screens {
 			if( signingIn ) return;
 			UpdateSignInInfo( Get( 0 ), Get( 1 ) );
 			
-			LauncherBoolWidget skip = widgets[view.sslIndex] as LauncherBoolWidget;
+			CheckboxWidget skip = widgets[view.sslIndex] as CheckboxWidget;
 			if( skip != null && skip.Value ) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 				Options.Set( "skip-ssl-check", true );
@@ -125,13 +124,13 @@ namespace Launcher.Gui.Screens {
 		void SSLSkipValidationClick( int mouseX, int mouseY ) {
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
-				LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.sslIndex];
+				CheckboxWidget widget = (CheckboxWidget)widgets[view.sslIndex];
 				SetBool( !widget.Value );
 			}
 		}
 		
 		void SetBool( bool value ) {
-			LauncherBoolWidget widget = (LauncherBoolWidget)widgets[view.sslIndex];
+			CheckboxWidget widget = (CheckboxWidget)widgets[view.sslIndex];
 			widget.Value = value;
 			widget.Redraw( game.Drawer );
 			game.Dirty = true;

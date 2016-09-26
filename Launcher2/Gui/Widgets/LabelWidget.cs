@@ -4,15 +4,14 @@ using System.Drawing;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
-
 	/// <summary> Represents text that cannot be modified by the user. </summary>
-	public sealed class LauncherLabelWidget : LauncherWidget {
+	public sealed class LabelWidget : Widget {
 		
 		/// <summary> Whether text should be drawn in a darker manner when this widget is not active. </summary>
 		public bool DarkenWhenInactive;
 		
 		Font font;
-		public LauncherLabelWidget( LauncherWindow window, Font font ) : base( window ) {
+		public LabelWidget( LauncherWindow window, Font font ) : base( window ) {
 			this.font = font;
 		}
 		

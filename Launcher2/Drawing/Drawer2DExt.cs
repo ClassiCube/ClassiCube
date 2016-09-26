@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Drawing {
 	public unsafe static class Drawer2DExt {
 		
 		public static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,

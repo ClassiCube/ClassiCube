@@ -4,8 +4,7 @@ using System.Drawing;
 using ClassicalSharp;
 using OpenTK.Platform.X11;
 
-namespace Launcher {
-	
+namespace Launcher.Drawing {
 	public unsafe sealed class X11PlatformDrawer : PlatformDrawer {
 		
 		IntPtr gc;

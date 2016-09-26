@@ -8,9 +8,8 @@ using Launcher.Gui.Views;
 using Launcher.Web;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Screens {
-	
-	public sealed partial class MainScreen : LauncherInputScreen {
+namespace Launcher.Gui.Screens {	
+	public sealed partial class MainScreen : InputScreen {
 		
 		MainView view;
 		public MainScreen( LauncherWindow game ) : base( game ) {
@@ -103,14 +102,14 @@ namespace Launcher.Gui.Screens {
 			Client.Start( data, resumeCCSkins, ref game.ShouldExit );
 		}
 		
-		protected override void SelectWidget( LauncherWidget widget ) {
+		protected override void SelectWidget( Widget widget ) {
 			base.SelectWidget( widget );
 			if( signingIn || !resumeValid || widget != widgets[view.resIndex] ) return;
 			const string format = "&eResume to {0}:{1}, as {2}";
 			SetStatus( String.Format( format, resumeIp, resumePort, resumeUser ) );
 		}
 		
-		protected override void UnselectWidget( LauncherWidget widget ) {
+		protected override void UnselectWidget( Widget widget ) {
 			base.UnselectWidget( widget );
 			if( signingIn || !resumeValid || widget != widgets[view.resIndex] ) return;
 			SetStatus( "" );

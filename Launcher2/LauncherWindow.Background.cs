@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.TexturePack;
+using Launcher.Drawing;
 
 namespace Launcher {
 

@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp;
 
-namespace Launcher {
+namespace Launcher.Drawing {
 	public unsafe static class Gradient {
 		
 		public static void Noise( FastBitmap bmp, Rectangle rect,
