@@ -3,10 +3,10 @@ using System;
 using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Map;
+using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public sealed class LoadLevelScreen : FilesScreen {
 		
 		public LoadLevelScreen( Game game ) : base( game ) {

@@ -2,8 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public abstract class PlayerListWidget : Widget {
 		
 		protected readonly Font font;

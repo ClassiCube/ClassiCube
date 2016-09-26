@@ -1,8 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Gui.Widgets;
+using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	/// <summary> Represents a container of widgets and other 2D elements. </summary>
 	/// <remarks> May cover the entire game window. </remarks>
 	public abstract class Screen : GuiElement {
@@ -22,5 +23,14 @@ namespace ClassicalSharp.Gui {
 		
 		/// <summary> Whether the normal in-game hud should be drawn over the top of this screen. </summary>
 		public virtual bool RenderHudAfter { get { return false; } }
+		
+		
+		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
+			if( action == null ) return (g, w, btn) => {};
+			return (g, w, btn) => {
+				if( btn != MouseButton.Left ) return;
+				action( g, w );
+			};
+		}
 	}
 }

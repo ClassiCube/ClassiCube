@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using ClassicalSharp.Events;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Network;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class ChatScreen : Screen {
 		
 		public ChatScreen( Game game ) : base( game ) {

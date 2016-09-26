@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
@@ -8,9 +9,8 @@ namespace ClassicalSharp {
 }
 
 namespace ClassicalSharp.Gui {
-	
 	public delegate void ClickHandler( Game g, Widget w, MouseButton btn );
-	                                  
+	
 	public abstract class GuiElement : IDisposable {
 		
 		protected Game game;
@@ -70,14 +70,6 @@ namespace ClassicalSharp.Gui {
 		
 		protected static bool Contains( int recX, int recY, int width, int height, int x, int y ) {
 			return x >= recX && y >= recY && x < recX + width && y < recY + height;
-		}
-		
-		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
-			if( action == null ) return (g, w, btn) => {};
-			return (g, w, btn) => {
-				if( btn != MouseButton.Left ) return;
-				action( g, w );
-			};
 		}
 	}
 }

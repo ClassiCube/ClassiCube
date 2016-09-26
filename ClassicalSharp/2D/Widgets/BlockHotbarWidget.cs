@@ -2,10 +2,10 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui.Screens;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed class BlockHotbarWidget : Widget {
 		
 		public BlockHotbarWidget( Game game ) : base( game ) {

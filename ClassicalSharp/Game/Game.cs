@@ -10,7 +10,7 @@ using ClassicalSharp.Commands;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.Gui;
+using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Map;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;

@@ -4,7 +4,7 @@ using System;
 using System.Net;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Generator;
-using ClassicalSharp.Gui;
+using ClassicalSharp.Gui.Screens;
 using OpenTK;
 using OpenTK.Input;
 

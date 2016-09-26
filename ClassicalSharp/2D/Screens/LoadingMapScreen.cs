@@ -3,12 +3,12 @@ using System;
 using System.Drawing;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Model;
 using ClassicalSharp.TexturePack;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class LoadingMapScreen : Screen {
 		
 		readonly Font font;

@@ -2,10 +2,10 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.Entities;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Singleplayer;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class HacksSettingsScreen : MenuOptionsScreen {
 		
 		public HacksSettingsScreen( Game game ) : base( game ) {

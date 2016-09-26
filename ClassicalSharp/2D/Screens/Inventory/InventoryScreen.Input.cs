@@ -4,8 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
 		public override bool HandlesAllInput { get { return true; } }

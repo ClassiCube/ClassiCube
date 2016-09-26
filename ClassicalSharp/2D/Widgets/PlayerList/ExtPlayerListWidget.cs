@@ -5,8 +5,7 @@ using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public class ExtPlayerListWidget : PlayerListWidget {
 		
 		public ExtPlayerListWidget( Game game, Font font ) : base( game, font ) {

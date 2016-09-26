@@ -6,8 +6,7 @@ using OpenTK.Input;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed class MenuInputWidget : Widget {
 		
 		public MenuInputWidget( Game game, Font font, Font boldFont ) : base( game ) {

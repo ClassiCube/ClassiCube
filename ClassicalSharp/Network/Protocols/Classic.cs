@@ -1,6 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using ClassicalSharp.Gui;
+using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Entities;
 using OpenTK;
 #if __MonoCS__

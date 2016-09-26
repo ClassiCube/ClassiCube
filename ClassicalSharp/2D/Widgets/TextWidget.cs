@@ -2,8 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {	
 	public class TextWidget : Widget {
 		
 		public TextWidget( Game game, Font font ) : base( game ) {

@@ -5,8 +5,7 @@ using System.Windows.Forms;
 using ClassicalSharp.Entities;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed partial class TextInputWidget : Widget {
 		
 		public override bool HandlesKeyPress( char key ) {

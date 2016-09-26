@@ -1,10 +1,10 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Singleplayer;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class ClassicOptionsScreen : MenuOptionsScreen {
 		
 		public ClassicOptionsScreen( Game game ) : base( game ) {

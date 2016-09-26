@@ -6,8 +6,7 @@ using OpenTK.Input;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {	
 	public sealed class ButtonWidget : Widget {
 		
 		public ButtonWidget( Game game, Font font ) : base( game ) {

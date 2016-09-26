@@ -1,11 +1,11 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.IO;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.TexturePack;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public sealed class TexturePackScreen : FilesScreen {
 		
 		public TexturePackScreen( Game game ) : base( game ) {

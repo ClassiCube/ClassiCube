@@ -2,11 +2,11 @@
 #if !ANDROID
 using System;
 using System.Drawing;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Hotkeys;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public sealed class EditHotkeyScreen : MenuScreen {
 		
 		const int keyI = 0, modifyI = 1, actionI = 2;

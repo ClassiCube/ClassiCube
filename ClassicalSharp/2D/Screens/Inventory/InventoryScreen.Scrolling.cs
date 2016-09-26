@@ -3,8 +3,7 @@ using System;
 using System.Drawing;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
 		const int scrollbarWidth = 10;

@@ -2,8 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	/// <summary> Draws text to the screen, uses the given font when the user has specified 'use arial' in options,
 	/// otherwise draws text using the bitmapped font in default.png </summary>
 	public sealed class ChatTextWidget : TextWidget {

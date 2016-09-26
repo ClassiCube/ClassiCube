@@ -3,8 +3,7 @@ using System;
 using System.Drawing;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {	
 	/// <summary> Represents an individual 2D gui component. </summary>
 	public abstract class Widget : GuiElement {
 		

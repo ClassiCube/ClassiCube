@@ -3,11 +3,11 @@ using System;
 using System.Drawing;
 using System.IO;
 using ClassicalSharp.Generator;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Singleplayer;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public sealed class GenLevelScreen : MenuScreen {
 		
 		public GenLevelScreen( Game game ) : base( game ) {

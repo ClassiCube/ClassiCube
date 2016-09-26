@@ -3,12 +3,12 @@ using System;
 using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui.Widgets;
 #if ANDROID
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class FpsScreen : Screen, IGameComponent {
 		
 		Font font, posFont;

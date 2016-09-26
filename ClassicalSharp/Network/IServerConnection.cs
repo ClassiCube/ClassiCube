@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
-using ClassicalSharp.Gui;
+using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Network;
 using ClassicalSharp.TexturePack;
 using OpenTK;

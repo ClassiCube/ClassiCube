@@ -2,11 +2,11 @@
 using System;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Map;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public sealed class SaveLevelScreen : MenuScreen {
 		
 		public SaveLevelScreen( Game game ) : base( game ) {

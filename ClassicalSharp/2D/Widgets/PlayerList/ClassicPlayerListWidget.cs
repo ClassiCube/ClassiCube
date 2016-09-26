@@ -2,8 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ClassicPlayerListWidget : NormalPlayerListWidget {
 		
 		ChatTextWidget overview;

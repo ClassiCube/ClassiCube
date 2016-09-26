@@ -2,10 +2,10 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class HudScreen : Screen, IGameComponent {
 		
 		public HudScreen( Game game ) : base( game ) { }

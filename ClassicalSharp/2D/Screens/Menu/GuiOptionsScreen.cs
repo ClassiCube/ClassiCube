@@ -1,8 +1,8 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Gui.Widgets;
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Screens {
 	public class GuiOptionsScreen : MenuOptionsScreen {
 		
 		public GuiOptionsScreen( Game game ) : base( game ) {

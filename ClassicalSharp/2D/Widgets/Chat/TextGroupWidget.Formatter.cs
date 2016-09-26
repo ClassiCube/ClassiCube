@@ -6,8 +6,7 @@ using System.Drawing;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.Gui {
-	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed partial class TextGroupWidget : Widget {
 		
 		public void SetText( int index, string text ) {
