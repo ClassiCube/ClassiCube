@@ -53,11 +53,11 @@ namespace Launcher.Gui.Widgets {
 		
 		public static Widget Input( IView view, string text, int width, Font inputFont,
 		                           Font inputHintFont, bool password, int maxChars, string hint ) {
-			LauncherInputWidget widget;
+			InputWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
-				widget = (LauncherInputWidget)view.widgets[view.widgetIndex];
+				widget = (InputWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new LauncherInputWidget( view.game );
+				widget = new InputWidget( view.game );
 				widget.Password = password;
 				widget.Chars.MaxChars = maxChars;
 				widget.HintText = hint;

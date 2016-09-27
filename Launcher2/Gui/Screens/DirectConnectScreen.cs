@@ -120,7 +120,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetText( int index, string text ) {
-			((LauncherInputWidget)widgets[index]).SetDrawData( drawer, text );
+			((InputWidget)widgets[index]).SetDrawData( drawer, text );
 		}
 		
 		void SetBool( bool value ) {

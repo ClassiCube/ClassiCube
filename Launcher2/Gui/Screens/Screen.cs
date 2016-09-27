@@ -94,8 +94,8 @@ namespace Launcher.Gui.Screens {
 				Widget widget = widgets[i];
 				if( widget == null || !widget.Visible ) continue;
 				int width = widget.Width, height = widget.Height;
-				if( widgets[i] is LauncherInputWidget )
-					width = ((LauncherInputWidget)widgets[i]).RealWidth;
+				if( widgets[i] is InputWidget )
+					width = ((InputWidget)widgets[i]).RealWidth;
 				
 				if( e.X >= widget.X && e.Y >= widget.Y &&
 				   e.X < widget.X + width && e.Y < widget.Y + height ) {
@@ -134,7 +134,8 @@ namespace Launcher.Gui.Screens {
 				
 				Widget widget = widgets[i];
 				int width = widget.Width;
-				if( widgets[i] is LauncherInputWidget )
+				if( widgets[i] is InputWidget )
+					width = ((InputWidget)widgets[i]).RealWidth;
 				moveArgs.X = widget.X + width / 2;
 				moveArgs.Y = widget.Y + widget.Height / 2;
 				
@@ -149,9 +150,9 @@ namespace Launcher.Gui.Screens {
 				game.Window.DesktopCursorPos = p;
 				lastClicked = widget;
 				
-				if( widgets[i] is LauncherInputWidget ) {
+				if( widgets[i] is InputWidget ) {
 					MouseButtonDown( null, pressArgs );
-					((LauncherInputWidget)widgets[i]).Chars.CaretPos = -1;
+					((InputWidget)widgets[i]).Chars.CaretPos = -1;
 				}
 				break;
 			}

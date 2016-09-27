@@ -24,7 +24,7 @@ namespace Launcher.Gui.Screens {
 			widgets[view.defIndex + 1].OnClick = (x, y) => game.SetScreen( new MainScreen( game ) );
 			SetupInputHandlers();
 			for( int i = 0; i < widgets.Length; i++ ) {
-				LauncherInputWidget input = widgets[i] as LauncherInputWidget;
+				InputWidget input = widgets[i] as InputWidget;
 				if( input == null ) continue;
 				input.Chars.TextChanged = TextChanged;
 			}
@@ -81,7 +81,7 @@ namespace Launcher.Gui.Screens {
 			Resize();
 		}
 		
-		void TextChanged( LauncherInputWidget widget ) {
+		void TextChanged( InputWidget widget ) {
 			bool changed = false;
 			int index = Array.IndexOf<Widget>( widgets, widget );
 			if( index < 3 ) changed |= Parse( 0, ref LauncherSkin.BackgroundCol );

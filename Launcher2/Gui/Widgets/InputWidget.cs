@@ -6,7 +6,7 @@ using Launcher.Drawing;
 
 namespace Launcher.Gui.Widgets {
 	/// <summary> Represents text that can have modified by the user. </summary>
-	public sealed class LauncherInputWidget : Widget {
+	public sealed class InputWidget : Widget {
 		
 		public int ButtonWidth, ButtonHeight;
 		
@@ -22,7 +22,7 @@ namespace Launcher.Gui.Widgets {
 		
 		Font font, hintFont;
 		int textHeight;
-		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
+		public InputWidget( LauncherWindow window ) : base( window ) {
 			Chars = new InputText( this );
 			TabSelectable = true;
 		}

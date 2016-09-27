@@ -36,8 +36,10 @@ namespace Launcher.Gui.Views {
 			Makers.Label( this, "Active button", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -70, 60 );
 			
-			//for( int i = start; i < widgetIndex; i++ )
-			//	((LauncherLabelWidget)widgets[i]).DarkenWhenInactive = true;
+			for( int i = start; i < widgetIndex; i++ ) {
+				((LabelWidget)widgets[i]).DarkenWhenInactive = true;
+				widgets[i].TabSelectable = true;
+			}
 			
 			Makers.Label( this, "Red", titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 30, -130 );

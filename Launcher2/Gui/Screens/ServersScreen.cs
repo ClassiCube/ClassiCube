@@ -96,7 +96,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetupWidgetHandlers() {
-			LauncherInputWidget hashWidget = (LauncherInputWidget)widgets[view.hashIndex];
+			InputWidget hashWidget = (InputWidget)widgets[view.hashIndex];
 			hashWidget.Chars.ClipboardFilter = HashFilter;
 			
 			widgets[view.backIndex].OnClick =

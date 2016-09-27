@@ -15,7 +15,7 @@ namespace Launcher.Gui.Widgets {
 		public Func<string, string> ClipboardFilter;
 		
 		/// <summary> Delegate invoked when the text changes. </summary>
-		public Action<LauncherInputWidget> TextChanged;
+		public Action<InputWidget> TextChanged;
 		
 		/// <summary> Delegate that only lets certain characters be entered. </summary>
 		public Func<char, bool> TextFilter;
@@ -24,8 +24,8 @@ namespace Launcher.Gui.Widgets {
 		/// <remarks> -1 to insert/delete characters at end of the text. </remarks>
 		public int CaretPos = -1;
 		
-		LauncherInputWidget input;
-		public InputText( LauncherInputWidget input ) {
+		InputWidget input;
+		public InputText( InputWidget input ) {
 			this.input = input;
 		}
 		

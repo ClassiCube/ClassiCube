@@ -127,16 +127,16 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected void Set( int index, string text ) {
-			((LauncherInputWidget)widgets[index]).SetDrawData( drawer, text );
-			((LauncherInputWidget)widgets[index]).Redraw( drawer );
+			((InputWidget)widgets[index]).SetDrawData( drawer, text );
+			((InputWidget)widgets[index]).Redraw( drawer );
 		}
 		
 		protected virtual void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 		}
 		
-		protected LauncherInputWidget curInput;
+		protected InputWidget curInput;
 		protected virtual void InputClick( int mouseX, int mouseY ) {
-			LauncherInputWidget input = (LauncherInputWidget)selectedWidget;
+			InputWidget input = (InputWidget)selectedWidget;
 			using( drawer ) {
 				drawer.SetBitmap( game.Framebuffer );
 				if( curInput != null ) {
@@ -155,7 +155,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected override void WidgetUnclicked( Widget widget ) {
-			LauncherInputWidget input = widget as LauncherInputWidget;
+			InputWidget input = widget as InputWidget;
 			if( input == null ) return;
 			input.Active = false;
 			RedrawWidget( input );
@@ -165,7 +165,7 @@ namespace Launcher.Gui.Screens {
 		
 		protected void SetupInputHandlers() {
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( !(widgets[i] is LauncherInputWidget) ) continue;
+				if( !(widgets[i] is InputWidget) ) continue;
 				widgets[i].OnClick = InputClick;
 			}
 		}
