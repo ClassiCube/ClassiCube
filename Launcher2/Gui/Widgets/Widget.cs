@@ -19,16 +19,19 @@ namespace Launcher.Gui.Widgets {
 		public Anchor VerticalAnchor;
 		
 		/// <summary> Horizontal offset from the reference point in pixels. </summary>
-		public int XOffset = 0;
+		public int XOffset;
 		
 		/// <summary> Vertical offset from the reference point in pixels. </summary>
-		public int YOffset = 0;
+		public int YOffset;
 		
 		/// <summary> Whether this widget should be rendered and interactable with. </summary>
 		public bool Visible = true;
 		
 		/// <summary> Whether this widget is the active widget selected by the user. </summary>
-		public bool Active = false;
+		public bool Active;
+		
+		/// <summary>Whether this widget can be selected via pressing tab. </summary>
+		public bool TabSelectable;
 		
 		public Action<int, int> OnClick;
 		

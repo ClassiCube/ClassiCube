@@ -24,6 +24,7 @@ namespace Launcher.Gui.Widgets {
 		int textHeight;
 		public LauncherInputWidget( LauncherWindow window ) : base( window ) {
 			Chars = new InputText( this );
+			TabSelectable = true;
 		}
 
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, 

@@ -171,10 +171,12 @@ namespace Launcher {
 			fetcher.CheckResourceExistence();
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
-			if( !fetcher.AllResourcesExist )
+			
+			if( !fetcher.AllResourcesExist ) {
 				SetScreen( new ResourcesScreen( this ) );
-			else
+			} else {
 				SetScreen( new MainScreen( this ) );
+			}
 			
 			while( true ) {
 				Window.ProcessEvents();

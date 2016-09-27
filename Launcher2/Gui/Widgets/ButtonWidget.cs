@@ -13,6 +13,7 @@ namespace Launcher.Gui.Widgets {
 		Font font;
 		
 		public ButtonWidget( LauncherWindow window ) : base( window ) {
+			TabSelectable = true;
 		}
 		
 		public void SetDrawData( IDrawer2D drawer, string text, Font font, int width, int height ) {

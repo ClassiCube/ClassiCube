@@ -15,7 +15,7 @@ namespace Launcher.Gui.Views {
 		const int tableX = 10, tableY = 50;
 		
 		public ServersView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[7];
+			widgets = new Widget[5];
 		}
 		
 		public override void Init() {

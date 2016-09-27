@@ -165,8 +165,7 @@ namespace Launcher.Gui.Screens {
 		
 		protected void SetupInputHandlers() {
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is LauncherInputWidget) )
-					continue;
+				if( !(widgets[i] is LauncherInputWidget) ) continue;
 				widgets[i].OnClick = InputClick;
 			}
 		}

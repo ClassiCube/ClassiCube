@@ -13,7 +13,7 @@ namespace Launcher.Gui.Views {
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
 		public MainView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[16];
+			widgets = new Widget[13];
 		}
 		
 		public override void Init() {

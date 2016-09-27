@@ -11,7 +11,7 @@ namespace Launcher.Gui.Views {
 		internal int backIndex = -1, nIndex, clIndex, clHaxIndex;
 		
 		public ChooseModeView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[14];
+			widgets = new Widget[11];
 		}
 
 		public override void Init() {

@@ -46,14 +46,13 @@ namespace Launcher.Gui.Views {
 		protected void RedrawAllButtonBackgrounds() {
 			int buttons = 0;
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null || !(widgets[i] is ButtonWidget) ) continue;
+				if( !(widgets[i] is ButtonWidget) ) continue;
 				buttons++;
 			}
 			if( buttons == 0 ) return;
 			
 			using( FastBitmap bmp = game.LockBits() ) {
 				for( int i = 0; i < widgets.Length; i++ ) {
-					if( widgets[i] == null ) continue;
 					ButtonWidget button = widgets[i] as ButtonWidget;
 					if( button != null )
 						button.RedrawBackground( bmp );
@@ -63,7 +62,6 @@ namespace Launcher.Gui.Views {
 		
 		protected void RedrawAll() {
 			for( int i = 0; i < widgets.Length; i++ ) {
-				if( widgets[i] == null ) continue;
 				widgets[i].Redraw( drawer );
 			}
 		}
