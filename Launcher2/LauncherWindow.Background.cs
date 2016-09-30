@@ -39,7 +39,7 @@ namespace Launcher {
 		
 		void ExtractTexturePack( string texPack ) {
 			using( Stream fs = new FileStream( texPack, FileMode.Open, FileAccess.Read, FileShare.Read ) ) {
-				ZipReader reader = new ZipReader();				
+				ZipReader reader = new ZipReader();
 				reader.ShouldProcessZipEntry = (f) => f == "default.png" || f == "terrain.png";
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract( fs );
@@ -51,14 +51,23 @@ namespace Launcher {
 			
 			if( filename == "default.png" ) {
 				if( fontPng ) return;
+				
 				Bitmap bmp = new Bitmap( stream );
+				if( !Platform.Is32Bpp( bmp ) )
+					Drawer.ConvertTo32Bpp( ref bmp );
+				
 				Drawer.SetFontBitmap( bmp );
 				useBitmappedFont = !Options.GetBool( OptionsKey.ArialChatFont, false );
 				fontPng = true;
 			} else if( filename == "terrain.png" ) {
 				if( terrainPng ) return;
-				using( Bitmap bmp = new Bitmap( stream ) )
-					MakeClassicTextures( bmp );
+				
+				Bitmap bmp = new Bitmap( stream );
+				if( !Platform.Is32Bpp( bmp ) )
+					Drawer.ConvertTo32Bpp( ref bmp );
+				
+				MakeClassicTextures( bmp );
+				bmp.Dispose();
 				terrainPng = true;
 			}
 		}
@@ -139,8 +148,8 @@ namespace Launcher {
 		}
 		
 		void ClearTile( int x, int y, int width, int height, int srcX, FastBitmap dst ) {
-			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );	
-			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect, 
+			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );
+			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect,
 			                            new Rectangle( x, y, width, height ) );
 		}
 	}
