@@ -14,11 +14,10 @@ namespace ClassicalSharp {
 		
 		public abstract Matrix4 GetProjection();
 		
-		public abstract Matrix4 GetView( double delta, float t );
+		public abstract Matrix4 GetView();
 		
-		/// <summary> Calculates the location of the camera's position in the world
-		/// based on the entity's eye position. </summary>
-		public abstract Vector3 GetCameraPos( Vector3 eyePos );
+		/// <summary> Calculates the location of the camera's position in the world. </summary>
+		public abstract Vector3 GetCameraPos( float t );
 		
 		/// <summary> Calculates the yaw and pitch of the camera in radians. </summary>
 		public abstract Vector2 GetCameraOrientation();
@@ -112,7 +111,7 @@ namespace ClassicalSharp {
 			UpdateMouseRotation();
 		}
 		
-		protected void CalcViewBobbing( double delta, float t, float velTiltScale ) {
+		protected void CalcViewBobbing( float t, float velTiltScale ) {
 			if( !game.ViewBobbing ) { tiltM = Matrix4.Identity; return; }
 			
 			LocalPlayer p = game.LocalPlayer;
@@ -125,108 +124,73 @@ namespace ClassicalSharp {
 			float vel = Utils.Lerp( p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t );
 			tiltM = tiltM * Matrix4.RotateX( -vel * 0.05f * p.anim.velTiltStrength / velTiltScale );
 		}
+		
+		protected Vector3 GetDirVector() {
+			return Utils.GetDirVector( player.HeadYawRadians,
+			                          AdjustPitch( player.PitchDegrees ) );
+		}
 	}
 	
 	public class ThirdPersonCamera : PerspectiveCamera {
+		public ThirdPersonCamera( Game window, bool forward ) : base( window ) { this.forward = forward; }
+		public override bool IsThirdPerson { get { return true; } }
 		
-		public ThirdPersonCamera( Game window ) : base( window ) {
-		}
-		
-		public override Vector2 GetCameraOrientation() {
-			return new Vector2( player.HeadYawRadians, player.PitchRadians );
-		}
-		
+		bool forward;
 		float dist = 3;
 		public override bool DoZoom( float deltaPrecise ) {
 			dist = Math.Max( dist - deltaPrecise, 2 );
 			return true;
 		}
 		
-		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, dist );
+		public override Matrix4 GetView() {
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			
-			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians,
-			                                  AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
-			Vector3 cameraPos = game.CameraClipPos.Intersect;
+			Vector3 cameraPos = game.CurrentCameraPos;
 			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltM;
-		}
-		
-		public override bool IsThirdPerson { get { return true; } }
-		
-		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			Vector3 dir = -Utils.GetDirVector( player.HeadYawRadians,
-			                                  AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
-			return game.CameraClipPos.Intersect;
-		}
-	}
-	
-	public class ForwardThirdPersonCamera : PerspectiveCamera {
-		
-		public ForwardThirdPersonCamera( Game window ) : base( window ) {
 		}
 		
 		public override Vector2 GetCameraOrientation() {
-			return new Vector2( player.HeadYawRadians + (float)Math.PI, -player.PitchRadians );
+			if( !forward )
+				return new Vector2( player.HeadYawRadians, player.PitchRadians );
+			return new Vector2( player.HeadYawRadians + (float)Math.PI, -player.PitchRadians );			
 		}
 		
-		float dist = 3;
-		public override bool DoZoom( float deltaPrecise ) {
-			dist = Math.Max( dist - deltaPrecise, 2 );
-			return true;
-		}
-		
-		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, dist );
+		public override Vector3 GetCameraPos( float t ) {
+			CalcViewBobbing( t, dist );
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			
-			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians,
-			                                 AdjustPitch( player.PitchDegrees ) );
-			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
-			Vector3 cameraPos = game.CameraClipPos.Intersect;
-			return Matrix4.LookAt( cameraPos, eyePos, Vector3.UnitY ) * tiltM;
-		}
-		
-		public override bool IsThirdPerson { get { return true; } }
-		
-		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			Vector3 dir = Utils.GetDirVector( player.HeadYawRadians,
-			                                 AdjustPitch( player.PitchDegrees ) );
+			Vector3 dir = GetDirVector();
+			if( !forward ) dir = -dir;
 			Picking.ClipCameraPos( game, eyePos, dir, dist, game.CameraClipPos );
 			return game.CameraClipPos.Intersect;
 		}
 	}
 	
 	public class FirstPersonCamera : PerspectiveCamera {
+		public FirstPersonCamera( Game window ) : base( window ) { }
+		public override bool IsThirdPerson { get { return false; } }
 		
-		public FirstPersonCamera( Game window ) : base( window ) {
+		public override Matrix4 GetView() {
+			Vector3 camPos = game.CurrentCameraPos;
+			Vector3 dir = GetDirVector();
+			return Matrix4.LookAt( camPos, camPos + dir, Vector3.UnitY ) * tiltM;
 		}
 		
 		public override Vector2 GetCameraOrientation() {
 			return new Vector2( player.HeadYawRadians, player.PitchRadians );
 		}
 		
-		public override Matrix4 GetView( double delta, float t ) {
-			CalcViewBobbing( delta, t, 1 );
-			Vector3 eyePos = player.EyePosition;
-			eyePos.Y += bobbingVer;
-			Vector3 cameraDir = Utils.GetDirVector( player.HeadYawRadians,
-			                                       AdjustPitch( player.PitchDegrees ) );
+		public override Vector3 GetCameraPos( float t ) {
+			CalcViewBobbing( t, 1 );
+			Vector3 camPos = player.EyePosition;
+			camPos.Y += bobbingVer;
 			
 			double adjYaw = player.HeadYawRadians + Math.PI / 2;
-			eyePos.X += bobbingHor * (float)Math.Sin( adjYaw );
-			eyePos.Z -= bobbingHor * (float)Math.Cos( adjYaw );
-			return Matrix4.LookAt( eyePos, eyePos + cameraDir, Vector3.UnitY ) * tiltM;
-		}
-		
-		public override bool IsThirdPerson { get { return false; } }
-		
-		public override Vector3 GetCameraPos( Vector3 eyePos ) {
-			return eyePos;
+			camPos.X += bobbingHor * (float)Math.Sin( adjYaw );
+			camPos.Z -= bobbingHor * (float)Math.Cos( adjYaw );
+			return camPos;
 		}
 	}
 }

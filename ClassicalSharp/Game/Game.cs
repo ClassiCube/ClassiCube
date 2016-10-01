@@ -121,14 +121,16 @@ namespace ClassicalSharp {
 			
 			if( !SkipClear || SkyboxRenderer.ShouldRender )
 				Graphics.Clear();
-			UpdateViewMatrix( delta, t );
+			CurrentCameraPos = Camera.GetCameraPos( t );
+			UpdateViewMatrix();
 			
 			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
 			if( World.IsNotLoaded ) visible = false;
-			if( visible )
+			if( visible ) {
 				Render3D( delta, t );
-			else
+			} else {
 				SelectedPos.SetAsInvalid();
+			}
 			
 			Gui.Render( delta );
 			if( screenshotRequested )
@@ -143,16 +145,15 @@ namespace ClassicalSharp {
 				InputHandler.SetFOV( ZoomFov, false );
 		}
 		
-		void UpdateViewMatrix( double delta, float t ) {
+		void UpdateViewMatrix() {
 			Graphics.SetMatrixMode( MatrixType.Modelview );
-			Matrix4 modelView = Camera.GetView( delta, t );
+			Matrix4 modelView = Camera.GetView();
 			View = modelView;
 			Graphics.LoadMatrix( ref modelView );
 			Culling.CalcFrustumEquations( ref Projection, ref modelView );
 		}
 		
 		void Render3D( double delta, float t ) {
-			CurrentCameraPos = Camera.GetCameraPos( LocalPlayer.EyePosition );
 			if( SkyboxRenderer.ShouldRender )
 				SkyboxRenderer.Render( delta );
 			AxisLinesRenderer.Render( delta );

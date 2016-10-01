@@ -21,9 +21,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal float MinZNear = 0.1f;
 		readonly FastBitmap bmpBuffer = new FastBitmap();
+
+		/// <summary> Event raised when a context is destroyed after having been previously lost. </summary>
+		public event EventHandler ContextDestroyed;
 		
 		/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
 		public event EventHandler ContextRecreated;
+
+		protected void RaiseContextDestroyed() {
+			if( ContextDestroyed != null ) ContextDestroyed( null, null );
+		}
 		
 		protected void RaiseContextRecreated() {
 			if( ContextRecreated != null ) ContextRecreated( null, null );
