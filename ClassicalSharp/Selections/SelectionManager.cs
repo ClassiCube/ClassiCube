@@ -73,8 +73,8 @@ namespace ClassicalSharp.Selections {
 		
 		public void Dispose() {			
 			if( lineVb <= 0 ) return;
-			Graphics.DeleteDynamicVb( vb );
-			Graphics.DeleteDynamicVb( lineVb );
+			Graphics.DeleteDynamicVb( ref vb );
+			Graphics.DeleteDynamicVb( ref lineVb );
 		}
 		
 		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2, IndicesCount = 6 * 6;

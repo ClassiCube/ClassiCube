@@ -35,7 +35,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref tex );
-			game.Graphics.DeleteVb( vb );
+			game.Graphics.DeleteVb( ref vb );
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
@@ -43,13 +43,11 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void OnNewMap( object sender, EventArgs e ) {
-			game.Graphics.DeleteVb( vb );
 			MakeVb();
 		}
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
-			if( e.Var != EnvVar.CloudsColour ) return;
-			game.Graphics.DeleteVb( vb );
+			if( e.Var != EnvVar.CloudsColour ) return;	
 			MakeVb();
 		}
 		
@@ -86,6 +84,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		unsafe void MakeVb() {
+			game.Graphics.DeleteVb( ref vb );
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[count];
 			IntPtr start = (IntPtr)vertices;
 			const float pos = 0.5f;

@@ -141,7 +141,7 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref RainTexId );
 			game.Graphics.DeleteTexture( ref SnowTexId );
-			graphics.DeleteDynamicVb( weatherVb );
+			graphics.DeleteDynamicVb( ref weatherVb );
 			game.Events.TextureChanged -= TextureChanged;
 		}
 		

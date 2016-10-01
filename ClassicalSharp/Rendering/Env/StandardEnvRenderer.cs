@@ -69,9 +69,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void OnNewMap( Game game ) {
 			graphics.Fog = false;
-			graphics.DeleteVb( skyVb );
-			graphics.DeleteVb( cloudsVb );
-			skyVb = cloudsVb = -1;
+			graphics.DeleteVb( ref skyVb );
+			graphics.DeleteVb( ref cloudsVb );
 		}
 		
 		public override void OnNewMapLoaded( Game game ) {
@@ -88,8 +87,8 @@ namespace ClassicalSharp.Renderers {
 		public override void Dispose() {
 			base.Dispose();
 			game.Events.ViewDistanceChanged -= ResetAllEnv;
-			graphics.DeleteVb( skyVb );
-			graphics.DeleteVb( cloudsVb );
+			graphics.DeleteVb( ref skyVb );
+			graphics.DeleteVb( ref cloudsVb );
 		}
 		
 		void RenderClouds( double delta ) {
@@ -134,13 +133,13 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetClouds() {
 			if( map.IsNotLoaded ) return;
-			graphics.DeleteVb( cloudsVb );
+			graphics.DeleteVb( ref cloudsVb );
 			ResetClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
 			if( map.IsNotLoaded ) return;
-			graphics.DeleteVb( skyVb );
+			graphics.DeleteVb( ref skyVb );
 			ResetSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		

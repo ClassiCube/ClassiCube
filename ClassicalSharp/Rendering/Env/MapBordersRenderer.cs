@@ -82,18 +82,16 @@ namespace ClassicalSharp.Renderers {
 			
 			graphics.DeleteTexture( ref edgeTexId );
 			graphics.DeleteTexture( ref sideTexId );
-			graphics.DeleteVb( sidesVb );
-			graphics.DeleteVb( edgesVb );
-			sidesVb = edgesVb = -1;
+			graphics.DeleteVb( ref sidesVb );
+			graphics.DeleteVb( ref edgesVb );
 		}
 
 		public void Ready( Game game ) { }
 		public void Reset( Game game ) { OnNewMap( game ); }
 		
 		public void OnNewMap( Game game ) {
-			graphics.DeleteVb( sidesVb );
-			graphics.DeleteVb( edgesVb );
-			sidesVb = edgesVb = -1;
+			graphics.DeleteVb( ref sidesVb );
+			graphics.DeleteVb( ref edgesVb );
 			
 			MakeTexture( ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock );
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
@@ -137,13 +135,13 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetSides() {
 			if( game.World.IsNotLoaded ) return;
-			graphics.DeleteVb( sidesVb );
+			graphics.DeleteVb( ref sidesVb );
 			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );	
 		}
 		
 		void ResetEdges() {
 			if( game.World.IsNotLoaded ) return;
-			graphics.DeleteVb( edgesVb );
+			graphics.DeleteVb( ref edgesVb );
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		

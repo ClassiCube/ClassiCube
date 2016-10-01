@@ -228,7 +228,7 @@ namespace ClassicalSharp.Renderers {
 			if( decUsed ) DecrementUsed( parts );
 			
 			for( int i = 0; i < parts.Length; i++ )
-				game.Graphics.DeleteVb( parts[i].VbId );
+				game.Graphics.DeleteVb( ref parts[i].VbId );
 			parts = null;
 		}
 		

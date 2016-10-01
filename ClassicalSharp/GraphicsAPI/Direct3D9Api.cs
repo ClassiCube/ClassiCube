@@ -180,8 +180,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DeleteTexture( ref int texId ) {
-			Delete( textures, texId );
-			texId = -1;
+			Delete( textures, ref texId );
 		}
 
 		int lastClearCol;
@@ -255,8 +254,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetStreamSource( 0, buffer, 0, batchStride );
 		}
 		
-		public override void DeleteDynamicVb( int id ) {
-			Delete( dynamicvBuffers, id );
+		public override void DeleteDynamicVb( ref int vb ) {
+			Delete( dynamicvBuffers, ref vb );
 		}
 
 		D3D.VertexFormat[] formatMapping;
@@ -288,12 +287,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
 		}
 
-		public override void DeleteVb( int vb ) {
-			Delete( vBuffers, vb );
+		public override void DeleteVb( ref int vb ) {
+			Delete( vBuffers, ref vb );
 		}
 		
-		public override void DeleteIb( int ib ) {
-			Delete( iBuffers, ib );
+		public override void DeleteIb( ref int ib ) {
+			Delete( iBuffers, ref ib );
 		}
 
 		int batchStride;
@@ -534,7 +533,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return oldLength;
 		}
 		
-		static void Delete<T>( T[] array, int id ) where T : class, IDisposable {
+		static void Delete<T>( T[] array, ref int id ) where T : class, IDisposable {
 			if( id <= 0 || id >= array.Length ) return;
 			
 			T value = array[id];
@@ -542,6 +541,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				value.Dispose();
 			}
 			array[id] = null;
+			id = -1;
 		}
 		
 		static int NumPrimitives( int vertices, DrawMode mode ) {

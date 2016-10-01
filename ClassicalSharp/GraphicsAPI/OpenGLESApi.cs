@@ -218,19 +218,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BufferSubData( All.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
 		}
 		
-		public override void DeleteDynamicVb( int id ) {
-			if( id <= 0 ) return;
-			GL.DeleteBuffers( 1, &id );
+		public override void DeleteDynamicVb( ref int vb ) {
+			if( vb <= 0 ) return;
+			int id = vb; GL.DeleteBuffers( 1, &id );
+			vb = -1;
 		}
 		
 		public override void DeleteVb( int vb ) {
 			if( vb <= 0 ) return;
-			GL.DeleteBuffers( 1, &vb );
+			int id = vb; GL.DeleteBuffers( 1, &id );
+			vb = -1;
 		}
 		
 		public override void DeleteIb( int ib ) {
 			if( ib <= 0 ) return;
-			GL.DeleteBuffers( 1, &ib );
+			int id = ib; GL.DeleteBuffers( 1, &id );
+			ib = -1;
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;

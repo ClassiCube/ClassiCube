@@ -22,7 +22,7 @@ namespace ClassicalSharp.Renderers {
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
-		public void Dispose() { api.DeleteDynamicVb( vb ); }
+		public void Dispose() { api.DeleteDynamicVb( ref vb ); }
 		
 		int col;
 		int index;

@@ -161,13 +161,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void BindIb( int ib );
 		
 		/// <summary> Frees all native resources held for the dynamic vertex buffer associated with the given id. </summary>
-		public abstract void DeleteDynamicVb( int id );
+		public abstract void DeleteDynamicVb( ref int vb );
 		
 		/// <summary> Frees all native resources held for the vertex buffer associated with the given id. </summary>
-		public abstract void DeleteVb( int vb );
+		public abstract void DeleteVb( ref int vb );
 		
 		/// <summary> Frees all native resources held for the index buffer associated with the given id. </summary>
-		public abstract void DeleteIb( int ib );
+		public abstract void DeleteIb( ref int ib );
 		
 		/// <summary> Informs the graphics API that the format of the vertex data used in subsequent
 		/// draw calls will be in the given format. </summary>
@@ -249,8 +249,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public virtual void Dispose() {
-			DeleteDynamicVb( quadVb );
-			DeleteDynamicVb( texVb );
+			DeleteDynamicVb( ref quadVb );
+			DeleteDynamicVb( ref texVb );
 		}
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];

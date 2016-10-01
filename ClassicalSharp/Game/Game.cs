@@ -331,7 +331,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < Components.Count; i++ )
 				Components[i].Dispose();
 			
-			Graphics.DeleteIb( defaultIb );
+			Graphics.DeleteIb( ref defaultIb );
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture( ref CloudsTex );
 			Graphics.Dispose();

@@ -85,7 +85,7 @@ namespace ClassicalSharp.Model {
 				api.DeleteTexture( ref tex.TexID );
 				Textures[i] = tex;
 			}
-			api.DeleteDynamicVb( vb );
+			api.DeleteDynamicVb( ref vb );
 		}
 		
 		void InitModel( ref CachedModel m ) {

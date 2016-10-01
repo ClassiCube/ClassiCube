@@ -125,7 +125,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Dispose() {
-			game.Graphics.DeleteDynamicVb( vb );
+			game.Graphics.DeleteDynamicVb( ref vb );
 			game.Graphics.DeleteTexture( ref ParticlesTexId );
 			game.UserEvents.BlockChanged -= BreakBlockEffect;
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;			

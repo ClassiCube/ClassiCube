@@ -17,7 +17,7 @@ namespace ClassicalSharp.Selections {
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }		
-		public void Dispose() { game.Graphics.DeleteDynamicVb( vb ); }
+		public void Dispose() { game.Graphics.DeleteDynamicVb( ref vb ); }
 		
 		public void Render( double delta ) {
 			if( !game.ShowAxisLines ) return;

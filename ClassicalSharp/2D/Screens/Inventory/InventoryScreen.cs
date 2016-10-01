@@ -102,7 +102,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			font.Dispose();
 			api.DeleteTexture( ref blockInfoTexture );
-			api.DeleteDynamicVb( vb );
+			api.DeleteDynamicVb( ref vb );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 			game.Keyboard.KeyRepeat = false;
 		}
