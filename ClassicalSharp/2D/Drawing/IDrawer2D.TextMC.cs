@@ -17,6 +17,8 @@ namespace ClassicalSharp {
 		
 		/// <summary> Sets the bitmap that contains the bitmapped font characters as an atlas. </summary>
 		public void SetFontBitmap( Bitmap bmp ) {
+			DisposeBitmappedText();
+			
 			FontBitmap = bmp;
 			boxSize = FontBitmap.Width / 16;
 			fontPixels = new FastBitmap( FontBitmap, true, true );
@@ -245,6 +247,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected void DisposeBitmappedText() {
+			if( FontBitmap == null ) return;
 			fontPixels.Dispose();
 			FontBitmap.Dispose();
 		}
