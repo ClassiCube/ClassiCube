@@ -209,14 +209,19 @@ namespace ClassicalSharp.Network {
 				}
 			} catch( Exception ex ) {
 				if( !( ex is WebException || ex is ArgumentException || ex is UriFormatException || ex is IOException ) ) throw;
-				Utils.LogDebug( "Failed to download from: " + url );
-				
+
 				if( ex is WebException ) {
 					WebException webEx = (WebException)ex;
 					if( webEx.Response != null ) {
 						status = ((HttpWebResponse)webEx.Response).StatusCode;
 						webEx.Response.Close();
 					}
+				}
+				
+				if( status != HttpStatusCode.OK ) {
+					Utils.LogDebug( "Failed to download (" + (int)status + ") from: " + url );
+				} else {
+					Utils.LogDebug( "Failed to download from: " + url );
 				}
 			}
 			value = CheckIsValidImage( value, url );
