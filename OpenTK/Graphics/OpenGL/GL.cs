@@ -128,12 +128,16 @@ namespace OpenTK.Graphics.OpenGL {
 		} static IntPtr GetFloatvAddress;
 
 		public static void GetIntegerv( GetPName pname, int* @params ) {
-			Interop.Calli( (int)pname,  @params, GetIntegervAddress );
+			Interop.Calli( (int)pname, @params, GetIntegervAddress );
 		} static IntPtr GetIntegervAddress;
 		
 		public static IntPtr GetString( StringName name ) {
 			return Interop.Calli_IntPtr( (int)name, GetStringAddress );
 		} static IntPtr GetStringAddress;
+		
+		public static void GetTexImage( TextureTarget target, int level, PixelFormat format, PixelType type, IntPtr pixels ) {
+			Interop.Calli( (int)target, level, (int)format, (int)type, pixels, GetTexImageAddress );
+		} static IntPtr GetTexImageAddress;
 
 		public static void Hint( HintTarget target, HintMode mode ) {
 			Interop.Calli( (int)target, (int)mode, HintAddress );

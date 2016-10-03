@@ -59,6 +59,7 @@ namespace OpenTK.Graphics.OpenGL {
 			GetFloatvAddress = GetAddress( "glGetFloatv" );
 			GetIntegervAddress = GetAddress( "glGetIntegerv" );
 			GetStringAddress = GetAddress( "glGetString" );
+			GetTexImageAddress = GetAddress( "glGetTexImage" );
 			HintAddress = GetAddress( "glHint" );
 			LoadIdentityAddress = GetAddress( "glLoadIdentity" );
 			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );
