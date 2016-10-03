@@ -43,9 +43,17 @@ namespace ClassicalSharp.Blocks {
 			
 			if( block == Block.Sapling || block == Block.Rope )
 				return CollideType.WalkThrough;
-			if( block == Block.Fire || block == Block.Snow )
+			if( block == Block.Fire || block == Block.Snow || block == Block.Air )
 				return CollideType.WalkThrough;
 			return CollideType.Solid;
+		}
+		
+		public static bool BlocksLight( byte block ) {
+			if( block == Block.Glass || block == Block.Leaves )
+				return true;
+			
+			return block != Block.Snow && 
+				Collide( block ) == CollideType.WalkThrough;
 		}
 	}
 }

@@ -103,27 +103,25 @@ namespace ClassicalSharp {
 				FullBright[b] = DefaultSet.FullBright( b );
 				FogDensity[b] = DefaultSet.FogDensity( b );
 				FogColour[b] = DefaultSet.FogColour( b );
+				BlocksLight[b] = DefaultSet.BlocksLight( b );
 				Collide[b] = DefaultSet.Collide( b );
-				
-				BlocksLight[block] = true;
-				IsOpaque[block] = true;
-				Collide[block] = CollideType.Solid;
+				CullWithNeighbours[b] = b != Block.Leaves;
 				SpeedMultiplier[block] = 1;
-				CullWithNeighbours[block] = true;
+				
+				IsOpaque[block] = true;				
 			}
 			for( int block = 0; block < BlocksCount; block++ )
 				Name[block] = "Invalid";
 			MakeNormalNames();
 			
 			SpeedMultiplier[0] = 1f;
-			CullWithNeighbours[Block.Leaves] = false;
 			SetupTextures();
 			
 			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water );
 			MarkTranslucent( Block.Ice );
-			MarkTransparent( Block.Glass, false ); MarkTransparent( Block.Leaves, false );
-			MarkTransparent( Block.Slab, true ); MarkTransparent( Block.Snow, true );
-			MarkTransparent( Block.CobblestoneSlab, true );
+			MarkTransparent( Block.Glass ); MarkTransparent( Block.Leaves );
+			MarkTransparent( Block.Slab ); MarkTransparent( Block.Snow );
+			MarkTransparent( Block.CobblestoneSlab );
 			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling );
 			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom );
 			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope );
@@ -153,9 +151,8 @@ namespace ClassicalSharp {
 			canDelete[Block.StillLava] = false;
 		}
 		
-		void MarkTransparent( byte id, bool blocks ) {
+		void MarkTransparent( byte id ) {
 			IsTransparent[id] = true;
-			BlocksLight[id] = blocks;
 			IsOpaque[id] = false;
 			//IsOpaqueY[id] = false;
 		}
@@ -163,7 +160,6 @@ namespace ClassicalSharp {
 		void MarkSprite( byte id ) {
 			IsSprite[id] = true;
 			IsTransparent[id] = true;
-			BlocksLight[id] = false;
 			IsOpaque[id] = false;
 			//IsOpaqueY[id] = false;
 		}
@@ -180,21 +176,23 @@ namespace ClassicalSharp {
 			IsTranslucent[id] = false;
 			IsOpaque[id] = true;
 			IsSprite[id] = false;
-			BlocksLight[id] = true;
-			FullBright[id] = false;
-			CullWithNeighbours[id] = true;
 			IsAir[id] = false;
-			
 			Name[id] = "Invalid";
-			FogColour[id] = default( FastColour );
-			FogDensity[id] = 0;
-			Collide[id] = CollideType.Solid;
+			
+			BlocksLight[id] = DefaultSet.BlocksLight( id );
+			FullBright[id] = DefaultSet.FullBright( id );
+			CullWithNeighbours[id] = id != Block.Leaves;
+			FogColour[id] = DefaultSet.FogColour( id );
+			FogDensity[id] = DefaultSet.FogDensity( id );
+			Collide[id] = DefaultSet.Collide( id );
 			SpeedMultiplier[id] = 1;
+			MinBB[id] = Vector3.Zero;
+			MaxBB[id] = Vector3.One;
+			MaxBB[id].Y = DefaultSet.Height( id );
+			
 			SetAll( 0, id );
 			if( updateCulling )
 				SetupCullingCache( id );
-			MinBB[id] = Vector3.Zero;
-			MaxBB[id] = Vector3.One;
 			StepSounds[id] = SoundType.None;
 			DigSounds[id] = SoundType.None;
 		}
