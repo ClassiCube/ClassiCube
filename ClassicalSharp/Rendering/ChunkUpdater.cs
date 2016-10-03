@@ -353,11 +353,15 @@ namespace ClassicalSharp.Renderers {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
 				int distSqr = distances[i];
-				bool inRange = distSqr <= adjViewDistSqr;
+				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
-				if( info.NormalParts == null && info.TranslucentParts == null ) {
-					if( inRange && chunkUpdats < chunksTarget )
-						BuildChunk( info, ref chunkUpdats );
+				bool inRange = distSqr <= adjViewDistSqr;
+				if( !noData && distSqr >= adjViewDistSqr + 32 * 16 ) {
+					DeleteChunk( info, true ); continue;
+				}
+				
+				if( noData && inRange && chunkUpdats < chunksTarget ) {
+					BuildChunk( info, ref chunkUpdats );
 				}
 				info.Visible = inRange &&
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
@@ -373,9 +377,14 @@ namespace ClassicalSharp.Renderers {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
 				int distSqr = distances[i];
-				bool inRange = distSqr <= adjViewDistSqr;
+				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
-				if( info.NormalParts == null && info.TranslucentParts == null ) {
+				bool inRange = distSqr <= adjViewDistSqr;
+				if( !noData && distSqr >= adjViewDistSqr + 32 * 16 ) {
+					DeleteChunk( info, true ); continue;
+				}
+				
+				if( noData ) {
 					if( inRange && chunkUpdates < chunksTarget ) {
 						BuildChunk( info, ref chunkUpdates );
 						// only need to update the visibility of chunks in range.

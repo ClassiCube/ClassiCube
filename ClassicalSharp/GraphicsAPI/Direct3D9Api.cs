@@ -262,14 +262,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		D3D.VertexFormat[] formatMapping;
 		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
+			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Default );
 			buffer.SetData( vertices, size, LockFlags.None );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
 		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Managed );
+			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Default );
 			buffer.SetData( vertices, size, LockFlags.None );
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
