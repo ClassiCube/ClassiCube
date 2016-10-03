@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Blocks;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -97,10 +98,15 @@ namespace ClassicalSharp {
 		
 		public void Init() {
 			for( int block = 1; block < BlocksCount; block++ ) {
-				MaxBB[block].Y = 1;
+				byte b = (byte)block;
+				MaxBB[b].Y = DefaultSet.Height( b );
+				FullBright[b] = DefaultSet.FullBright( b );
+				FogDensity[b] = DefaultSet.FogDensity( b );
+				FogColour[b] = DefaultSet.FogColour( b );
+				Collide[b] = DefaultSet.Collide( b );
+				
 				BlocksLight[block] = true;
 				IsOpaque[block] = true;
-				//IsOpaqueY[block] = true;
 				Collide[block] = CollideType.Solid;
 				SpeedMultiplier[block] = 1;
 				CullWithNeighbours[block] = true;
@@ -109,22 +115,10 @@ namespace ClassicalSharp {
 				Name[block] = "Invalid";
 			MakeNormalNames();
 			
-			FogDensity[Block.StillWater] = 0.1f;
-			FogColour[Block.StillWater] = new FastColour( 5, 5, 51 );
-			FogDensity[Block.Water] = 0.1f;
-			FogColour[Block.Water] = new FastColour( 5, 5, 51 );
-			FogDensity[Block.StillLava] = 2f;
-			FogColour[Block.StillLava] = new FastColour( 153, 25, 0 );
-			FogDensity[Block.Lava] = 2f;
-			FogColour[Block.Lava] = new FastColour( 153, 25, 0 );
-			Collide[Block.Snow] = CollideType.WalkThrough;
 			SpeedMultiplier[0] = 1f;
 			CullWithNeighbours[Block.Leaves] = false;
 			SetupTextures();
 			
-			SetBlockHeight( Block.Slab, 8/16f );
-			SetBlockHeight( Block.CobblestoneSlab, 8/16f );
-			SetBlockHeight( Block.Snow, 2/16f );
 			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water );
 			MarkTranslucent( Block.Ice );
 			MarkTransparent( Block.Glass, false ); MarkTransparent( Block.Leaves, false );
@@ -134,10 +128,6 @@ namespace ClassicalSharp {
 			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom );
 			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope );
 			MarkSprite( Block.Fire );
-			SetIsLiquid( Block.StillWater ); SetIsLiquid( Block.Water );
-			SetIsLiquid( Block.StillLava ); SetIsLiquid( Block.Lava );
-			SetFullBright( Block.Lava, true ); SetFullBright( Block.StillLava, true );
-			SetFullBright( Block.Magma, true ); SetFullBright( Block.Fire, true );
 
 			InitBoundingBoxes();
 			InitSounds();
@@ -176,25 +166,12 @@ namespace ClassicalSharp {
 			BlocksLight[id] = false;
 			IsOpaque[id] = false;
 			//IsOpaqueY[id] = false;
-			Collide[id] = CollideType.WalkThrough;
 		}
 		
 		void MarkTranslucent( byte id ) {
 			IsTranslucent[id] = true;
 			IsOpaque[id] = false;
 			//IsOpaqueY[id] = false;
-		}
-		
-		void SetIsLiquid( byte id ) {
-			Collide[id] = CollideType.SwimThrough;
-		}
-		
-		void SetBlockHeight( byte id, float height ) {
-			MaxBB[id].Y = height;
-		}
-		
-		void SetFullBright( byte id, bool emits ) {
-			FullBright[id] = emits;
 		}
 		
 		public void ResetBlockInfo( byte id, bool updateCulling ) {

@@ -146,6 +146,7 @@
     <Compile Include="Blocks\BlockInfo.Culling.cs" />
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\BlockInfo.Sounds.cs" />
+    <Compile Include="Blocks\DefaultSet.cs" />
     <Compile Include="Commands\SinglePlayerCommands.cs" />
     <Compile Include="Entities\AI\AI.cs" />
     <Compile Include="Entities\AI\FleeAI.cs" />
