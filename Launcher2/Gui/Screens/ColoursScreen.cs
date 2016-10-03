@@ -76,7 +76,6 @@ namespace Launcher.Gui.Screens {
 		
 		void ResetColours() {
 			LauncherSkin.ResetToDefault();
-			view.MakeAllRGBTriplets( true );
 			game.RedrawBackground();
 			Resize();
 		}

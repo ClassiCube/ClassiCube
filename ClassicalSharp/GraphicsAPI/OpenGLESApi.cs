@@ -224,13 +224,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			vb = -1;
 		}
 		
-		public override void DeleteVb( int vb ) {
+		public override void DeleteVb( ref int vb ) {
 			if( vb <= 0 ) return;
 			int id = vb; GL.DeleteBuffers( 1, &id );
 			vb = -1;
 		}
 		
-		public override void DeleteIb( int ib ) {
+		public override void DeleteIb( ref int ib ) {
 			if( ib <= 0 ) return;
 			int id = ib; GL.DeleteBuffers( 1, &id );
 			ib = -1;

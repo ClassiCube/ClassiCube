@@ -45,11 +45,11 @@ namespace Launcher.Gui.Views {
 			
 			connectIndex = widgetIndex;
 			Makers.Button( this, "Connect", 110, 35, titleFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 50 );
-			
+				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 50 );			
 			backIndex = widgetIndex;
 			Makers.Button( this, "Back", 80, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 125, 50 );
+			
 			statusIndex = widgetIndex;
 			Makers.Label( this, "", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 100 );

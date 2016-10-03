@@ -63,8 +63,11 @@ namespace ClassicalSharp.Renderers {
 			graphics.SetFogStart( 0 );
 			graphics.Fog = true;
 			ResetAllEnv( null, null );
+			
 			game.Events.ViewDistanceChanged += ResetAllEnv;
-			game.SetViewDistance(game.UserViewDistance, false);
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
+			game.SetViewDistance( game.UserViewDistance, false );
 		}
 		
 		public override void OnNewMap( Game game ) {
@@ -87,6 +90,9 @@ namespace ClassicalSharp.Renderers {
 		public override void Dispose() {
 			base.Dispose();
 			game.Events.ViewDistanceChanged -= ResetAllEnv;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
+			
 			graphics.DeleteVb( ref skyVb );
 			graphics.DeleteVb( ref cloudsVb );
 		}
@@ -132,18 +138,29 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetClouds() {
-			if( map.IsNotLoaded ) return;
+			if( map.IsNotLoaded || game.Graphics.LostContext ) return;
 			graphics.DeleteVb( ref cloudsVb );
-			ResetClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
+			RebuildClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
-			if( map.IsNotLoaded ) return;
+			if( map.IsNotLoaded || game.Graphics.LostContext ) return;
 			graphics.DeleteVb( ref skyVb );
-			ResetSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
+			RebuildSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
-		void ResetClouds( int extent, int axisSize ) {
+		void ContextLost(object sender, EventArgs e) {
+			game.Graphics.DeleteVb( ref skyVb );
+			game.Graphics.DeleteVb( ref cloudsVb );
+		}
+		
+		void ContextRecreated(object sender, EventArgs e) {
+			ResetClouds();
+			ResetSky();
+		}
+		
+		
+		void RebuildClouds( int extent, int axisSize ) {
 			extent = Utils.AdjViewDist( extent );
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;
@@ -154,7 +171,7 @@ namespace ClassicalSharp.Renderers {
 			cloudsVb = graphics.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
 		}
 		
-		void ResetSky( int extent, int axisSize ) {
+		void RebuildSky( int extent, int axisSize ) {
 			extent = Utils.AdjViewDist( extent );
 			int x1 = -extent, x2 = map.Width + extent;
 			int z1 = -extent, z2 = map.Length + extent;

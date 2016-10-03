@@ -244,7 +244,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			buffer.SetData( vertices, size, LockFlags.Discard );
 			
 			device.SetStreamSource( 0, buffer, 0, batchStride );
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, 
+			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
 		}
 		
 		public override void SetDynamicVbData<T>( int vb, T[] vertices, int count ) {
@@ -457,6 +458,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				DynamicDataBuffer buffer = dynamicvBuffers[i];
 				if( buffer != null ) buffer.Dispose();
 			}
+			RaiseContextLost();
+			LostContext = true;
 			
 			while( (uint)device.Reset( args ) == (uint)Direct3DError.DeviceLost )
 				LoopUntilRetrieved();
@@ -473,7 +476,9 @@ namespace ClassicalSharp.GraphicsAPI {
 				dynamicvBuffers[i].MaxSize = buffer.MaxSize;
 				buffer = dynamicvBuffers[i];
 			}
-			RaiseContextRecreated();
+			
+			LostContext = false;
+			RaiseContextRecreated();			
 		}
 		
 		void SetDefaultRenderStates() {

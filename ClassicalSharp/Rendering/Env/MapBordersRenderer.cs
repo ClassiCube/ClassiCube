@@ -34,6 +34,8 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged += ResetTextures;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		public void RenderSides( double delta ) {
@@ -79,6 +81,8 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged -= ResetTextures;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 			
 			graphics.DeleteTexture( ref edgeTexId );
 			graphics.DeleteTexture( ref sideTexId );
@@ -97,11 +101,7 @@ namespace ClassicalSharp.Renderers {
 			MakeTexture( ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock );
 		}
 		
-		public void OnNewMapLoaded( Game game ) {
-			CalculateRects( (int)game.ViewDistance );
-			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
-			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
-		}
+		public void OnNewMapLoaded( Game game ) { ResetSidesAndEdges( null, null ); }
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
 			if( e.Var == EnvVar.EdgeBlock ) {
@@ -134,16 +134,27 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetSides() {
-			if( game.World.IsNotLoaded ) return;
+			if( game.World.IsNotLoaded || game.Graphics.LostContext ) return;
 			graphics.DeleteVb( ref sidesVb );
-			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );	
+			RebuildSides( map.Env.SidesHeight, legacy ? 128 : 65536 );
 		}
 		
 		void ResetEdges() {
-			if( game.World.IsNotLoaded ) return;
+			if( game.World.IsNotLoaded || game.Graphics.LostContext ) return;
 			graphics.DeleteVb( ref edgesVb );
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
+		
+		void ContextLost(object sender, EventArgs e) {
+			game.Graphics.DeleteVb( ref sidesVb );
+			game.Graphics.DeleteVb( ref edgesVb );
+		}
+		
+		void ContextRecreated(object sender, EventArgs e) {
+			ResetSides();
+			ResetEdges();
+		}
+
 		
 		void RebuildSides( int y, int axisSize ) {
 			byte block = game.World.Env.SidesBlock;
@@ -151,7 +162,7 @@ namespace ClassicalSharp.Renderers {
 			for( int i = 0; i < rects.Length; i++ ) {
 				Rectangle r = rects[i];
 				sidesVertices += Utils.CountVertices( r.Width, r.Height, axisSize ); // YQuads outside
-			}			
+			}
 			sidesVertices += Utils.CountVertices( map.Width, map.Length, axisSize ); // YQuads beneath map
 			sidesVertices += 2 * Utils.CountVertices( map.Width, Math.Abs( y ), axisSize ); // ZQuads
 			sidesVertices += 2 * Utils.CountVertices( map.Length, Math.Abs( y ), axisSize ); // XQuads
@@ -190,7 +201,7 @@ namespace ClassicalSharp.Renderers {
 			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
 			for( int i = 0; i < rects.Length; i++ ) {
 				Rectangle r = rects[i];
-				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 
+				DrawY( r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col,
 				      HorOffset( block ), YOffset( block ), ref v );
 			}
 			edgesVb = graphics.CreateVb( ptr, VertexFormat.P3fT2fC4b, edgesVertices );
@@ -200,17 +211,17 @@ namespace ClassicalSharp.Renderers {
 			BlockInfo info = game.BlockInfo;
 			if( info.IsLiquid( block ) ) return -0.1f/16;
 			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid ) return 0.1f/16;
-			 return 0;
+			return 0;
 		}
 		
 		float YOffset( byte block ) {
 			BlockInfo info = game.BlockInfo;
 			if( info.IsLiquid( block ) ) return -1.5f/16;
 			if( info.IsTranslucent[block] && info.Collide[block] != CollideType.Solid ) return -0.1f/16;
-			 return 0;
+			return 0;
 		}
 		
-		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize, 
+		void DrawX( int x, int z1, int z2, int y1, int y2, int axisSize,
 		           int col, ref VertexP3fT2fC4b* v ) {
 			int endZ = z2, endY = y2, startY = y1;
 			for( ; z1 < endZ; z1 += axisSize ) {
@@ -230,7 +241,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize, 
+		void DrawZ( int z, int x1, int x2, int y1, int y2, int axisSize,
 		           int col, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endY = y2, startY = y1;
 			for( ; x1 < endX; x1 += axisSize ) {
@@ -250,7 +261,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize, 
+		void DrawY( int x1, int z1, int x2, int z2, float y, int axisSize,
 		           int col, float offset, float yOffset, ref VertexP3fT2fC4b* v ) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for( ; x1 < endX; x1 += axisSize ) {

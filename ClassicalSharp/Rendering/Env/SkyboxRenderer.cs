@@ -12,7 +12,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		const int count = 6 * 4;
 		
-		public bool ShouldRender { 
+		public bool ShouldRender {
 			get { return tex > 0 && !(game.EnvRenderer is MinimalEnvRenderer); }
 		}
 		
@@ -22,6 +22,8 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.WorldEvents.OnNewMap += OnNewMap;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 			MakeVb();
 		}
 		
@@ -36,18 +38,19 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref tex );
 			game.Graphics.DeleteVb( ref vb );
+			
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.WorldEvents.OnNewMap -= OnNewMap;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 
-		void OnNewMap( object sender, EventArgs e ) {
-			MakeVb();
-		}
+		void OnNewMap( object sender, EventArgs e ) { MakeVb(); }
 		
 		void EnvVariableChanged( object sender, EnvVarEventArgs e ) {
-			if( e.Var != EnvVar.CloudsColour ) return;	
+			if( e.Var != EnvVar.CloudsColour ) return;
 			MakeVb();
 		}
 		
@@ -60,8 +63,8 @@ namespace ClassicalSharp.Renderers {
 				game.UpdateTexture( ref tex, e.Name, e.Data, false );
 		}
 		
-		
 		public void Render( double deltaTime ) {
+			if( vb == -1 ) return;
 			game.Graphics.DepthWrite = false;
 			game.Graphics.Texturing = true;
 			game.Graphics.BindTexture( tex );
@@ -83,8 +86,16 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DepthWrite = true;
 		}
 		
-		unsafe void MakeVb() {
+		void ContextLost(object sender, EventArgs e) {
 			game.Graphics.DeleteVb( ref vb );
+		}
+		
+		void ContextRecreated(object sender, EventArgs e) { MakeVb(); }
+		
+		
+		unsafe void MakeVb() {
+			if( game.Graphics.LostContext ) return;
+			game.Graphics.DeleteVb( ref vb );			
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[count];
 			IntPtr start = (IntPtr)vertices;
 			const float pos = 0.5f;
@@ -127,7 +138,7 @@ namespace ClassicalSharp.Renderers {
 			*vertices = new VertexP3fT2fC4b( -pos, -pos,  pos, rec.U2, rec.V1, col ); vertices++;
 			*vertices = new VertexP3fT2fC4b(  pos, -pos,  pos, rec.U1, rec.V1, col ); vertices++;
 			*vertices = new VertexP3fT2fC4b(  pos, -pos, -pos, rec.U1, rec.V2, col ); vertices++;
-			vb = game.Graphics.CreateVb( start, VertexFormat.P3fT2fC4b, count );			
+			vb = game.Graphics.CreateVb( start, VertexFormat.P3fT2fC4b, count );
 		}
 	}
 }
