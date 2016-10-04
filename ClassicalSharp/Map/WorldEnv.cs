@@ -99,7 +99,7 @@ namespace ClassicalSharp.Map {
 		/// EnvVariableChanged event with variable 'SidesBlock'. </summary>
 		public void SetSidesBlock( byte block ) {
 			if( block == SidesBlock ) return;
-			if( block == BlockInfo.MaxDefinedBlock ) {
+			if( block == Block.MaxDefinedBlock ) {
 				Utils.LogDebug( "Tried to set sides block to an invalid block: " + block );
 				block = Block.Bedrock;
 			}
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Map {
 		/// EnvVariableChanged event with variable 'EdgeBlock'. </summary>
 		public void SetEdgeBlock( byte block ) {
 			if( block == EdgeBlock ) return;
-			if( block == BlockInfo.MaxDefinedBlock ) {
+			if( block == Block.MaxDefinedBlock ) {
 				Utils.LogDebug( "Tried to set edge block to an invalid block: " + block );
 				block = Block.StillWater;
 			}

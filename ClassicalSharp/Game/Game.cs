@@ -255,11 +255,7 @@ namespace ClassicalSharp {
 			World.Reset();
 			World.blocks = null;
 			Drawer2D.InitColours();
-			
-			for( int block = BlockInfo.CpeCount; block < BlockInfo.BlocksCount; block++ )
-				BlockInfo.ResetBlockInfo( (byte)block, false );
-			BlockInfo.SetupCullingCache();
-			BlockInfo.InitLightOffsets();
+			BlockInfo.Reset( this );
 			
 			TexturePackExtractor.ExtractDefault( this );
 			Gui.SetNewScreen( new ErrorScreen( this, title, reason ) );

@@ -4,6 +4,7 @@ using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Map;
 using ClassicalSharp.Gui.Widgets;
+using ClassicalSharp.TexturePack;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
@@ -18,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 			// Only add map files
 			for( int i = 0; i < rawFiles.Length; i++ ) {
 				string file = rawFiles[i];
-				if( file.EndsWith( ".cw" ) || file.EndsWith( ".dat" ) 
+				if( file.EndsWith( ".cw" ) || file.EndsWith( ".dat" )
 				   || file.EndsWith( ".fcm" ) || file.EndsWith( ".lvl" ) ) {
 					count++;
 				} else {
@@ -59,11 +60,11 @@ namespace ClassicalSharp.Gui.Screens {
 				using( FileStream fs = File.OpenRead( path ) ) {
 					int width, height, length;
 					game.World.Reset();
-					game.World.TextureUrl = null;
-					for( int block = BlockInfo.CpeCount; block < BlockInfo.BlocksCount; block++ )
-						game.BlockInfo.ResetBlockInfo( (byte)block, false );
-					game.BlockInfo.SetupCullingCache();
-					game.BlockInfo.InitLightOffsets();
+					if( game.World.TextureUrl != null ) {
+						TexturePackExtractor.ExtractDefault( game );
+						game.World.TextureUrl = null;
+					}
+					game.BlockInfo.Reset( game );
 					
 					byte[] blocks = importer.Load( fs, game, out width, out height, out length );
 					game.World.SetNewMap( blocks, width, height, length );

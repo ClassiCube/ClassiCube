@@ -192,7 +192,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void RecreateBlockTable() {
 			int blocksCount = 0;
-			int count = game.UseCPE ? BlockInfo.BlocksCount : BlockInfo.OriginalCount;
+			int count = game.UseCPE ? Block.Count : Block.OriginalCount;
 			for( int i = 1; i < count; i++ ) {
 				byte block = game.Inventory.MapBlock( i );
 				if( Show( block ) ) blocksCount++;
@@ -213,8 +213,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		bool Show( byte block ) {
 			if( game.PureClassic && IsHackBlock( block ) ) return false;
-			if( block < BlockInfo.CpeCount ) {
-				int count = game.UseCPEBlocks ? BlockInfo.CpeCount : BlockInfo.OriginalCount;
+			if( block < Block.CpeCount ) {
+				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
 				return block < count;
 			}
 			return game.BlockInfo.Name[block] != "Invalid";

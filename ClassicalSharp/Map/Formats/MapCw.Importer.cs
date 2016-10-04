@@ -152,7 +152,8 @@ namespace ClassicalSharp.Map {
 			info.StepSounds[id] = CPEProtocolBlockDefs.stepSnds[soundId];
 			info.FullBright[id] = (byte)compound["FullBright"].Value != 0;
 			info.IsSprite[id] = (byte)compound["Shape"].Value == 0;
-			CPEProtocolBlockDefs.SetBlockDraw( info, id, (byte)compound["BlockDraw"].Value );
+			byte blockDraw = (byte)compound["BlockDraw"].Value;
+			info.SetBlockDraw( id, (BlockDraw)blockDraw );
 			
 			data = (byte[])compound["Fog"].Value;
 			info.FogDensity[id] = (data[0] + 1) / 128f;
@@ -168,8 +169,9 @@ namespace ClassicalSharp.Map {
 				info.IsTransparent[id] = true;
 				info.IsOpaque[id] = false;
 			}
-			info.SetupCullingCache( id );
-			info.InitLightOffsets();
+			
+			info.UpdateCulling( id );
+			info.LightOffset[id] = info.CalcLightOffset( id );
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 			

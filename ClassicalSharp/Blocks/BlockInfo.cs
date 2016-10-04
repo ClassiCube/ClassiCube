@@ -4,237 +4,182 @@ using ClassicalSharp.Blocks;
 using OpenTK;
 
 namespace ClassicalSharp {
+
+	public enum SoundType : byte {
+		None, Wood, Gravel, Grass, Stone,
+		Metal, Glass, Cloth, Sand, Snow,
+	}
 	
-	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
-	public partial class BlockInfo {
-		
-		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
-		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
-		public bool[] IsTransparent = new bool[BlocksCount];
-		
-		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
-		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
-		public bool[] IsTranslucent = new bool[BlocksCount];
-		
-		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
-		public bool[] IsOpaque = new bool[BlocksCount];
-		
-		// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
-		//public bool[] IsOpaqueY = new bool[BlocksCount];
-		
-		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
-		public bool[] IsSprite = new bool[BlocksCount];
-		
-		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
-		public bool IsLiquid( byte block ) { return block >= Block.Water && block <= Block.StillLava; }
-		
-		/// <summary> Gets whether the given block blocks sunlight. </summary>
-		public bool[] BlocksLight = new bool[BlocksCount];
-		
-		/// <summary> Gets whether the given block should draw all it faces with a full white colour component. </summary>
-		public bool[] FullBright = new bool[BlocksCount];
-		
-		public string[] Name = new string[BlocksCount];
-		
-		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block.
-		/// Note that this is only used for exponential fog mode. </summary>
-		public FastColour[] FogColour = new FastColour[BlocksCount];
-		
-		public float[] FogDensity = new float[BlocksCount];
-		
-		public CollideType[] Collide = new CollideType[BlocksCount];
-		
-		public float[] SpeedMultiplier = new float[BlocksCount];
-		
-		public bool[] CullWithNeighbours = new bool[BlocksCount];
-		
-		public byte[] LightOffset = new byte[BlocksCount];
-		
-		public uint[] DefinedCustomBlocks = new uint[BlocksCount >> 5];
-		
-		public const byte MaxOriginalBlock = Block.Obsidian;
-		public const int OriginalCount = MaxOriginalBlock + 1;
-		public const byte MaxCpeBlock = Block.StoneBrick;
-		public const int CpeCount = MaxCpeBlock + 1;
-		public const byte MaxDefinedBlock = byte.MaxValue;
-		public const int BlocksCount = MaxDefinedBlock + 1;
-		
-		public void Reset( Game game ) {
-			// Reset properties
-			for( int i = 0; i < IsTransparent.Length; i++ ) IsTransparent[i] = false;
-			for( int i = 0; i < IsTranslucent.Length; i++ ) IsTranslucent[i] = false;
-			for( int i = 0; i < IsOpaque.Length; i++ ) IsOpaque[i] = false;
-			//for( int i = 0; i < IsOpaqueY.Length; i++ ) IsOpaqueY[i] = false;
-			for( int i = 0; i < IsSprite.Length; i++ ) IsSprite[i] = false;
-			for( int i = 0; i < BlocksLight.Length; i++ ) BlocksLight[i] = false;
-			for( int i = 0; i < FullBright.Length; i++ ) FullBright[i] = false;
-			for( int i = 0; i < Name.Length; i++ ) Name[i] = "Invalid";
-			for( int i = 0; i < FogColour.Length; i++ ) FogColour[i] = default(FastColour);
-			for( int i = 0; i < FogDensity.Length; i++ ) FogDensity[i] = 0;
-			for( int i = 0; i < Collide.Length; i++ ) Collide[i] = CollideType.WalkThrough;
-			for( int i = 0; i < SpeedMultiplier.Length; i++ ) SpeedMultiplier[i] = 0;
-			for( int i = 0; i < CullWithNeighbours.Length; i++ ) CullWithNeighbours[i] = false;
-			for( int i = 0; i < LightOffset.Length; i++ ) LightOffset[i] = 0;
-			for( int i = 0; i < DefinedCustomBlocks.Length; i++ ) DefinedCustomBlocks[i] = 0;			
-			// Reset textures
-			texId = 0;
-			for( int i = 0; i < textures.Length; i++ ) textures[i] = 0;
-			// Reset culling
-			for( int i = 0; i < hidden.Length; i++ ) hidden[i] = 0;
-			for( int i = 0; i < CanStretch.Length; i++ ) CanStretch[i] = 0;
-			for( int i = 0; i < IsAir.Length; i++ ) IsAir[i] = false;
-			// Reset bounds
-			for( int i = 0; i < MinBB.Length; i++ ) MinBB[i] = Vector3.Zero;
-			for( int i = 0; i < MaxBB.Length; i++ ) MaxBB[i] = Vector3.One;
-			// Reset sounds
-			for( int i = 0; i < DigSounds.Length; i++ ) DigSounds[i] = SoundType.None;
-			for( int i = 0; i < StepSounds.Length; i++ ) StepSounds[i] = SoundType.None;
-			Init();
-			
-			// TODO: Make this part of TerrainAtlas2D maybe?
-			using( FastBitmap fastBmp = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
-				RecalculateSpriteBB( fastBmp );
-		}
-		
-		public void Init() {
-			for( int block = 1; block < BlocksCount; block++ ) {
-				byte b = (byte)block;
-				MaxBB[b].Y = DefaultSet.Height( b );
-				FullBright[b] = DefaultSet.FullBright( b );
-				FogDensity[b] = DefaultSet.FogDensity( b );
-				FogColour[b] = DefaultSet.FogColour( b );
-				BlocksLight[b] = DefaultSet.BlocksLight( b );
-				Collide[b] = DefaultSet.Collide( b );
-				CullWithNeighbours[b] = b != Block.Leaves;
-				SpeedMultiplier[block] = 1;
-				
-				IsOpaque[block] = true;				
-			}
-			for( int block = 0; block < BlocksCount; block++ )
-				Name[block] = "Invalid";
-			MakeNormalNames();
-			
-			SpeedMultiplier[0] = 1f;
-			SetupTextures();
-			
-			MarkTranslucent( Block.StillWater ); MarkTranslucent( Block.Water );
-			MarkTranslucent( Block.Ice );
-			MarkTransparent( Block.Glass ); MarkTransparent( Block.Leaves );
-			MarkTransparent( Block.Slab ); MarkTransparent( Block.Snow );
-			MarkTransparent( Block.CobblestoneSlab );
-			MarkSprite( Block.Rose ); MarkSprite( Block.Sapling );
-			MarkSprite( Block.Dandelion ); MarkSprite( Block.BrownMushroom );
-			MarkSprite( Block.RedMushroom ); MarkSprite( Block.Rope );
-			MarkSprite( Block.Fire );
-
-			InitBoundingBoxes();
-			InitSounds();
-			SetupCullingCache();
-			InitLightOffsets();
-		}
-
-		public void SetDefaultBlockPermissions( InventoryPermissions canPlace, InventoryPermissions canDelete ) {
-			for( int block = Block.Stone; block <= BlockInfo.MaxDefinedBlock; block++ ) {
-				canPlace[block] = true;
-				canDelete[block] = true;
-			}
-			canPlace[Block.Lava] = false;
-			canPlace[Block.Water] = false;
-			canPlace[Block.StillLava] = false;
-			canPlace[Block.StillWater] = false;
-			canPlace[Block.Bedrock] = false;
-			
-			canDelete[Block.Bedrock] = false;
-			canDelete[Block.Lava] = false;
-			canDelete[Block.Water] = false;
-			canDelete[Block.StillWater] = false;
-			canDelete[Block.StillLava] = false;
-		}
-		
-		void MarkTransparent( byte id ) {
-			IsTransparent[id] = true;
-			IsOpaque[id] = false;
-			//IsOpaqueY[id] = false;
-		}
-		
-		void MarkSprite( byte id ) {
-			IsSprite[id] = true;
-			IsTransparent[id] = true;
-			IsOpaque[id] = false;
-			//IsOpaqueY[id] = false;
-		}
-		
-		void MarkTranslucent( byte id ) {
-			IsTranslucent[id] = true;
-			IsOpaque[id] = false;
-			//IsOpaqueY[id] = false;
-		}
-		
-		public void ResetBlockInfo( byte id, bool updateCulling ) {
-			DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
-			IsTransparent[id] = false;
-			IsTranslucent[id] = false;
-			IsOpaque[id] = true;
-			IsSprite[id] = false;
-			IsAir[id] = false;
-			Name[id] = "Invalid";
-			
-			BlocksLight[id] = DefaultSet.BlocksLight( id );
-			FullBright[id] = DefaultSet.FullBright( id );
-			CullWithNeighbours[id] = id != Block.Leaves;
-			FogColour[id] = DefaultSet.FogColour( id );
-			FogDensity[id] = DefaultSet.FogDensity( id );
-			Collide[id] = DefaultSet.Collide( id );
-			SpeedMultiplier[id] = 1;
-			MinBB[id] = Vector3.Zero;
-			MaxBB[id] = Vector3.One;
-			MaxBB[id].Y = DefaultSet.Height( id );
-			
-			SetAll( 0, id );
-			if( updateCulling )
-				SetupCullingCache( id );
-			StepSounds[id] = SoundType.None;
-			DigSounds[id] = SoundType.None;
-		}
-		
-		void MakeNormalNames() {
-			StringBuffer buffer = new StringBuffer( 64 );
-			int start = 0;
-			string value = Block.Names;
-			
-			for( int i = 0; i < BlockInfo.CpeCount; i++ ) {
-				int next = value.IndexOf( ' ', start );
-				if( next == -1 ) next = value.Length;
-				
-				buffer.Clear();
-				int index = 0;
-				SplitUppercase( buffer, value, start, next - start, ref index );
-				Name[i] = buffer.ToString();
-				start = next + 1;
-			}
-		}
-		
-		static void SplitUppercase( StringBuffer buffer, string value,
-		                           int start, int len, ref int index ) {
-			int end = start + len;
-			for( int i = start; i < end; i++ ) {
-				char c = value[i];
-				bool upper = Char.IsUpper( c ) && i > start;
-				bool nextLower = i < end - 1 && !Char.IsUpper( value[i + 1] );
-				
-				if( upper && nextLower ) {
-					buffer.Append( ref index, ' ' );
-					buffer.Append( ref index, Char.ToLower( c ) );
-				} else {
-					buffer.Append( ref index, c );
-				}				
-			}
-		}
+	public enum BlockDraw : byte {
+		Opaque, Transparent, TransparentLeaves,
+		Translucent, Gas, Sprite,
 	}
 	
 	public enum CollideType : byte {
 		WalkThrough, // i.e. gas or sprite
 		SwimThrough, // i.e. liquid
 		Solid,       // i.e. solid
+	}
+	
+	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
+	public partial class BlockInfo {
+		
+		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
+		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
+		public bool[] IsTransparent = new bool[Block.Count];
+		
+		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
+		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
+		public bool[] IsTranslucent = new bool[Block.Count];
+		
+		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
+		public bool[] IsOpaque = new bool[Block.Count];
+		
+		// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
+		//public bool[] IsOpaqueY = new bool[Block.Count];
+		
+		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
+		public bool[] IsSprite = new bool[Block.Count];
+		
+		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
+		public bool IsLiquid( byte block ) { return block >= Block.Water && block <= Block.StillLava; }
+		
+		/// <summary> Gets whether the given block blocks sunlight. </summary>
+		public bool[] BlocksLight = new bool[Block.Count];
+		
+		/// <summary> Gets whether the given block should draw all it faces with a full white colour component. </summary>
+		public bool[] FullBright = new bool[Block.Count];
+		
+		public string[] Name = new string[Block.Count];
+		
+		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block.
+		/// Note that this is only used for exponential fog mode. </summary>
+		public FastColour[] FogColour = new FastColour[Block.Count];
+		
+		public float[] FogDensity = new float[Block.Count];
+		
+		public CollideType[] Collide = new CollideType[Block.Count];
+		
+		public float[] SpeedMultiplier = new float[Block.Count];
+		
+		public bool[] CullWithNeighbours = new bool[Block.Count];
+		
+		public byte[] LightOffset = new byte[Block.Count];
+		
+		public uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
+		
+		public SoundType[] DigSounds = new SoundType[Block.Count];
+		
+		public SoundType[] StepSounds = new SoundType[Block.Count];
+		
+		public void Reset( Game game ) {
+			Init();
+			// TODO: Make this part of TerrainAtlas2D maybe?
+			using( FastBitmap fastBmp = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
+				RecalculateSpriteBB( fastBmp );
+		}
+		
+		public void Init() {
+			for( int i = 0; i < DefinedCustomBlocks.Length; i++ ) 
+				DefinedCustomBlocks[i] = 0;			
+			for( int block = 0; block < Block.Count; block++ )
+				ResetBlockProps( (byte)block );
+			UpdateCulling();
+		}
+
+		public void SetDefaultBlockPerms( InventoryPermissions place, 
+		                                 InventoryPermissions delete ) {
+			for( int block = Block.Stone; block <= Block.MaxDefinedBlock; block++ ) {
+				place[block] = true;
+				delete[block] = true;
+			}
+			place[Block.Lava] = false;
+			place[Block.Water] = false;
+			place[Block.StillLava] = false;
+			place[Block.StillWater] = false;
+			place[Block.Bedrock] = false;
+			
+			delete[Block.Bedrock] = false;
+			delete[Block.Lava] = false;
+			delete[Block.Water] = false;
+			delete[Block.StillWater] = false;
+			delete[Block.StillLava] = false;
+		}
+		
+		public void SetBlockDraw( byte id, BlockDraw draw ) {
+			IsTranslucent[id] = draw == BlockDraw.Translucent;
+			IsAir[id] = draw == BlockDraw.Gas;
+			IsSprite[id] = draw == BlockDraw.Sprite;
+			CullWithNeighbours[id] = draw != BlockDraw.TransparentLeaves;
+			
+			IsTransparent[id] = draw != BlockDraw.Opaque && draw != BlockDraw.Translucent;
+			IsOpaque[id] = draw == BlockDraw.Opaque;
+		}
+		
+		public void ResetBlockProps( byte id ) {
+			BlocksLight[id] = DefaultSet.BlocksLight( id );
+			FullBright[id] = DefaultSet.FullBright( id );
+			CullWithNeighbours[id] = id != Block.Leaves;
+			FogColour[id] = DefaultSet.FogColour( id );
+			FogDensity[id] = DefaultSet.FogDensity( id );
+			Collide[id] = DefaultSet.Collide( id );
+			DigSounds[id] = DefaultSet.DigSound( id );
+			StepSounds[id] = DefaultSet.StepSound( id );
+			SetBlockDraw( id, DefaultSet.Draw( id ) );
+			SpeedMultiplier[id] = 1;
+			Name[id] = DefaultName( id );
+			
+			if( IsSprite[id] ) {
+				MinBB[id] = new Vector3( 2.50f/16f, 0, 2.50f/16f );
+				MaxBB[id] = new Vector3( 13.5f/16f, 1, 13.5f/16f );
+			} else {
+				MinBB[id] = Vector3.Zero;
+				MaxBB[id] = Vector3.One;
+				MaxBB[id].Y = DefaultSet.Height( id );
+			}
+			LightOffset[id] = CalcLightOffset( id );
+			
+			if( id >= Block.CpeCount ) {
+				SetTex( 0, Side.Top, id );
+				SetTex( 0, Side.Bottom, id );
+				SetSide( 0, id );
+			} else {
+				SetTex( topTex[id], Side.Top, id );
+				SetTex( bottomTex[id], Side.Bottom, id );
+				SetSide( sideTex[id], id );
+			}
+		}
+		
+		static StringBuffer buffer = new StringBuffer( 64 );
+		static string DefaultName( byte block ) {
+			if( block >= Block.CpeCount ) return "Invalid";
+			
+			// Find start and end of this particular block name
+			int start = 0;
+			for( int i = 0; i < block; i++)
+				start = Block.Names.IndexOf( ' ', start ) + 1;
+			int end = Block.Names.IndexOf( ' ', start );
+			if( end == -1 ) end = Block.Names.Length;
+			
+			buffer.Clear();
+			SplitUppercase( buffer, start, end );
+			return buffer.ToString();
+		}
+		
+		static void SplitUppercase( StringBuffer buffer, int start, int end ) {
+			int index = 0;
+			for( int i = start; i < end; i++ ) {
+				char c = Block.Names[i];
+				bool upper = Char.IsUpper( c ) && i > start;
+				bool nextLower = i < end - 1 && !Char.IsUpper( Block.Names[i + 1] );
+				
+				if( upper && nextLower ) {
+					buffer.Append( ref index, ' ' );
+					buffer.Append( ref index, Char.ToLower( c ) );
+				} else {
+					buffer.Append( ref index, c );
+				}
+			}
+		}
 	}
 }

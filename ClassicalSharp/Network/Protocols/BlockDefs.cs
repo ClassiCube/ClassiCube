@@ -34,12 +34,15 @@ namespace ClassicalSharp.Network.Protocols {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
 					info.RecalculateBB( id, dst );
 			}
-			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
 		void HandleRemoveBlockDefinition() {
-			game.BlockInfo.ResetBlockInfo( reader.ReadUInt8(), true );
-			game.BlockInfo.InitLightOffsets();
+			byte id = reader.ReadUInt8();
+			BlockInfo info = game.BlockInfo;
+			
+			info.DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
+			info.ResetBlockProps( id );
+			info.UpdateCulling( id );
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
@@ -62,55 +65,56 @@ namespace ClassicalSharp.Network.Protocols {
 			info.MinBB[id] = min;
 			info.MaxBB[id] = max;
 			HandleDefineBlockCommonEnd( reader, id );
-			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
 		byte HandleDefineBlockCommonStart( NetReader reader, bool uniqueSideTexs ) {
-			byte block = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
-			info.ResetBlockInfo( block, false );
+			info.ResetBlockProps( id );
 			
-			info.Name[block] = reader.ReadCp437String();
-			info.Collide[block] = (CollideType)reader.ReadUInt8();
-			if( info.Collide[block] != CollideType.Solid ) {
-				info.IsTransparent[block] = true;
-				info.IsOpaque[block] = false;
+			info.Name[id] = reader.ReadCp437String();
+			info.Collide[id] = (CollideType)reader.ReadUInt8();
+			if( info.Collide[id] != CollideType.Solid ) {
+				info.IsTransparent[id] = true;
+				info.IsOpaque[id] = false;
 			}
 			
-			info.SpeedMultiplier[block] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
-			info.SetTex( reader.ReadUInt8(), Side.Top, block );
+			info.SpeedMultiplier[id] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
+			info.SetTex( reader.ReadUInt8(), Side.Top, id );
 			if( uniqueSideTexs ) {
-				info.SetTex( reader.ReadUInt8(), Side.Left, block );
-				info.SetTex( reader.ReadUInt8(), Side.Right, block );
-				info.SetTex( reader.ReadUInt8(), Side.Front, block );
-				info.SetTex( reader.ReadUInt8(), Side.Back, block );
+				info.SetTex( reader.ReadUInt8(), Side.Left, id );
+				info.SetTex( reader.ReadUInt8(), Side.Right, id );
+				info.SetTex( reader.ReadUInt8(), Side.Front, id );
+				info.SetTex( reader.ReadUInt8(), Side.Back, id );
 			} else {
-				info.SetSide( reader.ReadUInt8(), block );
+				info.SetSide( reader.ReadUInt8(), id );
 			}
-			info.SetTex( reader.ReadUInt8(), Side.Bottom, block );
+			info.SetTex( reader.ReadUInt8(), Side.Bottom, id );
 			
-			info.BlocksLight[block] = reader.ReadUInt8() == 0;
+			info.BlocksLight[id] = reader.ReadUInt8() == 0;
 			byte sound = reader.ReadUInt8();
 			if( sound < breakSnds.Length ) {
-				info.StepSounds[block] = stepSnds[sound];
-				info.DigSounds[block] = breakSnds[sound];
+				info.StepSounds[id] = stepSnds[sound];
+				info.DigSounds[id] = breakSnds[sound];
 			}
-			info.FullBright[block] = reader.ReadUInt8() != 0;
-			return block;
+			info.FullBright[id] = reader.ReadUInt8() != 0;
+			return id;
 		}
 		
-		void HandleDefineBlockCommonEnd( NetReader reader, byte block ) {
+		void HandleDefineBlockCommonEnd( NetReader reader, byte id ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
-			SetBlockDraw( info, block, blockDraw );
+			info.SetBlockDraw( id, (BlockDraw)blockDraw );
+			info.LightOffset[id] = info.CalcLightOffset( id );
 			
 			byte fogDensity = reader.ReadUInt8();
-			info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
-			info.FogColour[block] = new FastColour(
+			info.FogDensity[id] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
+			info.FogColour[id] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
-			info.SetupCullingCache( block );
-			info.InitLightOffsets();
+			
+			info.UpdateCulling( id );
 			game.Events.RaiseBlockDefinitionChanged();
+			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
 		
 		#if FALSE
@@ -158,22 +162,6 @@ namespace ClassicalSharp.Network.Protocols {
 			stepSnds[7] = SoundType.Cloth; breakSnds[7] = SoundType.Cloth;
 			stepSnds[8] = SoundType.Sand; breakSnds[8] = SoundType.Sand;
 			stepSnds[9] = SoundType.Snow; breakSnds[9] = SoundType.Snow;
-		}
-		
-		internal static void SetBlockDraw( BlockInfo info, byte block, byte blockDraw ) {
-			if( blockDraw == 1 ) {
-				info.IsTransparent[block] = true;
-			} else if( blockDraw == 2 ) {
-				info.IsTransparent[block] = true;
-				info.CullWithNeighbours[block] = false;
-			} else if( blockDraw == 3 ) {
-				info.IsTranslucent[block] = true;
-			} else if( blockDraw == 4 ) {
-				info.IsTransparent[block] = true;
-				info.IsAir[block] = true;
-			}
-			if( info.IsOpaque[block] )
-				info.IsOpaque[block] = blockDraw == 0;
 		}
 	}
 }

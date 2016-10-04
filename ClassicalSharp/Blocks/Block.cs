@@ -78,6 +78,13 @@ namespace ClassicalSharp {
 			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
 			" Teal Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom" +
 			" Gold Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone" +
-			" Snow Fire LightPink ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";
+			" Snow Fire LightPink ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";		
+				
+		public const byte MaxOriginalBlock = Block.Obsidian;
+		public const int OriginalCount = MaxOriginalBlock + 1;
+		public const byte MaxCpeBlock = Block.StoneBrick;
+		public const int CpeCount = MaxCpeBlock + 1;
+		public const byte MaxDefinedBlock = byte.MaxValue;
+		public const int Count = MaxDefinedBlock + 1;
 	}
 }

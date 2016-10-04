@@ -8,41 +8,27 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		public Vector3[] MinBB = new Vector3[BlocksCount];
-		public Vector3[] MaxBB = new Vector3[BlocksCount];
+		public Vector3[] MinBB = new Vector3[Block.Count];
+		public Vector3[] MaxBB = new Vector3[Block.Count];
 		
-		void InitBoundingBoxes() {
-			for( int i = 0; i < BlocksCount; i++ ) {
-				if( IsSprite[i] ) {
-					MinBB[i] = new Vector3( 2.50f/16f, 0, 2.50f/16f );
-					MaxBB[i] = new Vector3( 13.5f/16f, 1, 13.5f/16f );
-				} else {
-					MinBB[i] = Vector3.Zero;
-					MaxBB[i].X = 1; MaxBB[i].Z = 1;
-				}
+		internal byte CalcLightOffset( byte block ) {
+			int flags = 0xFF;
+			Vector3 min = MinBB[block], max = MaxBB[block];
+			
+			if( min.X != 0 ) flags &= ~(1 << Side.Left);
+			if( max.X != 1 ) flags &= ~(1 << Side.Right);
+			if( min.Z != 0 ) flags &= ~(1 << Side.Front);
+			if( max.Z != 1 ) flags &= ~(1 << Side.Back);
+			
+			if( (min.Y != 0 && max.Y == 1) && !IsAir[block] ) {
+				flags &= ~(1 << Side.Top);
+				flags &= ~(1 << Side.Bottom);
 			}
-		}
-		
-		internal void InitLightOffsets() {
-			for( int block = 0; block < BlocksCount; block++ ) {
-				int flags = 0xFF;
-				Vector3 min = MinBB[block], max = MaxBB[block];
-				
-				if( min.X != 0 ) flags &= ~(1 << Side.Left);
-				if( max.X != 1 ) flags &= ~(1 << Side.Right);
-				if( min.Z != 0 ) flags &= ~(1 << Side.Front);
-				if( max.Z != 1 ) flags &= ~(1 << Side.Back);
-				
-				if( (min.Y != 0 && max.Y == 1) && !IsAir[block] ) {
-					flags &= ~(1 << Side.Top);
-					flags &= ~(1 << Side.Bottom);
-				}
-				LightOffset[block] = (byte)flags;
-			}
+			return (byte)flags;
 		}
 		
 		public void RecalculateSpriteBB( FastBitmap fastBmp ) {
-			for( int i = 0; i < BlocksCount; i++ ) {
+			for( int i = 0; i < Block.Count; i++ ) {
 				if( IsSprite[i] ) RecalculateBB( i, fastBmp );
 			}
 		}

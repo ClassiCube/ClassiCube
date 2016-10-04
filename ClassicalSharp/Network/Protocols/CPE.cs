@@ -200,8 +200,7 @@ namespace ClassicalSharp.Network.Protocols {
 			Inventory inv = game.Inventory;
 			
 			if( blockId == 0 ) {
-				int count = game.UseCPEBlocks ? BlockInfo.CpeCount
-					: BlockInfo.OriginalCount;
+				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
 				for( int i = 1; i < count; i++ ) {
 					inv.CanPlace.SetNotOverridable( canPlace, i );
 					inv.CanDelete.SetNotOverridable( canDelete, i );

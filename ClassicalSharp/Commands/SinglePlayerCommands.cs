@@ -70,7 +70,7 @@ namespace ClassicalSharp.Commands {
 			if( !byte.TryParse( id, out blockID ) ) {
 				game.Chat.Add( "&eCuboid: &c\"" + id + "\" is not a valid block id." ); return false;
 			}
-			if( blockID >= BlockInfo.CpeCount && game.BlockInfo.Name[blockID] == "Invalid" ) {
+			if( blockID >= Block.CpeCount && game.BlockInfo.Name[blockID] == "Invalid" ) {
 				game.Chat.Add( "&eCuboid: &cThere is no block with id \"" + id + "\"." ); return false;
 			}
 			block = blockID;

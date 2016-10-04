@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 			Animations = AddComponent( new Animations() );
 			Inventory = AddComponent( new Inventory() );
 			
-			BlockInfo.SetDefaultBlockPermissions( Inventory.CanPlace, Inventory.CanDelete );
+			BlockInfo.SetDefaultBlockPerms( Inventory.CanPlace, Inventory.CanDelete );
 			World = new World( this );
 			LocalPlayer = AddComponent( new LocalPlayer( this ) );
 			Entities[255] = LocalPlayer;

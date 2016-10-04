@@ -7,70 +7,7 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		internal byte[] textures = new byte[BlocksCount * Side.Sides];
-
-		void SetupTextures() {
-			// Row 1
-			SetAll( Block.Grass ); SetAll( Block.Stone );
-			SetAll( Block.Dirt ); SetSide( Block.Grass );
-			SetTex( 0 + 2, Side.Bottom, Block.Grass ); SetAll( Block.Wood );
-			SetSide( Block.DoubleSlab ); SetSide( 0 + 5, Block.Slab );
-			SetTopAndBottom( Block.DoubleSlab ); SetTopAndBottom( 0 + 6, Block.Slab );
-			SetAll( Block.Brick ); SetSide( Block.TNT );
-			SetTop( Block.TNT ); SetBottom( Block.TNT );
-			SetAll( Block.Rope ); SetAll( Block.Rose ); SetAll( Block.Dandelion );
-			SetAll( Block.Water ); SetAll( Block.Sapling );
-			SetAll( 0 + 14, Block.StillWater );
-			// Row 2
-			SetAll( Block.Cobblestone ); SetAll( Block.Bedrock );
-			SetAll( Block.Sand ); SetAll( Block.Gravel );
-			SetAll( 16 + 0, Block.CobblestoneSlab ); SetSide( Block.Log );
-			SetTopAndBottom( Block.Log ); SetAll( Block.Leaves );
-			SetTop( Block.Iron ); SetTop( Block.Gold );
-			SetTop( Block.Sandstone ); SetTop( Block.Pillar );
-			texId += 1;
-			SetAll( Block.RedMushroom ); SetAll( Block.BrownMushroom );
-			SetAll( Block.Lava ); SetAll( 16 + 14, Block.StillLava );
-			texId += 1;
-			// Row 3
-			SetAll( Block.GoldOre ); SetAll( Block.IronOre );
-			SetAll( Block.CoalOre ); SetAll( Block.Bookshelf );
-			SetAll(  Block.MossyRocks ); SetAll( Block.Obsidian );
-			SetAll(	Block.Fire ); SetTopAndBottom( 0 + 4, Block.Bookshelf );
-			SetSide( Block.Iron ); SetSide( Block.Gold );
-			SetSide( Block.Sandstone ); SetSide( Block.Pillar );
-			texId += 5;
-			// Row 4
-			SetAll( Block.Sponge ); SetAll( Block.Glass ); 
-			SetAll( Block.Snow ); SetAll( Block.Ice ); 
-			SetAll( Block.StoneBrick ); SetAll( Block.Crate ); 
-			SetAll( Block.CeramicTile ); SetBottom( Block.Iron ); 
-			SetBottom( Block.Gold ); SetBottom( Block.Sandstone ); 
-			SetBottom( Block.Pillar );
-			texId += 5;
-			// Row 5
-			SetAll( Block.Red ); SetAll( Block.Orange ); 
-			SetAll( Block.Yellow ); SetAll( Block.Lime ); 
-			SetAll( Block.Green ); SetAll( Block.Teal ); 
-			SetAll( Block.Aqua ); SetAll( Block.Cyan ); 
-			SetAll( Block.Blue ); SetAll( Block.Indigo ); 
-			SetAll( Block.Violet ); SetAll( Block.Magenta ); 
-			SetAll( Block.Pink ); SetAll( Block.Black );
-			SetAll( Block.Gray ); SetAll( Block.White );
-			// Row 6
-			SetAll( Block.LightPink ); SetAll( Block.ForestGreen );
-			SetAll( Block.Brown ); SetAll( Block.DeepBlue );
-			SetAll( Block.Turquoise );
-			texId += 1;
-			SetAll( Block.Magma );
-		}
-		
-		void SetAll( int textureId, byte blockId ) {
-			int index = blockId * Side.Sides;
-			for( int i = index; i < index + Side.Sides; i++ ) {
-				textures[i] = (byte)textureId;
-			}
-		}
+		internal byte[] textures = new byte[Block.Count * Side.Sides];
 		
 		internal void SetSide( int textureId, byte blockId ) {
 			int index = blockId * Side.Sides;
@@ -78,34 +15,8 @@ namespace ClassicalSharp {
 				textures[i] = (byte)textureId;
 		}
 		
-		internal void SetTopAndBottom( int textureId, byte blockId ) {
-			textures[blockId * Side.Sides + Side.Bottom] = (byte)textureId;
-			textures[blockId * Side.Sides + Side.Top] = (byte)textureId;
-		}
-		
 		internal void SetTex( int textureId, int face, byte blockId ) {
 			textures[blockId * Side.Sides + face] = (byte)textureId;
-		}
-
-		int texId;
-		void SetAll( byte blockId ) {
-			SetAll( texId, blockId ); texId++;
-		}
-		
-		void SetSide( byte blockId ) {
-			SetSide( texId, blockId ); texId++;
-		}
-		
-		void SetTopAndBottom( byte blockId ) {
-			SetTopAndBottom( texId, blockId ); texId++;
-		}
-		
-		void SetTop( byte blockId ) {
-			SetTex( texId, Side.Top, blockId ); texId++;
-		}
-		
-		void SetBottom( byte blockId ) {
-			SetTex( texId, Side.Bottom, blockId ); texId++;
 		}
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>
@@ -145,5 +56,18 @@ namespace ClassicalSharp {
 			return bMin.X >= oMin.X && bMin.Y >= oMin.Y
 				&& bMax.X <= oMax.X && bMax.Y <= oMax.Y;
 		}
+		
+		static byte[] topTex = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14, 30, 30, 
+			18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 72, 
+			73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4, 
+			36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
+		static byte[] sideTex = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14, 30, 30, 
+			18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 72, 
+			73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35, 
+			36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
+		static byte[] bottomTex = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14, 30, 30, 
+			18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 72, 
+			73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4, 
+			36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 	}
 }

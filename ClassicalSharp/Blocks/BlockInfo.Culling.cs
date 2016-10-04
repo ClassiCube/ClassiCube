@@ -7,35 +7,32 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		public byte[] hidden = new byte[BlocksCount * BlocksCount];
+		public byte[] hidden = new byte[Block.Count * Block.Count];
 		
-		public byte[] CanStretch = new byte[BlocksCount];
+		public byte[] CanStretch = new byte[Block.Count];
 		
-		public bool[] IsAir = new bool[BlocksCount];
+		public bool[] IsAir = new bool[Block.Count];
 
-		internal void SetupCullingCache() {
-			IsAir[0] = true;
-			for( int block = 1; block < BlocksCount; block++ )
+		internal void UpdateCulling() {
+			for( int block = 1; block < Block.Count; block++ )
 				CheckOpaque( block );
-			for( int block = 0; block < BlocksCount; block++ )
+			for( int block = 0; block < Block.Count; block++ )
 				CanStretch[block] = 0x3F;
 			
-			for( int blockI = 1; blockI < BlocksCount; blockI++ ) {
-				for( int neighbourI = 1; neighbourI < BlocksCount; neighbourI++ ) {
-					byte block = (byte)blockI, neighbour = (byte)neighbourI;
-					UpdateCulling( block, neighbour );
+			for( int block = 1; block < Block.Count; block++ ) {
+				for( int neighbour = 1; neighbour < Block.Count; neighbour++ ) {
+					CalcCulling( (byte)block, (byte)neighbour );
 				}
 			}
 		}
 		
-		internal void SetupCullingCache( byte block ) {
-			IsAir[0] = true;
+		internal void UpdateCulling( byte block ) {
 			CheckOpaque( block );
 			CanStretch[block] = 0x3F;
 			
-			for( int other = 1; other < BlocksCount; other++ ) {
-				UpdateCulling( block, (byte)other );
-				UpdateCulling( (byte)other, block );
+			for( int other = 1; other < Block.Count; other++ ) {
+				CalcCulling( block, (byte)other );
+				CalcCulling( (byte)other, block );
 			}
 		}
 		
@@ -46,7 +43,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void UpdateCulling( byte block, byte other ) {
+		void CalcCulling( byte block, byte other ) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
 			if( IsLiquid( block ) ) bMax.Y -= 1.5f/16;
@@ -101,14 +98,14 @@ namespace ClassicalSharp {
 		void SetHidden( byte block, byte other, int side, bool value ) {
 			value = IsHidden( block, other, side ) && value;
 			int bit = value ? 1 : 0;
-			hidden[block * BlocksCount + other] &= (byte)~(1 << side);
-			hidden[block * BlocksCount + other] |= (byte)(bit << side);
+			hidden[block * Block.Count + other] &= (byte)~(1 << side);
+			hidden[block * Block.Count + other] |= (byte)(bit << side);
 		}
 		
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
 		public bool IsFaceHidden( byte block, byte other, int tileSide ) {
-			return (hidden[block * BlocksCount + other] & (1 << tileSide)) != 0;
+			return (hidden[(block << 8) | other] & (1 << tileSide)) != 0;
 		}
 		
 		void SetXStretch( byte block, bool stretch ) {
