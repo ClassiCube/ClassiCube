@@ -179,6 +179,7 @@
     <Compile Include="Generator\Noise.cs" />
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
+    <Compile Include="GraphicsAPI\IGraphicsAPI.Core.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
     <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />

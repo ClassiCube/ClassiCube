@@ -28,7 +28,5 @@ namespace ClassicalSharp.Model {
 	}
 	
 	/// <summary> Describes the type of skin that a humanoid model uses. </summary>
-	public enum SkinType {
-		Type64x32, Type64x64, Type64x64Slim,
-	}
+	public enum SkinType { Type64x32, Type64x64, Type64x64Slim, Invalid }
 }

@@ -158,9 +158,8 @@ namespace ClassicalSharp {
 				int alpha = AndroidColor.GetAlphaComponent( bmp.GetPixel( 54 * scale, 20 * scale ) );
 				#endif
 				return alpha >= 127 ? SkinType.Type64x64 : SkinType.Type64x64Slim;
-			} else {
-				throw new NotSupportedException( "unsupported skin dimensions: " + bmp.Width + ", " + bmp.Height );
 			}
+			return SkinType.Invalid;
 		}
 		
 		/// <summary> Returns whether the specified string starts with http:// or https:// </summary>

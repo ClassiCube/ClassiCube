@@ -363,8 +363,11 @@ namespace ClassicalSharp {
 				}
 				
 				Graphics.DeleteTexture( ref texId );
-				if( setSkinType )
+				if( setSkinType ) {
 					DefaultPlayerSkinType = Utils.GetSkinType( bmp );
+					if( DefaultPlayerSkinType == SkinType.Invalid )
+						throw new NotSupportedException( "char.png has invalid dimensions" );
+				}
 				
 				if( !Platform.Is32Bpp( bmp ) ) {
 					using( Bitmap bmp32 = Drawer2D.ConvertTo32Bpp( bmp ) )

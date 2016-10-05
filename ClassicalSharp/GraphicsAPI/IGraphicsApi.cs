@@ -11,7 +11,7 @@ using System.Drawing.Imaging;
 namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
-	public abstract class IGraphicsApi {
+	public abstract partial class IGraphicsApi {
 		
 		/// <summary> Maximum supported length of a dimension (width and height) of a 2D texture. </summary>
 		public abstract int MaxTextureDimensions { get; }
@@ -51,11 +51,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
 		public int CreateTexture( Bitmap bmp ) {
 			if( !Platform.Is32Bpp( bmp ) ) {
-				string line2 = String.Format( "input bitmap was not 32bpp" );
-				ErrorHandler.LogError( "IGraphicsApi.CreateTexture()",
-				                      Environment.NewLine + line2 +
-				                      Environment.NewLine + Environment.StackTrace );
-				return -1;
+				throw new ArgumentOutOfRangeException( "Bitmap must be 32bpp" );
 			}
 			bmpBuffer.SetData( bmp, false, true );
 			return CreateTexture( bmpBuffer );
@@ -252,155 +248,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal abstract void MakeApiInfo();		
 		public string[] ApiInfo;
 		
-		
-		protected void InitDynamicBuffers() {
-			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.P3fT2fC4b, 4 );
-		}
-		
-		public virtual void Dispose() {
-			DeleteDynamicVb( ref quadVb );
-			DeleteDynamicVb( ref texVb );
-		}
-		
-		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
-		internal int quadVb;
-		public virtual void Draw2DQuad( float x, float y, float width, float height, 
-		                               FastColour col ) {
-			int c = col.Pack();
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
-			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
-		}
-		
-		public virtual void Draw2DQuad( float x, float y, float width, float height, 
-		                               FastColour topCol, FastColour bottomCol ) {
-			int c = topCol.Pack();
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
-			c = bottomCol.Pack();
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
-			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
-		}
-		
-		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
-		internal int texVb;
-		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
-			int index = 0;
-			Make2DQuad( ref tex, col, texVerts, ref index );
-			SetBatchFormat( VertexFormat.P3fT2fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
-		}
-		
-		public static void Make2DQuad( ref Texture tex, FastColour col,
-		                              VertexP3fT2fC4b[] vertices, ref int index ) {
-			float x1 = tex.X, y1 = tex.Y, x2 = tex.X + tex.Width, y2 = tex.Y + tex.Height;
-			#if USE_DX
-			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
-			// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.
-			x1 -= 0.5f; x2 -= 0.5f;
-			y1 -= 0.5f; y2 -= 0.5f;
-			#endif
-			int c = col.Pack();
-			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, c );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, c );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, c );
-			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, c );
-		}
-		
-		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
-		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
-		public void Mode2D( float width, float height, bool setFog ) {
-			SetMatrixMode( MatrixType.Projection );
-			PushMatrix();
-			LoadOrthoMatrix( width, height );
-			SetMatrixMode( MatrixType.Modelview );
-			PushMatrix();
-			LoadIdentityMatrix();
-			
-			DepthTest = false;
-			AlphaBlending = true;
-			if( setFog ) Fog = false;
-		}
-		
 		protected virtual void LoadOrthoMatrix( float width, float height ) {
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, -10000, 10000 );
 			LoadMatrix( ref matrix );
 		}
-		
-		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
-		/// is suitable for rendering 3D vertices. </summary>
-		public void Mode3D( bool setFog ) {
-			SetMatrixMode( MatrixType.Projection );
-			PopMatrix(); // Get rid of orthographic 2D matrix.
-			SetMatrixMode( MatrixType.Modelview );
-			PopMatrix();
-			
-			DepthTest = true;
-			AlphaBlending = false;
-			if( setFog ) Fog = true;
-		}
-		
-		internal unsafe int MakeDefaultIb() {
-			const int maxIndices = 65536 / 4 * 6;
-			int element = 0;
-			ushort* indices = stackalloc ushort[maxIndices];
-			IntPtr ptr = (IntPtr)indices;
-			
-			for( int i = 0; i < maxIndices; i += 6 ) {
-				*indices = (ushort)(element + 0); indices++;
-				*indices = (ushort)(element + 1); indices++;
-				*indices = (ushort)(element + 2); indices++;
-				
-				*indices = (ushort)(element + 2); indices++;
-				*indices = (ushort)(element + 3); indices++;
-				*indices = (ushort)(element + 0); indices++;
-				element += 4;
-			}
-			return CreateIb( ptr, maxIndices );
-		}
-	}
-
-	public enum VertexFormat {
-		P3fC4b = 0, P3fT2fC4b = 1,
-	}
-	
-	public enum DrawMode {
-		Triangles = 0, Lines = 1,
-	}
-	
-	public enum CompareFunc {
-		Always = 0,
-		NotEqual = 1,
-		Never = 2,
-		
-		Less = 3,
-		LessEqual = 4,
-		Equal = 5,
-		GreaterEqual = 6,
-		Greater = 7,
-	}
-	
-	public enum BlendFunc {
-		Zero = 0,
-		One = 1,
-		
-		SourceAlpha = 2,
-		InvSourceAlpha = 3,
-		DestAlpha = 4,
-		InvDestAlpha = 5,
-	}
-	
-	public enum Fog {
-		Linear = 0, Exp = 1, Exp2 = 2,
-	}
-	
-	public enum MatrixType {
-		Projection = 0, Modelview = 1, Texture = 2,
 	}
 }

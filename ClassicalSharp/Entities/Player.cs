@@ -112,29 +112,29 @@ namespace ClassicalSharp.Entities {
 		protected void CheckSkin() {
 			DownloadedItem item;
 			game.AsyncDownloader.TryGetItem( SkinIdentifier, out item );
-			if( item != null && item.Data != null ) {
-				Bitmap bmp = (Bitmap)item.Data;
-				game.Graphics.DeleteTexture( ref TextureId );
-				if( !Platform.Is32Bpp( bmp ) )
-					game.Drawer2D.ConvertTo32Bpp( ref bmp );
-				uScale = 1; vScale = 1;
-				EnsurePow2( ref bmp );
-				
-				try {
-					SkinType = Utils.GetSkinType( bmp );
-					if( Model is HumanoidModel )
-						ClearHat( bmp, SkinType );
-					TextureId = game.Graphics.CreateTexture( bmp );
-					MobTextureId = -1;
-					
-					// Custom mob textures.
-					if( Utils.IsUrlPrefix( SkinName, 0 ) && item.TimeAdded > lastModelChange )
-						MobTextureId = TextureId;
-				} catch( NotSupportedException ) {
-					ResetSkin( bmp );
-				}
-				bmp.Dispose();
+			if( item == null || item.Data == null ) return;
+			
+			Bitmap bmp = (Bitmap)item.Data;
+			game.Graphics.DeleteTexture( ref TextureId );
+			if( !Platform.Is32Bpp( bmp ) )
+				game.Drawer2D.ConvertTo32Bpp( ref bmp );
+			uScale = 1; vScale = 1;
+			EnsurePow2( ref bmp );
+			
+			SkinType = Utils.GetSkinType( bmp );
+			if( SkinType == SkinType.Invalid ) {
+				ResetSkin( bmp ); return;
 			}
+			
+			if( Model is HumanoidModel )
+				ClearHat( bmp, SkinType );
+			TextureId = game.Graphics.CreateTexture( bmp );
+			MobTextureId = -1;
+			
+			// Custom mob textures.
+			if( Utils.IsUrlPrefix( SkinName, 0 ) && item.TimeAdded > lastModelChange )
+				MobTextureId = TextureId;
+			bmp.Dispose();
 		}
 		
 		void ResetSkin( Bitmap bmp ) {
@@ -143,6 +143,7 @@ namespace ClassicalSharp.Entities {
 			MobTextureId = -1;
 			TextureId = -1;
 			SkinType = game.DefaultPlayerSkinType;
+			bmp.Dispose();
 		}
 		
 		unsafe static void ClearHat( Bitmap bmp, SkinType skinType ) {
