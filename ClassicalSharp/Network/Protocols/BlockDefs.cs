@@ -19,16 +19,12 @@ namespace ClassicalSharp.Network.Protocols {
 		internal void HandleDefineBlock() {
 			byte id = HandleDefineBlockCommonStart( reader, false );
 			BlockInfo info = game.BlockInfo;
-			byte shape = reader.ReadUInt8();
-			if( shape == 0 ) {
-				info.IsSprite[id] = true;
-				info.IsOpaque[id] = false;
-				info.IsTransparent[id] = true;
-			} else if( shape <= 16 ) {
-				info.MaxBB[id].Y = shape / 16f;
-			}
 			
-			HandleDefineBlockCommonEnd( reader, id );
+			byte shape = reader.ReadUInt8();
+			if( shape > 0 && shape <= 16 )
+				info.MaxBB[id].Y = shape / 16f;
+			
+			HandleDefineBlockCommonEnd( reader, shape, id );
 			// Update sprite BoundingBox if necessary
 			if( info.IsSprite[id] ) {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
@@ -64,7 +60,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			info.MinBB[id] = min;
 			info.MaxBB[id] = max;
-			HandleDefineBlockCommonEnd( reader, id );
+			HandleDefineBlockCommonEnd( reader, 1, id );
 		}
 		
 		byte HandleDefineBlockCommonStart( NetReader reader, bool uniqueSideTexs ) {
@@ -101,9 +97,11 @@ namespace ClassicalSharp.Network.Protocols {
 			return id;
 		}
 		
-		void HandleDefineBlockCommonEnd( NetReader reader, byte id ) {
+		void HandleDefineBlockCommonEnd( NetReader reader, byte shape, byte id ) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
+			if( shape == 0 )
+				blockDraw = (byte)BlockDraw.Sprite;
 			info.SetBlockDraw( id, (BlockDraw)blockDraw );
 			info.LightOffset[id] = info.CalcLightOffset( id );
 			

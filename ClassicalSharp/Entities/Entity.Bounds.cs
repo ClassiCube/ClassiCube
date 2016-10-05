@@ -93,7 +93,7 @@ namespace ClassicalSharp.Entities {
 				//	max.Y -= 4/16f;
 				
 				AABB blockBB = new AABB( min, max );
-				if( !blockBB.Intersects( bounds ) ) continue;		
+				if( !blockBB.Intersects( bounds ) ) continue;
 				if( block == block1 || block == block2 ) return true;
 			}
 			return false;
