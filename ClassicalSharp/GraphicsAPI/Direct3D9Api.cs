@@ -164,8 +164,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { if( !value ) device.SetTexture( 0, null ); }
 		}
 
-		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
-			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed );
+		protected override int CreateTexture( int width, int height, IntPtr scan0, bool managedPool ) {
+			Pool pool = managedPool ? Pool.Managed : Pool.Default;
+			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, pool );
 			texture.SetData( 0, LockFlags.None, scan0, width * height * 4 );
 			return GetOrExpand( ref textures, texture, texBufferSize );
 		}

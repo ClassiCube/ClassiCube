@@ -96,8 +96,6 @@ namespace ClassicalSharp {
 							if( x >= width ) break;
 							
 							byte rawBlock = mapPtr[index];
-							if( rawBlock == Block.StillWater ) rawBlock = Block.Water;
-							if( rawBlock == Block.StillLava ) rawBlock = Block.Lava;
 							
 							allAir = allAir && rawBlock == 0;
 							allSolid = allSolid && info.IsOpaque[rawBlock];

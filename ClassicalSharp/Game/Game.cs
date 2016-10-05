@@ -371,9 +371,9 @@ namespace ClassicalSharp {
 				
 				if( !Platform.Is32Bpp( bmp ) ) {
 					using( Bitmap bmp32 = Drawer2D.ConvertTo32Bpp( bmp ) )
-						texId = Graphics.CreateTexture( bmp32 );
+						texId = Graphics.CreateTexture( bmp32, true );
 				} else {
-					texId = Graphics.CreateTexture( bmp );
+					texId = Graphics.CreateTexture( bmp, true );
 				}
 				return true;
 			}
