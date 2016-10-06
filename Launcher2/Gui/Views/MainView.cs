@@ -13,7 +13,7 @@ namespace Launcher.Gui.Views {
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
 		public MainView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[13];
+			widgets = new Widget[14];
 		}
 		
 		public override void Init() {
@@ -90,6 +90,10 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 250, -20 );
 			widgets[sslIndex].Visible = sslVisible;
 			widgets[sslIndex + 1].Visible = sslVisible;
+			
+			Makers.Bitmap( this, Bitmaps.OptionsIndices, 
+			              Bitmaps.OptionsPalette, Bitmaps.OptionsSize )
+				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 5 );
 		}
 	}
 }
