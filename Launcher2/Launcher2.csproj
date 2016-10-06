@@ -85,6 +85,7 @@
     <Compile Include="Gui\Views\ResourcesView.cs" />
     <Compile Include="Gui\Views\ServersView.cs" />
     <Compile Include="Gui\Views\UpdatesView.cs" />
+    <Compile Include="Gui\Widgets\BitmapWidget.cs" />
     <Compile Include="Gui\Widgets\CheckboxWidget.cs" />
     <Compile Include="Gui\Widgets\InputText.cs" />
     <Compile Include="Gui\Widgets\ButtonWidget.cs" />

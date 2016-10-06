@@ -3,7 +3,7 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Views;
 
-namespace Launcher.Gui.Widgets {	
+namespace Launcher.Gui.Widgets {
 	/// <summary> Helper methods to construct widgets. </summary>
 	public static class Makers {
 		
@@ -82,6 +82,20 @@ namespace Launcher.Gui.Widgets {
 
 			widget.Progress = progress;
 			widget.ProgressColour = progressCol;
+			view.widgetIndex++;
+			return widget;
+		}
+		
+		public static Widget Bitmap( IView view, byte[] indices, 
+		                            FastColour[] palette, int size ) {
+			BitmapWidget widget;
+			if( view.widgets[view.widgetIndex] != null ) {
+				widget = (BitmapWidget)view.widgets[view.widgetIndex];
+			} else {
+				widget = new BitmapWidget( view.game, size, indices, palette );
+				view.widgets[view.widgetIndex] = widget;
+			}
+			
 			view.widgetIndex++;
 			return widget;
 		}

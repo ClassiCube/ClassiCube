@@ -4,7 +4,7 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {	
+namespace Launcher.Gui.Views {
 	public sealed class DirectConnectView : IView {
 		
 		internal int connectIndex, backIndex, ccSkinsIndex, statusIndex;
@@ -45,7 +45,7 @@ namespace Launcher.Gui.Views {
 			
 			connectIndex = widgetIndex;
 			Makers.Button( this, "Connect", 110, 35, titleFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 50 );			
+				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 50 );
 			backIndex = widgetIndex;
 			Makers.Button( this, "Back", 80, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 125, 50 );

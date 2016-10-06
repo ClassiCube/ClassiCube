@@ -61,6 +61,9 @@ namespace Launcher.Gui.Screens {
 				game.ResetArea( label.X, label.Y, label.Width, label.Height );
 				RedrawWidget( label );
 			}
+			
+			BitmapWidget bitmap = widget as BitmapWidget;
+			if( bitmap != null ) RedrawWidget( bitmap );
 		}
 		
 		/// <summary>Redraws the given widget and marks the window as needing to be redrawn. </summary>
