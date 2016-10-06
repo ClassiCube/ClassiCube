@@ -66,7 +66,7 @@ namespace Launcher.Gui.Views {
 			
 			if( FirstTime ) {
 				backIndex = -1;
-				Makers.Label( this, "&eClick &fEnhanced &eif you are unsure which mode to choose.", textFont )
+				Makers.Label( this, "&eClick &fEnhanced &eif you'e not sure which mode to choose.", textFont )
 					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 160 );
 			} else {
 				backIndex = widgetIndex;

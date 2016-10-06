@@ -6,7 +6,7 @@ using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {	
+namespace Launcher.Gui.Screens {
 	public sealed class ColoursScreen : InputScreen {
 		
 		ColoursView view;
@@ -44,15 +44,18 @@ namespace Launcher.Gui.Screens {
 		
 		protected override void MouseMove( int x, int y, int xDelta, int yDelta ) {
 			base.MouseMove( x, y, xDelta, yDelta );
-			SliderWidget slider = (SliderWidget)widgets[view.sliderIndex];
 			
-			if( x >= slider.X && y >= slider.Y && x < slider.X + slider.Width 
-			   && y < slider.Y + slider.Height ) {
+			for( int i = 0; i < 3; i++) {
+				SliderWidget slider = (SliderWidget)widgets[view.sliderIndex + i];				
+				if( x < slider.X || y < slider.Y || x >= slider.X + slider.Width
+				   || y >= slider.Y + slider.Height ) continue;
+				
 				int value = x - slider.X;
 				// Map from 0 to 255
 				value = (255 * value) / (slider.Width - 1);
 				slider.Value = value;
 				RedrawWidget( slider );
+				return;
 			}
 		}
 		
@@ -61,16 +64,17 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Left )
+			if( e.Key == Key.Left ) {
 				AdjustSelectedColour( -1 );
-			else if( e.Key == Key.Right)
+			} else if( e.Key == Key.Right ) {
 				AdjustSelectedColour( +1 );
-			else if( e.Key == Key.Up )
+			} else if( e.Key == Key.Up ) {
 				AdjustSelectedColour( +10 );
-			else if( e.Key == Key.Down )
+			} else if( e.Key == Key.Down ) {
 				AdjustSelectedColour( -10 );
-			else
+			} else {
 				base.KeyDown( sender, e );
+			}
 		}
 		
 		void AdjustSelectedColour( int delta ) {
