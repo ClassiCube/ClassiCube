@@ -10,6 +10,8 @@ namespace Launcher.Gui.Screens {
 		
 		ResourceFetcher fetcher;
 		ResourcesView view;
+		int lastProgress = int.MinValue;
+
 		public ResourcesScreen( LauncherWindow game ) : base( game ) {
 			view = new ResourcesView( game );
 			widgets = view.widgets;
@@ -56,11 +58,11 @@ namespace Launcher.Gui.Screens {
 		
 		void CheckCurrentProgress() {
 			Request item = fetcher.downloader.CurrentItem;
-			if( item == null ) { view.lastProgress = int.MinValue; return; }
+			if( item == null ) { lastProgress = int.MinValue; return; }
 			
 			int progress = fetcher.downloader.CurrentItemProgress;
-			if( progress == view.lastProgress ) return;
-			view.lastProgress = progress;
+			if( progress == lastProgress ) return;
+			lastProgress = progress;
 			SetFetchStatus( progress );
 		}
 		

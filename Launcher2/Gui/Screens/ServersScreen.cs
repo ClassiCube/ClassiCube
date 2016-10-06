@@ -28,11 +28,11 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 		
-		protected override void MouseMove( object sender, MouseMoveEventArgs e ) {
-			base.MouseMove( sender, e );
+		protected override void MouseMove( int x, int y, int xDelta, int yDelta ) {
+			base.MouseMove( x, y, xDelta, yDelta );
 			if( selectedWidget != null && selectedWidget == widgets[view.tableIndex] ) {
 				TableWidget table = (TableWidget)widgets[view.tableIndex];
-				table.MouseMove( e.X, e.Y, e.XDelta, e.YDelta );
+				table.MouseMove( x, y, xDelta, yDelta );
 			}
 		}
 		

@@ -8,7 +8,7 @@ namespace Launcher.Gui.Widgets {
 	/// <summary> Represents a slider bar that may or may not be modifiable by the user. </summary>
 	public sealed class SliderWidget : Widget {
 		
-		public int Progress;
+		public int Value, MaxValue = 100;
 		public FastColour ProgressColour;
 		
 		public SliderWidget( LauncherWindow window, int width, int height ) : base( window ) {
@@ -22,7 +22,7 @@ namespace Launcher.Gui.Widgets {
 				DrawBoxBounds( bmp, r );
 				DrawBox( bmp, r );
 				
-				r.Width = (int)(Width * Progress / 100);
+				r.Width = (int)(Width * Value / MaxValue);
 				Drawer2DExt.Clear( bmp, r, ProgressColour );
 			}
 		}

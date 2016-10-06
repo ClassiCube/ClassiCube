@@ -71,16 +71,18 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public static Widget Slider( IView view, int width, int height,
-		                            int progress, FastColour progressCol ) {
+		                            int initValue, int maxValue,
+		                            FastColour progressCol ) {
 			SliderWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (SliderWidget)view.widgets[view.widgetIndex];
 			} else {
 				widget = new SliderWidget( view.game, width, height );
 				view.widgets[view.widgetIndex] = widget;
+				widget.Value = initValue;
+				widget.MaxValue = maxValue;
 			}
 
-			widget.Progress = progress;
 			widget.ProgressColour = progressCol;
 			view.widgetIndex++;
 			return widget;

@@ -11,7 +11,7 @@ namespace Launcher.Gui.Views {
 		public ColoursView( LauncherWindow game ) : base( game ) {
 			widgets = new Widget[26];
 		}
-		internal int defIndex;
+		internal int defIndex, sliderIndex;
 		
 		public override void Init() {
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
@@ -53,7 +53,9 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 120 );
 			Makers.Button( this, "Back", 80, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 170 );
-			Makers.Slider( this, 100, 10, 30, FastColour.Red )
+			
+			sliderIndex = widgetIndex;
+			Makers.Slider( this, 100, 10, 30, 255, FastColour.Red )
 				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 5 );
 		}
 		

@@ -41,6 +41,21 @@ namespace Launcher.Gui.Screens {
 			base.Dispose();
 		}
 		
+		
+		protected override void MouseMove( int x, int y, int xDelta, int yDelta ) {
+			base.MouseMove( x, y, xDelta, yDelta );
+			SliderWidget slider = (SliderWidget)widgets[view.sliderIndex];
+			
+			if( x >= slider.X && y >= slider.Y && x < slider.X + slider.Width 
+			   && y < slider.Y + slider.Height ) {
+				int value = x - slider.X;
+				// Map from 0 to 255
+				value = (255 * value) / (slider.Width - 1);
+				slider.Value = value;
+				RedrawWidget( slider );
+			}
+		}
+		
 		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
 			AdjustSelectedColour( e.Delta );
 		}

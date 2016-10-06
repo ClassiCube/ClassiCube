@@ -42,7 +42,6 @@ namespace Launcher.Gui.Views {
 		}
 
 		internal int yesIndex, noIndex, cancelIndex, sliderIndex, textIndex;
-		internal int lastProgress = int.MinValue;
 		const string format = "&eDownload size: {0} megabytes";
 		internal bool downloadingItems;
 		
@@ -60,7 +59,7 @@ namespace Launcher.Gui.Views {
 		internal void DrawProgressBox( int progress ) {
 			SliderWidget slider = (SliderWidget)widgets[sliderIndex];
 			slider.Visible = true;
-			slider.Progress = progress;
+			slider.Value = progress;
 			slider.Redraw( drawer );
 		}
 		
@@ -88,7 +87,7 @@ namespace Launcher.Gui.Views {
 			Makers.Button( this, "Cancel", 120, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 45 );
 			sliderIndex = widgetIndex;
-			Makers.Slider( this, 200, 10, lastProgress, progFront )
+			Makers.Slider( this, 200, 10, 0, 100, progFront )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 15 );
 		}
 		
