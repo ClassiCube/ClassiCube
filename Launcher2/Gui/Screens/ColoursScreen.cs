@@ -21,7 +21,7 @@ namespace Launcher.Gui.Screens {
 			view.Init();
 			
 			widgets[view.defIndex].OnClick = (x, y) => ResetColours();
-			widgets[view.defIndex + 1].OnClick = (x, y) => game.SetScreen( new MainScreen( game ) );
+			widgets[view.defIndex + 1].OnClick = (x, y) => game.SetScreen( new SettingsScreen( game ) );
 			SetupInputHandlers();
 			for( int i = 0; i < widgets.Length; i++ ) {
 				InputWidget input = widgets[i] as InputWidget;

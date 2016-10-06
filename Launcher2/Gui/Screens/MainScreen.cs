@@ -43,14 +43,14 @@ namespace Launcher.Gui.Screens {
 			string currentVer = Program.AppName.Substring( spaceIndex + 1 );
 			bool update = new Version( latestVer ) > new Version( currentVer );
 			
-			view.updateText = update ? "&aNew release available" : "&eUp to date     ";
+			view.updateText = update ? "&aNew release" : "&eUp to date";
 			game.RedrawBackground();
 			Resize();
 			SelectWidget( selectedWidget, 0, 0 );
 		}
 		
 		void FailedUpdateCheck( UpdateCheckTask task ) {
-			view.updateText = "&cUpdate check failed    ";
+			view.updateText = "&cCheck failed";
 			game.RedrawBackground();
 			Resize();
 			SelectWidget( selectedWidget, 0, 0 );
@@ -63,15 +63,7 @@ namespace Launcher.Gui.Screens {
 				(x, y) => game.SetScreen( new DirectConnectScreen( game ) );
 			widgets[view.spIndex].OnClick =
 				(x, y) => Client.Start( widgets[0].Text, ref game.ShouldExit );
-			
-			if( widgets[view.colIndex] != null )
-				widgets[view.colIndex].OnClick = 
-					(x, y) => game.SetScreen( new ColoursScreen( game ) );
-			
-			widgets[view.updatesIndex].OnClick =
-				(x, y) => game.SetScreen( new UpdatesScreen( game ) );
-			widgets[view.modeIndex].OnClick =
-				(x, y) => game.SetScreen( new ChooseModeScreen( game, false ) );
+
 			widgets[view.settingsIndex].OnClick =
 				(x, y) => game.SetScreen( new SettingsScreen( game ) );
 			SetupInputHandlers();

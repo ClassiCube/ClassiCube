@@ -71,7 +71,7 @@ namespace Launcher.Gui.Views {
 			} else {
 				backIndex = widgetIndex;
 				Makers.Button( this, "Back", 80, 35, titleFont )
-					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 175 );
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 170 );
 			}
 		}
 	}
