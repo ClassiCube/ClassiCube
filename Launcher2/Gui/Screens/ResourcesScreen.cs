@@ -11,14 +11,14 @@ namespace Launcher.Gui.Screens {
 		ResourceFetcher fetcher;
 		ResourcesView view;
 		public ResourcesScreen( LauncherWindow game ) : base( game ) {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
 			view = new ResourcesView( game );
 			widgets = view.widgets;
 		}
 
 		public override void Init() {
+			base.Init();
 			view.Init();
+			
 			SetWidgetHandlers();
 			Resize();
 		}
@@ -103,8 +103,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			base.Dispose();
 			view.Dispose();
 		}
 	}

@@ -13,13 +13,9 @@ namespace Launcher.Gui.Screens {
 		public InputScreen( LauncherWindow game ) : base( game ) { }
 		
 		public override void Init() {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
+			base.Init();
 			game.Window.Mouse.WheelChanged += MouseWheelChanged;
-			
 			game.Window.KeyPress += KeyPress;
-			game.Window.Keyboard.KeyDown += KeyDown;
-			game.Window.Keyboard.KeyUp += KeyUp;
 			game.Window.Keyboard.KeyRepeat = true;
 		}
 		
@@ -49,7 +45,7 @@ namespace Launcher.Gui.Screens {
 			lastCaretFlash = caretShow;
 		}
 		
-		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
 			if( e.Key == Key.Enter && enterIndex >= 0 ) {
 				Widget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
@@ -92,11 +88,6 @@ namespace Launcher.Gui.Screens {
 				KeyboardDevice keyboard = game.Window.Keyboard;
 				return keyboard[Key.ControlLeft] || keyboard[Key.ControlRight];
 			}
-		}
-		
-		protected void KeyUp( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab )
-				tabDown = false;
 		}
 
 		protected void KeyPress( object sender, KeyPressEventArgs e ) {
@@ -171,13 +162,9 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			game.Window.Mouse.WheelChanged -= MouseWheelChanged;
-			
+			base.Dispose();
+			game.Window.Mouse.WheelChanged -= MouseWheelChanged;			
 			game.Window.KeyPress -= KeyPress;
-			game.Window.Keyboard.KeyDown -= KeyDown;
-			game.Window.Keyboard.KeyUp -= KeyUp;
 			game.Window.Keyboard.KeyRepeat = false;
 		}
 	}

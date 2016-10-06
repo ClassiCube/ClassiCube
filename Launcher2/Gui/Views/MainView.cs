@@ -9,7 +9,7 @@ namespace Launcher.Gui.Views {
 		
 		Font buttonFont, updateFont;
 		internal int loginIndex, resIndex, dcIndex, spIndex, colIndex, statusIndex;
-		internal int updatesIndex, modeIndex, sslIndex;
+		internal int updatesIndex, modeIndex, sslIndex, settingsIndex;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
 		public MainView( LauncherWindow game ) : base( game ) {
@@ -91,6 +91,7 @@ namespace Launcher.Gui.Views {
 			widgets[sslIndex].Visible = sslVisible;
 			widgets[sslIndex + 1].Visible = sslVisible;
 			
+			settingsIndex = widgetIndex;
 			Makers.Bitmap( this, Bitmaps.OptionsIndices, 
 			              Bitmaps.OptionsPalette, Bitmaps.OptionsSize )
 				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 5 );

@@ -19,7 +19,12 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		/// <summary> Function called to setup the widgets and other data for this screen. </summary>
-		public abstract void Init();
+		public virtual void Init() {
+			game.Window.Mouse.Move += MouseMove;
+			game.Window.Mouse.ButtonDown += MouseButtonDown;
+			game.Window.Keyboard.KeyDown += KeyDown;
+			game.Window.Keyboard.KeyUp += KeyUp;
+		}
 		
 		/// <summary> Function that is repeatedly called multiple times every second. </summary>
 		public abstract void Tick();
@@ -28,7 +33,12 @@ namespace Launcher.Gui.Screens {
 		public abstract void Resize();
 		
 		/// <summary> Cleans up all native resources held by this screen. </summary>
-		public abstract void Dispose();
+		public virtual void Dispose() {
+			game.Window.Mouse.Move -= MouseMove;
+			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			game.Window.Keyboard.KeyDown -= KeyDown;
+			game.Window.Keyboard.KeyUp -= KeyUp;
+		}
 		
 		/// <summary> Function called when the pixels from the framebuffer
 		/// are about to be transferred to the window. </summary>
@@ -75,6 +85,7 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
+		
 		protected Widget lastClicked;
 		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
 			if( e.Button != MouseButton.Left ) return;
@@ -86,8 +97,7 @@ namespace Launcher.Gui.Screens {
 			lastClicked = selectedWidget;
 		}
 		
-		protected virtual void WidgetUnclicked( Widget widget ) {
-		}
+		protected virtual void WidgetUnclicked( Widget widget ) { }
 		
 		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
 			if( supressMove ) { supressMove = false; return; }
@@ -117,6 +127,22 @@ namespace Launcher.Gui.Screens {
 			selectedWidget = null;
 		}
 		
+		
+		protected virtual void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab ) {
+				HandleTab();
+			} else if( e.Key == Key.Enter ) {
+				Widget widget = selectedWidget;
+				if( widget != null && widget.OnClick != null )
+					widget.OnClick( 0, 0 );
+			}
+		}
+		
+		protected virtual void KeyUp( object sender, KeyboardKeyEventArgs e ) {
+			if( e.Key == Key.Tab )
+				tabDown = false;
+		}
+		
 		protected bool tabDown = false;
 		MouseMoveEventArgs moveArgs = new MouseMoveEventArgs();
 		MouseButtonEventArgs pressArgs = new MouseButtonEventArgs();
@@ -131,7 +157,7 @@ namespace Launcher.Gui.Screens {
 			Utils.Clamp( ref index, 0, widgets.Length - 1 );
 			
 			for( int j = 0; j < widgets.Length * 2; j++ ) {
-				int i = (j * dir + index) % widgets.Length;
+				int i = (index + j * dir) % widgets.Length;
 				if( i < 0 ) i += widgets.Length;
 				if( !widgets[i].Visible || !widgets[i].TabSelectable ) continue;
 				

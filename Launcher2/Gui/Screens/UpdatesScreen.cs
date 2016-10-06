@@ -14,41 +14,23 @@ namespace Launcher.Gui.Screens {
 		
 		UpdatesView view;
 		public UpdatesScreen( LauncherWindow game ) : base( game ) {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
-			
 			view = new UpdatesView( game );
 			widgets = view.widgets;
 		}
 
 		UpdateCheckTask checkTask;
 		public override void Init() {
-			view.Init();
+			base.Init();
+			view.Init();			
+			
 			if( game.checkTask != null && game.checkTask.Done && game.checkTask.Success )
 				SuccessfulUpdateCheck( game.checkTask );
 			
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
 			
-			game.Window.Keyboard.KeyDown += KeyDown;
-			game.Window.Keyboard.KeyUp += KeyUp;
 			SetWidgetHandlers();
 			Resize();
-		}
-
-		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab ) {
-				HandleTab();
-			} else if( e.Key == Key.Enter ) {
-				Widget widget = selectedWidget;
-				if( widget != null && widget.OnClick != null )
-					widget.OnClick( 0, 0 );
-			}
-		}
-		
-		void KeyUp( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab )
-				tabDown = false;
 		}
 
 		Build dev, stable;
@@ -136,10 +118,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.Window.Keyboard.KeyDown -= KeyDown;
-			game.Window.Keyboard.KeyUp -= KeyUp;
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			base.Dispose();
 			view.Dispose();
 		}
 	}

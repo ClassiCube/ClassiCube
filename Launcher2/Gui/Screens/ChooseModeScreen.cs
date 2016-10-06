@@ -10,21 +10,17 @@ namespace Launcher.Gui.Screens {
 		
 		ChooseModeView view;
 		public ChooseModeScreen( LauncherWindow game, bool firstTime ) : base( game ) {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
-			
 			view = new ChooseModeView( game );
 			view.FirstTime = firstTime;
 			widgets = view.widgets;
 		}
 
 		public override void Init() {
-			game.Window.Keyboard.KeyDown += KeyDown;
-			game.Window.Keyboard.KeyUp += KeyUp;
+			base.Init();
 			view.Init();
 			
 			widgets[view.nIndex].OnClick = (x, y) => ModeClick( false, false );
-			widgets[view.clIndex ].OnClick = (x, y) => ModeClick( true, false );
+			widgets[view.clIndex].OnClick = (x, y) => ModeClick( true, false );
 			widgets[view.clHaxIndex].OnClick = (x, y) => ModeClick( true, true );
 			
 			if( view.backIndex >= 0 ) {
@@ -35,21 +31,6 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Tick() { }
-
-		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab ) {
-				HandleTab();
-			} else if( e.Key == Key.Enter ) {
-				Widget widget = selectedWidget;
-				if( widget != null && widget.OnClick != null )
-					widget.OnClick( 0, 0 );
-			}
-		}
-		
-		void KeyUp( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Tab )
-				tabDown = false;
-		}
 
 		public override void Resize() {
 			view.DrawAll();
@@ -75,10 +56,7 @@ namespace Launcher.Gui.Screens {
 		}
 
 		public override void Dispose() {
-			game.Window.Keyboard.KeyDown -= KeyDown;
-			game.Window.Keyboard.KeyUp -= KeyUp;
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
+			base.Dispose();
 			view.Dispose();
 		}
 	}
