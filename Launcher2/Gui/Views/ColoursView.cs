@@ -9,7 +9,7 @@ namespace Launcher.Gui.Views {
 	public sealed class ColoursView : IView {
 		
 		public ColoursView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[25];
+			widgets = new Widget[26];
 		}
 		internal int defIndex;
 		
@@ -53,6 +53,8 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 120 );
 			Makers.Button( this, "Back", 80, 35, titleFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 170 );
+			Makers.Slider( this, 100, 10, 30, FastColour.Red )
+				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 5 );
 		}
 		
 		public void MakeAllRGBTriplets( bool force ) {

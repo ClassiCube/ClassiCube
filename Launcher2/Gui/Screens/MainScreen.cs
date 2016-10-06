@@ -46,14 +46,14 @@ namespace Launcher.Gui.Screens {
 			view.updateText = update ? "&aNew release available" : "&eUp to date     ";
 			game.RedrawBackground();
 			Resize();
-			SelectWidget( selectedWidget );
+			SelectWidget( selectedWidget, 0, 0 );
 		}
 		
 		void FailedUpdateCheck( UpdateCheckTask task ) {
 			view.updateText = "&cUpdate check failed    ";
 			game.RedrawBackground();
 			Resize();
-			SelectWidget( selectedWidget );
+			SelectWidget( selectedWidget, 0, 0 );
 		}
 		
 		void SetupWidgetHandlers() {
@@ -104,8 +104,8 @@ namespace Launcher.Gui.Screens {
 			Client.Start( data, resumeCCSkins, ref game.ShouldExit );
 		}
 		
-		protected override void SelectWidget( Widget widget ) {
-			base.SelectWidget( widget );
+		protected override void SelectWidget( Widget widget, int mouseX, int mouseY ) {
+			base.SelectWidget( widget, mouseX, mouseY );
 			if( signingIn || !resumeValid || widget != widgets[view.resIndex] ) return;
 			const string format = "&eResume to {0}:{1}, as {2}";
 			SetStatus( String.Format( format, resumeIp, resumePort, resumeUser ) );

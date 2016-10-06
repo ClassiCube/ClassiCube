@@ -54,7 +54,7 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		/// <summary> Called when user has moved their mouse over a given widget. </summary>
-		protected virtual void SelectWidget( Widget widget ) {
+		protected virtual void SelectWidget( Widget widget, int mouseX, int mouseY ) {
 			if( widget != null ) widget.Active = true;
 			ChangedActiveState( widget );
 		}
@@ -87,19 +87,27 @@ namespace Launcher.Gui.Screens {
 		
 		
 		protected Widget lastClicked;
-		protected void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
-			if( e.Button != MouseButton.Left ) return;
+		void MouseButtonDown( object sender, MouseButtonEventArgs e ) {
+			MouseButtonDown( e.X, e.Y, e.Button );
+		}
+		
+		void MouseMove( object sender, MouseMoveEventArgs e ) { 
+			MouseMove( e.X, e.Y, e.XDelta, e.YDelta ); 
+		}
+		
+		protected virtual void MouseButtonDown( int x, int y, MouseButton button ) {
+			if( button != MouseButton.Left ) return;
 			
 			if( lastClicked != null && lastClicked != selectedWidget )
 				WidgetUnclicked( lastClicked );
 			if( selectedWidget != null && selectedWidget.OnClick != null )
-				selectedWidget.OnClick( e.X, e.Y );
+				selectedWidget.OnClick( x, y );
 			lastClicked = selectedWidget;
 		}
 		
 		protected virtual void WidgetUnclicked( Widget widget ) { }
 		
-		protected virtual void MouseMove( object sender, MouseMoveEventArgs e ) {
+		protected virtual void MouseMove( int x, int y, int xDelta, int yDelta ) {
 			if( supressMove ) { supressMove = false; return; }
 			mouseMoved = true;
 			
@@ -110,13 +118,13 @@ namespace Launcher.Gui.Screens {
 				if( widgets[i] is InputWidget )
 					width = ((InputWidget)widgets[i]).RealWidth;
 				
-				if( e.X >= widget.X && e.Y >= widget.Y &&
-				   e.X < widget.X + width && e.Y < widget.Y + height ) {
+				if( x >= widget.X && y >= widget.Y &&
+				   x < widget.X + width && y < widget.Y + height ) {
 					if( selectedWidget == widget ) return;
 					
 					if( selectedWidget != null )
 						UnselectWidget( selectedWidget );
-					SelectWidget( widget );
+					SelectWidget( widget, x, y );
 					selectedWidget = widget;
 					return;
 				}
@@ -144,12 +152,10 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected bool tabDown = false;
-		MouseMoveEventArgs moveArgs = new MouseMoveEventArgs();
-		MouseButtonEventArgs pressArgs = new MouseButtonEventArgs();
 		protected void HandleTab() {
 			if( tabDown ) return;
 			tabDown = true;
-			bool shiftDown = game.Window.Keyboard[Key.ShiftLeft] 
+			bool shiftDown = game.Window.Keyboard[Key.ShiftLeft]
 				|| game.Window.Keyboard[Key.ShiftRight];
 			
 			int dir = shiftDown ? -1 : 1;
@@ -168,22 +174,17 @@ namespace Launcher.Gui.Screens {
 				int width = widget.Width;
 				if( widgets[i] is InputWidget )
 					width = ((InputWidget)widgets[i]).RealWidth;
-				moveArgs.X = widget.X + width / 2;
-				moveArgs.Y = widget.Y + widget.Height / 2;
+				int mouseX = widget.X + width / 2;
+				int mouseY = widget.Y + widget.Height / 2;
 				
-				pressArgs.Button = MouseButton.Left;
-				pressArgs.IsPressed = true;
-				pressArgs.X = moveArgs.X;
-				pressArgs.Y = moveArgs.Y;
-				
-				MouseMove( null, moveArgs );
+				MouseMove( mouseX, mouseY, 0, 0 );
 				Point p = game.Window.PointToScreen( Point.Empty );
-				p.Offset( moveArgs.X, moveArgs.Y );
+				p.Offset( mouseX, mouseY );
 				game.Window.DesktopCursorPos = p;
-				lastClicked = widget;
 				
+				lastClicked = widget;				
 				if( widgets[i] is InputWidget ) {
-					MouseButtonDown( null, pressArgs );
+					MouseButtonDown( mouseX, mouseY, MouseButton.Left );
 					((InputWidget)widgets[i]).Chars.CaretPos = -1;
 				}
 				break;
