@@ -37,28 +37,28 @@ namespace Launcher.Gui.Views {
 			widgetIndex = 0;
 			
 			MakeInput( Get( 0 ), 330, false, 32, "&7Username.." )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -100 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
 			MakeInput( Get( 1 ), 330, false, 64, "&7IP address:Port number.." )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -50 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -75 );
 			MakeInput( Get( 2 ), 330, false, 32, "&7Mppass.." )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 0 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -30 );
 			
 			connectIndex = widgetIndex;
 			Makers.Button( this, "Connect", 110, 35, titleFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 50 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 20 );
 			backIndex = widgetIndex;
 			Makers.Button( this, "Back", 80, 35, titleFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 125, 50 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 125, 20 );
 			
 			statusIndex = widgetIndex;
 			Makers.Label( this, "", textFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 100 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 70 );
 			Makers.Label( this, "Use classicube.net for skins", textFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 30, 130 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 30, 100 );
 			
 			ccSkinsIndex = widgetIndex;
 			Makers.Checkbox( this, booleanFont, true, 30 )
-				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 130 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 100 );
 		}
 	}
 }

@@ -25,7 +25,7 @@ namespace Launcher.Gui.Screens {
 			
 			if( view.backIndex >= 0 ) {
 				widgets[view.backIndex].OnClick = (x, y)
-					=> game.SetScreen( new MainScreen( game ) );
+					=> game.SetScreen( new SettingsScreen( game ) );
 			}
 			Resize();
 		}
@@ -52,7 +52,7 @@ namespace Launcher.Gui.Screens {
 			Options.Set( "nostalgia-classicoptions", classic );
 			Options.Save();
 			
-			game.SetScreen( new MainScreen( game ) );
+			game.SetScreen( new SettingsScreen( game ) );
 		}
 
 		public override void Dispose() {

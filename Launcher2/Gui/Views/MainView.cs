@@ -44,11 +44,11 @@ namespace Launcher.Gui.Views {
 			MakeInput( Get( 0 ), 280, false, 16, "&7Username.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
 			MakeInput( Get( 1 ), 280, true, 64, "&7Password.." )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -70 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -75 );
 			
 			loginIndex = widgetIndex;
 			Makers.Button( this, "Sign in", 100, buttonHeight, buttonFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, -90, -20 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, -90, -25 );
 			statusIndex = widgetIndex;
 			Makers.Label( this, Get( statusIndex ), textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 20 );
@@ -56,7 +56,7 @@ namespace Launcher.Gui.Views {
 			
 			resIndex = widgetIndex;
 			Makers.Button( this, "Resume", 100, buttonHeight, buttonFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 90, -20 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 90, -25 );
 			dcIndex = widgetIndex;
 			Makers.Button( this, "Direct connect", 200, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 60 );

@@ -22,15 +22,14 @@ namespace Launcher.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			view.Init();			
+			SetWidgetHandlers();
+			Resize();
 			
 			if( game.checkTask != null && game.checkTask.Done && game.checkTask.Success )
 				SuccessfulUpdateCheck( game.checkTask );
 			
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
-			
-			SetWidgetHandlers();
-			Resize();
 		}
 
 		Build dev, stable;
@@ -76,7 +75,7 @@ namespace Launcher.Gui.Screens {
 			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild( false, false );
 			
 			widgets[view.backIndex].OnClick =
-				(x, y) => game.SetScreen( new MainScreen( game ) );
+				(x, y) => game.SetScreen( new SettingsScreen( game ) );
 		}
 		
 		void UpdateBuild( bool release, bool dx ) {
