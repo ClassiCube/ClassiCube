@@ -4,16 +4,16 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Views {	
+namespace Launcher.Gui.Views {
 	public sealed partial class MainView : IView {
 		
 		Font buttonFont, updateFont;
-		internal int loginIndex, resIndex, dcIndex, spIndex, colIndex, statusIndex;
-		internal int updatesIndex, modeIndex, sslIndex, settingsIndex;
+		internal int loginIndex, resIndex, dcIndex, spIndex, statusIndex;
+		internal int sslIndex, settingsIndex;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
 		public MainView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[14];
+			widgets = new Widget[11];
 		}
 		
 		public override void Init() {
@@ -38,7 +38,7 @@ namespace Launcher.Gui.Views {
 		}
 
 		
-		internal string updateText = "&eChecking for updates..";
+		internal string updateText = "&eChecking..";
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput( Get( 0 ), 280, false, 16, "&7Username.." )
@@ -63,25 +63,7 @@ namespace Launcher.Gui.Views {
 			spIndex = widgetIndex;
 			Makers.Button( this, "Singleplayer", 200, buttonHeight, buttonFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 110 );
-			
-			
-			colIndex = widgetIndex;
-			Makers.Button( this, "Colours", 110, buttonHeight, buttonFont )
-				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
-			if( game.ClassicBackground )
-				widgets[widgetIndex - 1].Visible = false;
 
-			modeIndex = widgetIndex;
-			Makers.Button( this, "Choose mode", 200, buttonHeight, buttonFont )
-				.SetLocation( Anchor.Centre, Anchor.BottomOrRight, 0, -10 );
-			
-			updatesIndex = widgetIndex;
-			Makers.Button( this, "Updates", 110, buttonHeight, buttonFont )
-				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10 );			
-			Makers.Label( this, updateText, updateFont )
-				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -50 );
-			
-			
 			sslIndex = widgetIndex;
 			bool sslVisible = widgets[sslIndex] != null && widgets[sslIndex].Visible;
 			Makers.Checkbox( this, textFont, true, 30 )
@@ -91,8 +73,11 @@ namespace Launcher.Gui.Views {
 			widgets[sslIndex].Visible = sslVisible;
 			widgets[sslIndex + 1].Visible = sslVisible;
 			
+			Makers.Label( this, updateText, updateFont )
+				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 50 );
+			
 			settingsIndex = widgetIndex;
-			Makers.Bitmap( this, Bitmaps.OptionsIndices, 
+			Makers.Bitmap( this, Bitmaps.OptionsIndices,
 			              Bitmaps.OptionsPalette, Bitmaps.OptionsSize )
 				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 5 );
 		}

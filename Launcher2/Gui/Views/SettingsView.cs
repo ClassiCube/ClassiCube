@@ -9,7 +9,7 @@ namespace Launcher.Gui.Views {
 		internal int backIndex, updatesIndex, modeIndex, coloursIndex;
 		
 		public SettingsView( LauncherWindow game ) : base( game ) {
-			widgets = new Widget[3];
+			widgets = new Widget[7];
 		}
 
 		public override void Init() {
@@ -22,16 +22,32 @@ namespace Launcher.Gui.Views {
 			widgetIndex = 0;
 			int middle = game.Width / 2;
 			
-			modeIndex = widgetIndex;
-			Makers.Button( this, "Choose mode", 145, 35, titleFont )
-				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 250, -72 );
-			Makers.Label( this, "&eChange the client's mode/features", textFont )
-				.SetLocation( Anchor.LeftOrTop, Anchor.Centre, middle - 85, -72 - 12 );
+			updatesIndex = widgetIndex;
+			Makers.Button( this, "Updates", 110, 35, titleFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, -135, -120 );
+			Makers.Label( this, "&eGet the latest stuff", textFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 10, -120 );
 
+			modeIndex = widgetIndex;
+			Makers.Button( this, "Mode", 110, 35, titleFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, -135, -70 );
+			Makers.Label( this, "&eChange the enabled features", textFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 55, -70 );
+
+			coloursIndex = widgetIndex;
+			Makers.Button( this, "Colours", 110, 35, titleFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, -135, -20 );
+			Makers.Label( this, "&eChange how the launcher looks", textFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 65, -20 );
+			
+			if( game.ClassicBackground ) {
+				widgets[coloursIndex].Visible = false;
+				widgets[coloursIndex + 1].Visible = false;
+			}
 			
 			backIndex = widgetIndex;
 			Makers.Button( this, "Back", 80, 35, titleFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 175 );
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 170 );
 		}
 	}
 }
