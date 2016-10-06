@@ -105,7 +105,7 @@ namespace Launcher.Gui.Screens {
 			
 			for( int i = 0; i < widgets.Length; i++ ) {
 				Widget widget = widgets[i];
-				if( widget == null || !widget.Visible ) continue;
+				if( !widget.Visible ) continue;
 				int width = widget.Width, height = widget.Height;
 				if( widgets[i] is InputWidget )
 					width = ((InputWidget)widgets[i]).RealWidth;
@@ -149,12 +149,15 @@ namespace Launcher.Gui.Screens {
 		protected void HandleTab() {
 			if( tabDown ) return;
 			tabDown = true;
-			int index = lastClicked == null ? -1 :
-				Array.IndexOf<Widget>( widgets, lastClicked );
-			int dir = (game.Window.Keyboard[Key.ShiftLeft]
-			           || game.Window.Keyboard[Key.ShiftRight]) ? -1 : 1;
-			index += dir;
-			Utils.Clamp( ref index, 0, widgets.Length - 1 );
+			bool shiftDown = game.Window.Keyboard[Key.ShiftLeft] 
+				|| game.Window.Keyboard[Key.ShiftRight];
+			
+			int dir = shiftDown ? -1 : 1;
+			int index = 0;
+			if( lastClicked != null ) {
+				index = Array.IndexOf<Widget>( widgets, lastClicked );
+				index += dir;
+			}
 			
 			for( int j = 0; j < widgets.Length * 2; j++ ) {
 				int i = (index + j * dir) % widgets.Length;

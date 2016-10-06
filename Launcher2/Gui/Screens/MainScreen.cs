@@ -72,6 +72,8 @@ namespace Launcher.Gui.Screens {
 				(x, y) => game.SetScreen( new UpdatesScreen( game ) );
 			widgets[view.modeIndex].OnClick =
 				(x, y) => game.SetScreen( new ChooseModeScreen( game, false ) );
+			widgets[view.settingsIndex].OnClick =
+				(x, y) => game.SetScreen( new SettingsScreen( game ) );
 			SetupInputHandlers();
 		}
 
