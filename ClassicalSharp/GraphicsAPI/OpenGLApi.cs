@@ -151,10 +151,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				else GL.Disable( EnableCap.Texture2D ); }
 		}
 		
-		public override int CreateTexture( int width, int height, IntPtr scan0 ) {
-			if( !Utils.IsPowerOf2( width ) || !Utils.IsPowerOf2( height ) )
-				Utils.LogDebug( "Creating a non power of two texture." );
-			
+		protected override int CreateTexture( int width, int height, IntPtr scan0, bool managedPool ) {
 			int texId = 0;
 			GL.GenTextures( 1, &texId );
 			GL.BindTexture( TextureTarget.Texture2D, texId );

@@ -74,7 +74,7 @@ namespace ClassicalSharp.TexturePack {
 					                       0, index1D * elemSize, atlas, dst, elemSize );
 					index++;
 				}
-				TexIds[i] = graphics.CreateTexture( dst );
+				TexIds[i] = graphics.CreateTexture( dst, true );
 			}
 		}
 		

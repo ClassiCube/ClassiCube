@@ -49,21 +49,26 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions of the bitmap
 		/// are powers of two, because otherwise they will not display properly on certain graphics cards.	<br/>
 		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
-		public int CreateTexture( Bitmap bmp ) {
+		public int CreateTexture( Bitmap bmp, bool managedPool ) {
 			if( !Platform.Is32Bpp( bmp ) ) {
 				throw new ArgumentOutOfRangeException( "Bitmap must be 32bpp" );
 			}
-			bmpBuffer.SetData( bmp, false, true );
-			return CreateTexture( bmpBuffer );
+			
+			bmpBuffer.SetData( bmp, true, true );
+			return CreateTexture( bmpBuffer, managedPool );
 		}
 		
 		/// <summary> Creates a new native texture with the specified dimensions and FastBitmap instance
 		/// that encapsulates the pointer to the 32bpp image data.</summary>
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions are powers of two,
 		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
-		public int CreateTexture( FastBitmap bmp ) {
-			if( !bmp.IsLocked ) bmp.LockBits();
-			int texId = CreateTexture( bmp.Width, bmp.Height, bmp.Scan0 );
+		public int CreateTexture( FastBitmap bmp, bool managedPool ) {
+			if( !Utils.IsPowerOf2( bmp.Width ) || !Utils.IsPowerOf2( bmp.Height ) ) {
+				throw new ArgumentOutOfRangeException( "Bitmap must have power of two dimensions" );
+			}
+			
+			if( !bmp.IsLocked ) bmp.LockBits();		
+			int texId = CreateTexture( bmp.Width, bmp.Height, bmp.Scan0, managedPool );
 			bmp.UnlockBits();
 			return texId;
 		}
@@ -71,7 +76,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Creates a new native texture with the specified dimensions and pointer to the 32bpp image data. </summary>
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions are powers of two,
 		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
-		public abstract int CreateTexture( int width, int height, IntPtr scan0 );
+		protected abstract int CreateTexture( int width, int height, IntPtr scan0, bool managedPool );
 		
 		/// <summary> Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
 		/// of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. </summary>

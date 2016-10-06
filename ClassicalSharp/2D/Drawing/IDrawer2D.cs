@@ -135,7 +135,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture Make2DTexture( Bitmap bmp, Size used, int windowX, int windowY ) {			
-			int texId = graphics.CreateTexture( bmp );
+			int texId = graphics.CreateTexture( bmp, true );
 			return new Texture( texId, windowX, windowY, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height );
 		}

@@ -215,7 +215,7 @@ namespace ClassicalSharp.Entities {
 						row[x] = dist < half * half ? inPix : outPix;
 					}
 				}
-				shadowTex = graphics.CreateTexture( fastBmp );
+				shadowTex = graphics.CreateTexture( fastBmp, true );
 			}
 		}
 	}

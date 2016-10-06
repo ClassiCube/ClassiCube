@@ -25,6 +25,9 @@ namespace ClassicalSharp {
 		
 		public void SetData( Bitmap bmp, bool lockBits, bool readOnly ) {
 			Bitmap = bmp;
+			Width = bmp.Width;
+			Height = bmp.Height;
+			
 			if( lockBits ) LockBits();
 			ReadOnly = readOnly;
 		}

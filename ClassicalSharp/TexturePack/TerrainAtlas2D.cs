@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			{
 				int x = index % ElementsPerRow, y = index / ElementsPerRow;
 				FastBitmap.MovePortion( x * size, y * size, 0, 0, atlas, dst, size );
-				return graphics.CreateTexture( dst );
+				return graphics.CreateTexture( dst, true );
 			}
 		}
 		
