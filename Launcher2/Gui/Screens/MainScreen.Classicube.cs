@@ -83,28 +83,24 @@ namespace Launcher.Gui.Screens {
 			bool sslCertError = ex.Status == WebExceptionStatus.TrustFailure ||
 				(ex.Status == WebExceptionStatus.SendFailure && OpenTK.Configuration.RunningOnMono);
 			if( ex.Status == WebExceptionStatus.Timeout ) {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + "Timed out while connecting to classicube.net.";
+				string text = "&cTimed out when connecting to classicube.net.";
 				SetStatus( text );
 			} else if( ex.Status == WebExceptionStatus.ProtocolError ) {
 				HttpWebResponse response = (HttpWebResponse)ex.Response;
 				int errorCode = (int)response.StatusCode;
 				string description = response.StatusDescription;
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + " classicube.net returned: (" + errorCode + ") " + description;
+				string text = "&cclassicube.net returned: (" + errorCode + ") " + description;
 				SetStatus( text );
 			} else if( ex.Status == WebExceptionStatus.NameResolutionFailure ) {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + "Unable to resolve classicube.net" +
-					Environment.NewLine + "you may not be connected to the internet.";
+				string text = "&cUnable to resolve classicube.net" +
+					Environment.NewLine + "Are you connected to the internet?";
 				SetStatus( text );
 			} else if( sslCertError ) {
-				string text = "&eFailed to validate SSL certificate";
+				string text = "&cFailed to validate SSL certificate";
 				SetStatus( text );
 				ShowSSLErrorWidgets();
 			} else {
-				string text = "&eFailed to " + action + ":" +
-					Environment.NewLine + ex.Status;
+				string text = "&c" + ex.Status;
 				SetStatus( text );
 			}
 		}

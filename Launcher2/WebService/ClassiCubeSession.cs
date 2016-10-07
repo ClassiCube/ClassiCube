@@ -38,8 +38,7 @@ namespace Launcher.Web {
 			} catch( WebException ex ) {
 				Finish( false, ex, "sign in" ); return;
 			} catch( InvalidOperationException ex ) {
-				Finish( false, null, "&eFailed to sign in: " +
-				       Environment.NewLine + ex.Message ); return;
+				Finish( false, null, "&c" + ex.Message ); return;
 			}
 			
 			// Retrieve list of public servers
