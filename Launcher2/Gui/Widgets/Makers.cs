@@ -37,12 +37,12 @@ namespace Launcher.Gui.Widgets {
 			return widget;
 		}
 		
-		public static Widget Checkbox( IView view, Font font, bool initValue, int size ) {
+		public static Widget Checkbox( IView view, bool initValue, int size ) {
 			CheckboxWidget widget;
 			if( view.widgets[view.widgetIndex] != null ) {
 				widget = (CheckboxWidget)view.widgets[view.widgetIndex];
 			} else {
-				widget = new CheckboxWidget( view.game, font, size, size );
+				widget = new CheckboxWidget( view.game, size, size );
 				widget.Value = initValue;
 				view.widgets[view.widgetIndex] = widget;
 			}

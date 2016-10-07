@@ -6,50 +6,6 @@ using ClassicalSharp;
 namespace Launcher.Drawing {
 	public unsafe static class Drawer2DExt {
 		
-		public static void DrawScaledPixels( FastBitmap src, FastBitmap dst, Size scale,
-		                                    Rectangle srcRect, Rectangle dstRect, byte scaleA, byte scaleB ) {
-			int srcWidth = srcRect.Width, dstWidth = dstRect.Width;
-			int srcHeight = srcRect.Height, dstHeight = dstRect.Height;
-			int srcX = srcRect.X, dstX = dstRect.X;
-			int srcY = srcRect.Y, dstY = dstRect.Y;
-			int scaleWidth = scale.Width, scaleHeight = scale.Height;
-			
-			for( int yy = 0; yy < dstHeight; yy++ ) {
-				int scaledY = (yy + dstY) * srcHeight / scaleHeight;
-				int* srcRow = src.GetRowPtr( srcY + (scaledY % srcHeight) );
-				int* dstRow = dst.GetRowPtr( dstY + yy );
-				byte rgbScale = (byte)Utils.Lerp( scaleA, scaleB, (float)yy / dstHeight );
-				
-				for( int xx = 0; xx < dstWidth; xx++ ) {
-					int scaledX = (xx + dstX) * srcWidth / scaleWidth;
-					int pixel = srcRow[srcX + (scaledX % srcWidth)];
-					
-					int col = pixel & ~0xFFFFFF; // keep a, but clear rgb
-					col |= ((pixel & 0xFF) * rgbScale / 255);
-					col |= (((pixel >> 8) & 0xFF) * rgbScale / 255) << 8;
-					col |= (((pixel >> 16) & 0xFF) * rgbScale / 255) << 16;
-					dstRow[dstX + xx] = col;
-				}
-			}
-		}
-		
-		public static void DrawTiledPixels( FastBitmap src, FastBitmap dst,
-		                                   Rectangle srcRect, Rectangle dstRect ) {
-			int srcX = srcRect.X, srcWidth = srcRect.Width, srcHeight = srcRect.Height;
-			int x, y, width, height;
-			if( !ClampCoords( dst, dstRect, out x, out y, out width, out height ) )
-				return;
-			
-			for( int yy = 0; yy < height; yy++ ) {
-				// srcY is always 0 so we don't need to add
-				int* srcRow = src.GetRowPtr( ((yy + y) % srcHeight) );
-				int* dstRow = dst.GetRowPtr( y + yy );
-				
-				for( int xx = 0; xx < width; xx++ )
-					dstRow[x + xx] = srcRow[srcX + ((xx + x) % srcWidth)];
-			}
-		}
-		
 		public static void Clear( FastBitmap bmp, Rectangle rect, FastColour col ) {
 			int x, y, width, height;
 			if( !ClampCoords( bmp, rect, out x, out y, out width, out height ) )
@@ -62,8 +18,7 @@ namespace Launcher.Drawing {
 					row[x + xx] = pixel;
 			}
 		}
-		
-		
+				
 		public static bool ClampCoords( FastBitmap bmp, Rectangle rect, out int x,
 		                               out int y, out int width, out int height ) {
 			width = rect.Width; height = rect.Height;

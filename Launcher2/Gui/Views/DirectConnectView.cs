@@ -8,14 +8,12 @@ namespace Launcher.Gui.Views {
 	public sealed class DirectConnectView : IView {
 		
 		internal int connectIndex, backIndex, ccSkinsIndex, statusIndex;
-		Font booleanFont;
 
 		public DirectConnectView( LauncherWindow game ) : base( game ) {
 			widgets = new Widget[8];
 		}
 
 		public override void Init() {
-			booleanFont = new Font( game.FontName, 22, FontStyle.Regular );
 			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
 			textFont = new Font( game.FontName, 14, FontStyle.Regular );
 			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
@@ -25,11 +23,6 @@ namespace Launcher.Gui.Views {
 		string Get( int index ) {
 			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			booleanFont.Dispose();
 		}
 
 		
@@ -57,7 +50,7 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 30, 100 );
 			
 			ccSkinsIndex = widgetIndex;
-			Makers.Checkbox( this, booleanFont, true, 30 )
+			Makers.Checkbox( this, true, 24 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, -110, 100 );
 		}
 	}

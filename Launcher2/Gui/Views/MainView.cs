@@ -66,7 +66,7 @@ namespace Launcher.Gui.Views {
 
 			sslIndex = widgetIndex;
 			bool sslVisible = widgets[sslIndex] != null && widgets[sslIndex].Visible;
-			Makers.Checkbox( this, textFont, true, 30 )
+			Makers.Checkbox( this, true, 30 )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 160, -20 );
 			Makers.Label( this, "Skip SSL check", textFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 250, -20 );
@@ -77,9 +77,8 @@ namespace Launcher.Gui.Views {
 				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 50 );
 			
 			settingsIndex = widgetIndex;
-			Makers.Bitmap( this, Bitmaps.OptionsIndices,
-			              Bitmaps.OptionsPalette, Bitmaps.OptionsSize )
-				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -5, 5 );
+			Makers.Button( this, "Options", 100, buttonHeight, buttonFont )
+				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -6, 6 );
 		}
 	}
 }

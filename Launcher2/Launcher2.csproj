@@ -57,6 +57,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Drawing\BitmapDrawer.cs" />
     <Compile Include="Drawing\Drawer2DExt.cs" />
     <Compile Include="Drawing\Gradient.cs" />
     <Compile Include="Drawing\Platform\OSXDrawer.cs" />
@@ -110,7 +111,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Updater\Scripts.cs" />
     <Compile Include="Updater\Applier.cs" />
-    <Compile Include="Utils\Bitmaps.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\ErrorHandler.cs" />
     <Compile Include="Utils\JSON.cs" />

@@ -85,12 +85,12 @@ namespace Launcher {
 			
 			// Precompute the scaled background
 			using( FastBitmap src = new FastBitmap( bmp, true, true ) ) {
-				Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
-				                             new Rectangle( 2 * elemSize, 0, elemSize, elemSize ),
-				                             new Rectangle( tileSize, 0, tileSize, tileSize ), 128, 64 );
-				Drawer2DExt.DrawScaledPixels( src, terrainPixels, size,
-				                             new Rectangle( 1 * elemSize, 0, elemSize, elemSize ),
-				                             new Rectangle( 0, 0, tileSize, tileSize ), 96, 96 );
+				BitmapDrawer.DrawScaled( src, terrainPixels, size,
+				                        new Rectangle( 2 * elemSize, 0, elemSize, elemSize ),
+				                        new Rectangle( tileSize, 0, tileSize, tileSize ), 128, 64 );
+				BitmapDrawer.DrawScaled( src, terrainPixels, size,
+				                        new Rectangle( 1 * elemSize, 0, elemSize, elemSize ),
+				                        new Rectangle( 0, 0, tileSize, tileSize ), 96, 96 );
 			}
 		}
 		
@@ -149,8 +149,8 @@ namespace Launcher {
 		
 		void ClearTile( int x, int y, int width, int height, int srcX, FastBitmap dst ) {
 			Rectangle srcRect = new Rectangle( srcX, 0, tileSize, tileSize );
-			Drawer2DExt.DrawTiledPixels( terrainPixels, dst, srcRect,
-			                            new Rectangle( x, y, width, height ) );
+			Rectangle dstRect = new Rectangle( x, y, width, height );
+			BitmapDrawer.DrawTiled( terrainPixels, dst, srcRect, dstRect );
 		}
 	}
 }
