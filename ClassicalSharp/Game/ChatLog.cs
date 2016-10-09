@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			synth = new SpeechSynthesizer();
 			synth.SetOutputToDefaultAudioDevice();
 			synth.Volume = 100;
-			synth.Rate = -2;
+			synth.Rate = 0;
 			
 			Thread thread = new Thread(SoundThread);
 			thread.IsBackground = true;
