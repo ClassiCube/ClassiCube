@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using ClassicalSharp.Commands;
+using System.Speech.Synthesis;
 
 namespace ClassicalSharp {
 
@@ -12,10 +13,15 @@ namespace ClassicalSharp {
 		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement, ClientClock;
 		public ChatLine[] ClientStatus = new ChatLine[6];
+		SpeechSynthesizer synth;
 		
 		Game game;
 		public void Init( Game game ) {
 			this.game = game;
+			synth = new SpeechSynthesizer();
+			synth.SetOutputToDefaultAudioDevice();
+			synth.Volume = 100;
+			synth.Rate = -2;
 		}
 
 		public void Ready( Game game ) { }			
@@ -44,13 +50,16 @@ namespace ClassicalSharp {
 		static char[] trimChars = new [] { ' ', '\0' };
 		StringBuffer logBuffer = new StringBuffer( 128 );
 		public void Add( string text ) {
+			if (text != null) synth.Speak(Utils.StripColours(text.Trim()));
+			                              
 			Log.Add( text );
 			LogChatToFile( text );
 			game.Events.RaiseChatReceived( text, MessageType.Normal );
 		}
 		
-		public void Add( string text, MessageType type ) {
+		public void Add( string text, MessageType type ) {                          
 			if( type == MessageType.Normal ) {
+				if (text != null) synth.Speak(Utils.StripColours(text.Trim()));
 				Log.Add( text );
 				LogChatToFile( text );
 			} else if( type == MessageType.Status1 ) {

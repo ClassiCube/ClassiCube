@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>InteropPatcher</RootNamespace>
     <AssemblyName>InteropPatcher</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <AppDesignerFolder>Properties</AppDesignerFolder>
