@@ -483,7 +483,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void SetDefaultRenderStates() {
-			device.SetRenderState( RenderState.FillMode, (int)FillMode.Solid );
 			FaceCulling = false;
 			device.SetRenderState( RenderState.ColorVertex, false );
 			device.SetRenderState( RenderState.Lighting, false );
