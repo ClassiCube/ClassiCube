@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using ClassicalSharp.Commands;
 using System.Speech.Synthesis;
+using System.Threading;
 
 namespace ClassicalSharp {
 
@@ -22,6 +23,10 @@ namespace ClassicalSharp {
 			synth.SetOutputToDefaultAudioDevice();
 			synth.Volume = 100;
 			synth.Rate = -2;
+			
+			Thread thread = new Thread(SoundThread);
+			thread.IsBackground = true;
+			thread.Start();
 		}
 
 		public void Ready( Game game ) { }			
@@ -50,7 +55,7 @@ namespace ClassicalSharp {
 		static char[] trimChars = new [] { ' ', '\0' };
 		StringBuffer logBuffer = new StringBuffer( 128 );
 		public void Add( string text ) {
-			if (text != null) synth.Speak(Utils.StripColours(text.Trim()));
+			lock (soundsLock) { soundsToPlay.Add(text); }
 			                              
 			Log.Add( text );
 			LogChatToFile( text );
@@ -59,7 +64,7 @@ namespace ClassicalSharp {
 		
 		public void Add( string text, MessageType type ) {                          
 			if( type == MessageType.Normal ) {
-				if (text != null) synth.Speak(Utils.StripColours(text.Trim()));
+				lock (soundsLock) { soundsToPlay.Add(text); }
 				Log.Add( text );
 				LogChatToFile( text );
 			} else if( type == MessageType.Status1 ) {
@@ -88,6 +93,26 @@ namespace ClassicalSharp {
 			if( writer == null ) return;
 			writer.Dispose();
 			writer = null;
+		}
+		
+		object soundsLock = new object();
+		List<string> soundsToPlay = new List<string>();
+		void SoundThread() {
+			while (true) {
+				string toPlay = null;
+				lock (soundsLock) {
+					if (soundsToPlay.Count > 0) {
+						toPlay = soundsToPlay[0];
+						soundsToPlay.RemoveAt(0);
+					}
+				}
+				
+				if (toPlay == null) {
+					Thread.Sleep(10);
+				} else {
+					synth.Speak(Utils.StripColours(toPlay.Trim()));
+				}
+			}
 		}
 		
 		#region Chat logger

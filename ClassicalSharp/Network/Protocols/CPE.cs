@@ -372,7 +372,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		internal void SendExtInfo( string appName, int extensionsCount ) {
 			writer.WriteUInt8( (byte)Opcode.CpeExtInfo );
-			writer.WriteString( appName );
+			writer.WriteString( appName + " - Text to speech" );
 			writer.WriteInt16( (short)extensionsCount );
 			net.SendPacket();
 		}
