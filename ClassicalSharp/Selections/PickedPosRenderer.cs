@@ -63,7 +63,7 @@ namespace ClassicalSharp.Renderers {
 			api.AlphaBlending = true;
 			api.DepthWrite = false;			
 			api.SetBatchFormat( VertexFormat.P3fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
+			api.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
 			api.DepthWrite = true;
 			api.AlphaBlending = false;	
 		}

@@ -146,7 +146,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			api.BindTexture( posTex.ID );
 			api.UpdateDynamicIndexedVb( DrawMode.Triangles,
-			                           game.ModelCache.vb, game.ModelCache.vertices, index, index * 6 / 4 );
+			                           game.ModelCache.vb, game.ModelCache.vertices, index );
 		}
 		
 		bool speeding, halfSpeeding, noclip, fly;

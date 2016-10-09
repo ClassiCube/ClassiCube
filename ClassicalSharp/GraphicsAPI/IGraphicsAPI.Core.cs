@@ -26,7 +26,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
 			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
 			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4 );
 		}
 		
 		public virtual void Draw2DQuad( float x, float y, float width, float height, 
@@ -38,7 +38,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
 			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
 			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4, 6 );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4 );
 		}
 		
 		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
@@ -47,7 +47,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			int index = 0;
 			Make2DQuad( ref tex, col, texVerts, ref index );
 			SetBatchFormat( VertexFormat.P3fT2fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4, 6 );
+			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4 );
 		}
 		
 		public static void Make2DQuad( ref Texture tex, FastColour col,

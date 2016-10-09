@@ -70,7 +70,7 @@ namespace ClassicalSharp.Entities {
 				game.Graphics.BindTexture( shadowTex );
 				boundShadowTex = true;
 			}
-			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index, index * 6 / 4 );
+			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, verts, index );
 		}
 		
 		const byte c = 255; // avoids 'ambiguous match' compile errors.

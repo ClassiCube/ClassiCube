@@ -202,12 +202,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays( modeMappings[(int)mode], 0, count );
 		}
 		
-		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount, int indicesCount ) {
+		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount ) {
 			GL.BindBuffer( All.ArrayBuffer, id );
 			GL.BufferSubData( All.ArrayBuffer, IntPtr.Zero, new IntPtr( vCount * batchStride ), vertices );
 			
 			setupBatchFunc();
-			GL.DrawElements( modeMappings[(int)mode], indicesCount, indexType, zero );
+			GL.DrawElements( modeMappings[(int)mode], vCount * 6 / 4, indexType, zero );
 		}
 		
 		public override void SetDynamicVbData<T>( int id, T[] vertices, int count ) {

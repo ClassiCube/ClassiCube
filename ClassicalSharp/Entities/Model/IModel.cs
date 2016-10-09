@@ -110,7 +110,7 @@ namespace ClassicalSharp.Model {
 		protected void UpdateVB() {
 			ModelCache cache = game.ModelCache;
 			game.Graphics.UpdateDynamicIndexedVb(
-				DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+				DrawMode.Triangles, cache.vb, cache.vertices, index );
 			index = 0;
 		}
 		

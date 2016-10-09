@@ -106,7 +106,7 @@ namespace ClassicalSharp.Particles {
 			int drawCount = Math.Min( count, maxParticles * 4 );
 			if( drawCount == 0 ) return;
 			graphics.BindTexture( ParticlesTexId );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount, drawCount * 6 / 4 );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount );
 		}
 		
 		public void Tick( ScheduledTask task ) {

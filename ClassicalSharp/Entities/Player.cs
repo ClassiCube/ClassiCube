@@ -106,7 +106,7 @@ namespace ClassicalSharp.Entities {
 			api.texVerts[3] = new VertexP3fT2fC4b( ref p212, nameTex.U2, nameTex.V2, col );
 			
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4, 6 );
+			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4 );
 		}
 		
 		protected void CheckSkin() {

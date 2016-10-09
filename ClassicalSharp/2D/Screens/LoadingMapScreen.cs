@@ -70,7 +70,7 @@ namespace ClassicalSharp.Gui.Screens {
 					
 			ModelCache cache = game.ModelCache;
 			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index, index * 6 / 4 );
+			api.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index );
 			index = 0;
 		}
 		

@@ -38,7 +38,7 @@ namespace ClassicalSharp.Selections {
 				                     P.X - size, P.Y, P.Z + size, P.X + size, P.Y + 3, P.Z - size );
 			
 			game.Graphics.SetBatchFormat( VertexFormat.P3fC4b );
-			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index, index * 6 / 4 );
+			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
 		}
 	}
 }

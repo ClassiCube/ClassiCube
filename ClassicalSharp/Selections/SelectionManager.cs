@@ -66,7 +66,7 @@ namespace ClassicalSharp.Selections {
 			Graphics.DepthWrite = false;
 			Graphics.AlphaBlending = true;
 			Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices,
-			                                selections.Count * VerticesCount, selections.Count * IndicesCount );
+			                                selections.Count * VerticesCount );
 			Graphics.DepthWrite = true;
 			Graphics.AlphaBlending = false;
 		}
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Selections {
 			Graphics.DeleteDynamicVb( ref lineVb );
 		}
 		
-		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2, IndicesCount = 6 * 6;
+		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2;
 		void InitData() {
 			vertices = new VertexP3fC4b[256 * VerticesCount];
 			lineVertices = new VertexP3fC4b[256 * LineVerticesCount];

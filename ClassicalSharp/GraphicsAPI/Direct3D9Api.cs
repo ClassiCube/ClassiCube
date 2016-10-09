@@ -215,7 +215,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override bool AlphaArgBlend {
 			set {
 				TextureOp op = value ? TextureOp.Modulate : TextureOp.SelectArg1;
-				device.SetTextureStageState( 0, TextureStage.AlphaOperation, (int)op ); 
+				device.SetTextureStageState( 0, TextureStage.AlphaOperation, (int)op );
 			}
 		}
 		
@@ -239,14 +239,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.DrawPrimitives( modeMappings[(int)mode], 0, NumPrimitives( count, mode ) );
 		}
 		
-		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount, int indicesCount ) {
+		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) {
 			int size = vCount * batchStride;
 			DataBuffer buffer = dynamicvBuffers[vb];
 			buffer.SetData( vertices, size, LockFlags.Discard );
 			
 			device.SetStreamSource( 0, buffer, 0, batchStride );
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0, 
-			                             indicesCount / 6 * 4, 0, NumPrimitives( indicesCount, mode ) );
+			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, 0,
+			                             vCount, 0, NumPrimitives( vCount * 6 / 4, mode ) );
 		}
 		
 		public override void SetDynamicVbData<T>( int vb, T[] vertices, int count ) {
@@ -479,7 +479,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			
 			LostContext = false;
-			RaiseContextRecreated();			
+			RaiseContextRecreated();
 		}
 		
 		void SetDefaultRenderStates() {
@@ -577,7 +577,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				"-- Using Direct3D9 api --",
 				"Adapter: " + adapter,
 				"Mode: " + createFlags,
-				"Texture memory: " + texMem + " MB",				
+				"Texture memory: " + texMem + " MB",
 				"Max 2D texture dimensions: " + MaxTextureDimensions,
 				"Depth buffer format: " + depthFormat,
 				"Back buffer format: " + viewFormat,

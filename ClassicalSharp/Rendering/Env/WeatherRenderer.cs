@@ -102,7 +102,7 @@ namespace ClassicalSharp.Renderers {
 			graphics.AlphaArgBlend = true;
 			
 			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index, index * 6 / 4 );
+			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index );
 			
 			graphics.AlphaArgBlend = false;
 			graphics.AlphaTest = true;
