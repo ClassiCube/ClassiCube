@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Screens {
 			api.Texturing = true;
 			RenderMenuWidgets( delta );
 			if( inputWidget != null )
-				inputWidget.Render( delta );			
+				inputWidget.Render( delta );
 			
 			if( extendedHelp != null && extEndY <= extClipY )
 				extendedHelp.Render( delta );
@@ -68,14 +68,14 @@ namespace ClassicalSharp.Gui.Screens {
 			return inputWidget.HandlesKeyUp( key );
 		}
 		
-		public override void OnResize( int width, int height ) {			
+		public override void OnResize( int width, int height ) {
 			base.OnResize( width, height );
 			if( extendedHelp == null ) return;
 			extendedHelp.OnResize( width, height );
 		}
 		
 		public override void Dispose() {
-			DisposeWidgets();		
+			DisposeWidgets();
 			game.Keyboard.KeyRepeat = false;
 			extendedHelpFont.Dispose();
 			DisposeExtendedHelp();
@@ -111,8 +111,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeOpt( int dir, int y, string text, ClickHandler onClick,
-		                                    Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, 
+		                               Func<Game, string> getter, Action<Game, string> setter ) {
+			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41,
 			                                          text + ": " + getter( game ),
 			                                          Anchor.Centre, Anchor.Centre, titleFont, onClick );
 			widget.Metadata = text;
@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBool( int dir, int y, string text, string optKey,
-		                                       ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
 			string optName = text;
 			text = text + ": " + (getter( game ) ? "ON" : "OFF");
 			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
