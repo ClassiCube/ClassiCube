@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Entities;
 using OpenTK;
 
-namespace ClassicalSharp {
+namespace ClassicalSharp.Physics {
 	
 	/// <summary> Contains various methods for intersecting geometry. </summary>
 	public static class Intersection {

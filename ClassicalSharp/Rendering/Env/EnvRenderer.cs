@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
+using ClassicalSharp.Physics;
 using OpenTK;
 
 namespace ClassicalSharp.Renderers {

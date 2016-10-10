@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using ClassicalSharp.Map;
+using ClassicalSharp.Physics;
 using OpenTK;
 
 namespace ClassicalSharp {

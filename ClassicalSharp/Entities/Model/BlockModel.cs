@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Physics;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.TexturePack;
 using OpenTK;

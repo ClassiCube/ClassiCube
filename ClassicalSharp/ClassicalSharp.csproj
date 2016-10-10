@@ -185,6 +185,9 @@
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
     <Compile Include="Map\Formats\NbtFile.cs" />
     <Compile Include="Map\WorldEnv.cs" />
+    <Compile Include="Math\Physics\AABB.cs" />
+    <Compile Include="Math\Physics\IntersectionUtils.cs" />
+    <Compile Include="Math\Physics\Searcher.cs" />
     <Compile Include="Math\RayTracer.cs" />
     <Compile Include="Entities\Model\CustomModel.cs" />
     <Compile Include="Entities\Model\HumanModels.cs" />
@@ -252,8 +255,6 @@
     <Compile Include="Commands\CommandList.cs" />
     <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
-    <Compile Include="Math\AABB.cs" />
-    <Compile Include="Math\IntersectionUtils.cs" />
     <Compile Include="Math\PickedPos.cs" />
     <Compile Include="Math\Picking.cs" />
     <Compile Include="Platform\DesktopWindow.cs" />
@@ -334,6 +335,7 @@
     <Folder Include="Entities\Components" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
+    <Folder Include="Math\Physics" />
     <Folder Include="MeshBuilder" />
     <Folder Include="Network\Protocols" />
     <Folder Include="Platform" />
